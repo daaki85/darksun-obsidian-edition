@@ -16,6 +16,10 @@ have the detail.
   slot with each kind's inventory picture, six to a row, in place of the
   names; kinds the character can't pick are greyed. Pointing at a slot names
   it under them (SPECIALIZE IN / DAGGER), as CHOOSE A SPELL names a spell.
+- **View Character: the saves labelled, MOVE added.** The five saves under
+  the item icons each have their label (PPD, RSW, PP, BW, SP, as on the
+  inventory screen) in place of one unlabelled SAVE line; THAC0 moves down
+  beside PSI, and MOVE (the character's movement) is new, beside HP.
 
 **Fixed**
 - **The dice log showed XP for every kill,** the creature's value from its

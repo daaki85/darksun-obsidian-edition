@@ -295,8 +295,10 @@ How: the patched game calls the helper (`INT 65h`) just after the panel's
 weapon lines; the helper prints the lines with the game's own text routine,
 whose address, like the selected character, it reads from the game's code
 around the patch (overlays move, so nothing is fixed in advance). The View
-Character screen does the same through `INT F3h`, called while it draws the
-character's panel, and the routine that lists the weapons through `INT FAh`
+Character screen does the same through `INT F3h`, called once it has drawn
+the character's two panels (the saves under the item icons; MOVE, the
+creature record's +1Bh, and THAC0 at x D8h on HP's and PSI's lines, 7Fh and
+86h, clear of HP's value at its longest), and the routine that lists the weapons through `INT FAh`
 after each one. The Ledger keeps the numbers in the helper's memory, with the
 time it last did: older than 5 seconds, the helper shows the sheet's numbers
 instead. Before a screen is drawn, the helper asks the Ledger to update them

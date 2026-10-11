@@ -1047,11 +1047,13 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   the [rule change](#rule-changes) for fire, cold and electricity. Worked out
   the same way as REAC, each time the panel is drawn.
 
-The **View Character** screen gets THAC0 and the saves too, under the item
-icons: `THAC0: 15` and `SAVE: 8 12 11` / `15 13`, the saves in the order
-above.
+The **View Character** screen gets them too: the five saves under the item
+icons, each with its label as above (`PPD 11  RSW 9` / `PP 10  BW 13` /
+`SP 10`), and in the lower panel, right of HP and PSI as DAM is right of AC,
+the character's **MOVE** (its movement in a fight, before boots or a spell
+change it) and **THAC0**.
 
-![The View Character screen with THAC0 and the saves added, as they stand under Bless](docs/view-character.png)
+![The View Character screen: the saves labelled under the item icons, and MOVE and THAC0 beside HP and PSI](docs/view-character.png)
 
 They're the numbers as they stand now, worked out by the Ledger the way the
 game's own attack and saving throw routines do. Each time the game draws one

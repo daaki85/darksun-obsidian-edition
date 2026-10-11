@@ -833,8 +833,9 @@ probe_char:
         iret
 
 ; PROBE_VIEW: INT VEC_VIEW replaces "push dword 000B0140h" (6 bytes: INT + 4 NOPs) near the
-; end of the View Character screen's routine for its upper panel, once the game has drawn
-; its own lines. Adds THAC0 and the saves under the item icons, then does the push.
+; end of the View Character screen's routine for its panels, once the game has drawn its own
+; lines. Adds the five saves under the item icons, each with its label, and MOVE and THAC0 in the
+; lower panel right of HP and PSI (as DAM is right of AC), then does the push.
 ; The routine's code holds, at fixed distances before the patch, the (relocated) far address
 ; of the text routine, the segment of the panel's window handle and the segment of the
 ; selected character's number: they are read from there.
@@ -870,37 +871,44 @@ probe_view:
         je .done                ; an empty slot
         imul bx, bx, 0x3A
         lfs di, [0x1665]
+        mov cl, [fs:di + bx + 0x1B]  ; movement
+        mov [cs:v_move_val], cl
         mov al, [fs:di + bx + 0x1F]  ; THAC0
         call c_load_stats       ; (or the companion's, as they stand now)
         mov di, v_thac0 + 7
         mov al, [cs:c_vals]
         call c_itoa_s
-        mov di, v_saves1 + 5
-        mov al, [cs:c_vals + 1]
+        mov di, v_move + 7
+        mov al, [cs:v_move_val]
+        call c_itoa_s
+        xor si, si              ; the saves, each with its label (V_SAVES)
+.save:  mov bx, si
+        shl bx, 2
+        mov di, [cs:v_saves + bx]
+        add di, 4
+        mov al, [cs:c_vals + 1 + si]
         call v_two
-        mov al, [cs:c_vals + 2]
-        call v_two
-        mov al, [cs:c_vals + 3]
-        call v_two
-        mov di, v_saves2 + 5
-        mov al, [cs:c_vals + 4]
-        call v_two
-        mov al, [cs:c_vals + 5]
-        call v_two
-        push word 0x3A          ; under the item icons
-        push word 0xCD
+        push word [cs:v_saves + bx + 2]  ; (its place: y, then x)
+        mov ax, si
+        and ax, 1
+        imul ax, ax, V_SAVE_GAP
+        add ax, V_SAVE_X
+        push ax
+        push cs
+        push word [cs:v_saves + bx]
+        call c_draw_line
+        inc si
+        cmp si, 5
+        jb .save
+        push word V_LOW_Y       ; right of HP and PSI in the lower panel, as DAM is right of AC
+        push word V_LOW_X
+        push cs
+        push word v_move
+        call c_draw_line
+        push word V_LOW_Y + 7
+        push word V_LOW_X
         push cs
         push word v_thac0
-        call c_draw_line
-        push word 0x41
-        push word 0xCD
-        push cs
-        push word v_saves1
-        call c_draw_line
-        push word 0x48
-        push word 0xCD
-        push cs
-        push word v_saves2
         call c_draw_line
 .done:  pop fs
         pop es
@@ -928,8 +936,20 @@ v_two:                          ; AL (0-99) -> two digits (a space for a leading
         ret
 
 v_thac0  db 'THAC0: ', 0, 0, 0, 0
-v_saves1 db 'SAVE:00 00 00 ', 0
-v_saves2 db '     00 00 ', 0
+v_move   db 'MOVE:  ', 0, 0, 0, 0  ; (its number under THAC0's)
+v_move_val db 0
+; the saves under the item icons, two to a row (PPD and RSW, PP and BW, SP), with the short
+; labels the inventory panel gives them: each its text and its row's y
+V_SAVE_X   equ 0xCD
+V_SAVE_GAP equ 36
+V_LOW_X    equ 0xD8             ; (clear of HP's value, 7 letters from the game's place for it)
+V_LOW_Y    equ 0x7F             ; (HP's line; PSI's 7 below)
+v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
+.ppd     db 'PPD 00 ', 0
+.rsw     db 'RSW 00 ', 0
+.pp      db 'PP  00 ', 0
+.bw      db 'BW  00 ', 0
+.sp      db 'SP  00 ', 0
 
 ; THAC0 (AL) and the saves (sheet +37h..+3Bh at ES:SI), or the companion's numbers as they
 ; stand now, as the cells at CS:BX say
