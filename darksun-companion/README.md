@@ -1589,6 +1589,12 @@ Magic Missile), four at 2nd (and Shield and Wall of Fog), four and two of 2nd
 level at 3rd (and Fog Cloud and Mirror Image). A Scholar picks one more for
 each level. A multiclass preserver too.
 
+**EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
+picking, at creation and on changing class: the spells still to pick are the
+game's own, in its order (Grease, Magic Missile, Shield, Wall of Fog; then Fog
+Cloud, Mirror Image), less any already picked. The character is already saved
+when the window opens, so EXIT can't take you back to the creation screen.
+
 #### Kits that rule out classes and each other
 
 Some kits keep a human from some classes, both ways: greyed on the DUAL

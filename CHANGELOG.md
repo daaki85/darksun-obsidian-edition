@@ -8,6 +8,14 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #39 (in progress)
+
+**Fixed**
+- **EXIT on CHOOSE A SPELL did nothing** when a new preserver picked its
+  starting spells (or a human its spells on becoming a preserver): the window
+  only opened again. EXIT now ends the picking, and the spells still to pick
+  are the game's own starting spells, less any already picked.
+
 ## Pull request #38 ([merged 2026-10-10](https://github.com/daaki85/darksun-obsidian-edition/pull/38))
 
 **Release**

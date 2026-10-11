@@ -622,7 +622,8 @@ character hit in a round can't cast), and choose its spells well.
 - **INT limits learning:** a chance to learn each scroll's spell, and a most
   spells of each level ([learning spells](#learning-preserver-spells)).
   *Without the mod:* every scroll learnt, no limit.
-- It **chooses** its starting spells and one at each level up.
+- It **chooses** its starting spells and one at each level up. EXIT while
+  choosing its starting spells gives it the game's usual ones for the rest.
 - AD&D's wizard [spell slots](#spell-slots) (4 2 1 at 5th level; *without the
   mod:* 3 2 1).
 - **Cat's Grace** in Flaming Sphere's place.

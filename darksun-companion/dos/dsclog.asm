@@ -6073,9 +6073,12 @@ probe_pick_level:
 ; spell levels on offer up to 1st, then CH up to 2nd (PICK_CAP, for PROBE_PICK_LEVEL). DS the
 ; game's, interrupts on; all registers kept. From code of another overlay than CHOOSE A SPELL's
 ; (85560h on: the DUAL window's), only with the way back in a frame the overlay manager can fix
-; up (PROBE_CR_SPELLS): its loading may take that code's place.
+; up (PROBE_CR_SPELLS): its loading may take that code's place. EXIT on the window (its "YOU
+; HAVEN'T CHOSEN", then EXIT) leaves it with no spell learnt: the picks are over, and those left
+; are the game's own starting spells (PICK_FILL), as it gives them without the mod.
 PICK_STUB  equ 0x430A - 0x4356          ; (the stub's segment, less DS's, as WP_STUB)
 PICK_ENTRY equ 0x5C
+PICK_WIZARD equ 0x45                    ; (the preserver spells: 0-44h)
 pick_spells:
         pusha
         push es
@@ -6083,6 +6086,7 @@ pick_spells:
 .first: or cl, cl
         jz .second
         call .one
+        jc .exited
         dec cl
         jmp .first
 .second:
@@ -6090,13 +6094,18 @@ pick_spells:
 .more:  or ch, ch
         jz .done
         call .one
+        jc .exited
         dec ch
         jmp .more
+.exited:
+        call pick_fill
 .done:  mov byte [cs:pick_cap], 0
         pop es
         popa
         ret
-.one:   push cx
+.one:   push cx                 ; (CF set if the window was left with no spell learnt)
+        call pick_known
+        push ax
         mov ax, ds
         add ax, PICK_STUB
         mov [cs:pick_far + 2], ax
@@ -6104,10 +6113,81 @@ pick_spells:
         push si
         call far [cs:pick_far]
         add sp, 2
+        call pick_known
         pop cx
+        cmp si, 4               ; (only the party's four have KNOWN_OFF's table; creation's
+        jae .chose              ;   and DUAL's are among them)
+        cmp ax, cx
+        je .none
+.chose: pop cx
+        clc
+        ret
+.none:  pop cx
+        stc
         ret
 pick_far   dd 0
 pick_cap   db 0
+
+; PICK_KNOWN: AX the preserver spells member SI knows (KNOWN_OFF's bytes, the low four bits set
+; when known, as the game's learning, 500:43h, sets them). DS the game's; others kept.
+pick_known:
+        push bx
+        push cx
+        push ds
+        imul bx, si, KNOWN_SIZE
+        add bx, KNOWN_OFF
+        mov ax, ds
+        sub ax, KNOWN_FROM_DS
+        mov ds, ax
+        xor ax, ax
+        mov cx, PICK_WIZARD
+.spell: test byte [bx], 0x0F
+        jz .next
+        inc ax
+.next:  inc bx
+        loop .spell
+        pop ds
+        pop cx
+        pop bx
+        ret
+
+; PICK_FILL: member SI learns the game's own starting spells it doesn't know yet, CL of 1st level
+; (Grease, Magic Missile, Shield, Wall of Fog, as the game gives them) and CH of 2nd (Fog Cloud,
+; Mirror Image), for the picks EXIT left (fewer if the lists run out). DS the game's; all kept.
+pick_fill:
+        pusha
+        push ds
+        imul bx, si, KNOWN_SIZE
+        add bx, KNOWN_OFF
+        mov ax, ds
+        sub ax, KNOWN_FROM_DS
+        mov ds, ax
+        mov di, fill_first
+        call .list
+        mov cl, ch
+        mov di, fill_second
+        call .list
+        pop ds
+        popa
+        ret
+.list:  or cl, cl               ; (CL of the spells at CS:DI, to a 0)
+        jz .out
+        movzx ax, byte [cs:di]
+        or ax, ax
+        jz .out
+        inc di
+        push bx
+        add bx, ax
+        test byte [bx], 0x0F
+        jnz .known
+        and byte [bx], 0xF0
+        or byte [bx], 1
+        dec cl
+.known: pop bx
+        jmp .list
+.out:   ret
+fill_first  db 7, 8, 0x0B, 9, 0
+fill_second db 0x0F, 0x16, 0
 
 ; PROBE_DUAL_SPELLS: INT VEC_DUAL_SPELLS replaces "push 8 / push si / call 500:43h / add sp,4 /
 ; push 7 / push si / call 500:43h / add sp,4" (22 bytes: INT + 20 NOPs; DSUN.EXE 86DE4h) in the

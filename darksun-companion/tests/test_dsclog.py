@@ -34,6 +34,11 @@ EXE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
 TSR, GAME_DS, SS, CALLER, PARENT, RAND = 0x2000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000
 RING_SEG = 0xC000  # where the tests put the ring (DSCLOG's install puts it past its image)
 IF = 0x200  # the interrupt flag
+# CHOOSE A SPELL as the tests' stand-in (at its stub, DS + 430Ah - 4356h : 5Ch): the call counted at
+# DS:F000h, the spell levels on offer (preserver level 9, through PROBE_PICK_LEVEL) kept from DS:F002h,
+# and a spell (20h on) learnt by member 3, unless DS:F010h is set (EXIT: nothing learnt, not counted)
+PICK_STUB = "5350068b1e00f0b009cd%02x888702f0803e10f0007511ff0600f08cd82d560b8ec026c68726030107585bcb"
+KNOWN_3 = 0x168 + 3 * 0x8A  # member 3's known spells, from DS less 0B56h (DSCLOG's KNOWN_OFF)
 BP, PARENT_BP = 0x1000, 0x1100
 
 
@@ -3523,7 +3528,7 @@ class KitTests(unittest.TestCase):
         self.rules(0)
         stub = (self.DS + 0x430A - 0x4356) * 16 + 0x5C
         # the stub as the window: count the calls, and the spell levels on offer at preserver level 9
-        self.mu.mem_write(stub, bytes.fromhex("53508b1e00f0b009cd%02x888702f0ff0600f0585bcb" % VEC_PICK_LEVEL))
+        self.mu.mem_write(stub, bytes.fromhex(PICK_STUB % VEC_PICK_LEVEL))
         at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
@@ -3535,7 +3540,8 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(CALLER * 16 + past, b"\x90")
         for level, picks in ((0, None), (1, (2, 2)), (2, (2, 2, 2, 2)), (3, (2, 2, 2, 2, 4, 4)), (4, None)):
             with self.subTest(level=level):
-                self.mu.mem_write(self.DS * 16 + 0xF000, bytes(8))
+                self.mu.mem_write(self.DS * 16 + 0xF000, bytes(0x12))
+                self.mu.mem_write((self.DS - 0xB56) * 16 + KNOWN_3, bytes(0x8A))
                 self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", level))
                 for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2, esi=3,
                                         eax=0x1234, ecx=0x5678).items():
@@ -3551,6 +3557,43 @@ class KitTests(unittest.TestCase):
                                                                     r.UC_X86_REG_BP)], [level, 0x5678, 3, BP])
                 else:
                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), level)
+
+    def test_cr_spells_exit(self):
+        """EXIT on CHOOSE A SPELL (the window left with no spell learnt): the picks are over, and the
+        ones left are the game's own starting spells not yet known (PICK_FILL): 1st level Grease (7),
+        Magic Missile (8), Shield (0Bh), Wall of Fog (9); 2nd level Fog Cloud (0Fh), Mirror Image (16h)."""
+        from dscompanion.gamepatch import VEC_CR_SPELLS, VEC_PICK_LEVEL
+        at = self.image.find(bytes((0xB8, VEC_PICK_LEVEL, 0x25, 0xBA)))
+        self.mu.mem_write(VEC_PICK_LEVEL * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
+        self.rules(0)
+        self.mu.mem_write((self.DS + 0x430A - 0x4356) * 16 + 0x5C, bytes.fromhex(PICK_STUB % VEC_PICK_LEVEL))
+        at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
+        if not getattr(self, "hooked", False):
+            self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+            self.hooked = True
+        site = 0x480
+        past = site + 2 + (0x66F83 - 0x66F2F)
+        self.mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_CR_SPELLS, 0x90)))
+        self.mu.mem_write(CALLER * 16 + past, b"\x90")
+        known = (self.DS - 0xB56) * 16 + KNOWN_3
+        for level, before, want in ((1, (), (7, 8)), (3, (), (7, 8, 9, 0x0B, 0x0F, 0x16)),
+                                    (1, (7,), (7, 8, 0x0B)), (2, (8, 9), (7, 8, 9, 0x0B))):
+            with self.subTest(level=level, before=before):
+                self.mu.mem_write(self.DS * 16 + 0xF000, bytes(0x12))
+                self.mu.mem_write(self.DS * 16 + 0xF010, b"\x01")
+                self.mu.mem_write(known, bytes(0x8A))
+                for spell in before:
+                    self.mu.mem_write(known + spell, b"\x01")
+                self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", level))
+                for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2, esi=3,
+                                        eax=0x1234, ecx=0x5678).items():
+                    self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                self.mu.emu_start(CALLER * 16 + site, CALLER * 16 + past, count=50000)
+                self.assertEqual((self.mu.reg_read(r.UC_X86_REG_IP), self.mu.reg_read(r.UC_X86_REG_SP)), (past, 0x7FC))
+                got = bytes(self.mu.mem_read(known, 0x8A))
+                self.assertEqual(tuple(i for i, b in enumerate(got) if b & 0x0F), want)
+                self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_CX, r.UC_X86_REG_SI)], [0x5678, 3])
 
     def test_dual_kit_banned(self):
         """DK_BANNED: a kit for a human's new class (first on its sheet) barred by its other classes
@@ -3658,8 +3701,9 @@ class KitTests(unittest.TestCase):
         self.picker_sheet(11, 0, 9)
         stub = (self.DS + 0x430A - 0x4356) * 16 + 0x5C
         # the stub as the window: count the call, and the preserver level 9's spell levels then
-        self.mu.mem_write(stub, bytes.fromhex("53508b1e00f0b009cd%02x888702f0ff0600f0585bcb" % VEC_PICK_LEVEL))
-        self.mu.mem_write(self.DS * 16 + 0xF000, bytes(8))
+        self.mu.mem_write(stub, bytes.fromhex(PICK_STUB % VEC_PICK_LEVEL))
+        self.mu.mem_write(self.DS * 16 + 0xF000, bytes(0x12))
+        self.mu.mem_write((self.DS - 0xB56) * 16 + KNOWN_3, bytes(0x8A))
         self.run_vector(VEC_DUAL_SPELLS, 22, esi=3, eax=0x1234, ecx=0x5678)
         count, = struct.unpack("<H", self.mu.mem_read(self.DS * 16 + 0xF000, 2))
         self.assertEqual(count, 2)
