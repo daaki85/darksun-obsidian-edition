@@ -749,13 +749,13 @@ click handler (DSUN.EXE 7F226h and 7F236h, `effects_click_low` and
 of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still
 ends, as stopping it there is how a power is dropped.
 
-### Helms and boots
+### Helms
 
-([In the README](README.md#helms-and-boots).)
+([In the README](README.md#helms).)
 
 How: the helper sets the helm types' AC as the game's AC routine reads it
-(`INT F8h`, the Ring +1's place), and adds the move where the game sets a
-round's movement, Move x 10 (`INT FBh`).
+(`INT F8h`, the Ring +1's place). (An earlier rule gave boots a move in a
+fight; it is gone, and the boots' names it changed go back to the game's.)
 
 ### The game's own party
 

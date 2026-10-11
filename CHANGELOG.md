@@ -21,6 +21,12 @@ have the detail.
   inventory screen) in place of one unlabelled SAVE line; THAC0 moves down
   beside PSI, and MOVE (the character's movement) is new, beside HP.
 
+**Removed**
+- **Boots no longer give a move in a fight.** The rule was a leftover from
+  trying out changes to items; its switch is gone, boots are plain "Boots"
+  again (games where they were "Boots (Speed+1)" get the game's names back),
+  and the Characters tab's move shows only a kit's extra (the Stalker's).
+
 **Fixed**
 - **The dice log showed XP for every kill,** the creature's value from its
   character sheet, even where the party gains none (the opening fight in the

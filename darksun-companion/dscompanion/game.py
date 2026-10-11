@@ -102,9 +102,9 @@ BONE_GREAT_AXE_TYPE, OBSIDIAN_GREAT_AXE_TYPE = GAME_TYPES + 22, GAME_TYPES + 23 
 BONE_DAGGER_TYPE = GAME_TYPES + 24  # (a water cleric's dagger: weaponchoice.py)
 ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armour
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
-# The companion's rule changes (DSCLOG's RULES): helms count AC 1, boots add a move in a fight;
-# AD&D's two-weapon penalties; spells saved against with the spell save; no doubled d20
-RULE_HELMS, RULE_BOOTS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 2, 4, 8, 16
+# The companion's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
+# spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
+RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
 RULE_CATS_GRACE = 32  # Cat's Grace in Flaming Sphere's place
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # class levels go up to 10 (the game stops at 9)
@@ -147,7 +147,7 @@ ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 
 ACID, TOUCH_ARMOUR, TOUCH_WEAPON = 178, 186, 187
 ITEM_ATTACKS = {ACID: "acid", TOUCH_ARMOUR: "corroding touch", TOUCH_WEAPON: "corroding touch"}
 # the Options' setting for each, all on unless unticked
-RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("boots_move", RULE_BOOTS), ("two_weapons", RULE_TWO_WEAPONS),
+RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("spell_save", RULE_SPELL_SAVE), ("no_doubled_save", RULE_NO_DOUBLE),
                  ("cats_grace", RULE_CATS_GRACE), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
                  ("thief_table", RULE_THIEF_TABLE), ("half_giant_hands", RULE_HALF_GIANT),

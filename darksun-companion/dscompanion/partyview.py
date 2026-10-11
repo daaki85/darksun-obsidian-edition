@@ -93,7 +93,7 @@ class Card(ttk.Frame):
             label.bind("<Configure>", lambda e: label.configure(wraplength=max(e.width, 120)))
 
     def show(self, name: str, fields: Dict[str, str], status: str, current_ac: Optional[int],
-             game_art: Optional["art.GameArt"], slots=(), thief=(), equipment=(), hits=(), saves=(), boots=False, skills_label: str = "Thief skills now",
+             game_art: Optional["art.GameArt"], slots=(), thief=(), equipment=(), hits=(), saves=(), skills_label: str = "Thief skills now",
              weapons=(), no_spells: bool = False, kit: Optional[str] = None, kit_move: int = 0) -> None:
         """`slots`: [(kind, [(spell level, left, most), ...]), ...], as GameData.spell_slots gives;
         `thief`: [(skill, percent), ...], as GameData.thief_skills gives; `hits` and `saves`,
@@ -127,10 +127,8 @@ class Card(ttk.Frame):
         self.vars["saves"].set(("Saves (d20 needed now): " + ", ".join(
             f"{short} {s.needs}" for short, s in zip(game.SAVE_SHORT, saves))) if len(saves) == 5 else "")
         move = get("Move", "")
-        extra = int(boots) + kit_move
-        why = ", ".join(x for x in ("boots" if boots else "", kit if kit_move and kit else "") if x)
-        fight = number(move) + extra if extra and number(move) is not None else None
-        self.vars["move"].set(f"Move: {move}" + (f" ({fight} in a fight: {why})" if fight else ""))
+        fight = number(move) + kit_move if kit_move and kit and number(move) is not None else None
+        self.vars["move"].set(f"Move: {move}" + (f" ({fight} in a fight: {kit})" if fight else ""))
         self.vars["attacks"].set(attacks_text(get("Attacks/round", ""), hits))
         self.vars["weapons"].set(("Weapons: " + ", ".join(f"{kind} ({skill})" for kind, skill in weapons))
                                  if weapons else "")

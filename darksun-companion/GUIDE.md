@@ -1419,9 +1419,8 @@ materials, the short sword among them.
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
 
-**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**, and
-**boots give one more move** each round of a fight. *Without the mod:* helms
-give no AC and boots no movement.
+**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**.
+*Without the mod:* helms give no AC.
 
 **Protection.** Rings and cloaks of protection give +1 AC and +1 on every save,
 by AD&D's rules: two rings don't add up; a ring gives no AC with magical armour
@@ -1557,7 +1556,7 @@ AD&D's tables:
 |---|---|---|
 | In the game | show each turn's rolls in the game | off |
 | | describe monsters when you Look at them in a fight | on |
-| Rule changes | weapon specialization; kits; AD&D's class tables; the leader's CHA at shops; class restrictions; multiclass hit points; rangers' casting level; preservers' INT; hit dice rolled twice; scores and hit points as rolled; the spell save; DEX instead of a doubled d20; two weapons; levels up to 10; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; Cat's Grace; helms AC 1; boots for movement | all on |
+| Rule changes | weapon specialization; kits; AD&D's class tables; the leader's CHA at shops; class restrictions; multiclass hit points; rangers' casting level; preservers' INT; hit dice rolled twice; scores and hit points as rolled; the spell save; DEX instead of a doubled d20; two weapons; levels up to 10; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; Cat's Grace; helms AC 1 | all on |
 | Thieves | thief skills from AD&D's table; hiding in shadows to backstab; the cloak, boots and belt; picking pockets | on |
 | | ... or P in a conversation (the leader, a thief, picks the pocket of the one talked to) | off |
 | New content | new people, a small quest, new items | on |

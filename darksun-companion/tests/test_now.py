@@ -104,8 +104,8 @@ class RuleTests(unittest.TestCase):
 
     def test_rules_for_dsclog(self):
         log = dag()
-        log.set_rules(dicelog.RULE_HELMS | dicelog.RULE_BOOTS)
-        self.assertEqual(struct.unpack_from("<H", log.guest.mem, log.tsr_hdr + dicelog.TSR_RULES)[0], 3)
+        log.set_rules(dicelog.RULE_HELMS | game.RULE_TWO_WEAPONS)
+        self.assertEqual(struct.unpack_from("<H", log.guest.mem, log.tsr_hdr + dicelog.TSR_RULES)[0], 5)
 
 
 class ThiefTests(unittest.TestCase):
@@ -215,7 +215,7 @@ class SettingsTests(unittest.TestCase):
         log = dag()
         log.use_settings({"helm_ac": False, "new_items": False, "arena_ring": True, "no_doubled_save": False})
         self.assertEqual((log.rules, log.arena_ring, log.monster_info),
-                         (game.RULE_BOOTS | game.RULE_TWO_WEAPONS | game.RULE_SPELL_SAVE | game.RULE_CATS_GRACE
+                         (game.RULE_TWO_WEAPONS | game.RULE_SPELL_SAVE | game.RULE_CATS_GRACE
                           | game.RULE_STEALTH | game.RULE_LEVEL_10 | game.RULE_THIEF_TABLE
                           | game.RULE_HALF_GIANT | game.RULE_PROTECTION | game.RULE_ITEM_SAVES
                           | game.RULE_SPECIALIZE | game.RULE_RESTRICT | game.RULE_MULTI_HP | game.RULE_HP_BEST

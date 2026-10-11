@@ -230,7 +230,7 @@ stats_stamp dw 0                ; +164 the BIOS timer when the companion last wr
                                 ;      than STATS_FRESH, the screens show the game's own numbers
 stats_req  dw 0                 ; +166 counted up when a screen is about to show STATS ...
 stats_reply dw 0                ; +168 ... and set to it by the companion once STATS are up to date
-rules      dw 0                 ; +170 rule changes the companion turns on (RULE_HELMS, RULE_BOOTS)
+rules      dw 0                 ; +170 rule changes the companion turns on (RULE_HELMS, ...)
 pick_seq   dw 0                 ; +172 P pressed in a conversation (PROBE_PICK counts them) ...
 pick_reply dw 0                 ; +174 ... and set to it by the companion once PICK_TEXT is ready
 pick_off   dw pick_text         ; +176 offset of PICK_TEXT: what came of it, NUL-terminated (empty:
@@ -9666,10 +9666,9 @@ ws_type    dw 0
 ws_count   dw 0
 ws_plus    dw 0
 
-; RULES (set by the companion, from its Options): a helm counts AC 1, boots add 1 to movement
-; in a fight
+; RULES (set by the companion, from its Options): a helm counts AC 1, ... (2, once boots'
+; movement in a fight, is unused)
 RULE_HELMS equ 1
-RULE_BOOTS equ 2
 RULE_TWO_WEAPONS equ 4
 RULE_SPELL_SAVE equ 8           ; (the companion writes the game's save table for this one)
 RULE_NO_DOUBLE equ 16
@@ -9690,36 +9689,13 @@ RULE_HI_ROLLED equ 32           ; (RULES_HI) creation's scores and hit points as
 RULE_HI_TABLES equ 8            ; (RULES_HI) AD&D's class tables: XP, priests' THAC0, spell slots (XP_NEED, PROBE_*)
 RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's spell and most spells a level (INT_LEARN)
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
-FOOT      equ 13               ; the item's slot byte while worn on the feet
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
 ; creature's turn in a fight starts: AX = its movement for the turn (its Move x 10), SI the
-; creature. Does the move, with 10 more for boots on its feet when RULE_BOOTS is on.
+; creature. Does the move, with a kit's more (KIT_MOVE: the Stalker's).
 probe_move:
         call kit_move
-        test byte [cs:rules], RULE_BOOTS
-        jz .store
-        push ax
-        push bx
-        push cx
-        push dx
-        push es
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov [cs:r_things], ax
-        mov ax, si
-        mov word [cs:ws_slot], FOOT
-        mov word [cs:ws_type], 0xFFFF
-        call worn_scan
-        pop es
-        pop dx
-        pop cx
-        pop bx
-        pop ax
-        cmp word [cs:ws_count], 0
-        je .store
-        add ax, 10
 .store: mov [es:bx+0x22B], ax
         iret
 

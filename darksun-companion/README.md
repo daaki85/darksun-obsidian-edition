@@ -61,7 +61,7 @@ game.
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
   - [Cat's Grace](#cats-grace)
-  - [Helms and boots](#helms-and-boots)
+  - [Helms](#helms)
   - [The game's own party](#the-games-own-party)
 - [New content](#new-content)
   - [New items](#new-items)
@@ -299,8 +299,8 @@ party pane has two tabs:
     experience, AC (the one the game last used in a fight, with the base AC
     beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
     with Wooden Bow (base 19)`), the saves as the d20 needed now (see
-    [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (13 in
-    a fight: boots)`) and attacks;
+    [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
+    a fight: Stalker)`) and attacks;
   - what they wear and hold, by the game's own slot names ("Right hand: Bone
     Long Sword"; "Carried" for the backpack), with each item's material and
     plus;
@@ -1229,7 +1229,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
 
 ## Rule changes
 
-Twenty-two changes to the game's rules, each with its own box on the Options tab:
+Twenty-one changes to the game's rules, each with its own box on the Options tab:
 under **Rule changes**, but for the two thief rules, which are under
 **Thieves** with [picking pockets](#picking-pockets). All are on by default,
 and they take effect in games started with the dice log: with the Ledger
@@ -1259,8 +1259,7 @@ works](#how-the-game-works) has what the game does without them.
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
 | [Cat's Grace](#cats-grace) | a new spell in Flaming Sphere's place: DEX + 1d6 |
-| [Helms give AC 1](#helms-and-boots) | the game's helms give AC 1 rather than 0 |
-| [Boots give movement in a fight](#helms-and-boots) | whoever wears boots gets 1 more move each round of a fight |
+| [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
 
 ### Weapon specialization
 
@@ -1944,7 +1943,7 @@ boots' item box (right-click it on the inventory screen) says so under its
 name, `Hide +10` or `Move +10` (the skills' short names, as the inventory
 screen's thief rows have them).
 
-![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots (Speed+1)'s "Move +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
+![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Move +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
 
 The [Cloak and Boots of Elvenkind](#new-items) do more (whatever the plain
 gear's switch). Only thieves and rangers can wear them (multiclasses too; for
@@ -2248,7 +2247,7 @@ on it opens; untick it and Flaming Sphere is back.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#cats-grace).
 
-### Helms and boots
+### Helms
 
 The game's helms count as armour but give AC 0. With **Helms give AC 1**
 ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
@@ -2256,22 +2255,13 @@ Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
 the game's tables). It shows on the View Character and inventory screens like
 any armour.
 
-With **Boots give movement in a fight** ticked, whoever wears boots
-(Leather Boots, Serpent Boots: anything on the feet) gets 1 more move each
-round of a fight (13 rather than 12, say; Haste and Slow still double and
-halve it). The game sets each round's movement when it rolls initiative, so
-boots put on mid-fight count from the next round. The Characters tab shows it:
-`Move: 12 (13 in a fight: boots)`.
+The game has no descriptions of items, only their names, so while the rule is
+on the Ledger renames the plain helm **Helm (AC 1)**. The named ones
+(Dapartea's Helm, Helm/Contempltn, Helm of Might) keep their names, which
+would be too long for the game's Look box with the note. With the rule off,
+or without the Ledger, the names are the game's own.
 
-The game has no descriptions of items, only their names, so while the helms'
-or boots' rule is on the Ledger renames the plain ones: **Helm (AC 1)** and
-**Boots (Speed+1)** ("Speed", as `Move +10` in a boots' item box is moving
-silently). The named ones (Dapartea's Helm, Helm/Contempltn, Helm of Might,
-Serpent Boots) keep their names, which would be too long for the game's Look
-box with the note. With the rule off, or without the Ledger, the names are the
-game's own.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms-and-boots).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 
 ### The game's own party
 
@@ -2332,7 +2322,7 @@ Ledger adds them:
 | ![](docs/items/metal-great-axe.png) | **Metal Great Axe** | sold by the Weapon Merchant | the game's great axe, in metal |
 | ![](docs/items/metal-pick.png) | **Metal Pick** | sold by the Weapon Merchant | the game's pick, in metal |
 | ![](docs/items/metal-polearm.png) | **Metal Polearm** | carried by one of the six **Castle Guards** of the Upper Castle; an earth cleric's starting polearm | the game's polearm, in metal |
-| ![](docs/items/bone-scale-arm-armor.png) ![](docs/items/bone-scale-leg-armor.png) ![](docs/items/bone-helm.png) | **Bone Scale Arm Armor**, **Leg Armor** and **Bone Helm** | in the slave pens' chest with the Bone Scale Chest Armor and Arrows +3 (the game has the set but places only the chest piece) | the set; the helm AC 1 with [Helms give AC 1](#helms-and-boots), worn by those who can wear the armour (not thieves) |
+| ![](docs/items/bone-scale-arm-armor.png) ![](docs/items/bone-scale-leg-armor.png) ![](docs/items/bone-helm.png) | **Bone Scale Arm Armor**, **Leg Armor** and **Bone Helm** | in the slave pens' chest with the Bone Scale Chest Armor and Arrows +3 (the game has the set but places only the chest piece) | the set; the helm AC 1 with [Helms give AC 1](#helms), worn by those who can wear the armour (not thieves) |
 | ![](docs/items/leather-helm.png) | **Helm** | in **Kurzak**'s pack, in the slave pens | the game's leather helm |
 | ![](docs/items/thieves-tools.png) | **Thieves' Tools** | every thief's backpack; sold by **Kel** in his caravan (two sets, 30 each) | [picking pockets](#picking-pockets) |
 
@@ -2389,7 +2379,7 @@ each, Chest 36,000 and Helm 30,000, the Ashen Robe 6,000 and the Veiled Robe
 
 **The Warden's Plate** is plate mail +1 in four pieces: the chest 4 better
 than no armour (its AC 3, +1), the arms and legs 3 each (AC 2, +1), the helm 2
-(a helm's AC 1 with [helms giving AC 1](#helms-and-boots), +1): 12 better as a
+(a helm's AC 1 with [helms giving AC 1](#helms), +1): 12 better as a
 set, so a wearer with no other help goes from AC 10 to AC −2. (With that rule
 off the helm gives only its +1: 11 better, AC −1.) The game adds up its pieces' AC this way for all armour, so a
 full set does better than AD&D's plate mail +1 (one suit, AC 2: 8 better). It

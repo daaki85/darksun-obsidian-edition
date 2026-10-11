@@ -383,8 +383,7 @@ class Viewer:
                 ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
                                      "weapon in the other; two heavy weapons still can't be held)"),
                 ("cats_grace", "Cat's Grace in Flaming Sphere's place (DEX + 1d6, at most 24, like Strength)"),
-                ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
-                ("boots_move", "Boots give movement in a fight (1 more move each round)"))):
+                ("helm_ac", "Helms give AC 1 (the game's helms give none)"))):
             self.rule_vars[key] = tk.BooleanVar(value=bool(settings.get(key, True)))
             parent = thieves if key in thief_rules else rules
             ttk.Checkbutton(parent, text=text, variable=self.rule_vars[key],
@@ -1220,7 +1219,6 @@ class Viewer:
                 saves = gd.saves_now(index) if known and index < game.PARTY_SIZE else []
             except (struct.error, IndexError, ValueError):
                 hits, saves = [], []
-            boots = bool(known and self.rule_vars["boots_move"].get() and gd.wears_boots(index))
             try:
                 weapons = gd.specializations(index) if known and index < game.PARTY_SIZE else []
                 no_spells = bool(known and index < game.PARTY_SIZE and gd.no_spells(index))
@@ -1228,7 +1226,7 @@ class Viewer:
                 kit_move = sum(kits.move(k) for k in gd.kit_ids(index)) if kit else 0
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move = [], False, None, 0
-            card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves, boots,
+            card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,
                       skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move)
 
     def _hex_base(self) -> Optional[int]:
