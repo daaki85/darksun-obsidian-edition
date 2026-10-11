@@ -82,6 +82,7 @@ VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
+PK_HOVER = 7
 
 
 SCRIPT_BUFFER = 0x2E00  # the scripts' buffer, made bigger (the game's: 10000 bytes)
@@ -346,6 +347,9 @@ PATCHES = (
     Patch("pk_title", 0x860C3, bytes.fromhex("1e682630"), _interrupt(VEC_PK_TITLE, 4)),
     Patch("pk_fill", 0x8610F, bytes.fromhex("33ff8bf7"), _interrupt(VEC_PK_FILL, 4)),
     Patch("pk_click", 0x862D4, bytes.fromhex("8b4608"), _interrupt(VEC_PK_CLICK, 3)),
+    # the pop-up's event loop, each time round: the weapon window's slot the pointer is on named
+    # in its lines
+    Patch("pk_hover", 0x85F44, bytes.fromhex("0bc07515"), bytes((0xCD, VEC_CR_SPELLS, PK_HOVER, 0x90))),
     # the weapon kinds under the selected character's effects on the Effects screen
     Patch("ef_rows", 0x7F13E, bytes.fromhex("5f5e"), _interrupt(VEC_EF_ROWS, 2)),
     Patch("hp_best", 0x87319, bytes.fromhex("8bc8"), _interrupt(VEC_HP_BEST, 2)),

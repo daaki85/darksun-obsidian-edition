@@ -1358,11 +1358,14 @@ made once: a long sword handed to the character later stays one.
 **At a level gained.** A warrior with fewer weapon specs than it is due (a gladiator
 reaching 6th or 9th, or any warrior from a game begun before the rule) picks
 the rest the way a psionicist picks a new power: in the game's own pop-up,
-the weapon specs its classes allow in light letters, those it can't (or has) greyed,
-the picks left beside **EXIT** (which asks, as for powers, whether to leave
+made bigger, a picture of each weapon spec on a slot, six to a row, those its
+classes can't use (or it has) greyed. The pointer on a slot names it under
+them (**SPECIALIZE IN** / **POLEARM**, as CHOOSE A SPELL names a spell), and
+lights the slot if it can be picked; off the slots the title comes back. The
+picks left are beside **EXIT** (which asks, as for powers, whether to leave
 with picks unmade: they're offered again at the next level).
 
-![The level-up window: PICK A WEAPON SPECIALTY, the long sword, dagger, short sword, mace, axe and chatkcha open to a fighter/fire cleric (obsidian ones)](docs/weapon-picker.png)
+![The level-up window: a slot with a picture for each weapon spec, the pointer on the dagger's, lit, and SPECIALIZE IN / DAGGER under them; the club, great axe, pick, quarterstaff and the rest greyed for a fighter/fire cleric](docs/weapon-picker.png)
 
 **Where it shows.** The **Effects** screen lists the selected character's
 weapon specs under its effects ("SPECIALIZED IN", "MASTER OF", "GRAND MASTER OF",

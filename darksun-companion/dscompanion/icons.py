@@ -487,6 +487,19 @@ def cat_icon(strength: Rows) -> Rows:
     return out
 
 
+def objects_beside(path: str) -> Optional[gff.Chunks]:
+    """The game's SEGOBJEX.GFF in PATH's folder, with the companion's own items' objects and
+    icons (new_chunks), for their pictures (None if it can't be read)."""
+    folder = os.path.dirname(path) or "."
+    try:
+        name = next(n for n in os.listdir(folder) if n.upper() == OBJECTS_FILE)
+        with open(os.path.join(folder, name), "rb") as f:
+            chunks = gff.read_gff(f.read())
+        return {**chunks, **new_chunks(chunks)}
+    except (OSError, StopIteration, gff.GffError, KeyError, ValueError, IndexError, struct.error):
+        return None
+
+
 def write_resources(source: str, dest: str) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with Cat's Grace's icon and the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py), to DEST."""
@@ -501,7 +514,7 @@ def write_resources(source: str, dest: str) -> None:
         pass  # (no buttons: PgUp and PgDn still change the page)
     from . import weaponpages
     try:
-        added.update(weaponpages.chunks(chunks))
+        added.update(weaponpages.chunks(chunks, objects_beside(source)))
     except (KeyError, ValueError, IndexError, StopIteration, struct.error):
         pass  # (no weapon pages: the panel as the game has it, the choice through the Ledger)
     from . import kitpages

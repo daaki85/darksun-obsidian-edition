@@ -961,7 +961,9 @@ The kits that change spell slots, by the level of the kit's class (spells of
 ## Weapon specialization and attacks
 
 Warriors train in kinds of weapon. Choose them on the creation panel's
-**WEAPON SPEC** pages; picks due later come in a window at the level up.
+**WEAPON SPEC** pages; picks due later come in a window at the level up, a
+picture of each kind of weapon (point at one for its name; those you can't
+pick are greyed).
 
 | Who | Chooses | With a chosen kind |
 |---|---|---|

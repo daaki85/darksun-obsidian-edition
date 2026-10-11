@@ -10,6 +10,13 @@ have the detail.
 
 ## Pull request #39 (in progress)
 
+**Changed**
+- **The level-up weapon window shows the weapons.** Picking a weapon spec at a
+  level up (or on becoming a warrior by DUAL), the window is bigger and has a
+  slot with each kind's inventory picture, six to a row, in place of the
+  names; kinds the character can't pick are greyed. Pointing at a slot names
+  it under them (SPECIALIZE IN / DAGGER), as CHOOSE A SPELL names a spell.
+
 **Fixed**
 - **The dice log showed XP for every kill,** the creature's value from its
   character sheet, even where the party gains none (the opening fight in the

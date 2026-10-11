@@ -4449,7 +4449,7 @@ lv_ask:
 ; The PROBE_PK_* probes, in the psionicists' pop-up (DSUN.EXE 85EECh, its window routine 85F6Eh,
 ; the window's drawing 86107h and clicks 862B6h); outside weapon mode each does what it replaced.
 ; PROBE_PK_COUNT: "mov dx,ax / or dx,dx" (85F01h; 4 bytes), the powers it has to pick: some.
-; PROBE_PK_WIN: "push 445Dh" (85FF4h; 3 bytes), the window: the weapon window.
+; PROBE_PK_WIN: "push 445Dh" (85FF4h; 3 bytes), the window: the weapon window, centred.
 ; PROBE_PK_LEFT: "mov al,[4AECh]" (8602Dh; 3 bytes), the number shown: the kinds left to pick.
 ; PROBE_PK_TITLE: "push ds / push 3026h" (860C3h; 4 bytes), "PICK A PSIONIC POWER,": the weapons',
 ;   and its colours near-white on black (the next pushes' bytes; the game's own put back otherwise).
@@ -4469,6 +4469,14 @@ PK_LABEL_CALL equ 0x86054 - 0x86111 ;   PROBE_PK_FILL's INT; and 140:7FAh's)
 PK_WINDOW     equ 0x11A4            ; DS: the window up (far)
 PK_TITLE_SECOND equ 0x860CB - 0x860C5 ; ("push 0D000FEh" and "push 0D3009Fh", after PROBE_PK_TITLE's
 PK_TITLE_INK  equ 0x860D1 - 0x860C5 ;   INT: their colour bytes, less the address after it)
+PK_TITLE_WIDTH equ 0x860CF - 0x860C5 ; ("push 0D3009Fh"'s width, 9Fh, the lines centred in it, and
+PK_TITLE_Y    equ 0x860D4 - 0x860C5 ;   "push 46h": the lines' place)
+PK_GAME_WIDTH equ 0x9F
+PK_GAME_Y     equ 0x46
+PK_PICK_WIDTH equ 214               ; (weaponpages.PICK_WIDTH, PICK_TITLE_Y: the lines under the slots)
+PK_PICK_Y     equ 7 + 3 * 34 + 3
+PK_PICK_X     equ (320 - 214) / 2   ; (the window's place, "push 2B0050h" before PROBE_PK_WIN: centred,
+PK_PICK_TOP   equ (200 - 156) / 2   ;   weaponpages.PICK_HEIGHT 156)
 PK_GAME_SECOND equ 0xD0
 PK_GAME_INK   equ 0xD3              ; (dark grey)
 PK_PICK_SECOND equ 0xD0             ; (as the game has it)
@@ -4506,6 +4514,8 @@ probe_pk_win:
         cmp byte [cs:lv_mode], 0
         je .out
         mov word [bp + 8], PICK_WIN
+        mov word [bp + 10], PK_PICK_X   ; (and its place, centred: the game's, 50h and 2Bh, centre
+        mov word [bp + 12], PK_PICK_TOP ;   the psionicists' 159 by 113)
 .out:   pop ax
         pop bp
         iret
@@ -4535,10 +4545,14 @@ probe_pk_title:
         lds bx, [bp + 2]        ; the line's colours, in the pushes that come next: the game's ...
         mov byte [bx + PK_TITLE_SECOND], PK_GAME_SECOND
         mov byte [bx + PK_TITLE_INK], PK_GAME_INK
+        mov byte [bx + PK_TITLE_WIDTH], PK_GAME_WIDTH
+        mov byte [bx + PK_TITLE_Y], PK_GAME_Y
         cmp byte [cs:lv_mode], 0
         je .out
-        mov byte [bx + PK_TITLE_SECOND], PK_PICK_SECOND  ; ... or near-white on black, as the rows
-        mov byte [bx + PK_TITLE_INK], PK_PICK_INK
+        mov byte [bx + PK_TITLE_SECOND], PK_PICK_SECOND  ; ... or near-white on black, under the
+        mov byte [bx + PK_TITLE_INK], PK_PICK_INK         ;   slots, centred in the wider window
+        mov byte [bx + PK_TITLE_WIDTH], PK_PICK_WIDTH
+        mov byte [bx + PK_TITLE_Y], PK_PICK_Y
         mov [bp + 10], cs
         mov word [bp + 8], lv_title
 .out:   pop bx
@@ -4565,6 +4579,7 @@ probe_pk_fill:
         pop ds
         add word [bp + 2], PK_FILL_DONE
         pop bp
+        mov byte [cs:lv_hovered], 0xFF ; (the title, as the window is drawn)
         call pk_ops
 .out:   iret
 
@@ -4662,6 +4677,9 @@ lv_spell  dd 0                  ; the preservers' CHOOSE A SPELL (620:5Ch, as fi
 lv_class  db 0                  ; 0Bh while PROBE_LV_PICK has a preserver gone up a level
 lv_op_call dd 0                 ; 140:71Ah, a button's state (0 in use, 1 out of use)
 lv_label_call dd 0              ; 140:7FAh, a button's text
+lv_lines_call dd 0              ; 85CC9h, the window's two lines (as PK_HOVER finds it)
+lv_hovered db 0FFh              ; the slot PK_HOVER last named (0FFh none: the title)
+lv_hover  db 'SPECIALIZE IN', 0
 lv_mode   db 0                  ; 1 while LV_ASK has the pop-up up for weapons
 lv_left   db 0
 lv_have   db 0
@@ -6532,6 +6550,7 @@ RL_ROLL  equ 3                  ; 65944h, 65979h, 659AEh: the die's three loops 
 RL_SUM   equ 4                  ; 65185h, in the scores' redraw (65168h)
 RL_CON   equ 5                  ; 63946h, in the score click's CON case (63915h)
 RL_TRY   equ 6                  ; 6498Bh, in an ability's roll (6490Dh): each 4d4, whatever the rule
+PK_HOVER equ 7                  ; 85F44h, the weapon window's event loop: the slot under the pointer
 RL_HP_MAX equ 0x4996            ; DS: the most hit points the classes could roll (655D6h's)
 RL_BOX   equ 0x0F62             ; DS: the screen's boxes (x1, y1, x2, y2), the scores' first
 RL_LABEL_X equ 23               ; "SUM:" this far left of the scores' x
@@ -6549,6 +6568,105 @@ rl_sites:
         je rl_con
         cmp byte [cs:rl_site], RL_TRY
         je rl_try
+        cmp byte [cs:rl_site], PK_HOVER
+        je pk_hover
+        iret
+
+; PK_HOVER: "or ax,ax / jnz 85F5Dh" (85F44h; 4 bytes: the site's number and a NOP after the INT),
+; in the pop-up's event loop (85F2Ch), each time round: AX 0 when 110:965h has an event to deal
+; with. In weapon mode, the slot the pointer is on (INT 33h; the window where PROBE_PK_WIN puts it,
+; the slots where weaponpages has them) named in the window's two lines, "SPECIALIZE IN" and the
+; kind, as the powers' handler names a power (864B9h, with the routine that rubs out the old
+; lines, 85CC9h), and the title put back once it is on none; drawn only when that changes. (A slot
+; is a button, and a button the pointer is on takes the pointer: the powers' cells' handler never
+; hears of it.)
+PK_HOVER_PAST equ 0x85F47           ; (the address after the site's number)
+PK_LINES      equ 0x85CC9 - PK_HOVER_PAST
+PK_NO_EVENT   equ 0x85F5D - PK_HOVER_PAST
+PK_SEL_SEG    equ 0x85F75 - PK_HOVER_PAST ; ("mov ax,348h" at 85F74h: the character's number's
+PK_SELECTED   equ 0x25B             ;   segment, as fixed up; its name at [1665h] + 3Ah each, +28h)
+PK_NAMES      equ 0x1665
+PK_SLOTS_X    equ PK_PICK_X + (214 - 6 * 34 + 2) / 2 ; (the first slot's corner on the screen:
+PK_SLOTS_Y    equ PK_PICK_TOP + 7                    ;   weaponpages' left and PICK_TOP)
+PK_PITCH      equ 34
+PK_SLOT       equ 32
+pk_hover:
+        pushad
+        push es
+        mov di, sp
+        push word [ss:di + 38]  ; (the loop's own flags)
+        popf
+        mov bx, [ss:di + 30]    ; (AX as it was)
+        or bx, bx
+        jz .flags
+        add word [ss:di + 34], PK_NO_EVENT ; (no event: on round the loop, as the JNZ)
+.flags: cmp byte [cs:lv_mode], 0
+        je .out
+        mov ax, 3
+        int 0x33                ; CX, DX: the pointer, on the screen
+        mov al, 0xFF
+        sub cx, PK_SLOTS_X
+        jb .got
+        sub dx, PK_SLOTS_Y
+        jb .got
+        xchg ax, cx             ; (AX the x, CL 0FFh)
+        mov bl, PK_PITCH
+        div bl
+        cmp ah, PK_SLOT
+        jae .none
+        cmp al, 6
+        jae .none
+        mov ch, al              ; the column
+        mov ax, dx
+        div bl
+        cmp ah, PK_SLOT
+        jae .none
+        mov ah, 6
+        mul ah
+        add al, ch
+        cmp ax, 16
+        jb .got
+.none:  mov al, 0xFF
+.got:   cmp al, [cs:lv_hovered]
+        je .out
+        mov [cs:lv_hovered], al
+        les bx, [ss:di + 34]    ; (the overlay's code, at the INT's way back)
+        cmp al, 0xFF
+        jne .slot
+        mov ax, [es:bx + PK_SEL_SEG]
+        push es
+        mov es, ax
+        mov ax, [es:PK_SELECTED]
+        pop es
+        imul ax, ax, 0x3A
+        add ax, [PK_NAMES]
+        add ax, 0x28
+        push word [PK_NAMES + 2]
+        push ax
+        push cs
+        push word lv_title
+        jmp .draw
+.slot:  push cs
+        xor ah, ah
+        mov si, ax
+        add si, si
+        mov ax, [cs:ef_kinds + si]
+        inc ax                  ; (the kinds' names begin with two spaces)
+        inc ax
+        push ax
+        push cs
+        push word lv_hover
+.draw:  push dword (PK_PICK_SECOND << 16) | 0xFE
+        push dword (PK_PICK_INK << 16) | PK_PICK_WIDTH
+        push word PK_PICK_Y
+        push dword [PK_WINDOW]
+        lea ax, [bx + PK_LINES]
+        mov [cs:lv_lines_call], ax
+        mov [cs:lv_lines_call + 2], es
+        call far [cs:lv_lines_call]
+        add sp, 0x16
+.out:   pop es
+        popad
         iret
 
 ; CR_TOTAL: DX the six scores of the creature being made (DS:[11A0h], from +22h) added up.

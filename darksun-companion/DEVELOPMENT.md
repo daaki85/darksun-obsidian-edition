@@ -367,6 +367,28 @@ the creation pages (`INT C8h` to `INT C3h`, windows 3014 to 3019 in the
 Ledger's copy of `RESOURCE.GFF`), calls the game's psionic pop-up in weapon
 mode at a level gained (`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up,
 window 3021), and prints the Effects screen's lines (`INT BBh`).
+
+The pop-up in weapon mode is the psionicists' window (17501) made bigger:
+window 3021 is 214 by 156 (its marble, BMP 3022, the psionicists' 17001 carried
+on to that size), with a slot for each kind, six to a row: a button 0x860 +
+kind whose picture (ICON, same number) is the game's inventory picture of a
+weapon of that kind (`weaponpages.PICTURES`, objects in `SEGOBJEX.GFF`; the
+polearm's made smaller) on a slot, in three frames as the game uses them: as
+it is, lit (the pointer on a button in use), and out of use (the weapon a grey
+shape). The game puts the window where it would centre the psionicists'
+(`push 2B0050h` before `PROBE_PK_WIN`), so `PROBE_PK_WIN` gives it the place
+that centres 214 by 156; `PROBE_PK_TITLE` puts the two lines under the slots,
+centred in the wider window (the routine's width and y, pushed as bytes after
+it). Naming the slot under the pointer: a button in use takes the pointer
+itself (its lit frame), so no cell handler of the window (530:43h, as the
+powers' cells have) ever hears of it; instead `PK_HOVER` (a site of `INT 98h`,
+new: `or ax,ax / jnz 85F5Dh`, 4 bytes at 85F44h, in the pop-up's event loop
+85F2Ch, the jump done by the probe) reads the pointer each time round
+(`INT 33h` function 3), finds the slot from the window's place and the slots'
+(`PK_SLOTS_X`, `PK_PITCH`; `test_picker_matches_dsclog` keeps them
+weaponpages'), and when it changes draws **SPECIALIZE IN** and the kind's name
+with the routine the powers' handler names a power with (85CC9h, which rubs
+out the lines it drew before), or the title again off the slots.
 A missile weapon's attacks a round are its item type's (+0Bh, in halves: a
 bow 4, the rest 2), not the character's (sheet +2Ah) as in melee; `INT D1h`
 raises them to a specialist's (`MISSILE_RATE`, by the fighter, gladiator or
