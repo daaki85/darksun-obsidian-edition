@@ -514,7 +514,7 @@ others.
 |---|---|---|---|
 | **Stalker** | +2 movement in a fight; +15 to hide in shadows and move silently, and hiding not halved indoors | leather armour or none | the ranger's gear |
 | **Seeker** | priest spells from 6th level, cast at its level less 5 | its sphere's weapons only, as a cleric's (but it keeps the bow) | the ranger's gear, its weapon in a material its sphere allows |
-| **Justifier** | its expertise becomes specialization (+1 to hit, +2 damage) | its only spell slot is one 1st-level slot, from 10th level | the ranger's gear |
+| **Justifier** | its expertise becomes specialization (+1 to hit, +2 damage); no penalty for two weapons in any armour | its only spell slot is one 1st-level slot, from 10th level | the ranger's gear |
 
 A Seeker or Justifier can't later become a cleric or druid.
 
@@ -1044,7 +1044,7 @@ With a melee weapon in each hand:
   penalty to 0 but never make it a bonus: DEX 17 is 0 and −2, DEX 21 is 0 and 0,
   DEX 3 is −5 and −7.
 - **Rangers and Twin-blades** have no penalty while all their armour is light (leather, or
-  none).
+  none); a Justifier has none in any armour.
 - **The off hand attacks once a round.** Extra attacks are the main hand's: a
   warrior at 3/2 attacks 3/2 + 1 (one round 1 + 1, the next 2 + 1).
 

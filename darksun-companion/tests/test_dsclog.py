@@ -2007,6 +2007,21 @@ class RuleTests(RingTests):
         self.assertEqual([zf(0x200, 0), zf(0x200, 4), zf(0x40, 4), zf(0, 0)], [False, False, True, True])
         self.assertEqual([zf(0x200, 4, 4), zf(0x200, 0, 4), zf(0x200, 4, 5), zf(0x200, 4, 0x40)],
                          [True, False, False, False])
+        # a Justifier (kits on; the ranger's second kit) in metal: none still, with kits off the rule's
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        self.mu.mem_write(sheet * 16 + 0x21, bytes((13, 0, 0)))
+        self.mu.mem_write(sheet * 16 + 0x18, bytes((2,)))
+        self.mu.mem_write(sheet * 16 + 0x43, bytes((2,)))
+        self.mu.mem_write(hdr + 270, struct.pack("<H", 1))  # (RULES_HI: kits)
+        try:
+            self.assertEqual([zf(0x200, 4, 4), zf(0x200, 4, 5)], [False, False])
+            self.mu.mem_write(sheet * 16 + 0x43, bytes((3,)))  # a Seeker: light armour only
+            self.assertTrue(zf(0x200, 4, 4))
+            self.mu.mem_write(sheet * 16 + 0x43, bytes((2,)))
+            self.mu.mem_write(hdr + 270, struct.pack("<H", 0))
+            self.assertTrue(zf(0x200, 4, 4))
+        finally:
+            self.mu.mem_write(hdr + 270, struct.pack("<H", 0))
 
     def test_one_weapon_no_penalty(self):
         """A shield in the other hand, a bow in the missile slot, or the weapon not in a hand:

@@ -1419,7 +1419,7 @@ and costs something.
 | **Crusader** (cleric) | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level) | one fewer spell slot at each spell level |
 | **Elementalist** (cleric) | a second sphere: its spells (cast at its cleric level) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) |
 | **Seeker** (ranger) | priest spell slots from 6th level: one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th (and on), in place of a ranger's, cast at the ranger level less 5 (a ranger's: less 7) | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow |
-| **Justifier** (ranger) | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen) | one 1st-level priest spell slot from 10th level, in place of a ranger's slots, cast at the ranger level less 9 |
+| **Justifier** (ranger) | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | one 1st-level priest spell slot from 10th level, in place of a ranger's slots, cast at the ranger level less 9 |
 | **Battle Mage** (preserver) | a warrior's THAC0; a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at 3/2 attacks a round (2 from 7th level) | one fewer spell slot at each spell level; nothing in the off hand |
 | **Mind Warrior** (psionicist) | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level); a d8 hit die | a tenth fewer PSP (rounded down) |
 | **Mind Bender** (psionicist) | telepathy powers (the defence modes too) cost 2 PSP less to use | psychokinesis powers cost 2 PSP more |
@@ -1844,7 +1844,8 @@ can lessen the penalty to 0 but never make it a bonus, and low DEX
 makes it worse: DEX 17 is 0 and -2, DEX 21 0 and 0, DEX 3 -5 and -7. Rangers
 (their kits too) and [Twin-blades](#kits) have no penalty in light armour:
 every armour piece worn, a helm too, of leather or of no material. In other
-armour they take it as anyone does. It takes a melee weapon in each hand: one
+armour they take it as anyone does, but a Justifier, who has none in any
+armour. It takes a melee weapon in each hand: one
 weapon, a two-handed weapon, a weapon and a shield, or a weapon and a bow or
 sling (the missile slot) have no penalty. The game's own rule, a small bonus
 at DEX 5 or less, is gone. The dice log names it (`-4 two weapons, off hand at

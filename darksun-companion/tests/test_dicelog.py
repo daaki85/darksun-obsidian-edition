@@ -264,6 +264,13 @@ class AttackTests(unittest.TestCase):
                 m[typ + 8] = material
                 lines = log.describe(self.attack(18, thac0, 4, 5, 9, after_f1=10, hit_bonus=bonus, m16=2))
                 self.assertEqual(lines[1], want)
+        # a Justifier (the ranger's second kit, kits on) in metal: none still
+        m[typ + 8] = 4
+        log.set_rules(game.RULE_TWO_WEAPONS | game.RULE_KITS)
+        m[SHEETS + game.SHEET_CLASSES], m[SHEETS + 0x43] = 13, 2
+        lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
+        self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
+        self.assertEqual(log.game.two_weapons(0, 10), ("two weapons, off hand (Justifier)", 0))
 
     def test_monster_natural_attack(self):
         log = make_game()

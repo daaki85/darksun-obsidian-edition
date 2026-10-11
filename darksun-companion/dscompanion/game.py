@@ -1506,7 +1506,7 @@ class GameData:
         melee), and what it's called. The game's: its DEX table for initiative, sign flipped and
         never below 0 (a bonus at DEX 5 or less). With RULE_TWO_WEAPONS, AD&D's: -2 main hand,
         -4 off hand, plus the DEX reaction adjustment, never above 0. Rangers: none, but with the
-        rule only in light armour (DSCLOG's RG_TWO); a Twin-blade (kits.py) none with the rule, in
+        rule only in light armour (DSCLOG's RG_TWO), a Justifier in any; a Twin-blade (kits.py) none with the rule, in
         light armour too."""
         dex = self.creature(creature)[CREATURE_ABILITIES + 1]
         sheet = self.sheet(creature)
@@ -1514,10 +1514,12 @@ class GameData:
         if not self.rules & RULE_TWO_WEAPONS:
             return f"two weapons at DEX {dex}", 0 if ranger else max(0, -self.dex_initiative(dex))
         hand = "off hand" if slot == WEAPON_HANDS[1] else "main hand"
+        from . import kits
+        if ranger and kits.JUSTIFIER in self.kit_ids(creature):
+            return f"two weapons, {hand} (Justifier)", 0  # (in any armour)
         light = not self.heavy_armour_worn(creature)
         if ranger and light:
             return f"two weapons, {hand} (ranger)", 0
-        from . import kits
         if light and kits.TWIN_BLADE in self.kit_ids(creature):
             return f"two weapons, {hand} (Twin-blade)", 0
         if slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):

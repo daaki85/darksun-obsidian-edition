@@ -6630,8 +6630,9 @@ rl_sites:
 ; RG_TWO: "test word es:[bx+12h],200h" (5961Fh; 6 bytes: the site's number and 3 NOPs after the
 ; INT), where the routine giving an attack's to-hit adjustment for two weapons ready (595ECh)
 ; asks whether the attacker (sheet ES:BX, creature [BP-2]) is a ranger, who has none: its "jnz"
-; after it kept. With RULE_TWO_WEAPONS a ranger (its kits too) has none only in light armour
-; (HEAVY_WORN): in other armour ZF is set, as for anyone else, and PROBE_TWO gives AD&D's.
+; after it kept. With RULE_TWO_WEAPONS a ranger (its kits too, but a Justifier) has none only in
+; light armour (HEAVY_WORN): in other armour ZF is set, as for anyone else, and PROBE_TWO gives
+; AD&D's. A Justifier has none in any armour.
 rg_two:
         pushad
         push es
@@ -6641,6 +6642,9 @@ rg_two:
         jz .plain
         test byte [cs:rules], RULE_TWO_WEAPONS
         jz .out
+        call kit_is_b           ; (a Justifier: none in any armour; kits.py)
+        db KIT_JUSTIFIER
+        je .out
         mov dx, [bp - 2]
         call heavy_worn
         jnc .out
