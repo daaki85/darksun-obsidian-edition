@@ -237,6 +237,34 @@ class AttackTests(unittest.TestCase):
         lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
         self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
 
+    def test_two_weapons_ranger_light_armour(self):
+        """With the rule a ranger has no penalty only in light armour (DSCLOG's RG_TWO): a metal
+        chest piece (item 7, type 12) brings AD&D's; leather takes it away again."""
+        log = make_game()
+        log.set_rules(game.RULE_TWO_WEAPONS)
+        self.addCleanup(setattr, game, "RULES_IN_FORCE", 0)
+        m = log.guest.mem
+        dex = CREATURES + game.CREATURE_ABILITIES + 1
+        m[dex], m[DS * 16 + game.DEX_INITIATIVE + 17] = 17, 2
+        two_hands(m)
+        struct.pack_into("<H", m, SHEETS + game.SHEET_FLAGS, game.SHEET_FLAG_RANGER)
+        struct.pack_into("<h", m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_NEXT, 7)
+        struct.pack_into("<H", m, ITEMS + 7 * game.ITEM_SIZE + game.ITEM_TYPE, 12)
+        struct.pack_into("<H", m, ITEMS + 7 * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
+        m[ITEMS + 7 * game.ITEM_SIZE + game.ITEM_SLOT] = game.EQUIP_SLOTS.index("chest")
+        typ = ITEM_TYPES + 12 * game.ITEM_TYPE_SIZE
+        m[typ + 0x0F], m[typ], m[typ + 9] = 0x80, 0, game.EQUIP_SLOTS.index("chest")
+        m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = 10  # the left hand
+        m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 3
+        for material, thac0, bonus, want in (
+                (4, 11, -1, "    THAC0 16, +6 STR, +1 weapon, -2 two weapons, off hand at DEX 17 = 11"),
+                (5, 9, 1, "    THAC0 16, +6 STR, +1 weapon = 9"),
+                (0x40, 9, 1, "    THAC0 16, +6 STR, +1 weapon = 9")):
+            with self.subTest(material=material):
+                m[typ + 8] = material
+                lines = log.describe(self.attack(18, thac0, 4, 5, 9, after_f1=10, hit_bonus=bonus, m16=2))
+                self.assertEqual(lines[1], want)
+
     def test_monster_natural_attack(self):
         log = make_game()
         lines = log.describe(self.attack(20, 11, 1, -1, -1, after_f1=11, hit_bonus=0, attacker=STALKER,

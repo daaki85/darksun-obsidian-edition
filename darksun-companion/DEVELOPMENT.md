@@ -651,6 +651,16 @@ Character's `[BP-0Ah]`) no more than 2 halves, after every other change to
 the rate (specialization, the kits), so the extra attacks stay with the main
 hand. `GameData.weapon_hits` gives the party view the same.
 
+Rangers and Twin-blades in light armour: the game asks whether the attacker
+is a ranger (the sheet's `+12h`, 200h) before it calls for the DEX
+adjustment, and gives a ranger none (DSUN.EXE 5961Fh). With the rule that
+test is `RG_TWO` (a site of `INT 98h`): a ranger wearing armour that isn't
+light (`HEAVY_WORN`: `ARMOUR_WORN` with each piece's material weighed, as
+`KIT_ALLOWS` does: leather, or of no material) reads as anyone else, and
+`PROBE_TWO` gives AD&D's. A Twin-blade is passed over in `PROBE_TWO` only in
+light armour. `GameData.two_weapons` (`heavy_armour_worn`) says the same in
+the log and the party view.
+
 ### Thief skills from AD&D's table
 
 ([In the README](README.md#thief-skills-from-adds-table).)
@@ -763,18 +773,20 @@ fight; it is gone, and the boots' names it changed go back to the game's.)
 
 ([In the README](README.md#the-games-own-party).)
 
-How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307,
-308 and 313 for their figures), a creature record and a sheet each, already
-Okay and with no items; the game gives them their gear and spells as it
-starts. So the Ledger (`dscompanion/defaultparty.py`) changes them in memory
-while the game is new (its first hour, in the arena, as with Thieves' Tools),
-each change once, knowing each by name, race and classes together: their
-weapon kinds in the sheet's spare bytes, Gerakis's club item made a bone
-gythka in its place, Cilla's plain armour given back to the free item list
-(her chest armour is alone in its list, which is left empty, as a new list
-is), and her byte for spell 0 set in the known-spells table. Seen in play: Cilla's
-USE screen lists ARMOR among her 1st-level spells and her inventory has no
-chest armour (AC 5); Gerakis holds the gythka and the long sword.
+How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307, 308
+and 313 for their figures), a creature record and a sheet each, already Okay
+and with no items; the game gives them their gear and spells as it starts. So
+the Ledger (`dscompanion/defaultparty.py`) changes them in memory while the
+game is new (its first hour, in the arena, as with Thieves' Tools), each
+change once, knowing each by name, race and classes together: their weapon
+kinds in the sheet's spare bytes, Gerakis's club item made a bone gythka in
+its place, Cilla's plain armour given back to the free item list (her chest
+armour is alone in its list, which is left empty, as a new list is), and her
+byte for spell 0 set in the known-spells table, and with kits Cermak's kit
+byte (`+43h`) the Arcanist for his preserver class (place 0; his gladiator
+class, place 1, none). Seen in play: Cilla's USE screen lists ARMOR among her
+1st-level spells and her inventory has no chest armour (AC 5); Gerakis holds
+the gythka and the long sword.
 
 ### New items
 
@@ -1320,7 +1332,7 @@ in `kitpages.kit_ids`), and emulated tests hold the helper to it:
 | saves | Myrmidon (charms), Sentinel (spells, 0-137), Wanderer (fire and cold: the spell record's `+1Ah`, 2 or 4, as the game's Resist Fire and Resist Cold read it) | `PROBE_RING_SAVE` (the modifier routine's start: `KIT_SAVE`) |
 | thief skills | Assassin (pick pockets, open locks), Swashbuckler (all) | `PROBE_BELT` (the thief skill routine's end) |
 | hiding, moving silently | Stalker, Assassin | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
-| the two-weapon penalty | Twin-blade | `PROBE_TWO` |
+| the two-weapon penalty | Twin-blade (in light armour: `HEAVY_WORN`) | `PROBE_TWO` |
 | gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`), whatever the class restrictions |
 | skill with a weapon | Justifier (expertise, the bow's and its chosen kind's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
 | weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen kind `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own kinds, whatever its class), `LV_DUE` (a Battle Mage one); the creation panel counts a Battle Mage as a warrior (`WP_CLASSES`, so `WP_IDS` gives the disciplines' window with WEAPON SPEC; `kitpages.panel_windows`) |

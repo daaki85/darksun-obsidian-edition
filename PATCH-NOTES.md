@@ -46,12 +46,12 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Two weapons**
 
-- **[Changed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers fight with two at no penalty *(was a small bonus at DEX 5 or less, otherwise nothing)*.
+- **[Changed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers fight with two at no penalty in light armour *(was a small bonus at DEX 5 or less, otherwise nothing)*.
 - **[Changed]** The off hand attacks once a round, and extra attacks belong to the main hand *(was the full rate in each hand)*.
 
 **Armour and protection**
 
-- **[Changed]** Helms give AC 1 *(was 0)*. Boots give one more move each round of a fight.
+- **[Changed]** Helms give AC 1 *(was 0)*.
 - **[Changed]** Rings and cloaks of protection follow AD&D: two rings don't stack, a ring gives no AC with magical armour, and a cloak does nothing with magical or metal armour or a shield.
 - **[Changed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.

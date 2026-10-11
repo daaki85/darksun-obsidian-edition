@@ -446,7 +446,7 @@ their hands, and they treat it like one.
 | Kit | Gives | Costs | Starts with |
 |---|---|---|---|
 | **Arena Champion** | with a shield: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee without a shield | a shield in place of the off-hand club |
-| **Twin-blade** | no penalty for two weapons | no shield; no two-handed weapon | its weapon and the club as its two weapons |
+| **Twin-blade** | no penalty for two weapons in light armour | no shield; no two-handed weapon | its weapon and the club as its two weapons |
 | **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind |
 
 An Arena Champion can't later become a druid or preserver, a Brute a
@@ -1043,7 +1043,8 @@ With a melee weapon in each hand:
   the DEX adjustment from [initiative](#initiative) added, which can lessen the
   penalty to 0 but never make it a bonus: DEX 17 is 0 and −2, DEX 21 is 0 and 0,
   DEX 3 is −5 and −7.
-- **Rangers and Twin-blades** have no penalty.
+- **Rangers and Twin-blades** have no penalty while all their armour is light (leather, or
+  none).
 - **The off hand attacks once a round.** Extra attacks are the main hand's: a
   warrior at 3/2 attacks 3/2 + 1 (one round 1 + 1, the next 2 + 1).
 
@@ -1537,7 +1538,7 @@ AD&D's tables:
   the round can't cast (a Battle Mage can).
 - **Someone Out Cold takes the most a spell's dice can do,** with no save.
 - **Two weapons cost to-hit** unless your DEX is high or you are a ranger or
-  Twin-blade, and the off hand attacks only once a round.
+  Twin-blade in light armour, and the off hand attacks only once a round.
 - **A warrior's weapon specs matter:** outside them it attacks once a round
   until 7th level.
 - **Multi-class preservers take off their armour to cast** (a helm counts).

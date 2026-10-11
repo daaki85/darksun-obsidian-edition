@@ -83,6 +83,7 @@ VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
 PK_HOVER = 7
+RG_TWO = 8  # (the ranger's two weapons, light armour only: DSCLOG's RG_TWO)
 
 
 SCRIPT_BUFFER = 0x2E00  # the scripts' buffer, made bigger (the game's: 10000 bytes)
@@ -179,6 +180,7 @@ PATCHES = (
     # neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx (DSCLOG does it, or AD&D's penalties
     # by hand when the companion's rule is on)
     Patch("two_weapons", 0x59634, bytes.fromhex("f7d88bd00bd27d0233d2"), _interrupt(VEC_TWO, 10)),
+    Patch("ranger_two", 0x5961F, bytes.fromhex("26f747120002"), bytes((0xCD, VEC_CR_SPELLS, RG_TWO, 0x90, 0x90, 0x90))),
     # the saving throw, doubling its d20 against fire, cold and electricity: shl al,1 (DSCLOG
     # does it, unless the companion's rule is on)
     Patch("double", 0x79B74, bytes.fromhex("d0e0"), _interrupt(VEC_DOUBLE, 2)),

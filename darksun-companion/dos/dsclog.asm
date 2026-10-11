@@ -3816,7 +3816,14 @@ probe_no_cast:
 
 ; ARMOUR_WORN: carry set if creature DX (DS = the game's) wears armour, a helm too: an item of
 ; a type the game marks armour (+0Fh 80h), not a shield, on its arms, legs, head or chest.
-; All registers kept.
+; HEAVY_WORN: the same for armour that isn't light (not leather, and of a material, as KIT_ALLOWS
+; has it). All registers kept.
+heavy_worn:
+        mov byte [cs:aw_heavy], 1
+        call armour_worn
+        mov byte [cs:aw_heavy], 0
+        ret
+aw_heavy db 0
 armour_worn:
         pushad
         push es
@@ -3867,7 +3874,15 @@ armour_worn:
         jnz .on
         test byte [es:bx+0x0F], 0x80
         jz .on
-        pop es
+        cmp byte [cs:aw_heavy], 0
+        je .worn
+        mov al, [es:bx+8]       ; (light: leather, or of no material)
+        and al, 0x4F
+        cmp al, LEATHER
+        je .on
+        cmp al, 0x40
+        je .on
+.worn:  pop es
         popad
         stc
         ret
@@ -6588,6 +6603,7 @@ RL_SUM   equ 4                  ; 65185h, in the scores' redraw (65168h)
 RL_CON   equ 5                  ; 63946h, in the score click's CON case (63915h)
 RL_TRY   equ 6                  ; 6498Bh, in an ability's roll (6490Dh): each 4d4, whatever the rule
 PK_HOVER equ 7                  ; 85F44h, the weapon window's event loop: the slot under the pointer
+RG_TWO   equ 8                  ; 5961Fh, the two-weapon adjustment's test for a ranger
 RL_HP_MAX equ 0x4996            ; DS: the most hit points the classes could roll (655D6h's)
 RL_BOX   equ 0x0F62             ; DS: the screen's boxes (x1, y1, x2, y2), the scores' first
 RL_LABEL_X equ 23               ; "SUM:" this far left of the scores' x
@@ -6607,6 +6623,30 @@ rl_sites:
         je rl_try
         cmp byte [cs:rl_site], PK_HOVER
         je pk_hover
+        cmp byte [cs:rl_site], RG_TWO
+        je rg_two
+        iret
+
+; RG_TWO: "test word es:[bx+12h],200h" (5961Fh; 6 bytes: the site's number and 3 NOPs after the
+; INT), where the routine giving an attack's to-hit adjustment for two weapons ready (595ECh)
+; asks whether the attacker (sheet ES:BX, creature [BP-2]) is a ranger, who has none: its "jnz"
+; after it kept. With RULE_TWO_WEAPONS a ranger (its kits too) has none only in light armour
+; (HEAVY_WORN): in other armour ZF is set, as for anyone else, and PROBE_TWO gives AD&D's.
+rg_two:
+        pushad
+        push es
+        mov di, sp
+        and word [ss:di + 38], ~0x40
+        test word [es:bx + 0x12], 0x200
+        jz .plain
+        test byte [cs:rules], RULE_TWO_WEAPONS
+        jz .out
+        mov dx, [bp - 2]
+        call heavy_worn
+        jnc .out
+.plain: or word [ss:di + 38], 0x40
+.out:   pop es
+        popad
         iret
 
 ; PK_HOVER: "or ax,ax / jnz 85F5Dh" (85F44h; 4 bytes: the site's number and a NOP after the INT),
@@ -9800,12 +9840,17 @@ probe_two:
         cmp byte [es:bx+THINGS], 2
         jne .out                ; not a creature
         mov ax, [es:bx+THINGS+1]
-        push ax                 ; (a Twin-blade: none, as a ranger; kits.py)
+        push ax                 ; (a Twin-blade in light armour: none, as a ranger; kits.py)
         call cr_is
         db KIT_TWIN_BLADE
         pop ax
-        je .out
-        call worn_scan
+        jne .scan
+        push dx
+        mov dx, ax
+        call heavy_worn
+        pop dx
+        jnc .out
+.scan:  call worn_scan
         xor dx, dx
         cmp word [cs:ws_count], 0
         je .out                 ; nothing to fight with in the other hand

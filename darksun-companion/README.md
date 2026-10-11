@@ -1251,7 +1251,7 @@ works](#how-the-game-works) has what the game does without them.
 | [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 16 or more lowers what shops ask, 5% to 25%, as in Baldur's Gate |
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | DEX's defensive adjustment on those saves rather than a doubled d20 |
-| [Two weapons](#two-weapons) | -2 main hand, -4 off hand, DEX's reaction adjustment added; rangers none; the off hand attacks once a round |
+| [Two weapons](#two-weapons) | -2 main hand, -4 off hand, DEX's reaction adjustment added; rangers none in light armour; the off hand attacks once a round |
 | [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
 | [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
@@ -1404,7 +1404,7 @@ and costs something.
 | **Sentinel** (fighter) | AC 2 better with a shield in a hand; +2 initiative | −1 on saves against wizards' and priests' spells |
 | **Ravager** (fighter) | +1 to hit and damage in melee; a base AC by level (7 at 1st and 2nd level, 6 at 3rd and 4th, 5 at 5th and 6th, 4 at 7th and 8th, 3 at 9th and 10th), armour bettering it as usual | no missile or thrown weapons; no shield; light armour only (leather, or none) |
 | **Arena Champion** (gladiator) | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee with no shield |
-| **Twin-blade** (gladiator) | no penalty for two weapons (with the two-weapons rule) | no shield; no two-handed weapon (a half-giant may hold one in one hand, with the half-giants' rule) |
+| **Twin-blade** (gladiator) | no penalty for two weapons in light armour, leather or none (with the two-weapons rule) | no shield; no two-handed weapon (a half-giant may hold one in one hand, with the half-giants' rule) |
 | **Brute** (gladiator) | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec |
 | **Stalker** (ranger) | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with the stealth rule) | light armour only (leather, or none) |
 | **Assassin** (thief) | hiding in shadows not halved in daylight | −15 pick pockets and open locks |
@@ -1842,7 +1842,9 @@ with the main (right) hand and -4 with the off (left) hand, and the DEX
 reaction adjustment (the table under [Initiative](#initiative)) is added. It
 can lessen the penalty to 0 but never make it a bonus, and low DEX
 makes it worse: DEX 17 is 0 and -2, DEX 21 0 and 0, DEX 3 -5 and -7. Rangers
-have no penalty (in any armour). It takes a melee weapon in each hand: one
+(their kits too) and [Twin-blades](#kits) have no penalty in light armour:
+every armour piece worn, a helm too, of leather or of no material. In other
+armour they take it as anyone does. It takes a melee weapon in each hand: one
 weapon, a two-handed weapon, a weapon and a shield, or a weapon and a bow or
 sling (the missile slot) have no penalty. The game's own rule, a small bonus
 at DEX 5 or less, is gone. The dice log names it (`-4 two weapons, off hand at
@@ -2276,6 +2278,13 @@ says so in the dice log:
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
+
+With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
+class: a spell slot more at each spell level and two preserver spells a turn
+in a fight. His gear stays as it is (an Arcanist has none of its own), and so
+do the hit points the game gave him: the Arcanist's d3 counts from his next
+level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
+once, can't have one.
 
 Cermak and Cilla keep the game's own starting spells: only a character made
 on the creation screen [picks its own](#changing-class).

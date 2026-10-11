@@ -1505,23 +1505,35 @@ class GameData:
         """The to-hit adjustment for an attack with the weapon in SLOT while two are ready (in
         melee), and what it's called. The game's: its DEX table for initiative, sign flipped and
         never below 0 (a bonus at DEX 5 or less). With RULE_TWO_WEAPONS, AD&D's: -2 main hand,
-        -4 off hand, plus the DEX reaction adjustment, never above 0. Rangers: none either way;
-        a Twin-blade (kits.py) none with the rule."""
+        -4 off hand, plus the DEX reaction adjustment, never above 0. Rangers: none, but with the
+        rule only in light armour (DSCLOG's RG_TWO); a Twin-blade (kits.py) none with the rule, in
+        light armour too."""
         dex = self.creature(creature)[CREATURE_ABILITIES + 1]
         sheet = self.sheet(creature)
         ranger = len(sheet) >= SHEET_FLAGS + 2 and struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_RANGER
         if not self.rules & RULE_TWO_WEAPONS:
             return f"two weapons at DEX {dex}", 0 if ranger else max(0, -self.dex_initiative(dex))
         hand = "off hand" if slot == WEAPON_HANDS[1] else "main hand"
-        if ranger:
+        light = not self.heavy_armour_worn(creature)
+        if ranger and light:
             return f"two weapons, {hand} (ranger)", 0
         from . import kits
-        if kits.TWIN_BLADE in self.kit_ids(creature):
+        if light and kits.TWIN_BLADE in self.kit_ids(creature):
             return f"two weapons, {hand} (Twin-blade)", 0
         if slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):
             return "two weapons", 0  # not a hand's weapon, or nothing to fight with in the other hand
         return (f"two weapons, {hand} at DEX {dex}",
                 min(0, TWO_WEAPON_PENALTY.get(slot, -2) + self.dex_initiative(dex)))
+
+    def heavy_armour_worn(self, creature: int) -> bool:
+        """Armour worn that isn't light (not leather, and of a material: DSCLOG's HEAVY_WORN),
+        a helm too: an armour piece (not a shield, nor bracers or a robe) on the arms, legs, head
+        or chest."""
+        from . import kits, restrict
+        slots = {EQUIP_SLOTS.index(s) for s in ("arm", "legs", "head", "chest")}
+        return any(item[ITEM_SLOT] in slots and len(typ) > 0x0F and restrict.is_armour(typ)
+                   and typ[8] & 0x4F not in (kits.LEATHER, kits.NO_MATERIAL)
+                   for _, item, typ in self._worn(creature))
 
     def melee_weapon_in(self, creature: int, slot: int) -> bool:
         """A melee weapon (its type's class 1, as the game counts weapons ready) in SLOT: not

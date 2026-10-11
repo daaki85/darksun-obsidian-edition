@@ -1956,8 +1956,57 @@ class RuleTests(RingTests):
             self.assertEqual([self.two(adj, 4) for adj in (-3, 0)] + [self.two(adj, 7) for adj in (-3, 0)], [0] * 4)
             self.rules(0)
             self.assertEqual(self.two(-6, 4), 6)
+            self.rules(4)
+            self.body_armour(4)  # metal on the chest: AD&D's penalties, as anyone's
+            self.assertEqual([self.two(0, 4), self.two(0, 7)], [-2, -4])
+            self.body_armour(5)  # leather: none again
+            self.assertEqual([self.two(0, 4), self.two(0, 7)], [0, 0])
         finally:
             self.mu.mem_write(TSR * 16 + self.RULES + 100, struct.pack("<H", 0))
+
+    def body_armour(self, material):
+        """Item 5 (in creature 1's first list, after item 4) worn on the chest: type 70, armour
+        (+0Fh 80h) of MATERIAL (5 leather, 4 metal, 40h none)."""
+        self.mu.mem_write(self.TYPES * 16 + 70 * 0x14, bytes(0x14))
+        self.mu.mem_write(self.TYPES * 16 + 70 * 0x14 + 8, bytes([material]))
+        self.mu.mem_write(self.TYPES * 16 + 70 * 0x14 + 0x0F, bytes([0x80]))
+        rec = self.ITEMS * 16 + 5 * 21
+        self.mu.mem_write(rec + 0x0A, struct.pack("<H", 70))
+        self.mu.mem_write(rec + 0x11, bytes([9]))
+
+    def test_ranger_light_armour(self):
+        """RG_TWO, where the game asks whether the attacker is a ranger (sheet flag 200h), its
+        "jnz" to no adjustment after it: ZF clear for a ranger, set for anyone else; with the
+        two-weapon rule, a ranger in armour that isn't light (metal) gets ZF set, as anyone."""
+        image = load_image()
+        from dscompanion import gamepatch
+        VEC_CR_SPELLS = gamepatch.VEC_CR_SPELLS
+        at = image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        self.assertGreater(at, 0)
+        self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        self.hands()
+        sheet = 0xB900
+        self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", 1))  # (the attacker: creature 1)
+
+        def zf(flags, rules, material=None):
+            self.rules(rules)
+            if material is not None:
+                self.body_armour(material)
+            self.mu.mem_write(sheet * 16 + 0x12, struct.pack("<H", flags))
+            self.at += 0x20
+            code = bytes((0xCD, VEC_CR_SPELLS, gamepatch.RG_TWO, 0x90, 0x90, 0x90))
+            self.mu.mem_write(CALLER * 16 + self.at, code)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    es=sheet, ebx=0, eax=0x1111, edx=0x4444).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            self.mu.emu_start(CALLER * 16 + self.at, CALLER * 16 + self.at + 6)
+            self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_DX,
+                                                            r.UC_X86_REG_ES)], [0x800, 0x1111, 0x4444, sheet])
+            return bool(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40)
+
+        self.assertEqual([zf(0x200, 0), zf(0x200, 4), zf(0x40, 4), zf(0, 0)], [False, False, True, True])
+        self.assertEqual([zf(0x200, 4, 4), zf(0x200, 0, 4), zf(0x200, 4, 5), zf(0x200, 4, 0x40)],
+                         [True, False, False, False])
 
     def test_one_weapon_no_penalty(self):
         """A shield in the other hand, a bow in the missile slot, or the weapon not in a hand:

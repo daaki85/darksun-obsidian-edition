@@ -22,6 +22,13 @@ have the detail.
   inventory screen) in place of one unlabelled SAVE line; THAC0 moves down
   beside PSI, and MOVE (the character's movement) is new, beside HP.
 
+- **Rangers and Twin-blades fight with two weapons at no penalty only in light
+  armour** (with the two-weapon rule): every armour piece worn, a helm too, of
+  leather or of no material. In other armour they take AD&D's -2 and -4, as
+  anyone does; the dice log and the Characters tab say the same.
+- **Cermak is an Arcanist** in the game's own party (with kits), his gear and
+  hit points as the game gives them. Gerakis has no kit.
+
 **Removed**
 - **Boots no longer give a move in a fight.** The rule was a leftover from
   trying out changes to items; its switch is gone, boots are plain "Boots"

@@ -12,6 +12,9 @@ starts. Each is known by name, race and classes together.
   weighs 20, the gythka 120: one heavy weapon, as the game allows). K'ratchek (a fighter,
   druid and psionicist) the chatkcha, the one weapon she has. Cermak (a gladiator who became a
   preserver) the long sword and the axe, which count once his gladiator levels do again.
+- With kits: Cermak an Arcanist (his preserver class's kit; none for his gladiator class), with
+  no change to his gear (an Arcanist has none of its own) or to the hit points the game gave him
+  (the Arcanist's d3 counts from his next level).
 - With class restrictions: Cilla (a preserver, druid and thief) can't wear armour (the druid's
   rule), so her leather armour is taken away and she knows Armor, the first wizard spell (0),
   the one Old One-Eye's scroll in the fields teaches.
@@ -103,6 +106,20 @@ def take_armour(gd: GameData, member: int, name: str) -> List[str]:
     return [f"{name} has no armour: a druid wears none."] if taken else []
 
 
+def set_kit(gd: GameData, member: int, name: str) -> List[str]:
+    """Cermak an Arcanist: the kit of his preserver class (the one he has now, place 0), if he
+    has none yet."""
+    from . import kitpages
+    sheet = gd.sheet(member)
+    if sheet[kitpages.KIT_BYTE] not in (0, 0xFF) or kitpages.kit_place(sheet) is None:
+        return []
+    kit = kitpages.KITS[5].index("Arcanist") + 1
+    index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
+    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    gd.guest.write(sheets + index * game.SHEET_SIZE + kitpages.KIT_BYTE, bytes([kitpages.kit_byte(sheet, 0, kit)]))
+    return [f"{name} is an Arcanist."]
+
+
 def learn(gd: GameData, member: int, name: str, spell: int = ARMOR) -> List[str]:
     known = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * KNOWN_STRIDE + spell
     if gd.guest.read(known, 1) == b"\x01":
@@ -127,6 +144,8 @@ def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]]) -> List[str]:
             steps.append(("kinds", set_kinds))
             if name == "Gerakis" and rules & game.RULE_HALF_GIANT:
                 steps.append(("gythka", club_to_gythka))
+        if name == "Cermak" and rules & game.RULE_KITS:
+            steps.append(("kit", set_kit))
         if name == "Cilla" and rules & game.RULE_RESTRICT:
             steps += [("armour", take_armour), ("armor spell", learn)]
         for key, step in steps:
