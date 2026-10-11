@@ -11,6 +11,10 @@ have the detail.
 ## Pull request #39 (in progress)
 
 **Fixed**
+- **The dice log showed XP for every kill,** the creature's value from its
+  character sheet, even where the party gains none (the opening fight in the
+  arena, whoever dies). A kill now reads "Rampager is killed"; the XP shows
+  only on the "XP: ..." line, when the party's XP really goes up.
 - **EXIT on CHOOSE A SPELL did nothing** when a new preserver picked its
   starting spells (or a human its spells on becoming a preserver): the window
   only opened again. EXIT now ends the picking, and the spells still to pick

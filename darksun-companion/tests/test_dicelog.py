@@ -915,7 +915,7 @@ class NewLinesTests(unittest.TestCase):
         struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, 20)
         self.assertEqual(tracker.check(1.0), [])
         struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, -3)
-        self.assertEqual(tracker.check(2.0), ["Mountain Stalker is killed (500 XP)"])
+        self.assertEqual(tracker.check(2.0), ["Mountain Stalker is killed"])
         struct.pack_into("<I", m, SHEETS, 125)  # Dag's XP
         self.assertEqual(tracker.check(2.2), [])  # waits for the others' XP
         self.assertEqual(tracker.check(3.0), ["XP: Dag +125 (for Mountain Stalker 500)"])

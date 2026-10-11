@@ -1,8 +1,9 @@
 """Watches the party and the monsters for kills, experience and level-ups.
 
-The log notes each kill (with the creature's XP value from its character
-sheet) and, when the party's XP goes up (right after a kill the party makes),
-lists what each character gained and for which kills.
+The log notes each kill and, when the party's XP goes up (right after a kill the party makes),
+lists what each character gained and for which kills, with each one's XP value from its
+character sheet. A kill alone shows no XP: not every one gives the party any (the opening
+fight in the arena gives none, whoever dies).
 """
 
 import struct
@@ -20,7 +21,7 @@ KILL_WINDOW = 5.0  # seconds before an XP award in which kills count towards it
 LOSS_WAIT = 60.0
 # Going from one area to another, the game also drops the old area's people from the fight table
 # and clears or reuses their records: none of that is a death (the log once listed every guard in
-# the arena, "is killed (7261 XP)", on leaving the pens). A creature gone from the table counts as
+# the arena, "is killed", on leaving the pens). A creature gone from the table counts as
 # killed only in the same area, its record still its own, and not when all of many go at once.
 MASS_VANISH = 3
 
@@ -138,7 +139,7 @@ class PartyTracker:
         sheet = self.game.sheet(index)
         xp = struct.unpack_from("<I", sheet, game.SHEET_XP_VALUE)[0] if len(sheet) >= 8 else 0
         self.kills.append(Kill(name, xp, now))
-        return f"{name} is killed ({xp} XP)"
+        return f"{name} is killed"  # (its XP only with the party's gain: not every kill gives any)
 
     def _level_changes(self, old: Member, new: Member) -> List[str]:
         out = []
