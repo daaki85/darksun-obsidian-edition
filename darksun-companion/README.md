@@ -1594,7 +1594,8 @@ clicked on the creation screen, in place of the ones the game handed out by
 its starting level: two 1st-level spells at 1st level (the game's Grease and
 Magic Missile), four at 2nd (and Shield and Wall of Fog), four and two of 2nd
 level at 3rd (and Fog Cloud and Mirror Image). A Scholar picks one more for
-each level. A multiclass preserver too.
+each level. A multiclass preserver too. (The game's own party, used when no
+party is made, keeps the game's spells.)
 
 **EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
 picking, at creation and on changing class: the spells still to pick are the
@@ -2285,9 +2286,8 @@ says so in the dice log:
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
 
-Cermak and Cilla, as preservers, also pick their starting spells on
-**CHOOSE A SPELL** when the game starts, as [a new preserver
-does](#changing-class) (EXIT keeps the game's).
+Cermak and Cilla keep the game's own starting spells: only a character made
+on the creation screen [picks its own](#changing-class).
 
 ![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
 

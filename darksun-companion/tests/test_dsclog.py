@@ -38,6 +38,7 @@ IF = 0x200  # the interrupt flag
 # DS:F000h, the spell levels on offer (preserver level 9, through PROBE_PICK_LEVEL) kept from DS:F002h,
 # and a spell (20h on) learnt by member 3, unless DS:F010h is set (EXIT: nothing learnt, not counted)
 PICK_STUB = "5350068b1e00f0b009cd%02x888702f0803e10f0007511ff0600f08cd82d560b8ec026c68726030107585bcb"
+CR_TABLE = 0xE800  # (a creature table for PROBE_CR_SPELLS's tests, in the game's data segment)
 KNOWN_3 = 0x168 + 3 * 0x8A  # member 3's known spells, from DS less 0B56h (DSCLOG's KNOWN_OFF)
 BP, PARENT_BP = 0x1000, 0x1100
 
@@ -3538,8 +3539,13 @@ class KitTests(unittest.TestCase):
         past = site + 2 + (0x66F83 - 0x66F2F)
         self.mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_CR_SPELLS, 0x90)))
         self.mu.mem_write(CALLER * 16 + past, b"\x90")
-        for level, picks in ((0, None), (1, (2, 2)), (2, (2, 2, 2, 2)), (3, (2, 2, 2, 2, 4, 4)), (4, None)):
-            with self.subTest(level=level):
+        self.mu.mem_write(self.DS * 16 + 0x1665, struct.pack("<HH", CR_TABLE, self.DS))
+        status = self.DS * 16 + CR_TABLE + 3 * 0x3A + 0x1C  # (member 3's, SI)
+        # (the game's own party, Okay when START GAME makes it, keeps the game's spells)
+        for level, picks, okay in ((0, None, 0), (1, (2, 2), 0), (2, (2, 2, 2, 2), 0), (3, (2, 2, 2, 2, 4, 4), 0),
+                                   (4, None, 0), (1, None, 1), (3, None, 1)):
+            with self.subTest(level=level, okay=okay):
+                self.mu.mem_write(status, bytes((okay,)))
                 self.mu.mem_write(self.DS * 16 + 0xF000, bytes(0x12))
                 self.mu.mem_write((self.DS - 0xB56) * 16 + KNOWN_3, bytes(0x8A))
                 self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", level))
@@ -3576,6 +3582,8 @@ class KitTests(unittest.TestCase):
         past = site + 2 + (0x66F83 - 0x66F2F)
         self.mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_CR_SPELLS, 0x90)))
         self.mu.mem_write(CALLER * 16 + past, b"\x90")
+        self.mu.mem_write(self.DS * 16 + 0x1665, struct.pack("<HH", CR_TABLE, self.DS))
+        self.mu.mem_write(self.DS * 16 + CR_TABLE + 3 * 0x3A + 0x1C, b"\x00")  # (New)
         known = (self.DS - 0xB56) * 16 + KNOWN_3
         for level, before, want in ((1, (), (7, 8)), (3, (), (7, 8, 9, 0x0B, 0x0F, 0x16)),
                                     (1, (7,), (7, 8, 0x0B)), (2, (8, 9), (7, 8, 9, 0x0B))):

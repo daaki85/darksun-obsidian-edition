@@ -30,6 +30,10 @@ have the detail.
   starting spells (or a human its spells on becoming a preserver): the window
   only opened again. EXIT now ends the picking, and the spells still to pick
   are the game's own starting spells, less any already picked.
+- **The game's own party had to pick spells.** Starting a game with no party
+  made, Cermak and Cilla were put on CHOOSE A SPELL as a new preserver is.
+  They keep the game's own spells again; only a character made on the
+  creation screen (still New) picks.
 
 **Documentation**
 - **A review of every page.** The README's main screenshot (the dice log of
