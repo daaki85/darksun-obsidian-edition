@@ -9,7 +9,7 @@ for mapping it, and how each part of the [README](README.md) is done.
 Every roll in the game goes through one function, Borland C++'s `rand()`.
 
 1. When you start the game with the dice log, the launcher writes
-   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with about 180 small
+   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with 185 small
    changes, listed in `PATCHES` in `dscompanion/gamepatch.py`. Most replace a
    few bytes of the game's code with an `INT` (60h to 65h, and 8Ch to FEh;
    all of them are taken, so later sites share one, a site number after the
@@ -1166,32 +1166,8 @@ header's +270) switches them all off.
 
 ### The kits
 
-| Class | Kit | Benefit | Drawback |
-|---|---|---|---|
-| Fighter | Myrmidon | a second weapon spec at 1st level, on to mastery and grand mastery as the first | −4 on saves against charm |
-| | Sentinel | +2 AC with a shield, +2 initiative | −1 on saves against spells |
-| | Ravager | +1 to hit and damage in melee; a base AC by level (7 at 1st, 1 better every 2 levels to 3 at 9th and 10th), armour bettering it | no missile or thrown weapons, no shield, light armour only |
-| Gladiator | Arena Champion | with a shield in a hand: +1 to hit and damage in melee, AC 1 better | −1 to hit in melee with no shield |
-| | Twin-blade | no two-weapon penalty | no shield; no two-handed weapon, but a half-giant's held in one hand |
-| | Brute | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec |
-| Ranger | Stalker | +2 movement in a fight, +15 hide in shadows, +15 move silently | light armour only |
-| | Justifier | the bow's expertise and the chosen weapon spec's become specialization | priest spells on the Justifier's table: one 1st-level slot at 10th level |
-| | Seeker | priest spells on the Seeker's table: from 6th level | its sphere's weapon limits (but it keeps the bow) |
-| Thief | Swashbuckler | a warrior's THAC0 | −10 to all thief skills |
-| | Assassin | hiding in shadows isn't halved in daylight | −15 pick pockets and open locks |
-| | Shinobi | preserver spells on the Seeker's table, cast in light armour too | the Seeker's few slots; its own short list of spells, one learnt at each level up from its first slots, none from scrolls; only the dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow; light armour only; no shield |
-| Cleric | Elementalist | a second sphere: its spells and its weapons | spell slots one level slower (none at 1st level) |
-| | Healer | Cure spells heal 1 more per die | no weapon in the off hand |
-| | Crusader | a fighter's THAC0, a warrior's extra attacks in melee (3/2 from 7th level; the code has 2 from 13th, past the level cap) | one fewer spell slot at each spell level |
-| Druid | Grove Warden | AC 1 better for every 3 druid levels | no metal weapons |
-| | Lifebinder | healing spells heal a die more | blunt weapons only |
-| | Wanderer | +3 on saves against fire and cold spells (the game's Resist Fire and Resist Cold) | AC 1 worse |
-| Preserver | Scholar | a spell more learnt at each level up | −1 to hit |
-| | Battle Mage | a warrior's THAC0, a d6 hit die, expertise in one weapon spec (a one-handed melee weapon: long sword, short sword, dagger, club, mace, axe or pick; no thrown weapon), which it may use as well as a preserver's own weapons; light armour worn and spells cast in it; spells cast though hit earlier in the round (the game stops anyone else's) | one fewer spell slot at each spell level; nothing in the off hand |
-| | Arcanist | a spell slot more at each spell level, two preserver spells in a turn in a fight | a d3 hit die |
-| Psionicist | Mind Bender | telepathy powers cost 2 PSP less | psychokinesis powers 2 more |
-| | Mind Warrior | a warrior's THAC0, a warrior's extra attacks in melee (3/2 from 7th level; 2 from 13th in the code), a d8 hit die | a tenth fewer PSP |
-| | Kineticist | psychokinesis powers cost 2 PSP less | telepathy powers 2 more |
+What each kit gives and costs is in [the README's table](README.md#kits).
+Two kits have tables of their own.
 
 The Seeker's and the Justifier's tables are AD&D's (*The Complete Ranger's
 Handbook*), up to 10th level; their spells are cast at the table's casting
@@ -1217,33 +1193,22 @@ No kit is the kit page's first row, and what a new character has.
 
 ### Room in the helper
 
-DSCLOG keeps its code and data in one 64 KB segment, all reached
-through CS; the dice log's ring buffer (`NENT` 128 entries of `ESIZE` 192
-bytes, 24 KB) was in it too, and the image had grown to 63 KB. The ring now
-follows the resident part in memory, in a segment of its own: the install code
-sets `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs
-after the resident image, and its last step (`KEEP`, in the resident part, as
-the ring lies over the install code) clears the ring and stays resident with
-it. The image is 40 KB, about 25 KB short of the segment's end.
+DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
+The dice log's ring buffer (`NENT` 96 entries of `ESIZE` 192 bytes) follows
+the resident part in memory, in a segment of its own: the install code sets
+`ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
+the resident image, and its last step (`KEEP`, in the resident part, as the
+ring lies over the install code) clears the ring and stays resident with it.
+The text buffer (`TSIZE`) is 4 KB; the Ledger reads its size from the
+header and drains it every few tens of milliseconds.
 
-Measured with `mem` in DOSBox (GOG's settings: one upper memory block of
-63 KB): the old helper, asking for its 63 KB image and a stack when loaded,
-didn't fit in upper memory, so `LH` loaded it low, and the game had 570 KB of
-conventional memory free rather than 632 KB. Now it asks for the resident part
-and the ring (`LOAD_EXTRA`), 63 KB in all with its PSP, and loads high: 632 KB
-free, and 1 KB of upper memory left. The KIT page took 736 bytes of that
-(the image 40,752 bytes), and the helper still loads high. More code for the
-kits than the 300 bytes or so left goes low again (the game losing 62 KB, as
-before) unless room is made in upper memory too: the ring at 96 entries would
-give 6 KB, the text buffer (`TSIZE`, 8 KB) a little more.
-
-With the ring at 96 entries and the kits for dual classes (a kit for each
-class, the KIT menu after DUAL, a new preserver's spell picks), the image is
-46,448 bytes, and `mem` still has 632 KB free and 1 KB of upper memory left
-(in two blocks). The text buffer (`TSIZE`) is now 4 KB, not 8, which leaves
-5 KB of upper memory for what comes next; the Ledger reads the buffer's size
-from the helper's header, and drains it every few tens of milliseconds, so
-4 KB is still far more than one poll's worth of text.
+The helper has to load into upper memory, or the game loses 62 KB of
+conventional memory (570 KB free rather than 632 KB). With GOG's settings
+there is one upper memory block of 63 KB; the helper asks for its resident
+part and the ring (`LOAD_EXTRA`), and `mem` in DOSBox shows 632 KB free and a
+few KB of upper memory left. A change that adds much code should check that
+again: the ring is 96 entries, not 128, and the text buffer 4 KB, not 8, to
+make that room.
 
 ### The kit's byte
 
@@ -1402,82 +1367,9 @@ Every kit also needs its Python side: the Characters tab and the in-game
 THAC0 and saves (`game.py`), the dice log's lines, and tests that hold the
 helper's code (emulated) to the Python.
 
-### How they were built, and checked
+### How they're checked
 
-1. Done: the ring out of the segment, the memory measured; the kit's byte, the
-   KIT page, the Effects screen's line, the Characters tab, the rule switch.
-2. Done: the kits on hooks there already: Ravager, Sentinel (with an
-   initiative hook), Myrmidon, Arena Champion, Twin-blade, Brute, Stalker,
-   Assassin, Grove Warden, Wanderer, Arcanist's CON (since replaced by a d3
-   hit die, step 6), Lifebinder's weapons; and
-   the ring at 96 entries, for room in upper memory.
-3. THAC0 and spell slot hooks. Done: the THAC0 (Swashbuckler, Crusader,
-   Battle Mage, Mind Warrior, Scholar) and the Swashbuckler's thief skills.
-   Done too: the spell slots (Crusader, Battle Mage, Arcanist, Elementalist,
-   Justifier, Seeker), checked against the game's own routine run on a
-   running game's memory. Left for later then: the Scholar's spell learnt, with
-   the CHOOSE A SPELL screen (done in step 5), and whether the game lets a
-   Seeker below 8th level cast priest spells with its slots. It does: a ranger
-   knows every spell of its sphere from the start (the creation screen's DONE,
-   66F83h, and the dual routine, 86E1Eh, mark them known with no level test),
-   and casting asks only for a slot of the spell's level. Checked in the game:
-   a 6th-level fire Seeker's USE screen has PRI .../1 (the Seeker's table), and
-   it cast Bless at caster level 1 (6 less 5: `PROBE_RANGER_CAST`).
-4. Done: PSP costs (Mind Bender, Kineticist), the cures' dice
-   (Healer, Lifebinder), the cost to keep a power up (Mind Bender,
-   Kineticist), casting level (Seeker, Justifier), a spell cast though hit,
-   and nothing in the off hand (Battle Mage), no off-hand weapon (Healer).
-5. Done: the Shinobi (wizard slots, spells known, cast and learnt, its
-   casting level, no scrolls) and the Scholar's spell more. Found on the way:
-   the level a spell's duration and damage take is worked out apart from the
-   caster level routine (5E25Ch), with a ranger's whole level, so the
-   Seeker's and Justifier's casting levels are now there too, and a new rule
-   counts a plain ranger's 7 less there (rangers' casting level). Checked in the
-   game: the Shinobi's slots (the game's slot routine run on a running
-   game's memory), its spells on the USE screen and cast, Blur's duration at
-   thief level 8 (caster level 3), and its level up to 6th after a fight:
-   CHOOSE A SPELL with its four 1st-level spells it didn't know, one learnt;
-   a game scroll of Shield refused (nothing learnt, the scroll kept), where a
-   preserver learns its scroll with the same clicks; and a Scholar's level up
-   to 2nd: CHOOSE A SPELL twice, a spell learnt from each.
-6. Hit dice and PSP done: the Battle Mage's d6, the Mind Warrior's d8 and a
-   tenth fewer PSP, and the Arcanist's d3 (in place of its −2 CON), at a level
-   up and on the creation screen, where choosing or taking back one of those
-   kits rolls the hit points and works out the PSP again. Checked in the
-   game: on the creation screen, a 3rd-level preserver's range 9 to 18 (d4)
-   became 9 to 24 with Battle Mage (d6 rolls in the dice log) and 9 to 15
-   with Arcanist (d3), a psionicist's 9 to 24 became 9 to 30 with Mind
-   Warrior (d8) and its PSP 52 became 47, each back again when the kit was
-   taken back, and a class clicked with a kit left from the class before
-   rolled the class's own die; the numbers on screen, the creature and the
-   party's sheet agree after DONE. The level up's PSP is checked by emulation
-   only. Then the Battle Mage's weapon spec (expertise, with weapon
-   specialization) and light armour. Checked in the game: a preserver taking
-   Battle Mage gets WEAPON SPEC on the panel, the pages open with the long
-   sword marked, the great axe and the other kinds greyed, the axe chosen
-   into the sheet; the attack rate, equip check and Ledger are held to the
-   Python by emulated and unit tests. Then the Seeker's sphere weapons and
-   the Justifier's specialization. Checked in the game: a fire Seeker's
-   weapon pages open the obsidian kinds (long sword, dagger, short sword,
-   mace, axe, great axe, chatkcha) and grey the rest.
-7. Done: the Elementalist's second sphere: chosen on the creation panel's
-   spheres, its spells known, its caster level and its spells' levels, its
-   weapons. Checked in the game: a cleric taking Elementalist, its own
-   sphere marked, marks a second (both marked, the rest in use), takes it
-   back, and loses both when its own is taken back; an earth Elementalist
-   with water made with DONE knows the water spells (93, 108, 114, 126) as
-   well as earth's (75, 92, 111, 125, 133). Its casting of them and the
-   weapons are held to the Python by emulated tests.
-8. Done: kits for a human's classes after DUAL. The kit byte has two bits for
-   each class, and every rule asks for each kit the character has awake
-   (`KIT_IS`). The KIT menu after DUAL (`PROBE_DUAL_KIT`) bars kits both ways
-   (`DUAL_BANS`, `KIT_PAIRS`); a new Elementalist picks its second sphere and
-   a new warrior (or Battle Mage) its weapon kinds there too; a new preserver
-   picks its spells on CHOOSE A SPELL, on DUAL and at creation
-   (`PROBE_DUAL_SPELLS`, `PROBE_CR_SPELLS`). The Effects screen lists the kits
-   a line each and goes a page at a time when its panel is full
-   (`PROBE_EF_CLICK`). Checked in the game: a Battle Mage turned thief offered
-   Swashbuckler and Assassin (the Shinobi left off), an Elementalist turned
-   fighter taking Myrmidon and a long sword spec, a new 3rd-level preserver's
-   six spells its own, and the Effects pages of three kits and four weapon
-   specs.
+Each kit's helper code is held to its Python by emulated tests
+(`tests/test_dsclog.py` runs the helper's routines in a CPU emulator), and each was played in the game: the creation screen's KIT page and
+hit dice, the level ups (Shinobi and Scholar spells, Seeker slots), the KIT
+menu after DUAL with its bans, and the Effects screen's pages.

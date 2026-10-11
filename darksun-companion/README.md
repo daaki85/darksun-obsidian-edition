@@ -2,7 +2,7 @@
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
 in DOSBox, with its own companion window, **Templar's Ledger**, beside the
-game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
+game.
 
 ## Contents
 
@@ -15,6 +15,7 @@ game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
   - [Other ways to start](#other-ways-to-start)
   - [If the game or DOSBox crashes](#if-the-game-or-dosbox-crashes)
 - [The Ledger's window](#the-ledgers-window)
+  - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
 - [The dice log](#the-dice-log)
@@ -44,6 +45,7 @@ game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
   - [Class restrictions](#class-restrictions)
   - [Multiclass hit points](#multiclass-hit-points)
   - [Hit dice: the better of two](#hit-dice-the-better-of-two)
+  - [Scores and hit points as rolled](#scores-and-hit-points-as-rolled)
   - [Rangers' casting level](#rangers-casting-level)
   - [Preservers' INT](#preservers-int)
   - [AD&D's class tables](#adds-class-tables)
@@ -123,17 +125,23 @@ characters](#more-saves-and-characters)), a game speed setting ([Game
 speed](#game-speed)), crash reports, and no dragon asking for a word from the
 manual, the game's copy protection ([No manual check](#no-manual-check)).
 
-Nothing in the game folder or your save files is changed, except what play
-writes there: save pages 2 to 4 as files of their own beside the game's,
-characters 20 to 29 in the game's `CHARSAVE.GFF`, and, in a game you save,
-the new items (untick **New items** to go without). Some of them the
-original game doesn't know (the item types it lacks, such as the Short Sword,
-the Cloak of Protection, the bracers, the robes, plate mail and the Cloak and
-Boots of Elvenkind, and the new item names), so load such a save with the dice log. For the
-rest, the Ledger only reads the game's memory; the patched game and its copies
-of the game's files are in its own folder (see
-[DEVELOPMENT.md](DEVELOPMENT.md#how-the-dice-log-works)). The window is dressed
-in the game's own colours, sampled from it; no game artwork is copied.
+**What it changes on your computer.** The game's own files are never
+modified: the Ledger runs a patched copy of the game, with copies of its data
+files, from its own folder (see
+[DEVELOPMENT.md](DEVELOPMENT.md#how-the-dice-log-works)). Play writes to the
+game folder only what you'd expect:
+
+- your saves: page 1 as always, pages 2 to 4 as files of their own beside
+  them ([more saves](#more-saves));
+- your characters, 20 to 29 among the game's own in `CHARSAVE.GFF`
+  ([more characters](#more-characters));
+- in a saved game, the new items, if **New items** is ticked. Some are item
+  types the original game doesn't have (the Short Sword, the Cloak of
+  Protection, the bracers, the robes, plate mail, the Cloak and Boots of
+  Elvenkind), so load such a save with the Ledger.
+
+The window is dressed in the game's own colours, sampled from it; no game
+artwork is copied.
 
 ## Requirements
 
@@ -171,10 +179,8 @@ next to the game. You don't install anything into the game folder.
 
 ### One-time setup
 
-1. Download the latest release, `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`
-   (earlier, `Obsidian-Edition-<version>.zip`, and
-   `Templars-Ledger-<version>.zip` up to 1.2.0), from the
-   [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases),
+1. Download the latest release, `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`,
+   from the [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases),
    and unzip it anywhere: the files you need are in its
    `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>` folder. (Or the project as it stands: on its
    GitHub page click **Code → Download ZIP**; the files are then in its
@@ -332,6 +338,10 @@ mouse wheel, or arrow and page keys once it has the focus).
 
 ![The Options tab with Rule changes and Thieves open and the other sections closed](docs/options.png)
 
+### The Characters tab
+
+What some of a card's lines mean.
+
 **Spell slots.** `Priest spells left: 1st 5/5, 2nd 3/3, 3rd 2/2`
 means five first-level priest spells can still be cast out of five, and so
 on. Casting a spell uses one slot of its level, and resting fills them
@@ -352,11 +362,9 @@ with WIS 19 slots at the 2nd to 4th levels too, though a druid that level
 casts only 1st-level spells. Those aren't shown (here or in the game): only
 the spell levels the character's class levels reach, as in AD&D, where the
 WIS bonus counts only at levels the priest can cast. For a human dual-class character, a
-later class counts only while its level is below the first class's. Checked
-against two characters at the start of a new game, whose slots the game had
-just filled.
+later class counts only while its level is below the first class's.
 
-The viewer's **Current AC** row is the AC the game last used for each
+**AC.** The AC shown (**Current AC** on All fields) is the one the game last used for each
 character in a fight (armour, DEX and spells included), and the rows under it
 say what it was made of: armour and shield (and spells that take their place,
 such as Spirit Armor and Magical Vestments), DEX (the game's table: −1 at 15
@@ -364,7 +372,7 @@ down to −6 at 24; not counted when attacked from behind), and spells, rings
 (see [The Ring +1](#new-items)) and anything else. They show "-" until the game has worked out that character's AC
 in a fight.
 
-Ability scores such as `STR 24 (20 without spells)` show the score now and, in
+**Scores.** Ability scores such as `STR 24 (20 without spells)` show the score now and, in
 brackets, the character's own score when a spell (Strength, for one) has
 raised it. The character's own score already includes the racial adjustment:
 a half-giant's 20 + 4 shows as 24.
@@ -419,7 +427,7 @@ the game installed the window uses its own lettering and no portraits.
 
 ## The dice log
 
-![Templar's Ledger during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Fireball and Cone of Cold on the Rampager](docs/dicelog.png)
+![Templar's Ledger during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Cone of Cold killing a Slig and the Rampager's acid killing the Defiler](docs/dicelog.png)
 
 **Reading it at a glance.** Lines at the left edge are the events: a round
 starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented
@@ -516,10 +524,6 @@ more. The Dialogue tab does the same.
 game's code they came from. It's noisy, but useful for finding more rolls worth
 labelling.
 
-Tested in play: the attack and damage lines match the HP the game takes off,
-for both the party and the monsters, and every saving throw of a Fireball is
-logged.
-
 ## How the game works
 
 What the game does that its manual doesn't say, from its code and checked in play. The dice
@@ -602,8 +606,7 @@ Other things the game does its own way:
   air, while spells such as Bless, Barkskin or Spiritual Hammer belong to
   every sphere. Cast by a priest of another element, an elemental spell counts
   caster level 0. The game shows each priest only their element's spells, so
-  this only happens if a character somehow has the others. The log's
-  `caster level 0` lines in testing came from an earth druid given every spell.
+  this only happens if a character somehow has the others.
 
 The spell's area catches its caster too. Cilla's Scare made her Afraid, and her
 Fireball, cast at a Slig next to her, killed her.
@@ -629,8 +632,8 @@ their own:
   charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
   magic resistance line counts it, and Lower Resistance halving the result.
 - **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least 1d10.
-- Monsters use them too: the Screamer Beetle's "special attack" in earlier
-  logs was Psychic Crush (1d8, save vs paralysis/poison/death for half).
+- Monsters use them too: the Screamer Beetle's special attack is Psychic
+  Crush (1d8, save vs paralysis/poison/death for half).
 
 What each costs, from the game's own table (it differs from the books in
 places: Enhanced Strength and Domination cost nothing to start):
@@ -1134,7 +1137,7 @@ along its bottom from the left, so the slots take only the three lines above
 them: a character with both wizard and priest spells gets the two lines without
 the `SPELLS LEFT BY LEVEL` heading.
 
-The numbers are the Characters tab's (see [spell slots](#the-ledgers-window)), WIS bonus included,
+The numbers are the Characters tab's (see [spell slots](#the-characters-tab)), WIS bonus included,
 printed with the game's own text routine; they show while Templar's Ledger (or
 its command-line dice log) is running.
 
@@ -1455,19 +1458,14 @@ a preserver does. Its light armour holds whatever the class restrictions say
 of a preserver. Without weapon specialization it has no weapon spec, only a
 preserver's weapons.
 
-The kits' hit dice (the Battle Mage's, Mind Warrior's and Arcanist's) are
-rolled at every level up and on the creation screen. The game rolls a new
-character's hit points and works out its PSP when a class is clicked, before
-a kit can be chosen, so choosing or taking back one of these kits on the KIT
-page rolls the hit points and works out the PSP again, and the screen shows
-the new numbers; the dice log's hit point line names the kit's die
-(`Preserver d6 per level`). The Brute's +2 is for melee: a bow or staff sling, two-handed
-as it is, doesn't get it. The game's Resist Fire and Resist Cold don't halve
-fire's or cold's damage, so neither does the Wanderer's resistance. The Myrmidon takes its second weapon spec on
-the weapon pages after the kit is taken (go back to them from the KIT page),
-and loses it if another kit is taken. The dice log and the Ledger show each
-kit's part: a Ravager's to-hit and damage (`+1 Ravager`), a Sentinel's initiative and saves,
-a Stalker's hiding, the THAC0 shown for each weapon.
+The Myrmidon takes its second weapon spec on the weapon pages after the kit
+is taken (go back to them from the KIT page), and loses it if another kit is
+taken.
+
+The game rolls a new character's hit points and works out its PSP when a
+class is clicked, before a kit can be chosen, so choosing or taking back a
+kit with a die of its own (Battle Mage, Mind Warrior, Arcanist) rolls the hit
+points and works out the PSP again, and the screen shows the new numbers.
 
 #### Starting gear
 
@@ -1504,32 +1502,36 @@ club is in the backpack, a Lifebinder's club and sling are blunt).
 
 #### The kits in play
 
-The Lifebinder's die
-is rolled by the helper from the game's own random numbers; the dice log notes
-it, and the HP line shows what was healed.
-
-The Mind Bender's and Kineticist's PSP is both the cost to use a power and the
-cost to keep it up each round, never less than 1 (a power with no upkeep
-still has none); psychometabolism is as it was.
-
-A character hit in a fight can't cast a spell until the next round: the game
-won't let it choose one, and drops one it chose before the hit. The Battle
-Mage isn't stopped.
-
-The kits' spell slots are the game's own wherever it counts them (on resting,
-in the spell lists), and the Ledger's Spells tab shows the same. A kit's
-casting level is the one a spell's duration and damage take, and the one
-that sets the spell levels it may cast, half of it rounded up (the dice log's
-spell lines show it), and the Seeker's and Justifier's take their 5 and 9
-off both (see [Rangers' casting level](#rangers-casting-level) for a
-ranger's). WIS's bonus
-slots count for the Arcanist, Crusader and Elementalist as for their classes,
-not for the Seeker's and Justifier's own tables.
-
-A warrior's THAC0 is the game's own for a fighter, given where it is better
-than the character's class's; it and the Scholar's are in the THAC0 the game
-keeps for the character (View Character's, the attack's), worked out when the
-character is made and at each level up.
+- **Shown everywhere.** The dice log and the Ledger show each kit's part: a
+  Ravager's to-hit and damage (`+1 Ravager`), a Sentinel's initiative and
+  saves, a Stalker's hiding, the THAC0 for each weapon. A kit's hit die is
+  named on the hit point lines (`Preserver d6 per level`).
+- **Hit dice.** The Battle Mage's, Mind Warrior's and Arcanist's are rolled
+  on the creation screen and at every level up.
+- **A warrior's THAC0** is the game's own for a fighter, where it is better
+  than the class's. It and the Scholar's −1 are in the THAC0 the game keeps
+  for the character (View Character's, the attack's), worked out when the
+  character is made and at each level up.
+- **Spell slots** are the game's own wherever it counts them (resting, the
+  spell lists, the Ledger's Spells tab). WIS's bonus slots count for the
+  Arcanist, Crusader and Elementalist as for their classes, not for the
+  Seeker's and Justifier's own tables.
+- **Casting level.** A kit's casting level is the one a spell's duration and
+  damage take, and half of it (rounded up) is the highest spell level it may
+  cast; the Seeker and Justifier take 5 and 9 off the ranger level (see
+  [Rangers' casting level](#rangers-casting-level) for a plain ranger's).
+- **Casting when hit.** A character hit in a fight can't cast until the next
+  round: the game won't let it choose a spell, and drops one chosen before
+  the hit. The Battle Mage isn't stopped.
+- **PSP.** The Mind Bender's and Kineticist's 2 PSP more or less counts both
+  to use a power and to keep it up each round, never below 1 (a power with no
+  upkeep still has none); psychometabolism is as it was.
+- **The Lifebinder's die** is rolled from the game's own random numbers; the
+  dice log notes it, and the HP line shows what was healed.
+- **The Brute's +2** is for melee: a bow or staff sling, two-handed as it is,
+  doesn't get it.
+- **The Wanderer's resistance** is the game's Resist Fire and Resist Cold,
+  which give +3 on the save but don't halve the damage.
 
 #### Changing class
 
@@ -2282,6 +2284,10 @@ says so in the dice log:
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
+
+Cermak and Cilla, as preservers, also pick their starting spells on
+**CHOOSE A SPELL** when the game starts, as [a new preserver
+does](#changing-class) (EXIT keeps the game's).
 
 ![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
 

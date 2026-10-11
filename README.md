@@ -4,6 +4,8 @@ Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
 in DOSBox, with its own companion window, **Templar's Ledger**, beside the
 game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
 
+![Templar's Ledger during the arena's opening show: the party's character cards, and the dice log of the Defiler's Cone of Cold and the Rampager's acid](darksun-companion/docs/dicelog.png)
+
 ## Contents
 
 - [What it does](#what-it-does)
@@ -61,13 +63,11 @@ folder only what you'd expect: your saves (pages 2 to 4 as files of their own,
 
 1. Download the latest release from the
    [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases)
-   (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`; earlier,
-   `Obsidian-Edition-<version>.zip`, and `Templars-Ledger-<version>.zip` up to
-   1.2.0) and unzip it anywhere. (Or this repository as it stands: **Code →
+   (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`) and unzip it
+   anywhere. (Or this repository as it stands: **Code →
    Download ZIP**.)
 2. In the unzipped folder (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>`, or `darksun-companion`
-   in a download of the repository), double-click **`Start Obsidian Edition.bat`**
-   (`Start Templar's Ledger.bat` up to 1.2.0).
+   in a download of the repository), double-click **`Start Obsidian Edition.bat`**.
    The first time, it offers to install 64-bit Python if you don't have it.
    If Windows shows "Open File - Security Warning" (it does for any `.bat`
    from a download), press **Run**: the Ledger then unblocks its own files, so

@@ -61,9 +61,13 @@ The [README](README.md) has every rule in full detail.
    (the first time, it offers to install Python; see the
    [README](README.md#running-it-windows)).
 2. Press **Start the game**. The game opens beside the Ledger, whose dice log
-   shows every roll as it happens.
+   shows every roll as it happens:
+
+   ![The Ledger during the arena's opening show: the party's cards on the left, the dice log of a fight on the right](docs/dicelog.png)
+
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
-   chosen when a character is made, so the four the game offers have none.
+   chosen when a character is made. The game's own four, used when you make
+   none, are given weapon specs to suit them, but no kits.
 
 ## Playing
 
@@ -965,6 +969,8 @@ Warriors train in kinds of weapon. Choose them on the creation panel's
 picture of each kind of weapon (point at one for its name; those you can't
 pick are greyed).
 
+![The level-up window: a picture of each kind of weapon, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the kinds this fighter/cleric can't use greyed](docs/weapon-picker.png)
+
 | Who | Chooses | With a chosen kind |
 |---|---|---|
 | Fighter | 1 kind | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
@@ -989,9 +995,8 @@ ranger level). 3/2 means one attack one round and two the next.
 | a **Battle Mage** (by its preserver level), its chosen kind | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
-The levels are the warrior's (its best fighter, gladiator or ranger level), or
-for the three kits their own class's. A Battle Mage's chosen kind is a melee
-weapon. With [two weapons](#two-weapons), the off hand attacks once a round
+For the three kits the level is their own class's. A Battle Mage's chosen
+kind is a melee weapon. With [two weapons](#two-weapons), the off hand attacks once a round
 whatever the rate.
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th

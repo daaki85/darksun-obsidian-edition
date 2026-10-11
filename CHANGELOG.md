@@ -31,6 +31,19 @@ have the detail.
   only opened again. EXIT now ends the picking, and the spells still to pick
   are the game's own starting spells, less any already picked.
 
+**Documentation**
+- **A review of every page.** The README's main screenshot (the dice log of
+  the arena's opening show) is retaken without the kill XP it no longer shows,
+  and the Options tab's with every rule switch. The README gains a Characters
+  tab section (spell slots, AC and scores, which had trailed after the Options
+  tab), the missing "Scores and hit points as rolled" in its contents, a
+  clearer list of what play writes to the game folder, and the kits' details
+  in one list; notes on how things were tested and the old release names are
+  gone. The guide has its first pictures (the dice log, the weapon window) and
+  no longer says the game's own party has no weapon specs. DEVELOPMENT.md
+  points to the README for the kits' table, says what the helper's memory is
+  now rather than how it got there, and drops the kits' build diary.
+
 ## Pull request #38 ([merged 2026-10-10](https://github.com/daaki85/darksun-obsidian-edition/pull/38))
 
 **Release**
