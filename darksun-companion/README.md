@@ -1020,7 +1020,7 @@ Started with the dice log, the game's own inventory screen (the one with the
 character's figure and their equipment) shows five more things in its
 right-hand panel, drawn by the game's text routine so they look like the rest:
 
-![The inventory screen's panel in the game: THAC0 and the saves at the top, Daaki's thief skills (move silently and hide in shadows among them) beside the abilities, and his DEX reaction and defensive adjustments](docs/inventory.png)
+![The inventory screen's panel in the game: THAC0 and the saves at the top, Daaki's thief skills (move silently and hide in shadows among them) beside the abilities, his DEX reaction and defensive adjustments, and a club in each hand: 1.5 attacks a round with the right, one with the off hand](docs/inventory.png)
 
 ![A ranger's panel: Dream's move silently and hide in shadows, for the stealth rule, where a thief's go](docs/inventory-ranger.png)
 
@@ -1334,7 +1334,7 @@ character may use, in any material. The rest stay greyed:
 rest. A ranger never has the bow to choose: its expertise with the bow comes
 anyway.)
 
-![The creation screen: a gladiator's WEAPON SPEC page, the long sword and the club marked, the others greyed](docs/creation-weapons.png)
+![The creation screen: a gladiator's weapons page, the long sword and the club marked, the others greyed, and under CHR the total of the six scores and of the die's roll](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec in
 place of the bone long sword the game gives warriors, in a material it may
@@ -2281,7 +2281,7 @@ on the creation screen [picks its own](#changing-class).
 
 ![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
 
-![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, each 1.5 attacks a round](docs/default-party-gerakis.png)
+![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
 
@@ -2468,7 +2468,7 @@ arena Defiler's figure and a face of his own: the game's portrait 61 with a
 slave's brand on the brow, so the Dialogue tab never mistakes him for anyone
 else.
 
-![Kalzith: his talk, and his shop of six scrolls at 3,000 to 9,000 ceramic](docs/kalzith.png)
+![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic, here a quarter off with a CHA 20 leader](docs/kalzith.png)
 
 Talk to him as to anyone (click him with the look pointer, then the Look box's
 Talk button). His conversation is the game's kind, just him speaking:
@@ -2842,7 +2842,7 @@ only weapons and shields (all it can use). Two party members of the same race
 and sex each show their own equipment: the game gives them one figure, so the
 second is moved to pictures of their own.
 
-![The arena, three of the party as the game draws them (left) and as the Ledger shows them (right): leather armour and leggings recoloured, clubs and a sword worn at the hip, a bow on the back](docs/gear.png)
+![The arena fight with Scar, the fighters as the game draws them (left) and with gear and shadows on (right): armour recoloured, weapons in hand and at the hip, and each figure casting a shadow toward the lower right](docs/gear.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
 

@@ -53,6 +53,11 @@ have the detail.
   no longer says the game's own party has no weapon specs. DEVELOPMENT.md
   points to the README for the kits' table, says what the helper's memory is
   now rather than how it got there, and drops the kits' build diary.
+- **Screenshots retaken where they had fallen behind:** the inventory, the
+  tome and the game's own party (the off hand at one attack a round, not 1.5),
+  the creation screen's weapons page (with the scores' total under CHR), the
+  gear boxes (plain boots), the figures' gear (now with shadows), Kalzith's
+  shop (the leader's CHA discount) and the Options tab (no boots switch).
 
 ## Pull request #38 ([merged 2026-10-10](https://github.com/daaki85/darksun-obsidian-edition/pull/38))
 
