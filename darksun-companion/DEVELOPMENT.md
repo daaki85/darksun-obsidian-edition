@@ -388,7 +388,9 @@ new: `or ax,ax / jnz 85F5Dh`, 4 bytes at 85F44h, in the pop-up's event loop
 85F2Ch, the jump done by the probe) reads the pointer each time round
 (`INT 33h` function 3), finds the slot from the window's place and the slots'
 (`PK_SLOTS_X`, `PK_PITCH`; `test_picker_matches_dsclog` keeps them
-weaponpages'), and when it changes draws **SPECIALIZE IN** and the kind's name
+weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
+`PK_WORD` puts the kind in the sheet's first empty slot for a moment and asks
+`SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the kind's name
 with the routine the powers' handler names a power with (85CC9h, which rubs
 out the lines it drew before), or the title again off the slots.
 A missile weapon's attacks a round are its item type's (+0Bh, in halves: a

@@ -15,7 +15,8 @@ have the detail.
   level up (or on becoming a warrior by DUAL), the window is bigger and has a
   slot with each kind's inventory picture, six to a row, in place of the
   names; kinds the character can't pick are greyed. Pointing at a slot names
-  it under them (SPECIALIZE IN / DAGGER), as CHOOSE A SPELL names a spell.
+  it under them (SPECIALIZE IN / DAGGER, or EXPERT IN for a ranger or a
+  Battle Mage, whose picks are expertise), as CHOOSE A SPELL names a spell.
 - **View Character: the saves labelled, MOVE added.** The five saves under
   the item icons each have their label (PPD, RSW, PP, BW, SP, as on the
   inventory screen) in place of one unlabelled SAVE line; THAC0 moves down

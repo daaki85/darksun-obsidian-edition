@@ -2831,6 +2831,41 @@ class KitTests(unittest.TestCase):
         self.assertEqual(kitpages.panel_windows((8, 0, 0), game.RULE_KITS), (kitpages.KIT_DISCIPLINES,
                                                                               kitpages.KIT_SPHERES))
 
+    def test_pick_word(self):
+        """PK_WORD: the weapon window's first line for a kind pointed at, as weaponchoice.pick_word:
+        "EXPERT IN" for a ranger's or a Battle Mage's kind, "SPECIALIZE IN" for a fighter's or
+        gladiator's (any of its kinds) and a Justifier's; LV_MEMBER's sheet as it was after."""
+        from dscompanion import weaponchoice
+        rules = game.RULE_SPECIALIZE | game.RULE_KITS
+        self.rules(rules)
+        self.mu.mem_write(self.DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEET))
+        cases = (((9, 0, 0), (), 0, 0, "SPECIALIZE IN"),        # a fighter's first kind
+                 ((9, 0, 0), (1,), 0, 5, "SPECIALIZE IN"),      # ... and its second
+                 ((10, 0, 0), (), 0, 1, "SPECIALIZE IN"),       # a gladiator
+                 ((13, 0, 0), (), 0, 0, "EXPERT IN"),           # a ranger
+                 ((13, 0, 0), (1,), 0, 13, "EXPERT IN"),        # ... its bow
+                 ((13, 0, 0), (), 2, 0, "SPECIALIZE IN"),       # a Justifier
+                 ((11, 0, 0), (), 2, 1, "EXPERT IN"),           # a Battle Mage
+                 ((9, 0, 0), (1, 2, 3, 4), 0, 5, "SPECIALIZE IN"))  # (no slot left: as before)
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = rules
+            for classes, chosen, kit, kind, want in cases:
+                with self.subTest(classes=classes, chosen=chosen, kit=kit, kind=kind):
+                    sheet = bytearray(game.SHEET_SIZE)
+                    sheet[0x21:0x24], sheet[0x24], sheet[0x43] = bytes(classes), 4, kit
+                    sheet[0x14:0x14 + len(chosen)] = bytes(chosen)
+                    self.mu.mem_write(self.SHEET * 16, bytes(sheet))
+                    self.call(rb"\x50\x53\x56\x06\xba..\xc4\x1e\x61\x16", eax=kind)
+                    dx = self.mu.reg_read(r.UC_X86_REG_DX)
+                    text = bytes(self.mu.mem_read(TSR * 16 + dx, 16)).split(b"\0")[0].decode()
+                    self.assertEqual(text, want)
+                    self.assertEqual(weaponchoice.pick_word(bytes(sheet), kind), want)
+                    self.assertEqual(bytes(self.mu.mem_read(self.SHEET * 16, game.SHEET_SIZE)), bytes(sheet))
+                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX) & 0xFF, kind)
+        finally:
+            game.RULES_IN_FORCE = old
+
     def test_effects_line(self):
         """KIT_OF_SHEET: the Effects screen's line for kit AL ("KIT: RAVAGER")."""
         from dscompanion import kitpages

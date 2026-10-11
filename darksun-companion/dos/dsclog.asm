@@ -4700,6 +4700,7 @@ lv_label_call dd 0              ; 140:7FAh, a button's text
 lv_lines_call dd 0              ; 85CC9h, the window's two lines (as PK_HOVER finds it)
 lv_hovered db 0FFh              ; the slot PK_HOVER last named (0FFh none: the title)
 lv_hover  db 'SPECIALIZE IN', 0
+lv_expert db 'EXPERT IN', 0
 lv_mode   db 0                  ; 1 while LV_ASK has the pop-up up for weapons
 lv_left   db 0
 lv_have   db 0
@@ -6611,11 +6612,11 @@ rl_sites:
 ; PK_HOVER: "or ax,ax / jnz 85F5Dh" (85F44h; 4 bytes: the site's number and a NOP after the INT),
 ; in the pop-up's event loop (85F2Ch), each time round: AX 0 when 110:965h has an event to deal
 ; with. In weapon mode, the slot the pointer is on (INT 33h; the window where PROBE_PK_WIN puts it,
-; the slots where weaponpages has them) named in the window's two lines, "SPECIALIZE IN" and the
-; kind, as the powers' handler names a power (864B9h, with the routine that rubs out the old
-; lines, 85CC9h), and the title put back once it is on none; drawn only when that changes. (A slot
-; is a button, and a button the pointer is on takes the pointer: the powers' cells' handler never
-; hears of it.)
+; the slots where weaponpages has them) named in the window's two lines, "SPECIALIZE IN" (or
+; "EXPERT IN", PK_WORD) and the kind, as the powers' handler names a power (864B9h, with the
+; routine that rubs out the old lines, 85CC9h), and the title put back once it is on none; drawn
+; only when that changes. (A slot is a button, and a button the pointer is on takes the pointer:
+; the powers' cells' handler never hears of it.)
 PK_HOVER_PAST equ 0x85F47           ; (the address after the site's number)
 PK_LINES      equ 0x85CC9 - PK_HOVER_PAST
 PK_NO_EVENT   equ 0x85F5D - PK_HOVER_PAST
@@ -6684,6 +6685,7 @@ pk_hover:
         jmp .draw
 .slot:  push cs
         xor ah, ah
+        call pk_word
         mov si, ax
         add si, si
         mov ax, [cs:ef_kinds + si]
@@ -6691,7 +6693,7 @@ pk_hover:
         inc ax
         push ax
         push cs
-        push word lv_hover
+        push dx
 .draw:  push dword (PK_PICK_SECOND << 16) | 0xFE
         push dword (PK_PICK_INK << 16) | PK_PICK_WIDTH
         push word PK_PICK_Y
@@ -6704,6 +6706,49 @@ pk_hover:
 .out:   pop es
         popad
         iret
+
+; PK_WORD: DX the first line for kind AX: "EXPERT IN" when LV_MEMBER would have expertise with it
+; once picked, else "SPECIALIZE IN" (the kind put in the sheet's first empty SPEC_SLOTS byte for
+; SPEC_OF_SHEET to judge, its plain weapon's, and taken out again). DS the game's; others kept.
+pk_word:
+        push ax
+        push bx
+        push si
+        push es
+        mov dx, lv_hover
+        les bx, [LV_SHEETS]
+        push ax
+        imul ax, [cs:lv_member], 0x47
+        add bx, ax
+        pop ax
+        xor si, si
+.slot:  cmp byte [es:bx + si + SPEC_SLOTS], 0
+        je .put
+        inc si
+        cmp si, SPEC_COUNT
+        jb .slot
+        jmp .ret
+.put:   push si
+        inc al
+        mov [es:bx + si + SPEC_SLOTS], al
+        dec al
+        mov si, ax
+        shl si, 1
+        mov si, [cs:si + wp_plain]
+        push dx
+        call spec_of_sheet
+        mov al, dl
+        pop dx
+        pop si
+        mov byte [es:bx + si + SPEC_SLOTS], 0
+        cmp al, SPEC_EXPERT
+        jne .ret
+        mov dx, lv_expert
+.ret:   pop es
+        pop si
+        pop bx
+        pop ax
+        ret
 
 ; CR_TOTAL: DX the six scores of the creature being made (DS:[11A0h], from +22h) added up.
 ; DS the game's; others kept.

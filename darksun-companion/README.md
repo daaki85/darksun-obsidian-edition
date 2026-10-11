@@ -1364,7 +1364,8 @@ reaching 6th or 9th, or any warrior from a game begun before the rule) picks
 the rest the way a psionicist picks a new power: in the game's own pop-up,
 made bigger, a picture of each weapon spec on a slot, six to a row, those its
 classes can't use (or it has) greyed. The pointer on a slot names it under
-them (**SPECIALIZE IN** / **POLEARM**, as CHOOSE A SPELL names a spell), and
+them (**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick would
+be expertise: a ranger's, a Battle Mage's; as CHOOSE A SPELL names a spell), and
 lights the slot if it can be picked; off the slots the title comes back. The
 picks left are beside **EXIT** (which asks, as for powers, whether to leave
 with picks unmade: they're offered again at the next level).
