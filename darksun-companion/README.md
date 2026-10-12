@@ -2260,7 +2260,9 @@ in the character's sheet, so it saves with the game and the character.
   thri-kreen's four claws and bite become 1d6+1 each (a natural attack already
   better on average, as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in
   the log's THAC0 breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons
-  hurt creatures that only magical weapons can.
+  hurt creatures that only magical weapons can. With **Body Weaponry** or
+  **Animal Affinity** up, the power's dice for the first attack get the claw's
+  +1: 2d4+1 or 1d10+1.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
   own blue), with Fog Cloud's sounds as it's cast and as it lands; like any

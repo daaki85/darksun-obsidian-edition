@@ -1298,7 +1298,8 @@ can cast. INT sets two limits:
     dodging.
   - **Erdlu Claw** (1st level): talons for 5 rounds a caster level. Unarmed
     attacks, a thri-kreen's claws and bite too, do 1d6+1 where that's better,
-    are +1 to hit and count as a +1 magical weapon.
+    are +1 to hit and count as a +1 magical weapon. With Body Weaponry or
+    Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
     in a clear line, for 2d4 rounds unless it saves: -3 to its attacks, +2 to
     attacks on it.

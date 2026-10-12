@@ -10627,8 +10627,8 @@ probe_spell_text:
 .out:   iret
 ns_texts:
         db "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.", 13, 10, 0
-        db "ERDLU CLAW:  The target's nails grow into talons like an erdlu's: its unarmed attacks "
-        db "do 1d6+1 damage, +1 to hit, as a +1 weapon. Lasts 5 rounds per level.", 13, 10, 0
+        db "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
+        db "Animal Affinity's dice), +1 to hit, as a +1 weapon. Lasts 5 rounds per level.", 13, 10, 0
         db "FOGBOLT:  A bolt of fog clings to one creature: -3 to hit and Armor Class 2 worse for "
         db "2 to 8 rounds. A saving throw negates it.", 13, 10, 0
 

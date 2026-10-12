@@ -784,7 +784,10 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   routine (58019h, `NS_FIST` at 58226h), where a hit gets its weapon's magic
   (`[BP-0Ch]`, which becomes damage kinds 1000h/2000h/8000h, PLUS1-PLUS3 in
   `monsters.py`), an unarmed attack (`[BP-2]` -1) is +1 to hit (`[BP-8]`,
-  taken off the THAC0) and at least a +1 weapon.
+  taken off the THAC0) and at least a +1 weapon. The natural-attack routine
+  applies Body Weaponry (2d4) and Animal Affinity (at least 1d10) to the first
+  attack after `NS_CLAW`, changing the dice but not the bonus: with the claw,
+  2d4+1 and 1d10+1, as the description says.
 - Fogbolt puts effect 27 (unused) on a creature that fails its save. In the
   routine adding up an attack's to-hit adjustments from effects (7C3E9h,
   `NS_HIT` at 7C430h, beside the target's Blur), it takes 3 off for a fogged
