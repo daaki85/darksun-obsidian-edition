@@ -237,6 +237,41 @@ class AttackTests(unittest.TestCase):
         lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
         self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
 
+    def test_two_weapons_ranger_light_armour(self):
+        """With the rule a ranger has no penalty only in light armour (DSCLOG's RG_TWO): a metal
+        chest piece (item 7, type 12) brings AD&D's; leather takes it away again."""
+        log = make_game()
+        log.set_rules(game.RULE_TWO_WEAPONS)
+        self.addCleanup(setattr, game, "RULES_IN_FORCE", 0)
+        m = log.guest.mem
+        dex = CREATURES + game.CREATURE_ABILITIES + 1
+        m[dex], m[DS * 16 + game.DEX_INITIATIVE + 17] = 17, 2
+        two_hands(m)
+        struct.pack_into("<H", m, SHEETS + game.SHEET_FLAGS, game.SHEET_FLAG_RANGER)
+        struct.pack_into("<h", m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_NEXT, 7)
+        struct.pack_into("<H", m, ITEMS + 7 * game.ITEM_SIZE + game.ITEM_TYPE, 12)
+        struct.pack_into("<H", m, ITEMS + 7 * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
+        m[ITEMS + 7 * game.ITEM_SIZE + game.ITEM_SLOT] = game.EQUIP_SLOTS.index("chest")
+        typ = ITEM_TYPES + 12 * game.ITEM_TYPE_SIZE
+        m[typ + 0x0F], m[typ], m[typ + 9] = 0x80, 0, game.EQUIP_SLOTS.index("chest")
+        m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = 10  # the left hand
+        m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 3
+        for material, thac0, bonus, want in (
+                (4, 11, -1, "    THAC0 16, +6 STR, +1 weapon, -2 two weapons, off hand at DEX 17 = 11"),
+                (5, 9, 1, "    THAC0 16, +6 STR, +1 weapon = 9"),
+                (0x40, 9, 1, "    THAC0 16, +6 STR, +1 weapon = 9")):
+            with self.subTest(material=material):
+                m[typ + 8] = material
+                lines = log.describe(self.attack(18, thac0, 4, 5, 9, after_f1=10, hit_bonus=bonus, m16=2))
+                self.assertEqual(lines[1], want)
+        # a Justifier (the ranger's second kit, kits on) in metal: none still
+        m[typ + 8] = 4
+        log.set_rules(game.RULE_TWO_WEAPONS | game.RULE_KITS)
+        m[SHEETS + game.SHEET_CLASSES], m[SHEETS + 0x43] = 13, 2
+        lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
+        self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
+        self.assertEqual(log.game.two_weapons(0, 10), ("two weapons, off hand (Justifier)", 0))
+
     def test_monster_natural_attack(self):
         log = make_game()
         lines = log.describe(self.attack(20, 11, 1, -1, -1, after_f1=11, hit_bonus=0, attacker=STALKER,
@@ -294,7 +329,7 @@ class AttackTests(unittest.TestCase):
         """At the least, a spell's damage taken and healing, without its dice or saves."""
         log = make_game()
         log._turn_log += ["Fireball damage: 9d6 = [3 + 2 + 3 + 4 + 5 + 4 + 1 + 2 + 2] = 26",
-                          "Red Slaad saves vs Fireball from Daaki (petrification/polymorph): d20 = 6 -> saved",
+                          "Red Slaad's saving throw vs Fireball from Daaki (petrification/polymorph): d20 = 6 -> saved",
                           "  Red Slaad takes 13 from Fireball, now 47/60 HP",
                           "  Dag regains 7 HP from Cure Light Wounds, now 30/40 HP"]
         self.assertEqual(log.turn_summary(0, dicelog.POPUP_MINIMAL),
@@ -376,11 +411,11 @@ class AttackTests(unittest.TestCase):
         log = make_game()
         log._note_turn(["Round 2: Dag 25, Mountain Stalker 18", "    Dag 25 = 20 + 5 (0-9 roll)",
                         "Fireball damage: 5d6 = [2 + 5 + 3 + 6 + 1] = 17",
-                        "Dag saves vs Fireball from Defiler (petrification/polymorph): d20 = 7, doubled against fire = 14, needs 12 (60% to save) -> saved: half damage, 8",
+                        "Dag's saving throw vs Fireball from Defiler (petrification/polymorph): d20 = 7, doubled against fire = 14, needs 12 (60% to save) -> saved: half damage, 8",
                         "  Dag takes 8 from Fireball, now 16/24 HP", "Dice: 1d6 = [4] = 4"])
         text = log.turn_summary(0).split("\n")
         self.assertEqual(text[0], "Fireball damage: 5d6 = [2 + 5 + 3 + 6 + 1] = 17")  # not the round's order
-        self.assertTrue(text[1].startswith("Dag saves vs Fireball"))
+        self.assertTrue(text[1].startswith("Dag's saving throw vs Fireball"))
         self.assertIn("needs 12 -> saved", text[1])  # the chance to save left out too
         self.assertEqual(text[2], "Dag takes 8 from Fireball, now 16/24 HP")
         self.assertEqual(len(text), 3)  # nor unlabelled dice
@@ -457,7 +492,7 @@ class SaveTests(unittest.TestCase):
                          ["Hold Person damage: 2d6 = [6 + 4] = 10"])
         self.assertEqual(log.describe(self.save_roll(log, 13), now=1.1), [])
         self.assertEqual(log.describe(self.probe(15)),
-                         ["Mountain Stalker saves vs Hold Person from Dag (spell): d20 = 13 +2 other = 15, "
+                         ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): d20 = 13 +2 other = 15, "
                           "needs 14 (45% to save) -> saved"])
 
     def test_save_shows_what_it_leaves(self):
@@ -470,7 +505,7 @@ class SaveTests(unittest.TestCase):
             log.describe(d, now=1.0)
         log.describe(self.save_roll(log, 9, spell=FIREBALL), now=1.1)
         self.assertEqual(log.describe(self.probe(18, needed=14, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 9, doubled against fire = 18, "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9, doubled against fire = 18, "
                           "needs 14 (70% to save) -> saved: half damage, 7 of 15"])
 
     def test_save_not_doubled_with_the_rule(self):
@@ -485,7 +520,7 @@ class SaveTests(unittest.TestCase):
                                parent_code=dicelog.SPELL_DAMAGE_RETURN), now=1.0)
         log.describe(self.save_roll(log, 9, spell=FIREBALL), now=1.1)
         self.assertEqual(log.describe(self.probe(11, needed=14, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 9 +2 DEX 16 dodging = 11, "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9 +2 DEX 16 dodging = 11, "
                           "needs 14 (45% to save) -> failed: full damage, 15"])
         log.set_rules(0)  # and the mark comes off again
         rules = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF + FIREBALL * game.SPELL_SIZE
@@ -714,7 +749,7 @@ class SaveTests(unittest.TestCase):
         log = make_game()
         log.describe(self.save_roll(log, 7, spell=FIREBALL))
         self.assertEqual(log.describe(self.probe(14, needed=15, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 7, doubled against fire "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 7, doubled against fire "
                           "= 14, needs 15 (65% to save) -> failed"])
 
     def test_modifiers_name_the_effects_that_count(self):
@@ -732,7 +767,7 @@ class SaveTests(unittest.TestCase):
         set_effects(log, [(0x29, 0, 40), (0x29, 0, 7)])  # Prot Fire, Blessed
         log.describe(self.save_roll(log, 7, spell=FIREBALL))
         self.assertEqual(log.describe(self.probe(18, needed=15, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 7, doubled against fire "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 7, doubled against fire "
                           "= 14 +1 Blessed +3 Prot Fire = 18, needs 15 (75% to save) -> saved"])
         # paralysis/poison/death: a dwarf's CON counts twice over
         m = log.guest.mem
@@ -745,7 +780,7 @@ class SaveTests(unittest.TestCase):
     def test_natural_20_needs_no_probe(self):
         log = make_game()
         self.assertEqual(log.describe(self.save_roll(log, 20)),
-                         ["Mountain Stalker saves vs Hold Person from Dag (spell): d20 = 20 (natural 20) -> saved"])
+                         ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): d20 = 20 (natural 20) -> saved"])
 
     def test_magic_resistance(self):
         log = make_game()
@@ -915,7 +950,7 @@ class NewLinesTests(unittest.TestCase):
         struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, 20)
         self.assertEqual(tracker.check(1.0), [])
         struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, -3)
-        self.assertEqual(tracker.check(2.0), ["Mountain Stalker is killed (500 XP)"])
+        self.assertEqual(tracker.check(2.0), ["Mountain Stalker is killed"])
         struct.pack_into("<I", m, SHEETS, 125)  # Dag's XP
         self.assertEqual(tracker.check(2.2), [])  # waits for the others' XP
         self.assertEqual(tracker.check(3.0), ["XP: Dag +125 (for Mountain Stalker 500)"])
@@ -1398,17 +1433,18 @@ class CreationTests(unittest.TestCase):
                           "(rounded down), +5 CON 17 = 14)"])
 
     def test_hit_points_shared(self):
-        """RULE_MULTI_HP: each level's die shared between the classes, at least 1, and CON's bonus too."""
+        """RULE_MULTI_HP: as Demihuman Deities, CON's bonus (a warrior's, the character having a warrior
+        class) on each die, the total shared between the classes."""
         log = make_creation()
         log.set_rules(game.RULE_MULTI_HP)
         for cls, sides, level, face in ((9, 10, 1, 10), (9, 10, 2, 5), (17, 6, 1, 1), (17, 6, 2, 6)):
             e = entry(raw_for(face, sides), dicelog.DICE_SITE, words(0, 0, 1, sides),
                       words(dicelog.CREATION_HP_CALLER, 0x54FA, 1, cls, level), parent_code=dicelog.LEVEL_HP_RETURN)
             self.assertEqual(log.describe(e), [])
-        # 5 + 2 + 1 (the 1 at least) + 3 = 11, and CON 17's +6 / 2
+        # (22 + CON 17's +3 on each of the 4 dice) / 2
         self.assertEqual(log.creation_hp_lines(),
-                         ["Character creation, hit points 14: Fighter d10 per level: 10 + 5; Thief d6 per level: "
-                          "1 + 6 = 22, each / 2 classes (at least 1) = 11, +3 CON 17 shared = 14"])
+                         ["Character creation, hit points 17: Fighter d10 per level: 10 + 5; Thief d6 per level: "
+                          "1 + 6 = 22, +3 CON 17 on each of 4 dice = 34, / 2 classes = 17"])
 
     def test_hit_points_best_of_two(self):
         """RULE_HP_BEST: each level's die rolled twice, the better kept."""

@@ -4,7 +4,8 @@
 import struct
 from typing import List, NamedTuple, Optional
 
-from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, PARTY_SIZE, PERMANENT, PSIONIC_COUNT, PSIONIC_FIRST, SAVE_NAMES,
+from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
+                   PERMANENT, PSIONIC_COUNT, PSIONIC_FIRST, RULE_NEW_SPELLS, SAVE_NAMES,
                    SPELL_COUNT, SPELL_FIRST, SPELL_INFO_OFF, SPELL_INFO_SIZE, SPELL_LEVEL_CAP, SPELL_SIZE, GameData, kind_to_save,
                    ordinal)
 
@@ -130,6 +131,8 @@ def lasts_text(gd: GameData, spell: int, rec: bytes) -> str:
 
 
 def spell_level(gd: GameData, spell: int) -> Optional[int]:
+    if spell in NEW_SPELLS:
+        return NEW_SPELL_LEVELS[spell]
     if not SPELL_FIRST <= spell <= SPELL_COUNT:
         return None
     return gd.guest.read(gd.load_seg * 16 + SPELL_INFO_OFF + (spell - 1) * SPELL_INFO_SIZE, 1)[0] or None
@@ -139,7 +142,9 @@ def spell_info(gd: GameData, spell: int, party: List[int]) -> Optional[SpellInfo
     rec = gd.spell_record(spell)
     if len(rec) < SPELL_SIZE:
         return None
-    if spell >= PSIONIC_FIRST:
+    if spell in NEW_SPELLS:
+        magic = "Wizard"
+    elif spell >= PSIONIC_FIRST:
         magic = "Psionic"
     else:
         magic = "Wizard" if spell <= WIZARD_LAST else "Priest"
@@ -156,10 +161,12 @@ def spell_info(gd: GameData, spell: int, party: List[int]) -> Optional[SpellInfo
 
 
 def all_spells(gd: GameData, party: Optional[List[int]] = None) -> List[SpellInfo]:
-    """Every wizard and priest spell (by level) and psionic power, from the running game."""
+    """Every wizard and priest spell (by level) and psionic power, from the running game, and the new
+    spells while their rule is on."""
     party = list(range(PARTY_SIZE)) if party is None else party
     out = []
-    for spell in list(range(SPELL_FIRST, SPELL_COUNT + 1)) + list(range(PSIONIC_FIRST, PSIONIC_FIRST + PSIONIC_COUNT)):
+    new = list(NEW_SPELLS) if gd.rules & RULE_NEW_SPELLS else []
+    for spell in list(range(SPELL_FIRST, SPELL_COUNT + 1)) + new + list(range(PSIONIC_FIRST, PSIONIC_FIRST + PSIONIC_COUNT)):
         info = spell_info(gd, spell, party)
         if info:
             out.append(info)

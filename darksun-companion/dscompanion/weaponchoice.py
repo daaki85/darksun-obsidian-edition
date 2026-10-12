@@ -74,6 +74,21 @@ MISSILE_KINDS = frozenset(specialize.KINDS.index(k) for k in ("bow", "sling", "s
 BOW = specialize.KINDS.index("bow")
 
 
+def pick_word(sheet: bytes, kind: int) -> str:
+    """The weapon window's first line for a kind pointed at, as DSCLOG's PK_WORD: "EXPERT IN" when
+    the character would have expertise with it once picked (into its first empty slot: a ranger,
+    a Battle Mage, a fighter's second kind), else "SPECIALIZE IN"."""
+    s = bytearray(sheet)
+    slots = game.SPEC_SLOTS
+    for i in range(slots, slots + game.SPEC_COUNT):
+        if not s[i]:
+            s[i] = kind + 1
+            if specialize.skill(bytes(s), PLAIN[kind][0]) == specialize.EXPERT:
+                return "EXPERT IN"
+            break
+    return "SPECIALIZE IN"
+
+
 def kinds_for(sheet: bytes, allowed: Optional[List[int]] = None) -> List[int]:
     """The kinds (+1 each, as in the sheet) a new character ends up with; ALLOWED: the kinds its
     classes let it choose (restrict.allowed_kinds; None: all), the first of them the default

@@ -49,10 +49,12 @@ NAME = b"Ring/Protection"  # the game's own way of shortening ("Helm/Contempltn"
 NAME_FIT = 15
 # The items the rule changes make better, named for it while the rule is on (the game shows
 # no description of an item, only its name): entry, the game's own name, rule, what it gives
+NO_RULE = 0
 RULE_NAMES = ((6, "Helm", game.RULE_HELMS, " (AC 1)"), (145, "Dapartea's Helm", game.RULE_HELMS, " (AC 1)"),
               (107, "Helm/Contempltn", game.RULE_HELMS, " (AC 1)"), (236, "Helm of Might", game.RULE_HELMS, " (AC 1)"),
-              (43, "Boots", game.RULE_BOOTS, " (Speed+1)"), (286, "Serpent Boots", game.RULE_BOOTS, " (Speed+1)"))
-# what earlier versions named them ("Move" now names moving silently in the boots' item box)
+              (43, "Boots", NO_RULE, " (Speed+1)"), (286, "Serpent Boots", NO_RULE, " (Speed+1)"))
+# what earlier versions named them: boots gave a move in a fight once, a rule since gone (NO_RULE:
+# never on, so their names go back to the game's)
 OLD_EXTRAS = (" (+1 Move)",)
 # the game's own record for a Ring (from SEGOBJEX), not worn (slot 255), with a plus of 1
 VALUE = 15000  # its price (the game's Ring's 500, made a magic ring's: its magic rings are 30,000-50,000)

@@ -26,15 +26,26 @@ PAGES = (3014, 3015, 3016, 3017)  # the weapon pages
 WARRIOR_DISCIPLINES, WARRIOR_SPHERES = 3018, 3019
 PICKER = 3021  # the level-up window (like the psionicists', 17501)
 PSIONIC_PICKER = 17501
-PICK_FIRST = 0x860  # its rows, 0x860 + kind (the carved names without the mark's room)
+PICK_FIRST = 0x860  # its slots, 0x860 + kind
 PICK_COUNT_BUTTON, PICK_EXIT = 0x2C37, 0x4396  # (the psionicists' window's: picks left, EXIT)
-PICK_X, PICK_GAP_X, PICK_Y, PICK_PITCH = 6, 82, 6, 8  # the rows' place: two columns of eight
-# The rows' letters outlined in black, so that they read clearly over the marble: near-white
-# 19.4:1 against the outline, light grey out of use 8.1:1 (WCAG 2.0 AA asks 4.5:1); the
-# interface's own greys, which no region's palette changes. (DSCLOG's PROBE_PK_TITLE has the
-# window's line under them drawn in the same near-white.)
-PICK_COLOURS = [255, 214, 214]
-PICK_OUTLINE = 254
+# The level-up window: each kind a slot with a weapon's picture (the game's inventory picture of
+# one of that kind: PICTURES, objects in SEGOBJEX.GFF), six to a row, the window bigger than
+# the psionicists' (its marble, PSIONIC_BACKGROUND, carried on) and its two lines under the slots
+# (DSCLOG's PROBE_PK_TITLE: PICK_TITLE_Y). A slot is three pictures: as it is, lit (its edge
+# near-white, the pointer on it), and out of use (the weapon a grey shape).
+PICK_SLOT, PICK_PITCH, PICK_COLUMNS, PICK_TOP = 32, 34, 6, 7
+PICK_WIDTH, PICK_HEIGHT = 214, 156
+PICK_COUNT_GAP = 28  # (the picks left, a number centred in its 42-wide button, this far before EXIT)
+PICK_TITLE_Y = PICK_TOP + 3 * PICK_PITCH + 3
+PICK_BACKGROUND, PSIONIC_BACKGROUND = 3022, 17001  # (BMP chunks)
+WIND_WIDTH, WIND_HEIGHT, WIND_BACKGROUND = 0xBE, 0xC0, 0xC2
+BUTN_SIZE = 0x28  # a button's width and height
+PICTURES = (1014, 1185, 2504, 2427, 2506, 1183, 2508, 2510, 1019, 2512, 1011, 1188, 1010, 1017, 1015, 1016)
+POLEARM, POLEARM_SIZE = 9, 26  # (its picture, 36 pixels square, made smaller)
+# the interface's blue-greys, which no region's palette changes (17-31): the slot's face, its
+# dark top and left, light bottom and right, its lit edge, and a weapon out of use
+SLOT_FACE, SLOT_DARK, SLOT_LIGHT, SLOT_LIT, SLOT_OUT = 19, 17, 24, 31, 22
+MARBLE_LIGHT, MARBLE_DARK = 212, 208  # (the marble's own bevel)
 ROW_FIRST = 0x840  # the 16 kinds' rows, 0x840 + kind (after the dialogue window's and others', 81Ch-833h)
 MORE, BACK, VIEW = 0x850, 0x851, 0x852  # MORE SPECS, VIEW PSIONICS, WEAPON SPEC
 ROW_TEMPLATE, TOGGLE_TEMPLATE = 0x7FA, 0x7FF  # (AIR's row and VIEW PSIONICS's button)
@@ -149,23 +160,6 @@ def _encode(frames: List[Rows]) -> bytes:
     return encode_frames(frames)
 
 
-def outlined(font: Dict[str, Glyph], text: str, colours: List[int]) -> bytes:
-    """TEXT with a black outline a pixel wide (the picture a pixel bigger all round than the
-    letters); a frame for each colour."""
-    frames = []
-    for colour in colours:
-        rows = label(font, text, 1, colour)
-        width = len(rows[0]) + 1
-        rows = [[None] * width] + [r + [None] for r in rows] + [[None] * width]
-        ink = {(x, y) for y, r in enumerate(rows) for x, p in enumerate(r) if p is not None}
-        for y, r in enumerate(rows):
-            for x in range(width):
-                if (x, y) not in ink and any((x + dx, y + dy) in ink for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
-                    r[x] = PICK_OUTLINE
-        frames.append(rows)
-    return _encode(frames)
-
-
 def _button(template: bytes, template_id: int, new_id: int) -> bytes:
     return template.replace(struct.pack("<I", template_id), struct.pack("<I", new_id))
 
@@ -196,9 +190,10 @@ def page_text(kind: int) -> str:
     return SHORT.get(name, name.upper())
 
 
-def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
+def chunks(resource: gff.Chunks, objects: Optional[gff.Chunks] = None) -> Dict[Tuple[str, int], bytes]:
     """For the Ledger's copy of RESOURCE.GFF: the weapon pages, the warriors' windows, and their
-    rows' and buttons' pictures and buttons."""
+    rows' and buttons' pictures and buttons; and the level-up window (its weapons' pictures from
+    OBJECTS, SEGOBJEX.GFF's chunks with the Ledger's own items)."""
     font = glyphs(resource)
     row_colours = _colours(resource[("ICON", ROW_TEMPLATE)])
     toggle_colours = _colours(resource[("ICON", TOGGLE_TEMPLATE)])
@@ -224,13 +219,102 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     disciplines = resource[("WIND", DISCIPLINES)]
     added[("WIND", WARRIOR_DISCIPLINES)] = _window(
         disciplines, WARRIOR_DISCIPLINES, [(VIEW if c == DISCIPLINE_TOGGLE else c, x, y) for c, x, y in _items(disciplines)])
+    added.update(picker(resource, objects or {}, row_button))
+    return added
+
+
+def _trim(rows: Rows) -> Rows:
+    """ROWS without the clear rows and columns round them."""
+    ys = [y for y, r in enumerate(rows) if any(p is not None for p in r)]
+    xs = [x for x in range(len(rows[0])) if any(r[x] is not None for r in rows)] if rows else []
+    if not ys or not xs:
+        return [[None]]
+    return [r[min(xs):max(xs) + 1] for r in rows[min(ys):max(ys) + 1]]
+
+
+def _smaller(rows: Rows, size: int) -> Rows:
+    """ROWS made SIZE pixels square, a pixel taken for each (the same step both ways, so that a
+    diagonal stays unbroken)."""
+    h, w = len(rows), len(rows[0])
+    return [[rows[y * h // size][x * w // size] for x in range(size)] for y in range(size)]
+
+
+def weapon_picture(objects: gff.Chunks, kind: int) -> Rows:
+    """Kind KIND's weapon, as the game draws it in the inventory, trimmed (none if missing)."""
+    from .icons import OJFF_ICON, decode
+    ojff = objects.get(("OJFF", PICTURES[kind]))
+    if not ojff:
+        return [[None]]
+    bmp = objects.get(("BMP ", struct.unpack_from("<H", ojff, OJFF_ICON)[0]))
+    if not bmp:
+        return [[None]]
+    rows = _trim(decode(bmp))
+    if kind == POLEARM and max(len(rows), len(rows[0])) > PICK_SLOT - 4:
+        rows = _smaller(rows, POLEARM_SIZE)
+    return rows
+
+
+def slot(weapon: Rows, state: int) -> Rows:
+    """A slot with WEAPON in its middle: STATE 0 as it is, 1 lit, 2 out of use (the frames of a
+    button's picture, in the game's order)."""
+    n = PICK_SLOT
+    rows: Rows = [[SLOT_FACE] * n for _ in range(n)]
+    for i in range(n):
+        for (x, y) in ((i, 0), (0, i)):
+            rows[y][x] = SLOT_DARK
+        for (x, y) in ((i, n - 1), (n - 1, i)):
+            rows[y][x] = SLOT_LIGHT
+    if state == 1:
+        for i in range(n):
+            rows[0][i] = rows[n - 1][i] = rows[i][0] = rows[i][n - 1] = SLOT_LIT
+    h, w = len(weapon), len(weapon[0])
+    top, left = (n - h) // 2, (n - w) // 2
+    for y, r in enumerate(weapon):
+        for x, p in enumerate(r):
+            if p is not None and 0 <= top + y < n and 0 <= left + x < n:
+                rows[top + y][left + x] = SLOT_OUT if state == 2 else p
+    return rows
+
+
+def background(resource: gff.Chunks) -> Rows:
+    """The picker's marble, the psionicists' carried on to its size (inside their bevel, each
+    band of it shifted so the copies don't line up), in the same bevel."""
+    _, _, marble = decode_frame(resource[("BMP ", PSIONIC_BACKGROUND)])
+    marble = [r[3:-3] for r in marble[3:-3]]
+    mh, mw = len(marble), len(marble[0])
+    w, h = PICK_WIDTH, PICK_HEIGHT
+    rows: Rows = [[marble[(y + 37 * (x // mw)) % mh][(x + 53 * (y // mh)) % mw] for x in range(w)]
+                  for y in range(h)]
+    for x in range(w):
+        rows[0][x] = rows[1][x] = MARBLE_LIGHT
+        rows[h - 1][x] = rows[h - 2][x] = MARBLE_DARK
+    for y in range(h):
+        rows[y][0] = rows[y][1] = MARBLE_LIGHT
+        rows[y][w - 1] = rows[y][w - 2] = MARBLE_DARK
+    return rows
+
+
+def picker(resource: gff.Chunks, objects: gff.Chunks, row_button: bytes) -> Dict[Tuple[str, int], bytes]:
+    """The level-up window (PICKER): its marble, a slot for each kind, picks left and EXIT."""
+    added: Dict[Tuple[str, int], bytes] = {}
     psionic = resource[("WIND", PSIONIC_PICKER)]
-    keep = [(c, x, y) for c, x, y in _items(psionic) if c in (PICK_COUNT_BUTTON, PICK_EXIT)]
+    keep = {c: (x, y) for c, x, y in _items(psionic) if c in (PICK_COUNT_BUTTON, PICK_EXIT)}
+    left = (PICK_WIDTH - PICK_COLUMNS * PICK_PITCH + (PICK_PITCH - PICK_SLOT)) // 2
+    items = []
     for kind in range(len(specialize.KINDS)):
         cid = PICK_FIRST + kind
-        added[("ICON", cid)] = outlined(font, page_text(kind), PICK_COLOURS)
-        added[("BUTN", cid)] = _button(row_button, ROW_TEMPLATE, cid)
-    rows = [(PICK_FIRST + k, PICK_X - 1 + PICK_GAP_X * (k // 8), PICK_Y - 1 + PICK_PITCH * (k % 8))
-            for k in range(len(specialize.KINDS))]  # (the outline a pixel out from the letters)
-    added[("WIND", PICKER)] = _window(psionic, PICKER, rows + keep)
+        weapon = weapon_picture(objects, kind)
+        added[("ICON", cid)] = _encode([slot(weapon, state) for state in range(3)])
+        button = bytearray(_button(row_button, ROW_TEMPLATE, cid))
+        struct.pack_into("<HH", button, BUTN_SIZE, PICK_SLOT, PICK_SLOT)
+        added[("BUTN", cid)] = bytes(button)
+        items.append((cid, left + PICK_PITCH * (kind % PICK_COLUMNS), PICK_TOP + PICK_PITCH * (kind // PICK_COLUMNS)))
+    exit_x, exit_y = keep[PICK_EXIT]
+    dx, dy = PICK_WIDTH - 159, PICK_HEIGHT - 113  # (the psionicists' window's size)
+    exit_x, exit_y = exit_x + dx, exit_y + dy  # (its corner, as theirs; the picks left just before)
+    items += [(PICK_COUNT_BUTTON, exit_x - PICK_COUNT_GAP, exit_y), (PICK_EXIT, exit_x, exit_y)]
+    window = bytearray(_window(psionic, PICKER, items))
+    struct.pack_into("<HHH", window, WIND_WIDTH, PICK_WIDTH, PICK_HEIGHT, PICK_BACKGROUND)
+    added[("WIND", PICKER)] = bytes(window)
+    added[("BMP ", PICK_BACKGROUND)] = _encode([background(resource)])
     return added

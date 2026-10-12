@@ -102,10 +102,10 @@ BONE_GREAT_AXE_TYPE, OBSIDIAN_GREAT_AXE_TYPE = GAME_TYPES + 22, GAME_TYPES + 23 
 BONE_DAGGER_TYPE = GAME_TYPES + 24  # (a water cleric's dagger: weaponchoice.py)
 ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armour
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
-# The companion's rule changes (DSCLOG's RULES): helms count AC 1, boots add a move in a fight;
-# AD&D's two-weapon penalties; spells saved against with the spell save; no doubled d20
-RULE_HELMS, RULE_BOOTS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 2, 4, 8, 16
-RULE_CATS_GRACE = 32  # Cat's Grace in Flaming Sphere's place
+# The companion's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
+# spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
+RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
+RULE_NEW_SPELLS = 32  # three new wizard spells: Cat's Grace, Erdlu Claw, Fogbolt (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # class levels go up to 10 (the game stops at 9)
 RULE_THIEF_TABLE = 256  # thief skills from AD&D's table and Dark Sun's DEX adjustments
@@ -147,9 +147,9 @@ ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 
 ACID, TOUCH_ARMOUR, TOUCH_WEAPON = 178, 186, 187
 ITEM_ATTACKS = {ACID: "acid", TOUCH_ARMOUR: "corroding touch", TOUCH_WEAPON: "corroding touch"}
 # the Options' setting for each, all on unless unticked
-RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("boots_move", RULE_BOOTS), ("two_weapons", RULE_TWO_WEAPONS),
+RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("spell_save", RULE_SPELL_SAVE), ("no_doubled_save", RULE_NO_DOUBLE),
-                 ("cats_grace", RULE_CATS_GRACE), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
+                 ("new_spells", RULE_NEW_SPELLS), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
                  ("thief_table", RULE_THIEF_TABLE), ("half_giant_hands", RULE_HALF_GIANT),
                  ("protection_rules", RULE_PROTECTION), ("item_saves", RULE_ITEM_SAVES),
                  ("weapon_specialization", RULE_SPECIALIZE), ("class_restrictions", RULE_RESTRICT),
@@ -157,21 +157,36 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("boots_move", RULE_BOOTS), ("two_weap
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
                  ("rolled_scores", RULE_ROLLED))
-# Cat's Grace (RULE_CATS_GRACE): Flaming Sphere (wizard level 2) gets Strength's record and the
-# name, and DSCLOG sends it to Strength's code, which rolls 1d6 into an effect of its own (54,
-# a number the game leaves unused) that adds to DEX, at most 24, as Strength's adds to STR.
-FLAMING_SPHERE, STRENGTH_SPELL, GRACE_EFFECT = 14, 23, 54
+# The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): three wizard spells numbered after the game's
+# 196 (0-195), in the three records the game's table has room for past its own; DSCLOG fills their
+# records and rows in, names them, and keeps who knows them in the sheet (NEW_KNOWN_SHEET's bits).
+# Cat's Grace works as Strength does, for DEX: Strength's code rolls 1d6 into an effect of its own
+# (54, a number the game leaves unused) that adds to DEX, at most 24. Erdlu Claw's effect (6, unused
+# too) makes each natural (unarmed) attack 1d6+1 where that is better than its own (NS_CLAW), +1 to hit and at least
+# a +1 weapon (NS_FIST: its hit's damage kinds get PLUS1); Fogbolt's (27) takes 3 off the fogged creature's attacks and
+# gives 2 to attacks on it.
+GRACE_SPELL, CLAW_SPELL, FOG_SPELL = 196, 197, 198
+NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "Fogbolt"}
+NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1}
+NEW_SPELLS_END = 199  # (past the last: 199 on is the game's live data, not spell records)
+STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
+FLAMING_SPHERE = 14  # (once Cat's Grace's place)
+
+
+def cast_spell(spell: Optional[int]) -> bool:
+    """A wizard's or priest's spell, a psionic power, or a new spell: not a monster's power."""
+    return spell is not None and (SPELL_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT or spell in NEW_SPELLS)
 DETECT_INVISIBILITY = 13  # the spell (as the Ledger numbers them: 1 Burning Hands)
-GRACE_NAME, SPHERE_NAME = b"CAT'S GRACE", b"FLAMING SPHERE"  # (in the game's capitals)
+# the sheet's byte whose bits 4-6 say a character knows the new spells (bit 4: 196); its low four bits
+# are an Elementalist's second sphere (kits.SPHERE2)
+NEW_KNOWN_SHEET, NEW_KNOWN_BIT, NEW_KNOWN_MASK = 0x45, 0x10, 0x70
 # The game's table of effects (DSUN.EXE 44CD0h, from the load segment 3F8Dh), 6 bytes each from
 # effect 1: a far pointer to its name (the line under a portrait: "Hasted" for "Okay") and its
 # icon (an ICON chunk of RESOURCE.GFF, as the spells' are) on the Effects screen, which shows
-# only those with one. Effect 54 has neither (an empty name, icon 0): with the rule, it has
-# Cat's Grace's spell icon (Flaming Sphere's, the cat's paw with the rule) and the spell's name.
+# only those with one. Effects 6, 27 and 54 have neither (an empty name, icon 0): DSCLOG gives the
+# new spells' theirs, the spell's icon (ICON 21000 + the spell, in the Ledger's RESOURCE.GFF).
 EFFECT_TABLE_SEG, EFFECT_ENTRY = 0x3F8D, 6
-GRACE_ICON, NO_NAME = 21014, 0x1FF0  # (NO_NAME: the empty string the game's unnamed effects use)
-# Flaming Sphere's own record, from DSUN.EXE, to put back when the rule is off
-SPHERE_RECORD = bytes.fromhex("067800000000003c0014000001ffff4dff004049ffff6106ff000202001104a1")
+NEW_SPELL_ICON = 21000  # + the spell
 # The game turns a spell's kind of save (bits 5-7 of its +0Fh) into one of the sheet's five
 # saves (1-5: paralysis/poison/death ... spell) with a table of words at DS:1E75h, read afresh
 # for each save. Kind 5, what almost every spell is marked with, is petrification/polymorph
@@ -196,8 +211,13 @@ CATEGORY_DODGE = 0x40
 DOUBLED_FLAGS = 0x86
 
 
+# settings kept under an earlier name (the new spells' switch was Cat's Grace's alone)
+OLD_SETTING_NAMES = {"new_spells": "cats_grace"}
+
+
 def rules_from_settings(settings: dict) -> int:
-    return sum(bit for key, bit in RULE_SETTINGS if settings.get(key, True))
+    return sum(bit for key, bit in RULE_SETTINGS
+               if settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
 
 
 def kind_to_save(kind: int, rules: int) -> int:
@@ -258,6 +278,8 @@ SHEET_ATTACKS = 0x2A  # the game's attacks a round, in halves (2: 1, 3: 3/2)
 SHEET_XP, SHEET_XP_VALUE, SHEET_MAX_HP = 0x00, 0x04, 0x08  # a monster's sheet holds its XP value at +4
 SHEET_RACE, SHEET_ABILITIES = 0x18, 0x1B
 SHEET_CLASSES, SHEET_LEVELS, SHEET_BASE_AC = 0x21, 0x24, 0x27
+SHEET_HP_BASE = 0x0A  # the hit points rolled (the game divides them by the classes for the most)
+SHEET_LEVELS_BEFORE = 0x3F  # the levels before any were lost (the game scales SHEET_HP_BASE by them)
 # sheet +0x12: a word of flags, one bit per class the character has (druid 0x10, fighter
 # 0x20, gladiator 0x40, preserver 0x80, psionicist 0x100, ranger 0x200, thief 0x400)
 SHEET_FLAGS = 0x12
@@ -268,6 +290,7 @@ RACE_HALF_GIANT = 5
 # least a roll counts for
 LEVEL_HP_SEG = 0x40B1
 LEVEL_HP_CON_BONUS = 0x52  # +52h + CON: hit points per level (a warrior's; others get at most +2)
+WARRIOR_GROUP = 1  # (the hit point group of the warrior classes)
 # Character creation. DS:119Ch is a far pointer to the character being made, a sheet whose
 # classes (+21h) are numbered as in the creation screen's list (CREATION_CLASS_NAMES).
 CREATION_SHEET_PTR = 0x119C
@@ -304,7 +327,7 @@ EFFECT_NAMES = {
     60: "Magical Vestments", 61: "Animal Affinity", 62: "Body Weaponry", 63: "Strength Enhanced",
     64: "Strength Borrowed", 65: "Strength Lent", 66: "Adrenalin Control", 67: "Strength",
     68: "Weakened", 69: "Extra Hitpoints", 70: "Flame Blade", 71: "Spirit. Hammer", 72: "Shillelagh",
-    73: "Prayer", GRACE_EFFECT: "Cat's Grace",
+    73: "Prayer", GRACE_EFFECT: "Cat's Grace", CLAW_EFFECT: "Erdlu Claw", FOG_EFFECT: "Fogbolt",
 }
 
 # What effects do, where the game's own code shows it (to-hit, AC and saving throws)
@@ -318,6 +341,8 @@ EFFECT_RULES = {
     57: "AC at most 6 - level/4, +1 on saves", 58: "AC -2", 59: "AC at most 10 - level",
     60: "AC 5, 1 better per 3 caster levels above 5", 63: "higher STR", 64: "STR + the amount borrowed, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
+    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical weapon (talons)",
+    FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
     1: "2d4 acid damage each round",
@@ -461,7 +486,7 @@ SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen 
 # To hit, as the game's attack setup adds it: STR (melee) or DEX (missiles) from these tables,
 # the attacker's effects, the weapon's plus or its material's penalty
 STR_TO_HIT, DEX_MISSILE = 0x7C2, 0x7DC  # DS: a byte per ability score
-HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1))  # Blessed, Cursed, Slowed, Graft Weapon
+HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3))  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
 WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
 
@@ -521,17 +546,28 @@ def class_share(sheet: bytes) -> int:
     return max(sum(1 for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c), 1)
 
 
-def multiclass_gain(sheet: bytes, gain: int) -> int:
-    """With RULE_MULTI_HP (DSCLOG's PROBE_MC_ROLL), what a new level's hit point gain adds to the
-    sheet's base: its share (dropping fractions, at least 1) times the classes, as the game
-    divides the base by them."""
+def con_share(sheet: bytes, bonus: int, groups: Dict[int, int], last_die: Dict[int, int]) -> Optional[int]:
+    """With RULE_MULTI_HP (DSCLOG's CON_SHARE), the hit points CON adds to the most of a character of
+    more than one class, as Demihuman Deities (TSR 1998) has them: each hit die so far with CON's
+    bonus on it, in the total the game keeps (the sheet's +0Ah: the dice), the total divided by the
+    classes. BONUS is a warrior's (LEVEL_HP_CON_BONUS for CON), on every die if a class is a
+    warrior's (group 1), else at most +2; GROUPS each class's hit point group, LAST_DIE each group's
+    last level that rolls a die. That is (total + bonus x dice) / classes less total / classes,
+    the total as the game scales it for lost levels. One class: None (the game's own)."""
     n = class_share(sheet)
-    return gain if n == 1 else max(int(gain / n), 1) * n
-
-
-def con_share(sheet: bytes, bonus: int) -> int:
-    """With RULE_MULTI_HP (PROBE_MC_CON), CON's hit point bonus shared between the classes."""
-    return int(bonus / class_share(sheet))
+    if n == 1:
+        return None
+    levels = sum(sheet[SHEET_LEVELS:SHEET_LEVELS + 3])
+    before = sum(sheet[SHEET_LEVELS_BEFORE:SHEET_LEVELS_BEFORE + 3])
+    total = struct.unpack_from("<h", sheet, SHEET_HP_BASE)[0]
+    if before:
+        total = int(total * levels / before)
+    classes = [(c, sheet[SHEET_LEVELS + i]) for i, c in enumerate(sheet[SHEET_CLASSES:SHEET_CLASSES + 3])
+               if 0 < c < 32 and groups.get(c) is not None]
+    dice = sum(min(level, last_die.get(groups[c], level)) for c, level in classes)
+    if not any(groups[c] == WARRIOR_GROUP for c, _ in classes):
+        bonus = min(bonus, 2)
+    return int((total + bonus * dice) / n) - int(total / n)
 
 
 class LevelHp(NamedTuple):
@@ -868,6 +904,8 @@ class GameData:
             names = self.guest.read(self.ds * 16 + SPELL_NAMES, 0x400).split(b"\0")
             text = names[spell - PSIONIC_FIRST].decode("cp437", "replace") if spell - PSIONIC_FIRST < len(names) else ""
             return title(text) if text else f"psionic power {spell}"
+        if spell in NEW_SPELLS:
+            return NEW_SPELLS[spell]
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)
             return ITEM_ATTACKS[spell].capitalize()
         if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch
@@ -897,7 +935,7 @@ class GameData:
         """Mark the fire, cold and electricity spells for DEX on their saves (CATEGORY_DODGE),
         or unmark them. Returns how many records changed."""
         changed = 0
-        for spell in range(SPELL_FIRST, 256):
+        for spell in range(SPELL_FIRST, NEW_SPELLS_END):  # (past them the game's live data)
             at = (self.load_seg + SPELLS_SEG) * 16 + SPELLS_OFF + spell * SPELL_SIZE
             rec = self.guest.read(at, SPELL_SIZE)
             if len(rec) < SPELL_SIZE:
@@ -910,26 +948,12 @@ class GameData:
                 changed += 1
         return changed
 
-    def set_cats_grace(self, on: bool) -> bool:
-        """Put Cat's Grace in Flaming Sphere's place (Strength's record, the name), or Flaming
-        Sphere back. Only over what's there now being one or the other. True if it is as asked."""
-        sphere = (self.load_seg + SPELLS_SEG) * 16 + SPELLS_OFF - 0x10 + FLAMING_SPHERE * SPELL_SIZE
-        info = self.load_seg * 16 + SPELL_INFO_OFF + (FLAMING_SPHERE - 1) * SPELL_INFO_SIZE
-        name_at = self.ds * 16 + struct.unpack("<H", self.guest.read(info + 5, 2))[0]
-        name = self.guest.read(name_at, len(SPHERE_NAME) + 1)
-        if name.rstrip(b"\0") not in (SPHERE_NAME, GRACE_NAME):
-            return False  # not the name it should be: leave it
-        strength = self.spell_record(STRENGTH_SPELL)
-        want = strength if on else SPHERE_RECORD
-        mine = self.guest.read(sphere, SPELL_SIZE)
-        if mine != want:  # (the category's dodge flag aside, which set_dodge sees to)
-            self.guest.write(sphere, want)
-        text = GRACE_NAME if on else SPHERE_NAME
-        self.guest.write(name_at, text.ljust(len(SPHERE_NAME), b"\0") + b"\0")
-        entry = (self.load_seg + EFFECT_TABLE_SEG) * 16 + (GRACE_EFFECT - 1) * EFFECT_ENTRY
-        name_off = name_at - self.ds * 16 if on else NO_NAME
-        self.guest.write(entry, struct.pack("<HHH", name_off, self.ds, GRACE_ICON if on else 0))
-        return True
+    def new_spells_known(self, member: int) -> List[int]:
+        """The new spells (NEW_SPELLS) party member MEMBER knows: its sheet's NEW_KNOWN_SHEET bits."""
+        sheet = self.sheet(member)
+        if len(sheet) <= NEW_KNOWN_SHEET:
+            return []
+        return [spell for spell in NEW_SPELLS if sheet[NEW_KNOWN_SHEET] & NEW_KNOWN_BIT << (spell - GRACE_SPELL)]
 
     def spell_level(self, spell: int) -> int:
         """The spell's level (the game's table of spells, 7 bytes each: SPELL_LEVELS)."""
@@ -1175,7 +1199,7 @@ class GameData:
         spell, rangers 7 levels less (a Seeker 5, a Justifier 9: kits.ranger_cast_drop), a Shinobi's
         wizard spells its thief level less 5 (kits.cast_level). None for
         psionic powers and monsters' own powers."""
-        if not 0 < spell < PSIONIC_FIRST:
+        if not 0 < spell < PSIONIC_FIRST and spell not in NEW_SPELLS:
             return None
         spheres, = struct.unpack("<I", self.guest.read(
             (self.load_seg + SPELL_SPHERES_SEG) * 16 + SPELL_SPHERES_OFF + spell * SPELL_SPHERES_SIZE, 4))
@@ -1497,7 +1521,10 @@ class GameData:
             out.append(WeaponHit(index, slot, self.item_label(item, typ), base - sum(n for _, n in parts), parts,
                                  skill, halves))
         if not out:
-            parts = [(why, n) for why, n in [("STR", table(STR_TO_HIT, strength))] + common if n]
+            parts = [("STR", table(STR_TO_HIT, strength))] + common
+            if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in ids:
+                parts.append((EFFECT_NAMES[CLAW_EFFECT], 1))  # (DSCLOG's NS_FIST)
+            parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
 
@@ -1505,23 +1532,37 @@ class GameData:
         """The to-hit adjustment for an attack with the weapon in SLOT while two are ready (in
         melee), and what it's called. The game's: its DEX table for initiative, sign flipped and
         never below 0 (a bonus at DEX 5 or less). With RULE_TWO_WEAPONS, AD&D's: -2 main hand,
-        -4 off hand, plus the DEX reaction adjustment, never above 0. Rangers: none either way;
-        a Twin-blade (kits.py) none with the rule."""
+        -4 off hand, plus the DEX reaction adjustment, never above 0. Rangers: none, but with the
+        rule only in light armour (DSCLOG's RG_TWO), a Justifier in any; a Twin-blade (kits.py) none with the rule, in
+        light armour too."""
         dex = self.creature(creature)[CREATURE_ABILITIES + 1]
         sheet = self.sheet(creature)
         ranger = len(sheet) >= SHEET_FLAGS + 2 and struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_RANGER
         if not self.rules & RULE_TWO_WEAPONS:
             return f"two weapons at DEX {dex}", 0 if ranger else max(0, -self.dex_initiative(dex))
         hand = "off hand" if slot == WEAPON_HANDS[1] else "main hand"
-        if ranger:
-            return f"two weapons, {hand} (ranger)", 0
         from . import kits
-        if kits.TWIN_BLADE in self.kit_ids(creature):
+        if ranger and kits.JUSTIFIER in self.kit_ids(creature):
+            return f"two weapons, {hand} (Justifier)", 0  # (in any armour)
+        light = not self.heavy_armour_worn(creature)
+        if ranger and light:
+            return f"two weapons, {hand} (ranger)", 0
+        if light and kits.TWIN_BLADE in self.kit_ids(creature):
             return f"two weapons, {hand} (Twin-blade)", 0
         if slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):
             return "two weapons", 0  # not a hand's weapon, or nothing to fight with in the other hand
         return (f"two weapons, {hand} at DEX {dex}",
                 min(0, TWO_WEAPON_PENALTY.get(slot, -2) + self.dex_initiative(dex)))
+
+    def heavy_armour_worn(self, creature: int) -> bool:
+        """Armour worn that isn't light (not leather, and of a material: DSCLOG's HEAVY_WORN),
+        a helm too: an armour piece (not a shield, nor bracers or a robe) on the arms, legs, head
+        or chest."""
+        from . import kits, restrict
+        slots = {EQUIP_SLOTS.index(s) for s in ("arm", "legs", "head", "chest")}
+        return any(item[ITEM_SLOT] in slots and len(typ) > 0x0F and restrict.is_armour(typ)
+                   and typ[8] & 0x4F not in (kits.LEATHER, kits.NO_MATERIAL)
+                   for _, item, typ in self._worn(creature))
 
     def melee_weapon_in(self, creature: int, slot: int) -> bool:
         """A melee weapon (its type's class 1, as the game counts weapons ready) in SLOT: not
@@ -1707,6 +1748,19 @@ class GameData:
         """Hit points a warrior gains per level for a CON score (others get at most +2)."""
         base = (self.load_seg + LEVEL_HP_SEG) * 16 + LEVEL_HP_CON_BONUS
         return struct.unpack("b", self.guest.read(base + min(max(con, 0), 25), 1))[0]
+
+    def con_per_die(self, sheet: bytes, con: int) -> int:
+        """With RULE_MULTI_HP, CON's bonus on each hit die of a character of more than one class:
+        a warrior's (LEVEL_HP_CON_BONUS) if any class is a warrior's, else at most +2."""
+        bonus = self.level_hp_con_bonus(con)
+        warrior = any(self.level_hp_group(c) == WARRIOR_GROUP for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c)
+        return bonus if warrior else min(bonus, 2)
+
+    def multiclass_con(self, sheet: bytes, con: int) -> Optional[int]:
+        """con_share for SHEET and CON, from the game's hit point table (None: one class)."""
+        groups = {c: self.level_hp_group(c) for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c}
+        last_die = {g: self.level_hp_rule(c).dice_levels for c, g in groups.items() if g is not None}
+        return con_share(sheet, self.level_hp_con_bonus(con), groups, last_die)
 
     def sheet_at(self, index: int) -> bytes:
         """Character sheet number `index`."""

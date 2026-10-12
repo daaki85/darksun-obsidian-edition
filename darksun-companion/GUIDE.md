@@ -61,9 +61,13 @@ The [README](README.md) has every rule in full detail.
    (the first time, it offers to install Python; see the
    [README](README.md#running-it-windows)).
 2. Press **Start the game**. The game opens beside the Ledger, whose dice log
-   shows every roll as it happens.
+   shows every roll as it happens:
+
+   ![The Ledger during the arena's opening show: the party's cards on the left, the dice log of a fight on the right](docs/dicelog.png)
+
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
-   chosen when a character is made, so the four the game offers have none.
+   chosen when a character is made. The game's own four, used when you make
+   none, are given weapon specs to suit them, but no kits.
 
 ## Playing
 
@@ -89,7 +93,7 @@ easier.
 | **New characters' thief skills** | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
 | **Spells on the Effects screen** | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
 | **No copy protection** | The question from the manual never comes. |
-| **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows THAC0 and the saves, and for a character of several classes which class goes up next. |
+| **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
@@ -267,9 +271,11 @@ classes a human could change to ([kits](#kits)).
 - **CON's bonus** comes with every level: for a fighter, gladiator or ranger
   +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
   24-25 (−1 at 4-6); for anyone else at most +2.
-- **A character of several classes** gets each class's die divided by the
-  number of classes (at least 1), and CON's bonus divided too. *Without the
-  mod:* the dice are added and the total divided, and CON's bonus is whole.
+- **A character of several classes** adds CON's bonus to every die (the
+  fighter's bonus on every die if one of its classes is a warrior), and the
+  total is divided by the number of classes. *Without the mod:* the dice are
+  added and the total divided, and CON's bonus counts once a level of the
+  highest class.
 - Three [kits](#kits) have a die of their own.
 - At 0 hit points a character is Out Cold; at −10, dead.
 
@@ -442,7 +448,7 @@ their hands, and they treat it like one.
 | Kit | Gives | Costs | Starts with |
 |---|---|---|---|
 | **Arena Champion** | with a shield: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee without a shield | a shield in place of the off-hand club |
-| **Twin-blade** | no penalty for two weapons | no shield; no two-handed weapon | its weapon and the club as its two weapons |
+| **Twin-blade** | no penalty for two weapons in light armour | no shield; no two-handed weapon | its weapon and the club as its two weapons |
 | **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind |
 
 An Arena Champion can't later become a druid or preserver, a Brute a
@@ -510,7 +516,7 @@ others.
 |---|---|---|---|
 | **Stalker** | +2 movement in a fight; +15 to hide in shadows and move silently, and hiding not halved indoors | leather armour or none | the ranger's gear |
 | **Seeker** | priest spells from 6th level, cast at its level less 5 | its sphere's weapons only, as a cleric's (but it keeps the bow) | the ranger's gear, its weapon in a material its sphere allows |
-| **Justifier** | its expertise becomes specialization (+1 to hit, +2 damage) | its only spell slot is one 1st-level slot, from 10th level | the ranger's gear |
+| **Justifier** | its expertise becomes specialization (+1 to hit, +2 damage); no penalty for two weapons in any armour | its only spell slot is one 1st-level slot, from 10th level | the ranger's gear |
 
 A Seeker or Justifier can't later become a cleric or druid.
 
@@ -622,10 +628,11 @@ character hit in a round can't cast), and choose its spells well.
 - **INT limits learning:** a chance to learn each scroll's spell, and a most
   spells of each level ([learning spells](#learning-preserver-spells)).
   *Without the mod:* every scroll learnt, no limit.
-- It **chooses** its starting spells and one at each level up.
+- It **chooses** its starting spells and one at each level up. EXIT while
+  choosing its starting spells gives it the game's usual ones for the rest.
 - AD&D's wizard [spell slots](#spell-slots) (4 2 1 at 5th level; *without the
   mod:* 3 2 1).
-- **Cat's Grace** in Flaming Sphere's place.
+- Three **new spells**: Cat's Grace, Erdlu Claw and Fogbolt.
 - With another class it may wear that class's armour but **can't cast in
   it**. **Bracers of defense** and the mod's two **robes** give AC without
   being armour.
@@ -960,7 +967,11 @@ The kits that change spell slots, by the level of the kit's class (spells of
 ## Weapon specialization and attacks
 
 Warriors train in kinds of weapon. Choose them on the creation panel's
-**WEAPON SPEC** pages; picks due later come in a window at the level up.
+**WEAPON SPEC** pages; picks due later come in a window at the level up, a
+picture of each kind of weapon (point at one for its name; those you can't
+pick are greyed).
+
+![The level-up window: a picture of each kind of weapon, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the kinds this fighter/cleric can't use greyed](docs/weapon-picker.png)
 
 | Who | Chooses | With a chosen kind |
 |---|---|---|
@@ -986,9 +997,8 @@ ranger level). 3/2 means one attack one round and two the next.
 | a **Battle Mage** (by its preserver level), its chosen kind | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
-The levels are the warrior's (its best fighter, gladiator or ranger level), or
-for the three kits their own class's. A Battle Mage's chosen kind is a melee
-weapon. With [two weapons](#two-weapons), the off hand attacks once a round
+For the three kits the level is their own class's. A Battle Mage's chosen
+kind is a melee weapon. With [two weapons](#two-weapons), the off hand attacks once a round
 whatever the rate.
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
@@ -1035,7 +1045,8 @@ With a melee weapon in each hand:
   the DEX adjustment from [initiative](#initiative) added, which can lessen the
   penalty to 0 but never make it a bonus: DEX 17 is 0 and −2, DEX 21 is 0 and 0,
   DEX 3 is −5 and −7.
-- **Rangers and Twin-blades** have no penalty.
+- **Rangers and Twin-blades** have no penalty while all their armour is light (leather, or
+  none); a Justifier has none in any armour.
 - **The off hand attacks once a round.** Extra attacks are the main hand's: a
   warrior at 3/2 attacks 3/2 + 1 (one round 1 + 1, the next 2 + 1).
 
@@ -1281,18 +1292,26 @@ can cast. INT sets two limits:
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
 - Cause Serious and Critical Wounds roll 2d9 and 3d9; Cure Light, Serious and
   Critical Wounds heal 1d8, 2d8+1 and 3d8+3.
-- **Cat's Grace** is a 2nd-level wizard spell in Flaming Sphere's place: DEX +
-  1d6 (at most 24) for an hour of game time a caster level, which betters AC,
-  initiative, thief skills and dodging.
+- Three **new wizard spells**, learnt like any other:
+  - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for an hour of game
+    time a caster level, which betters AC, initiative, thief skills and
+    dodging.
+  - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a caster level. Unarmed
+    attacks, a thri-kreen's claws and bite too, do 1d6+1 where that's better,
+    are +1 to hit and count as a +1 magical weapon. With Body Weaponry or
+    Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
+  - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
+    in a clear line, for 2d4 rounds unless it saves: -3 to its attacks, +2 to
+    attacks on it.
 
 ### Spell lists
 
-**Preservers' spells** (the game's Flaming Sphere is Cat's Grace):
+**Preservers' spells** (with the mod's three new ones):
 
 | Level | Spells |
 |---|---|
-| 1 | Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Gaze Reflection, Grease, Magic Missile, Shield, Shocking Grasp, Wall of Fog |
-| 2 | Acid Arrow, Blur, Cat's Grace, Detect Invisibility, Fog Cloud, Glitterdust, Invisibility, Mirror Image, Protection from Paralysis, Scare, Stinking Cloud, Strength, Web |
+| 1 | Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Erdlu Claw, Fogbolt, Gaze Reflection, Grease, Magic Missile, Shield, Shocking Grasp, Wall of Fog |
+| 2 | Acid Arrow, Blur, Cat's Grace, Detect Invisibility, Flaming Sphere, Fog Cloud, Glitterdust, Invisibility, Mirror Image, Protection from Paralysis, Scare, Stinking Cloud, Strength, Web |
 | 3 | Blink, Dispel Magic, Fireball, Flame Arrow, Haste, Hold Person, Hold Undead, Lightning Bolt, Minor Malison, Minute Meteors, Monster Summoning I, Protection from Normal Missiles, Slow, Spirit Armor, Vampiric Touch |
 | 4 | Black Tentacles, Charm Monster, Confusion, Fear, Fire Shield, Ice Storm, Improved Invisibility, Minor Globe of Invulnerability, Minor Spell Turning, Monster Summoning II, Rainbow Pattern, Solid Fog, Stoneskin, Turn Pebble into Boulder, Wall of Fire, Wall of Ice |
 | 5 | Chaos, Cloudkill, Cone of Cold, Conjure Elemental, Dismissal, Domination, Feeblemind, Hold Monster, Lower Resistance to Magic, Monster Summoning III, Summon Shadow, Wall of Force, Wall of Stone |
@@ -1411,9 +1430,8 @@ materials, the short sword among them.
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
 
-**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**, and
-**boots give one more move** each round of a fight. *Without the mod:* helms
-give no AC and boots no movement.
+**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**.
+*Without the mod:* helms give no AC.
 
 **Protection.** Rings and cloaks of protection give +1 AC and +1 on every save,
 by AD&D's rules: two rings don't add up; a ring gives no AC with magical armour
@@ -1530,7 +1548,7 @@ AD&D's tables:
   the round can't cast (a Battle Mage can).
 - **Someone Out Cold takes the most a spell's dice can do,** with no save.
 - **Two weapons cost to-hit** unless your DEX is high or you are a ranger or
-  Twin-blade, and the off hand attacks only once a round.
+  Twin-blade in light armour, and the off hand attacks only once a round.
 - **A warrior's weapon specs matter:** outside them it attacks once a round
   until 7th level.
 - **Multi-class preservers take off their armour to cast** (a helm counts).
@@ -1549,7 +1567,7 @@ AD&D's tables:
 |---|---|---|
 | In the game | show each turn's rolls in the game | off |
 | | describe monsters when you Look at them in a fight | on |
-| Rule changes | weapon specialization; kits; AD&D's class tables; the leader's CHA at shops; class restrictions; multiclass hit points; rangers' casting level; preservers' INT; hit dice rolled twice; scores and hit points as rolled; the spell save; DEX instead of a doubled d20; two weapons; levels up to 10; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; Cat's Grace; helms AC 1; boots for movement | all on |
+| Rule changes | weapon specialization; kits; AD&D's class tables; the leader's CHA at shops; class restrictions; multiclass hit points; rangers' casting level; preservers' INT; hit dice rolled twice; scores and hit points as rolled; the spell save; DEX instead of a doubled d20; two weapons; levels up to 10; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; new wizard spells; helms AC 1 | all on |
 | Thieves | thief skills from AD&D's table; hiding in shadows to backstab; the cloak, boots and belt; picking pockets | on |
 | | ... or P in a conversation (the leader, a thief, picks the pocket of the one talked to) | off |
 | New content | new people, a small quest, new items | on |

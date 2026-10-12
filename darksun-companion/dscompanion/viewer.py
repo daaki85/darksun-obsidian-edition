@@ -345,8 +345,8 @@ class Viewer:
                 ("class_restrictions", "Class restrictions on armour, shields and weapons, the strictest class "
                                        "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
                                        "spheres); a multiclass preserver casts no spells in armour"),
-                ("multiclass_hp", "Multiclass hit points as in AD&D: each level's die and CON's bonus shared "
-                                  "between the classes"),
+                ("multiclass_hp", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
+                                  "a class is a warrior), the total shared between the classes"),
                 ("ranger_casting_level", "Rangers' spells last and do damage as cast at the ranger level less 7, "
                                          "as the spell levels they may cast count it (the game takes the whole "
                                          "level)"),
@@ -369,7 +369,7 @@ class Viewer:
                 ("no_doubled_save", "Saves against fire, cold and electricity: DEX defensive adjustment "
                                     "instead of a doubled d20"),
                 ("two_weapons", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
-                                "(no better than 0; rangers none); the off hand attacks once a round"),
+                                "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
                 ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
                                 "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
@@ -382,10 +382,11 @@ class Viewer:
                                      "with magical or metal armour or a shield"),
                 ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
                                      "weapon in the other; two heavy weapons still can't be held)"),
-                ("cats_grace", "Cat's Grace in Flaming Sphere's place (DEX + 1d6, at most 24, like Strength)"),
-                ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
-                ("boots_move", "Boots give movement in a fight (1 more move each round)"))):
-            self.rule_vars[key] = tk.BooleanVar(value=bool(settings.get(key, True)))
+                ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6, at most 24), Erdlu Claw "
+                               "(1st: unarmed attacks do 1d6+1, +1 to hit, as a +1 weapon) and Fogbolt (1st: -3 to hit, AC 2 worse)"),
+                ("helm_ac", "Helms give AC 1 (the game's helms give none)"))):
+            self.rule_vars[key] = tk.BooleanVar(
+                value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = thieves if key in thief_rules else rules
             ttk.Checkbutton(parent, text=text, variable=self.rule_vars[key],
                             command=self._popups_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
@@ -1068,7 +1069,7 @@ class Viewer:
         for line in lines:
             tag = ("round" if line.startswith(("Round ", "Initiative: ")) else
                    "turn" if line.endswith("'s turn") else
-                   "save" if " saves vs " in line or " magic resistance " in line else
+                   "save" if "'s saving throw vs " in line or " magic resistance " in line else
                    "hit" if "-> HIT" in line else
                    "miss" if "-> miss" in line else
                    "detail" if line.startswith("    ") else
@@ -1220,7 +1221,6 @@ class Viewer:
                 saves = gd.saves_now(index) if known and index < game.PARTY_SIZE else []
             except (struct.error, IndexError, ValueError):
                 hits, saves = [], []
-            boots = bool(known and self.rule_vars["boots_move"].get() and gd.wears_boots(index))
             try:
                 weapons = gd.specializations(index) if known and index < game.PARTY_SIZE else []
                 no_spells = bool(known and index < game.PARTY_SIZE and gd.no_spells(index))
@@ -1228,7 +1228,7 @@ class Viewer:
                 kit_move = sum(kits.move(k) for k in gd.kit_ids(index)) if kit else 0
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move = [], False, None, 0
-            card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves, boots,
+            card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,
                       skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move)
 
     def _hex_base(self) -> Optional[int]:

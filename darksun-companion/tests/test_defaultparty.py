@@ -53,7 +53,8 @@ class DefaultPartyTests(unittest.TestCase):
                 mock.patch.object(dp, "set_kinds", stub("kinds")), \
                 mock.patch.object(dp, "club_to_gythka", stub("gythka")), \
                 mock.patch.object(dp, "take_armour", stub("armour")), \
-                mock.patch.object(dp, "learn", stub("armor spell")):
+                mock.patch.object(dp, "learn", stub("armor spell")), \
+                mock.patch.object(dp, "set_kit", stub("kit")):
             lines = dp.ready(FakeGame(DEFAULT), rules, set() if done is None else done)
         return calls, lines
 
@@ -66,6 +67,47 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertNotIn(("Gerakis", "gythka"), calls)
         calls, _ = self.ready(game.RULE_RESTRICT)
         self.assertEqual(calls, [("Cilla", "armour"), ("Cilla", "armor spell")])
+        calls, _ = self.ready(game.RULE_KITS)  # (Cermak alone: Gerakis has no kit)
+        self.assertEqual(calls, [("Cermak", "kit")])
+
+    def test_cermak_arcanist(self):
+        """Set_kit writes Cermak's kit byte: the Arcanist for his preserver class (place 0, the
+        one he has now), none for his gladiator class (place 1); a kit there already is kept."""
+        from dscompanion import kitpages, kits
+
+        class Guest:
+            def __init__(self):
+                self.mem = bytearray(0x20000)
+
+            def read(self, at, n):
+                return bytes(self.mem[at:at + n])
+
+            def write(self, at, data):
+                self.mem[at:at + len(data)] = data
+
+        class Gd:
+            ds = 0x1000
+
+            def __init__(self, cermak):
+                self.guest = Guest()
+                self.guest.write(self.ds * 16 + game.SHEETS_PTR, (0x10).to_bytes(2, "little") + (0x1100).to_bytes(2, "little"))
+                self.at = 0x1100 * 16 + 0x10 + 2 * game.SHEET_SIZE
+                self.guest.write(self.at, cermak)
+
+            def sheet(self, member):
+                return self.guest.read(self.at, game.SHEET_SIZE)
+
+            def creature(self, member):
+                rec = bytearray(game.CREATURE_SIZE)
+                rec[game.CREATURE_SHEET_INDEX] = 2
+                return bytes(rec)
+
+        cermak = bytearray(sheet(1, (11, 10, 0)))
+        gd = Gd(bytes(cermak))
+        self.assertEqual(dp.set_kit(gd, 0, "Cermak"), ["Cermak is an Arcanist."])
+        self.assertEqual(kitpages.kit_ids(gd.sheet(0)), [kits.ARCANIST])
+        self.assertEqual(kitpages.kit_names(gd.sheet(0)), ["Arcanist"])
+        self.assertEqual(dp.set_kit(gd, 0, "Cermak"), [])
 
     def test_once_and_only_while_new(self):
         done = set()

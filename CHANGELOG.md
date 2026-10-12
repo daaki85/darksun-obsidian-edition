@@ -8,7 +8,100 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
-## Pull request #38 (in progress)
+## Pull request #39 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/39))
+
+**Added**
+- **Two new wizard spells, and Cat's Grace is a spell of its own.** Erdlu
+  Claw (1st level: 5 rounds a caster level, natural and unarmed attacks do
+  1d6+1 where that's better, or Body Weaponry's and Animal Affinity's dice +1,
+  are +1 to hit and count as a +1 magical weapon) and Fogbolt (1st level: a
+  dark grey bolt of its own, so Magic Missile's stays blue, which needs a clear
+  line to its target; 2d4 rounds unless saved against, -3 to the fogged
+  creature's attacks and +2 to attacks on it). Each has its own sounds: Cat's
+  Grace Haste's, Erdlu Claw Shocking Grasp's, Fogbolt Fog Cloud's (Cat's Grace
+  and Erdlu Claw, cast on a party member's portrait, show the game's usual
+  star). Cat's Grace no longer takes
+  Flaming Sphere's place: the three are spells 196-198, learnt, listed, cast
+  and shown on the Effects screen like the game's own, each with its icon and
+  description; who knows them is kept in the character's sheet. The switch is
+  **New wizard spells** (was Cat's Grace). The dice log's ring is 88 entries
+  (was 96), so the helper still fits in upper memory.
+
+**Changed**
+- **Multiclass hit points follow Demihuman Deities (TSR 1998).** CON's bonus
+  goes on every hit die (a warrior's +3, +4... on every die if one of the
+  classes is a fighter, gladiator or ranger, else at most +2) and the running
+  total is divided by the classes. The rule used to divide each die on its own
+  and then divide CON's bonus, which the game counts only once a level of the
+  highest class, by the classes again: a fighter 9 / preserver 10 / thief 10
+  with CON 18 got 12 hit points from CON, now 38.
+- **The level-up weapon window shows the weapons.** Picking a weapon spec at a
+  level up (or on becoming a warrior by DUAL), the window is bigger and has a
+  slot with each kind's inventory picture, six to a row, in place of the
+  names; kinds the character can't pick are greyed. Pointing at a slot names
+  it under them (SPECIALIZE IN / DAGGER, or EXPERT IN for a ranger or a
+  Battle Mage, whose picks are expertise), as CHOOSE A SPELL names a spell.
+- **View Character: the saves labelled, MOVE added.** The five saves under
+  the item icons each have their label (PPD, RSW, PP, BW, SP, as on the
+  inventory screen) in place of one unlabelled SAVE line; THAC0 moves down
+  beside PSI, and MOVE (the character's movement) is new, beside HP.
+- **Rangers and Twin-blades fight with two weapons at no penalty only in light
+  armour** (with the two-weapon rule): every armour piece worn, a helm too, of
+  leather or of no material. In other armour they take AD&D's -2 and -4, as
+  anyone does; the dice log and the Characters tab say the same. A Justifier
+  has no penalty in any armour, a bonus of its own.
+- **Cermak is an Arcanist** in the game's own party (with kits), his gear and
+  hit points as the game gives them. Gerakis has no kit.
+
+**Removed**
+- **Boots no longer give a move in a fight.** The rule was a leftover from
+  trying out changes to items; its switch is gone, boots are plain "Boots"
+  again (games where they were "Boots (Speed+1)" get the game's names back),
+  and the Characters tab's move shows only a kit's extra (the Stalker's).
+
+**Fixed**
+- **A save line read as if the save succeeded** ("Thrikreen saves vs Fogbolt
+  ... -> failed"). It is now the creature's saving throw, then the result:
+  `Wild Mul's saving throw vs Fogbolt from Daaki (spell): d20 = 16, needs 14
+  (35% to save) -> saved`; "cannot save" and "saves automatically" read
+  `none allowed (cannot save) -> failed` and `not needed (saves
+  automatically) -> saved`.
+- **The dice log showed XP for every kill,** the creature's value from its
+  character sheet, even where the party gains none (the opening fight in the
+  arena, whoever dies). A kill now reads "Rampager is killed"; the XP shows
+  only on the "XP: ..." line, when the party's XP really goes up.
+- **EXIT on CHOOSE A SPELL did nothing** when a new preserver picked its
+  starting spells (or a human its spells on becoming a preserver): the window
+  only opened again. EXIT now ends the picking, and the spells still to pick
+  are the game's own starting spells, less any already picked.
+- **The game's own party had to pick spells.** Starting a game with no party
+  made, Cermak and Cilla were put on CHOOSE A SPELL as a new preserver is.
+  They keep the game's own spells again; only a character made on the
+  creation screen (still New) picks.
+
+**Documentation**
+- **The new spells' screenshots:** their three descriptions, the Effects screen
+  with Cat's Grace and Erdlu Claw, and Fogbolt's bolt replace the two Cat's
+  Grace pictures; the Options tab and a spell's end-of-turn window (a Fogbolt,
+  where it was a Cone of Cold save with the doubled d20) are retaken.
+- **A review of every page.** The README's main screenshot (the dice log of
+  the arena's opening show) is retaken without the kill XP it no longer shows,
+  and the Options tab's with every rule switch. The README gains a Characters
+  tab section (spell slots, AC and scores, which had trailed after the Options
+  tab), the missing "Scores and hit points as rolled" in its contents, a
+  clearer list of what play writes to the game folder, and the kits' details
+  in one list; notes on how things were tested and the old release names are
+  gone. The guide has its first pictures (the dice log, the weapon window) and
+  no longer says the game's own party has no weapon specs. DEVELOPMENT.md
+  points to the README for the kits' table, says what the helper's memory is
+  now rather than how it got there, and drops the kits' build diary.
+- **Screenshots retaken where they had fallen behind:** the inventory, the
+  tome and the game's own party (the off hand at one attack a round, not 1.5),
+  the creation screen's weapons page (with the scores' total under CHR), the
+  gear boxes (plain boots), the figures' gear (now with shadows), Kalzith's
+  shop (the leader's CHA discount) and the Options tab (no boots switch).
+
+## Pull request #38 ([merged 2026-10-10](https://github.com/daaki85/darksun-obsidian-edition/pull/38))
 
 **Release**
 - **The release zip is `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`**, unzipping to a

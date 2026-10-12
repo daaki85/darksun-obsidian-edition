@@ -115,6 +115,31 @@ class CopyTests(unittest.TestCase):
         ids = [k for k in new if k[0] == "BMP "]
         self.assertEqual(len(ids), len(set(ids)))  # no icon numbered as another's map picture
 
+    def test_fog_bolt(self):
+        """Fogbolt's bolt: Magic Missile's object naming the grey picture, which is Magic Missile's
+        frames pixel for pixel with its white, cyan and blue in greys (the rest as they were)."""
+        from dscompanion.art import decode_frame
+        frames = [[[46, 220, None, 161, 7], [None, 220, 220, 46, None]],
+                  [[161, 161, 161, None, 46, 46, 46, 46, 220, 3]]]
+        bodies = [c[struct.unpack_from("<I", c, 6)[0]:] for c in map(icons.encode, frames)]  # (each frame)
+        offsets, data = [], b""
+        for body in bodies:
+            offsets.append(6 + 4 * len(bodies) + len(data))
+            data += body
+        chunk = struct.pack("<IH", 0, len(bodies)) + b"".join(struct.pack("<I", o) for o in offsets) + data
+        chunks = {("OJFF", icons.MISSILE_OBJECT): bytes(12) + struct.pack("<H", icons.MISSILE_PICTURE) + b"\xd0\x00",
+                  ("BMP ", icons.MISSILE_PICTURE): chunk}
+        new = icons.bolt_chunks(chunks)
+        self.assertEqual(set(new), {("OJFF", icons.FOG_BOLT_OBJECT), ("BMP ", icons.FOG_BOLT_PICTURE)})
+        self.assertEqual(new[("OJFF", icons.FOG_BOLT_OBJECT)],
+                         bytes(12) + struct.pack("<H", icons.FOG_BOLT_PICTURE) + b"\xd0\x00")
+        grey = new[("BMP ", icons.FOG_BOLT_PICTURE)]
+        self.assertEqual(len(grey), len(chunk))
+        for k, frame in enumerate(frames):
+            expected = [[icons.FOG_BOLT_GREYS.get(p, p) if p is not None else None for p in row] for row in frame]
+            self.assertEqual([list(row) for row in decode_frame(grey, k)[2]], expected)
+            self.assertEqual([list(row) for row in decode_frame(chunk, k)[2]], frame)
+
     def test_numbers_apart_from_the_rest(self):
         """No object or icon of these numbered as Kalzith's moved scroll icons or the party's
         sprites (the arms' first numbers were his: their boxes showed his pictures)."""

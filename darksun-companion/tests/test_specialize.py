@@ -141,11 +141,40 @@ class PageLabelTests(unittest.TestCase):
         self.assertTrue(all(0x834 <= i < 0xBB8 and i not in pages for i in rows))
         self.assertNotIn(weaponpages.PICKER, set(range(3000, 3014)) | {3020, 3024} | set(weaponpages.PAGES)
                          | {weaponpages.WARRIOR_DISCIPLINES, weaponpages.WARRIOR_SPHERES})
-        # (two columns of eight, inside the psionicists' window, 159 wide, above its words at 73)
-        xs = [weaponpages.PICK_X + weaponpages.PICK_GAP_X * (k // 8) for k in range(16)]
-        ys = [weaponpages.PICK_Y + weaponpages.PICK_PITCH * (k % 8) for k in range(16)]
-        self.assertLess(max(ys) + 7, 73)
-        self.assertEqual(sorted(set(xs)), [6, 88])
+        # (six slots across, three rows, inside the 214 by 156 window and above its title)
+        w = weaponpages
+        left = (w.PICK_WIDTH - w.PICK_COLUMNS * w.PICK_PITCH + (w.PICK_PITCH - w.PICK_SLOT)) // 2
+        xs = [left + w.PICK_PITCH * (k % w.PICK_COLUMNS) for k in range(16)]
+        ys = [w.PICK_TOP + w.PICK_PITCH * (k // w.PICK_COLUMNS) for k in range(16)]
+        self.assertGreaterEqual(min(xs), 4)
+        self.assertLessEqual(max(xs) + w.PICK_SLOT, w.PICK_WIDTH - 4)
+        self.assertLess(max(ys) + w.PICK_SLOT, w.PICK_TITLE_Y)
+
+    def test_picker_matches_dsclog(self):
+        """DSCLOG's PK_HOVER finds the slot under the pointer, and PROBE_PK_TITLE and PROBE_PK_WIN
+        place the lines and the window, from numbers of its own: weaponpages' layout."""
+        import os
+        import re
+        from dscompanion import weaponpages as w
+        with open(os.path.join(os.path.dirname(__file__), "..", "dos", "dsclog.asm")) as f:
+            source = f.read()
+        equ = {m.group(1): m.group(2).split(";")[0].strip()
+               for m in re.finditer(r"^(\w+)\s+equ\s+(.+)$", source, re.M)}
+
+        def value(name):
+            expr = equ[name]
+            for other in sorted(equ, key=len, reverse=True):
+                if other in expr and other != name:
+                    expr = re.sub(r"\b%s\b" % other, str(value(other)), expr)
+            return eval(expr.replace("/", "//"))
+
+        left = (w.PICK_WIDTH - w.PICK_COLUMNS * w.PICK_PITCH + (w.PICK_PITCH - w.PICK_SLOT)) // 2
+        self.assertEqual((value("PK_PICK_WIDTH"), value("PK_PICK_Y")), (w.PICK_WIDTH, w.PICK_TITLE_Y))
+        self.assertEqual((value("PK_PICK_X"), value("PK_PICK_TOP")),
+                         ((320 - w.PICK_WIDTH) // 2, (200 - w.PICK_HEIGHT) // 2))
+        self.assertEqual((value("PK_SLOTS_X"), value("PK_SLOTS_Y")),
+                         (value("PK_PICK_X") + left, value("PK_PICK_TOP") + w.PICK_TOP))
+        self.assertEqual((value("PK_PITCH"), value("PK_SLOT")), (w.PICK_PITCH, w.PICK_SLOT))
 
 
 

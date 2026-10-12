@@ -27,7 +27,7 @@ and a BMP chunk of its own number is its picture on the map, here the plain item
 
 import os
 import struct
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from . import gff
 
@@ -441,12 +441,15 @@ def with_chunks(data: bytes, added: gff.Chunks, room: Optional[Dict[Tuple[str, i
     return bytes(out)
 
 
-# Cat's Grace's spell icon (RESOURCE.GFF), for Flaming Sphere's (ICON 21014) with that rule:
-# Strength's tile (ICON 21023: the spell Cat's Grace works as) in a tawny cat's golds, its glyph a
-# cat's paw print in the game's dark line, with the light line below and right of it that its
-# glyphs have. DSCLOG asks for it in Flaming Sphere's place (PROBE_CHUNK_ID).
+# The new spells' icons (RESOURCE.GFF; game.NEW_SPELLS), ICON 21000 + the spell as the game's own,
+# on the USE screen and the Effects screen. Cat's Grace: Strength's tile (ICON 21023: the spell Cat's
+# Grace works as) in a tawny cat's golds, its glyph a cat's paw print in the game's dark line, with
+# the light line below and right of it that its glyphs have. Erdlu Claw: Gaze Reflection's sandy
+# tile, three claw scratches; Fogbolt: Charm Person's purple tile (the spell Fogbolt is made from),
+# its glyph taken off, a cloud with a bolt below.
 RESOURCE_FILE = "RESOURCE.GFF"
-STRENGTH_ICON, GRACE_ICON = 21023, 21900
+STRENGTH_ICON, GAZE_ICON, CHARM_ICON = 21023, 21006, 21002
+GRACE_ICON, CLAW_ICON, FOG_ICON = 21196, 21197, 21198
 GRACE_FILL = {163: 168, 76: 169, 77: 65, 75: 168, 78: 170, 134: 205}
 GRACE_FRAME = {60: 170, 145: 169, 147: 170, 133: 205, 203: 207, 134: 205}
 GLYPH, GLYPH_LIGHT = 204, 170
@@ -487,13 +490,136 @@ def cat_icon(strength: Rows) -> Rows:
     return out
 
 
+CLAW_GLYPH = (  # (three claw scratches)
+    ".....D....D....D",
+    "....DD...DD...DD",
+    "...DD...DD...DD.",
+    "...DD...DD...DD.",
+    "..DD...DD...DD..",
+    "..DD...DD...DD..",
+    ".DD...DD...DD...",
+    ".DD...DD...DD...",
+    ".D....D....D....",
+)
+FOG_GLYPH = (  # (a cloud with a bolt below)
+    "......DDD.......",
+    "...DDD...D......",
+    "..D.......DDD...",
+    ".D...........D..",
+    ".DDDDDDDDDDDDD..",
+    "......DD........",
+    ".....DD.........",
+    "....DDDDDD......",
+    "........DD......",
+    ".......DD.......",
+    "......DD........",
+    "......D.........",
+)
+CHARM_GLYPH = {174, 178, 74, 75}  # (Charm Person's glyph: its dark and light lines)
+CHARM_FILL = (177, 176)  # (... filled in with its tile's own purples)
+FOG_DARK, FOG_LIGHT = 254, 178
+
+
+def glyph_icon(base: Rows, old: Set[int], fill: int, glyph: Tuple[str, ...], top: int, dark: int,
+               light: int) -> Rows:
+    """BASE's tile with its glyph (colours OLD inside the frame) filled in with FILL and GLYPH drawn
+    from row TOP in DARK, its light line LIGHT below and right of it."""
+    n = len(base)
+    out = [list(r) for r in base]
+    for y in range(1, n - 1):
+        for x in range(1, n - 1):
+            if out[y][x] in old:
+                out[y][x] = fill
+    points = {(x, top + j) for j, line in enumerate(glyph) for x, ch in enumerate(line) if ch == "D"}
+    for x, y in points:
+        if (x + 1, y + 1) not in points and 0 < x + 1 < n - 1 and 0 < y + 1 < n - 1:
+            out[y + 1][x + 1] = light
+    for x, y in points:
+        out[y][x] = dark
+    return out
+
+
+def claw_icon(gaze: Rows) -> Rows:
+    """Erdlu Claw's icon from Gaze Reflection's."""
+    return glyph_icon(gaze, {129, 60, 182, 183}, 180, CLAW_GLYPH, 3, 129, 183)
+
+
+def fog_icon(charm: Rows) -> Rows:
+    """Fogbolt's icon from Charm Person's: its glyph taken off (each pixel of it the tile's own
+    purples, by turns), then the cloud and bolt in the game's black with a light purple line."""
+    n = len(charm)
+    out = [list(r) for r in charm]
+    for y in range(1, n - 1):
+        for x in range(1, n - 1):
+            if out[y][x] in CHARM_GLYPH:
+                out[y][x] = CHARM_FILL[(x + y) % 2]
+    return glyph_icon(out, set(), 0, FOG_GLYPH, 2, FOG_DARK, FOG_LIGHT)
+
+
+# Fogbolt's bolt (SEGOBJEX.GFF): a spell's record names its flight by a number (+10h, FFh none),
+# a place in the game's table of 16 flights before the records (3 bytes each: the object flying,
+# a byte); Magic Missile's, 4, is object 8109, BMP 2227 its picture (36 frames, one a direction)
+# in a white core, cyan and a blue edge. Fogbolt's own: object 8118, Magic Missile's with picture
+# 2584, the same frames in the greys 208-217 (alike in every region's palette), in place 15 of the
+# table, which no spell's record names (DSCLOG's NS_SETUP).
+MISSILE_OBJECT, MISSILE_PICTURE = 8109, 2227
+FOG_BOLT_OBJECT, FOG_BOLT_PICTURE = 8118, 2584
+FOG_BOLT_GREYS = {46: 214, 220: 211, 161: 209}  # white, cyan, blue: mid, dark and darkest grey
+
+
+def recolour_frames(chunk: bytes, colours: Dict[int, int]) -> bytes:
+    """A picture chunk with each frame's pixels changed by COLOURS (the runs' bytes in place)."""
+    out = bytearray(chunk)
+    count, = struct.unpack_from("<H", out, 4)
+    for frame in range(count):
+        pos = struct.unpack_from("<I", out, 6 + 4 * frame)[0] + 4
+        while out[pos] != 0xFF:
+            pos += 1
+            while True:
+                flags, length = out[pos + 1], out[pos + 3]
+                pos += 4
+                end = pos + length
+                while pos < end:
+                    c = out[pos]
+                    n = 1 if c & 1 else (c >> 1) + 1
+                    for at in range(pos + 1, pos + 1 + n):
+                        out[at] = colours.get(out[at], out[at])
+                    pos += 1 + n
+                if flags & 0x80:
+                    break
+    return bytes(out)
+
+
+def bolt_chunks(chunks: gff.Chunks) -> gff.Chunks:
+    """Fogbolt's flight: its object (Magic Missile's, naming the grey picture) and picture."""
+    record = bytearray(chunks[("OJFF", MISSILE_OBJECT)])
+    struct.pack_into("<H", record, OJFF_ICON, FOG_BOLT_PICTURE)
+    return {("OJFF", FOG_BOLT_OBJECT): bytes(record),
+            ("BMP ", FOG_BOLT_PICTURE): recolour_frames(chunks[("BMP ", MISSILE_PICTURE)], FOG_BOLT_GREYS)}
+
+
+def objects_beside(path: str) -> Optional[gff.Chunks]:
+    """The game's SEGOBJEX.GFF in PATH's folder, with the companion's own items' objects and
+    icons (new_chunks), for their pictures (None if it can't be read)."""
+    folder = os.path.dirname(path) or "."
+    try:
+        name = next(n for n in os.listdir(folder) if n.upper() == OBJECTS_FILE)
+        with open(os.path.join(folder, name), "rb") as f:
+            chunks = gff.read_gff(f.read())
+        return {**chunks, **new_chunks(chunks)}
+    except (OSError, StopIteration, gff.GffError, KeyError, ValueError, IndexError, struct.error):
+        return None
+
+
 def write_resources(source: str, dest: str) -> None:
-    """The game's RESOURCE.GFF (SOURCE, only read) with Cat's Grace's icon and the save/load
+    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons and the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py), to DEST."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
-    added = {("ICON", GRACE_ICON): encode(cat_icon(decode(chunks[("ICON", STRENGTH_ICON)])))}
+    added = {("ICON", GRACE_ICON): encode(cat_icon(decode(chunks[("ICON", STRENGTH_ICON)]))),
+             ("ICON", CLAW_ICON): encode(claw_icon(decode(chunks[("ICON", GAZE_ICON)]))),
+             ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", CHARM_ICON)])))}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))
@@ -501,7 +627,7 @@ def write_resources(source: str, dest: str) -> None:
         pass  # (no buttons: PgUp and PgDn still change the page)
     from . import weaponpages
     try:
-        added.update(weaponpages.chunks(chunks))
+        added.update(weaponpages.chunks(chunks, objects_beside(source)))
     except (KeyError, ValueError, IndexError, StopIteration, struct.error):
         pass  # (no weapon pages: the panel as the game has it, the choice through the Ledger)
     from . import kitpages
@@ -540,6 +666,10 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     except KeyError:  # (a number of his taken in this copy of the game: no Kalzith, the rest kept)
         his = {}
     added.update(his)
+    try:
+        added.update(bolt_chunks(chunks))
+    except (KeyError, ValueError, IndexError, struct.error):
+        pass  # (a game without Magic Missile's bolt: none to copy)
     from . import worldgear
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)

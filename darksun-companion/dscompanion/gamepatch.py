@@ -55,7 +55,7 @@ VEC_DAM_LINE = 0xCF
 VEC_VIEW_DAM = 0xCE
 VEC_CAN_USE = 0xCD
 VEC_NO_CAST = 0xCC
-VEC_MC_ROLL, VEC_MC_CON, VEC_MC_UNCON = 0xCB, 0xCA, 0xC9
+VEC_MC_CON, VEC_MC_UNCON = 0xCA, 0xC9
 VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN = 0xC8, 0xC7, 0xC6, 0xC5, 0xC4
 VEC_WP_CLASS = 0xC3
 VEC_LV_PICK = 0xC2
@@ -82,6 +82,43 @@ VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
+PK_HOVER = 7
+RG_TWO = 8  # (the ranger's two weapons, light armour only: DSCLOG's RG_TWO)
+# The new spells (196-198: DSCLOG's NEW SPELLS) share it too: NS_KNOWN, NS_LEARN, NS_NAME, NS_CLAW,
+# NS_HIT, then NS_CMP's sites in the order of DSCLOG's NS_CMP_SITES
+NS_KNOWN, NS_LEARN, NS_NAME, NS_CLAW, NS_HIT, NS_CMP = 9, 10, 11, 12, 13, 14
+# Each "cmp" of a spell's number with 8Ah (a psionic power from there), 45h (a priest spell), 0ACh
+# (a monster's power) or 0C4h (the end) that a new spell meets, which NS_CMP makes as a wizard's
+NS_CMP_SITES = (
+    (0x5585C, "81fe8a00"), (0x55865, "83fe45"),  # the USE screen's spells, drawn
+    (0x55AEC, "807eff8a"), (0x55AF2, "807eff45"),  # ... a click on one (its icon, which slots)
+    (0x55FEC, "81fe8a00"), (0x55FF5, "83fe45"),  # ... those that can be cast
+    (0x6CC93, "813ef54a8a00"), (0x6CCBE, "813ef54ac400"),  # the spell cast in a fight, shown
+    (0x72051, "813ef9548a00"),  # the readied spell's icon
+    (0x76883, "2681bf0a018a00"), (0x76C00, "2681bf0a018a00"),  # an effect's spell: not a power's upkeep
+    (0x772BB, "81fac400"), (0x772C7, "81faac00"), (0x772EC, "81fa8a00"),  # the cast
+    (0x7A258, "81fe8a00"),  # its effect on the target
+    (0x7BDA7, "81fe8a00"), (0x7BDB1, "81fe8a00"), (0x7BDCB, "81fe8a00"),  # 1st to 3rd level (Minor Globe)
+    (0x81B23, "817e088a00"),  # the caster level
+    (0x84C76, "81fe8a00"), (0x851BB, "81fe8a00"),  # the level the spell is cast at
+    (0x88DE0, "813ef54a8a00"), (0x88DFF, "813ef54ac400"),  # the spell cast, shown
+    (0x8B491, "807efdc4"), (0x8B6B5, "807efd8a"), (0x8B875, "817efe8a00"),  # a scroll used: its
+    (0x8B8AA, "807efdc4"), (0x8BA37, "807efdc4"), (0x8BA70, "807efdc4"),  # spell, learnt, its icon
+    (0x6F827, "807effc4"), (0x6F8D8, "81fac400"),  # an item's spell used, and cast
+    (0x720D3, "81fa8a00"), (0x8C457, "81fa8a00"),  # an item's spell's icon (a scroll's in its box)
+    (0x8C64E, "81fe8a00"),  # the spell info box's icon
+    (0x8B0FA, "80f9c4"), (0x58B7E, "80f9c4"),  # a scroll's spell, read; a weapon's, on a hit
+)
+# the lists of spells a member knows, may learn, may cast (500:25h, 2Ah, 2Fh): "cmp si,8Ah", the
+# end of their loops, made the new spells' end (their rows are empty while the rule is off)
+NS_FIST = NS_CMP + len(NS_CMP_SITES)  # (a melee hit's magic: after NS_CMP's)
+NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
+NS_END = 0xC7
+
+
+def _site(number: int, length: int) -> bytes:
+    """INT VEC_CR_SPELLS and a site's number, NOPs to LENGTH."""
+    return bytes((0xCD, VEC_CR_SPELLS, number)) + b"\x90" * (length - 3)
 
 
 SCRIPT_BUFFER = 0x2E00  # the scripts' buffer, made bigger (the game's: 10000 bytes)
@@ -178,6 +215,7 @@ PATCHES = (
     # neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx (DSCLOG does it, or AD&D's penalties
     # by hand when the companion's rule is on)
     Patch("two_weapons", 0x59634, bytes.fromhex("f7d88bd00bd27d0233d2"), _interrupt(VEC_TWO, 10)),
+    Patch("ranger_two", 0x5961F, bytes.fromhex("26f747120002"), bytes((0xCD, VEC_CR_SPELLS, RG_TWO, 0x90, 0x90, 0x90))),
     # the saving throw, doubling its d20 against fire, cold and electricity: shl al,1 (DSCLOG
     # does it, unless the companion's rule is on)
     Patch("double", 0x79B74, bytes.fromhex("d0e0"), _interrupt(VEC_DOUBLE, 2)),
@@ -192,6 +230,29 @@ PATCHES = (
     # ... and the routine working out a creature's abilities, at each of its effects:
     # mov [bp-0Ah],ax / mov cx,7 (DSCLOG adds Cat's Grace's amount to DEX)
     Patch("grace_ability", 0x7B7D7, bytes.fromhex("8946f6b90700"), _interrupt(VEC_GRACE_ABILITY, 6)),
+    # The new spells (DSCLOG's NEW SPELLS): the routine giving a spell's known byte (500:48h): its
+    # "cmp si,4" (a new spell's is DSCLOG's, from the sheet) ...
+    Patch("ns_known", 0x5DD04, bytes.fromhex("83fe04"), _site(NS_KNOWN, 3)),
+    # ... the routine teaching one (500:43h), marking it: and byte es:[bx],0F0h / or byte es:[bx],1
+    # (DSCLOG puts a new spell's in the sheet) ...
+    Patch("ns_learn", 0x5E3F7, bytes.fromhex("268027f026800f01"), _site(NS_LEARN, 8)),
+    # ... the routine giving a spell's name (500:61h): cmp ax,8Ah (DSCLOG's for a new one) ...
+    Patch("ns_name", 0x5E560, bytes.fromhex("3d8a00"), _site(NS_NAME, 3)),
+    # ... a natural attack's dice, before the game's effects for the first: or dx,dx / jne (Erdlu
+    # Claw's 1d6+1 for each where it is better) ...
+    Patch("ns_claw", 0x7B70A, bytes.fromhex("0bd27547"), _site(NS_CLAW, 4)),
+    # ... an attack's to-hit adjustments from effects, the target's Blur: test byte [bp-8],80h
+    # (Fogbolt's) ...
+    Patch("ns_hit", 0x7C430, bytes.fromhex("f646f880"), _site(NS_HIT, 4)),
+    # ... a melee hit's magic, as the hit's damage kinds get it: cmp word [bp-0Ch],0 (Erdlu Claw's
+    # +1 to hit and +1 weapon for a natural attack) ...
+    Patch("ns_fist", 0x58226, bytes.fromhex("837ef400"), _site(NS_FIST, 4)),
+    # ... the compares that tell a wizard's or priest's spell from the rest ...
+    *(Patch(f"ns_cmp_{offset:x}", offset, bytes.fromhex(code), _site(NS_CMP + k, len(code) // 2))
+      for k, (offset, code) in enumerate(NS_CMP_SITES)),
+    # ... and the lists' ends
+    *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"), bytes((0x81, 0xFE, NS_END, 0x00)))
+      for offset in NS_LIST_ENDS),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:
     # the memory reserved for it, "push dword 1" before the size (DSCLOG adds room for more
     # names) ...
@@ -328,7 +389,6 @@ PATCHES = (
     Patch("view_dam", 0x64EB6, bytes.fromhex("8956f2"), _interrupt(VEC_VIEW_DAM, 3)),
     Patch("can_use", 0x6EF34, bytes.fromhex("26234712"), _interrupt(VEC_CAN_USE, 4)),
     Patch("no_cast", 0x89B84, bytes.fromhex("83c404"), _interrupt(VEC_NO_CAST, 3)),
-    Patch("mc_roll", 0x8735E, bytes.fromhex("26014f0a"), _interrupt(VEC_MC_ROLL, 4)),
     Patch("mc_con", 0x87523, bytes.fromhex("03f8"), _interrupt(VEC_MC_CON, 2)),
     Patch("mc_uncon", 0x877DA, bytes.fromhex("2bd0"), _interrupt(VEC_MC_UNCON, 2)),
     # the creation panel's weapon pages (weaponpages.py)
@@ -346,6 +406,9 @@ PATCHES = (
     Patch("pk_title", 0x860C3, bytes.fromhex("1e682630"), _interrupt(VEC_PK_TITLE, 4)),
     Patch("pk_fill", 0x8610F, bytes.fromhex("33ff8bf7"), _interrupt(VEC_PK_FILL, 4)),
     Patch("pk_click", 0x862D4, bytes.fromhex("8b4608"), _interrupt(VEC_PK_CLICK, 3)),
+    # the pop-up's event loop, each time round: the weapon window's slot the pointer is on named
+    # in its lines
+    Patch("pk_hover", 0x85F44, bytes.fromhex("0bc07515"), bytes((0xCD, VEC_CR_SPELLS, PK_HOVER, 0x90))),
     # the weapon kinds under the selected character's effects on the Effects screen
     Patch("ef_rows", 0x7F13E, bytes.fromhex("5f5e"), _interrupt(VEC_EF_ROWS, 2)),
     Patch("hp_best", 0x87319, bytes.fromhex("8bc8"), _interrupt(VEC_HP_BEST, 2)),

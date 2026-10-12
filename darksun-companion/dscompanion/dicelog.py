@@ -65,7 +65,7 @@ TSR_PICK_SEQ, TSR_PICK_REPLY, TSR_PICK_OFF, TSR_PICK_ON, PICK_SIZE = 172, 174, 1
 PICK_TOOLS, PICK_KEY = 1, 2  # (TSR_PICK_ON: the thieving tools on someone; P in a conversation too)
 TSR_USE_SEQ, TSR_USE_REPLY, TSR_USE_WHO, TSR_USE_TAKEN, TSR_USE_ITEM = 180, 182, 184, 186, 188
 TSR_SWAP_ON, TSR_SWAP_SEQ, TSR_SWAP_OFF, SWAP_SIZE, SWAP_TEXT_SIZE = 190, 192, 194, 64, 240
-RULE_HELMS, RULE_BOOTS = game.RULE_HELMS, game.RULE_BOOTS
+RULE_HELMS = game.RULE_HELMS
 SLOT_KINDS = {"Wizard": "WIZ", "Priest": "PRI"}
 RAND_PATCHED = b"\xcd\x60"  # INT 60h at the start of rand() in DSUNLOG.EXE
 RAND_IP = 0x822  # rand()'s offset in the game's first code segment
@@ -377,7 +377,7 @@ class DiceLog:
         self._tools_session: set = set()  # ... while this runs
         self._swap_seq = 0  # DSCLOG's text swaps seen (the arena ring's search, ring.py)
         self._tools_new: List[str] = []
-        self.rules = 0  # RULE_HELMS | RULE_BOOTS: rule changes DSCLOG makes (set_rules)
+        self.rules = 0  # RULE_HELMS ...: rule changes DSCLOG makes (set_rules)
         self.stealth_roll: Callable[[], int] = lambda: random.randint(1, 100)  # hiding, moving silently
         self._ring_check = 0.0
         self._main_ticks: Optional[int] = None  # DSCLOG's count of the map's main loop, last read
@@ -669,7 +669,6 @@ class DiceLog:
                 save = game.kind_to_save(game.SPELL_KIND, rules)
                 self.guest.write(table + 2 * game.SPELL_KIND, struct.pack("<H", save))
             if self.game is not None:
-                self.game.set_cats_grace(bool(rules & game.RULE_CATS_GRACE))
                 self.game.set_dodge(bool(rules & game.RULE_NO_DOUBLE))
 
     def monster_ac(self, index: int) -> Optional[int]:
@@ -1062,7 +1061,7 @@ class DiceLog:
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
             if self.stealth_gear:
                 stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)
-            kalzith.stock(self.game, bool(self.rules & game.RULE_CATS_GRACE))  # (once a game, by its flag)
+            kalzith.stock(self.game, bool(self.rules & game.RULE_NEW_SPELLS))  # (once a game, by its flag)
             semyon.watch(self.game)  # (killed: never put in the pens)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
@@ -1748,13 +1747,19 @@ class DiceLog:
         # the spell effects the game checks here (from its code)
         effects = g.effects()
         on = lambda combatant, eid: any(x.owner == combatant and x.id == eid for x in effects)
-        for eid, value in ((7, 1), (12, -1), (47, -4), (49, 1)):
+        for eid, value in ((7, 1), (12, -1), (47, -4), (49, 1)):  # (Fogbolt's below, with Blur)
             if on(attacker_combatant, eid):
                 parts.append((EFFECT_NAMES[eid], value))
                 situational -= value
         if on(target_combatant, 55):
             parts.append(("target's Blur", -2))
             situational += 2
+        if on(attacker_combatant, game.FOG_EFFECT):  # (the new spells' Fogbolt: DSCLOG's NS_HIT)
+            parts.append(("Fogbolt", -3))
+            situational += 3
+        if on(target_combatant, game.FOG_EFFECT):
+            parts.append(("target's Fogbolt", 2))
+            situational -= 2
         prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
         if prayer:
             caster = g.combatant_creature(prayer.caster)
@@ -1772,6 +1777,9 @@ class DiceLog:
                 penalty = MATERIAL_TO_HIT[weapon.material]
                 parts.append((MATERIALS[weapon.material].lower(), penalty))
                 rest -= penalty
+        elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT):
+            parts.append(("Erdlu Claw", 1))  # (unarmed: DSCLOG's NS_FIST, in [BP-8])
+            rest -= 1
         # With two weapons ready the game adjusts every melee attack by the DEX table it
         # also uses for initiative, sign flipped and never below 0 (rangers excepted): a
         # bonus at DEX 5 or less, nothing otherwise. The manual's off-hand penalty isn't there,
@@ -1838,8 +1846,8 @@ class DiceLog:
             if count == 1 and e.parent_code.startswith(STRENGTH_ROLL_RETURN) and e.parent_arg(0x0E) is not None:
                 spell, target = e.parent_arg(0x0E), e.parent_arg(6)
                 self._spell_cast(spell, now)
-                # (Cat's Grace, in Flaming Sphere's place, uses Strength's code for DEX)
-                ability = "DEX" if spell == game.FLAMING_SPHERE and self.rules & game.RULE_CATS_GRACE else "STR"
+                # (Cat's Grace, a new spell, uses Strength's code for DEX)
+                ability = "DEX" if spell == game.GRACE_SPELL else "STR"
                 return self.flush(now, force=True) + [
                     f"{self.game.spell_name(spell)}: 1d{sides} = {faces[0]} -> {self._name(target)}'s {ability} "
                     f"+{faces[0]} while it lasts (at most {STR_MOST})"]
@@ -1889,7 +1897,7 @@ class DiceLog:
                 pending = PendingDice(f"{count}d{sides} = {faces_text} = {sum(faces)}", now,
                                       damage=e.parent_code.startswith(SPELL_DAMAGE_RETURN))
                 target, spell = e.parent_arg(6), e.parent_arg(8)
-                if count == 1 and sides == 100 and target is not None and game.SPELL_FIRST <= spell < game.PSIONIC_FIRST + game.PSIONIC_COUNT \
+                if count == 1 and sides == 100 and target is not None and game.cast_spell(spell) \
                         and self.game.combatant_creature(target) is not None:
                     pending.resistance = (target, spell, faces[0])
                 self._pending.append(pending)
@@ -1941,7 +1949,7 @@ class DiceLog:
         if not e.parent_code.startswith(OVERLAY_TRAP):
             return False
         spell, level = e.parent_arg(6), e.parent_arg(8)
-        if spell is None or level is None or not game.SPELL_FIRST <= spell < game.PSIONIC_FIRST + game.PSIONIC_COUNT or not 1 <= level <= 40:
+        if spell is None or level is None or not game.cast_spell(spell) or not 1 <= level <= 40:
             return False
         rec = self.game.spell_record(spell)
         return len(rec) > 4 and (rec[4] & 0x0F, rec[4] >> 4) == (count, sides)
@@ -1972,7 +1980,7 @@ class DiceLog:
         if not e.parent_code.startswith(OVERLAY_TRAP):
             return None
         spell = e.arg(0x0C)
-        if spell is None or spell != e.parent_arg(6) or not game.SPELL_FIRST <= spell < game.PSIONIC_FIRST + game.PSIONIC_COUNT:
+        if spell is None or spell != e.parent_arg(6) or not game.cast_spell(spell):
             return None
         rule = self.game.spell_damage(spell)
         if rule is None or rule.sides != sides or sides < 2:
@@ -2136,9 +2144,9 @@ class DiceLog:
             gained *= 2
             text += f", doubled for a half-giant = {gained}"
         classes = game.class_share(sheet)
-        if self.game.rules & game.RULE_MULTI_HP and classes > 1:
-            share = game.multiclass_gain(sheet, gained) // classes
-            text += f", / {classes} classes = {share}" + (" (at least 1)" if gained < classes else "")
+        if self.game.rules & game.RULE_MULTI_HP and classes > 1:  # (DSCLOG's CON_SHARE)
+            per = self.game.con_per_die(sheet, con)
+            text += f", {signed(per)} CON {con}, into the total shared by {classes} classes"
         cls_name = game.CLASS_NAMES.get(cls, f"class {cls}")
         return [f"{self.game.creature_name(member)}'s {game.ordinal(level)} {cls_name} level: hit points {text}"]
 
@@ -2299,28 +2307,31 @@ class DiceLog:
         steps += f" = {rolled}"
         classes = game.class_share(sheet)
         multi = bool(g.rules & game.RULE_MULTI_HP) and classes > 1
-        hp = rolled // classes
-        if multi:  # (RULE_MULTI_HP: each level's share, at least 1)
-            hp = sum(game.multiclass_gain(sheet, r[2]) for r in rolls) // classes
-            steps += f", each / {classes} classes (at least 1) = {hp}"
-        elif classes > 1:
-            steps += f", / {classes} classes = {hp}" + (" (rounded down)" if rolled % classes else "")
-        # CON's bonus counts levels that roll dice: a warrior's (group 1) at the full bonus, and
-        # the rest of the highest class's up to +2
         con = self._creation_con if self._creation_con is not None \
             else g.creature(index)[CREATURE_ABILITIES + 2]
-        bonus_per_level = g.level_hp_con_bonus(con)
         levels = {}
         for _, cls, _, _, _ in rolls:
             levels[cls] = levels.get(cls, 0) + 1
-        warrior = max((n for c, n in levels.items() if g.level_hp_group(c) == 1), default=0)
-        highest = max(levels.values())
-        bonus = bonus_per_level * warrior + min(bonus_per_level, 2) * (highest - warrior)
-        if multi:
-            bonus = game.con_share(sheet, bonus)
-        if bonus:
-            hp += bonus
-            steps += f", {signed(bonus)} CON {con}" + (" shared" if multi else "") + f" = {hp}"
+        if multi:  # (RULE_MULTI_HP, DSCLOG's CON_SHARE: CON's bonus on each die, then the total shared)
+            per = g.con_per_die(sheet, con)
+            total = rolled + per * len(rolls)
+            hp = int(total / classes)
+            if per:
+                steps += f", {signed(per)} CON {con} on each of {len(rolls)} dice = {total}"
+            steps += f", / {classes} classes = {hp}" + (" (rounded down)" if total % classes else "")
+        else:
+            hp = rolled // classes
+            if classes > 1:
+                steps += f", / {classes} classes = {hp}" + (" (rounded down)" if rolled % classes else "")
+            # CON's bonus counts levels that roll dice: a warrior's (group 1) at the full bonus, and
+            # the rest of the highest class's up to +2
+            bonus_per_level = g.level_hp_con_bonus(con)
+            warrior = max((n for c, n in levels.items() if g.level_hp_group(c) == game.WARRIOR_GROUP), default=0)
+            highest = max(levels.values())
+            bonus = bonus_per_level * warrior + min(bonus_per_level, 2) * (highest - warrior)
+            if bonus:
+                hp += bonus
+                steps += f", {signed(bonus)} CON {con} = {hp}"
         least = sum(levels.values())
         if hp < least:
             hp = least
@@ -2438,15 +2449,15 @@ class DiceLog:
         kind = SAVE_NAMES.get(index, "?")
         # a spell left on the ground (Grease, a cloud) makes its victims save with themselves as the caster
         source = f" from {g.combatant_name(caster)}" if caster != target else ""
-        who = f"{g.combatant_name(target)} saves vs {g.spell_name(spell)}{source} ({kind})"
+        who = f"{g.combatant_name(target)}'s saving throw vs {g.spell_name(spell)}{source} ({kind})"
         if total is None:
             return f"{who}: d20 = {natural} (natural {natural}) -> {self._save_result(spell, natural == 20)}"
         if total >= 0x80:  # the game adds -100 / +100 for "can't save" / "always saves"
             total -= 0x100
         if total < -50:
-            return f"{who}: cannot save"
+            return f"{who}: none allowed (cannot save) -> failed"
         if total > 100:
-            return f"{who}: saves automatically"
+            return f"{who}: not needed (saves automatically) -> saved"
         rules = g.spell_rules(spell)
         steps, rolled = "d20", None
         if natural is not None:
