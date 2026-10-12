@@ -2568,13 +2568,17 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#kalzith).
 
 #### Semyon
 
-Untie the arena's prisoner and he is **Semyon**, of the Veiled Alliance. He
-meets the party again in the arena's bone area, where they can recruit him to
-the Alliance. Recruited, he fights beside them in the next fight and, if he
-survives it, leaves: "That's enough for me. I'm leaving. I'll go find more
-members for the Alliance." (Some of his replies in the bone area send him off
-before that: "That's enough for me. I'll see you in the holding pens.", "Right,
-see you there!", or, still weak, "Why don't I meet you in the holding pen?")
+Untie the arena's prisoner and he is **Semyon**, a slave the templars tied up
+in the sun for asking after the Veiled Alliance, "much more of a scout than a
+warrior", as he says. He meets the party again in the arena's bone area, takes
+them for the Alliance ("You must really be from the Veiled Alliance! I thought
+they were a myth!") and asks to join. Made a member ("You, too, are now a
+member of the Alliance.") and asked to help, he fights beside them in the next
+fight and, if he survives it, leaves: "That's enough for me. I'm leaving. I'll
+go find more members for the Alliance." (Some of his replies in the bone area
+send him off before that: "That's enough for me. I'll see you in the holding
+pens.", "Right, see you there!", or, still weak, "Why don't I meet you in the
+holding pen?")
 Each way, he walks out through the arena's entrance to the pens, where a
 script takes him off the map, and nothing in the pens brings him back.
 

@@ -8,6 +8,15 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #40 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/40))
+
+**Documentation**
+- **Semyon as the game tells him.** The README called him "of the Veiled
+  Alliance"; in the game he is a slave tied up for asking after it, "much more
+  of a scout than a warrior", who takes the party for the Alliance and asks to
+  join. His section now says so, in his own words from the arena, as does the
+  description in the Ledger's code.
+
 ## Pull request #39 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/39))
 
 **Added**
