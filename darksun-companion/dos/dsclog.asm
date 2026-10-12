@@ -9523,6 +9523,180 @@ xp_suffix db ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; by class, 1-8 (CREATION_CLASS_NAMES in dscompanion/game.py)
 class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 0, 'T', 0
 
+; RECRUIT (a prototype): a script's random command with N = RECRUIT_N + R (R 1-99) puts the saved
+; character R of CHARSAVE.GFF in the party's first empty slot (status Gone), as the game's ADD
+; does from the inventory's empty-slot menu (DSUN.EXE 54632h): CHARSAVE opened (if it isn't),
+; the record read into the slot, its spells and psionics, the figure put beside the leader, the
+; slot's state set, CHARSAVE closed. BX: R. Keeps nothing (the caller saves).
+RECRUIT_N    equ 30000
+RC_STATUS    equ 0x333          ; in the party segment: each slot's status (8: Gone)
+RC_GONE      equ 8
+RC_PARTY_SEG equ 0x3972 - 0x4356
+RC_LEADER_SEG equ 0x3781 - 0x4356 ; +369h: the leader's slot
+RC_WHO_SEG   equ 0x3931 - 0x4356  ; +25Bh: the selected character (ADD's slot)
+RC_OPEN_SEG  equ 0x4239         ; (overlay entries, DSUN.EXE segments less the load segment)
+RC_LOAD_SEG  equ 0x4242
+RC_PLACE_SEG equ 0x1DF3
+RC_SLOT_SEG  equ 0x4211
+RC_REST_SEG  equ 0x1A0A
+rc_dbg  db 'RCDBG!'
+rc_calls dw 0
+rc_found dw 0xFFFF
+rc_ret  dw 0x1234
+rc_slot dw 0
+rc_who  dw 0
+rc_x    dw 0
+rc_y    dw 0
+rc_far  dw 0, 0
+rc_beside db 0
+%macro RC_CALL 2
+        mov ax, ds
+        sub ax, DGROUP_SEG - %1
+        mov word [cs:rc_far], %2
+        mov [cs:rc_far + 2], ax
+        call far [cs:rc_far]
+%endmacro
+recruit:
+        inc word [cs:rc_calls]
+        push es
+        mov ax, ds
+        add ax, RC_PARTY_SEG
+        mov es, ax
+        xor si, si
+.find:  cmp byte [es:si + RC_STATUS], RC_GONE
+        je .found
+        inc si
+        cmp si, 4
+        jb .find
+        jmp .out                        ; no room
+.found: mov [cs:rc_slot], si
+        mov [cs:rc_found], si
+        mov ax, ds
+        add ax, RC_WHO_SEG
+        mov es, ax
+        mov ax, [es:0x25B]
+        mov [cs:rc_who], ax
+        mov [es:0x25B], si              ; (ADD's own slot, for anything that reads it)
+        push bx
+        RC_CALL RC_OPEN_SEG, 0x57       ; open CHARSAVE.GFF
+        pop bx
+        push bx
+        push word 7                     ; the file
+        push dword 0x52414843           ; 'CHAR'
+        movzx eax, bx
+        push eax
+        push word [cs:rc_slot]
+        RC_CALL RC_LOAD_SEG, 0x25
+        add sp, 12
+        pop bx
+        mov [cs:rc_ret], ax
+        cmp ax, 0xFFFF
+        je .close
+        push bx
+        push word [cs:rc_slot]
+        RC_CALL RC_OPEN_SEG, 0x25       ; its spells and psionics
+        add sp, 4
+        ; where the figure goes: beside the leader (as ADD's: in play, DS:1168h, or the leader's
+        ;   own slot), else where the game starts a party
+        mov byte [cs:rc_beside], 1
+        mov ax, ds
+        add ax, RC_LEADER_SEG
+        mov es, ax
+        cmp word [0x1168], 0
+        jne .beside
+        mov ax, [es:0x369]
+        cmp ax, [cs:rc_slot]
+        je .beside
+        mov byte [cs:rc_beside], 0
+        mov word [cs:rc_x], 0x840
+        mov word [cs:rc_y], 0x660
+        jmp .place
+.beside:
+        mov bx, [es:0x369]
+        shl bx, 5
+        cmp word [bx + 0x6695], -1
+        jle .default
+        mov ax, [bx + 0x669D]
+        mov [cs:rc_x], ax
+        mov ax, [bx + 0x669F]
+        mov [cs:rc_y], ax
+        push ss
+        pop es
+        sub sp, 4
+        mov bp, sp
+        mov ax, [cs:rc_y]
+        mov [ss:bp], ax
+        mov ax, [cs:rc_x]
+        mov [ss:bp + 2], ax
+        lea ax, [bp]
+        push ax                         ; &y
+        lea ax, [bp + 2]
+        push ax                         ; &x
+        RC_CALL RC_SLOT_SEG, 0xAC       ; (a free square near there)
+        add sp, 4
+        mov ax, [ss:bp]
+        mov [cs:rc_y], ax
+        mov ax, [ss:bp + 2]
+        mov [cs:rc_x], ax
+        add sp, 4
+        jmp .place
+.default:
+        mov ax, [0x117E]
+        mov [cs:rc_x], ax
+        mov ax, [0x1180]
+        mov [cs:rc_y], ax
+.place: push word 0
+        push word 7
+        mov al, [0x388]
+        push ax
+        push word [cs:rc_y]
+        push word [cs:rc_x]
+        push word [cs:rc_slot]
+        mov ax, [cs:rc_slot]
+        imul ax, ax, 0x3A
+        les bx, [0x1665]
+        add bx, ax
+        mov ax, [es:bx + 0x18]
+        add ax, 0x12C
+        push ax
+        RC_CALL RC_PLACE_SEG, 0x55A
+        add sp, 14
+        push word [cs:rc_slot]
+        RC_CALL RC_SLOT_SEG, 0x93
+        add sp, 2
+        mov ax, [cs:rc_slot]
+        imul ax, ax, 0x3A
+        les bx, [0x1665]
+        add bx, ax
+        mov al, [es:bx + 0x1C]
+        mov dx, ds
+        add dx, RC_PARTY_SEG
+        mov es, dx
+        mov bx, [cs:rc_slot]
+        mov [es:bx + RC_STATUS], al
+        imul bx, bx, 0x13
+        mov word [es:bx + 0x8AA], 0
+        mov bx, [cs:rc_slot]
+        imul bx, bx, 0x1C
+        mov byte [es:bx + 0x377], 0xFF
+        push word [cs:rc_slot]
+        RC_CALL RC_REST_SEG, 0x6F3
+        add sp, 2
+        mov bx, [cs:rc_slot]
+        shl bx, 5
+        and byte [bx + 0x6694], 0x7F
+        cmp byte [cs:rc_beside], 0
+        jne .close
+        or byte [bx + 0x6694], 0x80
+.close: RC_CALL RC_OPEN_SEG, 0x5C       ; CHARSAVE.GFF closed
+        mov ax, ds
+        add ax, RC_WHO_SEG
+        mov es, ax
+        mov ax, [cs:rc_who]
+        mov [es:0x25B], ax
+.out:   pop es
+        ret
+
 ; PROBE_SCRIPT_RAND: INT VEC_SCRIPT_RAND replaces "inc eax / mov edx,eax" (5 bytes: INT + 3 NOPs;
 ; DSUN.EXE B300h) in the scripts' random command (0 to N, each as likely: rand() * (N + 1) /
 ; 32768), EAX its N, the rand() on the stack under the INT's return. Does the two instructions
@@ -9543,6 +9717,15 @@ probe_script_rand:
         mov edx, eax
         push bp
         mov bp, sp              ; BP+2 the INT's return, BP+8 the rand() pushed
+        cmp eax, RECRUIT_N + 1         ; (RECRUIT's N: a character joins)
+        jb .not_recruit
+        cmp eax, RECRUIT_N + 100
+        jae .not_recruit
+        pushad
+        lea ebx, [eax - RECRUIT_N - 1]
+        call recruit
+        popad
+.not_recruit:
         pushad
         push es
         movsx ebx, word [bp + 8]

@@ -37,6 +37,8 @@ GONE = 7  # the game's flag: he has gone to the holding pens (any way he left)
 PLACED, MET = 764, 765  # (the companion's flags: Kalzith's are 760-763; the game's run to 755)
 LEFT, DIED = 770, 771  # (the companion's) he left the arena after the fight he helped in; he died
 ARENA_TALK, EXIT = 5, 2400  # his arena script, and where in it he is taken off the map then
+RANDOM = 0x52  # (a term: a number from 0 to N)
+RECRUIT_N, RECRUIT_CHAR = 30000, 30  # DSCLOG's RECRUIT: rand(RECRUIT_N + R) adds saved character R
 REMOVE = 0x5E  # (object, region, x, y, ...): an object moved to a region (255: none)
 GOTO = 0x64
 CELL = (99, 45)  # (tiles) a free pen above Kalzith's, by its straw
@@ -202,6 +204,13 @@ def conversation() -> bytes:
         s.page()
         s.leave()
 
+    def join():  # (a prototype: DSCLOG's RECRUIT puts saved character RECRUIT_CHAR in the party)
+        s.say("A scout's work at last! Lead on, comrade.")
+        s.page()
+        s.op(0x16, ("op", (RANDOM, [("n", RECRUIT_N + RECRUIT_CHAR)])), ("var", 2, 0))
+        s.op(REMOVE, ("n", -SEMYON), *(("n", v) for v in GONE_AT))
+        s.leave()
+
     def menu():
         s.menu([("Why did they tie you up out there?", reply(
                     "I was asking around the pens about the Veiled Alliance. Someone told the "
@@ -216,6 +225,7 @@ def conversation() -> bytes:
                 ("Tell me about the Alliance.", reply(
                     "One village alone can't stand against an army. Bring them together, and Draj "
                     "will learn to fear the desert. But first, you have to get out of these pens."), ALWAYS),
+                ("Come with us. We could use a scout.", join, ALWAYS),
                 ("Farewell.", leaves(farewell), ALWAYS)])
 
     def breaking_out():
