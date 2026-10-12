@@ -2270,6 +2270,9 @@ in the character's sheet, so it saves with the game and the character.
   breakdowns show `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on
   attacks against it.
 
+Each has a sound of its own: Cat's Grace lands with Haste's shimmer, Erdlu
+Claw with Shocking Grasp's snap, Fogbolt with Fog Cloud's sounds.
+
 With the **New wizard spells** box unticked (it's ticked by default) the
 spells are gone from the lists and the game is as it was.
 

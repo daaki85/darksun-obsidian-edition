@@ -813,7 +813,11 @@ game's Creative Voice files), all played by 90:A6Fh: `+0Fh` with the glow on
 the caster (only when `+0Dh`, the glow's object, isn't -1), `+13h` while
 something flies (only when `+10h` isn't FFh), `+16h` as the spell lands.
 Fogbolt has Fog Cloud's 82 and 98 for the first and last, and keeps Charm
-Person's 75 for the flight (`FOG_CAST_SOUND`, `FOG_HIT_SOUND`).
+Person's 75 for the flight (`FOG_CAST_SOUND`, `FOG_HIT_SOUND`). Cat's Grace and
+Erdlu Claw are cast only on a party member's portrait on the USE screen, where
+the game shows its own star over the portrait whatever the spell, and plays
+the landing sound: Haste's 96 for Cat's Grace, Shocking Grasp's 77 for Erdlu
+Claw (`NS_LANDING`; they had Strength's and Enlarge's, the same 94).
 
 The sites share one interrupt with the creation panel's (`INT 98h`, then the
 site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).

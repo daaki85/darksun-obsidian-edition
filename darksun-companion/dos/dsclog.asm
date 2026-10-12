@@ -10917,6 +10917,7 @@ ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up 
 ns_levels    db 2, 1, 1         ; each one's spell level ...
 ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL ; ... the spell whose record it takes ...
 ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT       ; ... and its effect
+ns_landing   db 96, 77, FOG_HIT_SOUND ; the sound as it lands (+16h): Haste's, Shocking Grasp's, Fog Cloud's
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog
 ns_name_grace db "CAT'S GRACE", 0
 ns_name_claw db "ERDLU CLAW", 0
@@ -10978,6 +10979,8 @@ ns_setup:
         add bx, 2
         loop .copy
         pop di
+        mov al, [cs:si + ns_landing]
+        mov [es:di + 0x16], al
         or si, si
         jz .effect              ; (Cat's Grace: Strength's, its effect PROBE_GRACE_EFFECT's)
         mov al, [cs:si + ns_effects]
@@ -10988,8 +10991,8 @@ ns_setup:
         mov word [es:di + 5], 0
         mov word [es:di + 7], 60
         mov word [es:di + 0x11], 0x4000 ;   ... nor mind-affecting;
-        mov byte [es:di + 0x0F], FOG_CAST_SOUND ; Fog Cloud's sounds as it's cast and lands,
-        mov byte [es:di + 0x16], FOG_HIT_SOUND  ; Charm Person's, 75, as it flies)
+        mov byte [es:di + 0x0F], FOG_CAST_SOUND ; Fog Cloud's sound as it's cast (NS_LANDING
+                                                ; as it lands), Charm Person's, 75, as it flies)
         test byte [cs:ns_state], NS_OBJECTS
         jz .effect
         mov byte [es:di + 0x10], FOG_FLIGHT ; (and its grey bolt flies, where the copy has it)

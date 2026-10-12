@@ -2422,6 +2422,8 @@ class NewSpellTests(RuleTests):
             if rules:  # (its sounds: Fog Cloud's cast and landing, Charm Person's flight)
                 sounds = self.mu.mem_read(recs + 0x30 + 198 * 0x20 + 0x0F, 8)
                 self.assertEqual((sounds[0], sounds[4], sounds[7]), (82, 75, 98))
+                landing = [self.mu.mem_read(recs + 0x30 + n * 0x20 + 0x16, 1)[0] for n in (196, 197)]
+                self.assertEqual(landing, [96, 77])  # (Cat's Grace: Haste's; Erdlu Claw: Shocking Grasp's)
 
     def test_fog(self):
         """The to-hit adjustments from effects (NS_HIT, SI their sum): 3 off for a fogged attacker
