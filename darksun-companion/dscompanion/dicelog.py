@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import defaultparty, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
+from . import banter, defaultparty, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
 from .guestmem import GuestMemory
@@ -1063,6 +1063,7 @@ class DiceLog:
                 stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)
             kalzith.stock(self.game, bool(self.rules & game.RULE_NEW_SPELLS))  # (once a game, by its flag)
             semyon.watch(self.game)  # (killed: never put in the pens)
+            banter.watch(self.game)  # (each recruit's in-the-party flag, for the banter's tests)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
             if kalzith.watch(self.game):  # (killed: Dinos and the Trustee speak of him so)

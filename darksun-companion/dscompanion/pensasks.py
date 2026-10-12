@@ -88,11 +88,14 @@ def _meal(s: _Script) -> None:
     # quest's sound), as Dinos's own script does for Gilal (350)
     s.op(0x16, ("n", vulture.XP_REWARD), PARTY_XP)
     s.op(CALL, *XP_ROUTINE)
+    from . import banter  # (Semyon and Torvak on the meal, if both are along: banter.py)
+    banter.play(s, banter.VULTURE, DINOS_PORTRAIT)
 
 
 # As the game's people do for the dead: the Trustee asks "What was X like?" instead, Dinos keeps
 # the question and answers otherwise.
 DINOS_SCRIPT, TRUSTEE_SCRIPT = 139, 146
+DINOS_PORTRAIT = 117  # (his script's)
 DINOS_ASKS = (
     Ask("  What do you know about Kalzith?", 766, (KALZITH_ALIVE, KALZITH_DEAD),
         "The defiler in the middle pens. The templars bring him out when the crowd wants to watch "

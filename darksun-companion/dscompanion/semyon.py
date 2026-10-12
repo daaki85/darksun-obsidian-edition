@@ -29,6 +29,7 @@ from typing import Dict, Tuple
 
 from . import gpl, kalzith, recruits
 from .kalzith import START, _Script, ALWAYS, _is, leaves
+from . import banter
 
 SEMYON = 280  # his object (RDFF 280, "Semyon"; the Tied-up Prisoner is 319)
 SCRIPT = 219  # his conversation in the pens (Kalzith's is 218; the game's run to 217)
@@ -217,6 +218,7 @@ def conversation() -> bytes:
         def joined():
             s.say("A scout's work at last! Lead on, comrade.")
             s.page()
+            banter.play(s, banter.MEETING)  # (Torvak along: banter.py)
             s.op(REMOVE, ("n", -SEMYON), *(("n", v) for v in GONE_AT))
             s.leave()
 

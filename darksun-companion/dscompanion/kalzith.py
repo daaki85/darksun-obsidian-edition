@@ -538,6 +538,8 @@ def conversation() -> bytes:
     s.op(BEGIN)  # (every script of the game's opens so; its talk commands start after it)
     s.op(0x54, ("n", PORTRAIT))
     s.when(_is(("var", 0x8D, ALARM), 1), alarm, greeting)
+    from . import banter  # (Semyon and Torvak on him, as the talk ends, if both are along: banter.py)
+    banter.play(s, banter.KALZITH)
     return s.bytes()
 
 
@@ -601,6 +603,8 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
         from . import semyon as sm
         out[("GPL ", sm.SCRIPT)] = sm.conversation()
         out[("MAS ", MASTER)] = sm.with_semyon(out.get(("MAS ", MASTER), chunks[("MAS ", MASTER)]), field_types)
+        from . import banter  # (Semyon and Torvak on the pens, entering them: banter.py)
+        out[("MAS ", MASTER)] = banter.with_banter(out[("MAS ", MASTER)], banter.PENS, field_types)
         if ENTRIES in chunks:
             out[ENTRIES] = with_entry(out.get(ENTRIES, chunks[ENTRIES]), sm.SCRIPT)
         arena = ("GPL ", sm.ARENA_TALK)
