@@ -2449,15 +2449,15 @@ class DiceLog:
         kind = SAVE_NAMES.get(index, "?")
         # a spell left on the ground (Grease, a cloud) makes its victims save with themselves as the caster
         source = f" from {g.combatant_name(caster)}" if caster != target else ""
-        who = f"{g.combatant_name(target)} saves vs {g.spell_name(spell)}{source} ({kind})"
+        who = f"{g.combatant_name(target)}'s saving throw vs {g.spell_name(spell)}{source} ({kind})"
         if total is None:
             return f"{who}: d20 = {natural} (natural {natural}) -> {self._save_result(spell, natural == 20)}"
         if total >= 0x80:  # the game adds -100 / +100 for "can't save" / "always saves"
             total -= 0x100
         if total < -50:
-            return f"{who}: cannot save"
+            return f"{who}: none allowed (cannot save) -> failed"
         if total > 100:
-            return f"{who}: saves automatically"
+            return f"{who}: not needed (saves automatically) -> saved"
         rules = g.spell_rules(spell)
         steps, rolled = "d20", None
         if natural is not None:

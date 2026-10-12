@@ -1069,7 +1069,7 @@ class Viewer:
         for line in lines:
             tag = ("round" if line.startswith(("Round ", "Initiative: ")) else
                    "turn" if line.endswith("'s turn") else
-                   "save" if " saves vs " in line or " magic resistance " in line else
+                   "save" if "'s saving throw vs " in line or " magic resistance " in line else
                    "hit" if "-> HIT" in line else
                    "miss" if "-> miss" in line else
                    "detail" if line.startswith("    ") else

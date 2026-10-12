@@ -60,6 +60,12 @@ have the detail.
   and the Characters tab's move shows only a kit's extra (the Stalker's).
 
 **Fixed**
+- **A save line read as if the save succeeded** ("Thrikreen saves vs Fogbolt
+  ... -> failed"). It is now the creature's saving throw, then the result:
+  `Wild Mul's saving throw vs Fogbolt from Daaki (spell): d20 = 16, needs 14
+  (35% to save) -> saved`; "cannot save" and "saves automatically" read
+  `none allowed (cannot save) -> failed` and `not needed (saves
+  automatically) -> saved`.
 - **The dice log showed XP for every kill,** the creature's value from its
   character sheet, even where the party gains none (the opening fight in the
   arena, whoever dies). A kill now reads "Rampager is killed"; the XP shows

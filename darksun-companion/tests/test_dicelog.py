@@ -329,7 +329,7 @@ class AttackTests(unittest.TestCase):
         """At the least, a spell's damage taken and healing, without its dice or saves."""
         log = make_game()
         log._turn_log += ["Fireball damage: 9d6 = [3 + 2 + 3 + 4 + 5 + 4 + 1 + 2 + 2] = 26",
-                          "Red Slaad saves vs Fireball from Daaki (petrification/polymorph): d20 = 6 -> saved",
+                          "Red Slaad's saving throw vs Fireball from Daaki (petrification/polymorph): d20 = 6 -> saved",
                           "  Red Slaad takes 13 from Fireball, now 47/60 HP",
                           "  Dag regains 7 HP from Cure Light Wounds, now 30/40 HP"]
         self.assertEqual(log.turn_summary(0, dicelog.POPUP_MINIMAL),
@@ -411,11 +411,11 @@ class AttackTests(unittest.TestCase):
         log = make_game()
         log._note_turn(["Round 2: Dag 25, Mountain Stalker 18", "    Dag 25 = 20 + 5 (0-9 roll)",
                         "Fireball damage: 5d6 = [2 + 5 + 3 + 6 + 1] = 17",
-                        "Dag saves vs Fireball from Defiler (petrification/polymorph): d20 = 7, doubled against fire = 14, needs 12 (60% to save) -> saved: half damage, 8",
+                        "Dag's saving throw vs Fireball from Defiler (petrification/polymorph): d20 = 7, doubled against fire = 14, needs 12 (60% to save) -> saved: half damage, 8",
                         "  Dag takes 8 from Fireball, now 16/24 HP", "Dice: 1d6 = [4] = 4"])
         text = log.turn_summary(0).split("\n")
         self.assertEqual(text[0], "Fireball damage: 5d6 = [2 + 5 + 3 + 6 + 1] = 17")  # not the round's order
-        self.assertTrue(text[1].startswith("Dag saves vs Fireball"))
+        self.assertTrue(text[1].startswith("Dag's saving throw vs Fireball"))
         self.assertIn("needs 12 -> saved", text[1])  # the chance to save left out too
         self.assertEqual(text[2], "Dag takes 8 from Fireball, now 16/24 HP")
         self.assertEqual(len(text), 3)  # nor unlabelled dice
@@ -492,7 +492,7 @@ class SaveTests(unittest.TestCase):
                          ["Hold Person damage: 2d6 = [6 + 4] = 10"])
         self.assertEqual(log.describe(self.save_roll(log, 13), now=1.1), [])
         self.assertEqual(log.describe(self.probe(15)),
-                         ["Mountain Stalker saves vs Hold Person from Dag (spell): d20 = 13 +2 other = 15, "
+                         ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): d20 = 13 +2 other = 15, "
                           "needs 14 (45% to save) -> saved"])
 
     def test_save_shows_what_it_leaves(self):
@@ -505,7 +505,7 @@ class SaveTests(unittest.TestCase):
             log.describe(d, now=1.0)
         log.describe(self.save_roll(log, 9, spell=FIREBALL), now=1.1)
         self.assertEqual(log.describe(self.probe(18, needed=14, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 9, doubled against fire = 18, "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9, doubled against fire = 18, "
                           "needs 14 (70% to save) -> saved: half damage, 7 of 15"])
 
     def test_save_not_doubled_with_the_rule(self):
@@ -520,7 +520,7 @@ class SaveTests(unittest.TestCase):
                                parent_code=dicelog.SPELL_DAMAGE_RETURN), now=1.0)
         log.describe(self.save_roll(log, 9, spell=FIREBALL), now=1.1)
         self.assertEqual(log.describe(self.probe(11, needed=14, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 9 +2 DEX 16 dodging = 11, "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9 +2 DEX 16 dodging = 11, "
                           "needs 14 (45% to save) -> failed: full damage, 15"])
         log.set_rules(0)  # and the mark comes off again
         rules = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF + FIREBALL * game.SPELL_SIZE
@@ -749,7 +749,7 @@ class SaveTests(unittest.TestCase):
         log = make_game()
         log.describe(self.save_roll(log, 7, spell=FIREBALL))
         self.assertEqual(log.describe(self.probe(14, needed=15, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 7, doubled against fire "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 7, doubled against fire "
                           "= 14, needs 15 (65% to save) -> failed"])
 
     def test_modifiers_name_the_effects_that_count(self):
@@ -767,7 +767,7 @@ class SaveTests(unittest.TestCase):
         set_effects(log, [(0x29, 0, 40), (0x29, 0, 7)])  # Prot Fire, Blessed
         log.describe(self.save_roll(log, 7, spell=FIREBALL))
         self.assertEqual(log.describe(self.probe(18, needed=15, spell=FIREBALL)),
-                         ["Mountain Stalker saves vs Fireball from Dag (spell): d20 = 7, doubled against fire "
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 7, doubled against fire "
                           "= 14 +1 Blessed +3 Prot Fire = 18, needs 15 (75% to save) -> saved"])
         # paralysis/poison/death: a dwarf's CON counts twice over
         m = log.guest.mem
@@ -780,7 +780,7 @@ class SaveTests(unittest.TestCase):
     def test_natural_20_needs_no_probe(self):
         log = make_game()
         self.assertEqual(log.describe(self.save_roll(log, 20)),
-                         ["Mountain Stalker saves vs Hold Person from Dag (spell): d20 = 20 (natural 20) -> saved"])
+                         ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): d20 = 20 (natural 20) -> saved"])
 
     def test_magic_resistance(self):
         log = make_game()
