@@ -17,7 +17,7 @@ import subprocess
 import time
 from typing import Dict, List, Optional, Tuple
 
-from . import gamepatch, gff, gpl, icons, kalzith, tome, worldgear
+from . import gamepatch, gff, gpl, icons, kalzith, tome, worldgear, recruits
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -224,6 +224,10 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
         return str(e)
+    try:
+        recruits.write(os.path.join(DOS_DIR, recruits.FILE))  # (the people who can join the party)
+    except OSError:
+        pass
     objects_ok, new_objects = False, ()
     try:
         objects = _find_file(game_dir, icons.OBJECTS_FILE)

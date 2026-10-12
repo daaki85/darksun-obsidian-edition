@@ -9524,10 +9524,11 @@ xp_suffix db ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 0, 'T', 0
 
 ; RECRUIT (a prototype): a script's random command with N = RECRUIT_N + R (R 1-99) puts the saved
-; character R of CHARSAVE.GFF in the party's first empty slot (status Gone), as the game's ADD
+; character R of D:\RECRUITS.GFF (the companion's: recruits.py; the game opens it as CHARSAVE.GFF
+; while this runs, PROBE_DOS_OPEN) in the party's first empty slot (status Gone), as the game's ADD
 ; does from the inventory's empty-slot menu (DSUN.EXE 54632h): CHARSAVE opened (if it isn't),
 ; the record read into the slot, its spells and psionics, the figure put beside the leader, the
-; slot's state set, CHARSAVE closed. BX: R. Keeps nothing (the caller saves).
+; slot's state set, CHARSAVE closed, and the scripts' flag RC_JOINED set. BX: R. Keeps nothing (the caller saves).
 RECRUIT_N    equ 30000
 RC_STATUS    equ 0x333          ; in the party segment: each slot's status (8: Gone)
 RC_GONE      equ 8
@@ -9539,26 +9540,26 @@ RC_LOAD_SEG  equ 0x4242
 RC_PLACE_SEG equ 0x1DF3
 RC_SLOT_SEG  equ 0x4211
 RC_REST_SEG  equ 0x1A0A
-rc_dbg  db 'RCDBG!'
-rc_calls dw 0
-rc_found dw 0xFFFF
-rc_ret  dw 0x1234
-rc_slot dw 0
-rc_who  dw 0
-rc_x    dw 0
-rc_y    dw 0
+RC_HANDLE    equ 0x11C2         ; DS: the game's handle of CHARSAVE.GFF (0: closed)
 rc_far  dw 0, 0
-rc_beside db 0
-%macro RC_CALL 2
-        mov ax, ds
-        sub ax, DGROUP_SEG - %1
-        mov word [cs:rc_far], %2
-        mov [cs:rc_far + 2], ax
+RC_FLAGS     equ 0x1352         ; DS: far pointer to the scripts' flags
+RC_JOINED    equ 786            ; (the companion's flag: recruits.JOINED)
+rc_redirect db 0
+rc_bit  db 0
+%macro RC_CALL 2                ; the game's routine at segment %1 (an overlay's entry), offset %2
+        mov ax, DGROUP_SEG - %1
+        mov dx, %2
+        call rc_at
         call far [cs:rc_far]
 %endmacro
-recruit:
-        inc word [cs:rc_calls]
+rc_at:  mov [cs:rc_far], dx
+        mov dx, ds
+        sub dx, ax
+        mov [cs:rc_far + 2], dx
+        ret
+recruit:                        ; (SI the slot, DI the recruit: the game's routines keep both)
         push es
+        mov di, bx
         mov ax, ds
         add ax, RC_PARTY_SEG
         mov es, ax
@@ -9569,131 +9570,101 @@ recruit:
         cmp si, 4
         jb .find
         jmp .out                        ; no room
-.found: mov [cs:rc_slot], si
-        mov [cs:rc_found], si
-        mov ax, ds
+.found: mov ax, ds
         add ax, RC_WHO_SEG
         mov es, ax
-        mov ax, [es:0x25B]
-        mov [cs:rc_who], ax
-        mov [es:0x25B], si              ; (ADD's own slot, for anything that reads it)
-        push bx
-        RC_CALL RC_OPEN_SEG, 0x57       ; open CHARSAVE.GFF
-        pop bx
-        push bx
+        push word [es:0x25B]            ; (ADD's own slot, for anything that reads it)
+        mov [es:0x25B], si
+        push dword [RC_HANDLE]          ; (the game's CHARSAVE.GFF, if it has it open: kept aside,
+        mov dword [RC_HANDLE], 0        ;   and the recruits' file opened in its place)
+        mov byte [cs:rc_redirect], 1
+        RC_CALL RC_OPEN_SEG, 0x57       ; open CHARSAVE.GFF: D:\RECRUITS.GFF (PROBE_DOS_OPEN)
+        mov byte [cs:rc_redirect], 0
         push word 7                     ; the file
         push dword 0x52414843           ; 'CHAR'
-        movzx eax, bx
-        push eax
-        push word [cs:rc_slot]
+        push word 0
+        push di                         ; the record
+        push si
         RC_CALL RC_LOAD_SEG, 0x25
         add sp, 12
-        pop bx
-        mov [cs:rc_ret], ax
-        cmp ax, 0xFFFF
-        je .close
-        push bx
-        push word [cs:rc_slot]
+        inc ax
+        jz .close                       ; (-1: none)
+        push di
+        push si
         RC_CALL RC_OPEN_SEG, 0x25       ; its spells and psionics
         add sp, 4
-        ; where the figure goes: beside the leader (as ADD's: in play, DS:1168h, or the leader's
-        ;   own slot), else where the game starts a party
-        mov byte [cs:rc_beside], 1
+        ; where the figure goes: in play (DS:1168h) beside the leader, else where the game keeps a
+        ;   party's others (as ADD's; the new member is never the leader)
+        mov ax, 0x840
+        mov dx, 0x660
+        mov byte [cs:rc_bit], 0x80
+        cmp word [0x1168], 0
+        je .place
+        mov byte [cs:rc_bit], 0
         mov ax, ds
         add ax, RC_LEADER_SEG
         mov es, ax
-        cmp word [0x1168], 0
-        jne .beside
-        mov ax, [es:0x369]
-        cmp ax, [cs:rc_slot]
-        je .beside
-        mov byte [cs:rc_beside], 0
-        mov word [cs:rc_x], 0x840
-        mov word [cs:rc_y], 0x660
-        jmp .place
-.beside:
         mov bx, [es:0x369]
         shl bx, 5
+        mov ax, [0x117E]
+        mov dx, [0x1180]
         cmp word [bx + 0x6695], -1
-        jle .default
-        mov ax, [bx + 0x669D]
-        mov [cs:rc_x], ax
-        mov ax, [bx + 0x669F]
-        mov [cs:rc_y], ax
-        push ss
-        pop es
-        sub sp, 4
-        mov bp, sp
-        mov ax, [cs:rc_y]
-        mov [ss:bp], ax
-        mov ax, [cs:rc_x]
-        mov [ss:bp + 2], ax
-        lea ax, [bp]
+        jle .place
+        push word [bx + 0x669F]         ; y
+        push word [bx + 0x669D]         ; x
+        mov bx, sp
+        lea ax, [bx + 2]
         push ax                         ; &y
-        lea ax, [bp + 2]
-        push ax                         ; &x
+        push bx                         ; &x
         RC_CALL RC_SLOT_SEG, 0xAC       ; (a free square near there)
         add sp, 4
-        mov ax, [ss:bp]
-        mov [cs:rc_y], ax
-        mov ax, [ss:bp + 2]
-        mov [cs:rc_x], ax
-        add sp, 4
-        jmp .place
-.default:
-        mov ax, [0x117E]
-        mov [cs:rc_x], ax
-        mov ax, [0x1180]
-        mov [cs:rc_y], ax
+        pop ax
+        pop dx
 .place: push word 0
         push word 7
-        mov al, [0x388]
-        push ax
-        push word [cs:rc_y]
-        push word [cs:rc_x]
-        push word [cs:rc_slot]
-        mov ax, [cs:rc_slot]
-        imul ax, ax, 0x3A
+        push word [0x388]
+        push dx                         ; y
+        push ax                         ; x
+        push si
         les bx, [0x1665]
+        imul ax, si, 0x3A
         add bx, ax
         mov ax, [es:bx + 0x18]
-        add ax, 0x12C
+        add ax, 0x12C                   ; its figure
         push ax
         RC_CALL RC_PLACE_SEG, 0x55A
         add sp, 14
-        push word [cs:rc_slot]
+        push si
         RC_CALL RC_SLOT_SEG, 0x93
-        add sp, 2
-        mov ax, [cs:rc_slot]
-        imul ax, ax, 0x3A
+        pop ax
         les bx, [0x1665]
+        imul ax, si, 0x3A
         add bx, ax
         mov al, [es:bx + 0x1C]
         mov dx, ds
         add dx, RC_PARTY_SEG
         mov es, dx
-        mov bx, [cs:rc_slot]
-        mov [es:bx + RC_STATUS], al
-        imul bx, bx, 0x13
+        mov [es:si + RC_STATUS], al
+        imul bx, si, 0x13
         mov word [es:bx + 0x8AA], 0
-        mov bx, [cs:rc_slot]
-        imul bx, bx, 0x1C
+        imul bx, si, 0x1C
         mov byte [es:bx + 0x377], 0xFF
-        push word [cs:rc_slot]
+        push si
         RC_CALL RC_REST_SEG, 0x6F3
-        add sp, 2
-        mov bx, [cs:rc_slot]
+        pop ax
+        mov bx, si
         shl bx, 5
         and byte [bx + 0x6694], 0x7F
-        cmp byte [cs:rc_beside], 0
-        jne .close
-        or byte [bx + 0x6694], 0x80
-.close: RC_CALL RC_OPEN_SEG, 0x5C       ; CHARSAVE.GFF closed
+        mov al, [cs:rc_bit]
+        or [bx + 0x6694], al
+        les bx, [RC_FLAGS]              ; the recruit joined: the script's flag RC_JOINED set
+        or byte [es:bx + RC_JOINED / 8], 1 << (RC_JOINED % 8)
+.close: RC_CALL RC_OPEN_SEG, 0x5C       ; RECRUITS.GFF closed
+        pop dword [RC_HANDLE]
         mov ax, ds
         add ax, RC_WHO_SEG
         mov es, ax
-        mov ax, [cs:rc_who]
-        mov [es:0x25B], ax
+        pop word [es:0x25B]
 .out:   pop es
         ret
 
@@ -10887,6 +10858,9 @@ probe_dos_open:
         mov ax, si
         sub ax, dx              ; AX: the path's length
         mov bx, copies
+        cmp byte [cs:rc_redirect], 0
+        je .file
+        mov bx, rc_copies       ; (while RECRUIT adds one: CHARSAVE.GFF is the recruits' file)
 .file:  mov cl, [cs:bx]         ; this copy's name length (0: no more)
         xor ch, ch
         jcxz .no
@@ -10966,6 +10940,7 @@ resources_on dw 0               ; 1 once the game has opened D:\RESOURCE.GFF (PR
 scripts_on dw 0                 ; 1 once the game has opened D:\GPLDATA.GFF (Kalzith's conversation)
 region_on dw 0                  ; 1 once the game has opened D:\RGN29.GFF (Kalzith in the pens)
 others_on dw 0                  ; 1 once it has opened one of the other regions' copies
+rc_opened dw 0                  ; 1 once RECRUIT has opened D:\RECRUITS.GFF
 ; the files with copies: the name's length, the game's name (up to 12 letters), the copy's path,
 ; the flag set when opened
 COPY_PATH equ 16
@@ -10977,6 +10952,8 @@ COPY_SIZE equ 1 + OBJ_NAME_LEN + COPY_PATH + 2
         times COPY_PATH - %strlen(%2) db 0
         dw %3
 %endmacro
+rc_copies:
+        COPY 'CHARSAVE.GFF', 'D:\RECRUITS.GFF', rc_opened
 copies:
         COPY 'SEGOBJEX.GFF', 'D:\SEGOBJEX.GFF', objects_on
         COPY 'RESOURCE.GFF', 'D:\RESOURCE.GFF', resources_on
