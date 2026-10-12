@@ -1161,7 +1161,7 @@ next ones:
 
 ![The game's window at the end of a turn, in detail](docs/turn-detail.png)
 
-![The game's window after a Defiler's Cone of Cold](docs/turn-spell.png)
+![The game's window after Daaki's Fogbolts: the dice for how long it lasts, and the Thri-kreen's save](docs/turn-spell.png)
 
 **In short** (or `--short-popups`) gives one line per target instead (and each
 spell's first line):
@@ -2276,9 +2276,11 @@ Claw with Shocking Grasp's snap, Fogbolt with Fog Cloud's sounds.
 With the **New wizard spells** box unticked (it's ticked by default) the
 spells are gone from the lists and the game is as it was.
 
-![Cat's Grace on the USE screen: its icon, and its description](docs/catsgrace.png)
+![The three descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
 
-![The Effects screen: Cat's Grace's paw, and its name below](docs/cats-grace-effect.png)
+![The Effects screen with Cat's Grace and Erdlu Claw on Daaki, the claw's name below](docs/new-spells-effects.png)
+
+![Fogbolt's dark grey bolt on its way from the caster to a monster](docs/fogbolt.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
 
