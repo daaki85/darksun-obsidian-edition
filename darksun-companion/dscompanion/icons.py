@@ -445,9 +445,10 @@ def with_chunks(data: bytes, added: gff.Chunks, room: Optional[Dict[Tuple[str, i
 # on the USE screen and the Effects screen. Cat's Grace: Strength's tile (ICON 21023: the spell Cat's
 # Grace works as) in a tawny cat's golds, its glyph a cat's paw print in the game's dark line, with
 # the light line below and right of it that its glyphs have. Erdlu Claw: Gaze Reflection's sandy
-# tile, three talons; Fogbolt: Fog Cloud's, a cloud over an arrow.
+# tile, three claw scratches; Fogbolt: Charm Person's purple tile (the spell Fogbolt is made from),
+# its glyph taken off, a cloud with a bolt below.
 RESOURCE_FILE = "RESOURCE.GFF"
-STRENGTH_ICON, GAZE_ICON, FOG_CLOUD_ICON = 21023, 21006, 21015
+STRENGTH_ICON, GAZE_ICON, CHARM_ICON = 21023, 21006, 21002
 GRACE_ICON, CLAW_ICON, FOG_ICON = 21196, 21197, 21198
 GRACE_FILL = {163: 168, 76: 169, 77: 65, 75: 168, 78: 170, 134: 205}
 GRACE_FRAME = {60: 170, 145: 169, 147: 170, 133: 205, 203: 207, 134: 205}
@@ -489,29 +490,34 @@ def cat_icon(strength: Rows) -> Rows:
     return out
 
 
-CLAW_GLYPH = (  # (three talons)
-    "..DD...DD...DD..",
-    ".DDD..DDD..DDD..",
-    ".DD...DD...DD...",
-    ".DD...DD...DD...",
-    ".DD...DD...DD...",
-    "..DD...DD...DD..",
+CLAW_GLYPH = (  # (three claw scratches)
+    ".....D....D....D",
+    "....DD...DD...DD",
     "...DD...DD...DD.",
-    "....D....D....D.",
+    "...DD...DD...DD.",
+    "..DD...DD...DD..",
+    "..DD...DD...DD..",
+    ".DD...DD...DD...",
+    ".DD...DD...DD...",
+    ".D....D....D....",
 )
-FOG_GLYPH = (  # (a cloud over an arrow)
+FOG_GLYPH = (  # (a cloud with a bolt below)
     "......DDD.......",
     "...DDD...D......",
     "..D.......DDD...",
     ".D...........D..",
     ".DDDDDDDDDDDDD..",
-    "................",
-    ".........D......",
-    ".........DD.....",
-    "..DDDDDDDDDD....",
-    ".........DD.....",
-    ".........D......",
+    "......DD........",
+    ".....DD.........",
+    "....DDDDDD......",
+    "........DD......",
+    ".......DD.......",
+    "......DD........",
+    "......D.........",
 )
+CHARM_GLYPH = {174, 178, 74, 75}  # (Charm Person's glyph: its dark and light lines)
+CHARM_FILL = (177, 176)  # (... filled in with its tile's own purples)
+FOG_DARK, FOG_LIGHT = 254, 178
 
 
 def glyph_icon(base: Rows, old: Set[int], fill: int, glyph: Tuple[str, ...], top: int, dark: int,
@@ -535,12 +541,19 @@ def glyph_icon(base: Rows, old: Set[int], fill: int, glyph: Tuple[str, ...], top
 
 def claw_icon(gaze: Rows) -> Rows:
     """Erdlu Claw's icon from Gaze Reflection's."""
-    return glyph_icon(gaze, {129, 60, 182, 183}, 180, CLAW_GLYPH, 4, 129, 183)
+    return glyph_icon(gaze, {129, 60, 182, 183}, 180, CLAW_GLYPH, 3, 129, 183)
 
 
-def fog_icon(fog_cloud: Rows) -> Rows:
-    """Fogbolt's icon from Fog Cloud's."""
-    return glyph_icon(fog_cloud, {210, 217}, 73, FOG_GLYPH, 3, 210, 217)
+def fog_icon(charm: Rows) -> Rows:
+    """Fogbolt's icon from Charm Person's: its glyph taken off (each pixel of it the tile's own
+    purples, by turns), then the cloud and bolt in the game's black with a light purple line."""
+    n = len(charm)
+    out = [list(r) for r in charm]
+    for y in range(1, n - 1):
+        for x in range(1, n - 1):
+            if out[y][x] in CHARM_GLYPH:
+                out[y][x] = CHARM_FILL[(x + y) % 2]
+    return glyph_icon(out, set(), 0, FOG_GLYPH, 2, FOG_DARK, FOG_LIGHT)
 
 
 def objects_beside(path: str) -> Optional[gff.Chunks]:
@@ -564,7 +577,7 @@ def write_resources(source: str, dest: str) -> None:
     chunks = gff.read_gff(data)
     added = {("ICON", GRACE_ICON): encode(cat_icon(decode(chunks[("ICON", STRENGTH_ICON)]))),
              ("ICON", CLAW_ICON): encode(claw_icon(decode(chunks[("ICON", GAZE_ICON)]))),
-             ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", FOG_CLOUD_ICON)])))}
+             ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", CHARM_ICON)])))}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))
