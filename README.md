@@ -30,15 +30,16 @@ It brings the rules closer to AD&D: weapon specialization and mastery, kits
 (three for each class), class restrictions, AD&D's class tables (experience,
 priests' THAC0, spell slots), INT's limits on learning spells, thief skills
 from the Player's Handbook, saving throws as the books have them, the party
-leader's CHA at shops, scores and hit points kept as rolled, and levels up to
-10 ([Rule
+leader's CHA at shops, scores and hit points kept as rolled, multiclass hit
+points as the books have them, and levels up to 10 ([Rule
 changes](darksun-companion/README.md#rule-changes)). Thieves can hide in
 shadows to backstab, and pick pockets
 ([Picking pockets](darksun-companion/README.md#picking-pockets)).
 
 It adds to Athas: new weapons in every material, magic items with stories of
-their own (robes and bracers among them, for those who wear no armour), Kalzith
-(a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
+their own (robes and bracers among them, for those who wear no armour), three
+wizard spells ([Cat's Grace, Erdlu Claw and
+Fogbolt](darksun-companion/README.md#new-wizard-spells)), Kalzith (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
 vulture ([New content](darksun-companion/README.md#new-content)). Graphical
 additions show the weapons and armour the party wears, have characters cast
 shadows, and kick up dirt as they walk ([On the

@@ -750,7 +750,8 @@ on is live data (3E45h), never written. Cat's Grace is 196, Erdlu Claw 197,
 Fogbolt 198. When the rule switches on, the helper (`NS_SETUP`) copies in each
 one's record from a game spell it works like, Strength (23), Enlarge (5) and
 Charm Person (2), with its own effect number and, for Fogbolt, its own
-duration (2d4 rounds) and save; writes their rows in the spell rows (level,
+duration (2d4 rounds) and save, and each one's sounds and Fogbolt's bolt
+(below); writes their rows in the spell rows (level,
 mask, name, `3FB9:19Ch`, 7 bytes each); and gives the effects' table (6 bytes
 each, from 3F8Dh) their names and icons.
 
@@ -795,7 +796,7 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
 
 **Fogbolt's bolt.** A record's `+10h` names what flies from caster to target
 (FFh: nothing): a place in a table of 16 flights just before the records (3
-bytes each: the object flying, then a byte, MM's 8), which the cast reads at
+bytes each: the object flying, then a byte, Magic Missile's 8), which the cast reads at
 7530Ch (`imul ax,ax,3`, the object made at 0B8:55Ah and sent off by 600:2Ah);
 nothing else reads the table. Magic Missile's is place 4, object 8109, whose
 OJFF names BMP 2227 (36 frames, a direction each). The launcher's SEGOBJEX.GFF
@@ -815,9 +816,10 @@ something flies (only when `+10h` isn't FFh), `+16h` as the spell lands.
 Fogbolt has Fog Cloud's 82 and 98 for the first and last, and keeps Charm
 Person's 75 for the flight (`FOG_CAST_SOUND`, `FOG_HIT_SOUND`). Cat's Grace and
 Erdlu Claw are cast only on a party member's portrait on the USE screen, where
-the game shows its own star over the portrait whatever the spell, and plays
-the landing sound: Haste's 96 for Cat's Grace, Shocking Grasp's 77 for Erdlu
-Claw (`NS_LANDING`; they had Strength's and Enlarge's, the same 94).
+the game shows its own star over the portrait whatever the spell and, by its
+code (90:A6Fh with `+16h` alone on that path, 751C9h), plays the landing
+sound: Haste's 96 for Cat's Grace, Shocking Grasp's 77 for Erdlu Claw
+(`NS_LANDING`).
 
 The sites share one interrupt with the creation panel's (`INT 98h`, then the
 site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).

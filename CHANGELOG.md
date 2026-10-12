@@ -13,10 +13,14 @@ have the detail.
 **Added**
 - **Two new wizard spells, and Cat's Grace is a spell of its own.** Erdlu
   Claw (1st level: 5 rounds a caster level, natural and unarmed attacks do
-  1d6+1 where that's better, are +1 to hit and count as a +1 magical weapon)
-  and Fogbolt (1st level: a dark grey bolt, its own, so Magic Missile's stays
-  blue; 2d4 rounds unless saved against, -3 to the fogged creature's attacks
-  and +2 to attacks on it). Cat's Grace no longer takes
+  1d6+1 where that's better, or Body Weaponry's and Animal Affinity's dice +1,
+  are +1 to hit and count as a +1 magical weapon) and Fogbolt (1st level: a
+  dark grey bolt of its own, so Magic Missile's stays blue, which needs a clear
+  line to its target; 2d4 rounds unless saved against, -3 to the fogged
+  creature's attacks and +2 to attacks on it). Each has its own sounds: Cat's
+  Grace Haste's, Erdlu Claw Shocking Grasp's, Fogbolt Fog Cloud's (Cat's Grace
+  and Erdlu Claw, cast on a party member's portrait, show the game's usual
+  star). Cat's Grace no longer takes
   Flaming Sphere's place: the three are spells 196-198, learnt, listed, cast
   and shown on the Effects screen like the game's own, each with its icon and
   description; who knows them is kept in the character's sheet. The switch is
@@ -41,7 +45,6 @@ have the detail.
   the item icons each have their label (PPD, RSW, PP, BW, SP, as on the
   inventory screen) in place of one unlabelled SAVE line; THAC0 moves down
   beside PSI, and MOVE (the character's movement) is new, beside HP.
-
 - **Rangers and Twin-blades fight with two weapons at no penalty only in light
   armour** (with the two-weapon rule): every armour piece worn, a helm too, of
   leather or of no material. In other armour they take AD&D's -2 and -4, as
@@ -71,6 +74,10 @@ have the detail.
   creation screen (still New) picks.
 
 **Documentation**
+- **The new spells' screenshots:** their three descriptions, the Effects screen
+  with Cat's Grace and Erdlu Claw, and Fogbolt's bolt replace the two Cat's
+  Grace pictures; the Options tab and a spell's end-of-turn window (a Fogbolt,
+  where it was a Cone of Cold save with the doubled d20) are retaken.
 - **A review of every page.** The README's main screenshot (the dice log of
   the arena's opening show) is retaken without the kill XP it no longer shows,
   and the Options tab's with every rule switch. The README gains a Characters

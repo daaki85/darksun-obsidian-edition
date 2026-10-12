@@ -108,11 +108,13 @@ It brings the rules closer to AD&D: weapon specialization and mastery, kits
 (three for each class), class restrictions, AD&D's class tables (experience,
 priests' THAC0, spell slots), INT's limits on learning spells, thief skills
 from the Player's Handbook, saving throws as the books have them, the party
-leader's CHA at shops, scores and hit points kept as rolled, and levels up to 10 ([Rule changes](#rule-changes)). Thieves can hide in
+leader's CHA at shops, scores and hit points kept as rolled, multiclass hit
+points as the books have them, and levels up to 10 ([Rule changes](#rule-changes)). Thieves can hide in
 shadows to backstab, and pick pockets ([Picking pockets](#picking-pockets)).
 
 It adds to Athas: new weapons in every material, magic items with stories of
-their own (robes and bracers among them, for those who wear no armour), Kalzith
+their own (robes and bracers among them, for those who wear no armour), three wizard
+spells ([Cat's Grace, Erdlu Claw and Fogbolt](#new-wizard-spells)), Kalzith
 (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
 vulture ([New content](#new-content)). Graphical additions show the weapons and
 armour the party wears, have characters cast shadows, and kick up dirt as they
@@ -1668,10 +1670,9 @@ otherwise at most +2. Dice stop as usual after 9th or 10th level, and so
 does CON's bonus.
 
 The game already keeps the total and divides it, but gives CON's bonus only
-once a level of the character's highest class, whole. A fighter 9 / preserver
-10 / thief 10 with CON 18 gets 38 hit points from CON with the rule
-(4 × 29 dice / 3), as against the game's 38 by its own count; a preserver 5 /
-thief 6 with CON 18 gets 2 × 11 / 2 = 11 rather than the game's 12. A human
+once a level of the character's highest class, whole: a preserver 5 / thief 6
+with CON 18 gets 2 × 11 dice / 2 = 11 hit points from CON with the rule,
+rather than the game's 2 × 6 = 12. A human
 who dual-classes isn't affected (one class at a time). Ticked during a game, a
 character's most hit points change at its next level, when the game works
 them out again. The log shows the bonus on each die:
@@ -1845,20 +1846,20 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fire-cold-and-electricity-dex-inst
 
 ### Two weapons
 
-With **Two weapons** ticked, and two melee weapons ready, a character who isn't a ranger attacks at -2
-with the main (right) hand and -4 with the off (left) hand, and the DEX
-reaction adjustment (the table under [Initiative](#initiative)) is added. It
-can lessen the penalty to 0 but never make it a bonus, and low DEX
-makes it worse: DEX 17 is 0 and -2, DEX 21 0 and 0, DEX 3 -5 and -7. Rangers
-(their kits too) and [Twin-blades](#kits) have no penalty in light armour:
-every armour piece worn, a helm too, of leather or of no material. In other
-armour they take it as anyone does, but a Justifier, who has none in any
-armour. It takes a melee weapon in each hand: one
-weapon, a two-handed weapon, a weapon and a shield, or a weapon and a bow or
-sling (the missile slot) have no penalty. The game's own rule, a small bonus
-at DEX 5 or less, is gone. The dice log names it (`-4 two weapons, off hand at
-DEX 15`), as do the THAC0 lines on the Characters tab and the inventory
-screen.
+With **Two weapons** ticked, a character with a melee weapon in each hand
+attacks at -2 with the main (right) hand and -4 with the off (left) hand, plus
+the DEX reaction adjustment (the table under [Initiative](#initiative)). That
+can bring the penalty to 0 but never make it a bonus, and low DEX makes it
+worse: DEX 17 gives 0 and -2, DEX 21 0 and 0, DEX 3 -5 and -7. One weapon, a
+two-handed weapon, a weapon and a shield, or a weapon and a bow or sling (the
+missile slot) have no penalty. The game's own rule, a small bonus at DEX 5 or
+less, is gone.
+
+Rangers (their kits too) and [Twin-blades](#kits) have no penalty in light
+armour: every armour piece worn, a helm too, of leather or of no material. In
+other armour they take it as anyone does, DEX included. A Justifier has none
+in any armour. The dice log names it (`-4 two weapons, off hand at DEX 15`),
+as do the THAC0 lines on the Characters tab and the inventory screen.
 
 The off hand attacks once a round, whoever holds it: extra attacks (a
 fighter's, gladiator's or ranger's 3/2 from the game, a specialist's,
@@ -2246,8 +2247,8 @@ in the character's sheet, so it saves with the game and the character.
 
 | Spell | Level | Cast on | Lasts | Does |
 |---|---|---|---|---|
-| **Cat's Grace** | 2 | one creature (touch) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
-| **Erdlu Claw** | 1 | one creature | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, and counts as a +1 magical weapon |
+| **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
+| **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, and counts as a +1 magical weapon |
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | -3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
 
 - **Cat's Grace** is made to work exactly as the game's Strength does, for DEX.
@@ -2265,13 +2266,12 @@ in the character's sheet, so it saves with the game and the character.
   +1: 2d4+1 or 1d10+1.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
-  own blue), with Fog Cloud's sounds as it's cast and as it lands; like any
-  bolt it needs a clear line to the target. Its THAC0
+  own blue); like any bolt it needs a clear line to the target. Its THAC0
   breakdowns show `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on
   attacks against it.
 
-Each has a sound of its own: Cat's Grace lands with Haste's shimmer, Erdlu
-Claw with Shocking Grasp's snap, Fogbolt with Fog Cloud's sounds.
+Each has sounds of its own: Cat's Grace lands with Haste's shimmer, Erdlu Claw
+with Shocking Grasp's snap, and Fogbolt is cast and lands with Fog Cloud's.
 
 With the **New wizard spells** box unticked (it's ticked by default) the
 spells are gone from the lists and the game is as it was.

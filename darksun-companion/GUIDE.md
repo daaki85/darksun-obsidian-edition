@@ -1293,10 +1293,10 @@ can cast. INT sets two limits:
 - Cause Serious and Critical Wounds roll 2d9 and 3d9; Cure Light, Serious and
   Critical Wounds heal 1d8, 2d8+1 and 3d8+3.
 - Three **new wizard spells**, learnt like any other:
-  - **Cat's Grace** (2nd level): DEX + 1d6 (at most 24) for an hour of game
+  - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for an hour of game
     time a caster level, which betters AC, initiative, thief skills and
     dodging.
-  - **Erdlu Claw** (1st level): talons for 5 rounds a caster level. Unarmed
+  - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a caster level. Unarmed
     attacks, a thri-kreen's claws and bite too, do 1d6+1 where that's better,
     are +1 to hit and count as a +1 magical weapon. With Body Weaponry or
     Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
