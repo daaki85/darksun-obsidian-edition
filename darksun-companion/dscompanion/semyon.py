@@ -38,7 +38,6 @@ PLACED, MET = 764, 765  # (the companion's flags: Kalzith's are 760-763; the gam
 LEFT, DIED = 770, 771  # (the companion's) he left the arena after the fight he helped in; he died
 ARENA_TALK, EXIT = 5, 2400  # his arena script, and where in it he is taken off the map then
 RANDOM = 0x52  # (a term: a number from 0 to N)
-SCRATCH = ("var", 2, 0)  # (the scripts' scratch variable)
 REMOVE = 0x5E  # (object, region, x, y, ...): an object moved to a region (255: none)
 GOTO = 0x64
 CELL = (99, 45)  # (tiles) a free pen above Kalzith's, by its straw
@@ -71,6 +70,16 @@ HENCHMAN = 229
 BESIDE = -2  # (tiles, across) from where the henchman goes: the game puts Scar's group on one square
 WITH_US = 1  # (a side: the party's)
 AGAINST = 2  # (a side: against the party)
+
+
+def recruited(s, r: recruits.Recruit) -> tuple:
+    """Asks DSCLOG's RECRUIT for R (the random command, N = RECRUIT_N + its number, its result
+    set in the scripts' scratch variable) and gives the test of the answer: true if R joined,
+    false if the party had no empty slot. (A variable set is written with its type, 2; read
+    back, the same variable is the term 82h. The command run in the test itself never reaches
+    RECRUIT.)"""
+    s.op(0x16, ("op", (RANDOM, [("n", recruits.RECRUIT_N + r.number)])), ("var", 2, 0))
+    return ("expr", [("var", 0x82, 0), "==", ("n", 0)])
 
 
 def _flag(flag: int, value: int = 1) -> list:
@@ -204,10 +213,7 @@ def conversation() -> bytes:
         s.page()
         s.leave()
 
-    def join():  # (DSCLOG's RECRUIT puts recruits.SEMYON in the party's first empty slot: 0 if it did)
-        s.flag(recruits.JOINED, 0)
-        s.op(0x16, ("op", (RANDOM, [("n", recruits.RECRUIT_N + recruits.SEMYON.number)])), SCRATCH)
-
+    def join():  # (DSCLOG's RECRUIT puts recruits.SEMYON in the party's first empty slot)
         def joined():
             s.say("A scout's work at last! Lead on, comrade.")
             s.page()
@@ -220,7 +226,7 @@ def conversation() -> bytes:
             s.page()
             s.call("menu")
 
-        s.when(("expr", _flag(recruits.JOINED)), joined, no_room)
+        s.when(recruited(s, recruits.SEMYON), joined, no_room)
 
     def menu():
         s.menu([("Why did they tie you up out there?", reply(

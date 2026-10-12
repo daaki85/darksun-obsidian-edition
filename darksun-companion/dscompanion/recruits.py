@@ -6,8 +6,8 @@ PSST, PSIN). The Ledger writes them to D:\\RECRUITS.GFF (FILE), never the player
 while DSCLOG's RECRUIT adds one, the game's open of CHARSAVE.GFF is sent there instead.
 
 A script asks for one with its random command, N = RECRUIT_N + the recruit's number (RECRUIT in
-DSCLOG); it sets the flag JOINED if the recruit joined (none if there was no empty slot), for the
-script, which clears it first, to answer either way.
+DSCLOG); the command's result is 0 if the recruit joined, else (no empty slot) not 0, for the
+script to answer either way.
 
 Each recruit is made from TEMPLATE, a 3rd-level human fighter's records as the game writes them,
 with the recruit's own name, race, scores, class, level, hit points, saves, kit, weapon specs and
@@ -22,7 +22,6 @@ from .dataitems import Record
 
 FILE = "RECRUITS.GFF"
 RECRUIT_N = 30000
-JOINED = 786  # the companion's flag RECRUIT sets when the recruit has joined (DSCLOG's RC_JOINED)
 
 # The template: the creature's record (3Ah bytes) and the sheet's (47h), as a 3rd-level fighter's
 CREATURE = bytes.fromhex(
@@ -92,7 +91,14 @@ SEMYON = Recruit(
      _item(ARROWS, "ammo", weaponchoice.ARROWS[4]), _item(LEATHER_CHEST, "chest"),
      _item(LEATHER_ARMS, "arm"), _item(LEATHER_LEGS, "legs")))
 
-RECRUITS: Sequence[Recruit] = (SEMYON,)
+# a half-giant gladiator of the arena (torvak.py): STR, CON and the doubled hit dice a half-giant has
+TORVAK = Recruit(
+    31, "Torvak", game.RACE_HALF_GIANT, 8, (20, 13, 19, 8, 10, 9), 10, 3, 4500, 48, 18, (13, 15, 14, 16, 16),
+    1, ("long sword", "axe"), TRUE_NEUTRAL,
+    (_item(LEATHER_SHIELD, "left hand"), _item(LEATHER_CHEST, "chest"), _item(LEATHER_ARMS, "arm"),
+     _item(LEATHER_LEGS, "legs"), _item(_kind("long sword"), "right hand")))
+
+RECRUITS: Sequence[Recruit] = (SEMYON, TORVAK)
 
 
 def _sheet(r: Recruit) -> bytes:

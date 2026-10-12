@@ -666,6 +666,8 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     except KeyError:  # (a number of his taken in this copy of the game: no Kalzith, the rest kept)
         his = {}
     added.update(his)
+    from . import torvak
+    added.update(torvak.object_chunks(chunks))  # (the arena's gladiator who joins: a prototype)
     try:
         added.update(bolt_chunks(chunks))
     except (KeyError, ValueError, IndexError, struct.error):

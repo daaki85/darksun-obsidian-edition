@@ -9528,7 +9528,7 @@ class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 
 ; while this runs, PROBE_DOS_OPEN) in the party's first empty slot (status Gone), as the game's ADD
 ; does from the inventory's empty-slot menu (DSUN.EXE 54632h): CHARSAVE opened (if it isn't),
 ; the record read into the slot, its spells and psionics, the figure put beside the leader, the
-; slot's state set, CHARSAVE closed, and the scripts' flag RC_JOINED set. BX: R. Keeps nothing (the caller saves).
+; slot's state set, CHARSAVE closed. BX: R. The command's result is then 0 if the recruit joined. Keeps nothing (the caller saves).
 RECRUIT_N    equ 30000
 RC_STATUS    equ 0x333          ; in the party segment: each slot's status (8: Gone)
 RC_GONE      equ 8
@@ -9542,8 +9542,7 @@ RC_SLOT_SEG  equ 0x4211
 RC_REST_SEG  equ 0x1A0A
 RC_HANDLE    equ 0x11C2         ; DS: the game's handle of CHARSAVE.GFF (0: closed)
 rc_far  dw 0, 0
-RC_FLAGS     equ 0x1352         ; DS: far pointer to the scripts' flags
-RC_JOINED    equ 786            ; (the companion's flag: recruits.JOINED)
+rc_joined db 0
 rc_redirect db 0
 rc_bit  db 0
 %macro RC_CALL 2                ; the game's routine at segment %1 (an overlay's entry), offset %2
@@ -9558,13 +9557,19 @@ rc_at:  mov [cs:rc_far], dx
         mov [cs:rc_far + 2], dx
         ret
 recruit:                        ; (SI the slot, DI the recruit: the game's routines keep both)
+        mov byte [cs:rc_joined], 0
         push es
         mov di, bx
+        xor si, si
+.find:  les bx, [0x1665]                ; an empty slot: never filled (its creature's tag 0), or
+        imul ax, si, 0x3A               ;   left (status Gone, as DROP leaves it)
+        add bx, ax
+        cmp word [es:bx + 6], 0
+        je .found
         mov ax, ds
         add ax, RC_PARTY_SEG
         mov es, ax
-        xor si, si
-.find:  cmp byte [es:si + RC_STATUS], RC_GONE
+        cmp byte [es:si + RC_STATUS], RC_GONE
         je .found
         inc si
         cmp si, 4
@@ -9657,8 +9662,7 @@ recruit:                        ; (SI the slot, DI the recruit: the game's routi
         and byte [bx + 0x6694], 0x7F
         mov al, [cs:rc_bit]
         or [bx + 0x6694], al
-        les bx, [RC_FLAGS]              ; the recruit joined: the script's flag RC_JOINED set
-        or byte [es:bx + RC_JOINED / 8], 1 << (RC_JOINED % 8)
+        mov byte [cs:rc_joined], 1
 .close: RC_CALL RC_OPEN_SEG, 0x5C       ; RECRUITS.GFF closed
         pop dword [RC_HANDLE]
         mov ax, ds
@@ -9696,6 +9700,9 @@ probe_script_rand:
         lea ebx, [eax - RECRUIT_N - 1]
         call recruit
         popad
+        cmp byte [cs:rc_joined], 0      ; joined: the command's result 0 (the game multiplies
+        je .not_recruit                 ;   rand() by EDX, N + 1, next: 0)
+        xor edx, edx
 .not_recruit:
         pushad
         push es

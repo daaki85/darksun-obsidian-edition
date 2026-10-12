@@ -609,6 +609,14 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
         escape = ("GPL ", sm.ESCAPE_SCRIPT)
         if escape in chunks:  # (taken along to the pens with Scar)
             out[escape] = sm.with_escape(chunks[escape], field_types)
+    if semyon:  # Torvak, the arena's gladiator who joins (torvak.py: a prototype, with Semyon's switch)
+        from . import torvak as tv
+        mas = ("MAS ", tv.MASTER)
+        if mas in chunks:
+            out[("GPL ", tv.SCRIPT)] = tv.conversation()
+            out[mas] = tv.with_torvak(chunks[mas], field_types)
+            if ENTRIES in chunks:
+                out[ENTRIES] = with_entry(out.get(ENTRIES, chunks[ENTRIES]), tv.SCRIPT)
     # Dinos and the Trustee asked about him and Semyon, and Dinos about the vulture (pensasks.py);
     # the questions about either show only once he is in the pens (their flags)
     from . import pensasks

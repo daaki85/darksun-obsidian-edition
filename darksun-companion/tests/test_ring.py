@@ -176,11 +176,11 @@ class XpTests(unittest.TestCase):
 
 class FlagsTests(unittest.TestCase):
     def test_no_flags_in_memory(self):
-        """With the flags' pointer null (the arena outside a script's run): no flag, and nothing
+        """With the flags' pointer null (before a game is started): no flag, and nothing
         written (low memory left alone)."""
         log = arena()
         m = log.guest.mem
-        struct.pack_into("<I", m, DS * 16 + game.FLAGS_PTR, 0)
+        struct.pack_into("<I", m, (log.game.load_seg + game.FLAGS_SEG) * 16 + game.FLAGS_PTR, 0)
         low = bytes(m[:0x400])
         self.assertFalse(log.game.flag(ring.XP_GIVEN))
         log.game.set_flag(ring.XP_GIVEN)

@@ -246,8 +246,9 @@ REGION = 0x117C  # DS word: the region the party is in
 # script command for giving money (0Ch) adds to
 MONEY_SEG, MONEY = 0x3781, 0x357
 # The game's global flags (its scripts' 13h/8Dh variables): bits, flag n bit n % 8 of byte n // 8,
-# at the far pointer here (a save keeps them: SAVE chunk 29)
-FLAGS_PTR = 0x1352
+# at the far pointer here (a save keeps them: SAVE chunk 29). (DS:1352h holds a copy of it, made
+# only when the game saves: null in a new game until then, and stale after a load.)
+FLAGS_SEG, FLAGS_PTR = 0x3781, 0x34B
 # Speakers the game names in its own text (the dialogue window shows only a portrait):
 # 119 is asked about as "Yell something back at the Announcer?"
 SPEAKERS = {119: "The Announcer"}
@@ -795,17 +796,20 @@ class GameData:
         self.guest.write((self.load_seg + MONEY_SEG) * 16 + MONEY,
                          struct.pack("<I", max(0, self.money() + amount) & 0xFFFFFFFF))
 
+    def _flags(self) -> int:
+        off, seg = struct.unpack("<HH", self.guest.read((self.load_seg + FLAGS_SEG) * 16 + FLAGS_PTR, 4))
+        return seg * 16 + off
+
     def flag(self, n: int) -> bool:
-        """Flag N (False while the flags have no place in memory: their pointer is null at times,
-        such as in the arena outside a script's run)."""
-        flags = far_pointer(self.guest, self.ds, FLAGS_PTR)
+        """Flag N (False while the flags have no place in memory: before a game is started)."""
+        flags = self._flags()
         if not flags:
             return False
         return bool(self.guest.read(flags + n // 8, 1)[0] >> (n % 8) & 1)
 
     def set_flag(self, n: int, on: bool = True) -> None:
         """Flag N set (or cleared); nothing while the flags have no place in memory (see flag)."""
-        flags = far_pointer(self.guest, self.ds, FLAGS_PTR)
+        flags = self._flags()
         if not flags:
             return
         at = flags + n // 8
