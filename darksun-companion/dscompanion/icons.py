@@ -556,6 +556,48 @@ def fog_icon(charm: Rows) -> Rows:
     return glyph_icon(out, set(), 0, FOG_GLYPH, 2, FOG_DARK, FOG_LIGHT)
 
 
+# Fogbolt's bolt (SEGOBJEX.GFF): a spell's record names its flight by a number (+10h, FFh none),
+# a place in the game's table of 16 flights before the records (3 bytes each: the object flying,
+# a byte); Magic Missile's, 4, is object 8109, BMP 2227 its picture (36 frames, one a direction)
+# in a white core, cyan and a blue edge. Fogbolt's own: object 8118, Magic Missile's with picture
+# 2584, the same frames in the greys 208-217 (alike in every region's palette), in place 15 of the
+# table, which no spell's record names (DSCLOG's NS_SETUP).
+MISSILE_OBJECT, MISSILE_PICTURE = 8109, 2227
+FOG_BOLT_OBJECT, FOG_BOLT_PICTURE = 8118, 2584
+FOG_BOLT_GREYS = {46: 214, 220: 211, 161: 209}  # white, cyan, blue: mid, dark and darkest grey
+
+
+def recolour_frames(chunk: bytes, colours: Dict[int, int]) -> bytes:
+    """A picture chunk with each frame's pixels changed by COLOURS (the runs' bytes in place)."""
+    out = bytearray(chunk)
+    count, = struct.unpack_from("<H", out, 4)
+    for frame in range(count):
+        pos = struct.unpack_from("<I", out, 6 + 4 * frame)[0] + 4
+        while out[pos] != 0xFF:
+            pos += 1
+            while True:
+                flags, length = out[pos + 1], out[pos + 3]
+                pos += 4
+                end = pos + length
+                while pos < end:
+                    c = out[pos]
+                    n = 1 if c & 1 else (c >> 1) + 1
+                    for at in range(pos + 1, pos + 1 + n):
+                        out[at] = colours.get(out[at], out[at])
+                    pos += 1 + n
+                if flags & 0x80:
+                    break
+    return bytes(out)
+
+
+def bolt_chunks(chunks: gff.Chunks) -> gff.Chunks:
+    """Fogbolt's flight: its object (Magic Missile's, naming the grey picture) and picture."""
+    record = bytearray(chunks[("OJFF", MISSILE_OBJECT)])
+    struct.pack_into("<H", record, OJFF_ICON, FOG_BOLT_PICTURE)
+    return {("OJFF", FOG_BOLT_OBJECT): bytes(record),
+            ("BMP ", FOG_BOLT_PICTURE): recolour_frames(chunks[("BMP ", MISSILE_PICTURE)], FOG_BOLT_GREYS)}
+
+
 def objects_beside(path: str) -> Optional[gff.Chunks]:
     """The game's SEGOBJEX.GFF in PATH's folder, with the companion's own items' objects and
     icons (new_chunks), for their pictures (None if it can't be read)."""
@@ -624,6 +666,10 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     except KeyError:  # (a number of his taken in this copy of the game: no Kalzith, the rest kept)
         his = {}
     added.update(his)
+    try:
+        added.update(bolt_chunks(chunks))
+    except (KeyError, ValueError, IndexError, struct.error):
+        pass  # (a game without Magic Missile's bolt: none to copy)
     from . import worldgear
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)

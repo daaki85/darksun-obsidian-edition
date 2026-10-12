@@ -2401,6 +2401,25 @@ class NewSpellTests(RuleTests):
         self.rules(0)
         self.assertEqual(run(5, -1, 0, 0), (0, 0, True))
 
+    def test_fog_flight(self):
+        """NS_SETUP (on a site's way): Fogbolt's record is Charm Person's, flying flight 15 when the
+        game has the objects' copy open (OBJECTS_ON), which is then object 8118 at Magic Missile's
+        speed; without the copy, or with the rule off, no flight and flight 15 the game's."""
+        from dscompanion import gamepatch, icons
+        recs = (GAME_DS - (0x4356 - 0x3CB4)) * 16
+        def flights():
+            return struct.unpack("<HB", self.mu.mem_read(recs + 15 * 3, 3)), self.mu.mem_read(recs + 0x30 + 198 * 0x20 + 0x10, 1)[0]
+        self.mu.mem_write(recs + 4 * 3, struct.pack("<HB", icons.MISSILE_OBJECT, 8))
+        self.mu.mem_write(recs + 15 * 3, struct.pack("<HB", 8116, 16))
+        self.mu.mem_write(recs + 0x30 + 2 * 0x20 + 0x10, bytes([0xFF]))  # (Charm Person's: none)
+        objects_on = TSR * 16 + icons.TSR_OBJECTS_ON
+        for on, rules, expected in ((1, 32, ((icons.FOG_BOLT_OBJECT, 8), 15)), (0, 32, ((8116, 16), 0xFF)),
+                                    (1, 0, ((8116, 16), 0))):
+            self.mu.mem_write(objects_on, struct.pack("<H", on))
+            self.rules(rules)
+            self.site(gamepatch.NS_CMP + 11, edx=0)
+            self.assertEqual(flights(), expected)
+
     def test_fog(self):
         """The to-hit adjustments from effects (NS_HIT, SI their sum): 3 off for a fogged attacker
         (effect 27: bit 3 of [BP-15h]), 2 on against a fogged target ([BP-0Bh]); then Blur's test."""

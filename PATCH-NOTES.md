@@ -92,7 +92,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Magic and Psionics
 
-- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons, 1d6+1, +1 to hit and as a +1 magical weapon) and **Fogbolt** (1st level: -3 to a creature's attacks and +2 to attacks on it, for 2d4 rounds).
+- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons, 1d6+1, +1 to hit and as a +1 magical weapon) and **Fogbolt** (1st level: a dark grey bolt that gives a creature -3 to its attacks and +2 to attacks on it, for 2d4 rounds).
 - **[Changed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 
 ## Thieves

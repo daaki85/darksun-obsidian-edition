@@ -790,6 +790,21 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   `NS_HIT` at 7C430h, beside the target's Blur), it takes 3 off for a fogged
   attacker and gives 2 against a fogged target.
 
+**Fogbolt's bolt.** A record's `+10h` names what flies from caster to target
+(FFh: nothing): a place in a table of 16 flights just before the records (3
+bytes each: the object flying, then a byte, MM's 8), which the cast reads at
+7530Ch (`imul ax,ax,3`, the object made at 0B8:55Ah and sent off by 600:2Ah);
+nothing else reads the table. Magic Missile's is place 4, object 8109, whose
+OJFF names BMP 2227 (36 frames, a direction each). The launcher's SEGOBJEX.GFF
+copy adds object 8118 (8109's record naming BMP 2584) and BMP 2584, 2227's
+frames with its white, cyan and blue (46, 220, 161) in the greys 214, 211 and
+209 (`icons.bolt_chunks`; the 208-217 ramp is the same in every region's
+palette). No record names place 15, so `NS_SETUP` points it at object 8118 (at
+Magic Missile's speed byte) and gives Fogbolt's record `+10h` 15, only when
+the game has opened the copy (`objects_on`, part of `NS_STATE`); else, and
+with the rule off, place 15 is the game's (8116) and Fogbolt flies nothing, as
+Charm Person.
+
 The sites share one interrupt with the creation panel's (`INT 98h`, then the
 site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).
 A site's handler must leave the game's registers as they were: an early

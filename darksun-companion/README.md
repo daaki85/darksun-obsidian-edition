@@ -2261,9 +2261,11 @@ in the character's sheet, so it saves with the game and the character.
   better on average, as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in
   the log's THAC0 breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons
   hurt creatures that only magical weapons can.
-- **Fogbolt** wraps one creature in clinging fog. Its THAC0 breakdowns show
-  `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on attacks against
-  it.
+- **Fogbolt** wraps one creature in clinging fog. It flies to its target as
+  a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
+  own blue), so like any bolt it needs a clear line to the target. Its THAC0
+  breakdowns show `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on
+  attacks against it.
 
 With the **New wizard spells** box unticked (it's ticked by default) the
 spells are gone from the lists and the game is as it was.

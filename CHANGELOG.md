@@ -14,8 +14,9 @@ have the detail.
 - **Two new wizard spells, and Cat's Grace is a spell of its own.** Erdlu
   Claw (1st level: 5 rounds a caster level, natural and unarmed attacks do
   1d6+1 where that's better, are +1 to hit and count as a +1 magical weapon)
-  and Fogbolt (1st level: 2d4 rounds unless saved against, -3 to the fogged
-  creature's attacks and +2 to attacks on it). Cat's Grace no longer takes
+  and Fogbolt (1st level: a dark grey bolt, its own, so Magic Missile's stays
+  blue; 2d4 rounds unless saved against, -3 to the fogged creature's attacks
+  and +2 to attacks on it). Cat's Grace no longer takes
   Flaming Sphere's place: the three are spells 196-198, learnt, listed, cast
   and shown on the Effects screen like the game's own, each with its icon and
   description; who knows them is kept in the character's sheet. The switch is

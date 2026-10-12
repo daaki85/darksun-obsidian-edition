@@ -10844,6 +10844,13 @@ NS_KNOWN_BIT equ 0x10           ;   (196's; 197's twice that ...)
 NS_KNOWN_MASK equ 0x70          ;   ... and SPHERE2_MASK the second sphere's
 SPHERE2_MASK equ 0x0F
 SPELL_RECS   equ 0x30           ; the spell records (DS - SPELLS_FROM_DS: 20h each from here)
+FLIGHTS      equ 0              ; before them the 16 flights a record's +10h names (3 bytes each:
+MISSILE_FLIGHT equ 4            ;   the object flying, a byte): Magic Missile's, and place 15,
+FOG_FLIGHT   equ 15             ;   which no record names, Fogbolt's (object FOG_BOLT, in the
+FLIGHT15_OBJECT equ 8116        ;   companion's copy of SEGOBJEX.GFF: icons.py), else the game's
+FLIGHT15_BYTE equ 16
+FOG_BOLT     equ 8118
+NS_OBJECTS   equ 0x80           ; NS_STATE's bit: the copy open (OBJECTS_ON)
 EFFECT_TABLE_FROM_DS equ 0x4356 - 0x3F8D ; the effects' table (6 bytes each from effect 1: its
 EFFECT_NO_NAME equ 0x1FF0       ;   name, far, and icon); DS: the empty name of an unnamed one
 EFFECTS_FROM_DS equ 0x4356 - 0x3BF6 ; the active effects (10 bytes each from EFFECTS_OFF: the
@@ -10902,8 +10909,9 @@ probe_grace_ability:
 .out:   iret
 
 ; NS_SETUP: once the rule has changed (NS_STATE), the new spells' rows, records and effects as it
-; has them now (see NEW SPELLS). DS the game's; all registers kept.
-ns_state     db 0xFF            ; RULE_NEW_SPELLS as last set up (0FFh: not yet)
+; has them now (see NEW SPELLS), and flight 15 Fogbolt's grey bolt once the game has the objects'
+; copy open (FLIGHTS). DS the game's; all registers kept.
+ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up (0FFh: not yet)
 ns_levels    db 2, 1, 1         ; each one's spell level ...
 ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL ; ... the spell whose record it takes ...
 ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT       ; ... and its effect
@@ -10915,7 +10923,10 @@ ns_setup:
         push ax
         mov al, [cs:rules]
         and al, RULE_NEW_SPELLS
-        cmp al, [cs:ns_state]
+        cmp word [cs:objects_on], 1
+        jne .state
+        or al, NS_OBJECTS
+.state: cmp al, [cs:ns_state]
         jne .do
         pop ax
         ret
@@ -10924,6 +10935,7 @@ ns_setup:
         push es
         cld
         mov dl, al              ; (DL not 0 while the rule is on)
+        and dl, RULE_NEW_SPELLS
         xor si, si              ; (SI each new spell, 0 to NS_COUNT - 1)
 .spell: mov ax, ds              ; its row: the level and a wizard's mask (spell 0's), or nothing
         add ax, SPELL_LEVELS_SEG
@@ -10974,6 +10986,9 @@ ns_setup:
         mov word [es:di + 5], 0
         mov word [es:di + 7], 60
         mov word [es:di + 0x11], 0x4000 ;   ... nor mind-affecting)
+        test byte [cs:ns_state], NS_OBJECTS
+        jz .effect
+        mov byte [es:di + 0x10], FOG_FLIGHT ; (and its grey bolt flies, where the copy has it)
 .effect:
         mov ax, ds              ; its effect: the name and icon, or none
         sub ax, EFFECT_TABLE_FROM_DS
@@ -10996,7 +11011,19 @@ ns_setup:
 .next:  inc si
         cmp si, NS_COUNT
         jb .spell
-        pop es
+        mov ax, ds              ; flight 15: Fogbolt's grey bolt, as fast as Magic Missile's; else the game's
+        sub ax, SPELLS_FROM_DS
+        mov es, ax
+        mov word [es:FLIGHTS + FOG_FLIGHT * 3], FLIGHT15_OBJECT
+        mov byte [es:FLIGHTS + FOG_FLIGHT * 3 + 2], FLIGHT15_BYTE
+        or dl, dl
+        jz .done
+        test byte [cs:ns_state], NS_OBJECTS
+        jz .done
+        mov word [es:FLIGHTS + FOG_FLIGHT * 3], FOG_BOLT
+        mov al, [es:FLIGHTS + MISSILE_FLIGHT * 3 + 2]
+        mov [es:FLIGHTS + FOG_FLIGHT * 3 + 2], al
+.done:  pop es
         popa
         pop ax
         ret
