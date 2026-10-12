@@ -11107,6 +11107,20 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         dw -3, 0xC4
         db NS_K_BP8
         dw -3, 0xC4
+        db NS_K_BP8
+        dw -1, 0xC4             ; 6F827h an item's spell used (and 6F8D8h: its cast, DX)
+        db NS_K_R16
+        dw NS_DX, 0xC4
+        db NS_K_R16
+        dw NS_DX, 0x8A          ; 720D3h, 8C457h an item's spell's icon (a scroll's in its box)
+        db NS_K_R16
+        dw NS_DX, 0x8A
+        db NS_K_R16
+        dw NS_SI, 0x8A          ; 8C64Eh the spell info box's icon
+        db NS_K_R8
+        dw NS_CL, 0xC4          ; 8B0FAh a scroll's spell, read (and 58B7Eh: a weapon's, on a hit)
+        db NS_K_R8
+        dw NS_CL, 0xC4
 NS_CMP_COUNT equ ($ - ns_cmp_sites) / 5
 NS_FIST   equ NS_CMP + NS_CMP_COUNT ; 58226h, a melee hit's magic (after NS_CMP's)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)

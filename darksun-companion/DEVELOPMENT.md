@@ -750,7 +750,7 @@ them, and the three lists that end at 8Ah end at 0C7h (5DDEFh, 5DE72h,
 5DF06h). Creation and DUAL clear the bits with the rest of the spells; the
 level-up pick, the starting picks and the INT limits count them.
 
-**A wizard's spell.** About thirty places tell spells apart by comparing the
+**A wizard's spell.** About 35 places tell spells apart by comparing the
 number with 45h, 8Ah, 0ACh or 0C4h (the USE screen, the cast, the caster's
 level, a scroll used...). Each such compare is `INT 98h` and a site number
 (`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's

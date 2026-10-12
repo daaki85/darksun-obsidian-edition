@@ -104,6 +104,10 @@ NS_CMP_SITES = (
     (0x88DE0, "813ef54a8a00"), (0x88DFF, "813ef54ac400"),  # the spell cast, shown
     (0x8B491, "807efdc4"), (0x8B6B5, "807efd8a"), (0x8B875, "817efe8a00"),  # a scroll used: its
     (0x8B8AA, "807efdc4"), (0x8BA37, "807efdc4"), (0x8BA70, "807efdc4"),  # spell, learnt, its icon
+    (0x6F827, "807effc4"), (0x6F8D8, "81fac400"),  # an item's spell used, and cast
+    (0x720D3, "81fa8a00"), (0x8C457, "81fa8a00"),  # an item's spell's icon (a scroll's in its box)
+    (0x8C64E, "81fe8a00"),  # the spell info box's icon
+    (0x8B0FA, "80f9c4"), (0x58B7E, "80f9c4"),  # a scroll's spell, read; a weapon's, on a hit
 )
 # the lists of spells a member knows, may learn, may cast (500:25h, 2Ah, 2Fh): "cmp si,8Ah", the
 # end of their loops, made the new spells' end (their rows are empty while the rule is off)
