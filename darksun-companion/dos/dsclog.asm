@@ -10563,7 +10563,7 @@ probe_spell_text:
 ns_texts:
         db "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.", 13, 10, 0
         db "ERDLU CLAW:  The target's nails grow into talons like an erdlu's: its unarmed attacks "
-        db "do 1d6+1 damage, as a hand razor. Lasts 5 rounds per level.", 13, 10, 0
+        db "do 1d6+1 damage, +1 to hit, as a +1 weapon. Lasts 5 rounds per level.", 13, 10, 0
         db "FOGBOLT:  A bolt of fog clings to one creature: -3 to hit and Armor Class 2 worse for "
         db "2 to 8 rounds. A saving throw negates it.", 13, 10, 0
 
@@ -10757,7 +10757,8 @@ copies:
 ; Cat's Grace works as Strength does but for DEX: its own effect (54, a number the game leaves
 ; unused) holds the 1d6, which the routine that works out a creature's abilities adds to DEX,
 ; keeping it between 3 and 24. Erdlu Claw, a spell without a handler of its own, puts its effect
-; (6, unused too) on the creature, and its unarmed attacks do 1d6+1 (NS_CLAW). Fogbolt puts its (27)
+; (6, unused too) on the creature, and each of its natural attacks does 1d6+1 where that is
+; better than its own (NS_CLAW). Fogbolt puts its (27)
 ; on a creature that fails its save: -3 to hit, and +2 to hit it (NS_HIT).
 NS_FIRST     equ 0xC4
 NS_COUNT     equ 3
@@ -11044,7 +11045,7 @@ NS_SITE   equ 9                 ; the first site's number (PROBE_CR_SPELLS's RL_
 NS_KNOWN  equ NS_SITE           ; 5DD04h, the start of the routine that finds a spell's known byte
 NS_LEARN  equ NS_SITE + 1       ; 5E3F7h, where the routine that teaches a spell sets it
 NS_NAME   equ NS_SITE + 2       ; 5E560h, in the routine that gives a spell's name
-NS_CLAW   equ NS_SITE + 3       ; 7B71Bh, an unarmed attack's dice
+NS_CLAW   equ NS_SITE + 3       ; 7B70Ah, a natural attack's dice
 NS_HIT    equ NS_SITE + 4       ; 7C430h, an attack's to-hit adjustments
 NS_CMP    equ NS_SITE + 5       ; NS_CMP_SITES' from here
 ns_cmp_sites:                   ; (kind, the operand, the number compared with)
@@ -11107,30 +11108,32 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         db NS_K_BP8
         dw -3, 0xC4
 NS_CMP_COUNT equ ($ - ns_cmp_sites) / 5
-ns_sites:
-        mov al, [cs:rl_site]
-        sub al, NS_SITE
-        jz ns_known
-        dec al
-        jz ns_learn
-        dec al
-        jz ns_name
-        dec al
-        jz ns_claw
-        dec al
-        jz ns_hit
-        dec al
-        cmp al, NS_CMP_COUNT
+NS_FIST   equ NS_CMP + NS_CMP_COUNT ; 58226h, a melee hit's magic (after NS_CMP's)
+ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
+        cmp byte [cs:rl_site], NS_KNOWN
+        je ns_known
+        cmp byte [cs:rl_site], NS_LEARN
+        je ns_learn
+        cmp byte [cs:rl_site], NS_NAME
+        je ns_name
+        cmp byte [cs:rl_site], NS_CLAW
+        je ns_claw
+        cmp byte [cs:rl_site], NS_HIT
+        je ns_hit
+        cmp byte [cs:rl_site], NS_FIST
+        je ns_fist
+        cmp byte [cs:rl_site], NS_CMP + NS_CMP_COUNT
         jb ns_cmp
         iret
 
-; NS_CMP: the compare of site AL of NS_CMP_SITES, its flags into the INT's frame.
+; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
 ns_cmp:
         pushad
         push es
         mov di, sp
         call ns_setup
-        movzx si, al
+        movzx si, byte [cs:rl_site]
+        sub si, NS_CMP
         imul si, si, 5
         add si, ns_cmp_sites
         mov cl, [cs:si]
@@ -11270,32 +11273,71 @@ ns_name:
         popad
         iret
 
-; NS_CLAW: "test byte [bp-3],40h" (7B71Bh; 4 bytes: the site's number and a NOP after the INT) in
-; the routine giving a creature's natural attack (7B66Ch: for its unarmed one, its effects' bits at
-; [BP-0Ah]), where Body Weaponry (62) makes it 2d4 (the dice's number to the far word [BP+0Eh], their
-; sides to [BP+12h]): that test, and with Erdlu Claw's effect, 1d6+1 (the bonus to [BP+16h]).
+; NS_CLAW: "or dx,dx / jne 7B755h" (7B70Ah; 4 bytes: the site's number and a NOP after the INT) in
+; the routine giving natural attack DX of thing SI (7B66Ch; its dice's number to the far word at
+; [BP+0Eh], their sides to [BP+12h], its bonus to [BP+16h], all set by now), where the game goes on
+; to its effects only for the first (Body Weaponry's 2d4, Animal Affinity's 1d10). With Erdlu
+; Claw's effect on it (NS_HAS), each natural attack is 1d6+1 where that is better on average than
+; its own; then the game's way on.
+NS_CLAW_PAST equ 0x7B755 - 0x7B70D
 ns_claw:
         pushad
         push es
         mov di, sp
-        test byte [bp - 3], 0x40
-        pushf
-        pop ax
-        call ns_flags
-        jnz .out
         test byte [cs:rules], RULE_NEW_SPELLS
-        jz .out
-        test byte [bp - 0x0A + CLAW_EFFECT / 8], 1 << (CLAW_EFFECT % 8)
-        jz .out
+        jz .on
+        mov ax, si
+        mov cl, CLAW_EFFECT
+        call ns_has
+        jne .on
+        les bx, [bp + 0x0E]     ; (its average, twice over: dice x (sides + 1) + 2 x bonus)
+        mov ax, [es:bx]
+        les bx, [bp + 0x12]
+        mov cx, [es:bx]
+        inc cx
+        imul ax, cx
+        les bx, [bp + 0x16]
+        add ax, [es:bx]
+        add ax, [es:bx]
+        cmp ax, 9               ; (1d6+1's: 4.5)
+        jge .on
+        mov word [es:bx], 1
         les bx, [bp + 0x0E]
         mov word [es:bx], 1
         les bx, [bp + 0x12]
         mov word [es:bx], 6
-        les bx, [bp + 0x16]
-        mov word [es:bx], 1
+.on:    cmp word [ss:di + NS_DX], 0
+        je .out
+        add word [ss:di + 34], NS_CLAW_PAST
 .out:   pop es
         popad
         iret
+
+; NS_HAS: ZF set if thing AX has effect CL (the game's table of active effects). DS the game's; all
+; registers kept.
+ns_has:
+        push bx
+        push dx
+        push es
+        mov dx, ds
+        sub dx, EFFECTS_FROM_DS
+        mov es, dx
+        mov dx, [EFFECTS_COUNT]
+        mov bx, EFFECTS_OFF
+.each:  or dx, dx
+        jz .none
+        cmp [es:bx], ax
+        jne .next
+        cmp [es:bx + 6], cl
+        je .out
+.next:  add bx, 10
+        dec dx
+        jmp .each
+.none:  or dx, 1
+.out:   pop es
+        pop dx
+        pop bx
+        ret
 
 ; NS_HIT: "test byte [bp-8],80h" (7C430h; 4 bytes: the site's number and a NOP after the INT) in the
 ; routine adding up an attack's to-hit adjustments from effects (7C3E9h: SI the sum; the attacker's
@@ -11315,6 +11357,35 @@ ns_hit:
         jz .test
         add word [ss:di + NS_SI], 2
 .test:  test byte [bp - 8], 0x80
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+; NS_FIST: "cmp word [bp-0Ch],0" (58226h; 4 bytes: the site's number and a NOP after the INT) in the
+; melee attack routine (58019h: SI the attacker; [BP-2] the weapon's item, -1 for none: a natural
+; attack; [BP-8] its to-hit plus, taken off the THAC0; [BP-0Ch] its magic, which the hit's damage
+; kinds then get as PLUS1..PLUS3). With Erdlu Claw's effect on the attacker, a natural attack is
+; +1 to hit and at least a +1 weapon; then that compare.
+ns_fist:
+        pushad
+        push es
+        mov di, sp
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .test
+        cmp word [bp - 2], -1
+        jne .test
+        mov ax, si
+        mov cl, CLAW_EFFECT
+        call ns_has
+        jne .test
+        inc word [bp - 8]
+        cmp word [bp - 0x0C], 1
+        jge .test
+        mov word [bp - 0x0C], 1
+.test:  cmp word [bp - 0x0C], 0
         pushf
         pop ax
         call ns_flags

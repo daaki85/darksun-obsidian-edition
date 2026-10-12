@@ -383,7 +383,7 @@ class Viewer:
                 ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
                                      "weapon in the other; two heavy weapons still can't be held)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6, at most 24), Erdlu Claw "
-                               "(1st: unarmed attacks do 1d6+1) and Fogbolt (1st: -3 to hit, AC 2 worse)"),
+                               "(1st: unarmed attacks do 1d6+1, +1 to hit, as a +1 weapon) and Fogbolt (1st: -3 to hit, AC 2 worse)"),
                 ("helm_ac", "Helms give AC 1 (the game's helms give none)"))):
             self.rule_vars[key] = tk.BooleanVar(
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))

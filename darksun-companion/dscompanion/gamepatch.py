@@ -107,6 +107,7 @@ NS_CMP_SITES = (
 )
 # the lists of spells a member knows, may learn, may cast (500:25h, 2Ah, 2Fh): "cmp si,8Ah", the
 # end of their loops, made the new spells' end (their rows are empty while the rule is off)
+NS_FIST = NS_CMP + len(NS_CMP_SITES)  # (a melee hit's magic: after NS_CMP's)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xC7
 
@@ -233,11 +234,15 @@ PATCHES = (
     Patch("ns_learn", 0x5E3F7, bytes.fromhex("268027f026800f01"), _site(NS_LEARN, 8)),
     # ... the routine giving a spell's name (500:61h): cmp ax,8Ah (DSCLOG's for a new one) ...
     Patch("ns_name", 0x5E560, bytes.fromhex("3d8a00"), _site(NS_NAME, 3)),
-    # ... an unarmed attack's dice, Body Weaponry's test: test byte [bp-3],40h (Erdlu Claw's 1d6+1) ...
-    Patch("ns_claw", 0x7B71B, bytes.fromhex("f646fd40"), _site(NS_CLAW, 4)),
+    # ... a natural attack's dice, before the game's effects for the first: or dx,dx / jne (Erdlu
+    # Claw's 1d6+1 for each where it is better) ...
+    Patch("ns_claw", 0x7B70A, bytes.fromhex("0bd27547"), _site(NS_CLAW, 4)),
     # ... an attack's to-hit adjustments from effects, the target's Blur: test byte [bp-8],80h
     # (Fogbolt's) ...
     Patch("ns_hit", 0x7C430, bytes.fromhex("f646f880"), _site(NS_HIT, 4)),
+    # ... a melee hit's magic, as the hit's damage kinds get it: cmp word [bp-0Ch],0 (Erdlu Claw's
+    # +1 to hit and +1 weapon for a natural attack) ...
+    Patch("ns_fist", 0x58226, bytes.fromhex("837ef400"), _site(NS_FIST, 4)),
     # ... the compares that tell a wizard's or priest's spell from the rest ...
     *(Patch(f"ns_cmp_{offset:x}", offset, bytes.fromhex(code), _site(NS_CMP + k, len(code) // 2))
       for k, (offset, code) in enumerate(NS_CMP_SITES)),

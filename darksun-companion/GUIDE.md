@@ -630,7 +630,7 @@ character hit in a round can't cast), and choose its spells well.
   choosing its starting spells gives it the game's usual ones for the rest.
 - AD&D's wizard [spell slots](#spell-slots) (4 2 1 at 5th level; *without the
   mod:* 3 2 1).
-- **Cat's Grace** in Flaming Sphere's place.
+- Three **new spells**: Cat's Grace, Erdlu Claw and Fogbolt.
 - With another class it may wear that class's armour but **can't cast in
   it**. **Bracers of defense** and the mod's two **robes** give AC without
   being armour.
@@ -1290,18 +1290,24 @@ can cast. INT sets two limits:
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
 - Cause Serious and Critical Wounds roll 2d9 and 3d9; Cure Light, Serious and
   Critical Wounds heal 1d8, 2d8+1 and 3d8+3.
-- **Cat's Grace** is a 2nd-level wizard spell in Flaming Sphere's place: DEX +
-  1d6 (at most 24) for an hour of game time a caster level, which betters AC,
-  initiative, thief skills and dodging.
+- Three **new wizard spells**, learnt like any other:
+  - **Cat's Grace** (2nd level): DEX + 1d6 (at most 24) for an hour of game
+    time a caster level, which betters AC, initiative, thief skills and
+    dodging.
+  - **Erdlu Claw** (1st level): talons for 5 rounds a caster level. Unarmed
+    attacks, a thri-kreen's claws and bite too, do 1d6+1 where that's better,
+    are +1 to hit and count as a +1 magical weapon.
+  - **Fogbolt** (1st level): clinging fog on one creature for 2d4 rounds,
+    unless it saves: -3 to its attacks, +2 to attacks on it.
 
 ### Spell lists
 
-**Preservers' spells** (the game's Flaming Sphere is Cat's Grace):
+**Preservers' spells** (with the mod's three new ones):
 
 | Level | Spells |
 |---|---|
-| 1 | Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Gaze Reflection, Grease, Magic Missile, Shield, Shocking Grasp, Wall of Fog |
-| 2 | Acid Arrow, Blur, Cat's Grace, Detect Invisibility, Fog Cloud, Glitterdust, Invisibility, Mirror Image, Protection from Paralysis, Scare, Stinking Cloud, Strength, Web |
+| 1 | Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Erdlu Claw, Fogbolt, Gaze Reflection, Grease, Magic Missile, Shield, Shocking Grasp, Wall of Fog |
+| 2 | Acid Arrow, Blur, Cat's Grace, Detect Invisibility, Flaming Sphere, Fog Cloud, Glitterdust, Invisibility, Mirror Image, Protection from Paralysis, Scare, Stinking Cloud, Strength, Web |
 | 3 | Blink, Dispel Magic, Fireball, Flame Arrow, Haste, Hold Person, Hold Undead, Lightning Bolt, Minor Malison, Minute Meteors, Monster Summoning I, Protection from Normal Missiles, Slow, Spirit Armor, Vampiric Touch |
 | 4 | Black Tentacles, Charm Monster, Confusion, Fear, Fire Shield, Ice Storm, Improved Invisibility, Minor Globe of Invulnerability, Minor Spell Turning, Monster Summoning II, Rainbow Pattern, Solid Fog, Stoneskin, Turn Pebble into Boulder, Wall of Fire, Wall of Ice |
 | 5 | Chaos, Cloudkill, Cone of Cold, Conjure Elemental, Dismissal, Domination, Feeblemind, Hold Monster, Lower Resistance to Magic, Monster Summoning III, Summon Shadow, Wall of Force, Wall of Stone |
@@ -1557,7 +1563,7 @@ AD&D's tables:
 |---|---|---|
 | In the game | show each turn's rolls in the game | off |
 | | describe monsters when you Look at them in a fight | on |
-| Rule changes | weapon specialization; kits; AD&D's class tables; the leader's CHA at shops; class restrictions; multiclass hit points; rangers' casting level; preservers' INT; hit dice rolled twice; scores and hit points as rolled; the spell save; DEX instead of a doubled d20; two weapons; levels up to 10; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; Cat's Grace; helms AC 1 | all on |
+| Rule changes | weapon specialization; kits; AD&D's class tables; the leader's CHA at shops; class restrictions; multiclass hit points; rangers' casting level; preservers' INT; hit dice rolled twice; scores and hit points as rolled; the spell save; DEX instead of a doubled d20; two weapons; levels up to 10; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; new wizard spells; helms AC 1 | all on |
 | Thieves | thief skills from AD&D's table; hiding in shadows to backstab; the cloak, boots and belt; picking pockets | on |
 | | ... or P in a conversation (the leader, a thief, picks the pocket of the one talked to) | off |
 | New content | new people, a small quest, new items | on |

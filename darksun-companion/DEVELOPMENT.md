@@ -726,33 +726,62 @@ twice when something goes into a hand: the other hand's ("Two handed weapon in
 use") and the one going in ("Need two free hands"). The helper (`INT E3h`)
 answers both for the character on show, "not two-handed" for a half-giant.
 
-### Cat's Grace
+### New wizard spells
 
-([In the README](README.md#cats-grace).)
+([In the README](README.md#new-wizard-spells).)
 
-How: the Ledger gives Flaming Sphere (spell 14) Strength's record (range,
-duration, whom it can be cast on) and the name, in the game's memory. The
-helper sends it to Strength's own code (`INT EDh`), which rolls the 1d6;
-gives it an effect of its own (`INT EEh`: number 54, which the game leaves
-unused) holding the roll; and, in the routine that works out a creature's
-abilities from its own scores and its effects, adds that to DEX the way
-Strength's adds to STR (`INT EFh`). When the spell runs out, the game works
-the abilities out again without it. A game saved while Cat's Grace lasts and
-loaded without the dice log simply ignores the effect it doesn't know.
-On the Effects screen, Cat's Grace shows as the game's own effects do: its icon
-(the cat's paw), and its name on the bar below when the pointer is over it.
-The game's table of effects (6 bytes each, from the load segment + 3F8Dh: a far
-pointer to the name, then the icon) has an empty name and no icon for 54, and
-the screen shows only effects with an icon; with the rule on, the Ledger gives
-54 Flaming Sphere's icon (21014, read as Cat's Grace's) and the spell's name.
-The description: the game reads a spell's text from RESOURCE.GFF (chunk SPIN,
-the spell's number + 1) into a buffer for the box; after the read
-(`INT E2h`) the helper puts Cat's Grace's in, in the game's words for
-Strength's. The icon: the launcher writes `dos\RESOURCE.GFF`, the game's file
-(only read) with the icon added (number 21900), which the helper has the game
-open in place of its own (as `SEGOBJEX.GFF`); where the game's two routines
-that read a chunk begin (`INT E1h`), the helper has Flaming Sphere's icon
-(21014) read as that one.
+**Numbers.** The game's spells are 0-68 wizard, 69-137 priest, 138-171 psionic
+powers and 172-195 monsters' powers. Its table of 32-byte records (from the
+load segment + 3E3Fh) has an unused 96 bytes after 195, room for 196-198; 199
+on is live data (3E45h), never written. Cat's Grace is 196, Erdlu Claw 197,
+Fogbolt 198. When the rule switches on, the helper (`NS_SETUP`) copies in each
+one's record from a game spell it works like, Strength (23), Enlarge (5) and
+Charm Person (2), with its own effect number and, for Fogbolt, its own
+duration (2d4 rounds) and save; writes their rows in the spell rows (level,
+mask, name, `3FB9:19Ch`, 7 bytes each); and gives the effects' table (6 bytes
+each, from 3F8Dh) their names and icons.
+
+**Known.** The game keeps a party member's known spells in a table of its own
+(8Ah bytes each), with no room for more. A new spell's is a bit in the sheet's
+`+45h` (bits 4-6; the low nibble is the Elementalist's second sphere): the
+routine that finds a spell's known byte (500:48h, `NS_KNOWN` at 5DD04h) and
+the one that teaches it (500:43h, `NS_LEARN` at 5E3F7h) go to the helper for
+them, and the three lists that end at 8Ah end at 0C7h (5DDEFh, 5DE72h,
+5DF06h). Creation and DUAL clear the bits with the rest of the spells; the
+level-up pick, the starting picks and the INT limits count them.
+
+**A wizard's spell.** About thirty places tell spells apart by comparing the
+number with 45h, 8Ah, 0ACh or 0C4h (the USE screen, the cast, the caster's
+level, a scroll used...). Each such compare is `INT 98h` and a site number
+(`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's
+`ns_cmp_sites`); the helper makes a new spell compare as a wizard's
+spell does, and hands back the flags. The name routine (500:61h,
+`NS_NAME` at 5E560h) gives their names; their descriptions (RESOURCE.GFF's
+SPIN 197-199, which the game hasn't) come from the helper after the read; the
+icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
+
+**The effects.**
+- Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of
+  its own (`INT EEh`: 54, a number the game leaves unused); the routine that
+  works out a creature's abilities from its scores and effects adds it to DEX
+  as Strength's adds to STR (`INT EFh`).
+- Erdlu Claw puts effect 6 (unused) on its target. In the routine giving a
+  natural attack's dice (7B66Ch, `NS_CLAW` at 7B70Ah), each attack becomes
+  1d6+1 where that's better on average than its own. In the melee attack
+  routine (58019h, `NS_FIST` at 58226h), where a hit gets its weapon's magic
+  (`[BP-0Ch]`, which becomes damage kinds 1000h/2000h/8000h, PLUS1-PLUS3 in
+  `monsters.py`), an unarmed attack (`[BP-2]` -1) is +1 to hit (`[BP-8]`,
+  taken off the THAC0) and at least a +1 weapon.
+- Fogbolt puts effect 27 (unused) on a creature that fails its save. In the
+  routine adding up an attack's to-hit adjustments from effects (7C3E9h,
+  `NS_HIT` at 7C430h, beside the target's Blur), it takes 3 off for a fogged
+  attacker and gives 2 against a fogged target.
+
+The sites share one interrupt with the creation panel's (`INT 98h`, then the
+site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).
+A site's handler must leave the game's registers as they were: an early
+version took the site number in AL before saving them, which handed the name
+routine spell 0 and showed ARMOR as every spell's name on the USE screen.
 
 A click on an effect's icon on the Effects screen
 ([In the README](README.md#spells-on-the-effects-screen)) ends it in the game;
@@ -1209,7 +1238,7 @@ No kit is the kit page's first row, and what a new character has.
 ### Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 96 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 88 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -1222,8 +1251,9 @@ conventional memory (570 KB free rather than 632 KB). With GOG's settings
 there is one upper memory block of 63 KB; the helper asks for its resident
 part and the ring (`LOAD_EXTRA`), and `mem` in DOSBox shows 632 KB free and a
 few KB of upper memory left. A change that adds much code should check that
-again: the ring is 96 entries, not 128, and the text buffer 4 KB, not 8, to
-make that room.
+again: the ring is 88 entries, not 128 (96 until the new spells' code, when
+the game no longer started for lack of memory), and the text buffer 4 KB,
+not 8, to make that room.
 
 ### The kit's byte
 

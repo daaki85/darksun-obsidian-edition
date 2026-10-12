@@ -1777,6 +1777,9 @@ class DiceLog:
                 penalty = MATERIAL_TO_HIT[weapon.material]
                 parts.append((MATERIALS[weapon.material].lower(), penalty))
                 rest -= penalty
+        elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT):
+            parts.append(("Erdlu Claw", 1))  # (unarmed: DSCLOG's NS_FIST, in [BP-8])
+            rest -= 1
         # With two weapons ready the game adjusts every melee attack by the DEX table it
         # also uses for initiative, sign flipped and never below 0 (rangers excepted): a
         # bonus at DEX 5 or less, nothing otherwise. The manual's off-hand penalty isn't there,

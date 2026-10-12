@@ -162,7 +162,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
 # records and rows in, names them, and keeps who knows them in the sheet (NEW_KNOWN_SHEET's bits).
 # Cat's Grace works as Strength does, for DEX: Strength's code rolls 1d6 into an effect of its own
 # (54, a number the game leaves unused) that adds to DEX, at most 24. Erdlu Claw's effect (6, unused
-# too) makes unarmed attacks 1d6+1; Fogbolt's (27) takes 3 off the fogged creature's attacks and
+# too) makes each natural (unarmed) attack 1d6+1 where that is better than its own (NS_CLAW), +1 to hit and at least
+# a +1 weapon (NS_FIST: its hit's damage kinds get PLUS1); Fogbolt's (27) takes 3 off the fogged creature's attacks and
 # gives 2 to attacks on it.
 GRACE_SPELL, CLAW_SPELL, FOG_SPELL = 196, 197, 198
 NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "Fogbolt"}
@@ -337,7 +338,7 @@ EFFECT_RULES = {
     57: "AC at most 6 - level/4, +1 on saves", 58: "AC -2", 59: "AC at most 10 - level",
     60: "AC 5, 1 better per 3 caster levels above 5", 63: "higher STR", 64: "STR + the amount borrowed, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
-    CLAW_EFFECT: "unarmed attacks do 1d6+1 (talons, as a hand razor)",
+    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
@@ -1506,7 +1507,10 @@ class GameData:
             out.append(WeaponHit(index, slot, self.item_label(item, typ), base - sum(n for _, n in parts), parts,
                                  skill, halves))
         if not out:
-            parts = [(why, n) for why, n in [("STR", table(STR_TO_HIT, strength))] + common if n]
+            parts = [("STR", table(STR_TO_HIT, strength))] + common
+            if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in ids:
+                parts.append((EFFECT_NAMES[CLAW_EFFECT], 1))  # (DSCLOG's NS_FIST)
+            parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
 

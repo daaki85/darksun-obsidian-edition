@@ -2320,23 +2320,61 @@ class NewSpellTests(RuleTests):
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 196)
 
     def test_claw(self):
-        """Body Weaponry's test (NS_CLAW): Erdlu Claw's effect (6: bit 6 of [BP-0Ah]) makes the
-        unarmed attack 1d6+1; Body Weaponry's own (bit 6 of [BP-3]) is left to the game's 2d4."""
+        """A natural attack's dice (NS_CLAW, thing SI, attack DX): with Erdlu Claw's effect (6) on the
+        thing, 1d6+1 where that is better on average than its own; then on to the game's effects
+        for the first attack only (the JNE past them for the others)."""
         from dscompanion import gamepatch
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        self.mu.mem_write(effects, struct.pack("<hhhBB", 2, 0, 197, 9, 0) + bytes(2)
+                          + struct.pack("<hhhBB", 5, 0, 197, 6, 0) + bytes(2))
+        self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
         out = self.TYPES * 16 + 0x700
         for k, off in enumerate((0x0E, 0x12, 0x16)):
             self.mu.mem_write(SS * 16 + BP + off, struct.pack("<HH", 0x700 + 2 * k, self.TYPES))
-        def run(claw, body):
-            self.mu.mem_write(out, bytes(6))
-            self.mu.mem_write(SS * 16 + BP - 0x0A, bytes([0x40 if claw else 0]) + bytes(6) + bytes([0x40 if body else 0]))
-            zf = bool(self.site(gamepatch.NS_CLAW) & 0x40)
-            return zf, struct.unpack("<3H", self.mu.mem_read(out, 6))
+        def run(thing, dice, attack=0):
+            self.mu.mem_write(out, struct.pack("<3H", *dice))
+            self.at += 0x100
+            at = CALLER * 16 + self.at
+            self.mu.mem_write(at, bytes((0xCD, 0x98, gamepatch.NS_CLAW, 0x90)))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    esi=thing, edx=attack).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            past = 0x7B755 - 0x7B70D
+            hook = self.mu.hook_add(UC_HOOK_CODE, lambda uc, a, size, d: uc.emu_stop(), begin=at + 3, end=at + 3 + past)
+            self.mu.emu_start(at, at + 3 + past + 1)
+            self.mu.hook_del(hook)
+            ip = self.mu.reg_read(r.UC_X86_REG_IP) - self.at
+            return struct.unpack("<3H", self.mu.mem_read(out, 6)), ip
         self.rules(32)
-        self.assertEqual(run(True, False), (True, (1, 6, 1)))
-        self.assertEqual(run(False, False), (True, (0, 0, 0)))
-        self.assertEqual(run(True, True), (False, (0, 0, 0)))
+        self.assertEqual(run(5, (1, 4, 0)), ((1, 6, 1), 3))  # (a thri-kreen's claw: 1d4 -> 1d6+1)
+        self.assertEqual(run(5, (1, 4, 1), attack=2), ((1, 6, 1), 3 + 0x7B755 - 0x7B70D))  # (its bite too)
+        self.assertEqual(run(5, (2, 4, 0))[0], (2, 4, 0))  # (2d4 is as good: kept)
+        self.assertEqual(run(5, (1, 8, 2))[0], (1, 8, 2))  # (better: kept)
+        self.assertEqual(run(2, (1, 2, 0))[0], (1, 2, 0))  # (not on it)
         self.rules(0)
-        self.assertEqual(run(True, False), (True, (0, 0, 0)))
+        self.assertEqual(run(5, (1, 4, 0))[0], (1, 4, 0))
+
+    def test_fist(self):
+        """A melee hit's magic (NS_FIST, attacker SI): with Erdlu Claw's effect on it, a natural
+        attack ([BP-2] -1: no weapon) is +1 to hit ([BP-8]) and at least a +1 weapon ([BP-0Ch]);
+        then the game's "cmp word [bp-0Ch],0"."""
+        from dscompanion import gamepatch
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        self.mu.mem_write(effects, struct.pack("<hhhBB", 5, 0, 197, 6, 0) + bytes(2))
+        self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 1))
+        def run(thing, item, plus, magic):
+            self.mu.mem_write(SS * 16 + BP - 0x0C, struct.pack("<hhhhhh", magic, 0, plus, 0, 0, item))
+            flags = self.site(gamepatch.NS_FIST, esi=thing)
+            magic, _, plus = struct.unpack("<hhh", self.mu.mem_read(SS * 16 + BP - 0x0C, 6))
+            return plus, magic, bool(flags & 0x40)
+        self.rules(32)
+        self.assertEqual(run(5, -1, 0, 0), (1, 1, False))  # (clawed and unarmed: +1, a +1 weapon)
+        self.assertEqual(run(5, -1, 0, 2), (1, 2, False))  # (a monster's own +2 kept)
+        self.assertEqual(run(5, 40, 1, 1), (1, 1, False))  # (a weapon: as it was)
+        self.assertEqual(run(5, 40, 0, 0), (0, 0, True))
+        self.assertEqual(run(2, -1, 0, 0), (0, 0, True))  # (not on it)
+        self.rules(0)
+        self.assertEqual(run(5, -1, 0, 0), (0, 0, True))
 
     def test_fog(self):
         """The to-hit adjustments from effects (NS_HIT, SI their sum): 3 off for a fogged attacker

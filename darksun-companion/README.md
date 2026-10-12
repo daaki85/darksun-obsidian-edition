@@ -60,7 +60,7 @@ game.
   - [Items saving against acid](#items-saving-against-acid)
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
-  - [Cat's Grace](#cats-grace)
+  - [New wizard spells](#new-wizard-spells)
   - [Helms](#helms)
   - [The game's own party](#the-games-own-party)
 - [New content](#new-content)
@@ -1258,7 +1258,7 @@ works](#how-the-game-works) has what the game does without them.
 | [Items saving against acid](#items-saving-against-acid) | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
-| [Cat's Grace](#cats-grace) | a new spell in Flaming Sphere's place: DEX + 1d6 |
+| [New wizard spells](#new-wizard-spells) | Cat's Grace (DEX + 1d6), Erdlu Claw (talons) and Fogbolt (-3 to hit, AC 2 worse) |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
 
 ### Weapon specialization
@@ -2226,30 +2226,45 @@ weapon's line: that is its kind, not a limit.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
 
-### Cat's Grace
+### New wizard spells
 
-A new spell, in Flaming Sphere's place: a level 2 wizard spell from AD&D's
-*Spells & Magic*, made to work exactly as the game's Strength does, for DEX:
-the caster touches someone, whose DEX goes up by 1d6 (at most 24) for 60
-rounds per caster level. Everything that reads DEX follows it while it lasts:
-AC, initiative, REAC and DEF, thief skills, the two-weapon penalties and the
-saves against fire, cold and electricity. The log says what it rolled: `Cat's
-Grace: 1d6 = 4 -> Gerakis's DEX +4 while it lasts (at most 24)`.
+Three wizard spells from AD&D's *Spells & Magic* and the Dark Sun books,
+added to the game's own 68 (numbers 196-198, room the game's spell table has
+past its own). Preservers learn them as they learn any spell: picked at a level
+up or as starting spells, or from a scroll. They're listed on the USE screen by
+level with their own icons and descriptions (right-click one), use the usual
+slots, and show on the Effects screen while they last. Who knows them is kept
+in the character's sheet, so it saves with the game and the character.
 
-The game has no room for a new spell (wizard spells are numbers 1-68, every
-one taken), so Cat's Grace takes the place of Flaming Sphere, the weakest
-level 2 spell: 2d4 fire damage once, whatever the caster's level. While the
-box is ticked (it is by default), every character and monster who would cast
-Flaming Sphere casts Cat's Grace instead, under that name on the USE screen,
-with an icon of its own (Strength's tile in a tawny cat's golds, a cat's paw
-print in the game's dark line) and its own description in the box a right-click
-on it opens; untick it and Flaming Sphere is back.
+| Spell | Level | Cast on | Lasts | Does |
+|---|---|---|---|---|
+| **Cat's Grace** | 2 | one creature (touch) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
+| **Erdlu Claw** | 1 | one creature | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, and counts as a +1 magical weapon |
+| **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | -3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
+
+- **Cat's Grace** is made to work exactly as the game's Strength does, for DEX.
+  Everything that reads DEX follows it while it lasts: AC, initiative, REAC and
+  DEF, thief skills, the two-weapon penalties and the saves against fire, cold
+  and electricity. The log says what it rolled: `Cat's Grace: 1d6 = 4 ->
+  Gerakis's DEX +4 while it lasts (at most 24)`.
+- **Erdlu Claw** grows talons like an erdlu's. A character with a weapon in
+  hand is unchanged; one fighting unarmed hits for 1d6+1 instead. A
+  thri-kreen's four claws and bite become 1d6+1 each (a natural attack already
+  better on average, as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in
+  the log's THAC0 breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons
+  hurt creatures that only magical weapons can.
+- **Fogbolt** wraps one creature in clinging fog. Its THAC0 breakdowns show
+  `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on attacks against
+  it.
+
+With the **New wizard spells** box unticked (it's ticked by default) the
+spells are gone from the lists and the game is as it was.
 
 ![Cat's Grace on the USE screen: its icon, and its description](docs/catsgrace.png)
 
 ![The Effects screen: Cat's Grace's paw, and its name below](docs/cats-grace-effect.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#cats-grace).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
 
 ### Helms
 
@@ -2500,7 +2515,7 @@ Talk button). His conversation is the game's kind, just him speaking:
   (3,000 a level, as most of its scrolls are), less with [the leader's
   CHA](#the-leaders-cha-at-shops).
 
-  Cat's Grace is there only with its rule on (see
+  Cat's Grace is there only with the new spells' rule on (see
   [Rule changes](#rule-changes)). A preserver learns a scroll's spell as from
   any of the game's (right-click it in the inventory, click its spell), by the
   game's own rules (a spell of a level the preserver can cast), and with
