@@ -805,6 +805,13 @@ the game has opened the copy (`objects_on`, part of `NS_STATE`); else, and
 with the rule off, place 15 is the game's (8116) and Fogbolt flies nothing, as
 Charm Person.
 
+**Its sounds.** A record names three sounds (RESOURCE.GFF's BVOC chunks, the
+game's Creative Voice files), all played by 90:A6Fh: `+0Fh` with the glow on
+the caster (only when `+0Dh`, the glow's object, isn't -1), `+13h` while
+something flies (only when `+10h` isn't FFh), `+16h` as the spell lands.
+Fogbolt has Fog Cloud's 82 and 98 for the first and last, and keeps Charm
+Person's 75 for the flight (`FOG_CAST_SOUND`, `FOG_HIT_SOUND`).
+
 The sites share one interrupt with the creation panel's (`INT 98h`, then the
 site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).
 A site's handler must leave the game's registers as they were: an early

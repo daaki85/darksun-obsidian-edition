@@ -10850,6 +10850,8 @@ FOG_FLIGHT   equ 15             ;   which no record names, Fogbolt's (object FOG
 FLIGHT15_OBJECT equ 8116        ;   companion's copy of SEGOBJEX.GFF: icons.py), else the game's
 FLIGHT15_BYTE equ 16
 FOG_BOLT     equ 8118
+FOG_CAST_SOUND equ 82           ; a record's +0Fh: the sound with its cast glow (+0Dh), +13h as
+FOG_HIT_SOUND equ 98            ;   it flies, +16h as it lands (BVOC chunks of RESOURCE.GFF)
 NS_OBJECTS   equ 0x80           ; NS_STATE's bit: the copy open (OBJECTS_ON)
 EFFECT_TABLE_FROM_DS equ 0x4356 - 0x3F8D ; the effects' table (6 bytes each from effect 1: its
 EFFECT_NO_NAME equ 0x1FF0       ;   name, far, and icon); DS: the empty name of an unnamed one
@@ -10985,7 +10987,9 @@ ns_setup:
         mov byte [es:di + 4], 0x42      ; (Fogbolt: 2d4 rounds, not Charm Person's for ever ...
         mov word [es:di + 5], 0
         mov word [es:di + 7], 60
-        mov word [es:di + 0x11], 0x4000 ;   ... nor mind-affecting)
+        mov word [es:di + 0x11], 0x4000 ;   ... nor mind-affecting;
+        mov byte [es:di + 0x0F], FOG_CAST_SOUND ; Fog Cloud's sounds as it's cast and lands,
+        mov byte [es:di + 0x16], FOG_HIT_SOUND  ; Charm Person's, 75, as it flies)
         test byte [cs:ns_state], NS_OBJECTS
         jz .effect
         mov byte [es:di + 0x10], FOG_FLIGHT ; (and its grey bolt flies, where the copy has it)

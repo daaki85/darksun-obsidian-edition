@@ -2263,7 +2263,8 @@ in the character's sheet, so it saves with the game and the character.
   hurt creatures that only magical weapons can.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
-  own blue), so like any bolt it needs a clear line to the target. Its THAC0
+  own blue), with Fog Cloud's sounds as it's cast and as it lands; like any
+  bolt it needs a clear line to the target. Its THAC0
   breakdowns show `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on
   attacks against it.
 

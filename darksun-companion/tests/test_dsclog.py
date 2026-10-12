@@ -2411,7 +2411,7 @@ class NewSpellTests(RuleTests):
             return struct.unpack("<HB", self.mu.mem_read(recs + 15 * 3, 3)), self.mu.mem_read(recs + 0x30 + 198 * 0x20 + 0x10, 1)[0]
         self.mu.mem_write(recs + 4 * 3, struct.pack("<HB", icons.MISSILE_OBJECT, 8))
         self.mu.mem_write(recs + 15 * 3, struct.pack("<HB", 8116, 16))
-        self.mu.mem_write(recs + 0x30 + 2 * 0x20 + 0x10, bytes([0xFF]))  # (Charm Person's: none)
+        self.mu.mem_write(recs + 0x30 + 2 * 0x20 + 0x0F, bytes([79, 0xFF, 0, 0, 75, 0x6C, 0x20, 96]))  # (Charm Person's)
         objects_on = TSR * 16 + icons.TSR_OBJECTS_ON
         for on, rules, expected in ((1, 32, ((icons.FOG_BOLT_OBJECT, 8), 15)), (0, 32, ((8116, 16), 0xFF)),
                                     (1, 0, ((8116, 16), 0))):
@@ -2419,6 +2419,9 @@ class NewSpellTests(RuleTests):
             self.rules(rules)
             self.site(gamepatch.NS_CMP + 11, edx=0)
             self.assertEqual(flights(), expected)
+            if rules:  # (its sounds: Fog Cloud's cast and landing, Charm Person's flight)
+                sounds = self.mu.mem_read(recs + 0x30 + 198 * 0x20 + 0x0F, 8)
+                self.assertEqual((sounds[0], sounds[4], sounds[7]), (82, 75, 98))
 
     def test_fog(self):
         """The to-hit adjustments from effects (NS_HIT, SI their sum): 3 off for a fogged attacker
