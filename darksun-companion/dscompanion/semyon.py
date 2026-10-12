@@ -1,9 +1,10 @@
 """Semyon in the slave pens, after he has fought beside the party and left the arena.
 
 Semyon (the arena's Tied-up Prisoner, untied: object SEMYON) meets the party again in the
-arena's bone area; recruited to the Alliance (the game's flag 6), he fights beside them in the
-next fight and, if he survives, leaves: "That's enough for me. I'm leaving. I'll go find more
-members for the Alliance." (script 2). Some of his replies in the bone area send him off before
+arena's bone area, takes them for the Veiled Alliance and asks to join; made a member (the
+game's flag 6) and asked to help, he fights beside them in the next fight and, if he survives,
+leaves: "That's enough for me. I'm leaving. I'll go find more members for the Alliance."
+(script 2). Some of his replies in the bone area send him off before
 that ("I'll see you in the holding pens", script 5). Each way he walks out through the arena's
 entrance to the pens and a script takes him off the map, and nothing in the pens ever brings him
 back.
@@ -18,8 +19,10 @@ he is untied): once LEFT is set, the first time the party is in the pens after i
 free pen above Kalzith's (CELL), and talking to him runs his conversation (script SCRIPT). The
 other ways he leaves, and a Semyon killed in the fight, stay as in the game: he isn't there.
 
-His words are his own voice from the arena (a cheerful scout of the Veiled Alliance, who hid a
-gem in one of the pens' grain pots), with no narration, as the game's talks.
+His words are his own voice from the arena: an eager slave, "much more of a scout than a
+warrior", turned in for looking for the Veiled Alliance, who took the party for it and is now a
+member on their word; he hid a gem in one of the pens' grain pots. No narration, as the
+game's talks.
 """
 
 from typing import Dict, Tuple
