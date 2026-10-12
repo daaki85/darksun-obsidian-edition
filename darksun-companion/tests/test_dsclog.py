@@ -2156,8 +2156,11 @@ class RuleTests(RingTests):
         at the game's [BP-8]: (the buffer's text, AX), with SP back past the read's arguments."""
         image = load_image()
         # its rule test and "cmp di,0Fh", after three pops, "add sp,0Ch" and three pushes (33 bytes)
-        anchor = image.find(bytes.fromhex("2ef606") + struct.pack("<H", self.RULES) + bytes.fromhex("207425" "83ff0f"))
-        self.assertGreater(anchor, 0)
+        import re
+        found = re.search(re.escape(bytes.fromhex("2ef606") + struct.pack("<H", self.RULES) + b"\x20\x74")
+                          + b"." + re.escape(bytes.fromhex("81ffc500")), image, re.S)
+        self.assertIsNotNone(found)
+        anchor = found.start()
         probe = anchor - 33
         self.assertEqual(image[probe:probe + 3], bytes.fromhex("2e8f06"))
         self.mu.mem_write(VEC_SPELL_TEXT * 4, struct.pack("<HH", probe, TSR))
@@ -2174,49 +2177,35 @@ class RuleTests(RingTests):
         text = bytes(self.mu.mem_read(buf, 200)).split(b"\0")[0]
         return text, self.mu.reg_read(r.UC_X86_REG_AX)
 
-    def test_cats_grace_description(self):
-        """Rule 32: Flaming Sphere's description (SPIN 15) is Cat's Grace's; others, and without
-        the rule, the game's."""
+    def test_new_spells_descriptions(self):
+        """Rule 32: the new spells' descriptions (SPIN 197-199, which the game hasn't: AX FFFFh) are
+        the helper's; the game's own, and without the rule, as read."""
         grace = b"CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.\r\n"
         self.rules(32)
-        self.assertEqual(self.spell_text(15), (grace, len(grace)))
-        self.assertEqual(self.spell_text(14)[0][:15], b"FLAMING SPHERE:")
-        self.assertEqual(self.spell_text(15, 0xFFFF)[1], 0xFFFF)  # (no chunk read)
+        self.assertEqual(self.spell_text(197, 0xFFFF), (grace, len(grace)))
+        self.assertTrue(self.spell_text(198, 0xFFFF)[0].startswith(b"ERDLU CLAW:  "))
+        self.assertTrue(self.spell_text(199, 0xFFFF)[0].startswith(b"FOGBOLT:  "))
+        self.assertEqual(self.spell_text(15)[0][:15], b"FLAMING SPHERE:")
         self.rules(0)
-        self.assertEqual(self.spell_text(15), (b"FLAMING SPHERE:  Creates a burning globe.\r\n", 112))
+        self.assertEqual(self.spell_text(197, 0xFFFF)[1], 0xFFFF)
 
-    def chunk_id(self, kind, number, resources_on=1, limit=0x0100):
-        """INT VEC_CHUNK_ID at the start of a chunk-loading routine whose [BP+6] is KIND and
-        [BP+0Ah] NUMBER, the game's stack limit (DS:9Ch) LIMIT: (the number it then loads, CF from
-        the stack check)."""
+    def chunk_id(self, limit=0x0100):
+        """INT VEC_CHUNK_ID at the start of a chunk-loading routine, the game's stack limit (DS:9Ch)
+        LIMIT: CF from the stack check."""
         image = load_image()
-        icon = image.find(bytes.fromhex("66817e06") + b"ICON")
-        self.assertGreater(icon, 0)
-        probe = image.rfind(bytes.fromhex("2ef606") + struct.pack("<H", self.RULES), 0, icon) - 1
-        self.assertEqual(image[probe], 0xFB)  # (its STI)
-        on, = struct.unpack_from("<H", image, image.find(bytes.fromhex("2e833e"), probe) + 3)
-        self.mu.mem_write(TSR * 16 + on, struct.pack("<H", resources_on))
+        probe = image.find(bytes.fromhex("fb5089e083c008"))
+        self.assertGreater(probe, 0)
         self.mu.mem_write(VEC_CHUNK_ID * 4, struct.pack("<HH", probe, TSR))
-        self.mu.mem_write(SS * 16 + BP + 6, kind + struct.pack("<I", number))
         self.mu.mem_write(GAME_DS * 16 + 0x9C, struct.pack("<H", limit))
         self.run_at(bytes((0xCD, VEC_CHUNK_ID)), eax=0x1234)
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x1234)
-        number, = struct.unpack("<I", self.mu.mem_read(SS * 16 + BP + 0x0A, 4))
         self.assertTrue(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & IF)  # (interrupts on: RETF 2 keeps flags)
-        return number, self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 1
+        return self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 1
 
-    def test_cats_grace_icon(self):
-        """Rule 32, with the copy of RESOURCE.GFF open: Flaming Sphere's icon (21014) is asked for as
-        Cat's Grace's (21900); other icons and chunks, or without the rule or the copy, as asked.
-        The stack check as the game's: CF when its limit is below SP (0x800), not when above."""
-        self.rules(32)
-        self.assertEqual(self.chunk_id(b"ICON", 21014), (21900, 1))
-        self.assertEqual(self.chunk_id(b"ICON", 21015)[0], 21015)
-        self.assertEqual(self.chunk_id(b"SPIN", 21014)[0], 21014)
-        self.assertEqual(self.chunk_id(b"ICON", 21014, resources_on=0)[0], 21014)
-        self.assertEqual(self.chunk_id(b"ICON", 21014, limit=0x900)[1], 0)
-        self.rules(0)
-        self.assertEqual(self.chunk_id(b"ICON", 21014)[0], 21014)
+    def test_chunk_stack_check(self):
+        """The stack check as the game's: CF when its limit is below SP (0x800), not when above."""
+        self.assertEqual(self.chunk_id(), 1)
+        self.assertEqual(self.chunk_id(limit=0x900), 0)
 
     def con_levels(self, cls, level):
         """INT VEC_HD_CON with AL a class's level, ES:BX its group (dice up to 9), the game's
@@ -2246,7 +2235,7 @@ class RuleTests(RingTests):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class GraceTests(RuleTests):
-    """Cat's Grace (spell 14, rule 32): Strength's code, its own effect (54), DEX."""
+    """Cat's Grace (new spell 196, rule 32): Strength's code, its own effect (54), DEX."""
 
     def setUp(self):
         super().setUp()
@@ -2264,14 +2253,15 @@ class GraceTests(RuleTests):
         return struct.unpack("<h", self.mu.mem_read(at, 2))[0]
 
     def test_cast_goes_to_strength(self):
-        for rules, spell, want in ((32, 14, 23), (0, 14, 14), (32, 20, 20), (32, 23, 23)):
+        for rules, spell, want in ((32, 196, 23), (0, 196, 196), (32, 14, 14), (32, 23, 23)):
             self.rules(rules)
             self.word(0x0E, spell)
             self.run_at(bytes((0xCD, VEC_GRACE_CAST)))
             self.assertEqual((self.word(-0x1A), self.mu.reg_read(r.UC_X86_REG_AX)), (want, spell if want == spell else 23))
 
     def test_its_own_effect(self):
-        for rules, spell, want in ((32, 14, 54), (0, 14, 0x43), (32, 23, 0x43), (32, 0x94, 0x42), (0, 0x94, 0x42)):
+        for rules, spell, want in ((32, 196, 54), (0, 196, 0x43), (32, 14, 0x43), (32, 23, 0x43), (32, 0x94, 0x42),
+                                   (0, 0x94, 0x42)):
             self.rules(rules)
             self.word(0x0E, spell)
             self.run_at(bytes((0xCD, VEC_GRACE_EFFECT)))
@@ -2286,6 +2276,88 @@ class GraceTests(RuleTests):
             self.run_at(bytes((0xCD, VEC_GRACE_ABILITY)), eax=effect, ebx=0, es=effects, ecx=0)
             self.assertEqual((self.word(-0x340), self.word(-0x342), self.word(-0x0A)), (want, 18, effect))
             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 7)
+
+
+@unittest.skipIf(Uc is None, "unicorn not installed")
+class NewSpellTests(RuleTests):
+    """The new spells' sites (INT 98h and a site's number, gamepatch.NS_*): the compares that tell
+    a wizard's spell from the rest, Erdlu Claw's unarmed dice and Fogbolt's to-hit."""
+
+    def setUp(self):
+        super().setUp()
+        image = load_image()
+        at = image.find(bytes((0xB8, 0x98, 0x25, 0xBA)))
+        self.assertGreater(at, 0)
+        self.mu.mem_write(0x98 * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        # (NS_SETUP's tables: the game's spell levels, records and effects, all zero here)
+
+    def site(self, number, **regs):
+        """INT 98h and site NUMBER (then a NOP), back past it: the flags."""
+        mu = self.mu
+        self.at += 0x20
+        code = bytes((0xCD, 0x98, number, 0x90))
+        mu.mem_write(CALLER * 16 + self.at, code)
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + self.at, CALLER * 16 + self.at + 3)
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
+        return mu.reg_read(r.UC_X86_REG_EFLAGS)
+
+    def test_compares(self):
+        """772BBh's "cmp dx,0C4h" (NS_CMP site 11): a new spell is below it as a wizard's while the
+        rule is on; others, and with it off, as compared."""
+        from dscompanion import gamepatch
+        site = gamepatch.NS_CMP + 11
+        self.assertEqual(gamepatch.NS_CMP_SITES[11][0], 0x772BB)
+        CF, ZF = 1, 0x40
+        self.rules(32)
+        self.assertEqual(self.site(site, edx=196) & (CF | ZF), CF)
+        self.assertEqual(self.site(site, edx=198) & (CF | ZF), CF)
+        self.assertEqual(self.site(site, edx=199) & (CF | ZF), 0)
+        self.assertEqual(self.site(site, edx=0x95) & (CF | ZF), CF)
+        self.rules(0)
+        self.assertEqual(self.site(site, edx=196) & (CF | ZF), ZF)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 196)
+
+    def test_claw(self):
+        """Body Weaponry's test (NS_CLAW): Erdlu Claw's effect (6: bit 6 of [BP-0Ah]) makes the
+        unarmed attack 1d6+1; Body Weaponry's own (bit 6 of [BP-3]) is left to the game's 2d4."""
+        from dscompanion import gamepatch
+        out = self.TYPES * 16 + 0x700
+        for k, off in enumerate((0x0E, 0x12, 0x16)):
+            self.mu.mem_write(SS * 16 + BP + off, struct.pack("<HH", 0x700 + 2 * k, self.TYPES))
+        def run(claw, body):
+            self.mu.mem_write(out, bytes(6))
+            self.mu.mem_write(SS * 16 + BP - 0x0A, bytes([0x40 if claw else 0]) + bytes(6) + bytes([0x40 if body else 0]))
+            zf = bool(self.site(gamepatch.NS_CLAW) & 0x40)
+            return zf, struct.unpack("<3H", self.mu.mem_read(out, 6))
+        self.rules(32)
+        self.assertEqual(run(True, False), (True, (1, 6, 1)))
+        self.assertEqual(run(False, False), (True, (0, 0, 0)))
+        self.assertEqual(run(True, True), (False, (0, 0, 0)))
+        self.rules(0)
+        self.assertEqual(run(True, False), (True, (0, 0, 0)))
+
+    def test_fog(self):
+        """The to-hit adjustments from effects (NS_HIT, SI their sum): 3 off for a fogged attacker
+        (effect 27: bit 3 of [BP-15h]), 2 on against a fogged target ([BP-0Bh]); then Blur's test."""
+        from dscompanion import gamepatch
+        def run(attacker, target, blur=False):
+            self.mu.mem_write(SS * 16 + BP - 0x18, bytes(0x18))
+            if attacker:
+                self.mu.mem_write(SS * 16 + BP - 0x15, bytes([8]))
+            if target:
+                self.mu.mem_write(SS * 16 + BP - 0x0B, bytes([8]))
+            if blur:
+                self.mu.mem_write(SS * 16 + BP - 8, bytes([0x80]))
+            zf = bool(self.site(gamepatch.NS_HIT, esi=10) & 0x40)
+            return self.mu.reg_read(r.UC_X86_REG_SI), zf
+        self.rules(32)
+        self.assertEqual(run(True, False), (7, True))
+        self.assertEqual(run(False, True), (12, True))
+        self.assertEqual(run(True, True, blur=True), (9, False))
+        self.rules(0)
+        self.assertEqual(run(True, True), (10, True))
 
 
 @unittest.skipIf(Uc is None, "unicorn not installed")

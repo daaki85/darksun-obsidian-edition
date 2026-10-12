@@ -55,13 +55,14 @@ MET, FRIENDLY, COLD = 760, 761, 762
 STOCKED = 763  # (set by the Ledger: his scrolls and gear given)
 DIED = 772  # (set by the Ledger: seen dead; Dinos and the Trustee speak of him so, pensasks.py)
 
-# The scrolls: (spell, its name, price in ceramic pieces). Cat's Grace is the game's Flaming Sphere
-# (14) under the companion's rule, so it is sold only while the rule is on. The prices are the
+# The scrolls: (spell, its name, price in ceramic pieces). Cat's Grace is one of the new spells
+# (game.NEW_SPELLS; once the game's Flaming Sphere, 14, under the rule), sold only while their rule
+# is on; mend() makes an earlier build's scroll of it teach the new spell. The prices are the
 # game's price for the spell's level (3000 a level, as most of its 19 scrolls, objects 1400-1418).
 # None is a spell the game has a scroll of. Shield and Burning Hands took the places of Magic
 # Missile and Color Spray (the game has a Color Spray scroll); mend() turns those into them
 SCROLLS = ((9, "Shield", 3000), (1, "Burning Hands", 3000), (12, "Blur", 6000),
-           (game.FLAMING_SPHERE, "Cat's Grace", 6000), (32, "Lightning Bolt", 9000), (29, "Haste", 9000))
+           (game.GRACE_SPELL, "Cat's Grace", 6000), (32, "Lightning Bolt", 9000), (29, "Haste", 9000))
 SCROLL_TYPE = 0x60  # the game's spell scrolls (its objects 1400-1418)
 SCROLL_TEMPLATE = "88fa01000f2700000f2760000000000105ff7f0000"  # its scroll of spell 1 (object 1400)
 SCROLL_FROM = 1400  # the game's first scroll object, which his scrolls' objects copy
@@ -772,8 +773,8 @@ def loot(gd, choose: Callable = None) -> List[str]:
     return [f"Scroll of {left[keep]}"]
 
 
-def stock(gd, cats_grace: bool) -> List[str]:
-    """In the pens, once a game, Kalzith gets his scrolls (Cat's Grace only with its rule on) and
+def stock(gd, new_spells: bool) -> List[str]:
+    """In the pens, once a game, Kalzith gets his scrolls (Cat's Grace only with the new spells on) and
     his gear, worn (DRESSED); the game's flag STOCKED marks it done (a save keeps it, a new game
     starts without it). What was given, by name."""
     from . import npcitems
@@ -789,7 +790,7 @@ def stock(gd, cats_grace: bool) -> List[str]:
             continue
         out = [name_ for rec, slot, name_ in gear() if npcitems.add_to(gd, index, rec, slot)]
         out += [name_ for k, (spell, name_, price) in enumerate(SCROLLS)
-                if (cats_grace or spell != game.FLAMING_SPHERE)
+                if (new_spells or spell not in game.NEW_SPELLS)
                 and npcitems.add_to(gd, index, scroll(spell, price, k))]
         gd.set_flag(DRESSED)
         gd.set_flag(STOCKED)

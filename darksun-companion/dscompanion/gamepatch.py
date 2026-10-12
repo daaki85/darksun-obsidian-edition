@@ -84,6 +84,36 @@ DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
 PK_HOVER = 7
 RG_TWO = 8  # (the ranger's two weapons, light armour only: DSCLOG's RG_TWO)
+# The new spells (196-198: DSCLOG's NEW SPELLS) share it too: NS_KNOWN, NS_LEARN, NS_NAME, NS_CLAW,
+# NS_HIT, then NS_CMP's sites in the order of DSCLOG's NS_CMP_SITES
+NS_KNOWN, NS_LEARN, NS_NAME, NS_CLAW, NS_HIT, NS_CMP = 9, 10, 11, 12, 13, 14
+# Each "cmp" of a spell's number with 8Ah (a psionic power from there), 45h (a priest spell), 0ACh
+# (a monster's power) or 0C4h (the end) that a new spell meets, which NS_CMP makes as a wizard's
+NS_CMP_SITES = (
+    (0x5585C, "81fe8a00"), (0x55865, "83fe45"),  # the USE screen's spells, drawn
+    (0x55AEC, "807eff8a"), (0x55AF2, "807eff45"),  # ... a click on one (its icon, which slots)
+    (0x55FEC, "81fe8a00"), (0x55FF5, "83fe45"),  # ... those that can be cast
+    (0x6CC93, "813ef54a8a00"), (0x6CCBE, "813ef54ac400"),  # the spell cast in a fight, shown
+    (0x72051, "813ef9548a00"),  # the readied spell's icon
+    (0x76883, "2681bf0a018a00"), (0x76C00, "2681bf0a018a00"),  # an effect's spell: not a power's upkeep
+    (0x772BB, "81fac400"), (0x772C7, "81faac00"), (0x772EC, "81fa8a00"),  # the cast
+    (0x7A258, "81fe8a00"),  # its effect on the target
+    (0x7BDA7, "81fe8a00"), (0x7BDB1, "81fe8a00"), (0x7BDCB, "81fe8a00"),  # 1st to 3rd level (Minor Globe)
+    (0x81B23, "817e088a00"),  # the caster level
+    (0x84C76, "81fe8a00"), (0x851BB, "81fe8a00"),  # the level the spell is cast at
+    (0x88DE0, "813ef54a8a00"), (0x88DFF, "813ef54ac400"),  # the spell cast, shown
+    (0x8B491, "807efdc4"), (0x8B6B5, "807efd8a"), (0x8B875, "817efe8a00"),  # a scroll used: its
+    (0x8B8AA, "807efdc4"), (0x8BA37, "807efdc4"), (0x8BA70, "807efdc4"),  # spell, learnt, its icon
+)
+# the lists of spells a member knows, may learn, may cast (500:25h, 2Ah, 2Fh): "cmp si,8Ah", the
+# end of their loops, made the new spells' end (their rows are empty while the rule is off)
+NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
+NS_END = 0xC7
+
+
+def _site(number: int, length: int) -> bytes:
+    """INT VEC_CR_SPELLS and a site's number, NOPs to LENGTH."""
+    return bytes((0xCD, VEC_CR_SPELLS, number)) + b"\x90" * (length - 3)
 
 
 SCRIPT_BUFFER = 0x2E00  # the scripts' buffer, made bigger (the game's: 10000 bytes)
@@ -195,6 +225,25 @@ PATCHES = (
     # ... and the routine working out a creature's abilities, at each of its effects:
     # mov [bp-0Ah],ax / mov cx,7 (DSCLOG adds Cat's Grace's amount to DEX)
     Patch("grace_ability", 0x7B7D7, bytes.fromhex("8946f6b90700"), _interrupt(VEC_GRACE_ABILITY, 6)),
+    # The new spells (DSCLOG's NEW SPELLS): the routine giving a spell's known byte (500:48h): its
+    # "cmp si,4" (a new spell's is DSCLOG's, from the sheet) ...
+    Patch("ns_known", 0x5DD04, bytes.fromhex("83fe04"), _site(NS_KNOWN, 3)),
+    # ... the routine teaching one (500:43h), marking it: and byte es:[bx],0F0h / or byte es:[bx],1
+    # (DSCLOG puts a new spell's in the sheet) ...
+    Patch("ns_learn", 0x5E3F7, bytes.fromhex("268027f026800f01"), _site(NS_LEARN, 8)),
+    # ... the routine giving a spell's name (500:61h): cmp ax,8Ah (DSCLOG's for a new one) ...
+    Patch("ns_name", 0x5E560, bytes.fromhex("3d8a00"), _site(NS_NAME, 3)),
+    # ... an unarmed attack's dice, Body Weaponry's test: test byte [bp-3],40h (Erdlu Claw's 1d6+1) ...
+    Patch("ns_claw", 0x7B71B, bytes.fromhex("f646fd40"), _site(NS_CLAW, 4)),
+    # ... an attack's to-hit adjustments from effects, the target's Blur: test byte [bp-8],80h
+    # (Fogbolt's) ...
+    Patch("ns_hit", 0x7C430, bytes.fromhex("f646f880"), _site(NS_HIT, 4)),
+    # ... the compares that tell a wizard's or priest's spell from the rest ...
+    *(Patch(f"ns_cmp_{offset:x}", offset, bytes.fromhex(code), _site(NS_CMP + k, len(code) // 2))
+      for k, (offset, code) in enumerate(NS_CMP_SITES)),
+    # ... and the lists' ends
+    *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"), bytes((0x81, 0xFE, NS_END, 0x00)))
+      for offset in NS_LIST_ENDS),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:
     # the memory reserved for it, "push dword 1" before the size (DSCLOG adds room for more
     # names) ...

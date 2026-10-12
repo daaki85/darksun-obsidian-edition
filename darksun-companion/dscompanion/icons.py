@@ -27,7 +27,7 @@ and a BMP chunk of its own number is its picture on the map, here the plain item
 
 import os
 import struct
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from . import gff
 
@@ -441,12 +441,14 @@ def with_chunks(data: bytes, added: gff.Chunks, room: Optional[Dict[Tuple[str, i
     return bytes(out)
 
 
-# Cat's Grace's spell icon (RESOURCE.GFF), for Flaming Sphere's (ICON 21014) with that rule:
-# Strength's tile (ICON 21023: the spell Cat's Grace works as) in a tawny cat's golds, its glyph a
-# cat's paw print in the game's dark line, with the light line below and right of it that its
-# glyphs have. DSCLOG asks for it in Flaming Sphere's place (PROBE_CHUNK_ID).
+# The new spells' icons (RESOURCE.GFF; game.NEW_SPELLS), ICON 21000 + the spell as the game's own,
+# on the USE screen and the Effects screen. Cat's Grace: Strength's tile (ICON 21023: the spell Cat's
+# Grace works as) in a tawny cat's golds, its glyph a cat's paw print in the game's dark line, with
+# the light line below and right of it that its glyphs have. Erdlu Claw: Gaze Reflection's sandy
+# tile, three talons; Fogbolt: Fog Cloud's, a cloud over an arrow.
 RESOURCE_FILE = "RESOURCE.GFF"
-STRENGTH_ICON, GRACE_ICON = 21023, 21900
+STRENGTH_ICON, GAZE_ICON, FOG_CLOUD_ICON = 21023, 21006, 21015
+GRACE_ICON, CLAW_ICON, FOG_ICON = 21196, 21197, 21198
 GRACE_FILL = {163: 168, 76: 169, 77: 65, 75: 168, 78: 170, 134: 205}
 GRACE_FRAME = {60: 170, 145: 169, 147: 170, 133: 205, 203: 207, 134: 205}
 GLYPH, GLYPH_LIGHT = 204, 170
@@ -487,6 +489,60 @@ def cat_icon(strength: Rows) -> Rows:
     return out
 
 
+CLAW_GLYPH = (  # (three talons)
+    "..DD...DD...DD..",
+    ".DDD..DDD..DDD..",
+    ".DD...DD...DD...",
+    ".DD...DD...DD...",
+    ".DD...DD...DD...",
+    "..DD...DD...DD..",
+    "...DD...DD...DD.",
+    "....D....D....D.",
+)
+FOG_GLYPH = (  # (a cloud over an arrow)
+    "......DDD.......",
+    "...DDD...D......",
+    "..D.......DDD...",
+    ".D...........D..",
+    ".DDDDDDDDDDDDD..",
+    "................",
+    ".........D......",
+    ".........DD.....",
+    "..DDDDDDDDDD....",
+    ".........DD.....",
+    ".........D......",
+)
+
+
+def glyph_icon(base: Rows, old: Set[int], fill: int, glyph: Tuple[str, ...], top: int, dark: int,
+               light: int) -> Rows:
+    """BASE's tile with its glyph (colours OLD inside the frame) filled in with FILL and GLYPH drawn
+    from row TOP in DARK, its light line LIGHT below and right of it."""
+    n = len(base)
+    out = [list(r) for r in base]
+    for y in range(1, n - 1):
+        for x in range(1, n - 1):
+            if out[y][x] in old:
+                out[y][x] = fill
+    points = {(x, top + j) for j, line in enumerate(glyph) for x, ch in enumerate(line) if ch == "D"}
+    for x, y in points:
+        if (x + 1, y + 1) not in points and 0 < x + 1 < n - 1 and 0 < y + 1 < n - 1:
+            out[y + 1][x + 1] = light
+    for x, y in points:
+        out[y][x] = dark
+    return out
+
+
+def claw_icon(gaze: Rows) -> Rows:
+    """Erdlu Claw's icon from Gaze Reflection's."""
+    return glyph_icon(gaze, {129, 60, 182, 183}, 180, CLAW_GLYPH, 4, 129, 183)
+
+
+def fog_icon(fog_cloud: Rows) -> Rows:
+    """Fogbolt's icon from Fog Cloud's."""
+    return glyph_icon(fog_cloud, {210, 217}, 73, FOG_GLYPH, 3, 210, 217)
+
+
 def objects_beside(path: str) -> Optional[gff.Chunks]:
     """The game's SEGOBJEX.GFF in PATH's folder, with the companion's own items' objects and
     icons (new_chunks), for their pictures (None if it can't be read)."""
@@ -501,12 +557,14 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
 
 
 def write_resources(source: str, dest: str) -> None:
-    """The game's RESOURCE.GFF (SOURCE, only read) with Cat's Grace's icon and the save/load
+    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons and the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py), to DEST."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
-    added = {("ICON", GRACE_ICON): encode(cat_icon(decode(chunks[("ICON", STRENGTH_ICON)])))}
+    added = {("ICON", GRACE_ICON): encode(cat_icon(decode(chunks[("ICON", STRENGTH_ICON)]))),
+             ("ICON", CLAW_ICON): encode(claw_icon(decode(chunks[("ICON", GAZE_ICON)]))),
+             ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", FOG_CLOUD_ICON)])))}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))

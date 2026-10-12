@@ -41,9 +41,10 @@ BLUNT = frozenset((1, 4, 8, 14, 15))
 SHINOBI_KINDS = frozenset((2, 3, 8, 12, 13, 14, 15))
 SHINOBI = KIT_IDS["Shinobi"]
 BOW = 13  # (the bow's weapon kind: a Seeker keeps it whatever its sphere)
-# an Elementalist's second sphere: the sheet's byte SPHERE2, 0 none, else the sphere (0 air, 1 earth,
-# 2 fire, 3 water) + 1 (DSCLOG's SPHERE2)
-SPHERE2 = 0x45
+# an Elementalist's second sphere: the low four bits of the sheet's byte SPHERE2, 0 none, else the
+# sphere (0 air, 1 earth, 2 fire, 3 water) + 1 (DSCLOG's SPHERE2; the bits above it are the new spells
+# known, game.NEW_KNOWN_SHEET)
+SPHERE2, SPHERE2_MASK = 0x45, 0x0F
 # a Battle Mage's weapon specs to choose from (DSCLOG's KIT_BM_KINDS): the one-handed melee ones, not
 # thrown: long sword, club, dagger, short sword, mace, axe, pick
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
@@ -289,9 +290,9 @@ def stealth(kid: int) -> int:
 def second_sphere(kid: int, sheet: bytes) -> Optional[int]:
     """An Elementalist's second sphere (0 air to 3 water), or None (not one, or none chosen), as
     DSCLOG's EL_SECOND."""
-    if kid != ELEMENTALIST or len(sheet) <= SPHERE2 or not 1 <= sheet[SPHERE2] <= 4:
+    if kid != ELEMENTALIST or len(sheet) <= SPHERE2 or not 1 <= sheet[SPHERE2] & SPHERE2_MASK <= 4:
         return None
-    return sheet[SPHERE2] - 1
+    return (sheet[SPHERE2] & SPHERE2_MASK) - 1
 
 
 _PRIEST, _WARRIOR = frozenset(range(1, 9)), frozenset((9, 10)) | frozenset(RANGER_CLASSES)

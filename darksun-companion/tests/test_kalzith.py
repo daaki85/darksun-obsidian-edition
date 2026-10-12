@@ -211,14 +211,14 @@ class KalzithTests(unittest.TestCase):
                 return bytes(t)
         gd, given = Game(), []
         with mock.patch.object(npcitems, "add_to", lambda g, i, rec, slot=None: given.append((i, rec, slot)) or True):
-            self.assertEqual(kalzith.stock(gd, cats_grace=False), ["Quarterstaff", "Cloak", "Ashen Robe"]
-                             + [n for s, n, _ in kalzith.SCROLLS if s != game.FLAMING_SPHERE])
+            self.assertEqual(kalzith.stock(gd, new_spells=False), ["Quarterstaff", "Cloak", "Ashen Robe"]
+                             + [n for s, n, _ in kalzith.SCROLLS if s not in game.NEW_SPELLS])
             self.assertEqual({i for i, _, _ in given}, {9})
             self.assertEqual([slot for _, _, slot in given[:3]], [kalzith.RIGHT_HAND, game.CLOAK_SLOT, 9])
             self.assertTrue({kalzith.STOCKED, kalzith.DRESSED} <= gd.flags)
-            self.assertEqual(kalzith.stock(gd, cats_grace=True), [])  # (done this game)
+            self.assertEqual(kalzith.stock(gd, new_spells=True), [])  # (done this game)
             gd.flags.clear(); given.clear()
-            self.assertEqual(len(kalzith.stock(gd, cats_grace=True)), 3 + 6)
+            self.assertEqual(len(kalzith.stock(gd, new_spells=True)), 3 + 6)
             # each scroll its own object
             self.assertEqual(len({struct.unpack_from("<h", r, 0)[0] for _, r, _ in given[3:]}), 6)
 
@@ -264,7 +264,7 @@ class KalzithTests(unittest.TestCase):
     def test_six_scrolls(self):
         """Two of each level 1-3, at the game's prices (its own scroll of the spell's, else 3000 a level)."""
         self.assertEqual([p for _, _, p in kalzith.SCROLLS], [3000, 3000, 6000, 6000, 9000, 9000])
-        self.assertIn(game.FLAMING_SPHERE, [s for s, _, _ in kalzith.SCROLLS])
+        self.assertIn(game.GRACE_SPELL, [s for s, _, _ in kalzith.SCROLLS])
 
 
 class DeathTests(unittest.TestCase):

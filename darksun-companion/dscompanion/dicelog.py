@@ -669,7 +669,6 @@ class DiceLog:
                 save = game.kind_to_save(game.SPELL_KIND, rules)
                 self.guest.write(table + 2 * game.SPELL_KIND, struct.pack("<H", save))
             if self.game is not None:
-                self.game.set_cats_grace(bool(rules & game.RULE_CATS_GRACE))
                 self.game.set_dodge(bool(rules & game.RULE_NO_DOUBLE))
 
     def monster_ac(self, index: int) -> Optional[int]:
@@ -1062,7 +1061,7 @@ class DiceLog:
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
             if self.stealth_gear:
                 stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)
-            kalzith.stock(self.game, bool(self.rules & game.RULE_CATS_GRACE))  # (once a game, by its flag)
+            kalzith.stock(self.game, bool(self.rules & game.RULE_NEW_SPELLS))  # (once a game, by its flag)
             semyon.watch(self.game)  # (killed: never put in the pens)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
@@ -1748,13 +1747,19 @@ class DiceLog:
         # the spell effects the game checks here (from its code)
         effects = g.effects()
         on = lambda combatant, eid: any(x.owner == combatant and x.id == eid for x in effects)
-        for eid, value in ((7, 1), (12, -1), (47, -4), (49, 1)):
+        for eid, value in ((7, 1), (12, -1), (47, -4), (49, 1)):  # (Fogbolt's below, with Blur)
             if on(attacker_combatant, eid):
                 parts.append((EFFECT_NAMES[eid], value))
                 situational -= value
         if on(target_combatant, 55):
             parts.append(("target's Blur", -2))
             situational += 2
+        if on(attacker_combatant, game.FOG_EFFECT):  # (the new spells' Fogbolt: DSCLOG's NS_HIT)
+            parts.append(("Fogbolt", -3))
+            situational += 3
+        if on(target_combatant, game.FOG_EFFECT):
+            parts.append(("target's Fogbolt", 2))
+            situational -= 2
         prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
         if prayer:
             caster = g.combatant_creature(prayer.caster)
@@ -1838,8 +1843,8 @@ class DiceLog:
             if count == 1 and e.parent_code.startswith(STRENGTH_ROLL_RETURN) and e.parent_arg(0x0E) is not None:
                 spell, target = e.parent_arg(0x0E), e.parent_arg(6)
                 self._spell_cast(spell, now)
-                # (Cat's Grace, in Flaming Sphere's place, uses Strength's code for DEX)
-                ability = "DEX" if spell == game.FLAMING_SPHERE and self.rules & game.RULE_CATS_GRACE else "STR"
+                # (Cat's Grace, a new spell, uses Strength's code for DEX)
+                ability = "DEX" if spell == game.GRACE_SPELL else "STR"
                 return self.flush(now, force=True) + [
                     f"{self.game.spell_name(spell)}: 1d{sides} = {faces[0]} -> {self._name(target)}'s {ability} "
                     f"+{faces[0]} while it lasts (at most {STR_MOST})"]
@@ -1889,7 +1894,7 @@ class DiceLog:
                 pending = PendingDice(f"{count}d{sides} = {faces_text} = {sum(faces)}", now,
                                       damage=e.parent_code.startswith(SPELL_DAMAGE_RETURN))
                 target, spell = e.parent_arg(6), e.parent_arg(8)
-                if count == 1 and sides == 100 and target is not None and game.SPELL_FIRST <= spell < game.PSIONIC_FIRST + game.PSIONIC_COUNT \
+                if count == 1 and sides == 100 and target is not None and game.cast_spell(spell) \
                         and self.game.combatant_creature(target) is not None:
                     pending.resistance = (target, spell, faces[0])
                 self._pending.append(pending)
@@ -1941,7 +1946,7 @@ class DiceLog:
         if not e.parent_code.startswith(OVERLAY_TRAP):
             return False
         spell, level = e.parent_arg(6), e.parent_arg(8)
-        if spell is None or level is None or not game.SPELL_FIRST <= spell < game.PSIONIC_FIRST + game.PSIONIC_COUNT or not 1 <= level <= 40:
+        if spell is None or level is None or not game.cast_spell(spell) or not 1 <= level <= 40:
             return False
         rec = self.game.spell_record(spell)
         return len(rec) > 4 and (rec[4] & 0x0F, rec[4] >> 4) == (count, sides)
@@ -1972,7 +1977,7 @@ class DiceLog:
         if not e.parent_code.startswith(OVERLAY_TRAP):
             return None
         spell = e.arg(0x0C)
-        if spell is None or spell != e.parent_arg(6) or not game.SPELL_FIRST <= spell < game.PSIONIC_FIRST + game.PSIONIC_COUNT:
+        if spell is None or spell != e.parent_arg(6) or not game.cast_spell(spell):
             return None
         rule = self.game.spell_damage(spell)
         if rule is None or rule.sides != sides or sides < 2:
