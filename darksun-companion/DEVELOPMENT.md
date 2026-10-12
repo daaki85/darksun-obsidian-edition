@@ -361,7 +361,7 @@ and no question. It is replaced only if it is the dragon's (its
 
 ([In the README](README.md#weapon-specialization).)
 
-How: the kinds are kept in four bytes of each character's own record that the
+How: the chosen weapon types are kept in four bytes of each character's own record that the
 game never uses (+14h to +17h), so saves and the saved-characters roster keep
 them. The helper adds the bonuses and attacks where the game makes a weapon
 attack (`INT D1h`, `INT D0h`), on the DAM lines (`INT CFh`, `INT CEh`), runs
@@ -372,9 +372,9 @@ window 3021), and prints the Effects screen's lines (`INT BBh`).
 
 The pop-up in weapon mode is the psionicists' window (17501) made bigger:
 window 3021 is 214 by 156 (its marble, BMP 3022, the psionicists' 17001 carried
-on to that size), with a slot for each kind, six to a row: a button 0x860 +
-kind whose picture (ICON, same number) is the game's inventory picture of a
-weapon of that kind (`weaponpages.PICTURES`, objects in `SEGOBJEX.GFF`; the
+on to that size), with a slot for each weapon type, six to a row: a button 0x860 +
+type whose picture (ICON, same number) is the game's inventory picture of a
+weapon of that type (`weaponpages.PICTURES`, objects in `SEGOBJEX.GFF`; the
 polearm's made smaller) on a slot, in three frames as the game uses them: as
 it is, lit (the pointer on a button in use), and out of use (the weapon a grey
 shape). The game puts the window where it would centre the psionicists'
@@ -389,18 +389,18 @@ new: `or ax,ax / jnz 85F5Dh`, 4 bytes at 85F44h, in the pop-up's event loop
 (`INT 33h` function 3), finds the slot from the window's place and the slots'
 (`PK_SLOTS_X`, `PK_PITCH`; `test_picker_matches_dsclog` keeps them
 weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
-`PK_WORD` puts the kind in the sheet's first empty slot for a moment and asks
-`SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the kind's name
+`PK_WORD` puts the type in the sheet's first empty slot for a moment and asks
+`SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name
 with the routine the powers' handler names a power with (85CC9h, which rubs
 out the lines it drew before), or the title again off the slots.
 A missile weapon's attacks a round are its item type's (+0Bh, in halves: a
 bow 4, the rest 2), not the character's (sheet +2Ah) as in melee; `INT D1h`
 raises them to a specialist's (`MISSILE_RATE`, by the fighter, gladiator or
-ranger level; a grand master one more; a kind not chosen, from 7th level, a
+ranger level; a grand master one more; a weapon type not chosen, from 7th level, a
 specialist's a band lower), and the Ledger's Characters tab does the same
 (`specialize.missile_attacks`).
 Every ranger's expertise with the bow is in `SPEC_OF_SHEET` (`specialize.skill`),
-not in its chosen kinds, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
+not in its chosen weapon types, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
 the bow out of a ranger's choices.
 
 ### Class restrictions
@@ -416,7 +416,7 @@ classes' limits (`SPECIALIZED_BACK`, `restrict.specialized_back`): a dual-classe
 human's chosen weapon specs once its new class's level has passed the warrior
 class's, and a ranger's bow (every ranger has expertise with it, but never
 chooses it): a multiclass ranger's always, a human's while a ranger or once past.
-`KIT_FORBIDS` likewise passes a weapon of a kind in the sheet's `SPEC_SLOTS`
+`KIT_FORBIDS` likewise passes a weapon of a type in the sheet's `SPEC_SLOTS`
 (`KF_CHOSEN`) while the specs count (`SPECS_AWAKE`, `restrict.specs_awake`: one
 class; a human's warrior class now or passed; a Battle Mage's kit awake), but
 for the off hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
@@ -908,7 +908,7 @@ bit, which none of the game's daggers have; then the bone and obsidian great
 axes, the metal one's of those materials, and a bone dagger, the only dagger a
 water cleric may use) are item types the helper adds
 after the game's 115 each time the game reads its table in (`TYPES_EXTRA`; its
-weapon kinds by type, `kind_of_type`, cover them too); the Ledger's item names (`dscompanion/names.py`) are entries it adds
+weapon types by item type, `kind_of_type`, cover them too); the Ledger's item names (`dscompanion/names.py`) are entries it adds
 after the game's 322 (the game puts the item type's material before the name
 when it shows one); and the icons are objects in the Ledger's copy of
 `SEGOBJEX.GFF` (`dscompanion/icons.py`), which the helper has the game open
@@ -1358,7 +1358,7 @@ gladiator's four weapon specs make eight. `EF_DRAW` goes over the lines twice
 (`EF_LINES_OF`, each through `EF_LINE`): first counting them (`EF_COUNT`), then
 putting those of the page on the panel (`EF_PUT`). With more than five, a page
 has four and `MORE: CLICK HERE` in the fifth row; a page that starts with a
-weapon kind has its skill's heading again over it (`EF_HEAD`), and a heading
+weapon type has its skill's heading again over it (`EF_HEAD`), and a heading
 that would be a page's last row goes to the next. `PROBE_EF_CLICK` (`INT 97h`,
 new: `mov si,[bp+8]`, 3 bytes at 7EC9Eh) is in the screen's handler for its
 cells (7EC97h, buttons from 2BCDh; the lower panel's from the 21st): the events
@@ -1409,10 +1409,10 @@ in `kitpages.kit_ids`), and emulated tests hold the helper to it:
 | hiding, moving silently | Stalker, Assassin | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
 | the two-weapon penalty | Twin-blade (in light armour: `HEAVY_WORN`); Justifier (in any armour) | `PROBE_TWO`; `RG_TWO` |
 | gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`), whatever the class restrictions |
-| skill with a weapon | Justifier (expertise, the bow's and its chosen kind's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
-| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen kind `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own kinds, whatever its class), `LV_DUE` (a Battle Mage one); the creation panel counts a Battle Mage as a warrior (`WP_CLASSES`, so `WP_IDS` gives the disciplines' window with WEAPON SPEC; `kitpages.panel_windows`) |
-| attacks a round | Battle Mage (its chosen kind: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons-adds-penalties)) |
-| gear the kit allows | Battle Mage (its chosen kind's weapons, with weapon specialization; light armour) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
+| skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
+| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one); the creation panel counts a Battle Mage as a warrior (`WP_CLASSES`, so `WP_IDS` gives the disciplines' window with WEAPON SPEC; `kitpages.panel_windows`) |
+| attacks a round | Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons-adds-penalties)) |
+| gear the kit allows | Battle Mage (its chosen weapon type's weapons, with weapon specialization; light armour) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
 | hit die | Battle Mage (d6), Mind Warrior (d8), Arcanist (d3) | a level's die: `PROBE_HIT_DIE` (`INT A5h`, new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]` the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die` |
 | max PSP | Mind Warrior (a tenth fewer, rounded down) | at a level up: `PROBE_MAX_PSP` (`INT A4h`, new: `les bx,[bp-8]`, 8748Fh, the sum in SI before it goes in the sheet, in the routine at 873B2h); on the creation screen: `PROBE_CR_PSP` (`INT A2h`, new: the end, `pop bp / retf`, of 65B39h, which sums the PSP into the sheet being made's `+0Ch`; it drops the interrupt frame to end the routine itself, putting the flags back first, as a score's click reaches it with nothing after to set IF again). `kits.max_psp` |
 

@@ -912,7 +912,7 @@ From the game's code:
   thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
 
 Which weapons can backstab, the game's and the [Ledger's](#new-items), magic
-ones included. Weight belongs to the weapon's kind and
+ones included. Weight belongs to the weapon's type and
 material, in the game's units, which look like tenths of a pound (a dagger is
 10, a club 30, a mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb.
 Missile weapons (slings, bows, a thrown chatkcha) never backstab: it has to be
@@ -934,7 +934,7 @@ melee.
 | Cahulaks, gythka | bone (120) | 1d6, 2d4 | no |
 | Polearm | bone, metal (150) | 1d10 | no |
 
-About a dozen more weapon kinds are in the game's tables with no item of
+About a dozen more weapon types are in the game's tables with no item of
 theirs in its data (monsters' own, made by scripts, or unused).
 
 ### The game's saving throws
@@ -1241,7 +1241,7 @@ works](#how-the-game-works) has what the game does without them.
 
 | Rule (its box on the Options tab) | What it changes |
 |---|---|
-| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in kinds of weapon, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
+| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
 | [Class restrictions](#class-restrictions) | each class's limits on armour, shields and weapons hold, the strictest winning; a multiclass preserver casts no spells in armour |
 | [Multiclass hit points](#multiclass-hit-points) | CON's bonus on every hit die (a warrior's for a character with a warrior class), the total shared between the classes |
@@ -1266,7 +1266,7 @@ works](#how-the-game-works) has what the game does without them.
 ### Weapon specialization
 
 With **Weapon specialization** ticked, fighters, gladiators and rangers train
-in chosen weapon specs (kinds of weapon), as in AD&D. **Every ranger starts
+in chosen weapon specs (weapon types), as in AD&D. **Every ranger starts
 with expertise in the bow**, on top of the weapon spec it chooses.
 
 | Who | Chooses | With a weapon of a chosen weapon spec |
@@ -1554,10 +1554,10 @@ the game keeps them, and count again once the new class's level passes the
 old.
 
 A weapon spec is a weapon learnt for good, while the class or kit that gave it
-is awake: no kit keeps a character from a kind of weapon it specialized in
+is awake: no kit keeps a character from a weapon type it specialized in
 (but for the off hand's rules: the Healer's, the Battle Mage's), and a human
-who has changed class may use the kinds it chose whatever the new class
-allows. While that class or kit sleeps, the kinds go with it, and come back
+who has changed class may use the weapon types it chose whatever the new class
+allows. While that class or kit sleeps, the types go with it, and come back
 when it wakes.
 
 A human who changes class may take a kit for the new class too, so a human
@@ -1581,7 +1581,7 @@ goes on with its weapons), the first again after the last:
 ![The Effects screen, a page at a time: a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
 
 With **Weapon specialization** ticked, a human who becomes a fighter,
-gladiator or ranger (or a Battle Mage) then picks the weapon kinds it is due
+gladiator or ranger (or a Battle Mage) then picks the weapon types it is due
 on the same window as at a level up (**PICK A WEAPON SPECIALTY**), less any it
 has already.
 
@@ -2231,7 +2231,7 @@ light weapon in the other. The game's own rule that the two hands can't both
 hold heavy weapons (over 30 in weight each) still stands, so no half-giant
 holds two two-handed weapons. With two weapons ready, the two-weapon penalties
 apply as for anyone. The inventory screen still writes "2 handed" in the
-weapon's line: that is its kind, not a limit.
+weapon's line: that is its weapon type, not a limit.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
 
@@ -2671,9 +2671,9 @@ power, and who carries it), and the Ledger's, in **bold**. In **Where**, "—"
 means the item isn't placed with anyone in the data: the game's scripts hand it
 out (a reward, a gift or a find).
 
-**Weapons**, by material, then kind:
+**Weapons**, by material, then type:
 
-| Icon | Material | Kind | Item | Bonus / power | Where |
+| Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
 | ![](docs/items/swiftbite.png) | Bone | long sword | Swiftbite | +2 | — |
 | ![](docs/items/draketooth.png) | Bone | long sword | Draketooth | +1, strength | — |
@@ -2713,7 +2713,7 @@ out (a reward, a gift or a find).
 
 **Missile weapons and ammunition:**
 
-| Icon | Material | Kind | Item | Bonus / power | Where |
+| Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a chest |
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | — |
@@ -2824,13 +2824,13 @@ Tanelyv's Armor also has a chest piece, with no plus.
 ### Every mundane weapon
 
 Every plain weapon in a game with the new items, the game's and the Ledger's,
-by kind and material: who sells it and who carries it (by the names the game
+by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in Kel's
 caravan. The game's plain stone pick is only ever a
 [starting weapon](#weapon-specialization); Deepbiter is its magic one.
 
-| Icon | Kind | Material | Sold by | Carried by, or found in |
+| Icon | Type | Material | Sold by | Carried by, or found in |
 |---|---|---|---|---|
 | ![](docs/items/bone-long-sword.png) | long sword | bone | Jark, Weapon Merchant | Ranger, Templar, Chaero, Castle Guard, Arant's Guard, Warrior, Dagolar Guard, Caravan Guard, Guard, Lt. Kwerin, Slaver Guard, Messenger, Visitor, Renegade, Silt Runner |
 | ![](docs/items/metal-long-sword.png) | long sword | metal | Weapon Merchant | Uskuye, Elven Leader, Elite Guard, Village Hero, a chest in the warrens |
@@ -2878,7 +2878,7 @@ walking and fighting:
 
 | Worn | Shown |
 |---|---|
-| **Weapons and shields** | each kind its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
+| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
 | **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
 | **Armour** | the character's own clothing recoloured toward its material, shade for shade (leather, bone, chain, plate, scale...): the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures the artist drew mostly bare (the mul, the dwarf man) only their straps and loincloth change, so it shows little |
 | **Helms** | a circlet at the brow blended into the hair: a feather on leather, a dark stone on iron, low spikes on bone |

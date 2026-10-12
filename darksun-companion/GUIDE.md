@@ -327,14 +327,14 @@ the strictest winning:
   no spells while wearing armour (a helm counts, a shield doesn't). Bracers
   of defense aren't armour.
 - A ranger may always use a bow.
-- A human who changed class is held by its new class, but may use the kinds
-  of weapon it specialized in once its old class wakes.
+- A human who changed class is held by its new class, but may use the weapon
+  types it specialized in once its old class wakes.
 
 *Without the mod:* an item was allowed if **any** of the character's classes
 allowed it, and a preserver with another class cast in armour.
 
 Each class's section lists the magic weapons it can wield, the mod's new ones
-marked \*. A plain weapon of each kind and material is listed as "bone short
+marked \*. A plain weapon of each type and material is listed as "bone short
 sword" and the like.
 
 ### Fighter
@@ -342,13 +342,13 @@ sword" and the like.
 *d10 · STR · any race · XP for 2nd level 2,000, for 10th 500,000*
 
 **How it plays.** The steadiest front-liner: any armour, any shield, any
-weapon, the best THAC0, and it masters one kind of weapon. Choose that kind
+weapon, the best THAC0, and it masters one weapon type. Choose that type
 with care: it is the fighter's weapon for the whole game.
 
 **What the mod changes.**
 
-- [Weapon specialization](#weapon-specialization-and-attacks): one kind of
-  weapon, +1 to hit and +2 damage with 3/2 attacks a round; **mastery** at 5th
+- [Weapon specialization](#weapon-specialization-and-attacks): one weapon
+  type, +1 to hit and +2 damage with 3/2 attacks a round; **mastery** at 5th
   level (+3 and +3), **grand mastery** at 9th (the damage die a size larger and
   one more attack). Other weapons attack once a round until 7th level.
   *Without the mod:* 3/2 attacks with any weapon, no other bonus.
@@ -398,7 +398,7 @@ classes allow), a shield, leather chest, arm and leg armour.
   elf, half-elf, halfling, mul).
 - *Dual class:* with STR 15, a human fighter can become a cleric, druid,
   preserver, psionicist or thief, never a gladiator or ranger. Its weapon specs
-  sleep with the class; once awake, its specialized kinds stay usable whatever
+  sleep with the class; once awake, its specialized weapon types stay usable whatever
   the new class allows.
 
 **Magic weapons.** Every one: Dragonsbane +4, Swiftbite +2, El's Drinker +2,
@@ -422,8 +422,8 @@ single class** (a human may still change class).
 
 **What the mod changes.**
 
-- [Weapon specialization](#weapon-specialization-and-attacks) in **two** kinds
-  at 1st level, a third at 6th and a fourth at 9th: +1 to hit, +2 damage and
+- [Weapon specialization](#weapon-specialization-and-attacks) in **two** weapon
+  types at 1st level, a third at 6th and a fourth at 9th: +1 to hit, +2 damage and
   3/2 attacks with each. *Without the mod:* 3/2 attacks with any weapon.
 - AC 1 better from 5th level and 2 better at 10th, with or without armour.
 - AD&D's experience table. *Without the mod:* the fighter's.
@@ -475,14 +475,14 @@ melee, and any missile weapon.
 *d10 · WIS · elf, half-elf, half-giant, halfling, human, thri-kreen · good
 alignment · XP for 2nd level 2,250, for 10th 600,000*
 
-**How it plays.** A warrior of the wastes: the bow and one more kind of
-weapon, two weapons at no penalty, hiding and moving silently under the open
+**How it plays.** A warrior of the wastes: the bow and one more weapon
+type, two weapons at no penalty, hiding and moving silently under the open
 sky to strike from behind, and a little priest magic late on.
 
 **What the mod changes.**
 
 - [Expertise](#weapon-specialization-and-attacks) with the bow and one more
-  kind: a specialist's attacks a round. *Without the mod:* 3/2 in melee with
+  weapon type: a specialist's attacks a round. *Without the mod:* 3/2 in melee with
   any weapon.
 - [Hiding in shadows](#hiding-in-shadows) in a fight with a thief's numbers for
   its level, halved indoors; a successful hide and move silently makes its next
@@ -520,7 +520,7 @@ others.
 
 A Seeker or Justifier can't later become a cleric or druid.
 
-**Starting gear.** A plain weapon of its chosen kind, bow and arrows, leather
+**Starting gear.** A plain weapon of its chosen type, bow and arrows, leather
 chest and arm armour.
 
 **More than one class.**
@@ -661,7 +661,7 @@ their magic.
 |---|---|---|---|
 | **Arcanist** | a spell slot more at each spell level it has; in a fight, casts two preserver spells each turn instead of one | a d3 hit die | the preserver's gear |
 | **Scholar** | a spell more learnt at each level up | THAC0 1 worse | the preserver's gear |
-| **Battle Mage** | a warrior's THAC0; casts though hit earlier in the round; a d6 hit die; leather armour, cast in; expertise in one kind of weapon (3/2 attacks a round with it, 2 from 7th level) | one fewer spell slot at each spell level; nothing in the off hand | with weapon specialization, a plain weapon of its chosen kind in place of the quarterstaff |
+| **Battle Mage** | a warrior's THAC0; casts though hit earlier in the round; a d6 hit die; leather armour, cast in; expertise in one weapon type (3/2 attacks a round with it, 2 from 7th level) | one fewer spell slot at each spell level; nothing in the off hand | with weapon specialization, a plain weapon of its chosen type in place of the quarterstaff |
 
 A Battle Mage can't later become a fighter, gladiator or ranger. The
 Battle Mage chooses its weapon on the weapon pages after taking the kit.
@@ -685,7 +685,7 @@ Battle Mage chooses its weapon on the weapon pages after taking the kit.
 **Magic weapons.** Hornblade +1 (a bone long sword the game lets preservers
 use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Quarterstaff +2, Balk's
 Staff +1, Parting Staff +1, Sling +2, Sling +1, Windlash\* +1. A **Battle
-Mage** also those of its chosen kind.
+Mage** also those of its chosen weapon type.
 
 ### Cleric
 
@@ -966,22 +966,22 @@ The kits that change spell slots, by the level of the kit's class (spells of
 
 ## Weapon specialization and attacks
 
-Warriors train in kinds of weapon. Choose them on the creation panel's
+Warriors train in weapon types. Choose them on the creation panel's
 **WEAPON SPEC** pages; picks due later come in a window at the level up, a
-picture of each kind of weapon (point at one for its name; those you can't
+picture of each weapon type (point at one for its name; those you can't
 pick are greyed).
 
-![The level-up window: a picture of each kind of weapon, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the kinds this fighter/cleric can't use greyed](docs/weapon-picker.png)
+![The level-up window: a picture of each weapon type, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the types this fighter/cleric can't use greyed](docs/weapon-picker.png)
 
-| Who | Chooses | With a chosen kind |
+| Who | Chooses | With a chosen weapon type |
 |---|---|---|
-| Fighter | 1 kind | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
-| Gladiator | 2 kinds, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
-| Ranger | the bow, and 1 kind | expertise: a specialist's attacks, no other bonus |
+| Fighter | 1 weapon type | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
+| Gladiator | 2 weapon types, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
+| Ranger | the bow, and 1 weapon type | expertise: a specialist's attacks, no other bonus |
 
-The sixteen kinds: long sword, club, dagger, short sword, mace, axe, great
+The sixteen weapon types: long sword, club, dagger, short sword, mace, axe, great
 axe, pick, quarterstaff, polearm, gythka, cahulaks, chatkcha, bow, sling and
-staff sling. A warrior with another class chooses only kinds that class lets
+staff sling. A warrior with another class chooses only weapon types that class lets
 it use.
 
 **Attacks a round**, by the warrior's level (its best fighter, gladiator or
@@ -990,15 +990,15 @@ ranger level). 3/2 means one attack one round and two the next.
 | With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha, 1-6 | 7-10 |
 |---|---|---|---|---|---|---|
 | anyone who isn't a warrior | 1 | 1 | 2 | 2 | 1 | 1 |
-| a warrior, a kind it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| a chosen kind (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| a warrior, a weapon type it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
+| a chosen weapon type (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
 | a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), any weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
-| a **Battle Mage** (by its preserver level), its chosen kind | 3/2 | 2 | | | | |
+| a **Battle Mage** (by its preserver level), its chosen weapon type | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
 For the three kits the level is their own class's. A Battle Mage's chosen
-kind is a melee weapon. With [two weapons](#two-weapons), the off hand attacks once a round
+weapon type is a melee weapon. With [two weapons](#two-weapons), the off hand attacks once a round
 whatever the rate.
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
@@ -1408,7 +1408,7 @@ some costs.
 
 **Weapons.** Most are wood, bone, stone or obsidian; plain ones of those hit
 worse than metal ([hitting](#hitting)), and can break (1 chance in 160 after a
-hit; not clubs or quarterstaffs). Weapons of every kind come in several
+hit; not clubs or quarterstaffs). Weapons of every type come in several
 materials, the short sword among them.
 
 | Weapon | Damage | Can backstab |
@@ -1471,7 +1471,7 @@ magic weapons are also marked \* in each class's list.
 | Thieves' Tools | [picking pockets](#thieves-skills-and-picking-pockets); every thief starts with a set |
 
 New characters with weapon specialization start with a plain weapon of their
-chosen kind, often one of these.
+chosen type, often one of these.
 
 **Magic weapons:**
 

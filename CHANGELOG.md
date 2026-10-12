@@ -8,6 +8,14 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #41 (in progress)
+
+**Documentation**
+- **"Weapon type" throughout,** where the pages said "kind of weapon" or
+  "weapon kind": fighters specialize in one weapon type, gladiators in two,
+  the level-up window has a picture of each weapon type, and the item tables'
+  Kind column is Type.
+
 ## Pull request #40 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/40))
 
 **Documentation**
@@ -46,8 +54,8 @@ have the detail.
   with CON 18 got 12 hit points from CON, now 38.
 - **The level-up weapon window shows the weapons.** Picking a weapon spec at a
   level up (or on becoming a warrior by DUAL), the window is bigger and has a
-  slot with each kind's inventory picture, six to a row, in place of the
-  names; kinds the character can't pick are greyed. Pointing at a slot names
+  slot with each weapon type's inventory picture, six to a row, in place of the
+  names; types the character can't pick are greyed. Pointing at a slot names
   it under them (SPECIALIZE IN / DAGGER, or EXPERT IN for a ranger or a
   Battle Mage, whose picks are expertise), as CHOOSE A SPELL names a spell.
 - **View Character: the saves labelled, MOVE added.** The five saves under
@@ -284,8 +292,8 @@ have the detail.
   preserver (no shield); a Brute no psionicist or air cleric (no two-handed
   melee weapon).
 - **Weapon specs are weapons learnt for good,** while the class or kit that
-  gave them is awake: no kit forbids a kind the character specialized in (but
-  for the off hand's rules). A dual-classed human's chosen kinds sleep with
+  gave them is awake: no kit forbids a weapon type the character specialized in (but
+  for the off hand's rules). A dual-classed human's chosen weapon types sleep with
   their class, as before, and come back when it wakes.
 - **A human who becomes a preserver picks its two spells** on the game's
   CHOOSE A SPELL window (1st level only), not Grease and Magic Missile (INT
@@ -294,7 +302,7 @@ have the detail.
   asks for the new class's kit (**KIT: NONE**, then its kits; one barred by
   the character's other classes or kits left off), and a new Elementalist's
   second sphere; with weapon specialization a new fighter, gladiator, ranger
-  or Battle Mage then picks the weapon kinds it is due, as at a level up. Up
+  or Battle Mage then picks the weapon types it is due, as at a level up. Up
   to three kits, one for each class, each asleep with its class. A human
   who becomes a preserver and takes the Scholar kit picks three spells, not
   two. Kits that can't go together (Arena Champion or Sentinel with Shinobi;
@@ -410,7 +418,7 @@ have the detail.
 **Documentation**
 - **The guide's kits** each have a short description of who takes them on
   Athas, above each class's kit table.
-- **The guide's Battle Mage** now says its chosen kind of weapon gives 3/2
+- **The guide's Battle Mage** now says its chosen weapon type gives 3/2
   attacks a round, 2 from 7th level.
 - **Kits:** DEVELOPMENT.md has how they are built: room in the helper, the
   sheet byte for the kit, the creation page, and each effect's hook.
@@ -520,7 +528,7 @@ have the detail.
   content); Suggested system requirements under Requirements, linked from Game
   speed; Picking pockets moved to Thieves; weapon specialization tidied
   (repeated notes gone, one table heading for every warrior, "weapon spec" for
-  the kinds throughout, as the creation pages call them, and every ranger's bow
+  the weapon types throughout, as the creation pages call them, and every ranger's bow
   expertise said first).
 - The two Two weapons sections are one; the Effects screen's click (a spell
   left on) has a section under Controls, where its box is.
@@ -540,7 +548,7 @@ have the detail.
 
 **Changed**
 - **No bow to choose for a ranger** at creation (nor in the catch-up pick at
-  a level gained, for a ranger with no kind yet): every ranger has expertise
+  a level gained, for a ranger with no weapon type yet): every ranger has expertise
   with the bow already.
 
 **Documentation**
@@ -558,11 +566,11 @@ have the detail.
   Before, missiles kept the game's rate. The Characters tab shows each missile
   weapon's rate.
 - **Rangers and the bow:** every ranger has expertise with the bow on top of
-  the kind it chooses, and a ranger's expertise with a missile weapon now
+  the weapon type it chooses, and a ranger's expertise with a missile weapon now
   gives the same rate of fire, with no other bonus.
 
 **Documentation**
-- **Attacks a round:** a table in the guide by skill (non-warriors, a kind not
+- **Attacks a round:** a table in the guide by skill (non-warriors, a weapon type not
   chosen, expertise, specialized, mastery, grand mastery) and level, for
   melee, bows and the other missile weapons.
 
@@ -601,7 +609,7 @@ have the detail.
 - **[Every magic item](darksun-companion/README.md#every-magic-item)** and
   **[Every mundane weapon](darksun-companion/README.md#every-mundane-weapon):**
   each item, the game's and the Ledger's, with its bonus or power and who
-  sells or carries it; the magic weapons of each kind for weapon
+  sells or carries it; the magic weapons of each weapon type for weapon
   specialization.
 - **Mundane items** in a table of their own in New items, and the Ledger's
   weapons in the acid saving throw table.
@@ -758,7 +766,7 @@ have the detail.
   default): AC 6 on Mikquetzl, AC 5 on Wyrmias, AC 4 on Balkazar and AC 2 on
   Dagolar, 20,000 to 40,000; worn on the arms, nothing while armour is worn on the arms, legs or
   chest, and not armour to the class rules (a preserver casts in them).
-- **Magic weapons of the kinds the game has none of:** a Club +1 on Churrr
+- **Magic weapons of the weapon types the game has none of:** a Club +1 on Churrr
   in the warrens, a stone Pick +1 on one of the Undermountain folk, a Staff
   Sling +1 sold by the Bowyer and a metal Short Sword +2 on an Elite Guard,
   each with an icon of its own and priced as the game prices its own: the
@@ -769,14 +777,14 @@ have the detail.
   and a Castle Guard; an earth cleric may now take the great axe and the
   polearm, and starts with a metal one.
 - **Weapon specialization** (a new rule change, on by default): fighters and
-  gladiators specialize in kinds of weapon (+1 to hit, +2 damage), fighters
+  gladiators specialize in weapon types (+1 to hit, +2 damage), fighters
   on to mastery at 5th level (+3, +3) and grand mastery at 9th (the damage
   die a size larger and an attack more), rangers take expertise; a warrior
-  with a weapon of another kind attacks at AD&D's plain rate. Sixteen kinds,
+  with a weapon of another type attacks at AD&D's plain rate. Sixteen weapon types,
   chosen on the creation screen's new **WEAPON SPEC** pages (greyed as the
-  game's disciplines are, a multiclass warrior's limited to the kinds it may
+  game's disciplines are, a multiclass warrior's limited to the weapon types it may
   use some weapon of, in any material: a fire cleric's obsidian long sword),
-  a new warrior starting with a plain weapon of its kind in a material it may
+  a new warrior starting with a plain weapon of its type in a material it may
   use (new bone short swords and axes, obsidian ones for fire and earth
   clerics, as the game has only Kurzak's short sword and a metal axe; an
   obsidian mace pictured without Blackmace's glow; a plain great axe pictured
@@ -784,8 +792,8 @@ have the detail.
   the starting shield in the backpack); a
   gladiator's 3rd and 4th (and any warrior's from before the rule) picked at
   a level gained, in the game's own pop-up for a psionicist's new power; the
-  kinds listed on the **Effects** screen and counted on the DAM lines and in
-  the dice log. The Characters tab lists each character's kinds
+  weapon types listed on the **Effects** screen and counted on the DAM lines and in
+  the dice log. The Characters tab lists each character's weapon types
   (`Weapons: long sword (grand mastery)`) and gives the attacks a round with
   each weapon held (`Attacks: 3/2 a round with Long Sword, 1 with Axe`).
 - **Class restrictions** (a new rule change, on by default): psionicists,
