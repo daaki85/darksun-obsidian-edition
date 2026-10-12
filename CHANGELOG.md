@@ -8,7 +8,7 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
-## Pull request #39 (in progress)
+## Pull request #39 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/39))
 
 **Added**
 - **Two new wizard spells, and Cat's Grace is a spell of its own.** Erdlu
