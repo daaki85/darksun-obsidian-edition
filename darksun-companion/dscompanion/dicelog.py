@@ -2144,9 +2144,9 @@ class DiceLog:
             gained *= 2
             text += f", doubled for a half-giant = {gained}"
         classes = game.class_share(sheet)
-        if self.game.rules & game.RULE_MULTI_HP and classes > 1:
-            share = game.multiclass_gain(sheet, gained) // classes
-            text += f", / {classes} classes = {share}" + (" (at least 1)" if gained < classes else "")
+        if self.game.rules & game.RULE_MULTI_HP and classes > 1:  # (DSCLOG's CON_SHARE)
+            per = self.game.con_per_die(sheet, con)
+            text += f", {signed(per)} CON {con}, into the total shared by {classes} classes"
         cls_name = game.CLASS_NAMES.get(cls, f"class {cls}")
         return [f"{self.game.creature_name(member)}'s {game.ordinal(level)} {cls_name} level: hit points {text}"]
 
@@ -2307,28 +2307,31 @@ class DiceLog:
         steps += f" = {rolled}"
         classes = game.class_share(sheet)
         multi = bool(g.rules & game.RULE_MULTI_HP) and classes > 1
-        hp = rolled // classes
-        if multi:  # (RULE_MULTI_HP: each level's share, at least 1)
-            hp = sum(game.multiclass_gain(sheet, r[2]) for r in rolls) // classes
-            steps += f", each / {classes} classes (at least 1) = {hp}"
-        elif classes > 1:
-            steps += f", / {classes} classes = {hp}" + (" (rounded down)" if rolled % classes else "")
-        # CON's bonus counts levels that roll dice: a warrior's (group 1) at the full bonus, and
-        # the rest of the highest class's up to +2
         con = self._creation_con if self._creation_con is not None \
             else g.creature(index)[CREATURE_ABILITIES + 2]
-        bonus_per_level = g.level_hp_con_bonus(con)
         levels = {}
         for _, cls, _, _, _ in rolls:
             levels[cls] = levels.get(cls, 0) + 1
-        warrior = max((n for c, n in levels.items() if g.level_hp_group(c) == 1), default=0)
-        highest = max(levels.values())
-        bonus = bonus_per_level * warrior + min(bonus_per_level, 2) * (highest - warrior)
-        if multi:
-            bonus = game.con_share(sheet, bonus)
-        if bonus:
-            hp += bonus
-            steps += f", {signed(bonus)} CON {con}" + (" shared" if multi else "") + f" = {hp}"
+        if multi:  # (RULE_MULTI_HP, DSCLOG's CON_SHARE: CON's bonus on each die, then the total shared)
+            per = g.con_per_die(sheet, con)
+            total = rolled + per * len(rolls)
+            hp = int(total / classes)
+            if per:
+                steps += f", {signed(per)} CON {con} on each of {len(rolls)} dice = {total}"
+            steps += f", / {classes} classes = {hp}" + (" (rounded down)" if total % classes else "")
+        else:
+            hp = rolled // classes
+            if classes > 1:
+                steps += f", / {classes} classes = {hp}" + (" (rounded down)" if rolled % classes else "")
+            # CON's bonus counts levels that roll dice: a warrior's (group 1) at the full bonus, and
+            # the rest of the highest class's up to +2
+            bonus_per_level = g.level_hp_con_bonus(con)
+            warrior = max((n for c, n in levels.items() if g.level_hp_group(c) == game.WARRIOR_GROUP), default=0)
+            highest = max(levels.values())
+            bonus = bonus_per_level * warrior + min(bonus_per_level, 2) * (highest - warrior)
+            if bonus:
+                hp += bonus
+                steps += f", {signed(bonus)} CON {con} = {hp}"
         least = sum(levels.values())
         if hp < least:
             hp = least

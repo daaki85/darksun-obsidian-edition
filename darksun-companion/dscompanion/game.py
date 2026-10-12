@@ -278,6 +278,8 @@ SHEET_ATTACKS = 0x2A  # the game's attacks a round, in halves (2: 1, 3: 3/2)
 SHEET_XP, SHEET_XP_VALUE, SHEET_MAX_HP = 0x00, 0x04, 0x08  # a monster's sheet holds its XP value at +4
 SHEET_RACE, SHEET_ABILITIES = 0x18, 0x1B
 SHEET_CLASSES, SHEET_LEVELS, SHEET_BASE_AC = 0x21, 0x24, 0x27
+SHEET_HP_BASE = 0x0A  # the hit points rolled (the game divides them by the classes for the most)
+SHEET_LEVELS_BEFORE = 0x3F  # the levels before any were lost (the game scales SHEET_HP_BASE by them)
 # sheet +0x12: a word of flags, one bit per class the character has (druid 0x10, fighter
 # 0x20, gladiator 0x40, preserver 0x80, psionicist 0x100, ranger 0x200, thief 0x400)
 SHEET_FLAGS = 0x12
@@ -288,6 +290,7 @@ RACE_HALF_GIANT = 5
 # least a roll counts for
 LEVEL_HP_SEG = 0x40B1
 LEVEL_HP_CON_BONUS = 0x52  # +52h + CON: hit points per level (a warrior's; others get at most +2)
+WARRIOR_GROUP = 1  # (the hit point group of the warrior classes)
 # Character creation. DS:119Ch is a far pointer to the character being made, a sheet whose
 # classes (+21h) are numbered as in the creation screen's list (CREATION_CLASS_NAMES).
 CREATION_SHEET_PTR = 0x119C
@@ -543,17 +546,28 @@ def class_share(sheet: bytes) -> int:
     return max(sum(1 for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c), 1)
 
 
-def multiclass_gain(sheet: bytes, gain: int) -> int:
-    """With RULE_MULTI_HP (DSCLOG's PROBE_MC_ROLL), what a new level's hit point gain adds to the
-    sheet's base: its share (dropping fractions, at least 1) times the classes, as the game
-    divides the base by them."""
+def con_share(sheet: bytes, bonus: int, groups: Dict[int, int], last_die: Dict[int, int]) -> Optional[int]:
+    """With RULE_MULTI_HP (DSCLOG's CON_SHARE), the hit points CON adds to the most of a character of
+    more than one class, as Demihuman Deities (TSR 1998) has them: each hit die so far with CON's
+    bonus on it, in the total the game keeps (the sheet's +0Ah: the dice), the total divided by the
+    classes. BONUS is a warrior's (LEVEL_HP_CON_BONUS for CON), on every die if a class is a
+    warrior's (group 1), else at most +2; GROUPS each class's hit point group, LAST_DIE each group's
+    last level that rolls a die. That is (total + bonus x dice) / classes less total / classes,
+    the total as the game scales it for lost levels. One class: None (the game's own)."""
     n = class_share(sheet)
-    return gain if n == 1 else max(int(gain / n), 1) * n
-
-
-def con_share(sheet: bytes, bonus: int) -> int:
-    """With RULE_MULTI_HP (PROBE_MC_CON), CON's hit point bonus shared between the classes."""
-    return int(bonus / class_share(sheet))
+    if n == 1:
+        return None
+    levels = sum(sheet[SHEET_LEVELS:SHEET_LEVELS + 3])
+    before = sum(sheet[SHEET_LEVELS_BEFORE:SHEET_LEVELS_BEFORE + 3])
+    total = struct.unpack_from("<h", sheet, SHEET_HP_BASE)[0]
+    if before:
+        total = int(total * levels / before)
+    classes = [(c, sheet[SHEET_LEVELS + i]) for i, c in enumerate(sheet[SHEET_CLASSES:SHEET_CLASSES + 3])
+               if 0 < c < 32 and groups.get(c) is not None]
+    dice = sum(min(level, last_die.get(groups[c], level)) for c, level in classes)
+    if not any(groups[c] == WARRIOR_GROUP for c, _ in classes):
+        bonus = min(bonus, 2)
+    return int((total + bonus * dice) / n) - int(total / n)
 
 
 class LevelHp(NamedTuple):
@@ -1734,6 +1748,19 @@ class GameData:
         """Hit points a warrior gains per level for a CON score (others get at most +2)."""
         base = (self.load_seg + LEVEL_HP_SEG) * 16 + LEVEL_HP_CON_BONUS
         return struct.unpack("b", self.guest.read(base + min(max(con, 0), 25), 1))[0]
+
+    def con_per_die(self, sheet: bytes, con: int) -> int:
+        """With RULE_MULTI_HP, CON's bonus on each hit die of a character of more than one class:
+        a warrior's (LEVEL_HP_CON_BONUS) if any class is a warrior's, else at most +2."""
+        bonus = self.level_hp_con_bonus(con)
+        warrior = any(self.level_hp_group(c) == WARRIOR_GROUP for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c)
+        return bonus if warrior else min(bonus, 2)
+
+    def multiclass_con(self, sheet: bytes, con: int) -> Optional[int]:
+        """con_share for SHEET and CON, from the game's hit point table (None: one class)."""
+        groups = {c: self.level_hp_group(c) for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c}
+        last_die = {g: self.level_hp_rule(c).dice_levels for c, g in groups.items() if g is not None}
+        return con_share(sheet, self.level_hp_con_bonus(con), groups, last_die)
 
     def sheet_at(self, index: int) -> bytes:
         """Character sheet number `index`."""

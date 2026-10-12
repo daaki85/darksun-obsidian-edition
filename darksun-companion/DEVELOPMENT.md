@@ -425,10 +425,23 @@ for the off hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
 
 ([In the README](README.md#multiclass-hit-points).)
 
-How: the helper divides the die where the game adds a level's hit points to
-the sheet's total (`INT CBh`), and shares CON's bonus where the game adds it
-to the maximum (`INT CAh`, and `INT C9h` where it takes it off again to work
-back to the total when CON changes).
+The game's most hit points (874B0h): the sheet's total of rolled dice (`+0Ah`,
+each new level's die added at 8735Eh), scaled by the levels now over the
+levels before any were lost (`+24h`, `+3Fh`), divided by the number of
+classes, plus CON's bonus (8757Ch: the warrior levels, capped at the last
+that rolls a die, at the full bonus, the highest class's other capped levels
+at up to +2). When CON changes it works back to the total (877BEh: the most
+less CON's bonus, times the classes).
+
+How: where the game adds CON's bonus (`INT CAh`, 87523h) and takes it off again
+(`INT C9h`, 877DAh), the helper (`CON_SHARE`) puts in Demihuman Deities' for a
+character of more than one class: (total + bonus × dice) / classes less
+total / classes, the dice each class's levels up to its group's last that
+rolls one (the game's table, `+group × 4 + 1`), the bonus the table's
+warrior bonus (`+52h` + CON) if a class is in the warrior group, else at most
++2. One class, a human, or the rule off: the game's own. (An earlier version
+also divided each die on its own at 8735Eh; the game's running total is the
+book's, so that probe is gone.)
 
 ### Hit dice: the better of two
 

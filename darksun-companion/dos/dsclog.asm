@@ -79,7 +79,6 @@ VEC_DAM_LINE equ 0xCF      ; PROBE_DAM_LINE
 VEC_VIEW_DAM equ 0xCE      ; PROBE_VIEW_DAM
 VEC_CAN_USE equ 0xCD       ; PROBE_CAN_USE
 VEC_NO_CAST equ 0xCC       ; PROBE_NO_CAST
-VEC_MC_ROLL equ 0xCB       ; PROBE_MC_ROLL
 VEC_MC_CON equ 0xCA        ; PROBE_MC_CON
 VEC_MC_UNCON equ 0xC9      ; PROBE_MC_UNCON
 VEC_WP_DISC_WIN equ 0xC8   ; PROBE_WP_DISC_WIN
@@ -10009,8 +10008,6 @@ probe_hd_con:
 ; the warrior's full bonus, the rest's up to +2, undivided. With the rule, of a character of more
 ; than one class (not a human) each level's die counts its share, at least 1 (the base gains
 ; that times the classes, which the game divides again), and CON's bonus is shared out too.
-; PROBE_MC_ROLL: INT VEC_MC_ROLL replaces "add es:[bx+0Ah],cx" (4 bytes: INT + 2 NOPs; DSUN.EXE
-; 8735Eh) where a new level's hit points go into the base: ES:BX the sheet, CX the gain.
 ; PROBE_HIT_DIE: INT VEC_HIT_DIE replaces "mov al,es:[bx+0]" (5 bytes: INT + 3 NOPs; DSUN.EXE 87308h)
 ; where a new level's hit die is taken from its class's hit point group (ES:BX; the routine's
 ; [BP-4] the sheet, far), at a level up and at creation: AL that, a Battle Mage's a d6 (a
@@ -10196,27 +10193,6 @@ probe_cr_psp:
 ; get CON's bonus: AX the bonus, SI the sheet's number.
 ; PROBE_MC_UNCON: INT VEC_MC_UNCON replaces "sub dx,ax" (2 bytes; 877DAh) where the game takes
 ; CON's bonus off the hit points to work back to the base (when CON changes): AX, SI as above.
-probe_mc_roll:
-        test word [cs:rules], RULE_MULTI_HP
-        jz .add
-        push ax
-        push dx
-        call class_share        ; AX the classes sharing, 1 for none
-        cmp ax, 1
-        jbe .out
-        xchg ax, cx             ; CX the classes, AX the gain
-        cwd
-        idiv cx
-        cmp ax, 1
-        jge .share
-        mov ax, 1
-.share: imul cx                 ; (the classes' times the share: the game divides it back)
-        mov cx, ax
-.out:   pop dx
-        pop ax
-.add:   add [es:bx + 0x0A], cx
-        iret
-
 ; PROBE_HP_BEST: INT VEC_HP_BEST replaces "mov cx,ax" (2 bytes; DSUN.EXE 87319h) after the game's
 ; roll of a level's hit die (at creation too), AX the roll. With RULE_HP_BEST the game rolls it
 ; twice and keeps the better: the first time the roll is kept and the INT returns to the start of
@@ -10375,31 +10351,120 @@ probe_mc_uncon:
         sub dx, ax
         iret
 
-; CON_SHARE: AX (CON's hit point bonus) divided by the classes of sheet SI (dropping fractions)
-; with RULE_MULTI_HP. Other registers kept.
+; CON_SHARE: with RULE_MULTI_HP, for a character of more than one class (CLASS_SHARE; SI the sheet's
+; number), CON's hit points as Demihuman Deities (TSR 1998) has a multiclassed character's: each hit
+; die so far with CON's bonus on it, all in the total the game keeps (the sheet's +0Ah, which the
+; game already adds each new die to and divides by the classes), the total divided by the classes.
+; The bonus is a warrior's (LEVEL_HP_CON + CON) on every die if any class is a warrior's, else at
+; most +2; the dice, each class's levels up to its group's last that rolls one. AX (the game's own
+; CON hit points, by its highest class's levels) becomes (total + bonus x dice) / classes less
+; total / classes, the total as the game scales it for lost levels (87500h). Others kept.
+LEVEL_HP_FROM_DS equ 0x4356 - 0x40B1    ; the game's hit point table: +group x 4 (die, its last
+LEVEL_HP_CON equ 0x52                   ;   level, then a fixed gain), +10h + class: its group
+WARRIOR_GROUP equ 1
 con_share:
         test word [cs:rules], RULE_MULTI_HP
         jz .ret
         push bx
         push cx
         push dx
+        push si
+        push di
+        push bp
         push es
-        push ax
+        push fs
+        push ax                 ; (the game's: one class keeps it)
+        les bx, [0x1665]
+        imul ax, si, 0x3A
+        add bx, ax
+        mov al, [es:bx + 0x24]  ; CON
+        mov [cs:mc_con], al
         les bx, [0x1661]
         imul ax, si, 0x47
         add bx, ax
         call class_share
-        mov cx, ax
-        pop ax
-        cmp cx, 1
-        jbe .out
+        cmp ax, 1
+        jbe .game
+        mov bp, ax              ; BP the classes
+        mov si, bx              ; ES:SI the sheet
+        mov ax, ds
+        sub ax, LEVEL_HP_FROM_DS
+        mov fs, ax
+        xor cx, cx              ; (the levels, and before any were lost)
+        xor di, di
+        xor bx, bx
+.sum:   movzx ax, byte [es:si + bx + 0x24]
+        add cx, ax
+        movzx ax, byte [es:si + bx + 0x3F]
+        add di, ax
+        inc bx
+        cmp bx, 3
+        jb .sum
+        mov ax, [es:si + 0x0A]
+        or di, di
+        jz .total
+        imul cx
+        idiv di
+.total: mov [cs:mc_total], ax
+        xor cx, cx              ; CX the dice, DL 1 for a warrior's class
+        xor dx, dx
+        xor di, di
+.class: movzx bx, byte [es:si + 0x21]
+        or bx, bx
+        jz .next
+        cmp bx, 32
+        jae .next
+        movzx bx, byte [fs:bx + 0x10]
+        cmp bx, 4
+        jae .next
+        cmp bx, WARRIOR_GROUP
+        jne .dice
+        mov dl, 1
+.dice:  shl bx, 2
+        mov al, [fs:bx + 1]
+        cmp al, [es:si + 0x24]
+        jbe .count
+        mov al, [es:si + 0x24]
+.count: movzx ax, al
+        add cx, ax
+.next:  inc si                  ; (the next class)
+        inc di
+        cmp di, 3
+        jb .class
+        movzx bx, byte [cs:mc_con]
+        cmp bx, 25
+        jbe .con
+        mov bx, 25
+.con:   movsx ax, byte [fs:bx + LEVEL_HP_CON]
+        or dl, dl
+        jnz .bonus
+        cmp ax, 2
+        jle .bonus
+        mov ax, 2
+.bonus: imul cx                 ; (the bonus on every die)
+        add ax, [cs:mc_total]
         cwd
-        idiv cx
-.out:   pop es
+        idiv bp
+        mov cx, ax
+        mov ax, [cs:mc_total]
+        cwd
+        idiv bp
+        sub cx, ax
+        mov ax, cx
+        add sp, 2
+        jmp .out
+.game:  pop ax
+.out:   pop fs
+        pop es
+        pop bp
+        pop di
+        pop si
         pop dx
         pop cx
         pop bx
 .ret:   ret
+mc_total dw 0
+mc_con   db 0
 
 ; CLASS_SHARE: AX the number of classes of the sheet at ES:BX, 1 for a human's. Others kept.
 class_share:
@@ -14185,9 +14250,6 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_NO_CAST
         mov dx, probe_no_cast
         int 21h
-        mov ax, 2500h + VEC_MC_ROLL
-        mov dx, probe_mc_roll
-        int 21h
         mov ax, 2500h + VEC_MC_CON
         mov dx, probe_mc_con
         int 21h
@@ -14420,7 +14482,7 @@ install:                        ; DS = ES = PSP, CS = the image
 msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
 psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
-all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_PICK, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_ROLL, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
+all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_PICK, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
             db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX
 all_vectors_end:

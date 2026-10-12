@@ -345,8 +345,8 @@ class Viewer:
                 ("class_restrictions", "Class restrictions on armour, shields and weapons, the strictest class "
                                        "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
                                        "spheres); a multiclass preserver casts no spells in armour"),
-                ("multiclass_hp", "Multiclass hit points as in AD&D: each level's die and CON's bonus shared "
-                                  "between the classes"),
+                ("multiclass_hp", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
+                                  "a class is a warrior), the total shared between the classes"),
                 ("ranger_casting_level", "Rangers' spells last and do damage as cast at the ranger level less 7, "
                                          "as the spell levels they may cast count it (the game takes the whole "
                                          "level)"),

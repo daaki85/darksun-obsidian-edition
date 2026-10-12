@@ -1433,17 +1433,18 @@ class CreationTests(unittest.TestCase):
                           "(rounded down), +5 CON 17 = 14)"])
 
     def test_hit_points_shared(self):
-        """RULE_MULTI_HP: each level's die shared between the classes, at least 1, and CON's bonus too."""
+        """RULE_MULTI_HP: as Demihuman Deities, CON's bonus (a warrior's, the character having a warrior
+        class) on each die, the total shared between the classes."""
         log = make_creation()
         log.set_rules(game.RULE_MULTI_HP)
         for cls, sides, level, face in ((9, 10, 1, 10), (9, 10, 2, 5), (17, 6, 1, 1), (17, 6, 2, 6)):
             e = entry(raw_for(face, sides), dicelog.DICE_SITE, words(0, 0, 1, sides),
                       words(dicelog.CREATION_HP_CALLER, 0x54FA, 1, cls, level), parent_code=dicelog.LEVEL_HP_RETURN)
             self.assertEqual(log.describe(e), [])
-        # 5 + 2 + 1 (the 1 at least) + 3 = 11, and CON 17's +6 / 2
+        # (22 + CON 17's +3 on each of the 4 dice) / 2
         self.assertEqual(log.creation_hp_lines(),
-                         ["Character creation, hit points 14: Fighter d10 per level: 10 + 5; Thief d6 per level: "
-                          "1 + 6 = 22, each / 2 classes (at least 1) = 11, +3 CON 17 shared = 14"])
+                         ["Character creation, hit points 17: Fighter d10 per level: 10 + 5; Thief d6 per level: "
+                          "1 + 6 = 22, +3 CON 17 on each of 4 dice = 34, / 2 classes = 17"])
 
     def test_hit_points_best_of_two(self):
         """RULE_HP_BEST: each level's die rolled twice, the better kept."""

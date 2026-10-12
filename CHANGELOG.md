@@ -23,6 +23,13 @@ have the detail.
   (was 96), so the helper still fits in upper memory.
 
 **Changed**
+- **Multiclass hit points follow Demihuman Deities (TSR 1998).** CON's bonus
+  goes on every hit die (a warrior's +3, +4... on every die if one of the
+  classes is a fighter, gladiator or ranger, else at most +2) and the running
+  total is divided by the classes. The rule used to divide each die on its own
+  and then divide CON's bonus, which the game counts only once a level of the
+  highest class, by the classes again: a fighter 9 / preserver 10 / thief 10
+  with CON 18 got 12 hit points from CON, now 38.
 - **The level-up weapon window shows the weapons.** Picking a weapon spec at a
   level up (or on becoming a warrior by DUAL), the window is bigger and has a
   slot with each kind's inventory picture, six to a row, in place of the

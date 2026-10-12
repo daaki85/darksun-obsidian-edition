@@ -55,7 +55,7 @@ VEC_DAM_LINE = 0xCF
 VEC_VIEW_DAM = 0xCE
 VEC_CAN_USE = 0xCD
 VEC_NO_CAST = 0xCC
-VEC_MC_ROLL, VEC_MC_CON, VEC_MC_UNCON = 0xCB, 0xCA, 0xC9
+VEC_MC_CON, VEC_MC_UNCON = 0xCA, 0xC9
 VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN = 0xC8, 0xC7, 0xC6, 0xC5, 0xC4
 VEC_WP_CLASS = 0xC3
 VEC_LV_PICK = 0xC2
@@ -389,7 +389,6 @@ PATCHES = (
     Patch("view_dam", 0x64EB6, bytes.fromhex("8956f2"), _interrupt(VEC_VIEW_DAM, 3)),
     Patch("can_use", 0x6EF34, bytes.fromhex("26234712"), _interrupt(VEC_CAN_USE, 4)),
     Patch("no_cast", 0x89B84, bytes.fromhex("83c404"), _interrupt(VEC_NO_CAST, 3)),
-    Patch("mc_roll", 0x8735E, bytes.fromhex("26014f0a"), _interrupt(VEC_MC_ROLL, 4)),
     Patch("mc_con", 0x87523, bytes.fromhex("03f8"), _interrupt(VEC_MC_CON, 2)),
     Patch("mc_uncon", 0x877DA, bytes.fromhex("2bd0"), _interrupt(VEC_MC_UNCON, 2)),
     # the creation panel's weapon pages (weaponpages.py)

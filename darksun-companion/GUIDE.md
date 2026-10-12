@@ -271,9 +271,11 @@ classes a human could change to ([kits](#kits)).
 - **CON's bonus** comes with every level: for a fighter, gladiator or ranger
   +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
   24-25 (−1 at 4-6); for anyone else at most +2.
-- **A character of several classes** gets each class's die divided by the
-  number of classes (at least 1), and CON's bonus divided too. *Without the
-  mod:* the dice are added and the total divided, and CON's bonus is whole.
+- **A character of several classes** adds CON's bonus to every die (the
+  fighter's bonus on every die if one of its classes is a warrior), and the
+  total is divided by the number of classes. *Without the mod:* the dice are
+  added and the total divided, and CON's bonus counts once a level of the
+  highest class.
 - Three [kits](#kits) have a die of their own.
 - At 0 hit points a character is Out Cold; at −10, dead.
 
