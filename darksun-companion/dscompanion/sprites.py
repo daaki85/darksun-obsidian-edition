@@ -31,7 +31,7 @@ pictures.
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import art, game, halfelf, spritegear as sg, spriteparts as sp
+from . import art, figures, game, halfelf, spritegear as sg, spriteparts as sp
 from .game import GameData
 
 SPRITE_BASE = 2450  # (pairs: object 300's walking picture 2450, its combat one 2451, ...)
@@ -110,6 +110,7 @@ class Pictures:
     def __init__(self, chunks):
         self.chunks = chunks
         self.frames: Dict[int, List[sg.Rows]] = {}
+        self.made: Dict[Tuple[int, bool], Optional[Tuple[int, List[sg.Rows], List[Optional[sp.Parts]]]]] = {}
 
     def model(self, obj: int) -> Optional[int]:
         rec = self.chunks.get(("OJFF", obj))
@@ -124,21 +125,57 @@ class Pictures:
 
     def spare_capacity(self, combat: bool) -> int:
         """A spare picture's size: room for any model's."""
-        return max(capacity(self.own(m + combat), combat) for m in sp.MODELS if ("BMP ", m + combat) in self.chunks)
+        frames = [self.own(m + combat) for m in sp.MODELS if ("BMP ", m + combat) in self.chunks]
+        for figure in (halfelf.MAN, halfelf.WOMAN):  # (their own figures)
+            model = self.model(figure)
+            if model is not None and ("BMP ", model + combat) in self.chunks:
+                frames.append(self.base(model, figure, combat)[1])
+        return max(capacity(f, combat) for f in frames)
+
+    def base(self, model: int, figure: int, combat: bool) -> Tuple[int, List[sg.Rows], List[Optional[sp.Parts]]]:
+        """What FIGURE's walking (or COMBAT) pictures are made from: (the model, its frames, each
+        frame's parts if they can't be read from it): the game's own (MODEL's), or a half-elf's
+        own figure (figures.py), where the file has the pictures it is made from."""
+        key = (figure, combat)
+        if key not in self.made:
+            self.made[key] = None
+            made = figures.HalfElfMan if figure == halfelf.MAN else figures.HalfElfWoman if figure == halfelf.WOMAN else None
+            source = figures.ELF_MAN if figure == halfelf.MAN else figures.HUMAN_WOMAN
+            if made is not None and all(("BMP ", source + c) in self.chunks for c in (0, 1)) and sg._LIGHT:
+                try:
+                    maker = made(self.own(source), self.own(source + 1))
+                    frames = maker.frames(combat)
+                    parts = []
+                    for f, rows in enumerate(self.own(source + combat)):
+                        p = sp.parts(rows, source, f, combat)
+                        parts.append(figures.moved(p, maker.cuts.get((combat, f)), frames[f]))
+                    self.made[key] = (source, frames, parts)
+                except (ValueError, IndexError, KeyError, TypeError, ZeroDivisionError, struct.error):
+                    self.made[key] = None  # (the game's own, in the half-elf's colours: halfelf.py)
+        if self.made[key] is not None:
+            return self.made[key]
+        frames = self.own(model + combat)
+        return model, frames, [None] * len(frames)
 
     def build(self, obj: int, combat: bool, gear: Dict[str, Tuple[int, ...]], armour: Tuple[int, ...],
               model: Optional[int] = None, figure: Optional[int] = None) -> bytes:
         """The object's walking (or COMBAT) picture in this outfit (a spare (SPARES): MODEL's, in
-        FIGURE's colours: a half-elf's are their own, halfelf.py)."""
+        FIGURE's looks: a half-elf's are their own, figures.py and halfelf.py; an elf has pointed
+        ears)."""
         model = self.model(obj) if model is None else model
         figure = obj if figure is None else figure
-        frames = self.own(model + combat)
+        model, frames, parts = self.base(model, figure, combat)
+        own = self.made.get((figure, combat)) is not None  # (a half-elf's own figure)
         cloaks = self.own(sg.CLOAK_MODEL + combat)
         out = []
         for f, rows in enumerate(frames):
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
-            dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template)
-            out.append(trimmed(halfelf.over(dressed, rows, figure, PAD), combat))
+            dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, parts[f])
+            if not own:
+                dressed = halfelf.over(dressed, rows, figure, PAD)
+            if model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):
+                dressed = figures.ears_over(dressed, rows, model, f, combat, PAD)
+            out.append(trimmed(dressed, combat))
         return encode_frames(out)
 
     def room(self, obj: int, combat: bool) -> int:
@@ -146,7 +183,12 @@ class Pictures:
         if obj in SPARES:
             return self.spare_capacity(combat)
         model = self.model(obj)
-        return capacity(self.own(model + combat), combat) if model is not None else 0
+        if model is None:
+            return 0
+        own = capacity(self.own(model + combat), combat)
+        if obj in (halfelf.MAN, halfelf.WOMAN):  # (made from another's, maybe bigger)
+            own = max(own, capacity(self.base(model, obj, combat)[1], combat))
+        return own
 
 
 def _spare_model(chunks) -> Optional[int]:

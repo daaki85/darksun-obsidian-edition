@@ -708,15 +708,17 @@ def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int) -> None:
 
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
           pad: int = 10, armour: Tuple[int, ...] = (),
-          cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None) -> Rows:
+          cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None,
+          parts: Optional[sp.Parts] = None) -> Rows:
     """One frame of MODEL with WEAPONS ({"right"/"left": (item type, material[, name in
     BLADE_COLOURS])}: in the hands in a
     fight, walking worn at the belt (two-handed ones carried upright);
     "missile": the bow, sling or chatkcha carried, "ammo": arrows, on the back or at the hip),
     padded by PAD, in ARMOUR (item types: under all the rest). Nothing in the hands in the bow
-    frames (the game draws the bow)."""
+    frames (the game draws the bow). PARTS: where its parts are, if not read from ROWS."""
     out = padded(rows, pad)
-    parts = sp.parts(rows, model, frame, combat)
+    if parts is None:
+        parts = sp.parts(rows, model, frame, combat)
     if parts.facing is not None:
         for item_type in armour:
             if item_type in ARMOUR:

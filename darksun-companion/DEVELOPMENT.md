@@ -1159,13 +1159,30 @@ table it is drawn from; for a second member of the same figure the Ledger names
 their spare there and empties the slot, and the game loads the picture and
 fills it.
 
+Elves (objects 304 and 305) get pointed ears (`dscompanion/figures.py`): 2
+pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their place
+is read from each frame's parts (beside the head, two rows above the eyes from
+the front; at the eyes from behind; behind the face from the side), or set by
+hand for the poses whose parts can't be read (`EAR_PLAN`: lunges, the bow, hit,
+dead). They are drawn after the gear, only on pixels the gear left as they
+were, so a helm hides them.
+
 Half-elves (objects 306 and 307) name the human pictures, as 300 and 301 do.
-Their pictures in the copy are recoloured (`dscompanion/halfelf.py`): the
-man's top six rows (his hair), then his tunic, boots and wristbands by row; the
-woman's hair as one flood-filled patch of its browns from the top of her head,
-then her cloak, wristbands and boots. Gear is drawn on the human colours first,
-since `spriteparts` finds the hair and the wristbands by them. The recolour
-then changes only the pixels the gear left alone. A spare is recoloured by the
+The copy has their own figures instead (`figures.py`), made each time from the
+game's pictures. The man is the elf man's figure (`HalfElfMan`), a column wider
+below the neck. Each part of him (hair, jerkin, sleeves, trousers, boots) has
+its colours spread by brightness over a ramp of the party's palette (so it
+needs the palette, read from `GPLDATA.GFF`). He also gets dark eyes, a linen V
+at the neck, a belt with a buckle, hair cut at the nape and small ears. The
+woman (`HalfElfWoman`) is the human woman in her colours (`halfelf.recolour`),
+a column slimmer below the neck. Her long hair is cut away and put up in a bun,
+with her neck and cloak drawn where it hung, and she gets the elves' ears. Her
+fight poses are set by hand (`WOMAN_FIGHTS`). Gear is drawn on these figures
+by the parts of the game's frame they were made from, moved by the column
+added or taken out (`figures.moved`), since their hair and wristbands are no
+longer in the colours `spriteparts` finds them by. If the palette or the
+pictures they are made from are missing, or making them fails, a half-elf is
+the human figure recoloured (`halfelf.py`) as before. A spare is drawn as the
 figure it stands for.
 
 ### Shadows

@@ -2910,14 +2910,18 @@ only weapons and shields (all it can use). Two party members of the same race
 and sex each show their own equipment: the game gives them one figure, so the
 second is moved to pictures of their own.
 
-Half-elves have their own look. The game draws them with the human pictures,
-so the Ledger recolours them, keeping to colours the party's figures already
-use. A half-elf man has fair hair, a green tunic, brown boots and bronze
-wristbands. A half-elf woman has golden hair, a purple cloak, purple
-wristbands and red boots. Anything worn is drawn over these in its own
-colours, so a worn cloak or boots replace the purple and the red.
+Elves have pointed ears, walking and fighting; a helm worn over them hides
+them. Half-elves have their own look (the game draws them with the human
+pictures), made from the game's pictures in colours the party's figures
+already use. A half-elf man is built like the elf man, a little broader, with
+fair hair cut short at the nape, a linen shirt under a leather jerkin, green
+trousers, brown boots and small pointed ears. A half-elf woman is a little
+slimmer than the human woman, with golden hair up in a bun, pointed ears, a
+purple cloak, purple wristbands and red boots. Anything worn is drawn over
+these in its own colours, so a worn cloak or boots replace the purple and the
+red.
 
-![Humans (top) and half-elves (bottom), men on the left and women on the right, walking: the half-elf man fair-haired in a green tunic, the half-elf woman golden-haired in a purple cloak and red boots](docs/half-elves.png)
+![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
 
 ![The arena fight with Scar, the fighters as the game draws them (left) and with gear and shadows on (right): armour recoloured, weapons in hand and at the hip, and each figure casting a shadow toward the lower right](docs/gear.png)
 

@@ -648,6 +648,21 @@ def write_resources(source: str, dest: str) -> None:
     os.replace(tmp, dest)
 
 
+def _palette(source: str) -> None:
+    """The game's palette (GPLDATA.GFF, beside SOURCE) for the party's pictures (spritegear: the
+    half-elf man's colours are picked by their brightness). Without it, a half-elf is the human
+    figure in the half-elf's colours (halfelf.py)."""
+    from . import art, spritegear as sg
+    gpl = art._find(os.path.dirname(os.path.abspath(source)), "GPLDATA.GFF")
+    if not gpl:
+        return
+    try:
+        with open(gpl, "rb") as f:
+            sg.set_palette(art.palette_colours(gff.read_gff(f.read())[("PAL ", art.PORTRAIT_PALETTE)]))
+    except (OSError, gff.GffError, KeyError, ValueError, struct.error):
+        pass
+
+
 def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) -> Tuple[bool, Tuple[int, ...]]:
     """The game's SEGOBJEX.GFF (SOURCE, only read) with the companion's icons, and its new items
     in their people's and chests' objects (the content switched ON: dataitems.py), to DEST.
@@ -660,6 +675,7 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     chunks = gff.read_gff(data)
     added = new_chunks(chunks)
     room: Dict[Tuple[str, int], int] = {}
+    _palette(source)
     try:  # (the party's own sprites, for what they wear: room after each to be dressed in place)
         pictures = sprites.new_chunks(chunks)
         room = sprites.new_room(chunks, pictures)

@@ -23,6 +23,12 @@ have the detail.
   green tunic, brown boots and bronze wristbands. A half-elf woman has golden
   hair, a purple cloak, purple wristbands and red boots. Worn gear is drawn
   over them in its own colours.
+- **Elves have pointed ears,** walking and fighting (a helm hides them).
+- **Half-elves have their own figures.** The man is built on the elf's
+  figure, a little broader, with short fair hair, a linen shirt under a
+  leather jerkin, green trousers and small pointed ears. The woman is a little
+  slimmer than the human woman, with her golden hair in a bun and pointed
+  ears.
 
 **Documentation**
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or
