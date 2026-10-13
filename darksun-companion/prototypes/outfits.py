@@ -42,6 +42,11 @@ EXTRA = {724: STAFF}
 HAIRC = {23, 29, 48, 50, 69, 70, 194, 210, 212, 213}
 SKINC = set(range(128, 154))
 WOMAN_CLOAK = {53, 54, 55, 56, 188, 189, 190, 191, 42}
+BANDS = {249: 214, 250: 212}  # (the green wristbands steel, on every class)
+LEATHER = (204, 207, 205, 194, 206)
+# Outfits restyled: the colours of the figure's own clothes under it, and (the warrior's) its
+# leather, which the artist drew in skin-like browns, in leather's
+STYLE = {1252: {"tunic": (208, 209, 210, 211), "leather": LEATHER}}
 
 
 class Game:
@@ -59,6 +64,7 @@ class Game:
         self._align: Dict[Tuple[int, int, int, int], Tuple[int, int]] = {}
         self._erased: Dict[Tuple[int, int, int], Tuple[Rows, Set]] = {}
         self._cloth: Dict[int, Set[int]] = {}
+        self._base: Dict[int, Optional[int]] = {}  # (the outfit's commonest cloth colour)
         self._ramps: Dict[int, dict] = {}
 
     def fr(self, pic: int, f: int) -> Rows:
@@ -157,6 +163,7 @@ class Game:
                         cnt[q] += 1
             tot = sum(cnt.values())
             self._cloth[npc] = {q for q, n in cnt.items() if n >= 0.02 * tot}
+            self._base[npc] = next((q for q, _ in cnt.most_common() if q != 254), None)
         return self._cloth[npc]
 
     def ramps(self, npc: int) -> dict:
@@ -192,6 +199,10 @@ class Game:
                     if q is not None and q != 254 and (x + dx, y + dy) not in A:
                         got["outside"][q] += 1
         out = {k: (sorted((q for q, _ in cnt.most_common(6)), key=light) or None) for k, cnt in got.items()}
+        for k in ("legs", "feet"):  # (cloth only; bare where skin is most of it)
+            cloth = collections.Counter({q: n for q, n in got[k].items() if q not in SKINC})
+            out[k + " bare"] = sum(cloth.values()) * 2 < sum(got[k].values())
+            out[k] = sorted((q for q, _ in cloth.most_common(5)), key=light) or None
         out["cloak"] = sum(got["outside"].values()) > 300
         self._ramps[npc] = out
         return out
@@ -200,18 +211,23 @@ class Game:
 
     def dress(self, model: int, npc: int, cb: int, f: int) -> Tuple[Rows, int, int]:
         """MODEL's frame in NPC's clothes, and where its first pixel is in MODEL's own frame."""
+        style = STYLE.get(npc, {})
         if model == MAN:
             dx, dy = self.align(MAN + cb, npc + cb, f)
-            return self.erased(npc, cb, f)[0], dx, dy
-        tgt = [list(r) for r in self.fr(model + cb, f)]
+            rows = [list(r) for r in self.erased(npc, cb, f)[0]]
+            lay = self.outfit(npc, cb, f)
+            for Y, r in enumerate(rows):
+                for X, p in enumerate(r):
+                    if (X + dx, Y + dy) in lay:
+                        r[X] = restyle(p, style)
+                    if p in BANDS:
+                        r[X] = BANDS[p]
+            return rows, dx, dy
         R = self.ramps(npc)
-        if model == sg.CLOAK_MODEL and R["cloak"]:  # (her own cloak in the outfit's cloth)
-            for r in tgt:
-                for x, p in enumerate(r):
-                    if p in WOMAN_CLOAK:
-                        r[x] = by_light(p, R["outside"])
+        tgt = self.own_clothes(model, cb, f, R, style)
+        man = self.fr(MAN + cb, f)
         lay = self.outfit(npc, cb, f)
-        ms, mt = marks(self.fr(MAN + cb, f), MAN, f, bool(cb)), marks(tgt, model, f, bool(cb))
+        ms, mt = marks(man, MAN, f, bool(cb)), marks(self.fr(model + cb, f), model, f, bool(cb))
         P = 6
         W, H = len(tgt[0]) + 2 * P, len(tgt) + 2 * P
         out: Rows = [[None] * W for _ in range(H)]
@@ -220,30 +236,124 @@ class Game:
                 out[y + P][x + P] = p
         if ms and mt:
             cl = self.cloth(npc)
+            k = self.scale(model)
+            shift = self.shifts(man, tgt, ms, mt, k)
             for Y in range(H):
+                y = Y - P
+                rs = int(round(_pw(y, ms, mt)))
+                head = y < mt["neck"]
+                t = shift(y)
+                last = None
                 for X in range(W):
-                    y, x = Y - P, X - P
-                    sy_ = _pw(y, ms, mt)
-                    head = y < mt["neck"]
-                    k = (ms["headw"] / mt["headw"]) if head else (ms["shw"] / mt["shw"])
-                    sx = ms["cx"] + (x - mt["cx"]) * k
-                    q = lay.get((int(round(sx)), int(round(sy_))))
+                    x = X - P
+                    sx = int(round(ms["cx"] + (x - mt["cx"]) * k + t))
+                    q = lay.get((sx, rs))
+                    again, last = sx == last, sx
                     if q is None:
                         continue
+                    if again and q in cl and q != 254 and self._base.get(npc) is not None:
+                        q = self._base[npc]  # (a column drawn twice: the cloth's base, folds stay thin)
                     if (head or y <= mt["neck"] + 4) and q not in cl and q != 254:
                         continue  # (their own face, hair and beard)
                     if head and q == 254 and 0 <= y < len(tgt) and 0 <= x < len(tgt[0]) and tgt[y][x] is not None:
                         continue
-                    out[Y][X] = q
+                    out[Y][X] = restyle(q, style)
+        fill_holes(out)
+        for r in out:
+            for x, p in enumerate(r):
+                if p in BANDS:
+                    r[x] = BANDS[p]
         return tidy(out, 6), -P, -P
 
+    def bow_colours(self, model: int) -> Set[int]:
+        """The bow's colours in MODEL's bow frames: those its walking frames don't have."""
+        walking = {p for f in range(15) for r in self.fr(model, f) for p in r if p is not None}
+        return {p for f in sp.BOW_FRAMES for r in self.fr(model + 1, f) for p in r if p is not None} - walking
+
+    def own_clothes(self, model: int, cb: int, f: int, R: dict, style: dict) -> Rows:
+        """MODEL's frame with its own clothes in the outfit's: below the neck, what is not skin,
+        nor a colour of the head (hair, beard), nor the outline, in the outfit's torso colours (the
+        warrior's dark tunic), the feet in its boots'; the woman's cloak off under the outfit's
+        own, else a mantle in its tunic's colours."""
+        rows = [list(r) for r in self.fr(model + cb, f)]
+        tunic = style.get("tunic") or [q for q in (R["torso"] or []) if q not in SKINC] or None
+        if model == sg.CLOAK_MODEL:  # (her cloak off under the outfit's; else a mantle in its tunic)
+            for r in rows:
+                for x, p in enumerate(r):
+                    if p in WOMAN_CLOAK:
+                        r[x] = None if R["cloak"] or not tunic else by_light(p, tunic)
+            fill_holes(rows)
+        m = marks(self.fr(model + cb, f), model, f, bool(cb))
+        if not m:
+            return rows
+        head = {p for r in rows[:max(1, m["neck"] - 2)] for p in r if p is not None}  # (not the collar)
+        if cb and f in sp.BOW_FRAMES:
+            head |= self.bow_colours(model)
+        feet = None if R["feet bare"] else R["feet"]
+        for y in range(m["neck"], len(rows)):
+            for x, p in enumerate(rows[y]):
+                if p is None or p in SKINC or p in head or p in BANDS or edge(rows, x, y):
+                    continue
+                ramp = feet if y >= m["bottom"] - 2 and feet else tunic
+                if ramp:
+                    rows[y][x] = by_light(p, ramp)
+        return rows
+
+    def size(self, model: int) -> Tuple[int, int]:
+        """The figure's height and width standing in front view (without the woman's cloak)."""
+        rows = [[None if p in WOMAN_CLOAK and model == sg.CLOAK_MODEL else p for p in r] for r in self.fr(model, 0)]
+        cells = sil(rows)
+        xs, ys = [x for x, _ in cells], [y for _, y in cells]
+        return max(ys) - min(ys) + 1, max(xs) - min(xs) + 1
+
+    def scale(self, model: int) -> float:
+        """How much smaller the man is than MODEL, sideways: the mean of the height and width ratios."""
+        (hm, wm), (ht, wt) = self.size(MAN), self.size(model)
+        return (hm / ht + wm / wt) / 2
+
+    @staticmethod
+    def shifts(man: Rows, tgt: Rows, ms: dict, mt: dict, k: float):
+        """Where the man's outline lies best on the figure's, above the waist and below it: a
+        sideways shift for each row (the two blended over the waist's rows)."""
+        A = sil(man)
+        T = sil(tgt)
+
+        def best(rows):
+            cells = [(x, y) for x, y in T if y in rows]
+            if not cells:
+                return 0
+            def score(t):
+                hit = 0
+                for x, y in cells:
+                    if (int(round(ms["cx"] + (x - mt["cx"]) * k + t)), int(round(_pw(y, ms, mt)))) in A:
+                        hit += 1
+                return hit
+            return max(range(-6, 7), key=lambda t: (score(t), -abs(t)))
+        w = mt["waist"]
+        up, down = best(range(mt["top"], w + 1)), best(range(w + 1, mt["bottom"] + 1))
+
+        def shift(y):
+            if y <= w - 1:
+                return up
+            if y >= w + 2:
+                return down
+            return up + (down - up) * (y - w + 1) / 3
+        return shift
+
     def dead(self, model: int, npc: int) -> Tuple[Rows, int, int]:
-        """MODEL's dead frame in the outfit's colours: its clothes (not skin) in the torso's; for
-        the man the parts as he lies (boots up top, legs, torso, the head at the bottom); a cloak
-        or robe spread round it."""
+        """MODEL's dead frame in the outfit's colours: its own skin and hair kept; its clothes in
+        the torso's; the raised legs in the leggings' and boots'; the man by his parts as he lies
+        (boots up top, legs, torso, the head at the bottom). A cloak or robe spread a little round
+        the body, edged in its darkest tone."""
         R = self.ramps(npc)
         h = self.fr(model + 1, 13)
         H = len(h)
+        hair = sp.MODELS.get(model, ("", frozenset(), frozenset()))[2]
+        cells = sil(h)
+        ys = sorted(y for _, y in cells)
+        top = ys[0]
+        cut = 7 if model == MAN else ys[len(ys) // 3]  # (the raised legs above it)
+        bare = R["legs bare"] or not R["legs"]
         out = [list(r) for r in h]
         for y, r in enumerate(h):
             for x, c in enumerate(r):
@@ -252,35 +362,36 @@ class Game:
                 if model == MAN:
                     part = ("feet" if y <= 2 else "head" if y >= H - 6 and c in HAIRC else
                             ("legs" if y < 9 else None) if c in SKINC else "torso")
+                elif c in hair and y >= cut:
+                    part = None  # (their own hair)
+                elif y < cut:
+                    part = ("feet" if y <= top + 1 else "legs") if c in SKINC else None
                 else:
                     part = None if c in SKINC else "torso"
+                if part in ("legs", "feet") and bare:
+                    continue
                 if part and R[part]:
-                    if part == "legs" and all(q in SKINC for q in R["legs"][-2:]):
-                        continue
                     out[y][x] = by_light(c, R[part])
         if not (R["cloak"] and R["outside"]):
             return out, 0, 0
         P = 2
         big: Rows = [[None] * (len(h[0]) + 2 * P) for _ in range(P)] + \
             [[None] * P + r + [None] * P for r in out] + [[None] * (len(h[0]) + 2 * P) for _ in range(P)]
-        body = {(x + P, y + P) for x, y in sil(h)}
-        ys = sorted(y for _, y in body)
-        cut = 7 + P if model == MAN else ys[len(ys) // 3]  # (round the body and head, not raised legs)
+        body = {(x + P, y + P) for x, y in cells}
         ramp = R["outside"]
         add = {}
         for x, y in body:
-            if y < cut:
+            if y < cut + P:
                 continue
-            for a in range(-2, 3):
-                for b in range(-1, 3):
-                    q = (x + a, y + b)
-                    if q not in body and 0 <= q[1] < len(big) and 0 <= q[0] < len(big[0]) and abs(a) + abs(b) <= 3:
-                        add[q] = ramp[min(len(ramp) - 1, 1 + (q[0] + q[1]) % 3)]
+            for a, b in ((-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1), (0, 2)):  # (a little, and more below)
+                q = (x + a, y + b)
+                if q not in body and 0 <= q[1] < len(big) and 0 <= q[0] < len(big[0]):
+                    add[q] = ramp[min(len(ramp) - 1, 1 + (q[0] + q[1]) % 2)]
         for (x, y), c in add.items():
             big[y][x] = c
-        for x, y in list(add):  # (the cloth's edge)
+        for x, y in list(add):  # (the cloth's edge, in its darkest tone)
             if any((x + a, y + b) not in add and (x + a, y + b) not in body for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                big[y][x] = 254
+                big[y][x] = ramp[0]
         return big, -P, -P
 
     def full(self, model: int, npc: int) -> Tuple[List, List]:
@@ -326,6 +437,42 @@ def tidy(rows: Rows, most: int) -> Rows:
                 for x, y in comp:
                     rows[y][x] = None
     return rows
+
+
+def extents(rows: Rows) -> Dict[int, Tuple[int, int]]:
+    """Each row's leftmost and rightmost pixel, smoothed (the median of five rows)."""
+    raw = {}
+    for y, r in enumerate(rows):
+        xs = [x for x, p in enumerate(r) if p is not None]
+        if xs:
+            raw[y] = (min(xs), max(xs))
+    out = {}
+    for y in raw:
+        near = [raw[k] for k in range(y - 2, y + 3) if k in raw]
+        out[y] = (sorted(a for a, _ in near)[len(near) // 2], sorted(b for _, b in near)[len(near) // 2])
+    return out
+
+
+def fill_holes(rows: Rows) -> None:
+    """Empty pixels with three or four filled neighbours (where a cloak came off): their
+    commonest neighbour."""
+    for _ in range(2):
+        add = []
+        for y in range(1, len(rows) - 1):
+            for x in range(1, len(rows[0]) - 1):
+                if rows[y][x] is None:
+                    near = [rows[y + b][x + a] for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1)) if rows[y + b][x + a] is not None]
+                    if len(near) >= 3:
+                        add.append((x, y, collections.Counter(near).most_common(1)[0][0]))
+        for x, y, c in add:
+            rows[y][x] = c
+
+
+def restyle(p: Optional[int], style: dict) -> Optional[int]:
+    """An outfit's colour as its STYLE has it: skin-like browns in leather's."""
+    if p is not None and style.get("leather") and p in SKINC:
+        return by_light(p, style["leather"])
+    return p
 
 
 def light(p: int) -> float:
