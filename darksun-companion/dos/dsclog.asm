@@ -9530,7 +9530,8 @@ class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 
 ; ([BP+8]) up among its own: STORE keeps the roll on screen (RS_FIELDS: the sheet's race, sex,
 ; classes and kit, then its hit points, hit points rolled and most PSP; the creature's hit
 ; points, PSP and six scores; the hit points' least and most; the die's total, RL_POOL), RECALL
-; puts it back if the race, sex, classes and kit are still the stored ones. Either way the
+; puts it back. A stored roll is forgotten at the first button pressed after the race, sex,
+; classes or kit have changed (RS_SAME), and RECALL then does nothing. Either way the
 ; routine goes on as for a button not its own (RS_DONE: nothing more). After a recall the scores
 ; are shown again (the screen's routine for it, WP_STUB's entry RS_SCORES, which RL_SUM follows
 ; with the totals), then the rest as the die shows a roll: its routine from where it has rolled
@@ -9544,7 +9545,12 @@ RS_SCORES equ 0xBB
 RS_KEY    equ 6                    ; (RS_BUF's first bytes: race, sex, classes, kit)
 probe_rs_click:
         mov cx, 0x16
-        cmp word [bp + 8], RS_STORE
+        cmp byte [cs:rs_have], 0
+        je .which
+        call rs_same                        ; (race, sex, classes or kit changed: the roll forgotten)
+        je .which
+        mov byte [cs:rs_have], 0
+.which: cmp word [bp + 8], RS_STORE
         je .ours
         cmp word [bp + 8], RS_RECALL
         jne .out
@@ -9558,30 +9564,6 @@ probe_rs_click:
         je .xfer
         cmp byte [cs:rs_have], 0
         je .done
-        les bx, [0x119C]                   ; (the same race, sex, classes and kit)
-        mov di, rs_buf
-        mov si, rs_fields
-        mov cx, RS_KEY
-.key:   push bx
-        movzx ax, byte [cs:si + 1]
-        add bx, ax
-        mov al, [es:bx]
-        pop bx
-        cmp al, [cs:di]
-        jne .done
-        inc di
-        cmp byte [cs:si + 2], 1
-        je .next
-        mov al, [es:bx + 0x22]              ; (the second and third classes: +22h, +23h)
-        cmp al, [cs:di]
-        jne .done
-        mov al, [es:bx + 0x23]
-        cmp al, [cs:di + 1]
-        jne .done
-        add di, 2
-        sub cx, 2
-.next:  add si, 3
-        loop .key
         inc dl
 .xfer:  call rs_xfer
         or dl, dl
@@ -9608,6 +9590,32 @@ probe_rs_click:
 .done:  pop es
         popad
 .out:   iret
+
+; RS_SAME: ZF set if the sheet being made (DS:[119Ch]) has the stored roll's race, sex, classes
+; and kit (RS_BUF's first RS_KEY bytes, in RS_FIELDS' order). DS the game's; keeps all but flags.
+rs_same:
+        push es
+        push bx
+        push ax
+        les bx, [0x119C]
+        mov al, [es:bx + 0x18]
+        cmp al, [cs:rs_buf]
+        jne .out
+        mov al, [es:bx + 0x19]
+        cmp al, [cs:rs_buf + 1]
+        jne .out
+        mov ax, [es:bx + 0x21]
+        cmp ax, [cs:rs_buf + 2]
+        jne .out
+        mov al, [es:bx + 0x23]
+        cmp al, [cs:rs_buf + 4]
+        jne .out
+        mov al, [es:bx + 0x43]
+        cmp al, [cs:rs_buf + 5]
+.out:   pop ax
+        pop bx
+        pop es
+        ret
 
 ; RS_XFER: the roll's fields (RS_FIELDS, then the hit points' least and most and RL_POOL) into
 ; RS_BUF (DL 0) or back (DL 1). DS the game's; keeps DL, ES.

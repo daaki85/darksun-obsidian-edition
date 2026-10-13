@@ -1242,9 +1242,10 @@ better comes, RECALL puts the stored one back, AC and damage with it.
 
 ![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:99/99, 28/28 hit points](docs/creation-store-recall.png)
 
-RECALL does nothing if the race, sex, classes or kit have changed since the
-roll was stored (the hit points were rolled for those); change them back and
-it works again. STORE again keeps the new roll in place of the old. Always on.
+Changing the race, sex, classes or kit forgets the stored roll (its hit
+points were rolled for those), even if they are changed back: RECALL then
+does nothing until STORE keeps another. STORE again keeps the new roll in
+place of the old. Always on.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 

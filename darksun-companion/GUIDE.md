@@ -147,8 +147,8 @@ Each click of the die rolls a whole character:
   mod:* a click raises any score to its most.
 - **STORE and RECALL**, under the hit points, keep a roll and bring it back
   (scores, hit points and PSP), as in Baldur's Gate: store a good roll, try
-  the die again, and recall it if nothing better comes. RECALL waits while
-  the race, sex, classes or kit differ from the stored roll's.
+  the die again, and recall it if nothing better comes. Changing the race,
+  sex, classes or kit forgets the stored roll.
 
 | Class | Prime requisite |
 |---|---|

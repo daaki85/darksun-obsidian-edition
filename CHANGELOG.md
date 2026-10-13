@@ -14,8 +14,8 @@ have the detail.
 - **STORE and RECALL on the creation screen,** as Baldur's Gate has them:
   STORE keeps the roll on screen (the six scores and the die's total, the
   hit points and PSP), RECALL brings it back however many times the die has
-  been rolled since, AC and damage shown with it. RECALL does nothing while
-  the race, sex, classes or kit differ from the stored roll's. The two
+  been rolled since, AC and damage shown with it. Changing the race, sex,
+  classes or kit forgets the stored roll. The two
   buttons are carved like the game's own, under the hit points; the dice
   log's ring is 84 entries (was 88) to make room in upper memory.
 

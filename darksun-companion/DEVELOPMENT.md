@@ -381,8 +381,9 @@ most PSP (`+8`, `+0Ah`, `+0Ch` of DS:119Ch), the creature's hit points, PSP
 and six scores (`+0`, `+2`, `+22h` of DS:11A0h), the least and most hit points
 the classes could roll (DS:4996h), and the die's total (`RL_POOL`). STORE
 keeps those with the sheet's race, sex, classes and kit (`+18h`, `+19h`,
-`+21h` to `+23h`, `+43h`); RECALL puts them back only while those are the
-same. It then shows them as the game would: the scores through the screen's
+`+21h` to `+23h`, `+43h`); at each button pressed the probe forgets the
+stored roll if those have changed (`RS_SAME`), so RECALL finds none. RECALL
+then shows them as the game would: the scores through the screen's
 own redraw (the creation overlay's stub, entry BBh, which a score's click
 calls; `RL_SUM` adds the totals), and the rest by running the die's routine
 from where it has rolled the hit points (659D0h, with its stack frame and DI
