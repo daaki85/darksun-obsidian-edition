@@ -54,12 +54,12 @@ game.
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
   - [Helms](#helms)
-  - [The game's own party](#the-games-own-party)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits)
   - [Levels up to 10](#levels-up-to-10)
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
+  - [The game's own party](#the-games-own-party)
 - [Expanded features](#expanded-features)
   - [The leader's CHA at shops](#the-leaders-cha-at-shops)
   - [Improved thieving](#improved-thieving)
@@ -69,8 +69,8 @@ game.
 - [New content](#new-content)
   - [New wizard spells](#new-wizard-spells)
   - [New items](#new-items)
-  - [Bracers of defense](#bracers-of-defense)
-  - [Robes](#robes)
+    - [Bracers of defense](#bracers-of-defense)
+    - [Robes](#robes)
   - [New people](#new-people)
     - [Kalzith](#kalzith)
     - [Semyon](#semyon)
@@ -316,7 +316,7 @@ party pane has two tabs:
     Long Sword"; "Carried" for the backpack), with each item's material and
     plus;
   - last, spell slots for spellcasters (see below), thief skills for thieves,
-    and for rangers, with the stealth rule on, their chances to hide and move
+    and for rangers, with hiding to backstab on, their chances to hide and move
     silently (`Ranger skills now`).
 - **All fields** (Alt+A): every field the layout maps, in a table, with rows
   of its own for the AC in a fight and what it's made of, THAC0 with each
@@ -494,7 +494,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 |---|---|
 | `X DEX check: d20 = 9, needs 16 or less (DEX 16) -> success` | An ability check. A natural 20 always fails. |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](#how-the-game-works-out-thief-skills)), and what its chance is made of. |
-| `Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Cilla moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (the [stealth rule](#hiding-in-shadows-to-backstab)). |
+| `Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Cilla moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](#hiding-in-shadows-to-backstab) on). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
 | `    X's Bone Long Sword nearly broke: 0 on 0-7, then 12 on 0-19 (needed 0)` / `... BREAKS` | The weapon check the game makes after an attack sequence whose last attack hit. Only non-magical wood, bone, stone and obsidian weapons can break (and not every kind: clubs and quarterstaffs can't): they break when a 0-7 roll and then a 0-19 roll both come up 0, 1 chance in 160. The line only appears when the first roll comes up 0. |
 | `  Rampager's acid on Gerakis's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe` | An item the Rampager's acid or the Babau's corroding touch could destroy: the d20, the number it needed and whose number that was (see [Items saving against acid](#items-saving-against-acid)). |
@@ -891,8 +891,8 @@ has a script command that lets each member try in turn, but no script uses it.)
 in the game, so they make no difference; nor does the equipment penalty on
 them. (The Ledger rolls move silently when a pocket isn't picked, see
 [Picking pockets](#picking-pockets), and hide in shadows and move silently in
-fights with the [stealth rule](#hiding-in-shadows-to-backstab).) The scripts also make 3 ability checks (a d20 under the ability): CHA
-twice and STR once.
+fights, to [backstab](#hiding-in-shadows-to-backstab).) The scripts also make
+3 ability checks (a d20 under the ability): CHA twice and STR once.
 
 `python -m dscompanion checks` lists them all with the script's text around
 each (spoilers).
@@ -902,9 +902,9 @@ equipment penalty (none in games started with the dice log) and effects (but
 not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
 the two the Ledger rolls: move silently (when a pocket isn't picked, see
-[Picking pockets](#picking-pockets)) and hide in shadows (for the
-[stealth rule](#hiding-in-shadows-to-backstab)), with any Thieves' Tools carried. **All
-fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
+[Picking pockets](#picking-pockets)) and hide in shadows (to
+[backstab](#hiding-in-shadows-to-backstab)), with any Thieves' Tools carried.
+**All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
 ![Cilla's card on the Characters tab: Thieves' Tools carried, and her thief skills now, move silently and hide in shadows among them](docs/thief-card.png)
 
@@ -1038,7 +1038,7 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
 
 ![The inventory screen's panel in the game: THAC0 and the saves at the top, Daaki's thief skills (move silently and hide in shadows among them) beside the abilities, his DEX reaction and defensive adjustments, and a club in each hand: 1.5 attacks a round with the right, one with the off hand](docs/inventory.png)
 
-![A ranger's panel: Dream's move silently and hide in shadows, for the stealth rule, where a thief's go](docs/inventory-ranger.png)
+![A ranger's panel: Dream's move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
 
 - above STR, **THAC0** and the five **saving throws**, with the usual AD&D
   short labels: `PPD` paralysis/poison/death, `RSW` rod/staff/wand, `PP`
@@ -1049,10 +1049,10 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
   and hide in shadows are the ones the Ledger rolls (for
-  [picking pockets](#picking-pockets) and the [stealth rule](#hiding-in-shadows-to-backstab)).
+  [picking pockets](#picking-pockets) and [hiding to backstab](#hiding-in-shadows-to-backstab)).
   A worn belt's 5 is in `PICK` and `LOCK`. Hear noise (one script check) and
-  read languages (none) are left out for want of room. A ranger, with the [stealth rule](#hiding-in-shadows-to-backstab) on, gets their
-  `MOVE` and `HIDE` in the same places (the other four left out);
+  read languages (none) are left out for want of room. A ranger, with
+  [hiding to backstab](#hiding-in-shadows-to-backstab) on, gets their `MOVE` and `HIDE` in the same places (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): -6 at DEX 1 to +5 at DEX 24-25, the
   number the [two-weapon rule](#two-weapons) adds to its penalties, and the
@@ -1619,39 +1619,10 @@ or without the Ledger, the names are the game's own.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 
-### The game's own party
-
-START GAME with no party made plays the game's own four. With the rules on,
-the Ledger makes them ready for them in the first moments of a new game, and
-says so in the dice log:
-
-| Character | With weapon specialization | With class restrictions |
-|---|---|---|
-| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
-| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
-
-With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
-class: a spell slot more at each spell level and two preserver spells a turn
-in a fight. His gear stays as it is (an Arcanist has none of its own), and so
-do the hit points the game gave him: the Arcanist's d3 counts from his next
-level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
-once, can't have one.
-
-Cermak and Cilla keep the game's own starting spells: only a character made
-on the creation screen [picks its own](#changing-class).
-
-![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
-
-![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
-
 ## More character customization
 
-More choices for each character: a weapon to specialize in, a kit, two more
-levels to reach, and a roll to keep while trying the die again. The first
+More choices for each character: a weapon to specialize in, a kit, a 10th
+level to reach, and a roll to keep while trying the die again. The first
 three each have a box in the Options tab's **More character customization**
 section. All are on by default and, like the rule changes, take effect at
 once in games started with the dice log; untick one and the game is as it
@@ -1808,7 +1779,7 @@ and costs something.
 | **Arena Champion** (gladiator) | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee with no shield |
 | **Twin-blade** (gladiator) | no penalty for two weapons in light armour, leather or none (with the two-weapons rule) | no shield; no two-handed weapon (a half-giant may hold one in one hand, with the half-giants' rule) |
 | **Brute** (gladiator) | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec |
-| **Stalker** (ranger) | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with the stealth rule) | light armour only (leather, or none) |
+| **Stalker** (ranger) | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | light armour only (leather, or none) |
 | **Assassin** (thief) | hiding in shadows not halved in daylight | −15 pick pockets and open locks |
 | **Swashbuckler** (thief) | a warrior's THAC0 (21 less its level) | −10 to every thief skill |
 | **Grove Warden** (druid) | AC 1 better for every 3 druid levels | no metal weapons |
@@ -2098,6 +2069,37 @@ place of the old. Always on, in games started from the Ledger.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 
+### The game's own party
+
+START GAME with no party made plays the game's own four, who were made before
+any of these choices existed. With weapon specialization, kits and class
+restrictions on, the Ledger fits them to those in the first moments of a new
+game, and says so in the dice log (Cilla also gets the elf's figure: see
+[Elves and half-elves](#elves-and-half-elves)):
+
+| Character | With weapon specialization | With class restrictions |
+|---|---|---|
+| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
+| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
+
+With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
+class: a spell slot more at each spell level and two preserver spells a turn
+in a fight. His gear stays as it is (an Arcanist has none of its own), and so
+do the hit points the game gave him: the Arcanist's d3 counts from his next
+level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
+once, can't have one.
+
+Cermak and Cilla keep the game's own starting spells: only a character made
+on the creation screen [picks its own](#changing-class).
+
+![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
+
+![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
+
 ## Expanded features
 
 New things to do in play, each with a box in the Options tab's **Expanded
@@ -2130,10 +2132,11 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
 
 ### Improved thieving
 
-Thieves play as the Player's Handbook has them: their skills from its table,
-hiding in shadows and moving silently to backstab, worn gear that helps, and
-pockets to pick. The boxes are together under **Improved thieving** in the
-Options tab's Expanded features section.
+More for thieves to do: skills that grow by the Player's Handbook's table,
+hiding in shadows and moving silently to backstab (rangers too, to attack from
+behind), a cloak, boots and belt that help, and pockets to pick. The switches
+are together under **Improved thieving** in the Options tab's Expanded
+features section.
 
 #### Thief skills from AD&D's table
 
@@ -2518,7 +2521,7 @@ of the Wardens.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
 
-### Bracers of defense
+#### Bracers of defense
 
 A preserver can't cast in armour (with [class restrictions](#class-restrictions)),
 so the Ledger adds AD&D's bracers of defense ([where](#new-items)). They are
@@ -2534,7 +2537,7 @@ a point of AC.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#bracers-of-defense).
 
-### Robes
+#### Robes
 
 Two magic robes for those who go without armour: preservers, psionicists and
 druids alone may wear them. A robe is worn on the chest, in the chest armour's

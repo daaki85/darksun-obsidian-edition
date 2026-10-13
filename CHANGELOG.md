@@ -59,6 +59,12 @@ have the detail.
   thieving, and New content (the new wizard spells first). The guide's
   Options table and both READMEs' overviews follow, and the Options tab's
   screenshot is new.
+- **The game's own party** is under More character customization (its
+  weapon specs and Cermak's kit), and points to Cilla's elf figure; the
+  bracers and robes are parts of New items; the README says "hiding to
+  backstab" where it said "the stealth rule"; DEVELOPMENT.md's "How each part
+  works" follows the README's order; the patch notes' Thieves section is
+  **Improved Thieving**.
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or
   "weapon kind": fighters specialize in one weapon type, gladiators in two,
   the level-up window has a picture of each weapon type, and the item tables'

@@ -15,7 +15,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - [Combat](#combat)
 - [Classes and Kits](#classes-and-kits)
 - [Magic and Psionics](#magic-and-psionics)
-- [Thieves](#thieves)
+- [Improved Thieving](#improved-thieving)
 - [Items](#items)
 - [World](#world)
 - [Graphics](#graphics)
@@ -110,7 +110,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds).
 - **[Changed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 
-## Thieves
+## Improved Thieving
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
