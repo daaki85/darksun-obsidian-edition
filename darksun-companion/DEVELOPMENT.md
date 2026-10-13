@@ -1182,7 +1182,7 @@ by what their own colours can't tell `spritegear` (`spritegear.Own`, made by
 `figures.own`): the parts of the game's frame they were made from, moved by
 the column added or taken out (their hair and wristbands are no longer in the
 colours `spriteparts` finds them by); that frame itself, whose wristbands
-place a shield in a fight; the man's clothes (the ramps of his jerkin, shirt,
+place a shield in a fight, and on which a worn cloak is fitted before it is carried over to the man (fitted to him, a column broader, it would swing past his arms); the man's clothes (the ramps of his jerkin, shirt,
 trousers and boots, and where in each frame he wears them, for armour); and
 the woman's purple cloak (a worn cloak recolours it, shaded as the green at
 the same place in the human woman's frame, but not her purple wristbands; a

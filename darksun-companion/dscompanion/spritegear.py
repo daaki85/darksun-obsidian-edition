@@ -761,6 +761,18 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                                 if q in CLOAK_GREENS:
                                     t = green.index(q) / max(1, len(green) - 1)
                             row[x] = shades[min(len(shades) - 1, max(1, int(t * (len(shades) - 1) + 0.5)))]
+        elif cloak is not None and own is not None:  # (fitted to the source, carried over)
+            src = padded(own.source, pad)
+            before = [list(r) for r in src]
+            draw_cloak(src, [list(r) for r in src], model, own.source_parts, kind, pad, cloak)
+            for y, row in enumerate(src):
+                for x, p in enumerate(row):
+                    if p == before[y][x]:
+                        continue
+                    sx, sy = x - pad, y - pad
+                    for nx in range(own.at(sx, sy), own.at(sx + 1, sy)) or (own.at(sx, sy),):
+                        if 0 <= nx + pad < len(out[y]):
+                            out[y][nx + pad] = p
         elif cloak is not None:
             draw_cloak(out, [list(r) for r in out], model, parts, kind, pad, cloak)
     if "helm" in weapons and parts.facing is not None and model != sp.KREEN:
