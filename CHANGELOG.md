@@ -18,17 +18,14 @@ have the detail.
   classes or kit forgets the stored roll. The two
   buttons are carved like the game's own, under the hit points; the dice
   log's ring is 84 entries (was 88) to make room in upper memory.
-- **Half-elves look different from humans** on the map and in fights (the
-  game draws both with the same pictures). A half-elf man has fair hair, a
-  green tunic, brown boots and bronze wristbands. A half-elf woman has golden
-  hair, a purple cloak, purple wristbands and red boots. Worn gear is drawn
+- **Half-elves have their own figures** on the map and in fights (the game
+  draws them with the human pictures). The man is built on the elf's figure,
+  a little broader, with short fair hair, a linen shirt under a leather
+  jerkin, green trousers, brown boots and small pointed ears. The woman is a
+  little slimmer than the human woman, with her golden hair in a bun, pointed
+  ears, a purple cloak, purple wristbands and red boots. Worn gear is drawn
   over them in its own colours.
 - **Elves have pointed ears,** walking and fighting (a helm hides them).
-- **Half-elves have their own figures.** The man is built on the elf's
-  figure, a little broader, with short fair hair, a linen shirt under a
-  leather jerkin, green trousers and small pointed ears. The woman is a little
-  slimmer than the human woman, with her golden hair in a bun and pointed
-  ears.
 
 **Documentation**
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or
