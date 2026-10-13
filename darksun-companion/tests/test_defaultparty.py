@@ -126,8 +126,13 @@ class CillaFigureTests(unittest.TestCase):
         return bytes(rec)
 
     def test_in_the_objects_file(self):
-        out = dp.figure_chunks({("RDFF", dp.CILLA_OBJECT): self.record(dp.HALF_ELF_WOMAN)})
+        game_ = {("RDFF", dp.CILLA_OBJECT): self.record(dp.HALF_ELF_WOMAN),
+                 ("OJFF", dp.CILLA_OBJECT): bytes(12) + (2099).to_bytes(2, "little") + bytes(2),
+                 ("OJFF", 305): bytes(12) + (2059).to_bytes(2, "little") + bytes(2)}
+        copy = {**game_, ("OJFF", 305): bytes(12) + (2460).to_bytes(2, "little") + bytes(2)}
+        out = dp.figure_chunks(game_, copy)
         self.assertEqual(out[("RDFF", dp.CILLA_OBJECT)][dp.RDFF_FIGURE], dp.ELF_WOMAN)
+        self.assertEqual(out[("OJFF", dp.CILLA_OBJECT)][12:14], (2059).to_bytes(2, "little"))  # (the game's picture)
         self.assertEqual(dp.figure_chunks({("RDFF", dp.CILLA_OBJECT): self.record(dp.ELF_WOMAN)}), {})
         self.assertEqual(dp.figure_chunks({("RDFF", dp.CILLA_OBJECT): self.record(7, b"Other")}), {})
         self.assertEqual(dp.figure_chunks({}), {})

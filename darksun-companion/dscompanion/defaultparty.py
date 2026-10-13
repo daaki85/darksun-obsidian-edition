@@ -21,8 +21,8 @@ starts. Each is known by name, race and classes together.
 
 Cilla is an elf, but the game gives her the half-elf woman's figure (7, object 307: the human
 woman's pictures in the game, the half-elf woman's in the Ledger's copy, figures.py). She has
-the elf woman's (5) instead: in her record in the Ledger's copy of SEGOBJEX (figure_chunks, for
-a new game), and in the running game's creature table (elf_figure, for a game begun without
+the elf woman's (5) instead: in her record and her object's picture in the Ledger's copy of
+SEGOBJEX (figure_chunks, for a new game), and in the running game's creature table (elf_figure, for a game begun without
 it: the map shows her new figure from the next area or load on).
 """
 
@@ -36,6 +36,7 @@ CILLA_OBJECT = 32003  # (her record in SEGOBJEX: the party's objects are 32000 t
 RDFF_FIGURE = 0x22  # (the record's figure word: the creature's +18h)
 CREATURE_FIGURE = 0x18  # (the creature record's figure: sprites.CREATURE_FIGURE)
 ELF_WOMAN, HALF_ELF_WOMAN = 5, 7  # (figures: object 300 + the figure)
+OBJECT_FIRST, OJFF_PICTURE = 300, 0x0C  # (an object's picture: sprites.OJFF_PICTURE)
 KNOWN_SPELLS_PTR = 0x132A  # DS: far pointer to the party's known spells, a byte for each (0 to 137)
 KNOWN_STRIDE = game.SPELL_COUNT + 1
 ARMOR = 0  # the spell
@@ -69,16 +70,25 @@ def who(gd: GameData, member: int) -> str:
     return name
 
 
-def figure_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of SEGOBJEX: Cilla's record with the elf woman's figure (if it is the
-    game's, with the half-elf woman's)."""
-    rec = chunks.get(("RDFF", CILLA_OBJECT))
+def figure_chunks(chunks, current=None) -> Dict[Tuple[str, int], bytes]:
+    """For the Ledger's copy of SEGOBJEX (the game's CHUNKS, and the copy's chunks so far,
+    CURRENT): Cilla's record with the elf woman's figure, and her object with the elf woman's
+    picture (the game's), if they are the game's, with the half-elf woman's."""
+    current = chunks if current is None else current
+    rec = current.get(("RDFF", CILLA_OBJECT))
+    obj = current.get(("OJFF", CILLA_OBJECT))
+    elf = chunks.get(("OJFF", OBJECT_FIRST + ELF_WOMAN))
     if rec is None or len(rec) < RDFF_FIGURE + 2 or b"Cilla\0" not in rec \
             or struct.unpack_from("<H", rec, RDFF_FIGURE)[0] != HALF_ELF_WOMAN:
         return {}
     out = bytearray(rec)
     struct.pack_into("<H", out, RDFF_FIGURE, ELF_WOMAN)
-    return {("RDFF", CILLA_OBJECT): bytes(out)}
+    fixed = {("RDFF", CILLA_OBJECT): bytes(out)}
+    if obj is not None and elf is not None and len(obj) >= OJFF_PICTURE + 2:
+        picture = bytearray(obj)
+        picture[OJFF_PICTURE:OJFF_PICTURE + 2] = elf[OJFF_PICTURE:OJFF_PICTURE + 2]
+        fixed[("OJFF", CILLA_OBJECT)] = bytes(picture)
+    return fixed
 
 
 def elf_figure(gd: GameData) -> List[str]:

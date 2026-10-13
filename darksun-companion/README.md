@@ -76,7 +76,8 @@ game.
 - [Item tables](#item-tables)
   - [Every magic item](#every-magic-item)
   - [Every mundane weapon](#every-mundane-weapon)
-- [On the screen](#on-the-screen)
+- [Graphics](#graphics)
+  - [Elves and half-elves](#elves-and-half-elves)
   - [What the party wears](#what-the-party-wears)
   - [Shadows](#shadows)
   - [Dust](#dust)
@@ -119,7 +120,7 @@ spells ([Cat's Grace, Erdlu Claw and Fogbolt](#new-wizard-spells)), Kalzith
 (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
 vulture ([New content](#new-content)). Graphical additions show the weapons and
 armour the party wears, have characters cast shadows, and kick up dirt as they
-walk ([On the screen](#on-the-screen)).
+walk, and give elves and half-elves a look of their own ([Graphics](#graphics)).
 
 Quality of life changes: choosing an enemy with Tab and attacking it with
 Enter, scrolling the map by dragging with the mouse wheel
@@ -332,7 +333,7 @@ The sections:
 - **New content** ([New content](#new-content)): the new people, the vulture
   and the new items, from the next time the game is started; what a saved game
   already has stays in it.
-- **On the screen** ([On the screen](#on-the-screen)), **Controls**
+- **On the screen** ([Graphics](#graphics)), **Controls**
   ([Controls](#controls)) and **Game speed** ([Game speed](#game-speed)).
 
 All are on by default except each turn's rolls in the game, P in a
@@ -2883,10 +2884,31 @@ caravan. The game's plain stone pick is only ever a
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — |
 
-## On the screen
+## Graphics
 
-What the Ledger draws on the game's map. Each is switched on the Options tab's
-**On the screen** group.
+What the Ledger draws on the game's map. The party's gear, shadows and dust are
+each switched on the Options tab's **On the screen** group; the elves' and
+half-elves' looks are always there.
+
+### Elves and half-elves
+
+Elves have pointed ears, walking and fighting, beside any helm. Half-elves have
+their own look (the game draws them with the human pictures), made from the
+game's pictures in colours the party's figures already use. A half-elf man is
+built like the elf man, a little broader, with fair hair cut short at the nape,
+a linen shirt under a leather jerkin, green trousers, brown boots and small
+pointed ears. A half-elf woman is a little slimmer than the human woman, with
+golden hair up in a bun, pointed ears, a purple cloak, purple wristbands and
+red boots. Anything worn is drawn over these in its own colours, so a worn
+cloak or boots replace the purple and the red.
+
+Cilla, in the game's own party, is an elf, but the game gives her the figure it
+gives half-elf women. The Ledger gives her the elf woman's, in a new game and
+in one already begun (there from the next area or load on).
+
+![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
 
 ### What the party wears
 
@@ -2910,19 +2932,7 @@ only weapons and shields (all it can use). Two party members of the same race
 and sex each show their own equipment: the game gives them one figure, so the
 second is moved to pictures of their own.
 
-Elves have pointed ears, walking and fighting, beside any helm. Half-elves have their own look (the game draws them with the human
-pictures), made from the game's pictures in colours the party's figures
-already use. A half-elf man is built like the elf man, a little broader, with
-fair hair cut short at the nape, a linen shirt under a leather jerkin, green
-trousers, brown boots and small pointed ears. A half-elf woman is a little
-slimmer than the human woman, with golden hair up in a bun, pointed ears, a
-purple cloak, purple wristbands and red boots. Anything worn is drawn over
-these in its own colours, so a worn cloak or boots replace the purple and the
-red.
-
-![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
-
-![The arena fight with Scar, the fighters as the game draws them (left) and with gear and shadows on (right): armour recoloured, weapons in hand and at the hip, and each figure casting a shadow toward the lower right](docs/gear.png)
+![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
 
@@ -2935,7 +2945,7 @@ the game's maps comes from the upper left). The shadows are drawn on the floor
 before anything else, so every figure and wall stands on top of them: a shadow
 never covers another figure. Switch them off on the Options tab.
 
-![The slave pens and the arena, without shadows (left) and with them (right): each figure's outline darkened on the floor behind it, the floor's colours kept](docs/shadows.png)
+![The arena without shadows (left) and with them (right): each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#shadows).
 
@@ -2945,7 +2955,7 @@ Anyone walking on sand or dirt raises little puffs of dust behind their feet,
 which spread, rise a little and fade in about a second. The walls and figures
 stand in front of them, as with the shadows. Switch it off on the Options tab.
 
-![Jellybelly walking across the arena's sand in a fight: puffs of dust behind her, spreading and fading](docs/dust.png)
+![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
 
@@ -2966,7 +2976,7 @@ under the enemy chosen with Tab** (the default: none until Tab is pressed) or
 **under all the enemies** (the chosen one's thicker and redder); Tab and Enter
 have a switch of their own.
 
-![The arena fight with rings under all the enemies: the guard chosen with Tab (middle) has the thicker, redder ring](docs/rings.png)
+![The arena fight with rings under all the enemies, two Sligs and a Screamer Beetle, one Slig chosen with Tab](docs/rings.png)
 
 Tab and Enter also make attacking possible without aiming the mouse at all.
 

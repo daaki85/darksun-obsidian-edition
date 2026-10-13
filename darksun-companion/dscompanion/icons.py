@@ -696,7 +696,7 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)
     from . import defaultparty
-    added.update(defaultparty.figure_chunks({**chunks, **added}))  # (Cilla, an elf, drawn as one)
+    added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))  # (Cilla, an elf, drawn as one)
     out = with_chunks(data, added, room)
     tmp = dest + ".tmp"
     with open(tmp, "wb") as f:

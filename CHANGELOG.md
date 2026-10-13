@@ -29,7 +29,14 @@ have the detail.
   shield on the forearm in a fight.
 - **Elves have pointed ears,** walking and fighting, beside any helm.
 
+**Fixed**
+- **Cilla looks like the elf she is.** The game's own party gave her the
+  figure for half-elf women; she has the elf woman's now, in a new game and
+  (from the next area) in one already begun.
+
 **Documentation**
+- **Graphics** is the README's section for what the Ledger draws on the map
+  (was "On the screen"), with a part for elves and half-elves.
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or
   "weapon kind": fighters specialize in one weapon type, gladiators in two,
   the level-up window has a picture of each weapon type, and the item tables'

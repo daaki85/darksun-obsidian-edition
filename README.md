@@ -42,8 +42,8 @@ wizard spells ([Cat's Grace, Erdlu Claw and
 Fogbolt](darksun-companion/README.md#new-wizard-spells)), Kalzith (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
 vulture ([New content](darksun-companion/README.md#new-content)). Graphical
 additions show the weapons and armour the party wears, have characters cast
-shadows, and kick up dirt as they walk ([On the
-screen](darksun-companion/README.md#on-the-screen)).
+shadows, and kick up dirt as they walk, and give elves and
+half-elves a look of their own ([Graphics](darksun-companion/README.md#graphics)).
 
 Quality of life changes: choosing an enemy with Tab and attacking it with Enter,
 scrolling the map by dragging with the mouse wheel

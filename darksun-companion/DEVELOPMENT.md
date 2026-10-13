@@ -1159,7 +1159,7 @@ table it is drawn from; for a second member of the same figure the Ledger names
 their spare there and empties the slot, and the game loads the picture and
 fills it.
 
-Elves (objects 304 and 305) get pointed ears (`dscompanion/figures.py`): 2
+([Elves and half-elves in the README](README.md#elves-and-half-elves).) Elves (objects 304 and 305) get pointed ears (`dscompanion/figures.py`): 2
 pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their place
 is read from each frame's parts (beside the head, two rows above the eyes from
 the front; at the eyes from behind; behind the face from the side), or set by
@@ -1190,6 +1190,15 @@ belt isn't drawn over it from behind). If the palette or the
 pictures they are made from are missing, or making them fails, a half-elf is
 the human figure recoloured (`halfelf.py`) as before. A spare is drawn as the
 figure it stands for.
+
+Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)
+in her record (object 32003's RDFF, its word +22h, the creature's +18h), and
+her object (OJFF 32003) names the human woman's picture. In the Ledger's copy
+of SEGOBJEX she has the elf woman's figure (5) and picture (the game's, which
+the Ledger then swaps for its own as for anyone); in a game begun without the
+copy, the Ledger writes the figure into the running game's creature table, and
+the game draws her as an elf from its next area or load
+(`defaultparty.figure_chunks`, `defaultparty.elf_figure`).
 
 ### Shadows
 
