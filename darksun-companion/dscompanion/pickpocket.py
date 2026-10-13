@@ -1,8 +1,8 @@
-"""Picking pockets: the party leader, a thief, tries the pocket of whoever they're talking to.
+"""Picking pockets: a thief uses the thieving tools on someone (tools.py).
 
 The game has one pickpocket of its own, the Trustee's key in the slave pens, in his script.
-With the dice log's patched game, P in any conversation (DSCLOG's PROBE_PICK) has the Ledger
-roll the leader's pick pockets chance as it stands now (thief_skills_now). On a success the
+With the dice log's patched game, the tools used on someone (DSCLOG's PROBE_USE_ITEM) have the
+Ledger roll the thief's pick pockets chance as it stands now (thief_skills_now). On a success the
 thief lifts one small thing (weight 10 or less, and nothing worn on the body) from the
 person into the backpack. On a failure, a move silently roll decides whether they got away
 unnoticed. With nothing else on them, the thief takes a few coins (party money), and that is
@@ -153,7 +153,7 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
             coin_roll: Callable[[], int] = lambda: random.randint(*COINS),
             who: Optional[int] = None) -> Optional[Attempt]:
     """The leader tries the pocket of creature WHO (the thieving tools used on them), or of
-    whoever is talked to (P pressed in a conversation). None when there's no one to rob (a
+    whoever is talked to (WHO not given). None when there's no one to rob (a
     narration, someone in the party, a dead body)."""
     if who is None:
         who = gd.talk_target_creature()

@@ -740,12 +740,10 @@ weight 40 or less).
 
 ([In the README](README.md#picking-pockets).)
 
-How: the patched game's conversation window sends a key it doesn't know to
-the helper (`INT FCh`), which has the Ledger roll and move the item, then adds
-the result to the window's text; and the routine that uses the item on the
-pointer on something on the map tells the helper what was used on what
-(`INT FDh`): for the thieving tools on someone, the Ledger does the same, and
-the helper shows the result instead of the game's "nothing happens".
+How: the patched game's routine that uses the item on the pointer on
+something on the map tells the helper what was used on what (`INT FDh`). For
+the thieving tools on someone, the Ledger rolls and moves the item, and the
+helper shows the result instead of the game's "nothing happens".
 
 ### Levels up to 10
 

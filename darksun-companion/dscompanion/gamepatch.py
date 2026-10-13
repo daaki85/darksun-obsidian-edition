@@ -34,7 +34,7 @@ GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
 VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT = 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7  # not 66h-6Fh: the game calls those itself, looking for drivers
-VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_PICK, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD
+VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFD  # (0xFC: free)
 VEC_TWO, VEC_DOUBLE = 0xFE, 0xF0
 VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY = 0xED, 0xEE, 0xEF
 VEC_NAMES_SIZE, VEC_NAMES_FILL = 0xEC, 0xEB
@@ -206,9 +206,6 @@ PATCHES = (
     # where a creature's turn in a fight starts: mov es:[bx+22Bh],ax, its movement for the turn
     # (DSCLOG does it, adding 1 move for boots when the companion's rule is on)
     Patch("move", 0x57566, bytes.fromhex("2689872b02"), _interrupt(VEC_MOVE, 5)),
-    # the dialogue window's key handling, where a key it doesn't know goes: jmp <ignore it>
-    # (DSCLOG takes P as trying to pick the pocket of the person talked to)
-    Patch("pick", 0x7D9FD, bytes.fromhex("e97003"), _interrupt(VEC_PICK, 3)),
     # the routine that uses the item on the pointer on what's under it on the map, once it has
     # found that: cmp si,-1 / jne +3 (DSCLOG has the Ledger see to its thieving tools there)
     Patch("use_item", 0x73615, bytes.fromhex("83feff7503"), _interrupt(VEC_USE_ITEM, 5)),

@@ -29,6 +29,20 @@ have the detail.
   shield on the forearm in a fight.
 - **Elves have pointed ears,** walking and fighting, beside any helm.
 
+**Changed**
+- **The Options tab in four groups:** **Rule changes** (the game's rules
+  closer to AD&D), **More character customization** (weapon specialization,
+  kits, levels up to 10), **Expanded features** (the leader's CHA at shops,
+  and **Improved thieving**: AD&D's thief skills, hiding to backstab, the
+  cloak, boots and belt, picking pockets) and **New content** (now with the
+  new wizard spells). The Thieves section is gone, its switches under
+  Improved thieving; each switch keeps its setting.
+
+**Removed**
+- **P in a conversation** for picking pockets: Thieves' Tools are the way to
+  pick a pocket. The game is no longer patched where the conversation window
+  passes on a key, and DSCLOG's handler for it is gone.
+
 **Fixed**
 - **Cilla looks like the elf she is.** The game's own party gave her the
   figure for half-elf women; she has the elf woman's now, in a new game and
@@ -40,6 +54,11 @@ have the detail.
   tab's section has the same name, and DEVELOPMENT.md a section of its own
   for how elves and half-elves are drawn.
 - **The patch notes have a table of contents,** as their web page does.
+- **The README in the Options tab's groups:** Rule changes, More character
+  customization (STORE and RECALL with it), Expanded features with Improved
+  thieving, and New content (the new wizard spells first). The guide's
+  Options table and both READMEs' overviews follow, and the Options tab's
+  screenshot is new.
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or
   "weapon kind": fighters specialize in one weapon type, gladiators in two,
   the level-up window has a picture of each weapon type, and the item tables'

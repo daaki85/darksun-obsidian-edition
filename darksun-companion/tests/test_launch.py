@@ -80,7 +80,6 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("  cycles: 20000", text)
         self.assertIn("  shadows: True", text)  # (not in the settings: its default)
         self.assertIn("  stealth: True", text)
-        self.assertIn("  pick_key: False", text)
         self.assertNotIn("Games", text)  # (where the game is installed is left out)
         self.assertNotIn("Xan", text)  # (and the lists kept for the game, not switches)
         self.assertIn("2 bytes at 0x10 (low memory)", text)

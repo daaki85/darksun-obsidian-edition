@@ -39,7 +39,6 @@ VEC_RING_AC equ 0xF8  ; PROBE_RING_AC
 VEC_RING_SAVE equ 0xF9  ; PROBE_RING_SAVE
 VEC_WEAPON equ 0xFA   ; PROBE_WEAPON
 VEC_MOVE   equ 0xFB   ; PROBE_MOVE
-VEC_PICK   equ 0xFC   ; PROBE_PICK
 VEC_USE_ITEM equ 0xFD ; PROBE_USE_ITEM
 VEC_TWO    equ 0xFE   ; PROBE_TWO
 VEC_DOUBLE equ 0xF0   ; PROBE_DOUBLE
@@ -231,12 +230,11 @@ stats_stamp dw 0                ; +164 the BIOS timer when the companion last wr
 stats_req  dw 0                 ; +166 counted up when a screen is about to show STATS ...
 stats_reply dw 0                ; +168 ... and set to it by the companion once STATS are up to date
 rules      dw 0                 ; +170 rule changes the companion turns on (RULE_HELMS, ...)
-pick_seq   dw 0                 ; +172 P pressed in a conversation (PROBE_PICK counts them) ...
-pick_reply dw 0                 ; +174 ... and set to it by the companion once PICK_TEXT is ready
+           dw 0, 0              ; +172 (unused: once P in a conversation)
 pick_off   dw pick_text         ; +176 offset of PICK_TEXT: what came of it, NUL-terminated (empty:
                                 ;      nothing to show)
 pick_on    dw 0                 ; +178 the companion sets bit 0 for the thieving tools on someone to pick
-                                ;      their pocket, and bit 1 too to take P in a conversation as that
+                                ;      their pocket
 use_seq    dw 0                 ; +180 an item used on something on the map (PROBE_USE_ITEM counts) ...
 use_reply  dw 0                 ; +182 ... and set to it by the companion once it has had its say
 use_who    dw 0                 ; +184 the object it was used on
@@ -1236,90 +1234,14 @@ probe_next:
         popad
         iret
 
-; PROBE_PICK: INT VEC_PICK replaces "jmp <ignore the key>" (3 bytes: INT + NOP) in the
-; dialogue window's key handling, where a key that isn't one of the window's own (1-5, Y, N,
-; the arrows...) goes, while the window waits for a reply. For P, when the companion wants it:
-; count it, wait a moment for the companion to try the leader's hand at the pocket of the
-; person talked to (PICK_TEXT, what came of it), and show that in the window, which goes on
-; waiting for a reply as before. The window's code is overlay code: the way back is put in a
-; frame the overlay manager can fix up, as for PROBE_NEXT.
-PICK_JUMP equ 0x7DD70 - 0x7D9FF ; (DSUN.EXE) the JMP's target less the address after the INT
-PICK_KEY  equ -0x0C             ; the key, at the key handler's BP-0Ch: scan code, character
-PICK_WAIT equ 9                 ; timer ticks
-PICK_KEY_ON equ 2               ; (pick_on: P in a conversation too)
-probe_pick:
-        sti
-        pushad
-        push es
-        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
-        add word [ss:bx + 34], PICK_JUMP  ; go on where the JMP went
-        test word [cs:pick_on], PICK_KEY_ON
-        jz .out
-        mov ax, [bp + PICK_KEY]
-        and al, 0xDF            ; p or P
-        cmp ax, 0x1950
-        jne .out
-        inc word [cs:pick_seq]
-        xor ax, ax
-        mov es, ax
-        mov dx, [es:0x46C]      ; the BIOS timer
-        call rtc_begin
-.wait:  mov ax, [cs:pick_reply]
-        cmp ax, [cs:pick_seq]
-        je .ready
-        mov ax, [es:0x46C]
-        sub ax, dx
-        cmp ax, PICK_WAIT
-        jae .late_pick_reply
-        call rtc_waited         ; (the BIOS clock can stand still: the game's timer
-        jnc .wait               ;   doesn't always pass its ticks on; at most 2 s by the real-time clock)
-.late_pick_reply:
-        jmp .out                ; no answer: the companion isn't reading
-.ready: cmp byte [cs:pick_text], 0
-        je .out
-        push word [ss:bx + 36]
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
-        call give_xp
-        call pick_show
-        pop bp
-        pop ax
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-.out:   pop es
-        popad
-        iret
-
-; PICK_TEXT in the dialogue window, which is up and waiting for a reply: the text, then the
-; replies shown again; DS = the game's
-pick_show:
-        mov ax, ds
-        add ax, DLG_STUB
-        mov [cs:dlg + 2], ax
-        mov word [cs:dlg], DLG_FEED
-        push word 0
-        push cs
-        push word pick_text
-        push word 2
-        call far [cs:dlg]
-        add sp, 8
-        push word 0
-        push dword 0
-        push word 3
-        call far [cs:dlg]
-        add sp, 8
-        ret
-
+PICK_WAIT equ 9                 ; timer ticks the companion has to answer (PROBE_USE_ITEM)
 PICK_SIZE equ 240
 pick_text times PICK_SIZE db 0
 
 ; GIVE_XP: the XP the companion asked for with PICK_TEXT (XP_WHO, XP_AMOUNT), given by the routine
 ; the game's scripts give one person XP with (GPL 21h; it sees to a level gained), and the sound
 ; of a quest done that they play with it ("... receives N experience points!" is in PICK_TEXT);
-; DS = the game's. Called in the frame PROBE_PICK and PROBE_USE_ITEM make for the overlay manager.
+; DS = the game's. Called in the frame PROBE_USE_ITEM makes for the overlay manager.
 XP_SEG    equ 0x4251            ; (DSUN.EXE segments, less the load segment) an overlay's entry:
 XP_OFF    equ 0x005C            ;   (who, how many)
 give_xp:
@@ -14306,9 +14228,6 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_MOVE
         mov dx, probe_move
         int 21h
-        mov ax, 2500h + VEC_PICK
-        mov dx, probe_pick
-        int 21h
         mov ax, 2500h + VEC_USE_ITEM
         mov dx, probe_use_item
         int 21h
@@ -14661,7 +14580,7 @@ install:                        ; DS = ES = PSP, CS = the image
 msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
 psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
-all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_PICK, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
+all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
             db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK
 all_vectors_end:

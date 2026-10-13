@@ -39,10 +39,7 @@ game.
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
   - [No manual check](#no-manual-check)
-  - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
 - [Rule changes](#rule-changes)
-  - [Weapon specialization](#weapon-specialization)
-  - [Kits](#kits)
   - [Class restrictions](#class-restrictions)
   - [Multiclass hit points](#multiclass-hit-points)
   - [Hit dice: the better of two](#hit-dice-the-better-of-two)
@@ -50,21 +47,27 @@ game.
   - [Rangers' casting level](#rangers-casting-level)
   - [Preservers' INT](#preservers-int)
   - [AD&D's class tables](#adds-class-tables)
-  - [The leader's CHA at shops](#the-leaders-cha-at-shops)
   - [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save)
   - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
   - [Two weapons](#two-weapons)
-  - [Thief skills from AD&D's table](#thief-skills-from-adds-table)
-  - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
-  - [Picking pockets](#picking-pockets)
-  - [Levels up to 10](#levels-up-to-10)
   - [Items saving against acid](#items-saving-against-acid)
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
-  - [New wizard spells](#new-wizard-spells)
   - [Helms](#helms)
   - [The game's own party](#the-games-own-party)
+- [More character customization](#more-character-customization)
+  - [Weapon specialization](#weapon-specialization)
+  - [Kits](#kits)
+  - [Levels up to 10](#levels-up-to-10)
+  - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
+- [Expanded features](#expanded-features)
+  - [The leader's CHA at shops](#the-leaders-cha-at-shops)
+  - [Improved thieving](#improved-thieving)
+    - [Thief skills from AD&D's table](#thief-skills-from-adds-table)
+    - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
+    - [Picking pockets](#picking-pockets)
 - [New content](#new-content)
+  - [New wizard spells](#new-wizard-spells)
   - [New items](#new-items)
   - [Bracers of defense](#bracers-of-defense)
   - [Robes](#robes)
@@ -106,13 +109,17 @@ from ([the dice log](#the-dice-log)). The game's own screens gain THAC0, saves,
 thief skills and spell slots, and the Look box tells you what can hurt a
 monster ([In the game](#in-the-game)).
 
-It brings the rules closer to AD&D: weapon specialization and mastery, kits
-(three for each class), class restrictions, AD&D's class tables (experience,
-priests' THAC0, spell slots), INT's limits on learning spells, thief skills
-from the Player's Handbook, saving throws as the books have them, the party
-leader's CHA at shops, scores and hit points kept as rolled, multiclass hit
-points as the books have them, and levels up to 10 ([Rule changes](#rule-changes)). Thieves can hide in
-shadows to backstab, and pick pockets ([Picking pockets](#picking-pockets)).
+It brings the rules closer to AD&D: class restrictions, AD&D's class tables
+(experience, priests' THAC0, spell slots), INT's limits on learning spells,
+saving throws as the books have them, scores and hit points kept as rolled,
+and multiclass hit points as the books have them ([Rule
+changes](#rule-changes)). It gives more ways to build a character: weapon
+specialization and mastery, kits (three for each class), levels up to 10,
+and STORE and RECALL for a creation roll ([More character
+customization](#more-character-customization)). And it expands play:
+thieves with AD&D's skills hide in shadows to backstab and pick pockets, and
+the party leader's CHA lowers shop prices ([Expanded
+features](#expanded-features)).
 
 It adds to Athas: new weapons in every material, magic items with stories of
 their own (robes and bracers among them, for those who wear no armour), three wizard
@@ -125,9 +132,8 @@ and half-elves have a look of their own ([Graphics](#graphics)).
 Quality of life changes: choosing an enemy with Tab and attacking it with
 Enter, scrolling the map by dragging with the mouse wheel
 ([Controls](#controls)), 40 saves and 29 saved characters ([More saves and
-characters](#more-saves-and-characters)), STORE and RECALL for a creation
-roll ([STORE and RECALL](#store-and-recall-on-the-creation-screen)), a game
-speed setting ([Game speed](#game-speed)), crash reports, and no dragon asking for a word from the
+characters](#more-saves-and-characters)), a game speed setting ([Game
+speed](#game-speed)), crash reports, and no dragon asking for a word from the
 manual, the game's copy protection ([No manual check](#no-manual-check)).
 
 **What it changes on your computer.** The game's own files are never
@@ -327,21 +333,26 @@ The sections:
 
 - **In the game**: each turn's rolls and how much they say, monster
   descriptions ([In the game](#in-the-game)).
-- **Rule changes** ([Rule changes](#rule-changes)).
-- **Thieves** ([Thieves](#hiding-in-shadows-to-backstab)): AD&D's thief skills, hiding to
-  backstab, and picking pockets.
-- **New content** ([New content](#new-content)): the new people, the vulture
-  and the new items, from the next time the game is started; what a saved game
-  already has stays in it.
+- **Rule changes** ([Rule changes](#rule-changes)): the game's rules closer
+  to AD&D.
+- **More character customization** ([More character
+  customization](#more-character-customization)): weapon specialization, kits
+  and levels up to 10.
+- **Expanded features** ([Expanded features](#expanded-features)): the
+  leader's CHA at shops, and **Improved thieving** (AD&D's thief skills,
+  hiding to backstab, the cloak, boots and belt, and picking pockets).
+- **New content** ([New content](#new-content)): the new spells, at once; the
+  new people, the vulture and the new items, from the next time the game is
+  started (what a saved game already has stays in it).
 - **Graphics** ([Graphics](#graphics)), **Controls**
   ([Controls](#controls)) and **Game speed** ([Game speed](#game-speed)).
 
-All are on by default except each turn's rolls in the game, P in a
-conversation and the right button, and are remembered for next time.
+All are on by default except each turn's rolls in the game and the right
+button, and are remembered for next time.
 In a window too small to show the open sections, the tab scrolls (scrollbar,
 mouse wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes and Thieves open and the other sections closed](docs/options.png)
+![The Options tab with More character customization, Expanded features (Improved thieving among them) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -483,7 +494,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 |---|---|
 | `X DEX check: d20 = 9, needs 16 or less (DEX 16) -> success` | An ability check. A natural 20 always fails. |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](#how-the-game-works-out-thief-skills)), and what its chance is made of. |
-| `Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Cilla moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (the [stealth rule](#rule-changes)). |
+| `Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Cilla moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (the [stealth rule](#hiding-in-shadows-to-backstab)). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
 | `    X's Bone Long Sword nearly broke: 0 on 0-7, then 12 on 0-19 (needed 0)` / `... BREAKS` | The weapon check the game makes after an attack sequence whose last attack hit. Only non-magical wood, bone, stone and obsidian weapons can break (and not every kind: clubs and quarterstaffs can't): they break when a 0-7 roll and then a 0-19 roll both come up 0, 1 chance in 160. The line only appears when the first roll comes up 0. |
 | `  Rampager's acid on Gerakis's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe` | An item the Rampager's acid or the Babau's corroding touch could destroy: the d20, the number it needed and whose number that was (see [Items saving against acid](#items-saving-against-acid)). |
@@ -500,7 +511,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `XP: Gerakis +67, K'ratchek +22, ... (for Slig 270)` | Experience the party got, and for which kills, with each one's XP from its character sheet. The game gives it right after the kill: an equal share to each character, split again between a multi-class character's classes (the sheet counts XP per class, so a three-class thri-kreen shows a third of the share). |
 | `Cilla is now a 3rd level Ranger` / `    max HP 15 -> 21 (+6)` | A level gained, and the new maximum HP. |
 | `    max HP unchanged: the game divides the hit point total by the classes, ...` | A multi-class character gained a level and its most hit points stayed the same: every class level rolls its die, but the game divides the whole total by the number of classes, so a small roll can add only a fraction (it counts at a later level). A human who changed class gets none in the new class until its level passes the old class's. |
-| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [levels up to 10](#rule-changes)). With [the better of two](#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
+| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [levels up to 10](#levels-up-to-10)). With [the better of two](#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
 
 **Character creation**
 
@@ -880,7 +891,7 @@ has a script command that lets each member try in turn, but no script uses it.)
 in the game, so they make no difference; nor does the equipment penalty on
 them. (The Ledger rolls move silently when a pocket isn't picked, see
 [Picking pockets](#picking-pockets), and hide in shadows and move silently in
-fights with the [stealth rule](#rule-changes).) The scripts also make 3 ability checks (a d20 under the ability): CHA
+fights with the [stealth rule](#hiding-in-shadows-to-backstab).) The scripts also make 3 ability checks (a d20 under the ability): CHA
 twice and STR once.
 
 `python -m dscompanion checks` lists them all with the script's text around
@@ -892,7 +903,7 @@ not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
 the two the Ledger rolls: move silently (when a pocket isn't picked, see
 [Picking pockets](#picking-pockets)) and hide in shadows (for the
-[stealth rule](#rule-changes)), with any Thieves' Tools carried. **All
+[stealth rule](#hiding-in-shadows-to-backstab)), with any Thieves' Tools carried. **All
 fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
 ![Cilla's card on the Characters tab: Thieves' Tools carried, and her thief skills now, move silently and hide in shadows among them](docs/thief-card.png)
@@ -1038,13 +1049,13 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
   and hide in shadows are the ones the Ledger rolls (for
-  [picking pockets](#picking-pockets) and the [stealth rule](#rule-changes)).
+  [picking pockets](#picking-pockets) and the [stealth rule](#hiding-in-shadows-to-backstab)).
   A worn belt's 5 is in `PICK` and `LOCK`. Hear noise (one script check) and
-  read languages (none) are left out for want of room. A ranger, with the [stealth rule](#rule-changes) on, gets their
+  read languages (none) are left out for want of room. A ranger, with the [stealth rule](#hiding-in-shadows-to-backstab) on, gets their
   `MOVE` and `HIDE` in the same places (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): -6 at DEX 1 to +5 at DEX 24-25, the
-  number the [two-weapon rule](#rule-changes) adds to its penalties, and the
+  number the [two-weapon rule](#two-weapons) adds to its penalties, and the
   one initiative uses. It is worked out from the character's DEX each time
   the panel is drawn, so it follows any change (Cat's Grace's, while it
   lasts).
@@ -1232,38 +1243,17 @@ dragon doesn't come: the game goes on as if it had been answered. Always on.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
 
-### STORE and RECALL on the creation screen
-
-The creation screen has two more buttons under the hit points, as Baldur's
-Gate has them: **STORE** keeps the roll on screen, and **RECALL** brings it
-back, however many times the die has been rolled since. A roll is the six
-scores and what the die's total allows (the `SUM:` line), the hit points and
-the PSP. So a good roll can be stored and the die tried again; if nothing
-better comes, RECALL puts the stored one back, AC and damage with it.
-
-![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:99/99, 28/28 hit points](docs/creation-store-recall.png)
-
-Changing the race, sex, classes or kit forgets the stored roll (its hit
-points were rolled for those), even if they are changed back: RECALL then
-does nothing until STORE keeps another. STORE again keeps the new roll in
-place of the old. Always on.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
-
 ## Rule changes
 
-Twenty-one changes to the game's rules, each with its own box on the Options tab:
-under **Rule changes**, but for the two thief rules, which are under
-**Thieves** with [picking pockets](#picking-pockets). All are on by default,
-and they take effect in games started with the dice log: with the Ledger
-running, or with **Play Dark Sun (in-game rolls)**, which uses the Options as
-last set. Untick one and the game's own rule is back at once. [How the game
-works](#how-the-game-works) has what the game does without them.
+Fourteen changes that bring the game's own rules closer to AD&D, each with
+its own box in the Options tab's **Rule changes** section. All are on by
+default, and they take effect in games started with the dice log: with the
+Ledger running, or with **Play Dark Sun (in-game rolls)**, which uses the
+Options as last set. Untick one and the game's own rule is back at once. [How
+the game works](#how-the-game-works) has what the game does without them.
 
 | Rule (its box on the Options tab) | What it changes |
 |---|---|
-| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
-| [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
 | [Class restrictions](#class-restrictions) | each class's limits on armour, shields and weapons hold, the strictest winning; a multiclass preserver casts no spells in armour |
 | [Multiclass hit points](#multiclass-hit-points) | CON's bonus on every hit die (a warrior's for a character with a warrior class), the total shared between the classes |
 | [Hit dice: the better of two](#hit-dice-the-better-of-two) | each hit die rolled twice, the better kept, for every character |
@@ -1271,18 +1261,407 @@ works](#how-the-game-works) has what the game does without them.
 | [Rangers' casting level](#rangers-casting-level) | a ranger's spells last and do damage as cast at its level less 7, as the spell levels it may cast already count it |
 | [Preservers' INT](#preservers-int) | INT gives a preserver a chance to learn a spell from a scroll, and the most spells of each spell level it may know |
 | [AD&D's class tables](#adds-class-tables) | the XP for each level, priests' THAC0, and clerics', druids' and preservers' spell slots from AD&D's tables |
-| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 16 or more lowers what shops ask, 5% to 25%, as in Baldur's Gate |
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Two weapons](#two-weapons) | -2 main hand, -4 off hand, DEX's reaction adjustment added; rangers none in light armour; the off hand attacks once a round |
-| [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
-| [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
-| [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [Items saving against acid](#items-saving-against-acid) | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
-| [New wizard spells](#new-wizard-spells) | Cat's Grace (DEX + 1d6), Erdlu Claw (talons) and Fogbolt (-3 to hit, AC 2 worse) |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
+
+### Class restrictions
+
+With **Class restrictions** ticked, a character's classes keep it from
+armour, shields and weapons as in AD&D, the strictest class winning. The game
+checks only that one of the character's classes may use an item; with the rule
+the others must allow it too, and putting on what one forbids gets the game's
+own "Cannot use this item":
+
+| Class | Armour and helms | Shields | Weapons |
+|---|---|---|---|
+| **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings |
+| **Thief**, multiclass | light only | a leather one, and only if another of its classes allows shields | as its classes allow |
+| **Preserver**, one class | none | none | as the game has it |
+| **Druid** | none | none | any |
+| **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
+
+A **multiclass preserver** may wear what its other classes allow, but casts no
+spells (wizard or priest) while wearing armour (a helm counts, a shield
+doesn't), as the game's own "No spell use" stops them. The **USE** screen
+heads its spell slots **NO SPELLS IN ARMOUR**, and the Characters tab adds
+"(no spells in armour)" to them. A human who has
+changed class is held by the class it has now; another race by all of its
+classes. A ranger turned cleric uses both spheres' weapons, and a warrior who
+dual-classed uses the weapons it specialized in once the new class's level
+passes the old (a fighter's, gladiator's or ranger's chosen weapon specs, and a
+ranger's bow). A ranger's bow is always its own: a fire ranger/cleric, whose
+fire sphere allows only obsidian weapons, may still use bows.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#class-restrictions).
+
+### Multiclass hit points
+
+With **Multiclass hit points** ticked, a character of more than one class
+gets its hit points as *Demihuman Deities* (TSR, 1998) sets out AD&D's rule
+for multiclassed characters: every hit die it rolls, at creation and at each
+level, gets CON's bonus, goes into a running total, and the total divided by
+the number of classes (dropping fractions) is its most hit points. CON's
+bonus is a warrior's (+3 at CON 17, +4 at 18 and so on) on every die if one
+of its classes is a fighter, gladiator or ranger, as a "warrior character";
+otherwise at most +2. Dice stop as usual after 9th or 10th level, and so
+does CON's bonus.
+
+The game already keeps the total and divides it, but gives CON's bonus only
+once a level of the character's highest class, whole: a preserver 5 / thief 6
+with CON 18 gets 2 × 11 dice / 2 = 11 hit points from CON with the rule,
+rather than the game's 2 × 6 = 12. A human
+who dual-classes isn't affected (one class at a time). Ticked during a game, a
+character's most hit points change at its next level, when the game works
+them out again. The log shows the bonus on each die:
+
+```
+Gerrard's 4th Fighter level: hit points d10 = 8, +3 CON 17, into the total shared by 2 classes
+```
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#multiclass-hit-points).
+
+### Hit dice: the better of two
+
+With **Hit dice rolled twice** ticked, every character's hit die is rolled
+twice and the better roll kept: at creation (one die for each starting level
+of each class) and at every level gained. Everything after the roll is the
+game's (or the other rules'): CON's least, a half-giant's double, and a
+multiclass character's share. It isn't AD&D's, but it softens a bad roll; on
+average a d10 gives 7.15 instead of 5.5, a d8 5.8 instead of 4.5, a d6 4.5
+instead of 3.5 and a d4 3.1 instead of 2.5. Levels past the dice (a fixed
+gain) don't change. The log shows both rolls:
+
+```
+Cilla's 3rd Ranger level: hit points d10 = 2 and 7, the better 7
+Character creation, hit points 18: Fighter d10 per level: 10 (the better of 2 and 10) + 5 (the better of 5 and 1); ...
+```
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hit-dice-the-better-of-two).
+
+### Scores and hit points as rolled
+
+The game's creation screen lets a click change what the die rolled: a left
+click raises a score by 1 (round to the least from the most), a right click
+lowers it, and a click on the hit points sets them anywhere the classes could
+roll. Every score can go to its most that way. With **Scores and hit points as
+rolled** ticked:
+
+* **The six add up to no more than the die gave.** A score may still be
+  lowered, and the points it frees raise another. A raise past what's spare
+  stops at it, or does nothing when none is spare. The game's least and most
+  for each score still hold.
+* **The totals show under CHR**, the six's and the die's: `SUM:99/101` has 2
+  points to spare. A new roll of the die (or of a new race or sex) sets both.
+  A new class can raise a score to its least, as the game does; the die's
+  total grows to match if the six then add up to more.
+* **The hit points are as rolled**: a click on them does nothing. **CON moves
+  them:** raising or lowering CON adds or takes off its bonus for every level,
+  as the game counts it (a warrior's full bonus, at most +2 for others), where
+  the game only kept them within the new least and most.
+
+The dice log gives each roll's total with its scores:
+`Character creation: the six scores add up to 101`.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scores-and-hit-points-as-rolled).
+
+### Rangers' casting level
+
+A ranger casts priest spells as a priest of its level less 7, as in AD&D: a
+9th-level ranger counts as 2nd level, so it may cast 1st-level spells. The
+game counts it so for the spell levels it may cast (and for Dispel Magic),
+but a spell's duration and damage take the whole ranger level: that ranger's
+spells lasted as a 9th-level priest's. With **Rangers' casting level**
+ticked, they take the level less 7 too. A character with another class that
+casts the spell (a cleric/ranger of the same element) casts it at the better
+of the two, the ranger's counted 7 less. The Seeker's and Justifier's kits
+take 5 and 9 off, ticked or not. A 9th-level ranger's Protection from Evil
+(3 rounds a level) lasts 6 rounds with the rule, 27 without. The dice log's
+duration and damage lines show the level wherever they roll dice.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rangers-casting-level).
+
+### Preservers' INT
+
+In the game a preserver learns any spell from a scroll it reads, and may know
+every spell. With **Preservers' INT** ticked, AD&D's table for INT holds:
+
+| INT | Chance to learn a spell | Most spells of each spell level |
+|---|---|---|
+| 9 | 35% | 6 |
+| 10 | 40% | 7 |
+| 11 | 45% | 7 |
+| 12 | 50% | 7 |
+| 13 | 55% | 9 |
+| 14 | 60% | 9 |
+| 15 | 65% | 11 |
+| 16 | 70% | 11 |
+| 17 | 75% | 14 |
+| 18 | 85% | 18 |
+| 19 | 95% | all |
+| 20 to 23 | 96% to 99% | all |
+| 24 and 25 | 100% | all |
+
+- **Reading a scroll:** the preserver rolls d100 against its chance. Under
+  it, the spell is learnt and the scroll used up, as in the game; over it,
+  the spell isn't learnt (YOU FAIL TO LEARN THE SPELL) and the scroll is used
+  up all the same.
+- **A full spell level:** a preserver that already knows the most spells of
+  the scroll's spell level can't learn it (TOO MANY SPELLS OF THAT LEVEL),
+  and keeps the scroll.
+- **Level ups and new characters:** CHOOSE A SPELL leaves out the spells of a
+  level the preserver already knows the most of, and doesn't open when
+  nothing else is left to learn.
+
+The dice log shows each try: `Dreamwalker reads the scroll of Magic Missile:
+d100 = 37, needs 60 or less (INT 14) -> learnt`. Priest spells and psionic
+powers are as the game has them.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
+
+### AD&D's class tables
+
+The game has tables of its own where AD&D's differ. With **AD&D's class
+tables** ticked, AD&D's hold (the [player's guide](GUIDE.md) has them in
+full):
+
+- **Experience:** a gladiator needs 2,250 XP for 2nd level (the game uses
+  the fighter's table), a ranger 2,250 (2,200) and a thief 1,250 (1,200);
+  the rest are as the game has them. View Character's next-level figure and
+  the level ups both follow it.
+- **Priests' THAC0:** clerics and druids improve by 2 every 3 levels from
+  4th (20, 20, 20, 18...), as AD&D's priests do; the game has them improve
+  from 3rd (19 at 3rd, 17 at 6th, 15 at 9th). The new THAC0 comes at the
+  next level up. Warriors', wizards' and rogues' were AD&D's already.
+- **Spell slots:** clerics and druids take AD&D's priest table (3 3 1 at 5th
+  level, the game 3 2 1), preservers AD&D's wizard table (4 2 1 at 5th); WIS
+  still adds a priest's bonus slots. Rangers' slots were AD&D's already.
+
+Hit points were AD&D's already (with [Levels up to 10](#levels-up-to-10)).
+Kits change these as before.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#adds-class-tables).
+
+### Spells saved against with the spell save
+
+Almost every spell is marked for the game's "kind 5" save, which it treats as
+petrification/polymorph; with this rule it is the spell save. The spells
+marked for paralysis/poison/death (the poison clouds, Poison, Slay Living, the
+psionic attacks) keep it, as AD&D has them, and so do three monsters' powers
+marked for petrification/polymorph. The dice log and the Spells tab name the
+save used.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#spells-saved-against-with-the-spell-save).
+
+### Fire, cold and electricity: DEX instead of a doubled d20
+
+The game doubles the save's d20 against those spells (and nine monsters'
+attacks of those kinds). With this rule the d20 isn't doubled and
+AD&D's DEX defensive adjustment is added instead, as AD&D does for attacks
+that can be dodged: -5 at DEX 1, -4 at 3, -3 at 4, ... none for 7-14, +1 at
+15, +2 at 16, +3 at 17, +4 at 18-20, +5 at 21-23 and +6 at 24-25. Fireball
+stays dangerous for slow targets (needing 14 at DEX 12: 35% to save, where the
+doubled d20 gave 70%) and much less so for quick ones (DEX 21: 60%). The log
+names it: `+5 DEX 21 dodging`.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
+
+### Two weapons
+
+With **Two weapons** ticked, a character with a melee weapon in each hand
+attacks at -2 with the main (right) hand and -4 with the off (left) hand, plus
+the DEX reaction adjustment (the table under [Initiative](#initiative)). That
+can bring the penalty to 0 but never make it a bonus, and low DEX makes it
+worse: DEX 17 gives 0 and -2, DEX 21 0 and 0, DEX 3 -5 and -7. One weapon, a
+two-handed weapon, a weapon and a shield, or a weapon and a bow or sling (the
+missile slot) have no penalty. The game's own rule, a small bonus at DEX 5 or
+less, is gone.
+
+Rangers (their kits too) and [Twin-blades](#kits) have no penalty in light
+armour: every armour piece worn, a helm too, of leather or of no material. In
+other armour they take it as anyone does, DEX included. A Justifier has none
+in any armour. The dice log names it (`-4 two weapons, off hand at DEX 15`),
+as do the THAC0 lines on the Characters tab and the inventory screen.
+
+The off hand attacks once a round, whoever holds it: extra attacks (a
+fighter's, gladiator's or ranger's 3/2 from the game, a specialist's,
+mastery's, the kits') are the main hand's alone. So a 7th-level Crusader
+with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
+in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
+The off hand's DAM lines (the inventory screen and View Character) show its
+one attack.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons-adds-penalties).
+
+### Items saving against acid
+
+Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
+of armour, and the **Babau's corroding touch** a worn piece of armour and the
+melee weapon held (the first one in the character's list of held items; bows
+and slings never). The game makes the check on every such hit, whether or not
+the target's saving throw against the attack succeeds, and shows its own
+message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
+pieces worn on the arms, legs or chest count, not helms or shields, and at
+most one piece of armour is lost to a hit: the first that fails, in the order
+of the character's list.
+
+The game's own checks:
+
+- **A weapon** is destroyed on a d20 under 8 less its plus: a plain one 7 in
+  20 (35%), a +1 30%, +7 or better never.
+- **Armour** with a magical power (Drake Armor, Shimmer Armor) is never
+  destroyed. Any other piece is destroyed at once, without a roll, plus or
+  no plus: Tanelyv's Armor +2 goes as surely as plain leather. (The game reads
+  the byte that holds the item's power, not its plus.)
+
+With **Items save against acid as in AD&D** ticked, each item needs the easier
+of the game's number and AD&D's saving throw against acid for its material
+(the DMG's table), so no item is worse off than in the game. AD&D's number is
+less the item's plus, and 1 less again for a magical power:
+
+| Material | AD&D's number (the DMG's row) |
+|---|---|
+| Wood | 8 (thick wood) |
+| Bone (the game's ring, brigandine and scale armour too) | 11 |
+| Stone, obsidian | 5 (glass, the nearest) |
+| Metal | 13 |
+| Leather | 10 |
+| None (Silk Armor) | 12 (cloth) |
+
+| Item | Saved in the game | Saved with the rule |
+|---|---|---|
+| Leather Chest Armor | 0% | 55% (needs 10) |
+| Leather Chest Armor +1 | 0% | 60% (needs 9) |
+| Bone scale chest | 0% | 50% (needs 11) |
+| Chain chest | 0% | 40% (needs 13) |
+| Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
+| Drake Armor +1 (a power) | 100% | 100% (the game's) |
+| Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
+| Shadowseeker (metal, +1) | 70% | 70% (the game's: needs 7) |
+| Obsidian Dagger | 65% | 80% (needs 5) |
+| The Ledger's plain bone weapons (Dagger, Short Sword, Axe, Great Axe) | 65% | 65% (the game's: needs 8) |
+| The Ledger's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
+| The Ledger's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
+| Kreenfang, Drakejaw, Stillwater, Thornwall (bone, +1) | 70% | 70% (the game's: needs 7) |
+| Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
+| Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
+| Glasshewer (obsidian, +2) | 75% | 90% (needs 3) |
+| Deepbiter (stone, +1) | 70% | 85% (needs 4) |
+| Gutterknot (wood, +1) | 70% | 70% (the game's: needs 7) |
+| Greenbright, Galefang, Headsman, Linebreaker (metal, +2) | 75% | 75% (the game's: needs 6) |
+
+The dice log shows every check, whichever rule is on:
+
+```
+Defiler's saving throw vs Acid from Rampager (paralysis/poison/death): d20 = 20 (natural 20) -> saved
+  Rampager's acid on Defiler's Metal Chain Leg Armor: d20 = 16, needs 13 (AD&D's, 13 for metal; the game's: destroyed without a roll) -> safe
+  Rampager's acid on Defiler's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe
+```
+
+The Detonate psionic power, which can blow up an item a target carries, keeps
+the game's own rule (a d20 under 15 less the item's plus).
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
+
+### Rings and cloaks of protection
+
+The game has no rings or cloaks of protection; the Ledger adds three (the
+arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
+[New items](#new-items)), each +1 to AC and +1 on every
+saving throw. With **Rings and cloaks of protection as in AD&D** ticked, they
+follow the AD&D rules for them:
+
+- **Two rings don't add up:** only the better one counts (the left hand's,
+  if they're equal). The arena's ring and Pehtucl's, both +1, give +1 together,
+  not +2.
+- **A ring gives no AC with magical armour** (any worn armour piece, helm
+  included, with a plus), but still adds to saving throws.
+- **A cloak does nothing,** neither AC nor saves, with magical armour, with
+  metal armour (Chain, Grey's Scale, Tanelyv's Armor, the Helm of
+  Contemplation) or with a shield in either hand. Natural armour is fine:
+  leather and bone (Ring, Brigandine and Scale are bone in Dark Sun), and
+  plain helms. The cloak still adds to a ring.
+
+Armour here is what is worn on the arms, legs, head or chest; something only
+carried in a backpack doesn't count. Untick it and every ring and cloak worn
+counts, whatever else is worn (the game's way with the patched game).
+
+### Half-giants' two-handed weapons
+
+Half-giants stand up to twelve feet tall. With **Half-giants wield
+two-handed weapons in one hand** ticked, a half-giant can hold a two-handed
+weapon (a two-handed sword, a halberd, a bow) in one hand, with a shield or a
+light weapon in the other. The game's own rule that the two hands can't both
+hold heavy weapons (over 30 in weight each) still stands, so no half-giant
+holds two two-handed weapons. With two weapons ready, the two-weapon penalties
+apply as for anyone. The inventory screen still writes "2 handed" in the
+weapon's line: that is its weapon type, not a limit.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
+
+### Helms
+
+The game's helms count as armour but give AC 0. With **Helms give AC 1**
+ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
+Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
+the game's tables). It shows on the View Character and inventory screens like
+any armour.
+
+The game has no descriptions of items, only their names, so while the rule is
+on the Ledger renames the plain helm **Helm (AC 1)**. The named ones
+(Dapartea's Helm, Helm/Contempltn, Helm of Might) keep their names, which
+would be too long for the game's Look box with the note. With the rule off,
+or without the Ledger, the names are the game's own.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
+
+### The game's own party
+
+START GAME with no party made plays the game's own four. With the rules on,
+the Ledger makes them ready for them in the first moments of a new game, and
+says so in the dice log:
+
+| Character | With weapon specialization | With class restrictions |
+|---|---|---|
+| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
+| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
+
+With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
+class: a spell slot more at each spell level and two preserver spells a turn
+in a fight. His gear stays as it is (an Arcanist has none of its own), and so
+do the hit points the game gave him: the Arcanist's d3 counts from his next
+level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
+once, can't have one.
+
+Cermak and Cilla keep the game's own starting spells: only a character made
+on the creation screen [picks its own](#changing-class).
+
+![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
+
+![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
+
+## More character customization
+
+More choices for each character: a weapon to specialize in, a kit, two more
+levels to reach, and a roll to keep while trying the die again. The first
+three each have a box in the Options tab's **More character customization**
+section. All are on by default and, like the rule changes, take effect at
+once in games started with the dice log; untick one and the game is as it
+was.
+
+| Box on the Options tab | What it adds |
+|---|---|
+| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
+| [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
+| [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 
 ### Weapon specialization
 
@@ -1648,182 +2027,90 @@ And some kits can't go together, whichever came first (a human has one kit for e
 | Twin-blade | Healer | two weapons, and an off hand free of them |
 | Brute | Shinobi, Lifebinder | a two-handed weapon, and weapons that can't be one |
 
-### Class restrictions
+### Levels up to 10
 
-With **Class restrictions** ticked, a character's classes keep it from
-armour, shields and weapons as in AD&D, the strictest class winning. The game
-checks only that one of the character's classes may use an item; with the rule
-the others must allow it too, and putting on what one forbids gets the game's
-own "Cannot use this item":
+The game stops every class at level 9 (its manual's tables end there too).
+With **Class levels go up to 10** ticked, each class goes one level further,
+at the XP AD&D gives for 10th level:
 
-| Class | Armour and helms | Shields | Weapons |
-|---|---|---|---|
-| **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings |
-| **Thief**, multiclass | light only | a leather one, and only if another of its classes allows shields | as its classes allow |
-| **Preserver**, one class | none | none | as the game has it |
-| **Druid** | none | none | any |
-| **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
+| Class | XP for 10th level |
+|---|---|
+| Cleric | 450,000 |
+| Druid | 125,000 |
+| Fighter, gladiator | 500,000 |
+| Preserver | 250,000 |
+| Psionicist | 400,000 |
+| Ranger | 600,000 |
+| Thief | 160,000 |
 
-A **multiclass preserver** may wear what its other classes allow, but casts no
-spells (wizard or priest) while wearing armour (a helm counts, a shield
-doesn't), as the game's own "No spell use" stops them. The **USE** screen
-heads its spell slots **NO SPELLS IN ARMOUR**, and the Characters tab adds
-"(no spells in armour)" to them. A human who has
-changed class is held by the class it has now; another race by all of its
-classes. A ranger turned cleric uses both spheres' weapons, and a warrior who
-dual-classed uses the weapons it specialized in once the new class's level
-passes the old (a fighter's, gladiator's or ranger's chosen weapon specs, and a
-ranger's bow). A ranger's bow is always its own: a fire ranger/cleric, whose
-fire sphere allows only obsidian weapons, may still use bows.
+Everything else at 10th level is the game's own: it had it all along, and
+only the cap kept it out of reach. Its XP tables go on to level 20 (druids
+with a table of their own, not the cleric's), and THAC0, saves, spell slots
+and thief skills are worked out from the level. So at 10th level:
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#class-restrictions).
+- **Hit points** follow AD&D past 9th: preservers and thieves still roll
+  (d4 and d6, CON's bonus counting too), while the others gain a fixed amount
+  (+3 for fighters, gladiators and rangers, +2 for clerics, druids and
+  psionicists). The game's own table has the fixed gain for thieves too, as
+  it keeps thieves and psionicists together and AD&D's psionicist stops
+  rolling at 9th; with the rule thieves roll their 10th die.
+- **Gladiators** optimise their armour, as the game already has them do:
+  AC 1 better for every 5 gladiator levels, so -2 at 10th where it was -1.
+  (The Ledger counts it in **AC: spells, rings, other**. The game gives it
+  with or without armour.)
+- **THAC0 and saves** improve as the game's formulas give: 11 for a
+  gladiator, 14 for a druid, as for AD&D's warriors and priests.
+- **Spell slots** grow at the levels casters already have, up to 5th; no
+  class gets 6th-level slots (a cleric would at 11, a preserver at 12), so no
+  spells past 5th level are needed. A 10th-level preserver or druid has
+  5 4 3 2 2 before WIS by the game's table; with [AD&D's class
+  tables](#adds-class-tables), 4 4 3 2 2 and 4 4 3 3 2.
+- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
+  as at every level, offered from spell level (class level + 1) / 2 down:
+  5th at 10th as at 9th. **A psionicist picks a new power** (the game gives
+  one at each level, two at odd levels and 4th).
+- Spell damage that grows with the caster's level already counts up to
+  level 10 in the game, so a 10th-level caster gets the last step.
 
-### Multiclass hit points
+The level-up comes as the game's usual one ("Gerakis gains a level"), and
+View Character stops showing the XP for the next level at 10, as it does at
+9 without the rule. For a character of more than one class, a class already
+at 10 isn't named in the brackets, since it has no next level. Untick it and
+nobody goes past the level they have: a 10th-level character stays 10th.
 
-With **Multiclass hit points** ticked, a character of more than one class
-gets its hit points as *Demihuman Deities* (TSR, 1998) sets out AD&D's rule
-for multiclassed characters: every hit die it rolls, at creation and at each
-level, gets CON's bonus, goes into a running total, and the total divided by
-the number of classes (dropping fractions) is its most hit points. CON's
-bonus is a warrior's (+3 at CON 17, +4 at 18 and so on) on every die if one
-of its classes is a fighter, gladiator or ranger, as a "warrior character";
-otherwise at most +2. Dice stop as usual after 9th or 10th level, and so
-does CON's bonus.
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#levels-up-to-10).
 
-The game already keeps the total and divides it, but gives CON's bonus only
-once a level of the character's highest class, whole: a preserver 5 / thief 6
-with CON 18 gets 2 × 11 dice / 2 = 11 hit points from CON with the rule,
-rather than the game's 2 × 6 = 12. A human
-who dual-classes isn't affected (one class at a time). Ticked during a game, a
-character's most hit points change at its next level, when the game works
-them out again. The log shows the bonus on each die:
+### STORE and RECALL on the creation screen
 
-```
-Gerrard's 4th Fighter level: hit points d10 = 8, +3 CON 17, into the total shared by 2 classes
-```
+The creation screen has two more buttons under the hit points, as Baldur's
+Gate has them: **STORE** keeps the roll on screen, and **RECALL** brings it
+back, however many times the die has been rolled since. A roll is the six
+scores and what the die's total allows (the `SUM:` line), the hit points and
+the PSP. So a good roll can be stored and the die tried again; if nothing
+better comes, RECALL puts the stored one back, AC and damage with it.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#multiclass-hit-points).
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:99/99, 28/28 hit points](docs/creation-store-recall.png)
 
-### Hit dice: the better of two
+Changing the race, sex, classes or kit forgets the stored roll (its hit
+points were rolled for those), even if they are changed back: RECALL then
+does nothing until STORE keeps another. STORE again keeps the new roll in
+place of the old. Always on, in games started from the Ledger.
 
-With **Hit dice rolled twice** ticked, every character's hit die is rolled
-twice and the better roll kept: at creation (one die for each starting level
-of each class) and at every level gained. Everything after the roll is the
-game's (or the other rules'): CON's least, a half-giant's double, and a
-multiclass character's share. It isn't AD&D's, but it softens a bad roll; on
-average a d10 gives 7.15 instead of 5.5, a d8 5.8 instead of 4.5, a d6 4.5
-instead of 3.5 and a d4 3.1 instead of 2.5. Levels past the dice (a fixed
-gain) don't change. The log shows both rolls:
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 
-```
-Cilla's 3rd Ranger level: hit points d10 = 2 and 7, the better 7
-Character creation, hit points 18: Fighter d10 per level: 10 (the better of 2 and 10) + 5 (the better of 5 and 1); ...
-```
+## Expanded features
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hit-dice-the-better-of-two).
+New things to do in play, each with a box in the Options tab's **Expanded
+features** section. All are on by default and, like the rule changes, take effect at
+once in games started with the dice log; untick one and the game is as it
+was.
 
-### Scores and hit points as rolled
-
-The game's creation screen lets a click change what the die rolled: a left
-click raises a score by 1 (round to the least from the most), a right click
-lowers it, and a click on the hit points sets them anywhere the classes could
-roll. Every score can go to its most that way. With **Scores and hit points as
-rolled** ticked:
-
-* **The six add up to no more than the die gave.** A score may still be
-  lowered, and the points it frees raise another. A raise past what's spare
-  stops at it, or does nothing when none is spare. The game's least and most
-  for each score still hold.
-* **The totals show under CHR**, the six's and the die's: `SUM:99/101` has 2
-  points to spare. A new roll of the die (or of a new race or sex) sets both.
-  A new class can raise a score to its least, as the game does; the die's
-  total grows to match if the six then add up to more.
-* **The hit points are as rolled**: a click on them does nothing. **CON moves
-  them:** raising or lowering CON adds or takes off its bonus for every level,
-  as the game counts it (a warrior's full bonus, at most +2 for others), where
-  the game only kept them within the new least and most.
-
-The dice log gives each roll's total with its scores:
-`Character creation: the six scores add up to 101`.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scores-and-hit-points-as-rolled).
-
-### Rangers' casting level
-
-A ranger casts priest spells as a priest of its level less 7, as in AD&D: a
-9th-level ranger counts as 2nd level, so it may cast 1st-level spells. The
-game counts it so for the spell levels it may cast (and for Dispel Magic),
-but a spell's duration and damage take the whole ranger level: that ranger's
-spells lasted as a 9th-level priest's. With **Rangers' casting level**
-ticked, they take the level less 7 too. A character with another class that
-casts the spell (a cleric/ranger of the same element) casts it at the better
-of the two, the ranger's counted 7 less. The Seeker's and Justifier's kits
-take 5 and 9 off, ticked or not. A 9th-level ranger's Protection from Evil
-(3 rounds a level) lasts 6 rounds with the rule, 27 without. The dice log's
-duration and damage lines show the level wherever they roll dice.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rangers-casting-level).
-
-### Preservers' INT
-
-In the game a preserver learns any spell from a scroll it reads, and may know
-every spell. With **Preservers' INT** ticked, AD&D's table for INT holds:
-
-| INT | Chance to learn a spell | Most spells of each spell level |
-|---|---|---|
-| 9 | 35% | 6 |
-| 10 | 40% | 7 |
-| 11 | 45% | 7 |
-| 12 | 50% | 7 |
-| 13 | 55% | 9 |
-| 14 | 60% | 9 |
-| 15 | 65% | 11 |
-| 16 | 70% | 11 |
-| 17 | 75% | 14 |
-| 18 | 85% | 18 |
-| 19 | 95% | all |
-| 20 to 23 | 96% to 99% | all |
-| 24 and 25 | 100% | all |
-
-- **Reading a scroll:** the preserver rolls d100 against its chance. Under
-  it, the spell is learnt and the scroll used up, as in the game; over it,
-  the spell isn't learnt (YOU FAIL TO LEARN THE SPELL) and the scroll is used
-  up all the same.
-- **A full spell level:** a preserver that already knows the most spells of
-  the scroll's spell level can't learn it (TOO MANY SPELLS OF THAT LEVEL),
-  and keeps the scroll.
-- **Level ups and new characters:** CHOOSE A SPELL leaves out the spells of a
-  level the preserver already knows the most of, and doesn't open when
-  nothing else is left to learn.
-
-The dice log shows each try: `Dreamwalker reads the scroll of Magic Missile:
-d100 = 37, needs 60 or less (INT 14) -> learnt`. Priest spells and psionic
-powers are as the game has them.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
-
-### AD&D's class tables
-
-The game has tables of its own where AD&D's differ. With **AD&D's class
-tables** ticked, AD&D's hold (the [player's guide](GUIDE.md) has them in
-full):
-
-- **Experience:** a gladiator needs 2,250 XP for 2nd level (the game uses
-  the fighter's table), a ranger 2,250 (2,200) and a thief 1,250 (1,200);
-  the rest are as the game has them. View Character's next-level figure and
-  the level ups both follow it.
-- **Priests' THAC0:** clerics and druids improve by 2 every 3 levels from
-  4th (20, 20, 20, 18...), as AD&D's priests do; the game has them improve
-  from 3rd (19 at 3rd, 17 at 6th, 15 at 9th). The new THAC0 comes at the
-  next level up. Warriors', wizards' and rogues' were AD&D's already.
-- **Spell slots:** clerics and druids take AD&D's priest table (3 3 1 at 5th
-  level, the game 3 2 1), preservers AD&D's wizard table (4 2 1 at 5th); WIS
-  still adds a priest's bonus slots. Rangers' slots were AD&D's already.
-
-Hit points were AD&D's already (with [Levels up to 10](#levels-up-to-10)).
-Kits change these as before.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#adds-class-tables).
+| Box on the Options tab | What it adds |
+|---|---|
+| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 16 or more lowers what shops ask, 5% to 25%, as in Baldur's Gate |
+| [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
+| [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
+| [Picking pockets](#picking-pockets) | a thief uses Thieves' Tools on anyone in sight, until caught |
 
 ### The leader's CHA at shops
 
@@ -1841,58 +2128,14 @@ game has it.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
 
-### Spells saved against with the spell save
+### Improved thieving
 
-Almost every spell is marked for the game's "kind 5" save, which it treats as
-petrification/polymorph; with this rule it is the spell save. The spells
-marked for paralysis/poison/death (the poison clouds, Poison, Slay Living, the
-psionic attacks) keep it, as AD&D has them, and so do three monsters' powers
-marked for petrification/polymorph. The dice log and the Spells tab name the
-save used.
+Thieves play as the Player's Handbook has them: their skills from its table,
+hiding in shadows and moving silently to backstab, worn gear that helps, and
+pockets to pick. The boxes are together under **Improved thieving** in the
+Options tab's Expanded features section.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#spells-saved-against-with-the-spell-save).
-
-### Fire, cold and electricity: DEX instead of a doubled d20
-
-The game doubles the save's d20 against those spells (and nine monsters'
-attacks of those kinds). With this rule the d20 isn't doubled and
-AD&D's DEX defensive adjustment is added instead, as AD&D does for attacks
-that can be dodged: -5 at DEX 1, -4 at 3, -3 at 4, ... none for 7-14, +1 at
-15, +2 at 16, +3 at 17, +4 at 18-20, +5 at 21-23 and +6 at 24-25. Fireball
-stays dangerous for slow targets (needing 14 at DEX 12: 35% to save, where the
-doubled d20 gave 70%) and much less so for quick ones (DEX 21: 60%). The log
-names it: `+5 DEX 21 dodging`.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
-
-### Two weapons
-
-With **Two weapons** ticked, a character with a melee weapon in each hand
-attacks at -2 with the main (right) hand and -4 with the off (left) hand, plus
-the DEX reaction adjustment (the table under [Initiative](#initiative)). That
-can bring the penalty to 0 but never make it a bonus, and low DEX makes it
-worse: DEX 17 gives 0 and -2, DEX 21 0 and 0, DEX 3 -5 and -7. One weapon, a
-two-handed weapon, a weapon and a shield, or a weapon and a bow or sling (the
-missile slot) have no penalty. The game's own rule, a small bonus at DEX 5 or
-less, is gone.
-
-Rangers (their kits too) and [Twin-blades](#kits) have no penalty in light
-armour: every armour piece worn, a helm too, of leather or of no material. In
-other armour they take it as anyone does, DEX included. A Justifier has none
-in any armour. The dice log names it (`-4 two weapons, off hand at DEX 15`),
-as do the THAC0 lines on the Characters tab and the inventory screen.
-
-The off hand attacks once a round, whoever holds it: extra attacks (a
-fighter's, gladiator's or ranger's 3/2 from the game, a specialist's,
-mastery's, the kits') are the main hand's alone. So a 7th-level Crusader
-with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
-in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
-The off hand's DAM lines (the inventory screen and View Character) show its
-one attack.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons-adds-penalties).
-
-### Thief skills from AD&D's table
+#### Thief skills from AD&D's table
 
 The game's thief skills come out high: a 3rd-level elf thief with DEX 22 has
 move silently 66 and hide in shadows 61. AD&D gives 27 and 20 at 3rd level
@@ -1958,7 +2201,7 @@ Untick it for the game's numbers.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thief-skills-from-adds-table).
 
-### Hiding in shadows to backstab
+#### Hiding in shadows to backstab
 
 The game never rolls hide in shadows, and a thief only backstabs a target that
 has turned to face someone else. With **Thieves hide in shadows and move
@@ -2042,26 +2285,22 @@ Gerakis attacks Slig from behind with Wooden Club (1d6): d20 = 12, needs 10+ (55
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
 
-### Picking pockets
+#### Picking pockets
 
 The game has one pocket to pick, in the Trustee's conversation (his key). With
 **Picking pockets** ticked on the Options tab (it is by default), a thief can
-try anyone's with Thieves' Tools; with its **... or the leader, a thief, presses
-P in a conversation** ticked too (it is off by default), also with P, the
-thief as the party's leader (keys 1-4):
+try anyone's with **Thieves' Tools**. Every thief starts a new game with a set
+(a satchel) in the first free backpack cell, and a thief who joins later gets
+one too (the log says so). A thief who loses or sells theirs can buy another
+from Kel, who sells two sets.
 
-- **Thieves' Tools.** Every thief starts a new game with a set (a satchel) in
-  the first free backpack cell, and a thief who joins later gets one too (the
-  log says so). A thief who loses or sells theirs can buy another from Kel, who
-  sells two sets. On the inventory screen, pick the tools up, go back to the
-  game with them on the pointer, and click someone in sight: the result comes
-  up in the game's message window, and the tools stay on the pointer for the
-  next try. (Clicking open ground drops them, as with anything carried.) Not in
-  a fight: there's no time for it then.
-- **P in a conversation** (if ticked). In a conversation, press **P**.
+On the inventory screen, pick the tools up, go back to the game with them on
+the pointer, and click someone in sight. The tools stay on the pointer for the
+next try (clicking open ground drops them, as with anything carried). Not in a
+fight: there's no time for it then.
 
-Either way, the Ledger rolls the leader's pick pockets chance as
-it stands now (effects and a worn belt's 5 counted, as in the thief rows):
+The Ledger rolls the thief's pick pockets chance as it stands now (effects and
+a worn belt's 5 counted, as in the thief rows):
 
 - **Success:** one small thing goes into the thief's backpack (its first free
   cell): something weighing 10 or less (a bag or arrows are 10, a helm 15, a
@@ -2085,9 +2324,8 @@ or until they take the coins; after that, that person keeps a hand on their
 pockets for good. The Ledger remembers who in `settings.json`,
 for this party, with the time on the game's clock: load a game saved before
 the try and the clock goes back past it, so the try is forgotten and the
-person can be tried again. The Trustee is left to his own conversation. What happens is
-added to the conversation's text (use its arrow to scroll down to it if the
-text is long) and to the dice log:
+person can be tried again. The Trustee is left to his own conversation. What happens
+comes up in the game's message window and in the dice log:
 
 ```
 Daaki picks Kurzak's pocket: d100 = 71, needs 63 or less -> failed
@@ -2097,164 +2335,12 @@ Daaki picks Kurzak's pocket: d100 = 71, needs 63 or less -> failed
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
 
-### Levels up to 10
+## New content
 
-The game stops every class at level 9 (its manual's tables end there too).
-With **Class levels go up to 10** ticked, each class goes one level further,
-at the XP AD&D gives for 10th level:
-
-| Class | XP for 10th level |
-|---|---|
-| Cleric | 450,000 |
-| Druid | 125,000 |
-| Fighter, gladiator | 500,000 |
-| Preserver | 250,000 |
-| Psionicist | 400,000 |
-| Ranger | 600,000 |
-| Thief | 160,000 |
-
-Everything else at 10th level is the game's own: it had it all along, and
-only the cap kept it out of reach. Its XP tables go on to level 20 (druids
-with a table of their own, not the cleric's), and THAC0, saves, spell slots
-and thief skills are worked out from the level. So at 10th level:
-
-- **Hit points** follow AD&D past 9th: preservers and thieves still roll
-  (d4 and d6, CON's bonus counting too), while the others gain a fixed amount
-  (+3 for fighters, gladiators and rangers, +2 for clerics, druids and
-  psionicists). The game's own table has the fixed gain for thieves too, as
-  it keeps thieves and psionicists together and AD&D's psionicist stops
-  rolling at 9th; with the rule thieves roll their 10th die.
-- **Gladiators** optimise their armour, as the game already has them do:
-  AC 1 better for every 5 gladiator levels, so -2 at 10th where it was -1.
-  (The Ledger counts it in **AC: spells, rings, other**. The game gives it
-  with or without armour.)
-- **THAC0 and saves** improve as the game's formulas give: 11 for a
-  gladiator, 14 for a druid, as for AD&D's warriors and priests.
-- **Spell slots** grow at the levels casters already have, up to 5th; no
-  class gets 6th-level slots (a cleric would at 11, a preserver at 12), so no
-  spells past 5th level are needed. A 10th-level preserver or druid has
-  5 4 3 2 2 before WIS by the game's table; with [AD&D's class
-  tables](#adds-class-tables), 4 4 3 2 2 and 4 4 3 3 2.
-- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
-  as at every level, offered from spell level (class level + 1) / 2 down:
-  5th at 10th as at 9th. **A psionicist picks a new power** (the game gives
-  one at each level, two at odd levels and 4th).
-- Spell damage that grows with the caster's level already counts up to
-  level 10 in the game, so a 10th-level caster gets the last step.
-
-The level-up comes as the game's usual one ("Gerakis gains a level"), and
-View Character stops showing the XP for the next level at 10, as it does at
-9 without the rule. For a character of more than one class, a class already
-at 10 isn't named in the brackets, since it has no next level. Untick it and
-nobody goes past the level they have: a 10th-level character stays 10th.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#levels-up-to-10).
-
-### Items saving against acid
-
-Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
-of armour, and the **Babau's corroding touch** a worn piece of armour and the
-melee weapon held (the first one in the character's list of held items; bows
-and slings never). The game makes the check on every such hit, whether or not
-the target's saving throw against the attack succeeds, and shows its own
-message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
-pieces worn on the arms, legs or chest count, not helms or shields, and at
-most one piece of armour is lost to a hit: the first that fails, in the order
-of the character's list.
-
-The game's own checks:
-
-- **A weapon** is destroyed on a d20 under 8 less its plus: a plain one 7 in
-  20 (35%), a +1 30%, +7 or better never.
-- **Armour** with a magical power (Drake Armor, Shimmer Armor) is never
-  destroyed. Any other piece is destroyed at once, without a roll, plus or
-  no plus: Tanelyv's Armor +2 goes as surely as plain leather. (The game reads
-  the byte that holds the item's power, not its plus.)
-
-With **Items save against acid as in AD&D** ticked, each item needs the easier
-of the game's number and AD&D's saving throw against acid for its material
-(the DMG's table), so no item is worse off than in the game. AD&D's number is
-less the item's plus, and 1 less again for a magical power:
-
-| Material | AD&D's number (the DMG's row) |
-|---|---|
-| Wood | 8 (thick wood) |
-| Bone (the game's ring, brigandine and scale armour too) | 11 |
-| Stone, obsidian | 5 (glass, the nearest) |
-| Metal | 13 |
-| Leather | 10 |
-| None (Silk Armor) | 12 (cloth) |
-
-| Item | Saved in the game | Saved with the rule |
-|---|---|---|
-| Leather Chest Armor | 0% | 55% (needs 10) |
-| Leather Chest Armor +1 | 0% | 60% (needs 9) |
-| Bone scale chest | 0% | 50% (needs 11) |
-| Chain chest | 0% | 40% (needs 13) |
-| Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
-| Drake Armor +1 (a power) | 100% | 100% (the game's) |
-| Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
-| Shadowseeker (metal, +1) | 70% | 70% (the game's: needs 7) |
-| Obsidian Dagger | 65% | 80% (needs 5) |
-| The Ledger's plain bone weapons (Dagger, Short Sword, Axe, Great Axe) | 65% | 65% (the game's: needs 8) |
-| The Ledger's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
-| The Ledger's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
-| Kreenfang, Drakejaw, Stillwater, Thornwall (bone, +1) | 70% | 70% (the game's: needs 7) |
-| Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
-| Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
-| Glasshewer (obsidian, +2) | 75% | 90% (needs 3) |
-| Deepbiter (stone, +1) | 70% | 85% (needs 4) |
-| Gutterknot (wood, +1) | 70% | 70% (the game's: needs 7) |
-| Greenbright, Galefang, Headsman, Linebreaker (metal, +2) | 75% | 75% (the game's: needs 6) |
-
-The dice log shows every check, whichever rule is on:
-
-```
-Defiler's saving throw vs Acid from Rampager (paralysis/poison/death): d20 = 20 (natural 20) -> saved
-  Rampager's acid on Defiler's Metal Chain Leg Armor: d20 = 16, needs 13 (AD&D's, 13 for metal; the game's: destroyed without a roll) -> safe
-  Rampager's acid on Defiler's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe
-```
-
-The Detonate psionic power, which can blow up an item a target carries, keeps
-the game's own rule (a d20 under 15 less the item's plus).
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
-
-### Rings and cloaks of protection
-
-The game has no rings or cloaks of protection; the Ledger adds three (the
-arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
-[New items](#new-items)), each +1 to AC and +1 on every
-saving throw. With **Rings and cloaks of protection as in AD&D** ticked, they
-follow the AD&D rules for them:
-
-- **Two rings don't add up:** only the better one counts (the left hand's,
-  if they're equal). The arena's ring and Pehtucl's, both +1, give +1 together,
-  not +2.
-- **A ring gives no AC with magical armour** (any worn armour piece, helm
-  included, with a plus), but still adds to saving throws.
-- **A cloak does nothing,** neither AC nor saves, with magical armour, with
-  metal armour (Chain, Grey's Scale, Tanelyv's Armor, the Helm of
-  Contemplation) or with a shield in either hand. Natural armour is fine:
-  leather and bone (Ring, Brigandine and Scale are bone in Dark Sun), and
-  plain helms. The cloak still adds to a ring.
-
-Armour here is what is worn on the arms, legs, head or chest; something only
-carried in a backpack doesn't count. Untick it and every ring and cloak worn
-counts, whatever else is worn (the game's way with the patched game).
-
-### Half-giants' two-handed weapons
-
-Half-giants stand up to twelve feet tall. With **Half-giants wield
-two-handed weapons in one hand** ticked, a half-giant can hold a two-handed
-weapon (a two-handed sword, a halberd, a bow) in one hand, with a shield or a
-light weapon in the other. The game's own rule that the two hands can't both
-hold heavy weapons (over 30 in weight each) still stands, so no half-giant
-holds two two-handed weapons. With two weapons ready, the two-weapon penalties
-apply as for anyone. The inventory screen still writes "2 handed" in the
-weapon's line: that is its weapon type, not a limit.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
+Spells, people, a quest and items the Ledger adds to the game, each with a box
+in the Options tab's **New content** section: the people, the quest and the
+items from the next time the game is started, the spells at once in games
+started with the dice log.
 
 ### New wizard spells
 
@@ -2304,57 +2390,6 @@ spells are gone from the lists and the game is as it was.
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
-
-### Helms
-
-The game's helms count as armour but give AC 0. With **Helms give AC 1**
-ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
-Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
-the game's tables). It shows on the View Character and inventory screens like
-any armour.
-
-The game has no descriptions of items, only their names, so while the rule is
-on the Ledger renames the plain helm **Helm (AC 1)**. The named ones
-(Dapartea's Helm, Helm/Contempltn, Helm of Might) keep their names, which
-would be too long for the game's Look box with the note. With the rule off,
-or without the Ledger, the names are the game's own.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
-
-### The game's own party
-
-START GAME with no party made plays the game's own four. With the rules on,
-the Ledger makes them ready for them in the first moments of a new game, and
-says so in the dice log:
-
-| Character | With weapon specialization | With class restrictions |
-|---|---|---|
-| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
-| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
-
-With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
-class: a spell slot more at each spell level and two preserver spells a turn
-in a fight. His gear stays as it is (an Arcanist has none of its own), and so
-do the hit points the game gave him: the Arcanist's d3 counts from his next
-level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
-once, can't have one.
-
-Cermak and Cilla keep the game's own starting spells: only a character made
-on the creation screen [picks its own](#changing-class).
-
-![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
-
-![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
-
-## New content
-
-People, a quest and items the Ledger adds to the game, each with a box in the
-Options tab's **New content** section, from the next time the game is
-started.
 
 ### New items
 
@@ -2554,8 +2589,8 @@ Talk button). His conversation is the game's kind, just him speaking:
   (3,000 a level, as most of its scrolls are), less with [the leader's
   CHA](#the-leaders-cha-at-shops).
 
-  Cat's Grace is there only with the new spells' rule on (see
-  [Rule changes](#rule-changes)). A preserver learns a scroll's spell as from
+  Cat's Grace is there only with the new spells on (see
+  [New wizard spells](#new-wizard-spells)). A preserver learns a scroll's spell as from
   any of the game's (right-click it in the inventory, click its spell), by the
   game's own rules (a spell of a level the preserver can cast), and with
   [Preservers' INT](#preservers-int) on it rolls to learn it. He remembers a
