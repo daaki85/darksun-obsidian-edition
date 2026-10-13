@@ -110,7 +110,7 @@ class Pictures:
     def __init__(self, chunks):
         self.chunks = chunks
         self.frames: Dict[int, List[sg.Rows]] = {}
-        self.made: Dict[Tuple[int, bool], Optional[Tuple[int, List[sg.Rows], List[Optional[sp.Parts]]]]] = {}
+        self.made: Dict[Tuple[int, bool], Optional[Tuple[int, List[sg.Rows], List[Optional[sg.Own]]]]] = {}
 
     def model(self, obj: int) -> Optional[int]:
         rec = self.chunks.get(("OJFF", obj))
@@ -132,10 +132,10 @@ class Pictures:
                 frames.append(self.base(model, figure, combat)[1])
         return max(capacity(f, combat) for f in frames)
 
-    def base(self, model: int, figure: int, combat: bool) -> Tuple[int, List[sg.Rows], List[Optional[sp.Parts]]]:
-        """What FIGURE's walking (or COMBAT) pictures are made from: (the model, its frames, each
-        frame's parts if they can't be read from it): the game's own (MODEL's), or a half-elf's
-        own figure (figures.py), where the file has the pictures it is made from."""
+    def base(self, model: int, figure: int, combat: bool) -> Tuple[int, List[sg.Rows], List[Optional[sg.Own]]]:
+        """What FIGURE's walking (or COMBAT) pictures are made from: (the model, its frames, and
+        for each what the gear can't read from it, sg.Own): the game's own (MODEL's), or a
+        half-elf's own figure (figures.py), where the file has the pictures it is made from."""
         key = (figure, combat)
         if key not in self.made:
             self.made[key] = None
@@ -145,11 +145,8 @@ class Pictures:
                 try:
                     maker = made(self.own(source), self.own(source + 1))
                     frames = maker.frames(combat)
-                    parts = []
-                    for f, rows in enumerate(self.own(source + combat)):
-                        p = sp.parts(rows, source, f, combat)
-                        parts.append(figures.moved(p, maker.cuts.get((combat, f)), frames[f]))
-                    self.made[key] = (source, frames, parts)
+                    owns = [figures.own(maker, f, combat, rows, source) for f, rows in enumerate(frames)]
+                    self.made[key] = (source, frames, owns)
                 except (ValueError, IndexError, KeyError, TypeError, ZeroDivisionError, struct.error):
                     self.made[key] = None  # (the game's own, in the half-elf's colours: halfelf.py)
         if self.made[key] is not None:
@@ -164,13 +161,13 @@ class Pictures:
         ears)."""
         model = self.model(obj) if model is None else model
         figure = obj if figure is None else figure
-        model, frames, parts = self.base(model, figure, combat)
+        model, frames, owns = self.base(model, figure, combat)
         own = self.made.get((figure, combat)) is not None  # (a half-elf's own figure)
         cloaks = self.own(sg.CLOAK_MODEL + combat)
         out = []
         for f, rows in enumerate(frames):
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
-            dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, parts[f])
+            dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template, owns[f])
             if not own:
                 dressed = halfelf.over(dressed, rows, figure, PAD)
             if model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):

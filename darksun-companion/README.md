@@ -2910,8 +2910,7 @@ only weapons and shields (all it can use). Two party members of the same race
 and sex each show their own equipment: the game gives them one figure, so the
 second is moved to pictures of their own.
 
-Elves have pointed ears, walking and fighting; a helm worn over them hides
-them. Half-elves have their own look (the game draws them with the human
+Elves have pointed ears, walking and fighting, beside any helm. Half-elves have their own look (the game draws them with the human
 pictures), made from the game's pictures in colours the party's figures
 already use. A half-elf man is built like the elf man, a little broader, with
 fair hair cut short at the nape, a linen shirt under a leather jerkin, green

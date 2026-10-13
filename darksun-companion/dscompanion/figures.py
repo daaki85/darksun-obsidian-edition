@@ -5,7 +5,8 @@ game's is kept here: only how to change its pictures).
 Elves: pointed ears, 2 pixels wide and 3 rows tall, salmon inside (LIT) with a rose rim and a rose
 tip leaning a pixel out (RIM). From the front they stand two rows above the eyes, beside the head;
 from behind, at the eyes; from the side, the near ear on the hair behind the face. They are drawn
-over what the figure wears only where it left the picture as it was (a helm hides them). Poses the
+over what the figure wears only where it left the picture as it was (a shield or a raised weapon
+hides them). Poses the
 body can't be read from (lunges, the bow, hit, dead) have them set by hand (EAR_PLAN).
 
 The half-elf man: the elf man's figure, a column wider below the neck (between the elf's build
@@ -63,14 +64,31 @@ Cut = Tuple[int, int, int]
 GOLDEN_HAIR = frozenset((179, 180, 181, 182, 200, 65))  # (the half-elves' own)
 
 
-def moved(parts: sp.Parts, cut: Optional[Cut], rows: Rows) -> sp.Parts:
-    """The PARTS of the game's frame a half-elf's ROWS were made from, where they are on ROWS
-    (CUT): what the gear is drawn by (spritegear.armed), as ROWS' own can't be read (their hands
-    and hair in other colours). Their hair: only what is still there (golden)."""
+def mover(cut: Optional[Cut]) -> Callable[[int, int], int]:
+    """Where a pixel (x, y) of the game's frame is across the half-elf's made from it with CUT."""
     def at(x: int, y: int) -> int:
         if cut is None or y < cut[0] or x <= cut[1]:
             return x
         return x + cut[2]
+    return at
+
+
+def mover_back(cut: Optional[Cut]) -> Callable[[int, int], int]:
+    """Where a pixel (x, y) of the half-elf's made with CUT is across the game's frame."""
+    def back(x: int, y: int) -> int:
+        if cut is None or y < cut[0]:
+            return x
+        if cut[2] > 0:
+            return x if x <= cut[1] else x - 1  # (the column put in: a copy of the one before)
+        return x if x < cut[1] else x + 1
+    return back
+
+
+def moved(parts: sp.Parts, cut: Optional[Cut], rows: Rows) -> sp.Parts:
+    """The PARTS of the game's frame a half-elf's ROWS were made from, where they are on ROWS
+    (CUT): what the gear is drawn by (spritegear.armed), as ROWS' own can't be read (their hands
+    and hair in other colours). Their hair: only what is still there (golden)."""
+    at = mover(cut)
     hair = {(at(x, y), y) for x, y in parts.hair}
     hair = {(x, y) for x, y in hair if 0 <= y < len(rows) and 0 <= x < len(rows[y]) and rows[y][x] in GOLDEN_HAIR}
     out = parts._replace(hair=hair, hands={k: (at(x, y), y) for k, (x, y) in parts.hands.items()},
@@ -79,6 +97,27 @@ def moved(parts: sp.Parts, cut: Optional[Cut], rows: Rows) -> sp.Parts:
         sy, a, b = parts.shoulders
         out = out._replace(shoulders=(sy, at(a, sy), at(b, sy)))
     return out
+
+
+def own(maker, f: int, combat: bool, rows: Rows, model: int) -> sg.Own:
+    """What the gear needs of frame F of a half-elf's (ROWS, made by MAKER from MODEL's): its
+    parts, the game's frame, and its clothes and cloak (HalfElfMan.clothes, HalfElfWoman)."""
+    src = maker.own[combat][f]
+    cut = maker.cuts.get((combat, f))
+    src_parts = sp.parts(src, model, f, combat)
+    at = mover(cut)
+    clothing = set(sg.CLOTHES.get(model, ()))
+    dressed = getattr(maker, "worn", {}).get((combat, f))  # (his clothes, by part)
+    if dressed is None:  # (where the game's frame has clothing)
+        dressed = {(x, y) for y, r in enumerate(src) for x, c in enumerate(r) if c in clothing}
+    worn = set()  # (there on the half-elf's: the column put in too)
+    for x, y in dressed:
+        worn.add((at(x, y), y))
+        if cut is not None and cut[2] > 0 and y >= cut[0] and x == cut[1]:
+            worn.add((x + 1, y))
+    bands = frozenset(maker.bands.get((combat, f), ())) if hasattr(maker, "bands") else frozenset()
+    return sg.Own(moved(src_parts, cut, rows), src, src_parts, at, getattr(maker, "clothes", None),
+                  getattr(maker, "cloak", frozenset()), bands, frozenset(worn), mover_back(cut))
 
 
 def put(rows: Rows, x: int, y: int, c: Optional[int]) -> None:
@@ -155,6 +194,7 @@ GOLDEN = [179, 180, 181, 200, 182, 65]
 BOOTS = [204, 203, 207, 205, 201]
 MAN_RAMPS = {"hair": GOLDEN, "jerkin": LEATHER, "sleeve": LINEN, "legs": GREEN, "boots": BOOTS}
 MAN_BANDS = {250: 207, 249: 205}  # (his wristbands leather)
+WORN = ("jerkin", "sleeve", "legs", "boots")  # (the parts of him armour is drawn on)
 SKIN = frozenset(range(128, 154))
 BOW = frozenset((179, 180, 181, 182, 183))  # (kept as it is, below the shoulders in a fight)
 BLUE_EYES = frozenset((158, 159, 38, 160, 24, 29))
@@ -212,6 +252,7 @@ class HalfElfMan:
     def __init__(self, walk: Sequence[Rows], fight: Sequence[Rows]):
         self.own = {False: walk, True: fight}
         self.cuts: Dict[Tuple[bool, int], Optional[Cut]] = {}
+        self.worn: Dict[Tuple[bool, int], Set[Tuple[int, int]]] = {}  # (his clothes in each frame: for armour)
         self.colours: Dict[str, Set[int]] = collections.defaultdict(set)
         self.most: collections.Counter = collections.Counter()
         for f in range(min(7, len(walk))):
@@ -222,6 +263,11 @@ class HalfElfMan:
         for k, ramp in MAN_RAMPS.items():
             cs = sorted(self.colours[k], key=_light)
             self.map[k] = {c: ramp[min(len(ramp) - 1, int(i * len(ramp) / max(1, len(cs))))] for i, c in enumerate(cs)}
+        # His clothes, for armour (spritegear.draw_armour): the ramps of the parts of him the
+        # elf's clothes are in, dark to light
+        elf = set(sg.CLOTHES.get(ELF_MAN, ()))
+        worn = {c for k in WORN if self.colours[k] & elf for c in MAN_RAMPS[k]}
+        self.clothes = (254,) + tuple(sorted(worn - {254}, key=_light))
 
     def _mapped(self, k: str, c: int) -> int:
         if c in self.map[k]:
@@ -249,6 +295,8 @@ class HalfElfMan:
     def _recolour(self, src: Rows, f: int, combat: bool) -> Tuple[Rows, sp.Parts]:
         rows = [list(r) for r in src]
         z, p = _zones(src, f, combat)
+        hair = set(sp.MODELS[ELF_MAN][2]) | {179}
+        self.worn[(combat, f)] = {xy for xy, k in z.items() if k in WORN and src[xy[1]][xy[0]] not in hair}
         for (x, y), k in z.items():
             c = rows[y][x]
             if k in self.map:
@@ -345,6 +393,8 @@ class HalfElfMan:
                     continue
                 ks = [(n, k) for (cc, k), n in self.most.items() if cc == c]
                 k = max(ks)[1] if ks else None
+                if k in WORN:
+                    self.worn.setdefault((combat, f), set()).add((x, y))
                 if k in self.map:
                     rows[y][x] = self.map[k][c]
                 elif k == "bracer":
@@ -469,6 +519,8 @@ class HalfElfWoman:
     def __init__(self, walk: Sequence[Rows], fight: Sequence[Rows]):
         self.own = {False: walk, True: fight}
         self.cuts: Dict[Tuple[bool, int], Optional[Cut]] = {}
+        self.cloak = frozenset(halfelf.CLOAK.values())  # (her own, which a worn cloak recolours)
+        self.bands: Dict[Tuple[bool, int], Set[Tuple[int, int]]] = {}  # (her wristbands: in its colours, not it)
 
     def frames(self, combat: bool) -> List[Rows]:
         return [self.frame(f, combat) for f in range(len(self.own[combat]))]
@@ -486,6 +538,9 @@ class HalfElfWoman:
         sy = p.shoulders[0] if p.shoulders else 0
         rows, x = _slim(rows, sy)
         self.cuts[(combat, f)] = (sy, x, -1) if x is not None else None
+        at = mover(self.cuts[(combat, f)])
+        self.bands[(combat, f)] = {(at(bx, by), by) for by, r in enumerate(src) for bx, c in enumerate(r)
+                                   if c in halfelf.BANDS and not (x is not None and by >= sy and bx == x)}
         return rows
 
     def _walk(self, f: int) -> Rows:

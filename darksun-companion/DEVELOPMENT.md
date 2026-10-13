@@ -1165,7 +1165,7 @@ is read from each frame's parts (beside the head, two rows above the eyes from
 the front; at the eyes from behind; behind the face from the side), or set by
 hand for the poses whose parts can't be read (`EAR_PLAN`: lunges, the bow, hit,
 dead). They are drawn after the gear, only on pixels the gear left as they
-were, so a helm hides them.
+were, so a shield or a weapon in front hides them.
 
 Half-elves (objects 306 and 307) name the human pictures, as 300 and 301 do.
 The copy has their own figures instead (`figures.py`), made each time from the
@@ -1178,9 +1178,15 @@ woman (`HalfElfWoman`) is the human woman in her colours (`halfelf.recolour`),
 a column slimmer below the neck. Her long hair is cut away and put up in a bun,
 with her neck and cloak drawn where it hung, and she gets the elves' ears. Her
 fight poses are set by hand (`WOMAN_FIGHTS`). Gear is drawn on these figures
-by the parts of the game's frame they were made from, moved by the column
-added or taken out (`figures.moved`), since their hair and wristbands are no
-longer in the colours `spriteparts` finds them by. If the palette or the
+by what their own colours can't tell `spritegear` (`spritegear.Own`, made by
+`figures.own`): the parts of the game's frame they were made from, moved by
+the column added or taken out (their hair and wristbands are no longer in the
+colours `spriteparts` finds them by); that frame itself, whose wristbands
+place a shield in a fight; the man's clothes (the ramps of his jerkin, shirt,
+trousers and boots, and where in each frame he wears them, for armour); and
+the woman's purple cloak (a worn cloak recolours it, shaded as the green at
+the same place in the human woman's frame, but not her purple wristbands; a
+belt isn't drawn over it from behind). If the palette or the
 pictures they are made from are missing, or making them fails, a half-elf is
 the human figure recoloured (`halfelf.py`) as before. A spare is drawn as the
 figure it stands for.

@@ -24,8 +24,10 @@ have the detail.
   jerkin, green trousers, brown boots and small pointed ears. The woman is a
   little slimmer than the human woman, with her golden hair in a bun, pointed
   ears, a purple cloak, purple wristbands and red boots. Worn gear is drawn
-  over them in its own colours.
-- **Elves have pointed ears,** walking and fighting (a helm hides them).
+  over them as on the figures they were made from: armour on his clothes, a
+  worn cloak in place of her purple one (shaded as the human woman's), a
+  shield on the forearm in a fight.
+- **Elves have pointed ears,** walking and fighting, beside any helm.
 
 **Documentation**
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or

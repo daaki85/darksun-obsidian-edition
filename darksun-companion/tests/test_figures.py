@@ -67,6 +67,35 @@ class ShapeTests(unittest.TestCase):
         self.assertEqual(fg.moved(parts, None, rows).hands, parts.hands)
 
 
+class GearTests(unittest.TestCase):
+    """What a half-elf's frame tells the gear (spritegear.Own) that its colours can't."""
+
+    def test_mover_back(self):
+        for cut in ((2, 2, 1), (2, 2, -1), None):
+            at, back = fg.mover(cut), fg.mover_back(cut)
+            for x in range(6):
+                if cut and cut[2] < 0 and x == cut[1]:
+                    continue  # (the column taken out: nowhere on hers)
+                self.assertEqual(back(at(x, 3), 3), x)
+
+    def test_belt_not_over_own_cloak(self):
+        rows = [[N] * 7 for _ in range(4)] + [[N, 174, 175, 140, 175, 174, N]] + [[N] * 7 for _ in range(4)]
+        parts = sp.Parts(sp.BACK, sp.Head(0, 2, 4, 1), set(), (2, 1, 5), {}, 4, [(8, 2, 4)], 8)
+        out = sg.padded(rows, 2)
+        sg.draw_belt(out, parts, 42, 2, frozenset((174, 175, 176)))
+        self.assertEqual(out[6][2 + 1:2 + 6], [174, 175, sg._by_light(140, sg.BELTS[42]), 175, 174])
+
+    def test_armour_only_where_worn(self):
+        """Armour recolours the figure's own clothes (Own.clothes), only where it wore them."""
+        rows = [[N, 140, 140, N]] * 3 + [[N, 204, 205, N]] * 4
+        parts = sp.Parts(sp.FRONT, sp.Head(0, 1, 2, 1), set(), (3, 0, 3), {}, 5, [(6, 1, 2)], 6)
+        own = sg.Own(parts, rows, parts, lambda x, y: x, clothes=(254, 204, 205), worn=frozenset({(1, 4), (2, 4)}))
+        out = sg.padded(rows, 0)
+        sg.draw_armour(out, 2061, parts, 9, 0, own)
+        self.assertNotEqual(out[4][1:3], [204, 205])  # (worn: armour)
+        self.assertEqual(out[3][1:3], [204, 205])  # (not)
+
+
 class PictureTests(unittest.TestCase):
     def test_human_figure_without_the_elf(self):
         """No elf man's pictures in the file (or no palette): the half-elf man is the human's
@@ -74,8 +103,8 @@ class PictureTests(unittest.TestCase):
         frame = [[N, 69, 69, N], [N, 140, 140, N], [N, 140, 140, N], [N, 254, 254, N]]
         chunk = sprites.encode_frames([frame])
         pics = sprites.Pictures({("BMP ", 2095): chunk, ("BMP ", 2096): chunk})
-        model, frames, parts = pics.base(2095, he.MAN, False)
-        self.assertEqual((model, parts), (2095, [None]))
+        model, frames, owns = pics.base(2095, he.MAN, False)
+        self.assertEqual((model, owns), (2095, [None]))
         self.assertEqual(frames[0], frame)
 
 
@@ -94,10 +123,10 @@ class GameTests(unittest.TestCase):
         pics = sprites.Pictures(self.chunks)
         for figure, source in ((he.MAN, fg.ELF_MAN), (he.WOMAN, fg.HUMAN_WOMAN)):
             for combat in (False, True):
-                model, frames, parts = pics.base(pics.model(figure), figure, combat)
+                model, frames, owns = pics.base(pics.model(figure), figure, combat)
                 self.assertEqual(model, source)
                 self.assertEqual(len(frames), len(pics.own(source + combat)))
-                self.assertTrue(all(p is not None for p in parts))
+                self.assertTrue(all(o is not None and o.worn for o in owns))
         for obj in (304, 305, he.MAN, he.WOMAN):
             for combat in (False, True):
                 chunk = pics.build(obj, combat, {"right": (115, 4), "helm": (5, 4), "cloak": (65, 4)}, (9, 10, 11))
