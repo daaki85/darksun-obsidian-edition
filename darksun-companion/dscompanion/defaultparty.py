@@ -18,6 +18,12 @@ starts. Each is known by name, race and classes together.
 - With class restrictions: Cilla (a preserver, druid and thief) can't wear armour (the druid's
   rule), so her leather armour is taken away and she knows Armor, the first wizard spell (0),
   the one Old One-Eye's scroll in the fields teaches.
+
+Cilla is an elf, but the game gives her the half-elf woman's figure (7, object 307: the human
+woman's pictures in the game, the half-elf woman's in the Ledger's copy, figures.py). She has
+the elf woman's (5) instead: in her record in the Ledger's copy of SEGOBJEX (figure_chunks, for
+a new game), and in the running game's creature table (elf_figure, for a game begun without
+it: the map shows her new figure from the next area or load on).
 """
 
 import struct
@@ -26,6 +32,10 @@ from typing import Dict, List, NamedTuple, Set, Tuple
 from . import game, restrict, ring, specialize, weaponchoice
 from .game import GameData
 
+CILLA_OBJECT = 32003  # (her record in SEGOBJEX: the party's objects are 32000 to 32003)
+RDFF_FIGURE = 0x22  # (the record's figure word: the creature's +18h)
+CREATURE_FIGURE = 0x18  # (the creature record's figure: sprites.CREATURE_FIGURE)
+ELF_WOMAN, HALF_ELF_WOMAN = 5, 7  # (figures: object 300 + the figure)
 KNOWN_SPELLS_PTR = 0x132A  # DS: far pointer to the party's known spells, a byte for each (0 to 137)
 KNOWN_STRIDE = game.SPELL_COUNT + 1
 ARMOR = 0  # the spell
@@ -57,6 +67,33 @@ def who(gd: GameData, member: int) -> str:
     if sheet[game.SHEET_RACE] != want.race or tuple(sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]) != want.classes:
         return ""
     return name
+
+
+def figure_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
+    """For the Ledger's copy of SEGOBJEX: Cilla's record with the elf woman's figure (if it is the
+    game's, with the half-elf woman's)."""
+    rec = chunks.get(("RDFF", CILLA_OBJECT))
+    if rec is None or len(rec) < RDFF_FIGURE + 2 or b"Cilla\0" not in rec \
+            or struct.unpack_from("<H", rec, RDFF_FIGURE)[0] != HALF_ELF_WOMAN:
+        return {}
+    out = bytearray(rec)
+    struct.pack_into("<H", out, RDFF_FIGURE, ELF_WOMAN)
+    return {("RDFF", CILLA_OBJECT): bytes(out)}
+
+
+def elf_figure(gd: GameData) -> List[str]:
+    """Cilla (the game's own, an elf) given the elf woman's figure in a running game, if she has
+    the half-elf woman's; a line for the log."""
+    for member in range(game.PARTY_SIZE):
+        if who(gd, member) != "Cilla":
+            continue
+        rec = gd.creature(member)
+        if struct.unpack_from("<H", rec, CREATURE_FIGURE)[0] != HALF_ELF_WOMAN:
+            continue
+        creatures = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR)
+        gd.guest.write(creatures + member * game.CREATURE_SIZE + CREATURE_FIGURE, struct.pack("<H", ELF_WOMAN))
+        return ["Cilla, an elf, has the elf woman's figure (from the next area on)."]
+    return []
 
 
 def kinds_bytes(member: Member) -> bytes:

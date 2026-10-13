@@ -1058,6 +1058,7 @@ class DiceLog:
             if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
                 out += weaponchoice.kit_gear(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done)  # (the game's own party, once)
+            out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
             if self.stealth_gear:
                 stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)
