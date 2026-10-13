@@ -39,6 +39,7 @@ game.
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
   - [No manual check](#no-manual-check)
+  - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
 - [Rule changes](#rule-changes)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits)
@@ -123,8 +124,9 @@ walk ([On the screen](#on-the-screen)).
 Quality of life changes: choosing an enemy with Tab and attacking it with
 Enter, scrolling the map by dragging with the mouse wheel
 ([Controls](#controls)), 40 saves and 29 saved characters ([More saves and
-characters](#more-saves-and-characters)), a game speed setting ([Game
-speed](#game-speed)), crash reports, and no dragon asking for a word from the
+characters](#more-saves-and-characters)), STORE and RECALL for a creation
+roll ([STORE and RECALL](#store-and-recall-on-the-creation-screen)), a game
+speed setting ([Game speed](#game-speed)), crash reports, and no dragon asking for a word from the
 manual, the game's copy protection ([No manual check](#no-manual-check)).
 
 **What it changes on your computer.** The game's own files are never
@@ -1228,6 +1230,23 @@ word?"), and three wrong answers kill the party. Started from the Ledger, the
 dragon doesn't come: the game goes on as if it had been answered. Always on.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
+
+### STORE and RECALL on the creation screen
+
+The creation screen has two more buttons under the hit points, as Baldur's
+Gate has them: **STORE** keeps the roll on screen, and **RECALL** brings it
+back, however many times the die has been rolled since. A roll is the six
+scores and what the die's total allows (the `SUM:` line), the hit points and
+the PSP. So a good roll can be stored and the die tried again; if nothing
+better comes, RECALL puts the stored one back, AC and damage with it.
+
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:99/99, 28/28 hit points](docs/creation-store-recall.png)
+
+RECALL does nothing if the race, sex, classes or kit have changed since the
+roll was stored (the hit points were rolled for those); change them back and
+it works again. STORE again keeps the new roll in place of the old. Always on.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 
 ## Rule changes
 

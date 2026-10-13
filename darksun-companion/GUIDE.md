@@ -145,6 +145,10 @@ Each click of the die rolls a whole character:
   they add up to now and the most they may: 2 points to spare. A new class
   that raises a score to its minimum raises the most with it. *Without the
   mod:* a click raises any score to its most.
+- **STORE and RECALL**, under the hit points, keep a roll and bring it back
+  (scores, hit points and PSP), as in Baldur's Gate: store a good roll, try
+  the die again, and recall it if nothing better comes. RECALL waits while
+  the race, sex, classes or kit differ from the stored roll's.
 
 | Class | Prime requisite |
 |---|---|

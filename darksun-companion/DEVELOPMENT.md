@@ -357,6 +357,39 @@ start (offset 1, its one entry in the game's table of entry points), no words
 and no question. It is replaced only if it is the dragon's (its
 `" word on page "` line).
 
+### STORE and RECALL
+
+([In the README](README.md#store-and-recall-on-the-creation-screen).)
+
+The buttons: the creation screen is window 3011 in `RESOURCE.GFF`, its buttons
+the die (7DAh), EXIT (80Ah), DONE (7D0h) and the rest. In the Ledger's copy
+(`dscompanion/rollstore.py`) it has two more, STORE (8A0h) and RECALL (8A1h),
+under the hit points and PSP, after its own items (the name box, an `EBOX`,
+among them). Their pictures are the game's carved stone buttons: a blank cut
+from DELETE's bevel and face, and letters taken from SAVE, LOAD, DROP and
+DELETE (SAVE's and LOAD's letters touch, and are cut where the ink is
+thinnest). No button has a C, so it is drawn in the same three tones as the O
+(`C_SHAPE`). The game's third frame is out of use on some buttons and lit on
+others; these have their first again.
+
+The click: the screen's click routine (its overlay from 65480h) looks the
+button up in a table of its 22 (`mov cx,16h`, 6625Dh). `PROBE_RS_CLICK`
+(`INT 8Ah`) does the `mov` and, for STORE or RECALL, its work, then sends the
+routine on as for a button not its own (to 66377h: nothing more). A roll is
+what the die writes (657BBh): the sheet's hit points, hit points rolled and
+most PSP (`+8`, `+0Ah`, `+0Ch` of DS:119Ch), the creature's hit points, PSP
+and six scores (`+0`, `+2`, `+22h` of DS:11A0h), the least and most hit points
+the classes could roll (DS:4996h), and the die's total (`RL_POOL`). STORE
+keeps those with the sheet's race, sex, classes and kit (`+18h`, `+19h`,
+`+21h` to `+23h`, `+43h`); RECALL puts them back only while those are the
+same. It then shows them as the game would: the scores through the screen's
+own redraw (the creation overlay's stub, entry BBh, which a score's click
+calls; `RL_SUM` adds the totals), and the rest by running the die's routine
+from where it has rolled the hit points (659D0h, with its stack frame and DI
+1): the hit points shown, the PSP worked out again (65B39h, which rolls
+nothing) and shown, then the AC and damage. The overlay's segment is the
+INT's return.
+
 ### Weapon specialization
 
 ([In the README](README.md#weapon-specialization).)
@@ -1282,7 +1315,7 @@ No kit is the kit page's first row, and what a new character has.
 ### Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 88 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 84 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -1295,8 +1328,8 @@ conventional memory (570 KB free rather than 632 KB). With GOG's settings
 there is one upper memory block of 63 KB; the helper asks for its resident
 part and the ring (`LOAD_EXTRA`), and `mem` in DOSBox shows 632 KB free and a
 few KB of upper memory left. A change that adds much code should check that
-again: the ring is 88 entries, not 128 (96 until the new spells' code, when
-the game no longer started for lack of memory), and the text buffer 4 KB,
+again: the ring is 84 entries, not 128 (96 until the new spells' code, when
+the game no longer started for lack of memory; 88 until STORE and RECALL), and the text buffer 4 KB,
 not 8, to make that room.
 
 ### The kit's byte
