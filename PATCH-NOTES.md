@@ -128,6 +128,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 ## Graphics
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.
+- **[New]** Half-elves no longer look like humans: a half-elf man has fair hair and a green tunic, a half-elf woman golden hair, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
 - **[New]** A red ring can mark the enemy you've chosen, or all of them.
 

@@ -31,7 +31,7 @@ pictures.
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import art, game, spritegear as sg, spriteparts as sp
+from . import art, game, halfelf, spritegear as sg, spriteparts as sp
 from .game import GameData
 
 SPRITE_BASE = 2450  # (pairs: object 300's walking picture 2450, its combat one 2451, ...)
@@ -127,15 +127,18 @@ class Pictures:
         return max(capacity(self.own(m + combat), combat) for m in sp.MODELS if ("BMP ", m + combat) in self.chunks)
 
     def build(self, obj: int, combat: bool, gear: Dict[str, Tuple[int, ...]], armour: Tuple[int, ...],
-              model: Optional[int] = None) -> bytes:
-        """The object's walking (or COMBAT) picture in this outfit (a spare (SPARES): MODEL's)."""
+              model: Optional[int] = None, figure: Optional[int] = None) -> bytes:
+        """The object's walking (or COMBAT) picture in this outfit (a spare (SPARES): MODEL's, in
+        FIGURE's colours: a half-elf's are their own, halfelf.py)."""
         model = self.model(obj) if model is None else model
+        figure = obj if figure is None else figure
         frames = self.own(model + combat)
         cloaks = self.own(sg.CLOAK_MODEL + combat)
         out = []
         for f, rows in enumerate(frames):
             template = sg.cloak_template(cloaks[f], sg.CLOAK_MODEL, f, combat) if f < len(cloaks) else None
-            out.append(trimmed(sg.armed(rows, model, f, combat, gear, PAD, armour, template), combat))
+            dressed = sg.armed(rows, model, f, combat, gear, PAD, armour, template)
+            out.append(trimmed(halfelf.over(dressed, rows, figure, PAD), combat))
         return encode_frames(out)
 
     def room(self, obj: int, combat: bool) -> int:
@@ -371,14 +374,14 @@ class Dresser:
         for obj, (member, figure) in self.objects().items():
             outfit = worn(self.gd, member) if on else ({}, ())
             model = self.pics.model(figure)
-            key = (model, repr(sorted(outfit[0].items())), outfit[1])
+            key = (model, figure, repr(sorted(outfit[0].items())), outfit[1])
             fresh = self.shown.get(obj) != key
             if fresh:
                 pictures = {}
                 for combat, picture in zip((False, True), picture_ids(obj)):
-                    chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model)
+                    chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure)
                     if len(chunk) > self.pics.room(obj, combat):  # (more than there is room for: plain)
-                        chunk = self.pics.build(obj, combat, {}, (), model)
+                        chunk = self.pics.build(obj, combat, {}, (), model, figure)
                     pictures[picture] = chunk
                 if not self._write(pictures):
                     continue

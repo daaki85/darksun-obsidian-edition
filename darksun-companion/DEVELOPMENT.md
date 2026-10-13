@@ -1159,6 +1159,15 @@ table it is drawn from; for a second member of the same figure the Ledger names
 their spare there and empties the slot, and the game loads the picture and
 fills it.
 
+Half-elves (objects 306 and 307) name the human pictures, as 300 and 301 do.
+Their pictures in the copy are recoloured (`dscompanion/halfelf.py`): the
+man's top six rows (his hair), then his tunic, boots and wristbands by row; the
+woman's hair as one flood-filled patch of its browns from the top of her head,
+then her cloak, wristbands and boots. Gear is drawn on the human colours first,
+since `spriteparts` finds the hair and the wristbands by them. The recolour
+then changes only the pixels the gear left alone. A spare is recoloured by the
+figure it stands for.
+
 ### Shadows
 
 ([In the README](README.md#shadows).)
