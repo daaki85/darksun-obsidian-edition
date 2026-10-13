@@ -423,7 +423,7 @@ class Viewer:
                         variable=self.pick_key, command=self._popups_changed).pack(anchor="w", padx=(20, 0))
 
         # how the game looks
-        looks = section("on_screen", "On the screen (in the game)")
+        looks = section("on_screen", "Graphics (in the game)")
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
         ttk.Checkbutton(looks, text="Show what the party wears on their figures (weapons, armour, helms, "
                         "cloaks, boots, belts)", variable=self.show_gear,

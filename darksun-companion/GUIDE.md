@@ -101,7 +101,7 @@ easier.
 | **Each turn's rolls** (off unless ticked) | At the end of each turn in a fight, its rolls in the game's own window: at the least, in short or in detail. |
 | **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), so the party walks smoothly with shadows and dust. |
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Ledger. |
-| **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). |
+| **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans'. |
 | **Crash reports** | If the game or DOSBox stops with an error, the message stays on screen and the Ledger writes a report to send. |
 
 **In the Ledger's window:**
@@ -1575,7 +1575,7 @@ AD&D's tables:
 | Thieves | thief skills from AD&D's table; hiding in shadows to backstab; the cloak, boots and belt; picking pockets | on |
 | | ... or P in a conversation (the leader, a thief, picks the pocket of the one talked to) | off |
 | New content | new people, a small quest, new items | on |
-| On the screen | what the party wears, shadows, dust | on |
+| Graphics | what the party wears, shadows, dust | on |
 | Controls | Tab and Enter; rings under the enemy chosen with Tab; scrolling with the mouse wheel; spells kept on a click on the Effects screen | on |
 | | scrolling by holding the right button | off |
 | Game speed | GOG's own, faster or fastest | faster |

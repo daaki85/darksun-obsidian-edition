@@ -40,10 +40,10 @@ It adds to Athas: new weapons in every material, magic items with stories of
 their own (robes and bracers among them, for those who wear no armour), three
 wizard spells ([Cat's Grace, Erdlu Claw and
 Fogbolt](darksun-companion/README.md#new-wizard-spells)), Kalzith (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
-vulture ([New content](darksun-companion/README.md#new-content)). Graphical
-additions show the weapons and armour the party wears, have characters cast
-shadows, and kick up dirt as they walk, and give elves and
-half-elves a look of their own ([Graphics](darksun-companion/README.md#graphics)).
+vulture ([New content](darksun-companion/README.md#new-content)). On the
+map, the party wears its weapons and armour, figures cast shadows and kick up
+dust, and elves and half-elves have a look of their own
+([Graphics](darksun-companion/README.md#graphics)).
 
 Quality of life changes: choosing an enemy with Tab and attacking it with Enter,
 scrolling the map by dragging with the mouse wheel

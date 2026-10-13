@@ -118,9 +118,9 @@ It adds to Athas: new weapons in every material, magic items with stories of
 their own (robes and bracers among them, for those who wear no armour), three wizard
 spells ([Cat's Grace, Erdlu Claw and Fogbolt](#new-wizard-spells)), Kalzith
 (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
-vulture ([New content](#new-content)). Graphical additions show the weapons and
-armour the party wears, have characters cast shadows, and kick up dirt as they
-walk, and give elves and half-elves a look of their own ([Graphics](#graphics)).
+vulture ([New content](#new-content)). On the map, the party
+wears its weapons and armour, figures cast shadows and kick up dust, and elves
+and half-elves have a look of their own ([Graphics](#graphics)).
 
 Quality of life changes: choosing an enemy with Tab and attacking it with
 Enter, scrolling the map by dragging with the mouse wheel
@@ -333,7 +333,7 @@ The sections:
 - **New content** ([New content](#new-content)): the new people, the vulture
   and the new items, from the next time the game is started; what a saved game
   already has stays in it.
-- **On the screen** ([Graphics](#graphics)), **Controls**
+- **Graphics** ([Graphics](#graphics)), **Controls**
   ([Controls](#controls)) and **Game speed** ([Game speed](#game-speed)).
 
 All are on by default except each turn's rolls in the game, P in a
@@ -2886,8 +2886,8 @@ caravan. The game's plain stone pick is only ever a
 
 ## Graphics
 
-What the Ledger draws on the game's map. The party's gear, shadows and dust are
-each switched on the Options tab's **On the screen** group; the elves' and
+What the Ledger draws on the game's map. The party's gear, shadows and dust
+each have a switch in the Options tab's **Graphics** section; the elves' and
 half-elves' looks are always there.
 
 ### Elves and half-elves
@@ -2908,7 +2908,7 @@ in one already begun (there from the next area or load on).
 
 ![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#elves-and-half-elves).
 
 ### What the party wears
 
@@ -2924,7 +2924,7 @@ walking and fighting:
 | **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
 | **Armour** | the character's own clothing recoloured toward its material, shade for shade (leather, bone, chain, plate, scale...): the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures the artist drew mostly bare (the mul, the dwarf man) only their straps and loincloth change, so it shows little |
 | **Helms** | a circlet at the brow blended into the hair: a feather on leather, a dark stone on iron, low spikes on bone |
-| **Cloaks** | the human and half-elf woman's own cloak (its folds and swing as she walks and fights) fitted to the wearer, under the hair, in the cloak's colours; hers takes them too |
+| **Cloaks** | the cloak the game draws on the human woman (its folds and swing as she walks and fights), fitted to the wearer, under the hair, in the cloak's colours; a half-elf woman's own purple cloak takes the worn one's colours |
 | **Boots and belts** | the feet and the waist recoloured |
 
 The colours are muted ones no region's palette changes. A thri-kreen shows

@@ -1159,43 +1159,56 @@ table it is drawn from; for a second member of the same figure the Ledger names
 their spare there and empties the slot, and the game loads the picture and
 fills it.
 
-([Elves and half-elves in the README](README.md#elves-and-half-elves).) Elves (objects 304 and 305) get pointed ears (`dscompanion/figures.py`): 2
-pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their place
-is read from each frame's parts (beside the head, two rows above the eyes from
-the front; at the eyes from behind; behind the face from the side), or set by
-hand for the poses whose parts can't be read (`EAR_PLAN`: lunges, the bow, hit,
-dead). They are drawn after the gear, only on pixels the gear left as they
-were, so a shield or a weapon in front hides them.
+### Elves and half-elves
+
+([In the README](README.md#elves-and-half-elves).)
+
+How: elves (objects 304 and 305) get pointed ears (`dscompanion/figures.py`):
+2 pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their
+place is read from each frame's parts (beside the head, two rows above the
+eyes from the front; at the eyes from behind; behind the face from the side),
+or set by hand for the poses whose parts can't be read (`EAR_PLAN`: lunges,
+the bow, hit, dead). They are drawn after the gear, only on pixels the gear
+left as they were, so a shield or a weapon in front hides them.
 
 Half-elves (objects 306 and 307) name the human pictures, as 300 and 301 do.
-The copy has their own figures instead (`figures.py`), made each time from the
-game's pictures. The man is the elf man's figure (`HalfElfMan`), a column wider
-below the neck. Each part of him (hair, jerkin, sleeves, trousers, boots) has
-its colours spread by brightness over a ramp of the party's palette (so it
-needs the palette, read from `GPLDATA.GFF`). He also gets dark eyes, a linen V
-at the neck, a belt with a buckle, hair cut at the nape and small ears. The
-woman (`HalfElfWoman`) is the human woman in her colours (`halfelf.recolour`),
-a column slimmer below the neck. Her long hair is cut away and put up in a bun,
-with her neck and cloak drawn where it hung, and she gets the elves' ears. Her
-fight poses are set by hand (`WOMAN_FIGHTS`). Gear is drawn on these figures
-by what their own colours can't tell `spritegear` (`spritegear.Own`, made by
-`figures.own`): the parts of the game's frame they were made from, moved by
-the column added or taken out (their hair and wristbands are no longer in the
-colours `spriteparts` finds them by); that frame itself, whose wristbands
-place a shield in a fight, and on which a worn cloak is fitted before it is carried over to the man (fitted to him, a column broader, it would swing past his arms); the man's clothes (the ramps of his jerkin, shirt,
-trousers and boots, and where in each frame he wears them, for armour); and
-the woman's purple cloak (a worn cloak recolours it, shaded as the green at
-the same place in the human woman's frame, but not her purple wristbands; a
-belt isn't drawn over it from behind). If the palette or the
-pictures they are made from are missing, or making them fails, a half-elf is
-the human figure recoloured (`halfelf.py`) as before. A spare is drawn as the
-figure it stands for.
+The Ledger's copy of the file gives them figures of their own instead
+(`figures.py`), made each time from the game's pictures:
+
+- **The man** (`HalfElfMan`) is the elf man's figure, a column wider below
+  the neck. Each part of him (hair, jerkin, sleeves, trousers, boots) has its
+  colours spread by brightness over a ramp of the party's palette, so it needs
+  the palette, read from `GPLDATA.GFF`. He also gets dark eyes, a linen V at
+  the neck, a belt with a buckle, hair cut at the nape and small ears.
+- **The woman** (`HalfElfWoman`) is the human woman in her colours
+  (`halfelf.recolour`), a column slimmer below the neck. Her long hair is cut
+  away and put up in a bun, with her neck and cloak drawn where it hung, and
+  she gets the elves' ears. Her fight poses are set by hand (`WOMAN_FIGHTS`).
+
+Gear is drawn on them by what their own colours can't tell `spritegear`
+(`spritegear.Own`, made by `figures.own`):
+
+- the parts of the game's frame they were made from (head, hair, shoulders,
+  hands, feet), moved by the column added or taken out, since their hair and
+  wristbands are no longer in the colours `spriteparts` finds them by;
+- that frame itself: its wristbands place a shield in a fight, and a worn
+  cloak is fitted on it before it is carried over to the man (fitted to him, a
+  column broader, it would swing past his arms);
+- the man's clothes: the ramps of his jerkin, shirt, trousers and boots, and
+  where in each frame he wears them, so armour recolours them there;
+- the woman's purple cloak: a worn cloak recolours it, shaded as the green at
+  the same place in the human woman's frame, but not her purple wristbands,
+  and a belt isn't drawn over it from behind.
+
+If the palette or the pictures they are made from are missing, or making them
+fails, a half-elf is the human figure recoloured (`halfelf.py`), as before. A
+spare is drawn as the figure it stands for.
 
 Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)
 in her record (object 32003's RDFF, its word +22h, the creature's +18h), and
 her object (OJFF 32003) names the human woman's picture. In the Ledger's copy
 of SEGOBJEX she has the elf woman's figure (5) and picture (the game's, which
-the Ledger then swaps for its own as for anyone); in a game begun without the
+the Ledger then swaps for its own as for anyone). In a game begun without the
 copy, the Ledger writes the figure into the running game's creature table, and
 the game draws her as an elf from its next area or load
 (`defaultparty.figure_chunks`, `defaultparty.elf_figure`).

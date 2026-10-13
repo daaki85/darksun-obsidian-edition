@@ -8,6 +8,20 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 *These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
 
+## Contents
+
+- [Templar's Ledger](#templars-ledger)
+- [In the Game's Screens](#in-the-games-screens)
+- [Combat](#combat)
+- [Classes and Kits](#classes-and-kits)
+- [Magic and Psionics](#magic-and-psionics)
+- [Thieves](#thieves)
+- [Items](#items)
+- [World](#world)
+- [Graphics](#graphics)
+- [Quality of Life](#quality-of-life)
+- [Bug Fixes](#bug-fixes)
+
 ## Templar's Ledger
 
 - **[New]** A companion window that starts the game and runs beside it, laid out in the game's own colours.
@@ -93,13 +107,13 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Magic and Psionics
 
-- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons, 1d6+1 (or Body Weaponry's and Animal Affinity's dice +1), +1 to hit and as a +1 magical weapon) and **Fogbolt** (1st level: a dark grey bolt that gives a creature -3 to its attacks and +2 to attacks on it, for 2d4 rounds).
+- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds).
 - **[Changed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 
 ## Thieves
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
-- **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky. *(was a backstab only on a target turned to face someone else)*
+- **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
 - **[New]** **Picking pockets**: use Thieves' Tools on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.

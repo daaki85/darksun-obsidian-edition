@@ -36,7 +36,10 @@ have the detail.
 
 **Documentation**
 - **Graphics** is the README's section for what the Ledger draws on the map
-  (was "On the screen"), with a part for elves and half-elves.
+  (was "On the screen"), with a part for elves and half-elves; the Options
+  tab's section has the same name, and DEVELOPMENT.md a section of its own
+  for how elves and half-elves are drawn.
+- **The patch notes have a table of contents,** as their web page does.
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or
   "weapon kind": fighters specialize in one weapon type, gladiators in two,
   the level-up window has a picture of each weapon type, and the item tables'
