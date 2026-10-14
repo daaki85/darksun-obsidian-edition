@@ -44,9 +44,13 @@ have the detail.
 
 **Changed**
 - **Kits in the docs, class by class:** the README's one table of kits is now
-  a table for each class, with each kit's starting gear and what else a
-  player should know (the classes and kits it rules out, where its choices
-  are made); the player guide's class sections have the same full rows.
+  a table for each class, under a heading of its own, with the level each
+  part of a kit comes at (the Myrmidon's mastery at 5th level and grand
+  mastery at 9th, the Ravager's AC, the Seeker's and Shinobi's slots, the
+  Crusader's, Mind Warrior's and Battle Mage's attacks, the Grove Warden's
+  AC), each kit's starting gear and what else a player should know (the
+  classes and kits it rules out, where its choices are made); the player
+  guide's class sections have the same full rows.
 - **The player's guide is now `PLAYER-GUIDE.md`** (it was `GUIDE.md`), so its
   name says what it is; the links to it follow.
 - **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each
