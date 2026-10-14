@@ -307,7 +307,11 @@ class Viewer:
             self.sections[key] = part
             return part.body
 
-        in_game = section("in_game", "In the game (when started with the dice log)")
+        note = ttk.Label(options, text="Everything here applies in games started from the Ledger. A switch that "
+                         "says \"from the next start\" waits until the game is started again.", wraplength=460)
+        note.pack(anchor="w", pady=(0, 8))
+        options.bind("<Configure>", lambda e: note.configure(wraplength=max(200, e.width - 60)), add="+")
+        in_game = section("in_game", "In the game")
         # long lines wrap to the window (as with larger text) instead of running out of it
         options.bind("<Configure>", lambda e: [ttk.Style().configure(
             kind, wraplength=max(200, e.width - 60)) for kind in ("TCheckbutton", "TRadiobutton")], add="+")
@@ -325,18 +329,18 @@ class Viewer:
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
                         variable=self.monster_info, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
-        rules = section("rules", "Rule changes (in games started with the dice log)")
-        custom = section("custom", "More character customization (in games started with the dice log)")
-        features = section("features", "Expanded features (in games started with the dice log)")
+        rules = section("rules", "Rule changes")
+        custom = section("custom", "More character customization")
+        features = section("features", "Expanded features")
         # the thief's rules and picking pockets together, as the guide's Thieves section has them
         thieves = ttk.Frame(features)
         ttk.Label(thieves, text="Improved thieving", style="Status.TLabel").pack(anchor="w")
         # the companion's own content: people, a quest and items in the game, and the new spells. Some
         # are written into the game's files when it is started; what a save already has stays
         new = section("new_content", "New content")
-        ttk.Label(new, text="People, a quest and items: from the next time you start the game, in places "
+        ttk.Label(new, text="People, a quest and items: from the next start, in places "
                   "not yet visited. What a saved game already has (people met, items given) stays in it. "
-                  "The new spells: at once, in games started with the dice log.",
+                  "The new spells: at once.",
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
@@ -408,6 +412,11 @@ class Viewer:
                                             "a worn belt adds 5 to picking pockets and opening locks (hiding or not)",
                                 variable=self.stealth_gear, command=self._popups_changed).pack(anchor="w", padx=(20, 0))
 
+        self.roll_store = tk.BooleanVar(value=settings.get("roll_store", True) is not False)
+        ttk.Checkbutton(custom, text="STORE and RECALL on the creation screen: keep a roll, try the die again, "
+                        "and bring the kept roll back (from the next start)", variable=self.roll_store,
+                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+
         self.content_vars: Dict[str, tk.BooleanVar] = {}
         for key, text in (
                 ("kalzith", "Kalzith, a defiler slave in the slave pens who sells arcane scrolls (new games)"),
@@ -426,11 +435,19 @@ class Viewer:
         thieves.pack(anchor="w", fill="x", pady=(8, 0))
 
         # how the game looks
-        looks = section("on_screen", "Graphics (in the game)")
+        looks = section("on_screen", "Graphics")
+        self.elf_looks = tk.BooleanVar(value=settings.get("elf_looks", True) is not False)
+        ttk.Checkbutton(looks, text="Elves have pointed ears, and half-elves figures of their own instead of the "
+                        "humans' (from the next start)",
+                        variable=self.elf_looks, command=self._popups_changed).pack(anchor="w")
+        self.cilla_elf = tk.BooleanVar(value=settings.get("cilla_elf", True) is not False)
+        ttk.Checkbutton(looks, text="Cilla, an elf in the game's own party, drawn as an elf (the game gives her "
+                        "the half-elf woman's figure; from the next start)", variable=self.cilla_elf,
+                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
         ttk.Checkbutton(looks, text="Show what the party wears on their figures (weapons, armour, helms, "
                         "cloaks, boots, belts)", variable=self.show_gear,
-                        command=self._popups_changed).pack(anchor="w")
+                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
         self.show_shadows = tk.BooleanVar(value=bool(settings.get("shadows", True)))
         ttk.Checkbutton(looks, text="Shadows under the figures (see-through, on the floor)",
                         variable=self.show_shadows, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
@@ -439,7 +456,7 @@ class Viewer:
                         variable=self.show_dust, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
 
         # the mouse and keys in the game
-        controls = section("controls", "Controls (in the game)")
+        controls = section("controls", "Controls")
         self.use_targeting = tk.BooleanVar(value=bool(settings.get("targeting", True)))
         ttk.Checkbutton(controls, text="In a fight, Tab (Shift+Tab back) chooses an enemy, its ring brighter, and "
                         "Enter attacks it, even behind someone", variable=self.use_targeting,
@@ -460,11 +477,11 @@ class Viewer:
                         command=self._popups_changed).pack(anchor="w", padx=(20, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
-                        "ends it; psionic powers can still be stopped); from the next time you start the game",
+                        "ends it; psionic powers can still be stopped); from the next start",
                         variable=self.effects_kept, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
 
         # the game's speed (DOSBox's CPU)
-        pace = section("speed", "Game speed (from the next time you start the game)")
+        pace = section("speed", "Game speed (from the next start)")
         speed = settings.get("cycles", launch.DEFAULT_SPEED)
         speed = launch.SPEEDS[-1] if speed == launch.FASTEST_BEFORE else speed
         self.game_speed = tk.StringVar(value=str(speed if speed in launch.SPEEDS or speed == launch.GOG_SPEED
@@ -475,6 +492,27 @@ class Viewer:
                                       "(needs a faster PC)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
+        ttk.Button(options, text="Restore defaults", command=self.restore_defaults).pack(anchor="w", pady=(12, 0))
+
+    def restore_defaults(self) -> None:
+        """Every switch on the Options tab back as it comes (after asking)."""
+        if not messagebox.askyesno("Restore defaults", "Set every option on the Options tab back to its default?",
+                                   parent=self.root):
+            return
+        for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
+            var.set(True)
+        for var in (self.monster_info, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
+                    self.show_gear, self.show_shadows, self.show_dust, self.use_targeting, self.scroll_map,
+                    self.effects_kept):
+            var.set(True)
+        for var in (self.popups, self.scroll_right):
+            var.set(False)
+        self.popup_level.set(dicelog.popup_level({}))
+        self.ring_mode.set(rings.mode({}))
+        self.game_speed.set(str(launch.DEFAULT_SPEED))
+        self._popups_changed()
+        self._speed_chosen()
+        self.status.set("Options set back to their defaults (those that wait for the next start, from then).")
 
     def _sections_changed(self) -> None:
         """Remember which of the Options tab's sections are open."""
@@ -794,6 +832,8 @@ class Viewer:
                 self.dice.show_gear = self.show_gear.get()
                 self.dice.show_shadows = self.show_shadows.get()
                 self.dice.show_dust = self.show_dust.get()
+                self.dice.elf_looks = self.elf_looks.get()
+                self.dice.cilla_elf = self.cilla_elf.get()
                 self.dice.ring_mode = self.ring_mode.get()
                 self.dice.use_targeting = self.use_targeting.get()
                 self.dice.scroll_map = self.scroll_map.get()
@@ -891,6 +931,8 @@ class Viewer:
         settings["show_gear"] = self.show_gear.get()
         settings["shadows"] = self.show_shadows.get()
         settings["dust"] = self.show_dust.get()
+        settings["elf_looks"] = self.elf_looks.get()
+        settings["cilla_elf"] = self.cilla_elf.get()
         settings["rings"] = self.ring_mode.get()
         settings["targeting"] = self.use_targeting.get()
         settings["scroll_map"] = self.scroll_map.get()
@@ -899,6 +941,7 @@ class Viewer:
             settings[key] = var.get()
         settings["effects_kept"] = self.effects_kept.get()
         settings["stealth_gear"] = self.stealth_gear.get()
+        settings["roll_store"] = self.roll_store.get()
         for key, var in self.rule_vars.items():
             settings[key] = var.get()
         launch.save_settings(settings)
@@ -917,6 +960,7 @@ class Viewer:
             self.dice.scroll_right = self.scroll_right.get()
             self.dice.vulture_on = self.content_vars["vulture"].get()
             self.dice.stealth_gear = self.stealth_gear.get()
+            self.dice.cilla_elf = self.cilla_elf.get()
             self.dice.set_rules(self._rules())
 
     def _rules(self) -> int:

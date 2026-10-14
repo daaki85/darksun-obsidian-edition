@@ -101,7 +101,7 @@ easier.
 | **Each turn's rolls** (off unless ticked) | At the end of each turn in a fight, its rolls in the game's own window: at the least, in short or in detail. |
 | **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), so the party walks smoothly with shadows and dust. |
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Ledger. |
-| **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans'. |
+| **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
 | **Crash reports** | If the game or DOSBox stops with an error, the message stays on screen and the Ledger writes a report to send. |
 
 **In the Ledger's window:**
@@ -1572,14 +1572,16 @@ AD&D's tables:
 | In the game | show each turn's rolls in the game | off |
 | | describe monsters when you Look at them in a fight | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
-| More character customization | weapon specialization; kits; levels up to 10 | all on |
+| More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen | all on |
 | Expanded features | the leader's CHA at shops; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
 | New content | new wizard spells; new people; a small quest; new items | all on |
-| Graphics | what the party wears, shadows, dust | on |
+| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | on |
 | Controls | Tab and Enter; rings under the enemy chosen with Tab; scrolling with the mouse wheel; spells kept on a click on the Effects screen | on |
 | | scrolling by holding the right button | off |
 | Game speed | GOG's own, faster or fastest | faster |
 
 Rule changes, customization, expanded features and the new spells count at
-once in a game started from the Ledger; the new people, quest and items come
-the next time the game is started (a saved game keeps what it has).
+once in a game started from the Ledger; the new people, quest and items, and
+any switch that says "from the next start", come the next time the game is
+started (a saved game keeps what it has). **Restore defaults**, at the bottom
+of the tab, sets every switch back.

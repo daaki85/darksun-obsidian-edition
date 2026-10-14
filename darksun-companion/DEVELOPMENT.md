@@ -689,6 +689,10 @@ helper (`INT E7h`) holds it against 10 instead while the rule is on.
 
 ([In the README](README.md#store-and-recall-on-the-creation-screen).)
 
+With the `roll_store` switch off, the launcher leaves both out: the buttons from
+its copy of `RESOURCE.GFF` (`icons.write_resources`) and the click's patch from
+its copy of `DSUN.EXE` (`gamepatch.ROLL_STORE`, as `EFFECTS_KEPT`).
+
 The buttons: the creation screen is window 3011 in `RESOURCE.GFF`, its buttons
 the die (7DAh), EXIT (80Ah), DONE (7D0h) and the rest. In the Ledger's copy
 (`dscompanion/rollstore.py`) it has two more, STORE (8A0h) and RECALL (8A1h),
@@ -1198,8 +1202,11 @@ Gear is drawn on them by what their own colours can't tell `spritegear`
   the same place in the human woman's frame, but not her purple wristbands,
   and a belt isn't drawn over it from behind.
 
-If the palette or the pictures they are made from are missing, or making them
-fails, a half-elf is the human figure recoloured (`halfelf.py`), as before. A
+With the switch off (`elf_looks`, `sprites.Pictures(looks=False)`), or if the
+palette or the pictures they are made from are missing, or making them fails,
+a half-elf is the human figure recoloured (`halfelf.py`), as before, and elves
+have no ears. The switch counts when the launcher writes the copy; the Ledger
+dresses the party with the setting it had then. A
 spare is drawn as the figure it stands for.
 
 Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)
@@ -1209,7 +1216,8 @@ of SEGOBJEX she has the elf woman's figure (5) and picture (the game's, which
 the Ledger then swaps for its own as for anyone). In a game begun without the
 copy, the Ledger writes the figure into the running game's creature table, and
 the game draws her as an elf from its next area or load
-(`defaultparty.figure_chunks`, `defaultparty.elf_figure`).
+(`defaultparty.figure_chunks`, `defaultparty.elf_figure`), both only with the
+`cilla_elf` switch on.
 
 ### Shadows
 

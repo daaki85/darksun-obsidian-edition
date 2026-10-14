@@ -86,17 +86,19 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.2.0** is out ([release notes](release-notes/v2.2.0.md)),
-with two new wizard spells (Erdlu Claw and Fogbolt, beside Cat's Grace),
+**Obsidian Edition 2.2.1** is out ([release notes](release-notes/v2.2.1.md)):
+more of the Options tab can be switched (the elves' and half-elves' looks,
+Cilla's elf figure, STORE and RECALL), and **Restore defaults** sets it all
+back. 2.2.0 before it ([release notes](release-notes/v2.2.0.md)) brought two
+new wizard spells (Erdlu Claw and Fogbolt, beside Cat's Grace),
 half-elves and elves with a look of their own on the map, STORE and RECALL
 on the creation screen, multiclass hit points as Demihuman Deities has them,
-and the Options tab in four clearer groups. 2.1.1 before it fixed two things
-in character creation: the dice log's ability rolls, and CON raising the hit
-points.
+and the Options tab in four clearer groups.
 
 Earlier changes, pull request by pull request, are in
 [`CHANGELOG.md`](CHANGELOG.md). Releases have notes of their own:
-[2.2.0](release-notes/v2.2.0.md) (pull requests #39 to #42),
+[2.2.1](release-notes/v2.2.1.md) (pull request #43),
+[2.2.0](release-notes/v2.2.0.md) (#39 to #42),
 [2.1.1](release-notes/v2.1.1.md) (#37),
 [2.1.0](release-notes/v2.1.0.md) (#35),
 [2.0.0](release-notes/v2.0.0.md) (#31 and #32),

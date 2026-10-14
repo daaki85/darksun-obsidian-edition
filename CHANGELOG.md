@@ -3,10 +3,38 @@
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first.
 Released pull requests are summarised in a line or two each; the release notes
-([2.2.0](release-notes/v2.2.0.md): #39 to #42; [2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35; [2.0.0](release-notes/v2.0.0.md): #31 and #32; [1.2.0](release-notes/v1.2.0.md):
+([2.2.1](release-notes/v2.2.1.md): #43; [2.2.0](release-notes/v2.2.0.md): #39 to #42; [2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35; [2.0.0](release-notes/v2.0.0.md): #31 and #32; [1.2.0](release-notes/v1.2.0.md):
 #19 to #29; [1.1.0](release-notes/v1.1.0.md): #14 to #18;
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
+
+## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
+
+**Release**
+- **Obsidian Edition 2.2.1:** the version is 2.2.1, with its notes in
+  `release-notes/v2.2.1.md`, listed on the front page with the others.
+
+**Added**
+- **A switch for the elves' and half-elves' looks:** **Elves have pointed
+  ears, and half-elves figures of their own** in the Options tab's Graphics
+  section, on by default, from the next time the game is started. Off, elves
+  are as the game draws them and half-elves the human figures in their own
+  colours, as before 2.2.0.
+- **A switch for Cilla's elf figure** in the Graphics section (on by
+  default): off, she keeps the game's half-elf woman's figure, from the next
+  start.
+- **A switch for STORE and RECALL** under More character customization (on by
+  default): off, the creation screen is the game's, from the next start.
+- **Restore defaults** at the bottom of the Options tab sets every switch
+  back, after asking.
+
+**Changed**
+- **The Options tab's headings are plain names** (In the game, Rule changes,
+  More character customization, Expanded features, New content, Graphics,
+  Controls, Game speed), with one line above them saying that everything
+  applies in games started from the Ledger and that a switch marked "from the
+  next start" waits for the game to be started again. The elves' and
+  half-elves' looks come first in Graphics.
 
 ## Pull request #42 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/42))
 

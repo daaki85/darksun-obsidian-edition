@@ -563,6 +563,7 @@ class PatchError(Exception):
 
 # Patches that are switches on the Options tab: left out when off (their bytes still checked)
 EFFECTS_KEPT = ("effects_click_low", "effects_click_high")  # a click on the Effects screen keeps a spell
+ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
 
 
 def patched(original: bytes, skip=frozenset()) -> bytes:
