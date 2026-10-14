@@ -3,12 +3,16 @@
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first.
 Released pull requests are summarised in a line or two each; the release notes
-([2.2.0](release-notes/v2.2.0.md): #39 to #42; [2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35; [2.0.0](release-notes/v2.0.0.md): #31 and #32; [1.2.0](release-notes/v1.2.0.md):
+([2.2.1](release-notes/v2.2.1.md): #43; [2.2.0](release-notes/v2.2.0.md): #39 to #42; [2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35; [2.0.0](release-notes/v2.0.0.md): #31 and #32; [1.2.0](release-notes/v1.2.0.md):
 #19 to #29; [1.1.0](release-notes/v1.1.0.md): #14 to #18;
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
-## Pull request #43 (in progress)
+## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
+
+**Release**
+- **Obsidian Edition 2.2.1:** the version is 2.2.1, with its notes in
+  `release-notes/v2.2.1.md`, listed on the front page with the others.
 
 **Added**
 - **A switch for the elves' and half-elves' looks:** **Elves have pointed

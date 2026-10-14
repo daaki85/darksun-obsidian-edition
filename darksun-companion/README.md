@@ -2081,8 +2081,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 START GAME with no party made plays the game's own four, who were made before
 any of these choices existed. With weapon specialization, kits and class
 restrictions on, the Ledger fits them to those in the first moments of a new
-game, and says so in the dice log (Cilla also gets the elf's figure: see
-[Elves and half-elves](#elves-and-half-elves)):
+game, and says so in the dice log (Cilla also gets the elf's figure, with its
+own switch: see [Elves and half-elves](#elves-and-half-elves)):
 
 | Character | With weapon specialization | With class restrictions |
 |---|---|---|
