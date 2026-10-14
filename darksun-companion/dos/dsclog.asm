@@ -8550,7 +8550,12 @@ kit_row:
         div cl
         mov dl, ah
         inc dl
-.row:   mov dh, [es:bx + KIT_BYTE]
+.row:   push eax                ; (the classes the kit goes with, as PROBE_WP_CLASS keeps them: a
+        mov eax, [es:bx + 0x21] ;   new character's default class is never clicked, and a kit with
+        and eax, 0x00FFFFFF     ;   classes not seen is taken as stale, KIT_STALE, when the die
+        mov [cs:wp_classes_seen], eax ; rolls the hit points again)
+        pop eax
+        mov dh, [es:bx + KIT_BYTE]
         cmp dh, KIT_OPEN        ; none chosen: this one
         je .put
         cmp dl, dh              ; another, while one is chosen: out of use (nothing)

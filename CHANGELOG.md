@@ -32,6 +32,12 @@ have the detail.
   character can no longer take a kit (and back to KITS if it can again), and
   KITS pressed for a character with no kit class goes back as VIEW PSIONICS
   does.
+- **A kit lost on a new roll.** The die's new roll takes a kit away when the
+  character's classes aren't the ones the panel last saw, which it learns
+  from a click on a class. A new character's default class is never clicked,
+  so a fighter given a kit (a Myrmidon, with its two specializations) and
+  then rolled again lost the kit, and with it the second specialization. A
+  kit chosen now records the classes it goes with.
 - **The panel after a new race or sex.** The creation screen empties the
   classes, opens the panel for a character of no class, then puts the default
   class back without a click: a fighter was left with the game's VIEW SPHERES
