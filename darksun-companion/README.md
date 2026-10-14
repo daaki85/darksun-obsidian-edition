@@ -132,8 +132,8 @@ and half-elves have a look of their own ([Graphics](#graphics)).
 
 Quality of life changes: choosing an enemy with Tab and attacking it with
 Enter, scrolling the map by dragging with the mouse wheel
-([Controls](#controls)), 40 saves and 29 saved characters ([More saves and
-characters](#more-saves-and-characters)), a game speed setting ([Game
+([Controls](#controls)), 40 saves, each also kept under its name, and 29 saved
+characters ([More saves and characters](#more-saves-and-characters)), a game speed setting ([Game
 speed](#game-speed)), crash reports, and no dragon asking for a word from the
 manual, the game's copy protection ([No manual check](#no-manual-check)).
 
@@ -350,6 +350,8 @@ Everything there applies in games started from the Ledger; a switch that says
   Cilla drawn as an elf, what the party wears, shadows and dust.
 - **Controls** ([Controls](#controls)) and **Game speed** ([Game
   speed](#game-speed)).
+- **Saves** ([Saves under their names](#saves-under-their-names)): the folder
+  of saves kept under their names, and putting one back in a slot.
 
 All are on by default except each turn's rolls in the game and the right
 button, and are remembered for next time. **Restore defaults**, at the bottom
@@ -390,7 +392,7 @@ character in a fight (armour, DEX and spells included), and the rows under it
 say what it was made of: armour and shield (and spells that take their place,
 such as Spirit Armor and Magical Vestments), DEX (the game's table: −1 at 15
 down to −6 at 24; not counted when attacked from behind), and spells, rings
-(see [The Ring +1](#new-items)) and anything else. They show "-" until the game has worked out that character's AC
+(the [rings of protection](#rings-and-cloaks-of-protection)) and anything else. They show "-" until the game has worked out that character's AC
 in a fight.
 
 **Scores.** Ability scores such as `STR 24 (20 without spells)` show the score now and, in
@@ -925,8 +927,8 @@ From the game's code:
   in the same round, attacks from behind. (Its own attacks don't turn it.)
   It gets +2 to hit, and the target loses its DEX bonus and its shield.
 - A **backstab** is an attack from behind by a thief, in melee, with a weapon
-  that isn't too heavy (the game's weight value at most 40; a long sword's
-  is 20). It gets another +2 to hit (+4 in all), and on the thief's first
+  that isn't too heavy (the game's weight value at most 40, a metal long
+  sword's). It gets another +2 to hit (+4 in all), and on the thief's first
   attack of the round the damage, STR bonus included, is multiplied: x2 at
   thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
 
@@ -1095,8 +1097,8 @@ change.
   What depends on the target (attacking from behind or backstabbing, a Blurred
   target) is left out; the dice log shows it on each attack.
 - **Saves**: the d20 each needs, the character sheet's number less what the
-  game adds to every save: the [Ring +1](#new-items) and the
-  [Cloak of Protection](#new-items), Bless, Prayer,
+  game adds to every save: the [Rings of Protection and the
+  Cloak of Protection](#rings-and-cloaks-of-protection), Bless, Prayer,
   Barkskin, Spirit Armor (not on PPD), the Save penalty, and on PPD the CON
   adjustment (and a dwarf's or halfling's CON bonus). What depends on the
   spell or its caster (WIS against mind spells, Protection from Fire, a
@@ -1300,7 +1302,8 @@ classes. A ranger turned cleric uses both spheres' weapons, and a warrior who
 dual-classed uses the weapons it specialized in once the new class's level
 passes the old (a fighter's, gladiator's or ranger's chosen weapon specs, and a
 ranger's bow). A ranger's bow is always its own: a fire ranger/cleric, whose
-fire sphere allows only obsidian weapons, may still use bows.
+fire sphere allows only obsidian weapons, may still use bows. Cloaks,
+the Cloak of Protection among them, aren't armour: any class may wear one.
 
 A new character starts without the weapons, armour and shields its classes
 can't use. The game gives a character of several classes each class's gear,
@@ -1634,17 +1637,18 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 ## More character customization
 
 More choices for each character: a weapon to specialize in, a kit, a 10th
-level to reach, and a roll to keep while trying the die again. The first
-three each have a box in the Options tab's **More character customization**
-section. All are on by default and, like the rule changes, take effect at
-once in games started with the dice log; untick one and the game is as it
-was.
+level to reach, and a roll to keep while trying the die again. Each has a
+box in the Options tab's **More character customization** section. All are on
+by default and, like the rule changes, take effect at once in games started
+with the dice log (STORE and RECALL from the next start); untick one and the
+game is as it was.
 
 | Box on the Options tab | What it adds |
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
+| [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 
 ### Weapon specialization
 
@@ -1822,7 +1826,7 @@ NO KIT, the first row, is what a new character has. As with the clerical
 spheres, the rows not chosen are greyed: click the marked row to take it back,
 then click the kit you want. A few names are shortened to fit the panel
 (CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR). Choosing
-another class puts the kit back to none. The Effects screen names the kit
+another class puts the kit back to none; a new roll of the die keeps it. The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Ledger's Characters tab.
 
 The Elementalist chooses its second sphere on the creation panel's
@@ -2352,6 +2356,13 @@ Daaki picks Kurzak's pocket: d100 = 71, needs 63 or less -> failed
   Daaki fumbles Kurzak's pockets, but slips away unnoticed.
 ```
 
+**The Trustee's own key.** Picked in his talk by a thief with no room for it,
+the game drops it at his feet, and after each step of his rounds he went back
+for it ("There it is!") without picking it up: his rounds stalled, and he
+stayed busy ("I'd love to talk more... get back to work") for good. The
+Ledger's copy of his scripts leaves the key where it lies, for the party to
+pick up, and has him say the busy line once.
+
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
 
 ## New content
@@ -2429,8 +2440,8 @@ Ledger adds them:
 |---|---|---|---|
 | ![](docs/items/bone-short-sword.png) | **Bone Short Sword** | sold by the **Weapon Merchant** in Teaquetzl and **Jark** in Kel's caravan; carried by every **Renegade** | 1d6 |
 | ![](docs/items/obsidian-short-sword.png) | **Obsidian Short Sword** | sold by the Weapon Merchant and Jark; carried by **Chaero** | 1d6 |
-| ![](docs/items/bone-axe.png) | **Bone Axe** | sold by the Weapon Merchant and Jark; carried by every **Wild Mul** | 1d8 |
-| ![](docs/items/obsidian-axe.png) | **Obsidian Axe** | sold by the Weapon Merchant; carried by **Merzol**, the slave pens' gladiator | 1d8 |
+| ![](docs/items/bone-axe.png) | **Bone Axe** | sold by the Weapon Merchant and Jark; carried by every **Wild Mul** | 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](#attacks-from-behind-and-backstabs) |
+| ![](docs/items/obsidian-axe.png) | **Obsidian Axe** | sold by the Weapon Merchant; carried by **Merzol**, the slave pens' gladiator | 1d8; 30, as the bone axe |
 | ![](docs/items/obsidian-mace.png) | **Obsidian Mace** | sold by the Weapon Merchant and Jark; carried by every **Tari** in the warrens | the game's Mace (1d6+1), in obsidian (its only obsidian mace is Blackmace) |
 | ![](docs/items/short-sword.png) | **Metal Short Sword** | sold by the Weapon Merchant | 1d6: Shadowseeker without the plus |
 | ![](docs/items/metal-dagger.png) | **Metal Dagger** | carried by **Tobrian**, in Kel's caravan | the game's dagger, in metal |
@@ -3085,7 +3096,7 @@ game.)
 ![The load window on page 1 (left): the game's ten saves, and the PAGE 1 (greyed) to PAGE 4 buttons under LOAD and EXIT; and on an empty page 2 (right), with LOAD greyed](docs/save-pages.png)
 
 Page 1 is the game's own saves, `SAVE01.SAV` to `SAVE10.SAV` in the game
-folder; pages 2 to 4 are `SAVB01.SAV` to `SAVB10.SAV`, `SAVC..` and `SAVD..`,
+folder (or, with GOG's DOSBox, its `cloud_saves` folder); pages 2 to 4 are `SAVB01.SAV` to `SAVB10.SAV`, `SAVC..` and `SAVD..`,
 next to them. The game started without the Ledger shows page 1 only, as
 always: it looks for `SAVE??.SAV`, and the other pages' names don't match. (It
 had better not see them: it puts each save it finds in the row its number
@@ -3095,8 +3106,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-saves).
 
 #### Saves under their names
 
-Only the game's list says which file is which save. While it runs, the Ledger
-keeps a second copy of every save, under the name you typed for it in the
+Only the game's list says which file is which save. While its window is open,
+the Ledger keeps a second copy of every save, under the name you typed for it in the
 game, in its own **Named saves** folder: `Page 2 slot 05 - Before Scar's
 battle.SAV`. Saving over a slot replaces that slot's copy. The Options tab's
 **Saves** section has **Open the folder**, and **Put a save in a slot...**,

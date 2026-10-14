@@ -225,6 +225,7 @@ python -m dscompanion launch                        # start the game with the di
 python -m dscompanion view                          # the viewer only
 python -m dscompanion play                          # the game with the in-game additions, no viewer
 python -m dscompanion dicelog                       # the dice log in the command prompt
+python -m dscompanion checks                        # the scripts' thief skill and ability checks (spoilers)
 python -m dscompanion save C:\path\to\SAVE01.SAV   # the party stored in a save
 python -m dscompanion processes                     # is DOSBox found?
 ```
@@ -341,7 +342,9 @@ unless its type's `+0Fh` has 2). `PROBE_ITEM_BOX` (`INT DAh`, at the end of the 
 8C1A1h, the item `[BP+6]`) draws `Charges: n` in the row after the box's own
 lines (`IB_CHARGES`) when the spell byte is below F9h (from there the game's
 own effects: a belt's STR, a ring's AC...) and the charges aren't 0, but not
-for fruit (type 60, eaten whole).
+for fruit (type 60, eaten whole) nor scenery (a type whose `+08h` has both 20h
+and 40h: a door, a mirror, a crank), where those bytes hold something else
+(`TYPE_SCENERY`).
 
 ### No manual check
 
@@ -364,7 +367,9 @@ and no question. It is replaced only if it is the dragon's (its
 How: the helper adds the classes' limits where the game checks an item against
 the classes allowed to use it (`INT CDh`), and a multiclass preserver's armour
 where the game checks for "No spell use" (`INT CCh`). (`dscompanion/restrict.py`
-says the same in Python, for the tests.)
+says the same in Python, for the tests.) A cloak's type (worn in the cloak
+slot, `+09h` 8) counts for AC as armour does but isn't armour to the limits:
+the Cloak of Protection is for every class (`CLASS_FORBIDS`, `restrict.is_armour`).
 A weapon the character has made its own is left as the game has it, past the
 classes' limits (`SPECIALIZED_BACK`, `restrict.specialized_back`): a dual-classed
 human's chosen weapon specs once its new class's level has passed the warrior
@@ -814,6 +819,17 @@ something on the map tells the helper what was used on what (`INT FDh`). For
 the thieving tools on someone, the Ledger rolls and moves the item, and the
 helper shows the result instead of the game's "nothing happens".
 
+The Trustee's key (his own pick, in his talk): a thief with no room for it has
+it dropped at his feet (script 146), and his rounds (script 8, from 3767; its
+step in word variable 135,20) test after each step whether the key is stolen
+(flag 55) and lies within 9 of him, and make for it ("There it is!") without
+picking it up, so the rounds stall. After a talk he is busy (flag 51, "I'd love
+to talk more...") until the rounds' first step clears it, so a stall left him
+busy for good. In the Ledger's copy of `GPLDATA.GFF` (`pensasks.py`), the test
+asks for flag 55 to be 2, which it never is (`no_key_chase`), and the busy line
+jumps to code after the script's end that clears flag 51, says it and jumps
+back (`busy_once`).
+
 ### New wizard spells
 
 ([In the README](README.md#new-wizard-spells).)
@@ -960,7 +976,9 @@ weapon types by item type, `kind_of_type`, cover them too); the Ledger's item na
 after the game's 322 (the game puts the item type's material before the name
 when it shows one); and the icons are objects in the Ledger's copy of
 `SEGOBJEX.GFF` (`dscompanion/icons.py`), which the helper has the game open
-instead of its own (its `INT 21h` hook). Where the game adds up AC and saving
+instead of its own (its `INT 21h` hook). The copy also has the game's Polearm
+picture made 22 pixels tall (`icons.fit_box`): at its own 36, the item box's
+lines, which start below the picture, ran out of the box. Where the game adds up AC and saving
 throws, the helper counts the rings and the cloak (`INT F8h` and the save
 probes). Shadowseeker's sight is the game's own way with a magic item's spell:
 readied, it puts Detect Invisibility on its wielder. In the original game the
@@ -1121,7 +1139,7 @@ menu's part goes to the same command followed by the new questions' flags
 new questions after its last about someone. Each then jumps back to where the
 game's script carries on.
 
-That makes the Trustee's script 10,898 bytes, and the game reads every script
+That (with [his busy line](#picking-pockets)) makes the Trustee's script 10,967 bytes, and the game reads every script
 into one buffer of 10,000 bytes (a script that calls into another reads it in
 over its own). One of 9,800 bytes ran; one of 10,000 ended with "BAD GPL
 EXIT" (the game's own largest is 9,792). So the Ledger's copy of the game
@@ -1321,6 +1339,14 @@ away and the page's put in with the game's text font
 (`dscompanion/savepages.py`; the buttons' own carved letters have no P, G or
 digits).
 
+Saves under their names (`dscompanion/namedsaves.py`): every few seconds the
+Ledger looks at the 40 slots' files (`cloud_saves` before the game folder, as
+GOG's DOSBox mounts it over the folder), and copies one newer than its copy to
+`Named saves/` as `Page P slot NN - NAME.SAV`, the name from the save's
+`STXT 1` (up to its first NUL; characters Windows won't take become `_`). A
+slot's copy under another name is removed. **Put a save in a slot...** copies
+a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot.
+
 ### More characters
 
 ([In the README](README.md#more-characters).)
@@ -1446,6 +1472,10 @@ is in the roster's CHAR record (the sheet at its `+4Eh`). It also keeps the
 creation sheet from one character to the next, so the kit is put back to none
 whenever the disciplines' window is opened other than on the way back to it
 (`KIT_KEEP`, set by VIEW PSIONICS): for a new character, or another class.
+The die's new roll clears a kit too when the classes aren't the ones the panel
+last saw (`kit_stale` against `wp_classes_seen`, which `PROBE_WP_CLASS` sets on
+a class click); a new character's default class is never clicked, so `KIT_ROW`
+sets `wp_classes_seen` as well, to the classes the kit is chosen for.
 
 The rows' letters are carved from the game's own labels, as the weapon
 pages' (`kitpages.py`, with a J and a hyphen drawn). The panel's frame comes
@@ -1453,7 +1483,10 @@ in to about 95 pixels past the rows' left at the second kit's row, so a row
 is held to 88 (`ROW_WIDTH`, its mark's room in), clear of it: ARENA CHAMPION,
 SWASHBUCKLER, ELEMENTALIST, GROVE WARDEN, BATTLE MAGE, MIND BENDER and MIND
 WARRIOR are shortened (CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE,
-M-BENDER, M-WARRIOR), the last two as the game's P-KINESIS.
+M-BENDER, M-WARRIOR), the last two as the game's P-KINESIS. Each row's button
+(the weapon pages' too) is a copy of the game's AIR row's, which is 33 pixels
+wide, made as wide as its label (`weaponpages.row_button`): at 33, a click on
+the right of a longer name did nothing.
 
 The Effects screen's lower panel (`PROBE_EF_ROWS`) has the kit's line first,
 `KIT: RAVAGER`, before the weapon specs; the Characters tab has `Kit: Ravager`

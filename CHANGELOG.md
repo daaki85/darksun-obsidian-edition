@@ -78,6 +78,21 @@ have the detail.
   wide: a click on the rest of a longer name (the middle of MYRMIDON or LNG
   SWORD) did nothing. Each row's button is now as wide as its name.
 
+**Documentation**
+- **A review of every page for this pull request's changes.** The README's
+  picking pockets section tells of the Trustee's key, its class restrictions
+  that a cloak isn't armour, its kits that a new roll keeps the kit, its new
+  items the axes' weight, its Options list the Saves section and its More
+  saves `cloud_saves`; the More character customization table gains STORE and
+  RECALL, which has a box too. A backstab's weight limit is a metal long
+  sword's 40 (it said a long sword's was 20), and the AC and saves lines point
+  to the rings of protection rather than "the Ring +1". The guide's Equipment
+  has the obsidian axe backstabbing and cloaks for every class, and its Ledger
+  list the named saves; both overviews mention them. DEVELOPMENT.md has the
+  scenery and cloak checks, the kit kept through a roll, the rows' width, the
+  polearm's picture, the Trustee's two script changes (his script is now
+  10,967 bytes), the named saves and the `checks` command.
+
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 
 **Release**

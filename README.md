@@ -49,8 +49,8 @@ dust, and elves and half-elves have a look of their own
 
 Quality of life changes: choosing an enemy with Tab and attacking it with Enter,
 scrolling the map by dragging with the mouse wheel
-([Controls](darksun-companion/README.md#controls)), 40 saves and 29 saved
-characters ([More saves and
+([Controls](darksun-companion/README.md#controls)), 40 saves, each also
+kept under its name, and 29 saved characters ([More saves and
 characters](darksun-companion/README.md#more-saves-and-characters)), a game
 speed setting ([Game speed](darksun-companion/README.md#game-speed)), crash
 reports, and no dragon asking for a word from the manual, the game's copy

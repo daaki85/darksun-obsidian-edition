@@ -114,6 +114,9 @@ easier.
 - **Dialogue:** everything said, with the speaker and the replies offered.
 - **Spells:** every spell's and psionic power's dice, saves, effects and
   duration, and each party member's caster level for it.
+- **Saves under their names:** a copy of every save in the **Named saves**
+  folder, named as you named it in the game; the Options tab's **Saves**
+  section opens the folder and puts a copy back in a slot to load.
 - **Text size** (**A+** and **A-**, or Ctrl + and Ctrl −) and keyboard access to
   everything.
 - **`Play Dark Sun (in-game rolls).bat`** plays with all of the above in the
@@ -1422,7 +1425,7 @@ materials, the short sword among them.
 | Long sword | 1d8 | yes |
 | Club | 1d6 | yes |
 | Quarterstaff | 1d6 | yes |
-| Axe | 1d8 | bone ones |
+| Axe | 1d8 | bone and obsidian ones (not metal) |
 | Pick | 1d4+1 | yes |
 | Great axe (two-handed) | 1d10 | no |
 | Mace | 1d6+1 | no |
@@ -1440,7 +1443,8 @@ weapon in the other.
 **Protection.** Rings and cloaks of protection give +1 AC and +1 on every save,
 by AD&D's rules: two rings don't add up; a ring gives no AC with magical armour
 (its saves still count); a cloak does nothing with magical or metal armour or
-a shield. **Bracers of defense** give their AC (6, 5, 4 or 2), and the mod's
+a shield. A cloak isn't armour: any class may wear one, druids too.
+**Bracers of defense** give their AC (6, 5, 4 or 2), and the mod's
 two **robes** their plus, only with no armour worn, and a preserver casts in
 either. These are rare finds.
 
