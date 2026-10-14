@@ -612,8 +612,9 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
 
 
 def write_resources(source: str, dest: str) -> None:
-    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons and the save/load
-    window's PAGE 1 to PAGE 4 buttons (savepages.py), to DEST."""
+    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the save/load
+    window's PAGE 1 to PAGE 4 buttons (savepages.py) and the creation screen's STORE and RECALL
+    (rollstore.py), to DEST."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
@@ -635,11 +636,31 @@ def write_resources(source: str, dest: str) -> None:
         added.update(kitpages.chunks(chunks))
     except (KeyError, ValueError, IndexError, StopIteration, struct.error):
         pass  # (no kit pages: no kits to choose)
+    from . import rollstore
+    try:
+        added.update(rollstore.chunks(chunks))
+    except (KeyError, ValueError, IndexError, struct.error):
+        pass  # (no STORE and RECALL: the creation screen as the game has it)
     out = with_chunks(data, added)
     tmp = dest + ".tmp"
     with open(tmp, "wb") as f:
         f.write(out)
     os.replace(tmp, dest)
+
+
+def _palette(source: str) -> None:
+    """The game's palette (GPLDATA.GFF, beside SOURCE) for the party's pictures (spritegear: the
+    half-elf man's colours are picked by their brightness). Without it, a half-elf is the human
+    figure in the half-elf's colours (halfelf.py)."""
+    from . import art, spritegear as sg
+    gpl = art._find(os.path.dirname(os.path.abspath(source)), "GPLDATA.GFF")
+    if not gpl:
+        return
+    try:
+        with open(gpl, "rb") as f:
+            sg.set_palette(art.palette_colours(gff.read_gff(f.read())[("PAL ", art.PORTRAIT_PALETTE)]))
+    except (OSError, gff.GffError, KeyError, ValueError, struct.error):
+        pass
 
 
 def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) -> Tuple[bool, Tuple[int, ...]]:
@@ -654,6 +675,7 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     chunks = gff.read_gff(data)
     added = new_chunks(chunks)
     room: Dict[Tuple[str, int], int] = {}
+    _palette(source)
     try:  # (the party's own sprites, for what they wear: room after each to be dressed in place)
         pictures = sprites.new_chunks(chunks)
         room = sprites.new_room(chunks, pictures)
@@ -673,6 +695,8 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     from . import worldgear
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)
+    from . import defaultparty
+    added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))  # (Cilla, an elf, drawn as one)
     out = with_chunks(data, added, room)
     tmp = dest + ".tmp"
     with open(tmp, "wb") as f:

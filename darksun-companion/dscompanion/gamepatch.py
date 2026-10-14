@@ -34,7 +34,7 @@ GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
 VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT = 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7  # not 66h-6Fh: the game calls those itself, looking for drivers
-VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_PICK, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD
+VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFD  # (0xFC: free)
 VEC_TWO, VEC_DOUBLE = 0xFE, 0xF0
 VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY = 0xED, 0xEE, 0xEF
 VEC_NAMES_SIZE, VEC_NAMES_FILL = 0xEC, 0xEB
@@ -79,6 +79,7 @@ VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN = 0x96, 0x95, 0x94, 0
 VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
 VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
+VEC_RS_CLICK = 0x8A
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -205,9 +206,6 @@ PATCHES = (
     # where a creature's turn in a fight starts: mov es:[bx+22Bh],ax, its movement for the turn
     # (DSCLOG does it, adding 1 move for boots when the companion's rule is on)
     Patch("move", 0x57566, bytes.fromhex("2689872b02"), _interrupt(VEC_MOVE, 5)),
-    # the dialogue window's key handling, where a key it doesn't know goes: jmp <ignore it>
-    # (DSCLOG takes P as trying to pick the pocket of the person talked to)
-    Patch("pick", 0x7D9FD, bytes.fromhex("e97003"), _interrupt(VEC_PICK, 3)),
     # the routine that uses the item on the pointer on what's under it on the map, once it has
     # found that: cmp si,-1 / jne +3 (DSCLOG has the Ledger see to its thieving tools there)
     Patch("use_item", 0x73615, bytes.fromhex("83feff7503"), _interrupt(VEC_USE_ITEM, 5)),
@@ -495,6 +493,9 @@ PATCHES = (
     Patch("price_buy", 0x8384B, bytes.fromhex("268b4f06"), _interrupt(VEC_PRICE, 4)),
     Patch("price_shown", 0x83BB1, bytes.fromhex("268b4f06"), _interrupt(VEC_PRICE, 4)),
     Patch("price_afford", 0x8310C, bytes.fromhex("66260fbf4706"), _interrupt(VEC_PRICE_EAX, 6)),
+    # STORE and RECALL on the creation screen (rollstore.py): the screen's click routine looking up
+    # its buttons
+    Patch("roll_store", 0x6625D, bytes.fromhex("b91600"), _interrupt(VEC_RS_CLICK, 3)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),

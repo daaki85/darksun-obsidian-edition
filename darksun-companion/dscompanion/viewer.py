@@ -326,27 +326,38 @@ class Viewer:
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
                         variable=self.monster_info, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
         rules = section("rules", "Rule changes (in games started with the dice log)")
-        # the thieves' rules and picking pockets together, as the guide's Thieves section has them
-        thieves = section("thieves", "Thieves (in games started with the dice log)")
-        thief_rules = ("thief_table", "stealth")
+        custom = section("custom", "More character customization (in games started with the dice log)")
+        features = section("features", "Expanded features (in games started with the dice log)")
+        # the thief's rules and picking pockets together, as the guide's Thieves section has them
+        thieves = ttk.Frame(features)
+        ttk.Label(thieves, text="Improved thieving", style="Status.TLabel").pack(anchor="w")
+        # the companion's own content: people, a quest and items in the game, and the new spells. Some
+        # are written into the game's files when it is started; what a save already has stays
+        new = section("new_content", "New content")
+        ttk.Label(new, text="People, a quest and items: from the next time you start the game, in places "
+                  "not yet visited. What a saved game already has (people met, items given) stays in it. "
+                  "The new spells: at once, in games started with the dice log.",
+                  wraplength=460).pack(anchor="w")
+        options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
+            wraplength=max(200, e.width - 60)), add="+")
+        where = {"weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features,
+                 "thief_table": thieves, "stealth": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
-        # (in the order the README's Rule changes has them: the ones that change most first)
-        for n, (key, text) in enumerate((
-                ("weapon_specialization", "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
-                                          "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
-                                          "rangers have expertise, every ranger with the bow; specialists and "
-                                          "rangers shoot missiles faster; other weapons at a warrior's plain rate "
-                                          "(chosen on the creation panel's WEAPON SPEC pages)"),
-                ("kits", "Kits: a character of one class may take one of its class's three kits, each "
-                         "giving something and costing something (chosen on the creation panel's KIT "
-                         "page)"),
+        # (in the order the README has them)
+        for key, text in (
                 ("class_restrictions", "Class restrictions on armour, shields and weapons, the strictest class "
                                        "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
                                        "spheres); a multiclass preserver casts no spells in armour"),
                 ("multiclass_hp", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
                                   "a class is a warrior), the total shared between the classes"),
+                ("best_hit_die", "Hit dice rolled twice, the better kept, at creation and at every level "
+                                 "(every character)"),
+                ("rolled_scores", "Character creation keeps what the die rolls: a score may be raised only "
+                                  "while the six add up to no more than the die gave (lower one to raise "
+                                  "another; the total is shown under CHR), and the hit points can't be "
+                                  "clicked; a change of CON adds or takes off its bonus"),
                 ("ranger_casting_level", "Rangers' spells last and do damage as cast at the ranger level less 7, "
                                          "as the spell levels they may cast count it (the game takes the whole "
                                          "level)"),
@@ -356,25 +367,12 @@ class Viewer:
                 ("adnd_tables", "AD&D's class tables: the XP each class needs (a gladiator's its own, not the "
                                 "fighter's), priests' THAC0 (2 better every 3 levels), and clerics', druids' and "
                                 "preservers' spell slots by level (WIS's bonus slots stay the game's)"),
-                ("cha_prices", "The leader's CHA lowers what shops ask, as in Baldur's Gate: 5% off at CHA 16, "
-                               "10% at 17, 15% at 18, 20% at 19, 25% from 20 (selling as the game has it)"),
-                ("rolled_scores", "Character creation keeps what the die rolls: a score may be raised only "
-                                  "while the six add up to no more than the die gave (lower one to raise "
-                                  "another; the total is shown under CHR), and the hit points can't be "
-                                  "clicked; a change of CON adds or takes off its bonus"),
-                ("best_hit_die", "Hit dice rolled twice, the better kept, at creation and at every level "
-                                 "(every character)"),
                 ("spell_save", "Spells are saved against with the spell save (the game uses "
                                "petrification/polymorph)"),
                 ("no_doubled_save", "Saves against fire, cold and electricity: DEX defensive adjustment "
                                     "instead of a doubled d20"),
                 ("two_weapons", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
                                 "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
-                ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
-                                "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
-                ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
-                            "(no enemy beside them; thieves half the chance in daylight, rangers indoors)"),
-                ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
                 ("item_saves", "Items save against acid as in AD&D, by material, a plus helping, where that's "
                                "better than the game's (which destroys armour without a magical power outright)"),
                 ("protection_rules", "Rings and cloaks of protection as in AD&D: only the better of two rings "
@@ -382,12 +380,27 @@ class Viewer:
                                      "with magical or metal armour or a shield"),
                 ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
                                      "weapon in the other; two heavy weapons still can't be held)"),
+                ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
+                ("weapon_specialization", "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
+                                          "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
+                                          "rangers have expertise, every ranger with the bow; specialists and "
+                                          "rangers shoot missiles faster; other weapons at a warrior's plain rate "
+                                          "(chosen on the creation panel's WEAPON SPEC pages)"),
+                ("kits", "Kits: a character of one class may take one of its class's three kits, each "
+                         "giving something and costing something (chosen on the creation panel's KIT "
+                         "page)"),
+                ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
+                ("cha_prices", "The leader's CHA lowers what shops ask, as in Baldur's Gate: 5% off at CHA 16, "
+                               "10% at 17, 15% at 18, 20% at 19, 25% from 20 (selling as the game has it)"),
+                ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
+                                "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
+                ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
+                            "(no enemy beside them; thieves half the chance in daylight, rangers indoors)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6, at most 24), Erdlu Claw "
-                               "(1st: unarmed attacks do 1d6+1, +1 to hit, as a +1 weapon) and Fogbolt (1st: -3 to hit, AC 2 worse)"),
-                ("helm_ac", "Helms give AC 1 (the game's helms give none)"))):
+                               "(1st: unarmed attacks do 1d6+1, +1 to hit, as a +1 weapon) and Fogbolt (1st: -3 to hit, AC 2 worse)")):
             self.rule_vars[key] = tk.BooleanVar(
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
-            parent = thieves if key in thief_rules else rules
+            parent = where.get(key, rules)
             ttk.Checkbutton(parent, text=text, variable=self.rule_vars[key],
                             command=self._popups_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
             if key == "stealth":  # (under it: what worn gear adds)
@@ -395,14 +408,6 @@ class Viewer:
                                             "a worn belt adds 5 to picking pockets and opening locks (hiding or not)",
                                 variable=self.stealth_gear, command=self._popups_changed).pack(anchor="w", padx=(20, 0))
 
-        # the companion's own content: people, a quest and items in the game. Some
-        # are written into the game's files when it is started; what a save already has stays
-        new = section("new_content", "New content")
-        ttk.Label(new, text="From the next time you start the game, in places not yet visited. What a "
-                  "saved game already has (people met, items given) stays in it.",
-                  wraplength=460).pack(anchor="w")
-        options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
-            wraplength=max(200, e.width - 60)), add="+")
         self.content_vars: Dict[str, tk.BooleanVar] = {}
         for key, text in (
                 ("kalzith", "Kalzith, a defiler slave in the slave pens who sells arcane scrolls (new games)"),
@@ -418,12 +423,10 @@ class Viewer:
         ttk.Checkbutton(thieves, text="Picking pockets: a thief uses Thieves' Tools on someone in sight (each "
                         "thief gets a set), until caught", variable=self.pickpockets,
                         command=self._popups_changed).pack(anchor="w", pady=(4, 0))
-        self.pick_key = tk.BooleanVar(value=bool(settings.get("pick_key", False)))
-        ttk.Checkbutton(thieves, text="... or the leader, a thief, presses P in a conversation",
-                        variable=self.pick_key, command=self._popups_changed).pack(anchor="w", padx=(20, 0))
+        thieves.pack(anchor="w", fill="x", pady=(8, 0))
 
         # how the game looks
-        looks = section("on_screen", "On the screen (in the game)")
+        looks = section("on_screen", "Graphics (in the game)")
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
         ttk.Checkbutton(looks, text="Show what the party wears on their figures (weapons, armour, helms, "
                         "cloaks, boots, belts)", variable=self.show_gear,
@@ -788,7 +791,6 @@ class Viewer:
                 self.dice.monster_info = self.monster_info.get()
                 self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
                 self.dice.pickpockets = self.pickpockets.get()
-                self.dice.pick_key = self.pick_key.get()
                 self.dice.show_gear = self.show_gear.get()
                 self.dice.show_shadows = self.show_shadows.get()
                 self.dice.show_dust = self.show_dust.get()
@@ -886,7 +888,6 @@ class Viewer:
         settings["turn_popups_level"] = self.popup_level.get()
         settings["monster_info"] = self.monster_info.get()
         settings["pickpockets"] = self.pickpockets.get()
-        settings["pick_key"] = self.pick_key.get()
         settings["show_gear"] = self.show_gear.get()
         settings["shadows"] = self.show_shadows.get()
         settings["dust"] = self.show_dust.get()
@@ -906,7 +907,7 @@ class Viewer:
             self.dice.popup_level = self.popup_level.get()
             self.dice.set_monster_info(self.monster_info.get())
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
-            self.dice.set_pickpockets(self.pickpockets.get(), self.pick_key.get())
+            self.dice.set_pickpockets(self.pickpockets.get())
             self.dice.show_gear = self.show_gear.get()
             self.dice.show_shadows = self.show_shadows.get()
             self.dice.show_dust = self.show_dust.get()

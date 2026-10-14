@@ -40,8 +40,6 @@ game.
   - [Charges in item boxes](#charges-in-item-boxes)
   - [No manual check](#no-manual-check)
 - [Rule changes](#rule-changes)
-  - [Weapon specialization](#weapon-specialization)
-  - [Kits](#kits)
   - [Class restrictions](#class-restrictions)
   - [Multiclass hit points](#multiclass-hit-points)
   - [Hit dice: the better of two](#hit-dice-the-better-of-two)
@@ -49,24 +47,30 @@ game.
   - [Rangers' casting level](#rangers-casting-level)
   - [Preservers' INT](#preservers-int)
   - [AD&D's class tables](#adds-class-tables)
-  - [The leader's CHA at shops](#the-leaders-cha-at-shops)
   - [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save)
   - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
   - [Two weapons](#two-weapons)
-  - [Thief skills from AD&D's table](#thief-skills-from-adds-table)
-  - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
-  - [Picking pockets](#picking-pockets)
-  - [Levels up to 10](#levels-up-to-10)
   - [Items saving against acid](#items-saving-against-acid)
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
-  - [New wizard spells](#new-wizard-spells)
   - [Helms](#helms)
+- [More character customization](#more-character-customization)
+  - [Weapon specialization](#weapon-specialization)
+  - [Kits](#kits)
+  - [Levels up to 10](#levels-up-to-10)
+  - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [The game's own party](#the-games-own-party)
+- [Expanded features](#expanded-features)
+  - [The leader's CHA at shops](#the-leaders-cha-at-shops)
+  - [Improved thieving](#improved-thieving)
+    - [Thief skills from AD&D's table](#thief-skills-from-adds-table)
+    - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
+    - [Picking pockets](#picking-pockets)
 - [New content](#new-content)
+  - [New wizard spells](#new-wizard-spells)
   - [New items](#new-items)
-  - [Bracers of defense](#bracers-of-defense)
-  - [Robes](#robes)
+    - [Bracers of defense](#bracers-of-defense)
+    - [Robes](#robes)
   - [New people](#new-people)
     - [Kalzith](#kalzith)
     - [Semyon](#semyon)
@@ -75,7 +79,8 @@ game.
 - [Item tables](#item-tables)
   - [Every magic item](#every-magic-item)
   - [Every mundane weapon](#every-mundane-weapon)
-- [On the screen](#on-the-screen)
+- [Graphics](#graphics)
+  - [Elves and half-elves](#elves-and-half-elves)
   - [What the party wears](#what-the-party-wears)
   - [Shadows](#shadows)
   - [Dust](#dust)
@@ -104,21 +109,25 @@ from ([the dice log](#the-dice-log)). The game's own screens gain THAC0, saves,
 thief skills and spell slots, and the Look box tells you what can hurt a
 monster ([In the game](#in-the-game)).
 
-It brings the rules closer to AD&D: weapon specialization and mastery, kits
-(three for each class), class restrictions, AD&D's class tables (experience,
-priests' THAC0, spell slots), INT's limits on learning spells, thief skills
-from the Player's Handbook, saving throws as the books have them, the party
-leader's CHA at shops, scores and hit points kept as rolled, multiclass hit
-points as the books have them, and levels up to 10 ([Rule changes](#rule-changes)). Thieves can hide in
-shadows to backstab, and pick pockets ([Picking pockets](#picking-pockets)).
+It brings the rules closer to AD&D: class restrictions, AD&D's class tables
+(experience, priests' THAC0, spell slots), INT's limits on learning spells,
+saving throws as the books have them, scores and hit points kept as rolled,
+and multiclass hit points as the books have them ([Rule
+changes](#rule-changes)). It gives more ways to build a character: weapon
+specialization and mastery, kits (three for each class), levels up to 10,
+and STORE and RECALL for a creation roll ([More character
+customization](#more-character-customization)). And it expands play:
+thieves with AD&D's skills hide in shadows to backstab and pick pockets, and
+the party leader's CHA lowers shop prices ([Expanded
+features](#expanded-features)).
 
 It adds to Athas: new weapons in every material, magic items with stories of
 their own (robes and bracers among them, for those who wear no armour), three wizard
 spells ([Cat's Grace, Erdlu Claw and Fogbolt](#new-wizard-spells)), Kalzith
 (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
-vulture ([New content](#new-content)). Graphical additions show the weapons and
-armour the party wears, have characters cast shadows, and kick up dirt as they
-walk ([On the screen](#on-the-screen)).
+vulture ([New content](#new-content)). On the map, the party
+wears its weapons and armour, figures cast shadows and kick up dust, and elves
+and half-elves have a look of their own ([Graphics](#graphics)).
 
 Quality of life changes: choosing an enemy with Tab and attacking it with
 Enter, scrolling the map by dragging with the mouse wheel
@@ -307,7 +316,7 @@ party pane has two tabs:
     Long Sword"; "Carried" for the backpack), with each item's material and
     plus;
   - last, spell slots for spellcasters (see below), thief skills for thieves,
-    and for rangers, with the stealth rule on, their chances to hide and move
+    and for rangers, with hiding to backstab on, their chances to hide and move
     silently (`Ranger skills now`).
 - **All fields** (Alt+A): every field the layout maps, in a table, with rows
   of its own for the AC in a fight and what it's made of, THAC0 with each
@@ -324,21 +333,26 @@ The sections:
 
 - **In the game**: each turn's rolls and how much they say, monster
   descriptions ([In the game](#in-the-game)).
-- **Rule changes** ([Rule changes](#rule-changes)).
-- **Thieves** ([Thieves](#hiding-in-shadows-to-backstab)): AD&D's thief skills, hiding to
-  backstab, and picking pockets.
-- **New content** ([New content](#new-content)): the new people, the vulture
-  and the new items, from the next time the game is started; what a saved game
-  already has stays in it.
-- **On the screen** ([On the screen](#on-the-screen)), **Controls**
+- **Rule changes** ([Rule changes](#rule-changes)): the game's rules closer
+  to AD&D.
+- **More character customization** ([More character
+  customization](#more-character-customization)): weapon specialization, kits
+  and levels up to 10.
+- **Expanded features** ([Expanded features](#expanded-features)): the
+  leader's CHA at shops, and **Improved thieving** (AD&D's thief skills,
+  hiding to backstab, the cloak, boots and belt, and picking pockets).
+- **New content** ([New content](#new-content)): the new spells, at once; the
+  new people, the vulture and the new items, from the next time the game is
+  started (what a saved game already has stays in it).
+- **Graphics** ([Graphics](#graphics)), **Controls**
   ([Controls](#controls)) and **Game speed** ([Game speed](#game-speed)).
 
-All are on by default except each turn's rolls in the game, P in a
-conversation and the right button, and are remembered for next time.
+All are on by default except each turn's rolls in the game and the right
+button, and are remembered for next time.
 In a window too small to show the open sections, the tab scrolls (scrollbar,
 mouse wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes and Thieves open and the other sections closed](docs/options.png)
+![The Options tab with More character customization, Expanded features (Improved thieving among them) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -480,7 +494,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 |---|---|
 | `X DEX check: d20 = 9, needs 16 or less (DEX 16) -> success` | An ability check. A natural 20 always fails. |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](#how-the-game-works-out-thief-skills)), and what its chance is made of. |
-| `Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Cilla moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (the [stealth rule](#rule-changes)). |
+| `Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Cilla moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](#hiding-in-shadows-to-backstab) on). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
 | `    X's Bone Long Sword nearly broke: 0 on 0-7, then 12 on 0-19 (needed 0)` / `... BREAKS` | The weapon check the game makes after an attack sequence whose last attack hit. Only non-magical wood, bone, stone and obsidian weapons can break (and not every kind: clubs and quarterstaffs can't): they break when a 0-7 roll and then a 0-19 roll both come up 0, 1 chance in 160. The line only appears when the first roll comes up 0. |
 | `  Rampager's acid on Gerakis's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe` | An item the Rampager's acid or the Babau's corroding touch could destroy: the d20, the number it needed and whose number that was (see [Items saving against acid](#items-saving-against-acid)). |
@@ -497,7 +511,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `XP: Gerakis +67, K'ratchek +22, ... (for Slig 270)` | Experience the party got, and for which kills, with each one's XP from its character sheet. The game gives it right after the kill: an equal share to each character, split again between a multi-class character's classes (the sheet counts XP per class, so a three-class thri-kreen shows a third of the share). |
 | `Cilla is now a 3rd level Ranger` / `    max HP 15 -> 21 (+6)` | A level gained, and the new maximum HP. |
 | `    max HP unchanged: the game divides the hit point total by the classes, ...` | A multi-class character gained a level and its most hit points stayed the same: every class level rolls its die, but the game divides the whole total by the number of classes, so a small roll can add only a fraction (it counts at a later level). A human who changed class gets none in the new class until its level passes the old class's. |
-| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [levels up to 10](#rule-changes)). With [the better of two](#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
+| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [levels up to 10](#levels-up-to-10)). With [the better of two](#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
 
 **Character creation**
 
@@ -877,8 +891,8 @@ has a script command that lets each member try in turn, but no script uses it.)
 in the game, so they make no difference; nor does the equipment penalty on
 them. (The Ledger rolls move silently when a pocket isn't picked, see
 [Picking pockets](#picking-pockets), and hide in shadows and move silently in
-fights with the [stealth rule](#rule-changes).) The scripts also make 3 ability checks (a d20 under the ability): CHA
-twice and STR once.
+fights, to [backstab](#hiding-in-shadows-to-backstab).) The scripts also make
+3 ability checks (a d20 under the ability): CHA twice and STR once.
 
 `python -m dscompanion checks` lists them all with the script's text around
 each (spoilers).
@@ -888,9 +902,9 @@ equipment penalty (none in games started with the dice log) and effects (but
 not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
 the two the Ledger rolls: move silently (when a pocket isn't picked, see
-[Picking pockets](#picking-pockets)) and hide in shadows (for the
-[stealth rule](#rule-changes)), with any Thieves' Tools carried. **All
-fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
+[Picking pockets](#picking-pockets)) and hide in shadows (to
+[backstab](#hiding-in-shadows-to-backstab)), with any Thieves' Tools carried.
+**All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
 ![Cilla's card on the Characters tab: Thieves' Tools carried, and her thief skills now, move silently and hide in shadows among them](docs/thief-card.png)
 
@@ -912,7 +926,7 @@ From the game's code:
   thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
 
 Which weapons can backstab, the game's and the [Ledger's](#new-items), magic
-ones included. Weight belongs to the weapon's kind and
+ones included. Weight belongs to the weapon's type and
 material, in the game's units, which look like tenths of a pound (a dagger is
 10, a club 30, a mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb.
 Missile weapons (slings, bows, a thrown chatkcha) never backstab: it has to be
@@ -934,7 +948,7 @@ melee.
 | Cahulaks, gythka | bone (120) | 1d6, 2d4 | no |
 | Polearm | bone, metal (150) | 1d10 | no |
 
-About a dozen more weapon kinds are in the game's tables with no item of
+About a dozen more weapon types are in the game's tables with no item of
 theirs in its data (monsters' own, made by scripts, or unused).
 
 ### The game's saving throws
@@ -1024,7 +1038,7 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
 
 ![The inventory screen's panel in the game: THAC0 and the saves at the top, Daaki's thief skills (move silently and hide in shadows among them) beside the abilities, his DEX reaction and defensive adjustments, and a club in each hand: 1.5 attacks a round with the right, one with the off hand](docs/inventory.png)
 
-![A ranger's panel: Dream's move silently and hide in shadows, for the stealth rule, where a thief's go](docs/inventory-ranger.png)
+![A ranger's panel: Dream's move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
 
 - above STR, **THAC0** and the five **saving throws**, with the usual AD&D
   short labels: `PPD` paralysis/poison/death, `RSW` rod/staff/wand, `PP`
@@ -1035,13 +1049,13 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
   and hide in shadows are the ones the Ledger rolls (for
-  [picking pockets](#picking-pockets) and the [stealth rule](#rule-changes)).
+  [picking pockets](#picking-pockets) and [hiding to backstab](#hiding-in-shadows-to-backstab)).
   A worn belt's 5 is in `PICK` and `LOCK`. Hear noise (one script check) and
-  read languages (none) are left out for want of room. A ranger, with the [stealth rule](#rule-changes) on, gets their
-  `MOVE` and `HIDE` in the same places (the other four left out);
+  read languages (none) are left out for want of room. A ranger, with
+  [hiding to backstab](#hiding-in-shadows-to-backstab) on, gets their `MOVE` and `HIDE` in the same places (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): -6 at DEX 1 to +5 at DEX 24-25, the
-  number the [two-weapon rule](#rule-changes) adds to its penalties, and the
+  number the [two-weapon rule](#two-weapons) adds to its penalties, and the
   one initiative uses. It is worked out from the character's DEX each time
   the panel is drawn, so it follows any change (Cat's Grace's, while it
   lasts).
@@ -1231,18 +1245,15 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
 
 ## Rule changes
 
-Twenty-one changes to the game's rules, each with its own box on the Options tab:
-under **Rule changes**, but for the two thief rules, which are under
-**Thieves** with [picking pockets](#picking-pockets). All are on by default,
-and they take effect in games started with the dice log: with the Ledger
-running, or with **Play Dark Sun (in-game rolls)**, which uses the Options as
-last set. Untick one and the game's own rule is back at once. [How the game
-works](#how-the-game-works) has what the game does without them.
+Fourteen changes that bring the game's own rules closer to AD&D, each with
+its own box in the Options tab's **Rule changes** section. All are on by
+default, and they take effect in games started with the dice log: with the
+Ledger running, or with **Play Dark Sun (in-game rolls)**, which uses the
+Options as last set. Untick one and the game's own rule is back at once. [How
+the game works](#how-the-game-works) has what the game does without them.
 
 | Rule (its box on the Options tab) | What it changes |
 |---|---|
-| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in kinds of weapon, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
-| [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
 | [Class restrictions](#class-restrictions) | each class's limits on armour, shields and weapons hold, the strictest winning; a multiclass preserver casts no spells in armour |
 | [Multiclass hit points](#multiclass-hit-points) | CON's bonus on every hit die (a warrior's for a character with a warrior class), the total shared between the classes |
 | [Hit dice: the better of two](#hit-dice-the-better-of-two) | each hit die rolled twice, the better kept, for every character |
@@ -1250,382 +1261,13 @@ works](#how-the-game-works) has what the game does without them.
 | [Rangers' casting level](#rangers-casting-level) | a ranger's spells last and do damage as cast at its level less 7, as the spell levels it may cast already count it |
 | [Preservers' INT](#preservers-int) | INT gives a preserver a chance to learn a spell from a scroll, and the most spells of each spell level it may know |
 | [AD&D's class tables](#adds-class-tables) | the XP for each level, priests' THAC0, and clerics', druids' and preservers' spell slots from AD&D's tables |
-| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 16 or more lowers what shops ask, 5% to 25%, as in Baldur's Gate |
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Two weapons](#two-weapons) | -2 main hand, -4 off hand, DEX's reaction adjustment added; rangers none in light armour; the off hand attacks once a round |
-| [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
-| [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
-| [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [Items saving against acid](#items-saving-against-acid) | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
-| [New wizard spells](#new-wizard-spells) | Cat's Grace (DEX + 1d6), Erdlu Claw (talons) and Fogbolt (-3 to hit, AC 2 worse) |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
-
-### Weapon specialization
-
-With **Weapon specialization** ticked, fighters, gladiators and rangers train
-in chosen weapon specs (kinds of weapon), as in AD&D. **Every ranger starts
-with expertise in the bow**, on top of the weapon spec it chooses.
-
-| Who | Chooses | With a weapon of a chosen weapon spec |
-|---|---|---|
-| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die a size larger, d8 to d10, and one more attack a round) |
-| **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
-| **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
-
-The game already gives every fighter, gladiator and ranger the specialist's
-attacks in melee (3/2 a round, 2 from 7th level). With the rule, a warrior
-fighting with a weapon outside its chosen weapon specs gets AD&D's plain rate, half
-an attack less; with a chosen weapon spec it keeps the game's rate (a grand
-master one more).
-
-Missile weapons have a rate of fire of their own in the game, the same for
-everyone (a bow 2 a round, a sling, staff sling or chatkcha 1). With the rule,
-fighters and gladiators shoot faster with a chosen weapon spec, and rangers
-with theirs and every bow: AD&D's specialist's rate for the sling, a step above
-it for the bow, staff sling and chatkcha. From 7th level every warrior shoots
-its other missile weapons faster too, a step behind a specialist, as in melee
-(AD&D keeps the weapon's own rate). Mastery's and grand mastery's bonuses to
-hit and damage count for missiles too.
-
-**Attacks a round,** by skill and level (a warrior's level: the highest of its
-fighter, gladiator and ranger levels; characters stop at 10):
-
-| Skill with the weapon | Who | Melee, levels 1–6 | Melee, levels 7–10 | Bow, levels 1–6 | Bow, levels 7–10 | Sling, staff sling or chatkcha, levels 1–6 | Sling, staff sling or chatkcha, levels 7–10 |
-|---|---|---|---|---|---|---|---|
-| none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
-| not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits): its chosen weapon spec (melee only) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
-| specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
-| mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
-| grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
-
-The sixteen weapon specs take in the game's
-weapons of every material and its named ones (Bloodwrath, Swiftbite and the
-like are long swords); spell-made weapons and gloves are none.
-
-| Weapon specs (four to a page) |
-|---|
-| long sword, club, dagger, short sword |
-| mace, axe, great axe, pick |
-| quarterstaff, polearm, gythka, cahulaks |
-| chatkcha, bow, sling, staff sling |
-
-**Choosing at creation.** On the character creation screen, the panel under
-the classes (the psionic disciplines, or a cleric's or ranger's spheres) has
-**WEAPON SPEC** for a warrior: four pages of weapon specs, **MORE SPECS** to the next,
-and on the last **VIEW PSIONICS** back to the panel. It works as the game's
-disciplines do: the long sword is marked to start with (a gladiator's two:
-the long sword and the club), the others greyed; click a marked one to take
-it back, then another. A multiclass warrior can choose only the weapon specs its other
-class lets it use: those of which the game (or the Ledger) has a weapon the
-character may use, in any material. The rest stay greyed:
-
-| A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
-|---|---|---|
-| …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
-| …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
-| …with air cleric (missile weapons, and the dagger that can be thrown) | dagger, chatkcha, bow, sling, staff sling | an obsidian dagger |
-| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the Ledger's metal) | an obsidian long sword |
-| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
-| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
-
-(The starting weapon is for the weapon spec marked first; the next table has the
-rest. A ranger never has the bow to choose: its expertise with the bow comes
-anyway.)
-
-![The creation screen: a gladiator's weapons page, the long sword and the club marked, the others greyed, and under CHR the total of the six scores and of the die's roll](docs/creation-weapons.png)
-
-A new character starts the game with a plain weapon of its first weapon spec in
-place of the bone long sword the game gives warriors, in a material it may
-use, and the log says so (`Grog starts with a plain obsidian long sword for the
-weapon specialization chosen, in place of the bone long sword`):
-
-| Weapon spec | Starting weapon | For a cleric's sphere that can't use it |
-|---|---|---|
-| long sword | the game's bone long sword | obsidian (fire, earth) |
-| club, quarterstaff, bow | wooden (a bow with 20 arrows) | |
-| dagger, chatkcha | obsidian | a dagger: bone, the Ledger's (water) |
-| short sword | bone, the Ledger's | obsidian (fire, earth) |
-| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the Ledger's; a polearm: metal, the Ledger's (earth) |
-| axe | bone, the Ledger's | obsidian (fire, earth) |
-| great axe | bone, the Ledger's | obsidian (fire, earth) |
-| pick | stone | |
-| sling, staff sling | leather | |
-
-A two-handed weapon held in the hands puts the game's starting shield in the
-backpack (not a half-giant's, with [its rule](#half-giants-two-handed-weapons)).
-A bow or staff sling goes in the missile slot instead, and the shield stays, as
-the game asks nothing of the hands for it. The weapon is
-made once: a long sword handed to the character later stays one.
-
-**At a level gained.** A warrior with fewer weapon specs than it is due (a gladiator
-reaching 6th or 9th, or any warrior from a game begun before the rule) picks
-the rest the way a psionicist picks a new power: in the game's own pop-up,
-made bigger, a picture of each weapon spec on a slot, six to a row, those its
-classes can't use (or it has) greyed. The pointer on a slot names it under
-them (**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick would
-be expertise: a ranger's, a Battle Mage's; as CHOOSE A SPELL names a spell), and
-lights the slot if it can be picked; off the slots the title comes back. The
-picks left are beside **EXIT** (which asks, as for powers, whether to leave
-with picks unmade: they're offered again at the next level).
-
-![The level-up window: a slot with a picture for each weapon spec, the pointer on the dagger's, lit, and SPECIALIZE IN / DAGGER under them; the club, great axe, pick, quarterstaff and the rest greyed for a fighter/fire cleric](docs/weapon-picker.png)
-
-**Where it shows.** The **Effects** screen lists the selected character's
-weapon specs under its effects ("SPECIALIZED IN", "MASTER OF", "GRAND MASTER OF",
-"EXPERT IN"); View Character's DAM line counts it; the Characters tab lists
-them (**Weapons: long sword (grand mastery)**) and gives the attacks a
-round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
-round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
-each attack (`+1 specialized`, `+3 grand mastery`, `(d10 for d8: grand
-mastery)`). A ranger's expertise with the bow isn't a chosen weapon spec, so neither
-list shows it, but it counts; and View Character, as the game has it, gives a
-character's melee rate whatever weapon is ready.
-
-![The Effects screen: Daaki, a 9th-level fighter, GRAND MASTER OF LONG SWORD](docs/effects-weapons.png)
-
-A human who dual-classes keeps what it earned as a fighter, gladiator or
-ranger: its weapon specs, and the weapons it chose, whatever the new class (or
-a kit) allows, count again once the new class's level passes the old. Till
-then they sleep, as the class does.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
-
-### Kits
-
-With **Kits** ticked, a character of one class may take one of three kits for
-its class when it is made, or none (the class as it is). Each gives something
-and costs something.
-
-| Kit | Gives | Costs |
-|---|---|---|
-| **Myrmidon** (fighter) | a second weapon spec at 1st level, on to mastery and grand mastery as the first | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination) |
-| **Sentinel** (fighter) | AC 2 better with a shield in a hand; +2 initiative | −1 on saves against wizards' and priests' spells |
-| **Ravager** (fighter) | +1 to hit and damage in melee; a base AC by level (7 at 1st and 2nd level, 6 at 3rd and 4th, 5 at 5th and 6th, 4 at 7th and 8th, 3 at 9th and 10th), armour bettering it as usual | no missile or thrown weapons; no shield; light armour only (leather, or none) |
-| **Arena Champion** (gladiator) | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee with no shield |
-| **Twin-blade** (gladiator) | no penalty for two weapons in light armour, leather or none (with the two-weapons rule) | no shield; no two-handed weapon (a half-giant may hold one in one hand, with the half-giants' rule) |
-| **Brute** (gladiator) | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec |
-| **Stalker** (ranger) | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with the stealth rule) | light armour only (leather, or none) |
-| **Assassin** (thief) | hiding in shadows not halved in daylight | −15 pick pockets and open locks |
-| **Swashbuckler** (thief) | a warrior's THAC0 (21 less its level) | −10 to every thief skill |
-| **Grove Warden** (druid) | AC 1 better for every 3 druid levels | no metal weapons |
-| **Wanderer** (druid) | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse |
-| **Arcanist** (preserver) | a spell slot more at each spell level it has slots at; in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) |
-| **Shinobi** (thief) | preserver spells from 6th level, on the Seeker's slots (one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th), cast at the thief level less 5, in light armour too: its own 14 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), one learnt at each level up from 6th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield |
-| **Lifebinder** (druid) | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) |
-| **Healer** (cleric) | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) |
-| **Scholar** (preserver) | a spell more learnt at each level up (CHOOSE A SPELL comes up twice) | −1 to hit (THAC0 1 worse) |
-| **Crusader** (cleric) | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level) | one fewer spell slot at each spell level |
-| **Elementalist** (cleric) | a second sphere: its spells (cast at its cleric level) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) |
-| **Seeker** (ranger) | priest spell slots from 6th level: one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th (and on), in place of a ranger's, cast at the ranger level less 5 (a ranger's: less 7) | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow |
-| **Justifier** (ranger) | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | one 1st-level priest spell slot from 10th level, in place of a ranger's slots, cast at the ranger level less 9 |
-| **Battle Mage** (preserver) | a warrior's THAC0; a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at 3/2 attacks a round (2 from 7th level) | one fewer spell slot at each spell level; nothing in the off hand |
-| **Mind Warrior** (psionicist) | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level); a d8 hit die | a tenth fewer PSP (rounded down) |
-| **Mind Bender** (psionicist) | telepathy powers (the defence modes too) cost 2 PSP less to use | psychokinesis powers cost 2 PSP more |
-| **Kineticist** (psionicist) | psychokinesis powers cost 2 PSP less to use | telepathy powers (the defence modes too) cost 2 PSP more |
-
-#### Choosing a kit
-
-The kit is chosen on the creation panel's **KIT** page, opened with **KITS**,
-the button at the end of the panel's pages: under the psionic disciplines for
-a fighter, gladiator (without weapon specialization), preserver, psionicist
-or thief; under the clerical spheres for a cleric, druid or ranger; on the
-last weapon page for a fighter, gladiator or ranger choosing weapon specs.
-NO KIT, the first row, is what a new character has. As with the clerical
-spheres, the rows not chosen are greyed: click the marked row to take it back,
-then click the kit you want. A few names are shortened to fit the panel
-(CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR). Choosing
-another class puts the kit back to none. The Effects screen names the kit
-(`KIT: RAVAGER`), as does the Ledger's Characters tab.
-
-The Elementalist chooses its second sphere on the creation panel's
-**CLERICAL SPHERE** list: once the kit is taken (KITS, then ELEMENTAL), its
-own sphere marked, the other spheres stay in use, and a click on one marks it
-as the second; a click on it again takes it back, and taking back its own
-sphere takes back both. The Ledger's Characters tab names it (**Kit:
-Elementalist (and water)**). Its second sphere's spells are known from the
-start, as its own sphere's are (a priest knows every spell of its spheres from
-the start: the game marks them when the character is made, and again when a
-human changes class, not at a level up).
-
-The Battle Mage chooses its weapon spec on the weapon pages: once the kit is
-taken, **VIEW PSIONICS** on the KIT page goes back to the panel, which then
-has **WEAPON SPEC** in place of KITS. The long sword is marked to start with;
-the pages grey the weapon specs it can't choose. With its chosen weapon spec it
-attacks at expertise's rate by its preserver level; with any other weapon, as
-a preserver does. Its light armour holds whatever the class restrictions say
-of a preserver. Without weapon specialization it has no weapon spec, only a
-preserver's weapons.
-
-The Myrmidon takes its second weapon spec on the weapon pages after the kit
-is taken (go back to them from the KIT page), and loses it if another kit is
-taken.
-
-The game rolls a new character's hit points and works out its PSP when a
-class is clicked, before a kit can be chosen, so choosing or taking back a
-kit with a die of its own (Battle Mage, Mind Warrior, Arcanist) rolls the hit
-points and works out the PSP again, and the screen shows the new numbers.
-
-#### Starting gear
-
-The game hands a new character its gear when DONE is clicked, by its class:
-
-| Class | Starting gear |
-|---|---|
-| Fighter | bone long sword, shield, leather chest, arm and leg armour |
-| Gladiator | bone long sword, club in the off hand, leather arm armour |
-| Ranger | bone long sword, bow and arrows, leather chest and arm armour |
-| Cleric | shield, leather chest and arm armour, a club in the backpack |
-| Druid | club, sling |
-| Preserver | quarterstaff, sling |
-| Psionicist | club, bow and arrows, leather chest armour |
-| Thief | bone long sword, sling, leather chest armour |
-
-With **Kits** ticked, the Ledger fits that gear to the kit while the character
-is new, and the dice log says what it changed: a weapon in the hand the kit
-forbids becomes a plain one it allows (a **Shinobi**'s long sword a bone
-short sword; a **Brute**'s a bone great axe, its club left behind (no use to it);
-a **Seeker**'s long sword one of a material its sphere allows); a shield the
-kit forbids is taken away (a **Ravager**'s), the Ravager getting a second of
-its weapon for that hand (unless the weapon takes both hands), and an
-off-hand weapon it forbids goes to the backpack; with weapon specialization a
-**Myrmidon** gets a plain weapon of its second weapon spec too, in the
-backpack (a bow in the missile slot, with arrows);
-an **Arena Champion**'s off-hand club becomes a shield, the gladiator's kit
-being the one that fights with it; and with weapon specialization a
-**Battle Mage**'s quarterstaff becomes a plain weapon of its chosen weapon spec
-(`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in
-place of the Quarterstaff`). The other kits keep the class's gear: it fits
-them (the Twin-blade's long sword and club are its two weapons, the Healer's
-club is in the backpack, a Lifebinder's club and sling are blunt).
-
-#### The kits in play
-
-- **Shown everywhere.** The dice log and the Ledger show each kit's part: a
-  Ravager's to-hit and damage (`+1 Ravager`), a Sentinel's initiative and
-  saves, a Stalker's hiding, the THAC0 for each weapon. A kit's hit die is
-  named on the hit point lines (`Preserver d6 per level`).
-- **Hit dice.** The Battle Mage's, Mind Warrior's and Arcanist's are rolled
-  on the creation screen and at every level up.
-- **A warrior's THAC0** is the game's own for a fighter, where it is better
-  than the class's. It and the Scholar's −1 are in the THAC0 the game keeps
-  for the character (View Character's, the attack's), worked out when the
-  character is made and at each level up.
-- **Spell slots** are the game's own wherever it counts them (resting, the
-  spell lists, the Ledger's Spells tab). WIS's bonus slots count for the
-  Arcanist, Crusader and Elementalist as for their classes, not for the
-  Seeker's and Justifier's own tables.
-- **Casting level.** A kit's casting level is the one a spell's duration and
-  damage take, and half of it (rounded up) is the highest spell level it may
-  cast; the Seeker and Justifier take 5 and 9 off the ranger level (see
-  [Rangers' casting level](#rangers-casting-level) for a plain ranger's).
-- **Casting when hit.** A character hit in a fight can't cast until the next
-  round: the game won't let it choose a spell, and drops one chosen before
-  the hit. The Battle Mage isn't stopped.
-- **PSP.** The Mind Bender's and Kineticist's 2 PSP more or less counts both
-  to use a power and to keep it up each round, never below 1 (a power with no
-  upkeep still has none); psychometabolism is as it was.
-- **The Lifebinder's die** is rolled from the game's own random numbers; the
-  dice log notes it, and the HP line shows what was healed.
-- **The Brute's +2** is for melee: a bow or staff sling, two-handed as it is,
-  doesn't get it.
-- **The Wanderer's resistance** is the game's Resist Fire and Resist Cold,
-  which give +3 on the save but don't halve the damage.
-
-#### Changing class
-
-A kit belongs to the class it was chosen with. A human who changes class
-(**DUAL** on the menu a right-click on a portrait opens, for a human of 2nd
-level or more) keeps it, but it sleeps as that class does: gifts and costs
-alike count again once the new class's level passes the old one's. The
-Effects screen shows `KIT: BATTLMAGE (ASLEEP)` until then;
-the Ledger's Characters tab says so too (`Battle Mage, dormant until the
-fighter level passes 3`). Once awake, the kit goes by its own class's level
-(a Ravager's AC, a Seeker's slots, a Battle Mage's expertise from 7th
-preserver level), its hit die only ever counts for its own class (the new
-class rolls its own), and a Mind Warrior's PSP stays a tenth fewer, asleep or
-not (they are its psionicist levels'). A Battle Mage's chosen weapon spec is
-the kit's alone: a Battle Mage turned fighter isn't specialized in it, and has
-expertise with it once the kit wakes. A warrior's own weapon specs stay, as
-the game keeps them, and count again once the new class's level passes the
-old.
-
-A weapon spec is a weapon learnt for good, while the class or kit that gave it
-is awake: no kit keeps a character from a kind of weapon it specialized in
-(but for the off hand's rules: the Healer's, the Battle Mage's), and a human
-who has changed class may use the kinds it chose whatever the new class
-allows. While that class or kit sleeps, the kinds go with it, and come back
-when it wakes.
-
-A human who changes class may take a kit for the new class too, so a human
-can have up to three, one for each class it has had. Right after DUAL (and
-the sphere a new cleric picks), the game's own three-choice menu asks for it:
-**KIT: NONE** at the top, then the new class's kits; click one, or the top
-row for none. A kit that can't go with the character's other classes or kits
-(below) is left off the menu. A new **Elementalist** then picks its second
-sphere on the same menu (**SPHERE 2: NONE**, then the three other spheres).
-Each kit sleeps and wakes with its own class.
-
-![The KIT menu after DUAL: a Battle Mage turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
-
-The Effects screen lists the kits, oldest first, a line each (the longer names
-shortened as on the KIT page, `(ASLEEP)` after one that sleeps), then the
-weapon specs. Its lower panel has room for five lines: when there are more,
-it shows four and **MORE: CLICK HERE** under them, and a click on the panel
-shows the next page (a weapon spec's heading again at the top of a page that
-goes on with its weapons), the first again after the last:
-
-![The Effects screen, a page at a time: a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
-
-With **Weapon specialization** ticked, a human who becomes a fighter,
-gladiator or ranger (or a Battle Mage) then picks the weapon kinds it is due
-on the same window as at a level up (**PICK A WEAPON SPECIALTY**), less any it
-has already.
-
-A human who becomes a preserver picks its first two spells on the game's
-**CHOOSE A SPELL** window, twice over, from the 1st-level ones (the game gave
-it Grease and Magic Missile), as a preserver picks one at each level up. If
-it takes the **Scholar** kit for its new preserver class, it picks a third,
-as a Scholar picks one more at each level up.
-
-A new preserver picks its starting spells the same way when **DONE** is
-clicked on the creation screen, in place of the ones the game handed out by
-its starting level: two 1st-level spells at 1st level (the game's Grease and
-Magic Missile), four at 2nd (and Shield and Wall of Fog), four and two of 2nd
-level at 3rd (and Fog Cloud and Mirror Image). A Scholar picks one more for
-each level. A multiclass preserver too. (The game's own party, used when no
-party is made, keeps the game's spells.)
-
-**EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
-picking, at creation and on changing class: the spells still to pick are the
-game's own, in its order (Grease, Magic Missile, Shield, Wall of Fog; then Fog
-Cloud, Mirror Image), less any already picked. The character is already saved
-when the window opens, so EXIT can't take you back to the creation screen.
-
-#### Kits that rule out classes and each other
-
-Some kits keep a human from some classes, both ways: greyed on the DUAL
-window for a human who has the kit (as the game greys the classes it already
-bars), and left off the KIT menu for a human who has had the class:
-
-| Kit | Can't become | Why |
-|---|---|---|
-| Seeker, Justifier | cleric, druid | their own priest slot tables would take the new class's slots' place |
-| Shinobi | preserver | its own wizard slot table would take the new class's slots' place |
-| Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
-| Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
-| Brute | psionicist, air cleric | it needs a two-handed melee weapon, which those classes can't use |
-
-And some kits can't go together, whichever came first (a human has one kit for each of its classes, and the game never lets a human change from one warrior class to another, so only these can meet):
-
-| Kit | Can't go with | Why |
-|---|---|---|
-| Arena Champion, Sentinel | Shinobi | one needs a shield, the other forbids it |
-| Twin-blade | Healer | two weapons, and an off hand free of them |
-| Brute | Shinobi, Lifebinder | a two-handed weapon, and weapons that can't be one |
 
 ### Class restrictions
 
@@ -1804,22 +1446,6 @@ Kits change these as before.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#adds-class-tables).
 
-### The leader's CHA at shops
-
-The game's shops ask an item's price whoever buys. With **The leader's CHA at
-shops** ticked, the party leader's CHA lowers it, as Baldur's Gate's table
-has it:
-
-| Leader's CHA | 15 or less | 16 | 17 | 18 | 19 | 20 or more |
-|---|---|---|---|---|---|---|
-| Discount | none | 5% | 10% | 15% | 20% | 25% |
-
-The price shown under each item, the one charged, and whether the shop's list
-greys an item as too dear all follow it (never below 1). Selling is as the
-game has it.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
-
 ### Spells saved against with the spell save
 
 Almost every spell is marked for the game's "kind 5" save, which it treats as
@@ -1870,264 +1496,6 @@ The off hand's DAM lines (the inventory screen and View Character) show its
 one attack.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons-adds-penalties).
-
-### Thief skills from AD&D's table
-
-The game's thief skills come out high: a 3rd-level elf thief with DEX 22 has
-move silently 66 and hide in shadows 61. AD&D gives 27 and 20 at 3rd level
-before race and DEX. The game adds 4 a level to a base of its own, and its DEX
-formula gives move silently and hide in shadows less than Dark Sun's table at
-high DEX, and some other skills more. With **Thief skills from AD&D's table**
-ticked, a skill is:
-
-- AD&D's average for the thief level (the Player's Handbook's table, up to
-  10th level),
-- plus the race's adjustment, the game's own (already the Dark Sun rules'
-  numbers),
-- plus DEX's: AD&D's table up to 19, the Dark Sun rules' exceptional DEX
-  past it, for the first five skills (hear noise, climb walls and read
-  languages have none).
-
-AD&D's averages, by thief level:
-
-| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 |
-| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 |
-| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
-| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 |
-| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 |
-| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 |
-| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 |
-| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 |
-
-The race adjustments, as the game has them (humans, half-giants and
-thri-kreen have none):
-
-| Race | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows | Hear noise | Climb walls | Read languages |
-|---|---|---|---|---|---|---|---|---|
-| Dwarf | 0 | +10 | +15 | 0 | 0 | 0 | −10 | −5 |
-| Elf | +5 | −5 | 0 | +5 | +10 | +5 | 0 | 0 |
-| Half-elf | +10 | 0 | 0 | 0 | +5 | 0 | 0 | 0 |
-| Halfling | +5 | +5 | +5 | +10 | +15 | +5 | −15 | −5 |
-| Mul | 0 | −5 | 0 | +5 | 0 | 0 | +5 | −5 |
-
-The DEX adjustments:
-
-| DEX | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows |
-|---|---|---|---|---|---|
-| 9 | −15 | −10 | −10 | −20 | −10 |
-| 10 | −10 | −5 | −10 | −15 | −5 |
-| 11 | −5 | 0 | −5 | −10 | 0 |
-| 12 | 0 | 0 | 0 | −5 | 0 |
-| 13-15 | 0 | 0 | 0 | 0 | 0 |
-| 16 | 0 | +5 | 0 | 0 | 0 |
-| 17 | +5 | +10 | 0 | +5 | +5 |
-| 18 | +10 | +15 | +5 | +10 | +10 |
-| 19 | +15 | +20 | +10 | +15 | +15 |
-| 20 | +20 | +25 | +12 | +20 | +17 |
-| 21 | +25 | +27 | +15 | +25 | +20 |
-| 22 | +27 | +30 | +17 | +30 | +22 |
-
-then the situation and effects as before. So Azil, a 3rd-level elf thief with
-DEX 22: pick pockets 40 + 5 + 27 = 72, open locks 58, find traps 47, move
-silently 62, hide in shadows 52, hear noise 20, climb walls 87. A ranger's
-move silently and hide in shadows take the same race and DEX adjustments.
-Untick it for the game's numbers.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thief-skills-from-adds-table).
-
-### Hiding in shadows to backstab
-
-The game never rolls hide in shadows, and a thief only backstabs a target that
-has turned to face someone else. With **Thieves hide in shadows and move
-silently to backstab, rangers to attack from behind** ticked, a thief whose
-turn comes in a fight with no enemy in any of the eight squares around them
-tries to hide in shadows; if they do, they try to move silently up to someone;
-and if both succeed, their next attack that turn counts as one from behind: +2
-to hit, the target's DEX and shield don't count, and with a weapon that can
-backstab it is a backstab, the damage multiplied as usual. The attack gives
-the thief away, and so does the turn ending without one. An enemy next to the
-thief when the turn comes means no hiding at all: get clear first. A worn
-cloak adds 10 to hiding in shadows (before daylight halves it) and worn boots
-add 10 to moving silently, for rangers too, up to 95: `needs 18 or less (26
-+10 cloak = 36, halved in daylight)`. With that switched on, a cloak's or
-boots' item box (right-click it on the inventory screen) says so under its
-name, `Hide +10` or `Move +10` (the skills' short names, as the inventory
-screen's thief rows have them).
-
-![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Move +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
-
-The [Cloak and Boots of Elvenkind](#new-items) do more (whatever the plain
-gear's switch). Only thieves and rangers can wear them (multiclasses too; for
-anyone else, the game's "Cannot use this item"). In the cloak, hiding in
-shadows needs 95 or less under the open sky and 90 under a roof, not halved by
-the light (AD&D's: all but invisible in the wild, 90% among buildings), unless
-their own chance is better; in the boots, moving silently needs 95 or less.
-Their boxes say `Hide 90-95%` and `Move 95%`.
-
-![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Move 95%", 20,000](docs/elvenkind.png)
-
-The same switch has a worn **belt** add 5 to a thief's **picking pockets and
-opening locks**, whether hiding is on or not: the game's own lock picking
-counts it, and so do the Ledger's pockets and its thief rows (`PICK 80`,
-`LOCK 64`). A belt's box says `Pick +5, Lock +5`.
-
-Plain cloaks, boots and belts cost 24 (the game's Leather Cloak is 20), anywhere
-in the region, shops included; magic ones (with a plus, or dearer than 100)
-keep their prices.
-
-```
-Cilla's turn
-Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden
-  Cilla moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
-Cilla attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
-    THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
-  Cilla hits Slig for 16: (1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19) x2 backstab
-```
-
-The chance to hide is **halved in daylight**. Which maps are under the open
-sky goes by the game's regions: open desert and rock, the villages' open
-ground and the arena are; the slave pens, the sewers, the lava caverns and
-the other underground or roofed places aren't. Three maps have both, buildings
-with floors of their own standing on open ground: there it goes by the floor
-under the thief (from the game's map of the region in memory), so a thief in
-a building is out of the sun and one in a roofless ruin isn't. The chances
-are the thief's own as they stand (level, race, DEX, and effects: Invisibility makes hiding certain, Fire Shield and Mirror Image
-rule it out).
-
-**Rangers** hide and move silently too, with the same box ticked. The game
-gives rangers no thief skills, so the Ledger uses AD&D's ranger table, by
-ranger level, with the race's and DEX's adjustments as for a thief:
-
-| Ranger level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 |
-| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 |
-
-The light works the other way round for these outdoorsmen: the **full chance
-under the open sky, half indoors** (the same maps and floors as for thieves).
-Their attack from behind gets +2 to hit, and the target's DEX and shield don't
-count, but it is never a backstab. Armour doesn't matter, nor does what
-they hold. The Characters tab shows a ranger's two chances (**Ranger skills
-now**), and the game's inventory screen shows them where a thief's `MOVE`
-and `HIDE` go. Someone with thief levels hides as a thief.
-
-```
-Gerakis hides in shadows: d100 = 15, needs 63 or less (63, a ranger under the open sky) -> hidden
-  Gerakis moves silently: d100 = 42, needs 78 or less -> unheard: their next attack this turn is from behind
-Gerakis attacks Slig from behind with Wooden Club (1d6): d20 = 12, needs 10+ (55%), hits AC 1, target AC 3 -> HIT
-```
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
-
-### Picking pockets
-
-The game has one pocket to pick, in the Trustee's conversation (his key). With
-**Picking pockets** ticked on the Options tab (it is by default), a thief can
-try anyone's with Thieves' Tools; with its **... or the leader, a thief, presses
-P in a conversation** ticked too (it is off by default), also with P, the
-thief as the party's leader (keys 1-4):
-
-- **Thieves' Tools.** Every thief starts a new game with a set (a satchel) in
-  the first free backpack cell, and a thief who joins later gets one too (the
-  log says so). A thief who loses or sells theirs can buy another from Kel, who
-  sells two sets. On the inventory screen, pick the tools up, go back to the
-  game with them on the pointer, and click someone in sight: the result comes
-  up in the game's message window, and the tools stay on the pointer for the
-  next try. (Clicking open ground drops them, as with anything carried.) Not in
-  a fight: there's no time for it then.
-- **P in a conversation** (if ticked). In a conversation, press **P**.
-
-Either way, the Ledger rolls the leader's pick pockets chance as
-it stands now (effects and a worn belt's 5 counted, as in the thief rows):
-
-- **Success:** one small thing goes into the thief's backpack (its first free
-  cell): something weighing 10 or less (a bag or arrows are 10, a helm 15, a
-  long sword 30) that isn't worn on the body (armour, a belt, boots, a helm, a
-  cloak). A dagger, a ring, an amulet, a gem or food can be lifted, and so can
-  three weapons whatever their weight: Kurzak's Shadowseeker, Churrr's
-  Gutterknot and Maris's Mindshard (see [New items](#new-items)). Lifting one is
-  worth 200 XP to the thief, given as the game gives a quest's ("Cilla
-  receives 200 experience points!", with the quest's sound; split among a
-  multi-class thief's classes). Keys stay, as scripts may look for them. People outside the party keep all they own in
-  their pack, so this goes by what each thing is.
-- **Failure:** a move silently roll. Made, the thief slips away unnoticed;
-  missed, they're caught.
-
-With nothing like that left on them, the thief takes what's in their purse
-instead: a few ceramic pieces (2 to 5), added to the party's money. That is
-the last try on that person.
-
-A thief can go on trying the same person until **caught** (both rolls failed)
-or until they take the coins; after that, that person keeps a hand on their
-pockets for good. The Ledger remembers who in `settings.json`,
-for this party, with the time on the game's clock: load a game saved before
-the try and the clock goes back past it, so the try is forgotten and the
-person can be tried again. The Trustee is left to his own conversation. What happens is
-added to the conversation's text (use its arrow to scroll down to it if the
-text is long) and to the dice log:
-
-```
-Daaki picks Kurzak's pocket: d100 = 71, needs 63 or less -> failed
-  Daaki moves silently to get away: d100 = 12, needs 55 or less -> success
-  Daaki fumbles Kurzak's pockets, but slips away unnoticed.
-```
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
-
-### Levels up to 10
-
-The game stops every class at level 9 (its manual's tables end there too).
-With **Class levels go up to 10** ticked, each class goes one level further,
-at the XP AD&D gives for 10th level:
-
-| Class | XP for 10th level |
-|---|---|
-| Cleric | 450,000 |
-| Druid | 125,000 |
-| Fighter, gladiator | 500,000 |
-| Preserver | 250,000 |
-| Psionicist | 400,000 |
-| Ranger | 600,000 |
-| Thief | 160,000 |
-
-Everything else at 10th level is the game's own: it had it all along, and
-only the cap kept it out of reach. Its XP tables go on to level 20 (druids
-with a table of their own, not the cleric's), and THAC0, saves, spell slots
-and thief skills are worked out from the level. So at 10th level:
-
-- **Hit points** follow AD&D past 9th: preservers and thieves still roll
-  (d4 and d6, CON's bonus counting too), while the others gain a fixed amount
-  (+3 for fighters, gladiators and rangers, +2 for clerics, druids and
-  psionicists). The game's own table has the fixed gain for thieves too, as
-  it keeps thieves and psionicists together and AD&D's psionicist stops
-  rolling at 9th; with the rule thieves roll their 10th die.
-- **Gladiators** optimise their armour, as the game already has them do:
-  AC 1 better for every 5 gladiator levels, so -2 at 10th where it was -1.
-  (The Ledger counts it in **AC: spells, rings, other**. The game gives it
-  with or without armour.)
-- **THAC0 and saves** improve as the game's formulas give: 11 for a
-  gladiator, 14 for a druid, as for AD&D's warriors and priests.
-- **Spell slots** grow at the levels casters already have, up to 5th; no
-  class gets 6th-level slots (a cleric would at 11, a preserver at 12), so no
-  spells past 5th level are needed. A 10th-level preserver or druid has
-  5 4 3 2 2 before WIS by the game's table; with [AD&D's class
-  tables](#adds-class-tables), 4 4 3 2 2 and 4 4 3 3 2.
-- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
-  as at every level, offered from spell level (class level + 1) / 2 down:
-  5th at 10th as at 9th. **A psionicist picks a new power** (the game gives
-  one at each level, two at odd levels and 4th).
-- Spell damage that grows with the caster's level already counts up to
-  level 10 in the game, so a 10th-level caster gets the last step.
-
-The level-up comes as the game's usual one ("Gerakis gains a level"), and
-View Character stops showing the XP for the next level at 10, as it does at
-9 without the rule. For a character of more than one class, a class already
-at 10 isn't named in the brackets, since it has no next level. Untick it and
-nobody goes past the level they have: a 10th-level character stays 10th.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#levels-up-to-10).
 
 ### Items saving against acid
 
@@ -2231,9 +1599,751 @@ light weapon in the other. The game's own rule that the two hands can't both
 hold heavy weapons (over 30 in weight each) still stands, so no half-giant
 holds two two-handed weapons. With two weapons ready, the two-weapon penalties
 apply as for anyone. The inventory screen still writes "2 handed" in the
-weapon's line: that is its kind, not a limit.
+weapon's line: that is its weapon type, not a limit.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
+
+### Helms
+
+The game's helms count as armour but give AC 0. With **Helms give AC 1**
+ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
+Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
+the game's tables). It shows on the View Character and inventory screens like
+any armour.
+
+The game has no descriptions of items, only their names, so while the rule is
+on the Ledger renames the plain helm **Helm (AC 1)**. The named ones
+(Dapartea's Helm, Helm/Contempltn, Helm of Might) keep their names, which
+would be too long for the game's Look box with the note. With the rule off,
+or without the Ledger, the names are the game's own.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
+
+## More character customization
+
+More choices for each character: a weapon to specialize in, a kit, a 10th
+level to reach, and a roll to keep while trying the die again. The first
+three each have a box in the Options tab's **More character customization**
+section. All are on by default and, like the rule changes, take effect at
+once in games started with the dice log; untick one and the game is as it
+was.
+
+| Box on the Options tab | What it adds |
+|---|---|
+| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
+| [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
+| [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
+
+### Weapon specialization
+
+With **Weapon specialization** ticked, fighters, gladiators and rangers train
+in chosen weapon specs (weapon types), as in AD&D. **Every ranger starts
+with expertise in the bow**, on top of the weapon spec it chooses.
+
+| Who | Chooses | With a weapon of a chosen weapon spec |
+|---|---|---|
+| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die a size larger, d8 to d10, and one more attack a round) |
+| **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
+| **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
+
+The game already gives every fighter, gladiator and ranger the specialist's
+attacks in melee (3/2 a round, 2 from 7th level). With the rule, a warrior
+fighting with a weapon outside its chosen weapon specs gets AD&D's plain rate, half
+an attack less; with a chosen weapon spec it keeps the game's rate (a grand
+master one more).
+
+Missile weapons have a rate of fire of their own in the game, the same for
+everyone (a bow 2 a round, a sling, staff sling or chatkcha 1). With the rule,
+fighters and gladiators shoot faster with a chosen weapon spec, and rangers
+with theirs and every bow: AD&D's specialist's rate for the sling, a step above
+it for the bow, staff sling and chatkcha. From 7th level every warrior shoots
+its other missile weapons faster too, a step behind a specialist, as in melee
+(AD&D keeps the weapon's own rate). Mastery's and grand mastery's bonuses to
+hit and damage count for missiles too.
+
+**Attacks a round,** by skill and level (a warrior's level: the highest of its
+fighter, gladiator and ranger levels; characters stop at 10):
+
+| Skill with the weapon | Who | Melee, levels 1–6 | Melee, levels 7–10 | Bow, levels 1–6 | Bow, levels 7–10 | Sling, staff sling or chatkcha, levels 1–6 | Sling, staff sling or chatkcha, levels 7–10 |
+|---|---|---|---|---|---|---|---|
+| none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
+| not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
+| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits): its chosen weapon spec (melee only) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
+
+The sixteen weapon specs take in the game's
+weapons of every material and its named ones (Bloodwrath, Swiftbite and the
+like are long swords); spell-made weapons and gloves are none.
+
+| Weapon specs (four to a page) |
+|---|
+| long sword, club, dagger, short sword |
+| mace, axe, great axe, pick |
+| quarterstaff, polearm, gythka, cahulaks |
+| chatkcha, bow, sling, staff sling |
+
+**Choosing at creation.** On the character creation screen, the panel under
+the classes (the psionic disciplines, or a cleric's or ranger's spheres) has
+**WEAPON SPEC** for a warrior: four pages of weapon specs, **MORE SPECS** to the next,
+and on the last **VIEW PSIONICS** back to the panel. It works as the game's
+disciplines do: the long sword is marked to start with (a gladiator's two:
+the long sword and the club), the others greyed; click a marked one to take
+it back, then another. A multiclass warrior can choose only the weapon specs its other
+class lets it use: those of which the game (or the Ledger) has a weapon the
+character may use, in any material. The rest stay greyed:
+
+| A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
+|---|---|---|
+| …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
+| …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
+| …with air cleric (missile weapons, and the dagger that can be thrown) | dagger, chatkcha, bow, sling, staff sling | an obsidian dagger |
+| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the Ledger's metal) | an obsidian long sword |
+| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
+| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
+
+(The starting weapon is for the weapon spec marked first; the next table has the
+rest. A ranger never has the bow to choose: its expertise with the bow comes
+anyway.)
+
+![The creation screen: a gladiator's weapons page, the long sword and the club marked, the others greyed, and under CHR the total of the six scores and of the die's roll](docs/creation-weapons.png)
+
+A new character starts the game with a plain weapon of its first weapon spec in
+place of the bone long sword the game gives warriors, in a material it may
+use, and the log says so (`Grog starts with a plain obsidian long sword for the
+weapon specialization chosen, in place of the bone long sword`):
+
+| Weapon spec | Starting weapon | For a cleric's sphere that can't use it |
+|---|---|---|
+| long sword | the game's bone long sword | obsidian (fire, earth) |
+| club, quarterstaff, bow | wooden (a bow with 20 arrows) | |
+| dagger, chatkcha | obsidian | a dagger: bone, the Ledger's (water) |
+| short sword | bone, the Ledger's | obsidian (fire, earth) |
+| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the Ledger's; a polearm: metal, the Ledger's (earth) |
+| axe | bone, the Ledger's | obsidian (fire, earth) |
+| great axe | bone, the Ledger's | obsidian (fire, earth) |
+| pick | stone | |
+| sling, staff sling | leather | |
+
+A two-handed weapon held in the hands puts the game's starting shield in the
+backpack (not a half-giant's, with [its rule](#half-giants-two-handed-weapons)).
+A bow or staff sling goes in the missile slot instead, and the shield stays, as
+the game asks nothing of the hands for it. The weapon is
+made once: a long sword handed to the character later stays one.
+
+**At a level gained.** A warrior with fewer weapon specs than it is due (a gladiator
+reaching 6th or 9th, or any warrior from a game begun before the rule) picks
+the rest the way a psionicist picks a new power: in the game's own pop-up,
+made bigger, a picture of each weapon spec on a slot, six to a row, those its
+classes can't use (or it has) greyed. The pointer on a slot names it under
+them (**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick would
+be expertise: a ranger's, a Battle Mage's; as CHOOSE A SPELL names a spell), and
+lights the slot if it can be picked; off the slots the title comes back. The
+picks left are beside **EXIT** (which asks, as for powers, whether to leave
+with picks unmade: they're offered again at the next level).
+
+![The level-up window: a slot with a picture for each weapon spec, the pointer on the dagger's, lit, and SPECIALIZE IN / DAGGER under them; the club, great axe, pick, quarterstaff and the rest greyed for a fighter/fire cleric](docs/weapon-picker.png)
+
+**Where it shows.** The **Effects** screen lists the selected character's
+weapon specs under its effects ("SPECIALIZED IN", "MASTER OF", "GRAND MASTER OF",
+"EXPERT IN"); View Character's DAM line counts it; the Characters tab lists
+them (**Weapons: long sword (grand mastery)**) and gives the attacks a
+round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
+round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
+each attack (`+1 specialized`, `+3 grand mastery`, `(d10 for d8: grand
+mastery)`). A ranger's expertise with the bow isn't a chosen weapon spec, so neither
+list shows it, but it counts; and View Character, as the game has it, gives a
+character's melee rate whatever weapon is ready.
+
+![The Effects screen: Daaki, a 9th-level fighter, GRAND MASTER OF LONG SWORD](docs/effects-weapons.png)
+
+A human who dual-classes keeps what it earned as a fighter, gladiator or
+ranger: its weapon specs, and the weapons it chose, whatever the new class (or
+a kit) allows, count again once the new class's level passes the old. Till
+then they sleep, as the class does.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
+
+### Kits
+
+With **Kits** ticked, a character of one class may take one of three kits for
+its class when it is made, or none (the class as it is). Each gives something
+and costs something.
+
+| Kit | Gives | Costs |
+|---|---|---|
+| **Myrmidon** (fighter) | a second weapon spec at 1st level, on to mastery and grand mastery as the first | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination) |
+| **Sentinel** (fighter) | AC 2 better with a shield in a hand; +2 initiative | −1 on saves against wizards' and priests' spells |
+| **Ravager** (fighter) | +1 to hit and damage in melee; a base AC by level (7 at 1st and 2nd level, 6 at 3rd and 4th, 5 at 5th and 6th, 4 at 7th and 8th, 3 at 9th and 10th), armour bettering it as usual | no missile or thrown weapons; no shield; light armour only (leather, or none) |
+| **Arena Champion** (gladiator) | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee with no shield |
+| **Twin-blade** (gladiator) | no penalty for two weapons in light armour, leather or none (with the two-weapons rule) | no shield; no two-handed weapon (a half-giant may hold one in one hand, with the half-giants' rule) |
+| **Brute** (gladiator) | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec |
+| **Stalker** (ranger) | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | light armour only (leather, or none) |
+| **Assassin** (thief) | hiding in shadows not halved in daylight | −15 pick pockets and open locks |
+| **Swashbuckler** (thief) | a warrior's THAC0 (21 less its level) | −10 to every thief skill |
+| **Grove Warden** (druid) | AC 1 better for every 3 druid levels | no metal weapons |
+| **Wanderer** (druid) | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse |
+| **Arcanist** (preserver) | a spell slot more at each spell level it has slots at; in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) |
+| **Shinobi** (thief) | preserver spells from 6th level, on the Seeker's slots (one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th), cast at the thief level less 5, in light armour too: its own 14 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), one learnt at each level up from 6th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield |
+| **Lifebinder** (druid) | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) |
+| **Healer** (cleric) | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) |
+| **Scholar** (preserver) | a spell more learnt at each level up (CHOOSE A SPELL comes up twice) | −1 to hit (THAC0 1 worse) |
+| **Crusader** (cleric) | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level) | one fewer spell slot at each spell level |
+| **Elementalist** (cleric) | a second sphere: its spells (cast at its cleric level) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) |
+| **Seeker** (ranger) | priest spell slots from 6th level: one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th (and on), in place of a ranger's, cast at the ranger level less 5 (a ranger's: less 7) | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow |
+| **Justifier** (ranger) | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | one 1st-level priest spell slot from 10th level, in place of a ranger's slots, cast at the ranger level less 9 |
+| **Battle Mage** (preserver) | a warrior's THAC0; a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at 3/2 attacks a round (2 from 7th level) | one fewer spell slot at each spell level; nothing in the off hand |
+| **Mind Warrior** (psionicist) | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level); a d8 hit die | a tenth fewer PSP (rounded down) |
+| **Mind Bender** (psionicist) | telepathy powers (the defence modes too) cost 2 PSP less to use | psychokinesis powers cost 2 PSP more |
+| **Kineticist** (psionicist) | psychokinesis powers cost 2 PSP less to use | telepathy powers (the defence modes too) cost 2 PSP more |
+
+#### Choosing a kit
+
+The kit is chosen on the creation panel's **KIT** page, opened with **KITS**,
+the button at the end of the panel's pages: under the psionic disciplines for
+a fighter, gladiator (without weapon specialization), preserver, psionicist
+or thief; under the clerical spheres for a cleric, druid or ranger; on the
+last weapon page for a fighter, gladiator or ranger choosing weapon specs.
+NO KIT, the first row, is what a new character has. As with the clerical
+spheres, the rows not chosen are greyed: click the marked row to take it back,
+then click the kit you want. A few names are shortened to fit the panel
+(CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR). Choosing
+another class puts the kit back to none. The Effects screen names the kit
+(`KIT: RAVAGER`), as does the Ledger's Characters tab.
+
+The Elementalist chooses its second sphere on the creation panel's
+**CLERICAL SPHERE** list: once the kit is taken (KITS, then ELEMENTAL), its
+own sphere marked, the other spheres stay in use, and a click on one marks it
+as the second; a click on it again takes it back, and taking back its own
+sphere takes back both. The Ledger's Characters tab names it (**Kit:
+Elementalist (and water)**). Its second sphere's spells are known from the
+start, as its own sphere's are (a priest knows every spell of its spheres from
+the start: the game marks them when the character is made, and again when a
+human changes class, not at a level up).
+
+The Battle Mage chooses its weapon spec on the weapon pages: once the kit is
+taken, **VIEW PSIONICS** on the KIT page goes back to the panel, which then
+has **WEAPON SPEC** in place of KITS. The long sword is marked to start with;
+the pages grey the weapon specs it can't choose. With its chosen weapon spec it
+attacks at expertise's rate by its preserver level; with any other weapon, as
+a preserver does. Its light armour holds whatever the class restrictions say
+of a preserver. Without weapon specialization it has no weapon spec, only a
+preserver's weapons.
+
+The Myrmidon takes its second weapon spec on the weapon pages after the kit
+is taken (go back to them from the KIT page), and loses it if another kit is
+taken.
+
+The game rolls a new character's hit points and works out its PSP when a
+class is clicked, before a kit can be chosen, so choosing or taking back a
+kit with a die of its own (Battle Mage, Mind Warrior, Arcanist) rolls the hit
+points and works out the PSP again, and the screen shows the new numbers.
+
+#### Starting gear
+
+The game hands a new character its gear when DONE is clicked, by its class:
+
+| Class | Starting gear |
+|---|---|
+| Fighter | bone long sword, shield, leather chest, arm and leg armour |
+| Gladiator | bone long sword, club in the off hand, leather arm armour |
+| Ranger | bone long sword, bow and arrows, leather chest and arm armour |
+| Cleric | shield, leather chest and arm armour, a club in the backpack |
+| Druid | club, sling |
+| Preserver | quarterstaff, sling |
+| Psionicist | club, bow and arrows, leather chest armour |
+| Thief | bone long sword, sling, leather chest armour |
+
+With **Kits** ticked, the Ledger fits that gear to the kit while the character
+is new, and the dice log says what it changed: a weapon in the hand the kit
+forbids becomes a plain one it allows (a **Shinobi**'s long sword a bone
+short sword; a **Brute**'s a bone great axe, its club left behind (no use to it);
+a **Seeker**'s long sword one of a material its sphere allows); a shield the
+kit forbids is taken away (a **Ravager**'s), the Ravager getting a second of
+its weapon for that hand (unless the weapon takes both hands), and an
+off-hand weapon it forbids goes to the backpack; with weapon specialization a
+**Myrmidon** gets a plain weapon of its second weapon spec too, in the
+backpack (a bow in the missile slot, with arrows);
+an **Arena Champion**'s off-hand club becomes a shield, the gladiator's kit
+being the one that fights with it; and with weapon specialization a
+**Battle Mage**'s quarterstaff becomes a plain weapon of its chosen weapon spec
+(`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in
+place of the Quarterstaff`). The other kits keep the class's gear: it fits
+them (the Twin-blade's long sword and club are its two weapons, the Healer's
+club is in the backpack, a Lifebinder's club and sling are blunt).
+
+#### The kits in play
+
+- **Shown everywhere.** The dice log and the Ledger show each kit's part: a
+  Ravager's to-hit and damage (`+1 Ravager`), a Sentinel's initiative and
+  saves, a Stalker's hiding, the THAC0 for each weapon. A kit's hit die is
+  named on the hit point lines (`Preserver d6 per level`).
+- **Hit dice.** The Battle Mage's, Mind Warrior's and Arcanist's are rolled
+  on the creation screen and at every level up.
+- **A warrior's THAC0** is the game's own for a fighter, where it is better
+  than the class's. It and the Scholar's −1 are in the THAC0 the game keeps
+  for the character (View Character's, the attack's), worked out when the
+  character is made and at each level up.
+- **Spell slots** are the game's own wherever it counts them (resting, the
+  spell lists, the Ledger's Spells tab). WIS's bonus slots count for the
+  Arcanist, Crusader and Elementalist as for their classes, not for the
+  Seeker's and Justifier's own tables.
+- **Casting level.** A kit's casting level is the one a spell's duration and
+  damage take, and half of it (rounded up) is the highest spell level it may
+  cast; the Seeker and Justifier take 5 and 9 off the ranger level (see
+  [Rangers' casting level](#rangers-casting-level) for a plain ranger's).
+- **Casting when hit.** A character hit in a fight can't cast until the next
+  round: the game won't let it choose a spell, and drops one chosen before
+  the hit. The Battle Mage isn't stopped.
+- **PSP.** The Mind Bender's and Kineticist's 2 PSP more or less counts both
+  to use a power and to keep it up each round, never below 1 (a power with no
+  upkeep still has none); psychometabolism is as it was.
+- **The Lifebinder's die** is rolled from the game's own random numbers; the
+  dice log notes it, and the HP line shows what was healed.
+- **The Brute's +2** is for melee: a bow or staff sling, two-handed as it is,
+  doesn't get it.
+- **The Wanderer's resistance** is the game's Resist Fire and Resist Cold,
+  which give +3 on the save but don't halve the damage.
+
+#### Changing class
+
+A kit belongs to the class it was chosen with. A human who changes class
+(**DUAL** on the menu a right-click on a portrait opens, for a human of 2nd
+level or more) keeps it, but it sleeps as that class does: gifts and costs
+alike count again once the new class's level passes the old one's. The
+Effects screen shows `KIT: BATTLMAGE (ASLEEP)` until then;
+the Ledger's Characters tab says so too (`Battle Mage, dormant until the
+fighter level passes 3`). Once awake, the kit goes by its own class's level
+(a Ravager's AC, a Seeker's slots, a Battle Mage's expertise from 7th
+preserver level), its hit die only ever counts for its own class (the new
+class rolls its own), and a Mind Warrior's PSP stays a tenth fewer, asleep or
+not (they are its psionicist levels'). A Battle Mage's chosen weapon spec is
+the kit's alone: a Battle Mage turned fighter isn't specialized in it, and has
+expertise with it once the kit wakes. A warrior's own weapon specs stay, as
+the game keeps them, and count again once the new class's level passes the
+old.
+
+A weapon spec is a weapon learnt for good, while the class or kit that gave it
+is awake: no kit keeps a character from a weapon type it specialized in
+(but for the off hand's rules: the Healer's, the Battle Mage's), and a human
+who has changed class may use the weapon types it chose whatever the new class
+allows. While that class or kit sleeps, the types go with it, and come back
+when it wakes.
+
+A human who changes class may take a kit for the new class too, so a human
+can have up to three, one for each class it has had. Right after DUAL (and
+the sphere a new cleric picks), the game's own three-choice menu asks for it:
+**KIT: NONE** at the top, then the new class's kits; click one, or the top
+row for none. A kit that can't go with the character's other classes or kits
+(below) is left off the menu. A new **Elementalist** then picks its second
+sphere on the same menu (**SPHERE 2: NONE**, then the three other spheres).
+Each kit sleeps and wakes with its own class.
+
+![The KIT menu after DUAL: a Battle Mage turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
+
+The Effects screen lists the kits, oldest first, a line each (the longer names
+shortened as on the KIT page, `(ASLEEP)` after one that sleeps), then the
+weapon specs. Its lower panel has room for five lines: when there are more,
+it shows four and **MORE: CLICK HERE** under them, and a click on the panel
+shows the next page (a weapon spec's heading again at the top of a page that
+goes on with its weapons), the first again after the last:
+
+![The Effects screen, a page at a time: a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
+
+With **Weapon specialization** ticked, a human who becomes a fighter,
+gladiator or ranger (or a Battle Mage) then picks the weapon types it is due
+on the same window as at a level up (**PICK A WEAPON SPECIALTY**), less any it
+has already.
+
+A human who becomes a preserver picks its first two spells on the game's
+**CHOOSE A SPELL** window, twice over, from the 1st-level ones (the game gave
+it Grease and Magic Missile), as a preserver picks one at each level up. If
+it takes the **Scholar** kit for its new preserver class, it picks a third,
+as a Scholar picks one more at each level up.
+
+A new preserver picks its starting spells the same way when **DONE** is
+clicked on the creation screen, in place of the ones the game handed out by
+its starting level: two 1st-level spells at 1st level (the game's Grease and
+Magic Missile), four at 2nd (and Shield and Wall of Fog), four and two of 2nd
+level at 3rd (and Fog Cloud and Mirror Image). A Scholar picks one more for
+each level. A multiclass preserver too. (The game's own party, used when no
+party is made, keeps the game's spells.)
+
+**EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
+picking, at creation and on changing class: the spells still to pick are the
+game's own, in its order (Grease, Magic Missile, Shield, Wall of Fog; then Fog
+Cloud, Mirror Image), less any already picked. The character is already saved
+when the window opens, so EXIT can't take you back to the creation screen.
+
+#### Kits that rule out classes and each other
+
+Some kits keep a human from some classes, both ways: greyed on the DUAL
+window for a human who has the kit (as the game greys the classes it already
+bars), and left off the KIT menu for a human who has had the class:
+
+| Kit | Can't become | Why |
+|---|---|---|
+| Seeker, Justifier | cleric, druid | their own priest slot tables would take the new class's slots' place |
+| Shinobi | preserver | its own wizard slot table would take the new class's slots' place |
+| Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
+| Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
+| Brute | psionicist, air cleric | it needs a two-handed melee weapon, which those classes can't use |
+
+And some kits can't go together, whichever came first (a human has one kit for each of its classes, and the game never lets a human change from one warrior class to another, so only these can meet):
+
+| Kit | Can't go with | Why |
+|---|---|---|
+| Arena Champion, Sentinel | Shinobi | one needs a shield, the other forbids it |
+| Twin-blade | Healer | two weapons, and an off hand free of them |
+| Brute | Shinobi, Lifebinder | a two-handed weapon, and weapons that can't be one |
+
+### Levels up to 10
+
+The game stops every class at level 9 (its manual's tables end there too).
+With **Class levels go up to 10** ticked, each class goes one level further,
+at the XP AD&D gives for 10th level:
+
+| Class | XP for 10th level |
+|---|---|
+| Cleric | 450,000 |
+| Druid | 125,000 |
+| Fighter, gladiator | 500,000 |
+| Preserver | 250,000 |
+| Psionicist | 400,000 |
+| Ranger | 600,000 |
+| Thief | 160,000 |
+
+Everything else at 10th level is the game's own: it had it all along, and
+only the cap kept it out of reach. Its XP tables go on to level 20 (druids
+with a table of their own, not the cleric's), and THAC0, saves, spell slots
+and thief skills are worked out from the level. So at 10th level:
+
+- **Hit points** follow AD&D past 9th: preservers and thieves still roll
+  (d4 and d6, CON's bonus counting too), while the others gain a fixed amount
+  (+3 for fighters, gladiators and rangers, +2 for clerics, druids and
+  psionicists). The game's own table has the fixed gain for thieves too, as
+  it keeps thieves and psionicists together and AD&D's psionicist stops
+  rolling at 9th; with the rule thieves roll their 10th die.
+- **Gladiators** optimise their armour, as the game already has them do:
+  AC 1 better for every 5 gladiator levels, so -2 at 10th where it was -1.
+  (The Ledger counts it in **AC: spells, rings, other**. The game gives it
+  with or without armour.)
+- **THAC0 and saves** improve as the game's formulas give: 11 for a
+  gladiator, 14 for a druid, as for AD&D's warriors and priests.
+- **Spell slots** grow at the levels casters already have, up to 5th; no
+  class gets 6th-level slots (a cleric would at 11, a preserver at 12), so no
+  spells past 5th level are needed. A 10th-level preserver or druid has
+  5 4 3 2 2 before WIS by the game's table; with [AD&D's class
+  tables](#adds-class-tables), 4 4 3 2 2 and 4 4 3 3 2.
+- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
+  as at every level, offered from spell level (class level + 1) / 2 down:
+  5th at 10th as at 9th. **A psionicist picks a new power** (the game gives
+  one at each level, two at odd levels and 4th).
+- Spell damage that grows with the caster's level already counts up to
+  level 10 in the game, so a 10th-level caster gets the last step.
+
+The level-up comes as the game's usual one ("Gerakis gains a level"), and
+View Character stops showing the XP for the next level at 10, as it does at
+9 without the rule. For a character of more than one class, a class already
+at 10 isn't named in the brackets, since it has no next level. Untick it and
+nobody goes past the level they have: a 10th-level character stays 10th.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#levels-up-to-10).
+
+### STORE and RECALL on the creation screen
+
+The creation screen has two more buttons under the hit points, as Baldur's
+Gate has them: **STORE** keeps the roll on screen, and **RECALL** brings it
+back, however many times the die has been rolled since. A roll is the six
+scores and what the die's total allows (the `SUM:` line), the hit points and
+the PSP. So a good roll can be stored and the die tried again; if nothing
+better comes, RECALL puts the stored one back, AC and damage with it.
+
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:99/99, 28/28 hit points](docs/creation-store-recall.png)
+
+Changing the race, sex, classes or kit forgets the stored roll (its hit
+points were rolled for those), even if they are changed back: RECALL then
+does nothing until STORE keeps another. STORE again keeps the new roll in
+place of the old. Always on, in games started from the Ledger.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
+
+### The game's own party
+
+START GAME with no party made plays the game's own four, who were made before
+any of these choices existed. With weapon specialization, kits and class
+restrictions on, the Ledger fits them to those in the first moments of a new
+game, and says so in the dice log (Cilla also gets the elf's figure: see
+[Elves and half-elves](#elves-and-half-elves)):
+
+| Character | With weapon specialization | With class restrictions |
+|---|---|---|
+| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
+| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
+
+With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
+class: a spell slot more at each spell level and two preserver spells a turn
+in a fight. His gear stays as it is (an Arcanist has none of its own), and so
+do the hit points the game gave him: the Arcanist's d3 counts from his next
+level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
+once, can't have one.
+
+Cermak and Cilla keep the game's own starting spells: only a character made
+on the creation screen [picks its own](#changing-class).
+
+![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
+
+![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
+
+## Expanded features
+
+New things to do in play, each with a box in the Options tab's **Expanded
+features** section. All are on by default and, like the rule changes, take effect at
+once in games started with the dice log; untick one and the game is as it
+was.
+
+| Box on the Options tab | What it adds |
+|---|---|
+| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 16 or more lowers what shops ask, 5% to 25%, as in Baldur's Gate |
+| [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
+| [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
+| [Picking pockets](#picking-pockets) | a thief uses Thieves' Tools on anyone in sight, until caught |
+
+### The leader's CHA at shops
+
+The game's shops ask an item's price whoever buys. With **The leader's CHA at
+shops** ticked, the party leader's CHA lowers it, as Baldur's Gate's table
+has it:
+
+| Leader's CHA | 15 or less | 16 | 17 | 18 | 19 | 20 or more |
+|---|---|---|---|---|---|---|
+| Discount | none | 5% | 10% | 15% | 20% | 25% |
+
+The price shown under each item, the one charged, and whether the shop's list
+greys an item as too dear all follow it (never below 1). Selling is as the
+game has it.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
+
+### Improved thieving
+
+More for thieves to do: skills that grow by the Player's Handbook's table,
+hiding in shadows and moving silently to backstab (rangers too, to attack from
+behind), a cloak, boots and belt that help, and pockets to pick. The switches
+are together under **Improved thieving** in the Options tab's Expanded
+features section.
+
+#### Thief skills from AD&D's table
+
+The game's thief skills come out high: a 3rd-level elf thief with DEX 22 has
+move silently 66 and hide in shadows 61. AD&D gives 27 and 20 at 3rd level
+before race and DEX. The game adds 4 a level to a base of its own, and its DEX
+formula gives move silently and hide in shadows less than Dark Sun's table at
+high DEX, and some other skills more. With **Thief skills from AD&D's table**
+ticked, a skill is:
+
+- AD&D's average for the thief level (the Player's Handbook's table, up to
+  10th level),
+- plus the race's adjustment, the game's own (already the Dark Sun rules'
+  numbers),
+- plus DEX's: AD&D's table up to 19, the Dark Sun rules' exceptional DEX
+  past it, for the first five skills (hear noise, climb walls and read
+  languages have none).
+
+AD&D's averages, by thief level:
+
+| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 |
+| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 |
+| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
+| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 |
+| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 |
+| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 |
+| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 |
+| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 |
+
+The race adjustments, as the game has them (humans, half-giants and
+thri-kreen have none):
+
+| Race | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows | Hear noise | Climb walls | Read languages |
+|---|---|---|---|---|---|---|---|---|
+| Dwarf | 0 | +10 | +15 | 0 | 0 | 0 | −10 | −5 |
+| Elf | +5 | −5 | 0 | +5 | +10 | +5 | 0 | 0 |
+| Half-elf | +10 | 0 | 0 | 0 | +5 | 0 | 0 | 0 |
+| Halfling | +5 | +5 | +5 | +10 | +15 | +5 | −15 | −5 |
+| Mul | 0 | −5 | 0 | +5 | 0 | 0 | +5 | −5 |
+
+The DEX adjustments:
+
+| DEX | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows |
+|---|---|---|---|---|---|
+| 9 | −15 | −10 | −10 | −20 | −10 |
+| 10 | −10 | −5 | −10 | −15 | −5 |
+| 11 | −5 | 0 | −5 | −10 | 0 |
+| 12 | 0 | 0 | 0 | −5 | 0 |
+| 13-15 | 0 | 0 | 0 | 0 | 0 |
+| 16 | 0 | +5 | 0 | 0 | 0 |
+| 17 | +5 | +10 | 0 | +5 | +5 |
+| 18 | +10 | +15 | +5 | +10 | +10 |
+| 19 | +15 | +20 | +10 | +15 | +15 |
+| 20 | +20 | +25 | +12 | +20 | +17 |
+| 21 | +25 | +27 | +15 | +25 | +20 |
+| 22 | +27 | +30 | +17 | +30 | +22 |
+
+then the situation and effects as before. So Azil, a 3rd-level elf thief with
+DEX 22: pick pockets 40 + 5 + 27 = 72, open locks 58, find traps 47, move
+silently 62, hide in shadows 52, hear noise 20, climb walls 87. A ranger's
+move silently and hide in shadows take the same race and DEX adjustments.
+Untick it for the game's numbers.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thief-skills-from-adds-table).
+
+#### Hiding in shadows to backstab
+
+The game never rolls hide in shadows, and a thief only backstabs a target that
+has turned to face someone else. With **Thieves hide in shadows and move
+silently to backstab, rangers to attack from behind** ticked, a thief whose
+turn comes in a fight with no enemy in any of the eight squares around them
+tries to hide in shadows; if they do, they try to move silently up to someone;
+and if both succeed, their next attack that turn counts as one from behind: +2
+to hit, the target's DEX and shield don't count, and with a weapon that can
+backstab it is a backstab, the damage multiplied as usual. The attack gives
+the thief away, and so does the turn ending without one. An enemy next to the
+thief when the turn comes means no hiding at all: get clear first. A worn
+cloak adds 10 to hiding in shadows (before daylight halves it) and worn boots
+add 10 to moving silently, for rangers too, up to 95: `needs 18 or less (26
++10 cloak = 36, halved in daylight)`. With that switched on, a cloak's or
+boots' item box (right-click it on the inventory screen) says so under its
+name, `Hide +10` or `Move +10` (the skills' short names, as the inventory
+screen's thief rows have them).
+
+![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Move +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
+
+The [Cloak and Boots of Elvenkind](#new-items) do more (whatever the plain
+gear's switch). Only thieves and rangers can wear them (multiclasses too; for
+anyone else, the game's "Cannot use this item"). In the cloak, hiding in
+shadows needs 95 or less under the open sky and 90 under a roof, not halved by
+the light (AD&D's: all but invisible in the wild, 90% among buildings), unless
+their own chance is better; in the boots, moving silently needs 95 or less.
+Their boxes say `Hide 90-95%` and `Move 95%`.
+
+![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Move 95%", 20,000](docs/elvenkind.png)
+
+The same switch has a worn **belt** add 5 to a thief's **picking pockets and
+opening locks**, whether hiding is on or not: the game's own lock picking
+counts it, and so do the Ledger's pockets and its thief rows (`PICK 80`,
+`LOCK 64`). A belt's box says `Pick +5, Lock +5`.
+
+Plain cloaks, boots and belts cost 24 (the game's Leather Cloak is 20), anywhere
+in the region, shops included; magic ones (with a plus, or dearer than 100)
+keep their prices.
+
+```
+Cilla's turn
+Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden
+  Cilla moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
+Cilla attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
+    THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
+  Cilla hits Slig for 16: (1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19) x2 backstab
+```
+
+The chance to hide is **halved in daylight**. Which maps are under the open
+sky goes by the game's regions: open desert and rock, the villages' open
+ground and the arena are; the slave pens, the sewers, the lava caverns and
+the other underground or roofed places aren't. Three maps have both, buildings
+with floors of their own standing on open ground: there it goes by the floor
+under the thief (from the game's map of the region in memory), so a thief in
+a building is out of the sun and one in a roofless ruin isn't. The chances
+are the thief's own as they stand (level, race, DEX, and effects: Invisibility makes hiding certain, Fire Shield and Mirror Image
+rule it out).
+
+**Rangers** hide and move silently too, with the same box ticked. The game
+gives rangers no thief skills, so the Ledger uses AD&D's ranger table, by
+ranger level, with the race's and DEX's adjustments as for a thief:
+
+| Ranger level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 |
+| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 |
+
+The light works the other way round for these outdoorsmen: the **full chance
+under the open sky, half indoors** (the same maps and floors as for thieves).
+Their attack from behind gets +2 to hit, and the target's DEX and shield don't
+count, but it is never a backstab. Armour doesn't matter, nor does what
+they hold. The Characters tab shows a ranger's two chances (**Ranger skills
+now**), and the game's inventory screen shows them where a thief's `MOVE`
+and `HIDE` go. Someone with thief levels hides as a thief.
+
+```
+Gerakis hides in shadows: d100 = 15, needs 63 or less (63, a ranger under the open sky) -> hidden
+  Gerakis moves silently: d100 = 42, needs 78 or less -> unheard: their next attack this turn is from behind
+Gerakis attacks Slig from behind with Wooden Club (1d6): d20 = 12, needs 10+ (55%), hits AC 1, target AC 3 -> HIT
+```
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
+
+#### Picking pockets
+
+The game has one pocket to pick, in the Trustee's conversation (his key). With
+**Picking pockets** ticked on the Options tab (it is by default), a thief can
+try anyone's with **Thieves' Tools**. Every thief starts a new game with a set
+(a satchel) in the first free backpack cell, and a thief who joins later gets
+one too (the log says so). A thief who loses or sells theirs can buy another
+from Kel, who sells two sets.
+
+On the inventory screen, pick the tools up, go back to the game with them on
+the pointer, and click someone in sight. The tools stay on the pointer for the
+next try (clicking open ground drops them, as with anything carried). Not in a
+fight: there's no time for it then.
+
+The Ledger rolls the thief's pick pockets chance as it stands now (effects and
+a worn belt's 5 counted, as in the thief rows):
+
+- **Success:** one small thing goes into the thief's backpack (its first free
+  cell): something weighing 10 or less (a bag or arrows are 10, a helm 15, a
+  long sword 30) that isn't worn on the body (armour, a belt, boots, a helm, a
+  cloak). A dagger, a ring, an amulet, a gem or food can be lifted, and so can
+  three weapons whatever their weight: Kurzak's Shadowseeker, Churrr's
+  Gutterknot and Maris's Mindshard (see [New items](#new-items)). Lifting one is
+  worth 200 XP to the thief, given as the game gives a quest's ("Cilla
+  receives 200 experience points!", with the quest's sound; split among a
+  multi-class thief's classes). Keys stay, as scripts may look for them. People outside the party keep all they own in
+  their pack, so this goes by what each thing is.
+- **Failure:** a move silently roll. Made, the thief slips away unnoticed;
+  missed, they're caught.
+
+With nothing like that left on them, the thief takes what's in their purse
+instead: a few ceramic pieces (2 to 5), added to the party's money. That is
+the last try on that person.
+
+A thief can go on trying the same person until **caught** (both rolls failed)
+or until they take the coins; after that, that person keeps a hand on their
+pockets for good. The Ledger remembers who in `settings.json`,
+for this party, with the time on the game's clock: load a game saved before
+the try and the clock goes back past it, so the try is forgotten and the
+person can be tried again. The Trustee is left to his own conversation. What happens
+comes up in the game's message window and in the dice log:
+
+```
+Daaki picks Kurzak's pocket: d100 = 71, needs 63 or less -> failed
+  Daaki moves silently to get away: d100 = 12, needs 55 or less -> success
+  Daaki fumbles Kurzak's pockets, but slips away unnoticed.
+```
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
+
+## New content
+
+Spells, people, a quest and items the Ledger adds to the game, each with a box
+in the Options tab's **New content** section: the people, the quest and the
+items from the next time the game is started, the spells at once in games
+started with the dice log.
 
 ### New wizard spells
 
@@ -2283,57 +2393,6 @@ spells are gone from the lists and the game is as it was.
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
-
-### Helms
-
-The game's helms count as armour but give AC 0. With **Helms give AC 1**
-ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
-Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
-the game's tables). It shows on the View Character and inventory screens like
-any armour.
-
-The game has no descriptions of items, only their names, so while the rule is
-on the Ledger renames the plain helm **Helm (AC 1)**. The named ones
-(Dapartea's Helm, Helm/Contempltn, Helm of Might) keep their names, which
-would be too long for the game's Look box with the note. With the rule off,
-or without the Ledger, the names are the game's own.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
-
-### The game's own party
-
-START GAME with no party made plays the game's own four. With the rules on,
-the Ledger makes them ready for them in the first moments of a new game, and
-says so in the dice log:
-
-| Character | With weapon specialization | With class restrictions |
-|---|---|---|
-| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
-| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
-
-With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
-class: a spell slot more at each spell level and two preserver spells a turn
-in a fight. His gear stays as it is (an Arcanist has none of its own), and so
-do the hit points the game gave him: the Arcanist's d3 counts from his next
-level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
-once, can't have one.
-
-Cermak and Cilla keep the game's own starting spells: only a character made
-on the creation screen [picks its own](#changing-class).
-
-![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
-
-![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
-
-## New content
-
-People, a quest and items the Ledger adds to the game, each with a box in the
-Options tab's **New content** section, from the next time the game is
-started.
 
 ### New items
 
@@ -2407,8 +2466,8 @@ character can use.
 | ![](docs/items/wardens-arms.png) | **Warden's Arms** | the Lower Castle's treasure chest, with Dark Flame (behind the wall the Serpent Boots show, where the vrock perch) | plate arm armour +1 (AC 2, +1) |
 | ![](docs/items/wardens-legs.png) | **Warden's Legs** | the Gemfields' chest | plate leg armour +1 (AC 2, +1) |
 | ![](docs/items/wardens-chest.png) | **Warden's Chest** | on **Balkazar**'s body | plate chest armour +1 (AC 3, +1): Resist Fire on its wearer while worn |
-| ![](docs/items/cloak-of-elvenkind.png) | **Cloak of Elvenkind** | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) | a grey cloak: [all but invisible](#hiding-in-shadows-to-backstab) in a fight, with the hiding rule; thieves and rangers only |
-| ![](docs/items/boots-of-elvenkind.png) | **Boots of Elvenkind** | the buried chest of Kel's caravan, with the Cahulaks +1 | soft boots: [silent](#hiding-in-shadows-to-backstab), with the hiding rule; thieves and rangers only |
+| ![](docs/items/cloak-of-elvenkind.png) | **Cloak of Elvenkind** | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) | a grey cloak: [all but invisible](#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only |
+| ![](docs/items/boots-of-elvenkind.png) | **Boots of Elvenkind** | the buried chest of Kel's caravan, with the Cahulaks +1 | soft boots: [silent](#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only |
 | ![](docs/items/bracers-of-defense.png) | **Bracers of Defense** | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) | AC for those wearing no armour: [bracers of defense](#bracers-of-defense) |
 
 **Prices** follow the game's own: magic melee weapons 20,800 a plus (41,600
@@ -2462,7 +2521,7 @@ of the Wardens.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
 
-### Bracers of defense
+#### Bracers of defense
 
 A preserver can't cast in armour (with [class restrictions](#class-restrictions)),
 so the Ledger adds AD&D's bracers of defense ([where](#new-items)). They are
@@ -2478,7 +2537,7 @@ a point of AC.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#bracers-of-defense).
 
-### Robes
+#### Robes
 
 Two magic robes for those who go without armour: preservers, psionicists and
 druids alone may wear them. A robe is worn on the chest, in the chest armour's
@@ -2533,8 +2592,8 @@ Talk button). His conversation is the game's kind, just him speaking:
   (3,000 a level, as most of its scrolls are), less with [the leader's
   CHA](#the-leaders-cha-at-shops).
 
-  Cat's Grace is there only with the new spells' rule on (see
-  [Rule changes](#rule-changes)). A preserver learns a scroll's spell as from
+  Cat's Grace is there only with the new spells on (see
+  [New wizard spells](#new-wizard-spells)). A preserver learns a scroll's spell as from
   any of the game's (right-click it in the inventory, click its spell), by the
   game's own rules (a spell of a level the preserver can cast), and with
   [Preservers' INT](#preservers-int) on it rolls to learn it. He remembers a
@@ -2671,9 +2730,9 @@ power, and who carries it), and the Ledger's, in **bold**. In **Where**, "—"
 means the item isn't placed with anyone in the data: the game's scripts hand it
 out (a reward, a gift or a find).
 
-**Weapons**, by material, then kind:
+**Weapons**, by material, then type:
 
-| Icon | Material | Kind | Item | Bonus / power | Where |
+| Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
 | ![](docs/items/swiftbite.png) | Bone | long sword | Swiftbite | +2 | — |
 | ![](docs/items/draketooth.png) | Bone | long sword | Draketooth | +1, strength | — |
@@ -2713,7 +2772,7 @@ out (a reward, a gift or a find).
 
 **Missile weapons and ammunition:**
 
-| Icon | Material | Kind | Item | Bonus / power | Where |
+| Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a chest |
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | — |
@@ -2824,13 +2883,13 @@ Tanelyv's Armor also has a chest piece, with no plus.
 ### Every mundane weapon
 
 Every plain weapon in a game with the new items, the game's and the Ledger's,
-by kind and material: who sells it and who carries it (by the names the game
+by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in Kel's
 caravan. The game's plain stone pick is only ever a
 [starting weapon](#weapon-specialization); Deepbiter is its magic one.
 
-| Icon | Kind | Material | Sold by | Carried by, or found in |
+| Icon | Type | Material | Sold by | Carried by, or found in |
 |---|---|---|---|---|
 | ![](docs/items/bone-long-sword.png) | long sword | bone | Jark, Weapon Merchant | Ranger, Templar, Chaero, Castle Guard, Arant's Guard, Warrior, Dagolar Guard, Caravan Guard, Guard, Lt. Kwerin, Slaver Guard, Messenger, Visitor, Renegade, Silt Runner |
 | ![](docs/items/metal-long-sword.png) | long sword | metal | Weapon Merchant | Uskuye, Elven Leader, Elite Guard, Village Hero, a chest in the warrens |
@@ -2863,10 +2922,31 @@ caravan. The game's plain stone pick is only ever a
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — |
 
-## On the screen
+## Graphics
 
-What the Ledger draws on the game's map. Each is switched on the Options tab's
-**On the screen** group.
+What the Ledger draws on the game's map. The party's gear, shadows and dust
+each have a switch in the Options tab's **Graphics** section; the elves' and
+half-elves' looks are always there.
+
+### Elves and half-elves
+
+Elves have pointed ears, walking and fighting, beside any helm. Half-elves have
+their own look (the game draws them with the human pictures), made from the
+game's pictures in colours the party's figures already use. A half-elf man is
+built like the elf man, a little broader, with fair hair cut short at the nape,
+a linen shirt under a leather jerkin, green trousers, brown boots and small
+pointed ears. A half-elf woman is a little slimmer than the human woman, with
+golden hair up in a bun, pointed ears, a purple cloak, purple wristbands and
+red boots. Anything worn is drawn over these in its own colours, so a worn
+cloak or boots replace the purple and the red.
+
+Cilla, in the game's own party, is an elf, but the game gives her the figure it
+gives half-elf women. The Ledger gives her the elf woman's, in a new game and
+in one already begun (there from the next area or load on).
+
+![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#elves-and-half-elves).
 
 ### What the party wears
 
@@ -2878,11 +2958,11 @@ walking and fighting:
 
 | Worn | Shown |
 |---|---|
-| **Weapons and shields** | each kind its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
+| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
 | **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
 | **Armour** | the character's own clothing recoloured toward its material, shade for shade (leather, bone, chain, plate, scale...): the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures the artist drew mostly bare (the mul, the dwarf man) only their straps and loincloth change, so it shows little |
 | **Helms** | a circlet at the brow blended into the hair: a feather on leather, a dark stone on iron, low spikes on bone |
-| **Cloaks** | the human and half-elf woman's own cloak (its folds and swing as she walks and fights) fitted to the wearer, under the hair, in the cloak's colours; hers takes them too |
+| **Cloaks** | the cloak the game draws on the human woman (its folds and swing as she walks and fights), fitted to the wearer, under the hair, in the cloak's colours; a half-elf woman's own purple cloak takes the worn one's colours |
 | **Boots and belts** | the feet and the waist recoloured |
 
 The colours are muted ones no region's palette changes. A thri-kreen shows
@@ -2890,7 +2970,7 @@ only weapons and shields (all it can use). Two party members of the same race
 and sex each show their own equipment: the game gives them one figure, so the
 second is moved to pictures of their own.
 
-![The arena fight with Scar, the fighters as the game draws them (left) and with gear and shadows on (right): armour recoloured, weapons in hand and at the hip, and each figure casting a shadow toward the lower right](docs/gear.png)
+![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
 
@@ -2903,7 +2983,7 @@ the game's maps comes from the upper left). The shadows are drawn on the floor
 before anything else, so every figure and wall stands on top of them: a shadow
 never covers another figure. Switch them off on the Options tab.
 
-![The slave pens and the arena, without shadows (left) and with them (right): each figure's outline darkened on the floor behind it, the floor's colours kept](docs/shadows.png)
+![The arena without shadows (left) and with them (right): each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#shadows).
 
@@ -2913,7 +2993,7 @@ Anyone walking on sand or dirt raises little puffs of dust behind their feet,
 which spread, rise a little and fade in about a second. The walls and figures
 stand in front of them, as with the shadows. Switch it off on the Options tab.
 
-![Jellybelly walking across the arena's sand in a fight: puffs of dust behind her, spreading and fading](docs/dust.png)
+![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
 
@@ -2934,7 +3014,7 @@ under the enemy chosen with Tab** (the default: none until Tab is pressed) or
 **under all the enemies** (the chosen one's thicker and redder); Tab and Enter
 have a switch of their own.
 
-![The arena fight with rings under all the enemies: the guard chosen with Tab (middle) has the thicker, redder ring](docs/rings.png)
+![The arena fight with rings under all the enemies, two Sligs and a Screamer Beetle, one Slig chosen with Tab](docs/rings.png)
 
 Tab and Enter also make attacking possible without aiming the mouse at all.
 

@@ -127,7 +127,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <li><a href="#combat">Combat</a></li>
       <li><a href="#classes">Classes and Kits</a></li>
       <li><a href="#magic">Magic and Psionics</a></li>
-      <li><a href="#thieves">Thieves</a></li>
+      <li><a href="#thieves">Improved Thieving</a></li>
       <li><a href="#items">Items</a></li>
       <li><a href="#world">World</a></li>
       <li><a href="#graphics">Graphics</a></li>
@@ -167,8 +167,8 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <h2>Combat</h2>
       <h4>Weapon specialization</h4>
       <ul>
-        <li><span class="tag new">New</span>Fighters specialize in one kind of weapon (+1 to hit, +2 damage, 3/2 attacks a round), with <strong>mastery</strong> at 5th level (+3, +3) and <strong>grand mastery</strong> at 9th (a larger damage die and one more attack).</li>
-        <li><span class="tag new">New</span>Gladiators specialize in two kinds, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other kind.</li>
+        <li><span class="tag new">New</span>Fighters specialize in one weapon type (+1 to hit, +2 damage, 3/2 attacks a round), with <strong>mastery</strong> at 5th level (+3, +3) and <strong>grand mastery</strong> at 9th (a larger damage die and one more attack).</li>
+        <li><span class="tag new">New</span>Gladiators specialize in two weapon types, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon type.</li>
         <li><span class="tag chg">Changed</span>Warriors attack at AD&amp;D's plain rate with weapons outside their specializations <span class="was">(was 3/2 with any weapon)</span>. Specialists shoot missiles faster.</li>
       </ul>
       <h4>Saving throws</h4>
@@ -197,6 +197,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <ul>
         <li><span class="tag chg">Changed</span>Every class can reach <strong>10th level</strong> <span class="was">(was 9th)</span>.</li>
         <li><span class="tag chg">Changed</span>Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as <code>SUM:99/101</code>), and the hit points stay as rolled, moving only with CON's bonus <span class="was">(was any score clicked up to its most, and the hit points set by a click)</span>.</li>
+        <li><span class="tag new">New</span><strong>STORE</strong> and <strong>RECALL</strong> on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.</li>
         <li><span class="tag chg">Changed</span>Class restrictions hold: a character may use an item only if <em>every</em> one of its classes allows it, and a multiclass preserver can't cast in armour <span class="was">(was any one class allowing it)</span>.</li>
         <li><span class="tag chg">Changed</span>Multiclass characters gain hit points as in AD&amp;D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.</li>
         <li><span class="tag chg">Changed</span>Experience, priests' THAC0 and spell slots follow AD&amp;D's tables: a gladiator needs <span class="num">2,250</span> XP for 2nd level <span class="was">(was 2,000)</span>, a preserver has <span class="num">4 2 1</span> slots at 5th <span class="was">(was 3 2 1)</span>, a cleric <span class="num">3 3 1</span> <span class="was">(was 3 2 1)</span>.</li>
@@ -230,17 +231,17 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
     <section id="magic">
       <h2>Magic and Psionics</h2>
       <ul>
-        <li><span class="tag new">New</span>Three new wizard spells, each with its own icon and description: <strong>Cat's Grace</strong> (2nd level: DEX +1d6 for an hour of game time a caster level), <strong>Erdlu Claw</strong> (1st level: unarmed attacks become talons, 1d6+1 (or Body Weaponry's and Animal Affinity's dice +1), +1 to hit and as a +1 magical weapon) and <strong>Fogbolt</strong> (1st level: a dark grey bolt that gives a creature -3 to its attacks and +2 to attacks on it, for 2d4 rounds).</li>
+        <li><span class="tag new">New</span>Three new wizard spells, each with its own icon and description: <strong>Cat's Grace</strong> (2nd level: DEX +1d6 for an hour of game time a caster level), <strong>Erdlu Claw</strong> (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and <strong>Fogbolt</strong> (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds).</li>
         <li><span class="tag chg">Changed</span>A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.</li>
       </ul>
     </section>
 
     <section id="thieves">
-      <h2>Thieves</h2>
+      <h2>Improved Thieving</h2>
       <ul>
         <li><span class="tag chg">Changed</span>Thief skills follow AD&amp;D's table by level, with Dark Sun's race and DEX adjustments <span class="was">(was a 3rd-level elf with move silently 66 and hide in shadows 61)</span>.</li>
-        <li><span class="tag new">New</span>Thieves <strong>hide in shadows and move silently</strong> in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky. <span class="was">(was a backstab only on a target turned to face someone else)</span></li>
-        <li><span class="tag new">New</span><strong>Picking pockets</strong>: use Thieves' Tools on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.</li>
+        <li><span class="tag new">New</span>Thieves <strong>hide in shadows and move silently</strong> in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky <span class="was">(was a backstab only on a target turned to face someone else)</span>.</li>
+        <li><span class="tag new">New</span><strong>Picking pockets</strong>: every thief starts with a set of Thieves' Tools (Kel sells more); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.</li>
         <li><span class="tag new">New</span>A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks.</li>
         <li><span class="tag fix">Fixed</span>Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.</li>
       </ul>
@@ -248,24 +249,62 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
 
     <section id="items">
       <h2>Items</h2>
-      <h4>Weapons</h4>
+      <h4>Magic weapons</h4>
+      <p>Fifteen new magic weapons, each with its own icon and a story from the game's own item sage.</p>
       <ul>
-        <li><span class="tag new">New</span>Short swords, bone and obsidian axes, great axes, daggers, maces, and metal picks and polearms, the plain weapons the game never had, sold by merchants and carried across Athas.</li>
-        <li><span class="tag new">New</span>Sixteen new magic weapons, each with its own icon and a story from the game's own item sage. Among them: Flame Blade, an obsidian long sword whose edge burns; Galefang, a dagger an air cleric can wield; Mindshard and Stillwater, short swords for psionicists; and the first magic club, pick and staff sling in the game.</li>
+        <li><span class="tag new">New</span><strong>Flame Blade</strong>: an obsidian long sword +1 whose blade burns what it hits (2d6 fire damage, a save for half). A fire or earth cleric can wield it.</li>
+        <li><span class="tag new">New</span><strong>Shadowseeker</strong>: a short sword +1 whose wielder sees the invisible.</li>
+        <li><span class="tag new">New</span><strong>Kreenfang</strong>: a bone gythka +1.</li>
+        <li><span class="tag new">New</span><strong>Gutterknot</strong>: a club +1, the game's first magic club.</li>
+        <li><span class="tag new">New</span><strong>Deepbiter</strong>: a stone pick +1, the game's first magic pick.</li>
+        <li><span class="tag new">New</span><strong>Windlash</strong>: a staff sling +1, the game's first magic staff sling.</li>
+        <li><span class="tag new">New</span><strong>Greenbright</strong>: a metal short sword +2.</li>
+        <li><span class="tag new">New</span><strong>Drakejaw</strong>: a bone axe +1 a water cleric can wield.</li>
+        <li><span class="tag new">New</span><strong>Glasshewer</strong>: an obsidian axe +2 a fire or earth cleric can wield.</li>
+        <li><span class="tag new">New</span><strong>Headsman</strong>: a metal great axe +2.</li>
+        <li><span class="tag new">New</span><strong>Galefang</strong>: a metal dagger +2 an air cleric can wield.</li>
+        <li><span class="tag new">New</span><strong>Mindshard</strong>: an obsidian short sword +1 a psionicist can wield.</li>
+        <li><span class="tag new">New</span><strong>Stillwater</strong>: a bone short sword +1 a psionicist can wield.</li>
+        <li><span class="tag new">New</span><strong>Linebreaker</strong>: a metal polearm +2.</li>
+        <li><span class="tag new">New</span><strong>Thornwall</strong>: a bone polearm +1.</li>
+        <li><span class="tag chg">Changed</span>The Elven Leader's gift is a <strong>Gythka +2</strong> <span class="was">(was +1)</span>.</li>
       </ul>
-      <h4>Armour and worn items</h4>
+      <h4>Magic armour and worn items</h4>
       <ul>
-        <li><span class="tag new">New</span><strong>Bracers of Defense</strong> (AC 6 to 2) and two robes, the <strong>Ashen Robe</strong> and the <strong>Veiled Robe</strong>, for those who wear no armour. A preserver casts in them.</li>
-        <li><span class="tag new">New</span><strong>The Warden's Plate</strong>: plate armour +1 in four pieces, 12 points of AC as a set.</li>
-        <li><span class="tag new">New</span>Rings and a cloak of protection, the Cloak and Boots of Elvenkind, Arrowbane, the Sunking Crown, and the Tome of Understanding (+1 WIS for good).</li>
-        <li><span class="tag chg">Changed</span>The game's bone scale armour set is complete, with its arm and leg pieces and helm.</li>
+        <li><span class="tag new">New</span><strong>Bracers of Defense</strong>: AC 6 to 2 for those who wear no armour, four pairs across Athas. A preserver casts in them.</li>
+        <li><span class="tag new">New</span><strong>Ashen Robe</strong> (+1): AC 1 better and +1 on saves against spells, for preservers, psionicists and druids. A preserver casts in it.</li>
+        <li><span class="tag new">New</span><strong>Veiled Robe</strong> (+2), a robe of the Veiled Alliance: AC 2 better, +1 on every save, and a wizard spell slot more at spell levels 1 to 3, for preservers, psionicists and druids.</li>
+        <li><span class="tag new">New</span><strong>The Warden's Plate</strong>: plate armour +1 in four pieces, 12 points of AC as a set. The helm gives Cloak of Bravery and the chest Resist Fire while worn.</li>
+        <li><span class="tag new">New</span><strong>Inixhide</strong>: leather chest armour +1.</li>
+        <li><span class="tag new">New</span><strong>Rings of Protection +1</strong> (two) and a <strong>Cloak of Protection +1</strong>: +1 AC and +1 on every saving throw.</li>
+        <li><span class="tag new">New</span><strong>Cloak of Elvenkind</strong>: all but invisible when hiding in shadows. Thieves and rangers only.</li>
+        <li><span class="tag new">New</span><strong>Boots of Elvenkind</strong>: silent when moving. Thieves and rangers only.</li>
+        <li><span class="tag new">New</span><strong>Arrowbane</strong>: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.</li>
+        <li><span class="tag new">New</span><strong>Sunking Crown</strong>: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.</li>
+      </ul>
+      <h4>Other magic items</h4>
+      <ul>
+        <li><span class="tag new">New</span><strong>Tome of Understanding</strong>: read it for +1 WIS for good.</li>
+        <li><span class="tag new">New</span><strong>Kalzith's six scrolls</strong>: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.</li>
+      </ul>
+      <h4>Mundane items</h4>
+      <p>The plain weapons the game never had, sold by merchants and carried across Athas, and more.</p>
+      <ul>
+        <li><span class="tag new">New</span><strong>Short swords</strong> (1d6) in bone, obsidian and metal: the game had none.</li>
+        <li><span class="tag new">New</span><strong>Axes</strong> (1d8) in bone and obsidian.</li>
+        <li><span class="tag new">New</span><strong>Great axes</strong> (1d10, two-handed) in bone, obsidian and metal.</li>
+        <li><span class="tag new">New</span><strong>Daggers</strong> in metal, and in bone: the only dagger a water cleric can use.</li>
+        <li><span class="tag new">New</span><strong>Maces</strong> in obsidian and metal.</li>
+        <li><span class="tag new">New</span>A <strong>metal pick</strong> and a <strong>metal polearm</strong>.</li>
+        <li><span class="tag new">New</span><strong>Thieves' Tools</strong>: every thief starts with a set, and Kel sells more, for picking pockets.</li>
+        <li><span class="tag chg">Changed</span>The game's <strong>bone scale armour</strong> set is complete, with its arm and leg pieces and helm.</li>
       </ul>
     </section>
 
     <section id="world">
       <h2>World</h2>
       <ul>
-        <li><span class="tag new">New</span><strong>Kalzith</strong>, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.</li>
+        <li><span class="tag new">New</span><strong>Kalzith</strong>, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.</li>
         <li><span class="tag new">New</span>More of <strong>Semyon</strong>'s story, for players who help him in the arena.</li>
         <li><span class="tag new">New</span>A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.</li>
         <li><span class="tag new">New</span>Merchants give your party leader a discount for high Charisma, from <span class="num">5%</span> at CHA 16 to <span class="num">25%</span> at 20, as in Baldur's Gate.</li>
@@ -276,6 +315,8 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <h2>Graphics</h2>
       <ul>
         <li><span class="tag new">New</span>The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.</li>
+        <li><span class="tag new">New</span>Elves have pointed ears.</li>
+        <li><span class="tag new">New</span>Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.</li>
         <li><span class="tag new">New</span>Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.</li>
         <li><span class="tag new">New</span>A red ring can mark the enemy you've chosen, or all of them.</li>
       </ul>
@@ -300,6 +341,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag fix">Fixed</span><strong>DELETE</strong> in the character roster deleted the wrong character when the list was scrolled.</li>
         <li><span class="tag fix">Fixed</span>A character not yet played showed 0 in every thief skill.</li>
         <li><span class="tag fix">Fixed</span>The game's Sling +1 had no icon.</li>
+        <li><span class="tag fix">Fixed</span>Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now.</li>
       </ul>
     </section>
   </main>

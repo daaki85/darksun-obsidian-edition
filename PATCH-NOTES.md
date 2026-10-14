@@ -8,6 +8,20 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 *These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
 
+## Contents
+
+- [Templar's Ledger](#templars-ledger)
+- [In the Game's Screens](#in-the-games-screens)
+- [Combat](#combat)
+- [Classes and Kits](#classes-and-kits)
+- [Magic and Psionics](#magic-and-psionics)
+- [Improved Thieving](#improved-thieving)
+- [Items](#items)
+- [World](#world)
+- [Graphics](#graphics)
+- [Quality of Life](#quality-of-life)
+- [Bug Fixes](#bug-fixes)
+
 ## Templar's Ledger
 
 - **[New]** A companion window that starts the game and runs beside it, laid out in the game's own colours.
@@ -33,8 +47,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Weapon specialization**
 
-- **[New]** Fighters specialize in one kind of weapon (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
-- **[New]** Gladiators specialize in two kinds, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other kind.
+- **[New]** Fighters specialize in one weapon type (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
+- **[New]** Gladiators specialize in two weapon types, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon type.
 - **[Changed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
 
 **Saving throws**
@@ -62,6 +76,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[Changed]** Every class can reach **10th level** *(was 9th)*.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
+- **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
 - **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*.
 - **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.
 - **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
@@ -92,34 +107,74 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Magic and Psionics
 
-- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons, 1d6+1 (or Body Weaponry's and Animal Affinity's dice +1), +1 to hit and as a +1 magical weapon) and **Fogbolt** (1st level: a dark grey bolt that gives a creature -3 to its attacks and +2 to attacks on it, for 2d4 rounds).
+- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds).
 - **[Changed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 
-## Thieves
+## Improved Thieving
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
-- **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky. *(was a backstab only on a target turned to face someone else)*
-- **[New]** **Picking pockets**: use Thieves' Tools on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
+- **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
+- **[New]** **Picking pockets**: every thief starts with a set of Thieves' Tools (Kel sells more); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.
 
 ## Items
 
-**Weapons**
+**Magic weapons**
 
-- **[New]** Short swords, bone and obsidian axes, great axes, daggers, maces, and metal picks and polearms, the plain weapons the game never had, sold by merchants and carried across Athas.
-- **[New]** Sixteen new magic weapons, each with its own icon and a story from the game's own item sage. Among them: Flame Blade, an obsidian long sword whose edge burns; Galefang, a dagger an air cleric can wield; Mindshard and Stillwater, short swords for psionicists; and the first magic club, pick and staff sling in the game.
+Fifteen new magic weapons, each with its own icon and a story from the game's own item sage.
 
-**Armour and worn items**
+- **[New]** **Flame Blade**: an obsidian long sword +1 whose blade burns what it hits (2d6 fire damage, a save for half). A fire or earth cleric can wield it.
+- **[New]** **Shadowseeker**: a short sword +1 whose wielder sees the invisible.
+- **[New]** **Kreenfang**: a bone gythka +1.
+- **[New]** **Gutterknot**: a club +1, the game's first magic club.
+- **[New]** **Deepbiter**: a stone pick +1, the game's first magic pick.
+- **[New]** **Windlash**: a staff sling +1, the game's first magic staff sling.
+- **[New]** **Greenbright**: a metal short sword +2.
+- **[New]** **Drakejaw**: a bone axe +1 a water cleric can wield.
+- **[New]** **Glasshewer**: an obsidian axe +2 a fire or earth cleric can wield.
+- **[New]** **Headsman**: a metal great axe +2.
+- **[New]** **Galefang**: a metal dagger +2 an air cleric can wield.
+- **[New]** **Mindshard**: an obsidian short sword +1 a psionicist can wield.
+- **[New]** **Stillwater**: a bone short sword +1 a psionicist can wield.
+- **[New]** **Linebreaker**: a metal polearm +2.
+- **[New]** **Thornwall**: a bone polearm +1.
+- **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
 
-- **[New]** **Bracers of Defense** (AC 6 to 2) and two robes, the **Ashen Robe** and the **Veiled Robe**, for those who wear no armour. A preserver casts in them.
-- **[New]** **The Warden's Plate**: plate armour +1 in four pieces, 12 points of AC as a set.
-- **[New]** Rings and a cloak of protection, the Cloak and Boots of Elvenkind, Arrowbane, the Sunking Crown, and the Tome of Understanding (+1 WIS for good).
-- **[Changed]** The game's bone scale armour set is complete, with its arm and leg pieces and helm.
+**Magic armour and worn items**
+
+- **[New]** **Bracers of Defense**: AC 6 to 2 for those who wear no armour, four pairs across Athas. A preserver casts in them.
+- **[New]** **Ashen Robe** (+1): AC 1 better and +1 on saves against spells, for preservers, psionicists and druids. A preserver casts in it.
+- **[New]** **Veiled Robe** (+2), a robe of the Veiled Alliance: AC 2 better, +1 on every save, and a wizard spell slot more at spell levels 1 to 3, for preservers, psionicists and druids.
+- **[New]** **The Warden's Plate**: plate armour +1 in four pieces, 12 points of AC as a set. The helm gives Cloak of Bravery and the chest Resist Fire while worn.
+- **[New]** **Inixhide**: leather chest armour +1.
+- **[New]** **Rings of Protection +1** (two) and a **Cloak of Protection +1**: +1 AC and +1 on every saving throw.
+- **[New]** **Cloak of Elvenkind**: all but invisible when hiding in shadows. Thieves and rangers only.
+- **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
+- **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
+- **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
+
+**Other magic items**
+
+- **[New]** **Tome of Understanding**: read it for +1 WIS for good.
+- **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.
+
+**Mundane items**
+
+The plain weapons the game never had, sold by merchants and carried across Athas, and more.
+
+- **[New]** **Short swords** (1d6) in bone, obsidian and metal: the game had none.
+- **[New]** **Axes** (1d8) in bone and obsidian.
+- **[New]** **Great axes** (1d10, two-handed) in bone, obsidian and metal.
+- **[New]** **Daggers** in metal, and in bone: the only dagger a water cleric can use.
+- **[New]** **Maces** in obsidian and metal.
+- **[New]** A **metal pick** and a **metal polearm**.
+- **[New]** **Thieves' Tools**: every thief starts with a set, and Kel sells more, for picking pockets.
+- **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
 
 ## World
 
-- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.
+- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 16 to 25% at 20, as in Baldur's Gate.
@@ -127,6 +182,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 ## Graphics
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.
+- **[New]** Elves have pointed ears.
+- **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
 - **[New]** A red ring can mark the enemy you've chosen, or all of them.
 
@@ -145,3 +202,4 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now.

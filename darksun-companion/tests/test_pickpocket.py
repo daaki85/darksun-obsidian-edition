@@ -1,4 +1,4 @@
-"""Picking pockets: P in a conversation, the leader a thief (pickpocket.py)."""
+"""Picking pockets: the thieving tools used on someone (pickpocket.py)."""
 
 import os
 import struct
@@ -223,7 +223,7 @@ class ToolsTests(unittest.TestCase):
                          tools.NAME_ENTRY)
 
     def test_tools_on_someone(self):
-        """Used on the Guard (creature 5): the same as P in a conversation with him."""
+        """Used on the Guard (creature 5)."""
         struct.pack_into("<h", self.pick.m, (LOAD_SEG + game.TALK_SEG) * 16 + game.TALK_TARGET, -1)
         result = pickpocket.attempt(self.gd, set(), lambda: 11, lambda: 3, who=GUARD)
         self.assertEqual(result.text, "Dag lifts Bag from Guard unnoticed.")
@@ -231,22 +231,15 @@ class ToolsTests(unittest.TestCase):
 
 
 class SwitchTests(unittest.TestCase):
-    def test_tools_and_the_key(self):
-        """The helper's switch: the thieving tools (bit 0) with picking pockets on; P in a
-        conversation (bit 1) only when that is ticked too; nothing with picking pockets off."""
+    def test_tools(self):
+        """The helper's switch: the thieving tools (bit 0) with picking pockets on, nothing with
+        it off."""
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from test_dicelog import HDR, make_game
         from dscompanion import dicelog
         log = make_game()
         flags = lambda: struct.unpack("<H", log.guest.read(HDR + dicelog.TSR_PICK_ON, 2))[0]
-        self.assertFalse(log.pick_key)  # (off unless asked for)
         log.set_pickpockets(True)
         self.assertEqual(flags(), dicelog.PICK_TOOLS)
-        log.set_pickpockets(True, True)
-        self.assertEqual(flags(), dicelog.PICK_TOOLS | dicelog.PICK_KEY)
         log.set_pickpockets(False)
         self.assertEqual(flags(), 0)
-        log.use_settings({"pickpockets": True})
-        self.assertFalse(log.pick_key)
-        log.use_settings({"pickpockets": True, "pick_key": True})
-        self.assertTrue(log.pick_key)

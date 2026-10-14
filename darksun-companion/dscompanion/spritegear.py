@@ -18,7 +18,7 @@ shields (all it can use). armed() makes one frame.
 """
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, FrozenSet, List, NamedTuple, Optional, Tuple
 
 from . import game, spriteparts as sp
 
@@ -680,9 +680,9 @@ def draw_boots(rows: Rows, parts: sp.Parts, item_type: int, pad: int) -> None:
             rows[Y][X] = _by_light(p, shades)
 
 
-def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int) -> None:
-    """A belt: a row at the waist across the body (not the arms or hands), a buckle at the front of
-    the Belt of Might."""
+def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int, cloak: FrozenSet[int] = frozenset()) -> None:
+    """A belt: a row at the waist across the body (not the arms or hands, nor over the figure's own
+    CLOAK's colours), a buckle at the front of the Belt of Might."""
     shades = BELTS.get(item_type)
     if shades is None or parts.waist is None or not parts.head:
         return
@@ -697,7 +697,8 @@ def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int) -> None:
         if not run:
             continue
         for x in range(max(run[0], int(middle - half)), min(run[1], int(middle + half + 0.5)) + 1):
-            if any(abs(x - hx) <= 1 and abs(y - hy) <= 1 for hx, hy in hands) or _outline(rows, x + pad, y + pad):
+            if any(abs(x - hx) <= 1 and abs(y - hy) <= 1 for hx, hy in hands) or _outline(rows, x + pad, y + pad) \
+                    or unpadded[y][x] in cloak:
                 continue
             cells.append((x, y))
     for x, y in cells:
@@ -706,37 +707,72 @@ def draw_belt(rows: Rows, parts: sp.Parts, item_type: int, pad: int) -> None:
         rows[parts.waist + pad][int(round(middle)) + pad] = BUCKLE
 
 
+class Own(NamedTuple):
+    """A figure made from one of the game's frames in other colours and a little another shape
+    (figures.py), whose parts and clothes can't be read from its own colours."""
+    parts: sp.Parts  # where its parts are
+    source: Rows  # the game's frame it was made from
+    source_parts: sp.Parts
+    at: Callable[[int, int], int]  # where a pixel (x, y) of the source is across it: its x
+    clothes: Optional[Tuple[int, ...]] = None  # its clothing colours, dark to light (None: the model's)
+    cloak: FrozenSet[int] = frozenset()  # its own cloak's colours (CLOAK_MODEL's figure)
+    not_cloak: FrozenSet[sp.Point] = frozenset()  # pixels in them that aren't the cloak (wristbands)
+    worn: Optional[FrozenSet[sp.Point]] = None  # the pixels that were clothing in the source (None: any)
+    back: Optional[Callable[[int, int], int]] = None  # where a pixel (x, y) of it is across the source
+
+
 def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, Tuple],
           pad: int = 10, armour: Tuple[int, ...] = (),
-          cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None) -> Rows:
+          cloak: Optional[Tuple[sp.Parts, Dict[sp.Point, int]]] = None,
+          own: Optional[Own] = None) -> Rows:
     """One frame of MODEL with WEAPONS ({"right"/"left": (item type, material[, name in
     BLADE_COLOURS])}: in the hands in a
     fight, walking worn at the belt (two-handed ones carried upright);
     "missile": the bow, sling or chatkcha carried, "ammo": arrows, on the back or at the hip),
     padded by PAD, in ARMOUR (item types: under all the rest). Nothing in the hands in the bow
-    frames (the game draws the bow)."""
+    frames (the game draws the bow). OWN: a figure of its own made from MODEL's frame (Own)."""
     out = padded(rows, pad)
-    parts = sp.parts(rows, model, frame, combat)
+    parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
     if parts.facing is not None:
         for item_type in armour:
             if item_type in ARMOUR:
-                draw_armour(out, model, parts, item_type, pad)
+                draw_armour(out, model, parts, item_type, pad, own)
     if parts.facing is not None and model != sp.KREEN:
         if "boots" in weapons:
             draw_boots(out, parts, weapons["boots"][0], pad)
         if "belt" in weapons:
-            draw_belt(out, parts, weapons["belt"][0], pad)
+            draw_belt(out, parts, weapons["belt"][0], pad, own.cloak if own is not None else frozenset())
     if "cloak" in weapons and parts.facing is not None and model != sp.KREEN:
         kind = weapons["cloak"][0]
         if model == CLOAK_MODEL:  # (her own cloak, in the cloak's colours: option 2)
             shades = CLOAK_COLOURS.get(kind, CLOAK_COLOURS[65])
+            greens = own.cloak if own is not None and own.cloak else CLOAK_GREENS
+            skip = own.not_cloak if own is not None else frozenset()
             if shades is not None:
-                ramp = sorted(CLOAK_GREENS, key=_cloak_shade)
+                ramp = sorted(greens, key=_cloak_shade)
+                green = sorted(CLOAK_GREENS, key=_cloak_shade)
                 for y, row in enumerate(out):
                     for x, p in enumerate(row):
-                        if p in CLOAK_GREENS:
+                        if p in greens and (x - pad, y - pad) not in skip:
                             t = ramp.index(p) / max(1, len(ramp) - 1)
+                            if own is not None and own.back is not None:  # (shaded as her green was)
+                                sy_, sx_ = y - pad, own.back(x - pad, y - pad)
+                                q = own.source[sy_][sx_] if 0 <= sy_ < len(own.source) and 0 <= sx_ < len(own.source[sy_]) else None
+                                if q in CLOAK_GREENS:
+                                    t = green.index(q) / max(1, len(green) - 1)
                             row[x] = shades[min(len(shades) - 1, max(1, int(t * (len(shades) - 1) + 0.5)))]
+        elif cloak is not None and own is not None:  # (fitted to the source, carried over)
+            src = padded(own.source, pad)
+            before = [list(r) for r in src]
+            draw_cloak(src, [list(r) for r in src], model, own.source_parts, kind, pad, cloak)
+            for y, row in enumerate(src):
+                for x, p in enumerate(row):
+                    if p == before[y][x]:
+                        continue
+                    sx, sy = x - pad, y - pad
+                    for nx in range(own.at(sx, sy), own.at(sx + 1, sy)) or (own.at(sx, sy),):
+                        if 0 <= nx + pad < len(out[y]):
+                            out[y][nx + pad] = p
         elif cloak is not None:
             draw_cloak(out, [list(r) for r in out], model, parts, kind, pad, cloak)
     if "helm" in weapons and parts.facing is not None and model != sp.KREEN:
@@ -795,7 +831,11 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         elif shape == SHIELD:
             behind = g[1] or parts.facing == sp.BACK  # (from behind: held in front of the body)
             if pose and hand == "left":
-                spot = fight_shield(rows, model, frame, parts, hands.get("right"))
+                if own is not None:  # (by the game's frame's wristbands)
+                    spot = fight_shield(own.source, model, frame, own.source_parts, hands.get("right"))
+                    spot = spot and (own.at(spot[0], spot[1]), spot[1], spot[2])
+                else:
+                    spot = fight_shield(rows, model, frame, parts, hands.get("right"))
                 if spot is None:
                     continue
                 hx, hy, hidden = spot
@@ -884,11 +924,12 @@ def _pattern(pattern: str, x: int, y: int, shade: int, top: int) -> int:
     return shade
 
 
-def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int) -> None:
-    """One piece of armour: the model's clothing in its part of the (padded) picture ROWS
-    recoloured into the armour's shades."""
+def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int, own: Optional[Own] = None) -> None:
+    """One piece of armour: the model's clothing (OWN's, a figure of its own) in its part of the
+    (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak)."""
     piece, shades, pattern = ARMOUR[item_type]
-    clothes = CLOTHES.get(model, ())
+    clothes = own.clothes if own is not None and own.clothes else CLOTHES.get(model, ())
+    cloak = own.cloak if own is not None else frozenset()
     if not clothes or parts.waist is None:
         return
     rank = {c: i / max(1, len(clothes) - 1) for i, c in enumerate(clothes)}
@@ -898,12 +939,16 @@ def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: in
     hands = list(parts.hands.values())
     for y, row in enumerate(unpadded):
         for x, p in enumerate(row):
-            if p not in rank or (x, y) in keep_out:
+            if p not in rank or (x, y) in keep_out or (own is not None and own.worn is not None and (x, y) not in own.worn):
                 continue
             if p == 254 and any(not (0 <= y + dy < len(unpadded) and 0 <= x + dx < len(row))
                                 or unpadded[y + dy][x + dx] is None
                                 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
                 continue  # (black at the edge is the outline, not clothing)
+            if p == 254 and cloak and sum(0 <= y + dy < len(unpadded) and 0 <= x + dx < len(row)
+                                          and unpadded[y + dy][x + dx] in cloak
+                                          for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))) >= 2:
+                continue  # (a fold of the figure's own cloak)
             by_hand = any(abs(x - hx) <= 2 and hy - 4 <= y <= hy + 1 for hx, hy in hands)
             part = ARMOUR_ARMS if by_hand else (ARMOUR_CHEST if y <= parts.waist else ARMOUR_LEGS)
             if part != piece:

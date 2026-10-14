@@ -26,24 +26,26 @@ screens gain THAC0, saves, thief skills and spell slots, and the Look box tells
 you what can hurt a monster ([In the
 game](darksun-companion/README.md#in-the-game)).
 
-It brings the rules closer to AD&D: weapon specialization and mastery, kits
-(three for each class), class restrictions, AD&D's class tables (experience,
-priests' THAC0, spell slots), INT's limits on learning spells, thief skills
-from the Player's Handbook, saving throws as the books have them, the party
-leader's CHA at shops, scores and hit points kept as rolled, multiclass hit
-points as the books have them, and levels up to 10 ([Rule
-changes](darksun-companion/README.md#rule-changes)). Thieves can hide in
-shadows to backstab, and pick pockets
-([Picking pockets](darksun-companion/README.md#picking-pockets)).
+It brings the rules closer to AD&D: class restrictions, AD&D's class tables
+(experience, priests' THAC0, spell slots), INT's limits on learning spells,
+saving throws as the books have them, scores and hit points kept as rolled,
+and multiclass hit points as the books have them ([Rule
+changes](darksun-companion/README.md#rule-changes)). It gives more ways to build a character: weapon
+specialization and mastery, kits (three for each class), levels up to 10,
+and STORE and RECALL for a creation roll ([More character
+customization](darksun-companion/README.md#more-character-customization)). And it expands play:
+thieves with AD&D's skills hide in shadows to backstab and pick pockets, and
+the party leader's CHA lowers shop prices ([Expanded
+features](darksun-companion/README.md#expanded-features)).
 
 It adds to Athas: new weapons in every material, magic items with stories of
 their own (robes and bracers among them, for those who wear no armour), three
 wizard spells ([Cat's Grace, Erdlu Claw and
 Fogbolt](darksun-companion/README.md#new-wizard-spells)), Kalzith (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
-vulture ([New content](darksun-companion/README.md#new-content)). Graphical
-additions show the weapons and armour the party wears, have characters cast
-shadows, and kick up dirt as they walk ([On the
-screen](darksun-companion/README.md#on-the-screen)).
+vulture ([New content](darksun-companion/README.md#new-content)). On the
+map, the party wears its weapons and armour, figures cast shadows and kick up
+dust, and elves and half-elves have a look of their own
+([Graphics](darksun-companion/README.md#graphics)).
 
 Quality of life changes: choosing an enemy with Tab and attacking it with Enter,
 scrolling the map by dragging with the mouse wheel

@@ -432,50 +432,6 @@ class UseItemTests(unittest.TestCase):
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
-class PickKeyTests(unittest.TestCase):
-    """PROBE_PICK, where the conversation window passes on a key it doesn't know: P asks the
-    Ledger to pick a pocket only with that switched on too (bit 1), not for the tools alone."""
-    JUMP = 0x7DD70 - 0x7D9FF
-
-    def setUp(self):
-        from dscompanion.gamepatch import VEC_PICK
-        image = load_image()
-        self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
-        mu.mem_map(0, 0x100000)
-        mu.mem_write(TSR * 16, image)
-        self.hdr = TSR * 16 + image.find(HDR_SIG)
-        handler = image.find(bytes.fromhex("fb66600689e3368147"))  # sti, pushad, push es, mov bx,sp, add [ss:bx+..]
-        self.assertGreater(handler, 0)
-        mu.mem_write(VEC_PICK * 4, struct.pack("<HH", handler, TSR))
-        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
-
-        def companion(uc, access, address, size, value, _):  # answers at once, with nothing to show
-            uc.mem_write(self.hdr + 174, struct.pack("<H", value))
-        mu.hook_add(UC_HOOK_MEM_WRITE, companion, begin=self.hdr + 172, end=self.hdr + 173)
-        mu.mem_write(TSR * 16 + struct.unpack("<H", mu.mem_read(self.hdr + 176, 2))[0], b"\0")
-
-    def press(self, key, on):
-        mu = self.mu
-        mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, 0xFC, 0x90)))
-        mu.mem_write(self.hdr + 178, struct.pack("<H", on))
-        mu.mem_write(SS * 16 + BP - 0x0C, struct.pack("<H", key))
-        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
-            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
-        before = struct.unpack("<H", mu.mem_read(self.hdr + 172, 2))[0]
-        mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x602 + self.JUMP, count=200000)
-        self.assertEqual(mu.reg_read(r.UC_X86_REG_IP), 0x602 + self.JUMP)
-        return struct.unpack("<H", mu.mem_read(self.hdr + 172, 2))[0] != before
-
-    def test_p_only_with_its_switch(self):
-        P = 0x1950
-        self.assertFalse(self.press(P, 0))
-        self.assertFalse(self.press(P, 1))  # (the tools only)
-        self.assertTrue(self.press(P, 3))
-        self.assertTrue(self.press(0x1970, 3))  # (p too)
-        self.assertFalse(self.press(0x1E41, 3))  # (another key)
-
-
-@unittest.skipIf(Uc is None, "unicorn is not installed")
 class BeltTests(unittest.TestCase):
     """PROBE_BELT, at the end of the game's thief skill routine (where "mov ax,si" was): a thief
     wearing a belt gets 5 more to pick pockets and open locks, with SKILLS_ON's belt bit."""

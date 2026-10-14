@@ -116,6 +116,60 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertEqual(self.ready(game.RULE_RESTRICT, new=False)[0], [])
 
 
+class CillaFigureTests(unittest.TestCase):
+    """Cilla, an elf, drawn with the elf woman's figure, not the half-elf woman's."""
+
+    def record(self, figure, name=b"Cilla"):
+        rec = bytearray(159)
+        rec[0x32:0x32 + len(name) + 1] = name + b"\0"
+        rec[dp.RDFF_FIGURE:dp.RDFF_FIGURE + 2] = figure.to_bytes(2, "little")
+        return bytes(rec)
+
+    def test_in_the_objects_file(self):
+        game_ = {("RDFF", dp.CILLA_OBJECT): self.record(dp.HALF_ELF_WOMAN),
+                 ("OJFF", dp.CILLA_OBJECT): bytes(12) + (2099).to_bytes(2, "little") + bytes(2),
+                 ("OJFF", 305): bytes(12) + (2059).to_bytes(2, "little") + bytes(2)}
+        copy = {**game_, ("OJFF", 305): bytes(12) + (2460).to_bytes(2, "little") + bytes(2)}
+        out = dp.figure_chunks(game_, copy)
+        self.assertEqual(out[("RDFF", dp.CILLA_OBJECT)][dp.RDFF_FIGURE], dp.ELF_WOMAN)
+        self.assertEqual(out[("OJFF", dp.CILLA_OBJECT)][12:14], (2059).to_bytes(2, "little"))  # (the game's picture)
+        self.assertEqual(dp.figure_chunks({("RDFF", dp.CILLA_OBJECT): self.record(dp.ELF_WOMAN)}), {})
+        self.assertEqual(dp.figure_chunks({("RDFF", dp.CILLA_OBJECT): self.record(7, b"Other")}), {})
+        self.assertEqual(dp.figure_chunks({}), {})
+
+    def test_in_a_running_game(self):
+        class Guest:
+            def __init__(self):
+                self.mem = bytearray(0x40000)
+
+            def read(self, at, n):
+                return bytes(self.mem[at:at + n])
+
+            def write(self, at, data):
+                self.mem[at:at + len(data)] = data
+
+        class Gd(FakeGame):
+            ds = 0x1000
+
+            def __init__(self, party):
+                super().__init__(party)
+                self.guest = Guest()
+                self.guest.write(self.ds * 16 + game.CREATURES_PTR, (0).to_bytes(2, "little") + (0x2000).to_bytes(2, "little"))
+                self.base = 0x2000 * 16
+                for m in range(len(party)):
+                    self.guest.write(self.base + m * game.CREATURE_SIZE + dp.CREATURE_FIGURE, (dp.HALF_ELF_WOMAN).to_bytes(2, "little"))
+
+            def creature(self, member):
+                return self.guest.read(self.base + member * game.CREATURE_SIZE, game.CREATURE_SIZE)
+
+        gd = Gd(DEFAULT)
+        cilla = list(dp.PARTY).index("Cilla")
+        self.assertTrue(dp.elf_figure(gd))
+        self.assertEqual(gd.creature(cilla)[dp.CREATURE_FIGURE], dp.ELF_WOMAN)
+        self.assertEqual(gd.creature(0)[dp.CREATURE_FIGURE], dp.HALF_ELF_WOMAN)  # (only hers)
+        self.assertEqual(dp.elf_figure(gd), [])  # (once)
+
+
 class SpellZeroTests(unittest.TestCase):
     def test_armor_is_a_spell(self):
         """Spell 0 (Armor) is one of the game's: named, levelled and listed."""

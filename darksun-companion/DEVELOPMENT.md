@@ -357,52 +357,6 @@ start (offset 1, its one entry in the game's table of entry points), no words
 and no question. It is replaced only if it is the dragon's (its
 `" word on page "` line).
 
-### Weapon specialization
-
-([In the README](README.md#weapon-specialization).)
-
-How: the kinds are kept in four bytes of each character's own record that the
-game never uses (+14h to +17h), so saves and the saved-characters roster keep
-them. The helper adds the bonuses and attacks where the game makes a weapon
-attack (`INT D1h`, `INT D0h`), on the DAM lines (`INT CFh`, `INT CEh`), runs
-the creation pages (`INT C8h` to `INT C3h`, windows 3014 to 3019 in the
-Ledger's copy of `RESOURCE.GFF`), calls the game's psionic pop-up in weapon
-mode at a level gained (`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up,
-window 3021), and prints the Effects screen's lines (`INT BBh`).
-
-The pop-up in weapon mode is the psionicists' window (17501) made bigger:
-window 3021 is 214 by 156 (its marble, BMP 3022, the psionicists' 17001 carried
-on to that size), with a slot for each kind, six to a row: a button 0x860 +
-kind whose picture (ICON, same number) is the game's inventory picture of a
-weapon of that kind (`weaponpages.PICTURES`, objects in `SEGOBJEX.GFF`; the
-polearm's made smaller) on a slot, in three frames as the game uses them: as
-it is, lit (the pointer on a button in use), and out of use (the weapon a grey
-shape). The game puts the window where it would centre the psionicists'
-(`push 2B0050h` before `PROBE_PK_WIN`), so `PROBE_PK_WIN` gives it the place
-that centres 214 by 156; `PROBE_PK_TITLE` puts the two lines under the slots,
-centred in the wider window (the routine's width and y, pushed as bytes after
-it). Naming the slot under the pointer: a button in use takes the pointer
-itself (its lit frame), so no cell handler of the window (530:43h, as the
-powers' cells have) ever hears of it; instead `PK_HOVER` (a site of `INT 98h`,
-new: `or ax,ax / jnz 85F5Dh`, 4 bytes at 85F44h, in the pop-up's event loop
-85F2Ch, the jump done by the probe) reads the pointer each time round
-(`INT 33h` function 3), finds the slot from the window's place and the slots'
-(`PK_SLOTS_X`, `PK_PITCH`; `test_picker_matches_dsclog` keeps them
-weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
-`PK_WORD` puts the kind in the sheet's first empty slot for a moment and asks
-`SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the kind's name
-with the routine the powers' handler names a power with (85CC9h, which rubs
-out the lines it drew before), or the title again off the slots.
-A missile weapon's attacks a round are its item type's (+0Bh, in halves: a
-bow 4, the rest 2), not the character's (sheet +2Ah) as in melee; `INT D1h`
-raises them to a specialist's (`MISSILE_RATE`, by the fighter, gladiator or
-ranger level; a grand master one more; a kind not chosen, from 7th level, a
-specialist's a band lower), and the Ledger's Characters tab does the same
-(`specialize.missile_attacks`).
-Every ranger's expertise with the bow is in `SPEC_OF_SHEET` (`specialize.skill`),
-not in its chosen kinds, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
-the bow out of a ranger's choices.
-
 ### Class restrictions
 
 ([In the README](README.md#class-restrictions).)
@@ -416,7 +370,7 @@ classes' limits (`SPECIALIZED_BACK`, `restrict.specialized_back`): a dual-classe
 human's chosen weapon specs once its new class's level has passed the warrior
 class's, and a ranger's bow (every ranger has expertise with it, but never
 chooses it): a multiclass ranger's always, a human's while a ranger or once past.
-`KIT_FORBIDS` likewise passes a weapon of a kind in the sheet's `SPEC_SLOTS`
+`KIT_FORBIDS` likewise passes a weapon of a type in the sheet's `SPEC_SLOTS`
 (`KF_CHOSEN`) while the specs count (`SPECS_AWAKE`, `restrict.specs_awake`: one
 class; a human's warrior class now or passed; a Battle Mage's kit awake), but
 for the off hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
@@ -605,30 +559,6 @@ alone; the routine keeps only SI, DI and BP, so the probe keeps the rest)
 and adds `ADND_SLOTS`; anyone else, or with the rule off, the routine as it
 was.
 
-### The leader's CHA at shops
-
-([In the README](README.md#the-leaders-cha-at-shops); `prices.py`.)
-
-The shop (overlay at 83000h) reads an item's price, the word at its `+6`,
-straight from the item: `mov cx,es:[bx+6]` to charge it (8384Bh: times the
-count for a stack, against the party's money, the dword at 2C0:357h; NO
-DEAL!, DS:2EE7h, if short) and to show it under the item (83BB1h, as
-`%d$`), and `movsx eax,word es:[bx+6]` where the list colours an item the party
-can't afford (8310Ch). Selling (83CCAh) is left alone; 9999 there is "I
-COULDN'T SELL THAT".
-
-How (`RULE_HI_CHA_PRICES`, the second rules word's 16: `game.RULE_CHA_PRICES`):
-`PROBE_PRICE` (`INT 8Dh`) at the first two and `PROBE_PRICE_EAX` (`INT 8Ch`)
-at the third read the price and pass it through `CHA_PRICE`: the leader is
-the party member at `DS:4979h` (whose turn it is; outside a fight, the
-leader), its CHA its creature record's `+27h`; the price times (100 − 5 for
-each point of CHA past 15, at most 25) / 100, never below 1, and 9999 kept.
-
-Checked in the game: with a CHA 20 leader, Kalzith's scrolls showed 2,250,
-4,500 and 6,750 (25% off 3,000, 6,000 and 9,000) and each was charged that.
-A bought item stays on the pointer until it is put down (the game's held item,
-`DS:17A0h`), and the shop takes no other click meanwhile.
-
 ### Spells saved against with the spell save
 
 ([In the README](README.md#spells-saved-against-with-the-spell-save).)
@@ -675,6 +605,163 @@ through in any armour. A Twin-blade is passed over in `PROBE_TWO` only in
 light armour. `GameData.two_weapons` (`heavy_armour_worn`) says the same in
 the log and the party view.
 
+### Items saving against acid
+
+([In the README](README.md#items-saving-against-acid).)
+
+How: where the game works out the number a weapon's d20 must reach
+(`INT D6h`), where it skips the roll for armour with no magical power
+(`INT D5h`) and where it works out armour's number (`INT D4h`), the helper
+gives the easier of the two and records the check for the dice log.
+
+### Half-giants' two-handed weapons
+
+([In the README](README.md#half-giants-two-handed-weapons).)
+
+How: the inventory screen checks a weapon type's two-handed bit (+0Fh, 40h)
+twice when something goes into a hand: the other hand's ("Two handed weapon in
+use") and the one going in ("Need two free hands"). The helper (`INT E3h`)
+answers both for the character on show, "not two-handed" for a half-giant.
+
+### Helms
+
+([In the README](README.md#helms).)
+
+How: the helper sets the helm types' AC as the game's AC routine reads it
+(`INT F8h`, the Ring +1's place). (An earlier rule gave boots a move in a
+fight; it is gone, and the boots' names it changed go back to the game's.)
+
+### Weapon specialization
+
+([In the README](README.md#weapon-specialization).)
+
+How: the chosen weapon types are kept in four bytes of each character's own record that the
+game never uses (+14h to +17h), so saves and the saved-characters roster keep
+them. The helper adds the bonuses and attacks where the game makes a weapon
+attack (`INT D1h`, `INT D0h`), on the DAM lines (`INT CFh`, `INT CEh`), runs
+the creation pages (`INT C8h` to `INT C3h`, windows 3014 to 3019 in the
+Ledger's copy of `RESOURCE.GFF`), calls the game's psionic pop-up in weapon
+mode at a level gained (`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up,
+window 3021), and prints the Effects screen's lines (`INT BBh`).
+
+The pop-up in weapon mode is the psionicists' window (17501) made bigger:
+window 3021 is 214 by 156 (its marble, BMP 3022, the psionicists' 17001 carried
+on to that size), with a slot for each weapon type, six to a row: a button 0x860 +
+type whose picture (ICON, same number) is the game's inventory picture of a
+weapon of that type (`weaponpages.PICTURES`, objects in `SEGOBJEX.GFF`; the
+polearm's made smaller) on a slot, in three frames as the game uses them: as
+it is, lit (the pointer on a button in use), and out of use (the weapon a grey
+shape). The game puts the window where it would centre the psionicists'
+(`push 2B0050h` before `PROBE_PK_WIN`), so `PROBE_PK_WIN` gives it the place
+that centres 214 by 156; `PROBE_PK_TITLE` puts the two lines under the slots,
+centred in the wider window (the routine's width and y, pushed as bytes after
+it). Naming the slot under the pointer: a button in use takes the pointer
+itself (its lit frame), so no cell handler of the window (530:43h, as the
+powers' cells have) ever hears of it; instead `PK_HOVER` (a site of `INT 98h`,
+new: `or ax,ax / jnz 85F5Dh`, 4 bytes at 85F44h, in the pop-up's event loop
+85F2Ch, the jump done by the probe) reads the pointer each time round
+(`INT 33h` function 3), finds the slot from the window's place and the slots'
+(`PK_SLOTS_X`, `PK_PITCH`; `test_picker_matches_dsclog` keeps them
+weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
+`PK_WORD` puts the type in the sheet's first empty slot for a moment and asks
+`SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name
+with the routine the powers' handler names a power with (85CC9h, which rubs
+out the lines it drew before), or the title again off the slots.
+A missile weapon's attacks a round are its item type's (+0Bh, in halves: a
+bow 4, the rest 2), not the character's (sheet +2Ah) as in melee; `INT D1h`
+raises them to a specialist's (`MISSILE_RATE`, by the fighter, gladiator or
+ranger level; a grand master one more; a weapon type not chosen, from 7th level, a
+specialist's a band lower), and the Ledger's Characters tab does the same
+(`specialize.missile_attacks`).
+Every ranger's expertise with the bow is in `SPEC_OF_SHEET` (`specialize.skill`),
+not in its chosen weapon types, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
+the bow out of a ranger's choices.
+
+### Levels up to 10
+
+([In the README](README.md#levels-up-to-10).)
+
+How: the game holds a class level against 9 in two places, where a character
+goes up a level and where View Character shows the XP for the next one; the
+helper (`INT E7h`) holds it against 10 instead while the rule is on.
+
+### STORE and RECALL
+
+([In the README](README.md#store-and-recall-on-the-creation-screen).)
+
+The buttons: the creation screen is window 3011 in `RESOURCE.GFF`, its buttons
+the die (7DAh), EXIT (80Ah), DONE (7D0h) and the rest. In the Ledger's copy
+(`dscompanion/rollstore.py`) it has two more, STORE (8A0h) and RECALL (8A1h),
+under the hit points and PSP, after its own items (the name box, an `EBOX`,
+among them). Their pictures are the game's carved stone buttons: a blank cut
+from DELETE's bevel and face, and letters taken from SAVE, LOAD, DROP and
+DELETE (SAVE's and LOAD's letters touch, and are cut where the ink is
+thinnest). No button has a C, so it is drawn in the same three tones as the O
+(`C_SHAPE`). The game's third frame is out of use on some buttons and lit on
+others; these have their first again.
+
+The click: the screen's click routine (its overlay from 65480h) looks the
+button up in a table of its 22 (`mov cx,16h`, 6625Dh). `PROBE_RS_CLICK`
+(`INT 8Ah`) does the `mov` and, for STORE or RECALL, its work, then sends the
+routine on as for a button not its own (to 66377h: nothing more). A roll is
+what the die writes (657BBh): the sheet's hit points, hit points rolled and
+most PSP (`+8`, `+0Ah`, `+0Ch` of DS:119Ch), the creature's hit points, PSP
+and six scores (`+0`, `+2`, `+22h` of DS:11A0h), the least and most hit points
+the classes could roll (DS:4996h), and the die's total (`RL_POOL`). STORE
+keeps those with the sheet's race, sex, classes and kit (`+18h`, `+19h`,
+`+21h` to `+23h`, `+43h`); at each button pressed the probe forgets the
+stored roll if those have changed (`RS_SAME`), so RECALL finds none. RECALL
+then shows them as the game would: the scores through the screen's
+own redraw (the creation overlay's stub, entry BBh, which a score's click
+calls; `RL_SUM` adds the totals), and the rest by running the die's routine
+from where it has rolled the hit points (659D0h, with its stack frame and DI
+1): the hit points shown, the PSP worked out again (65B39h, which rolls
+nothing) and shown, then the AC and damage. The overlay's segment is the
+INT's return.
+
+### The game's own party
+
+([In the README](README.md#the-games-own-party).)
+
+How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307, 308
+and 313 for their figures), a creature record and a sheet each, already Okay
+and with no items; the game gives them their gear and spells as it starts. So
+the Ledger (`dscompanion/defaultparty.py`) changes them in memory while the
+game is new (its first hour, in the arena, as with Thieves' Tools), each
+change once, knowing each by name, race and classes together: their weapon
+kinds in the sheet's spare bytes, Gerakis's club item made a bone gythka in
+its place, Cilla's plain armour given back to the free item list (her chest
+armour is alone in its list, which is left empty, as a new list is), and her
+byte for spell 0 set in the known-spells table, and with kits Cermak's kit
+byte (`+43h`) the Arcanist for his preserver class (place 0; his gladiator
+class, place 1, none). Seen in play: Cilla's USE screen lists ARMOR among her
+1st-level spells and her inventory has no chest armour (AC 5); Gerakis holds
+the gythka and the long sword.
+
+### The leader's CHA at shops
+
+([In the README](README.md#the-leaders-cha-at-shops); `prices.py`.)
+
+The shop (overlay at 83000h) reads an item's price, the word at its `+6`,
+straight from the item: `mov cx,es:[bx+6]` to charge it (8384Bh: times the
+count for a stack, against the party's money, the dword at 2C0:357h; NO
+DEAL!, DS:2EE7h, if short) and to show it under the item (83BB1h, as
+`%d$`), and `movsx eax,word es:[bx+6]` where the list colours an item the party
+can't afford (8310Ch). Selling (83CCAh) is left alone; 9999 there is "I
+COULDN'T SELL THAT".
+
+How (`RULE_HI_CHA_PRICES`, the second rules word's 16: `game.RULE_CHA_PRICES`):
+`PROBE_PRICE` (`INT 8Dh`) at the first two and `PROBE_PRICE_EAX` (`INT 8Ch`)
+at the third read the price and pass it through `CHA_PRICE`: the leader is
+the party member at `DS:4979h` (whose turn it is; outside a fight, the
+leader), its CHA its creature record's `+27h`; the price times (100 − 5 for
+each point of CHA past 15, at most 25) / 100, never below 1, and 9999 kept.
+
+Checked in the game: with a CHA 20 leader, Kalzith's scrolls showed 2,250,
+4,500 and 6,750 (25% off 3,000, 6,000 and 9,000) and each was charged that.
+A bought item stays on the pointer until it is put down (the game's held item,
+`DS:17A0h`), and the shop takes no other click meanwhile.
+
 ### Thief skills from AD&D's table
 
 ([In the README](README.md#thief-skills-from-adds-table).)
@@ -706,38 +793,10 @@ weight 40 or less).
 
 ([In the README](README.md#picking-pockets).)
 
-How: the patched game's conversation window sends a key it doesn't know to
-the helper (`INT FCh`), which has the Ledger roll and move the item, then adds
-the result to the window's text; and the routine that uses the item on the
-pointer on something on the map tells the helper what was used on what
-(`INT FDh`): for the thieving tools on someone, the Ledger does the same, and
-the helper shows the result instead of the game's "nothing happens".
-
-### Levels up to 10
-
-([In the README](README.md#levels-up-to-10).)
-
-How: the game holds a class level against 9 in two places, where a character
-goes up a level and where View Character shows the XP for the next one; the
-helper (`INT E7h`) holds it against 10 instead while the rule is on.
-
-### Items saving against acid
-
-([In the README](README.md#items-saving-against-acid).)
-
-How: where the game works out the number a weapon's d20 must reach
-(`INT D6h`), where it skips the roll for armour with no magical power
-(`INT D5h`) and where it works out armour's number (`INT D4h`), the helper
-gives the easier of the two and records the check for the dice log.
-
-### Half-giants' two-handed weapons
-
-([In the README](README.md#half-giants-two-handed-weapons).)
-
-How: the inventory screen checks a weapon type's two-handed bit (+0Fh, 40h)
-twice when something goes into a hand: the other hand's ("Two handed weapon in
-use") and the one going in ("Need two free hands"). The helper (`INT E3h`)
-answers both for the character on show, "not two-handed" for a half-giant.
+How: the patched game's routine that uses the item on the pointer on
+something on the map tells the helper what was used on what (`INT FDh`). For
+the thieving tools on someone, the Ledger rolls and moves the item, and the
+helper shows the result instead of the game's "nothing happens".
 
 ### New wizard spells
 
@@ -835,33 +894,6 @@ click handler (DSUN.EXE 7F226h and 7F236h, `effects_click_low` and
 of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still
 ends, as stopping it there is how a power is dropped.
 
-### Helms
-
-([In the README](README.md#helms).)
-
-How: the helper sets the helm types' AC as the game's AC routine reads it
-(`INT F8h`, the Ring +1's place). (An earlier rule gave boots a move in a
-fight; it is gone, and the boots' names it changed go back to the game's.)
-
-### The game's own party
-
-([In the README](README.md#the-games-own-party).)
-
-How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307, 308
-and 313 for their figures), a creature record and a sheet each, already Okay
-and with no items; the game gives them their gear and spells as it starts. So
-the Ledger (`dscompanion/defaultparty.py`) changes them in memory while the
-game is new (its first hour, in the arena, as with Thieves' Tools), each
-change once, knowing each by name, race and classes together: their weapon
-kinds in the sheet's spare bytes, Gerakis's club item made a bone gythka in
-its place, Cilla's plain armour given back to the free item list (her chest
-armour is alone in its list, which is left empty, as a new list is), and her
-byte for spell 0 set in the known-spells table, and with kits Cermak's kit
-byte (`+43h`) the Arcanist for his preserver class (place 0; his gladiator
-class, place 1, none). Seen in play: Cilla's USE screen lists ARMOR among her
-1st-level spells and her inventory has no chest armour (AC 5); Gerakis holds
-the gythka and the long sword.
-
 ### New items
 
 ([In the README](README.md#new-items).)
@@ -908,7 +940,7 @@ bit, which none of the game's daggers have; then the bone and obsidian great
 axes, the metal one's of those materials, and a bone dagger, the only dagger a
 water cleric may use) are item types the helper adds
 after the game's 115 each time the game reads its table in (`TYPES_EXTRA`; its
-weapon kinds by type, `kind_of_type`, cover them too); the Ledger's item names (`dscompanion/names.py`) are entries it adds
+weapon types by item type, `kind_of_type`, cover them too); the Ledger's item names (`dscompanion/names.py`) are entries it adds
 after the game's 322 (the game puts the item type's material before the name
 when it shows one); and the icons are objects in the Ledger's copy of
 `SEGOBJEX.GFF` (`dscompanion/icons.py`), which the helper has the game open
@@ -1125,6 +1157,60 @@ table it is drawn from; for a second member of the same figure the Ledger names
 their spare there and empties the slot, and the game loads the picture and
 fills it.
 
+### Elves and half-elves
+
+([In the README](README.md#elves-and-half-elves).)
+
+How: elves (objects 304 and 305) get pointed ears (`dscompanion/figures.py`):
+2 pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their
+place is read from each frame's parts (beside the head, two rows above the
+eyes from the front; at the eyes from behind; behind the face from the side),
+or set by hand for the poses whose parts can't be read (`EAR_PLAN`: lunges,
+the bow, hit, dead). They are drawn after the gear, only on pixels the gear
+left as they were, so a shield or a weapon in front hides them.
+
+Half-elves (objects 306 and 307) name the human pictures, as 300 and 301 do.
+The Ledger's copy of the file gives them figures of their own instead
+(`figures.py`), made each time from the game's pictures:
+
+- **The man** (`HalfElfMan`) is the elf man's figure, a column wider below
+  the neck. Each part of him (hair, jerkin, sleeves, trousers, boots) has its
+  colours spread by brightness over a ramp of the party's palette, so it needs
+  the palette, read from `GPLDATA.GFF`. He also gets dark eyes, a linen V at
+  the neck, a belt with a buckle, hair cut at the nape and small ears.
+- **The woman** (`HalfElfWoman`) is the human woman in her colours
+  (`halfelf.recolour`), a column slimmer below the neck. Her long hair is cut
+  away and put up in a bun, with her neck and cloak drawn where it hung, and
+  she gets the elves' ears. Her fight poses are set by hand (`WOMAN_FIGHTS`).
+
+Gear is drawn on them by what their own colours can't tell `spritegear`
+(`spritegear.Own`, made by `figures.own`):
+
+- the parts of the game's frame they were made from (head, hair, shoulders,
+  hands, feet), moved by the column added or taken out, since their hair and
+  wristbands are no longer in the colours `spriteparts` finds them by;
+- that frame itself: its wristbands place a shield in a fight, and a worn
+  cloak is fitted on it before it is carried over to the man (fitted to him, a
+  column broader, it would swing past his arms);
+- the man's clothes: the ramps of his jerkin, shirt, trousers and boots, and
+  where in each frame he wears them, so armour recolours them there;
+- the woman's purple cloak: a worn cloak recolours it, shaded as the green at
+  the same place in the human woman's frame, but not her purple wristbands,
+  and a belt isn't drawn over it from behind.
+
+If the palette or the pictures they are made from are missing, or making them
+fails, a half-elf is the human figure recoloured (`halfelf.py`), as before. A
+spare is drawn as the figure it stands for.
+
+Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)
+in her record (object 32003's RDFF, its word +22h, the creature's +18h), and
+her object (OJFF 32003) names the human woman's picture. In the Ledger's copy
+of SEGOBJEX she has the elf woman's figure (5) and picture (the game's, which
+the Ledger then swaps for its own as for anyone). In a game begun without the
+copy, the Ledger writes the figure into the running game's creature table, and
+the game draws her as an elf from its next area or load
+(`defaultparty.figure_chunks`, `defaultparty.elf_figure`).
+
 ### Shadows
 
 ([In the README](README.md#shadows).)
@@ -1282,7 +1368,7 @@ No kit is the kit page's first row, and what a new character has.
 ### Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 88 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 84 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -1295,8 +1381,8 @@ conventional memory (570 KB free rather than 632 KB). With GOG's settings
 there is one upper memory block of 63 KB; the helper asks for its resident
 part and the ring (`LOAD_EXTRA`), and `mem` in DOSBox shows 632 KB free and a
 few KB of upper memory left. A change that adds much code should check that
-again: the ring is 88 entries, not 128 (96 until the new spells' code, when
-the game no longer started for lack of memory), and the text buffer 4 KB,
+again: the ring is 84 entries, not 128 (96 until the new spells' code, when
+the game no longer started for lack of memory; 88 until STORE and RECALL), and the text buffer 4 KB,
 not 8, to make that room.
 
 ### The kit's byte
@@ -1358,7 +1444,7 @@ gladiator's four weapon specs make eight. `EF_DRAW` goes over the lines twice
 (`EF_LINES_OF`, each through `EF_LINE`): first counting them (`EF_COUNT`), then
 putting those of the page on the panel (`EF_PUT`). With more than five, a page
 has four and `MORE: CLICK HERE` in the fifth row; a page that starts with a
-weapon kind has its skill's heading again over it (`EF_HEAD`), and a heading
+weapon type has its skill's heading again over it (`EF_HEAD`), and a heading
 that would be a page's last row goes to the next. `PROBE_EF_CLICK` (`INT 97h`,
 new: `mov si,[bp+8]`, 3 bytes at 7EC9Eh) is in the screen's handler for its
 cells (7EC97h, buttons from 2BCDh; the lower panel's from the 21st): the events
@@ -1409,10 +1495,10 @@ in `kitpages.kit_ids`), and emulated tests hold the helper to it:
 | hiding, moving silently | Stalker, Assassin | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
 | the two-weapon penalty | Twin-blade (in light armour: `HEAVY_WORN`); Justifier (in any armour) | `PROBE_TWO`; `RG_TWO` |
 | gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`), whatever the class restrictions |
-| skill with a weapon | Justifier (expertise, the bow's and its chosen kind's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
-| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen kind `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own kinds, whatever its class), `LV_DUE` (a Battle Mage one); the creation panel counts a Battle Mage as a warrior (`WP_CLASSES`, so `WP_IDS` gives the disciplines' window with WEAPON SPEC; `kitpages.panel_windows`) |
-| attacks a round | Battle Mage (its chosen kind: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons-adds-penalties)) |
-| gear the kit allows | Battle Mage (its chosen kind's weapons, with weapon specialization; light armour) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
+| skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
+| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one); the creation panel counts a Battle Mage as a warrior (`WP_CLASSES`, so `WP_IDS` gives the disciplines' window with WEAPON SPEC; `kitpages.panel_windows`) |
+| attacks a round | Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons-adds-penalties)) |
+| gear the kit allows | Battle Mage (its chosen weapon type's weapons, with weapon specialization; light armour) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
 | hit die | Battle Mage (d6), Mind Warrior (d8), Arcanist (d3) | a level's die: `PROBE_HIT_DIE` (`INT A5h`, new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]` the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die` |
 | max PSP | Mind Warrior (a tenth fewer, rounded down) | at a level up: `PROBE_MAX_PSP` (`INT A4h`, new: `les bx,[bp-8]`, 8748Fh, the sum in SI before it goes in the sheet, in the routine at 873B2h); on the creation screen: `PROBE_CR_PSP` (`INT A2h`, new: the end, `pop bp / retf`, of 65B39h, which sums the PSP into the sheet being made's `+0Ch`; it drops the interrupt frame to end the routine itself, putting the flags back first, as a score's click reaches it with nothing after to set IF again). `kits.max_psp` |
 

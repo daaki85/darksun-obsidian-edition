@@ -61,8 +61,8 @@ TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT
 # character creation: each ability's 4d4 rolled (counted), and the last four of each, STR to CHA (DSCLOG's
 # RL_TRY: the die tumbles faster than the ring is read)
 TSR_TRIES_SEQ, TSR_TRIES = 280, 282
-TSR_PICK_SEQ, TSR_PICK_REPLY, TSR_PICK_OFF, TSR_PICK_ON, PICK_SIZE = 172, 174, 176, 178, 240
-PICK_TOOLS, PICK_KEY = 1, 2  # (TSR_PICK_ON: the thieving tools on someone; P in a conversation too)
+TSR_PICK_OFF, TSR_PICK_ON, PICK_SIZE = 176, 178, 240
+PICK_TOOLS = 1  # (TSR_PICK_ON: the thieving tools on someone)
 TSR_USE_SEQ, TSR_USE_REPLY, TSR_USE_WHO, TSR_USE_TAKEN, TSR_USE_ITEM = 180, 182, 184, 186, 188
 TSR_SWAP_ON, TSR_SWAP_SEQ, TSR_SWAP_OFF, SWAP_SIZE, SWAP_TEXT_SIZE = 190, 192, 194, 64, 240
 RULE_HELMS = game.RULE_HELMS
@@ -348,7 +348,6 @@ class DiceLog:
         self.monster_info = True  # monsters' defences in the game's Look box (set_monster_info)
         self.arena_ring = True  # put the Ring +1 on the Tied-up Prisoner's body in the arena (ring.py)
         self.pickpockets = True  # the thieving tools pick a pocket (pickpocket.py, tools.py)
-        self.pick_key = False  # ... and so does P in a conversation
         self.show_gear = True  # the party's map sprites dressed in what they wear (sprites.py)
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
@@ -476,14 +475,11 @@ class DiceLog:
         if self.tsr_hdr is not None:
             self.guest.write(self.tsr_hdr + TSR_POPUPS, struct.pack("<H", int(on)))
 
-    def set_pickpockets(self, on: bool, key: Optional[bool] = None) -> None:
-        """Picking pockets (ON): the thieving tools used on someone, and with KEY, P in a
-        conversation, as the leader trying the pocket of the person talked to."""
+    def set_pickpockets(self, on: bool) -> None:
+        """Picking pockets (ON): the thieving tools used on someone."""
         self.pickpockets = on
-        if key is not None:
-            self.pick_key = key
         if self.tsr_hdr is not None:
-            flags = (PICK_TOOLS | (PICK_KEY if self.pick_key else 0)) if on else 0
+            flags = PICK_TOOLS if on else 0
             self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", flags))
 
     def load_picked(self, entries) -> None:
@@ -596,29 +592,6 @@ class DiceLog:
             self._remember_pick(result.key)
         return result.log or [result.text]
 
-    def _answer_pick(self) -> List[str]:
-        """P was pressed in a conversation: try the pocket, and hand DSCLOG what came of it."""
-        if self.tsr_hdr is None:
-            return []
-        seq = self.guest.read(self.tsr_hdr + TSR_PICK_SEQ, 2)
-        if seq == self.guest.read(self.tsr_hdr + TSR_PICK_REPLY, 2):
-            return []
-        try:
-            result = pickpocket.attempt(self.game, self.picked)
-        except (struct.error, IndexError, ValueError):
-            result = None
-        text = result.text if result else ""
-        offset = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_PICK_OFF, 2))[0]
-        base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
-        self.guest.write(base + offset, text.encode("cp437", "replace")[:PICK_SIZE - 1] + b"\0")
-        self._write_xp(result)
-        self.guest.write(self.tsr_hdr + TSR_PICK_REPLY, seq)
-        if not result:
-            return []
-        if result.key:
-            self._remember_pick(result.key)
-        return result.log or [result.text]
-
     def set_monster_info(self, on: bool) -> None:
         """Have the game's Look box (in a fight) say what hurts a monster, and then show all of it."""
         self.monster_info = on
@@ -632,7 +605,6 @@ class DiceLog:
         self.monster_info = bool(settings.get("monster_info", True))
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
         self.pickpockets = bool(settings.get("pickpockets", True))
-        self.pick_key = bool(settings.get("pick_key", False))
         self.show_gear = bool(settings.get("show_gear", True))
         self.show_shadows = bool(settings.get("shadows", True))
         self.scroll_map = bool(settings.get("scroll_map", True))
@@ -993,7 +965,6 @@ class DiceLog:
         self._answer_turn()  # after the entries: they hold the turn's last attack
         self._forget_undone_picks()
         self._answer_stats()
-        out += self._answer_pick()
         out += self._answer_use()
         out += self._answer_look()
         changes = self.hp_changes(now) + self.psp_changes()
@@ -1058,6 +1029,7 @@ class DiceLog:
             if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
                 out += weaponchoice.kit_gear(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done)  # (the game's own party, once)
+            out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
             if self.stealth_gear:
                 stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)
