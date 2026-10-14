@@ -46,6 +46,11 @@ have the detail.
   lines below the picture: the damage line (Thornwall's, Linebreaker's, the
   game's own bone polearm's) fell outside. The Ledger now writes the polearms'
   picture at 22 pixels.
+- **The Trustee stuck at "I have to get back to work".** The game makes him
+  busy after a talk until his rounds of the pens bring him back to their first
+  corner; when his rounds stall (he can't reach his next corner), he stays busy
+  for good and never talks again. In the Ledger's copy of his script he says
+  the line once and is free to talk the next time.
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 

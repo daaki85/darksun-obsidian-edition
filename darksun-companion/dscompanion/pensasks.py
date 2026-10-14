@@ -214,9 +214,45 @@ def with_asks(script: bytes, field_types: bytes, first: str, asks: Sequence[Ask]
     return bytes(out)
 
 
+# The Trustee is busy (the game's flag BUSY: "I'd love to talk more, but I have to get back to
+# work") from a talk until his rounds of the pens (script 8, his walk from corner to corner) come
+# back to their first corner, which clears it. Rounds that stop (he can't reach his next corner)
+# leave him busy for good, his talk and his key with it. With the Ledger he says it once and is
+# free to talk the next time: the line jumps to a piece clearing BUSY, then saying it.
+BUSY = 51
+
+
+def busy_once(script: bytes, field_types: bytes, original: Optional[bytes] = None) -> bytes:
+    """SCRIPT (the Trustee's) with his busy line clearing BUSY; unchanged if it isn't there as
+    the game has it (or already done). ORIGINAL: the game's script, as for with_asks."""
+    original = original or script
+    ops = gpl.decode(original, field_types)
+    busy = ("expr", [("var", FLAG, BUSY), "==", ("n", 1)])
+    i = next((i for i, o in enumerate(ops[:-3]) if o.code == TEST and o.args[0] == busy
+              and ops[i + 1].code == 0x3E and ops[i + 2].code == 0x4F), None)
+    if i is None:
+        return script
+    line, after = ops[i + 2], ops[i + 3]
+    if script[line.at:after.at] != original[line.at:after.at]:
+        return script  # (done, or something else put over it)
+    s = _Script()
+    s.label("busy")
+    s.flag(BUSY, 0)
+    s.op(GOTO, ("n", after.at))
+    added = bytearray(s.bytes(base=len(script), end=False))
+    at = len(script) + len(added) - len(gpl.encode_op((GOTO, [("n", after.at)])))
+    added[at - len(script):at - len(script)] = original[line.at:after.at]  # (the line, then on)
+    out = bytearray(script) + added
+    if len(out) > LONGEST:
+        return script
+    jump = gpl.encode_op((GOTO, [("n", len(script))]))
+    out[line.at:line.at + len(jump)] = jump
+    return bytes(out)
+
+
 def script_chunks(chunks, field_types: bytes, vulture: bool = True) -> dict:
     """For the Ledger's copy of GPLDATA: Dinos's and the Trustee's talks with the questions (the
-    vulture's only with the vulture quest on)."""
+    vulture's only with the vulture quest on), and the Trustee's busy line said once."""
     out = {}
     for number, first, asks, before in MENUS:
         if VULTURE in asks and not vulture:
@@ -227,4 +263,10 @@ def script_chunks(chunks, field_types: bytes, vulture: bool = True) -> dict:
             changed = with_asks(script, field_types, first, asks, before, chunks[key])
             if changed != script:
                 out[key] = changed
+    key = ("GPL ", TRUSTEE_SCRIPT)
+    if key in chunks:
+        script = out.get(key, chunks[key])
+        changed = busy_once(script, field_types, chunks[key])
+        if changed != script:
+            out[key] = changed
     return out

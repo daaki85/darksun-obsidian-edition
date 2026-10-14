@@ -203,5 +203,50 @@ class PensAsksTests(unittest.TestCase):
         self.assertEqual(out.get(("GPL ", number), first), first)
 
 
+def _busy_like() -> bytes:
+    """The Trustee's greeting as the game has it: busy (flag 51), the line and the end; else on."""
+    s = _Script()
+    s.op(0x18, ("expr", [("var", 0x8D, pensasks.BUSY), "==", ("n", 1)]))
+    s.op(0x3E, ("label", "else"))
+    s.op(0x4F, ("n", 115), ("str", "I'd love to talk more, but I have to get back to work -- they "))
+    s.op(0x4F, ("n", 115), ("str", "don't feed you for nothin' around here! "))
+    s.op(0x31)
+    s.label("else")
+    s.op(0x3F, ("label", "end"))
+    s.op(0x4F, ("n", 115), ("str", "So you're the new gladiators. "))
+    s.label("end")
+    s.op(0x67)
+    s.op(0x15)
+    return s.bytes(end=False)
+
+
+class BusyOnceTests(unittest.TestCase):
+
+    def test_line_clears_busy(self):
+        """The busy line jumps to a piece clearing the flag, saying it and going back on; every
+        other byte is the game's."""
+        script = _busy_like()
+        ops = gpl.decode(script, b"")
+        line, after = ops[2], ops[3]
+        out = pensasks.busy_once(script, b"")
+        jump = gpl.encode_op((0x64, [("n", len(script))]))
+        self.assertEqual(out[line.at:line.at + len(jump)], jump)
+        self.assertEqual(out[:line.at], script[:line.at])
+        self.assertEqual(out[line.at + len(jump):len(script)], script[line.at + len(jump):])
+        added = [(o.code, o.args) for o in gpl.decode(out[len(script):], b"")]
+        self.assertEqual(added, [(0x16, [("n", 0), ("var", 13, pensasks.BUSY)]),
+                                 (line.code, line.args), (0x64, [("n", after.at)])])
+
+    def test_once_and_elsewhere(self):
+        script = _busy_like()
+        out = pensasks.busy_once(script, b"")
+        self.assertEqual(pensasks.busy_once(out, b"", script), out)  # (done once)
+        self.assertEqual(pensasks.busy_once(_game_like(), b""), _game_like())  # (no busy line)
+
+    def test_script_chunks(self):
+        chunks = {("GPL ", pensasks.TRUSTEE_SCRIPT): _busy_like()}
+        self.assertIn(("GPL ", pensasks.TRUSTEE_SCRIPT), pensasks.script_chunks(chunks, b""))
+
+
 if __name__ == "__main__":
     unittest.main()
