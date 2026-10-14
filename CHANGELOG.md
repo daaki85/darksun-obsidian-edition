@@ -14,7 +14,9 @@ have the detail.
 - **The combat log in the game is on by default** (it was off until
   ticked): in a fight its panel shows the rolls over the map's lower right;
   **L** or its **-** button folds it to one line, and the Options tab's
-  switch turns it off. A setting already saved keeps its choice.
+  switch turns it off. Settings saved by an earlier version have it turned
+  on once (`settings_version` 2 in `settings.json`); after that the player's
+  choice stands.
 
 ## Pull request #44 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/44))
 

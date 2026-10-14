@@ -80,6 +80,28 @@ class LaunchTests(unittest.TestCase):
         self.assertTrue(launch.effective_switches({})["combat_log"])
         self.assertFalse(launch.effective_switches({"combat_log": False})["combat_log"])
 
+    def test_older_settings_get_the_combat_log_once(self):
+        """Settings saved before version 2 have the combat log turned on, once; then it is the player's."""
+        old = {"combat_log": False, "dust": False}
+        self.assertTrue(launch.upgrade_settings(old))
+        self.assertEqual(old, {"combat_log": True, "dust": False, "settings_version": launch.SETTINGS_VERSION})
+        old["combat_log"] = False  # (switched off again, and saved as version 2)
+        self.assertFalse(launch.upgrade_settings(old))
+        self.assertFalse(old["combat_log"])
+        self.assertFalse(launch.upgrade_settings({}))  # (no settings yet: the defaults)
+        import json
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                with open(launch.SETTINGS, "w") as f:
+                    json.dump({"combat_log": False}, f)
+                self.assertTrue(launch.load_settings()["combat_log"])
+                launch.save_settings(dict(launch.load_settings(), combat_log=False))
+                self.assertFalse(launch.load_settings()["combat_log"])
+            finally:
+                launch.SETTINGS = saved_path
+
     def test_crash_report(self):
         """What DOSBox and the game left, the switches, and the end of the logs, in a file of its
         own in crash-logs."""
