@@ -310,26 +310,14 @@ each class's next level in its tables and shows the lowest. Where it adds the
 closing bracket, the helper (`INT D2h`) finds which classes that number
 belongs to and adds their letters first.
 
-### Each turn's rolls
-
-([In the README](README.md#each-turns-rolls).)
-
-How: the patched game calls the helper (`INT F1h`) in its combat loop, right
-after the call that may pass the turn on. When whose turn it is has changed,
-the helper counts it and waits up to a third of a second for the Ledger,
-which writes the summary into the helper's memory; the helper then feeds it to
-the game's dialogue window the way the game's scripts do for a narration
-(the emblem, the text, "Press continue"). If the Ledger isn't running, or the
-box is unticked, the game doesn't wait at all. (INT 66h-6Fh can't be used: the
-game calls those itself, looking for sound drivers.)
-
 ### What hurts a monster (the Look box)
 
 ([In the README](README.md#what-hurts-a-monster-the-look-box).)
 
-How: the patched game calls the helper (`INT F5h`) where the box has drawn its
-first status rows; the helper asks the Ledger (as for each turn's rolls), and
-prints the lines with the game's text routine. `INT F6h`, at the end of the
+How: the patched game calls the helper (`INT F5h`; INT 66h-6Fh can't be used:
+the game calls those itself, looking for sound drivers) where the box has drawn its
+first status rows; the helper asks the Ledger and waits a moment for its
+answer, and prints the lines with the game's text routine. `INT F6h`, at the end of the
 routine that closes the box, shows the whole description.
 
 ### Charges in item boxes

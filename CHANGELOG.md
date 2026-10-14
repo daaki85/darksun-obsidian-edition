@@ -91,6 +91,12 @@ have the detail.
   The metal Axe is the game's own, 70. Drakejaw and Glasshewer, of those
   types, weigh 30 too.
 
+**Removed**
+- **Each turn's rolls in the game's dialogue window** (the "Show each turn's
+  rolls" switch and `--popups`): the combat log shows them without stopping
+  the game. The game is no longer patched in its combat loop for them, and
+  DSCLOG is about 1 KB smaller.
+
 **Fixed**
 - **The dice log stopped in a fight whose round order named someone it
   couldn't match** (seen in the arena's opening show, the Defiler and a

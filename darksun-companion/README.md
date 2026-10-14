@@ -35,7 +35,6 @@ game.
 - [In the game](#in-the-game)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
-  - [Each turn's rolls](#each-turns-rolls)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
@@ -228,7 +227,7 @@ no packaged program to trust.
 1. Double-click **`Start Obsidian Edition.bat`** in that
    folder. The Ledger opens on its own.
 2. On its **Options** tab, pick what you want: the rule changes, the new
-   content, picking pockets, each turn's rolls in the game and so on (see
+   content, picking pockets, the combat log in the game and so on (see
    [The Ledger's window](#the-ledgers-window) and [Rule changes](#rule-changes)).
    They're remembered for next time.
 3. Pick the **Game window** size at the top if you like, then press **Start
@@ -265,7 +264,7 @@ the dice log will say the game was started without it.
 **Just the game, with the in-game additions, no Ledger window:** double-click
 **`Play Dark Sun (in-game rolls).bat`**. The dice log runs unseen and stops
 when you close DOSBox. It uses the switches on the Ledger's Options tab as you
-last set them (each turn's rolls, monster descriptions, picking pockets, the
+last set them (the combat log, monster descriptions, picking pockets, the
 rule changes); the new items, the new people and the cooked
 vulture are there too. If anything goes wrong it says so in a message box and
 writes the details to `play.log`.
@@ -337,7 +336,7 @@ open it, ▸ when closed and ▾ when open. Which sections are open is remembere
 Everything there applies in games started from the Ledger; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
-- **In the game**: each turn's rolls and how much they say, monster
+- **In the game**: the combat log and how much it says, monster
   descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](#rule-changes)): the game's rules closer
   to AD&D.
@@ -357,8 +356,7 @@ Everything there applies in games started from the Ledger; a switch that says
 - **Saves** ([Saves under their names](#saves-under-their-names)): the folder
   of saves kept under their names, and putting one back in a slot.
 
-All are on by default except each turn's rolls in the game and the right
-button, and are remembered for next time. **Restore defaults**, at the bottom
+All are on by default except the combat log and the right button, and are remembered for next time. **Restore defaults**, at the bottom
 of the tab, sets them all back (after asking).
 In a window too small to show the open sections, the tab scrolls (scrollbar,
 mouse wheel, or arrow and page keys once it has the focus).
@@ -1168,48 +1166,6 @@ The numbers are the Characters tab's (see [spell slots](#the-characters-tab)), W
 printed with the game's own text routine; they show while Templar's Ledger (or
 its command-line dice log) is running.
 
-### Each turn's rolls
-
-With **Show each turn's rolls in the game** ticked on the Options tab (it is
-off unless you tick it; or `python -m dscompanion dicelog --popups`), the game
-stops at the end
-of every turn in a fight in which someone attacked or cast a spell, and shows
-that turn's rolls in its own dialogue window, with **Continue** to go on. Below
-the box, pick how much it says: **at the least**, **in short** or **in
-detail**. In detail, they are the dice log's own lines: each attack's d20, the AC it would hit and the
-target's AC, how the THAC0 was worked out, and for a hit the damage dice and
-bonuses; a spell's damage dice, and each saving throw against it. (The chance
-to hit or to save is left out: the log has it.) The last line says who is
-still to act this round (`Still to act this round: Jellybelly, Mountain
-Stalker`), `End of round 2.` when everyone has, or, when the new round's
-order is already in, that order (`Round 3: Dreamwalker, Jellybelly, Mlemlem,
-Daaki`). The window shows five lines at a time; its **MORE** arrow shows the
-next ones:
-
-![The game's window at the end of a turn, in detail](docs/turn-detail.png)
-
-![The game's window after Daaki's Fogbolts: the dice for how long it lasts, and the Wild Mul's saving throw](docs/turn-spell.png)
-
-**In short** (or `--short-popups`) gives one line per target instead (and each
-spell's first line):
-
-![The game's window at the end of Mlemlem's turn, in short](docs/turn-summary.png)
-
-`20 vs 11+ HIT, 12 damage` is the d20, the roll it needed (THAC0 − the
-target's AC; a natural 20 always hits, a 1 always misses), and the damage the
-hit did.
-
-**At the least** (or `--minimal-popups`) gives only what came of the turn, no
-dice: `Mlemlem hits Mountain Stalker for 12, misses. Slig takes 9 from
-Fireball`. It leaves out who is still to act.
-
-Each turn gets its own window, monsters' included. Only fights the party is in get them:
-the fights the game stages without the party, such as the Defiler's show at
-the start of the arena, are run by scripts waiting on the same dialogue window,
-and a window of ours there would let the script go on before the fight ends.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#each-turns-rolls).
-
 ### The combat log in the game
 
 With **Show a combat log in the game, bottom right, in a fight** ticked on the
@@ -1223,7 +1179,8 @@ monster's. Its top line says the round, who is acting and who is still to
 says: **at the least** (`Rampager hits Defiler for 4`), **in short**, the
 default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
 `Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
-the log. The panel is on only in fights, doesn't wait for a click as the
+the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
+target's AC; a natural 20 always hits, a 1 always misses). The panel is on only in fights, doesn't wait for a click as the
 turn's window does, and goes when the fight ends (or the Ledger is closed). A
 window the game opens over the map (a character's menu, a question) hides it
 until it closes. It needs the game started from the Ledger (which turns off

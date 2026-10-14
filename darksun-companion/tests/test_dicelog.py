@@ -289,61 +289,6 @@ class AttackTests(unittest.TestCase):
         self.assertEqual(log.describe(dice[1]),
                          ["  Dag hits Mountain Stalker for 20: 2d8 = [2 + 5] +1 weapon +12 STR 24"])
 
-    def test_turn_summary_for_the_game(self):
-        log = make_game()
-        log.describe(self.attack(18, 8, 4, 5, 9, after_f1=9, hit_bonus=1))  # Dag hits (needs 4)
-        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1)
-        for face in (2, 5):
-            log.describe(entry(raw_for(face, 8), dicelog.DICE_SITE, words(0, 0, 2, 8, 1), parent, (0x29, 0, 0, 0),
-                               parent_code=dicelog.WEAPON_DAMAGE_RETURN))
-        log.describe(self.attack(3, 8, 4, 5, 9, after_f1=9, hit_bonus=1))  # and misses
-        short = "Dag attacks Mountain Stalker: 18 vs 4+ HIT, 20 damage; 3 vs 4+ miss"
-        self.assertEqual(log.turn_summary(0, dicelog.POPUP_SHORT), short)
-        # anyone's attacks during a turn go in its summary (a guarding character striking back...)
-        self.assertEqual(log.turn_summary(1, dicelog.POPUP_SHORT), short)
-        # in detail: the dice log's lines, the damage under the hit it belongs to
-        lines = log.turn_summary(0).split("\n")
-        self.assertEqual(len(lines), 5)
-        self.assertTrue(lines[0].startswith("Dag attacks Mountain Stalker") and lines[0].endswith("-> HIT"))
-        self.assertTrue(lines[1].startswith("THAC0"))
-        self.assertEqual(lines[2], "Dag hits Mountain Stalker for 20: 2d8 = [2 + 5] +1 weapon +12 STR 24")
-        self.assertTrue(lines[3].endswith("-> miss"))
-        # at the least: what came of it
-        self.assertEqual(log.turn_summary(0, dicelog.POPUP_MINIMAL), "Dag hits Mountain Stalker for 20, misses")
-        log.popup_level = dicelog.POPUP_SHORT
-        # DSCLOG's side: it counts the turn's end (Dag's, combatant 0) and waits for the text
-        m = log.guest.mem
-        struct.pack_into("<H", m, HDR + dicelog.TSR_HDR_OFF, 0)
-        struct.pack_into("<H", m, HDR + dicelog.TSR_MSG_OFF, 0x400)
-        log.set_popups(True)
-        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_POPUPS)[0], 1)
-        struct.pack_into("<H", m, HDR + dicelog.TSR_ENDED, 0)
-        struct.pack_into("<H", m, HDR + dicelog.TSR_TURN_SEQ, 1)
-        log._answer_turn()
-        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_REPLY_SEQ)[0], 1)
-        self.assertEqual(bytes(m[HDR + 0x400:HDR + 0x400 + 68]).split(b"\0")[0],
-                         b"Dag attacks Mountain Stalker: 18 vs 4+ HIT, 20 damage; 3 vs 4+ miss")
-        self.assertEqual(log.turn_summary(0), "")  # a new turn starts afresh
-
-    def test_minimal_spells(self):
-        """At the least, a spell's damage taken and healing, without its dice or saves."""
-        log = make_game()
-        log._turn_log += ["Fireball damage: 9d6 = [3 + 2 + 3 + 4 + 5 + 4 + 1 + 2 + 2] = 26",
-                          "Red Slaad's saving throw vs Fireball from Daaki (petrification/polymorph): d20 = 6 -> saved",
-                          "  Red Slaad takes 13 from Fireball, now 47/60 HP",
-                          "  Dag regains 7 HP from Cure Light Wounds, now 30/40 HP"]
-        self.assertEqual(log.turn_summary(0, dicelog.POPUP_MINIMAL),
-                         "Red Slaad takes 13 from Fireball. Dag regains 7 HP from Cure Light Wounds")
-
-    def test_popup_settings(self):
-        """Off unless ticked; the level as saved, or from an earlier version's detail switch."""
-        log = make_game()
-        log.use_settings({})
-        self.assertEqual((log.popups, log.popup_level), (False, dicelog.POPUP_DETAIL))
-        self.assertEqual(dicelog.popup_level({"turn_popups_detail": False}), dicelog.POPUP_SHORT)
-        self.assertEqual(dicelog.popup_level({"turn_popups_level": "minimal", "turn_popups_detail": True}),
-                         dicelog.POPUP_MINIMAL)
-
     def test_look_box_describes_the_monster(self):
         log = make_game()
         m = log.guest.mem
@@ -406,37 +351,6 @@ class AttackTests(unittest.TestCase):
         self.assertEqual(log._answer_look(), [])
         self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_LOOK_REPLY)[0], 2)
         self.assertEqual(m[HDR + 0x300], 0)
-
-    def test_spells_and_saves_in_the_game_summary(self):
-        log = make_game()
-        log._note_turn(["Round 2: Dag 25, Mountain Stalker 18", "    Dag 25 = 20 + 5 (0-9 roll)",
-                        "Fireball damage: 5d6 = [2 + 5 + 3 + 6 + 1] = 17",
-                        "Dag's saving throw vs Fireball from Defiler (petrification/polymorph): d20 = 7, doubled against fire = 14, needs 12 (60% to save) -> saved: half damage, 8",
-                        "  Dag takes 8 from Fireball, now 16/24 HP", "Dice: 1d6 = [4] = 4"])
-        text = log.turn_summary(0).split("\n")
-        self.assertEqual(text[0], "Fireball damage: 5d6 = [2 + 5 + 3 + 6 + 1] = 17")  # not the round's order
-        self.assertTrue(text[1].startswith("Dag's saving throw vs Fireball"))
-        self.assertIn("needs 12 -> saved", text[1])  # the chance to save left out too
-        self.assertEqual(text[2], "Dag takes 8 from Fireball, now 16/24 HP")
-        self.assertEqual(len(text), 3)  # nor unlabelled dice
-        self.assertEqual(log.turn_summary(0, dicelog.POPUP_SHORT).split(". ")[0], "Fireball damage: 5d6 = [2 + 5 + 3 + 6 + 1] = 17")
-
-    def test_detailed_summary_in_the_game(self):
-        log = make_game()
-        log.describe(self.attack(18, 8, 4, 5, 9, after_f1=9, hit_bonus=1))
-        m = log.guest.mem
-        struct.pack_into("<H", m, HDR + dicelog.TSR_HDR_OFF, 0)
-        struct.pack_into("<H", m, HDR + dicelog.TSR_MSG_OFF, 0x400)
-        log.set_popups(True)
-        struct.pack_into("<H", m, HDR + dicelog.TSR_TURN_SEQ, 1)
-        log._answer_turn()
-        shown = bytes(m[HDR + 0x400:HDR + 0x400 + dicelog.MSG_SIZE]).split(b"\0")[0].decode()
-        self.assertNotIn("%", shown)  # the game's window shows no "%"
-        self.assertNotIn("needs", shown)  # nor the chance to hit: the AC hit and the target's AC say it
-        self.assertIn("hits AC -10, target AC 4 -> HIT", shown)
-        # the game's window shows it, and DSCLOG passes back its first 400 characters: not dialogue
-        said = DialogueEntry(None, shown[:40])
-        self.assertEqual(log._not_ours([said, DialogueEntry(None, chosen="Continue")]), [])
 
 
 class SlotsForTheGameTests(unittest.TestCase):
@@ -1100,21 +1014,9 @@ class NewLinesTests(unittest.TestCase):
         self.assertEqual(status["next"], [("Mountain Stalker", 18)])
         self.assertEqual(status["done"], [("Dag", 25)])
         self.assertEqual(status["down"], [("Jellybelly", 20)])
-        self.assertEqual(log.still_to_act(), "Still to act this round: Daaki, Mountain Stalker")
-        self.assertEqual(log.still_to_act(ended=0), "Still to act this round: Daaki, Mountain Stalker")
-        # the turn that ended was the last of round 2: round 3's order has been rolled since
-        self.assertEqual(log.still_to_act(ended=0x29), "Round 3: Daaki, Mountain Stalker")
-        # the game ran Daaki's turn before the helper could ask: the summary shows Daaki's attacks
-        daaki = frozenset({log.game.combatant_creature(1)})
-        self.assertEqual(log.still_to_act(ended=0, acted_creatures=daaki), "Still to act this round: Mountain Stalker")
-        both = daaki | {log.game.combatant_creature(0x29)}
-        self.assertEqual(log.still_to_act(ended=0, acted_creatures=both), "End of round 3.")
-        # a new round rolled since: the rolls shown were the old round's
-        self.assertEqual(log.still_to_act(ended=0x29, acted_creatures=both), "Round 3: Daaki, Mountain Stalker")
         table = log.game.combatant_creature  # killed: the creature has left the fight's table
         log.game.combatant_creature = lambda c: None if c == 0x29 else table(c)
         self.assertEqual(log.round_status()["down"], [("Jellybelly", 20), ("Mountain Stalker", 18)])
-        self.assertEqual(log.still_to_act(), "Still to act this round: Daaki")
         log.game.combatant_creature = table
         log.game.game_time = lambda: 600 + dicelog.FIGHT_GAP + 1  # the fight is over
         self.assertIsNone(log.round_status())

@@ -319,30 +319,20 @@ class Viewer:
         # long lines wrap to the window (as with larger text) instead of running out of it
         options.bind("<Configure>", lambda e: [ttk.Style().configure(
             kind, wraplength=max(200, e.width - 60)) for kind in ("TCheckbutton", "TRadiobutton")], add="+")
-        # the game's own window, at the end of each turn in a fight: that turn's rolls
-        self.popups = tk.BooleanVar(value=bool(settings.get("turn_popups", False)))
-        ttk.Checkbutton(in_game, text="Show each turn's rolls in the game (click Continue to go on)",
-                        variable=self.popups, command=self._popups_changed).pack(anchor="w")
-        self.popup_level = tk.StringVar(value=dicelog.popup_level(settings))
-        for value, text in ((dicelog.POPUP_MINIMAL, "... at the least: what came of each attack and spell, no dice"),
-                            (dicelog.POPUP_SHORT, "... in short: each attack's roll, what it needed and the damage"),
-                            (dicelog.POPUP_DETAIL, "... in detail, as in the log (MORE shows the next lines)")):
-            ttk.Radiobutton(in_game, text=text, value=value, variable=self.popup_level,
-                            command=self._popups_changed).pack(anchor="w", padx=(20, 0))
         # the combat log's panel over the map in a fight (combatlog.py), at a level of its own
         self.combat_log = tk.BooleanVar(value=bool(settings.get("combat_log", False)))
         ttk.Checkbutton(in_game, text="Show a combat log in the game, bottom right, in a fight",
-                        variable=self.combat_log, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        variable=self.combat_log, command=self._options_changed).pack(anchor="w")
         self.combat_log_level = tk.StringVar(value=dicelog.combat_log_level(settings))
-        for value, text in ((dicelog.POPUP_MINIMAL, "... at the least: what came of each attack and spell"),
-                            (dicelog.POPUP_SHORT, "... in short: each roll, what it needed and the damage"),
-                            (dicelog.POPUP_DETAIL, "... in detail, as in the log")):
+        for value, text in ((combatlog.MINIMAL, "... at the least: what came of each attack and spell"),
+                            (combatlog.SHORT, "... in short: each roll, what it needed and the damage"),
+                            (combatlog.DETAIL, "... in detail, as in the log")):
             ttk.Radiobutton(in_game, text=text, value=value, variable=self.combat_log_level,
-                            command=self._popups_changed).pack(anchor="w", padx=(20, 0))
+                            command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
-                        variable=self.monster_info, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         rules = section("rules", "Rule changes")
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
@@ -422,16 +412,16 @@ class Viewer:
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = where.get(key, rules)
             ttk.Checkbutton(parent, text=text, variable=self.rule_vars[key],
-                            command=self._popups_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
+                            command=self._options_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
             if key == "stealth":  # (under it: what worn gear adds)
                 ttk.Checkbutton(thieves, text="... a worn cloak adds 10 to hiding, worn boots 10 to moving silently; "
                                             "a worn belt adds 5 to picking pockets and opening locks (hiding or not)",
-                                variable=self.stealth_gear, command=self._popups_changed).pack(anchor="w", padx=(20, 0))
+                                variable=self.stealth_gear, command=self._options_changed).pack(anchor="w", padx=(20, 0))
 
         self.roll_store = tk.BooleanVar(value=settings.get("roll_store", True) is not False)
         ttk.Checkbutton(custom, text="STORE and RECALL on the creation screen: keep a roll, try the die again, "
                         "and bring the kept roll back (from the next start)", variable=self.roll_store,
-                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}
         for key, text in (
@@ -445,11 +435,11 @@ class Viewer:
                                    "New items lists them)")):
             self.content_vars[key] = tk.BooleanVar(value=settings.get(key, True) is not False)
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
-                            command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                            command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.pickpockets = tk.BooleanVar(value=bool(settings.get("pickpockets", True)))
         ttk.Checkbutton(thieves, text="Picking pockets: a thief uses Thieves' Tools on someone in sight (each "
                         "thief gets a set), until caught", variable=self.pickpockets,
-                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         thieves.pack(anchor="w", fill="x", pady=(8, 0))
 
         # how the game looks
@@ -457,46 +447,46 @@ class Viewer:
         self.elf_looks = tk.BooleanVar(value=settings.get("elf_looks", True) is not False)
         ttk.Checkbutton(looks, text="Elves have pointed ears, and half-elves figures of their own instead of the "
                         "humans' (from the next start)",
-                        variable=self.elf_looks, command=self._popups_changed).pack(anchor="w")
+                        variable=self.elf_looks, command=self._options_changed).pack(anchor="w")
         self.cilla_elf = tk.BooleanVar(value=settings.get("cilla_elf", True) is not False)
         ttk.Checkbutton(looks, text="Cilla, an elf in the game's own party, drawn as an elf (the game gives her "
                         "the half-elf woman's figure; from the next start)", variable=self.cilla_elf,
-                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
         ttk.Checkbutton(looks, text="Show what the party wears on their figures (weapons, armour, helms, "
                         "cloaks, boots, belts)", variable=self.show_gear,
-                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_shadows = tk.BooleanVar(value=bool(settings.get("shadows", True)))
         ttk.Checkbutton(looks, text="Shadows under the figures (see-through, on the floor)",
-                        variable=self.show_shadows, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        variable=self.show_shadows, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_dust = tk.BooleanVar(value=bool(settings.get("dust", True)))
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
-                        variable=self.show_dust, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        variable=self.show_dust, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         # the mouse and keys in the game
         controls = section("controls", "Controls")
         self.use_targeting = tk.BooleanVar(value=bool(settings.get("targeting", True)))
         ttk.Checkbutton(controls, text="In a fight, Tab (Shift+Tab back) chooses an enemy, its ring brighter, and "
                         "Enter attacks it, even behind someone", variable=self.use_targeting,
-                        command=self._popups_changed).pack(anchor="w")
+                        command=self._options_changed).pack(anchor="w")
         self.ring_mode = tk.StringVar(value=rings.mode(settings))
         ttk.Label(controls, text="Red rings on the ground in a fight:").pack(anchor="w", pady=(4, 0))
         for value, text in ((rings.OFF, "... none"),
                             (rings.ONLY_CHOSEN, "... under the enemy chosen with Tab"),
                             (rings.ALL, "... under all the enemies (the chosen one's redder)")):
             ttk.Radiobutton(controls, text=text, value=value, variable=self.ring_mode,
-                            command=self._popups_changed).pack(anchor="w", padx=(20, 0))
+                            command=self._options_changed).pack(anchor="w", padx=(20, 0))
         self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
         ttk.Checkbutton(controls, text="Scroll the map by pressing the mouse wheel and moving", variable=self.scroll_map,
-                        command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scroll_right = tk.BooleanVar(value=bool(settings.get("scroll_right", False)))
         ttk.Checkbutton(controls, text="... or by holding the right mouse button and moving (a right "
                         "click still changes the pointer)", variable=self.scroll_right,
-                        command=self._popups_changed).pack(anchor="w", padx=(20, 0))
+                        command=self._options_changed).pack(anchor="w", padx=(20, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
                         "ends it; psionic powers can still be stopped); from the next start",
-                        variable=self.effects_kept, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+                        variable=self.effects_kept, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         # the game's speed (DOSBox's CPU)
         pace = section("speed", "Game speed (from the next start)")
@@ -590,13 +580,12 @@ class Viewer:
                     self.show_gear, self.show_shadows, self.show_dust, self.use_targeting, self.scroll_map,
                     self.effects_kept):
             var.set(True)
-        for var in (self.popups, self.scroll_right, self.combat_log):
+        for var in (self.scroll_right, self.combat_log):
             var.set(False)
-        self.popup_level.set(dicelog.popup_level({}))
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
-        self._popups_changed()
+        self._options_changed()
         self._speed_chosen()
         self.status.set("Options set back to their defaults (those that wait for the next start, from then).")
 
@@ -926,8 +915,6 @@ class Viewer:
                 self.dice = DiceLog(self.guest)
                 self.dice.speaker_names = launch.speaker_names()
                 self.dice.learned_speakers = launch.learned_speakers()
-                self.dice.popups = self.popups.get()
-                self.dice.popup_level = self.popup_level.get()
                 self.dice.monster_info = self.monster_info.get()
                 self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
                 self.dice.pickpockets = self.pickpockets.get()
@@ -1029,11 +1016,11 @@ class Viewer:
         launch.save_settings(settings)
         self.status.set("Game speed: from the next time you start the game.")
 
-    def _popups_changed(self) -> None:
-        on = self.popups.get()
+    def _options_changed(self) -> None:
+        """A switch on the Options tab changed: all of them saved, and the log told."""
         settings = launch.load_settings()
-        settings["turn_popups"] = on
-        settings["turn_popups_level"] = self.popup_level.get()
+        for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
+            settings.pop(old, None)
         settings["monster_info"] = self.monster_info.get()
         settings["combat_log"] = self.combat_log.get()
         settings["combat_log_level"] = self.combat_log_level.get()
@@ -1056,8 +1043,6 @@ class Viewer:
             settings[key] = var.get()
         launch.save_settings(settings)
         if self.dice is not None:
-            self.dice.set_popups(on)
-            self.dice.popup_level = self.popup_level.get()
             self.dice.set_monster_info(self.monster_info.get())
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
             self.dice.set_pickpockets(self.pickpockets.get())

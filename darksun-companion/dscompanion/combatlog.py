@@ -35,7 +35,7 @@ PANEL_X0, PANEL_Y0 = 136, 120  # (DSCLOG's: where on the screen)
 FIRST, LAST = 16, 223  # the palette's colours the game doesn't animate (DSCLOG's DARK_FIRST, DARK_LAST)
 FONT_INK, FONT_SHADOW = 254, 20  # (art.FONT_INK, FONT_SHADOW: the font's pixels)
 
-# the detail levels (dicelog's POPUP_MINIMAL, POPUP_SHORT, POPUP_DETAIL)
+# the detail levels (the Options tab's combat_log_level)
 MINIMAL, SHORT, DETAIL = "minimal", "short", "detail"
 HISTORY = 200  # lines kept
 

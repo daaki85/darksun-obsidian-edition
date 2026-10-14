@@ -28,13 +28,11 @@ VEC_AC   equ 0x62     ; PROBE_AC
 VEC_TEXT equ 0x63     ; PROBE_TEXT
 VEC_MSG  equ 0x64     ; PROBE_MSG
 VEC_CHAR equ 0x65     ; PROBE_CHAR
-VEC_TURN equ 0xF1     ; PROBE_TURN (not 66h-6Fh: the game calls those, looking for drivers)
 VEC_USE  equ 0xF2     ; PROBE_USE
 VEC_VIEW equ 0xF3     ; PROBE_VIEW
 VEC_WIN  equ 0xF4     ; PROBE_WIN
 VEC_LOOK equ 0xF5     ; PROBE_LOOK
 VEC_UNLOOK equ 0xF6   ; PROBE_UNLOOK
-VEC_NEXT equ 0xF7     ; PROBE_NEXT
 VEC_RING_AC equ 0xF8  ; PROBE_RING_AC
 VEC_RING_SAVE equ 0xF9  ; PROBE_RING_SAVE
 VEC_WEAPON equ 0xFA   ; PROBE_WEAPON
@@ -210,10 +208,7 @@ tsize    dw TSIZE               ; +130 its size (a power of two)
 probe_text_off dw probe_text    ; +132 offset of PROBE_TEXT in this segment
 probe_msg_off dw probe_msg      ; +134 offset of PROBE_MSG in this segment
 probe_char_off dw probe_char    ; +136 offset of PROBE_CHAR in this segment
-turn_seq  dw 0                  ; +138 turns that have ended in a fight (PROBE_TURN counts them)
-reply_seq dw 0                  ; +140 the companion sets this to TURN_SEQ once MSG_BUF is ready
-popups_on dw 0                  ; +142 the companion sets 1 to have turn summaries shown
-msg_off   dw msg_buf            ; +144 offset of MSG_BUF: the summary, NUL-terminated
+          times 4 dw 0          ; +138 (unused: the turn summaries' pop-up, gone for the combat log)
 ended     dw 0                  ; +146 the combatant whose turn just ended
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one per party
                                 ;      member, lines separated by "|", NUL-terminated (the companion
@@ -1185,83 +1180,15 @@ c_draw  dd 0
 c_winptr dd 0
 
 
-; PROBE_TURN: INT VEC_TURN replaces "add sp,4" (3 bytes: INT + NOP) in the game's combat
-; loop, straight after the call that runs combat and may pass the turn on (it is given the
-; address of DS:4979h, whose turn it is). When the turn has changed and the companion wants
-; summaries, note whose turn ended, wait a moment (at most TURN_WAIT timer ticks) for the
-; companion to put that turn's summary in MSG_BUF, and show it with the game's own message
-; window, as the game's scripts do for a narration: the emblem instead of a portrait, the
-; text, then "Continue" to click (the scripts' own "Press continue"), then CLOSE.
-; The dialogue window's routines are reached through the game's overlay stub for them,
-; whose segment is a fixed distance from the game's data segment.
+; The game's dialogue window (SHOW_WINDOW): its routines are reached through the game's overlay
+; stub for them, whose segment is a fixed distance from the game's data segment.
 DLG_STUB  equ 0x42CA - 0x4356   ; the stub's segment (DSUN.EXE: 42CAh) less the data segment's
 DLG_FEED  equ 0x25              ; the window's input: (kind, far text, word), see the text buffer
 DLG_WAIT  equ 0x34              ; wait for a reply to be clicked
 S_PRESS   equ 0x15E8            ; DS: "Press continue"
 S_CONT    equ 0x15F7            ; DS: "Continue"
 S_CLOSE   equ 0x1F11            ; DS: "CLOSE"
-TURN_WAIT equ 7                 ; timer ticks (55 ms each)
-probe_turn:                     ; (re-entered while the window waits: all state on the stack)
-        push bp                 ; the replaced "add sp,4": move the interrupt frame (and BP)
-        mov bp, sp              ; up over the 4 bytes, so IRET returns with them gone
-        push ax
-        mov ax, [bp + 6]
-        mov [bp + 10], ax       ; flags
-        mov ax, [bp + 4]
-        mov [bp + 8], ax        ; CS
-        mov ax, [bp + 2]
-        mov [bp + 6], ax        ; IP
-        mov ax, [bp]
-        mov [bp + 4], ax        ; BP
-        pop ax
-        mov sp, bp
-        add sp, 4
-        pop bp
-        sti
-        pushad
-        push es
-        call turn_check
-        pop es
-        popad
-        iret
-
-; PROBE_NEXT: INT VEC_NEXT replaces "cmp word [bp-2],0" (4 bytes: INT + 2 NOPs, then the
-; game's "jne +5") in the combat routine PROBE_TURN's call runs, once it has passed the turn on
-; (DS:4979h) and before it plays the turn of a combatant the computer runs (a monster, or
-; someone charmed). The game plays such a turn whole before its loop reaches PROBE_TURN, so
-; without this the monster's rolls would join the summary of the turn before. Checks the turn
-; as PROBE_TURN does, then goes on where the compare and the JNE would have gone.
-; The combat routine is overlay code, and the summary's window is too: loading the window's
-; code may move the combat routine or throw it out of memory while the window is up. The
-; overlay manager then fixes up the return addresses it finds by following BP from frame to
-; frame, so the way back is put in such a frame (as a far call's return address, with BP
-; pointing at the game's), and taken from there afterwards: the combat routine where it is
-; now, or the manager's trap that loads it again. (Returning to where it was before broke
-; the game at random: the fight started over, or it stopped with "Stack overflow!")
-probe_next:
-        sti
-        pushad
-        push es
-        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
-        mov ax, [ss:bx + 34]    ; (the NOPs after the INT)
-        add ax, 4               ; past the NOPs and the JNE when the compare finds 0 ...
-        cmp word [bp - 2], 0    ; the replaced compare (BP: the combat routine's frame)
-        je .frame
-        add ax, 5               ; ... and to its target when not
-.frame: push word [ss:bx + 36]
-        push ax
-        push bp
-        mov bp, sp
-        call turn_check
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
-        iret
+TURN_WAIT equ 7                 ; timer ticks (55 ms each) the companion has to answer
 
 PICK_WAIT equ 9                 ; timer ticks the companion has to answer (PROBE_USE_ITEM)
 PICK_SIZE equ 240
@@ -1403,40 +1330,6 @@ probe_use_item:
         popad
         iret
 
-; whose turn it is (DS:4979h) has changed since last seen: count it, wait a moment for the
-; companion's summary of the turn that ended (MSG_BUF) and show it; DS = the game's
-turn_check:
-        cmp byte [cs:showing], 0
-        jne .out                ; a summary is up: leave the game's loop alone meanwhile
-        mov bx, [0x4979]        ; whose turn it is now
-        xchg bx, [cs:last_turn]
-        cmp bx, [cs:last_turn]
-        je .out                 ; the same as last time
-        cmp word [cs:popups_on], 0
-        je .out
-        mov [cs:ended], bx
-        inc word [cs:turn_seq]
-        xor ax, ax
-        mov es, ax
-        mov dx, [es:0x46C]      ; the BIOS timer
-        call rtc_begin
-.wait:  mov ax, [cs:reply_seq]
-        cmp ax, [cs:turn_seq]
-        je .ready
-        mov ax, [es:0x46C]
-        sub ax, dx
-        cmp ax, TURN_WAIT
-        jae .late_reply_seq
-        call rtc_waited         ; (the BIOS clock can stand still: the game's timer
-        jnc .wait               ;   doesn't always pass its ticks on; at most 2 s by the real-time clock)
-.late_reply_seq:
-        jmp .out                ; no answer: the companion isn't reading
-.ready: cmp byte [cs:msg_buf], 0
-        je .out                 ; nothing to say about that turn
-        mov word [cs:show_text], msg_buf
-        call show_window
-.out:   ret
-
 ; the text at CS:[SHOW_TEXT] in the game's dialogue window, with "Continue" to click;
 ; DS = the game's
 show_window:
@@ -1489,8 +1382,7 @@ show_window:
 
 show_text dw 0                  ; the text SHOW_WINDOW shows
 dlg     dd 0                    ; the dialogue window routine being called
-showing db 0                    ; 1 while PROBE_TURN has a summary up
-last_turn dw 0xFFFF
+showing db 0                    ; 1 while SHOW_WINDOW has its window up
 
 ; PROBE_USE: INT VEC_USE replaces "add sp,0Ch" (3 bytes: INT + NOP) in the USE (cast spells)
 ; screen's routine that labels its LEVEL button, which runs whenever the screen is drawn
@@ -1500,7 +1392,6 @@ USE_TEXT_SEG equ 0x2B7A - 0x4356 ; the text routine's segment (DSUN.EXE: 2B7Ah) 
 USE_TEXT_OFF equ 0x16D
 USE_WHO_SEG  equ 0x3931 - 0x4356 ; the selected character's number is at this segment:25Bh
 SLOTS_SIZE   equ 96
-MSG_SIZE     equ 900         ; the turn summary: the dialogue window keeps up to 1024 bytes
 probe_use:
         push bp                 ; the replaced "add sp,0Ch": move the interrupt frame (and BP)
         mov bp, sp              ; up over the 12 bytes
@@ -12730,7 +12621,6 @@ USE_STEP   equ 7                ; wands...) go, along the panel's bottom from 0x
 USE_LAST_Y equ 0x7A
 u_line  times SLOTS_SIZE db 0
 slots_text times 4 * SLOTS_SIZE db 0
-msg_buf times MSG_SIZE db 0
 
 tput:                           ; AL -> text buffer at position BX
         push bx
@@ -15212,9 +15102,6 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_CHAR
         mov dx, probe_char
         int 21h
-        mov ax, 2500h + VEC_TURN
-        mov dx, probe_turn
-        int 21h
         mov ax, 2500h + VEC_USE
         mov dx, probe_use
         int 21h
@@ -15229,9 +15116,6 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov ax, 2500h + VEC_UNLOOK
         mov dx, probe_unlook
-        int 21h
-        mov ax, 2500h + VEC_NEXT
-        mov dx, probe_next
         int 21h
         mov ax, 2500h + VEC_RING_AC
         mov dx, probe_ring_ac
@@ -15660,7 +15544,7 @@ ua_strat dw 0
 msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
 psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
-all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
+all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
             db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
 all_vectors_end:

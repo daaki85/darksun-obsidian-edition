@@ -98,7 +98,6 @@ easier.
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
 | **The Effects screen** | Names each kit and weapon spec, a page at a time when there are many. |
-| **Each turn's rolls** (off unless ticked) | At the end of each turn in a fight, its rolls in the game's own window: at the least, in short or in detail. |
 | **Combat log** (off unless ticked) | In a fight, a panel at the map's lower right with every roll as it comes, at the least, in short or in detail. Drag its scrollbar (or turn the mouse wheel over it, on Windows) to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back. |
 | **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), so the party walks smoothly with shadows and dust. |
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Ledger. |
@@ -1577,8 +1576,7 @@ AD&D's tables:
 
 | Section | Switch | Default |
 |---|---|---|
-| In the game | show each turn's rolls in the game | off |
-| | show a combat log in the game, bottom right, in a fight | off |
+| In the game | show a combat log in the game, bottom right, in a fight | off |
 | | describe monsters when you Look at them in a fight | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
 | More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen | all on |

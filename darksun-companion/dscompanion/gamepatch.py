@@ -33,7 +33,7 @@ from typing import NamedTuple
 GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
-VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT = 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7  # not 66h-6Fh: the game calls those itself, looking for drivers
+VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK = 0xF2, 0xF3, 0xF4, 0xF5, 0xF6  # (F1h, F7h free) not 66h-6Fh: the game calls those itself, looking for drivers
 VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD
 VEC_TWO, VEC_DOUBLE = 0xFE, 0xF0
 VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY = 0xED, 0xEE, 0xEF
@@ -179,14 +179,6 @@ PATCHES = (
     # the inventory screen's right-hand panel, just after its weapon lines: add sp,0Eh
     # (DSCLOG then adds THAC0, the saves and thief skills, in the game's own lettering)
     Patch("inventory", 0x6F6BF, bytes.fromhex("83c40e"), _interrupt(VEC_CHAR, 3)),
-    # the combat loop, straight after the call that may pass the turn on: add sp,4
-    # (DSCLOG then shows the companion's summary of the turn that ended, if it wants to)
-    Patch("turn", 0x1C953, bytes.fromhex("83c404"), _interrupt(VEC_TURN, 3)),
-    # the combat routine that call runs, once it has passed the turn on and before it plays a
-    # turn the computer runs (a monster's) whole: cmp word [bp-2],0 / jne +5 (DSCLOG checks
-    # the turn there too, so the turn before gets its own summary, then goes where the compare
-    # and the jump would have; the jump is left as it is, but DSCLOG relies on it being there)
-    Patch("next", 0x5734F, bytes.fromhex("837efe007505"), _interrupt(VEC_NEXT, 4) + bytes.fromhex("7505")),
     # the USE (cast spells) screen, after it labels its LEVEL button: add sp,0Ch
     # (DSCLOG then draws the character's spell slots under the spells)
     Patch("use", 0x70FBB, bytes.fromhex("83c40c"), _interrupt(VEC_USE, 3)),

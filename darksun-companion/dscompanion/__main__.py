@@ -149,9 +149,6 @@ def cmd_dicelog(args) -> None:
             time.sleep(2)
     log = DiceLog(guest, record_everything=args.raw)
     log.use_settings(load_settings())  # the Ring +1, the rule changes, monster descriptions
-    log.popups = args.popups
-    log.popup_level = (dicelog.POPUP_MINIMAL if args.minimal_popups else
-                       dicelog.POPUP_SHORT if args.short_popups else dicelog.POPUP_DETAIL)
     log.speaker_names = speaker_names()
     log.learned_speakers = learned_speakers()
 
@@ -286,7 +283,6 @@ def cmd_play(args) -> None:
             return
         log = DiceLog(guest)
         log.use_settings(settings)  # as last set on the Ledger's Options tab
-        log.popups = log.popups and not args.no_popups
         log.speaker_names = launch.speaker_names()
         log.learned_speakers = launch.learned_speakers()
         started = time.time()
@@ -362,7 +358,6 @@ def main(argv=None) -> int:
 
     s = sub.add_parser("play", help="start the game with the in-game rolls and stats, no window of our own")
     s.add_argument("--game-dir", help="the game's install folder (remembered after the first time)")
-    s.add_argument("--no-popups", action="store_true", help="without each turn's rolls in the game")
     s.add_argument("--window-scale", type=int, choices=(1, 2, 3, 4),
                    help="DOSBox's window: 3 (the default) is three times the game's 320x200, 2 twice, 4 four times "
                         "(remembered)")
@@ -374,12 +369,6 @@ def main(argv=None) -> int:
     s = sub.add_parser("dicelog", parents=[common], help="print the game's dice rolls as they happen")
     s.add_argument("--all", action="store_true", help="also show rolls the log can't label")
     s.add_argument("--raw", action="store_true", help="record every rand() call, not just rolls (noisy)")
-    s.add_argument("--popups", action="store_true",
-                   help="in a fight, have the game show each turn's rolls when the turn ends")
-    s.add_argument("--short-popups", action="store_true",
-                   help="with --popups: one line per target instead of the log's detail")
-    s.add_argument("--minimal-popups", action="store_true",
-                   help="with --popups: only what came of each attack and spell, no dice")
     s.set_defaults(func=cmd_dicelog)
 
     s = sub.add_parser("checks", help="list the thief skill and ability checks in the game's scripts (spoilers)")
