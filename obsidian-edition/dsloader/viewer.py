@@ -320,7 +320,7 @@ class Viewer:
         options.bind("<Configure>", lambda e: [ttk.Style().configure(
             kind, wraplength=max(200, e.width - 60)) for kind in ("TCheckbutton", "TRadiobutton")], add="+")
         # the combat log's panel over the map in a fight (combatlog.py), at a level of its own
-        self.combat_log = tk.BooleanVar(value=bool(settings.get("combat_log", False)))
+        self.combat_log = tk.BooleanVar(value=bool(settings.get("combat_log", True)))
         ttk.Checkbutton(in_game, text="Show a combat log in the game, bottom right, in a fight",
                         variable=self.combat_log, command=self._options_changed).pack(anchor="w")
         self.combat_log_level = tk.StringVar(value=dicelog.combat_log_level(settings))

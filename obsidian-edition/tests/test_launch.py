@@ -74,6 +74,12 @@ class LaunchTests(unittest.TestCase):
         self.assertTrue(items["vulture"])
         self.assertTrue(all(launch.content({"world_magic": False, "pens_gear": False})[k] for k in launch.ITEM_PARTS))
 
+    def test_combat_log_on_unless_switched_off(self):
+        """The combat log in the game is on by default, in the switches and in the dice log."""
+        self.assertIs(launch.SWITCH_DEFAULTS["combat_log"], True)
+        self.assertTrue(launch.effective_switches({})["combat_log"])
+        self.assertFalse(launch.effective_switches({"combat_log": False})["combat_log"])
+
     def test_crash_report(self):
         """What DOSBox and the game left, the switches, and the end of the logs, in a file of its
         own in crash-logs."""

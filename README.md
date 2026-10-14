@@ -84,11 +84,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Coming in the next release** (pull request #44, [in the
-changelog](CHANGELOG.md#pull-request-44-in-progress)): a combat log in the
-game, three more wizard spells (Reflected Image, Spook and Friends), two magic
-shields, defilers' scrolls, buying back magical items, saves kept under their
-names, and Templar's Ledger renamed the Loader.
+**Coming in the next release** (pull requests #44 and #45, [in the
+changelog](CHANGELOG.md)): a combat log in the game, three more wizard spells
+(Reflected Image, Spook and Friends), two magic shields, defilers' scrolls,
+buying back magical items, saves kept under their names, and Templar's Ledger
+renamed the Loader.
 
 **Obsidian Edition 2.2.1** is out ([release notes](release-notes/v2.2.1.md)):
 more of the Options tab can be switched (the elves' and half-elves' looks,
