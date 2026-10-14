@@ -1610,7 +1610,7 @@ measured with the patched game and the dice log running:
   the pens, opened a conversation and a shop, and played the arena's opening
   fight to the end without a fault (a check, not a whole game).
 
-### The in-game combat log: the panel (Stages 1 to 3)
+### The in-game combat log: the panel (Stages 1 to 4)
 
 - **Where it lives.** The Ledger draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
@@ -1658,6 +1658,17 @@ measured with the patched game and the dice log running:
   over), through routines not hooked: `PANEL_TICK` puts the panel again when
   the pointer has moved, on that pass and the next, and every 16 passes
   anyway.
+- **Sizes (Stage 4).** The Ledger sets the panel's top and height
+  (`+344`, `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130,
+  the most); its foot stays at row 198. Smaller than it was, DSCLOG draws the
+  view again under it first. Collapsed is 15 rows (the newest line in the
+  header), docked 78, expanded 130 (11 lines and the filters' row). The
+  header's level chip and - / + buttons, and the filters, are pressed through
+  `PANEL_MOUSE` as the scrollbar is. **L** (`INT 16h`, `our_key`, while the
+  panel is on screen: `PANEL_LIVE`) is counted at `+348` and kept from the
+  game; the keyboard hook is on while the panel is shown, not only with Tab
+  targeting. The level and size are saved in the settings
+  (`combat_log_level`, `combat_log_size`).
 - **Not checked mid-fight:** saving and loading, and area changes, as the
   game allows neither in a fight; out of one the panel is off. DOSBox's
   window size doesn't matter (it is drawn into the game's screen).

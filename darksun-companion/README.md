@@ -1233,7 +1233,15 @@ with the pointer over the panel (on Windows: DOSBox doesn't pass the wheel to
 the game, so the Ledger listens for it itself). Scrolled back, it stays where
 it is as new lines come, and a **Latest** chip at its foot says how many have;
 click it (or scroll to the end) to follow the fight again. Clicks on the panel
-are its own: the party doesn't walk there. It needs the game started from the Ledger (which turns off
+are its own: the party doesn't walk there.
+
+Its top line has three buttons on the right: the level (**Least**, **Short**,
+**Detail**; a click goes to the next, and the Options tab follows), and **-**
+and **+** to make it smaller or bigger. Collapsed, it is one line, the newest;
+expanded, it is taller (11 lines) and has filters along its top: **All**,
+**Party** (the party's lines), **Damage** (hits, damage and deaths) and
+**Saves** (saving throws and magic resistance). **L** on the map collapses it
+and opens it again. Its size is remembered. It needs the game started from the Ledger (which turns off
 DOSBox's EMS to make room for it).
 
 ### What hurts a monster (the Look box)

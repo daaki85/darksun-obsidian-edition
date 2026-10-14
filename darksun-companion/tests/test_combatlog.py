@@ -88,10 +88,11 @@ class LinesTests(unittest.TestCase):
 
     def test_detail(self):
         lines = self.log.at(c.DETAIL, NAMES)
-        self.assertEqual(len(lines), len(FIGHT) - 1)  # (all but the unlabelled die)
-        self.assertEqual(lines[1].text, "Defiler 29 = 20 + 4 (0-9 roll) +5 DEX, tie broken by 103 (0-199 roll)")
-        self.assertEqual(lines[1].depth, 2)
-        self.assertEqual(lines[0].depth, 0)
+        self.assertEqual(len(lines), len(FIGHT))  # (all but the unlabelled die, the round's order a line of its own)
+        self.assertEqual(lines[0], c.Line("round", None, "ROUND 1", 0))  # (the order after the rule)
+        self.assertEqual(lines[1], c.Line("detail", None, "Defiler 29, Rampager 29, Slig 27", 1))
+        self.assertEqual(lines[2].text, "Defiler 29 = 20 + 4 (0-9 roll) +5 DEX, tie broken by 103 (0-199 roll)")
+        self.assertEqual(lines[2].depth, 2)
 
     def test_sides(self):
         lines = {line.text: line.side for line in self.log.at(c.SHORT, NAMES)}
@@ -274,6 +275,85 @@ class ScrollingTests(unittest.TestCase):
         x0, y0, x1, y1 = c.chip_rect()
         self.assertEqual(picture[y0 * c.PANEL_W + x0], ink["outline"])
         self.assertEqual(picture[(y0 + 1) * c.PANEL_W + x0 + 1], ink["stone"])
+
+
+class StatesTests(unittest.TestCase):
+    def setUp(self):
+        self.panel, self.game = c.Panel(), FakeGame()
+        self.panel.mouse(self.game, HDR)
+
+    def press(self, px, py):
+        """A press at PX, PY in the panel as it is now."""
+        hits = c.struct.unpack_from("<H", self.game.guest.mem, HDR + c.TSR_MOUSE + 6)[0] + 1
+        x, y = c.PANEL_X0 + px, self.panel.g.top + py
+        self.game.guest.mem[HDR + c.TSR_MOUSE:HDR + c.TSR_MOUSE + 12] = c.struct.pack("<hhHHhh", x, y, 0, hits, x, y)
+        self.panel.mouse(self.game, HDR)
+
+    def test_sizes(self):
+        for g in c.SIZES.values():
+            self.assertEqual(g.top + g.height, c.PANEL_Y0 + c.PANEL_H)  # (the foot stays)
+            self.assertLessEqual(g.height, 130)  # (DSCLOG's PANEL_H_MOST)
+            if g.rows:
+                self.assertLessEqual(g.text_y + g.rows * c.LINE_H, g.well[3] + 1)
+        self.assertEqual(c.SIZES[c.DOCKED].well, c.WELL)
+
+    def test_buttons(self):
+        plus, minus = c.PLUS_X0 + 3, c.MINUS_X0 + 3
+        self.press(plus, 5)
+        self.assertEqual(self.panel.size, c.EXPANDED)
+        self.press(plus, 5)  # (as big as it gets)
+        self.assertEqual(self.panel.size, c.EXPANDED)
+        self.press(minus, 5)
+        self.press(minus, 5)
+        self.assertEqual(self.panel.size, c.COLLAPSED)
+        self.press(minus, 5)
+        self.assertEqual(self.panel.size, c.COLLAPSED)
+
+    def test_level_chip(self):
+        x0, y0, x1, y1 = c.level_rect(None)
+        self.assertEqual(self.panel.level, c.SHORT)
+        self.press(x0 + 2, y0 + 2)
+        self.assertEqual(self.panel.level, c.DETAIL)
+        self.press(x0 + 2, y0 + 2)
+        self.assertEqual(self.panel.level, c.MINIMAL)
+
+    def test_filters(self):
+        self.panel.font = FakeFont()
+        self.panel.resize(c.EXPANDED)
+        rects = dict(c.filter_rects(FakeFont(), self.panel.g))
+        x0, y0, x1, y1 = rects["saves"]
+        self.press(x0 + 2, y0 + 2)
+        self.assertEqual(self.panel.filter, "saves")
+        self.panel.resize(c.DOCKED)  # (no filters' row: all of it again)
+        self.assertEqual(self.panel.filter, "all")
+        log = c.Log()
+        log.add(FIGHT)
+        lines = log.at(c.SHORT, NAMES)
+        self.assertTrue(all(ln.kind in ("save", "round") for ln in c.filtered(lines, "saves")))
+        self.assertIn("Slig is killed", [ln.text for ln in c.filtered(lines, "damage")])
+        self.assertEqual(c.filtered(lines, "party"), [ln for ln in lines if ln.kind == "round"])
+
+    def test_l_key(self):
+        self.panel.resize(c.EXPANDED)
+        keys = HDR + c.TSR_KEYS
+        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", 1)
+        self.panel.mouse(self.game, HDR)
+        self.assertEqual(self.panel.size, c.COLLAPSED)
+        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", 2)
+        self.panel.mouse(self.game, HDR)
+        self.assertEqual(self.panel.size, c.EXPANDED)  # (back to the size it had)
+
+    def test_update_writes_the_size(self):
+        g = self.game.guest
+        g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
+        g.mem[HDR + c.TSR_HDR_OFF:HDR + c.TSR_HDR_OFF + 2] = c.struct.pack("<H", 0)
+        g.mem[HDR + c.TSR_DAC:HDR + c.TSR_DAC + 2] = c.struct.pack("<H", 0x2000)
+        self.panel.resize(c.COLLAPSED)
+        self.panel.log.add(FIGHT)
+        self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES)
+        self.assertEqual(c.struct.unpack_from("<HH", g.mem, HDR + c.TSR_PANEL_TOP),
+                         (c.SIZES[c.COLLAPSED].top, c.SIZES[c.COLLAPSED].height))
+        self.assertEqual(c.struct.unpack_from("<H", g.mem, HDR + c.TSR_PANEL_NEW)[0], 1)
 
 
 if __name__ == "__main__":

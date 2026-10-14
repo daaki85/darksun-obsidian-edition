@@ -192,6 +192,17 @@ def combat_log_level(settings: dict) -> str:
     return level if level in POPUP_LEVELS else POPUP_SHORT
 
 
+def _remember(values: dict) -> None:
+    """Settings the game itself changed (the combat log panel's level and size), saved."""
+    from . import launch
+    try:
+        settings = launch.load_settings()
+        settings.update(values)
+        launch.save_settings(settings)
+    except OSError:
+        pass
+
+
 def _game_font(game_dir: Optional[str]):
     """The game's font (art.Font) from its folder, or None."""
     from . import art, launch
@@ -638,6 +649,8 @@ class DiceLog:
         self.show_shadows = bool(settings.get("shadows", True))
         self.combat_log = bool(settings.get("combat_log", False))
         self.combat_log_level = combat_log_level(settings)
+        if settings.get("combat_log_size") in combatlog.SIZES:
+            self._panel.resize(settings["combat_log_size"])
         self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
@@ -1141,12 +1154,16 @@ class DiceLog:
         notches = self._wheel.take()
         if self.tsr_hdr is None or self.game is None or not self._panel.shown:
             return
-        before = self._panel.first
+        panel = self._panel
+        before = (panel.first, panel.size, panel.level, panel.filter)
         try:
-            self._panel.mouse(self.game, self.tsr_hdr)
-            if notches and self._panel.over():
-                self._panel.wheel(notches)
-            if self._panel.first != before:
+            panel.mouse(self.game, self.tsr_hdr)
+            if notches and panel.over():
+                panel.wheel(notches)
+            if panel.level != self.combat_log_level or panel.size != before[1]:
+                self.combat_log_level = panel.level  # (the panel's level chip: the Options tab's too)
+                _remember({"combat_log_level": panel.level, "combat_log_size": panel.size})
+            if (panel.first, panel.size, panel.level, panel.filter) != before:
                 self._update_panel(now)
         except (struct.error, IndexError, ValueError):
             pass

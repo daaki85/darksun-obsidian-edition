@@ -337,6 +337,10 @@ panel_held dw 0                 ; +336 1 while the left button pressed on the pa
 panel_hits dw 0                 ; +338 the presses on the panel, counted, and where the last was:
 panel_hx   dw 0                 ; +340   x,
 panel_hy   dw 0                 ; +342   y
+panel_top  dw PANEL_Y0          ; +344 the companion's: where the panel's top is on the screen,
+panel_rows dw PANEL_H           ; +346   and its height (at most PANEL_H_MOST), set before PANEL_NEW
+panel_keys dw 0                 ; +348 L pressed on the map with the panel shown, counted (the
+                                ;      companion collapses or opens it); the key kept from the game
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -14026,13 +14030,15 @@ view_again:
 PANEL_X0   equ 136              ; (x0 and the width a multiple of 4: whole bytes of the planes)
 PANEL_Y0   equ 120
 PANEL_W    equ 180
-PANEL_H    equ 78
-PANEL_BYTES equ PANEL_W * PANEL_H
+PANEL_H    equ 78                ; (as it starts: the companion's PANEL_TOP and PANEL_ROWS)
+PANEL_H_MOST equ 130
+PANEL_BYTES equ PANEL_W * PANEL_H_MOST
 SHOWN_PAGE equ 0x118E           ; (in the page routines' segment, PAGES_SEG) 1: A400h shown
 panel_shown db 0
 panel_dirty db 0
 panel_pseg  dw 0                ; the page routines' segment, and the page on show when the panel
-panel_page  dw 0                ;   was last drawn (PANEL_DRAW)
+panel_page  dw 0                ;   was last drawn (PANEL_DRAW), and its top then
+panel_drawn dw PANEL_Y0
 
 panel_tick:
         cmp word [cs:panel_on], 0
@@ -14053,6 +14059,12 @@ panel_tick:
 .on:    cmp word [cs:panel_new], 0
         je .old
         mov word [cs:panel_new], 0
+        cmp byte [cs:panel_shown], 0
+        je .draw
+        mov ax, [cs:panel_top]          ; smaller than it was: the view drawn again under it first
+        cmp ax, [cs:panel_drawn]
+        jbe .draw
+        call view_again
         jmp .draw
 .old:   cmp byte [cs:panel_shown], 0
         je .draw
@@ -14082,6 +14094,22 @@ panel_wait db PANEL_EVERY
 panel_lx   dw 0
 panel_ly   dw 0
 
+; PANEL_LIVE: ZF set if the panel is on screen: shown, and the page on show the one it was last
+; drawn into (not while the game shows the other screen: a window over the map, the panel not on it)
+panel_live:
+        cmp byte [cs:panel_shown], 0
+        je .no
+        push es
+        push ax
+        mov es, [cs:panel_pseg]
+        mov ax, [es:SHOWN_PAGE]
+        cmp ax, [cs:panel_page]
+        pop ax
+        pop es
+        ret
+.no:    cmp sp, 0                       ; (ZF clear)
+        ret
+
 ; PANEL_MOUSE: in MOUSE_EVENT (AX the events, BX the buttons held, CX, DX where): the pointer
 ; noted for the companion; a left press on the panel, while it is shown, counted and kept from the
 ; game with its release (the companion scrolls the log: combatlog.py)
@@ -14094,21 +14122,15 @@ panel_mouse:
         je .ret
         test al, EVENT_LEFT_PRESS
         jz .ret
-        push es                         ; (not while the game shows the other screen: a window
-        push ax                         ;   over the map, the panel not on it)
-        mov es, [cs:panel_pseg]
-        mov ax, [es:SHOWN_PAGE]
-        cmp ax, [cs:panel_page]
-        pop ax
-        pop es
+        call panel_live
         jne .ret
         push cx
         push dx
         sub cx, PANEL_X0
         cmp cx, PANEL_W
         jae .out
-        sub dx, PANEL_Y0
-        cmp dx, PANEL_H
+        sub dx, [cs:panel_top]
+        cmp dx, [cs:panel_rows]
 .out:   pop dx
         pop cx
         jae .ret
@@ -14136,8 +14158,10 @@ panel_draw:
         add ax, PAGES_SEG
         mov es, ax
         mov [cs:panel_pseg], ax         ; (where the page on show is said, and which it was:
-        mov ax, [es:SHOWN_PAGE]         ;   PANEL_MOUSE)
+        mov ax, [es:SHOWN_PAGE]         ;   PANEL_LIVE)
         mov [cs:panel_page], ax
+        mov ax, [cs:panel_top]          ; (and where its top was: PANEL_TICK)
+        mov [cs:panel_drawn], ax
         mov ax, 0xA000
         cmp word [es:SHOWN_PAGE], 0
         je .seg
@@ -14153,8 +14177,12 @@ panel_draw:
         mov al, 2
         out dx, ax
         mov si, bx                      ; the picture's first pixel of this plane ...
-        mov di, PANEL_Y0 * 80 + PANEL_X0 / 4    ; ... and the screen's byte for it
-        mov dx, PANEL_H
+        mov ax, [cs:panel_top]          ; ... and the screen's byte for it
+        mov dx, 80
+        mul dx
+        add ax, PANEL_X0 / 4
+        mov di, ax
+        mov dx, [cs:panel_rows]
 .row:   mov cx, PANEL_W / 4
 .pix:   mov al, [si]
         stosb
@@ -14650,6 +14678,8 @@ KEY_TAB     equ 0x0F09
 KEY_BACKTAB equ 0x0F00
 KEY_ENTER   equ 0x1C0D
 KEY_PAD_ENTER equ 0xE00D
+KEY_L       equ 0x266C
+KEY_SHIFT_L equ 0x264C
 HIT_PASSES  equ 600             ; passes of the map's main loop the hit is the chosen enemy, from the
                                 ;   click (not BIOS ticks: the BIOS clock can stand still in a fight,
                                 ;   and the hit stayed the enemy, the walk to it stalling)
@@ -14659,7 +14689,10 @@ LEFT        equ 1
 
 int16:
         cmp word [cs:target_on], 0
+        jne .on
+        cmp byte [cs:panel_shown], 0    ; (L for the combat log's panel)
         je .chain
+.on:
         cmp ah, 0x00
         je .read
         cmp ah, 0x10
@@ -14705,6 +14738,17 @@ int16:
         iret
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
+        cmp ax, KEY_L
+        je .l
+        cmp ax, KEY_SHIFT_L
+        jne .tabs
+.l:     call panel_live                 ; L on the map, the panel on it: the companion's
+        jne .no
+        inc word [cs:panel_keys]
+        stc
+        ret
+.tabs:  cmp word [cs:target_on], 0
+        je .no
         cmp ax, KEY_TAB
         jne .back
         inc word [cs:tab_seq]

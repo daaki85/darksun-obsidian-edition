@@ -963,6 +963,8 @@ class Viewer:
         lines = self.dice.lines(self.show_all.get())
         if lines:
             self._append_dice(lines)
+        if self.dice.combat_log_level != self.combat_log_level.get():  # (the panel's level chip)
+            self.combat_log_level.set(self.dice.combat_log_level)
         self.round_line.set(self._round_text())
         picked = self.dice.take_picked()
         if picked is not None:

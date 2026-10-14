@@ -17,7 +17,9 @@ have the detail.
   least, in short (the default) or in detail. An Options switch, off by
   default. It scrolls back over the fight: the scrollbar's handle, a page
   at a click on the bar, the mouse wheel over it (on Windows), and a
-  **Latest** chip back to the newest lines.
+  **Latest** chip back to the newest lines. Its header has the level and
+  - / + buttons: collapsed to one line, docked, or expanded with filters
+  (All, Party, Damage, Saves); **L** collapses and opens it.
 - **Saves under their names.** The Ledger keeps a second copy of every save in
   its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before
   Scar's battle.SAV`), and the Options tab's new **Saves** section opens the
