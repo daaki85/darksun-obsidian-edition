@@ -10,6 +10,12 @@ have the detail.
 
 ## Pull request #44 (in progress)
 
+**Added**
+- **Saves under their names.** The Ledger keeps a second copy of every save in
+  its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before
+  Scar's battle.SAV`), and the Options tab's new **Saves** section opens the
+  folder and puts a named save back in a slot of the game's list.
+
 **Fixed**
 - **Stuck on the creation panel's KITS page.** A single-class warrior on the
   last weapon page has KITS for its button; adding a class there (a fighter
@@ -49,8 +55,11 @@ have the detail.
 - **The Trustee stuck at "I have to get back to work".** The game makes him
   busy after a talk until his rounds of the pens bring him back to their first
   corner; when his rounds stall (he can't reach his next corner), he stays busy
-  for good and never talks again. In the Ledger's copy of his script he says
-  the line once and is free to talk the next time.
+  for good and never talks again. What stalls them: a thief with no room for
+  his stolen key drops it at his feet, and after each step of his rounds he
+  makes for it ("There it is!") without picking it up. In the Ledger's copy he
+  leaves the key where it lies (the party can pick it up), and he says the
+  busy line once and is free to talk the next time.
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 

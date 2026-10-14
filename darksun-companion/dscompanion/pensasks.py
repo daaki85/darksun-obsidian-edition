@@ -250,9 +250,34 @@ def busy_once(script: bytes, field_types: bytes, original: Optional[bytes] = Non
     return bytes(out)
 
 
+# What keeps his rounds from coming back: a key picked from his pocket by a thief with no room
+# for it is dropped at his feet (his talk, script 146), and after each step of his rounds he looks
+# for it lying within 9 squares (the key stolen: KEY_STOLEN), says "There it is!" and makes for it
+# (8 at 4299), but doesn't pick it up: drawn back to it after every step, he never gets round. The
+# Ledger's copy has him leave it there (the party can pick it up): the test asks for a value the
+# flag never has.
+ROUNDS_SCRIPT, KEY_STOLEN, KEY, NEVER = 8, 55, -30032, 2
+
+
+def no_key_chase(script: bytes, field_types: bytes) -> bytes:
+    """The Trustee's rounds (script 8) without his walk to his dropped key; unchanged if the test
+    isn't there as the game has it."""
+    ops = gpl.decode(script, field_types)
+    stolen = ("expr", ["(", ("var", FLAG, KEY_STOLEN), "==", ("n", 1), ")"])
+    for i, o in enumerate(ops[:-2]):
+        if o.code == TEST and o.args[0] == stolen and ops[i + 1].code == 0x3E and ops[i + 2].code == TEST \
+                and ("n", KEY) in ops[i + 2].args[0][1].args:
+            never = gpl.encode_op((TEST, [("expr", ["(", ("var", FLAG, KEY_STOLEN), "==", ("n", NEVER), ")"])]))
+            if len(never) != ops[i + 1].at - o.at:
+                return script
+            return script[:o.at] + never + script[ops[i + 1].at:]
+    return script
+
+
 def script_chunks(chunks, field_types: bytes, vulture: bool = True) -> dict:
     """For the Ledger's copy of GPLDATA: Dinos's and the Trustee's talks with the questions (the
-    vulture's only with the vulture quest on), and the Trustee's busy line said once."""
+    vulture's only with the vulture quest on), the Trustee's busy line said once, and his rounds
+    without his walk to a dropped key."""
     out = {}
     for number, first, asks, before in MENUS:
         if VULTURE in asks and not vulture:
@@ -268,5 +293,10 @@ def script_chunks(chunks, field_types: bytes, vulture: bool = True) -> dict:
         script = out.get(key, chunks[key])
         changed = busy_once(script, field_types, chunks[key])
         if changed != script:
+            out[key] = changed
+    key = ("GPL ", ROUNDS_SCRIPT)
+    if key in chunks:
+        changed = no_key_chase(chunks[key], field_types)
+        if changed != chunks[key]:
             out[key] = changed
     return out

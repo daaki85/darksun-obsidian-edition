@@ -248,5 +248,39 @@ class BusyOnceTests(unittest.TestCase):
         self.assertIn(("GPL ", pensasks.TRUSTEE_SCRIPT), pensasks.script_chunks(chunks, b""))
 
 
+def _rounds_like() -> bytes:
+    """The end of the Trustee's rounds as the game has it: his key stolen and lying near, he
+    makes for it."""
+    s = _Script()
+    s.op(0x18, ("expr", ["(", ("var", 0x8D, pensasks.KEY_STOLEN), "==", ("n", 1), ")"]))
+    s.op(0x3E, ("label", "end"))
+    s.op(0x18, ("op", (16, [("var", 137, 39), ("n", pensasks.KEY), ("n", 9)])))
+    s.op(0x3E, ("label", "end2"))
+    s.op(0x14, ("n", 0), ("n", 8))
+    s.label("end2")
+    s.op(0x67)
+    s.label("end")
+    s.op(0x67)
+    s.op(0x31)
+    return s.bytes(end=False)
+
+
+class KeyChaseTests(unittest.TestCase):
+
+    def test_never(self):
+        """The test asks for a value the flag never has; nothing else changes, nothing moves."""
+        script = _rounds_like()
+        out = pensasks.no_key_chase(script, b"")
+        self.assertEqual(len(out), len(script))
+        first = gpl.decode(out, b"")[0]
+        self.assertEqual(first.args[0][1][3], ("n", pensasks.NEVER))
+        self.assertEqual(out[gpl.decode(script, b"")[1].at:], script[gpl.decode(script, b"")[1].at:])
+
+    def test_elsewhere(self):
+        self.assertEqual(pensasks.no_key_chase(_game_like(), b""), _game_like())
+        chunks = {("GPL ", pensasks.ROUNDS_SCRIPT): _rounds_like()}
+        self.assertIn(("GPL ", pensasks.ROUNDS_SCRIPT), pensasks.script_chunks(chunks, b""))
+
+
 if __name__ == "__main__":
     unittest.main()

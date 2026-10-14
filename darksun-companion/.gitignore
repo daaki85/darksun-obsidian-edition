@@ -21,3 +21,5 @@ RGN08.GFF
 RGN08.GFF.tmp
 GAMEEND.TXT
 crash-logs/
+Named saves/
+*.SAV

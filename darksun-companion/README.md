@@ -90,6 +90,7 @@ game.
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
+    - [Saves under their names](#saves-under-their-names)
   - [More characters](#more-characters)
 - [Game speed](#game-speed)
 - [Accessibility](#accessibility)
@@ -3091,6 +3092,16 @@ had better not see them: it puts each save it finds in the row its number
 names, with room for ten, and a `SAVE11.SAV` would be written past the end.)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-saves).
+
+#### Saves under their names
+
+Only the game's list says which file is which save. While it runs, the Ledger
+keeps a second copy of every save, under the name you typed for it in the
+game, in its own **Named saves** folder: `Page 2 slot 05 - Before Scar's
+battle.SAV`. Saving over a slot replaces that slot's copy. The Options tab's
+**Saves** section has **Open the folder**, and **Put a save in a slot...**,
+which copies a named save (or any save file) into the page and slot you give,
+asking first if that slot holds one, to be loaded from the game's list.
 
 ### More characters
 

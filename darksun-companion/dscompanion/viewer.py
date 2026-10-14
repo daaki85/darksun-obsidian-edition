@@ -10,20 +10,24 @@ view of a record that highlights bytes as they change; click a byte to see it
 decoded as each value type) and the Options tab.
 """
 
+import os
 import re
 import struct
+import subprocess
+import sys
 import time
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, dicelog, game, kits, launch, partyview, rings, spellbook, theme, values
+from . import __version__, art, dicelog, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
 from .process import ProcessError
 
 REFRESH_MS = 500
+SAVES_EVERY = 3.0  # seconds between looks at the game's saves (namedsaves.py)
 DICE_MS = 50
 RETRY_SECONDS = 2.0
 MAX_LOG_LINES = 3000
@@ -492,7 +496,74 @@ class Viewer:
                                       "(needs a faster PC)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
+        # the saves, a second time under their names in the game (namedsaves.py)
+        kept = section("saves", "Saves")
+        about = ttk.Label(kept, text="Every save is copied, as the game writes it, into the Ledger's \"Named "
+                          "saves\" folder under the name it has in the game (\"Page 2 slot 05 - Before Scar's "
+                          "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
+        about.pack(anchor="w")
+        kept.bind("<Configure>", lambda e: about.configure(wraplength=max(200, e.width - 20)), add="+")
+        buttons = ttk.Frame(kept)
+        buttons.pack(anchor="w", pady=(4, 0))
+        ttk.Button(buttons, text="Open the folder", command=self.open_named_saves).pack(side="left")
+        ttk.Button(buttons, text="Put a save in a slot...", command=self.restore_save).pack(side="left", padx=(8, 0))
         ttk.Button(options, text="Restore defaults", command=self.restore_defaults).pack(anchor="w", pady=(12, 0))
+
+    def _saves_game_dir(self) -> Optional[str]:
+        game_dir = self._game_dir or launch.find_game_dir()
+        if game_dir is None:
+            messagebox.showinfo("Saves", "The Ledger hasn't found the game yet: start it once from the Ledger.",
+                                parent=self.root)
+        return game_dir
+
+    def open_named_saves(self) -> None:
+        game_dir = self._saves_game_dir()
+        if game_dir is None:
+            return
+        namedsaves.sync(game_dir)
+        os.makedirs(namedsaves.NAMED, exist_ok=True)
+        try:
+            if sys.platform == "win32":
+                os.startfile(namedsaves.NAMED)  # type: ignore[attr-defined]
+            else:
+                subprocess.Popen(["xdg-open", namedsaves.NAMED])
+        except OSError:
+            self.status.set(f"The named saves are in {namedsaves.NAMED}")
+
+    def restore_save(self) -> None:
+        """A save file (a named copy) put in a slot of the game's list, to be loaded from there."""
+        game_dir = self._saves_game_dir()
+        if game_dir is None:
+            return
+        os.makedirs(namedsaves.NAMED, exist_ok=True)
+        copy = filedialog.askopenfilename(parent=self.root, title="Which save?", initialdir=namedsaves.NAMED,
+                                          filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
+        if not copy:
+            return
+        m = namedsaves.COPY.match(os.path.basename(copy))
+        where = simpledialog.askstring("Put a save in a slot", "Which page and slot of the game's list? "
+                                       "(page 1 to 4, slot 1 to 10, as 2-5)", parent=self.root,
+                                       initialvalue=f"{m.group(1)}-{int(m.group(2))}" if m else "1-1")
+        if not where:
+            return
+        try:
+            page, slot = (int(n) for n in where.replace(" ", "").split("-"))
+            if not (1 <= page <= 4 and 1 <= slot <= 10):
+                raise ValueError
+        except ValueError:
+            messagebox.showerror("Put a save in a slot", "That isn't a page and slot (such as 2-5).", parent=self.root)
+            return
+        there = namedsaves.slot_name(game_dir, page, slot)
+        if there is not None and not messagebox.askyesno(
+                "Put a save in a slot", f"Page {page} slot {slot} has \"{there}\". Put this save there instead? "
+                "(Its named copy stays in the folder.)", parent=self.root):
+            return
+        try:
+            name = namedsaves.restore(copy, game_dir, page, slot)
+        except (OSError, ValueError) as e:
+            messagebox.showerror("Put a save in a slot", str(e), parent=self.root)
+            return
+        self.status.set(f"\"{name}\" is in page {page} slot {slot}: load it from the game's list.")
 
     def restore_defaults(self) -> None:
         """Every switch on the Options tab back as it comes (after asking)."""
@@ -781,7 +852,23 @@ class Viewer:
                 self._refresh_hex()
             except ProcessError as e:
                 self._disconnected(e)
+        self._sync_saves()
         self.root.after(REFRESH_MS, self._tick)
+
+    def _sync_saves(self) -> None:
+        """Every few seconds, the game's saves copied under their names (namedsaves.py)."""
+        now = time.monotonic()
+        if now < getattr(self, "_saves_due", 0.0):
+            return
+        self._saves_due = now + SAVES_EVERY
+        game_dir = self._game_dir or launch.load_settings().get("game_dir")
+        if game_dir and os.path.isdir(game_dir):
+            try:
+                made = namedsaves.sync(game_dir)
+            except OSError:
+                made = []
+            if made:
+                self.status.set("Save copied: " + ", ".join(made))
 
     def _auto_locate(self) -> None:
         """For Shattered Lands, point the party slots at the game's own tables."""
