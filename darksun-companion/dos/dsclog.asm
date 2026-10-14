@@ -5863,9 +5863,11 @@ probe_round_mark:
         mov byte [cs:arc_casts + si], 0
 .ret:   iret
 
-; The Shinobi's spells (kits.SHINOBI_SPELLS): spell, spell level. Wizard spells are 0 to WIZARD_LAST.
+; The Shinobi's spells (kits.SHINOBI_SPELLS): spell, spell level. Wizard spells are 0 to WIZARD_LAST;
+; Fogbolt (FOG_SPELL), a new spell, counts only with RULE_NEW_SPELLS (SHINOBI_KNOWS).
 SHINOBI_SPELLS:
         db 6, 1,  2, 1,  9, 1,  4, 1,  11, 1           ; Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog
+        db FOG_SPELL, 1                                ; Fogbolt
         db 17, 2,  19, 2,  12, 2,  13, 2,  15, 2       ; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
         db 25, 3,  29, 3,  36, 3,  30, 3               ; Blink, Haste, Protection from Normal Missiles, Hold Person
 SHINOBI_SPELLS_END:
@@ -5935,11 +5937,16 @@ probe_ranger_level:
 .out:   pop cx
         iret
 
-; SHINOBI_WIZARD: AX (a level), for wizard spell [BP+8] the level a Shinobi (combatant [BP+6])
+; SHINOBI_WIZARD: AX (a level), for wizard spell [BP+8] (or a new spell) the level a Shinobi (combatant [BP+6])
 ; casts it at where more; then IRET.
 shinobi_wizard:
         cmp word [bp + 8], WIZARD_LAST
+        jbe .wizard
+        cmp word [bp + 8], NS_FIRST     ; (or a new spell: NEW SPELLS)
+        jb .ret
+        cmp word [bp + 8], NS_LAST
         ja .ret
+.wizard:
         push cx
         mov cx, ax
         call shinobi_level
@@ -6048,35 +6055,63 @@ probe_pick_any:
         iret
 
 ; SHINOBI_UNKNOWN: CF set if character SI doesn't know one of the Shinobi's spells (SHINOBI_SPELLS)
-; of spell level CL or less. DS the game's; all registers kept.
+; of spell level CL or less (SHINOBI_KNOWS). DS the game's; all registers kept.
 shinobi_unknown:
         push ax
         push bx
         push si
-        push ds
-        imul bx, si, KNOWN_SIZE
-        add bx, KNOWN_OFF
-        mov ax, ds
-        sub ax, KNOWN_FROM_DS
-        mov ds, ax
+        mov bx, si
         mov si, SHINOBI_SPELLS
 .spell: cmp [cs:si + 1], cl
         ja .next
         movzx ax, byte [cs:si]
-        push bx
-        add bx, ax
-        cmp byte [bx], 0
-        pop bx
+        call shinobi_knows
+        jc .next
         stc
-        je .out
+        jmp .out
 .next:  add si, 2
         cmp si, SHINOBI_SPELLS_END
         jb .spell
         clc
-.out:   pop ds
-        pop si
+.out:   pop si
         pop bx
         pop ax
+        ret
+
+; SHINOBI_KNOWS: CF set if party member BX knows spell AX: the game's byte for it (KNOWN_OFF's), or
+; for a new spell its sheet's bit (NS_KNOWS); a new spell counts as known while RULE_NEW_SPELLS is
+; off (so it isn't offered). DS the game's; all registers kept.
+shinobi_knows:
+        cmp ax, NS_FIRST
+        jae .new
+        push bx
+        push ds
+        push ax
+        imul bx, bx, KNOWN_SIZE
+        add bx, KNOWN_OFF
+        add bx, ax
+        mov ax, ds
+        sub ax, KNOWN_FROM_DS
+        mov ds, ax
+        pop ax
+        cmp byte [bx], 0
+        pop ds
+        pop bx
+        jne .yes
+        clc
+        ret
+.new:   test byte [cs:rules], RULE_NEW_SPELLS
+        jz .yes
+        push ax
+        push cx
+        mov cl, al
+        sub cl, NS_FIRST
+        mov ax, bx
+        call ns_knows
+        pop cx
+        pop ax
+        ret
+.yes:   stc
         ret
 
 ; PROBE_PICK_LEVEL: INT VEC_PICK_LEVEL replaces "inc al" (2 bytes; DSUN.EXE 85861h) in the CHOOSE A
@@ -7048,29 +7083,21 @@ probe_pick_list:
         mov bp, sp
         les si, [ss:bp + 14]    ; (the INT's way back: CS:IP)
         mov es, [es:si + PICK_LIST_SEG]
-        mov cx, [es:PICK_WHO]   ; the character's known spells: CX their offset
-        imul cx, cx, KNOWN_SIZE
-        add cx, KNOWN_OFF
+        mov cx, [es:PICK_WHO]   ; (CX the character)
         mov dl, [PICK_MOST]     ; (DL the highest spell level on offer)
-        mov ax, ds
-        sub ax, KNOWN_FROM_DS
-        push ds
-        mov ds, ax
         xor di, di              ; (the list's length)
         mov si, SHINOBI_SPELLS
 .spell: cmp [cs:si + 1], dl
         ja .next
-        movzx bx, byte [cs:si]
-        add bx, cx
-        cmp byte [bx], 0
-        jne .next               ; (known)
-        sub bx, cx
-        mov [es:PICK_LIST + di], bx
+        movzx ax, byte [cs:si]
+        mov bx, cx
+        call shinobi_knows
+        jc .next                ; (known)
+        mov [es:PICK_LIST + di], ax
         add di, 2
 .next:  add si, 2
         cmp si, SHINOBI_SPELLS_END
         jb .spell
-        pop ds
         shr di, 1
         jmp .out
 .int:   test word [cs:rules_hi], RULE_HI_INT    ; (a preserver: the list without the spells of a

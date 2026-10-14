@@ -23,6 +23,9 @@ have the detail.
   the game's wooden shield isn't.
 
 **Changed**
+- **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the
+  game's five, with the new spells on: offered at a level up as the others
+  are, and cast at the thief level less 5 as they are.
 - **The bone and obsidian axes weigh 30** (35 and 70 before), the game's
   heaviest a weapon can be without being HEAVY: they are no longer HEAVY, so
   either can go in the off hand with another weapon, and both can backstab.

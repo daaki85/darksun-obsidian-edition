@@ -6,6 +6,7 @@ that number, 0 for none (the rule off, more than one class, none chosen).
 
 from typing import Optional, Tuple
 
+from .game import FOG_SPELL, NEW_SPELLS
 from .kitpages import KIT_IDS, KITS
 
 RAVAGER, SENTINEL, STALKER = KIT_IDS["Ravager"], KIT_IDS["Sentinel"], KIT_IDS["Stalker"]
@@ -49,8 +50,9 @@ SPHERE2, SPHERE2_MASK = 0x45, 0x0F
 # thrown: long sword, club, dagger, short sword, mace, axe, pick
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
-# level up from thief level SHINOBI_FIRST, none from scrolls; it casts at its thief level less 5
-SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1),  # Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog
+# level up from thief level SHINOBI_FIRST, none from scrolls; it casts at its thief level less 5.
+# Fogbolt, a new spell, only with the new spells on (its known bit in the sheet: NS_KNOWS)
+SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (FOG_SPELL, 1),  # Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt
                   (17, 2), (19, 2), (12, 2), (13, 2), (15, 2),  # Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
                   (25, 3), (29, 3), (36, 3), (30, 3))  # Blink, Haste, Protection from Normal Missiles, Hold Person
 SHINOBI_FIRST, WIZARD_LAST = 6, 68  # (wizard spells are 0 to WIZARD_LAST)
@@ -199,7 +201,7 @@ def cast_level(kid: int, spell: int, level: int, thief_level: int) -> int:
     (81B16h: the spell levels it may cast, half that rounded up; Dispel Magic) has it with
     PROBE_CAST_LEVEL, and the level a spell's duration and damage take (5E25Ch) with
     PROBE_SPELL_LEVEL."""
-    if kid == SHINOBI and spell <= WIZARD_LAST:
+    if kid == SHINOBI and (spell <= WIZARD_LAST or spell in NEW_SPELLS):
         return max(level, shinobi_cast(thief_level))
     return level
 
@@ -233,13 +235,14 @@ def shinobi_pick_level(level: int) -> int:
     return (shinobi_cast(level) + 1) // 2
 
 
-def pick_list(kid: int, known, most: int):
+def pick_list(kid: int, known, most: int, new_spells: bool = True):
     """The spells a character of kit KID may pick at a level up, for a Shinobi (PROBE_PICK_LIST):
-    its own up to spell level MOST that it doesn't know (KNOWN(spell) true); None for others (the
-    game's list)."""
+    its own up to spell level MOST that it doesn't know (KNOWN(spell) true), Fogbolt only with the
+    new spells on (NEW_SPELLS); None for others (the game's list)."""
     if kid != SHINOBI:
         return None
-    return [spell for spell, lvl in SHINOBI_SPELLS if lvl <= most and not known(spell)]
+    return [spell for spell, lvl in SHINOBI_SPELLS
+            if lvl <= most and not known(spell) and (new_spells or spell not in NEW_SPELLS)]
 
 
 def move(kid: int) -> int:

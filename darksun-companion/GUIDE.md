@@ -963,7 +963,8 @@ The kits that change spell slots, by the level of the kit's class (spells of
   place of a ranger's own slots.
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own
   list, learning one at each level up from 6th: **1st level** Gaze Reflection,
-  Charm Person, Shield, Color Spray, Wall of Fog; **2nd** Invisibility, Mirror
+  Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt (with the new spells
+  on); **2nd** Invisibility, Mirror
   Image, Blur, Detect Invisibility, Fog Cloud; **3rd** Blink, Haste, Protection
   from Normal Missiles, Hold Person.
 - An **Arcanist** casts two preserver spells each turn in a fight instead of

@@ -3591,7 +3591,8 @@ class KitTests(unittest.TestCase):
 
     def test_cast_level(self):
         """PROBE_CAST_LEVEL and PROBE_SPELL_LEVEL: AX the level the routines' classes give ([BP-2],
-        DI), a Shinobi's for a wizard spell its thief level less 5 where better (kits.cast_level)."""
+        DI), a Shinobi's for a wizard spell (or a new one, 196-198) its thief level less 5 where better
+        (kits.cast_level)."""
         from dscompanion import kits
         from dscompanion.gamepatch import VEC_CAST_LEVEL, VEC_SPELL_LEVEL
         for rules in (game.RULE_KITS, 0):
@@ -3600,7 +3601,7 @@ class KitTests(unittest.TestCase):
                 kid = self.kit_of(cls, kit, rules)
                 for level in (1, 5, 6, 8, 10):
                     self.creature(cls, kit, level=level)
-                    for spell in (0, 30, 68, 69, 86, 137, 138):
+                    for spell in (0, 30, 68, 69, 86, 137, 138, 195, 196, 198, 199):
                         for given in (0, 2, 7, 10):
                             with self.subTest(rules=rules, cls=cls, kit=kit, level=level, spell=spell, given=given):
                                 self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", given))
@@ -3968,7 +3969,7 @@ class KitTests(unittest.TestCase):
                         self.mu.mem_write(self.DS * 16 + 0x4AEC, bytes((most,)))
                         self.mu.mem_write(seg * 16 + 7, struct.pack("<3H", 40, 41, 42))
                         self.run_vector(VEC_PICK_LIST, 2, eax=3, ebx=0x2222, ecx=0x3333, esi=0x4444, es=0x6666)
-                        want = kits.pick_list(kid, known.__contains__, most)
+                        want = kits.pick_list(kid, known.__contains__, most, new_spells=False)
                         if want is None:
                             want = [40, 41, 42]
                         di = self.mu.reg_read(r.UC_X86_REG_DI)
@@ -3976,7 +3977,34 @@ class KitTests(unittest.TestCase):
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_CX,
                                                                         r.UC_X86_REG_SI, r.UC_X86_REG_ES, r.UC_X86_REG_DS)],
                                          [3, 0x2222, 0x3333, 0x4444, 0x6666, self.DS])
-        self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2), [6, 9, 4, 11, 19, 12, 13, 15])
+        self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2), [6, 9, 4, 11, 198, 19, 12, 13, 15])
+        self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2, new_spells=False),
+                         [6, 9, 4, 11, 19, 12, 13, 15])
+
+    def test_pick_list_fogbolt(self):
+        """PROBE_PICK_LIST with the new spells on: a Shinobi is offered Fogbolt (198) until its sheet's
+        bit says it knows it (NS_KNOWS: +45h, 40h), as the game's own spells by their bytes."""
+        from dscompanion import kits
+        from dscompanion.gamepatch import VEC_PICK_LIST
+        seg, who = 0x8700, 7  # (thing 7: creature 6, self.creature's)
+        site = 0x400 + (VEC_PICK_LIST & 0x1F) * 0x10
+        self.mu.mem_write(CALLER * 16 + site + 2 + (0x8562E - 0x85641), struct.pack("<H", seg))
+        self.mu.mem_write(seg * 16 + 0x25B, struct.pack("<H", who))
+        known_at = (self.DS - (0x4356 - 0x3800)) * 16 + 0x168 + who * 0x8A
+        known = {2, 17, 29}
+        self.mu.mem_write(known_at, bytes(1 if n in known else 0 for n in range(0x8A)))
+        self.rules(game.RULE_KITS | game.RULE_NEW_SPELLS)
+        for knows in (False, True):
+            with self.subTest(knows=knows):
+                self.creature(17, 3, index=6, level=10)
+                self.mu.mem_write(self.SHEET * 16 + 6 * 0x47 + 0x45, bytes((0x40 if knows else 0,)))
+                self.picker_sheet(17, 3, 10)
+                self.mu.mem_write(self.DS * 16 + 0x4AEC, bytes((1,)))
+                self.run_vector(VEC_PICK_LIST, 2, eax=3, ebx=0x2222, ecx=0x3333, esi=0x4444, es=0x6666)
+                di = self.mu.reg_read(r.UC_X86_REG_DI)
+                got = list(struct.unpack("<%dH" % di, self.mu.mem_read(seg * 16 + 7, 2 * di)))
+                self.assertEqual(got, kits.pick_list(kits.SHINOBI, (known | ({198} if knows else set())).__contains__, 1))
+                self.assertEqual(198 in got, not knows)
 
     def test_ranger_level(self):
         """PROBE_RANGER_LEVEL: AL the class's level (ES:BX the sheet + the class's place), a ranger's
@@ -4163,7 +4191,7 @@ class KitTests(unittest.TestCase):
                             self.mu.emu_start(CALLER * 16 + site, 0, count=5000)
                             ip = self.mu.reg_read(r.UC_X86_REG_IP)
                             opens = kid == kits.SHINOBI and bool(
-                                kits.pick_list(kid, known.__contains__, kits.shinobi_pick_level(level)))
+                                kits.pick_list(kid, known.__contains__, kits.shinobi_pick_level(level), new_spells=False))
                             want_ax = (0 if kid == kits.SHINOBI else ax)
                             self.assertEqual(ip, site + 2 + open_at + 1 if opens else site + 6)
                             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DI), 1 if opens else 0)

@@ -1404,11 +1404,18 @@ of it):
 | Seeker: 1st, 2nd, 3rd level slots | 1 | 2 | 2, 1 | 2, 2 | 2, 2, 1 |
 | Justifier: casting level, slots | | | | | 1; one 1st-level |
 
-The Shinobi's spells, all the game's (thief level 6 on, the Seeker's slots):
+The Shinobi's spells, the game's and Fogbolt (thief level 6 on, the Seeker's slots):
 
 | Spell level | Spells |
 |---|---|
-| 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog |
+| 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt |
+
+Fogbolt, a [new spell](#new-wizard-spells), is known by its bit in the sheet
+(`NS_KNOWS`) rather than the game's byte: `SHINOBI_KNOWS` reads either for the
+level up's offer (`SHINOBI_UNKNOWN`, `PROBE_PICK_LIST`), and counts Fogbolt as
+known (not offered) while the new spells are off. `SHINOBI_WIZARD` gives the
+Shinobi's casting level for the new spells (196-198) as for the game's wizard
+spells (0-68).
 | 2nd | Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud |
 | 3rd | Blink, Haste, Protection from Normal Missiles, Hold Person |
 
