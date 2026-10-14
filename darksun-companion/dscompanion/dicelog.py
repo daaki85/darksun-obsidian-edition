@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import defaultparty, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
+from . import defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
 from .guestmem import GuestMemory
@@ -421,6 +421,8 @@ class DiceLog:
         self._spell_until = 0.0  # HP changes before this are a spell's doing
         self._spell_name = ""
         self.tracker: Optional[PartyTracker] = None
+        self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
+        self.defiler_scrolls = True
         self.text: Optional[TextBuffer] = None
         self.dialogue = Dialogue()
         self._dialogue: List[DialogueEntry] = []
@@ -450,6 +452,7 @@ class DiceLog:
         self._rings = rings.Rings()
         self._targeting.forget()
         self.tracker = PartyTracker(self.game)
+        self.defilers = defilerscrolls.DefilerScrolls()
         self.text = TextBuffer(self.guest.read, hdr)
         self.set_record_everything(self.record_everything)
         self.set_popups(self.popups)
@@ -523,6 +526,7 @@ class DiceLog:
             return
         went_back = self._clock is not None and now < self._clock
         if went_back:
+            self.defilers.reset()  # (a save loaded: its fights rolled for again)
             self._mended_in = None  # (a save loaded: its scrolls looked at again)
         # A try later than the game's clock is not this game's: one undone by loading an earlier
         # save, or another game's (a new game started with the same party, the Ledger started
@@ -614,6 +618,7 @@ class DiceLog:
         self.elf_looks = settings.get("elf_looks", True) is not False
         self.cilla_elf = settings.get("cilla_elf", True) is not False
         self.vulture_on = bool(settings.get("vulture", True))
+        self.defiler_scrolls = settings.get("defiler_scrolls", True) is not False
         self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
         self.use_targeting = bool(settings.get("targeting", True))
@@ -990,6 +995,8 @@ class DiceLog:
             self._write_stats()
             if not self._party_check(now):
                 out += self.tracker.check(now)
+                if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
+                    out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
                 out += self._arena_ring(now)
                 out += self._drawn(now)
                 self._kalzith_sold_out()
@@ -1357,6 +1364,7 @@ class DiceLog:
         if now - self._party_changed_at < LOAD_SETTLE:
             if self.tracker:
                 self.tracker.reset()
+            self.defilers.reset()
             return True
         return False
 

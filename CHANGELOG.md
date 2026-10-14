@@ -32,6 +32,11 @@ have the detail.
   Effects screen) and description; preservers and the Shinobi learn all
   three.
 
+- **Defilers' scrolls:** each defiler in a fight has a 5% chance of carrying
+  a scroll of a random preserver spell (the game's 69, and the new spells
+  with them on), found on its body when it dies; rolled once a fight, the
+  roll in the dice log. A New content box, on by default.
+
 **Changed**
 - **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each
   point after, to 40% at 25 (it was 5% at 16 to 25% from 20).

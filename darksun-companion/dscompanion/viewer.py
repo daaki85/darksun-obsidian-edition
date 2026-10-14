@@ -426,6 +426,8 @@ class Viewer:
                 ("kalzith", "Kalzith, a defiler slave in the slave pens who sells arcane scrolls (new games)"),
                 ("semyon", "Semyon in the slave pens after he leaves the arena, and breaking out with Scar"),
                 ("vulture", "The cooked vulture: Dinos cooks it for the party (XP and a full rest)"),
+                ("defiler_scrolls", "Defilers' scrolls: a defiler in a fight carries a scroll of a random "
+                                    "preserver spell one time in 20, dropped where it dies"),
                 (launch.NEW_ITEMS, "New items, magical and mundane: weapons, armour and other gear the game "
                                    "lacks or never placed, on its people, in its shops and chests (the guide's "
                                    "New items lists them)")):
@@ -926,6 +928,7 @@ class Viewer:
                 self.dice.scroll_map = self.scroll_map.get()
                 self.dice.scroll_right = self.scroll_right.get()
                 self.dice.vulture_on = self.content_vars["vulture"].get()
+                self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.stealth_gear = self.stealth_gear.get()
                 self.dice.load_picked(launch.pickpocketed())
                 self.dice.tools_given = launch.tools_given()
@@ -1046,6 +1049,7 @@ class Viewer:
             self.dice.scroll_map = self.scroll_map.get()
             self.dice.scroll_right = self.scroll_right.get()
             self.dice.vulture_on = self.content_vars["vulture"].get()
+            self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
             self.dice.stealth_gear = self.stealth_gear.get()
             self.dice.cilla_elf = self.cilla_elf.get()
             self.dice.set_rules(self._rules())

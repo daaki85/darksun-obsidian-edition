@@ -1216,6 +1216,36 @@ words and the quest's sound), as Dinos's own script does when he heals Gilal
 (350). The Ledger then refills the party, once (flag 781), only while the party
 is talking with him (never from a game being loaded).
 
+### Defilers' scrolls
+
+([In the README](README.md#defilers-scrolls).)
+
+When a creature's hit points reach 0 the game empties its item lists and puts
+what it carried in a container on the ground (an item whose `+08h` names a
+list), in the same step: in the arena's opening fight the Defiler's lists
+were empty, and its things in the container (object 306's item), before the
+Ledger looked again, a quarter of a second later. A scroll can't be put on
+the body at the death itself, so `defilerscrolls.py` gives it earlier: while
+the game's fight flag (`IN_COMBAT`) is set, each living creature after the
+party whose sheet's classes (`+21h`) include 18, the defilers' (no party
+member has it), is rolled for once (d100, 5 or less; Kalzith left out), and a
+scroll put in its pack (`npcitems.add_to`, a list of its own if it has none),
+which the game then drops with the rest. Checked in the game: the arena
+Defiler given a scroll of Haste as it came on, the scroll in its container
+after the Rampager killed it, its lists back on the game's free list.
+
+The rolls are kept for the session by area, creature and name, and forgotten
+when the game's clock goes back or the party changes (a game loaded); a
+defiler already carrying one (a game saved mid-fight) gets no second. The
+scroll is `kalzith.scroll`'s, of the game's object 1400: a scroll teaches
+when right-clicked only for objects 1400-1499 (`SCROLL_LEARNED`), and its
+spell is the item's own (`+02h`, one past the spell's number), so one object
+serves every spell; priced at 3000 a level, as the game's scrolls. Checked in
+the game: one given to Cermak, right-clicked, showed SCROLL, 3000 and Shield's
+icon, and taught Shield (`YOU LEARN THE SPELL`). Items of one object show as
+one in a merchant's list, so two such scrolls sold to the same merchant show
+as one there.
+
 ### What the party wears
 
 ([In the README](README.md#what-the-party-wears).)

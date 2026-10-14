@@ -76,6 +76,7 @@ game.
     - [Semyon](#semyon)
     - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
   - [The cooked vulture](#the-cooked-vulture)
+  - [Defilers' scrolls](#defilers-scrolls)
 - [Item tables](#item-tables)
   - [Every magic item](#every-magic-item)
   - [Every mundane weapon](#every-mundane-weapon)
@@ -2370,8 +2371,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
 
 Spells, people, a quest and items the Ledger adds to the game, each with a box
 in the Options tab's **New content** section: the people, the quest and the
-items from the next time the game is started, the spells at once in games
-started with the dice log.
+items from the next time the game is started, the spells and the defilers'
+scrolls at once in games started with the dice log.
 
 ### New wizard spells
 
@@ -2771,6 +2772,30 @@ used on one of them from the inventory, it's too tough to be worth the chewing.)
 ![Dinos's answer in his dialogue window with his portrait, then the game's own window for the reward: "Each party member receives 100 experience points!"](docs/vulture-meal.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-cooked-vulture).
+
+### Defilers' scrolls
+
+A defiler may carry a spell scroll it was studying: with **Defilers' scrolls**
+ticked (it's ticked by default), each defiler in a fight has a 5% chance
+(1 in 20) of carrying a scroll of a random preserver spell, any of the game's
+69 (1st to 5th level) or, with the new spells on, the Ledger's new ones. When
+it dies the scroll is on its body, with the rest of what it carried.
+
+The defilers are those the game makes defilers: Balkazar, Wyrmias, the Troop
+Leader, the arena's Defiler (who dies in the opening fight), the Dark Spiders,
+the thri-kreen Click-tunk!, Churr-te-tunk! and Cheee-smak-tunk!, and a few
+more, on either side of the fight. Kalzith keeps his own scrolls.
+
+The scroll is the game's own kind: a preserver learns from it as from any
+scroll (right-click it, then click its spell's icon), and it sells for 3,000
+ceramic pieces a spell level. The dice log shows each roll:
+`Defiler's scroll: d100 = 3, needs 5 or less -> a scroll of Haste, dropped
+where Defiler falls`.
+
+Each defiler is rolled for once in each fight. A fight played again from a save
+is a new chance; a game saved mid-fight keeps the scroll a defiler was given.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#defilers-scrolls).
 
 ## Item tables
 

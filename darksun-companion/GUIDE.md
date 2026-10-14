@@ -1280,6 +1280,9 @@ can cast. INT sets two limits:
 | 20-23 | 96-99% | all |
 | 24-25 | 100% | all |
 
+- **Defilers sometimes carry scrolls:** each defiler in a fight has a 1 in 20
+  chance of carrying a scroll of a random preserver spell, found on its body
+  when it dies.
 - **A failed roll uses the scroll up.**
 - **A full spell level** learns no more: the scroll is kept.
 - The level-up choice leaves out levels already full.
@@ -1591,7 +1594,7 @@ AD&D's tables:
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
 | More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen | all on |
 | Expanded features | the leader's CHA at shops; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
-| New content | new wizard spells; new people; a small quest; new items | all on |
+| New content | new wizard spells; new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | on |
 | Controls | Tab and Enter; rings under the enemy chosen with Tab; scrolling with the mouse wheel; spells kept on a click on the Effects screen | on |
 | | scrolling by holding the right button | off |
