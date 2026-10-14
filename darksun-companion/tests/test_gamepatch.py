@@ -37,6 +37,7 @@ class GamePatchTests(unittest.TestCase):
         for p in gamepatch.PATCHES:
             got = patched[p.offset:p.offset + len(p.original)]
             self.assertEqual(got, p.original if p.name in gamepatch.EFFECTS_KEPT else p.replacement, p.name)
+        self.assertTrue(set(gamepatch.ROLL_STORE) <= names)  # (STORE and RECALL, switched the same way)
 
     def test_enter_out_of_the_save_windows_keys(self):
         """The save/load window's key table (Esc, Enter, Up, Down) without Enter, which PROBE_SAVE_PAGE

@@ -200,7 +200,7 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
 # The Options tab's new content and game changes (settings keys), each on unless switched off;
 # the game's copies are written with them as they stand when it is started
 CONTENT = ("kalzith", "semyon", "vulture", "pens_gear", "magic_arms", "world_gear", "world_magic", "effects_kept", "stealth_gear", "arena_ring",
-           "elf_looks")
+           "elf_looks", "roll_store", "cilla_elf")
 # the new items' parts (worldgear.data_chunks', and the arena's ring, ring.py), all switched by
 # one box: NEW_ITEMS
 ITEM_PARTS, NEW_ITEMS = ("pens_gear", "magic_arms", "world_gear", "world_magic", "arena_ring"), "new_items"
@@ -220,7 +220,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
     the saved settings if none given). Returns why the game can't be patched, or None."""
     on = content(load_settings() if settings is None else settings)
-    skip = frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)
+    skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
+        | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE))
     try:
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
@@ -287,7 +288,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
-            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE))
+            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"])
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
         pass  # no Cat's Grace icon: Flaming Sphere's
     return None

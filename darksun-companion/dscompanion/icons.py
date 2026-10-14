@@ -611,10 +611,10 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
         return None
 
 
-def write_resources(source: str, dest: str) -> None:
+def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the save/load
-    window's PAGE 1 to PAGE 4 buttons (savepages.py) and the creation screen's STORE and RECALL
-    (rollstore.py), to DEST."""
+    window's PAGE 1 to PAGE 4 buttons (savepages.py) and, with ROLL_STORE, the creation screen's
+    STORE and RECALL (rollstore.py), to DEST."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
@@ -638,7 +638,8 @@ def write_resources(source: str, dest: str) -> None:
         pass  # (no kit pages: no kits to choose)
     from . import rollstore
     try:
-        added.update(rollstore.chunks(chunks))
+        if roll_store:
+            added.update(rollstore.chunks(chunks))
     except (KeyError, ValueError, IndexError, struct.error):
         pass  # (no STORE and RECALL: the creation screen as the game has it)
     out = with_chunks(data, added)
@@ -697,7 +698,8 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)
     from . import defaultparty
-    added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))  # (Cilla, an elf, drawn as one)
+    if (on or {}).get("cilla_elf", True) is not False:  # (Cilla, an elf, drawn as one)
+        added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))
     out = with_chunks(data, added, room)
     tmp = dest + ".tmp"
     with open(tmp, "wb") as f:

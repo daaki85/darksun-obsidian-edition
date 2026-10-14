@@ -329,27 +329,30 @@ The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below),
 **Options** (Alt+O) with the Ledger's switches, in sections that open and
 close: click a section's heading (or Tab to it and press Space or Enter) to
 open it, ▸ when closed and ▾ when open. Which sections are open is remembered.
-The sections:
+Everything there applies in games started from the Ledger; a switch that says
+"from the next start" waits until the game is started again. The sections:
 
 - **In the game**: each turn's rolls and how much they say, monster
   descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](#rule-changes)): the game's rules closer
   to AD&D.
 - **More character customization** ([More character
-  customization](#more-character-customization)): weapon specialization, kits
-  and levels up to 10.
+  customization](#more-character-customization)): weapon specialization, kits,
+  levels up to 10, and STORE and RECALL on the creation screen.
 - **Expanded features** ([Expanded features](#expanded-features)): the
   leader's CHA at shops, and **Improved thieving** (AD&D's thief skills,
   hiding to backstab, the cloak, boots and belt, and picking pockets).
 - **New content** ([New content](#new-content)): the new spells, at once; the
   new people, the vulture and the new items, from the next time the game is
   started (what a saved game already has stays in it).
-- **Graphics** ([Graphics](#graphics)): the elves' and half-elves' looks, what
-  the party wears, shadows and dust. **Controls**
-  ([Controls](#controls)) and **Game speed** ([Game speed](#game-speed)).
+- **Graphics** ([Graphics](#graphics)): the elves' and half-elves' looks,
+  Cilla drawn as an elf, what the party wears, shadows and dust.
+- **Controls** ([Controls](#controls)) and **Game speed** ([Game
+  speed](#game-speed)).
 
 All are on by default except each turn's rolls in the game and the right
-button, and are remembered for next time.
+button, and are remembered for next time. **Restore defaults**, at the bottom
+of the tab, sets them all back (after asking).
 In a window too small to show the open sections, the tab scrolls (scrollbar,
 mouse wheel, or arrow and page keys once it has the focus).
 
@@ -2066,7 +2069,10 @@ better comes, RECALL puts the stored one back, AC and damage with it.
 Changing the race, sex, classes or kit forgets the stored roll (its hit
 points were rolled for those), even if they are changed back: RECALL then
 does nothing until STORE keeps another. STORE again keeps the new roll in
-place of the old. Always on, in games started from the Ledger.
+place of the old. With **STORE and RECALL on the creation screen** unticked
+in the Options tab's More character customization section (it's ticked by
+default), the screen is as the game has it, from the next time the game is
+started.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 
@@ -2947,9 +2953,12 @@ are the human figures in their own colours. It counts from the next time the
 game is started.
 
 Cilla, in the game's own party, is an elf, but the game gives her the figure it
-gives half-elf women. The Ledger gives her the elf woman's, in a new game and
-in one already begun (there from the next area or load on), with the switch
-on or off.
+gives half-elf women. With **Cilla, an elf in the game's own party, drawn as
+an elf** ticked (the default), the Ledger gives her the elf woman's, in a new
+game and in one already begun (there from the next area or load on), whatever
+the switch above. Unticked, she keeps the game's half-elf woman's figure, from
+the next time the game is started (a game where she already has the elf's
+keeps it).
 
 ![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
 

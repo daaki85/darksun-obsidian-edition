@@ -353,6 +353,7 @@ class DiceLog:
         self._shadows = shadows.Shadows()
         self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
         self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
+        self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
         self.stealth_gear = True  # a worn cloak's and boots' bonuses to hiding (stealth.py)
         self._dust = dust.Dust()
@@ -611,6 +612,7 @@ class DiceLog:
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
         self.elf_looks = settings.get("elf_looks", True) is not False
+        self.cilla_elf = settings.get("cilla_elf", True) is not False
         self.vulture_on = bool(settings.get("vulture", True))
         self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
@@ -1031,7 +1033,8 @@ class DiceLog:
             if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
                 out += weaponchoice.kit_gear(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done)  # (the game's own party, once)
-            out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
+            if self.cilla_elf:
+                out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
             if self.stealth_gear:
                 stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)

@@ -15,7 +15,22 @@ have the detail.
   ears, and half-elves figures of their own** in the Options tab's Graphics
   section, on by default, from the next time the game is started. Off, elves
   are as the game draws them and half-elves the human figures in their own
-  colours, as before 2.2.0; Cilla keeps the elf woman's figure either way.
+  colours, as before 2.2.0.
+- **A switch for Cilla's elf figure** in the Graphics section (on by
+  default): off, she keeps the game's half-elf woman's figure, from the next
+  start.
+- **A switch for STORE and RECALL** under More character customization (on by
+  default): off, the creation screen is the game's, from the next start.
+- **Restore defaults** at the bottom of the Options tab sets every switch
+  back, after asking.
+
+**Changed**
+- **The Options tab's headings are plain names** (In the game, Rule changes,
+  More character customization, Expanded features, New content, Graphics,
+  Controls, Game speed), with one line above them saying that everything
+  applies in games started from the Ledger and that a switch marked "from the
+  next start" waits for the game to be started again. The elves' and
+  half-elves' looks come first in Graphics.
 
 ## Pull request #42 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/42))
 
