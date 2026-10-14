@@ -1548,9 +1548,14 @@ header and drains it every few tens of milliseconds.
 
 The helper has to load into upper memory, or the game loses 62 KB of
 conventional memory (570 KB free rather than 632 KB). With GOG's settings
-there is one upper memory block of 63 KB; the helper asks for its resident
-part and the ring (`LOAD_EXTRA`), and `mem` in DOSBox shows 632 KB free and a
-few KB of upper memory left. A change that adds much code should check that
+there is one upper memory block of 63 KB, EMS's 64 KB page frame taking the
+rest; the launcher's config turns EMS off (`launch.DOS_LINES`: the game uses
+XMS instead), which leaves the helper a second 64 KB block (65 KB free
+with it loaded; see [the in-game combat log](#the-in-game-combat-log-what-the-game-allows-stage-0)).
+The helper's own segment is still at most 64 KB (everything through CS), so
+the second block is room for data kept apart from it, as the ring is. The
+helper asks for its resident part and the ring (`LOAD_EXTRA`); with EMS on,
+`mem` in DOSBox showed 632 KB free and a few KB of upper memory left. A change that adds much code should check that
 again: the ring is 74 entries, not 128 (96 until the new spells' code, when
 the game no longer started for lack of memory; 88 until STORE and RECALL; 84
 until spells 199-201 and `seg_space`, when the helper no longer fitted in the

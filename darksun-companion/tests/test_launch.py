@@ -42,6 +42,16 @@ class LaunchTests(unittest.TestCase):
         # a game stopping with an error leaves its message up, saved for the crash report
         self.assertEqual(lines.index(r"d:\gameend.com"), lines.index(r"d:\dsunlog.exe") + 1)
         self.assertTrue(os.path.isfile(os.path.join(launch.DOS_DIR, launch.GAME_END_COM)))
+        # EMS off, so the helper has the upper memory block EMS's page frame would take
+        self.assertLess(lines.index("ems=false"), lines.index("[autoexec]"))
+        self.assertEqual(lines[lines.index("ems=false") - 1], "[dos]")
+
+    def test_conf_without_the_helper_leaves_ems_alone(self):
+        with tempfile.TemporaryDirectory() as d:
+            game = make_game(d, cloud_saves=False)
+            conf = launch.write_conf(game, os.path.join(d, "test.conf"), dice_log=False)
+            with open(conf, newline="") as f:
+                self.assertNotIn("ems=", f.read())
 
     def test_dosbox_closing_said_in_the_log(self):
         self.assertEqual(launch.closed_line(0), "DOSBox closed.")

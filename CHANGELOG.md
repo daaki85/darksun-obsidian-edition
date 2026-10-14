@@ -43,6 +43,10 @@ have the detail.
   Expanded features box, on by default.
 
 **Changed**
+- **EMS off in the launcher's DOSBox settings:** GOG's settings turn on EMS,
+  whose 64 KB page frame left the helper 1 KB of upper memory; the
+  launcher's config now turns it off (the game uses XMS instead), giving the
+  helper a 64 KB block more, with conventional memory unchanged (632 KB).
 - **Kits in the docs, class by class:** the README's one table of kits is now
   a table for each class, under a heading of its own, with the level each
   part of a kit comes at (the Myrmidon's mastery at 5th level and grand

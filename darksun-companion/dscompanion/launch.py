@@ -178,10 +178,18 @@ def cpu_lines(settings: dict) -> List[str]:
     return ["[cpu]", f"core={CORE}", f"cycles=fixed {speed}", ""]
 
 
+# GOG's dosbox_darksun.conf has EMS on, and DOSBox 0.74 then keeps EMS's 64 KB page frame in the
+# upper memory the helper loads into, leaving it 1 KB to spare; with EMS off the block is the
+# helper's (65 KB free). The game's memory layer takes XMS when there is no EMS.
+DOS_LINES = ["[dos]", "ems=false", ""]
+
+
 def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
     """Our replacement for dosbox_darksun_single.conf. Without the dice log it just runs the game."""
     settings = load_settings()
     lines = display_lines(settings) + cpu_lines(settings)
+    if dice_log:  # (EMS's 64 KB page frame sits where the helper loads; the game takes XMS without it)
+        lines += DOS_LINES
     lines += ["[autoexec]", "@echo off", "cls", 'mount c ".."']
     if os.path.isdir(os.path.join(game_dir, "cloud_saves")):
         lines.append(r'mount C "..\cloud_saves" -t overlay')  # where GOG keeps the saves
