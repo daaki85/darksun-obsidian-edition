@@ -16,13 +16,15 @@ from . import palette, shadows
 
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_DAC = 238  # ... the offset of DAC, the palette as DSCLOG last read it (768 values, 0-63)
-TSR_PANEL_ON, TSR_PANEL_COL = 326, 328  # ... the panel shown; its eight colours
+TSR_PANEL_ON, TSR_PANEL_COL = 326, 328  # ... the panel shown; its ten colours
 FIRST, LAST = 16, 223  # the palette's colours the game doesn't animate (DSCLOG's DARK_FIRST, DARK_LAST)
-# the frame's colours, in DSCLOG's order (P_OUTLINE to P_GRAIN_LO): outline, light, stone, dark, well,
+# the frame's colours, in DSCLOG's order (P_OUTLINE to P_WELL_LO): outline, light, stone, dark, well,
 # handle, and the stone's grain, a lighter and a darker speckle (as the game's own status box has)
+# and the well's, fainter (the log's text goes on it)
 GRAIN_HI, GRAIN_LO = "#8A8AA2", "#5F5F78"
+WELL_HI, WELL_LO = "#3C3C5C", "#262640"
 FRAME = (palette.SHADOW, palette.EDGE_LIT, palette.BUTTON, palette.STONE, palette.DEEP, palette.EDGE_LIT,
-         GRAIN_HI, GRAIN_LO)
+         GRAIN_HI, GRAIN_LO, WELL_HI, WELL_LO)
 
 
 def rgb(colour: str) -> Tuple[int, int, int]:

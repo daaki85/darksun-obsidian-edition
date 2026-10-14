@@ -325,9 +325,9 @@ sold_q     times 4 * 2 dw 0     ; +310 the last SOLD_SLOTS of them: the thing ho
                                 ;      the merchant's pack (buyback.py)
 panel_on   dw 0                 ; +326 the companion sets 1 to have the combat log's panel drawn
                                 ;      over the map (PANEL), 0 to have it gone (the view drawn again)
-panel_col  times 8 db 0         ; +328 the panel's colours, palette indices the companion picks from
-                                ;      DAC (+238): outline, light, stone, dark, well, thumb, and
-                                ;      the stone's grain: lighter, darker
+panel_col  times 10 db 0        ; +328 the panel's colours, palette indices the companion picks from
+                                ;      DAC (+238): outline, light, stone, dark, well, thumb, the
+                                ;      stone's grain (lighter, darker), the well's (lighter, darker)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -14015,7 +14015,10 @@ P_WELL     equ 4
 P_THUMB    equ 5
 P_GRAIN_HI equ 6
 P_GRAIN_LO equ 7
-GRAINED    equ 0x80             ; (a part's colour with it: the stone's grain over it, PFILL)
+P_WELL_HI  equ 8
+P_WELL_LO  equ 9
+GRAINED    equ 0x80             ; (a part's colour with it: the stone's grain over it, PFILL;
+WELL_GRAIN equ 0x40             ;   with this too, the well's)
 GRAIN_HI_N equ 32               ; (of 256: how many of its pixels take the lighter grain, the
 GRAIN_LO_N equ 32               ;   darker; the rest keep the colour)
 panel_shown db 0
@@ -14060,11 +14063,15 @@ panel_draw:
         mov al, bl
         and al, GRAINED
         mov [cs:pf_grain], al
-        and bx, 0x7F
-        mov al, [cs:panel_col + P_GRAIN_HI]
+        mov si, panel_col + P_GRAIN_HI  ; (the grain's colours: the stone's, or the well's)
+        test bl, WELL_GRAIN
+        jz .grain
+        mov si, panel_col + P_WELL_HI
+.grain: mov al, [cs:si]
         mov [cs:pf_hi], al
-        mov al, [cs:panel_col + P_GRAIN_LO]
+        mov al, [cs:si + 1]
         mov [cs:pf_lo], al
+        and bx, 0x3F
         mov al, [cs:panel_col + bx]
         mov bx, [cs:di + 1]             ; ... and the rectangle
         mov cx, [cs:di + 3]
@@ -14097,7 +14104,7 @@ panel_parts:
         PART P_DARK, PANEL_X1 - 1, PANEL_X1 - 1, PANEL_Y0 + 2, PANEL_Y1 - 1
         PART P_DARK, PANEL_X0 + 3, PANEL_X1 - 3, PANEL_Y0 + 12, PANEL_Y0 + 12         ; (the header's
         PART P_LIGHT, PANEL_X0 + 3, PANEL_X1 - 3, PANEL_Y0 + 13, PANEL_Y0 + 13        ;   groove)
-        PART P_WELL, PANEL_X0 + 4, PANEL_X1 - 4, PANEL_Y0 + 15, PANEL_Y1 - 4          ; the well
+        PART P_WELL | GRAINED | WELL_GRAIN, PANEL_X0 + 4, PANEL_X1 - 4, PANEL_Y0 + 15, PANEL_Y1 - 4  ; the well
         PART P_DARK, PANEL_X1 - 10, PANEL_X1 - 5, PANEL_Y0 + 16, PANEL_Y1 - 5         ; the scrollbar
         PART P_THUMB, PANEL_X1 - 9, PANEL_X1 - 6, PANEL_Y1 - 22, PANEL_Y1 - 6         ;   and its handle
         db 0xFF
