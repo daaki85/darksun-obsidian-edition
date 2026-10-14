@@ -944,10 +944,10 @@ melee.
 | Long sword | bone, obsidian, metal (10 to 40, metal at the limit) | 1d8 | yes |
 | Club | wood (30) | 1d6 | yes |
 | Quarterstaff | wood (40) | 1d6 | yes |
-| Axe | bone (35) | 1d8 | yes |
+| Axe | bone, obsidian (30) | 1d8 | yes |
 | Pick | stone, metal (40) | 1d4+1 | yes |
 | Shillelagh, Flame Blade, Spiritual Hammer (spells) | (10, 40, 40) | 2d4, 1d4+4, 1d4+1 | yes |
-| Axe | obsidian, metal (70) | 1d8 | no |
+| Axe | metal (70) | 1d8 | no |
 | Great axe | bone (50); obsidian, metal (70) | 1d10 | no |
 | Mace | bone, obsidian, metal (100) | 1d6+1 | no |
 | Cahulaks, gythka | bone (120) | 1d6, 2d4 | no |

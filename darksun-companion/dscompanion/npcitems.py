@@ -36,10 +36,10 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     bytes.fromhex("000000000f00fa0001060000000000806f120000"),
     # a bone short sword and a bone axe, a new warrior's (weaponchoice.py)
     bytes.fromhex("010030000f00fa0001050101060100007817" "0001"),
-    bytes.fromhex("010010002300fa0001050101080100007817" "0001"),
+    bytes.fromhex("010010001e00fa0001050101080100007817" "0001"),
     # an obsidian short sword and an obsidian axe
     bytes.fromhex("010030001e00fa0003050101060100007e17" "0001"),
-    bytes.fromhex("010010004600fa0003050101080100007e17" "0001"),
+    bytes.fromhex("010010001e00fa0003050101080100007e17" "0001"),
     # a plain metal short sword (worldgear.py): the first's
     bytes.fromhex("010030001e00fa00040501010601000072160001"),
     # bracers of defense (bracers.py): the cloak of protection's, worn on the arms

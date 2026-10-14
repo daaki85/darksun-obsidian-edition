@@ -16,6 +16,13 @@ have the detail.
   Scar's battle.SAV`), and the Options tab's new **Saves** section opens the
   folder and puts a named save back in a slot of the game's list.
 
+**Changed**
+- **The bone and obsidian axes weigh 30** (35 and 70 before), the game's
+  heaviest a weapon can be without being HEAVY: they are no longer HEAVY, so
+  either can go in the off hand with another weapon, and both can backstab.
+  The metal Axe is the game's own, 70. Drakejaw and Glasshewer, of those
+  types, weigh 30 too.
+
 **Fixed**
 - **Stuck on the creation panel's KITS page.** A single-class warrior on the
   last weapon page has KITS for its button; adding a class there (a fighter
