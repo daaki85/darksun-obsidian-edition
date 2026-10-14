@@ -13,7 +13,7 @@ game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
 - [What's new](#whats-new)
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
 - [Changelog](CHANGELOG.md)
-- [The player's guide](darksun-companion/GUIDE.md): the rules and tables, without spoilers
+- [The player's guide](darksun-companion/PLAYER-GUIDE.md): the rules and tables, without spoilers
 - [The full documentation](darksun-companion/README.md): everything in detail
 
 ## What it does

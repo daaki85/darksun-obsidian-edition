@@ -97,12 +97,12 @@ game.
 - [Game speed](#game-speed)
 - [Accessibility](#accessibility)
 - [Without the game](#without-the-game)
-- [The player's guide](GUIDE.md)
+- [The player's guide](PLAYER-GUIDE.md)
 - [Development](DEVELOPMENT.md)
 
 ## What it does
 
-New to the game, or to the mod? [The player's guide](GUIDE.md) has its rules
+New to the game, or to the mod? [The player's guide](PLAYER-GUIDE.md) has its rules
 and tables in one place, without spoilers, with a section for each class.
 
 It shows what the game keeps hidden. Every roll is logged as it happens:
@@ -1444,7 +1444,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
 ### AD&D's class tables
 
 The game has tables of its own where AD&D's differ. With **AD&D's class
-tables** ticked, AD&D's hold (the [player's guide](GUIDE.md) has them in
+tables** ticked, AD&D's hold (the [player's guide](PLAYER-GUIDE.md) has them in
 full):
 
 - **Experience:** a gladiator needs 2,250 XP for 2nd level (the game uses
