@@ -2466,8 +2466,8 @@ character can use.
 | ![](docs/items/wardens-arms.png) | **Warden's Arms** | the Lower Castle's treasure chest, with Dark Flame (behind the wall the Serpent Boots show, where the vrock perch) | plate arm armour +1 (AC 2, +1) |
 | ![](docs/items/wardens-legs.png) | **Warden's Legs** | the Gemfields' chest | plate leg armour +1 (AC 2, +1) |
 | ![](docs/items/wardens-chest.png) | **Warden's Chest** | on **Balkazar**'s body | plate chest armour +1 (AC 3, +1): Resist Fire on its wearer while worn |
-| ![](docs/items/cloak-of-elvenkind.png) | **Cloak of Elvenkind** | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) | a grey cloak: [all but invisible](#hiding-in-shadows-to-backstab) in a fight, with the hiding rule; thieves and rangers only |
-| ![](docs/items/boots-of-elvenkind.png) | **Boots of Elvenkind** | the buried chest of Kel's caravan, with the Cahulaks +1 | soft boots: [silent](#hiding-in-shadows-to-backstab), with the hiding rule; thieves and rangers only |
+| ![](docs/items/cloak-of-elvenkind.png) | **Cloak of Elvenkind** | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) | a grey cloak: [all but invisible](#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only |
+| ![](docs/items/boots-of-elvenkind.png) | **Boots of Elvenkind** | the buried chest of Kel's caravan, with the Cahulaks +1 | soft boots: [silent](#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only |
 | ![](docs/items/bracers-of-defense.png) | **Bracers of Defense** | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) | AC for those wearing no armour: [bracers of defense](#bracers-of-defense) |
 
 **Prices** follow the game's own: magic melee weapons 20,800 a plus (41,600

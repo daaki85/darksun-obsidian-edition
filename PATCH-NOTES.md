@@ -129,7 +129,9 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[New]** **Bracers of Defense** (AC 6 to 2) and two robes, the **Ashen Robe** and the **Veiled Robe**, for those who wear no armour. A preserver casts in them.
 - **[New]** **The Warden's Plate**: plate armour +1 in four pieces, 12 points of AC as a set.
-- **[New]** Rings and a cloak of protection, the Cloak and Boots of Elvenkind, Arrowbane, the Sunking Crown, and the Tome of Understanding (+1 WIS for good).
+- **[New]** Rings and a cloak of protection, and the **Cloak and Boots of Elvenkind**, which help a thief or ranger hide and move silently.
+- **[New]** For the head: **Arrowbane**, a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas, and the **Sunking Crown**, a gold crown that protects its wearer from evil.
+- **[New]** The **Tome of Understanding**: read it for +1 WIS for good.
 - **[Changed]** The game's bone scale armour set is complete, with its arm and leg pieces and helm.
 
 ## World
