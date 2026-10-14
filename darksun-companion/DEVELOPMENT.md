@@ -920,7 +920,7 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   1F8h, after row 211's room), which the table's segment reaches.
 - Spook is Charm Person's record (flags 4204h: mind-affecting, undead
   immune, magic resistance) with Afraid's effect 17 for 3 rounds (`+4` 13h,
-  3d1; `+5` 0; `+7` 60) and Magic Missile's flight. In the save
+  3d1; `+5` 0; `+7` 60) and, as Charm Person, nothing flying. In the save
   routine (79A71h, `PROBE_SAVE` at 79BB7h) the helper takes 1 for every 2 of
   the caster's levels (preserver, or the Shinobi's casting level), at most 6,
   off the target's d20 total; the log names it.

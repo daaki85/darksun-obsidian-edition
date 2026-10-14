@@ -2416,8 +2416,7 @@ in the character's sheet, so it saves with the game and the character.
   Its icon is a hand mirror with one figure in it, on the Effects screen too,
   where it is named REFLECTED IMAGE (as in the Look box and under the
   portrait).
-- **Spook** flies to its target as Magic Missile does and frightens it into
-  running for 3 rounds. The log's save line shows the penalty: `d20 = 9 -1
+- **Spook** frightens one creature into running for 3 rounds. The log's save line shows the penalty: `d20 = 9 -1
   Spook, the caster's levels = 8, needs 16 -> failed`.
 - **Friends** makes the caster charming for a short while, as AD&D's spell
   does: CHA + 2d4, the dice log showing the roll (`Friends: 2d4 = [4 + 3] = 7
