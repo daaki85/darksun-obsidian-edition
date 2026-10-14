@@ -836,9 +836,26 @@ back (`busy_once`).
 
 **Numbers.** The game's spells are 0-68 wizard, 69-137 priest, 138-171 psionic
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the
-load segment + 3E3Fh) has an unused 96 bytes after 195, room for 196-198; 199
-on is live data (3E45h), never written. Cat's Grace is 196, Erdlu Claw 197,
-Fogbolt 198. When the rule switches on, the helper (`NS_SETUP`) copies in each
+load segment + 3E3Fh) has 96 bytes after 195, room for 196-198, then the
+monster kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198,
+Reflected Image 199, Spook 200, Friends 201.
+
+**Room for 199-201 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
+game's segment table (load + 4137h, 8 bytes a selector: segment, length) has
+selector 3B8h, a small stack of 60h bytes, there, and selector 3C0h the monster
+kinds table (192h bytes) right after. The overlay loader fixes up its code's
+selectors from that table each time it loads an overlay (3BD7Ch), and the
+table's own entries are the only relocations to the two segments. So at the
+first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP from
+`AH=62h`, the load segment 10h past it) checks both entries, copies the 200h
+bytes from 3E3Fh to `seg_space` in its own resident image and points the two
+selectors there (`seg_moved`, the header's +306). The records then run to 211.
+The stack had been written over records 196-198's room all along; with it
+moved, nothing writes there but the helper. Spells 199-201 are set up, listed
+and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
+`monsters.py` reads the kinds table's segment from the selector. The spell rows
+for 196 on run past the game's table (3FB9h:19Ch, 7 bytes each) into segment
+4010h from 188h, short of its data at 357h. When the rule switches on, the helper (`NS_SETUP`) copies in each
 one's record from a game spell it works like, Strength (23), Enlarge (5) and
 Charm Person (2), with its own effect number and, for Fogbolt, its own
 duration (2d4 rounds) and save, and each one's sounds and Fogbolt's bolt
@@ -848,7 +865,10 @@ each, from 3F8Dh) their names and icons.
 
 **Known.** The game keeps a party member's known spells in a table of its own
 (8Ah bytes each), with no room for more. A new spell's is a bit in the sheet's
-`+45h` (bits 4-6; the low nibble is the Elementalist's second sphere): the
+`+45h` (bits 4-6 for 196-198, bit 3 Reflected Image, bit 7 Spook; bits 0-2 are
+the Elementalist's second sphere), or Friends' bit 7 of the kit byte `+43h`
+(whose FFh, no kit yet, counts as not known; `NS_SHEET_KNOWS`,
+`NS_SHEET_LEARN`, `NS_SHEET_FORGET`): the
 routine that finds a spell's known byte (500:48h, `NS_KNOWN` at 5DD04h) and
 the one that teaches it (500:43h, `NS_LEARN` at 5E3F7h) go to the helper for
 them, and the three lists that end at 8Ah end at 0C7h (5DDEFh, 5DE72h,
@@ -884,6 +904,24 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   routine adding up an attack's to-hit adjustments from effects (7C3E9h,
   `NS_HIT` at 7C430h, beside the target's Blur), it takes 3 off for a fogged
   attacker and gives 2 against a fogged target.
+- Reflected Image is Mirror Image's record (19) with one image (`+4` 11h, 1d1),
+  so it is Mirror Image's effect 25 and replaces it, and either recast
+  replaces the last, as the game does for Mirror Image; Dispel Magic ends
+  it as it ends Mirror Image. Where an attack rolls d100 against the images
+  (7A5BFh, `cmp ax,4Bh` at 7A5CDh, `NS_IMAGE`), the helper looks up the
+  target's effect 25 and makes the chance 50 when the effect's spell is 199.
+- Spook is Charm Person's record (flags 4204h: mind-affecting, undead
+  immune, magic resistance) with Afraid's effect 17 for 3 rounds (`+4` 13h,
+  3d1; `+5` 0; `+7` 60) and Magic Missile's flight. In the save
+  routine (79A71h, `PROBE_SAVE` at 79BB7h) the helper takes 1 for every 2 of
+  the caster's levels (preserver, or the Shinobi's casting level), at most 6,
+  off the target's d20 total; the log names it.
+- Friends goes through Strength's handler (79470h) as Cat's Grace does, with
+  effect 74 (unused) and no dice; the ability routine adds 6 to CHA
+  (`[BP-338h]`), to at most 25, and leaves a higher CHA as it is. Shop prices
+  read the effective CHA (creature +27h). Its record is the caster only
+  (`+0Ch` 7) for 5 rounds and 1 a level (`+4` 15h, 5d1; `+5` 1; `+1Dh` 1, `+7`
+  60); a new casting replaces the effect as Strength's does.
 
 **Fogbolt's bolt.** A record's `+10h` names what flies from caster to target
 (FFh: nothing): a place in a table of 16 flights just before the records (3
@@ -1404,17 +1442,18 @@ of it):
 | Seeker: 1st, 2nd, 3rd level slots | 1 | 2 | 2, 1 | 2, 2 | 2, 2, 1 |
 | Justifier: casting level, slots | | | | | 1; one 1st-level |
 
-The Shinobi's spells, the game's and Fogbolt (thief level 6 on, the Seeker's slots):
+The Shinobi's spells, the game's and three new ones (thief level 6 on, the Seeker's slots):
 
 | Spell level | Spells |
 |---|---|
-| 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt |
+| 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image, Spook |
 
-Fogbolt, a [new spell](#new-wizard-spells), is known by its bit in the sheet
+Fogbolt, Reflected Image and Spook, [new spells](#new-wizard-spells), are known by its bit in the sheet
 (`NS_KNOWS`) rather than the game's byte: `SHINOBI_KNOWS` reads either for the
-level up's offer (`SHINOBI_UNKNOWN`, `PROBE_PICK_LIST`), and counts Fogbolt as
-known (not offered) while the new spells are off. `SHINOBI_WIZARD` gives the
-Shinobi's casting level for the new spells (196-198) as for the game's wizard
+level up's offer (`SHINOBI_UNKNOWN`, `PROBE_PICK_LIST`), and counts them as
+known (not offered) while the new spells are off (or, for 199-201, before
+`SEG_MOVE`). `SHINOBI_WIZARD` gives the
+Shinobi's casting level for the new spells (196-201) as for the game's wizard
 spells (0-68).
 | 2nd | Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud |
 | 3rd | Blink, Haste, Protection from Normal Missiles, Hold Person |
@@ -1424,7 +1463,7 @@ No kit is the kit page's first row, and what a new character has.
 ### Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 84 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 74 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -1437,8 +1476,10 @@ conventional memory (570 KB free rather than 632 KB). With GOG's settings
 there is one upper memory block of 63 KB; the helper asks for its resident
 part and the ring (`LOAD_EXTRA`), and `mem` in DOSBox shows 632 KB free and a
 few KB of upper memory left. A change that adds much code should check that
-again: the ring is 84 entries, not 128 (96 until the new spells' code, when
-the game no longer started for lack of memory; 88 until STORE and RECALL), and the text buffer 4 KB,
+again: the ring is 74 entries, not 128 (96 until the new spells' code, when
+the game no longer started for lack of memory; 88 until STORE and RECALL; 84
+until spells 199-201 and `seg_space`, when the helper no longer fitted in the
+block and loaded low), and the text buffer 4 KB,
 not 8, to make that room.
 
 ### The kit's byte

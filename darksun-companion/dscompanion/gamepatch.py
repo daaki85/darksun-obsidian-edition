@@ -87,7 +87,7 @@ DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
 PK_HOVER = 7
 RG_TWO = 8  # (the ranger's two weapons, light armour only: DSCLOG's RG_TWO)
-# The new spells (196-198: DSCLOG's NEW SPELLS) share it too: NS_KNOWN, NS_LEARN, NS_NAME, NS_CLAW,
+# The new spells (196-201: DSCLOG's NEW SPELLS) share it too: NS_KNOWN, NS_LEARN, NS_NAME, NS_CLAW,
 # NS_HIT, then NS_CMP's sites in the order of DSCLOG's NS_CMP_SITES
 NS_KNOWN, NS_LEARN, NS_NAME, NS_CLAW, NS_HIT, NS_CMP = 9, 10, 11, 12, 13, 14
 # Each "cmp" of a spell's number with 8Ah (a psionic power from there), 45h (a priest spell), 0ACh
@@ -115,8 +115,9 @@ NS_CMP_SITES = (
 # the lists of spells a member knows, may learn, may cast (500:25h, 2Ah, 2Fh): "cmp si,8Ah", the
 # end of their loops, made the new spells' end (their rows are empty while the rule is off)
 NS_FIST = NS_CMP + len(NS_CMP_SITES)  # (a melee hit's magic: after NS_CMP's)
+NS_IMAGE = NS_FIST + 1  # (an image taking a blow: Reflected Image's chance)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
-NS_END = 0xC7
+NS_END = 0xCA
 
 
 def _site(number: int, length: int) -> bytes:
@@ -247,6 +248,8 @@ PATCHES = (
     # ... a melee hit's magic, as the hit's damage kinds get it: cmp word [bp-0Ch],0 (Erdlu Claw's
     # +1 to hit and +1 weapon for a natural attack) ...
     Patch("ns_fist", 0x58226, bytes.fromhex("837ef400"), _site(NS_FIST, 4)),
+    # ... the d100 an image takes a blow on: cmp ax,4Bh (75; Reflected Image's one 50) ...
+    Patch("ns_image", 0x7A5CD, bytes.fromhex("3d4b00"), _site(NS_IMAGE, 3)),
     # ... the compares that tell a wizard's or priest's spell from the rest ...
     *(Patch(f"ns_cmp_{offset:x}", offset, bytes.fromhex(code), _site(NS_CMP + k, len(code) // 2))
       for k, (offset, code) in enumerate(NS_CMP_SITES)),

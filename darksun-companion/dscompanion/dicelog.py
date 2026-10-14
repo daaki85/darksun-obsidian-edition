@@ -1825,6 +1825,10 @@ class DiceLog:
             if count == 1 and e.parent_code.startswith(STRENGTH_ROLL_RETURN) and e.parent_arg(0x0E) is not None:
                 spell, target = e.parent_arg(0x0E), e.parent_arg(6)
                 self._spell_cast(spell, now)
+                if spell == game.FRIENDS_SPELL:  # (Friends, a new spell, uses Strength's code; its 1d6 unused)
+                    return self.flush(now, force=True) + [
+                        f"Friends: {self._name(target)}'s CHA +{game.FRIENDS_CHA} while it lasts "
+                        f"(at most {game.FRIENDS_MOST})"]
                 # (Cat's Grace, a new spell, uses Strength's code for DEX)
                 ability = "DEX" if spell == game.GRACE_SPELL else "STR"
                 return self.flush(now, force=True) + [

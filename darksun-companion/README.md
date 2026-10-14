@@ -123,8 +123,9 @@ the party leader's CHA lowers shop prices ([Expanded
 features](#expanded-features)).
 
 It adds to Athas: new weapons in every material, magic items with stories of
-their own (robes and bracers among them, for those who wear no armour), three wizard
-spells ([Cat's Grace, Erdlu Claw and Fogbolt](#new-wizard-spells)), Kalzith
+their own (robes and bracers among them, for those who wear no armour), six wizard
+spells ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and
+Friends](#new-wizard-spells)), Kalzith
 (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
 vulture ([New content](#new-content)). On the map, the party
 wears its weapons and armour, figures cast shadows and kick up dust, and elves
@@ -1802,7 +1803,7 @@ and costs something.
 | **Grove Warden** (druid) | AC 1 better for every 3 druid levels | no metal weapons |
 | **Wanderer** (druid) | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse |
 | **Arcanist** (preserver) | a spell slot more at each spell level it has slots at; in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) |
-| **Shinobi** (thief) | preserver spells from 6th level, on the Seeker's slots (one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th), cast at the thief level less 5, in light armour too: its own 15 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and [Fogbolt](#new-wizard-spells) with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), one learnt at each level up from 6th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield |
+| **Shinobi** (thief) | preserver spells from 6th level, on the Seeker's slots (one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th), cast at the thief level less 5, in light armour too: its own 15 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and [Fogbolt, Reflected Image and Spook](#new-wizard-spells) with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), one learnt at each level up from 6th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield |
 | **Lifebinder** (druid) | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) |
 | **Healer** (cleric) | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) |
 | **Scholar** (preserver) | a spell more learnt at each level up (CHOOSE A SPELL comes up twice) | −1 to hit (THAC0 1 worse) |
@@ -2374,9 +2375,8 @@ started with the dice log.
 
 ### New wizard spells
 
-Three wizard spells from AD&D's *Spells & Magic* and the Dark Sun books,
-added to the game's own 68 (numbers 196-198, room the game's spell table has
-past its own). Preservers learn them as they learn any spell: picked at a level
+Six wizard spells from AD&D's *Spells & Magic*, the *Player's Handbook* and
+the Dark Sun books, added to the game's own 68 (numbers 196-201). Preservers learn them as they learn any spell: picked at a level
 up or as starting spells, or from a scroll. They're listed on the USE screen by
 level with their own icons and descriptions (right-click one), use the usual
 slots, and show on the Effects screen while they last. Who knows them is kept
@@ -2387,6 +2387,9 @@ in the character's sheet, so it saves with the game and the character.
 | **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
 | **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, and counts as a +1 magical weapon |
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | -3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
+| **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: an attack on the caster has a 50% chance of striking the image instead, which vanishes |
+| **Spook** | 1 | one creature in sight | 3 rounds (a save negates) | the creature panics and flees (Afraid); its save is 1 worse for every 2 caster levels (at most -6); undead aren't affected, and magic resistance applies |
+| **Friends** | 1 | the caster | 5 rounds and 1 a caster level | CHA + 6 (at most 25): better prices when buying and selling |
 
 - **Cat's Grace** is made to work exactly as the game's Strength does, for DEX.
   Everything that reads DEX follows it while it lasts: AC, initiative, REAC and
@@ -2405,7 +2408,23 @@ in the character's sheet, so it saves with the game and the character.
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
   own blue); like any bolt it needs a clear line to the target. Its THAC0
   breakdowns show `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on
-  attacks against it.
+  attacks against it. Its icon is a grey cloud.
+- **Reflected Image** is a smaller Mirror Image: one image, struck instead of
+  the caster half the time (Mirror Image's are three quarters of the time).
+  The two don't add up: casting either one replaces the other, and casting
+  Reflected Image again only gives the one image back. Dispel Magic ends it.
+  On the Effects screen it shows as Mirror Images, the effect it shares.
+- **Spook** flies to its target as Magic Missile does and frightens it into
+  running for 3 rounds. The log's save line shows the penalty: `d20 = 9 -1
+  Spook, the caster's levels = 8, needs 16 -> failed`.
+- **Friends** makes the caster charming for a short while. Shop prices follow
+  the party leader's CHA, so a leader who casts it before trading buys and
+  sells better (see [CHA and prices](#expanded-features)). A second casting
+  replaces the first rather than adding to it; a CHA of 25 or more already is
+  left as it is.
+
+A Shinobi can learn Reflected Image and Spook, as well as Fogbolt; Friends
+is for preservers only.
 
 Each has sounds of its own: Cat's Grace lands with Haste's shimmer, Erdlu Claw
 with Shocking Grasp's snap, and Fogbolt is cast and lands with Fog Cloud's.
@@ -2413,7 +2432,7 @@ with Shocking Grasp's snap, and Fogbolt is cast and lands with Fog Cloud's.
 With the **New wizard spells** box unticked (it's ticked by default) the
 spells are gone from the lists and the game is as it was.
 
-![The three descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
+![The descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
 
 ![The Effects screen with Cat's Grace and Erdlu Claw on Daaki, the claw's name below](docs/new-spells-effects.png)
 

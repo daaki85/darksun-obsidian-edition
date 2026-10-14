@@ -639,7 +639,8 @@ character hit in a round can't cast), and choose its spells well.
   choosing its starting spells gives it the game's usual ones for the rest.
 - AD&D's wizard [spell slots](#spell-slots) (4 2 1 at 5th level; *without the
   mod:* 3 2 1).
-- Three **new spells**: Cat's Grace, Erdlu Claw and Fogbolt.
+- Six **new spells**: Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image,
+  Spook and Friends.
 - With another class it may wear that class's armour but **can't cast in
   it**. **Bracers of defense** and the mod's two **robes** give AC without
   being armour.
@@ -963,8 +964,8 @@ The kits that change spell slots, by the level of the kit's class (spells of
   place of a ranger's own slots.
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own
   list, learning one at each level up from 6th: **1st level** Gaze Reflection,
-  Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt (with the new spells
-  on); **2nd** Invisibility, Mirror
+  Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image,
+  Spook (the last three with the new spells on); **2nd** Invisibility, Mirror
   Image, Blur, Detect Invisibility, Fog Cloud; **3rd** Blink, Haste, Protection
   from Normal Missiles, Hold Person.
 - An **Arcanist** casts two preserver spells each turn in a fight instead of
@@ -1300,7 +1301,7 @@ can cast. INT sets two limits:
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
 - Cause Serious and Critical Wounds roll 2d9 and 3d9; Cure Light, Serious and
   Critical Wounds heal 1d8, 2d8+1 and 3d8+3.
-- Three **new wizard spells**, learnt like any other:
+- Six **new wizard spells**, learnt like any other:
   - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for an hour of game
     time a caster level, which betters AC, initiative, thief skills and
     dodging.
@@ -1311,14 +1312,22 @@ can cast. INT sets two limits:
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
     in a clear line, for 2d4 rounds unless it saves: -3 to its attacks, +2 to
     attacks on it.
+  - **Reflected Image** (1st level, on the caster): one image, which an attack
+    strikes half the time instead of the caster, and which then vanishes.
+    It and Mirror Image replace each other; Dispel Magic ends it.
+  - **Spook** (1st level): one creature flees in fear for 3 rounds unless it
+    saves, at -1 for every 2 caster levels (at most -6). Undead aren't
+    affected; magic resistance applies.
+  - **Friends** (1st level, on the caster): CHA + 6 (at most 25) for 5 rounds
+    and 1 a caster level, for better prices. Casting it again replaces it.
 
 ### Spell lists
 
-**Preservers' spells** (with the mod's three new ones):
+**Preservers' spells** (with the mod's six new ones):
 
 | Level | Spells |
 |---|---|
-| 1 | Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Erdlu Claw, Fogbolt, Gaze Reflection, Grease, Magic Missile, Shield, Shocking Grasp, Wall of Fog |
+| 1 | Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Erdlu Claw, Fogbolt, Friends, Gaze Reflection, Grease, Magic Missile, Reflected Image, Shield, Shocking Grasp, Spook, Wall of Fog |
 | 2 | Acid Arrow, Blur, Cat's Grace, Detect Invisibility, Flaming Sphere, Fog Cloud, Glitterdust, Invisibility, Mirror Image, Protection from Paralysis, Scare, Stinking Cloud, Strength, Web |
 | 3 | Blink, Dispel Magic, Fireball, Flame Arrow, Haste, Hold Person, Hold Undead, Lightning Bolt, Minor Malison, Minute Meteors, Monster Summoning I, Protection from Normal Missiles, Slow, Spirit Armor, Vampiric Touch |
 | 4 | Black Tentacles, Charm Monster, Confusion, Fear, Fire Shield, Ice Storm, Improved Invisibility, Minor Globe of Invulnerability, Minor Spell Turning, Monster Summoning II, Rainbow Pattern, Solid Fog, Stoneskin, Turn Pebble into Boulder, Wall of Fire, Wall of Ice |

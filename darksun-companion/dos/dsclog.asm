@@ -147,7 +147,7 @@ VEC_RACE_PANEL equ 0x89    ; PROBE_RACE_PANEL
 VEC_BOX_AC equ 0x88        ; PROBE_BOX_AC
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
-NENT    equ 84          ; entries in the ring (84: the helper and it fit in upper memory)
+NENT    equ 74          ; entries in the ring (74: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
 STACK   equ 256         ; bytes of stack while installing
 
@@ -317,6 +317,7 @@ learn_result db 0               ; +279 ... and LEARN_LEARNT, LEARN_FAILED or LEA
 rl_seq     dw 0                 ; +280 an ability's 4d4 rolled on the creation screen (RL_TRY), counted
 rl_tries   times 24 db 0        ; +282 the last four 4d4 of each ability, STR to CHA (the dice log's,
                                 ;      as the die tumbles faster than its ring is read)
+seg_moved  db 0                 ; +306 1 once SEG_MOVE has made the new spells' records' room
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -531,9 +532,11 @@ record:
 ; PROBE_SAVE: INT VEC_SAVE replaces "mov al,[bp-2] / cmp al,[bp-1]" (6 bytes:
 ; INT + 4 NOPs) at the end of the saving-throw function, where [bp-2] is the
 ; final total (d20 + modifiers) and [bp-1] the save value it must reach.
-; Records both, then does the replaced instructions; RETF 2 keeps their flags.
+; Records both, then does the replaced instructions; RETF 2 keeps their flags. (Spook's save is
+; worse for its caster's levels first: SPOOK_SAVE.)
 probe_save:
         sti
+        call spook_save
         push si
         mov si, sp
         sub si, 4               ; SS:SI+6 = our return address
@@ -5867,7 +5870,7 @@ probe_round_mark:
 ; Fogbolt (FOG_SPELL), a new spell, counts only with RULE_NEW_SPELLS (SHINOBI_KNOWS).
 SHINOBI_SPELLS:
         db 6, 1,  2, 1,  9, 1,  4, 1,  11, 1           ; Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog
-        db FOG_SPELL, 1                                ; Fogbolt
+        db FOG_SPELL, 1,  REFLECT_SPELL, 1,  SPOOK_SPELL, 1 ; Fogbolt, Reflected Image, Spook
         db 17, 2,  19, 2,  12, 2,  13, 2,  15, 2       ; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
         db 25, 3,  29, 3,  36, 3,  30, 3               ; Blink, Haste, Protection from Normal Missiles, Hold Person
 SHINOBI_SPELLS_END:
@@ -6080,7 +6083,7 @@ shinobi_unknown:
 
 ; SHINOBI_KNOWS: CF set if party member BX knows spell AX: the game's byte for it (KNOWN_OFF's), or
 ; for a new spell its sheet's bit (NS_KNOWS); a new spell counts as known while RULE_NEW_SPELLS is
-; off (so it isn't offered). DS the game's; all registers kept.
+; off, or its record has no room yet (NS_NEW: so it isn't offered). DS the game's; all registers kept.
 shinobi_knows:
         cmp ax, NS_FIRST
         jae .new
@@ -6100,8 +6103,10 @@ shinobi_knows:
         jne .yes
         clc
         ret
-.new:   test byte [cs:rules], RULE_NEW_SPELLS
-        jz .yes
+.new:   push ax
+        call ns_new             ; (off, or no room for its record yet: as known, not offered)
+        pop ax
+        jnc .yes
         push ax
         push cx
         mov cl, al
@@ -6294,7 +6299,7 @@ probe_dual_spells:
         db KIT_SCHOLAR
         jne .pick
         inc cx
-.pick:  and byte [es:bx + NS_SHEET], ~NS_KNOWN_MASK ; (the new spells too: the game took its own)
+.pick:  call ns_forget_all       ; (the new spells too: the game took its own)
         call pick_spells
         pop es
         pop cx
@@ -6589,7 +6594,7 @@ probe_cr_spells:
         push ax                 ; (a new character knows none of the new spells: NS_SHEET)
         mov ax, si
         call creature_sheet
-        and byte [es:bx + NS_SHEET], ~NS_KNOWN_MASK
+        call ns_forget_all
         pop ax
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
         mov cx, 2               ; (CL 1st-level picks, CH 2nd-level)
@@ -7193,8 +7198,12 @@ pick_int_any:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .none
         call ns_setup
-        mov al, NS_FIRST        ; (and the new spells: NS_KNOWS)
+        mov al, NS_FIRST        ; (and the new spells: NS_KNOWS; those with room for their records)
 .new:   push ax
+        call ns_new
+        pop ax
+        jnc .new_next
+        push ax
         push cx
         mov cl, al
         sub cl, NS_FIRST
@@ -7479,17 +7488,12 @@ probe_learn_said:
         movzx ax, byte [cs:learn_spell]
         call ns_new
         jnc .table
-        push cx                 ; (a new spell: its bit in the sheet, NS_SHEET)
+        push cx                 ; (a new spell: its bit in the sheet, NS_SHEET_FORGET)
         push es
         mov cl, al
-        mov al, NS_KNOWN_BIT
-        shl al, cl
-        not al
-        push ax
         movzx ax, byte [cs:learn_who]
         call thing_sheet
-        pop ax
-        and [es:bx + NS_SHEET], al
+        call ns_sheet_forget
         pop es
         pop cx
         jmp .taken
@@ -10874,6 +10878,12 @@ ns_texts:
         db "Animal Affinity's dice), +1 to hit, as a +1 weapon. Lasts 5 rounds per level.", 13, 10, 0
         db "FOGBOLT:  A bolt of fog clings to one creature: -3 to hit and Armor Class 2 worse for "
         db "2 to 8 rounds. A saving throw negates it.", 13, 10, 0
+        db "REFLECTED IMAGE:  An image of the caster moves with it: an attack may strike the "
+        db "image instead, which then vanishes. Mirror Image takes its place.", 13, 10, 0
+        db "SPOOK:  One creature flees in fear for 3 rounds. Its saving throw is 1 worse for each "
+        db "2 caster levels (up to 6). Undead are not affected.", 13, 10, 0
+        db "FRIENDS:  The caster's charisma rises by 6 (to 25 at most) for 5 rounds and 1 per "
+        db "level.", 13, 10, 0
 
 ; PROBE_CHUNK_ID: INT VEC_CHUNK_ID replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack
 ; check) at the start of the game's two routines that load a GFF chunk, whose [BP+6] is the
@@ -10928,6 +10938,7 @@ OBJ_NAME_LEN equ 12
 probe_dos_open:
         cmp ah, 3Dh
         jne .chain
+        call seg_move
         push ax
         push bx
         push cx
@@ -11020,6 +11031,66 @@ probe_dos_open:
         pop ax
 .chain: jmp far [cs:old21]
 old21       dd 0
+
+; SEG_MOVE: once, at a file open (AH=3Dh) of the game's (DSUNLOG.EXE the program running, its
+; segment table where it should be, SEGTAB_AT), before any of its overlays is in: the game's segments
+; 3E3Fh (a small stack, selector 3B8h) and 3E45h (the monster kinds' table, 3C0h), the 200h bytes
+; after the spell records, moved here (SEG_SPACE: each overlay's code is given the table's segment
+; as it is read in), so that the new spells from 196 on have their records' room there (NEW
+; SPELLS: 196-198 had been over the stack). All registers kept.
+SEGTAB_AT    equ 0x4137          ; the segment table (8 bytes a selector: the segment, the length)
+SEL_RECORDS  equ 0x3B0           ;   from the load segment, and its selectors: the spell records',
+SEL_STACK    equ 0x3B8           ;   the stack's and the monster kinds'
+SEL_KINDS    equ 0x3C0
+SEG_RECORDS  equ 0x3CB4
+SEG_STACK    equ 0x3E3F
+SEG_KINDS    equ 0x3E45
+SEG_BYTES    equ 0x200
+seg_move:
+        cmp byte [cs:seg_moved], 0
+        jne .ret
+        pusha
+        push ds
+        push es
+        mov ah, 62h
+        pushf
+        call far [cs:old21]     ; (BX the program's PSP)
+        lea dx, [bx + 0x10]     ; (DX its load segment)
+        lea ax, [bx + 0x10 + SEGTAB_AT]
+        mov es, ax
+        lea ax, [bx + 0x10 + SEG_RECORDS]
+        cmp [es:SEL_RECORDS], ax
+        jne .out
+        cmp word [es:SEL_RECORDS + 2], 0x18B0
+        jne .out
+        lea ax, [bx + 0x10 + SEG_STACK]
+        cmp [es:SEL_STACK], ax
+        jne .out
+        lea ax, [bx + 0x10 + SEG_KINDS]
+        cmp [es:SEL_KINDS], ax
+        jne .out
+        cmp word [es:SEL_KINDS + 2], 0x192
+        jne .out
+        mov ds, [es:SEL_STACK]  ; (the 200h bytes, here)
+        xor si, si
+        mov ax, cs
+        add ax, (seg_space - hdr) / 16
+        mov [es:SEL_STACK], ax
+        add ax, (SEG_KINDS - SEG_STACK)
+        mov [es:SEL_KINDS], ax
+        push es
+        mov ax, cs
+        mov es, ax
+        mov di, seg_space
+        mov cx, SEG_BYTES / 2
+        cld
+        rep movsw
+        pop es
+        mov byte [cs:seg_moved], 1
+.out:   pop es
+        pop ds
+        popa
+.ret:   ret
 obj_scratch dw 0
 copy_at     dw 0
 resources_on dw 0               ; 1 once the game has opened D:\RESOURCE.GFF (PROBE_CHUNK_ID)
@@ -11070,23 +11141,31 @@ copies:
 ; better than its own (NS_CLAW). Fogbolt puts its (27)
 ; on a creature that fails its save: -3 to hit, and +2 to hit it (NS_HIT).
 NS_FIRST     equ 0xC4
-NS_COUNT     equ 3
+NS_COUNT     equ 6
 NS_LAST      equ NS_FIRST + NS_COUNT - 1
 GRACE_SPELL  equ NS_FIRST
 CLAW_SPELL   equ NS_FIRST + 1
 FOG_SPELL    equ NS_FIRST + 2
+REFLECT_SPELL equ NS_FIRST + 3
+SPOOK_SPELL  equ NS_FIRST + 4
+FRIENDS_SPELL equ NS_FIRST + 5
 STRENGTH_SPELL equ 23
 ENLARGE_SPELL equ 5
 CHARM_SPELL  equ 2
+MIRROR_SPELL equ 19
 GRACE_EFFECT equ 54
 CLAW_EFFECT  equ 6
 FOG_EFFECT   equ 27
+MIRROR_EFFECT equ 25            ; (the game's Mirror Images: Reflected Image's too)
+AFRAID_EFFECT equ 17            ; (the game's Afraid: Spook's)
+FRIENDS_EFFECT equ 74           ; (unused by the game, as 6, 27 and 54)
+FRIENDS_CHA  equ 6              ; Friends' CHA, up to FRIENDS_MOST
+FRIENDS_MOST equ 25
+SPOOK_MOST   equ 6              ; Spook's save: 1 worse for each 2 caster levels, up to 6
 ADRENALIN    equ 0x94           ; the psionic Adrenalin Control, which Strength's code also serves
 NS_ICON      equ 21000          ; a spell's icon: ICON 21000 + its number (RESOURCE.GFF)
-NS_SHEET     equ 0x45           ; the sheet's byte whose bits 4-6 say it knows 196-198 ...
-NS_KNOWN_BIT equ 0x10           ;   (196's; 197's twice that ...)
-NS_KNOWN_MASK equ 0x70          ;   ... and SPHERE2_MASK the second sphere's
-SPHERE2_MASK equ 0x0F
+NS_SHEET     equ 0x45           ; the sheet's byte with most of the bits that say it knows them
+SPHERE2_MASK equ 0x07           ;   (its low three bits the Elementalist's second sphere, 0-4)
 SPELL_RECS   equ 0x30           ; the spell records (DS - SPELLS_FROM_DS: 20h each from here)
 FLIGHTS      equ 0              ; before them the 16 flights a record's +10h names (3 bytes each:
 MISSILE_FLIGHT equ 4            ;   the object flying, a byte): Magic Missile's, and place 15,
@@ -11096,7 +11175,8 @@ FLIGHT15_BYTE equ 16
 FOG_BOLT     equ 8118
 FOG_CAST_SOUND equ 82           ; a record's +0Fh: the sound with its cast glow (+0Dh), +13h as
 FOG_HIT_SOUND equ 98            ;   it flies, +16h as it lands (BVOC chunks of RESOURCE.GFF)
-NS_OBJECTS   equ 0x80           ; NS_STATE's bit: the copy open (OBJECTS_ON)
+NS_OBJECTS   equ 0x80           ; NS_STATE's bits: the copy open (OBJECTS_ON), and the records'
+NS_MOVED     equ 0x40           ;   room made (SEG_MOVED)
 EFFECT_TABLE_FROM_DS equ 0x4356 - 0x3F8D ; the effects' table (6 bytes each from effect 1: its
 EFFECT_NO_NAME equ 0x1FF0       ;   name, far, and icon); DS: the empty name of an unnamed one
 EFFECTS_FROM_DS equ 0x4356 - 0x3BF6 ; the active effects (10 bytes each from EFFECTS_OFF: the
@@ -11111,13 +11191,17 @@ probe_grace_cast:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .store
         cmp ax, GRACE_SPELL
+        je .strength
+        cmp ax, FRIENDS_SPELL   ; (Friends too)
         jne .store
+.strength:
         mov ax, STRENGTH_SPELL
 .store: mov [bp-0x1A], ax
         iret
 
 ; PROBE_GRACE_EFFECT: INT VEC_GRACE_EFFECT replaces Strength's handler choosing its effect
-; (19 bytes: INT + 17 NOPs): Adrenalin Control 42h, Strength 43h, and Cat's Grace its own.
+; (19 bytes: INT + 17 NOPs): Adrenalin Control 42h, Strength 43h, and Cat's Grace and Friends
+; their own.
 probe_grace_effect:
         mov word [bp-0x14], 0x43
         cmp word [bp+0x0E], ADRENALIN
@@ -11127,18 +11211,36 @@ probe_grace_effect:
 .grace: test byte [cs:rules], RULE_NEW_SPELLS
         jz .out
         cmp word [bp+0x0E], GRACE_SPELL
-        jne .out
+        jne .friends
         mov word [bp-0x14], GRACE_EFFECT
+.friends:
+        cmp word [bp+0x0E], FRIENDS_SPELL
+        jne .out
+        mov word [bp-0x14], FRIENDS_EFFECT
 .out:   iret
 
 ; PROBE_GRACE_ABILITY: INT VEC_GRACE_ABILITY replaces "mov [bp-0Ah],ax / mov cx,7" (6 bytes:
 ; INT + 4 NOPs) in the routine that works out a creature's abilities, as it looks at one of its
 ; effects (AX its number; ES:BX the effect, its amount at +10Fh): Cat's Grace adds the amount
-; to DEX in its sums (words from [BP-342h], STR first), as Strength's adds to STR.
+; to DEX in its sums (words from [BP-342h], STR first), as Strength's adds to STR; Friends adds
+; FRIENDS_CHA to CHA (the handler's 1d6 not used), up to FRIENDS_MOST.
 probe_grace_ability:
         mov [bp-0x0A], ax
         mov cx, 7
-        cmp ax, GRACE_EFFECT
+        cmp ax, FRIENDS_EFFECT
+        jne .grace
+        push ax
+        mov ax, [bp-0x338]
+        add ax, FRIENDS_CHA
+        cmp ax, FRIENDS_MOST
+        jle .cha
+        mov ax, FRIENDS_MOST
+.cha:   cmp ax, [bp-0x338]      ; (never lower: a CHA above it already kept)
+        jl .kept
+        mov [bp-0x338], ax
+.kept:  pop ax
+        iret
+.grace: cmp ax, GRACE_EFFECT
         jne .out
         push ax
         mov al, [es:bx+0x10F]
@@ -11158,21 +11260,61 @@ probe_grace_ability:
 ; has them now (see NEW SPELLS), and flight 15 Fogbolt's grey bolt once the game has the objects'
 ; copy open (FLIGHTS). DS the game's; all registers kept.
 ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up (0FFh: not yet)
-ns_levels    db 2, 1, 1         ; each one's spell level ...
-ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL ; ... the spell whose record it takes ...
-ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT       ; ... and its effect
-ns_landing   db 96, 77, FOG_HIT_SOUND ; the sound as it lands (+16h): Haste's, Shocking Grasp's, Fog Cloud's
-ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog
+ns_levels    db 2, 1, 1, 1, 1, 1 ; each one's spell level ...
+ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL, MIRROR_SPELL, CHARM_SPELL, STRENGTH_SPELL
+                                ; ... the spell whose record it takes ...
+ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT, MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT
+                                ; ... its effect ...
+ns_effect_how db 2, 1, 1, 0, 3, 2 ; ... put in the record and named by the helper (1), put in
+                                ;   the record, the game's own (3), the template's (0), or by the
+                                ;   handler (PROBE_GRACE_EFFECT) and named by the helper (2) ...
+ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
+                                ;   Grasp's, Fog Cloud's (0: the template's) ...
+ns_known_at  db NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, KIT_BYTE ; ... and the sheet's
+ns_known_bit db 0x10, 0x20, 0x40, 0x08, 0x80, 0x80 ;   byte and bit that say a member knows it
+                                ;   (KIT_BYTE's 0FFh, KIT_OPEN, none: NS_BIT_AT)
+; NS_PATCHES: the records' changes from their templates': the new spell (0 to NS_COUNT - 1), the
+; place, 1 (a byte) or 2 (a word), the value; 0FFh ends them.
+%macro NS_PATCH 4
+        db %1 - NS_FIRST, %2, %3
+        dw %4
+%endmacro
+ns_patches:
+        NS_PATCH FOG_SPELL, 4, 1, 0x42          ; Fogbolt: 2d4 rounds (+4: the dice, sides x 16 + count;
+        NS_PATCH FOG_SPELL, 5, 2, 0             ;   +5 a level's more; +7 the time each counts), not
+        NS_PATCH FOG_SPELL, 7, 2, 60            ;   Charm Person's for ever ...
+        NS_PATCH FOG_SPELL, 0x11, 2, 0x4000     ;   ... nor mind-affecting; Fog Cloud's sound as it's
+        NS_PATCH FOG_SPELL, 0x0F, 1, FOG_CAST_SOUND ; cast (Charm Person's, 75, as it flies)
+        NS_PATCH REFLECT_SPELL, 4, 1, 0x11      ; Reflected Image: one image (Mirror Image's are its
+        NS_PATCH REFLECT_SPELL, 5, 2, 0         ;   "rounds", 1d4 + a level's third, counted down)
+        NS_PATCH SPOOK_SPELL, 4, 1, 0x13        ; Spook: 3 rounds, not Charm Person's for ever ...
+        NS_PATCH SPOOK_SPELL, 5, 2, 0
+        NS_PATCH SPOOK_SPELL, 7, 2, 60
+        NS_PATCH SPOOK_SPELL, 0x10, 1, MISSILE_FLIGHT ; ... and Magic Missile's sparks fly to it
+        NS_PATCH FRIENDS_SPELL, 4, 1, 0x15      ; Friends: 5 rounds and 1 a level, not Strength's hour
+        NS_PATCH FRIENDS_SPELL, 5, 2, 1         ;   a level (+1Dh's low bits: the levels a "level"
+        NS_PATCH FRIENDS_SPELL, 7, 2, 60        ;   counts, 1) ...
+        NS_PATCH FRIENDS_SPELL, 0x1D, 1, 1
+        NS_PATCH FRIENDS_SPELL, 1, 2, 0xFFFF    ; ... on the caster alone, as Mirror Image
+        NS_PATCH FRIENDS_SPELL, 0x0C, 1, 7
+        db 0xFF
+ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
 ns_name_grace db "CAT'S GRACE", 0
 ns_name_claw db "ERDLU CLAW", 0
 ns_name_fog  db "FOGBOLT", 0
+ns_name_reflect db "REFLECTED IMAGE", 0
+ns_name_spook db "SPOOK", 0
+ns_name_friends db "FRIENDS", 0
 ns_setup:
         push ax
         mov al, [cs:rules]
         and al, RULE_NEW_SPELLS
         cmp word [cs:objects_on], 1
-        jne .state
+        jne .moved
         or al, NS_OBJECTS
+.moved: cmp byte [cs:seg_moved], 0
+        je .state
+        or al, NS_MOVED
 .state: cmp al, [cs:ns_state]
         jne .do
         pop ax
@@ -11184,7 +11326,11 @@ ns_setup:
         mov dl, al              ; (DL not 0 while the rule is on)
         and dl, RULE_NEW_SPELLS
         xor si, si              ; (SI each new spell, 0 to NS_COUNT - 1)
-.spell: mov ax, ds              ; its row: the level and a wizard's mask (spell 0's), or nothing
+.spell: cmp si, REFLECT_SPELL - NS_FIRST
+        jb .row
+        cmp byte [cs:seg_moved], 0
+        je .next                ; (no room for its record: SEG_MOVE)
+.row:   mov ax, ds              ; its row: the level and a wizard's mask (spell 0's), or nothing
         add ax, SPELL_LEVELS_SEG
         mov es, ax
         imul di, si, 7
@@ -11224,23 +11370,45 @@ ns_setup:
         loop .copy
         pop di
         mov al, [cs:si + ns_landing]
+        or al, al
+        jz .own_landing
         mov [es:di + 0x16], al
-        or si, si
-        jz .effect              ; (Cat's Grace: Strength's, its effect PROBE_GRACE_EFFECT's)
+.own_landing:
+        test byte [cs:si + ns_effect_how], 1
+        jz .patches             ; (Cat's Grace, Friends: Strength's, the effect PROBE_GRACE_EFFECT's)
         mov al, [cs:si + ns_effects]
         mov [es:di + 0x19], al
+.patches:
+        mov bx, ns_patches      ; (and NS_PATCHES' changes for it)
+.patch: movzx ax, byte [cs:bx]
+        cmp al, 0xFF
+        je .flight
+        cmp ax, si
+        jne .skip
+        movzx cx, byte [cs:bx + 1]
+        push di
+        add di, cx
+        mov ax, [cs:bx + 3]
+        cmp byte [cs:bx + 2], 1
+        jne .word
+        mov [es:di], al
+        jmp .put
+.word:  mov [es:di], ax
+.put:   pop di
+.skip:  add bx, 5
+        jmp .patch
+.flight:
         cmp si, FOG_SPELL - NS_FIRST
         jne .effect
-        mov byte [es:di + 4], 0x42      ; (Fogbolt: 2d4 rounds, not Charm Person's for ever ...
-        mov word [es:di + 5], 0
-        mov word [es:di + 7], 60
-        mov word [es:di + 0x11], 0x4000 ;   ... nor mind-affecting;
-        mov byte [es:di + 0x0F], FOG_CAST_SOUND ; Fog Cloud's sound as it's cast (NS_LANDING
-                                                ; as it lands), Charm Person's, 75, as it flies)
         test byte [cs:ns_state], NS_OBJECTS
         jz .effect
-        mov byte [es:di + 0x10], FOG_FLIGHT ; (and its grey bolt flies, where the copy has it)
+        mov byte [es:di + 0x10], FOG_FLIGHT ; (Fogbolt's grey bolt flies, where the copy has it)
 .effect:
+        mov al, [cs:si + ns_effect_how]
+        or al, al
+        jz .next                ; (the game's effect: its name and icon its own)
+        cmp al, 3
+        je .next
         mov ax, ds              ; its effect: the name and icon, or none
         sub ax, EFFECT_TABLE_FROM_DS
         mov es, ax
@@ -11280,7 +11448,8 @@ ns_setup:
         ret
 
 ; NS_NEW: CF set if spell AX is a new one and the rule is on, AX then its place (0 to NS_COUNT - 1);
-; else AX kept. Others kept.
+; else AX kept. Those from REFLECT_SPELL on only once their records have room (SEG_MOVED). Others
+; kept.
 ns_new:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .no
@@ -11288,7 +11457,11 @@ ns_new:
         jb .no
         cmp ax, NS_LAST
         ja .no
-        sub ax, NS_FIRST
+        cmp ax, REFLECT_SPELL
+        jb .yes
+        cmp byte [cs:seg_moved], 0
+        je .no
+.yes:   sub ax, NS_FIRST
         stc
         ret
 .no:    clc
@@ -11307,22 +11480,146 @@ ns_flags:
         ret
 
 ; NS_KNOWS: CF set if party member AX (its thing) knows new spell CL (0 to NS_COUNT - 1): its
-; sheet's NS_SHEET bit. DS the game's; all registers kept.
+; sheet's bit (NS_SHEET_KNOWS). DS the game's; all registers kept.
 ns_knows:
-        push ax
         push bx
         push es
         call thing_sheet
-        mov al, NS_KNOWN_BIT
-        shl al, cl
-        test [es:bx + NS_SHEET], al
+        call ns_sheet_knows
         pop es
         pop bx
-        pop ax
+        ret
+
+; NS_BIT: DI the sheet's byte that says a member knows new spell CL (0 to NS_COUNT - 1: NS_KNOWN_AT),
+; AL its bit (NS_KNOWN_BIT). Others kept.
+ns_bit:
+        push bx
+        movzx bx, cl
+        movzx di, byte [cs:bx + ns_known_at]
+        mov al, [cs:bx + ns_known_bit]
+        pop bx
+        ret
+
+; NS_SHEET_KNOWS: CF set if sheet ES:BX says it knows new spell CL (KIT_BYTE's KIT_OPEN: none
+; chosen, and no spell known). All registers kept.
+ns_sheet_knows:
+        push ax
+        push di
+        call ns_bit
+        cmp di, KIT_BYTE
+        jne .test
+        cmp byte [es:bx + di], KIT_OPEN
+        je .no
+.test:  test [es:bx + di], al
         jz .no
+        pop di
+        pop ax
         stc
         ret
-.no:    clc
+.no:    pop di
+        pop ax
+        clc
+        ret
+
+; NS_SHEET_LEARN: sheet ES:BX knows new spell CL (a KIT_OPEN kit byte made 0, no kit, first);
+; NS_SHEET_FORGET: no longer; NS_FORGET_ALL: none of them. All registers kept.
+ns_sheet_learn:
+        push ax
+        push di
+        call ns_bit
+        cmp di, KIT_BYTE
+        jne .set
+        cmp byte [es:bx + di], KIT_OPEN
+        jne .set
+        mov byte [es:bx + di], 0
+.set:   or [es:bx + di], al
+        pop di
+        pop ax
+        ret
+ns_sheet_forget:
+        push ax
+        push di
+        call ns_bit
+        cmp di, KIT_BYTE
+        jne .clear
+        cmp byte [es:bx + di], KIT_OPEN
+        je .out
+.clear: not al
+        and [es:bx + di], al
+.out:   pop di
+        pop ax
+        ret
+ns_forget_all:
+        push cx
+        xor cx, cx
+.each:  call ns_sheet_forget
+        inc cx
+        cmp cx, NS_COUNT
+        jb .each
+        pop cx
+        ret
+
+; SPOOK_SAVE: in the saving throw (its [BP+6] the target, [BP+8] the caster, [BP+0Ah] the spell,
+; SI too; [BP-2] the total, a byte), Spook's total 1 less for each 2 of the caster's wizard levels
+; (NS_CASTER_LEVEL), no more than SPOOK_MOST, no less than 0. All registers kept.
+spook_save:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .ret
+        cmp si, SPOOK_SPELL
+        jne .ret
+        push ax
+        mov ax, [bp + 8]
+        call ns_caster_level
+        shr ax, 1
+        cmp ax, SPOOK_MOST
+        jbe .less
+        mov ax, SPOOK_MOST
+.less:  sub [bp - 2], al
+        jns .kept
+        mov byte [bp - 2], 0
+.kept:  pop ax
+.ret:   ret
+
+; NS_CASTER_LEVEL: AX the wizard level combatant AX casts a new spell at: the level of a preserver
+; class of its, or a Shinobi's casting level (SHINOBI_CAST), the more. DS the game's; others kept.
+ns_caster_level:
+        push bx
+        push cx
+        push dx
+        push si
+        push es
+        mov dx, ds
+        add dx, THINGS_SEG
+        mov es, dx
+        imul bx, ax, 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        call creature_sheet
+        xor dx, dx
+        xor si, si
+.class: cmp byte [es:bx + si + 0x21], PRESERVER_CLASS
+        jne .next
+        movzx ax, byte [es:bx + si + 0x24]
+        cmp ax, dx
+        jbe .next
+        mov dx, ax
+.next:  inc si
+        cmp si, 3
+        jb .class
+        call kit_is_b
+        db KIT_SHINOBI
+        jne .out
+        call kit_level
+        movzx ax, al
+        call shinobi_cast
+        cmp ax, dx
+        jbe .out
+        mov dx, ax
+.out:   mov ax, dx
+        pop es
+        pop si
+        pop dx
+        pop cx
+        pop bx
         ret
 
 ; NS_COUNT_OF: AX how many of the new spells party member SI knows (none while the rule is off),
@@ -11466,6 +11763,7 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         dw NS_CL, 0xC4
 NS_CMP_COUNT equ ($ - ns_cmp_sites) / 5
 NS_FIST   equ NS_CMP + NS_CMP_COUNT ; 58226h, a melee hit's magic (after NS_CMP's)
+NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a weapon's blow
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -11479,6 +11777,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_hit
         cmp byte [cs:rl_site], NS_FIST
         je ns_fist
+        cmp byte [cs:rl_site], NS_IMAGE
+        je ns_image
         cmp byte [cs:rl_site], NS_CMP + NS_CMP_COUNT
         jb ns_cmp
         iret
@@ -11598,9 +11898,7 @@ ns_learn:
         mov cl, ah
         movzx ax, al
         call thing_sheet
-        mov al, NS_KNOWN_BIT
-        shl al, cl
-        or [es:bx + NS_SHEET], al
+        call ns_sheet_learn
 .out:   pop es
         popad
         iret
@@ -11669,6 +11967,61 @@ ns_claw:
 .out:   pop es
         popad
         iret
+
+; NS_IMAGE: "cmp ax,4Bh" (7A5CDh; 3 bytes) where a weapon's blow at thing SI with Mirror Images
+; (25) on it strikes an image instead on a d100 (AX) of 75 or less: 50 or less for one of Reflected
+; Image (the effect's spell, NS_EFFECT_SPELL), its flags into the INT's frame.
+IMAGE_CHANCE equ 75
+REFLECT_CHANCE equ 50
+ns_image:
+        pushad
+        push es
+        mov di, sp
+        mov dx, IMAGE_CHANCE
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .cmp
+        mov ax, [ss:di + NS_SI]
+        mov cl, MIRROR_EFFECT
+        call ns_effect_spell
+        cmp ax, REFLECT_SPELL
+        jne .cmp
+        mov dx, REFLECT_CHANCE
+.cmp:   mov ax, [ss:di + NS_AX]
+        cmp ax, dx
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+; NS_EFFECT_SPELL: AX the spell that put effect CL on thing AX (the game's table of active effects:
+; the spell at +4), FFFFh if none. DS the game's; others kept.
+ns_effect_spell:
+        push bx
+        push dx
+        push es
+        mov dx, ds
+        sub dx, EFFECTS_FROM_DS
+        mov es, dx
+        mov dx, [EFFECTS_COUNT]
+        mov bx, EFFECTS_OFF
+.each:  or dx, dx
+        jz .none
+        cmp [es:bx], ax
+        jne .next
+        cmp [es:bx + 6], cl
+        jne .next
+        mov ax, [es:bx + 4]
+        jmp .out
+.next:  add bx, 10
+        dec dx
+        jmp .each
+.none:  mov ax, 0xFFFF
+.out:   pop es
+        pop dx
+        pop bx
+        ret
 
 ; NS_HAS: ZF set if thing AX has effect CL (the game's table of active effects). DS the game's; all
 ; registers kept.
@@ -14349,6 +14702,7 @@ keep:   mov ax, [cs:psp]
         int 21h
 
 align 16
+seg_space times SEG_BYTES db 0   ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
 resident_end:                   ; (the ring follows, in a segment of its own)
 RING_BYTES equ NENT * ESIZE
 

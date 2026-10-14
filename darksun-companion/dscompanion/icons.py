@@ -491,11 +491,13 @@ def with_chunks(data: bytes, added: gff.Chunks, room: Optional[Dict[Tuple[str, i
 # on the USE screen and the Effects screen. Cat's Grace: Strength's tile (ICON 21023: the spell Cat's
 # Grace works as) in a tawny cat's golds, its glyph a cat's paw print in the game's dark line, with
 # the light line below and right of it that its glyphs have. Erdlu Claw: Gaze Reflection's sandy
-# tile, three claw scratches; Fogbolt: Charm Person's purple tile (the spell Fogbolt is made from),
-# its glyph taken off, a cloud with a bolt below.
+# tile, three claw scratches; Fogbolt: Armor's grey tile, its glyph taken off, a cloud with a bolt
+# below; Reflected Image: Mirror Image's, one of its two figures left, the other hollow; Spook:
+# Scare's purple tile, a ghost; Friends: Hold Person's warm tile, a heart.
 RESOURCE_FILE = "RESOURCE.GFF"
-STRENGTH_ICON, GAZE_ICON, CHARM_ICON = 21023, 21006, 21002
-GRACE_ICON, CLAW_ICON, FOG_ICON = 21196, 21197, 21198
+STRENGTH_ICON, GAZE_ICON, CHARM_ICON, ARMOR_ICON = 21023, 21006, 21002, 21000
+MIRROR_ICON, SCARE_ICON, HOLD_ICON = 21019, 21021, 21030
+GRACE_ICON, CLAW_ICON, FOG_ICON, REFLECT_ICON, SPOOK_ICON, FRIENDS_ICON = range(21196, 21202)
 GRACE_FILL = {163: 168, 76: 169, 77: 65, 75: 168, 78: 170, 134: 205}
 GRACE_FRAME = {60: 170, 145: 169, 147: 170, 133: 205, 203: 207, 134: 205}
 GLYPH, GLYPH_LIGHT = 204, 170
@@ -561,9 +563,40 @@ FOG_GLYPH = (  # (a cloud with a bolt below)
     "......DD........",
     "......D.........",
 )
-CHARM_GLYPH = {174, 178, 74, 75}  # (Charm Person's glyph: its dark and light lines)
+CHARM_GLYPH = {174, 178, 74, 75}  # (Charm Person's and Scare's glyphs: their dark and light lines)
 CHARM_FILL = (177, 176)  # (... filled in with its tile's own purples)
-FOG_DARK, FOG_LIGHT = 254, 178
+ARMOR_GLYPH, ARMOR_FILL = {208, 214}, (211, 212)  # (Armor's: its dome's lines, and its greys)
+FOG_DARK, FOG_LIGHT = 208, 214
+GHOST_GLYPH = (  # (a ghost: a hooded head, two eyes, a ragged hem)
+    ".....DDDDDD.....",
+    "....D......D....",
+    "...D........D...",
+    "...D..D..D..D...",
+    "...D..D..D..D...",
+    "...D........D...",
+    "...D...DD...D...",
+    "...D........D...",
+    "...D........D...",
+    "...D.D.DD.D.D...",
+    "...DD.D..D.DD...",
+)
+HEART_GLYPH = (  # (a heart)
+    "...DDD....DDD...",
+    "..D...D..D...D..",
+    ".D.....DD.....D.",
+    ".D............D.",
+    ".D............D.",
+    "..D..........D..",
+    "...D........D...",
+    "....D......D....",
+    ".....D....D.....",
+    "......D..D......",
+    ".......DD.......",
+)
+HOLD_GLYPH, HOLD_FILL = {134, 150}, (139, 140)  # (Hold Person's glyph lines, and its tile's tans)
+HEART_DARK, HEART_LIGHT = 134, 150
+MIRROR_RIGHT = range(8, 14)  # (Mirror Image's second figure's columns ...)
+MIRROR_SOLID, MIRROR_HOLLOW = {42, 40}, 216  # (... its fill, made its tile's pale teal)
 
 
 def glyph_icon(base: Rows, old: Set[int], fill: int, glyph: Tuple[str, ...], top: int, dark: int,
@@ -590,16 +623,42 @@ def claw_icon(gaze: Rows) -> Rows:
     return glyph_icon(gaze, {129, 60, 182, 183}, 180, CLAW_GLYPH, 3, 129, 183)
 
 
-def fog_icon(charm: Rows) -> Rows:
-    """Fogbolt's icon from Charm Person's: its glyph taken off (each pixel of it the tile's own
-    purples, by turns), then the cloud and bolt in the game's black with a light purple line."""
-    n = len(charm)
-    out = [list(r) for r in charm]
+def untiled(base: Rows, old: Set[int], fills: Tuple[int, int]) -> Rows:
+    """BASE's tile with its glyph (colours OLD inside the frame) taken off, each pixel of it one of
+    FILLS, by turns."""
+    n = len(base)
+    out = [list(r) for r in base]
     for y in range(1, n - 1):
         for x in range(1, n - 1):
-            if out[y][x] in CHARM_GLYPH:
-                out[y][x] = CHARM_FILL[(x + y) % 2]
-    return glyph_icon(out, set(), 0, FOG_GLYPH, 2, FOG_DARK, FOG_LIGHT)
+            if out[y][x] in old:
+                out[y][x] = fills[(x + y) % 2]
+    return out
+
+
+def fog_icon(armor: Rows) -> Rows:
+    """Fogbolt's icon from Armor's grey tile: its glyph taken off, then the cloud and bolt in its
+    dark grey with its light line."""
+    return glyph_icon(untiled(armor, ARMOR_GLYPH, ARMOR_FILL), set(), 0, FOG_GLYPH, 2, FOG_DARK, FOG_LIGHT)
+
+
+def reflect_icon(mirror: Rows) -> Rows:
+    """Reflected Image's icon from Mirror Image's: its second figure hollow (one image)."""
+    out = [list(r) for r in mirror]
+    for y in range(1, len(out) - 1):
+        for x in MIRROR_RIGHT:
+            if out[y][x] in MIRROR_SOLID:
+                out[y][x] = MIRROR_HOLLOW
+    return out
+
+
+def spook_icon(scare: Rows) -> Rows:
+    """Spook's icon from Scare's: its glyph taken off, a ghost in its dark line."""
+    return glyph_icon(untiled(scare, CHARM_GLYPH, CHARM_FILL), set(), 0, GHOST_GLYPH, 3, 174, 178)
+
+
+def friends_icon(hold: Rows) -> Rows:
+    """Friends' icon from Hold Person's: its glyph taken off, a heart in its dark line."""
+    return glyph_icon(untiled(hold, HOLD_GLYPH, HOLD_FILL), set(), 0, HEART_GLYPH, 3, HEART_DARK, HEART_LIGHT)
 
 
 # Fogbolt's bolt (SEGOBJEX.GFF): a spell's record names its flight by a number (+10h, FFh none),
@@ -666,7 +725,10 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
     chunks = gff.read_gff(data)
     added = {("ICON", GRACE_ICON): encode(cat_icon(decode(chunks[("ICON", STRENGTH_ICON)]))),
              ("ICON", CLAW_ICON): encode(claw_icon(decode(chunks[("ICON", GAZE_ICON)]))),
-             ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", CHARM_ICON)])))}
+             ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", ARMOR_ICON)]))),
+             ("ICON", REFLECT_ICON): encode(reflect_icon(decode(chunks[("ICON", MIRROR_ICON)]))),
+             ("ICON", SPOOK_ICON): encode(spook_icon(decode(chunks[("ICON", SCARE_ICON)]))),
+             ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)])))}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))

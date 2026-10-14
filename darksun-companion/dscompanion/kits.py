@@ -6,7 +6,7 @@ that number, 0 for none (the rule off, more than one class, none chosen).
 
 from typing import Optional, Tuple
 
-from .game import FOG_SPELL, NEW_SPELLS
+from .game import FOG_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL
 from .kitpages import KIT_IDS, KITS
 
 RAVAGER, SENTINEL, STALKER = KIT_IDS["Ravager"], KIT_IDS["Sentinel"], KIT_IDS["Stalker"]
@@ -42,17 +42,18 @@ BLUNT = frozenset((1, 4, 8, 14, 15))
 SHINOBI_KINDS = frozenset((2, 3, 8, 12, 13, 14, 15))
 SHINOBI = KIT_IDS["Shinobi"]
 BOW = 13  # (the bow's weapon kind: a Seeker keeps it whatever its sphere)
-# an Elementalist's second sphere: the low four bits of the sheet's byte SPHERE2, 0 none, else the
+# an Elementalist's second sphere: the low three bits of the sheet's byte SPHERE2, 0 none, else the
 # sphere (0 air, 1 earth, 2 fire, 3 water) + 1 (DSCLOG's SPHERE2; the bits above it are the new spells
-# known, game.NEW_KNOWN_SHEET)
-SPHERE2, SPHERE2_MASK = 0x45, 0x0F
+# known, game.NEW_KNOWN)
+SPHERE2, SPHERE2_MASK = 0x45, 0x07
 # a Battle Mage's weapon specs to choose from (DSCLOG's KIT_BM_KINDS): the one-handed melee ones, not
 # thrown: long sword, club, dagger, short sword, mace, axe, pick
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
 # level up from thief level SHINOBI_FIRST, none from scrolls; it casts at its thief level less 5.
-# Fogbolt, a new spell, only with the new spells on (its known bit in the sheet: NS_KNOWS)
+# Fogbolt, Reflected Image and Spook, new spells, only with the new spells on (their known bits: NS_KNOWS)
 SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (FOG_SPELL, 1),  # Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt
+                  (REFLECT_SPELL, 1), (SPOOK_SPELL, 1),  # Reflected Image, Spook
                   (17, 2), (19, 2), (12, 2), (13, 2), (15, 2),  # Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
                   (25, 3), (29, 3), (36, 3), (30, 3))  # Blink, Haste, Protection from Normal Missiles, Hold Person
 SHINOBI_FIRST, WIZARD_LAST = 6, 68  # (wizard spells are 0 to WIZARD_LAST)
@@ -193,6 +194,15 @@ def shinobi_cast(level: int) -> int:
     """The level a Shinobi of thief level LEVEL casts its wizard spells at (DSCLOG's SHINOBI_CAST):
     5 less, 1st at 6th level."""
     return max(0, level - (SHINOBI_FIRST - 1))
+
+
+def spook_penalty(preserver_level: int, shinobi_thief_level: int = 0) -> int:
+    """Spook's save modifier (DSCLOG's SPOOK_SAVE): 1 worse for each 2 levels the caster casts it at,
+    a preserver's level or a Shinobi's casting level (shinobi_cast of SHINOBI_THIEF_LEVEL), the more;
+    no worse than game.SPOOK_MOST."""
+    from .game import SPOOK_MOST
+    level = max(preserver_level, shinobi_cast(shinobi_thief_level) if shinobi_thief_level else 0)
+    return -min(SPOOK_MOST, level // 2)
 
 
 def cast_level(kid: int, spell: int, level: int, thief_level: int) -> int:

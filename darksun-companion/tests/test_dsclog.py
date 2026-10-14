@@ -32,6 +32,7 @@ except ImportError:  # optional dependency
 
 EXE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")
 TSR, GAME_DS, SS, CALLER, PARENT, RAND = 0x2000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000
+SEG_MOVED = 306  # the header's: SEG_MOVE has made the new spells' records' room
 RING_SEG = 0xC000  # where the tests put the ring (DSCLOG's install puts it past its image)
 IF = 0x200  # the interrupt flag
 # CHOOSE A SPELL as the tests' stand-in (at its stub, DS + 430Ah - 4356h : 5Ch): the call counted at
@@ -2233,7 +2234,8 @@ class GraceTests(RuleTests):
         return struct.unpack("<h", self.mu.mem_read(at, 2))[0]
 
     def test_cast_goes_to_strength(self):
-        for rules, spell, want in ((32, 196, 23), (0, 196, 196), (32, 14, 14), (32, 23, 23)):
+        for rules, spell, want in ((32, 196, 23), (0, 196, 196), (32, 14, 14), (32, 23, 23), (32, 201, 23),
+                                   (0, 201, 201)):
             self.rules(rules)
             self.word(0x0E, spell)
             self.run_at(bytes((0xCD, VEC_GRACE_CAST)))
@@ -2241,7 +2243,7 @@ class GraceTests(RuleTests):
 
     def test_its_own_effect(self):
         for rules, spell, want in ((32, 196, 54), (0, 196, 0x43), (32, 14, 0x43), (32, 23, 0x43), (32, 0x94, 0x42),
-                                   (0, 0x94, 0x42)):
+                                   (0, 0x94, 0x42), (32, 201, 74), (0, 201, 0x43)):
             self.rules(rules)
             self.word(0x0E, spell)
             self.run_at(bytes((0xCD, VEC_GRACE_EFFECT)))
@@ -2255,6 +2257,18 @@ class GraceTests(RuleTests):
             self.word(-0x342, 18)  # STR, untouched
             self.run_at(bytes((0xCD, VEC_GRACE_ABILITY)), eax=effect, ebx=0, es=effects, ecx=0)
             self.assertEqual((self.word(-0x340), self.word(-0x342), self.word(-0x0A)), (want, 18, effect))
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 7)
+
+    def test_friends_adds_to_cha(self):
+        """Friends' effect (74): CHA ([BP-338h]) 6 more, at most 25 (one above kept); the amount at
+        +10Fh (Strength's 1d6) not counted."""
+        effects = 0x9800
+        self.mu.mem_write(effects * 16 + 0x10F, bytes([5]))
+        for effect, cha, want in ((74, 12, 18), (74, 21, 25), (74, 27, 27), (67, 12, 12)):
+            self.word(-0x338, cha)
+            self.word(-0x340, 15)  # DEX, untouched
+            self.run_at(bytes((0xCD, VEC_GRACE_ABILITY)), eax=effect, ebx=0, es=effects, ecx=0)
+            self.assertEqual((self.word(-0x338), self.word(-0x340), self.word(-0x0A)), (want, 15, effect))
             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 7)
 
 
@@ -2293,11 +2307,66 @@ class NewSpellTests(RuleTests):
         self.rules(32)
         self.assertEqual(self.site(site, edx=196) & (CF | ZF), CF)
         self.assertEqual(self.site(site, edx=198) & (CF | ZF), CF)
-        self.assertEqual(self.site(site, edx=199) & (CF | ZF), 0)
+        self.assertEqual(self.site(site, edx=199) & (CF | ZF), 0)  # (no room for its record yet)
         self.assertEqual(self.site(site, edx=0x95) & (CF | ZF), CF)
+        self.moved(1)
+        for spell in (199, 200, 201):
+            self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
+        self.assertEqual(self.site(site, edx=202) & (CF | ZF), 0)
         self.rules(0)
         self.assertEqual(self.site(site, edx=196) & (CF | ZF), ZF)
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 196)
+
+    def moved(self, value):
+        """The header's SEG_MOVED: the new spells' records' room made (SEG_MOVE) or not."""
+        self.mu.mem_write(TSR * 16 + SEG_MOVED, bytes([value]))
+
+    def test_image_chance(self):
+        """A blow at a thing with Mirror Images (25) on it (NS_IMAGE, thing SI, the d100 AX): an
+        image takes it on 75 or less, on 50 or less if Reflected Image (199) put the effect there;
+        the flags of that compare."""
+        from dscompanion import gamepatch
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        self.mu.mem_write(effects, struct.pack("<hhhBB", 2, 0, 19, 25, 0) + bytes(2)
+                          + struct.pack("<hhhBB", 5, 0, 199, 25, 0) + bytes(2))
+        self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
+        def greater(thing, roll):
+            flags = self.site(gamepatch.NS_IMAGE, esi=thing, eax=roll)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), roll)
+            return not flags & 0x40 and bool(flags & 0x80) == bool(flags & 0x800)
+        self.rules(32)
+        self.moved(1)
+        self.assertEqual([greater(2, n) for n in (50, 51, 75, 76)], [False, False, False, True])
+        self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, True, True, True])
+        self.rules(0)
+        self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, False, False, True])
+
+    def test_new_records(self):
+        """NS_SETUP once the records have room (SEG_MOVED): Reflected Image is Mirror Image's record
+        with one image (1d1, none a level), Spook Charm Person's with Afraid (17), 3 rounds and Magic
+        Missile's flight, Friends Strength's for 5 rounds and 1 a level on the caster; their rows
+        1st level; Friends' effect (74) named. Without the room their records' place is left alone."""
+        from dscompanion import gamepatch
+        recs = (GAME_DS - (0x4356 - 0x3CB4)) * 16 + 0x30
+        rows = (GAME_DS + 0x3FB9 - 0x4356) * 16 + 0x19C
+        names = (GAME_DS - (0x4356 - 0x3F8D)) * 16
+        for spell, fill in ((19, 0x19), (2, 0x02), (23, 0x23)):
+            self.mu.mem_write(recs + spell * 0x20, bytes([fill]) * 0x20)
+        self.mu.mem_write(recs + 199 * 0x20, b"\xEE" * 0x60)
+        afraid = bytes(self.mu.mem_read(names + 16 * 6, 6))
+        self.rules(32)
+        self.site(gamepatch.NS_CMP + 11, edx=0)
+        self.assertEqual(bytes(self.mu.mem_read(recs + 199 * 0x20, 0x60)), b"\xEE" * 0x60)
+        self.moved(1)
+        self.site(gamepatch.NS_CMP + 11, edx=0)
+        reflect, spook, friends = (bytes(self.mu.mem_read(recs + n * 0x20, 0x20)) for n in (199, 200, 201))
+        self.assertEqual((reflect[4], reflect[5:7], reflect[0x19]), (0x11, b"\0\0", 0x19))
+        self.assertEqual((spook[4], struct.unpack_from("<H", spook, 7)[0], spook[0x10], spook[0x19]), (0x13, 60, 4, 17))
+        self.assertEqual((friends[4], struct.unpack_from("<HH", friends, 5), friends[0x0C], friends[1:3]),
+                         (0x15, (1, 60), 7, b"\xff\xff"))
+        self.assertEqual([self.mu.mem_read(rows + n * 7, 1)[0] for n in (199, 200, 201)], [1, 1, 1])
+        self.assertEqual(struct.unpack("<HHH", self.mu.mem_read(names + 73 * 6, 6))[1:], (TSR, 21201))
+        self.assertEqual(bytes(self.mu.mem_read(names + 16 * 6, 6)), afraid)  # (Afraid's own, as it was)
 
     def test_claw(self):
         """A natural attack's dice (NS_CLAW, thing SI, attack DX): with Erdlu Claw's effect (6) on the
@@ -2978,10 +3047,112 @@ class KitTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
         mu.mem_write(self.DS * 16 + 0x119C, struct.pack("<HH", 0, self.CREATION))
         self.hdr = TSR * 16 + self.image.find(HDR_SIG)
+        mu.mem_write(self.hdr + SEG_MOVED, b"\x01")  # (as in the game: SEG_MOVE done at its start)
 
     def rules(self, rules):
         self.mu.mem_write(self.hdr + self.RULES, struct.pack("<H", rules & 0xFFFF))
         self.mu.mem_write(self.hdr + self.RULES_HI, struct.pack("<H", rules >> 16))
+
+    def test_seg_move(self):
+        """SEG_MOVE (at a file open, the game's PSP from DOS's 62h): the segment table's entries for
+        3E3Fh and 3E45h (selectors 3B8h, 3C0h), the 200h bytes from 3E3Fh copied into SEG_SPACE and
+        the entries pointing there, once; nothing if the table isn't the game's."""
+        import re
+        mu = self.mu
+        at = re.search(rb"\x60\x1e\x06\xb4\x62\x9c\x2e\xff\x1e(..)", self.image, re.S)
+        start, old21 = at.start() - 8, struct.unpack("<H", at.group(1))[0]
+        stub = 0x8F00  # (DOS: AH=62h, BX the PSP)
+        mu.mem_write(stub * 16, bytes.fromhex("bbf06fcf"))  # mov bx,6FF0h / iret
+        mu.mem_write(TSR * 16 + old21, struct.pack("<HH", 0, stub))
+        load = 0x7000
+        table = (load + 0x4137) * 16
+        data = bytes(range(256)) * 2
+        def setup(records_len=0x18B0):
+            mu.mem_write(table + 0x3B0, struct.pack("<HH", load + 0x3CB4, records_len))
+            mu.mem_write(table + 0x3B8, struct.pack("<HH", load + 0x3E3F, 0x60))
+            mu.mem_write(table + 0x3C0, struct.pack("<HH", load + 0x3E45, 0x192))
+            mu.mem_write((load + 0x3E3F) * 16, data)
+        def run():
+            self.call(re.escape(self.image[start:start + 16]))
+            return struct.unpack("<HH", mu.mem_read(table + 0x3B8, 4))[0], \
+                struct.unpack("<H", mu.mem_read(table + 0x3C0, 2))[0], mu.mem_read(self.hdr + SEG_MOVED, 1)[0]
+        mu.mem_write(self.hdr + SEG_MOVED, b"\x00")
+        setup(records_len=0x1234)
+        self.assertEqual(run(), (load + 0x3E3F, load + 0x3E45, 0))  # (not the game's table: left)
+        setup()
+        stack, kinds, moved = run()
+        self.assertEqual((kinds - stack, moved), (6, 1))
+        self.assertTrue(TSR <= stack and (stack - TSR) * 16 + 0x200 <= len(self.image))  # (in the helper)
+        self.assertEqual(bytes(mu.mem_read(stack * 16, 0x200)), data)
+        mu.mem_write(table + 0x3B8, struct.pack("<H", load + 0x3E3F))
+        self.assertEqual(run()[0], load + 0x3E3F)  # (once only)
+
+    def test_known_bits(self):
+        """NS_SHEET_KNOWS, NS_SHEET_LEARN, NS_SHEET_FORGET: each new spell's bit (game.NEW_KNOWN), as
+        game.knows_new_spell reads them; Friends' in the kit byte's top bit, none while it is
+        KIT_OPEN (0FFh), which learning it makes 0 (no kit) first."""
+        import re
+        from dscompanion import kitpages
+        mu = self.mu
+        sheet = self.SHEET * 16
+        def find(pattern):
+            return re.escape(self.image[re.search(pattern, self.image, re.S).start():][:12])
+        # (each starts "push ax / push di / call ns_bit / cmp di,43h": knows, learn, forget in order)
+        starts = [m.start() for m in re.finditer(rb"\x50\x57\xe8..\x83\xff\x43", self.image, re.S)]
+        self.assertEqual(len(starts), 3)
+        knows, learn, forget = starts
+        def go(at, spell, before):
+            mu.mem_write(sheet, bytes(before))
+            for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7FC, es=self.SHEET, ebx=0,
+                                    ecx=spell - game.GRACE_SPELL, eflags=0).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+            mu.emu_start(TSR * 16 + at, TSR * 16 + 0xFFF0)
+            return bytes(mu.mem_read(sheet, game.SHEET_SIZE)), mu.reg_read(r.UC_X86_REG_EFLAGS) & 1
+        for spell in game.NEW_SPELLS:
+            for kit in (0, 2, 0xFF):
+                blank = bytearray(game.SHEET_SIZE)
+                blank[kitpages.KIT_BYTE], blank[0x45] = kit, 3  # (and an Elementalist's second sphere)
+                with self.subTest(spell=spell, kit=kit):
+                    learnt, _ = go(learn, spell, blank)
+                    self.assertTrue(game.knows_new_spell(learnt, spell))
+                    self.assertEqual([game.knows_new_spell(learnt, n) for n in game.NEW_SPELLS],
+                                     [n == spell for n in game.NEW_SPELLS])
+                    self.assertEqual(learnt[0x45] & 7, 3)
+                    self.assertEqual(go(knows, spell, learnt)[1], 1)
+                    self.assertEqual(go(knows, spell, blank)[1], 0)
+                    forgot, _ = go(forget, spell, learnt)
+                    self.assertFalse(game.knows_new_spell(forgot, spell))
+                    if kit == 0xFF and spell == game.FRIENDS_SPELL:
+                        self.assertEqual((learnt[kitpages.KIT_BYTE], forgot[kitpages.KIT_BYTE]), (0x80, 0))
+                    else:
+                        self.assertEqual(forgot, bytes(blank))
+
+    def test_spook_save(self):
+        """SPOOK_SAVE (the saving throw: SI the spell, [BP+8] the caster, [BP-2] the total): Spook's
+        total 1 less for each 2 of the caster's wizard levels (a preserver's, or a Shinobi's casting
+        level), at most 6 less, no less than 0; others' and with the rule off as they were."""
+        import re
+        from dscompanion import kits
+        at = re.search(rb"\x2e\xf6\x06..\x20\x74.\x81\xfe\xc8\x00", self.image, re.S).start()
+        def run(spell, total, rules=game.RULE_NEW_SPELLS):
+            self.rules(rules | game.RULE_KITS)
+            self.mu.mem_write(SS * 16 + BP + 8, struct.pack("<H", 7))
+            self.mu.mem_write(SS * 16 + BP - 2, bytes([total]))
+            self.call(re.escape(self.image[at:at + 12]), esi=spell, ebp=BP)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SI), spell)
+            return self.mu.mem_read(SS * 16 + BP - 2, 1)[0]
+        for cls, kit, level, want in ((11, 0, 1, 0), (11, 0, 5, 2), (11, 0, 9, 4), (11, 0, 20, 6),
+                                      (17, 3, 10, 2), (17, 0, 10, 0), (9, 0, 10, 0)):
+            with self.subTest(cls=cls, kit=kit, level=level):
+                self.creature(cls, kit, index=6, level=level)
+                self.assertEqual(run(200, 15), 15 - want)
+                self.assertEqual(-want, kits.spook_penalty(level if cls == 11 else 0,
+                                                            level if (cls, kit) == (17, 3) else 0))
+        self.creature(11, 0, index=6, level=12)
+        self.assertEqual(run(200, 3), 0)
+        self.assertEqual(run(2, 15), 15)
+        self.assertEqual(run(200, 15, rules=0), 15)
 
     def call(self, pattern, **regs):
         import re
@@ -3977,7 +4148,8 @@ class KitTests(unittest.TestCase):
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_CX,
                                                                         r.UC_X86_REG_SI, r.UC_X86_REG_ES, r.UC_X86_REG_DS)],
                                          [3, 0x2222, 0x3333, 0x4444, 0x6666, self.DS])
-        self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2), [6, 9, 4, 11, 198, 19, 12, 13, 15])
+        self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2),
+                         [6, 9, 4, 11, 198, 199, 200, 19, 12, 13, 15])
         self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2, new_spells=False),
                          [6, 9, 4, 11, 19, 12, 13, 15])
 

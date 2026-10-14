@@ -22,7 +22,18 @@ have the detail.
   its story from Alagorn, in his shields' menu; neither is for thieves, as
   the game's wooden shield isn't.
 
+- **Three new wizard spells,** with the new spells on: **Reflected Image**
+  (1st level, on the caster: one image, struck instead of the caster half the
+  time; it and Mirror Image replace each other), **Spook** (1st level: one
+  creature flees for 3 rounds unless it saves, at -1 for every 2 caster
+  levels, at most -6; undead aren't affected) and **Friends** (1st level, on
+  the caster: CHA + 6, at most 25, for 5 rounds and 1 a level, for better
+  prices). Each has its icon and description; preservers learn all three, a
+  Shinobi Reflected Image and Spook.
+
 **Changed**
+- **Fogbolt's icon is grey** (its cloud on Armor's grey tile, rather than
+  Charm Person's purple).
 - **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the
   game's five, with the new spells on: offered at a level up as the others
   are, and cast at the thief level less 5 as they are.
@@ -33,6 +44,10 @@ have the detail.
   types, weigh 30 too.
 
 **Fixed**
+- **The new spells' records shared memory with a stack.** The game kept a
+  small stack where Cat's Grace, Erdlu Claw and Fogbolt's records are; the
+  helper now moves it (and the monster kinds table) into its own memory as
+  the game starts, which also makes room for the three spells above.
 - **New preservers weren't offered their spells.** DONE on the creation
   screen gave a new preserver (single or multiclass) the game's own starting
   spells instead of CHOOSE A SPELL: the check meant to leave START GAME's

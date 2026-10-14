@@ -151,6 +151,31 @@ class CopyTests(unittest.TestCase):
             self.assertEqual([list(row) for row in decode_frame(grey, k)[2]], expected)
             self.assertEqual([list(row) for row in decode_frame(chunk, k)[2]], frame)
 
+    def test_new_spell_icons(self):
+        """The new spells' icons (21196 + n): each from its game tile, the frame kept, the glyph
+        changed: Fogbolt's cloud on Armor's grey, Reflected Image's one figure, Spook's ghost,
+        Friends' heart."""
+        def tile(colours):
+            return [[colours[(x + y) % len(colours)] for x in range(16)] for y in range(16)]
+        armor, mirror, scare, hold = tile([211, 212, 208, 214]), tile([70, 73, 42, 40]), tile([176, 177, 174]), \
+            tile([139, 140, 134, 150])
+        self.assertEqual((icons.FOG_ICON, icons.REFLECT_ICON, icons.SPOOK_ICON, icons.FRIENDS_ICON),
+                         (21198, 21199, 21200, 21201))
+        for make, base, glyph in ((icons.fog_icon, armor, icons.FOG_DARK), (icons.spook_icon, scare, 174),
+                                  (icons.friends_icon, hold, icons.HEART_DARK)):
+            out = make(base)
+            self.assertEqual((len(out), len(out[0])), (16, 16))
+            self.assertEqual([out[0], out[15]], [base[0], base[15]])
+            inside = {p for row in out[1:15] for p in row[1:15]}
+            self.assertIn(glyph, inside)
+            self.assertNotEqual(out, base)
+        fog = icons.fog_icon(armor)
+        self.assertNotIn(214, {fog[y][x] for y in range(1, 15) for x in range(1, 15)} - {icons.FOG_LIGHT})
+        reflect = icons.reflect_icon(mirror)
+        right = {reflect[y][x] for y in range(1, 15) for x in icons.MIRROR_RIGHT}
+        self.assertFalse(right & icons.MIRROR_SOLID)
+        self.assertEqual([row[:8] for row in reflect], [row[:8] for row in mirror])
+
     def test_numbers_apart_from_the_rest(self):
         """No object or icon of these numbered as Kalzith's moved scroll icons or the party's
         sprites (the arms' first numbers were his: their boxes showed his pictures)."""

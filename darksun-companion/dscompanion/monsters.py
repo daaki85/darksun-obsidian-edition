@@ -21,7 +21,11 @@ import struct
 from typing import Dict, List, NamedTuple, Optional, Tuple
 
 CREATURE_KIND = 0x16  # word: the monster's kind (0 for people)
-MONSTER_KINDS_SEG = 0x3E45  # from the load segment
+MONSTER_KINDS_SEG = 0x3E45  # from the load segment, where the game has it ...
+# ... but DSCLOG moves it at the game's start (its SEG_MOVE: the spell records' room): the game's
+# table of its data segments (8 bytes a selector, the segment first, from the load segment +
+# SEGMENT_TABLE) says where; the kinds' selector is KINDS_SELECTOR
+SEGMENT_TABLE, KINDS_SELECTOR = 0x4137, 0x3C0
 KIND_COUNT = 42
 KIND_PROPERTIES_OFF = 0x00  # dword per kind
 KIND_CLASS_OFF = 0xA8  # byte per kind: its resistance class (0: none)
@@ -207,7 +211,8 @@ class MonsterTables:
     """The kinds table, read once from the running game (it's filled when the game starts)."""
 
     def __init__(self, read, load_seg: int):
-        base = (load_seg + MONSTER_KINDS_SEG) * 16
+        seg = struct.unpack("<H", read((load_seg + SEGMENT_TABLE) * 16 + KINDS_SELECTOR, 2))[0]
+        base = (seg or load_seg + MONSTER_KINDS_SEG) * 16
         data = read(base, CLASS_MASKS_OFF + CLASS_SIZE * CLASS_COUNT)
         self.properties = list(struct.unpack_from(f"<{KIND_COUNT}I", data, KIND_PROPERTIES_OFF))
         self.classes = list(data[KIND_CLASS_OFF:KIND_CLASS_OFF + KIND_COUNT])

@@ -158,19 +158,28 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
                  ("rolled_scores", RULE_ROLLED))
-# The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): three wizard spells numbered after the game's
-# 196 (0-195), in the three records the game's table has room for past its own; DSCLOG fills their
-# records and rows in, names them, and keeps who knows them in the sheet (NEW_KNOWN_SHEET's bits).
+# The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
+# 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
+# DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
+# in, names them, and keeps who knows them in the sheet (NEW_KNOWN's bits).
 # Cat's Grace works as Strength does, for DEX: Strength's code rolls 1d6 into an effect of its own
 # (54, a number the game leaves unused) that adds to DEX, at most 24. Erdlu Claw's effect (6, unused
 # too) makes each natural (unarmed) attack 1d6+1 where that is better than its own (NS_CLAW), +1 to hit and at least
 # a +1 weapon (NS_FIST: its hit's damage kinds get PLUS1); Fogbolt's (27) takes 3 off the fogged creature's attacks and
-# gives 2 to attacks on it.
-GRACE_SPELL, CLAW_SPELL, FOG_SPELL = 196, 197, 198
-NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "Fogbolt"}
-NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1}
-NEW_SPELLS_END = 199  # (past the last: 199 on is the game's live data, not spell records)
+# gives 2 to attacks on it. Reflected Image is Mirror Image's record with one image (its effect, 25,
+# the game's Mirror Images: one takes the other's place); Spook is Charm Person's with the game's
+# Afraid (17) for 3 rounds, its save 1 worse for each 2 caster levels (up to 6: SPOOK_MOST); Friends
+# goes through Strength's code as Cat's Grace does, into an effect of its own (74, unused too) that
+# adds 6 to CHA (at most 25) for 5 rounds and 1 a level.
+GRACE_SPELL, CLAW_SPELL, FOG_SPELL, REFLECT_SPELL, SPOOK_SPELL, FRIENDS_SPELL = range(196, 202)
+NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "Fogbolt",
+              REFLECT_SPELL: "Reflected Image", SPOOK_SPELL: "Spook", FRIENDS_SPELL: "Friends"}
+NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
+                    FRIENDS_SPELL: 1}
+NEW_SPELLS_END = 202  # (past the last)
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
+MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
+FRIENDS_CHA, FRIENDS_MOST, SPOOK_MOST = 6, 25, 6
 FLAMING_SPHERE = 14  # (once Cat's Grace's place)
 
 
@@ -178,9 +187,21 @@ def cast_spell(spell: Optional[int]) -> bool:
     """A wizard's or priest's spell, a psionic power, or a new spell: not a monster's power."""
     return spell is not None and (SPELL_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT or spell in NEW_SPELLS)
 DETECT_INVISIBILITY = 13  # the spell (as the Ledger numbers them: 1 Burning Hands)
-# the sheet's byte whose bits 4-6 say a character knows the new spells (bit 4: 196); its low four bits
-# are an Elementalist's second sphere (kits.SPHERE2)
-NEW_KNOWN_SHEET, NEW_KNOWN_BIT, NEW_KNOWN_MASK = 0x45, 0x10, 0x70
+# the sheet's byte and bit that say a character knows each new spell: most in +45h, whose low three
+# bits are an Elementalist's second sphere (kits.SPHERE2); Friends' in the kit byte's top bit (its
+# 0FFh, kitpages.KIT_OPEN, none chosen and no spell known)
+NEW_KNOWN_SHEET, KIT_SHEET, KIT_OPEN_BYTE = 0x45, 0x43, 0xFF
+NEW_KNOWN = {GRACE_SPELL: (NEW_KNOWN_SHEET, 0x10), CLAW_SPELL: (NEW_KNOWN_SHEET, 0x20),
+             FOG_SPELL: (NEW_KNOWN_SHEET, 0x40), REFLECT_SPELL: (NEW_KNOWN_SHEET, 0x08),
+             SPOOK_SPELL: (NEW_KNOWN_SHEET, 0x80), FRIENDS_SPELL: (KIT_SHEET, 0x80)}
+
+
+def knows_new_spell(sheet: bytes, spell: int) -> bool:
+    """Whether SHEET says it knows new spell SPELL (NEW_KNOWN)."""
+    at, bit = NEW_KNOWN[spell]
+    if len(sheet) <= at or at == KIT_SHEET and sheet[at] == KIT_OPEN_BYTE:
+        return False
+    return bool(sheet[at] & bit)
 # The game's table of effects (DSUN.EXE 44CD0h, from the load segment 3F8Dh), 6 bytes each from
 # effect 1: a far pointer to its name (the line under a portrait: "Hasted" for "Okay") and its
 # icon (an ICON chunk of RESOURCE.GFF, as the spells' are) on the Effects screen, which shows
@@ -329,6 +350,7 @@ EFFECT_NAMES = {
     64: "Strength Borrowed", 65: "Strength Lent", 66: "Adrenalin Control", 67: "Strength",
     68: "Weakened", 69: "Extra Hitpoints", 70: "Flame Blade", 71: "Spirit. Hammer", 72: "Shillelagh",
     73: "Prayer", GRACE_EFFECT: "Cat's Grace", CLAW_EFFECT: "Erdlu Claw", FOG_EFFECT: "Fogbolt",
+    FRIENDS_EFFECT: "Friends",
 }
 
 # What effects do, where the game's own code shows it (to-hit, AC and saving throws)
@@ -344,6 +366,7 @@ EFFECT_RULES = {
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
     CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
+    FRIENDS_EFFECT: f"CHA + {FRIENDS_CHA}, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
     1: "2d4 acid damage each round",
@@ -359,7 +382,7 @@ EFFECT_RULES = {
     # one, Improved Invisibility (timed) has none
     23: "attacking or casting at an enemy ends it, unless it is Improved Invisibility",
     24: "ends when it attacks or casts at an enemy",
-    25: "each weapon attack has a 75% chance to hit an image instead, using one up",
+    25: "each weapon attack has a 75% chance (50% for Reflected Image's) to hit an image instead, using one up",
     29: "can't be Paralyzed or Slowed",
     33: "can't attack or cast harmful spells",
     34: "loses its turns, can't move, fails every saving throw",
@@ -626,6 +649,7 @@ PANEL_SKILLS = (0, 1, 2, 3, 4, 6)
 # ... and the ones the Ledger's own screens show (room for all that are ever rolled)
 LEDGER_SKILLS = (0, 1, 2, 3, 4, 5, 6)
 THIEF = 17  # class number
+PRESERVER = 11
 # Tables (a byte per skill): base; then 8 per race (race 1 first); DEX below which each point
 # costs 5, above which each gives 5, above which each costs 3 again; the armour penalty
 THIEF_TABLE_SEG = 0x3FAA
@@ -950,11 +974,11 @@ class GameData:
         return changed
 
     def new_spells_known(self, member: int) -> List[int]:
-        """The new spells (NEW_SPELLS) party member MEMBER knows: its sheet's NEW_KNOWN_SHEET bits."""
+        """The new spells (NEW_SPELLS) party member MEMBER knows: its sheet's bits (NEW_KNOWN)."""
         sheet = self.sheet(member)
         if len(sheet) <= NEW_KNOWN_SHEET:
             return []
-        return [spell for spell in NEW_SPELLS if sheet[NEW_KNOWN_SHEET] & NEW_KNOWN_BIT << (spell - GRACE_SPELL)]
+        return [spell for spell in NEW_SPELLS if knows_new_spell(sheet, spell)]
 
     def spell_level(self, spell: int) -> int:
         """The spell's level (the game's table of spells, 7 bytes each: SPELL_LEVELS)."""
@@ -1055,6 +1079,16 @@ class GameData:
             out.append((robes.save(robe, spell), "Veiled Robe" if robe >= robes.VEILED_PLUS else "Ashen Robe"))
         if EFFECT_SAVE_PENALTY in mine:
             out.append((-1, EFFECT_NAMES[EFFECT_SAVE_PENALTY]))
+        if spell == SPOOK_SPELL and self.rules & RULE_NEW_SPELLS and len(caster_sheet) >= SHEET_SIZE:
+            places = range(3)
+            preserver = max((caster_sheet[SHEET_LEVELS + p] for p in places
+                             if caster_sheet[SHEET_CLASSES + p] == PRESERVER), default=0)
+            thief = max((caster_sheet[SHEET_LEVELS + p] for p in places
+                         if caster_sheet[SHEET_CLASSES + p] == THIEF), default=0)
+            shinobi = kits.SHINOBI in self.kit_ids(ci)
+            penalty = kits.spook_penalty(preserver, thief if shinobi else 0)
+            if penalty:
+                out.append((penalty, "Spook, the caster's levels"))
         if EFFECT_SPIRIT_ARMOR in mine and save != PPD_SAVE:
             out.append((3, EFFECT_NAMES[EFFECT_SPIRIT_ARMOR]))
         if EFFECT_BARKSKIN in mine:
