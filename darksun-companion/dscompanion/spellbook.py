@@ -12,7 +12,7 @@ from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW
 WIZARD_LAST = 68  # spells 0-68 are wizard spells (0: Armor), 69-137 priest spells
 # a spell record's save byte (+1Fh): bit 0 a save is allowed, bits 5-7 its kind; the game's
 # table at DS:1E75h turns the kind into one of the sheet's five saves (kind 6: none;
-# game.kind_to_save, with the companion's spell save rule)
+# game.kind_to_save, with the Loader's spell save rule)
 NO_SAVE_KIND = 6
 DAMAGE_KINDS = ((0x02, "fire"), (0x04, "cold"), (0x80, "electricity"), (0x40, "acid"), (0x01, "poison"),
                 (0x08, "crushing"), (0x10, "edged"), (0x20, "pointed"), (0x100, "draining"),

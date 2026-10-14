@@ -34,7 +34,7 @@ MATERIAL_COLOURS = {
     5: (207, 205, 194),  # leather
 }
 FLAME = (248, 241, 242)  # the Flame Blade: the fire colours the game cycles
-# The companion's named weapons (icons.which), their blades in their icons' colours: Kreenfang's two
+# The Loader's named weapons (icons.which), their blades in their icons' colours: Kreenfang's two
 # in the fire colours, Shadowseeker's in night steel (dark blue-greys no region changes)
 BLADE_COLOURS: Dict[str, Tuple[int, int, int]] = {"Kreenfang": FLAME, "Shadowseeker": (17, 18, 21)}
 

@@ -14,7 +14,7 @@ from dscompanion.game import SpellDamage, SpellRules
 class StubGame:
     def __init__(self, damage=None, rules=None, negates=False, name="Spell", game_rules=0):
         self.damage, self.spell, self.negates, self.name = damage, rules, negates, name
-        self.rules = game_rules  # the companion's rule changes (game.RULE_*)
+        self.rules = game_rules  # the Loader's rule changes (game.RULE_*)
 
     def spell_damage(self, spell):
         return self.damage
@@ -50,7 +50,7 @@ class TextTests(unittest.TestCase):
         self.assertEqual(spellbook.lasts_text(gd, 27, rec), "")  # instant
 
     def test_spell_save_rule(self):
-        """Kind 5, what almost every spell has: petrification/polymorph, or with the companion's
+        """Kind 5, what almost every spell has: petrification/polymorph, or with the Loader's
         rule the spell save. Kind 1 stays paralysis/poison/death."""
         rec = record(save=(5 << 5) | 1)
         self.assertEqual(spellbook.save_text(StubGame(), 1, rec, False), "petrification/polymorph")

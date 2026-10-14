@@ -1,7 +1,7 @@
 """Runs DSCLOG's interrupt handlers in a CPU emulator (needs `pip install unicorn`).
 
 Checks its rand() returns what Borland's rand() returns, keeps the registers
-the game relies on, and records the entries the companion decodes; and that
+the game relies on, and records the entries the Loader decodes; and that
 the probes do the game instructions they replace.
 """
 
@@ -1812,7 +1812,7 @@ class ItemSaveTests(unittest.TestCase):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class RuleTests(RingTests):
-    """The companion's rule changes: two weapons' to-hit, and the doubled save d20."""
+    """The Loader's rule changes: two weapons' to-hit, and the doubled save d20."""
     RULES = 170  # the header's RULES word
 
     def setUp(self):
@@ -2041,7 +2041,7 @@ class RuleTests(RingTests):
         self.assertEqual(self.thief_skill(0, 0, 22, 28), (28, 0))  # no thief level: the game's
 
     def test_bone_helm_counts_as_a_helm(self):
-        """Helms give AC 1 (rule 1): the companion's bone helm (type 117) as the game's (5)."""
+        """Helms give AC 1 (rule 1): the Loader's bone helm (type 117) as the game's (5)."""
         for typ in (5, 117):
             for rules, want in ((1, 1), (0, 0)):
                 self.rules(rules)

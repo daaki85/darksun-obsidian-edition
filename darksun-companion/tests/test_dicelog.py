@@ -211,7 +211,7 @@ class AttackTests(unittest.TestCase):
         self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
 
     def test_two_weapons_adnd(self):
-        """With the companion's rule: -2 main hand, -4 off hand, the DEX reaction adjustment
+        """With the Loader's rule: -2 main hand, -4 off hand, the DEX reaction adjustment
         (the game's initiative table) added, never above 0."""
         log = make_game()
         log.set_rules(game.RULE_TWO_WEAPONS)
@@ -423,7 +423,7 @@ class SaveTests(unittest.TestCase):
                           "needs 14 (70% to save) -> saved: half damage, 7 of 15"])
 
     def test_save_not_doubled_with_the_rule(self):
-        """With the companion's rule the game doesn't double the d20, and neither does the log;
+        """With the Loader's rule the game doesn't double the d20, and neither does the log;
         the target's DEX defensive adjustment counts instead (DEX 16: +2)."""
         log = make_game()
         log.set_rules(game.RULE_NO_DOUBLE)

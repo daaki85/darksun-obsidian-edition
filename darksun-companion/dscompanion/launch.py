@@ -3,7 +3,7 @@
 GOG runs DOSBox with two config files: dosbox_darksun.conf (settings) and
 dosbox_darksun_single.conf (the [autoexec] that mounts the game and shows a
 small menu). We keep the first and replace the second with our own
-[autoexec], which also mounts the companion's dos folder as D:, loads
+[autoexec], which also mounts the Loader's dos folder as D:, loads
 DSCLOG.EXE into upper memory, and runs DSUNLOG.EXE: a patched copy of the
 game (see gamepatch.py) that the launcher keeps in the dos folder. Nothing in
 the game folder is changed.

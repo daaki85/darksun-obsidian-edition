@@ -1713,7 +1713,7 @@ class DiceLog:
         # With two weapons ready the game adjusts every melee attack by the DEX table it
         # also uses for initiative, sign flipped and never below 0 (rangers excepted): a
         # bonus at DEX 5 or less, nothing otherwise. The manual's off-hand penalty isn't there,
-        # unless the companion's rule puts AD&D's in (GameData.two_weapons).
+        # unless the Loader's rule puts AD&D's in (GameData.two_weapons).
         weapons_ready = e.parent_local(-0x16)
         if mode <= 1 and weapons_ready is not None and weapons_ready >= 2:
             item = e.arg(0x12)

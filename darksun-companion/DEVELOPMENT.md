@@ -1,6 +1,6 @@
 # Obsidian Edition: development
 
-How Obsidian Edition and its window, the Dark Sun Obsidian Edition Loader, work inside:
+How Obsidian Edition and the Dark Sun Obsidian Edition Loader, which starts the game with it, work inside:
 the patched game and its helper, what's known of the game's data, the tools
 for mapping it, and how each part of the [README](README.md) is done.
 

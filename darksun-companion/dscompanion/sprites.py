@@ -233,7 +233,7 @@ def new_room(chunks, new: Dict[Tuple[str, int], bytes], looks: bool = True) -> D
 
 def worn(gd: GameData, member: int) -> Tuple[Dict[str, Tuple[int, ...]], Tuple[int, ...]]:
     """What a party member wears, as spritegear takes it: ({place: (item type, material[, name])},
-    armour), the name for one of the companion's weapons spritegear colours as its icon."""
+    armour), the name for one of the Loader's weapons spritegear colours as its icon."""
     from .icons import which
     gear: Dict[str, Tuple[int, ...]] = {}
     armour: List[int] = []

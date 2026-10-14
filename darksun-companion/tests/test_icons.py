@@ -1,4 +1,4 @@
-"""The companion's item icons: pictures made from the game's own, and SEGOBJEX's copy with them."""
+"""The Loader's item icons: pictures made from the game's own, and SEGOBJEX's copy with them."""
 
 import os
 import struct

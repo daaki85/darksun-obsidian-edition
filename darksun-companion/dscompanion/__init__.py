@@ -1,3 +1,3 @@
-"""The Dark Sun Obsidian Edition Loader, the mod's window beside Dark Sun: Shattered Lands: reads the game from a running DOSBox."""
+"""The Dark Sun Obsidian Edition Loader, which starts Dark Sun: Shattered Lands with the mod and reads the game from its DOSBox."""
 
 __version__ = "2.2.1"  # (the release's tag is "v" and this; release-notes/ has its notes)

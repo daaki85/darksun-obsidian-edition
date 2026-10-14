@@ -1,4 +1,4 @@
-"""Thieving tools: an item of the companion's own that picks pockets.
+"""Thieving tools: an item of the Loader's own that picks pockets.
 
 Every thief starts a new game with a set (in the backpack's first free cell): while the game
 is new (its first hour, in the arena where every game starts), any thief in the party without

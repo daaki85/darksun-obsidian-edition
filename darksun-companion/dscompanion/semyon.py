@@ -34,8 +34,8 @@ SEMYON = 280  # his object (RDFF 280, "Semyon"; the Tied-up Prisoner is 319)
 SCRIPT = 219  # his conversation in the pens (Kalzith's is 218; the game's run to 217)
 PORTRAIT = 118  # the game's portrait for him
 GONE = 7  # the game's flag: he has gone to the holding pens (any way he left)
-PLACED, MET = 764, 765  # (the companion's flags: Kalzith's are 760-763; the game's run to 755)
-LEFT, DIED = 770, 771  # (the companion's) he left the arena after the fight he helped in; he died
+PLACED, MET = 764, 765  # (the Loader's flags: Kalzith's are 760-763; the game's run to 755)
+LEFT, DIED = 770, 771  # (the Loader's) he left the arena after the fight he helped in; he died
 ARENA_TALK, EXIT = 5, 2400  # his arena script, and where in it he is taken off the map then
 REMOVE = 0x5E  # (object, region, x, y, ...): an object moved to a region (255: none)
 GOTO = 0x64
@@ -44,7 +44,7 @@ MADE_AS = 6  # 25h's fifth number when the game makes him (script 5)
 
 
 ESCAPED = 503  # the game's flag: the party escaped the pens (through the sewers' grate)
-CLEARED = 775  # (the companion's) Kalzith and he taken off the map after the escape
+CLEARED = 775  # (the Loader's) Kalzith and he taken off the map after the escape
 GONE_AT = (255, 20, 20, 1)  # where the game puts the pens' people then (region 255: none)
 # His object is the arena's: on the party's side (as when he fights beside them), and with 0 where
 # every slave of the pens has 12 (the creature's byte 1Bh; the arena's Tied-up Prisoner has 0 too).

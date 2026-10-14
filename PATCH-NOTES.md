@@ -2,7 +2,7 @@
 
 *A Dark Sun: Shattered Lands mod · Current version 2.2.1 · Every change from the original game*
 
-Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. Its companion window, the Loader, runs beside the game and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
+Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
@@ -24,7 +24,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## The Loader
 
-- **[New]** A companion window that starts the game and runs beside it, laid out in the game's own colours.
+- **[New]** The Loader: it starts the game with the mod and your options, and stays open while you play, laid out in the game's own colours.
 - **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
 - **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.

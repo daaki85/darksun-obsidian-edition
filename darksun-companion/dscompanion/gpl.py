@@ -330,7 +330,7 @@ def checks(scripts: Dict[Tuple[str, int], bytes], field_types: bytes, context: i
 
 
 # Writing scripts: the reader's forms back into bytes (numbers in their shortest form, strings
-# 7-bit packed), for scripts of the companion's own. encode(decode(script)) reads back the same.
+# 7-bit packed), for scripts of the Loader's own. encode(decode(script)) reads back the same.
 
 def _w(v: int) -> bytes:
     return bytes(((v >> 8) & 0xFF, v & 0xFF))

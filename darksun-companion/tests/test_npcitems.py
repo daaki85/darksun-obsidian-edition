@@ -1,4 +1,4 @@
-"""Kurzak's, Legcrusher's and Pehtucl's things, of the companion's own (npcitems.py)."""
+"""Kurzak's, Legcrusher's and Pehtucl's things, of the Loader's own (npcitems.py)."""
 
 import os
 import struct

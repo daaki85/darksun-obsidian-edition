@@ -1,10 +1,10 @@
-"""Names for the companion's own items, past the game's own 322 in its name table.
+"""Names for the Loader's own items, past the game's own 322 in its name table.
 
 The game reads its item names (GPLDATA's NAME chunk: 322 of 25 bytes, numbered 0-321) into
 memory as it starts and as each game is loaded; an item names its entry by number, and nothing
 in the game checks that number against 322. The patched game has DSCLOG reserve room for
 NAMES_EXTRA more each time and copy its own names into them (PROBE_NAMES_SIZE and
-PROBE_NAMES_FILL), noting where in its header (names_ptr). The companion's items name those
+PROBE_NAMES_FILL), noting where in its header (names_ptr). The Loader's items name those
 entries (from OWN on: RING, TOOLS), so they take nothing of the game's.
 
 Earlier versions borrowed two of the game's entries instead: one nothing used (the ring's) and
@@ -71,7 +71,7 @@ def migrate(gd: GameData) -> int:
 
 def update(gd: GameData, tsr_hdr) -> bool:
     """Once the table has DSCLOG's names: the borrowed entries given back, the items that named
-    them moved to today's. True if the companion's items can be named (and given) now."""
+    them moved to today's. True if the Loader's items can be named (and given) now."""
     if not ready(gd, tsr_hdr):
         return False
     restore(gd)

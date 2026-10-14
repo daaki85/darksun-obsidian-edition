@@ -1,4 +1,4 @@
-"""Items of the companion's own on people in the slave pens.
+"""Items of the Loader's own on people in the slave pens.
 
 - Kurzak, the leader of the guards: a metal Short Sword (Shadowseeker, a short sword +1, with the
   magic weapons' switch: arms.py; a thief can lift it) and a leather Helm.
@@ -9,7 +9,7 @@
   Protection +1 (a thief can lift it).
 
 The game has no short sword, and no cloak whose plus counts, so those two have item types of
-the companion's own: DSCLOG adds TYPES after the game's 115 each time it reads its type table
+the Loader's own: DSCLOG adds TYPES after the game's 115 each time it reads its type table
 in, as it adds names after its 322 (names.py). The items are in their people's objects in the
 Loader's copy of SEGOBJEX (PENS: dataitems.py, worldgear.data_chunks), so the game makes the
 three with them.

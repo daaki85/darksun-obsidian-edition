@@ -5,7 +5,7 @@ the player's own install (GOG release), and when it can't be found the window
 simply does without them.
 
   * Portraits: GPLDATA.GFF, PORT chunks (the number the dialogue window shows,
-    1 to 120; and Kalzith's, which the companion makes from one of them), in the
+    1 to 120; and Kalzith's, which the Loader makes from one of them), in the
     colours of GPLDATA's first palette (PAL 1: 256 VGA colours, 6 bits a channel).
   * Font: RESOURCE.GFF, FONT 100: the game's 9-pixel font with a shadow.
   * Figures: RESOURCE.GFF, BMP 20000-20013: the full-length figure the
@@ -146,7 +146,7 @@ class GameArt:
 
     def _load_gpl(self, chunks) -> None:
         self.portraits = {cid: data for (kind, cid), data in chunks.items() if kind == "PORT"}
-        from . import kalzith  # the companion's own: Kalzith's face, made from one of the game's
+        from . import kalzith  # the Loader's own: Kalzith's face, made from one of the game's
         face = kalzith.portrait_chunk(chunks)
         if face:
             self.portraits.setdefault(kalzith.PORTRAIT, face)

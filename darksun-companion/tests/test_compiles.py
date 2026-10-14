@@ -1,4 +1,4 @@
-"""Every module of the companion compiles (the window's too, which no other test imports: it
+"""Every module of the Loader compiles (the window's too, which no other test imports: it
 needs tkinter)."""
 
 import glob

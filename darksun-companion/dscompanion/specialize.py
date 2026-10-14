@@ -23,7 +23,7 @@ KINDS = ("long sword", "club", "dagger", "short sword",
 PAGE_SIZE = 4
 DEFAULT = 0  # long sword
 
-# The game's item types (DSUN's IT1R, numbered from 0) by kind, and the companion's own short sword
+# The game's item types (DSUN's IT1R, numbered from 0) by kind, and the Loader's own short sword
 _TYPES = {
     "long sword": (45, 63, 81, 47, 41, 50, 85, 97, 98),  # obsidian, metal, bone; Dragonsbane and El's
     # Drinker (47), Draketooth, Swiftbite, Dark Flame, Hornblade, Bloodwrath: all 1d8 blades

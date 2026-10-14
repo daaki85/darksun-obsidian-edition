@@ -59,7 +59,7 @@ SEMYON_DEAD = _all(_is(semyon.PLACED), _is(semyon.DIED))
 
 class Ask(NamedTuple):
     text: str  # the question (as the game's: two spaces first)
-    flag: Optional[int]  # the companion's flag showing it (set as the menu's part starts); None:
+    flag: Optional[int]  # the Loader's flag showing it (set as the menu's part starts); None:
     shown: tuple  # (values) shown when any of them is true (with no flag: the one, tested as
     # the menu is shown)
     answer: str

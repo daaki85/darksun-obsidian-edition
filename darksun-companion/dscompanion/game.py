@@ -78,9 +78,9 @@ ARMOUR_SLOTS = tuple(EQUIP_SLOTS.index(s) for s in ("arm", "legs", "head", "ches
 TYPE_SHIELD = 4
 # The plain "Ring" item type. With the dice log's patched game, a worn one's plus betters AC
 # and saving throws (DSCLOG's PROBE_RING_AC and PROBE_RING_SAVE); the game has no such ring of
-# its own, and the companion can put a Ring +1 in the arena (ring.py).
+# its own, and the Loader can put a Ring +1 in the arena (ring.py).
 RING_TYPE = 102
-# Item types of the companion's own, which DSCLOG adds after the game's 115 (npcitems.py): a
+# Item types of the Loader's own, which DSCLOG adds after the game's 115 (npcitems.py): a
 # metal short sword, and a cloak of protection, whose plus counts for AC and, worn (CLOAK),
 # on saves as a ring's does
 GAME_TYPES = 115
@@ -103,7 +103,7 @@ BONE_DAGGER_TYPE = GAME_TYPES + 24  # (a water cleric's dagger: weaponchoice.py)
 ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armour
 METAL_SHIELD_TYPE = GAME_TYPES + 26  # a metal shield (worldgear.py's Ironbulwark): the game has none
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
-# The companion's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
+# The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
 RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)

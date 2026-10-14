@@ -1,4 +1,4 @@
-"""The companion's items' names, past the game's own 322 in its name table."""
+"""The Loader's items' names, past the game's own 322 in its name table."""
 
 import os
 import struct

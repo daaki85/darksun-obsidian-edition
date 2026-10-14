@@ -14,7 +14,7 @@ from dscompanion import bonescale, game, icons
 
 class BoneScaleTests(unittest.TestCase):
     def test_pieces(self):
-        """The game's arm and leg pieces, and a Bone Helm of the companion's type; each tells
+        """The game's arm and leg pieces, and a Bone Helm of the Loader's type; each tells
         which it is."""
         self.assertEqual([bonescale.which_piece(p) for p in bonescale.PIECES], list(bonescale.PIECES))
         self.assertEqual(struct.unpack_from("<H", bonescale.HELM, game.ITEM_TYPE)[0], game.BONE_HELM_TYPE)

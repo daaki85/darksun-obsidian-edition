@@ -1,10 +1,10 @@
 ; DSCLOG.EXE - dice log helper for the Dark Sun companion.
 ;
 ; A tiny TSR that stays resident (load it high with LH) and holds a ring
-; buffer plus a replacement for the game's Borland rand(). The companion runs a
+; buffer plus a replacement for the game's Borland rand(). The Loader runs a
 ; patched copy of the game (DSUNLOG.EXE) whose rand() and a few "probe" places
 ; start with INT instructions; this TSR answers those interrupts
-; (VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG) and the companion reads the ring buffer
+; (VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG) and the Loader reads the ring buffer
 ; from DOSBox's memory. VEC_CHAR adds THAC0, the saving throws and thief skills to the
 ; game's inventory screen. VEC_RING_AC and VEC_RING_SAVE make a ring with a plus (the
 ; companion's Ring +1) better the AC and saving throws of whoever wears it.
@@ -169,7 +169,7 @@ section mz start=0
 
 section image follows=mz vstart=0
 
-; ---- header, found by the companion via SIG (16-byte aligned) ----
+; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
 sig      db 'DSCLOGvZ'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
@@ -211,36 +211,36 @@ probe_char_off dw probe_char    ; +136 offset of PROBE_CHAR in this segment
           times 4 dw 0          ; +138 (unused: the turn summaries' pop-up, gone for the combat log)
 ended     dw 0                  ; +146 the combatant whose turn just ended
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one per party
-                                ;      member, lines separated by "|", NUL-terminated (the companion
+                                ;      member, lines separated by "|", NUL-terminated (the Loader
                                 ;      keeps them up to date); PROBE_USE draws them
 look_seq   dw 0                 ; +150 monsters looked at in a fight (PROBE_LOOK counts them)
-look_reply dw 0                 ; +152 the companion sets this to LOOK_SEQ once LOOK_TEXT is ready
+look_reply dw 0                 ; +152 the Loader sets this to LOOK_SEQ once LOOK_TEXT is ready
 look_who   dw 0                 ; +154 the combatant looked at
 look_off   dw look_text         ; +156 offset of LOOK_TEXT: up to 3 short lines for the Look box,
                                 ;      separated by "|", NUL-terminated
 look_full_off dw look_full      ; +158 offset of LOOK_FULL: the whole description, shown in the
                                 ;      dialogue window afterwards (empty: none)
-look_on    dw 0                 ; +160 the companion sets 1 to have monsters described
+look_on    dw 0                 ; +160 the Loader sets 1 to have monsters described
 stats_off  dw stats             ; +162 offset of STATS: for each party member, the THAC0 and
                                 ;      saves as they stand now (see STATS)
-stats_stamp dw 0                ; +164 the BIOS timer when the companion last wrote STATS: older
+stats_stamp dw 0                ; +164 the BIOS timer when the Loader last wrote STATS: older
                                 ;      than STATS_FRESH, the screens show the game's own numbers
 stats_req  dw 0                 ; +166 counted up when a screen is about to show STATS ...
-stats_reply dw 0                ; +168 ... and set to it by the companion once STATS are up to date
-rules      dw 0                 ; +170 rule changes the companion turns on (RULE_HELMS, ...)
+stats_reply dw 0                ; +168 ... and set to it by the Loader once STATS are up to date
+rules      dw 0                 ; +170 rule changes the Loader turns on (RULE_HELMS, ...)
            dw 0, 0              ; +172 (unused: once P in a conversation)
 pick_off   dw pick_text         ; +176 offset of PICK_TEXT: what came of it, NUL-terminated (empty:
                                 ;      nothing to show)
-pick_on    dw 0                 ; +178 the companion sets bit 0 for the thieving tools on someone to pick
+pick_on    dw 0                 ; +178 the Loader sets bit 0 for the thieving tools on someone to pick
                                 ;      their pocket
 use_seq    dw 0                 ; +180 an item used on something on the map (PROBE_USE_ITEM counts) ...
-use_reply  dw 0                 ; +182 ... and set to it by the companion once it has had its say
+use_reply  dw 0                 ; +182 ... and set to it by the Loader once it has had its say
 use_who    dw 0                 ; +184 the object it was used on
-use_taken  dw 0                 ; +186 the companion sets 1 when it was one of its own (the thieving
+use_taken  dw 0                 ; +186 the Loader sets 1 when it was one of its own (the thieving
                                 ;      tools): the game then does nothing more, and PICK_TEXT is shown;
                                 ;      2 when it is used up as well (the cooked vulture, eaten)
 use_item   dw 0                 ; +188 the item used (FFFFh: none)
-swap_on    dw 0                 ; +190 the companion sets 1 to have the next dialogue text that
+swap_on    dw 0                 ; +190 the Loader sets 1 to have the next dialogue text that
                                 ;      starts with SWAP_MATCH shown as SWAP_TEXT instead (once)
 swap_seq   dw 0                 ; +192 counted up when it has been
 swap_off   dw swap_match        ; +194 offset of SWAP_MATCH (SWAP_SIZE bytes, NUL-terminated),
@@ -249,7 +249,7 @@ names_off  dw extra_names       ; +196 offset of EXTRA_NAMES: the names past the
                                 ;      of NAME_SIZE bytes), copied into the game's table each time it loads
 names_count dw NAMES_EXTRA      ; +198 how many
 names_ptr  dd 0                 ; +200 the game's name table, as last loaded with them (0: not yet)
-stealth    dw 0                 ; +204 the companion sets bit N when party member N is hidden and
+stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and
                                 ;      unheard (RULE_STEALTH): their next attack is from behind
 stealth_used dw 0               ; +206 counted up each time one is (the bit cleared)
 types_off  dw extra_types       ; +208 offset of EXTRA_TYPES: item types past the game's own
@@ -257,43 +257,43 @@ types_off  dw extra_types       ; +208 offset of EXTRA_TYPES: item types past th
 types_count dw TYPES_EXTRA      ; +210 how many
 types_first dw 0                ; +212 the number the first of them gets (the game's own count)
 types_ptr  dd 0                 ; +214 the game's item type table, as last loaded with them
-objects_on dw 0                 ; +218 1 once the game has opened the companion's copy of
+objects_on dw 0                 ; +218 1 once the game has opened the Loader's copy of
                                 ;      SEGOBJEX.GFF (its icons: see PROBE_DOS_OPEN)
-shadows_on dw 0                 ; +220 the companion sets 1 to have figures cast shadows (SHADOWS)
+shadows_on dw 0                 ; +220 the Loader sets 1 to have figures cast shadows (SHADOWS)
 shadow_tab_off dw shadow_tab    ; +222 offset of SHADOW_TAB: a byte for each of the game's 520 things,
-                                ;      1 for those that cast a shadow (the companion keeps it)
-dark_build dw 0                 ; +224 the companion sets 1 to have DARK made again from the palette
+                                ;      1 for those that cast a shadow (the Loader keeps it)
+dark_build dw 0                 ; +224 the Loader sets 1 to have DARK made again from the palette
                                 ;      (after the area, so the palette, changes); 0 once it is
 shadow_passes dw 0              ; +226 shadow passes drawn (counted)
-scroll_on  dw 0                 ; +228 the companion sets SCROLL_MIDDLE and/or SCROLL_RIGHT to have
+scroll_on  dw 0                 ; +228 the Loader sets SCROLL_MIDDLE and/or SCROLL_RIGHT to have
                                 ;      a drag with that button scroll the map (SCROLLING)
-pan_x      dw 0                 ; +230 the companion adds to these (wrapping) to scroll the map by
+pan_x      dw 0                 ; +230 the Loader adds to these (wrapping) to scroll the map by
 pan_y      dw 0                 ; +232   as many pixels (to a chosen enemy: TARGETING)
-dust_on    dw 0                 ; +234 the companion sets 1 once LIGHT is made, to have walkers raise
+dust_on    dw 0                 ; +234 the Loader sets 1 once LIGHT is made, to have walkers raise
                                 ;      dust (DUST)
 light_off  dw light             ; +236 offset of LIGHT: each colour's lighter one (0: none, not ground
-                                ;      dust shows on), the companion makes it from DAC
+                                ;      dust shows on), the Loader makes it from DAC
 dac_off    dw dac               ; +238 offset of DAC: the palette as DARK was last made from it
 dust_puffs dw 0                 ; +240 puffs of dust raised (counted)
-view_redraw dw 0                ; +242 the companion sets 1 to have the view drawn again (all of it, from
+view_redraw dw 0                ; +242 the Loader sets 1 to have the view drawn again (all of it, from
                                 ;      the main loop: VIEW_AGAIN), as it is once it has been
-rings_on   dw 0                 ; +244 the companion sets 1 to have rings drawn under the things RING_TAB
+rings_on   dw 0                 ; +244 the Loader sets 1 to have rings drawn under the things RING_TAB
                                 ;      marks (RINGS), once RED is made
 ring_tab_off dw ring_tab        ; +246 offset of RING_TAB: a byte for each of the game's 520 things: 1 a
                                 ;      ring, 2 the chosen one's (brighter, thicker)
 red_off    dw red               ; +248 offset of RED: each colour's reddened one (0: none), as LIGHT
-target_on  dw 0                 ; +250 the companion sets 1 while Tab chooses an enemy (TARGETING)
+target_on  dw 0                 ; +250 the Loader sets 1 while Tab chooses an enemy (TARGETING)
 tab_seq    dw 0                 ; +252 Tab pressed (counted) ...
 back_seq   dw 0                 ; +254 ... and Shift+Tab
-hit_target dw 0xFFFF            ; +256 the enemy chosen (the companion sets it; FFFFh: none)
+hit_target dw 0xFFFF            ; +256 the enemy chosen (the Loader sets it; FFFFh: none)
 attack_seq dw 0                 ; +258 Enter pressed on it (counted)
 main_ticks dw 0                 ; +260 the map's main loop run (counted: not while a talk, menu or
                                 ;      shop is open)
-xp_who     dw 0xFFFF            ; +262 the companion sets the party member to be given XP_AMOUNT
+xp_who     dw 0xFFFF            ; +262 the Loader sets the party member to be given XP_AMOUNT
                                 ;      with PICK_TEXT (GIVE_XP: the game's own routine, and the
                                 ;      quest's sound; FFFFh: none), DSCLOG sets it back once given
 xp_amount  dw 0                 ; +264
-skills_on  dw 0                 ; +266 the companion sets SKILLS_STEALTH to have an item's box name a
+skills_on  dw 0                 ; +266 the Loader sets SKILLS_STEALTH to have an item's box name a
                                 ;      cloak's and boots' bonus to hiding and moving silently
                                 ;      (PROBE_ITEM_BOX), SKILLS_BELT for a worn belt's to picking
                                 ;      pockets and opening locks (PROBE_BELT, and its box's line),
@@ -301,7 +301,7 @@ skills_on  dw 0                 ; +266 the companion sets SKILLS_STEALTH to have
 ring_seg   dw 0                 ; +268 the ring's segment: a memory block of its own (upper memory
                                 ;      if any has room, else conventional), so the ring takes none
                                 ;      of the helper's 64 KB (set when installed; RING_OFF its offset)
-rules_hi   dw 0                 ; +270 more rule changes the companion turns on (RULE_HI_KITS)
+rules_hi   dw 0                 ; +270 more rule changes the Loader turns on (RULE_HI_KITS)
 learn_seq  dw 0                 ; +272 a preserver's try at a scroll's spell (INT_LEARN), counted ...
 learn_who  db 0                 ; +274 ... the party member ...
 learn_spell db 0                ; +275 ... the spell ...
@@ -318,12 +318,12 @@ sold_seq   dw 0                 ; +308 a magical item sold to a merchant and kep
 sold_q     times 4 * 2 dw 0     ; +310 the last SOLD_SLOTS of them: the thing holding it, then
                                 ;      the merchant (the shop's DS:179Ch), for the Loader to put in
                                 ;      the merchant's pack (buyback.py)
-panel_on   dw 0                 ; +326 the companion sets 1 to have the combat log's panel drawn
+panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log's panel drawn
                                 ;      over the map (PANEL), 0 to have it gone (the view drawn again)
 panel_seg  dw 0                 ; +328 the panel's picture: PANEL_W x PANEL_H palette indices, row
-                                ;      by row, the companion's to draw (combatlog.py); its own
+                                ;      by row, the Loader's to draw (combatlog.py); its own
                                 ;      memory block (0: none could be had, no panel)
-panel_new  dw 0                 ; +330 the companion sets 1 once it has put a new picture there;
+panel_new  dw 0                 ; +330 the Loader sets 1 once it has put a new picture there;
                                 ;      DSCLOG draws it and sets it back to 0
 panel_mx   dw 0                 ; +332 the pointer, as the mouse driver last said (game pixels): x,
 panel_my   dw 0                 ; +334   y (MOUSE_EVENT)
@@ -332,7 +332,7 @@ panel_held dw 0                 ; +336 1 while the left button pressed on the pa
 panel_hits dw 0                 ; +338 the presses on the panel, counted, and where the last was:
 panel_hx   dw 0                 ; +340   x,
 panel_hy   dw 0                 ; +342   y
-panel_top  dw PANEL_Y0          ; +344 the companion's: where the panel's top is on the screen,
+panel_top  dw PANEL_Y0          ; +344 the Loader's: where the panel's top is on the screen,
 panel_rows dw PANEL_H           ; +346   and its height (at most PANEL_H_MOST), set before PANEL_NEW
 panel_keys dw 0                 ; +348 L pressed on the map with the panel shown, counted (the
                                 ;      companion collapses or opens it); the key kept from the game
@@ -592,7 +592,7 @@ probe_ac:
         retf 2
 
 ; GPL_HOOK: the game's script interpreter calls the far pointer at DS:00ACh with
-; each command's number before running it. The companion points it here and
+; each command's number before running it. The Loader points it here and
 ; puts the game's own hook in GPL_CHAIN. Records the command (kind 3), then
 ; passes on to the game's hook.
 gpl_hook:
@@ -792,8 +792,8 @@ probe_char:
         inc cx
         cmp cx, 3
         jb .cls
-        ; no thief levels: a ranger's move silently and hide in shadows (the companion's
-        ; stealth rule), in the thief's places, when the companion sends them
+        ; no thief levels: a ranger's move silently and hide in shadows (the Loader's
+        ; stealth rule), in the thief's places, when the Loader sends them
         mov bx, [cs:c_who]
         call stats_for
         jc .react
@@ -896,7 +896,7 @@ probe_view:
         mov cl, [fs:di + bx + 0x1B]  ; movement
         mov [cs:v_move_val], cl
         mov al, [fs:di + bx + 0x1F]  ; THAC0
-        call c_load_stats       ; (or the companion's, as they stand now)
+        call c_load_stats       ; (or the Loader's, as they stand now)
         mov di, v_thac0 + 7
         mov al, [cs:c_vals]
         call c_itoa_s
@@ -973,7 +973,7 @@ v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 .bw      db 'BW  00 ', 0
 .sp      db 'SP  00 ', 0
 
-; THAC0 (AL) and the saves (sheet +37h..+3Bh at ES:SI), or the companion's numbers as they
+; THAC0 (AL) and the saves (sheet +37h..+3Bh at ES:SI), or the Loader's numbers as they
 ; stand now, as the cells at CS:BX say
 c_cells_saves:
         call c_load_stats
@@ -983,7 +983,7 @@ c_cells_saves:
 
 ; the eight thief skills of the character (sheet ES:SI, creature FS:DI, thief level AL):
 ; base + 4 a level + the race's adjustment + DEX, from the game's tables (before equipment and
-; effects); the companion's numbers instead, which count those too, while it keeps STATS
+; effects); the Loader's numbers instead, which count those too, while it keeps STATS
 c_thief:
         push si
         mov dl, al
@@ -1041,7 +1041,7 @@ c_thief:
         mov [cs:c_vals + 5], al ; shadows (which the Loader rolls: for picking pockets
                                 ; and its stealth rule), and climb walls; not hear noise (one
                                 ; script check in the game) or read languages (none)
-        mov bx, [cs:c_who]      ; the companion's, with equipment and effects, if it keeps them
+        mov bx, [cs:c_who]      ; the Loader's, with equipment and effects, if it keeps them
         call stats_for
         jc .ours
         cmp byte [cs:bx + 17], 0
@@ -1188,13 +1188,13 @@ DLG_WAIT  equ 0x34              ; wait for a reply to be clicked
 S_PRESS   equ 0x15E8            ; DS: "Press continue"
 S_CONT    equ 0x15F7            ; DS: "Continue"
 S_CLOSE   equ 0x1F11            ; DS: "CLOSE"
-TURN_WAIT equ 7                 ; timer ticks (55 ms each) the companion has to answer
+TURN_WAIT equ 7                 ; timer ticks (55 ms each) the Loader has to answer
 
-PICK_WAIT equ 9                 ; timer ticks the companion has to answer (PROBE_USE_ITEM)
+PICK_WAIT equ 9                 ; timer ticks the Loader has to answer (PROBE_USE_ITEM)
 PICK_SIZE equ 240
 pick_text times PICK_SIZE db 0
 
-; GIVE_XP: the XP the companion asked for with PICK_TEXT (XP_WHO, XP_AMOUNT), given by the routine
+; GIVE_XP: the XP the Loader asked for with PICK_TEXT (XP_WHO, XP_AMOUNT), given by the routine
 ; the game's scripts give one person XP with (GPL 21h; it sees to a level gained), and the sound
 ; of a quest done that they play with it ("... receives N experience points!" is in PICK_TEXT);
 ; DS = the game's. Called in the frame PROBE_USE_ITEM makes for the overlay manager.
@@ -1225,8 +1225,8 @@ sound_call dw SOUND_OFF, 0
 
 ; PROBE_USE_ITEM: INT VEC_USE_ITEM replaces "cmp si,-1 / jne +3" (5 bytes: INT + 3 NOPs) in the
 ; routine that uses the item on the pointer on whatever is under it on the map (SI: that
-; object, -1 for none). When the companion wants picked pockets: count it, wait a moment for
-; the companion to see whether the item is its thieving tools and the object someone to rob
+; object, -1 for none). When the Loader wants picked pockets: count it, wait a moment for
+; the Loader to see whether the item is its thieving tools and the object someone to rob
 ; (USE_TAKEN), and if so show what came of it (PICK_TEXT) and skip the game's own handling (the
 ; routine's end). Otherwise on as the compare and the JNE would have gone. Overlay code: the
 ; way back is put in a frame the overlay manager can fix up (pushed as a far call's, with BP).
@@ -1284,7 +1284,7 @@ probe_use_item:
         call rtc_waited         ; (the BIOS clock can stand still: the game's timer
         jnc .wait               ;   doesn't always pass its ticks on; at most 2 s by the real-time clock)
 .late_use_reply:
-        jmp .go                 ; no answer: the companion isn't reading
+        jmp .go                 ; no answer: the Loader isn't reading
 .ready: cmp word [cs:use_taken], 0
         je .go
         cmp word [cs:use_taken], 2
@@ -1803,7 +1803,7 @@ use_draw:                       ; the selected character's slots in the USE scre
 .done:  ret
 ; PROBE_LOOK: INT VEC_LOOK replaces "mov si,ax / xor di,di" (4 bytes: INT + 2 NOPs) in the
 ; routine that fills the Look box (right-click to Look, then a monster in a fight), where the
-; first of its four status rows have been drawn and AX says how many. Asks the companion
+; first of its four status rows have been drawn and AX says how many. Asks the Loader
 ; for up to three short lines about the monster (LOOK_TEXT), prints them in the rows left
 ; with the game's text routine, as the box prints the monster's level, and moves the game's
 ; row count past them, so its own status lines follow in any row still free. If the
@@ -1842,7 +1842,7 @@ probe_look:
         call rtc_waited         ; (the BIOS clock can stand still: the game's timer
         jnc .wait               ;   doesn't always pass its ticks on; at most 2 s by the real-time clock)
 .late_look_reply:
-        jmp .done               ; no answer: the companion isn't reading
+        jmp .done               ; no answer: the Loader isn't reading
 .ready: mov es, [ss:si + 36]
         mov di, [ss:si + 34]
         sub di, 2               ; ES:DI = the patch
@@ -1931,7 +1931,7 @@ probe_unlook:
         popad
         iret
 
-; STATS: STATS_SIZE bytes for each party member, kept by the companion: +0 1 if in use, +1 THAC0
+; STATS: STATS_SIZE bytes for each party member, kept by the Loader: +0 1 if in use, +1 THAC0
 ; with the main weapon (signed), +2 the five saves as the d20 needed now, +8 three words: the
 ; item numbers of the weapons ready, +14 three bytes: the THAC0 with each (signed), +17 1 for a
 ; thief (2 for a ranger: of the six, only move silently and hide in shadows count), +18 the six
@@ -1942,7 +1942,7 @@ STATS_FRESH equ 91              ; timer ticks (5 seconds)
 STATS_WAIT  equ 9               ; ... (half a second): the longest a screen waits for fresh STATS
 stats   times 4 * STATS_SIZE db 0
 
-; A screen is being drawn: while the companion is keeping STATS, have it bring them up to date
+; A screen is being drawn: while the Loader is keeping STATS, have it bring them up to date
 ; (an item just put on, say) and wait for that, once for all the screen's lines (not again
 ; within 2 timer ticks). The game stands still meanwhile, so its state is what's drawn.
 stats_sync:
@@ -1959,7 +1959,7 @@ stats_sync:
         mov ax, dx
         sub ax, [cs:stats_stamp]
         cmp ax, STATS_FRESH
-        jae .out                ; the companion isn't running
+        jae .out                ; the Loader isn't running
         inc word [cs:stats_req]
         call rtc_begin
 .wait:  mov ax, [cs:stats_reply]
@@ -1969,7 +1969,7 @@ stats_sync:
         sub ax, dx
         cmp ax, STATS_WAIT
         jae .done
-        call rtc_waited         ; (as the waits for the companion: the BIOS clock can stand still)
+        call rtc_waited         ; (as the waits for the Loader: the BIOS clock can stand still)
         jnc .wait
 .done:  mov ax, [es:0x46C]
         mov [cs:sync_at], ax
@@ -1980,7 +1980,7 @@ stats_sync:
 
 sync_at dw 0
 
-; RTC_BEGIN, RTC_WAITED: a wait for the companion ends after its BIOS ticks, or, as the BIOS clock
+; RTC_BEGIN, RTC_WAITED: a wait for the Loader ends after its BIOS ticks, or, as the BIOS clock
 ; stands still while the game's timer handler keeps its ticks to itself (as in some fights), once
 ; the real-time clock's second has changed twice (1 to 2 seconds): never a hang.
 rtc_begin:
@@ -2016,7 +2016,7 @@ rtc_second:                             ; AL = the real-time clock's seconds (CM
 w_sec   db 0
 w_flips db 0
 
-; BX = a party member (0-3): CF clear and CS:BX = their STATS entry if the companion keeps it
+; BX = a party member (0-3): CF clear and CS:BX = their STATS entry if the Loader keeps it
 ; current, CF set if not
 stats_for:
         cmp bx, 3
@@ -2040,7 +2040,7 @@ stats_for:
 .no:    stc
         ret
 
-; THAC0 (AL) and the saves (sheet +37h..+3Bh at ES:SI) into C_VALS, or the companion's numbers
+; THAC0 (AL) and the saves (sheet +37h..+3Bh at ES:SI) into C_VALS, or the Loader's numbers
 ; for the character in C_WHO instead. Keeps ES, SI, DI.
 c_load_stats:
         push bx
@@ -2073,7 +2073,7 @@ c_itoa_s:                       ; AL (signed) -> decimal at CS:DI, with "-" belo
 ; PROBE_WEAPON: INT VEC_WEAPON replaces "add sp,10h" (3 bytes: INT + NOP) straight after the
 ; routine that lists a creature's weapons (on the inventory screen, and in the Look box) has
 ; drawn one: its name, then its damage, AX lines from y = [BP+0Eh]. Does the add, then puts
-; the THAC0 the companion worked out for that weapon at the right of its last line.
+; the THAC0 the Loader worked out for that weapon at the right of its last line.
 W_PATCH equ 0x7276E             ; DSUN.EXE offsets
 W_DRAW  equ 0x72851             ; "lcall 0090h:0A40h" operand: the routine that draws the lines
 W_X     equ 0x12A               ; (window coordinates: the lines start at 0ECh)
@@ -2144,13 +2144,13 @@ c_who   dw 0
 c_signed db 0
 
 ; RINGS: the game has rings (item type RING_TYPE, a plain "Ring") but nothing that makes
-; one better AC or saves. The companion can put a Ring +1 in the arena; these two make its
+; one better AC or saves. The Loader can put a Ring +1 in the arena; these two make its
 ; plus count, as a ring of protection's would.
 RING_TYPE  equ 102
 HELM_LEATHER equ 5              ; the helm item types: Helm, Dapartea's Helm; Helm of
 HELM_METAL   equ 89             ; Contemplation; and a leather one no object uses (Helm of
 HELM_OTHER   equ 109            ; Might, made by a script)
-HELM_BONE    equ 117            ; (and the companion's bone helm, of TYPES)
+HELM_BONE    equ 117            ; (and the Loader's bone helm, of TYPES)
 FINGER     equ 4                ; the item's slot byte while worn on a finger (the left
 FINGER2    equ 11               ; hand's, then the right's)
 CLOAK      equ 12               ; ... and on the back
@@ -7206,7 +7206,7 @@ probe_scroll_learn:
 ; spell level it may know (INT_MOST): knowing that many of the spell's level, it can't (AX 0, and
 ; PROBE_LEARN_REFUSED's message, LEARN_FULL_TEXT: the scroll is kept); else a d100 above the chance
 ; and it fails (AX kept: the game teaches it and uses the scroll up, PROBE_LEARN_SAID takes the
-; spell back and says so). The try is told to the companion (LEARN_SEQ...). DS the game's; others kept.
+; spell back and says so). The try is told to the Loader (LEARN_SEQ...). DS the game's; others kept.
 INT_FIRST    equ 9                      ; (the rows' first INT; a preserver's least)
 INT_ROWS     equ 17                     ; (9 to 25)
 INT_ALL      equ 255                    ; (no most)
@@ -9195,7 +9195,7 @@ spec_of_sheet:
         pop ax
         ret
 
-; By item type (the game's 115, then the companion's own: 115 its short sword), the weapon kind
+; By item type (the game's 115, then the Loader's own: 115 its short sword), the weapon kind
 ; + 1 (dscompanion/specialize.py's KIND_OF_TYPE; 0 none)
 KIND_TYPES equ 140
 kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 5, 12, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -9994,14 +9994,14 @@ ws_type    dw 0
 ws_count   dw 0
 ws_plus    dw 0
 
-; RULES (set by the companion, from its Options): a helm counts AC 1, ... (2, once boots'
+; RULES (set by the Loader, from its Options): a helm counts AC 1, ... (2, once boots'
 ; movement in a fight, is unused)
 RULE_HELMS equ 1
 RULE_TWO_WEAPONS equ 4
-RULE_SPELL_SAVE equ 8           ; (the companion writes the game's save table for this one)
+RULE_SPELL_SAVE equ 8           ; (the Loader writes the game's save table for this one)
 RULE_NO_DOUBLE equ 16
 RULE_NEW_SPELLS equ 32          ; three new wizard spells: Cat's Grace, Erdlu Claw, Fogbolt (NEW SPELLS)
-RULE_STEALTH equ 64             ; (the companion rolls the hiding and moving silently, and sets STEALTH)
+RULE_STEALTH equ 64             ; (the Loader rolls the hiding and moving silently, and sets STEALTH)
 RULE_LEVEL_10 equ 128          ; class levels go up to 10, not 9
 RULE_THIEF_TABLE equ 256        ; thief skills from AD&D's table and Dark Sun's DEX adjustments
 RULE_HALF_GIANT equ 512         ; half-giants wield two-handed weapons in one hand
@@ -10857,9 +10857,9 @@ dex_table:
 ; one of COPIES' (SEGOBJEX.GFF, the game's objects and their pictures; RESOURCE.GFF, its screens'
 ; pictures and texts; GPLDATA.GFF, its scripts; RGN29.GFF, the slave pens; RGN1C.GFF, RGN1E.GFF,
 ; RGN08.GFF and RGN28.GFF, the Upper Castle, the Undermountain, the Gemfields and the warrens, a
-; person or thing there with an object of its own for a new item) opens the companion's
+; person or thing there with an object of its own for a new item) opens the Loader's
 ; copy instead (D:\..., which the launcher writes with
-; the companion's icons added; the game folder is never changed), and notes that it has; with no
+; the Loader's icons added; the game folder is never changed), and notes that it has; with no
 ; copy there, the game's own. Everything else goes on to DOS.
 OBJ_NAME_LEN equ 12
 probe_dos_open:
@@ -11060,7 +11060,7 @@ copies:
 ; Elementalist's second sphere, SPHERE2's low four bits), which saves keep: the game's own table
 ; has 8Ah bytes a member, so NS_KNOWN hands the game a byte of its own for the bit (NS_SCRATCH) and
 ; NS_LEARN puts a learnt spell's in the sheet. Their names (NS_NAME), descriptions (PROBE_SPELL_TEXT)
-; and icons (21000 + the spell, in the companion's copy of RESOURCE.GFF) are the helper's.
+; and icons (21000 + the spell, in the Loader's copy of RESOURCE.GFF) are the helper's.
 ; Cat's Grace works as Strength does but for DEX: its own effect (54, a number the game leaves
 ; unused) holds the 1d6, which the routine that works out a creature's abilities adds to DEX,
 ; keeping it between 3 and 24. Erdlu Claw, a spell without a handler of its own, puts its effect
@@ -12225,7 +12225,7 @@ ns_fist:
         iret
 
 ; NAMES: the game's name table (GPLDATA's NAME chunk: 322 names of 25 bytes, which items name
-; by number) gets NAMES_EXTRA more, for the companion's own items (the Ring of Protection, the
+; by number) gets NAMES_EXTRA more, for the Loader's own items (the Ring of Protection, the
 ; Thieves' Tools...). Where the game reserves memory for the chunk (as it starts, and as a game
 ; is loaded) PROBE_NAMES_SIZE makes the room for them; once it has read the chunk in,
 ; PROBE_NAMES_FILL copies EXTRA_NAMES after the game's own. Nothing in the game limits the
@@ -12363,7 +12363,7 @@ probe_types_fill:
         pop cx
         pop ax
 .out:   iret
-; the types, numbered from the game's count (115): the companion's (the same as TYPES in
+; the types, numbered from the game's count (115): the Loader's (the same as TYPES in
 ; dscompanion/npcitems.py), the rest unused
 extra_types:
         ; a metal short sword: the metal long sword's type (63), 1d6
@@ -12464,7 +12464,7 @@ extra_types:
         ; 126Fh, no thieves); the game has no metal shield
         db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
         db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
-; the names, numbered from NAMES_OWN (322): the companion's items' (the same as the companion's
+; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
 ; NAMES in dscompanion/names.py), the rest blank until it writes more
 extra_names:
         db "Ring/Protection"
@@ -12540,7 +12540,7 @@ extra_names:
         times (NAMES_EXTRA - 35) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
-; shadows and move silently up to someone; the companion rolls both and, when both succeed,
+; shadows and move silently up to someone; the Loader rolls both and, when both succeed,
 ; sets the thief's bit in STEALTH. Their next attack then counts as one from behind, and so
 ; as a backstab when the game's own conditions for one hold; the bit is cleared (attacking
 ; gives the thief away).
@@ -12643,7 +12643,7 @@ kind    dw 0
 extra   dw 0
 SPELL_SEG equ 2 + 0x79BB7 - 0x79A85  ; return address - (DSUN.EXE offsets: patch, mov ax's operand)
 
-; SHADOWS (SHADOWS_ON): every figure the companion marks (SHADOW_TAB) casts a see-through shadow
+; SHADOWS (SHADOWS_ON): every figure the Loader marks (SHADOW_TAB) casts a see-through shadow
 ; on the floor, its outline laid down toward the lower right (the light on Athas's maps comes from
 ; the upper left, as the walls' and bones' shadows show), drawn after the floor and before anything else, so
 ; walls and figures, its own and everyone else's, stand on it.
@@ -13397,7 +13397,7 @@ build_dark:
 ; driver's 03h), to scroll the map when it is at the screen's edge; PROBE_SCROLL makes that call
 ; itself and, while dragging, has the game centre its view where the drag puts it (191F:0281h, as
 ; clicking on the overview map does: the view is then drawn again), and the pointer is kept off
-; the edges. It also scrolls by what the companion adds to PAN_X and PAN_Y.
+; the edges. It also scrolls by what the Loader adds to PAN_X and PAN_Y.
 
 DRAG_START  equ 4               ; pixels the pointer moves before a right click is a drag
 CAM_X       equ 0x1178          ; DS: the view's top left on the map
@@ -13552,7 +13552,7 @@ probe_scroll:
 .read:  mov ax, 3
         int 0x33                        ; BX = buttons, CX, DX = where
         cmp word [cs:scroll_on], 0
-        je .wheel                       ; (the companion's scrolling, as for a chosen enemy, anyway)
+        je .wheel                       ; (the Loader's scrolling, as for a chosen enemy, anyway)
         cmp byte [cs:drag], 2
         jne .wheel
         cmp byte [cs:drag_new], 0
@@ -13570,7 +13570,7 @@ probe_scroll:
         sub si, dx
         add si, [cs:drag_y]
         call pan_to
-.wheel: mov ax, [cs:pan_x]              ; the companion's
+.wheel: mov ax, [cs:pan_x]              ; the Loader's
         sub ax, [cs:pan_x_done]
         mov si, [cs:pan_y]
         sub si, [cs:pan_y_done]
@@ -13661,7 +13661,7 @@ centre_on:                              ; the view's top left to (AX, SI), drawn
 ; DUST (DUST_ON): a figure walking raises puffs of dust behind it, which spread, rise a little and
 ; fade away in about a second (DUST_LIFE ticks of the BIOS clock). Each is drawn on the floor as the
 ; shadows are (DUST_PASS: before the walls and figures, which stand in it), lightening the ground's
-; colours through LIGHT (made by the companion from the palette: 0 for colours that aren't ground
+; colours through LIGHT (made by the Loader from the palette: 0 for colours that aren't ground
 ; dust shows on, so only sand and dirt take it), dithered thinner toward its edge and as it fades,
 ; by a pattern fixed to the map (so a puff looks the same however much of it is drawn again).
 ;
@@ -13907,20 +13907,20 @@ view_again:
         pop ax
         ret
 
-; PANEL: the combat log's panel over the map, bottom right. The companion draws it (combatlog.py:
+; PANEL: the combat log's panel over the map, bottom right. The Loader draws it (combatlog.py:
 ; its frame and, in time, the log's lines), PANEL_W x PANEL_H palette indices in PANEL_SEG, and this
 ; puts that picture on screen. The map is drawn straight into the screen on show (no page flip on
 ; the map), a rectangle at a time, so the picture is put again from the main loop (PANEL_TICK, from
-; PROBE_SCROLL) whenever the floor has been drawn since (FLOOR_ENTER marks it) or the companion has
+; PROBE_SCROLL) whenever the floor has been drawn since (FLOOR_ENTER marks it) or the Loader has
 ; a new one (PANEL_NEW), and at the end of each redrawn rectangle (REDRAW_POST), into the page on
-; show (0980:118E: A400h when 1, else A000h). PANEL_ON is the companion's: set, the panel is shown;
-; cleared, or the companion silent for STATS_FRESH (its STATS_STAMP), the view is drawn again
+; show (0980:118E: A400h when 1, else A000h). PANEL_ON is the Loader's: set, the panel is shown;
+; cleared, or the Loader silent for STATS_FRESH (its STATS_STAMP), the view is drawn again
 ; without it. The game's windows over the map (a figure's menu, a question) are shown on the other
 ; screen, the view drawn there again without the panel: it is back when they close.
 PANEL_X0   equ 136              ; (x0 and the width a multiple of 4: whole bytes of the planes)
 PANEL_Y0   equ 120
 PANEL_W    equ 180
-PANEL_H    equ 78                ; (as it starts: the companion's PANEL_TOP and PANEL_ROWS)
+PANEL_H    equ 78                ; (as it starts: the Loader's PANEL_TOP and PANEL_ROWS)
 PANEL_H_MOST equ 130
 PANEL_BYTES equ PANEL_W * PANEL_H_MOST
 SHOWN_PAGE equ 0x118E           ; (in the page routines' segment, PAGES_SEG) 1: A400h shown
@@ -13933,7 +13933,7 @@ panel_drawn dw PANEL_Y0
 panel_tick:
         cmp word [cs:panel_on], 0
         je .off
-        push es                         ; (the companion gone: off, as if it had said so)
+        push es                         ; (the Loader gone: off, as if it had said so)
         xor ax, ax
         mov es, ax
         mov ax, [es:0x46C]
@@ -14001,8 +14001,8 @@ panel_live:
         ret
 
 ; PANEL_MOUSE: in MOUSE_EVENT (AX the events, BX the buttons held, CX, DX where): the pointer
-; noted for the companion; a left press on the panel, while it is shown, counted and kept from the
-; game with its release (the companion scrolls the log: combatlog.py)
+; noted for the Loader; a left press on the panel, while it is shown, counted and kept from the
+; game with its release (the Loader scrolls the log: combatlog.py)
 panel_mouse:
         mov [cs:panel_mx], cx
         mov [cs:panel_my], dx
@@ -14439,9 +14439,9 @@ last_y     times MAP_COUNT dw 0
 walked     times MAP_COUNT db 0
 light      times 256 db 0
 
-; RINGS (RINGS_ON): a ring on the ground under each thing RING_TAB marks (the companion marks the
+; RINGS (RINGS_ON): a ring on the ground under each thing RING_TAB marks (the Loader marks the
 ; enemies in a fight, and the one chosen with Tab), drawn in the floor pass as the shadows are, so
-; the figures stand in it, the ground's colours reddened through RED (made by the companion from the
+; the figures stand in it, the ground's colours reddened through RED (made by the Loader from the
 ; palette): two pixels thick, the chosen one's three, and redder.
 ring_pass:
         cmp word [cs:rings_on], 0
@@ -14556,7 +14556,7 @@ r_fy       dw 0
 ring_tab   times MAP_COUNT db 0
 red        times 256 db 0
 
-; TARGETING (TARGET_ON): Tab and Shift+Tab, counted for the companion, choose an enemy in a fight
+; TARGETING (TARGET_ON): Tab and Shift+Tab, counted for the Loader, choose an enemy in a fight
 ; (its ring brighter: RINGS); Enter attacks it, as a click on it does, even where another figure
 ; stands in front of it. The game reads keys through INT 16h: INT16 takes Tab, Shift+Tab and (with
 ; an enemy chosen) Enter out of what it sees. For Enter, the main loop (TARGET_CLICK, from
@@ -14632,7 +14632,7 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         je .l
         cmp ax, KEY_SHIFT_L
         jne .tabs
-.l:     call panel_live                 ; L on the map, the panel on it: the companion's
+.l:     call panel_live                 ; L on the map, the panel on it: the Loader's
         jne .no
         inc word [cs:panel_keys]
         stc

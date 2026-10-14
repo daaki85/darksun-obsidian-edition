@@ -129,7 +129,7 @@ def reprice(gd: GameData) -> int:
         for index, rec in it.chain(thing):
             if index in done or len(rec) < game.ITEM_SIZE \
                     or struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] >= game.GAME_TYPES + 8:
-                continue  # (past the game's types and the companion's: no type record)
+                continue  # (past the game's types and the Loader's: no type record)
             value, = struct.unpack_from("<H", rec, ITEM_VALUE)
             if gd.item_type_record(rec)[TYPE_WORN] in (WORN_CLOAK, WORN_FEET, WORN_BELT) \
                     and rec[game.ITEM_PLUS] == 0 and value <= PLAIN_MOST and value != GEAR_VALUE:

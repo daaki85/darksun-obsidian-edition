@@ -1,4 +1,4 @@
-"""Inventory icons of the companion's own for its items, made the way the game makes its magic
+"""Inventory icons of the Loader's own for its items, made the way the game makes its magic
 items' (the Bloodwrath's is the obsidian long sword's with a few pixels in the colours the game
 cycles: 240-248, fire): from the plain item's icon.
 
@@ -724,7 +724,7 @@ def bolt_chunks(chunks: gff.Chunks) -> gff.Chunks:
 
 
 def objects_beside(path: str) -> Optional[gff.Chunks]:
-    """The game's SEGOBJEX.GFF in PATH's folder, with the companion's own items' objects and
+    """The game's SEGOBJEX.GFF in PATH's folder, with the Loader's own items' objects and
     icons (new_chunks), for their pictures (None if it can't be read)."""
     folder = os.path.dirname(path) or "."
     try:
@@ -793,7 +793,7 @@ def _palette(source: str) -> None:
 
 
 def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) -> Tuple[bool, Tuple[int, ...]]:
-    """The game's SEGOBJEX.GFF (SOURCE, only read) with the companion's icons, and its new items
+    """The game's SEGOBJEX.GFF (SOURCE, only read) with the Loader's icons, and its new items
     in their people's and chests' objects (the content switched ON: dataitems.py), to DEST.
     Whether Kalzith's object is in it (his scripts name it: without it they mustn't be
     written), and the objects added for items (the regions' copies and scripts naming them
@@ -836,7 +836,7 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     return ("OJFF", kalzith.OBJECT) in his, tuple(sorted(n for (k, n) in items if k == "RDFF" and ("RDFF", n) not in chunks))
 
 
-# The companion's items, and the plain pictures they keep in a game that hasn't the copy
+# The Loader's items, and the plain pictures they keep in a game that hasn't the copy
 TSR_OBJECTS_ON = 218  # in DSCLOG's header: 1 once the game has opened the copy
 PICTURE_CACHE = 0x0C  # an item's cache of the picture loaded for it (cleared to load anew)
 LEATHER_CHEST_TYPE = 6
@@ -873,7 +873,7 @@ WOODEN_SHIELD_TYPE, GUTTERWARD = 16, 0x163  # (the game's wooden Shield; Gutterw
 
 
 def which(rec: bytes) -> Optional[str]:
-    """Which of the companion's items an item record is, if one: the Short Sword (Shadowseeker once +1) and the
+    """Which of the Loader's items an item record is, if one: the Short Sword (Shadowseeker once +1) and the
     Cloak by their types, the rings by their names and plus, Inixhide (Leather Chest Armor +1) and Kreenfang (the Gythka
     +1) by their types and plus (the game has no gythka with a plus)."""
     from . import game, npcitems, ring
@@ -959,7 +959,7 @@ def picture(name: str, on: bool) -> int:
 
 
 def repaint(gd, on: bool) -> int:
-    """The companion's items anywhere in the region (carried, in a container, on the ground) with
+    """The Loader's items anywhere in the region (carried, in a container, on the ground) with
     their own icons (ON: the game has the copy), or back to the plain ones (so a game without the
     copy never looks for a picture it hasn't). How many changed."""
     from . import game, ring

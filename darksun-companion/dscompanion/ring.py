@@ -1,4 +1,4 @@
-"""The Ring +1: an item of the companion's own, on the Tied-up Prisoner in the arena.
+"""The Ring +1: an item of the Loader's own, on the Tied-up Prisoner in the arena.
 
 The game has a plain "Ring" item type that nothing in it has a plus on. The dice log's
 patched game makes a worn ring's plus better AC and saving throws (DSCLOG's PROBE_RING_AC

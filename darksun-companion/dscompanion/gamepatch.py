@@ -12,10 +12,10 @@ instruction that DSCLOG.EXE answers (see dos/dsclog.asm):
     copies the text, the replies to choose from and the portrait shown;
   * the start of the message box routine ("... is broken !", level ups);
   * two places where the game adds up AC and saving throw modifiers, so that a worn
-    ring with a plus (the Ring +1 the companion can put in the arena) counts;
+    ring with a plus (the Ring +1 the Loader can put in the arena) counts;
   * the routine that lists a character's weapons, where DSCLOG adds each one's THAC0;
   * the start of a turn in a fight, where DSCLOG can add a move for boots (a rule change
-    the companion turns on, like AC 1 for helms, which the AC place above gives).
+    the Loader turns on, like AC 1 for helms, which the AC place above gives).
 
 A last change lets the copy live outside the game folder: the game looks for
 its data files in the folder its EXE is in, and the copy looks in the current
@@ -204,20 +204,20 @@ PATCHES = (
     # after drawing one: add sp,10h (DSCLOG does it, then adds that weapon's THAC0)
     Patch("weapon", 0x7276E, bytes.fromhex("83c410"), _interrupt(VEC_WEAPON, 3)),
     # where a creature's turn in a fight starts: mov es:[bx+22Bh],ax, its movement for the turn
-    # (DSCLOG does it, adding 1 move for boots when the companion's rule is on)
+    # (DSCLOG does it, adding 1 move for boots when the Loader's rule is on)
     Patch("move", 0x57566, bytes.fromhex("2689872b02"), _interrupt(VEC_MOVE, 5)),
     # the routine that uses the item on the pointer on what's under it on the map, once it has
     # found that: cmp si,-1 / jne +3 (DSCLOG has the Loader see to its thieving tools there)
     Patch("use_item", 0x73615, bytes.fromhex("83feff7503"), _interrupt(VEC_USE_ITEM, 5)),
     # the to-hit adjustment for two weapons ready, once it has the DEX's initiative adjustment:
     # neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx (DSCLOG does it, or AD&D's penalties
-    # by hand when the companion's rule is on)
+    # by hand when the Loader's rule is on)
     Patch("two_weapons", 0x59634, bytes.fromhex("f7d88bd00bd27d0233d2"), _interrupt(VEC_TWO, 10)),
     Patch("ranger_two", 0x5961F, bytes.fromhex("26f747120002"), bytes((0xCD, VEC_CR_SPELLS, RG_TWO, 0x90, 0x90, 0x90))),
     # the saving throw, doubling its d20 against fire, cold and electricity: shl al,1 (DSCLOG
-    # does it, unless the companion's rule is on)
+    # does it, unless the Loader's rule is on)
     Patch("double", 0x79B74, bytes.fromhex("d0e0"), _interrupt(VEC_DOUBLE, 2)),
-    # Cat's Grace (the companion's rule, in Flaming Sphere's place): the spells with handlers of
+    # Cat's Grace (the Loader's rule, in Flaming Sphere's place): the spells with handlers of
     # their own, picking one by the spell's number: mov ax,[bp+0Eh] / mov [bp-1Ah],ax (DSCLOG
     # sends Cat's Grace to Strength's) ...
     Patch("grace_cast", 0x791F3, bytes.fromhex("8b460e8946e6"), _interrupt(VEC_GRACE_CAST, 6)),
@@ -273,7 +273,7 @@ PATCHES = (
     Patch("names_fill_load", 0x6A5D6, bytes.fromhex("83c40c"), _interrupt(VEC_NAMES_FILL, 3)),
     # where an attack is worked out from behind / a backstab: a hidden thief's is (RULE_STEALTH)
     Patch("stealth", 0x58353, bytes.fromhex("ff76e6"), _interrupt(VEC_STEALTH, 3)),
-    # the item types (IT1R), read in just before the names: room for the companion's own
+    # the item types (IT1R), read in just before the names: room for the Loader's own
     Patch("types_size_start", 0x56618, bytes.fromhex("666a01"), _interrupt(VEC_TYPES_SIZE, 3)),
     Patch("types_size_load", 0x6A54A, bytes.fromhex("666a01"), _interrupt(VEC_TYPES_SIZE, 3)),
     Patch("types_fill_start", 0x56647, bytes.fromhex("83c40c"), _interrupt(VEC_TYPES_FILL, 3)),

@@ -339,7 +339,7 @@ class Viewer:
         # the thief's rules and picking pockets together, as the guide's Thieves section has them
         thieves = ttk.Frame(features)
         ttk.Label(thieves, text="Improved thieving", style="Status.TLabel").pack(anchor="w")
-        # the companion's own content: people, a quest and items in the game, and the new spells. Some
+        # the Loader's own content: people, a quest and items in the game, and the new spells. Some
         # are written into the game's files when it is started; what a save already has stays
         new = section("new_content", "New content")
         ttk.Label(new, text="People, a quest and items: from the next start, in places "

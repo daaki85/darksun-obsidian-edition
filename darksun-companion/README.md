@@ -1,8 +1,8 @@
 # Obsidian Edition
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox, with its own window, the **Dark Sun Obsidian Edition Loader**,
-beside the game (called Templar's Ledger up to 2.2.1).
+in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
+(called Templar's Ledger up to 2.2.1), which loads the mod with your options.
 
 ## Contents
 
@@ -190,8 +190,9 @@ slows instead of speeding up: choose the next setting down.
 
 ## Running it (Windows)
 
-The Loader, the mod's companion window, is a separate program that runs
-next to the game. You don't install anything into the game folder.
+The Loader starts DOSBox with a patched copy of the game and your options,
+and stays open while you play. You don't install anything into the game
+folder.
 
 ### One-time setup
 
