@@ -114,7 +114,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
-- **[New]** **Picking pockets**: use Thieves' Tools on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
+- **[New]** **Picking pockets**: every thief starts with a set of Thieves' Tools (Kel sells more); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.
 
@@ -123,7 +123,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Weapons**
 
 - **[New]** Short swords, bone and obsidian axes, great axes, daggers, maces, and metal picks and polearms, the plain weapons the game never had, sold by merchants and carried across Athas.
-- **[New]** Sixteen new magic weapons, each with its own icon and a story from the game's own item sage. Among them: Flame Blade, an obsidian long sword whose edge burns; Galefang, a dagger an air cleric can wield; Mindshard and Stillwater, short swords for psionicists; and the first magic club, pick and staff sling in the game.
+- **[New]** Sixteen new magic weapons, each with its own icon and a story from the game's own item sage. Among them: Flame Blade, an obsidian long sword whose edge burns; Galefang, a dagger an air cleric can wield; Mindshard and Stillwater, short swords for psionicists; and the first magic club, pick and staff sling in the game. The Elven Leader's gift is a Gythka +2 *(was +1)*.
 
 **Armour and worn items**
 
@@ -136,7 +136,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## World
 
-- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.
+- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 16 to 25% at 20, as in Baldur's Gate.
