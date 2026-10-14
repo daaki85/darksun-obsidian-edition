@@ -19,6 +19,19 @@ have the detail.
   character can no longer take a kit (and back to KITS if it can again), and
   KITS pressed for a character with no kit class goes back as VIEW PSIONICS
   does.
+- **The panel after a new race or sex.** The creation screen empties the
+  classes, opens the panel for a character of no class, then puts the default
+  class back without a click: a fighter was left with the game's VIEW SPHERES
+  (which did nothing) where WEAPON SPEC belongs. The panel now follows the
+  class put back.
+- **Starting gear the classes can't use.** A character of several classes
+  started with each class's gear, what it couldn't wear in the backpack (a
+  fighter/druid/thief's leather armour, which a druid can't wear). With class
+  restrictions, a new character's weapons, armour and shields its classes
+  can't use are left behind, and the dice log says so.
+- **A missile weapon's line on the inventory screen** showed the weapon's own
+  rate of fire and no specialization bonus (a staff sling specialist's `1D4`).
+  It now shows the rate and the bonus the attack uses (`1.5x1D4+2`).
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 

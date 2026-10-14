@@ -375,6 +375,11 @@ chooses it): a multiclass ranger's always, a human's while a ranger or once past
 class; a human's warrior class now or passed; a Battle Mage's kit awake), but
 for the off hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
 
+A New character's starting weapons, armour and shields its classes can't use
+(`restrict.usable`) are taken out of its lists (`weaponchoice.class_gear`, with
+the rule on): the game gives a character of several classes each class's gear
+and puts what it can't wear in the backpack.
+
 ### Multiclass hit points
 
 ([In the README](README.md#multiclass-hit-points).)
@@ -676,6 +681,12 @@ specialist's a band lower), and the Ledger's Characters tab does the same
 Every ranger's expertise with the bow is in `SPEC_OF_SHEET` (`specialize.skill`),
 not in its chosen weapon types, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
 the bow out of a ranger's choices.
+
+The inventory screen's line for a missile weapon (`1D4`) comes from a branch of
+the same routine as the DAM line, with the weapon's own rate of fire (its type's
+`+0Bh`): PROBE_MISSILE_LINE (INT FCh at 729FFh) gives it the rate PROBE_ATTACKS
+does (`MISSILE_RATE`) and the bonus and sides PROBE_SPEC_DAMAGE does, for the
+creature the routine has.
 
 ### Levels up to 10
 
@@ -1466,6 +1477,15 @@ other drawing shows the first page. The redraw is overlay code reached from
 the helper, so the INT's way back is in a frame the overlay manager can patch,
 as for `PROBE_LV_PICK`. Calling 7E620h alone draws the contents without the
 background: the pages' text lands on top of each other.
+
+The panel follows the classes as they change. A class click runs PROBE_WP_CLASS:
+the disciplines' window opened again if it isn't the one for the class now, and
+the last weapon page opened again with VIEW PSIONICS or KITS as the character
+can or can't take a kit; KITS pressed for a character with no kit class goes
+back as VIEW PSIONICS does. A new race or sex empties the classes, has the
+panel opened for no class, then puts the default class in without a click:
+PROBE_RACE_PANEL (INT 89h at 63403h, after that call) opens the disciplines'
+window again for the class put in.
 
 ### Where each effect goes
 

@@ -1301,6 +1301,13 @@ passes the old (a fighter's, gladiator's or ranger's chosen weapon specs, and a
 ranger's bow). A ranger's bow is always its own: a fire ranger/cleric, whose
 fire sphere allows only obsidian weapons, may still use bows.
 
+A new character starts without the weapons, armour and shields its classes
+can't use. The game gives a character of several classes each class's gear,
+and puts what it may not wear in the backpack: the Ledger leaves that behind
+and says so in the dice log (`Yilballa's Chest Armor is left behind: their
+classes can't use it`, for a druid's leather armour given for its fighter
+class).
+
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#class-restrictions).
 
 ### Multiclass hit points
@@ -1751,7 +1758,8 @@ with picks unmade: they're offered again at the next level).
 
 **Where it shows.** The **Effects** screen lists the selected character's
 weapon specs under its effects ("SPECIALIZED IN", "MASTER OF", "GRAND MASTER OF",
-"EXPERT IN"); View Character's DAM line counts it; the Characters tab lists
+"EXPERT IN"); View Character's DAM line and the inventory screen's weapon
+lines count it (a staff sling specialist's `1.5x1D4+2`); the Characters tab lists
 them (**Weapons: long sword (grand mastery)**) and gives the attacks a
 round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
 round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on

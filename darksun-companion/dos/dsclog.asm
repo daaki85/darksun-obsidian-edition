@@ -39,6 +39,7 @@ VEC_RING_AC equ 0xF8  ; PROBE_RING_AC
 VEC_RING_SAVE equ 0xF9  ; PROBE_RING_SAVE
 VEC_WEAPON equ 0xFA   ; PROBE_WEAPON
 VEC_MOVE   equ 0xFB   ; PROBE_MOVE
+VEC_MISSILE_LINE equ 0xFC ; PROBE_MISSILE_LINE
 VEC_USE_ITEM equ 0xFD ; PROBE_USE_ITEM
 VEC_TWO    equ 0xFE   ; PROBE_TWO
 VEC_DOUBLE equ 0xF0   ; PROBE_DOUBLE
@@ -142,6 +143,7 @@ VEC_ADND_SLOTS equ 0x8E    ; PROBE_ADND_SLOTS
 VEC_PRICE equ 0x8D         ; PROBE_PRICE
 VEC_PRICE_EAX equ 0x8C     ; PROBE_PRICE_EAX
 VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
+VEC_RACE_PANEL equ 0x89    ; PROBE_RACE_PANEL
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
 NENT    equ 84          ; entries in the ring (84: the helper and it fit in upper memory)
@@ -2881,6 +2883,48 @@ probe_dam_line:
         mov ah, ch
         pop cx
         iret
+
+; PROBE_MISSILE_LINE: INT VEC_MISSILE_LINE replaces "mov al,es:[bx+0Bh]" (4 bytes: INT + 2 NOPs;
+; DSUN.EXE 729FFh) in the same routine's branch for a missile weapon (the inventory screen's
+; "1D4"), ES:BX its item type's record, SI the type, the routine's [BP-6] the creature (0 for
+; none), the damage bonus, the dice's sides and their count pushed as for PROBE_DAM_LINE. AL: the
+; weapon's attacks a round (halves). With RULE_SPECIALIZE, the rate of fire as PROBE_ATTACKS gives
+; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does.
+probe_missile_line:
+        mov al, [es:bx + 0x0B]
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .ret
+        cmp dword [bp - 6], 0
+        je .ret
+        push di
+        mov di, sp              ; DI+8 the count, +0Ah the sides, +0Ch the bonus
+        push bx
+        push dx
+        push es
+        cbw
+        push ax
+        les bx, [bp - 6]        ; the creature, its sheet
+        mov ax, [es:bx + 4]
+        imul ax, ax, 0x47
+        les bx, [0x1661]
+        add bx, ax
+        call spec_of_sheet
+        pop ax
+        call missile_rate
+        cmp dl, SPEC_SPECIAL
+        jb .out
+        ja .three
+        add word [ss:di + 0x0C], 2
+        jmp .out
+.three: add word [ss:di + 0x0C], 3
+        cmp dl, SPEC_GRAND
+        jne .out
+        add word [ss:di + 0x0A], 2
+.out:   pop es
+        pop dx
+        pop bx
+        pop di
+.ret:   iret
 
 ; PROBE_VIEW_DAM: INT VEC_VIEW_DAM replaces "mov [bp-0Eh],dx" (3 bytes: INT + NOP; DSUN.EXE 64EB6h)
 ; in View Character's routine for its "DAM: 1.5x1D8+4": DX the damage bonus it stores, its [BP-6]
@@ -7956,6 +8000,52 @@ probe_wp_class:
         pop bx
         pop ax
 .ret:   iret
+
+; PROBE_RACE_PANEL: INT VEC_RACE_PANEL replaces "add sp,6" (3 bytes: INT; DSUN.EXE 63403h) in the
+; creation screen's routine for a new race or sex, after its call (63C95h) that gives the
+; character its default class. The routine empties the classes first, and the panel is opened
+; again for a character of no class (the game's disciplines, VIEW SPHERES), then the class put
+; in with no click to have the panel follow it: the disciplines' window is opened again here if
+; it isn't the one for the class now (WEAPON SPEC, KITS), as after a click on a class.
+probe_race_panel:
+        pop word [cs:rp_ip]
+        pop word [cs:rp_cs]
+        pop word [cs:rp_fl]
+        add sp, 6
+        push word [cs:rp_fl]
+        push word [cs:rp_cs]
+        push word [cs:rp_ip]
+        call wp_rules
+        jz .ret
+        sti
+        pushad
+        push es
+        mov ax, [WP_DISC]
+        or ax, [WP_DISC + 2]
+        jz .done
+        call wp_ids
+        les bx, [WP_DISC]
+        cmp ax, [es:bx + 8]
+        je .done
+        push word 0x7F8         ; (its marks kept, as PROBE_WP_CLASS keeps them)
+        push word 0x7F6
+        push dword [WP_DISC]
+        call wp_marked
+        add sp, 8
+        mov [WP_DISC_MASK], ax
+        mov byte [cs:kit_keep], 1
+        mov ax, ds              ; the game opens it again (641B9h), as for the class now
+        add ax, WP_STUB
+        mov [cs:wp_far + 2], ax
+        mov word [cs:wp_far], WP_TO_DISC
+        call far [cs:wp_far]
+.done:  pop es
+        popad
+.ret:   iret
+
+rp_ip   dw 0
+rp_cs   dw 0
+rp_fl   dw 0
 
 probe_wp_disc_click:
         push bp
@@ -14264,6 +14354,12 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_USE_ITEM
         mov dx, probe_use_item
         int 21h
+        mov ax, 2500h + VEC_MISSILE_LINE
+        mov dx, probe_missile_line
+        int 21h
+        mov ax, 2500h + VEC_RACE_PANEL
+        mov dx, probe_race_panel
+        int 21h
         mov ax, 2500h + VEC_TWO
         mov dx, probe_two
         int 21h
@@ -14613,9 +14709,9 @@ install:                        ; DS = ES = PSP, CS = the image
 msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
 psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
-all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
+all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL
 all_vectors_end:
 
         align 16, db 0

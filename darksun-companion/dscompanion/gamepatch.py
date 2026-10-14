@@ -34,7 +34,7 @@ GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
 VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT = 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7  # not 66h-6Fh: the game calls those itself, looking for drivers
-VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFD  # (0xFC: free)
+VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD
 VEC_TWO, VEC_DOUBLE = 0xFE, 0xF0
 VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY = 0xED, 0xEE, 0xEF
 VEC_NAMES_SIZE, VEC_NAMES_FILL = 0xEC, 0xEB
@@ -80,6 +80,7 @@ VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
 VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
+VEC_RACE_PANEL = 0x89
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -383,6 +384,9 @@ PATCHES = (
     # ... and the same on the "DAM: 1.5x1D8+4" line (View Character, the inventory screen): its
     # "mov al,es:[bx+2Ah]", with the bonus, sides and count already pushed
     Patch("dam_line", 0x72A77, bytes.fromhex("268a472a"), _interrupt(VEC_DAM_LINE, 4)),
+    # ... and on a missile weapon's line (the inventory screen's "1D4"): its "mov al,es:[bx+0Bh]",
+    # the weapon's own rate of fire
+    Patch("missile_line", 0x729FF, bytes.fromhex("268a470b"), _interrupt(VEC_MISSILE_LINE, 4)),
     # ... and on View Character's: "mov [bp-0Eh],dx", the damage bonus it stores
     Patch("view_dam", 0x64EB6, bytes.fromhex("8956f2"), _interrupt(VEC_VIEW_DAM, 3)),
     Patch("can_use", 0x6EF34, bytes.fromhex("26234712"), _interrupt(VEC_CAN_USE, 4)),
@@ -496,6 +500,9 @@ PATCHES = (
     # STORE and RECALL on the creation screen (rollstore.py): the screen's click routine looking up
     # its buttons
     Patch("roll_store", 0x6625D, bytes.fromhex("b91600"), _interrupt(VEC_RS_CLICK, 3)),
+    # a new race or sex on the creation screen: "add sp,6" after the call that gives the default
+    # class, where the panel is set right for it (DSCLOG opens the disciplines' window again)
+    Patch("race_panel", 0x63403, bytes.fromhex("83c406"), _interrupt(VEC_RACE_PANEL, 3)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),

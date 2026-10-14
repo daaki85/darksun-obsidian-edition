@@ -387,6 +387,38 @@ class FinishNewTests(unittest.TestCase):
         self.assertEqual(self.item(2)[0], weaponchoice.START_TYPE)
 
 
+class ClassGearTests(FinishNewTests):
+    """weaponchoice.class_gear: a New character's starting gear its classes can't use left behind."""
+
+    def test_druid_leaves_the_armour(self):
+        from dscompanion import restrict, weaponchoice
+        s = bytearray(sheet((), classes=(9, 5, 17)))  # (fighter/druid/thief, a half-elf)
+        s[game.SHEET_RACE] = 7
+        s[game.SHEET_FLAGS:game.SHEET_FLAGS + 2] = b"\xff\xff"
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        for t in (12, 13):  # (12 leather armour, 13 a long sword: types the game lets every class use)
+            at = self.TYPES + t * game.ITEM_TYPE_SIZE
+            self.mem[at + 0x10:at + 0x12] = b"\xff\xff"
+        armour, sword = 12, 13
+        self.give(armour, 0x20, 30)  # (in the backpack)
+        self.give(sword, 0x21, game.WEAPON_HANDS[0])
+        taken = []
+
+        def unlink(gd, it, item, what, empty=False):
+            taken.append(item)
+            return True
+        kinds = {armour: "armour", sword: "weapon"}
+        with mock.patch("dscompanion.ring.unlink", unlink), \
+                mock.patch.object(restrict, "is_weapon", lambda typ: kinds.get(typ[0]) == "weapon"), \
+                mock.patch.object(restrict, "is_armour", lambda typ: kinds.get(typ[0]) == "armour"), \
+                mock.patch.object(restrict, "is_shield", lambda typ: False):
+            for t in kinds:
+                self.mem[self.TYPES + t * game.ITEM_TYPE_SIZE] = t  # (each type known by its first byte)
+            out = weaponchoice.class_gear(self.gd)
+        self.assertEqual(taken, [0])  # (the armour: a druid wears none; the sword stays)
+        self.assertIn("left behind", out[0])
+
+
 class KitGearTests(FinishNewTests):
     """weaponchoice.kit_gear: a New character's starting gear fitted to its kit."""
 

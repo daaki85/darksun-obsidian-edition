@@ -228,6 +228,37 @@ def finish_new(gd) -> List[str]:
     return out
 
 
+def class_gear(gd) -> List[str]:
+    """The party's New characters' starting weapons, armour and shields that their classes can't
+    use (restrict.usable: a druid's leather armour, given for its fighter class) left behind:
+    lines for the log. The game gives a character of several classes the gear of each and puts
+    what it may not wear in the backpack, where it would only weigh."""
+    from . import ring
+    out: List[str] = []
+    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
+    read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
+    for member in range(game.PARTY_SIZE):
+        rec = gd.creature(member)
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+            continue
+        index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
+        sheet = gd.guest.read(sheets + index * game.SHEET_SIZE, game.SHEET_SIZE)
+        if len(sheet) < game.SHEET_SIZE:
+            continue
+        for item_index, item, _ in list(gd._worn(member)):
+            type_ = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
+            typ = read(type_)
+            if len(typ) < game.ITEM_TYPE_SIZE or not (restrict.is_weapon(typ) or restrict.is_armour(typ)
+                                                      or restrict.is_shield(typ)):
+                continue
+            if restrict.usable(sheet, type_, typ) or not ring.unlink(gd, ring.Items(gd), item_index, "class gear"):
+                continue
+            name = gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
+            out.append(f"{gd.creature_name(member)}'s {name} is left behind: their classes can't use it")
+    return out
+
+
 SHIELD = (4, 0x05, 0xFC04, 10)  # the game's starting (leather) shield: type, name, picture, price
 # the kinds a forbidden starting weapon becomes, the nearest to the long sword first (a Shinobi's
 # short sword, a Brute's great axe); then any other kind, in KINDS' order

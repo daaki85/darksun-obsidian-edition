@@ -1028,6 +1028,8 @@ class DiceLog:
             ring.name_items(self.game, self.rules)
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
+            if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
+                out += weaponchoice.class_gear(self.game)
             if self.rules & game.RULE_SPECIALIZE:  # (new characters' weapon kinds and starting weapon)
                 out += weaponchoice.finish_new(self.game)
             if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
