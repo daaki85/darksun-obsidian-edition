@@ -43,6 +43,9 @@ have the detail.
   Expanded features box, on by default.
 
 **Changed**
+- **The Ravager and the Grove Warden can't go together:** a human who has
+  one isn't offered the other after DUAL (each has an AC of its own that
+  betters with level, and they would stack).
 - **The Stalker and the thief:** a human Stalker can't dual to thief, and a
   thief (with any thief kit or none) who duals to ranger isn't offered the
   Stalker kit: its +15 to hiding would add to a thief's own skills.
@@ -76,6 +79,9 @@ have the detail.
   types, weigh 30 too.
 
 **Fixed**
+- **The dice log stopped in a fight whose round order named someone it
+  couldn't match** (seen in the arena's opening show, the Defiler and a
+  Slig): the turn's lines now pass over that entry.
 - **The new spells' records shared memory with a stack.** The game kept a
   small stack where Cat's Grace, Erdlu Claw and Fogbolt's records are; the
   helper now moves it (and the monster kinds table) into its own memory as

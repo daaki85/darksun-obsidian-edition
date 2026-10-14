@@ -4132,6 +4132,8 @@ class KitTests(unittest.TestCase):
         self.assertFalse(kits.dual_kit_banned(kits.SEEKER, [17], []))
         self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.TWIN_BLADE]))
         self.assertFalse(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION]))
+        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [9], [kits.RAVAGER]))  # (either way round)
+        self.assertTrue(kits.dual_kit_banned(kits.RAVAGER, [5], [kits.GROVE_WARDEN]))
 
     def test_dual_kit(self):
         """PROBE_DUAL_KIT: the new class's kit on the game's three-choice menu (4D0:25h, through its

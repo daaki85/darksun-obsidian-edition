@@ -1808,7 +1808,7 @@ A fighter starts with a bone long sword, shield, leather chest, arm and leg armo
 |---|---|---|---|---|
 | **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination) | the fighter's gear, and a plain weapon of its second weapon spec in the backpack (a bow in the missile slot, with arrows) | the second weapon spec is picked on the weapon pages after the kit is taken, and lost if another kit is taken |
 | **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
-| **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager` |
+| **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
 #### Gladiator kits
 
@@ -1866,7 +1866,7 @@ A druid starts with a club and sling.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th** | no metal weapons | the druid's gear | |
+| **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th** | no metal weapons | the druid's gear | can't go with the Ravager |
 | **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
@@ -2080,6 +2080,7 @@ And some kits can't go together, whichever came first (a human has one kit for e
 | Arena Champion, Sentinel | Shinobi | one needs a shield, the other forbids it |
 | Twin-blade | Healer | two weapons, and an off hand free of them |
 | Brute | Shinobi, Lifebinder | a two-handed weapon, and weapons that can't be one |
+| Ravager | Grove Warden | each has an AC of its own that betters with level: one on top of the other would stack |
 
 ### Levels up to 10
 

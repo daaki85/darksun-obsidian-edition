@@ -323,6 +323,11 @@ sold_seq   dw 0                 ; +308 a magical item sold to a merchant and kep
 sold_q     times 4 * 2 dw 0     ; +310 the last SOLD_SLOTS of them: the thing holding it, then
                                 ;      the merchant (the shop's DS:179Ch), for the Ledger to put in
                                 ;      the merchant's pack (buyback.py)
+panel_on   dw 0                 ; +326 the companion sets 1 to have the combat log's panel drawn
+                                ;      over the map (PANEL), 0 to have it gone (the view drawn again)
+panel_col  times 8 db 0         ; +328 the panel's colours, palette indices the companion picks from
+                                ;      DAC (+238): outline, light, stone, dark, well, thumb, and
+                                ;      the stone's grain: lighter, darker
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -6534,10 +6539,11 @@ kit_pair:
 ; Kits barred from going together (kits.KIT_PAIRS): one needing a shield and one forbidding it
 ; (Arena Champion, Sentinel; Twin-blade, Shinobi, Ravager); two-weapon fighting and the off hand
 ; free of weapons (Twin-blade, Healer); a two-handed weapon and weapons it can't be (Brute;
-; Shinobi, Lifebinder). 0 ends it.
+; Shinobi, Lifebinder); two ACs that grow by level, one on the other (Ravager, Grove Warden). 0 ends it.
 kit_pairs  db KIT_CHAMPION, KIT_TWIN_BLADE,  KIT_CHAMPION, KIT_SHINOBI,  KIT_CHAMPION, KIT_RAVAGER
            db KIT_SENTINEL, KIT_TWIN_BLADE,  KIT_SENTINEL, KIT_SHINOBI,  KIT_SENTINEL, KIT_RAVAGER
            db KIT_TWIN_BLADE, KIT_HEALER,  KIT_BRUTE, KIT_SHINOBI,  KIT_BRUTE, KIT_LIFEBINDER
+           db KIT_RAVAGER, KIT_GROVE_WARDEN     ; (two ACs of their own by level, one on the other)
            dw 0
 dk_opts    times 3 dd 0
 dk_far     dd 0
@@ -12784,10 +12790,42 @@ probe_redraw:
         pop word [cs:resume]
         pop word [cs:resume + 2]
         popf
+        cmp word [cs:panel_on], 0       ; (the combat log's panel: drawn again over what this draws,
+        je .plain                       ;   at its end: REDRAW_POST)
+        cmp byte [cs:redraw_busy], 0
+        jne .plain
+        mov byte [cs:redraw_busy], 1
         push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp+2]                  ; the caller's way back, kept, and REDRAW_POST in its place
+        mov [cs:redraw_ret], ax
+        mov ax, [bp+4]
+        mov [cs:redraw_ret + 2], ax
+        mov word [bp+2], redraw_post
+        mov [bp+4], cs
+        pop ax
+        pop bp
+.plain: push bp
         mov bp, sp
         sub sp, 8
         jmp far [cs:resume]
+
+; the rectangle drawn again: the panel over it, if the floor was drawn under it, then back to the
+; caller (its arguments still on the stack)
+redraw_post:
+        pushf
+        mov byte [cs:redraw_busy], 0
+        cmp byte [cs:panel_dirty], 0
+        je .back
+        cmp byte [cs:panel_shown], 0
+        je .back
+        mov byte [cs:panel_dirty], 0
+        call panel_draw
+.back:  popf
+        jmp far [cs:redraw_ret]
+redraw_busy db 0
+redraw_ret  dd 0
 
 ; PROBE_REDRAW_ALL: INT VEC_REDRAW_ALL replaces "push word [bp+8] / push word [bp+6]" (6 bytes:
 ; INT + 4 NOPs) where the routine drawing again what moved, having made the rectangle round it all
@@ -12831,6 +12869,10 @@ floor_enter:
         pop word [cs:resume]
         pop word [cs:resume + 2]
         popf
+        cmp word [cs:panel_on], 0       ; (the floor drawn over the panel, maybe: drawn again)
+        je .shade
+        mov byte [cs:panel_dirty], 1
+.shade:
         cmp word [cs:shadows_on], 0
         jne .on
         cmp word [cs:dust_on], 0
@@ -13592,9 +13634,10 @@ probe_scroll:
         call dust_tick
         call target_click
         cmp word [cs:view_redraw], 0
-        je .read
+        je .panel
         mov word [cs:view_redraw], 0
         call view_again
+.panel: call panel_tick
 .read:  mov ax, 3
         int 0x33                        ; BX = buttons, CX, DX = where
         cmp word [cs:scroll_on], 0
@@ -13952,6 +13995,195 @@ view_again:
         pop bx
         pop ax
         ret
+
+; PANEL: the combat log's panel over the map, bottom right (Stage 1: its frame). The map is drawn
+; straight into the screen on show (no page flip on the map), a rectangle at a time, so the panel
+; is drawn again from the main loop (PANEL_TICK, from PROBE_SCROLL) whenever the floor has been drawn
+; since (FLOOR_ENTER marks it), into the page on show (0980:118E: A400h when 1, else A000h).
+; PANEL_ON is the companion's (combatlog.py): set, the panel is drawn; cleared, the view is drawn
+; again without it. Its colours are the companion's too, picked from the palette (PANEL_COL).
+PANEL_X0   equ 136              ; (180 x 68 pixels; x0 and x1 + 1 on a byte's edge)
+PANEL_Y0   equ 128
+PANEL_X1   equ 315
+PANEL_Y1   equ 195
+SHOWN_PAGE equ 0x118E           ; (in the page routines' segment, PAGES_SEG) 1: A400h shown
+P_OUTLINE  equ 0                ; (PANEL_COL's colours)
+P_LIGHT    equ 1
+P_STONE    equ 2
+P_DARK     equ 3
+P_WELL     equ 4
+P_THUMB    equ 5
+P_GRAIN_HI equ 6
+P_GRAIN_LO equ 7
+GRAINED    equ 0x80             ; (a part's colour with it: the stone's grain over it, PFILL)
+GRAIN_HI_N equ 32               ; (of 256: how many of its pixels take the lighter grain, the
+GRAIN_LO_N equ 32               ;   darker; the rest keep the colour)
+panel_shown db 0
+panel_dirty db 0
+
+panel_tick:
+        cmp word [cs:panel_on], 0
+        jne .on
+        cmp byte [cs:panel_shown], 0
+        je .ret
+        mov byte [cs:panel_shown], 0
+        call view_again                 ; (the view under it drawn again)
+.ret:   ret
+.on:    cmp byte [cs:panel_shown], 0
+        je .draw
+        cmp byte [cs:panel_dirty], 0
+        je .ret
+.draw:  mov byte [cs:panel_dirty], 0
+        mov byte [cs:panel_shown], 1
+        call panel_draw
+        ret
+
+; PANEL_DRAW: the frame, in the page on show (registers kept)
+panel_draw:
+        pusha
+        push es
+        cld
+        mov ax, ds
+        sub ax, DGROUP_SEG
+        add ax, PAGES_SEG
+        mov es, ax
+        mov ax, 0xA000
+        cmp word [es:SHOWN_PAGE], 0
+        je .seg
+        mov ax, 0xA400
+.seg:   mov es, ax
+        call vga_save
+        mov di, panel_parts
+.part:  cmp byte [cs:di], 0xFF
+        je .done
+        mov bl, [cs:di]                 ; the colour ...
+        mov al, bl
+        and al, GRAINED
+        mov [cs:pf_grain], al
+        and bx, 0x7F
+        mov al, [cs:panel_col + P_GRAIN_HI]
+        mov [cs:pf_hi], al
+        mov al, [cs:panel_col + P_GRAIN_LO]
+        mov [cs:pf_lo], al
+        mov al, [cs:panel_col + bx]
+        mov bx, [cs:di + 1]             ; ... and the rectangle
+        mov cx, [cs:di + 3]
+        mov dx, [cs:di + 5]
+        mov si, [cs:di + 7]
+        push di
+        call pfill
+        pop di
+        add di, 9
+        jmp .part
+.done:  call vga_restore
+        pop es
+        popa
+        ret
+
+; the frame's parts, drawn in turn: colour (PANEL_COL's), x0, x1, y0, y1; FFh ends them
+%macro PART 5
+        db %1
+        dw %2, %3, %4, %5
+%endmacro
+panel_parts:
+        PART P_OUTLINE, PANEL_X0, PANEL_X1, PANEL_Y0, PANEL_Y1
+        PART P_STONE | GRAINED, PANEL_X0 + 1, PANEL_X1 - 1, PANEL_Y0 + 1, PANEL_Y0 + 14   ; (the stone,
+        PART P_STONE | GRAINED, PANEL_X0 + 1, PANEL_X0 + 3, PANEL_Y0 + 15, PANEL_Y1 - 1   ;   grainy, round
+        PART P_STONE | GRAINED, PANEL_X1 - 3, PANEL_X1 - 1, PANEL_Y0 + 15, PANEL_Y1 - 1   ;   the well)
+        PART P_STONE | GRAINED, PANEL_X0 + 4, PANEL_X1 - 4, PANEL_Y1 - 3, PANEL_Y1 - 1
+        PART P_LIGHT, PANEL_X0 + 1, PANEL_X1 - 1, PANEL_Y0 + 1, PANEL_Y0 + 1          ; (the bevel: lit
+        PART P_LIGHT, PANEL_X0 + 1, PANEL_X0 + 1, PANEL_Y0 + 1, PANEL_Y1 - 1          ;   from the upper
+        PART P_DARK, PANEL_X0 + 2, PANEL_X1 - 1, PANEL_Y1 - 1, PANEL_Y1 - 1           ;   left)
+        PART P_DARK, PANEL_X1 - 1, PANEL_X1 - 1, PANEL_Y0 + 2, PANEL_Y1 - 1
+        PART P_DARK, PANEL_X0 + 3, PANEL_X1 - 3, PANEL_Y0 + 12, PANEL_Y0 + 12         ; (the header's
+        PART P_LIGHT, PANEL_X0 + 3, PANEL_X1 - 3, PANEL_Y0 + 13, PANEL_Y0 + 13        ;   groove)
+        PART P_WELL, PANEL_X0 + 4, PANEL_X1 - 4, PANEL_Y0 + 15, PANEL_Y1 - 4          ; the well
+        PART P_DARK, PANEL_X1 - 10, PANEL_X1 - 5, PANEL_Y0 + 16, PANEL_Y1 - 5         ; the scrollbar
+        PART P_THUMB, PANEL_X1 - 9, PANEL_X1 - 6, PANEL_Y1 - 22, PANEL_Y1 - 6         ;   and its handle
+        db 0xFF
+
+; PFILL: the rectangle x BX to CX, y DX to SI (inclusive) in colour AL, in mode X page ES (80 bytes
+; a row), a plane at a time; with PF_GRAIN, grainy: a pattern fixed by x and y gives some pixels
+; PF_HI or PF_LO instead (the same each time it is drawn). AX, BX, CX, DX, SI, DI not kept.
+pfill:
+        mov [cs:pf_col], al
+        mov [cs:pf_x0], bx
+        mov [cs:pf_x1], cx
+        mov [cs:pf_y0], dx
+        mov [cs:pf_y1], si
+        mov word [cs:pf_plane], 0
+.plane: mov ax, [cs:pf_x0]              ; the first x of this plane at x0 or after
+        mov bx, ax
+        and bx, 3
+        mov cx, [cs:pf_plane]
+        sub cx, bx
+        jge .first
+        add cx, 4
+.first: add ax, cx
+        cmp ax, [cs:pf_x1]
+        jg .next
+        mov [cs:pf_first], ax
+        mov dx, 0x3C4                   ; this plane only
+        mov cl, [cs:pf_plane]
+        mov ah, 1
+        shl ah, cl
+        mov al, 2
+        out dx, ax
+        mov cx, [cs:pf_x1]
+        sub cx, [cs:pf_first]
+        shr cx, 2
+        inc cx
+        mov [cs:pf_count], cx
+        mov si, [cs:pf_y0]
+.row:   cmp si, [cs:pf_y1]
+        jg .next
+        imul di, si, 80
+        mov ax, [cs:pf_first]
+        shr ax, 2
+        add di, ax
+        mov cx, [cs:pf_count]
+        mov al, [cs:pf_col]
+        cmp byte [cs:pf_grain], 0
+        jne .grain
+        rep stosb
+.rowed: inc si
+        jmp .row
+.grain: mov bx, [cs:pf_first]           ; (BX: x)
+.gpix:  imul ax, bx, 29                 ; the grain's pattern: a hash of x and y
+        imul dx, si, 71
+        add ax, dx
+        mov dx, ax
+        shr dx, 4
+        xor ax, dx
+        imul ax, ax, 0x6D
+        mov dl, al
+        mov al, [cs:pf_col]
+        cmp dl, GRAIN_HI_N
+        jae .glo
+        mov al, [cs:pf_hi]
+        jmp .gput
+.glo:   cmp dl, GRAIN_HI_N + GRAIN_LO_N
+        jae .gput
+        mov al, [cs:pf_lo]
+.gput:  stosb
+        add bx, 4
+        loop .gpix
+        jmp .rowed
+.next:  inc word [cs:pf_plane]
+        cmp word [cs:pf_plane], 4
+        jb .plane
+        ret
+pf_col   db 0
+pf_grain db 0
+pf_hi    db 0
+pf_lo    db 0
+pf_x0    dw 0
+pf_x1    dw 0
+pf_y0    dw 0
+pf_y1    dw 0
+pf_plane dw 0
+pf_first dw 0
+pf_count dw 0
 
 ; DUST_UNION: in PROBE_REDRAW_ALL (x0 [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]: on screen),
 ; the puffs' ground taken in, as far as it is on screen

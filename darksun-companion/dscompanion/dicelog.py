@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
+from . import buyback, combatlog, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
 from .guestmem import GuestMemory
@@ -351,6 +351,8 @@ class DiceLog:
         self.show_gear = True  # the party's map sprites dressed in what they wear (sprites.py)
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
+        self.combat_log = False  # the combat log's panel in the game, in a fight (combatlog.py)
+        self._panel = combatlog.Panel()
         self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
         self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
         self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
@@ -614,6 +616,7 @@ class DiceLog:
         self.pickpockets = bool(settings.get("pickpockets", True))
         self.show_gear = bool(settings.get("show_gear", True))
         self.show_shadows = bool(settings.get("shadows", True))
+        self.combat_log = bool(settings.get("combat_log", False))
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
         self.elf_looks = settings.get("elf_looks", True) is not False
@@ -1081,7 +1084,9 @@ class DiceLog:
             return []
         try:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
-                                 needed=self.show_dust or self.ring_mode != rings.OFF)
+                                 needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log)
+            self._panel.update(self.game, self.tsr_hdr, self.combat_log and self.game.in_combat(),
+                               self._shadows.palettes)
             foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
@@ -1477,6 +1482,8 @@ class DiceLog:
     def _first_able(self) -> Optional[int]:
         """The first in the round's order who can act (alive and up: one down is passed over)."""
         for combatant, _, _ in self.round_order or ():
+            if combatant is None:  # (a name in the order matched to no one)
+                continue
             index = self.game.combatant_creature(combatant)
             rec = self.game.creature(index) if index is not None else b""
             if len(rec) > game.CREATURE_STATUS and struct.unpack_from("<h", rec, 0)[0] > 0 \

@@ -1291,6 +1291,10 @@ class RoundAndTurnTests(unittest.TestCase):
         m[stalker + game.CREATURE_STATUS] = game.OUT_COLD
         self.log.round_order = [(0x29, "Mountain Stalker", 25), (1, "Daaki", 20)]
         self.assertEqual(self.log.turn_lines(), ["Daaki's turn"])
+        # (a name in the order matched to no one, as in the arena's opening show: passed over)
+        self.round(840)
+        self.log.round_order = [(None, "Defiler", 29), (1, "Daaki", 20)]
+        self.assertEqual(self.log.turn_lines(), ["Daaki's turn"])
 
     def test_the_rounds_order_comes_before_its_first_turn(self):
         m = self.log.guest.mem

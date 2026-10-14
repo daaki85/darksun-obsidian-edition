@@ -331,10 +331,12 @@ def dual_banned(kid: int, cls: int) -> bool:
 # Kits barred from going together, either way round (DSCLOG's KIT_PAIRS): one needing a shield and one
 # forbidding it (Arena Champion, Sentinel; Twin-blade, Shinobi, Ravager); two-weapon fighting and
 # an off hand free of weapons (Twin-blade, Healer); a two-handed weapon and weapons it can't be
-# (Brute; Shinobi, Lifebinder).
+# (Brute; Shinobi, Lifebinder); two ACs that grow by level, one on top of the other (Ravager, Grove
+# Warden).
 KIT_PAIRS = frozenset(frozenset(p) for p in (
     (CHAMPION, TWIN_BLADE), (CHAMPION, SHINOBI), (CHAMPION, RAVAGER), (SENTINEL, TWIN_BLADE),
-    (SENTINEL, SHINOBI), (SENTINEL, RAVAGER), (TWIN_BLADE, HEALER), (BRUTE, SHINOBI), (BRUTE, LIFEBINDER)))
+    (SENTINEL, SHINOBI), (SENTINEL, RAVAGER), (TWIN_BLADE, HEALER), (BRUTE, SHINOBI), (BRUTE, LIFEBINDER),
+    (RAVAGER, GROVE_WARDEN)))
 
 
 def dual_kit_banned(kid: int, classes, kids) -> bool:
