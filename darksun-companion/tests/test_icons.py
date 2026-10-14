@@ -153,7 +153,7 @@ class CopyTests(unittest.TestCase):
 
     def test_new_spell_icons(self):
         """The new spells' icons (21196 + n): each from its game tile, the frame kept, the glyph
-        changed: Fogbolt's cloud on Armor's grey, Reflected Image's one figure, Spook's ghost,
+        changed: Fogbolt's cloud on Armor's grey, Reflected Image's hand mirror, Spook's ghost,
         Friends' heart."""
         def tile(colours):
             return [[colours[(x + y) % len(colours)] for x in range(16)] for y in range(16)]
@@ -172,9 +172,11 @@ class CopyTests(unittest.TestCase):
         fog = icons.fog_icon(armor)
         self.assertNotIn(214, {fog[y][x] for y in range(1, 15) for x in range(1, 15)} - {icons.FOG_LIGHT})
         reflect = icons.reflect_icon(mirror)
-        right = {reflect[y][x] for y in range(1, 15) for x in icons.MIRROR_RIGHT}
-        self.assertFalse(right & icons.MIRROR_SOLID)
-        self.assertEqual([row[:8] for row in reflect], [row[:8] for row in mirror])
+        self.assertEqual([reflect[0], reflect[-1]], [mirror[0], mirror[-1]])  # (its tile's border kept)
+        self.assertEqual([row[0] for row in reflect], [row[0] for row in mirror])
+        self.assertEqual(reflect[3][7:9], [70, 70])  # (the figure's head in the glass)
+        self.assertEqual(reflect[3][4:7], [216, 216, 216])
+        self.assertNotEqual(reflect, mirror)
 
     def test_numbers_apart_from_the_rest(self):
         """No object or icon of these numbered as Kalzith's moved scroll icons or the party's

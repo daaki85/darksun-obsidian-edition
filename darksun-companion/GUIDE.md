@@ -174,11 +174,11 @@ What the scores do:
   ([learning spells](#learning-preserver-spells)).
 - **WIS:** priests' bonus spell slots, and saves against mind-affecting magic.
 - **CHA:** how some people take to the party, and the **party leader's**
-  CHA lowers what shops ask, as in Baldur's Gate:
+  CHA lowers what shops ask:
 
-  | Leader's CHA | 15 or less | 16 | 17 | 18 | 19 | 20 or more |
-  |---|---|---|---|---|---|---|
-  | Shops ask | full price | 5% less | 10% less | 15% less | 20% less | 25% less |
+  | Leader's CHA | 17 or less | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 |
+  |---|---|---|---|---|---|---|---|---|---|
+  | Shops ask | full price | 5% less | 10% less | 15% less | 20% less | 25% less | 30% less | 35% less | 40% less |
 
   Selling is unchanged. *Without the mod:* CHA makes no difference to prices.
 
@@ -965,7 +965,7 @@ The kits that change spell slots, by the level of the kit's class (spells of
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own
   list, learning one at each level up from 6th: **1st level** Gaze Reflection,
   Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image,
-  Spook (the last three with the new spells on); **2nd** Invisibility, Mirror
+  Spook, Friends (the last four with the new spells on); **2nd** Invisibility, Mirror
   Image, Blur, Detect Invisibility, Fog Cloud; **3rd** Blink, Haste, Protection
   from Normal Missiles, Hold Person.
 - An **Arcanist** casts two preserver spells each turn in a fight instead of
@@ -1318,8 +1318,9 @@ can cast. INT sets two limits:
   - **Spook** (1st level): one creature flees in fear for 3 rounds unless it
     saves, at -1 for every 2 caster levels (at most -6). Undead aren't
     affected; magic resistance applies.
-  - **Friends** (1st level, on the caster): CHA + 6 (at most 25) for 5 rounds
-    and 1 a caster level, for better prices. Casting it again replaces it.
+  - **Friends** (1st level, on the caster): CHA + 2d4 (at most 25) for 1d4
+    rounds and 1 a caster level, for better prices. Casting it again replaces
+    it.
 
 ### Spell lists
 

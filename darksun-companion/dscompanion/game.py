@@ -169,8 +169,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
 # gives 2 to attacks on it. Reflected Image is Mirror Image's record with one image (its effect, 25,
 # the game's Mirror Images: one takes the other's place); Spook is Charm Person's with the game's
 # Afraid (17) for 3 rounds, its save 1 worse for each 2 caster levels (up to 6: SPOOK_MOST); Friends
-# goes through Strength's code as Cat's Grace does, into an effect of its own (74, unused too) that
-# adds 6 to CHA (at most 25) for 5 rounds and 1 a level.
+# goes through Strength's code as Cat's Grace does, rolling 2d4 into an effect of its own (74, unused
+# too) that adds to CHA (at most 25) for 1d4 rounds and 1 a level.
 GRACE_SPELL, CLAW_SPELL, FOG_SPELL, REFLECT_SPELL, SPOOK_SPELL, FRIENDS_SPELL = range(196, 202)
 NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "Fogbolt",
               REFLECT_SPELL: "Reflected Image", SPOOK_SPELL: "Spook", FRIENDS_SPELL: "Friends"}
@@ -179,7 +179,7 @@ NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 
 NEW_SPELLS_END = 202  # (past the last)
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
-FRIENDS_CHA, FRIENDS_MOST, SPOOK_MOST = 6, 25, 6
+FRIENDS_MOST, SPOOK_MOST = 25, 6
 FLAMING_SPHERE = 14  # (once Cat's Grace's place)
 
 
@@ -366,7 +366,7 @@ EFFECT_RULES = {
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
     CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
-    FRIENDS_EFFECT: f"CHA + {FRIENDS_CHA}, at most {FRIENDS_MOST}",
+    FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
     1: "2d4 acid damage each round",

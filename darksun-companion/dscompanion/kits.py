@@ -6,7 +6,7 @@ that number, 0 for none (the rule off, more than one class, none chosen).
 
 from typing import Optional, Tuple
 
-from .game import FOG_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL
+from .game import FOG_SPELL, FRIENDS_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL
 from .kitpages import KIT_IDS, KITS
 
 RAVAGER, SENTINEL, STALKER = KIT_IDS["Ravager"], KIT_IDS["Sentinel"], KIT_IDS["Stalker"]
@@ -51,9 +51,9 @@ SPHERE2, SPHERE2_MASK = 0x45, 0x07
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
 # level up from thief level SHINOBI_FIRST, none from scrolls; it casts at its thief level less 5.
-# Fogbolt, Reflected Image and Spook, new spells, only with the new spells on (their known bits: NS_KNOWS)
+# Fogbolt, Reflected Image, Spook and Friends, new spells, only with the new spells on (their known bits: NS_KNOWS)
 SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (FOG_SPELL, 1),  # Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt
-                  (REFLECT_SPELL, 1), (SPOOK_SPELL, 1),  # Reflected Image, Spook
+                  (REFLECT_SPELL, 1), (SPOOK_SPELL, 1), (FRIENDS_SPELL, 1),  # Reflected Image, Spook, Friends
                   (17, 2), (19, 2), (12, 2), (13, 2), (15, 2),  # Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
                   (25, 3), (29, 3), (36, 3), (30, 3))  # Blink, Haste, Protection from Normal Missiles, Hold Person
 SHINOBI_FIRST, WIZARD_LAST = 6, 68  # (wizard spells are 0 to WIZARD_LAST)

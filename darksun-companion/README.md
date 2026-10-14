@@ -1803,7 +1803,7 @@ and costs something.
 | **Grove Warden** (druid) | AC 1 better for every 3 druid levels | no metal weapons |
 | **Wanderer** (druid) | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse |
 | **Arcanist** (preserver) | a spell slot more at each spell level it has slots at; in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) |
-| **Shinobi** (thief) | preserver spells from 6th level, on the Seeker's slots (one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th), cast at the thief level less 5, in light armour too: its own 15 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and [Fogbolt, Reflected Image and Spook](#new-wizard-spells) with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), one learnt at each level up from 6th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield |
+| **Shinobi** (thief) | preserver spells from 6th level, on the Seeker's slots (one 1st-level slot at 6th, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th), cast at the thief level less 5, in light armour too: its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and [Fogbolt, Reflected Image, Spook and Friends](#new-wizard-spells) with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), one learnt at each level up from 6th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield |
 | **Lifebinder** (druid) | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) |
 | **Healer** (cleric) | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) |
 | **Scholar** (preserver) | a spell more learnt at each level up (CHOOSE A SPELL comes up twice) | −1 to hit (THAC0 1 worse) |
@@ -2130,7 +2130,7 @@ was.
 
 | Box on the Options tab | What it adds |
 |---|---|
-| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 16 or more lowers what shops ask, 5% to 25%, as in Baldur's Gate |
+| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25 |
 | [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
 | [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
 | [Picking pockets](#picking-pockets) | a thief uses Thieves' Tools on anyone in sight, until caught |
@@ -2138,12 +2138,12 @@ was.
 ### The leader's CHA at shops
 
 The game's shops ask an item's price whoever buys. With **The leader's CHA at
-shops** ticked, the party leader's CHA lowers it, as Baldur's Gate's table
-has it:
+shops** ticked, the party leader's CHA lowers it, 5% from CHA 18 and 5% more
+for each point after, to 40% at 25 (the highest a CHA can be):
 
-| Leader's CHA | 15 or less | 16 | 17 | 18 | 19 | 20 or more |
-|---|---|---|---|---|---|---|
-| Discount | none | 5% | 10% | 15% | 20% | 25% |
+| Leader's CHA | 17 or less | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 |
+|---|---|---|---|---|---|---|---|---|---|
+| Discount | none | 5% | 10% | 15% | 20% | 25% | 30% | 35% | 40% |
 
 The price shown under each item, the one charged, and whether the shop's list
 greys an item as too dear all follow it (never below 1). Selling is as the
@@ -2389,7 +2389,7 @@ in the character's sheet, so it saves with the game and the character.
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | -3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
 | **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: an attack on the caster has a 50% chance of striking the image instead, which vanishes |
 | **Spook** | 1 | one creature in sight | 3 rounds (a save negates) | the creature panics and flees (Afraid); its save is 1 worse for every 2 caster levels (at most -6); undead aren't affected, and magic resistance applies |
-| **Friends** | 1 | the caster | 5 rounds and 1 a caster level | CHA + 6 (at most 25): better prices when buying and selling |
+| **Friends** | 1 | the caster | 1d4 rounds and 1 a caster level | CHA + 2d4 (at most 25): lower shop prices |
 
 - **Cat's Grace** is made to work exactly as the game's Strength does, for DEX.
   Everything that reads DEX follows it while it lasts: AC, initiative, REAC and
@@ -2413,18 +2413,21 @@ in the character's sheet, so it saves with the game and the character.
   the caster half the time (Mirror Image's are three quarters of the time).
   The two don't add up: casting either one replaces the other, and casting
   Reflected Image again only gives the one image back. Dispel Magic ends it.
-  On the Effects screen it shows as Mirror Images, the effect it shares.
+  Its icon is a hand mirror with one figure in it, on the Effects screen too,
+  where it is named REFLECTED IMAGE (as in the Look box and under the
+  portrait).
 - **Spook** flies to its target as Magic Missile does and frightens it into
   running for 3 rounds. The log's save line shows the penalty: `d20 = 9 -1
   Spook, the caster's levels = 8, needs 16 -> failed`.
-- **Friends** makes the caster charming for a short while. Shop prices follow
+- **Friends** makes the caster charming for a short while, as AD&D's spell
+  does: CHA + 2d4, the dice log showing the roll (`Friends: 2d4 = [4 + 3] = 7
+  -> Xan's CHA +7 while it lasts (at most 25)`). Shop prices follow
   the party leader's CHA, so a leader who casts it before trading buys and
   sells better (see [CHA and prices](#expanded-features)). A second casting
   replaces the first rather than adding to it; a CHA of 25 or more already is
   left as it is.
 
-A Shinobi can learn Reflected Image and Spook, as well as Fogbolt; Friends
-is for preservers only.
+A Shinobi can learn Reflected Image, Spook and Friends, as well as Fogbolt.
 
 Each has sounds of its own: Cat's Grace lands with Haste's shimmer, Erdlu Claw
 with Shocking Grasp's snap, and Fogbolt is cast and lands with Fog Cloud's.
@@ -2433,6 +2436,8 @@ With the **New wizard spells** box unticked (it's ticked by default) the
 spells are gone from the lists and the game is as it was.
 
 ![The descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
+
+![More descriptions: Reflected Image's hand mirror, Spook's ghost, Friends' heart and Fogbolt's grey cloud](docs/new-spells-2.png)
 
 ![The Effects screen with Cat's Grace and Erdlu Claw on Daaki, the claw's name below](docs/new-spells-effects.png)
 

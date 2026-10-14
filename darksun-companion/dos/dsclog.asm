@@ -5867,10 +5867,10 @@ probe_round_mark:
 .ret:   iret
 
 ; The Shinobi's spells (kits.SHINOBI_SPELLS): spell, spell level. Wizard spells are 0 to WIZARD_LAST;
-; Fogbolt (FOG_SPELL), a new spell, counts only with RULE_NEW_SPELLS (SHINOBI_KNOWS).
+; Fogbolt, Reflected Image, Spook and Friends, new spells, count only with RULE_NEW_SPELLS (SHINOBI_KNOWS).
 SHINOBI_SPELLS:
         db 6, 1,  2, 1,  9, 1,  4, 1,  11, 1           ; Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog
-        db FOG_SPELL, 1,  REFLECT_SPELL, 1,  SPOOK_SPELL, 1 ; Fogbolt, Reflected Image, Spook
+        db FOG_SPELL, 1,  REFLECT_SPELL, 1,  SPOOK_SPELL, 1,  FRIENDS_SPELL, 1 ; Fogbolt, Reflected Image, Spook, Friends
         db 17, 2,  19, 2,  12, 2,  13, 2,  15, 2       ; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
         db 25, 3,  29, 3,  36, 3,  30, 3               ; Blink, Haste, Protection from Normal Missiles, Hold Person
 SHINOBI_SPELLS_END:
@@ -9454,12 +9454,14 @@ probe_adnd_slots:
 adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2
            db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2
 
-; The leader's CHA and shop prices (RULE_HI_CHA_PRICES; prices.py), as Baldur's Gate has them:
-; buying costs 5% less at CHA 16, 10% at 17, 15% at 18, 20% at 19 and 25% from 20. The leader
+; The leader's CHA and shop prices (RULE_HI_CHA_PRICES; prices.py):
+; buying costs 5% less at CHA 18 and 5% more for each point above, to 40% at 25. The leader
 ; is the party member whose turn it is outside a fight (DS:4979h). Selling is as the game has it.
 ;
 ; CHA_PRICE: CX an item's price (the word at its +6), lowered for the leader's CHA (never below
 ; 1; the game's 9999, "not for sale", kept). DS the game's; others kept.
+CHA_PRICE_FIRST equ 18          ; (prices.CHA_FIRST)
+CHA_PRICE_STEPS equ 8           ; (to CHA 25)
 cha_price:
         test word [cs:rules_hi], RULE_HI_CHA_PRICES
         jz .out
@@ -9477,11 +9479,11 @@ cha_price:
         imul bx, bx, 0x3A
         add bx, ax
         mov al, [es:bx + 0x27]          ; (the abilities from +22h: STR, DEX, CON, INT, WIS, CHA)
-        sub al, 15
+        sub al, CHA_PRICE_FIRST - 1
         jle .done
-        cmp al, 5
+        cmp al, CHA_PRICE_STEPS
         jbe .pct
-        mov al, 5
+        mov al, CHA_PRICE_STEPS
 .pct:   mov ah, 5
         mul ah                          ; AX the discount in %
         mov bx, 100
@@ -10882,8 +10884,8 @@ ns_texts:
         db "image instead, which then vanishes. Mirror Image takes its place.", 13, 10, 0
         db "SPOOK:  One creature flees in fear for 3 rounds. Its saving throw is 1 worse for each "
         db "2 caster levels (up to 6). Undead are not affected.", 13, 10, 0
-        db "FRIENDS:  The caster's charisma rises by 6 (to 25 at most) for 5 rounds and 1 per "
-        db "level.", 13, 10, 0
+        db "FRIENDS:  The caster's charisma rises by 2d4 (to 25 at most) for 1d4 rounds and 1 "
+        db "per level.", 13, 10, 0
 
 ; PROBE_CHUNK_ID: INT VEC_CHUNK_ID replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack
 ; check) at the start of the game's two routines that load a GFF chunk, whose [BP+6] is the
@@ -11159,7 +11161,6 @@ FOG_EFFECT   equ 27
 MIRROR_EFFECT equ 25            ; (the game's Mirror Images: Reflected Image's too)
 AFRAID_EFFECT equ 17            ; (the game's Afraid: Spook's)
 FRIENDS_EFFECT equ 74           ; (unused by the game, as 6, 27 and 54)
-FRIENDS_CHA  equ 6              ; Friends' CHA, up to FRIENDS_MOST
 FRIENDS_MOST equ 25
 SPOOK_MOST   equ 6              ; Spook's save: 1 worse for each 2 caster levels, up to 6
 ADRENALIN    equ 0x94           ; the psionic Adrenalin Control, which Strength's code also serves
@@ -11201,7 +11202,9 @@ probe_grace_cast:
 
 ; PROBE_GRACE_EFFECT: INT VEC_GRACE_EFFECT replaces Strength's handler choosing its effect
 ; (19 bytes: INT + 17 NOPs): Adrenalin Control 42h, Strength 43h, and Cat's Grace and Friends
-; their own.
+; their own; Friends rolls 2d4 (FRIENDS_DICE) where the others roll 1d6.
+FRIENDS_DICE equ 0x00040002     ; (the dice routine's count, then sides: 2d4)
+FRIENDS_PUSH equ 0x79489 - 0x79472 ; (past the INT's 17 NOPs and "push dword 60001h", 79483h)
 probe_grace_effect:
         mov word [bp-0x14], 0x43
         cmp word [bp+0x0E], ADRENALIN
@@ -11217,21 +11220,40 @@ probe_grace_effect:
         cmp word [bp+0x0E], FRIENDS_SPELL
         jne .out
         mov word [bp-0x14], FRIENDS_EFFECT
+        push bx                 ; Friends' 2d4, not Strength's 1d6: the handler's next "push
+        mov bx, sp              ;   60001h" (6 bytes: the dice, count and sides) done here with
+        sub sp, 4               ;   FRIENDS_DICE, and the INT's return moved past it
+        mov bx, sp              ; (SS:BX: BX and the frame 4 lower; the old ones from +4)
+        push ax
+        mov ax, [ss:bx + 4]     ; BX
+        mov [ss:bx], ax
+        mov ax, [ss:bx + 6]     ; IP, past the push
+        add ax, FRIENDS_PUSH
+        mov [ss:bx + 2], ax
+        mov ax, [ss:bx + 8]     ; CS
+        mov [ss:bx + 4], ax
+        mov ax, [ss:bx + 10]    ; flags
+        mov [ss:bx + 6], ax
+        mov word [ss:bx + 8], FRIENDS_DICE & 0xFFFF
+        mov word [ss:bx + 10], FRIENDS_DICE >> 16
+        pop ax
+        pop bx
 .out:   iret
 
 ; PROBE_GRACE_ABILITY: INT VEC_GRACE_ABILITY replaces "mov [bp-0Ah],ax / mov cx,7" (6 bytes:
 ; INT + 4 NOPs) in the routine that works out a creature's abilities, as it looks at one of its
 ; effects (AX its number; ES:BX the effect, its amount at +10Fh): Cat's Grace adds the amount
 ; to DEX in its sums (words from [BP-342h], STR first), as Strength's adds to STR; Friends adds
-; FRIENDS_CHA to CHA (the handler's 1d6 not used), up to FRIENDS_MOST.
+; its amount (2d4) to CHA, up to FRIENDS_MOST.
 probe_grace_ability:
         mov [bp-0x0A], ax
         mov cx, 7
         cmp ax, FRIENDS_EFFECT
         jne .grace
         push ax
-        mov ax, [bp-0x338]
-        add ax, FRIENDS_CHA
+        mov al, [es:bx+0x10F]
+        cbw
+        add ax, [bp-0x338]
         cmp ax, FRIENDS_MOST
         jle .cha
         mov ax, FRIENDS_MOST
@@ -11291,7 +11313,7 @@ ns_patches:
         NS_PATCH SPOOK_SPELL, 5, 2, 0
         NS_PATCH SPOOK_SPELL, 7, 2, 60
         NS_PATCH SPOOK_SPELL, 0x10, 1, MISSILE_FLIGHT ; ... and Magic Missile's sparks fly to it
-        NS_PATCH FRIENDS_SPELL, 4, 1, 0x15      ; Friends: 5 rounds and 1 a level, not Strength's hour
+        NS_PATCH FRIENDS_SPELL, 4, 1, 0x41      ; Friends: 1d4 rounds and 1 a level, not Strength's hour
         NS_PATCH FRIENDS_SPELL, 5, 2, 1         ;   a level (+1Dh's low bits: the levels a "level"
         NS_PATCH FRIENDS_SPELL, 7, 2, 60        ;   counts, 1) ...
         NS_PATCH FRIENDS_SPELL, 0x1D, 1, 1
@@ -11430,6 +11452,21 @@ ns_setup:
 .next:  inc si
         cmp si, NS_COUNT
         jb .spell
+        mov ax, ds              ; Reflected Image's entry (NS_ENTRY), or nothing
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        xor ax, ax
+        mov [es:REFLECT_ENTRY], ax
+        mov [es:REFLECT_ENTRY + 2], ax
+        mov [es:REFLECT_ENTRY + 4], ax
+        or dl, dl
+        jz .flights
+        test byte [cs:ns_state], NS_MOVED
+        jz .flights
+        mov word [es:REFLECT_ENTRY], ns_name_reflect
+        mov [es:REFLECT_ENTRY + 2], cs
+        mov word [es:REFLECT_ENTRY + 4], NS_ICON + REFLECT_SPELL
+.flights:
         mov ax, ds              ; flight 15: Fogbolt's grey bolt, as fast as Magic Missile's; else the game's
         sub ax, SPELLS_FROM_DS
         mov es, ax
@@ -11764,6 +11801,9 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
 NS_CMP_COUNT equ ($ - ns_cmp_sites) / 5
 NS_FIST   equ NS_CMP + NS_CMP_COUNT ; 58226h, a melee hit's magic (after NS_CMP's)
 NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a weapon's blow
+NS_ENTRY_EF equ NS_IMAGE + 1    ; 7ED37h, 7EEC9h, 7EF34h: an effect's entry, the Effects screen's
+NS_ENTRY_LOOK equ NS_IMAGE + 2  ; 5FD1Ch: the Look box's
+NS_ENTRY_STATUS equ NS_IMAGE + 3 ; 71DF5h: the status under a portrait
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -11779,6 +11819,11 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_fist
         cmp byte [cs:rl_site], NS_IMAGE
         je ns_image
+        cmp byte [cs:rl_site], NS_ENTRY_EF
+        jb .cmp
+        cmp byte [cs:rl_site], NS_ENTRY_STATUS
+        jbe ns_entry
+.cmp:
         cmp byte [cs:rl_site], NS_CMP + NS_CMP_COUNT
         jb ns_cmp
         iret
@@ -11992,6 +12037,54 @@ ns_image:
         pop ax
         call ns_flags
         pop es
+        popad
+        iret
+
+; NS_ENTRY: "imul ax,ax,6" or "imul bx,bx,6" (3 bytes) where the Effects screen (its icons and
+; names: AX the effect, on the character on show), the Look box (BX, on thing [BP+0Ah]) and the
+; status under a portrait (BX, on party member DI) find an effect's entry in the effects' table
+; (6 bytes each from effect 1: the name, far, then the icon) by its number times 6: Mirror Images
+; put there by Reflected Image (NS_EFFECT_SPELL) is REFLECT_ENTRY's instead, its name and icon,
+; which NS_SETUP keeps past the spell rows (as an entry of the table's segment).
+NS_DI equ 2
+NS_BX equ 18
+EF_SHOWN_FROM_DS equ 0x4356 - 0x3931 ; the character on show on the Effects screen (348h:25Bh)
+EF_SHOWN     equ 0x25B
+REFLECT_ENTRY equ (SPELL_LEVELS_SEG + 0x4356 - 0x3F8D) * 16 + SPELL_LEVELS + (NS_FIRST + 16) * 7
+ns_entry:
+        pushad
+        push es
+        mov di, sp
+        mov bx, NS_AX           ; (the frame's register: AX on the Effects screen, else BX)
+        cmp byte [cs:rl_site], NS_ENTRY_EF
+        je .ef
+        mov bx, NS_BX
+        mov ax, [ss:di + NS_DI]
+        cmp byte [cs:rl_site], NS_ENTRY_STATUS
+        je .thing
+        mov ax, [bp + 0x0A]
+        jmp .thing
+.ef:    mov ax, ds
+        sub ax, EF_SHOWN_FROM_DS
+        mov es, ax
+        mov ax, [es:EF_SHOWN]
+.thing: mov dx, [ss:di + bx]    ; (DX the effect)
+        cmp dx, MIRROR_EFFECT
+        jne .times
+        call ns_setup           ; (its entry as the rule has it now)
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .times
+        cmp byte [cs:seg_moved], 0
+        je .times
+        mov cl, MIRROR_EFFECT
+        call ns_effect_spell
+        cmp ax, REFLECT_SPELL
+        jne .times
+        mov word [ss:di + bx], REFLECT_ENTRY + 6
+        jmp .out
+.times: imul dx, dx, 6
+        mov [ss:di + bx], dx
+.out:   pop es
         popad
         iret
 

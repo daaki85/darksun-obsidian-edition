@@ -1822,13 +1822,14 @@ class DiceLog:
             if count == 1 and sides == 2 and e.parent_code.startswith(RANDOM_SIDE_RETURN):
                 side = "the party's" if faces[0] == 1 else "the monsters'"
                 return [f"    {self._name(e.parent_arg(6))} fights on {side} side this turn (d2 = {faces[0]})"]
-            if count == 1 and e.parent_code.startswith(STRENGTH_ROLL_RETURN) and e.parent_arg(0x0E) is not None:
+            if e.parent_code.startswith(STRENGTH_ROLL_RETURN) and e.parent_arg(0x0E) is not None:
                 spell, target = e.parent_arg(0x0E), e.parent_arg(6)
                 self._spell_cast(spell, now)
-                if spell == game.FRIENDS_SPELL:  # (Friends, a new spell, uses Strength's code; its 1d6 unused)
+                if spell == game.FRIENDS_SPELL:  # (Friends, a new spell, uses Strength's code, rolling 2d4)
+                    total = sum(faces)
                     return self.flush(now, force=True) + [
-                        f"Friends: {self._name(target)}'s CHA +{game.FRIENDS_CHA} while it lasts "
-                        f"(at most {game.FRIENDS_MOST})"]
+                        f"Friends: {count}d{sides} = {faces_text} = {total} -> {self._name(target)}'s CHA +{total} "
+                        f"while it lasts (at most {game.FRIENDS_MOST})"]
                 # (Cat's Grace, a new spell, uses Strength's code for DEX)
                 ability = "DEX" if spell == game.GRACE_SPELL else "STR"
                 return self.flush(now, force=True) + [

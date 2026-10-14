@@ -595,8 +595,23 @@ HEART_GLYPH = (  # (a heart)
 )
 HOLD_GLYPH, HOLD_FILL = {134, 150}, (139, 140)  # (Hold Person's glyph lines, and its tile's tans)
 HEART_DARK, HEART_LIGHT = 134, 150
-MIRROR_RIGHT = range(8, 14)  # (Mirror Image's second figure's columns ...)
-MIRROR_SOLID, MIRROR_HOLLOW = {42, 40}, 216  # (... its fill, made its tile's pale teal)
+MIRROR_GREEN = 42  # (Mirror Image's tile's green; its dark and pale teals below)
+HAND_MIRROR = (  # (a hand mirror, a figure in its glass: D the frame, P the glass, F the figure)
+    ".....DDDDDD.....",
+    "....DPPPPPPD....",
+    "...DPPPFFPPPD...",
+    "...DPPPFFPPPD...",
+    "...DPPFFFFPPD...",
+    "...DPPPFFPPPD...",
+    "...DPPPFFPPPD...",
+    "...DPPFPPFPPD...",
+    "....DPPPPPPD....",
+    ".....DDDDDD.....",
+    ".......DD.......",
+    ".......DD.......",
+    "......DDDD......",
+)
+HAND_MIRROR_COLOURS = {"D": 70, "P": 216, "F": 70}
 
 
 def glyph_icon(base: Rows, old: Set[int], fill: int, glyph: Tuple[str, ...], top: int, dark: int,
@@ -642,12 +657,17 @@ def fog_icon(armor: Rows) -> Rows:
 
 
 def reflect_icon(mirror: Rows) -> Rows:
-    """Reflected Image's icon from Mirror Image's: its second figure hollow (one image)."""
+    """Reflected Image's icon from Mirror Image's tile: its two tall mirrors taken off (the tile's
+    green within its border), and one hand mirror with one figure in its glass."""
+    n = len(mirror)
     out = [list(r) for r in mirror]
-    for y in range(1, len(out) - 1):
-        for x in MIRROR_RIGHT:
-            if out[y][x] in MIRROR_SOLID:
-                out[y][x] = MIRROR_HOLLOW
+    for y in range(1, n - 1):
+        for x in range(1, n - 1):
+            out[y][x] = MIRROR_GREEN
+    for j, line in enumerate(HAND_MIRROR):
+        for x, ch in enumerate(line):
+            if ch in HAND_MIRROR_COLOURS:
+                out[1 + j][x] = HAND_MIRROR_COLOURS[ch]
     return out
 
 

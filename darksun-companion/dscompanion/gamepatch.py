@@ -116,6 +116,9 @@ NS_CMP_SITES = (
 # end of their loops, made the new spells' end (their rows are empty while the rule is off)
 NS_FIST = NS_CMP + len(NS_CMP_SITES)  # (a melee hit's magic: after NS_CMP's)
 NS_IMAGE = NS_FIST + 1  # (an image taking a blow: Reflected Image's chance)
+# an effect's entry in the effects' table (its number times 6): Reflected Image's own name and icon
+# where Mirror Images is its (DSCLOG's NS_ENTRY): the Effects screen's, the Look box's, a portrait's
+NS_ENTRY_EF, NS_ENTRY_LOOK, NS_ENTRY_STATUS = NS_IMAGE + 1, NS_IMAGE + 2, NS_IMAGE + 3
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -250,6 +253,12 @@ PATCHES = (
     Patch("ns_fist", 0x58226, bytes.fromhex("837ef400"), _site(NS_FIST, 4)),
     # ... the d100 an image takes a blow on: cmp ax,4Bh (75; Reflected Image's one 50) ...
     Patch("ns_image", 0x7A5CD, bytes.fromhex("3d4b00"), _site(NS_IMAGE, 3)),
+    # ... an effect's entry, by its number times 6: Reflected Image's for its Mirror Images ...
+    Patch("ns_entry_name", 0x7ED37, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),
+    Patch("ns_entry_icon", 0x7EEC9, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),
+    Patch("ns_entry_draw", 0x7EF34, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),
+    Patch("ns_entry_look", 0x5FD1C, bytes.fromhex("6bdb06"), _site(NS_ENTRY_LOOK, 3)),
+    Patch("ns_entry_status", 0x71DF5, bytes.fromhex("6bdb06"), _site(NS_ENTRY_STATUS, 3)),
     # ... the compares that tell a wizard's or priest's spell from the rest ...
     *(Patch(f"ns_cmp_{offset:x}", offset, bytes.fromhex(code), _site(NS_CMP + k, len(code) // 2))
       for k, (offset, code) in enumerate(NS_CMP_SITES)),

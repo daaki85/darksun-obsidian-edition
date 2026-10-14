@@ -2243,11 +2243,29 @@ class GraceTests(RuleTests):
 
     def test_its_own_effect(self):
         for rules, spell, want in ((32, 196, 54), (0, 196, 0x43), (32, 14, 0x43), (32, 23, 0x43), (32, 0x94, 0x42),
-                                   (0, 0x94, 0x42), (32, 201, 74), (0, 201, 0x43)):
+                                   (0, 0x94, 0x42), (0, 201, 0x43)):
             self.rules(rules)
             self.word(0x0E, spell)
             self.run_at(bytes((0xCD, VEC_GRACE_EFFECT)))
             self.assertEqual(self.word(-0x14), want, (rules, spell))
+
+    def test_friends_rolls_2d4(self):
+        """Friends (201): effect 74, and the handler's "push dword 60001h" (1d6) after the INT's 17
+        NOPs done as 2d4 (count 2, sides 4) instead, the INT returning past it."""
+        self.rules(32)
+        self.word(0x0E, 201)
+        mu = self.mu
+        self.at += 0x20
+        code = bytes((0xCD, VEC_GRACE_EFFECT)) + b"\x90" * 17 + bytes.fromhex("666801000600") + b"\x90"
+        mu.mem_write(CALLER * 16 + self.at, code)
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, ebx=0x1234,
+                                eax=0x5678).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + self.at, CALLER * 16 + self.at + 25)
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FC)
+        self.assertEqual(struct.unpack("<HH", mu.mem_read(SS * 16 + 0x7FC, 4)), (2, 4))
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_AX)), (0x1234, 0x5678))
+        self.assertEqual(self.word(-0x14), 74)
 
     def test_adds_to_dex(self):
         effects = 0x9800
@@ -2260,11 +2278,11 @@ class GraceTests(RuleTests):
             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 7)
 
     def test_friends_adds_to_cha(self):
-        """Friends' effect (74): CHA ([BP-338h]) 6 more, at most 25 (one above kept); the amount at
-        +10Fh (Strength's 1d6) not counted."""
+        """Friends' effect (74): CHA ([BP-338h]) its amount at +10Fh (the 2d4) more, at most 25
+        (one above kept)."""
         effects = 0x9800
         self.mu.mem_write(effects * 16 + 0x10F, bytes([5]))
-        for effect, cha, want in ((74, 12, 18), (74, 21, 25), (74, 27, 27), (67, 12, 12)):
+        for effect, cha, want in ((74, 12, 17), (74, 21, 25), (74, 27, 27), (67, 12, 12)):
             self.word(-0x338, cha)
             self.word(-0x340, 15)  # DEX, untouched
             self.run_at(bytes((0xCD, VEC_GRACE_ABILITY)), eax=effect, ebx=0, es=effects, ecx=0)
@@ -2341,6 +2359,46 @@ class NewSpellTests(RuleTests):
         self.rules(0)
         self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, False, False, True])
 
+    def test_reflect_entry(self):
+        """Where the game finds an effect's entry by its number times 6 (NS_ENTRY: the Effects
+        screen's AX for the character on show, the Look box's BX for thing [BP+0Ah], a portrait's BX
+        for member DI): Mirror Images (25) from Reflected Image (199) is REFLECT_ENTRY's, which
+        NS_SETUP names REFLECTED IMAGE with its icon; from Mirror Image (19), or with the rule off or
+        before SEG_MOVE, 25 x 6."""
+        from dscompanion import gamepatch
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        self.mu.mem_write(effects, struct.pack("<hhhBB", 2, 0, 19, 25, 0) + bytes(2)
+                          + struct.pack("<hhhBB", 1, 0, 199, 25, 0) + bytes(2))
+        self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
+        shown = (GAME_DS - (0x4356 - 0x3931)) * 16 + 0x25B
+        table = (GAME_DS - (0x4356 - 0x3F8D)) * 16
+        entry = (0x3FB9 - 0x3F8D) * 16 + 0x19C + (196 + 16) * 7
+        self.assertEqual(entry, (0x4010 - 0x3F8D) * 16 + 0x1F8)
+        def ef(member, effect):
+            self.mu.mem_write(shown, struct.pack("<H", member))
+            self.site(gamepatch.NS_ENTRY_EF, eax=effect)
+            return self.mu.reg_read(r.UC_X86_REG_AX)
+        def look(thing, effect):
+            self.mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<H", thing))
+            self.site(gamepatch.NS_ENTRY_LOOK, ebx=effect)
+            return self.mu.reg_read(r.UC_X86_REG_BX)
+        def status(member, effect):
+            self.site(gamepatch.NS_ENTRY_STATUS, ebx=effect, edi=member)
+            return self.mu.reg_read(r.UC_X86_REG_BX)
+        self.rules(32)
+        self.assertEqual([ef(1, 25), look(1, 25), status(1, 25)], [25 * 6] * 3)  # (not moved yet)
+        self.moved(1)
+        for how in (ef, look, status):
+            self.assertEqual([how(1, 25), how(2, 25), how(1, 17), how(3, 25)],
+                             [entry + 6, 25 * 6, 17 * 6, 25 * 6])
+        far, icon = struct.unpack("<IH", self.mu.mem_read(table + entry, 6))
+        name = self.mu.mem_read((far >> 16) * 16 + (far & 0xFFFF), 16)
+        self.assertEqual(bytes(name), b"REFLECTED IMAGE\0")
+        self.assertEqual(icon, 21199)
+        self.rules(0)
+        self.assertEqual([ef(1, 25), look(1, 25), status(1, 25)], [25 * 6] * 3)
+        self.assertEqual(bytes(self.mu.mem_read(table + entry, 6)), bytes(6))
+
     def test_new_records(self):
         """NS_SETUP once the records have room (SEG_MOVED): Reflected Image is Mirror Image's record
         with one image (1d1, none a level), Spook Charm Person's with Afraid (17), 3 rounds and Magic
@@ -2363,7 +2421,7 @@ class NewSpellTests(RuleTests):
         self.assertEqual((reflect[4], reflect[5:7], reflect[0x19]), (0x11, b"\0\0", 0x19))
         self.assertEqual((spook[4], struct.unpack_from("<H", spook, 7)[0], spook[0x10], spook[0x19]), (0x13, 60, 4, 17))
         self.assertEqual((friends[4], struct.unpack_from("<HH", friends, 5), friends[0x0C], friends[1:3]),
-                         (0x15, (1, 60), 7, b"\xff\xff"))
+                         (0x41, (1, 60), 7, b"\xff\xff"))
         self.assertEqual([self.mu.mem_read(rows + n * 7, 1)[0] for n in (199, 200, 201)], [1, 1, 1])
         self.assertEqual(struct.unpack("<HHH", self.mu.mem_read(names + 73 * 6, 6))[1:], (TSR, 21201))
         self.assertEqual(bytes(self.mu.mem_read(names + 16 * 6, 6)), afraid)  # (Afraid's own, as it was)
@@ -4149,7 +4207,7 @@ class KitTests(unittest.TestCase):
                                                                         r.UC_X86_REG_SI, r.UC_X86_REG_ES, r.UC_X86_REG_DS)],
                                          [3, 0x2222, 0x3333, 0x4444, 0x6666, self.DS])
         self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2),
-                         [6, 9, 4, 11, 198, 199, 200, 19, 12, 13, 15])
+                         [6, 9, 4, 11, 198, 199, 200, 201, 19, 12, 13, 15])
         self.assertEqual(kits.pick_list(kits.SHINOBI, known.__contains__, 2, new_spells=False),
                          [6, 9, 4, 11, 19, 12, 13, 15])
 

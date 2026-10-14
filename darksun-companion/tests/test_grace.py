@@ -32,8 +32,12 @@ class LogTests(unittest.TestCase):
     def test_cha_for_friends(self):
         log = make_game()
         log.rules = game.RULE_NEW_SPELLS
-        line = self.roll(log, game.FRIENDS_SPELL, 4)[-1]
-        self.assertTrue(line.startswith("Friends: ") and line.endswith("'s CHA +6 while it lasts (at most 25)"), line)
+        args = words(0, 0, 0, 0, 0, 0, game.FRIENDS_SPELL)
+        for face in (3, 4):  # (Strength's code rolls Friends' 2d4)
+            lines = log.describe(entry(raw_for(face, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), args,
+                                       parent_code=dicelog.STRENGTH_ROLL_RETURN), now=1.0)
+        self.assertTrue(lines[-1].startswith("Friends: 2d4 = [3 + 4] = 7 -> ")
+                        and lines[-1].endswith("'s CHA +7 while it lasts (at most 25)"), lines)
 
 
 class NewSpellTests(unittest.TestCase):
@@ -63,7 +67,7 @@ class NewSpellTests(unittest.TestCase):
     def test_shinobi_spells(self):
         self.assertIn((game.REFLECT_SPELL, 1), kits.SHINOBI_SPELLS)
         self.assertIn((game.SPOOK_SPELL, 1), kits.SHINOBI_SPELLS)
-        self.assertNotIn(game.FRIENDS_SPELL, [s for s, _ in kits.SHINOBI_SPELLS])
+        self.assertIn((game.FRIENDS_SPELL, 1), kits.SHINOBI_SPELLS)
 
     def test_old_setting(self):
         self.assertFalse(game.rules_from_settings({"cats_grace": False}) & game.RULE_NEW_SPELLS)

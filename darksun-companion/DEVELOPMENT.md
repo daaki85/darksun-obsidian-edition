@@ -776,10 +776,12 @@ How (`RULE_HI_CHA_PRICES`, the second rules word's 16: `game.RULE_CHA_PRICES`):
 at the third read the price and pass it through `CHA_PRICE`: the leader is
 the party member at `DS:4979h` (whose turn it is; outside a fight, the
 leader), its CHA its creature record's `+27h`; the price times (100 − 5 for
-each point of CHA past 15, at most 25) / 100, never below 1, and 9999 kept.
+each point of CHA past 17, at most 40 at CHA 25) / 100, never below 1, and
+9999 kept.
 
-Checked in the game: with a CHA 20 leader, Kalzith's scrolls showed 2,250,
-4,500 and 6,750 (25% off 3,000, 6,000 and 9,000) and each was charged that.
+Checked in the game (with the table of the time, 25% at CHA 20): Kalzith's
+scrolls showed 2,250, 4,500 and 6,750 (25% off 3,000, 6,000 and 9,000) and
+each was charged that.
 A bought item stays on the pointer until it is put down (the game's held item,
 `DS:17A0h`), and the shop takes no other click meanwhile.
 
@@ -910,6 +912,12 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   it as it ends Mirror Image. Where an attack rolls d100 against the images
   (7A5BFh, `cmp ax,4Bh` at 7A5CDh, `NS_IMAGE`), the helper looks up the
   target's effect 25 and makes the chance 50 when the effect's spell is 199.
+  Where the game finds an effect's entry in the effects' table (its number
+  times 6: the Effects screen's icons and names, 7ED37h, 7EEC9h, 7EF34h; the
+  Look box's, 5FD1Ch; the status under a portrait, 71DF5h; `NS_ENTRY`), the
+  helper gives an entry of its own for effect 25 from spell 199: name
+  REFLECTED IMAGE and icon 21199, kept past the spell rows (segment 4010h at
+  1F8h, after row 211's room), which the table's segment reaches.
 - Spook is Charm Person's record (flags 4204h: mind-affecting, undead
   immune, magic resistance) with Afraid's effect 17 for 3 rounds (`+4` 13h,
   3d1; `+5` 0; `+7` 60) and Magic Missile's flight. In the save
@@ -917,11 +925,15 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   the caster's levels (preserver, or the Shinobi's casting level), at most 6,
   off the target's d20 total; the log names it.
 - Friends goes through Strength's handler (79470h) as Cat's Grace does, with
-  effect 74 (unused) and no dice; the ability routine adds 6 to CHA
-  (`[BP-338h]`), to at most 25, and leaves a higher CHA as it is. Shop prices
-  read the effective CHA (creature +27h). Its record is the caster only
-  (`+0Ch` 7) for 5 rounds and 1 a level (`+4` 15h, 5d1; `+5` 1; `+1Dh` 1, `+7`
-  60); a new casting replaces the effect as Strength's does.
+  effect 74 (unused). The handler rolls its amount with `push dword 60001h`
+  (1d6) at 79483h, after the effect choice's INT and its 17 NOPs; for
+  Friends `PROBE_GRACE_EFFECT` pushes 2d4 (40002h) on the caller's stack
+  itself and returns past that push (`FRIENDS_DICE`, `FRIENDS_PUSH`). The
+  ability routine adds the amount to CHA (`[BP-338h]`), to at most 25, and
+  leaves a higher CHA as it is. Shop prices read the effective CHA (creature
+  +27h). Its record is the caster only (`+0Ch` 7) for 1d4 rounds and 1 a
+  level (`+4` 41h; `+5` 1; `+1Dh` 1, `+7` 60); a new casting replaces the
+  effect as Strength's does.
 
 **Fogbolt's bolt.** A record's `+10h` names what flies from caster to target
 (FFh: nothing): a place in a table of 16 flights just before the records (3
@@ -1442,13 +1454,13 @@ of it):
 | Seeker: 1st, 2nd, 3rd level slots | 1 | 2 | 2, 1 | 2, 2 | 2, 2, 1 |
 | Justifier: casting level, slots | | | | | 1; one 1st-level |
 
-The Shinobi's spells, the game's and three new ones (thief level 6 on, the Seeker's slots):
+The Shinobi's spells, the game's and four new ones (thief level 6 on, the Seeker's slots):
 
 | Spell level | Spells |
 |---|---|
-| 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image, Spook |
+| 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image, Spook, Friends |
 
-Fogbolt, Reflected Image and Spook, [new spells](#new-wizard-spells), are known by its bit in the sheet
+Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-wizard-spells), are known by its bit in the sheet
 (`NS_KNOWS`) rather than the game's byte: `SHINOBI_KNOWS` reads either for the
 level up's offer (`SHINOBI_UNKNOWN`, `PROBE_PICK_LIST`), and counts them as
 known (not offered) while the new spells are off (or, for 199-201, before

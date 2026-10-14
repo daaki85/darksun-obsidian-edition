@@ -27,11 +27,14 @@ have the detail.
   time; it and Mirror Image replace each other), **Spook** (1st level: one
   creature flees for 3 rounds unless it saves, at -1 for every 2 caster
   levels, at most -6; undead aren't affected) and **Friends** (1st level, on
-  the caster: CHA + 6, at most 25, for 5 rounds and 1 a level, for better
-  prices). Each has its icon and description; preservers learn all three, a
-  Shinobi Reflected Image and Spook.
+  the caster: CHA + 2d4, at most 25, for 1d4 rounds and 1 a level, for better
+  prices). Each has its icon (Reflected Image's a hand mirror, named on the
+  Effects screen) and description; preservers and the Shinobi learn all
+  three.
 
 **Changed**
+- **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each
+  point after, to 40% at 25 (it was 5% at 16 to 25% from 20).
 - **Fogbolt's icon is grey** (its cloud on Armor's grey tile, rather than
   Charm Person's purple).
 - **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the
