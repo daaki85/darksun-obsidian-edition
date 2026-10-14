@@ -120,19 +120,57 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Items
 
-**Weapons**
+**Magic weapons**
 
-- **[New]** Short swords, bone and obsidian axes, great axes, daggers, maces, and metal picks and polearms, the plain weapons the game never had, sold by merchants and carried across Athas.
-- **[New]** Sixteen new magic weapons, each with its own icon and a story from the game's own item sage. Among them: Flame Blade, an obsidian long sword whose edge burns; Galefang, a dagger an air cleric can wield; Mindshard and Stillwater, short swords for psionicists; and the first magic club, pick and staff sling in the game. The Elven Leader's gift is a Gythka +2 *(was +1)*.
+Fifteen new magic weapons, each with its own icon and a story from the game's own item sage.
 
-**Armour and worn items**
+- **[New]** **Flame Blade**: an obsidian long sword +1 whose blade burns what it hits (2d6 fire damage, a save for half). A fire or earth cleric can wield it.
+- **[New]** **Shadowseeker**: a short sword +1 whose wielder sees the invisible.
+- **[New]** **Kreenfang**: a bone gythka +1.
+- **[New]** **Gutterknot**: a club +1, the game's first magic club.
+- **[New]** **Deepbiter**: a stone pick +1, the game's first magic pick.
+- **[New]** **Windlash**: a staff sling +1, the game's first magic staff sling.
+- **[New]** **Greenbright**: a metal short sword +2.
+- **[New]** **Drakejaw**: a bone axe +1 a water cleric can wield.
+- **[New]** **Glasshewer**: an obsidian axe +2 a fire or earth cleric can wield.
+- **[New]** **Headsman**: a metal great axe +2.
+- **[New]** **Galefang**: a metal dagger +2 an air cleric can wield.
+- **[New]** **Mindshard**: an obsidian short sword +1 a psionicist can wield.
+- **[New]** **Stillwater**: a bone short sword +1 a psionicist can wield.
+- **[New]** **Linebreaker**: a metal polearm +2.
+- **[New]** **Thornwall**: a bone polearm +1.
+- **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
 
-- **[New]** **Bracers of Defense** (AC 6 to 2) and two robes, the **Ashen Robe** and the **Veiled Robe**, for those who wear no armour. A preserver casts in them.
-- **[New]** **The Warden's Plate**: plate armour +1 in four pieces, 12 points of AC as a set.
-- **[New]** Rings and a cloak of protection, and the **Cloak and Boots of Elvenkind**, which help a thief or ranger hide and move silently.
-- **[New]** For the head: **Arrowbane**, a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas, and the **Sunking Crown**, a gold crown that protects its wearer from evil. Neither is armour: a preserver casts in them, and bracers and rings and cloaks of protection still work with them.
-- **[New]** The **Tome of Understanding**: read it for +1 WIS for good.
-- **[Changed]** The game's bone scale armour set is complete, with its arm and leg pieces and helm.
+**Magic armour and worn items**
+
+- **[New]** **Bracers of Defense**: AC 6 to 2 for those who wear no armour, four pairs across Athas. A preserver casts in them.
+- **[New]** **Ashen Robe** (+1): AC 1 better and +1 on saves against spells, for preservers, psionicists and druids. A preserver casts in it.
+- **[New]** **Veiled Robe** (+2), a robe of the Veiled Alliance: AC 2 better, +1 on every save, and a wizard spell slot more at spell levels 1 to 3, for preservers, psionicists and druids.
+- **[New]** **The Warden's Plate**: plate armour +1 in four pieces, 12 points of AC as a set. The helm gives Cloak of Bravery and the chest Resist Fire while worn.
+- **[New]** **Inixhide**: leather chest armour +1.
+- **[New]** **Rings of Protection +1** (two) and a **Cloak of Protection +1**: +1 AC and +1 on every saving throw.
+- **[New]** **Cloak of Elvenkind**: all but invisible when hiding in shadows. Thieves and rangers only.
+- **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
+- **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
+- **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
+
+**Other magic items**
+
+- **[New]** **Tome of Understanding**: read it for +1 WIS for good.
+- **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.
+
+**Mundane items**
+
+The plain weapons the game never had, sold by merchants and carried across Athas, and more.
+
+- **[New]** **Short swords** (1d6) in bone, obsidian and metal: the game had none.
+- **[New]** **Axes** (1d8) in bone and obsidian.
+- **[New]** **Great axes** (1d10, two-handed) in bone, obsidian and metal.
+- **[New]** **Daggers** in metal, and in bone: the only dagger a water cleric can use.
+- **[New]** **Maces** in obsidian and metal.
+- **[New]** A **metal pick** and a **metal polearm**.
+- **[New]** **Thieves' Tools**: every thief starts with a set, and Kel sells more, for picking pockets.
+- **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
 
 ## World
 
