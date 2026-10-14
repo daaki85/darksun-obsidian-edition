@@ -352,6 +352,7 @@ class DiceLog:
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
         self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
+        self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
         self.stealth_gear = True  # a worn cloak's and boots' bonuses to hiding (stealth.py)
         self._dust = dust.Dust()
@@ -609,6 +610,7 @@ class DiceLog:
         self.show_shadows = bool(settings.get("shadows", True))
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
+        self.elf_looks = settings.get("elf_looks", True) is not False
         self.vulture_on = bool(settings.get("vulture", True))
         self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
@@ -1134,7 +1136,7 @@ class DiceLog:
             import os
             copy = os.path.join(launch.DOS_DIR, icons.OBJECTS_FILE)
             self._dresser = sprites.Dresser.for_game(self.game, launch.find_game_dir(),
-                                                     copy if os.path.exists(copy) else None)
+                                                     copy if os.path.exists(copy) else None, self.elf_looks)
             if self._dresser is not None and self.tsr_hdr is not None:
                 hdr = self.tsr_hdr
                 self._dresser.request_redraw = lambda: shadows.redraw(self.game, hdr)

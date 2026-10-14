@@ -437,6 +437,10 @@ class Viewer:
         self.show_dust = tk.BooleanVar(value=bool(settings.get("dust", True)))
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
                         variable=self.show_dust, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+        self.elf_looks = tk.BooleanVar(value=settings.get("elf_looks", True) is not False)
+        ttk.Checkbutton(looks, text="Elves have pointed ears, and half-elves figures of their own instead of the "
+                        "humans' (from the next time you start the game)",
+                        variable=self.elf_looks, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
 
         # the mouse and keys in the game
         controls = section("controls", "Controls (in the game)")
@@ -794,6 +798,7 @@ class Viewer:
                 self.dice.show_gear = self.show_gear.get()
                 self.dice.show_shadows = self.show_shadows.get()
                 self.dice.show_dust = self.show_dust.get()
+                self.dice.elf_looks = self.elf_looks.get()
                 self.dice.ring_mode = self.ring_mode.get()
                 self.dice.use_targeting = self.use_targeting.get()
                 self.dice.scroll_map = self.scroll_map.get()
@@ -891,6 +896,7 @@ class Viewer:
         settings["show_gear"] = self.show_gear.get()
         settings["shadows"] = self.show_shadows.get()
         settings["dust"] = self.show_dust.get()
+        settings["elf_looks"] = self.elf_looks.get()
         settings["rings"] = self.ring_mode.get()
         settings["targeting"] = self.use_targeting.get()
         settings["scroll_map"] = self.scroll_map.get()

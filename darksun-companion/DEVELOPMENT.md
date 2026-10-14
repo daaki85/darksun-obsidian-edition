@@ -1198,8 +1198,11 @@ Gear is drawn on them by what their own colours can't tell `spritegear`
   the same place in the human woman's frame, but not her purple wristbands,
   and a belt isn't drawn over it from behind.
 
-If the palette or the pictures they are made from are missing, or making them
-fails, a half-elf is the human figure recoloured (`halfelf.py`), as before. A
+With the switch off (`elf_looks`, `sprites.Pictures(looks=False)`), or if the
+palette or the pictures they are made from are missing, or making them fails,
+a half-elf is the human figure recoloured (`halfelf.py`), as before, and elves
+have no ears. The switch counts when the launcher writes the copy; the Ledger
+dresses the party with the setting it had then. A
 spare is drawn as the figure it stands for.
 
 Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)

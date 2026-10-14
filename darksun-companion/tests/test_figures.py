@@ -107,6 +107,17 @@ class PictureTests(unittest.TestCase):
         self.assertEqual((model, owns), (2095, [None]))
         self.assertEqual(frames[0], frame)
 
+    def test_looks_switched_off(self):
+        """With the elves' and half-elves' looks off, a half-elf is the game's own figure, even
+        where the elf's pictures are there to build one from."""
+        frame = [[N, 69, 69, N], [N, 140, 140, N], [N, 140, 140, N], [N, 254, 254, N]]
+        chunk = sprites.encode_frames([frame])
+        pics = sprites.Pictures({("BMP ", n): chunk for n in (2095, 2096, fg.ELF_MAN, fg.ELF_MAN + 1,
+                                                               fg.HUMAN_WOMAN, fg.HUMAN_WOMAN + 1)}, looks=False)
+        for figure in (he.MAN, he.WOMAN):
+            model, frames, owns = pics.base(2095, figure, False)
+            self.assertEqual((model, owns), (2095, [None]))
+
 
 @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "DSUN_OBJECTS (the game's SEGOBJEX.GFF) not given")
 class GameTests(unittest.TestCase):

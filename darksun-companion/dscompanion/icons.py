@@ -677,8 +677,9 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     room: Dict[Tuple[str, int], int] = {}
     _palette(source)
     try:  # (the party's own sprites, for what they wear: room after each to be dressed in place)
-        pictures = sprites.new_chunks(chunks)
-        room = sprites.new_room(chunks, pictures)
+        looks = (on or {}).get("elf_looks", True) is not False  # (elves' ears, half-elves' figures)
+        pictures = sprites.new_chunks(chunks, looks)
+        room = sprites.new_room(chunks, pictures, looks)
         added.update(pictures)
     except (KeyError, ValueError, IndexError, struct.error):
         pass

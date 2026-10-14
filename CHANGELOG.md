@@ -8,6 +8,15 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #43 (in progress)
+
+**Added**
+- **A switch for the elves' and half-elves' looks:** **Elves have pointed
+  ears, and half-elves figures of their own** in the Options tab's Graphics
+  section, on by default, from the next time the game is started. Off, elves
+  are as the game draws them and half-elves the human figures in their own
+  colours, as before 2.2.0; Cilla keeps the elf woman's figure either way.
+
 ## Pull request #42 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/42))
 
 **Release**

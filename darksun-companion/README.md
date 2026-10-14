@@ -344,7 +344,8 @@ The sections:
 - **New content** ([New content](#new-content)): the new spells, at once; the
   new people, the vulture and the new items, from the next time the game is
   started (what a saved game already has stays in it).
-- **Graphics** ([Graphics](#graphics)), **Controls**
+- **Graphics** ([Graphics](#graphics)): the elves' and half-elves' looks, what
+  the party wears, shadows and dust. **Controls**
   ([Controls](#controls)) and **Game speed** ([Game speed](#game-speed)).
 
 All are on by default except each turn's rolls in the game and the right
@@ -2924,9 +2925,9 @@ caravan. The game's plain stone pick is only ever a
 
 ## Graphics
 
-What the Ledger draws on the game's map. The party's gear, shadows and dust
-each have a switch in the Options tab's **Graphics** section; the elves' and
-half-elves' looks are always there.
+What the Ledger draws on the game's map. The elves' and half-elves' looks,
+the party's gear, shadows and dust each have a switch in the Options tab's
+**Graphics** section.
 
 ### Elves and half-elves
 
@@ -2940,9 +2941,15 @@ golden hair up in a bun, pointed ears, a purple cloak, purple wristbands and
 red boots. Anything worn is drawn over these in its own colours, so a worn
 cloak or boots replace the purple and the red.
 
+With **Elves have pointed ears, and half-elves figures of their own** unticked
+(it's ticked by default), elves are as the game draws them, and half-elves
+are the human figures in their own colours. It counts from the next time the
+game is started.
+
 Cilla, in the game's own party, is an elf, but the game gives her the figure it
 gives half-elf women. The Ledger gives her the elf woman's, in a new game and
-in one already begun (there from the next area or load on).
+in one already begun (there from the next area or load on), with the switch
+on or off.
 
 ![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
 
