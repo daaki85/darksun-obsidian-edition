@@ -8,7 +8,7 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
-## Pull request #41 (in progress)
+## Pull request #41 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/41))
 
 **Added**
 - **STORE and RECALL on the creation screen,** as Baldur's Gate has them:
