@@ -6543,13 +6543,12 @@ dk_spheres db 'AIR', 0, 0, 0, 'EARTH', 0, 'FIRE', 0, 0, 'WATER', 0
 ; CHOOSE A SPELL instead (PICK_SPELLS: 2, 4, or 4 and two of 2nd level), a Scholar one more for
 ; each level (KIT_MADE), then on past the game's (CR_SPELLS_PAST). CHOOSE A SPELL is overlay code
 ; of its own: the way back is put in a frame the overlay manager can fix up, as for PROBE_LV_PICK
-; (without it the game's code is lost). Another level, or a character not New (the game's own
-; party, which START GAME makes Okay before this): AX [BP-2], on as before.
+; (without it the game's code is lost). Another level, or the grants run for the game's own
+; party (START GAME with no party made calls them from 65480h+6FBh, not DONE's 66556h): AX [BP-2],
+; on as before. (The creature's status can't tell the two: a character being made reads Okay
+; here too, as the game's party does.)
 CR_SPELLS_PAST equ 0x66F83 - 0x66F2F    ; (past the game's grants, less the address after the INT)
-CR_CREATURES  equ 0x1665               ; DS: the creature table (far), a record each 3Ah, its
-CR_CREATURE_SIZE equ 0x3A               ;   status at +1Ch: 0 New (made, not yet played)
-CR_STATUS     equ 0x1C
-CR_STATUS_NEW equ 0
+CR_FROM_DONE  equ 0x66F2F - 0x66556    ; (the grants' way back into DONE, less the INT's)
 probe_cr_spells:
         push bp
         mov bp, sp
@@ -6571,16 +6570,17 @@ probe_cr_spells:
         jz .iret
         cmp ax, 3
         ja .iret
-        push es                 ; only a character being made (New) picks: the game's own party,
-        push bx                 ;   Okay already when START GAME makes it, keeps the game's spells
-        push ax
-        les bx, [CR_CREATURES]
-        imul ax, si, CR_CREATURE_SIZE
-        add bx, ax
-        cmp byte [es:bx + CR_STATUS], CR_STATUS_NEW
-        pop ax
+        push bx                 ; only a character made on the creation screen picks (the grants
+        mov bx, sp              ;   called by DONE, in the same overlay as the INT, [BP+2] and
+        push ax                 ;   [BP+4]): the game's own party keeps the game's spells
+        mov ax, [ss:bx + 2]
+        sub ax, CR_FROM_DONE
+        cmp ax, [bp + 2]
+        jne .from
+        mov ax, [ss:bx + 4]
+        cmp ax, [bp + 4]
+.from:  pop ax
         pop bx
-        pop es
         je .pick
 .iret:  iret
 .pick:  sti

@@ -33,6 +33,12 @@ have the detail.
   types, weigh 30 too.
 
 **Fixed**
+- **New preservers weren't offered their spells.** DONE on the creation
+  screen gave a new preserver (single or multiclass) the game's own starting
+  spells instead of CHOOSE A SPELL: the check meant to leave START GAME's
+  ready-made party alone read the character's status, which says Okay for a
+  character being made too. It now tells the two apart by where the game's
+  spell grants were called from.
 - **Stuck on the creation panel's KITS page.** A single-class warrior on the
   last weapon page has KITS for its button; adding a class there (a fighter
   made fighter/thief) kept the button, and pressing it opened a page with no
