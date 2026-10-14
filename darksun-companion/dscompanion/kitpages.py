@@ -182,7 +182,7 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
                                    for cls, names in KITS.items() for k, name in enumerate(names)]
     for cid, text in rows + [(KIT_NONE, "NO KIT")]:
         added[("ICON", cid)] = wp.picture(font, text, wp.ROW_PAD, row_colours)
-        added[("BUTN", cid)] = wp._button(row_button, wp.ROW_TEMPLATE, cid)
+        added[("BUTN", cid)] = wp.row_button(row_button, cid, font, text)
     added[("ICON", KIT_VIEW)] = wp.picture(font, "KITS", 0, toggle_colours)
     added[("BUTN", KIT_VIEW)] = wp._button(toggle_button, wp.TOGGLE_TEMPLATE, KIT_VIEW)
     spheres = resource[("WIND", wp.SPHERES)]

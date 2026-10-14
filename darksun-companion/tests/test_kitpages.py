@@ -78,6 +78,21 @@ class KitPageTests(unittest.TestCase):
         self.assertEqual(ids, [kitpages.KIT_NONE, kitpages.KIT_ROW + 6, kitpages.KIT_ROW + 7, kitpages.KIT_ROW + 8,
                                weaponpages.BACK])
 
+    def test_row_as_wide_as_its_label(self):
+        """A row's button is as wide as its label, not AIR's 33 pixels (a click on the rest of a
+        longer name, MYRMIDON's or LNG SWORD's, was taken by nothing)."""
+        import struct
+        air = bytearray(110)
+        air[:4] = b"BUTN"
+        struct.pack_into("<I", air, 8, weaponpages.ROW_TEMPLATE)
+        struct.pack_into("<HH", air, weaponpages.BUTN_SIZE, 33, 7)
+        font = {ch: [[True] * 5 for _ in range(weaponpages.HEIGHT)] for ch in "MYRIDON"}
+        button = weaponpages.row_button(bytes(air), 0x871, font, "MYRMIDON")
+        want = len(weaponpages.label(font, "MYRMIDON", weaponpages.ROW_PAD, 1)[0])
+        self.assertGreater(want, 33)
+        self.assertEqual(struct.unpack_from("<HH", button, weaponpages.BUTN_SIZE), (want, 7))
+        self.assertEqual(struct.unpack_from("<I", button, 8)[0], 0x871)
+
     def kit_window(self, cls):
         """CLS's kit page, from a spheres' window of four rows and a button (pictures left out)."""
         import struct

@@ -164,6 +164,17 @@ def _button(template: bytes, template_id: int, new_id: int) -> bytes:
     return template.replace(struct.pack("<I", template_id), struct.pack("<I", new_id))
 
 
+def row_button(template: bytes, new_id: int, font: Dict[str, Glyph], text: str, pad: int = ROW_PAD) -> bytes:
+    """A row's button: AIR's (TEMPLATE), as wide as the row's label (AIR's own is 33 pixels: a
+    longer label's right part would take no click)."""
+    button = bytearray(_button(template, ROW_TEMPLATE, new_id))
+    if len(button) < BUTN_SIZE + 4:
+        return bytes(button)
+    _, height = struct.unpack_from("<HH", button, BUTN_SIZE)
+    struct.pack_into("<HH", button, BUTN_SIZE, len(label(font, text, pad, 0)[0]), height)
+    return bytes(button)
+
+
 def _window(template: bytes, wid: int, items: List[Tuple[int, int, int]]) -> bytes:
     """A window like TEMPLATE (its frame and place), its own id WID, with these buttons (id, x, y)."""
     head = bytearray(template[:ITEM_AT])
@@ -197,12 +208,12 @@ def chunks(resource: gff.Chunks, objects: Optional[gff.Chunks] = None) -> Dict[T
     font = glyphs(resource)
     row_colours = _colours(resource[("ICON", ROW_TEMPLATE)])
     toggle_colours = _colours(resource[("ICON", TOGGLE_TEMPLATE)])
-    row_button, toggle_button = resource[("BUTN", ROW_TEMPLATE)], resource[("BUTN", TOGGLE_TEMPLATE)]
+    air_button, toggle_button = resource[("BUTN", ROW_TEMPLATE)], resource[("BUTN", TOGGLE_TEMPLATE)]
     added: Dict[Tuple[str, int], bytes] = {}
     for kind in range(len(specialize.KINDS)):
         cid = ROW_FIRST + kind
         added[("ICON", cid)] = picture(font, page_text(kind), ROW_PAD, row_colours)
-        added[("BUTN", cid)] = _button(row_button, ROW_TEMPLATE, cid)
+        added[("BUTN", cid)] = row_button(air_button, cid, font, page_text(kind))
     for cid, text in ((MORE, "MORE SPECS"), (BACK, "VIEW PSIONICS"), (VIEW, "WEAPON SPEC")):
         added[("ICON", cid)] = picture(font, text, 0, toggle_colours)
         added[("BUTN", cid)] = _button(toggle_button, TOGGLE_TEMPLATE, cid)
@@ -219,7 +230,7 @@ def chunks(resource: gff.Chunks, objects: Optional[gff.Chunks] = None) -> Dict[T
     disciplines = resource[("WIND", DISCIPLINES)]
     added[("WIND", WARRIOR_DISCIPLINES)] = _window(
         disciplines, WARRIOR_DISCIPLINES, [(VIEW if c == DISCIPLINE_TOGGLE else c, x, y) for c, x, y in _items(disciplines)])
-    added.update(picker(resource, objects or {}, row_button))
+    added.update(picker(resource, objects or {}, air_button))
     return added
 
 

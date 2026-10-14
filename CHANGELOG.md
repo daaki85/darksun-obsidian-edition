@@ -73,6 +73,10 @@ have the detail.
   makes for it ("There it is!") without picking it up. In the Ledger's copy he
   leaves the key where it lies (the party can pick it up), and he says the
   busy line once and is free to talk the next time.
+- **Rows of the creation panel's weapon and kit pages took clicks only at
+  their left.** Each row is a copy of the game's AIR row, a button 33 pixels
+  wide: a click on the rest of a longer name (the middle of MYRMIDON or LNG
+  SWORD) did nothing. Each row's button is now as wide as its name.
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 
