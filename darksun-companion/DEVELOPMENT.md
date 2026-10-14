@@ -633,7 +633,8 @@ answers both for the character on show, "not two-handed" for a half-giant.
 ([In the README](README.md#helms).)
 
 How: the helper sets the helm types' AC as the game's AC routine reads it
-(`INT F8h`, the Ring +1's place). (An earlier rule gave boots a move in a
+(`INT F8h`, the Ring +1's place), and as the item box reads it for its "AC
+BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An earlier rule gave boots a move in a
 fight; it is gone, and the boots' names it changed go back to the game's.)
 
 ### Weapon specialization

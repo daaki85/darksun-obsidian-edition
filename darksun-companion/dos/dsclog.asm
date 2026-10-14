@@ -144,6 +144,7 @@ VEC_PRICE equ 0x8D         ; PROBE_PRICE
 VEC_PRICE_EAX equ 0x8C     ; PROBE_PRICE_EAX
 VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
 VEC_RACE_PANEL equ 0x89    ; PROBE_RACE_PANEL
+VEC_BOX_AC equ 0x88        ; PROBE_BOX_AC
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
 NENT    equ 84          ; entries in the ring (84: the helper and it fit in upper memory)
@@ -2338,6 +2339,27 @@ probe_ring_ac:
         inc al
 .set:   mov [es:bx+0x12], al    ; (the type's AC, read next)
         pop ax
+        iret
+
+; PROBE_BOX_AC: INT VEC_BOX_AC replaces "mov al,es:[bx+12h]" (4 bytes: INT + 2 NOPs; DSUN.EXE 8C15Ah)
+; in the item box's routine, the type's AC for its "AC BONUS:", ES:BX the type's record, SI the
+; type: a helm's set first as PROBE_RING_AC sets it (1 with RULE_HELMS, else 0), so a helm not
+; yet worn shows it too.
+probe_box_ac:
+        cmp si, HELM_LEATHER
+        je .is
+        cmp si, HELM_METAL
+        je .is
+        cmp si, HELM_OTHER
+        je .is
+        cmp si, HELM_BONE
+        jne .read
+.is:    xor al, al
+        test byte [cs:rules], RULE_HELMS
+        jz .set
+        inc al
+.set:   mov [es:bx + 0x12], al
+.read:  mov al, [es:bx + 0x12]
         iret
 
 ; PROBE_RING_SAVE: INT VEC_RING_SAVE replaces "xor si,si" (2 bytes) at the start of the
@@ -14360,6 +14382,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_RACE_PANEL
         mov dx, probe_race_panel
         int 21h
+        mov ax, 2500h + VEC_BOX_AC
+        mov dx, probe_box_ac
+        int 21h
         mov ax, 2500h + VEC_TWO
         mov dx, probe_two
         int 21h
@@ -14711,7 +14736,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_TURN, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_NEXT, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
 all_vectors_end:
 
         align 16, db 0

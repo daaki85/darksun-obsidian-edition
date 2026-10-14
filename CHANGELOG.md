@@ -32,6 +32,9 @@ have the detail.
 - **A missile weapon's line on the inventory screen** showed the weapon's own
   rate of fire and no specialization bonus (a staff sling specialist's `1D4`).
   It now shows the rate and the bonus the attack uses (`1.5x1D4+2`).
+- **A helm's item box said AC BONUS:0** (beside its name's "(AC 1)") until it
+  had been worn: the rule set the helms' AC only as the game added up a
+  character's. The box now sets it too, and shows 1.
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 
