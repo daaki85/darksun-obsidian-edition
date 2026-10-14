@@ -2359,6 +2359,59 @@ class NewSpellTests(RuleTests):
         self.rules(0)
         self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, False, False, True])
 
+    def rules_hi(self, value):
+        self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
+
+    def test_sell_price(self):
+        """What a shop pays (SELL_PRICE, "mov si,es:[bx+6]", ES:BX the item): half with the CHA
+        prices rule (RULE_HI 16), never below 1; all of it without; 9999 (not for sale) kept."""
+        from dscompanion import gamepatch
+        item = 0x9800 * 16 + 0x40
+        def pays(price, rules_hi):
+            self.rules_hi(rules_hi)
+            self.mu.mem_write(item + 6, struct.pack("<H", price))
+            self.site(gamepatch.SELL_PRICE, es=0x9800, ebx=0x40, esi=0x1234)
+            return self.mu.reg_read(r.UC_X86_REG_SI)
+        self.assertEqual([pays(p, 16) for p in (3000, 7, 1, 0, 9999)], [1500, 3, 1, 0, 9999])
+        self.assertEqual(pays(3000, 0), 3000)
+
+    def test_sell_keep(self):
+        """A shop freeing the thing holding an item sold ("push word [179Eh]", SELL_KEEP): with the
+        buyback rule (RULE_HI 64) and a magical item (a plus or a power), 270Fh pushed in its place
+        and the thing and the merchant (DS:179Ch) queued in the header (+308 counted, +310 the
+        entries); anything else, or the rule off, the thing pushed."""
+        from dscompanion import gamepatch
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        self.mu.mem_write(GAME_DS * 16 + 0x165D, struct.pack("<HH", 0, 0x9800))
+        self.mu.mem_write(things + 330 * 3, struct.pack("<BH", 1, 5))
+        self.mu.mem_write(GAME_DS * 16 + 0x179E, struct.pack("<HH", 330, 77)[:2])
+        self.mu.mem_write(GAME_DS * 16 + 0x179C, struct.pack("<H", 77))
+        def sell(plus, power, rules_hi):
+            self.rules_hi(rules_hi)
+            rec = bytearray(0x15)
+            rec[0x14], rec[0x0F] = plus & 0xFF, power
+            self.mu.mem_write(0x9800 * 16 + 5 * 0x15, bytes(rec))
+            mu = self.mu
+            self.at += 0x20
+            mu.mem_write(CALLER * 16 + self.at, bytes((0xCD, 0x98, gamepatch.SELL_KEEP, 0x90)))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    eax=0x1111, ebx=0x2222, ecx=0x3333, es=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(CALLER * 16 + self.at, CALLER * 16 + self.at + 3)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FE)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_CX,
+                                                       r.UC_X86_REG_ES)], [0x1111, 0x2222, 0x3333, 0x4444])
+            pushed, = struct.unpack("<H", mu.mem_read(SS * 16 + 0x7FE, 2))
+            return pushed, struct.unpack("<H", mu.mem_read(hdr + 308, 2))[0]
+        self.mu.mem_write(hdr + 308, struct.pack("<H", 0))
+        self.assertEqual(sell(1, 0, 64), (0x270F, 1))
+        self.assertEqual(struct.unpack("<HH", self.mu.mem_read(hdr + 310, 4)), (330, 77))
+        self.assertEqual(sell(0, 3, 64), (0x270F, 2))  # (a power: a wand, a scroll...)
+        self.assertEqual(sell(0, 0, 64), (330, 2))  # (nothing magical: freed)
+        self.assertEqual(sell(-1, 0, 64), (330, 2))  # (cursed: no plus)
+        self.assertEqual(sell(2, 0, 0), (330, 2))  # (the rule off)
+
     def test_reflect_entry(self):
         """Where the game finds an effect's entry by its number times 6 (NS_ENTRY: the Effects
         screen's AX for the character on show, the Look box's BX for thing [BP+0Ah], a portrait's BX

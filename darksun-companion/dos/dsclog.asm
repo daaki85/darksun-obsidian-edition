@@ -318,6 +318,11 @@ rl_seq     dw 0                 ; +280 an ability's 4d4 rolled on the creation s
 rl_tries   times 24 db 0        ; +282 the last four 4d4 of each ability, STR to CHA (the dice log's,
                                 ;      as the die tumbles faster than its ring is read)
 seg_moved  db 0                 ; +306 1 once SEG_MOVE has made the new spells' records' room
+           db 0                 ; +307
+sold_seq   dw 0                 ; +308 a magical item sold to a merchant and kept (SELL_KEEP), counted:
+sold_q     times 4 * 2 dw 0     ; +310 the last SOLD_SLOTS of them: the thing holding it, then
+                                ;      the merchant (the shop's DS:179Ch), for the Ledger to put in
+                                ;      the merchant's pack (buyback.py)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -10093,6 +10098,7 @@ RULE_HI_ROLLED equ 32           ; (RULES_HI) creation's scores and hit points as
 RULE_HI_TABLES equ 8            ; (RULES_HI) AD&D's class tables: XP, priests' THAC0, spell slots (XP_NEED, PROBE_*)
 RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's spell and most spells a level (INT_LEARN)
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
+RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -11803,6 +11809,8 @@ NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a weapon's blow
 NS_ENTRY_EF equ NS_IMAGE + 1    ; 7ED37h, 7EEC9h, 7EF34h: an effect's entry, the Effects screen's
 NS_ENTRY_LOOK equ NS_IMAGE + 2  ; 5FD1Ch: the Look box's
 NS_ENTRY_STATUS equ NS_IMAGE + 3 ; 71DF5h: the status under a portrait
+SELL_KEEP equ NS_IMAGE + 4      ; 83D9Eh: a shop freeing an item sold
+SELL_PRICE equ NS_IMAGE + 5     ; 83CCAh: what a shop pays for an item
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -11818,6 +11826,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_fist
         cmp byte [cs:rl_site], NS_IMAGE
         je ns_image
+        cmp byte [cs:rl_site], SELL_KEEP
+        je sell_keep
+        cmp byte [cs:rl_site], SELL_PRICE
+        je sell_price
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -12085,6 +12097,97 @@ ns_entry:
         mov [ss:di + bx], dx
 .out:   pop es
         popad
+        iret
+
+; SELL_PRICE: "mov si,es:[bx+6]" (83CCAh; 4 bytes: the site's number and a NOP after the INT) where
+; a shop takes the price it pays for the item the party sells (ES:BX the item; shown in its offer,
+; then paid, times the count for a stack). With RULE_HI_CHA_PRICES, half (never below 1), as
+; Baldur's Gate's shops pay: the leader's CHA takes at most 40% off buying, so nothing bought can
+; be sold for more than it cost (prices.sell_price).
+sell_price:
+        pushad
+        push es
+        mov di, sp
+        mov ax, [es:bx + 6]
+        test word [cs:rules_hi], RULE_HI_CHA_PRICES
+        jz .set
+        cmp ax, 9999
+        je .set
+        cmp ax, 1
+        jbe .set
+        shr ax, 1
+.set:   mov [ss:di + NS_SI], ax
+        pop es
+        popad
+        iret
+
+; SELL_KEEP: "push word [179Eh]" (83D9Eh; 4 bytes: the site's number and a NOP after the INT) where
+; a shop has paid for the item the party sold and frees the thing holding it (0A0h:1C94h, which
+; frees nothing for 270Fh). With RULE_HI_BUYBACK and a magical item (a plus, +14h, or a power,
+; +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the thing and the merchant
+; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Ledger, which puts the item in the merchant's pack,
+; where the shop lists it; any other item is pushed and freed as the game does. The push: the
+; registers kept and the interrupt's frame moved down a word, the word under them.
+SOLD_SLOTS   equ 4              ; (SOLD_Q's room: 4 entries in the header)
+SOLD_THING   equ 0x179E         ; DS: the thing holding the item sold ...
+SHOP_MERCHANT equ 0x179C        ; ... and the shop's merchant
+ITEM_PLUS_AT equ 0x14
+ITEM_POWER_AT equ 0x0F
+sell_keep:
+        push ax
+        push bx
+        push cx
+        push es
+        mov cx, [SOLD_THING]
+        test word [cs:rules_hi], RULE_HI_BUYBACK
+        jz .push
+        cmp cx, NO_THING
+        jae .push
+        mov bx, ds
+        add bx, THINGS_SEG
+        mov es, bx
+        imul bx, cx, 3
+        cmp byte [es:bx + THINGS], 1    ; (a list of items ...
+        jne .push
+        mov ax, [es:bx + THINGS + 1]    ;   ... its first)
+        cmp ax, NO_THING
+        jae .push
+        les bx, [ITEMS]
+        imul ax, ax, 0x15
+        add bx, ax
+        cmp byte [es:bx + ITEM_PLUS_AT], 0
+        jg .keep
+        cmp byte [es:bx + ITEM_POWER_AT], 0
+        je .push
+.keep:  mov bx, [cs:sold_seq]
+        and bx, SOLD_SLOTS - 1
+        shl bx, 2
+        mov [cs:bx + sold_q], cx
+        mov ax, [SHOP_MERCHANT]
+        mov [cs:bx + sold_q + 2], ax
+        inc word [cs:sold_seq]
+        mov cx, NO_THING
+.push:  mov bx, sp              ; (SS:BX: ES, CX, BX, AX, then the frame: IP, CS, flags)
+        sub sp, 2
+        mov ax, [ss:bx]
+        mov [ss:bx - 2], ax
+        mov ax, [ss:bx + 2]
+        mov [ss:bx], ax
+        mov ax, [ss:bx + 4]
+        mov [ss:bx + 2], ax
+        mov ax, [ss:bx + 6]
+        mov [ss:bx + 4], ax
+        mov ax, [ss:bx + 8]
+        mov [ss:bx + 6], ax
+        mov ax, [ss:bx + 10]
+        mov [ss:bx + 8], ax
+        mov ax, [ss:bx + 12]
+        mov [ss:bx + 10], ax
+        mov [ss:bx + 12], cx    ; (the word pushed)
+        pop es
+        pop cx
+        pop bx
+        pop ax
         iret
 
 ; NS_EFFECT_SPELL: AX the spell that put effect CL on thing AX (the game's table of active effects:

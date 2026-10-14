@@ -38,9 +38,16 @@ have the detail.
   kept out of the dice log so it isn't given away. A New content box, on by
   default.
 
+- **Buying back magical items:** a magical item sold to a merchant (a plus,
+  or a power: rings, wands, scrolls) stays in the merchant's stock to buy
+  back; the game destroys everything sold, and still does other items. An
+  Expanded features box, on by default.
+
 **Changed**
 - **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each
-  point after, to 40% at 25 (it was 5% at 16 to 25% from 20).
+  point after, to 40% at 25 (it was 5% at 16 to 25% from 20); shops pay half
+  an item's price when the party sells (the game paid all of it, which with
+  the discount let anything bought be sold at a profit).
 - **Fogbolt's icon is grey** (its cloud on Armor's grey tile, rather than
   Charm Person's purple).
 - **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the

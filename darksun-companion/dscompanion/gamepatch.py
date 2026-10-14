@@ -119,6 +119,8 @@ NS_IMAGE = NS_FIST + 1  # (an image taking a blow: Reflected Image's chance)
 # an effect's entry in the effects' table (its number times 6): Reflected Image's own name and icon
 # where Mirror Images is its (DSCLOG's NS_ENTRY): the Effects screen's, the Look box's, a portrait's
 NS_ENTRY_EF, NS_ENTRY_LOOK, NS_ENTRY_STATUS = NS_IMAGE + 1, NS_IMAGE + 2, NS_IMAGE + 3
+SELL_KEEP = NS_IMAGE + 4  # (a shop freeing an item sold: DSCLOG keeps a magical one, buyback.py)
+SELL_PRICE = NS_IMAGE + 5  # (what a shop pays: half with the CHA prices rule, prices.sell_price)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -259,6 +261,10 @@ PATCHES = (
     Patch("ns_entry_draw", 0x7EF34, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),
     Patch("ns_entry_look", 0x5FD1C, bytes.fromhex("6bdb06"), _site(NS_ENTRY_LOOK, 3)),
     Patch("ns_entry_status", 0x71DF5, bytes.fromhex("6bdb06"), _site(NS_ENTRY_STATUS, 3)),
+    # ... the shop's "push word [179Eh]" before freeing an item sold (a magical one kept: buyback.py) ...
+    Patch("sell_keep", 0x83D9E, bytes.fromhex("ff369e17"), _site(SELL_KEEP, 4)),
+    # ... and the price the shop pays (mov si,es:[bx+6]: half, with the CHA prices rule) ...
+    Patch("sell_price", 0x83CCA, bytes.fromhex("268b7706"), _site(SELL_PRICE, 4)),
     # ... the compares that tell a wizard's or priest's spell from the rest ...
     *(Patch(f"ns_cmp_{offset:x}", offset, bytes.fromhex(code), _site(NS_CMP + k, len(code) // 2))
       for k, (offset, code) in enumerate(NS_CMP_SITES)),

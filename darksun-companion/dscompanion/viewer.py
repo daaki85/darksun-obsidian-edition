@@ -348,7 +348,7 @@ class Viewer:
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
-        where = {"weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features,
+        where = {"weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features, "buyback": features,
                  "thief_table": thieves, "stealth": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
@@ -398,8 +398,10 @@ class Viewer:
                          "giving something and costing something (chosen on the creation panel's KIT "
                          "page)"),
                 ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
-                ("cha_prices", "The leader's CHA lowers what shops ask, as in Baldur's Gate: 5% off at CHA 16, "
-                               "10% at 17, 15% at 18, 20% at 19, 25% from 20 (selling as the game has it)"),
+                ("cha_prices", "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
+                               "point after, to 40% at 25; shops pay half an item's price"),
+                ("buyback", "Merchants keep the magical items the party sells them, to buy back at their price "
+                            "(the game destroys whatever is sold; other items still are)"),
                 ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
                                 "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "

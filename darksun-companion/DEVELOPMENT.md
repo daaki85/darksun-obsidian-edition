@@ -785,6 +785,33 @@ each was charged that.
 A bought item stays on the pointer until it is put down (the game's held item,
 `DS:17A0h`), and the shop takes no other click meanwhile.
 
+What a shop pays: `SELL_PRICE` (an `INT 98h` site, 83CCAh's `mov si,es:[bx+6]`,
+ES:BX the item sold; the price shown in its offer and paid, times the count
+for a stack) gives half, never below 1, with the same rule (`prices.sell_price`):
+at the best discount (40% off) nothing bought sells for more than it cost.
+
+### Buying back magical items
+
+([In the README](README.md#buying-back-magical-items).)
+
+The shop, once it has paid for the item sold, frees the thing holding it
+(`push word [179Eh]` / `call 0A0h:1C94h` at 83D9Eh; the routine frees nothing
+for 270Fh), and the item with it. `SELL_KEEP` (an `INT 98h` site over the push,
+`RULE_HI_BUYBACK`, the second rules word's 64: `game.RULE_BUYBACK`) looks at the
+thing's first item (things table, kind 1) and, for one with a plus (`+14h`
+above 0) or a power (`+0Fh`), pushes 270Fh in its place (the registers kept,
+the interrupt's frame moved down a word, the word under it) and queues the
+thing and the shop's merchant (`DS:179Ch`, the object whose item lists the
+shop's list is built from at 8347Ah) in the header (`SOLD_SEQ` +308 counted,
+`SOLD_Q` +310, four entries). The Ledger (`buyback.py`, every quarter of a
+second) puts each queued item first in the merchant's last item list (a new
+one if it has none; a backpack cell of its own), gives the thing back to the
+game's free list, and logs it; a merchant that isn't a person (none known)
+has the item freed as the game would. Bought back, it costs its price less
+the CHA discount, at least 60%, more than the half the shop paid. Checked with
+the emulator (both sites) and unit tests (the move); not yet in a shop in the
+game, for want of a save beside a merchant.
+
 ### Thief skills from AD&D's table
 
 ([In the README](README.md#thief-skills-from-adds-table).)

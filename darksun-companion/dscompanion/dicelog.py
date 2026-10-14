@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
+from . import buyback, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
 from .guestmem import GuestMemory
@@ -423,6 +423,7 @@ class DiceLog:
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
         self.defiler_scrolls = True
+        self.buyback = buyback.Buyback()  # (magical items sold, kept to buy back: the rule's DSCLOG part)
         self.text: Optional[TextBuffer] = None
         self.dialogue = Dialogue()
         self._dialogue: List[DialogueEntry] = []
@@ -995,6 +996,8 @@ class DiceLog:
             self._write_stats()
             if not self._party_check(now):
                 out += self.tracker.check(now)
+                if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
+                    out += self.buyback.watch(self.game, self.tsr_hdr)
                 if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
                     out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
                 out += self._arena_ring(now)
