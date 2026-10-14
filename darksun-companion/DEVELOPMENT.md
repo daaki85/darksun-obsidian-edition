@@ -1557,6 +1557,46 @@ until spells 199-201 and `seg_space`, when the helper no longer fitted in the
 block and loaded low), and the text buffer 4 KB,
 not 8, to make that room.
 
+### The in-game combat log: what the game allows (Stage 0)
+
+Findings for the planned combat log panel ([the design brief](docs/combat-log/HANDOFF.md)),
+measured with the patched game and the dice log running:
+
+- **Pages.** The game keeps a table of pages at `0980:0004` (DSUN.EXE
+  segments, less the load segment; the shadows read it): each page's memory
+  segment (`+4`; a child page, flag `40h` at `+C04h`, names its parent there),
+  its bounds (`+404h` x0, `+604h` y0, `+804h` x1, `+A04h` y1). Pages 0 and 1
+  are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others are
+  windows over them and buffers in the rest of video memory (`A7E8h`, a third
+  320 x 200; smaller ones to `AE55h`).
+- **The flip.** The routine at `0980:5814` (DSUN.EXE 14414h) shows one screen
+  or the other (the CRTC start address; `0980:118E` says which, 1 for `A400h`)
+  and swaps them for -1. It is called from 45 places, all in overlays, for
+  screens and windows: in five seconds of walking on the map the page shown
+  changed three times, on opening and closing windows.
+- **The map draws into the screen shown.** The view's floor, walls and
+  figures go straight into `A400h`, the screen on show (the shadows' `v_seg`
+  read live), a rectangle at a time as things move (`PROBE_REDRAW` 2475Fh,
+  `PROBE_REDRAW_ALL` 24B18h, the floor routines 2700Eh and 27162h). So there is
+  no last moment of a frame on the map: a panel over the view has to be drawn
+  again after each of those redraws that overlaps it (their way back, as
+  `FLOOR_POST` does for the floor), or the figures walking under it would
+  wipe it. How the game keeps its own status box on top through those redraws
+  is not yet known; it may clip the view's rectangles to the windows (the
+  child pages), which would be the cheapest way for a panel too.
+- **Keys.** On the map End and PgUp scroll the view (16 pixels down-left and
+  up-right: the numeric keypad's diagonals; PgDn and Home likely too, at the
+  map's edge here), so the brief's End, PgUp and PgDn are the game's. L did
+  nothing on the map.
+- **Font.** The game's text font is RESOURCE.GFF's FONT 100, 9 pixels high
+  with its shadow (`art.py`): a panel 67 pixels high holds a header and 6
+  lines.
+- **Memory.** With the helper loaded, `mem` in DOSBox (after QUIT) shows 632
+  KB of conventional memory free and **1 KB of upper memory**. The panel's
+  code and its lines have to come out of the helper's other room: the dice
+  log's ring (74 entries of 192 bytes) or the text buffer (4 KB), or the lines
+  kept in video memory past the game's buffers.
+
 ### The kit's byte
 
 Sheet `+43h`: zero in every sheet of the saves and saved characters at hand
