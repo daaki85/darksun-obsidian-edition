@@ -52,7 +52,10 @@ have the detail.
 - **Templar's Ledger is now the Dark Sun Obsidian Edition Loader** (the
   Loader for short): the window's banner and title, the crash message in the
   game, and every page of the docs, which now call it what starts the game
-  with the mod rather than a companion window. Its settings, named saves and crash
+  with the mod rather than a companion window.
+- **The folder is `obsidian-edition` and the Python package `dsloader`**
+  (they were `darksun-companion` and `dscompanion`): `python -m dsloader`
+  runs the command line, and the tests workflow is `tests.yml`. Its settings, named saves and crash
   reports stay where they were.
 - **More kits that can't go together:** the Grove Warden can't dual to
   gladiator, nor a gladiator who duals to druid take it (its AC would add to
@@ -884,8 +887,8 @@ have the detail.
 
 **Documentation**
 - **Item icons** in every item table of the guide.
-- **[Every magic item](darksun-companion/README.md#every-magic-item)** and
-  **[Every mundane weapon](darksun-companion/README.md#every-mundane-weapon):**
+- **[Every magic item](obsidian-edition/README.md#every-magic-item)** and
+  **[Every mundane weapon](obsidian-edition/README.md#every-mundane-weapon):**
   each item, the game's and the Ledger's, with its bonus or power and who
   sells or carries it; the magic weapons of each weapon type for weapon
   specialization.
@@ -1111,7 +1114,7 @@ have the detail.
 - **The README is shorter** (2,974 lines to about 2,300): how each part works
   (the helper's interrupts, the game's offsets and flags), how the dice log
   works, what's known of the game's data and the development notes are in a
-  new `darksun-companion/DEVELOPMENT.md`, each README section linking to its
+  new `obsidian-edition/DEVELOPMENT.md`, each README section linking to its
   part; "What it does" is a short overview; the thieves' skills and backstabs,
   and the saving throws, are each one section with their rule changes, and the
   two-weapon rule sits with the dice log's two weapons; the new items are one
