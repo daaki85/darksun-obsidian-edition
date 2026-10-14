@@ -11,6 +11,11 @@ have the detail.
 ## Pull request #44 (in progress)
 
 **Added**
+- **A combat log in the game.** In a fight, a panel over the map's lower
+  right shows the dice log's lines as they come, in the game's font and the
+  Ledger's colours, with the round and who acts next above them; at the
+  least, in short (the default) or in detail. An Options switch, off by
+  default. (Scrolling it back comes next.)
 - **Saves under their names.** The Ledger keeps a second copy of every save in
   its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before
   Scar's battle.SAV`), and the Options tab's new **Saves** section opens the

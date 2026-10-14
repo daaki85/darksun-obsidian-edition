@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, dicelog, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -329,6 +329,16 @@ class Viewer:
                             (dicelog.POPUP_DETAIL, "... in detail, as in the log (MORE shows the next lines)")):
             ttk.Radiobutton(in_game, text=text, value=value, variable=self.popup_level,
                             command=self._popups_changed).pack(anchor="w", padx=(20, 0))
+        # the combat log's panel over the map in a fight (combatlog.py), at a level of its own
+        self.combat_log = tk.BooleanVar(value=bool(settings.get("combat_log", False)))
+        ttk.Checkbutton(in_game, text="Show a combat log in the game, bottom right, in a fight",
+                        variable=self.combat_log, command=self._popups_changed).pack(anchor="w", pady=(4, 0))
+        self.combat_log_level = tk.StringVar(value=dicelog.combat_log_level(settings))
+        for value, text in ((dicelog.POPUP_MINIMAL, "... at the least: what came of each attack and spell"),
+                            (dicelog.POPUP_SHORT, "... in short: each roll, what it needed and the damage"),
+                            (dicelog.POPUP_DETAIL, "... in detail, as in the log")):
+            ttk.Radiobutton(in_game, text=text, value=value, variable=self.combat_log_level,
+                            command=self._popups_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
@@ -580,9 +590,10 @@ class Viewer:
                     self.show_gear, self.show_shadows, self.show_dust, self.use_targeting, self.scroll_map,
                     self.effects_kept):
             var.set(True)
-        for var in (self.popups, self.scroll_right):
+        for var in (self.popups, self.scroll_right, self.combat_log):
             var.set(False)
         self.popup_level.set(dicelog.popup_level({}))
+        self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self._popups_changed()
@@ -922,6 +933,9 @@ class Viewer:
                 self.dice.pickpockets = self.pickpockets.get()
                 self.dice.show_gear = self.show_gear.get()
                 self.dice.show_shadows = self.show_shadows.get()
+                self.dice.combat_log = self.combat_log.get()
+                self.dice.combat_log_level = self.combat_log_level.get()
+                self.dice.game_dir = launch.find_game_dir()
                 self.dice.show_dust = self.show_dust.get()
                 self.dice.elf_looks = self.elf_looks.get()
                 self.dice.cilla_elf = self.cilla_elf.get()
@@ -1019,6 +1033,8 @@ class Viewer:
         settings["turn_popups"] = on
         settings["turn_popups_level"] = self.popup_level.get()
         settings["monster_info"] = self.monster_info.get()
+        settings["combat_log"] = self.combat_log.get()
+        settings["combat_log_level"] = self.combat_log_level.get()
         settings["pickpockets"] = self.pickpockets.get()
         settings["show_gear"] = self.show_gear.get()
         settings["shadows"] = self.show_shadows.get()
@@ -1046,6 +1062,8 @@ class Viewer:
             self.dice.show_gear = self.show_gear.get()
             self.dice.show_shadows = self.show_shadows.get()
             self.dice.show_dust = self.show_dust.get()
+            self.dice.combat_log = self.combat_log.get()
+            self.dice.combat_log_level = self.combat_log_level.get()
             self.dice.ring_mode = self.ring_mode.get()
             self.dice.use_targeting = self.use_targeting.get()
             self.dice.scroll_map = self.scroll_map.get()
@@ -1205,13 +1223,7 @@ class Viewer:
     def _append_dice(self, lines: List[str]) -> None:
         names = self._log_names() if lines else []
         for line in lines:
-            tag = ("round" if line.startswith(("Round ", "Initiative: ")) else
-                   "turn" if line.endswith("'s turn") else
-                   "save" if "'s saving throw vs " in line or " magic resistance " in line else
-                   "hit" if "-> HIT" in line else
-                   "miss" if "-> miss" in line else
-                   "detail" if line.startswith("    ") else
-                   "damage" if line.startswith("  ") or " damage: " in line else "other")
+            tag = combatlog.line_kind(line)
             self.dice_text.insert("end", line + "\n", tag)
             self._colour_names(line, names)
         excess = int(self.dice_text.index("end-1c").split(".")[0]) - MAX_LOG_LINES

@@ -14016,9 +14016,9 @@ view_again:
 ; without it. The game's windows over the map (a figure's menu, a question) are shown on the other
 ; screen, the view drawn there again without the panel: it is back when they close.
 PANEL_X0   equ 136              ; (x0 and the width a multiple of 4: whole bytes of the planes)
-PANEL_Y0   equ 128
+PANEL_Y0   equ 120
 PANEL_W    equ 180
-PANEL_H    equ 68
+PANEL_H    equ 78
 PANEL_BYTES equ PANEL_W * PANEL_H
 SHOWN_PAGE equ 0x118E           ; (in the page routines' segment, PAGES_SEG) 1: A400h shown
 panel_shown db 0

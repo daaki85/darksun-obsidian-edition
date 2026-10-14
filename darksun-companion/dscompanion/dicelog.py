@@ -172,6 +172,7 @@ ITEM_ARMOUR = 0x8000  # (in the entry's extra, with the item)
 KIND_SCRIPT = 5  # DSCLOG's scripts' random command (PROBE_SCRIPT_RAND): raw = result | N << 8
 # How much each turn's pop-up in the game says (the Options' turn_popups_level)
 POPUP_DETAIL, POPUP_SHORT, POPUP_MINIMAL = "detail", "short", "minimal"
+FIGHT_LINES_AFTER = 5.0  # seconds after a fight its lines still go into the combat log's panel (XP, the last kill)
 POPUP_LEVELS = (POPUP_MINIMAL, POPUP_SHORT, POPUP_DETAIL)
 # a spell's result in the log, for the least of them: "  Slig takes 9 from Fireball, now 9/18 HP"
 REGENERATES = 20  # CON from which a creature regains a hit point now and then by itself
@@ -184,6 +185,19 @@ def popup_level(settings: dict) -> str:
     if level in POPUP_LEVELS:
         return level
     return POPUP_DETAIL if settings.get("turn_popups_detail", True) else POPUP_SHORT
+
+def combat_log_level(settings: dict) -> str:
+    """The combat log panel's level as saved: in short unless chosen."""
+    level = settings.get("combat_log_level")
+    return level if level in POPUP_LEVELS else POPUP_SHORT
+
+
+def _game_font(game_dir: Optional[str]):
+    """The game's font (art.Font) from its folder, or None."""
+    from . import art, launch
+    folder = launch.find_game_dir(game_dir)
+    return art.GameArt(folder).font if folder else None
+
 
 THIEF = 17  # class number
 
@@ -353,6 +367,11 @@ class DiceLog:
         self._shadows = shadows.Shadows()
         self.combat_log = False  # the combat log's panel in the game, in a fight (combatlog.py)
         self._panel = combatlog.Panel()
+        self.combat_log_level = POPUP_SHORT  # ... its lines in short, in detail or the results only
+        self._fight_at: Optional[float] = None  # ... when a fight was last seen (its last lines go in too)
+        self._fight_monsters: set = set()  # ... the monsters' names in it (their colour)
+        self._font_tried = False  # ... the game's font looked for (none: the panel without lines)
+        self.game_dir: Optional[str] = None  # the game's folder (its font)
         self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
         self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
         self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
@@ -617,6 +636,8 @@ class DiceLog:
         self.show_gear = bool(settings.get("show_gear", True))
         self.show_shadows = bool(settings.get("shadows", True))
         self.combat_log = bool(settings.get("combat_log", False))
+        self.combat_log_level = combat_log_level(settings)
+        self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
         self.elf_looks = settings.get("elf_looks", True) is not False
@@ -1027,6 +1048,8 @@ class DiceLog:
             if now - self._tries_at > CREATION_TUMBLE:
                 out.append(f"({self.missed} rolls came too fast to record)")
             self.missed = 0
+        if self.combat_log and out:
+            self._panel_lines(out, now)
         return out
 
     def _arena_ring(self, now: float) -> List[str]:
@@ -1085,8 +1108,7 @@ class DiceLog:
         try:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
                                  needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log)
-            self._panel.update(self.game, self.tsr_hdr, self.combat_log and self.game.in_combat(),
-                               self._shadows.palettes)
+            self._update_panel(now)
             foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
@@ -1095,6 +1117,44 @@ class DiceLog:
         except (struct.error, IndexError, ValueError):
             return []
         return out
+
+    def _panel_lines(self, lines: List[str], now: float) -> None:
+        """A fight's lines into the combat log's panel (and those just after it: XP, the last kill)."""
+        try:
+            if self.game is not None and self.game.in_combat():
+                if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
+                    self._fight_monsters = set()  # (a new fight)
+                self._fight_at = now
+        except (struct.error, IndexError, ValueError):
+            pass
+        if self._fight_at is not None and now - self._fight_at <= FIGHT_LINES_AFTER:
+            self._panel.log.add(lines)
+
+    def _update_panel(self, now: float) -> None:
+        """The combat log's panel: on in a fight, with the fight's lines so far, who acts and
+        who is next."""
+        fighting = self.combat_log and self.game.in_combat()
+        if fighting:
+            if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
+                self._fight_monsters = set()  # (a new fight)
+            self._fight_at = now
+        top, names = "", {}
+        if fighting:
+            if not self._font_tried:
+                self._font_tried = True
+                self._panel.font = _game_font(self.game_dir)
+            self._panel.level = self.combat_log_level
+            for n in range(game.PARTY_SIZE):
+                name = self.game.creature_name(n)
+                if name and not name.startswith("creature "):
+                    names.setdefault(name, f"member{n}")
+            for index in set(self.game.combatants().values()):
+                name = self.game.creature_name(index)
+                if index >= game.PARTY_SIZE and name and not name.startswith("creature "):
+                    self._fight_monsters.add(name)
+            names.update({m: "monster" for m in self._fight_monsters if m not in names})
+            top = combatlog.header(self.round_status())
+        self._panel.update(self.game, self.tsr_hdr, fighting, self._shadows.palettes, top, names)
 
     def _learn_lines(self) -> List[str]:
         """A preserver's tries at a scroll's spell since the last look (the rule for INT's chance:

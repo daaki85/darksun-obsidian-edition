@@ -1209,6 +1209,25 @@ and a window of ours there would let the script go on before the fight ends.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#each-turns-rolls).
 
+### The combat log in the game
+
+With **Show a combat log in the game, bottom right, in a fight** ticked on the
+Options tab (off unless you tick it), a panel over the map's lower right shows
+the fight as it goes: the dice log's lines in the game's own font, in the
+Ledger's colours for each kind of line (hits green, misses grey, damage amber,
+saving throws blue), the party's names in their colours and the monsters' in
+red, a filled pip before a party member's line and a hollow one before a
+monster's. Its top line says the round, who is acting and who is still to
+(`Round 2: Gerakis, then Cermak, Cilla`). Below the switch, pick how much it
+says: **at the least** (`Rampager hits Defiler for 4`), **in short**, the
+default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
+`Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
+the log. The panel is on only in fights, doesn't wait for a click as the
+turn's window does, and goes when the fight ends (or the Ledger is closed). A
+window the game opens over the map (a character's menu, a question) hides it
+until it closes. It needs the game started from the Ledger (which turns off
+DOSBox's EMS to make room for it).
+
 ### What hurts a monster (the Look box)
 
 In a fight, Look at a monster (right-click until the cursor is the Look icon,

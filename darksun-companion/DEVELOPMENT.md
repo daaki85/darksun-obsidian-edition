@@ -1610,10 +1610,10 @@ measured with the patched game and the dice log running:
   the pens, opened a conversation and a shop, and played the arena's opening
   fight to the end without a fault (a check, not a whole game).
 
-### The in-game combat log: the panel (Stage 1)
+### The in-game combat log: the panel (Stages 1 and 2)
 
 - **Where it lives.** The Ledger draws the panel's picture (`combatlog.py`:
-  180 × 68 palette indices in the area's own colours, matched to the palette
+  180 × 78 palette indices in the area's own colours, matched to the palette
   DSCLOG last read) into an upper memory block DSCLOG takes for it at install
   (`panel_seg`, header `+328`); the dice log's ring has a block of its own
   there too. With EMS on there is no such block and no panel.
@@ -1631,6 +1631,17 @@ measured with the patched game and the dice log running:
   it, and is back when the window closes. Full screens (USE, View Character)
   stop the main loop, so it isn't drawn over them. (Drawing it into both
   screens doesn't work: the game keeps other pictures in the one not shown.)
+- **The lines (Stage 2).** The Ledger keeps the fight's dice log lines
+  (`combatlog.Log`, the last 200, from the moment it sees a fight to 5 seconds
+  after) and draws them into the picture: a header line (`round_status`: the
+  round, who is acting, who is next), then the last 6 rows of the well. Each
+  line's level (`shorten`) is worked out from the log's own wording (the
+  attack, save, magic resistance, damage and d100 patterns), an attack's
+  damage put on its line; its kind (`line_kind`, the Ledger's colours) from
+  the full line; whose line from the name it starts with (a filled pip for
+  the party, hollow for a monster). The game's font comes from RESOURCE.GFF
+  (`art.Font`); without it the panel has no lines. A new picture is written
+  only when something in it changes.
 - **Not checked mid-fight:** saving and loading, and area changes, as the
   game allows neither in a fight; out of one the panel is off. DOSBox's
   window size doesn't matter (it is drawn into the game's screen).
