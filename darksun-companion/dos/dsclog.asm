@@ -173,7 +173,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the companion via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGvY'          ; +0
+sig      db 'DSCLOGvZ'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12

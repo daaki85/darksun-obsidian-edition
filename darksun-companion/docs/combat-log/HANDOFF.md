@@ -4,7 +4,9 @@
 (`1-in-game-concept.png`, `2-panel-states.png`, `3-line-types-and-behaviour.png`) were shared
 as screenshots in the conversation and are not in this folder yet.*
 
-**Status:** design only. Nothing in this brief is built, and nothing here has been run against the game. The repo was read at HEAD `9a78f62` without `DSUN.EXE`, DOSBox or a way to play, so every claim about the game's internals below is either quoted from `DEVELOPMENT.md` / `dsclog.asm` or marked **unverified**.
+**Status (built):** Stages 0 to 5 are in (the panel, its lines, scrolling, the sizes, level chip, filters and L); see DEVELOPMENT.md, "The in-game combat log", for what was built and how it differs (the header reads "Round 2: Gerakis, then Cermak", the panel is 78 rows docked, and End, PgUp and PgDn stay the game's). Not built: keeping the panel up under game windows, and clicking a name to centre the view.
+
+**Status when written:** design only. Nothing in this brief was built then, and nothing here has been run against the game. The repo was read at HEAD `9a78f62` without `DSUN.EXE`, DOSBox or a way to play, so every claim about the game's internals below is either quoted from `DEVELOPMENT.md` / `dsclog.asm` or marked **unverified**.
 
 **The ask:** put the Ledger's dice log on screen in the game itself, as a docked panel that scrolls, like the combat log in Baldur's Gate: Enhanced Edition. Today the log lives only in the Templar's Ledger window, and the in-game option ("Show each turn's rolls in the game") is a blocking dialogue box at the end of each turn.
 

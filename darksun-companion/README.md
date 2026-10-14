@@ -36,6 +36,7 @@ game.
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
   - [Each turn's rolls](#each-turns-rolls)
+  - [The combat log in the game](#the-combat-log-in-the-game)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
   - [No manual check](#no-manual-check)
@@ -1225,7 +1226,10 @@ default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
 the log. The panel is on only in fights, doesn't wait for a click as the
 turn's window does, and goes when the fight ends (or the Ledger is closed). A
 window the game opens over the map (a character's menu, a question) hides it
-until it closes.
+until it closes. It needs the game started from the Ledger (which turns off
+DOSBox's EMS to make room for it).
+
+![The combat log in the arena, in short](docs/combat-log.png)
 
 It scrolls back over the fight (the last 200 lines): drag the scrollbar's
 handle, click the bar above or below it for a page, or turn the mouse wheel
@@ -1241,8 +1245,9 @@ and **+** to make it smaller or bigger. Collapsed, it is one line, the newest;
 expanded, it is taller (11 lines) and has filters along its top: **All**,
 **Party** (the party's lines), **Damage** (hits, damage and deaths) and
 **Saves** (saving throws and magic resistance). **L** on the map collapses it
-and opens it again. Its size is remembered. It needs the game started from the Ledger (which turns off
-DOSBox's EMS to make room for it).
+and opens it again. Its size is remembered.
+
+![The combat log expanded, with its filters](docs/combat-log-expanded.png)
 
 ### What hurts a monster (the Look box)
 

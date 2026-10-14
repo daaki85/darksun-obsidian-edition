@@ -40,6 +40,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
 - **[New]** Optionally, the game pauses after each turn in a fight to show that turn's rolls in its own dialogue window.
+- **[New]** Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Ledger's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds it away.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
 - **[New]** The Effects screen lists your kits and weapon specializations.
 
