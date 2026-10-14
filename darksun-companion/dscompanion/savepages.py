@@ -6,7 +6,7 @@ for PgUp and PgDn or a click on PAGE 1 to PAGE 4.
 The buttons are the game's kind: a button (BUTN) placed in the window, under EXIT, and its four
 pictures (ICON: as it is, the pointer over it, out of use, pressed) made from EXIT's, its letters
 taken away and the page's put in, in the game's text font (FONT 100: the buttons' own carved
-letters have no P, G or digits) and in EXIT's letters' colours. They go in the Ledger's copy of
+letters have no P, G or digits) and in EXIT's letters' colours. They go in the Loader's copy of
 RESOURCE.GFF (icons.write_resources); the page shown is out of use (DSCLOG).
 """
 
@@ -92,7 +92,7 @@ def window_with_buttons(window: bytes) -> bytes:
 
 
 def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of RESOURCE.GFF: the window with the buttons, and theirs."""
+    """For the Loader's copy of RESOURCE.GFF: the window with the buttons, and theirs."""
     font = Font(resource[("FONT", FONT_ID)])
     exit_icon, exit_button = resource[("ICON", EXIT)], resource[("BUTN", EXIT)]
     added = {("WIND", WINDOW): window_with_buttons(resource[("WIND", WINDOW)])}

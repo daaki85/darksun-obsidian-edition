@@ -169,7 +169,7 @@ def panel_windows(classes: Sequence[int], rules: int, kit: int = 0) -> Tuple[int
 
 
 def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of RESOURCE.GFF: the kit pages, the windows with KITS for their
+    """For the Loader's copy of RESOURCE.GFF: the kit pages, the windows with KITS for their
     button, and their rows' and buttons' pictures and buttons."""
     font = wp.glyphs(resource)
     for ch, art in DRAWN.items():

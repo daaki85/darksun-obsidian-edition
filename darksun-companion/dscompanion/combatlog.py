@@ -1,9 +1,9 @@
-"""The combat log's panel in the game (DSCLOG's PANEL), drawn and kept up by the Ledger.
+"""The combat log's panel in the game (DSCLOG's PANEL), drawn and kept up by the Loader.
 
-The Ledger draws the panel, a picture of PANEL_W x PANEL_H palette indices (render), and puts it
+The Loader draws the panel, a picture of PANEL_W x PANEL_H palette indices (render), and puts it
 in the memory block DSCLOG keeps for it (TSR_PANEL_SEG); DSCLOG puts the picture over the map,
 bottom right, from the game's main loop and after each rectangle of the view the game draws again
-(the map is drawn straight into the screen on show, a rectangle at a time). The Ledger turns it on
+(the map is drawn straight into the screen on show, a rectangle at a time). The Loader turns it on
 in a fight (TSR_PANEL_ON) and off after, when DSCLOG has the view drawn again without it.
 
 The picture is in the area's own colours: the game's stone (palette.py) matched to the nearest of
@@ -14,7 +14,7 @@ mottled like the game's dialogue window, in darker shades.
 
 The lines are the dice log's own (DiceLog.lines), from the fight (Log): in detail all of them, in
 short a line for each attack, saving throw and spell's damage with its dice, at the least what came
-of them. They are in the game's font (art.Font), in the Ledger's colours for their kind
+of them. They are in the game's font (art.Font), in the Loader's colours for their kind
 (palette.LOG_COLOURS) with the names in the party's and the monsters' colours, a filled pip before
 a party member's line and a hollow one before a monster's, long lines wrapped with a hanging
 indent. Above them the round, who is acting and who is next. See docs/combat-log/HANDOFF.md.
@@ -79,7 +79,7 @@ class Line(NamedTuple):
 
 
 def line_kind(line: str) -> str:
-    """A dice log line's kind, for its colour (as the Ledger's log shows it)."""
+    """A dice log line's kind, for its colour (as the Loader's log shows it)."""
     return ("round" if line.startswith(("Round ", "Initiative: ")) else
             "turn" if line.endswith("'s turn") else
             "save" if "'s saving throw vs " in line or " magic resistance " in line else

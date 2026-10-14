@@ -1,4 +1,4 @@
-"""The elves' ears and the half-elves' own figures (figures.py), and the Ledger's pictures with them
+"""The elves' ears and the half-elves' own figures (figures.py), and the Loader's pictures with them
 (sprites.Pictures). With DSUN_OBJECTS (the game's SEGOBJEX.GFF, its GPLDATA.GFF beside it), each
 party figure built from the game's own pictures."""
 

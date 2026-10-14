@@ -2,7 +2,7 @@
 
 *A Dark Sun: Shattered Lands mod · Current version 2.2.1 · Every change from the original game*
 
-Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. Its companion window, Templar's Ledger, runs beside the game and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
+Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. Its companion window, the Loader, runs beside the game and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
@@ -10,7 +10,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Contents
 
-- [Templar's Ledger](#templars-ledger)
+- [The Loader](#the-loader)
 - [In the Game's Screens](#in-the-games-screens)
 - [Combat](#combat)
 - [Classes and Kits](#classes-and-kits)
@@ -22,7 +22,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - [Quality of Life](#quality-of-life)
 - [Bug Fixes](#bug-fixes)
 
-## Templar's Ledger
+## The Loader
 
 - **[New]** A companion window that starts the game and runs beside it, laid out in the game's own colours.
 - **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
@@ -31,7 +31,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
 - **[New]** **Options:** every rule change and addition below has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
 
-> *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Ledger started as a way to see those numbers. Once we could see them, we started fixing them.*
+> *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 
 ## In the Game's Screens
 
@@ -39,7 +39,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
-- **[New]** Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Ledger's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds it away.
+- **[New]** Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds it away.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
 - **[New]** The Effects screen lists your kits and weapon specializations.
 
@@ -194,10 +194,10 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse.
 - **[New]** Press the mouse wheel and drag to scroll the map.
-- **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Ledger's, and 29 stored characters *(was 19)*.
+- **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written.
-- **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Ledger.
+- **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
 
 ## Bug Fixes

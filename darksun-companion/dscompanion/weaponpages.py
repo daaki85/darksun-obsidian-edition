@@ -11,7 +11,7 @@ VIEW SPHERES or VIEW PSIONICS.
 The rows' and buttons' pictures (ICON, three frames: as they are, out of use, marked) are made in
 the game's small carved letters, taken from its own rows (CLERIC, P-KINESIS and the rest); the
 game has no X or Q in them, so those two are drawn here in the same hand. They go in the
-Ledger's copy of RESOURCE.GFF (icons.write_resources), with the buttons (BUTN, copies of the
+Loader's copy of RESOURCE.GFF (icons.write_resources), with the buttons (BUTN, copies of the
 spheres') and the windows.
 """
 
@@ -202,9 +202,9 @@ def page_text(kind: int) -> str:
 
 
 def chunks(resource: gff.Chunks, objects: Optional[gff.Chunks] = None) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of RESOURCE.GFF: the weapon pages, the warriors' windows, and their
+    """For the Loader's copy of RESOURCE.GFF: the weapon pages, the warriors' windows, and their
     rows' and buttons' pictures and buttons; and the level-up window (its weapons' pictures from
-    OBJECTS, SEGOBJEX.GFF's chunks with the Ledger's own items)."""
+    OBJECTS, SEGOBJEX.GFF's chunks with the Loader's own items)."""
     font = glyphs(resource)
     row_colours = _colours(resource[("ICON", ROW_TEMPLATE)])
     toggle_colours = _colours(resource[("ICON", TOGGLE_TEMPLATE)])

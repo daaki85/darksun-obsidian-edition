@@ -2,11 +2,11 @@
 
 Every thief starts a new game with a set (in the backpack's first free cell): while the game
 is new (its first hour, in the arena where every game starts), any thief in the party without
-one gets one. Later on, a thief the Ledger hasn't seen before (an older game, someone who
+one gets one. Later on, a thief the Loader hasn't seen before (an older game, someone who
 joins) gets a set once. Picked up on
 the inventory screen and taken back to the game, the pointer carries them; clicked on someone,
 the patched game's routine for using an item on something (DSCLOG's PROBE_USE_ITEM) has the
-Ledger try that person's pockets with the leader's hand (pickpocket.py), and shows what came
+Loader try that person's pockets with the leader's hand (pickpocket.py), and shows what came
 of it. The item is a small one of the game's "misc" type. Its name, "Thieves' Tools", is the
 second of the entries DSCLOG adds after the game's own (names.py); the tools are told apart by
 that name, their picture and their type together.
@@ -90,8 +90,8 @@ def held_tools(gd: GameData, it: ring.Items) -> bool:
 
 def give_tools(gd: GameData, given: set, now: bool = False, session: Optional[set] = None) -> List[str]:
     """A set of tools for each thief in the party that should have one: in a new game (or
-    NOW, the Ledger's button), each without a set, but in a new game only once while the
-    Ledger runs (SESSION: whom); later, each not given one before (GIVEN: whom). Both are
+    NOW, the Loader's button), each without a set, but in a new game only once while the
+    Loader runs (SESSION: whom); later, each not given one before (GIVEN: whom). Both are
     updated."""
     fresh = now or new_game(gd)
     session = set() if session is None else session

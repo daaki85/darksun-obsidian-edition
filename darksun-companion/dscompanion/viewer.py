@@ -1,4 +1,4 @@
-"""Templar's Ledger's window (tkinter), in the colours of the game's own screens.
+"""The Loader's window (tkinter), in the colours of the game's own screens.
 
 Left: the party, a card for each character (partyview.py) and every field the
 layout maps in a table. For Shattered Lands the party is found automatically;
@@ -92,7 +92,7 @@ class Viewer:
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
         ttk.Button(top, text="Reconnect", command=self.reconnect).pack(side="right")
-        # for when the Ledger was opened on its own: start the game (with the dice log) from here
+        # for when the Loader was opened on its own: start the game (with the dice log) from here
         self.start_button = ttk.Button(top, text="Start the game", command=self.start_game)
         self.start_button.pack(side="left")
         # text size, also Ctrl + / Ctrl - / Ctrl 0
@@ -293,7 +293,7 @@ class Viewer:
         self._apply_layout()
 
     def _build_options(self, tabs: ttk.Notebook) -> None:
-        """The Options tab: what the Ledger shows, changes and adds in the game."""
+        """The Options tab: what the Loader shows, changes and adds in the game."""
         # it scrolls, for a window too small (or text too large) to show it all
         area = theme.ScrollArea(tabs, padding=6)
         tabs.add(area, text="Options", underline=0)
@@ -311,7 +311,7 @@ class Viewer:
             self.sections[key] = part
             return part.body
 
-        note = ttk.Label(options, text="Everything here applies in games started from the Ledger. A switch that "
+        note = ttk.Label(options, text="Everything here applies in games started from the Loader. A switch that "
                          "says \"from the next start\" waits until the game is started again.", wraplength=460)
         note.pack(anchor="w", pady=(0, 8))
         options.bind("<Configure>", lambda e: note.configure(wraplength=max(200, e.width - 60)), add="+")
@@ -502,7 +502,7 @@ class Viewer:
                             command=self._speed_chosen).pack(anchor="w")
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
-        about = ttk.Label(kept, text="Every save is copied, as the game writes it, into the Ledger's \"Named "
+        about = ttk.Label(kept, text="Every save is copied, as the game writes it, into the Loader's \"Named "
                           "saves\" folder under the name it has in the game (\"Page 2 slot 05 - Before Scar's "
                           "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
         about.pack(anchor="w")
@@ -516,7 +516,7 @@ class Viewer:
     def _saves_game_dir(self) -> Optional[str]:
         game_dir = self._game_dir or launch.find_game_dir()
         if game_dir is None:
-            messagebox.showinfo("Saves", "The Ledger hasn't found the game yet: start it once from the Ledger.",
+            messagebox.showinfo("Saves", "The Loader hasn't found the game yet: start it once from the Loader.",
                                 parent=self.root)
         return game_dir
 
@@ -674,7 +674,7 @@ class Viewer:
 
     def start_game(self) -> None:
         """Start Shattered Lands with the dice log, as "Start Game with Dice Log.bat" does; the
-        Ledger attaches to it once DOSBox is up. The game folder is the remembered one, or asked
+        Loader attaches to it once DOSBox is up. The game folder is the remembered one, or asked
         for (and then remembered)."""
         if self.guest or (self.dosbox and self.dosbox.poll() is None):
             return
@@ -1412,7 +1412,7 @@ class Viewer:
 
 
 def run(layout: Layout, connect: Callable[[], GuestMemory], dosbox=None, game_dir: Optional[str] = None) -> None:
-    """The Ledger's window; DOSBOX, if given, is the game started for it (from GAME_DIR), whose
+    """The Loader's window; DOSBOX, if given, is the game started for it (from GAME_DIR), whose
     closing is told in the log as if started from the window."""
     root = tk.Tk()
     viewer = Viewer(root, layout, connect)

@@ -9,10 +9,10 @@ that ("I'll see you in the holding pens", script 5). Each way he walks out throu
 entrance to the pens and a script takes him off the map, and nothing in the pens ever brings him
 back.
 
-The Ledger changes only the way after the fight: script 2 sends him walking out and, when he gets
+The Loader changes only the way after the fight: script 2 sends him walking out and, when he gets
 there, runs script 5 at EXIT, which takes him off the map (5Eh to region 255); nothing else runs
-that command. There, the Ledger's copy first sets its flag LEFT. A Semyon killed (in that fight,
-or anywhere) the Ledger marks with its flag DIED (watch), and he is never put in the pens then.
+that command. There, the Loader's copy first sets its flag LEFT. A Semyon killed (in that fight,
+or anywhere) the Loader marks with its flag DIED (watch), and he is never put in the pens then.
 The pens' master script (MAS 41) then puts him in his pen the way the
 arena's script first put him on the map (25h: an object made at a place, as script 5 does when
 he is untied): once LEFT is set, the first time the party is in the pens after it he is in the
@@ -48,7 +48,7 @@ CLEARED = 775  # (the companion's) Kalzith and he taken off the map after the es
 GONE_AT = (255, 20, 20, 1)  # where the game puts the pens' people then (region 255: none)
 # His object is the arena's: on the party's side (as when he fights beside them), and with 0 where
 # every slave of the pens has 12 (the creature's byte 1Bh; the arena's Tied-up Prisoner has 0 too).
-# In his pen (PLACED: put there by the Ledger) he is as the slaves are (as the game's scripts set
+# In his pen (PLACED: put there by the Loader) he is as the slaves are (as the game's scripts set
 # anyone's, 40h: an object's field), on their side (SIDE: 1 the party's, 2 against it, 4 neither)
 # and with their 12 (STEADY), once (SETTLED; also for one put in his pen before). Attacked, he is then as any of them is.
 SET_FIELD, SIDE, NEUTRAL, STEADY, SLAVES_STEADY = 0x40, 74, 4, 70, 12

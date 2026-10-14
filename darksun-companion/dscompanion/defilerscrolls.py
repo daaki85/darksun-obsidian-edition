@@ -2,7 +2,7 @@
 
 The game puts all a creature carries in a pile where it falls, in the same step as its hit points
 reach 0 (seen in the arena's opening fight: the Defiler's lists emptied and its things on the
-ground before the Ledger's next look), so a scroll can't be added at the death itself. Instead,
+ground before the Loader's next look), so a scroll can't be added at the death itself. Instead,
 each defiler (a creature whose sheet has the defiler's class, 18: Balkazar, Wyrmias, the Troop
 Leader, the arena's Defiler, the Dark Spiders...) is rolled for once in each fight it is seen in,
 alive: d100, CHANCE or less and it carries a scroll of a random preserver spell, which the game

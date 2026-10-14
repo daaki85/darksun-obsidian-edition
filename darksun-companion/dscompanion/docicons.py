@@ -1,6 +1,6 @@
 """The items' icons for the guide's tables (README.md), drawn from the game's data as the game
 shows them: `python -m dscompanion.docicons GAME_FOLDER` writes docs/items/*.png from the
-Ledger's copy of SEGOBJEX.GFF (dos/, with its icons: start the game from the Ledger once) and
+Loader's copy of SEGOBJEX.GFF (dos/, with its icons: start the game from the Loader once) and
 the game's palette (its GPLDATA.GFF), each picture twice its size, the rest transparent.
 
 ICONS: each image's name and the object whose picture it is (an item's +0, negated)."""
@@ -17,7 +17,7 @@ ZOOM = 2
 LEDGER = {name: number for name, _, number, _, _ in icons.ICONS}
 
 ICONS: Dict[str, int] = {
-    # the Ledger's (icons.py)
+    # the Loader's (icons.py)
     **{name.lower().replace("'", "").replace(" ", "-").replace("+", "plus"): number
        for name, number in LEDGER.items()},
     "bone-scale-arm-armor": 1034, "bone-scale-leg-armor": 1035, "thieves-tools": 1068,

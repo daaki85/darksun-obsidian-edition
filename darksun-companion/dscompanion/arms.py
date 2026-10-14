@@ -1,5 +1,5 @@
 """Two plain weapons made magic (the MAGIC_ARMS switch, on unless turned off), in the game's data
-(dataitems.py: the Ledger's copy of SEGOBJEX, written as the game is started).
+(dataitems.py: the Loader's copy of SEGOBJEX, written as the game is started).
 
 - The 2 handed Bone Gythka on the dead body lying by the stone arch in the arena, where every game
   starts: Kreenfang, a gythka +1. The body is the game's object 1204, "Dead Body" (an item whose
@@ -52,7 +52,7 @@ def shadowseeker(sword: bytes) -> bytes:
 
 
 def kreenfang_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of SEGOBJEX: the arena's dead body with its gythka Kreenfang."""
+    """For the Loader's copy of SEGOBJEX: the arena's dead body with its gythka Kreenfang."""
     key = ("RDFF", BODY)
     if key not in chunks:
         return {}

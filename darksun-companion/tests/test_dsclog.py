@@ -289,7 +289,7 @@ class StubTests(unittest.TestCase):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class UseItemTests(unittest.TestCase):
     """PROBE_USE_ITEM, where the game uses the item on the pointer on what's under it: on as the
-    compare and JNE it replaces would go, or, for the Ledger's thieving tools, to the routine's
+    compare and JNE it replaces would go, or, for the Loader's thieving tools, to the routine's
     end (DSUN.EXE: 7361Ah, 7361Dh and 7371Dh, less the address after the INT)."""
     NONE, SOME, DONE = 0x605, 0x608, 0x602 + 0x106
 
@@ -326,14 +326,14 @@ class UseItemTests(unittest.TestCase):
         self.run_use(0xFFFF, self.NONE)
 
     def test_not_ours(self):
-        """The Ledger is told what was used on what: the pointer's item 1, item 231 in the
+        """The Loader is told what was used on what: the pointer's item 1, item 231 in the
         segment the routine's "mov dx,<segment>" (3FEh past the INT) loads."""
         mu = self.mu
         mu.mem_write(GAME_DS * 16 + 0x17A0, struct.pack("<h", 1))
         mu.mem_write(CALLER * 16 + 0x602 + 0x3FE, struct.pack("<H", 0x9000))
         mu.mem_write(0x9000 * 16 + 1 * 10 + 0x44, struct.pack("<H", 231))
         self.run_use(300, self.SOME, on=0)
-        self.run_use(300, self.SOME)  # the Ledger says it's not its tools
+        self.run_use(300, self.SOME)  # the Loader says it's not its tools
         self.assertEqual(struct.unpack("<HH", mu.mem_read(self.hdr + 184, 2) + mu.mem_read(self.hdr + 188, 2)),
                          (300, 231))
 

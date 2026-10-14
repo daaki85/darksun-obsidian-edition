@@ -1,4 +1,4 @@
-# Runs Obsidian Edition's tests (the mod and Templar's Ledger) on Windows, where players run it.
+# Runs Obsidian Edition's tests (the mod and the Loader) on Windows, where players run it.
 name: Obsidian Edition tests
 
 on:

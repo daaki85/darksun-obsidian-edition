@@ -2,15 +2,15 @@
 
 The party are objects 300-313 (SEGOBJEX's OJFF chunks): object 300 + the figure picked at character
 creation (the creature's +18h). An object's word +0Ch names its walking picture (a BMP chunk), its
-combat picture the next chunk. In the Ledger's copy of SEGOBJEX (icons.write_objects) each of the
+combat picture the next chunk. In the Loader's copy of SEGOBJEX (icons.write_objects) each of the
 14 objects gets a pair of its own, SPRITE_BASE on: the game's own pictures with room round them
 (gear sticks out), each with room kept free after it in the file (not in its length).
 
 The game loads a picture from the file when it first needs it (DSUN.EXE 25FA6h), keeping it in a
 table of the pictures it has (PICTURE_TABLE: 16 bytes each, +0 the picture's number, +2 its
 length), and draws a figure's whole picture each time: so a picture's length is what drawing it
-costs, and the Ledger's are exactly as long as they need be. When a party member's worn items
-change, the Ledger writes their object's two pictures, dressed, over the old in its copy of the
+costs, and the Loader's are exactly as long as they need be. When a party member's worn items
+change, the Loader writes their object's two pictures, dressed, over the old in its copy of the
 file, with their new lengths in the file's index (where the game reads them each time it loads
 one), takes the old ones out of the game's table (their number changed to STALE: the game frees
 them itself, as any it no longer draws), and empties the member's slots on the map, so the game
@@ -22,7 +22,7 @@ draws everyone with it. So the copy also has a spare pair for each party place (
 14), each with room for any model: a member whose figure an earlier member already has is drawn in
 the spare pair of their place. Each thing on the map (the table at MAP_ENTRIES, one entry per
 combatant) names the picture it is drawn with (+18h, the walking one; its combat one is the next)
-and the slot in the game's table it is drawn from (+0Fh). The Ledger names the member's spare
+and the slot in the game's table it is drawn from (+0Fh). The Loader names the member's spare
 picture there and empties the slot, and the game loads the picture itself and draws them with it
 at once. The same puts right a save from before the copy, whose party still names the game's own
 pictures.
@@ -196,7 +196,7 @@ def _spare_model(chunks) -> Optional[int]:
 
 
 def new_chunks(chunks, looks: bool = True) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of SEGOBJEX: each party object's own pair of pictures (as the game's,
+    """For the Loader's copy of SEGOBJEX: each party object's own pair of pictures (as the game's,
     with room for gear), the object pointing at them; LOOKS as Pictures has it."""
     pics = Pictures(chunks, looks)
     out = {}
@@ -210,7 +210,7 @@ def new_chunks(chunks, looks: bool = True) -> Dict[Tuple[str, int], bytes]:
         struct.pack_into("<H", rec, OJFF_PICTURE, walk)
         out[("OJFF", obj)] = bytes(rec)
     spare_model = _spare_model(chunks)
-    if spare_model is not None:  # (no object of their own: the Ledger names them on the map)
+    if spare_model is not None:  # (no object of their own: the Loader names them on the map)
         for obj in SPARES:
             walk, fight = picture_ids(obj)
             out[("BMP ", walk)] = pics.build(obj, False, {}, (), spare_model)
@@ -254,7 +254,7 @@ def worn(gd: GameData, member: int) -> Tuple[Dict[str, Tuple[int, ...]], Tuple[i
 
 class Dresser:
     """Keeps the party's sprites in the running game dressed in what they wear: each outfit
-    written into the Ledger's copy of SEGOBJEX (COPY_FILE) at its own length, and the game made to
+    written into the Loader's copy of SEGOBJEX (COPY_FILE) at its own length, and the game made to
     load it from there."""
 
     def __init__(self, gd: GameData, objects_file: str, palette: List[Tuple[int, int, int]],
@@ -266,7 +266,7 @@ class Dresser:
         self.gd = gd
         self.copy_file = copy_file
         self.places: Dict[int, Tuple[int, int, int]] = {}  # picture: (index entry, offset, length)
-        self._stamp: Optional[Tuple[int, int]] = None  # the copy as the Ledger last saw it
+        self._stamp: Optional[Tuple[int, int]] = None  # the copy as the Loader last saw it
         self.shown: Dict[int, tuple] = {}  # object: the outfit its pictures in the copy show
         self.request_redraw: Optional[Callable[[], None]] = None  # has the view drawn again (DSCLOG)
         self._redraw_at: Optional[float] = None  # (once pictures loaded anew are in)

@@ -1,11 +1,11 @@
 """The cooked vulture: a meal at last.
 
 Hitting the arena's vulture knocks its feathers off (a plucked vulture), and the slave pens'
-campfire cooks it, but nothing in the game ever uses the cooked vulture. With the Ledger, Dinos
+campfire cooks it, but nothing in the game ever uses the cooked vulture. With the Loader, Dinos
 (the pens' fine cook) is asked about it in his talk while the party carries it ("We cooked the
 vulture from the arena.", pensasks.py): he takes it, shows them how to prepare it properly and
-they eat it together, with the sound of a quest done. His script sets the Ledger's flag MEAL, on
-which the Ledger gives each party member XP_REWARD XP and restores them as after a full rest (HP,
+they eat it together, with the sound of a quest done. His script sets the Loader's flag MEAL, on
+which the Loader gives each party member XP_REWARD XP and restores them as after a full rest (HP,
 PSP and spell slots), once (EATEN).
 
 Eaten by the party themselves (used on one of them, DSCLOG's PROBE_USE_ITEM), it is no use.
@@ -19,7 +19,7 @@ from .game import GameData
 
 COOKED_PICTURE, TYPE = 0xF5B4, 60  # the cooked vulture (object A4Ch); small things carried
 COOKED = 0xA4C  # (its object, as the campfire's script makes it)
-MEAL, EATEN = 780, 781  # (the Ledger's flags) set by Dinos's script; the reward given
+MEAL, EATEN = 780, 781  # (the Loader's flags) set by Dinos's script; the reward given
 OWN_NAME = 0x101  # the game's "Vulture"
 XP_REWARD = 100
 PENS, DINOS = 0x29, "Dinos"  # where he is (RGN29), and his name

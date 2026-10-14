@@ -1,5 +1,5 @@
 """Half-elves' own colours on the map: the game draws a half-elf with the human's pictures (objects
-306 and 307 name the same as 300 and 301), so the Ledger's copy of SEGOBJEX (sprites.py) recolours
+306 and 307 name the same as 300 and 301), so the Loader's copy of SEGOBJEX (sprites.py) recolours
 them, in colours the party's pictures already have.
 
 A half-elf man: fair-haired (the human man's dark hair, the top rows of his head, in golden

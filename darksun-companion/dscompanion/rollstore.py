@@ -5,7 +5,7 @@ rolled since.
 The buttons are the game's carved stone ones (as EXIT and DONE), lettered from its own: S from
 SAVE, A from LOAD, O and R from DROP, E, L and T from DELETE; C, which no button has, is drawn in
 the same carving (C_SHAPE). STORE is 52 wide, RECALL as DELETE (62). They go
-in the Ledger's copy of RESOURCE.GFF (icons.write_resources), the buttons (BUTN, copies of SAVE's)
+in the Loader's copy of RESOURCE.GFF (icons.write_resources), the buttons (BUTN, copies of SAVE's)
 and the creation screen's window (WIND 3011) with the two of them under the hit points and PSP.
 """
 
@@ -130,7 +130,7 @@ def picture(resource: gff.Chunks, text: str, width: int, frame: int) -> Rows:
 
 
 def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of RESOURCE.GFF: STORE's and RECALL's pictures and buttons, and the
+    """For the Loader's copy of RESOURCE.GFF: STORE's and RECALL's pictures and buttons, and the
     creation screen's window with both."""
     if any(k not in resource for k in (("WIND", CREATION), ("BUTN", SAVE), ("ICON", DELETE))):
         return {}

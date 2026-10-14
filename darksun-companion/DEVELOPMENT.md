@@ -1,6 +1,6 @@
 # Obsidian Edition: development
 
-How Obsidian Edition and its companion window, Templar's Ledger, work inside:
+How Obsidian Edition and its window, the Dark Sun Obsidian Edition Loader, work inside:
 the patched game and its helper, what's known of the game's data, the tools
 for mapping it, and how each part of the [README](README.md) is done.
 
@@ -16,7 +16,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    `INT`, as in [Scores and hit points as
    rolled](#scores-and-hit-points-as-rolled)) that the helper answers: `rand()`, the saving throw, AC, the dialogue
    window and message boxes for the dice log; the inventory, View Character,
-   USE and Effects screens and the Look box for what the Ledger adds to them;
+   USE and Effects screens and the Look box for what the Loader adds to them;
    and the places each rule change, new item and screen addition needs. The
    sections under [How each part works](#how-each-part-works) name the patches
    each part uses. One, at the start of a monster's turn, is in overlay code
@@ -45,7 +45,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    record the final saving throw total, the AC the game uses, and the text
    of dialogues and messages (in a second buffer); the rest draw the in-game
    additions and make the new items and the rule changes count.
-3. Templar's Ledger finds the buffer in DOSBox's memory and reads it every 50 ms.
+3. The Loader finds the buffer in DOSBox's memory and reads it every 50 ms.
    It works out what each roll was for from the code that asked for it, and
    reads the rest (names, weapons, spells, effects) from the game's own data.
 4. To keep bursts of unimportant randomness from crowding out the rolls that
@@ -54,7 +54,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
 
 Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking
-pockets, the [rule changes](README.md#rule-changes)), the Ledger's other
+pockets, the [rule changes](README.md#rule-changes)), the Loader's other
 additions (the new items and the Ring +1, the cooked vulture, Kalzith, Semyon,
 what the party wears, shadows, dust, rings, Tab and Enter, scrolling) and the
 fixes always in the patched copy: no equipment penalty on thief skills (see
@@ -154,7 +154,7 @@ types 20-byte ones (`DS:0x1669`, 115 of them, from GPLDATA.GFF):
 | type | `+0x12` | its AC (on top of the item's plus) |
 
 Free item records and free objects are kept in lists (`DS:0x4D76`,
-`DS:0x4D72`), which is how the Ledger adds [the Ring +1](README.md#new-items) and
+`DS:0x4D72`), which is how the Loader adds [the Ring +1](README.md#new-items) and
 Kalzith's scrolls as the game would.
 
 Also seen: per-region `RGnn` chunks hold a combined creature record, sheet and
@@ -205,8 +205,8 @@ nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
 The header's signature (`DSCLOGvZ` now) goes up whenever the helper and the
-Ledger must change together (`HDR_SIG` in `dscompanion/dicelog.py`), so a
-Ledger never talks to an older helper.
+Loader must change together (`HDR_SIG` in `dscompanion/dicelog.py`), so a
+Loader never talks to an older helper.
 
 The post-game check that keeps an error on screen for the crash report is
 built the same way:
@@ -267,7 +267,7 @@ python -m dscompanion next decreased                # also: changed, unchanged, 
 ## How each part works
 
 For each part of the README, how it's done: where the patched game calls the
-helper (DSCLOG), and what the Ledger reads and writes. The heading names the
+helper (DSCLOG), and what the Loader reads and writes. The heading names the
 README's section.
 
 ### The Dialogue tab
@@ -300,9 +300,9 @@ Character screen does the same through `INT F3h`, called once it has drawn
 the character's two panels (the saves under the item icons; MOVE, the
 creature record's +1Bh, and THAC0 at x D8h on HP's and PSI's lines, 7Fh and
 86h, clear of HP's value at its longest), and the routine that lists the weapons through `INT FAh`
-after each one. The Ledger keeps the numbers in the helper's memory, with the
+after each one. The Loader keeps the numbers in the helper's memory, with the
 time it last did: older than 5 seconds, the helper shows the sheet's numbers
-instead. Before a screen is drawn, the helper asks the Ledger to update them
+instead. Before a screen is drawn, the helper asks the Loader to update them
 and waits for its answer, half a second at most. Nothing else in the game changes.
 
 Which class levels up next, on View Character: the game looks up the XP for
@@ -316,7 +316,7 @@ belongs to and adds their letters first.
 
 How: the patched game calls the helper (`INT F5h`; INT 66h-6Fh can't be used:
 the game calls those itself, looking for sound drivers) where the box has drawn its
-first status rows; the helper asks the Ledger and waits a moment for its
+first status rows; the helper asks the Loader and waits a moment for its
 answer, and prints the lines with the game's text routine. `INT F6h`, at the end of the
 routine that closes the box, shows the whole description.
 
@@ -342,7 +342,7 @@ How: the dragon's question is the game's script 20, which script 120 runs (a
 call into another script, command 14h) when the party leaves the warrens
 (region 28h) until bit 12 of the game's variable (135, 73) is set. The right
 answer goes on to script 86 at 1087, which sets 255 in the variable (7, 4)
-and, in region 28h, that bit. In the Ledger's copy of the scripts
+and, in region 28h, that bit. In the Loader's copy of the scripts
 (`dscompanion/manualcheck.py`), script 20 does just that and ends: the same
 start (offset 1, its one entry in the game's table of entry points), no words
 and no question. It is replaced only if it is the dragon's (its
@@ -452,7 +452,7 @@ helper moves the return address past it.
   game's clamp follows.
 * `RL_SUM` (in place of 65168h's `add sp,4` after the copy is put back) draws
   `SUM:` 23 pixels left of the scores and the totals, `99/101`, on the line
-  under CHR, with the game's text routine as the Ledger's other lines are.
+  under CHR, with the game's text routine as the Loader's other lines are.
   The scores' box is made a line taller and wider (`rl_sum_box`: x2 48 to 77,
   y2 178 to 185, in the game's data) so the copy put back clears them.
 
@@ -523,7 +523,7 @@ game's message. Else a d100 of the helper's own (`D100`: a generator
 stirred by the BIOS's timer ticks); over the chance, the game teaches the
 spell and uses the scroll up, and `PROBE_LEARN_SAID` (`INT 92h`, new, 8B712h)
 takes it back (the four bits cleared) and pushes YOU FAIL TO LEARN THE SPELL.
-Each try is told to the Ledger in the helper's header (`+272`: a count, then
+Each try is told to the Loader in the helper's header (`+272`: a count, then
 the member, spell, INT, chance, d100 or spells known, result;
 `DiceLog._learn_lines`). At a level up (and a new preserver's picks),
 `PROBE_PICK_LIST` drops the game's list's spells of a full level, and
@@ -561,7 +561,7 @@ was.
 
 ([In the README](README.md#spells-saved-against-with-the-spell-save).)
 
-How: the Ledger writes the game's own table that turns a spell's kind of save
+How: the Loader writes the game's own table that turns a spell's kind of save
 into one of the five (a table of words at DS:1E75h, read afresh for every
 save), and puts it back when the rule is unticked.
 
@@ -570,7 +570,7 @@ save), and puts it back when the rule is unticked.
 ([In the README](README.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
 
 How: the helper does the save's doubling (`INT F0h`) only while this rule is
-off, and the Ledger marks the fire, cold and electricity spells with the game's
+off, and the Loader marks the fire, cold and electricity spells with the game's
 own "can be dodged" flag (bit 40h of the spell's category word), which no spell
 has, so the game's save routine adds the DEX defensive adjustment from its own
 table.
@@ -639,7 +639,7 @@ game never uses (+14h to +17h), so saves and the saved-characters roster keep
 them. The helper adds the bonuses and attacks where the game makes a weapon
 attack (`INT D1h`, `INT D0h`), on the DAM lines (`INT CFh`, `INT CEh`), runs
 the creation pages (`INT C8h` to `INT C3h`, windows 3014 to 3019 in the
-Ledger's copy of `RESOURCE.GFF`), calls the game's psionic pop-up in weapon
+Loader's copy of `RESOURCE.GFF`), calls the game's psionic pop-up in weapon
 mode at a level gained (`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up,
 window 3021), and prints the Effects screen's lines (`INT BBh`).
 
@@ -670,7 +670,7 @@ A missile weapon's attacks a round are its item type's (+0Bh, in halves: a
 bow 4, the rest 2), not the character's (sheet +2Ah) as in melee; `INT D1h`
 raises them to a specialist's (`MISSILE_RATE`, by the fighter, gladiator or
 ranger level; a grand master one more; a weapon type not chosen, from 7th level, a
-specialist's a band lower), and the Ledger's Characters tab does the same
+specialist's a band lower), and the Loader's Characters tab does the same
 (`specialize.missile_attacks`).
 Every ranger's expertise with the bow is in `SPEC_OF_SHEET` (`specialize.skill`),
 not in its chosen weapon types, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
@@ -699,7 +699,7 @@ its copy of `RESOURCE.GFF` (`icons.write_resources`) and the click's patch from
 its copy of `DSUN.EXE` (`gamepatch.ROLL_STORE`, as `EFFECTS_KEPT`).
 
 The buttons: the creation screen is window 3011 in `RESOURCE.GFF`, its buttons
-the die (7DAh), EXIT (80Ah), DONE (7D0h) and the rest. In the Ledger's copy
+the die (7DAh), EXIT (80Ah), DONE (7D0h) and the rest. In the Loader's copy
 (`dscompanion/rollstore.py`) it has two more, STORE (8A0h) and RECALL (8A1h),
 under the hit points and PSP, after its own items (the name box, an `EBOX`,
 among them). Their pictures are the game's carved stone buttons: a blank cut
@@ -735,7 +735,7 @@ INT's return.
 How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307, 308
 and 313 for their figures), a creature record and a sheet each, already Okay
 and with no items; the game gives them their gear and spells as it starts. So
-the Ledger (`dscompanion/defaultparty.py`) changes them in memory while the
+the Loader (`dscompanion/defaultparty.py`) changes them in memory while the
 game is new (its first hour, in the arena, as with Thieves' Tools), each
 change once, knowing each by name, race and classes together: their weapon
 kinds in the sheet's spare bytes, Gerakis's club item made a bone gythka in
@@ -796,7 +796,7 @@ place (the registers kept, the interrupt's frame moved down a word, the word
 under it) and queues the thing and the shop's merchant (`DS:179Ch`, the object
 whose item lists the shop's list is built from at 8347Ah: Kalzith's map object,
 229, a person, creature 33) in the header (`SOLD_SEQ` +308 counted, `SOLD_Q`
-+310, four entries). The Ledger (`buyback.py`, every quarter of a second) puts
++310, four entries). The Loader (`buyback.py`, every quarter of a second) puts
 each queued item first in the merchant's last item list (a new one if it has
 none; a backpack cell of its own) and zeroes the pointer's thing, as the game
 leaves it (left a list, even an empty one, the inventory screen picks nothing up
@@ -814,7 +814,7 @@ to Kalzith for 1,800 went first in his stock at 3000, and a Cloak (24) sold for
 How: where the game's thief skill routine adds 4 a level, the helper
 (`INT E4h`) puts AD&D's number for the level in place of the game's base and
 level, adds the DEX table's, and jumps past the game's DEX formula to its
-armour and effects. The Ledger's screens and the inventory screen's panel
+armour and effects. The Loader's screens and the inventory screen's panel
 work the chances out the same way.
 
 ### Hiding in shadows to backstab
@@ -828,7 +828,7 @@ game's thief skill routine (`INT D9h`, where it returns the chance, armour and
 effects counted) the helper adds the belt's 5 to picking pockets and opening
 locks for a thief wearing one.
 
-How (the rolls): the Ledger rolls both when the turn passes to the thief and tells the
+How (the rolls): the Loader rolls both when the turn passes to the thief and tells the
 helper, which, where the game has just worked out whether an attack is from
 behind and a backstab (`INT EAh`), makes the hidden thief's next one so, by
 the game's own conditions for a backstab (a thief, in melee, a weapon of
@@ -840,7 +840,7 @@ weight 40 or less).
 
 How: the patched game's routine that uses the item on the pointer on
 something on the map tells the helper what was used on what (`INT FDh`). For
-the thieving tools on someone, the Ledger rolls and moves the item, and the
+the thieving tools on someone, the Loader rolls and moves the item, and the
 helper shows the result instead of the game's "nothing happens".
 
 The Trustee's key (his own pick, in his talk): a thief with no room for it has
@@ -849,7 +849,7 @@ step in word variable 135,20) test after each step whether the key is stolen
 (flag 55) and lies within 9 of him, and make for it ("There it is!") without
 picking it up, so the rounds stall. After a talk he is busy (flag 51, "I'd love
 to talk more...") until the rounds' first step clears it, so a stall left him
-busy for good. In the Ledger's copy of `GPLDATA.GFF` (`pensasks.py`), the test
+busy for good. In the Loader's copy of `GPLDATA.GFF` (`pensasks.py`), the test
 asks for flag 55 to be 2, which it never is (`no_key_chase`), and the busy line
 jumps to code after the script's end that clears flag 51, says it and jumps
 back (`busy_once`).
@@ -1005,14 +1005,14 @@ ends, as stopping it there is how a power is dropped.
 How: the new items (the slave pens' and the world's, the bone scale set,
 Kreenfang) are in the game's data (`dscompanion/dataitems.py`, `worldgear.py`,
 `npcitems.py`, `arms.py`): in the
-Ledger's copy of `SEGOBJEX.GFF`, each person's or chest's object (its RDFF: the
+Loader's copy of `SEGOBJEX.GFF`, each person's or chest's object (its RDFF: the
 object's record, then its items, each a child or the next of the one before,
 with its type and name as attributes) has the new items after its own, so the
 game makes them where it makes the object. Kreenfang is the arena's dead
 body's (object 1204) own gythka made +1 and renamed, its name attribute with
 it. One Castle Guard, one Undermountain miner and one Magera (Drakejaw's) have
 an object of their own (2560, 2561, 2562: copies of their kind's, their record
-renumbered), their entity in the Ledger's copies of `RGN1C.GFF`, `RGN1E.GFF`
+renumbered), their entity in the Loader's copies of `RGN1C.GFF`, `RGN1E.GFF`
 and `RGN08.GFF` pointing to it; so does one skeleton of the warrens
 (Gutterward's: 2585, entity 85 in the copy of `RGN28.GFF`; its kind's object,
 2266, is the skeletons' of five regions). So does the slave pens' weapon rack (2563: the
@@ -1047,9 +1047,9 @@ axes, the metal one's of those materials, a bone dagger, the only dagger a
 water cleric may use, the robes', and a metal shield, Ironbulwark's: the
 game's leather shield's type in metal, for the classes of its wooden one) are item types the helper adds
 after the game's 115 each time the game reads its table in (`TYPES_EXTRA`; its
-weapon types by item type, `kind_of_type`, cover them too); the Ledger's item names (`dscompanion/names.py`) are entries it adds
+weapon types by item type, `kind_of_type`, cover them too); the Loader's item names (`dscompanion/names.py`) are entries it adds
 after the game's 322 (the game puts the item type's material before the name
-when it shows one); and the icons are objects in the Ledger's copy of
+when it shows one); and the icons are objects in the Loader's copy of
 `SEGOBJEX.GFF` (`dscompanion/icons.py`), which the helper has the game open
 instead of its own (its `INT 21h` hook). The copy also has the game's Polearm
 picture made 22 pixels tall (`icons.fit_box`): at its own 36, the item box's
@@ -1060,7 +1060,7 @@ readied, it puts Detect Invisibility on its wielder. In the original game the
 rings are plain rings without a name, and the sword, cloak and helm types it
 doesn't have: don't load a save that has them without the dice log.
 
-Alagorn's new menu lines are in the Ledger's copy of his scripts
+Alagorn's new menu lines are in the Loader's copy of his scripts
 (`dscompanion/alagorn.py`); he knows an item by its picture.
 - Scripts 212 and 213 with every story would overflow the script buffer, as
   the [Trustee's](#what-dinos-and-the-trustee-say-about-them) once did, so
@@ -1075,13 +1075,13 @@ Alagorn's new menu lines are in the Ledger's copy of his scripts
   joins two queries with "or", as the game's own tests do.
 - Each item a menu shows needs a value saying it's carried, and a script has 16
   locals: the weapons menu's six game items, its loop's own and ten new ones
-  are one too many, so items past the locals use the Ledger's flags from 784
+  are one too many, so items past the locals use the Loader's flags from 784
   on (set afresh as the part starts, as the locals are). The new stories'
   "none left" test is one subroutine they all call.
 
 The icons in the guide's item tables (`docs/items/*.png`) are drawn from the
-game's data by `python -m dscompanion.docicons GAME_FOLDER`, from the Ledger's
-copy of `SEGOBJEX.GFF` in `dos/` (start the game from the Ledger once first)
+game's data by `python -m dscompanion.docicons GAME_FOLDER`, from the Loader's
+copy of `SEGOBJEX.GFF` in `dos/` (start the game from the Loader once first)
 and the game's palette: each picture twice its size, the rest transparent.
 `docicons.ICONS` names each image's object; a new item needs its line there,
 and `tests/test_docicons.py` checks that every icon the guide shows is there.
@@ -1108,7 +1108,7 @@ bracers branch). The Ashen Robe is +1, the Veiled Robe +2, and the plus tells
 them apart: `ROBE_PLUS` finds the one worn on the chest (`WORN_SCAN`).
 `KIT_SAVE` adds 1 to every save for +2, and for +1 to a save against a wizard's
 or priest's spell (0-137); `PROBE_SLOTS` adds a wizard slot at spell levels 1-3
-for +2 where there are any. The Ledger: `restrict.is_robe`, `robes.save`,
+for +2 where there are any. The Loader: `restrict.is_robe`, `robes.save`,
 `robes.slots`, `GameData.protection` (not armour). The icons are drawn
 (`icons.robe_icon`, objects 2580 and 2582); Kel's object (107) carries the
 Veiled Robe in the data (`worldgear.MAGIC`), and Kalzith's Ashen Robe is put
@@ -1118,7 +1118,7 @@ on him with his cloak and scrolls (`kalzith.stock`).
 
 ([In the README](README.md#kalzith).)
 
-How: he is the game's own kind of person, in the Ledger's copies of three of
+How: he is the game's own kind of person, in the Loader's copies of three of
 its files, which the dice log's helper has the game open instead of the
 originals:
 
@@ -1139,14 +1139,14 @@ originals:
 
 His state is in the game's own flags (760 to 763: met, friendly, cold, his
 scrolls given; the game uses flags up to 755), so a save keeps it. The first
-time the party is in the pens, the Ledger puts his six scrolls among his
+time the party is in the pens, the Loader puts his six scrolls among his
 things (from the game's free list, as for [the arena's ring](README.md#new-items)),
-once a game. If he is killed, the Ledger marks it (flag 772) and the others
+once a game. If he is killed, the Loader marks it (flag 772) and the others
 speak of him as dead (see
 [Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)); after
 the party's escape he is gone from the pens with everyone else.
 
-With his scrolls the Ledger gives him his gear, worn (`kalzith.gear`, flag
+With his scrolls the Loader gives him his gear, worn (`kalzith.gear`, flag
 776): a Quarterstaff in the right hand, a Cloak (the game's own) and his Ashen
 Robe on the chest. His shop sells these too. The shop's list (built at
 `8347Ah`) takes every entry of the merchant's item lists whose kind is an item
@@ -1160,9 +1160,9 @@ running. (The dice log's helper counts the game's map loop; it doesn't run
 while a talk, menu or shop is open.)
 
 Killed, he leaves one of the scrolls he still had, chosen at random, and
-whatever of his gear he still had, in his body where he fell, and the Ledger
+whatever of his gear he still had, in his body where he fell, and the Loader
 logs the scroll ("Kalzith leaves: Scroll of Blur"). The game puts everything a
-dead person carried in the body; the Ledger takes the other scrolls out of it
+dead person carried in the body; the Loader takes the other scrolls out of it
 (flag 777, once).
 
 He is a slave of the pens like the game's own (his record is Dinos's): attacked,
@@ -1172,10 +1172,10 @@ he turns on the party as they do, and only the guards near him join the fight.
 
 ([In the README](README.md#semyon).)
 
-How: in the Ledger's copy of `GPLDATA.GFF`, the command that takes him off the
+How: in the Loader's copy of `GPLDATA.GFF`, the command that takes him off the
 map when he walks out after the fight (script 5 at 2400, run only from there)
-first sets the Ledger's flag 770; the game's other exits don't reach it. The
-Ledger sets flag 771 if it ever sees him dead (his record's hit points or
+first sets the Loader's flag 770; the game's other exits don't reach it. The
+Loader sets flag 771 if it ever sees him dead (his record's hit points or
 status). The pens' script ends with, "if flag 770 is set, 771 isn't, and he
 isn't in his pen yet, make him there", the command the arena's script uses
 when he is untied (25h, his object 280), and the command that runs his
@@ -1185,10 +1185,10 @@ so a save keeps him.
 
 How: the arena's script 3 moves Scar and his henchman to the pens (5Eh to region
 41) when the party reaches the west exit after Scar's plan is agreed. In the
-Ledger's copy, the henchman's move (at 1828) becomes a jump past the script's
+Loader's copy, the henchman's move (at 1828) becomes a jump past the script's
 end, where that move is made, then Semyon's, to a square beside them (74, 68),
 if he is recruited (the game's flag 6), not seen dead (771), in the arena and
-not against the party (his field 74, the side, not 2); then the Ledger's flag
+not against the party (his field 74, the side, not 2); then the Loader's flag
 782 is set and the script goes on where it was. With 782 set, the pens' script
 leaves him on the party's side, and his conversation has the breakout's line
 instead of his menu, until the escape (the game's flag 503).
@@ -1206,7 +1206,7 @@ game's, which keeps its place.
 
 ([In the README](README.md#what-dinos-and-the-trustee-say-about-them).)
 
-How: in the Ledger's copy of `GPLDATA.GFF`, their scripts (139 and 146) keep
+How: in the Loader's copy of `GPLDATA.GFF`, their scripts (139 and 146) keep
 every byte where it was, since the game's jumps go to fixed places. Two
 commands become jumps to code after the script's end: the one starting the
 menu's part goes to the same command followed by the new questions' flags
@@ -1217,7 +1217,7 @@ game's script carries on.
 That (with [his busy line](#picking-pockets)) makes the Trustee's script 10,967 bytes, and the game reads every script
 into one buffer of 10,000 bytes (a script that calls into another reads it in
 over its own). One of 9,800 bytes ran; one of 10,000 ended with "BAD GPL
-EXIT" (the game's own largest is 9,792). So the Ledger's copy of the game
+EXIT" (the game's own largest is 9,792). So the Loader's copy of the game
 makes the buffer 11,776 bytes where it is allocated (`push dword 10000` at
 6A692h becomes 2E00h), about 1.7 KB more of the game's memory.
 
@@ -1225,17 +1225,17 @@ makes the buffer 11,776 bytes where it is allocated (`push dword 10000` at
 
 ([In the README](README.md#the-cooked-vulture).)
 
-How: in the Ledger's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
+How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
 question in its first menu (a copy of the game's with the question added, as for
 the questions about Kalzith and Semyon, see
 [Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)), shown
 while the game's own test says someone in the party carries the cooked vulture
 (33h, as the campfire's script asks about the plucked one; the game's object
 A4Ch), the test being the question's own condition in the menu. Chosen, the script takes it (5Ch, as the campfire takes the plucked one)
-and sets the Ledger's flag 780, then gives the XP through the game's own routine
+and sets the Loader's flag 780, then gives the XP through the game's own routine
 for quests (the amount in its variable, then script 74 at 135: the window, the
 words and the quest's sound), as Dinos's own script does when he heals Gilal
-(350). The Ledger then refills the party, once (flag 781), only while the party
+(350). The Loader then refills the party, once (flag 781), only while the party
 is talking with him (never from a game being loaded).
 
 ### Defilers' scrolls
@@ -1246,7 +1246,7 @@ When a creature's hit points reach 0 the game empties its item lists and puts
 what it carried in a container on the ground (an item whose `+08h` names a
 list), in the same step: in the arena's opening fight the Defiler's lists
 were empty, and its things in the container (object 306's item), before the
-Ledger looked again, a quarter of a second later. A scroll can't be put on
+Loader looked again, a quarter of a second later. A scroll can't be put on
 the body at the death itself, so `defilerscrolls.py` gives it earlier: while
 the game's fight flag (`IN_COMBAT`) is set, each living creature after the
 party whose sheet's classes (`+21h`) include 18, the defilers' (no party
@@ -1278,7 +1278,7 @@ pictures, the game's with room round them for gear (walking, 6 pixels at the
 sides and 2 above, as much as anything worn reaches; in a fight, 10), and free
 space after each in the file. The game draws a figure's whole picture at every
 step, so each picture is exactly as long as it needs to be. While the game
-runs, when someone's worn items change, the Ledger draws their pictures anew
+runs, when someone's worn items change, the Loader draws their pictures anew
 (`dscompanion/spritegear.py`, from where `dscompanion/spriteparts.py` finds the
 head, hair, hands and the rest in each frame), writes them into its copy of the
 file with their new lengths in the file's index (the game reads a picture's
@@ -1291,7 +1291,7 @@ pictures and draws them at once, in a few thousandths of a second
 game loads later (in a fight, in another area) comes dressed, from the file.
 The copy also has a spare pair of pictures for each party place. Each thing on
 the map names the picture it is drawn with and the slot in the game's picture
-table it is drawn from; for a second member of the same figure the Ledger names
+table it is drawn from; for a second member of the same figure the Loader names
 their spare there and empties the slot, and the game loads the picture and
 fills it.
 
@@ -1308,7 +1308,7 @@ the bow, hit, dead). They are drawn after the gear, only on pixels the gear
 left as they were, so a shield or a weapon in front hides them.
 
 Half-elves (objects 306 and 307) name the human pictures, as 300 and 301 do.
-The Ledger's copy of the file gives them figures of their own instead
+The Loader's copy of the file gives them figures of their own instead
 (`figures.py`), made each time from the game's pictures:
 
 - **The man** (`HalfElfMan`) is the elf man's figure, a column wider below
@@ -1339,16 +1339,16 @@ Gear is drawn on them by what their own colours can't tell `spritegear`
 With the switch off (`elf_looks`, `sprites.Pictures(looks=False)`), or if the
 palette or the pictures they are made from are missing, or making them fails,
 a half-elf is the human figure recoloured (`halfelf.py`), as before, and elves
-have no ears. The switch counts when the launcher writes the copy; the Ledger
+have no ears. The switch counts when the launcher writes the copy; the Loader
 dresses the party with the setting it had then. A
 spare is drawn as the figure it stands for.
 
 Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)
 in her record (object 32003's RDFF, its word +22h, the creature's +18h), and
-her object (OJFF 32003) names the human woman's picture. In the Ledger's copy
+her object (OJFF 32003) names the human woman's picture. In the Loader's copy
 of SEGOBJEX she has the elf woman's figure (5) and picture (the game's, which
-the Ledger then swaps for its own as for anyone). In a game begun without the
-copy, the Ledger writes the figure into the running game's creature table, and
+the Loader then swaps for its own as for anyone). In a game begun without the
+copy, the Loader writes the figure into the running game's creature table, and
 the game draws her as an elf from its next area or load
 (`defaultparty.figure_chunks`, `defaultparty.elf_figure`), both only with the
 `cilla_elf` switch on.
@@ -1362,11 +1362,11 @@ works](#how-the-dice-log-works)) calls DSCLOG when the game draws the floor of
 the view or of a rectangle of it. DSCLOG then lays each casting figure's
 current picture, flattened and stretched, onto the floor just drawn, darkening
 each pixel to the closest clearly darker colour of the area's palette (a table
-it makes from the palette when the Ledger asks: after each area change, once
+it makes from the palette when the Loader asks: after each area change, once
 its fade-in is over, and now and then; the colours the game cycles, for water
 and fire, are never picked as darker ones). The rectangles the game draws again when a figure
 moves are widened by the length of a shadow, so none is left behind. The
-Ledger keeps DSCLOG's list of who casts one (`dscompanion/shadows.py`) and has
+Loader keeps DSCLOG's list of who casts one (`dscompanion/shadows.py`) and has
 DSCLOG draw the view again when it changes (from the game's main loop, as
 centring the view does: marking the figures changed instead, as the game's own
 code does to draw one again, can set one in a fight walking again).
@@ -1386,7 +1386,7 @@ How: DSCLOG notes, each time round the game's main loop, how far each figure
 that casts a shadow has walked, and raises a puff a little behind and to one
 side of its feet every 6 pixels (the feet in turn). The puffs are drawn on the
 floor after the shadows, lightening it through a table of each colour's lighter
-one, which the Ledger makes from the area's palette (`dscompanion/dust.py`):
+one, which the Loader makes from the area's palette (`dscompanion/dust.py`):
 only warm, middling colours (sand, dirt) have one, so stone, water and the
 figures take none. Each puff is dithered thinner toward its edge and as it
 fades, by a pattern fixed to the map, so a puff looks the same however much of
@@ -1399,7 +1399,7 @@ the view drawn again a few times a second until the last puff is gone.
 ([In the README](README.md#choosing-an-enemy-tab-enter-and-the-rings).)
 
 How: DSCLOG hooks the keyboard (`INT 16h`) and takes Tab, Shift+Tab and, with an
-enemy chosen, Enter from what the game reads, counting them for the Ledger
+enemy chosen, Enter from what the game reads, counting them for the Loader
 (`dscompanion/targeting.py`), which keeps the enemies marked and the chosen one
 (`dscompanion/rings.py`). The rings are drawn in the floor pass, after the
 shadows, through a table of each colour's redder one made from the palette. For
@@ -1421,7 +1421,7 @@ and released where it was pressed), a drag never does. The game's main loop
 asks where the pointer is (to scroll at the screen's edge); there DSCLOG has
 the game centre its view where the drag puts it, with the game's own routine
 (the one clicking on the overview map uses, which draws the view again), and
-keeps the pointer it reports off the edges meanwhile. The Ledger only switches
+keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dscompanion/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
 
@@ -1437,14 +1437,14 @@ take them there (`INT D8h`, `INT D7h`), and for a new page run the window's
 own routines that search the folder, draw the rows and draw the window. Enter
 is taken out of the window's key table, so it comes to DSCLOG too, which goes
 on to LOAD (or SAVE) as the table did, but not on a row with no save. The
-buttons are the game's kind, in the Ledger's copy of `RESOURCE.GFF`: placed
+buttons are the game's kind, in the Loader's copy of `RESOURCE.GFF`: placed
 in the window under EXIT, with pictures made from EXIT's, its letters taken
 away and the page's put in with the game's text font
 (`dscompanion/savepages.py`; the buttons' own carved letters have no P, G or
 digits).
 
 Saves under their names (`dscompanion/namedsaves.py`): every few seconds the
-Ledger looks at the 40 slots' files (`cloud_saves` before the game folder, as
+Loader looks at the 40 slots' files (`cloud_saves` before the game folder, as
 GOG's DOSBox mounts it over the folder), and copies one newer than its copy to
 `Named saves/` as `Page P slot NN - NAME.SAV`, the name from the save's
 `STXT 1` (up to its first NUL; characters Windows won't take become `_`). A
@@ -1467,12 +1467,12 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 
 ([In the README](README.md#game-speed).)
 
-The Ledger's drawing is as cheap as it can be without looking any different:
+The Loader's drawing is as cheap as it can be without looking any different:
 a shadow is darkened a plane of the video memory at a time (the graphics
 card's registers set four times for a figure, not four times for each of its
 rows), and a dust puff's pixels are worked out a row at a time, only within
 its outline and the part of the view being drawn again. The pictures the
-Ledger draws the party's gear on are each exactly as long as their outfit,
+Loader draws the party's gear on are each exactly as long as their outfit,
 with only the room gear needs round the figure while walking (6 pixels at the
 sides, 2 above; 10 in a fight), since the game draws a walking figure's whole
 picture at every step.
@@ -1531,7 +1531,7 @@ the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
 ring lies over the install code) clears the ring and stays resident with it.
-The text buffer (`TSIZE`) is 4 KB; the Ledger reads its size from the
+The text buffer (`TSIZE`) is 4 KB; the Loader reads its size from the
 header and drains it every few tens of milliseconds.
 
 The helper has to load into upper memory, or the game loses 62 KB of
@@ -1600,32 +1600,32 @@ measured with the patched game and the dice log running:
 
 ### The in-game combat log: the panel (Stages 1 to 4)
 
-- **Where it lives.** The Ledger draws the panel's picture (`combatlog.py`:
+- **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
   DSCLOG last read) into an upper memory block DSCLOG takes for it at install
   (`panel_seg`, header `+328`); the dice log's ring has a block of its own
   there too. With EMS on there is no such block and no panel.
 - **Putting it on screen.** DSCLOG copies the picture into the screen on
   show, a plane at a time, from the main loop (`PANEL_TICK`, in
-  `PROBE_SCROLL`) when the floor has been drawn since or the Ledger has a new
+  `PROBE_SCROLL`) when the floor has been drawn since or the Loader has a new
   picture (`panel_new`, `+330`), and at the end of each rectangle the game
   draws again (`REDRAW_POST`, the way back of 2475Fh), so figures walking and
   the view scrolling don't wipe it.
-- **On and off.** The Ledger sets `panel_on` (`+326`) in a fight with the
-  switch on; off, or the Ledger silent for 5 seconds (`stats_stamp`, which it
+- **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
+  switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
   writes about once a second), DSCLOG has the view drawn again without it.
 - **The game's windows.** A figure's menu, a question or EXIT GAME are shown
   on the other screen, the view drawn there again first: the panel is not on
   it, and is back when the window closes. Full screens (USE, View Character)
   stop the main loop, so it isn't drawn over them. (Drawing it into both
   screens doesn't work: the game keeps other pictures in the one not shown.)
-- **The lines (Stage 2).** The Ledger keeps the fight's dice log lines
+- **The lines (Stage 2).** The Loader keeps the fight's dice log lines
   (`combatlog.Log`, the last 200, from the moment it sees a fight to 5 seconds
   after) and draws them into the picture: a header line (`round_status`: the
   round, who is acting, who is next), then the last 6 rows of the well. Each
   line's level (`shorten`) is worked out from the log's own wording (the
   attack, save, magic resistance, damage and d100 patterns), an attack's
-  damage put on its line; its kind (`line_kind`, the Ledger's colours) from
+  damage put on its line; its kind (`line_kind`, the Loader's colours) from
   the full line; whose line from the name it starts with (a filled pip for
   the party, hollow for a monster). The game's font comes from RESOURCE.GFF
   (`art.Font`); without it the panel has no lines. A new picture is written
@@ -1635,7 +1635,7 @@ measured with the patched game and the dice log running:
   the driver gives them), and a left press on the panel, while the page on
   show is the one the panel was last drawn into (not under a game window), is
   counted with where it was (`+338` on) and kept from the game with its
-  release, `+336` set while it is held. The Ledger (`Panel.mouse`, each pass
+  release, `+336` set while it is held. The Loader (`Panel.mouse`, each pass
   of the log) makes it a drag of the handle, a page, or a click on the
   **Latest** chip; the mouse wheel comes from a Windows low-level mouse hook
   (`wheel.py`, its own thread), counted only with DOSBox's window in front
@@ -1646,7 +1646,7 @@ measured with the patched game and the dice log running:
   over), through routines not hooked: `PANEL_TICK` puts the panel again when
   the pointer has moved, on that pass and the next, and every 16 passes
   anyway.
-- **Sizes (Stage 4).** The Ledger sets the panel's top and height
+- **Sizes (Stage 4).** The Loader sets the panel's top and height
   (`+344`, `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130,
   the most); its foot stays at row 198. Smaller than it was, DSCLOG draws the
   view again under it first. Collapsed is 15 rows (the newest line in the
@@ -1761,7 +1761,7 @@ sheet at ES:BX, `cr_is` for a creature (AX), `cb_is` for a combatant
 (`[BP+6]`); each leaves the kit's class's place in `KIT_WHERE` for `KIT_LEVEL`
 and `KIT_CLASS_OF_SHEET`. Rules that several kits touch (AC, THAC0, slots,
 saves, to hit and damage, cures) take each kit's part in turn. Each effect has
-its twin in `kits.py`, which the Ledger and the dice log use (once for each kit
+its twin in `kits.py`, which the Loader and the dice log use (once for each kit
 in `kitpages.kit_ids`), and emulated tests hold the helper to it:
 
 | Effect | Kits | Where |
@@ -1819,7 +1819,7 @@ meet its:
 | Effect | Kits | Where |
 |---|---|---|
 | priest spells known | Elementalist (its second sphere's too) | the loops that mark each priest spell (45h-89h) known or not for a party member by the class's bit, on making a character (66F89h) and when a human changes class (86E1Eh, in the DUAL routine at 86C80h; a level up marks none, as a priest knows its spheres' spells of every level from the start): `PROBE_EL_KNOW` (`INT 9Eh`, new: `test dword es:[bx+19Dh],eax`, 66FC9h and 86E56h; its flags back to the JZ with `RETF 2`) adds the second sphere's cleric bit. And the routine giving a priest its spheres' spells (5E401h, no caller found): `PROBE_EL_GRANT` (`INT A1h`, new: `xor si,si`, 5E489h) adds it to its mask |
-| a kit asleep after dual-classing | every kit | the routine that changes a human's class (86C80h, DUAL on a portrait's menu: 70EF1h opens its window, 86B3Fh, for a human of 2nd level or more) moves the classes down and puts the new one first. The kit byte (`+43h`) has two bits for each class (0 none, 1-3), the first class's lowest and each class taken after it the next two, so a kit stays with its class however the classes move: `KIT_PLACE` gives the oldest class's place (0 for one class; 1 or 2 for a human; none for another race's multiclass), `KIT_AT` the kit of the class at a place, `KIT_AWAKE` holds a kit asleep until the level at `+24h` passes its class's (as the game counts earlier classes; the class it has now is always awake). `KIT_IS` finds a kit only while awake and `KIT_HAS` either way. The byte's 0FFh (`KIT_OPEN`, on the creation panel) is no kit. The kit's own levels come from `KIT_LEVEL` (Ravager and Grove Warden AC, the warrior THAC0, the Seeker's and Justifier's slots, the Shinobi's casting and spell picks, the Battle Mage's 7th-level expertise) and its class from `KIT_CLASS_OF_SHEET` (a Seeker's sphere, an Elementalist's cleric); `PROBE_SLOT_LEVEL` puts an Elementalist's slots behind for its own class's place only (`KIT_AT` there). `PROBE_HIT_DIE` gives a kit's die only for one class (a human who changed class rolls for its new one); `PROBE_MAX_PSP` takes a Mind Warrior's tenth with `KIT_HAS`, as a sleeping psionicist class still gives its PSP. `SPEC_OF_SHEET` treats a dual-classed Battle Mage's weapon spec as the kit's (none asleep, expertise awake), not a new warrior class's. The Effects screen has a `KIT:` line for each kit, the oldest class's first, ` (ASLEEP)` after one asleep (`KIT_AT`, `KIT_OF_SHEET` with `KIT_SHORT`'s shorter names, `KIT_LINE_ASLEEP`, `KIT_AWAKE`); see the next section for its pages. `kitpages.kit_place`, `kit_at`, `kit_awake`, `kits_of`, `kit_ids`, `kit_level`, `kit_class_of` are the Ledger's |
+| a kit asleep after dual-classing | every kit | the routine that changes a human's class (86C80h, DUAL on a portrait's menu: 70EF1h opens its window, 86B3Fh, for a human of 2nd level or more) moves the classes down and puts the new one first. The kit byte (`+43h`) has two bits for each class (0 none, 1-3), the first class's lowest and each class taken after it the next two, so a kit stays with its class however the classes move: `KIT_PLACE` gives the oldest class's place (0 for one class; 1 or 2 for a human; none for another race's multiclass), `KIT_AT` the kit of the class at a place, `KIT_AWAKE` holds a kit asleep until the level at `+24h` passes its class's (as the game counts earlier classes; the class it has now is always awake). `KIT_IS` finds a kit only while awake and `KIT_HAS` either way. The byte's 0FFh (`KIT_OPEN`, on the creation panel) is no kit. The kit's own levels come from `KIT_LEVEL` (Ravager and Grove Warden AC, the warrior THAC0, the Seeker's and Justifier's slots, the Shinobi's casting and spell picks, the Battle Mage's 7th-level expertise) and its class from `KIT_CLASS_OF_SHEET` (a Seeker's sphere, an Elementalist's cleric); `PROBE_SLOT_LEVEL` puts an Elementalist's slots behind for its own class's place only (`KIT_AT` there). `PROBE_HIT_DIE` gives a kit's die only for one class (a human who changed class rolls for its new one); `PROBE_MAX_PSP` takes a Mind Warrior's tenth with `KIT_HAS`, as a sleeping psionicist class still gives its PSP. `SPEC_OF_SHEET` treats a dual-classed Battle Mage's weapon spec as the kit's (none asleep, expertise awake), not a new warrior class's. The Effects screen has a `KIT:` line for each kit, the oldest class's first, ` (ASLEEP)` after one asleep (`KIT_AT`, `KIT_OF_SHEET` with `KIT_SHORT`'s shorter names, `KIT_LINE_ASLEEP`, `KIT_AWAKE`); see the next section for its pages. `kitpages.kit_place`, `kit_at`, `kit_awake`, `kits_of`, `kit_ids`, `kit_level`, `kit_class_of` are the Loader's |
 | classes barred to a dual-classing human | Seeker, Justifier (cleric, druid); Shinobi (preserver); Swashbuckler, Crusader, Battle Mage, Mind Warrior (fighter, gladiator, ranger); Arena Champion, Sentinel (druid, preserver: no shield); Brute (psionicist, air cleric: no two-handed melee weapon); Stalker (thief: its hiding on a thief's own); Grove Warden (gladiator: its AC on a gladiator's own) | the DUAL window (866C7h) asks of each class (SI, 1-17) whether member [BP+6] may change to it (86E94h: AX 1 if so; human, prime requisites) and greys the rows answered no: `PROBE_DUAL_BAN` (`INT 9Dh`, new: the `or ax,ax` after the call, 866FFh; its flags back to the JZ with `RETF 2`) answers no for a class one of its kits bars (each `KIT_AT`, asleep too; `KIT_BANS`), from `DUAL_BANS` (a kit's number, then a dword of class bits; `kits.DUAL_BANS`). The slot kits' tables (`PROBE_SLOTS`) replace the whole count for their kind of magic, so they would take a new cleric's, druid's or preserver's slots' place |
 | a new preserver's spells, on changing class | every human (not a kit's) | the routine that changes a human's class, for a preserver (86DB5h), takes away its wizard spells and marks Grease (8) and Magic Missile (7) known: `PROBE_DUAL_SPELLS` (`INT 9Ch`, new: those two `push / push si / call 500:43h / add sp,4`, 22 bytes from 86DE4h) calls CHOOSE A SPELL (620:5Ch, 85560h: the level up's) twice in their place, through its stub (`PICK_STUB`: DS less 4Ch, as `WP_STUB`), with the spell levels on offer up to 1st (`PICK_CAP`, which `PROBE_PICK_LEVEL` heeds). The dual routine is in CHOOSE A SPELL's own overlay (85560h to 87250h), so the call can't unload the code it returns to. The same call from another overlay needs its way back where the overlay manager can patch it: see the next row |
 | a new preserver's spells, at creation | every preserver | the creation screen's DONE (overlay 65480h) marks spells known by preserver level (`[BP-2]`, 66F2Dh on: 7 and 8 at 1st; 9 and 0Bh too at 2nd; 0Fh and 16h too at 3rd). `PROBE_CR_SPELLS` (`INT 98h`, new: `mov ax,[bp-2]`, 3 bytes) has a character made on the creation screen (the grants called from DONE, 66556h: their way back at `[BP+2]`, `[BP+4]` is the INT's less `CR_FROM_DONE`, in the same overlay; START GAME with no party made calls them for the game's own party from 65480h+6FBh, which keeps the game's spells, and the creature's status can't tell the two, Okay in both) pick as many on CHOOSE A SPELL (`PICK_SPELLS`: 2, 4, or 4 and two of 2nd level; a Scholar's one more a level, `KIT_MADE`) and goes on past them (66F83h, `CR_SPELLS_PAST`). CHOOSE A SPELL returns nothing; EXIT leaves it with no spell learnt, which `PICK_SPELLS` tells by counting the member's known preserver spells before and after (`PICK_KNOWN`, the low four bits of each byte from `KNOWN_OFF`, as 500:43h sets them; the party's four only, creation's and DUAL's among them). Then the picks end and `PICK_FILL` marks the game's own spells known for those left, in its order, less any known (`fill_first`, `fill_second`). DONE's routine (6649Ch) has saved the character to its slot and opened its files (550:57h) before the grants, so going back to the creation screen from here isn't done CHOOSE A SPELL is another overlay, whose loading may put the creation code out: without care the game is lost on the way back. The INT's way back is pushed as a stack frame (`push cs / push ip / push bp / mov bp,sp`) that the overlay manager walks and patches to reload the code first, as `PROBE_LV_PICK` and `PROBE_DUAL_KIT` do, and read back after |

@@ -1,5 +1,5 @@
-"""The Ledger's new items written into the game's own data: each in the object it belongs to (a
-person's, a chest's) in the Ledger's copy of SEGOBJEX.GFF, so that the game makes it with them.
+"""The Loader's new items written into the game's own data: each in the object it belongs to (a
+person's, a chest's) in the Loader's copy of SEGOBJEX.GFF, so that the game makes it with them.
 
 An object's record (an RDFF chunk) is a list of records, each a header and its data:
 
@@ -18,7 +18,7 @@ with than carry along.
 People of a kind share one object (six Castle Guards, four Undermountain miners), and so can things
 (the slave pens' weapon rack and the Lower Castle's): an item for one of them alone needs an object
 of their own, a copy of the kind's under a new number (its record naming itself), and the region's
-entity for that person (its ETAB entry) pointing to it, in the Ledger's copy of the region's file.
+entity for that person (its ETAB entry) pointing to it, in the Loader's copy of the region's file.
 """
 
 import struct

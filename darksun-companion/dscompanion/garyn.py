@@ -3,7 +3,7 @@ pith, given by his own script.
 
 In his talk (script 174), "I'm here to deliver a bag of pith to you." has him thank them the
 first time (while flag FLAG is 0), tell them how the extract is made and to take it to Linara,
-and set FLAG. In the Ledger's copy of the scripts, the command setting it becomes a jump to code
+and set FLAG. In the Loader's copy of the scripts, the command setting it becomes a jump to code
 after the script's end (as elvenleader.py's): the first time, a new page, his words, the tome
 given (command 39h, a new item of its object, to the one talking to him), or left on the ground
 by him when it can't be carried (25h); then FLAG set, as before, and back.

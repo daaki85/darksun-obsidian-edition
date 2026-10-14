@@ -1,4 +1,4 @@
-"""The look of Templar's Ledger: widgets styled like Shattered Lands' own screens.
+"""The look of the Loader: widgets styled like Shattered Lands' own screens.
 
 The colours are in palette.py. No artwork of the game's is copied; the
 banner's rock is drawn from those colours at start-up.

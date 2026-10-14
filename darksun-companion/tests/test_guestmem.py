@@ -1,4 +1,4 @@
-"""Writes the Ledger may never make: over low memory, or the start of the game's data segment."""
+"""Writes the Loader may never make: over low memory, or the start of the game's data segment."""
 
 import os
 import sys

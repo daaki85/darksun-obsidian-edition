@@ -1,4 +1,4 @@
-"""The party's own sprites in the Ledger's SEGOBJEX copy, and dressing them in what they wear."""
+"""The party's own sprites in the Loader's SEGOBJEX copy, and dressing them in what they wear."""
 
 import os
 import struct
@@ -134,7 +134,7 @@ class SpriteTests(unittest.TestCase):
     def test_pointed_at_the_spare(self):
         """On the map: the member's picture named the spare and their slot emptied (the game loads
         it); the first member left as they were; back to their own when no longer sharing; a save's
-        picture of the game's own made the Ledger's; one whose pictures are written anew loaded
+        picture of the game's own made the Loader's; one whose pictures are written anew loaded
         again."""
         gd = FakeGame(figures=[0, 0])
         shared, spare = sprites.picture_ids(300), sprites.picture_ids(315)

@@ -1,4 +1,4 @@
-"""Alagorn tells of the Ledger's magic items: Kreenfang and Shadowseeker (arms.py), Gutterknot,
+"""Alagorn tells of the Loader's magic items: Kreenfang and Shadowseeker (arms.py), Gutterknot,
 Deepbiter, Windlash, Greenbright and the Flame Blade, the Warden's Plate, Gutterward and
 Ironbulwark, the Cloak and Boots of
 Elvenkind, the Bracers of Defense, Arrowbane and the Sunking Crown (worldgear.py), and the Tome of
@@ -12,7 +12,7 @@ carries (a local for each, from a query on the item's picture: the Bloodwrath's 
 there are none, or shows a menu of those, one reply each; a reply's story clears its local, and
 when none is left (a local of the script's: DONE) the menu's loop ends.
 
-With the Ledger, Shadowseeker, Greenbright and the Flame Blade join the swords, Kreenfang,
+With the Loader, Shadowseeker, Greenbright and the Flame Blade join the swords, Kreenfang,
 Gutterknot, Deepbiter and Windlash the weapons, Inixhide and the Warden's Plate's four pieces the
 armour, Gutterward and Ironbulwark the shields, the Cloak and Boots of Elvenkind, the bracers, Arrowbane, the crown and the cloak of
 protection the clothes (where the game has its Helm of Contemplation and Chameleon Gloves), the
@@ -64,7 +64,7 @@ SCRIPT_OF = {SWORDS: SCRIPT, WEAPONS: SCRIPT, RINGS: OTHER_SCRIPT, ARMOUR: OTHER
              CLOTHES: OTHER_SCRIPT, OTHER: OTHER_SCRIPT}
 # Scripts 212 and 213 with every story would be longer than the scripts' buffer: 212's clothes, and
 # its rings and other items, and 213's weapons are told by copies of them, each with only those
-# (the Ledger's scripts; Kalzith's 218, Semyon's 219). His talk (script 211) calls each part by its
+# (the Loader's scripts; Kalzith's 218, Semyon's 219). His talk (script 211) calls each part by its
 # place in its script (14h): the call for those parts names the copy instead, its places the same.
 TALK = 211
 COPY_OF = {CLOTHES: 220, RINGS: 221, OTHER: 221, WEAPONS: 222}
@@ -290,8 +290,8 @@ def _carried(name: str) -> tuple:
 
 
 # A menu with more items than the script's locals hold (the game's six weapons, the loop's own, and
-# the new ones) keeps the rest in the Ledger's flags from FLAGS on (the game's run to 755, the
-# Ledger's own 760-783, a save keeps 808), set afresh each time the part starts, as the locals are.
+# the new ones) keeps the rest in the Loader's flags from FLAGS on (the game's run to 755, the
+# Loader's own 760-783, a save keeps 808), set afresh each time the part starts, as the locals are.
 # A slot: a local's number, or a flag's negated.
 FLAGS = 784
 FLAG_SET, FLAG_READ = 13, 141
@@ -459,7 +459,7 @@ def _called_from(talk: bytes, field_types: bytes, entry: int, number: int, sourc
 
 def script_chunks(chunks, field_types: bytes, arms: bool = True, magic: bool = True,
                   pens: bool = True) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of GPLDATA: Alagorn's talks (his two scripts, and the copies of 212:
+    """For the Loader's copy of GPLDATA: Alagorn's talks (his two scripts, and the copies of 212:
     COPY_OF) with the magic items of the switches on (ARMS: Kreenfang and Shadowseeker; PENS:
     Inixhide and the rings and cloak of protection; MAGIC: the world's and the tome)."""
     out: Dict[Tuple[str, int], bytes] = {}

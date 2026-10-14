@@ -109,7 +109,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
   <div class="eyebrow">Dark Sun: Shattered Lands · Mod</div>
   <h1>Obsidian Edition<br>Patch Notes</h1>
   <div class="meta">Current version 2.2.1 · October 14, 2026 · Every change from the original 1993 game</div>
-  <p class="lede">Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&amp;D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. Its companion window, Templar's Ledger, runs beside the game and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.</p>
+  <p class="lede">Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&amp;D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. Its companion window, the Loader, runs beside the game and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.</p>
   <div class="actions">
     <a class="btn" href="https://github.com/daaki85/darksun-obsidian-edition/releases/latest">Download</a>
     <a class="btn ghost" href="https://github.com/daaki85/darksun-obsidian-edition/blob/main/darksun-companion/PLAYER-GUIDE.md">Player's guide</a>
@@ -122,7 +122,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
   <nav class="index" aria-label="Sections">
     <p>In these notes</p>
     <ol>
-      <li><a href="#ledger">Templar's Ledger</a></li>
+      <li><a href="#loader">The Loader</a></li>
       <li><a href="#ui">In the Game's Screens</a></li>
       <li><a href="#combat">Combat</a></li>
       <li><a href="#classes">Classes and Kits</a></li>
@@ -137,8 +137,8 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
   </nav>
 
   <main id="notes">
-    <section id="ledger">
-      <h2>Templar's Ledger</h2>
+    <section id="loader">
+      <h2>The Loader</h2>
       <ul>
         <li><span class="tag new">New</span>A companion window that starts the game and runs beside it, laid out in the game's own colours.</li>
         <li><span class="tag new">New</span><strong>The dice log:</strong> every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.</li>
@@ -147,7 +147,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag new">New</span><strong>Dialogue:</strong> everything said, with the speaker's portrait and name, and the reply you chose.</li>
         <li><span class="tag new">New</span><strong>Options:</strong> every rule change and addition below has its own switch, nearly all on by default, and <strong>Restore defaults</strong> sets them all back.</li>
       </ul>
-      <div class="dev"><b>Developers' Notes</b>Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Ledger started as a way to see those numbers. Once we could see them, we started fixing them.</div>
+      <div class="dev"><b>Developers' Notes</b>Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.</div>
     </section>
 
     <section id="ui">
@@ -157,7 +157,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag new">New</span>View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.</li>
         <li><span class="tag new">New</span>The USE screen shows the spell slots left at each spell level, and the most you get after resting.</li>
         <li><span class="tag new">New</span>In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (<span class="num">NEEDS +1 WEAPON</span>, <span class="num">IMM FIRE COLD</span>...). Close it to read the rest.</li>
-        <li><span class="tag new">New</span>Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Ledger's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and <span class="num">L</span> folds it away.</li>
+        <li><span class="tag new">New</span>Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and <span class="num">L</span> folds it away.</li>
         <li><span class="tag new">New</span>Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.</li>
         <li><span class="tag new">New</span>The Effects screen lists your kits and weapon specializations.</li>
       </ul>
@@ -330,10 +330,10 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <ul>
         <li><span class="tag new">New</span><strong>Tab</strong> chooses the nearest enemy and <strong>Enter</strong> attacks it, with no aiming of the mouse.</li>
         <li><span class="tag new">New</span>Press the mouse wheel and drag to scroll the map.</li>
-        <li><span class="tag chg">Changed</span><span class="num">40</span> save slots on four pages <span class="was">(was 10)</span>, each also kept under its name in a folder of the Ledger's, and <span class="num">29</span> stored characters <span class="was">(was 19)</span>.</li>
+        <li><span class="tag chg">Changed</span><span class="num">40</span> save slots on four pages <span class="was">(was 10)</span>, each also kept under its name in a folder of the Loader's, and <span class="num">29</span> stored characters <span class="was">(was 19)</span>.</li>
         <li><span class="tag new">New</span>A game speed setting, so the whole party walks as smoothly as one.</li>
         <li><span class="tag new">New</span>Crash reports: if the game stops with an error, the message stays on screen and a report is written.</li>
-        <li><span class="tag new">New</span>The game's window at double, triple or quadruple size, or full screen, chosen in the Ledger.</li>
+        <li><span class="tag new">New</span>The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.</li>
         <li><span class="tag chg">Changed</span>No more copy protection: the dragon asking for a word from the manual never comes.</li>
       </ul>
     </section>

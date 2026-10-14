@@ -533,7 +533,7 @@ class DiceLog:
             self.defilers.reset()  # (a save loaded: its fights rolled for again)
             self._mended_in = None  # (a save loaded: its scrolls looked at again)
         # A try later than the game's clock is not this game's: one undone by loading an earlier
-        # save, or another game's (a new game started with the same party, the Ledger started
+        # save, or another game's (a new game started with the same party, the Loader started
         # after it: seen the first time the clock is read)
         undone = [k for k in self.picked
                   if (self.picked_at.get(k) is None and went_back)
@@ -911,7 +911,7 @@ class DiceLog:
         out += self.flush(now)
         refused = getattr(self.guest, "refused", None)
         if refused:
-            out += [f"(The Ledger stopped one of its own writes over the game's memory: {r}. "
+            out += [f"(The Loader stopped one of its own writes over the game's memory: {r}. "
                     "Please send this line.)" for r in refused[:3]]
             refused.clear()
         if self.missed:
@@ -973,7 +973,7 @@ class DiceLog:
         return out
 
     def _drawn(self, now: float) -> List[str]:
-        """What DSCLOG draws and does for the Ledger, kept up four times a second (not with the
+        """What DSCLOG draws and does for the Loader, kept up four times a second (not with the
         ring's search, every 3 s: a Tab's ring and the Enter's target were that late): shadows,
         the enemy chosen with Tab and the rings, dust."""
         if self.tsr_hdr is None:
@@ -1101,8 +1101,8 @@ class DiceLog:
             pass
 
     def _dress(self, now: float) -> None:
-        """The party's sprites in what they wear, once the game has the Ledger's SEGOBJEX (whose
-        party pictures the Ledger keeps dressed); as the game's own when switched off."""
+        """The party's sprites in what they wear, once the game has the Loader's SEGOBJEX (whose
+        party pictures the Loader keeps dressed); as the game's own when switched off."""
         if not icons.ready(self.game, self.tsr_hdr):
             return
         if self._dresser is None and not self._dresser_tried:

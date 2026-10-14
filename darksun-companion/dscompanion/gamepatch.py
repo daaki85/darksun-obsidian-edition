@@ -207,7 +207,7 @@ PATCHES = (
     # (DSCLOG does it, adding 1 move for boots when the companion's rule is on)
     Patch("move", 0x57566, bytes.fromhex("2689872b02"), _interrupt(VEC_MOVE, 5)),
     # the routine that uses the item on the pointer on what's under it on the map, once it has
-    # found that: cmp si,-1 / jne +3 (DSCLOG has the Ledger see to its thieving tools there)
+    # found that: cmp si,-1 / jne +3 (DSCLOG has the Loader see to its thieving tools there)
     Patch("use_item", 0x73615, bytes.fromhex("83feff7503"), _interrupt(VEC_USE_ITEM, 5)),
     # the to-hit adjustment for two weapons ready, once it has the DEX's initiative adjustment:
     # neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx (DSCLOG does it, or AD&D's penalties

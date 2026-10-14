@@ -188,7 +188,7 @@ FLAMING_SPHERE = 14  # (once Cat's Grace's place)
 def cast_spell(spell: Optional[int]) -> bool:
     """A wizard's or priest's spell, a psionic power, or a new spell: not a monster's power."""
     return spell is not None and (SPELL_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT or spell in NEW_SPELLS)
-DETECT_INVISIBILITY = 13  # the spell (as the Ledger numbers them: 1 Burning Hands)
+DETECT_INVISIBILITY = 13  # the spell (as the Loader numbers them: 1 Burning Hands)
 # the sheet's byte and bit that say a character knows each new spell: most in +45h, whose low three
 # bits are an Elementalist's second sphere (kits.SPHERE2); Friends' in the kit byte's top bit (its
 # 0FFh, kitpages.KIT_OPEN, none chosen and no spell known)
@@ -208,7 +208,7 @@ def knows_new_spell(sheet: bytes, spell: int) -> bool:
 # effect 1: a far pointer to its name (the line under a portrait: "Hasted" for "Okay") and its
 # icon (an ICON chunk of RESOURCE.GFF, as the spells' are) on the Effects screen, which shows
 # only those with one. Effects 6, 27 and 54 have neither (an empty name, icon 0): DSCLOG gives the
-# new spells' theirs, the spell's icon (ICON 21000 + the spell, in the Ledger's RESOURCE.GFF).
+# new spells' theirs, the spell's icon (ICON 21000 + the spell, in the Loader's RESOURCE.GFF).
 EFFECT_TABLE_SEG, EFFECT_ENTRY = 0x3F8D, 6
 NEW_SPELL_ICON = 21000  # + the spell
 # The game turns a spell's kind of save (bits 5-7 of its +0Fh) into one of the sheet's five
@@ -229,7 +229,7 @@ TWO_WEAPON_PENALTY = {3: -2, 10: -4}
 # A spell's category word (its rules' +01h, the record's +11h; WIS counts against 0x1E, ...):
 # with bit 40h set, the game's saving throw adds the target's DEX defensive adjustment (its
 # DEX AC table, sign flipped: +4 at DEX 18, -4 at DEX 3), AD&D's rule for attacks that can be
-# dodged. The game marks no spell so; with RULE_NO_DOUBLE the Ledger marks the fire, cold and
+# dodged. The game marks no spell so; with RULE_NO_DOUBLE the Loader marks the fire, cold and
 # electricity spells (DOUBLED_KINDS), in place of the doubled d20 (set_dodge).
 CATEGORY_DODGE = 0x40
 DOUBLED_FLAGS = 0x86
@@ -643,12 +643,12 @@ HUMAN = 1
 THIEF_SKILLS = ("pick pockets", "open locks", "find/remove traps", "move silently", "hide in shadows",
                 "hear noise", "climb walls", "read languages")
 # the ones shown: those the game ever rolls (no script asks for the other three), and move
-# silently, which the Templar's Ledger rolls when a pocket isn't picked (pickpocket.py)
+# silently, which the Loader rolls when a pocket isn't picked (pickpocket.py)
 ROLLED_SKILLS = (0, 1, 2, 3, 5, 6)
-# the ones the game's inventory screen shows (DSCLOG's STATS): hide in shadows, which the Ledger's
+# the ones the game's inventory screen shows (DSCLOG's STATS): hide in shadows, which the Loader's
 # stealth rule rolls, in hear noise's place (one script check in the game, and no room for both)
 PANEL_SKILLS = (0, 1, 2, 3, 4, 6)
-# ... and the ones the Ledger's own screens show (room for all that are ever rolled)
+# ... and the ones the Loader's own screens show (room for all that are ever rolled)
 LEDGER_SKILLS = (0, 1, 2, 3, 4, 5, 6)
 THIEF = 17  # class number
 PRESERVER = 11
@@ -659,7 +659,7 @@ THIEF_BASE, THIEF_RACE, THIEF_DEX_LOW, THIEF_DEX_HIGH, THIEF_DEX_TOP, THIEF_ARMO
 THIEF_PER_LEVEL = 4
 # The equipment the thief routine checks for its penalty (anything at all in these slots): a
 # list of words at the thief table's +D0h, ended by 13: the legs, the quiver and both hands. The
-# dice log's copy of the game empties it (gamepatch.py), so the Ledger reads it
+# dice log's copy of the game empties it (gamepatch.py), so the Loader reads it
 THIEF_PENALTY_LIST, PENALTY_LIST_END = 0xD0, 13
 THIEF_PENALTY_SLOTS = tuple(EQUIP_SLOTS.index(s) for s in ("legs", "ammo", "left hand", "right hand"))
 # RULE_THIEF_TABLE (DSCLOG's PROBE_THIEF_SKILL does the same in the game): a skill is AD&D's
@@ -689,7 +689,7 @@ def dex_adjustment(dex: int, skill: int) -> int:
     return DEX_ADJUST[min(max(dex, DEX_FIRST), DEX_FIRST + len(DEX_ADJUST) - 1) - DEX_FIRST][skill]
 
 
-# AD&D's ranger: hide in shadows and move silently by ranger level (1-10), the Ledger's own
+# AD&D's ranger: hide in shadows and move silently by ranger level (1-10), the Loader's own
 # (the game gives rangers no thief skills); race and DEX adjust them as a thief's
 RANGER_HIDE = AD_D_THIEF[4]
 RANGER_MOVE = AD_D_THIEF[3]

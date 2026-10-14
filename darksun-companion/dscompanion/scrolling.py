@@ -1,4 +1,4 @@
-"""Scrolling the map with the mouse (DSCLOG's SCROLLING), switched by the Ledger.
+"""Scrolling the map with the mouse (DSCLOG's SCROLLING), switched by the Loader.
 
 DSCLOG does the dragging: holding the wheel pressed (the middle button) and moving scrolls the
 map with the pointer; so, if switched on, does holding the right button, a right click still

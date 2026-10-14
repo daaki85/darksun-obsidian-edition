@@ -6,9 +6,9 @@ Gythka (object 2534: command 39h, a new item of that object to them), or, when t
 carry it, says so and leaves it on the ground by him (25h). Then a click (the window's "more")
 and the talk goes on.
 
-In the Ledger's copy of the scripts, that click becomes a jump to code after the script's end
+In the Loader's copy of the scripts, that click becomes a jump to code after the script's end
 (as alagorn.py's): a new page, his words for the cloak, the cloak given the same way, an object
-of the Ledger's own (CLOAK: its record the Cloak of Elvenkind's, worldgear.py, in the Ledger's
+of the Loader's own (CLOAK: its record the Cloak of Elvenkind's, worldgear.py, in the Loader's
 copy of SEGOBJEX), or left on the ground by him with a word when it can't be carried; then the
 click, and back.
 """

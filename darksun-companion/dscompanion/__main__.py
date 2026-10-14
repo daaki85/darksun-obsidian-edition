@@ -282,7 +282,7 @@ def cmd_play(args) -> None:
         if guest is None:
             return
         log = DiceLog(guest)
-        log.use_settings(settings)  # as last set on the Ledger's Options tab
+        log.use_settings(settings)  # as last set on the Loader's Options tab
         log.speaker_names = launch.speaker_names()
         log.learned_speakers = launch.learned_speakers()
         started = time.time()
@@ -338,7 +338,7 @@ def main(argv=None) -> int:
     common.add_argument("--pid", type=int, help="DOSBox process id (default: the only DOSBox running)")
     common.add_argument("--host-base", help="skip auto-detection: host address of guest RAM")
 
-    p = argparse.ArgumentParser(prog="dscompanion", description="Templar's Ledger: party viewer, dice log and memory tools for Dark Sun: Shattered Lands")
+    p = argparse.ArgumentParser(prog="dscompanion", description="Dark Sun Obsidian Edition Loader: party viewer, dice log and memory tools for Dark Sun: Shattered Lands")
     sub = p.add_subparsers(dest="command", required=True)
 
     s = sub.add_parser("view", parents=[common], help="open the party viewer window")

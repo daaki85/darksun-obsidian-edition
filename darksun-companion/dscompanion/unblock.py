@@ -1,4 +1,4 @@
-"""The "downloaded from the internet" mark taken off the Ledger's own files.
+"""The "downloaded from the internet" mark taken off the Loader's own files.
 
 Windows marks a file downloaded by a browser with a note beside it (an NTFS stream named
 Zone.Identifier, the "Mark of the Web"), and unzipping a marked zip with Explorer marks every
@@ -7,7 +7,7 @@ publisher could not be verified", every time. A .bat file can't carry a signatur
 the files themselves can prevent that.
 
 The first .bat file the player starts has to be let through by them (Run). From then on the
-Ledger, already running, takes the mark off the files in its own folder (and nothing outside
+Loader, already running, takes the mark off the files in its own folder (and nothing outside
 it), so the others start without asking. It does what Explorer's "Unblock" box does. Anything
 that fails (another file system, a file in use) is left as it was.
 """
@@ -17,7 +17,7 @@ import sys
 from typing import Callable, List, Optional
 
 MARK = ":Zone.Identifier"
-FOLDER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # the Ledger's own folder
+FOLDER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # the Loader's own folder
 SKIP = {"__pycache__", ".git"}
 
 

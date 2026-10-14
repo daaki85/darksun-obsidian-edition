@@ -1,6 +1,6 @@
 """The mouse wheel, for the combat log's panel in the game (combatlog.py).
 
-DOSBox 0.74 (GOG's) never passes the wheel on to the game, so the Ledger listens for it itself:
+DOSBox 0.74 (GOG's) never passes the wheel on to the game, so the Loader listens for it itself:
 a low-level mouse hook (Windows' WH_MOUSE_LL, on a thread of its own with its message loop) counts
 the notches turned while DOSBox's window is in front, for the dice log to scroll the panel by
 when the game's pointer is over it. The hook only listens: the wheel goes on to DOSBox as ever.

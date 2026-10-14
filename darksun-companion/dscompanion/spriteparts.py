@@ -1,5 +1,5 @@
 """Where the parts of a party member's map sprite are, frame by frame: the head (and its brow),
-the hair, the shoulders, the hands, the waist and the feet. What the Ledger draws worn equipment
+the hair, the shoulders, the hands, the waist and the feet. What the Loader draws worn equipment
 from (a weapon in the hand, a helm on the head, a cloak from the shoulders under the hair).
 
 The party are objects 300-313 (SEGOBJEX's OJFF chunks): 300 + the figure picked on the character

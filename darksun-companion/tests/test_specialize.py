@@ -268,7 +268,7 @@ class StartWeaponTests(unittest.TestCase):
         self.assertEqual(self.start("long sword", (9, 3)), ("long sword", 45))  # fire: obsidian
         self.assertEqual(self.start("long sword", (9, 2)), ("long sword", 45))  # earth: obsidian
         self.assertEqual(self.start("dagger", (9, 2)), ("dagger", 17))
-        self.assertEqual(self.start("mace", (9, 3)), ("mace", 46))  # a plain obsidian mace, the Ledger's
+        self.assertEqual(self.start("mace", (9, 3)), ("mace", 46))  # a plain obsidian mace, the Loader's
 
 
 class FinishNewTests(unittest.TestCase):

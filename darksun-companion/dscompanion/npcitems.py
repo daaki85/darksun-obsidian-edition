@@ -11,7 +11,7 @@
 The game has no short sword, and no cloak whose plus counts, so those two have item types of
 the companion's own: DSCLOG adds TYPES after the game's 115 each time it reads its type table
 in, as it adds names after its 322 (names.py). The items are in their people's objects in the
-Ledger's copy of SEGOBJEX (PENS: dataitems.py, worldgear.data_chunks), so the game makes the
+Loader's copy of SEGOBJEX (PENS: dataitems.py, worldgear.data_chunks), so the game makes the
 three with them.
 """
 

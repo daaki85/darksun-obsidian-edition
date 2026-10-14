@@ -211,7 +211,7 @@ class WhichTests(unittest.TestCase):
         self.assertIsNone(icons.which(bytes(plain)))
 
     def test_starting_weapons(self):
-        """The Ledger's bone and obsidian short swords and axes by their types, and a great axe
+        """The Loader's bone and obsidian short swords and axes by their types, and a great axe
         with no plus (the game's only one is +3: its picture's gem)."""
         rec = bytearray(npcitems.SWORD)
         for type_, name in ((game.BONE_SHORT_SWORD_TYPE, "Bone Short Sword"), (game.BONE_AXE_TYPE, "Bone Axe"),

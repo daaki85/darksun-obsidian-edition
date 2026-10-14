@@ -316,7 +316,7 @@ seg_moved  db 0                 ; +306 1 once SEG_MOVE has made the new spells' 
            db 0                 ; +307
 sold_seq   dw 0                 ; +308 a magical item sold to a merchant and kept (SELL_KEEP), counted:
 sold_q     times 4 * 2 dw 0     ; +310 the last SOLD_SLOTS of them: the thing holding it, then
-                                ;      the merchant (the shop's DS:179Ch), for the Ledger to put in
+                                ;      the merchant (the shop's DS:179Ch), for the Loader to put in
                                 ;      the merchant's pack (buyback.py)
 panel_on   dw 0                 ; +326 the companion sets 1 to have the combat log's panel drawn
                                 ;      over the map (PANEL), 0 to have it gone (the view drawn again)
@@ -1038,7 +1038,7 @@ c_thief:
         jb .skill
         pop si
         mov al, [cs:c_vals + 6] ; pick pockets, open locks, find traps, move silently and hide in
-        mov [cs:c_vals + 5], al ; shadows (which the Templar's Ledger rolls: for picking pockets
+        mov [cs:c_vals + 5], al ; shadows (which the Loader rolls: for picking pockets
                                 ; and its stealth rule), and climb walls; not hear noise (one
                                 ; script check in the game) or read languages (none)
         mov bx, [cs:c_who]      ; the companion's, with equipment and effects, if it keeps them
@@ -1476,7 +1476,7 @@ use_win dd 0                    ; the USE screen's window, as PROBE_USE last saw
 ; to PAGE 4 buttons theirs (PROBE_SAVE_CLICK). The page is one letter of the game's two save
 ; names, the folder search's ("SAVE??.SAV") and the name a save is written to ("SAVE%.2d.SAV"):
 ; loading takes the name the search found. (The other pages' names don't match the game's
-; search, so the game without the Ledger never sees them: its list has room for ten, and a
+; search, so the game without the Loader never sees them: its list has room for ten, and a
 ; SAVE11.SAV would run past it.) For the new page, the window's own routines (in its overlay, at
 ; CS: nothing they call is an overlay, so it stays put) search the folder again and draw the
 ; rows, the selected row stays (in the load window, the first save: PgUp and PgDn pass by pages
@@ -3804,7 +3804,7 @@ armour_worn:
         ret
 
 ; Weapon pages in the character creation panel (RULE_SPECIALIZE; dscompanion/weaponpages.py, which
-; puts the windows and their pictures in the Ledger's RESOURCE.GFF). The panel shows the psionic
+; puts the windows and their pictures in the Loader's RESOURCE.GFF). The panel shows the psionic
 ; disciplines' window (3012, DS:EA2h its window) or the clerical spheres' (3013, DS:EA6h), which
 ; the game swaps through its routines at DSUN.EXE 640E4h (to the spheres) and 641B9h (back). For a
 ; fighter, gladiator or ranger it gets windows with WEAPON SPEC for its button (3018 for the
@@ -3812,7 +3812,7 @@ armour_worn:
 ; (3014-3017; kept at DS:EA6h, as the spheres' window is, so that the game closes it as one),
 ; each four kinds (specialize.KINDS), MORE SPECS to the next, the last's VIEW PSIONICS back.
 ; The kind marked is the creation sheet's (DS:119Ch) first SPEC_SLOTS byte, which goes with the
-; sheet when DONE is pressed (the Ledger puts in the long sword for a warrior who marks none).
+; sheet when DONE is pressed (the Loader puts in the long sword for a warrior who marks none).
 ; PROBE_WP_DISC_WIN: INT replaces "push 0BC4h" (3 bytes: INT + NOP; 67BFBh), the disciplines'
 ; window being opened: pushes 3018's id instead for a warrior with no sphere.
 ; PROBE_WP_SPHERE_WIN: INT replaces "push 0BC5h" (6413Bh), the spheres' window being opened:
@@ -12051,7 +12051,7 @@ sell_price:
 ; a shop has paid for the item the party sold and empties the item list of the thing holding it,
 ; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_BUYBACK and a magical item (a plus, +14h, or a power,
 ; +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the thing and the merchant
-; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Ledger, which puts the item in the merchant's pack,
+; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Loader, which puts the item in the merchant's pack,
 ; where the shop lists it; any other item is pushed and freed as the game does. The push: the
 ; registers kept and the interrupt's frame moved down a word, the word under them.
 SOLD_SLOTS   equ 4              ; (SOLD_Q's room: 4 entries in the header)
@@ -14758,7 +14758,7 @@ probe_hit:
 ; an item's box (right-click an item: its picture, price, name, damage, HEAVY, AC BONUS; DSUN.EXE
 ; 8C1A1h), its lines drawn (SI: the item's type, DI: the row after them, but for AC BONUS's).
 ; With SKILLS_ON's bits, a cloak's or boots' bonus to hiding in shadows or moving silently (the
-; Ledger's rule: stealth.py), or a belt's to picking pockets and opening locks (PROBE_BELT), in the
+; Loader's rule: stealth.py), or a belt's to picking pockets and opening locks (PROBE_BELT), in the
 ; next row, with the routine's own text routine, as it draws AC BONUS; an item that casts a spell
 ; with charges (a wand, a ring, a necklace: its spell byte, +0Fh, a spell's + 1 below ITEM_SPECIAL;
 ; its charges, +0Eh, not 0; not fruit, eaten whole; not scenery, a door) its charges left there
@@ -14916,7 +14916,7 @@ ib_elf_quiet db 'Move 95%', 0
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
 ; gets BELT_BONUS more to pick pockets (0) and open locks (1); an Assassin (kits.py) 15 less to
-; those, a Swashbuckler 10 less to every skill, no less than 0, as the Ledger counts them (game.py's thief_skills_now); then AX = the chance, as
+; those, a Swashbuckler 10 less to every skill, no less than 0, as the Loader counts them (game.py's thief_skills_now); then AX = the chance, as
 ; the code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
 BELT_BONUS equ 5

@@ -15,7 +15,7 @@ def gift(name):
 
 class WorldGearTests(unittest.TestCase):
     def test_weapons(self):
-        """Each weapon given is one of the Ledger's own, with its picture, in no list or slot."""
+        """Each weapon given is one of the Loader's own, with its picture, in no list or slot."""
         for spec, plus, name in ((worldgear.BONE_SHORT_SWORD, 0, "Bone Short Sword"),
                                  (worldgear.OBSIDIAN_SHORT_SWORD, 0, "Obsidian Short Sword"),
                                  (worldgear.BONE_AXE, 0, "Bone Axe"), (worldgear.OBSIDIAN_AXE, 0, "Obsidian Axe"),
@@ -78,7 +78,7 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual(worldgear.STAFF_SLING_1[0][3], 2800)
 
     def test_bracers(self):
-        """AC 6, 5, 4 and 2, as a plus of 10 - AC, worn on the arms; the Ledger's icon and name."""
+        """AC 6, 5, 4 and 2, as a plus of 10 - AC, worn on the arms; the Loader's icon and name."""
         acs = {}
         for name in ("Mikquetzl", "Wyrmias", "Balkazar", "Dagolar"):
             g = gift(name)
@@ -363,7 +363,7 @@ class DataTests(unittest.TestCase):
         self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x08, 0x1C, 0x1E, 0x28, 0x29])
 
     def test_regions_opened(self):
-        """Every region file the Ledger copies for a clone is one DSCLOG opens in the game's place
+        """Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
         (its D:\ copy named in its table of copies): else the game reads its own."""
         exe = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")
         with open(exe, "rb") as f:

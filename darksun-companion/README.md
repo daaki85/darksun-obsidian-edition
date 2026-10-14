@@ -1,8 +1,8 @@
 # Obsidian Edition
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox, with its own companion window, **Templar's Ledger**, beside the
-game.
+in DOSBox, with its own window, the **Dark Sun Obsidian Edition Loader**,
+beside the game (called Templar's Ledger up to 2.2.1).
 
 ## Contents
 
@@ -14,7 +14,7 @@ game.
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
   - [If the game or DOSBox crashes](#if-the-game-or-dosbox-crashes)
-- [The Ledger's window](#the-ledgers-window)
+- [The Loader's window](#the-loaders-window)
   - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
@@ -142,7 +142,7 @@ speed](#game-speed)), crash reports, and no dragon asking for a word from the
 manual, the game's copy protection ([No manual check](#no-manual-check)).
 
 **What it changes on your computer.** The game's own files are never
-modified: the Ledger runs a patched copy of the game, with copies of its data
+modified: the Loader runs a patched copy of the game, with copies of its data
 files, from its own folder (see
 [DEVELOPMENT.md](DEVELOPMENT.md#how-the-dice-log-works)). Play writes to the
 game folder only what you'd expect:
@@ -154,7 +154,7 @@ game folder only what you'd expect:
 - in a saved game, the new items, if **New items** is ticked. Some are item
   types the original game doesn't have (the Short Sword, the Cloak of
   Protection, the bracers, the robes, plate mail, the Cloak and Boots of
-  Elvenkind, a metal shield), so load such a save with the Ledger.
+  Elvenkind, a metal shield), so load such a save with the Loader.
 
 The window is dressed in the game's own colours, sampled from it; no game
 artwork is copied.
@@ -182,15 +182,15 @@ setting (suggestions, not tested limits):
 | Faster (20,000 cycles, the default) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
 | Fastest (35,000 cycles) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
 
-The Ledger itself (Python and its window) needs about 100 MB of memory and
+The Loader itself (Python and its window) needs about 100 MB of memory and
 little processor time. A screen of 1920×1080 or more shows the game's window
-at **Triple** size beside the Ledger's; on a smaller one choose **Double**.
+at **Triple** size beside the Loader's; on a smaller one choose **Double**.
 If the computer can't keep up, the sound crackles or stutters and the game
 slows instead of speeding up: choose the next setting down.
 
 ## Running it (Windows)
 
-Templar's Ledger, the mod's companion window, is a separate program that runs
+The Loader, the mod's companion window, is a separate program that runs
 next to the game. You don't install anything into the game folder.
 
 ### One-time setup
@@ -214,7 +214,7 @@ next to the game. You don't install anything into the game folder.
 asks this for any `.bat` file unzipped from a download, since a `.bat` file can't
 be signed. To skip it altogether, before unzipping right-click the zip, choose
 **Properties**, tick **Unblock** and press **OK**. Otherwise press **Run** the
-first time: the Ledger then takes the download mark off the files in its own
+first time: the Loader then takes the download mark off the files in its own
 folder (what that Unblock box does, and nothing outside the folder), so the other
 `.bat` files start without asking.
 
@@ -226,22 +226,22 @@ no packaged program to trust.
 ### Every time you play
 
 1. Double-click **`Start Obsidian Edition.bat`** in that
-   folder. The Ledger opens on its own.
+   folder. The Loader opens on its own.
 2. On its **Options** tab, pick what you want: the rule changes, the new
    content, picking pockets, the combat log in the game and so on (see
-   [The Ledger's window](#the-ledgers-window) and [Rule changes](#rule-changes)).
+   [The Loader's window](#the-loaders-window) and [Rule changes](#rule-changes)).
    They're remembered for next time.
 3. Pick the **Game window** size at the top if you like, then press **Start
    the game** (top left).
 
 That starts Shattered Lands (through GOG's own DOSBox) with the dice log helper
-loaded and your options in force, and the Ledger picks it up once DOSBox is up.
+loaded and your options in force, and the Loader picks it up once DOSBox is up.
 Your saves are the same ones the game normally uses. The first time, it looks
 for the game in the usual GOG folders; if it can't find it, it asks you where
 the game is installed and remembers the answer.
 
 DOSBox opens in a window three times the game's size (960x720), not full
-screen. To change that, pick **Game window** at the top of the Ledger:
+screen. To change that, pick **Game window** at the top of the Loader:
 **Double (640x480)**, **Triple (960x720)**, **Quadruple (1280x960)** or **Full
 screen**. It's remembered, and used from the next time you start the game.
 Alt+Enter switches between window and full screen while playing. (From a
@@ -256,15 +256,15 @@ the **Dice log** tab as they happen.
 
 ### Other ways to start
 
-**Game and Ledger in one double-click:** **`Start Game with Dice Log.bat`**
-starts the game with the dice log and opens the Ledger next to it, with the
+**Game and Loader in one double-click:** **`Start Game with Dice Log.bat`**
+starts the game with the dice log and opens the Loader next to it, with the
 options as you last set them on the Options tab. With the game started the
-normal way instead (GOG's own shortcut), the Ledger still shows the party, but
+normal way instead (GOG's own shortcut), the Loader still shows the party, but
 the dice log will say the game was started without it.
 
-**Just the game, with the in-game additions, no Ledger window:** double-click
+**Just the game, with the in-game additions, no Loader window:** double-click
 **`Play Dark Sun (in-game rolls).bat`**. The dice log runs unseen and stops
-when you close DOSBox. It uses the switches on the Ledger's Options tab as you
+when you close DOSBox. It uses the switches on the Loader's Options tab as you
 last set them (the combat log, monster descriptions, picking pockets, the
 rule changes); the new items, the new people and the cooked
 vulture are there too. If anything goes wrong it says so in a message box and
@@ -275,27 +275,27 @@ writes the details to `play.log`.
 When the game stops with an error (such as
 "Null pointer assignment"), DOSBox waits with the game's message on screen
 ("The game stopped with an error", then press a key) rather than closing over
-it. With the game started from the Ledger (or either `.bat` file), the dice log
+it. With the game started from the Loader (or either `.bat` file), the dice log
 also says how DOSBox closed: `DOSBox closed: it crashed (an access violation,
 code C0000005h)` means DOSBox itself failed, not the game.
 
-Either way, the Ledger saves a crash report in the
+Either way, the Loader saves a crash report in the
 `crash-logs` folder (beside `Start Obsidian Edition.bat`), named for the time,
 such as `crash-logs\crash-2026-10-04-213012.txt`, and says so in the dice log
 (or, with `Play Dark Sun (in-game rolls).bat`, in a message box). It holds:
 - how DOSBox closed (its exit code), and what the game left on the screen;
-- how long the game ran, and the Ledger's switches and game speed (not where the
+- how long the game ran, and the Loader's switches and game speed (not where the
   game is installed, nor the party's names);
 - DOSBox's own `stdout.txt` and `stderr.txt` from that run, if it wrote them;
-- any writes into the game the Ledger refused as unsafe;
+- any writes into the game the Loader refused as unsafe;
 - the last 300 lines of the dice log and the last 80 of the dialogue.
 
 Send the file along with what you were doing just before. A game closed the
 usual way (Exit to DOS, or closing DOSBox's window) writes no report. With the
-game started from GOG's own shortcut, the Ledger can't see how it closed, so
+game started from GOG's own shortcut, the Loader can't see how it closed, so
 there is no report.
 
-## The Ledger's window
+## The Loader's window
 
 The window has the party on one side and the logs and tools on the other, with
 **Start the game**, the game window's size, the text size and **Reconnect** (to
@@ -331,10 +331,10 @@ party pane has two tabs:
 The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below),
 **Memory tools** (for mapping the game's memory, with **Save layout** and
 **Reload layout**: see [DEVELOPMENT.md](DEVELOPMENT.md#mapping-memory)), and
-**Options** (Alt+O) with the Ledger's switches, in sections that open and
+**Options** (Alt+O) with the Loader's switches, in sections that open and
 close: click a section's heading (or Tab to it and press Space or Enter) to
 open it, ▸ when closed and ▾ when open. Which sections are open is remembered.
-Everything there applies in games started from the Ledger; a switch that says
+Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
 - **In the game**: the combat log and how much it says, monster
@@ -449,12 +449,12 @@ to the number. Text shown without a face (the emblem instead) is `Narration`.
 Each entry shows the speaker's portrait, as the game's own dialogue window
 does. Portraits and the title's lettering are read from your installed game
 at run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the launcher
-remembers); nothing from the game is copied into Templar's Ledger. Without
+remembers); nothing from the game is copied into the Loader. Without
 the game installed the window uses its own lettering and no portraits.
 
 ## The dice log
 
-![Templar's Ledger during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Cone of Cold killing a Slig and the Rampager's acid killing the Defiler](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Cone of Cold killing a Slig and the Rampager's acid killing the Defiler](docs/dicelog.png)
 
 **Reading it at a glance.** Lines at the left edge are the events: a round
 starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented
@@ -540,7 +540,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `Message: Long Sword is broken !` | The game's own message boxes: broken or corroded weapons and armour, level-ups, "NO PATH FROM HERE" and so on. |
 | `Dinos cooks the vulture and the party eats with him: ... restored as after a full rest (HP, PSP and spell slots); the game gives each 100 XP` | Dinos asked about the cooked vulture (see [The cooked vulture](#the-cooked-vulture)); the XP itself is on the `XP:` line after it. |
 | `Dice: 1d8 = [3] = 3` | Dice the log couldn't tie to anything (for example a spell with no saving throw). |
-| `(The Ledger stopped one of its own writes over the game's memory: ...)` | A safety net: the Ledger never writes over the start of memory (the interrupt vectors, the BIOS's and DOS's data) or the first bytes of the game's data, which its C runtime checks ("Null pointer assignment"). Such a write could only come from a pointer the game has left empty for a moment; the line says where in the Ledger it came from. Please report it. |
+| `(The Loader stopped one of its own writes over the game's memory: ...)` | A safety net: the Loader never writes over the start of memory (the interrupt vectors, the BIOS's and DOS's data) or the first bytes of the game's data, which its C runtime checks ("Null pointer assignment"). Such a write could only come from a pointer the game has left empty for a moment; the line says where in the Loader it came from. Please report it. |
 
 The log keeps its newest line in view. Scroll up to read back and it stays
 where you are; scroll to the bottom again and it follows the new lines once
@@ -837,7 +837,7 @@ the chance out as:
   not what the code does.) In games started with the dice log there is no
   equipment penalty at all: the slots are a list in the game's data
   (legs, quiver, left hand, right hand), and the dice log's
-  copy of the game empties it. The Ledger reads the list from the running
+  copy of the game empties it. The Loader reads the list from the running
   game, so its numbers match whichever game it is.
 - plus the situation's bonus or penalty (a hard lock, say).
 
@@ -900,7 +900,7 @@ has a script command that lets each member try in turn, but no script uses it.)
 
 **Move silently, hide in shadows and read languages are never rolled** anywhere
 in the game, so they make no difference; nor does the equipment penalty on
-them. (The Ledger rolls move silently when a pocket isn't picked, see
+them. (The Loader rolls move silently when a pocket isn't picked, see
 [Picking pockets](#picking-pockets), and hide in shadows and move silently in
 fights, to [backstab](#hiding-in-shadows-to-backstab).) The scripts also make
 3 ability checks (a d20 under the ability): CHA twice and STR once.
@@ -912,7 +912,7 @@ The **Characters** tab shows each thief's chances as they stand, with the
 equipment penalty (none in games started with the dice log) and effects (but
 not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
-the two the Ledger rolls: move silently (when a pocket isn't picked, see
+the two the Loader rolls: move silently (when a pocket isn't picked, see
 [Picking pockets](#picking-pockets)) and hide in shadows (to
 [backstab](#hiding-in-shadows-to-backstab)), with any Thieves' Tools carried.
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
@@ -936,7 +936,7 @@ From the game's code:
   attack of the round the damage, STR bonus included, is multiplied: x2 at
   thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
 
-Which weapons can backstab, the game's and the [Ledger's](#new-items), magic
+Which weapons can backstab, the game's and the [Loader's](#new-items), magic
 ones included. Weight belongs to the weapon's type and
 material, in the game's units, which look like tenths of a pound (a dagger is
 10, a club 30, a mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb.
@@ -1030,7 +1030,7 @@ fear applies only to a kind of spell that no spell in the game is marked as,
 and so does AD&D's DEX defensive adjustment for attacks that can be dodged
 (+5 at DEX 1 to -6 at DEX 25 on AC, so -5 to +6 on the save), unless the
 [rule change](#rule-changes) puts it on the fire, cold and electricity spells. And nothing in the game gives saves from items: there
-are no rings or cloaks of protection, which is why the Ledger adds
+are no rings or cloaks of protection, which is why the Loader adds
 [a ring](#new-items) and [a cloak](#new-items). Their +1 is in the
 log's saving throws as `+1 Ring of Protection` and `+1 Cloak of Protection`
 (with [AD&D's rules for them](#rings-and-cloaks-of-protection) off, all of it
@@ -1039,7 +1039,7 @@ as `Ring of Protection`).
 ## In the game
 
 The game itself shows more, in its own lettering and windows, when it is started
-from the Ledger (or either `.bat` file).
+from the Loader (or either `.bat` file).
 
 ### THAC0, saves and thief skills
 
@@ -1059,7 +1059,7 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
 - right of the abilities, level with STR to CHA, for a character with thief
   levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
-  and hide in shadows are the ones the Ledger rolls (for
+  and hide in shadows are the ones the Loader rolls (for
   [picking pockets](#picking-pockets) and [hiding to backstab](#hiding-in-shadows-to-backstab)).
   A worn belt's 5 is in `PICK` and `LOCK`. Hear noise (one script check) and
   read languages (none) are left out for want of room. A ranger, with
@@ -1085,9 +1085,9 @@ change it) and **THAC0**.
 
 ![The View Character screen: the saves labelled under the item icons, and MOVE and THAC0 beside HP and PSI](docs/view-character.png)
 
-They're the numbers as they stand now, worked out by the Ledger the way the
+They're the numbers as they stand now, worked out by the Loader the way the
 game's own attack and saving throw routines do. Each time the game draws one
-of these screens, the helper has the Ledger bring them up to date first (the
+of these screens, the helper has the Loader bring them up to date first (the
 game waits a moment for it), so putting on a ring or readying another weapon
 shows at once. Spells start and end as time passes in the game, which it
 doesn't while these screens are open; open the screen again to see such a
@@ -1116,11 +1116,11 @@ change.
 
 The Characters tab shows the same THAC0 with each weapon and saves. The
 game's own numbers (the character sheet's) come back on these screens when
-the Ledger isn't running.
+the Loader isn't running.
 
 **The next level's class.** For a character of more than one class, the number in brackets on View
 Character's experience line is the XP at which the first of their classes
-goes up a level, and the Ledger adds which class that is:
+goes up a level, and the Loader adds which class that is:
 `EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each
 class is a letter, except preserver and psionicist, which both start with P:
 
@@ -1165,7 +1165,7 @@ them: a character with both wizard and priest spells gets the two lines without
 the `SPELLS LEFT BY LEVEL` heading.
 
 The numbers are the Characters tab's (see [spell slots](#the-characters-tab)), WIS bonus included,
-printed with the game's own text routine; they show while Templar's Ledger (or
+printed with the game's own text routine; they show while the Loader (or
 its command-line dice log) is running.
 
 ### The combat log in the game
@@ -1173,7 +1173,7 @@ its command-line dice log) is running.
 With **Show a combat log in the game, bottom right, in a fight** ticked on the
 Options tab (off unless you tick it), a panel over the map's lower right shows
 the fight as it goes: the dice log's lines in the game's own font, in the
-Ledger's colours for each kind of line (hits green, misses grey, damage amber,
+Loader's colours for each kind of line (hits green, misses grey, damage amber,
 saving throws blue), the party's names in their colours and the monsters' in
 red, a filled pip before a party member's line and a hollow one before a
 monster's. Its top line says the round, who is acting and who is still to
@@ -1183,9 +1183,9 @@ default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
 `Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
 the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
 target's AC; a natural 20 always hits, a 1 always misses). The panel is on only in fights, never waits for a click, and goes
-when the fight ends (or the Ledger is closed). A
+when the fight ends (or the Loader is closed). A
 window the game opens over the map (a character's menu, a question) hides it
-until it closes. It needs the game started from the Ledger (which turns off
+until it closes. It needs the game started from the Loader (which turns off
 DOSBox's EMS to make room for it).
 
 ![The combat log in the arena, in short](docs/combat-log.png)
@@ -1193,7 +1193,7 @@ DOSBox's EMS to make room for it).
 It scrolls back over the fight (the last 200 lines): drag the scrollbar's
 handle, click the bar above or below it for a page, or turn the mouse wheel
 with the pointer over the panel (on Windows: DOSBox doesn't pass the wheel to
-the game, so the Ledger listens for it itself). Scrolled back, it stays where
+the game, so the Loader listens for it itself). Scrolled back, it stays where
 it is as new lines come, and a **Latest** chip at its foot says how many have;
 click it (or scroll to the end) to follow the fight again. Clicks on the panel
 are its own: the party doesn't walk there.
@@ -1247,7 +1247,7 @@ inventory screen), under its name, counting down as it's used:
 The game's copy protection is gone. Leaving the sewers (the Tari's warrens) the
 first time, the game has a dragon appear and ask for a word from the manual
 ("The 3rd word on page 14, line 1, begins with the letter 'p'. What is that
-word?"), and three wrong answers kill the party. Started from the Ledger, the
+word?"), and three wrong answers kill the party. Started from the Loader, the
 dragon doesn't come: the game goes on as if it had been answered. Always on.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
@@ -1257,7 +1257,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
 Fourteen changes that bring the game's own rules closer to AD&D, each with
 its own box in the Options tab's **Rule changes** section. All are on by
 default, and they take effect in games started with the dice log: with the
-Ledger running, or with **Play Dark Sun (in-game rolls)**, which uses the
+Loader running, or with **Play Dark Sun (in-game rolls)**, which uses the
 Options as last set. Untick one and the game's own rule is back at once. [How
 the game works](#how-the-game-works) has what the game does without them.
 
@@ -1295,7 +1295,7 @@ own "Cannot use this item":
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
 
 A thief of any kind holds only leather shields, the rule or not: the game's own
-lists leave thieves out of the wooden shield, and the Ledger's metal one.
+lists leave thieves out of the wooden shield, and the Loader's metal one.
 
 A **multiclass preserver** may wear what its other classes allow, but casts no
 spells (wizard or priest) while wearing armour (a helm counts, a shield
@@ -1312,7 +1312,7 @@ the Cloak of Protection among them, aren't armour: any class may wear one.
 
 A new character starts without the weapons, armour and shields its classes
 can't use. The game gives a character of several classes each class's gear,
-and puts what it may not wear in the backpack: the Ledger leaves that behind
+and puts what it may not wear in the backpack: the Loader leaves that behind
 and says so in the dice log (`Yilballa's Chest Armor is left behind: their
 classes can't use it`, for a druid's leather armour given for its fighter
 class).
@@ -1563,9 +1563,9 @@ less the item's plus, and 1 less again for a magical power:
 | Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
 | Shadowseeker (metal, +1) | 70% | 70% (the game's: needs 7) |
 | Obsidian Dagger | 65% | 80% (needs 5) |
-| The Ledger's plain bone weapons (Dagger, Short Sword, Axe, Great Axe) | 65% | 65% (the game's: needs 8) |
-| The Ledger's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
-| The Ledger's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
+| The Loader's plain bone weapons (Dagger, Short Sword, Axe, Great Axe) | 65% | 65% (the game's: needs 8) |
+| The Loader's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
+| The Loader's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
 | Kreenfang, Drakejaw, Stillwater, Thornwall (bone, +1) | 70% | 70% (the game's: needs 7) |
 | Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
 | Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
@@ -1589,7 +1589,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
 
 ### Rings and cloaks of protection
 
-The game has no rings or cloaks of protection; the Ledger adds three (the
+The game has no rings or cloaks of protection; the Loader adds three (the
 arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
 [New items](#new-items)), each +1 to AC and +1 on every
 saving throw. With **Rings and cloaks of protection as in AD&D** ticked, they
@@ -1632,10 +1632,10 @@ the game's tables). It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
 
 The game has no descriptions of items, only their names, so while the rule is
-on the Ledger renames the plain helm **Helm (AC 1)**. The named ones
+on the Loader renames the plain helm **Helm (AC 1)**. The named ones
 (Dapartea's Helm, Helm/Contempltn, Helm of Might) keep their names, which
 would be too long for the game's Look box with the note. With the rule off,
-or without the Ledger, the names are the game's own.
+or without the Loader, the names are the game's own.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 
@@ -1712,7 +1712,7 @@ and on the last **VIEW PSIONICS** back to the panel. It works as the game's
 disciplines do: the long sword is marked to start with (a gladiator's two:
 the long sword and the club), the others greyed; click a marked one to take
 it back, then another. A multiclass warrior can choose only the weapon specs its other
-class lets it use: those of which the game (or the Ledger) has a weapon the
+class lets it use: those of which the game (or the Loader) has a weapon the
 character may use, in any material. The rest stay greyed:
 
 | A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
@@ -1720,7 +1720,7 @@ character may use, in any material. The rest stay greyed:
 | …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
 | …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
 | …with air cleric (missile weapons, and the dagger that can be thrown) | dagger, chatkcha, bow, sling, staff sling | an obsidian dagger |
-| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the Ledger's metal) | an obsidian long sword |
+| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the Loader's metal) | an obsidian long sword |
 | …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
 | …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
 
@@ -1739,11 +1739,11 @@ weapon specialization chosen, in place of the bone long sword`):
 |---|---|---|
 | long sword | the game's bone long sword | obsidian (fire, earth) |
 | club, quarterstaff, bow | wooden (a bow with 20 arrows) | |
-| dagger, chatkcha | obsidian | a dagger: bone, the Ledger's (water) |
-| short sword | bone, the Ledger's | obsidian (fire, earth) |
-| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the Ledger's; a polearm: metal, the Ledger's (earth) |
-| axe | bone, the Ledger's | obsidian (fire, earth) |
-| great axe | bone, the Ledger's | obsidian (fire, earth) |
+| dagger, chatkcha | obsidian | a dagger: bone, the Loader's (water) |
+| short sword | bone, the Loader's | obsidian (fire, earth) |
+| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the Loader's; a polearm: metal, the Loader's (earth) |
+| axe | bone, the Loader's | obsidian (fire, earth) |
+| great axe | bone, the Loader's | obsidian (fire, earth) |
 | pick | stone | |
 | sling, staff sling | leather | |
 
@@ -1891,13 +1891,13 @@ spheres, the rows not chosen are greyed: click the marked row to take it back,
 then click the kit you want. A few names are shortened to fit the panel
 (CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR). Choosing
 another class puts the kit back to none; a new roll of the die keeps it. The Effects screen names the kit
-(`KIT: RAVAGER`), as does the Ledger's Characters tab.
+(`KIT: RAVAGER`), as does the Loader's Characters tab.
 
 The Elementalist chooses its second sphere on the creation panel's
 **CLERICAL SPHERE** list: once the kit is taken (KITS, then ELEMENTAL), its
 own sphere marked, the other spheres stay in use, and a click on one marks it
 as the second; a click on it again takes it back, and taking back its own
-sphere takes back both. The Ledger's Characters tab names it (**Kit:
+sphere takes back both. The Loader's Characters tab names it (**Kit:
 Elementalist (and water)**). Its second sphere's spells are known from the
 start, as its own sphere's are (a priest knows every spell of its spheres from
 the start: the game marks them when the character is made, and again when a
@@ -1920,7 +1920,7 @@ points and works out the PSP again, and the screen shows the new numbers.
 #### Starting gear
 
 The game hands a new character its class's gear (named above each class's
-table) when DONE is clicked. With **Kits** ticked, the Ledger fits that gear
+table) when DONE is clicked. With **Kits** ticked, the Loader fits that gear
 to the kit while the character is new, as each table's **Starts with** says:
 a weapon or shield the kit forbids is swapped or taken away, and a kit with a
 weapon spec of its own gets a plain weapon of it. The dice log says what it
@@ -1929,7 +1929,7 @@ spec, in place of the Quarterstaff`).
 
 #### The kits in play
 
-- **Shown everywhere.** The dice log and the Ledger show each kit's part: a
+- **Shown everywhere.** The dice log and the Loader show each kit's part: a
   Ravager's to-hit and damage (`+1 Ravager`), a Sentinel's initiative and
   saves, a Stalker's hiding, the THAC0 for each weapon. A kit's hit die is
   named on the hit point lines (`Preserver d6 per level`).
@@ -1940,7 +1940,7 @@ spec, in place of the Quarterstaff`).
   for the character (View Character's, the attack's), worked out when the
   character is made and at each level up.
 - **Spell slots** are the game's own wherever it counts them (resting, the
-  spell lists, the Ledger's Spells tab). WIS's bonus slots count for the
+  spell lists, the Loader's Spells tab). WIS's bonus slots count for the
   Arcanist, Crusader and Elementalist as for their classes, not for the
   Seeker's and Justifier's own tables.
 - **Casting level.** A kit's casting level is the one a spell's duration and
@@ -1958,7 +1958,7 @@ A kit belongs to the class it was chosen with. A human who changes class
 level or more) keeps it, but it sleeps as that class does: gifts and costs
 alike count again once the new class's level passes the old one's. The
 Effects screen shows `KIT: BATTLMAGE (ASLEEP)` until then;
-the Ledger's Characters tab says so too (`Battle Mage, dormant until the
+the Loader's Characters tab says so too (`Battle Mage, dormant until the
 fighter level passes 3`). Once awake, the kit goes by its own class's level
 (a Ravager's AC, a Seeker's slots, a Battle Mage's expertise from 7th
 preserver level), its hit die only ever counts for its own class (the new
@@ -2076,7 +2076,7 @@ and thief skills are worked out from the level. So at 10th level:
   rolling at 9th; with the rule thieves roll their 10th die.
 - **Gladiators** optimise their armour, as the game already has them do:
   AC 1 better for every 5 gladiator levels, so -2 at 10th where it was -1.
-  (The Ledger counts it in **AC: spells, rings, other**. The game gives it
+  (The Loader counts it in **AC: spells, rings, other**. The game gives it
   with or without armour.)
 - **THAC0 and saves** improve as the game's formulas give: 11 for a
   gladiator, 14 for a druid, as for AD&D's warriors and priests.
@@ -2125,7 +2125,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 
 START GAME with no party made plays the game's own four, who were made before
 any of these choices existed. With weapon specialization, kits and class
-restrictions on, the Ledger fits them to those in the first moments of a new
+restrictions on, the Loader fits them to those in the first moments of a new
 game, and says so in the dice log (Cilla also gets the elf's figure, with its
 own switch: see [Elves and half-elves](#elves-and-half-elves)):
 
@@ -2305,7 +2305,7 @@ Their boxes say `Hide 90-95%` and `Move 95%`.
 
 The same switch has a worn **belt** add 5 to a thief's **picking pockets and
 opening locks**, whether hiding is on or not: the game's own lock picking
-counts it, and so do the Ledger's pockets and its thief rows (`PICK 80`,
+counts it, and so do the Loader's pockets and its thief rows (`PICK 80`,
 `LOCK 64`). A belt's box says `Pick +5, Lock +5`.
 
 Plain cloaks, boots and belts cost 24 (the game's Leather Cloak is 20), anywhere
@@ -2332,7 +2332,7 @@ are the thief's own as they stand (level, race, DEX, and effects: Invisibility m
 rule it out).
 
 **Rangers** hide and move silently too, with the same box ticked. The game
-gives rangers no thief skills, so the Ledger uses AD&D's ranger table, by
+gives rangers no thief skills, so the Loader uses AD&D's ranger table, by
 ranger level, with the race's and DEX's adjustments as for a thief:
 
 | Ranger level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -2370,7 +2370,7 @@ the pointer, and click someone in sight. The tools stay on the pointer for the
 next try (clicking open ground drops them, as with anything carried). Not in a
 fight: there's no time for it then.
 
-The Ledger rolls the thief's pick pockets chance as it stands now (effects and
+The Loader rolls the thief's pick pockets chance as it stands now (effects and
 a worn belt's 5 counted, as in the thief rows):
 
 - **Success:** one small thing goes into the thief's backpack (its first free
@@ -2392,7 +2392,7 @@ the last try on that person.
 
 A thief can go on trying the same person until **caught** (both rolls failed)
 or until they take the coins; after that, that person keeps a hand on their
-pockets for good. The Ledger remembers who in `settings.json`,
+pockets for good. The Loader remembers who in `settings.json`,
 for this party, with the time on the game's clock: load a game saved before
 the try and the clock goes back past it, so the try is forgotten and the
 person can be tried again. The Trustee is left to his own conversation. What happens
@@ -2408,14 +2408,14 @@ Daaki picks Kurzak's pocket: d100 = 71, needs 63 or less -> failed
 the game drops it at his feet, and after each step of his rounds he went back
 for it ("There it is!") without picking it up: his rounds stalled, and he
 stayed busy ("I'd love to talk more... get back to work") for good. The
-Ledger's copy of his scripts leaves the key where it lies, for the party to
+Loader's copy of his scripts leaves the key where it lies, for the party to
 pick up, and has him say the busy line once.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
 
 ## New content
 
-Spells, people, a quest and items the Ledger adds to the game, each with a box
+Spells, people, a quest and items the Loader adds to the game, each with a box
 in the Options tab's **New content** section: the people, the quest and the
 items from the next time the game is started, the spells and the defilers'
 scrolls at once in games started with the dice log.
@@ -2494,8 +2494,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
 ### New items
 
 Items the game never had, or never placed. All but the arena's ring (which the
-Ledger hands over itself, while it runs) are written
-into the game's own data each time the Ledger starts the game, so the game
+Loader hands over itself, while it runs) are written
+into the game's own data each time the Loader starts the game, so the game
 makes them with their people and chests and then keeps and saves them like its
 own. A changed switch takes effect in regions the party hasn't visited yet;
 start a new game to have them all. The log doesn't say where they are: they're
@@ -2504,7 +2504,7 @@ with the game's own.
 
 **Mundane items.** The game has no short sword at all, no bone or obsidian
 axe or great axe, no bone dagger and few plain metal weapons; the
-Ledger adds them:
+Loader adds them:
 
 | Icon | Item | Where | What it is |
 |---|---|---|---|
@@ -2534,7 +2534,7 @@ character can use.
 
 | Icon | Item | Where | What it does |
 |---|---|---|---|
-| ![](docs/items/ring-of-protection-plus1.png) | **Ring of Protection +1** | the arena's Tied-up Prisoner: free him, then look at his body (the game's script says there's nothing; the Ledger finds a ring sewn into his loincloth, 50 XP to whoever searched) | +1 AC and +1 on every saving throw |
+| ![](docs/items/ring-of-protection-plus1.png) | **Ring of Protection +1** | the arena's Tied-up Prisoner: free him, then look at his body (the game's script says there's nothing; the Loader finds a ring sewn into his loincloth, 50 XP to whoever searched) | +1 AC and +1 on every saving throw |
 | ![](docs/items/pehtucls-ring-of-protection-plus1.png) | **Ring of Protection +1** | worn by **Pehtucl**, the slave pens' head templar (in the south-west corner, with the Obsidian Bloodwrath) | the same |
 | ![](docs/items/cloak-of-protection-plus1.png) | **Cloak of Protection +1** | worn by Pehtucl | the same, from the cloak slot |
 | ![](docs/items/inixhide.png) | **Inixhide** | worn by **Legcrusher**, the pens' half-giant | Leather Chest Armor +1: the leather's AC, +1 |
@@ -2606,7 +2606,7 @@ Mindshard (200 XP for each weapon).
 the way the game makes its magic items' (a few pixels in the colours it cycles
 like fire); dropped on the map they look like the plain item. The game's names
 are at most 15 letters, so the rings are **RING/PROTECTION** and the cloak
-**Cloak/Protectn**; the Ledger's screens and the log give them in full. As with
+**Cloak/Protectn**; the Loader's screens and the log give them in full. As with
 its own items, the game puts the material first: **Leather Inixhide**,
 **Metal +1 Shadowseeker** in the item box.
 
@@ -2626,12 +2626,12 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
 #### Bracers of defense
 
 A preserver can't cast in armour (with [class restrictions](#class-restrictions)),
-so the Ledger adds AD&D's bracers of defense ([where](#new-items)). They are
+so the Loader adds AD&D's bracers of defense ([where](#new-items)). They are
 worn on the arms, in the arm armour's place, and give the AC their name says:
 AC 6 is 4 better than no armour, AC 2 is 8 better. As in AD&D they give nothing
 while armour is worn: on the arms, legs or chest, or a helm (bone, leather or
 metal, magical or not). A shield, rings and cloaks of protection, and the
-Ledger's circlet and crown (worn on the head, but not armour) go with them.
+Loader's circlet and crown (worn on the head, but not armour) go with them.
 They aren't armour to anything else: a preserver casts in them, a thief wears
 them, and a ring or cloak of protection still counts. In the game they are
 **BRACERS/DEFENSE** with their plus (Bracers/Defense +4 is AC 6), priced 5,000
@@ -2653,7 +2653,7 @@ it.
 | ![](docs/items/ashen-robe.png) | **Ashen Robe** (+1) | AC 1 better; +1 on saves against wizards' and priests' spells | worn by [Kalzith](#kalzith), who sells it with his scrolls, and left with his body if he's killed (6,000) |
 | ![](docs/items/veiled-robe.png) | **Veiled Robe** (+2), a robe of the Veiled Alliance | AC 2 better; +1 on every save; a wizard spell slot more at spell levels 1, 2 and 3 where the wearer has any | sold by **Kel** (40,000) |
 
-The dice log and the Ledger name a robe among a save's modifiers, and the
+The dice log and the Loader name a robe among a save's modifiers, and the
 Spells tab counts the Veiled Robe's slots. Alagorn tells both their stories.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#robes).
@@ -2661,7 +2661,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#robes).
 ### New people
 
 Two people of the slave pens, in new games: those that reach the pens with the
-Ledger's copies of the game's files in use (a save keeps the pens as they were
+Loader's copies of the game's files in use (a save keeps the pens as they were
 when the party first went in).
 
 #### Kalzith
@@ -2743,7 +2743,7 @@ holding pen?")
 Each way, he walks out through the arena's entrance to the pens, where a
 script takes him off the map, and nothing in the pens brings him back.
 
-With the Ledger, if he left after the fight he helped in, he is there, in a pen
+With the Loader, if he left after the fight he helped in, he is there, in a pen
 of his own above Kalzith's, the first time the party is in the pens after it.
 His other ways out stay as in the game, and so does a Semyon who was killed: he
 isn't in the pens. Talk to him (Look, then Talk): he says why the templars tied
@@ -2759,7 +2759,7 @@ Attacked in his pen, he turns on the party as the pens' other slaves do.
 take up Scar's offer to break out together, and head for the west exit. In the
 game, when the alarm goes up ("Gladiators escaping! Guards! Sound the
 alarms!"), Scar and his henchmen come along to the slave pens and Semyon is left
-behind. With the Ledger, if he is still in the arena, alive and on the party's
+behind. With the Loader, if he is still in the arena, alive and on the party's
 side, he comes too: he stands beside Scar's men in the pens and fights the guards
 with them, on the party's side. Talked to then, he says: "Scar's gladiators and
 the Veiled Alliance, side by side! Who would have believed it? Stay close to
@@ -2775,9 +2775,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#semyon).
 
 Dinos ("Who else is in here?") and the Trustee ("Who else is in the
 slavepens?") each answer questions about the others in the pens. With the
-Ledger their menus also ask about Kalzith, and about Semyon once he is in his
+Loader their menus also ask about Kalzith, and about Semyon once he is in his
 pen ("What do you know about Kalzith?", "What can you tell me about
-Semyon?"). Kalzith's question waits until the Ledger has found him in the pens
+Semyon?"). Kalzith's question waits until the Loader has found him in the pens
 (the game's test for whether someone is there only knows the game's own
 people); Semyon's once he has been in his pen. As with the game's own
 questions, each is shown only until it's answered in that talk.
@@ -2800,7 +2800,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-dinos-and-the-trustee-say-abo
 
 Hit the arena's vulture and its feathers come off (a plucked vulture); the
 slave pens' campfire cooks it. In the game itself the cooked vulture is then no
-use to anyone: no script asks for it. With the Ledger running, **Dinos**, the
+use to anyone: no script asks for it. With the Loader running, **Dinos**, the
 pens' fine cook, can be asked about it: talk to him while someone in the party
 carries it, and among the first things the party can say to him, just before
 "Goodbye.", is **"We cooked the vulture from the arena."** He takes it ("A vulture! Give it here. A pinch of salt,
@@ -2824,7 +2824,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-cooked-vulture).
 A defiler may carry a spell scroll it was studying: with **Defilers' scrolls**
 ticked (it's ticked by default), each defiler in a fight has a 5% chance
 (1 in 20) of carrying a scroll of a random preserver spell, any of the game's
-69 (1st to 5th level) or, with the new spells on, the Ledger's new ones. When
+69 (1st to 5th level) or, with the new spells on, the Loader's new ones. When
 it dies the scroll is on its body, with the rest of what it carried.
 
 The defilers are those the game makes defilers: Balkazar, Wyrmias, the Troop
@@ -2845,13 +2845,13 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#defilers-scrolls).
 ## Item tables
 
 Every magic item and every mundane weapon in a game with the
-[new items](#new-items), the game's and the Ledger's, with their icons.
+[new items](#new-items), the game's and the Loader's, with their icons.
 
 ### Every magic item
 
-All the magic items in a game with the Ledger's new content on: the game's own,
+All the magic items in a game with the Loader's new content on: the game's own,
 read from its data (each item type's slot and material, each item's plus and
-power, and who carries it), and the Ledger's, in **bold**. In **Where**, "—"
+power, and who carries it), and the Loader's, in **bold**. In **Where**, "—"
 means the item isn't placed with anyone in the data: the game's scripts hand it
 out (a reward, a gift or a find).
 
@@ -2940,10 +2940,10 @@ out (a reward, a gift or a find).
 |---|---|---|---|---|---|
 | ![](docs/items/tanelyvs-arm-armor.png) | Arms | Metal | Tanelyv's Armor | chain +2 | — |
 | ![](docs/items/wardens-arms.png) | Arms | Metal | **Warden's Arms** | plate +1 | the Lower Castle's chest |
-| ![](docs/items/greys-scale-arms.png) | Arms | Metal | Grey's Scale | no plus (AC 3 with the Ledger) | Arant |
+| ![](docs/items/greys-scale-arms.png) | Arms | Metal | Grey's Scale | no plus (AC 3 with the Loader) | Arant |
 | ![](docs/items/tanelyvs-leg-armor.png) | Legs | Metal | Tanelyv's Armor | chain +2 | — |
 | ![](docs/items/wardens-legs.png) | Legs | Metal | **Warden's Legs** | plate +1 | the Gemfields' chest |
-| ![](docs/items/greys-scale-legs.png) | Legs | Metal | Grey's Scale | no plus (AC 3 with the Ledger) | Arant |
+| ![](docs/items/greys-scale-legs.png) | Legs | Metal | Grey's Scale | no plus (AC 3 with the Loader) | Arant |
 
 Tanelyv's Armor also has a chest piece, with no plus.
 
@@ -3009,7 +3009,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 
 ### Every mundane weapon
 
-Every plain weapon in a game with the new items, the game's and the Ledger's,
+Every plain weapon in a game with the new items, the game's and the Loader's,
 by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in Kel's
@@ -3051,7 +3051,7 @@ caravan. The game's plain stone pick is only ever a
 
 ## Graphics
 
-What the Ledger draws on the game's map. The elves' and half-elves' looks,
+What the Loader draws on the game's map. The elves' and half-elves' looks,
 the party's gear, shadows and dust each have a switch in the Options tab's
 **Graphics** section.
 
@@ -3074,7 +3074,7 @@ game is started.
 
 Cilla, in the game's own party, is an elf, but the game gives her the figure it
 gives half-elf women. With **Cilla, an elf in the game's own party, drawn as
-an elf** ticked (the default), the Ledger gives her the elf woman's, in a new
+an elf** ticked (the default), the Loader gives her the elf woman's, in a new
 game and in one already begun (there from the next area or load on), whatever
 the switch above. Unticked, she keeps the game's half-elf woman's figure, from
 the next time the game is started (a game where she already has the elf's
@@ -3089,7 +3089,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#elves-and-half-elves).
 The party's figures on the map and in fights show what each one wears, and
 change as soon as their gear does (switch it off on the Options tab to see the
 game's own). The game draws each race and sex the same whatever they carry;
-the Ledger keeps the artist's pictures and adds to them, frame by frame,
+the Loader keeps the artist's pictures and adds to them, frame by frame,
 walking and fighting:
 
 | Worn | Shown |
@@ -3175,7 +3175,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 
 On the Effects screen (a character's spells and powers in effect), a click on
 an effect's icon ends it in the game, so a stray click loses a spell. With the
-Ledger a click leaves a spell on; a psionic power's effect still ends, as that
+Loader a click leaves a spell on; a psionic power's effect still ends, as that
 is how a power is stopped. It is a change to the game itself, from the next
 time it is started.
 
@@ -3183,7 +3183,7 @@ time it is started.
 
 ### More saves
 
-The game's save and load window holds 10 saves. With the Ledger it holds 40,
+The game's save and load window holds 10 saves. With the Loader it holds 40,
 on four pages of ten: the **PAGE 1** to **PAGE 4** buttons under EXIT show a
 page, the page shown has its button greyed, and **PgDn** and **PgUp** go to
 the next page and the one before. Save and load as always; the window opens
@@ -3197,7 +3197,7 @@ game.)
 
 Page 1 is the game's own saves, `SAVE01.SAV` to `SAVE10.SAV` in the game
 folder (or, with GOG's DOSBox, its `cloud_saves` folder); pages 2 to 4 are `SAVB01.SAV` to `SAVB10.SAV`, `SAVC..` and `SAVD..`,
-next to them. The game started without the Ledger shows page 1 only, as
+next to them. The game started without the Loader shows page 1 only, as
 always: it looks for `SAVE??.SAV`, and the other pages' names don't match. (It
 had better not see them: it puts each save it finds in the row its number
 names, with room for ten, and a `SAVE11.SAV` would be written past the end.)
@@ -3207,7 +3207,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-saves).
 #### Saves under their names
 
 Only the game's list says which file is which save. While its window is open,
-the Ledger keeps a second copy of every save, under the name you typed for it in the
+the Loader keeps a second copy of every save, under the name you typed for it in the
 game, in its own **Named saves** folder: `Page 2 slot 05 - Before Scar's
 battle.SAV`. Saving over a slot replaces that slot's copy. The Options tab's
 **Saves** section has **Open the folder**, and **Put a save in a slot...**,
@@ -3218,12 +3218,12 @@ asking first if that slot holds one, to be loaded from the game's list.
 
 The game keeps up to 19 characters made with CREATE CHARACTERS (and the party
 members dropped back to the roster); a 20th is refused with "Maximum
-characters". With the Ledger it keeps 29. The roster in the ADD window
+characters". With the Loader it keeps 29. The roster in the ADD window
 scrolls through them all, as it did through 19.
 
 They are in the game's own `CHARSAVE.GFF`, each under a number, 1 to 29. The
-game started without the Ledger reads numbers 1 to 19 only: characters saved
-under 20 to 29 aren't shown, and aren't lost; they come back with the Ledger.
+game started without the Loader reads numbers 1 to 19 only: characters saved
+under 20 to 29 aren't shown, and aren't lost; they come back with the Loader.
 (The game saves a new character under the highest free number, so the first
 ten made after the 19th go to 20 to 29.)
 
@@ -3235,8 +3235,8 @@ another character was deleted. Now it deletes the one chosen.
 A character made with CREATE CHARACTERS is **New** until the game starts,
 when the game makes it Okay (and gives a New one the starting gear). The game's
 tests for Okay left New out, so a New thief's skills all showed 0 on the
-inventory screen, and the Ledger did the same. The patched game counts New as
-Okay wherever it tests for Okay, and so does the Ledger. Left as they were: the
+inventory screen, and the Loader did the same. The patched game counts New as
+Okay wherever it tests for Okay, and so does the Loader. Left as they were: the
 status under the portrait still reads New, and the game still gives the
 starting gear and makes New characters Okay when the game starts.
 
@@ -3255,7 +3255,7 @@ The launcher gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
 **Game speed** is GOG's own, that, or 35,000: there, with everything on, the
 whole party in view walks as fast as the leader alone, but it needs a faster
-computer. It applies the next time the game is started. Both of the Ledger's
+computer. It applies the next time the game is started. Both of the Loader's
 run on DOSBox's dynamic core (GOG's settings run this game on the slower
 normal core): the same cycles do more, and cost the computer about a third
 less.
@@ -3265,13 +3265,13 @@ the game's time; higher is smoother):
 
 | | All four in view | The leader alone |
 |---|---|---|
-| 20,000 cycles, the Ledger's shadows, dust, rings and gear off | 248 | 254 |
+| 20,000 cycles, the Loader's shadows, dust, rings and gear off | 248 | 254 |
 | 20,000, everything on | 139 | 263 |
 | 30,000, everything on | 214 | 264 |
 | 35,000, everything on | 258 | 254 |
 | 40,000, everything on | 267 | 269 |
 
-So at 20,000 the Ledger's own drawing is what slows the whole party: without
+So at 20,000 the Loader's own drawing is what slows the whole party: without
 it the four walk as fast as one. Of it, the dust costs the most (each puff is
 worked out pixel by pixel, and four walkers raise four times as many), then
 the shadows. What each setting asks of the computer: [Suggested system
@@ -3281,7 +3281,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#game-speed).
 
 ## Accessibility
 
-Templar's Ledger aims at the AODA's standard for software people read,
+The Loader aims at the AODA's standard for software people read,
 WCAG 2.0 level AA:
 
 - **Contrast:** every colour used for text has at least 4.5:1 contrast with
@@ -3323,4 +3323,4 @@ python tests/make_fake_party.py
 dosbox FAKEPTY.COM
 ```
 
-![The Ledger on the practice program: All fields with Sadira and Rikus, and Memory tools with her record found and its bytes](docs/viewer.png)
+![The Loader on the practice program: All fields with Sadira and Rikus, and Memory tools with her record found and its bytes](docs/viewer.png)

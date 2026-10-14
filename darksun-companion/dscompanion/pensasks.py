@@ -1,8 +1,8 @@
 """Dinos and the Trustee asked about Kalzith and Semyon.
 
 Both of the game's people answer questions about the others in the pens from a menu ("What do you
-know about Gilal?", "What can you tell me about Dinos?"); with the Ledger, the same menus also ask
-about Kalzith once the Ledger has found him in the pens (kalzith.py), and about Semyon while he
+know about Gilal?", "What can you tell me about Dinos?"); with the Loader, the same menus also ask
+about Kalzith once the Loader has found him in the pens (kalzith.py), and about Semyon while he
 is in his pen (semyon.py). As the game's own, a question isn't shown again once answered in that
 talk.
 
@@ -14,7 +14,7 @@ after its last about someone, followed by a jump on to what comes after the game
 answers are subroutines, as the game's are.
 
 The Trustee's script is then longer than the game's buffer for scripts allows (10000 bytes,
-less some): the Ledger's copy of the game has a bigger one (gamepatch.SCRIPT_BUFFER).
+less some): the Loader's copy of the game has a bigger one (gamepatch.SCRIPT_BUFFER).
 """
 
 from typing import Callable, NamedTuple, Optional, Sequence
@@ -25,7 +25,7 @@ from .kalzith import _Script
 GOTO, MENU, SET, TEST, SKIP_UNLESS = 0x64, 0x48, 0x16, 0x18, 0x63
 WHERE = 0x80  # (the person talking, an object): 999 when the object isn't on the map (only for
 # the game's objects, below 520: Kalzith's, 1000, is never found, so his question waits on the
-# flag the Ledger sets once it has found him in the pens and given him his scrolls)
+# flag the Loader sets once it has found him in the pens and given him his scrolls)
 GONE = 999
 LOCAL, SET_LOCAL, FLAG = 0x8E, 14, 0x8D
 # The longest script the buffer runs: in the game's, of 10000 bytes, one of 9800 ran and one of
@@ -48,9 +48,9 @@ def _all(*parts: list) -> tuple:
     return ("expr", out)
 
 
-# Who is known, alive or dead. Kalzith: once the Ledger has found him in the pens (STOCKED),
+# Who is known, alive or dead. Kalzith: once the Loader has found him in the pens (STOCKED),
 # dead by its flag (kalzith.DIED: the game's 80h can't see him). Semyon: once he has been in his
-# pen (PLACED), alive while there and not marked dead, dead by the Ledger's flag (semyon.DIED).
+# pen (PLACED), alive while there and not marked dead, dead by the Loader's flag (semyon.DIED).
 KALZITH_ALIVE = _all(_is(kalzith.STOCKED), _is(kalzith.DIED, 0))
 KALZITH_DEAD = _all(_is(kalzith.STOCKED), _is(kalzith.DIED))
 SEMYON_ALIVE = _all(_is(semyon.PLACED), _is(semyon.DIED, 0), _here(semyon.SEMYON))
@@ -70,7 +70,7 @@ class Ask(NamedTuple):
 
 # The cooked vulture (vulture.py): the party asks Dinos about it while one of them carries it (the
 # game's 33h test, as the campfire's script asks about the plucked one). He takes it (5Ch, as the
-# campfire takes the plucked one), and they eat together: the Ledger's flag MEAL, on which it
+# campfire takes the plucked one), and they eat together: the Loader's flag MEAL, on which it
 # gives each a full rest, and the XP as the game's quests give theirs (its routine: the window,
 # the words and the quest's sound).
 PARTY, TAKE = 32766, 0x5C
@@ -217,7 +217,7 @@ def with_asks(script: bytes, field_types: bytes, first: str, asks: Sequence[Ask]
 # The Trustee is busy (the game's flag BUSY: "I'd love to talk more, but I have to get back to
 # work") from a talk until his rounds of the pens (script 8, his walk from corner to corner) come
 # back to their first corner, which clears it. Rounds that stop (he can't reach his next corner)
-# leave him busy for good, his talk and his key with it. With the Ledger he says it once and is
+# leave him busy for good, his talk and his key with it. With the Loader he says it once and is
 # free to talk the next time: the line jumps to a piece clearing BUSY, then saying it.
 BUSY = 51
 
@@ -254,7 +254,7 @@ def busy_once(script: bytes, field_types: bytes, original: Optional[bytes] = Non
 # for it is dropped at his feet (his talk, script 146), and after each step of his rounds he looks
 # for it lying within 9 squares (the key stolen: KEY_STOLEN), says "There it is!" and makes for it
 # (8 at 4299), but doesn't pick it up: drawn back to it after every step, he never gets round. The
-# Ledger's copy has him leave it there (the party can pick it up): the test asks for a value the
+# Loader's copy has him leave it there (the party can pick it up): the test asks for a value the
 # flag never has.
 ROUNDS_SCRIPT, KEY_STOLEN, KEY, NEVER = 8, 55, -30032, 2
 
@@ -275,7 +275,7 @@ def no_key_chase(script: bytes, field_types: bytes) -> bytes:
 
 
 def script_chunks(chunks, field_types: bytes, vulture: bool = True) -> dict:
-    """For the Ledger's copy of GPLDATA: Dinos's and the Trustee's talks with the questions (the
+    """For the Loader's copy of GPLDATA: Dinos's and the Trustee's talks with the questions (the
     vulture's only with the vulture quest on), the Trustee's busy line said once, and his rounds
     without his walk to a dropped key."""
     out = {}

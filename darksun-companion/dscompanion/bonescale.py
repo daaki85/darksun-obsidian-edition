@@ -2,7 +2,7 @@
 
 The game has Bone Scale Chest Armor, Arm Armor and Leg Armor (objects 1033-1035, the arm and leg
 pieces never placed anywhere in play) but no helm of bone. It puts the chest piece in a chest of
-the slave pens (object 1564, with Arrows +3). In the Ledger's copy of SEGOBJEX the arm and leg
+the slave pens (object 1564, with Arrows +3). In the Loader's copy of SEGOBJEX the arm and leg
 pieces and a Bone Helm (an item type of the companion's own: the Helm's, of bone, with an icon of
 its own in the bone scale's colours, icons.py) are in that chest too (dataitems.py, worldgear.py's
 data_chunks), so the game makes the set together.

@@ -1,7 +1,7 @@
 ; GAMEEND.COM: run after the game. If the game stopped with an error (a message such as "Null
 ; pointer assignment" left on the screen, a non-zero return code, or the screen left in graphics
 ; mode), the screen's text and the code are saved to GAMEEND.TXT next to this file (for the
-; Ledger's crash report) and the message stays on screen until a key is pressed (in text mode, if
+; Loader's crash report) and the message stays on screen until a key is pressed (in text mode, if
 ; the game left the screen in graphics, where it couldn't be read); otherwise
 ; nothing (DOSBox closes as before).
 ; Build: nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
@@ -59,7 +59,7 @@ ROWS    equ 25
         mov ax, 4C01h
         int 21h
 
-; GAMEEND.TXT, beside this program (D:, the Ledger's dos folder): the code, the mode, then the
+; GAMEEND.TXT, beside this program (D:, the Loader's dos folder): the code, the mode, then the
 ; screen's rows (trailing spaces trimmed, blank rows at the end left out)
 save:
         mov ah, 3Ch
@@ -168,7 +168,7 @@ hex2:
         stosb
         ret
 
-said    db 13, 10, "The game stopped with an error. Templar's Ledger saves what is on the screen", 13, 10
+said    db 13, 10, "The game stopped with an error. The Loader saves what is on the screen", 13, 10
         db "in its crash report. Press a key to close DOSBox.$"
 fname   db "D:\GAMEEND.TXT", 0
 head    db "Return code "

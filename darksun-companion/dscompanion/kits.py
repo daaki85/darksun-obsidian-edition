@@ -1,4 +1,4 @@
-"""The kits' effects, as DSCLOG makes them (its KIT_* routines): for the Ledger and the dice log.
+"""The kits' effects, as DSCLOG makes them (its KIT_* routines): for the Loader and the dice log.
 
 A kit is a sheet's KIT_BYTE (kitpages.py, which also numbers them: kitpages.kit_at); these take
 that number, 0 for none (the rule off, more than one class, none chosen).
@@ -296,7 +296,7 @@ def thief_skill(kid: int, skill: int) -> int:
 
 def stealth(kid: int) -> int:
     """Added to a ranger's hiding in shadows and moving silently (the stealth rule's, rolled by
-    the Ledger): a Stalker's 15."""
+    the Loader): a Stalker's 15."""
     return 15 if kid == STALKER else 0
 
 

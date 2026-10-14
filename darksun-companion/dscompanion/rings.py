@@ -1,8 +1,8 @@
 """Rings on the ground under the enemies in a fight (DSCLOG's RINGS), and the one chosen.
 
 DSCLOG draws them in the floor pass, as the shadows, so the figures stand in them: an ellipse at
-each marked thing's feet, the ground reddened through RED, which the Ledger makes from the area's
-palette (each colour's nearest redder one). The Ledger marks the enemies while the party is in a
+each marked thing's feet, the ground reddened through RED, which the Loader makes from the area's
+palette (each colour's nearest redder one). The Loader marks the enemies while the party is in a
 fight (the creatures standing on another side than the party's), and the chosen one (targeting.py)
 brighter; when the marks change, the view is drawn again.
 """

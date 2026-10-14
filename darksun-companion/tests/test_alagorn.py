@@ -235,7 +235,7 @@ class AlagornTests(unittest.TestCase):
         self.assertEqual(sets, [2, 3, 5, 6, 7, 2, 3, 5, 6, 7, 8, 9, 10])
 
     def test_past_the_locals_flags(self):
-        """Items past the script's locals (the loop's own one of them) kept in the Ledger's flags
+        """Items past the script's locals (the loop's own one of them) kept in the Loader's flags
         from FLAGS on: set by their query, shown by them, cleared by their story, counted in the
         tests for none carried and none left."""
         from unittest import mock
@@ -252,7 +252,7 @@ class AlagornTests(unittest.TestCase):
         self.assertTrue(tests)
 
     def test_every_magic_item_told(self):
-        """Each magic item the Ledger adds has a story: named ones their own, the rings and cloaks
+        """Each magic item the Loader adds has a story: named ones their own, the rings and cloaks
         of protection one for their kind (whichever the party carries), as the bracers."""
         told = {n for kinds in (alagorn.ARMS, alagorn.PENS, alagorn.MAGIC) for items in kinds.values()
                 for name, _ in items for n in alagorn.PICTURES_OF.get(name, (name,))}

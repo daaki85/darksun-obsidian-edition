@@ -1,4 +1,4 @@
-"""Half-elves' own colours (halfelf.py), and the Ledger's pictures of them (sprites.Pictures)."""
+"""Half-elves' own colours (halfelf.py), and the Loader's pictures of them (sprites.Pictures)."""
 
 import os
 import struct

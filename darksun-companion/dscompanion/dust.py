@@ -2,7 +2,7 @@
 
 DSCLOG raises the puffs and draws them on the floor (lightening its colours, as the shadows darken
 them); which colours are ground that dust shows on, and how much lighter it makes each, is the
-Ledger's to work out from the area's palette, each time DSCLOG has read it (shadows.py asks for
+Loader's to work out from the area's palette, each time DSCLOG has read it (shadows.py asks for
 that): LIGHT, a byte for each colour, its lighter one among the palette's, or 0.
 """
 

@@ -1,5 +1,5 @@
 """The elves' ears and the half-elves' own figures, on the party's map pictures (sprites.py), made
-from the game's own pictures each time the Ledger writes its copy of SEGOBJEX (nothing of the
+from the game's own pictures each time the Loader writes its copy of SEGOBJEX (nothing of the
 game's is kept here: only how to change its pictures).
 
 Elves: pointed ears, 2 pixels wide and 3 rows tall, salmon inside (LIT) with a rose rim and a rose

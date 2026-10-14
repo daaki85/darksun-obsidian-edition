@@ -186,7 +186,7 @@ class ToolsTests(unittest.TestCase):
         self.assertEqual(tools.give_tools(self.gd, given), [])
 
     def test_button(self):
-        """The Ledger's button: a set for a thief without one, whatever was given before."""
+        """The Loader's button: a set for a thief without one, whatever was given before."""
         self.clock(90000)
         given = {"Dag|Dag"}
         self.assertEqual(len(tools.give_tools(self.gd, given, now=True)), 1)

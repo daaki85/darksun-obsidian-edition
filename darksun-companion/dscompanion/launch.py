@@ -91,7 +91,7 @@ def set_speaker_name(portrait: int, name: str) -> None:
 
 
 def learned_speakers() -> Dict[int, str]:
-    """Portrait names the Ledger worked out from conversations: {portrait: name}."""
+    """Portrait names the Loader worked out from conversations: {portrait: name}."""
     names = load_settings().get("speakers_learned", {})
     return {int(k): v for k, v in names.items() if str(k).isdigit() and isinstance(v, str) and v}
 
@@ -158,7 +158,7 @@ def display_lines(settings: dict) -> List[str]:
 # draws a frame, shows it at the screen's next refresh (70 a second), and a walking figure takes a
 # step a frame (a walk of one square: four frames): a frame that takes a moment longer than a
 # refresh waits for the next, and the party walks at half speed. With the whole party in view and
-# the Ledger's shadows and dust a frame needs about 35000 to fit: there the four walk as fast as the
+# the Loader's shadows and dust a frame needs about 35000 to fit: there the four walk as fast as the
 # leader alone; at 20000 about half as fast, at GOG's 7000 slower still. Both with the dynamic core
 # (GOG's "auto" runs this game, a real-mode one, on the normal core): the same cycles do more and
 # cost the computer about a third less. (30000, the fastest of before, is taken as the fastest now.)
@@ -318,7 +318,7 @@ def closed_line(code: int) -> str:
 
 
 # GAMEEND.COM, run after the game, notes in GAMEEND.TXT (in DOS_DIR) how the game stopped with an
-# error; the Ledger's crash reports go in CRASH_DIR
+# error; the Loader's crash reports go in CRASH_DIR
 GAME_END_COM = "GAMEEND.COM"
 GAME_END = os.path.join(DOS_DIR, "GAMEEND.TXT")
 CRASH_DIR = os.path.join(HERE, "crash-logs")
@@ -357,7 +357,7 @@ SWITCH_DEFAULTS = {"monster_info": True, "pickpockets": True,
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:
-    """Every switch as the Ledger uses it: as set, else its default (rule changes and content: on)."""
+    """Every switch as the Loader uses it: as set, else its default (rule changes and content: on)."""
     from . import game
     out: Dict[str, object] = {key: settings.get(key, default) for key, default in SWITCH_DEFAULTS.items()}
     out.update(content(settings))
@@ -378,7 +378,7 @@ def crash_report(code: int, note: Optional[str], settings: dict, dice: str, dial
     lines += ["", "Switches (as set on the Options tab, else the default):"]
     lines += [f"  {key}: {value!r}" for key, value in sorted(effective_switches(settings).items())]
     if refused:
-        lines += ["", "Writes the Ledger refused (a pointer read while the game had it empty):"]
+        lines += ["", "Writes the Loader refused (a pointer read while the game had it empty):"]
         lines += ["  " + r for r in refused[-50:]]
     for name, text in output.items():
         lines += ["", f"DOSBox's {name}:", text]

@@ -1,4 +1,4 @@
-"""THAC0 with each weapon and the saves as they stand now (the game's screens and the Ledger's)."""
+"""THAC0 with each weapon and the saves as they stand now (the game's screens and the Loader's)."""
 
 import os
 import struct

@@ -936,7 +936,7 @@ class NewLinesTests(unittest.TestCase):
         self.assertEqual(log.picked, {"Dag|41|7|Trader"})
 
     def test_pockets_of_another_game_forgotten_in_a_new_one(self):
-        """The Ledger started with a new game under way (same party names): the tries of the
+        """The Loader started with a new game under way (same party names): the tries of the
         last game, later than this game's clock, are forgotten at once; earlier ones stay."""
         log = make_game()
         log.load_picked(["Dag|41|7|Kurzak@5000", "Dag|41|8|Guard@100"])

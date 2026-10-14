@@ -1,6 +1,6 @@
 """The game's own portraits and font, read from the installed game at run time.
 
-Nothing of the game's is copied into Templar's Ledger: the pictures come from
+Nothing of the game's is copied into the Loader: the pictures come from
 the player's own install (GOG release), and when it can't be found the window
 simply does without them.
 

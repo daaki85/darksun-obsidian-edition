@@ -9,7 +9,7 @@ quests, and no word of where any item is found (the mod's new items are listed
 by what they are).
 
 Everything here is the mod with its **default options**, which is how the
-Ledger starts. Every rule change has a switch on the Ledger's **Options** tab
+Loader starts. Every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance)); where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [README](README.md) has every rule in full detail.
@@ -60,10 +60,10 @@ The [README](README.md) has every rule in full detail.
 1. Unzip the mod anywhere and double-click **`Start Obsidian Edition.bat`**
    (the first time, it offers to install Python; see the
    [README](README.md#running-it-windows)).
-2. Press **Start the game**. The game opens beside the Ledger, whose dice log
+2. Press **Start the game**. The game opens beside the Loader, whose dice log
    shows every roll as it happens:
 
-   ![The Ledger during the arena's opening show: the party's cards on the left, the dice log of a fight on the right](docs/dicelog.png)
+   ![The Loader during the arena's opening show: the party's cards on the left, the dice log of a fight on the right](docs/dicelog.png)
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
@@ -73,7 +73,7 @@ The [README](README.md) has every rule in full detail.
 
 The pointer has three modes, changed with a right-click: **Walk**, **Attack**
 and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
-**Use** or **Pick Up** it, and at a monster in a fight to see what the Ledger
+**Use** or **Pick Up** it, and at a monster in a fight to see what the Loader
 tells of it. Resting at a fire ring fills hit points, PSP and spell slots.
 
 The [quality of life changes](#quality-of-life) list what the mod makes
@@ -100,11 +100,11 @@ easier.
 | **The Effects screen** | Names each kit and weapon spec, a page at a time when there are many. |
 | **Combat log** (off unless ticked) | In a fight, a panel at the map's lower right with every roll as it comes, at the least, in short or in detail. Drag its scrollbar (or turn the mouse wheel over it, on Windows) to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back. |
 | **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), so the party walks smoothly with shadows and dust. |
-| **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Ledger. |
+| **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
 | **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
-| **Crash reports** | If the game or DOSBox stops with an error, the message stays on screen and the Ledger writes a report to send. |
+| **Crash reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send. |
 
-**In the Ledger's window:**
+**In the Loader's window:**
 
 - **The dice log:** every roll as it happens, with what it needed and where
   each bonus came from; **Save...** keeps it as a text file.
@@ -120,7 +120,7 @@ easier.
 - **Text size** (**A+** and **A-**, or Ctrl + and Ctrl −) and keyboard access to
   everything.
 - **`Play Dark Sun (in-game rolls).bat`** plays with all of the above in the
-  game but no Ledger window; **`Show Save.bat`** shows the party in a save file.
+  game but no Loader window; **`Show Save.bat`** shows the party in a save file.
 
 ## Making a party
 
@@ -1588,7 +1588,7 @@ AD&D's tables:
 | Game speed | GOG's own, faster or fastest | faster |
 
 Rule changes, customization, expanded features and the new spells count at
-once in a game started from the Ledger; the new people, quest and items, and
+once in a game started from the Loader; the new people, quest and items, and
 any switch that says "from the next start", come the next time the game is
 started (a saved game keeps what it has). **Restore defaults**, at the bottom
 of the tab, sets every switch back.

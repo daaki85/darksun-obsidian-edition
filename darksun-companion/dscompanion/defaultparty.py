@@ -2,7 +2,7 @@
 the rule changes, once, while the game is new (tools.new_game: its first hour, in the arena).
 
 They are the game's objects (32000 to 32003, and 300, 307, 308 and 313 for their figures), a
-creature record and a sheet each, already Okay, so the Ledger's way with a new character
+creature record and a sheet each, already Okay, so the Loader's way with a new character
 (weaponchoice.finish_new) passes them by; the game gives them their gear and spells as it
 starts. Each is known by name, race and classes together.
 
@@ -20,8 +20,8 @@ starts. Each is known by name, race and classes together.
   the one Old One-Eye's scroll in the fields teaches.
 
 Cilla is an elf, but the game gives her the half-elf woman's figure (7, object 307: the human
-woman's pictures in the game, the half-elf woman's in the Ledger's copy, figures.py). She has
-the elf woman's (5) instead: in her record and her object's picture in the Ledger's copy of
+woman's pictures in the game, the half-elf woman's in the Loader's copy, figures.py). She has
+the elf woman's (5) instead: in her record and her object's picture in the Loader's copy of
 SEGOBJEX (figure_chunks, for a new game), and in the running game's creature table (elf_figure, for a game begun without
 it: the map shows her new figure from the next area or load on).
 """
@@ -71,7 +71,7 @@ def who(gd: GameData, member: int) -> str:
 
 
 def figure_chunks(chunks, current=None) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of SEGOBJEX (the game's CHUNKS, and the copy's chunks so far,
+    """For the Loader's copy of SEGOBJEX (the game's CHUNKS, and the copy's chunks so far,
     CURRENT): Cilla's record with the elf woman's figure, and her object with the elf woman's
     picture (the game's), if they are the game's, with the half-elf woman's."""
     current = chunks if current is None else current

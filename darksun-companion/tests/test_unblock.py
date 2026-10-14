@@ -1,4 +1,4 @@
-"""The downloaded mark taken off the Ledger's own files on Windows (unblock.py)."""
+"""The downloaded mark taken off the Loader's own files on Windows (unblock.py)."""
 
 import os
 import sys

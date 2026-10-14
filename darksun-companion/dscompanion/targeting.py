@@ -1,7 +1,7 @@
 """Choosing an enemy with Tab in a fight, and attacking it with Enter (DSCLOG's TARGETING).
 
-DSCLOG counts Tab and Shift+Tab (taking them from the game) while the Ledger has it on: during a
-party member's turn in a fight. The Ledger steps through the enemies (rings.enemies), the nearest
+DSCLOG counts Tab and Shift+Tab (taking them from the game) while the Loader has it on: during a
+party member's turn in a fight. The Loader steps through the enemies (rings.enemies), the nearest
 to whoever's turn it is first, and tells DSCLOG which is chosen: its ring is drawn brighter, and
 Enter then has DSCLOG click on it for the game, the routine finding what is under the pointer
 answering with it whatever stands in front.

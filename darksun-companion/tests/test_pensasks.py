@@ -182,7 +182,7 @@ class PensAsksTests(unittest.TestCase):
         self.assertEqual([m[1] for m in pensasks.MENUS if pensasks.VULTURE in m[2]], ["<name>"])
 
     def test_buffer(self):
-        """The Ledger's game has room for the Trustee's script with the questions (10540 bytes)."""
+        """The Loader's game has room for the Trustee's script with the questions (10540 bytes)."""
         self.assertGreaterEqual(pensasks.LONGEST, 10540)
         self.assertGreater(gamepatch.SCRIPT_BUFFER, 10000)
 

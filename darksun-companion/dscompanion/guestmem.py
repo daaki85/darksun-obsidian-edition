@@ -28,7 +28,7 @@ class GuestMemoryError(Exception):
     pass
 
 
-LOW_MEMORY = 0x600  # the interrupt vectors, the BIOS's data and DOS's own: never the Ledger's to write
+LOW_MEMORY = 0x600  # the interrupt vectors, the BIOS's data and DOS's own: never the Loader's to write
 
 
 class GuestMemory:
@@ -36,7 +36,7 @@ class GuestMemory:
         self.proc = proc
         self.base = base  # host address of guest address 0
         self.size = size
-        # ranges no write of the Ledger's may touch: {name: (start, end)}; the game's data
+        # ranges no write of the Loader's may touch: {name: (start, end)}; the game's data
         # segment's first bytes are added once it is known (GameData). A write there could only
         # come from a pointer read while the game has it empty (0:offset): refused and noted
         self.guarded = {"low memory": (0, LOW_MEMORY)}
@@ -73,7 +73,7 @@ class GuestMemory:
 
 
 def _caller() -> str:
-    """Where in the Ledger the write came from: its last few calls outside this file."""
+    """Where in the Loader the write came from: its last few calls outside this file."""
     import traceback
     frames = [f for f in traceback.extract_stack()[:-2] if os.path.basename(f.filename) != "guestmem.py"]
     return " < ".join(f"{os.path.basename(f.filename)}:{f.lineno} {f.name}" for f in reversed(frames[-4:]))

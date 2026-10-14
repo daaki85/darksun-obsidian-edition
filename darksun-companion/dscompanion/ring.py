@@ -4,7 +4,7 @@ The game has a plain "Ring" item type that nothing in it has a plus on. The dice
 patched game makes a worn ring's plus better AC and saving throws (DSCLOG's PROBE_RING_AC
 and PROBE_RING_SAVE). When the Tied-up Prisoner dies (cut from his bonds, or killed where he
 hangs), the game leaves his body, which can't be opened: looking at it, the arena's script
-says "There is nothing on the body." While the ring is still to be found, the Ledger has
+says "There is nothing on the body." While the ring is still to be found, the Loader has
 DSCLOG show SEARCH_TEXT instead of that line (its text swap), and then puts the ring in the
 leader's backpack (give_ring): an item record from the game's free list. Once the party has
 it, the game keeps and saves it like any other item.
@@ -32,7 +32,7 @@ THING_COUNT = 0x208  # objects 0-519; 320-519 are handed out from a free list
 FREE_THINGS, THINGS_USED = 0x4D72, 0x4C48  # DS: that list's first, and how many are out
 FREE_ITEMS = 0x4D76  # DS: the first free item record (each names the next at +04h)
 ITEM_CONTENTS = 0x08
-# The Ledger's own takings from that list (and givings back), the last ones, for a report on an
+# The Loader's own takings from that list (and givings back), the last ones, for a report on an
 # item gone missing (bonescale.Watch): (time, item, what for)
 TAKEN: Deque[Tuple[float, int, str]] = deque(maxlen=30)
 
@@ -69,10 +69,10 @@ MAX_ITEMS = 200  # items followed before giving up (a damaged list)
 # (XP_GIVEN, set by the script), the XP: the amount, then the game's routine for one person
 # (script 74 at 171: the one searching, "<name> receives 50 experience points!" and the quest's
 # sound; at 135, as the vulture's meal, it is each party member). The script alone keeps the flag:
-# the Ledger can't, the game's flags having no place in memory outside its scripts' time.
+# the Loader can't, the game's flags having no place in memory outside its scripts' time.
 BODY_SCRIPT, BODY_AT = 5, 6833
 XP_REWARD = 50
-XP_GIVEN = 783  # (the Ledger's flag, set by the script)
+XP_GIVEN = 783  # (the Loader's flag, set by the script)
 PRINT, GOTO, SET, CALL = 0x4F, 0x64, 0x16, 0x14
 XP_AMOUNT = ("var", 7, 16)  # the experience points the game's routine gives
 XP_ROUTINE = (("n", 171), ("n", 74))  # (offset, script): its routine for one person

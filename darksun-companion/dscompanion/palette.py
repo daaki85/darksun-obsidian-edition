@@ -1,4 +1,4 @@
-"""Templar's Ledger's colours: sampled from Shattered Lands' own screens.
+"""The Loader's colours: sampled from Shattered Lands' own screens.
 
 Every colour was sampled from the game (GOG release, in DOSBox): the grey stone
 of its panels and buttons, the amber of dialogue text, the yellow of the
@@ -12,8 +12,8 @@ lighter stone is kept for bevels and edges, not behind text.
 
 from typing import Dict, Tuple
 
-NAME = "Templar's Ledger"
-SUBTITLE = "a companion for Dark Sun: Shattered Lands"
+NAME = "Dark Sun Obsidian Edition Loader"
+SUBTITLE = "starts Shattered Lands with your options, and shows every roll"
 
 # Stone, darkest to lightest (panels, buttons, frames)
 SHADOW = "#202038"  # outlines and text shadows

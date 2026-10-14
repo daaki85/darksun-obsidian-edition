@@ -758,7 +758,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
     try:
         added.update(weaponpages.chunks(chunks, objects_beside(source)))
     except (KeyError, ValueError, IndexError, StopIteration, struct.error):
-        pass  # (no weapon pages: the panel as the game has it, the choice through the Ledger)
+        pass  # (no weapon pages: the panel as the game has it, the choice through the Loader)
     from . import kitpages
     try:
         added.update(kitpages.chunks(chunks))

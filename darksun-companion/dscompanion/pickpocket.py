@@ -2,7 +2,7 @@
 
 The game has one pickpocket of its own, the Trustee's key in the slave pens, in his script.
 With the dice log's patched game, the tools used on someone (DSCLOG's PROBE_USE_ITEM) have the
-Ledger roll the thief's pick pockets chance as it stands now (thief_skills_now). On a success the
+Loader roll the thief's pick pockets chance as it stands now (thief_skills_now). On a success the
 thief lifts one small thing (weight 10 or less, and nothing worn on the body) from the
 person into the backpack. On a failure, a move silently roll decides whether they got away
 unnoticed. With nothing else on them, the thief takes a few coins (party money), and that is
@@ -12,7 +12,7 @@ failed) or until they take the coins; after that, their pockets are out of reach
 Lifting Kurzak's Short Sword (npcitems.py), Churrr's Gutterknot or Maris's Mindshard (worldgear.py) is worth SWORD_XP
 to the thief, given as the game gives
 a quest's XP to one person ("Cilla receives 200 experience points!", and the quest's sound): the
-Ledger has DSCLOG call the game's own routine for it, which also sees to a level gained.
+Loader has DSCLOG call the game's own routine for it, which also sees to a level gained.
 """
 
 import random

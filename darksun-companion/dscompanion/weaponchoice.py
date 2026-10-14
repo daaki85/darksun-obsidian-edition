@@ -1,7 +1,7 @@
 """New characters' weapon kinds and starting weapon (weapon specialization).
 
 A character is chosen its kinds on the creation panel (weaponpages.py); before it is first
-played (its status New) the Ledger makes them whole:
+played (its status New) the Loader makes them whole:
 
 - a fighter or ranger has one kind, the long sword if none was marked (a Myrmidon, kits.py, a
   second if marked; a Battle Mage, kits.py, one of its own); a gladiator two, the long sword and the club if none were; any other class
@@ -9,7 +9,7 @@ played (its status New) the Ledger makes them whole:
 - the game's starting weapon, the bone long sword in the right hand, becomes a plain weapon of
   the first kind, of bone or obsidian where the game has one, in a material the character can use
   (a fire cleric's long sword obsidian), with its picture and name; the short sword and the axe
-  are the Ledger's own, of bone (the game has no short sword but Kurzak's, Shadowseeker, and only
+  are the Loader's own, of bone (the game has no short sword but Kurzak's, Shadowseeker, and only
   a metal axe). A bow, sling or staff sling goes to the missile slot, and a bow comes with
   arrows; a weapon in both hands sends the starting shield to the backpack.
 
@@ -42,10 +42,10 @@ PLAIN: Tuple[Tuple[int, int, int, int], ...] = (
     (81, 0x1C, 0xFC0C, 45),    # long sword (bone)
     (18, 0x11, 0xFB5F, 1),     # club
     (17, 0x10, 0xFB60, 2),     # dagger (obsidian)
-    (game.BONE_SHORT_SWORD_TYPE, 0x144, 0x10000 - 2419, 10),  # short sword (the Ledger's, of bone)
+    (game.BONE_SHORT_SWORD_TYPE, 0x144, 0x10000 - 2419, 10),  # short sword (the Loader's, of bone)
     (20, 0x13, 0xFB5D, 8),     # mace (bone)
-    (game.BONE_AXE_TYPE, 0x1A, 0x10000 - 2421, 8),  # axe (the Ledger's, of bone: the game's is metal)
-    (game.BONE_GREAT_AXE_TYPE, 0x03, 0x10000 - 2574, 12),  # great axe (the Ledger's, of bone: the game's only one is +3)
+    (game.BONE_AXE_TYPE, 0x1A, 0x10000 - 2421, 8),  # axe (the Loader's, of bone: the game's is metal)
+    (game.BONE_GREAT_AXE_TYPE, 0x03, 0x10000 - 2574, 12),  # great axe (the Loader's, of bone: the game's only one is +3)
     (112, 0xAD, 0xFB46, 8),    # pick (stone)
     (3, 0x04, 0xFC05, 1),      # quarterstaff
     (19, 0x12, 0xFB5E, 7),     # polearm (bone)
@@ -65,7 +65,7 @@ OTHERS = {
     specialize.KINDS.index("short sword"): ((game.OBSIDIAN_SHORT_SWORD_TYPE, 0x144, 0x10000 - 2488, 20),),
     specialize.KINDS.index("axe"): ((game.OBSIDIAN_AXE_TYPE, 0x1A, 0x10000 - 2490, 15),
                                     (22, 0x1A, 0xFB61, 100)),  # obsidian (a fire cleric's), metal
-    # the Ledger's obsidian great axe (a fire or earth cleric's), and its metal ones (worldgear.py)
+    # the Loader's obsidian great axe (a fire or earth cleric's), and its metal ones (worldgear.py)
     specialize.KINDS.index("great axe"): ((game.OBSIDIAN_GREAT_AXE_TYPE, 0x03, 0x10000 - 2576, 25),
                                           (game.METAL_GREAT_AXE_TYPE, 0x03, 0x10000 - 2508, 300)),
     specialize.KINDS.index("polearm"): ((game.METAL_POLEARM_TYPE, 0x12, 0x10000 - 2512, 250),),

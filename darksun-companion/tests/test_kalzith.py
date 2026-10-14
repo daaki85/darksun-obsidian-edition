@@ -256,7 +256,7 @@ class KalzithTests(unittest.TestCase):
             self.assertEqual(kalzith.mend(Game()), 0)
 
     def test_none_the_game_has(self):
-        """None of his spells has a scroll in the game (its objects 1400-1418, by the Ledger's
+        """None of his spells has a scroll in the game (its objects 1400-1418, by the Loader's
         spell numbers: Color Spray 4, Enlarge 5, Wall of Fog 11, Mirror Image 19, ...)."""
         game_scrolls = {4, 5, 11, 19, 24, 26, 28, 31, 33, 38, 44, 47, 50, 52, 53, 63, 65, 66}
         self.assertFalse(game_scrolls & {s for s, _, _ in kalzith.SCROLLS})

@@ -13,7 +13,7 @@ TOME_SPELL. DSCLOG's PROBE_TOME, where the game would show that message, raises 
 WIS by one (in the sheet and the creature record; at most 25) and goes on as for a power taught:
 the game uses the tome up and shows the helper's message ("Cilla reads the tome: WIS 19.").
 
-Its object and pictures, in the Ledger's copy of SEGOBJEX: object TOME_OBJECT, the game's
+Its object and pictures, in the Loader's copy of SEGOBJEX: object TOME_OBJECT, the game's
 scroll's (1400: the box's icon is clicked only for an object of a scroll's kind, +4) with an icon
 of its own, the game's book's (Jasmine's Book, 1128) with its cover night steel and its emblem in
 the fire colours the game cycles on its magic items (icons.py's); its picture on the map the
@@ -36,7 +36,7 @@ TOME_SPELL = 0xB0  # a "spell" the game has none of (172 or more; below 196, or 
 # clicked): DSCLOG's TOME_SPELL
 SCROLL_TYPE = 96
 NAME = 0x157  # a name entry DSCLOG adds
-NAMES = {NAME: b"Tome/Understand"}  # (the game's 15 letters: "Tome of Understanding" on the Ledger's screens)
+NAMES = {NAME: b"Tome/Understand"}  # (the game's 15 letters: "Tome of Understanding" on the Loader's screens)
 VALUE = 43500  # AD&D's 43,500 gp
 WIS_MOST = 25
 COVER = {74: 18, 75: 20, 76: 22, 77: 24, 78: 27}  # the book's reds to night steel, light for light
@@ -69,7 +69,7 @@ def icon(rows: icons.Rows) -> icons.Rows:
 
 
 def object_chunks(chunks, header_number: int = 0) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of SEGOBJEX: the tome's object, pictures and record, and picture
+    """For the Loader's copy of SEGOBJEX: the tome's object, pictures and record, and picture
     TOME_OBJECT's owners pointed to MOVED. Nothing if a number of its is taken (KeyError)."""
     if ("OJFF", TOME_OBJECT) in chunks or ("RDFF", TOME_OBJECT) in chunks \
             or any(key[1] in (MOVED, ICON) for key in chunks):

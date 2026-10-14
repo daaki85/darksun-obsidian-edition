@@ -49,6 +49,10 @@ have the detail.
   Expanded features box, on by default.
 
 **Changed**
+- **Templar's Ledger is now the Dark Sun Obsidian Edition Loader** (the
+  Loader for short): the window's banner and title, the crash message in the
+  game, and every page of the docs. Its settings, named saves and crash
+  reports stay where they were.
 - **More kits that can't go together:** the Grove Warden can't dual to
   gladiator, nor a gladiator who duals to druid take it (its AC would add to
   the gladiator's own); the Swashbuckler, Crusader, Battle Mage and Mind

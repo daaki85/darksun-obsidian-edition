@@ -1,6 +1,6 @@
 """New weapons and bracers in the world: merchants' stock and people's packs.
 
-- The Ledger's plain weapons (weaponchoice.py): the bone and obsidian short swords and axes, the
+- The Loader's plain weapons (weaponchoice.py): the bone and obsidian short swords and axes, the
   obsidian mace and a plain metal short sword. The game has no other short sword than Kurzak's,
   no axe but a metal one, and no obsidian mace but Blackmace. The two merchants who sell plain
   weapons stock them, and a few kinds of people carry one, as their loot.
@@ -49,7 +49,7 @@ and chests' objects in its copy of SEGOBJEX.GFF, by the Options tab's switches, 
 has them where the game makes those people and chests. People of a kind who share an object
 (the Tari, Renegades, Wild Muls) each carry the item; one Castle Guard, one Undermountain miner
 and one Magera have an object of their own for theirs (a copy of their kind's, and their region's entity
-pointing to it, in the Ledger's copy of that region's file).
+pointing to it, in the Loader's copy of that region's file).
 """
 
 import struct
@@ -341,7 +341,7 @@ def gythka_chunks(chunks, out: Dict[Tuple[str, int], bytes]) -> Dict[Tuple[str, 
             changed[key] = dataitems.chunk(recs, end)
     return {k: v for k, v in changed.items() if v != chunks[k]}
 ELVEN_CLOAK_OBJECT = 2546  # (its picture's object: the item the Elven Leader's script makes)
-# the header numbers of the Ledger's own item types: the game's item they're made from
+# the header numbers of the Loader's own item types: the game's item they're made from
 BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYPE: 5, game.BONE_SHORT_SWORD_TYPE: 81,
               game.BONE_AXE_TYPE: 22, game.OBSIDIAN_SHORT_SWORD_TYPE: 45, game.OBSIDIAN_AXE_TYPE: 22,
               game.METAL_SHORT_SWORD_TYPE: 63, game.BRACERS_TYPE: 7, game.METAL_DAGGER_TYPE: 33,
@@ -361,7 +361,7 @@ def header_numbers(chunks) -> Dict[int, int]:
 
 
 def object_chunks(chunks, gifts: Sequence[Gift], extra: Sequence[Tuple[int, Sequence[bytes]]] = ()) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of SEGOBJEX: the objects of GIFTS (and EXTRA: (object, items)) with
+    """For the Loader's copy of SEGOBJEX: the objects of GIFTS (and EXTRA: (object, items)) with
     their items, each clone a new object (its OJFF and its RDFF, renumbered), with them."""
     numbers = header_numbers(chunks)
     wanted: Dict[int, List[bytes]] = {}
@@ -428,7 +428,7 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
 
 
 def region_chunks(region: int, rgn: Dict[Tuple[str, int], bytes], gifts: Sequence[Gift]) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of a region's file (RGNxx.GFF, its chunks RGN): its entity table
+    """For the Loader's copy of a region's file (RGNxx.GFF, its chunks RGN): its entity table
     with each of GIFTS' clones there pointed to its new object."""
     key = ("ETAB", region)
     if key not in rgn:
@@ -459,5 +459,5 @@ def write_region(source: str, dest: str, region: int, gifts: Sequence[Gift]) -> 
 
 
 def regions(gifts: Sequence[Gift]) -> List[int]:
-    """The regions whose files the Ledger copies (for a clone)."""
+    """The regions whose files the Loader copies (for a clone)."""
     return sorted({g.region for g in gifts if g.clone and g.region is not None})

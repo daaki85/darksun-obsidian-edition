@@ -7,7 +7,7 @@ its spell). Insult him or threaten to report him and he won't trade until the pa
 50 ceramic pieces, or a Charisma check. Killed, he leaves one of his scrolls at random, a Cloak and
 a Quarterstaff and his Ashen Robe (loot).
 
-He is the game's own kind of person, added to the Ledger's copies of three of its files (the game
+He is the game's own kind of person, added to the Loader's copies of three of its files (the game
 folder is never changed; DSCLOG has the game open the copies):
 
   * SEGOBJEX.GFF: object OBJECT, his OJFF (a person's, with the arena Defiler's picture) and
@@ -17,11 +17,11 @@ folder is never changed; DSCLOG has the game open the copies):
     command that runs it when the party talks to him (6Eh, as for Dinos and the rest), with its
     entry in the game's table of entry points (GPLI, which saves go by); and his
     portrait, PORTRAIT: the game's PORTRAIT_FROM with an X branded on the brow, so that no one
-    else's face is his (the Ledger's dialogue tab shows it too).
+    else's face is his (the Loader's dialogue tab shows it too).
 
 The game reads the pens' people from RGN29 only the first time the party goes there (a save keeps
-them as they were), so he is in new games: those started after the Ledger has these copies.
-His stock, the six scrolls in SCROLLS, the Ledger puts among his things once a game (stock), as it
+them as they were), so he is in new games: those started after the Loader has these copies.
+His stock, the six scrolls in SCROLLS, the Loader puts among his things once a game (stock), as it
 does the slave-pen items (npcitems); the game's shop screen (24h) sells what he carries.
 """
 
@@ -52,8 +52,8 @@ DEFILER_CLASS, LEVEL = 18, 5
 # his state, in four of the game's global flags (bits; it uses 1-755, a save keeps 808): met
 # him, friendly, cold; his scrolls given
 MET, FRIENDLY, COLD = 760, 761, 762
-STOCKED = 763  # (set by the Ledger: his scrolls and gear given)
-DIED = 772  # (set by the Ledger: seen dead; Dinos and the Trustee speak of him so, pensasks.py)
+STOCKED = 763  # (set by the Loader: his scrolls and gear given)
+DIED = 772  # (set by the Loader: seen dead; Dinos and the Trustee speak of him so, pensasks.py)
 
 # The scrolls: (spell, its name, price in ceramic pieces). Cat's Grace is one of the new spells
 # (game.NEW_SPELLS; once the game's Flaming Sphere, 14, under the rule), sold only while their rule
@@ -71,7 +71,7 @@ SCROLL_FROM = 1400  # the game's first scroll object, which his scrolls' objects
 # clicked, it teaches its spell only for an object from 1400 to 1499 (DSUN.EXE 8B6A3h), and
 # casts it otherwise. The game's objects stop at 1432; from 1433 the numbers are pictures only,
 # most of them other objects' icons: those of 1440-1445 move to pictures of their own
-# (MOVED_ICONS: no chunk of the game's has those numbers, nor the Ledger's other pictures), and
+# (MOVED_ICONS: no chunk of the game's has those numbers, nor the Loader's other pictures), and
 # the scrolls take theirs. Earlier builds' scrolls (OLD_SCROLL_OBJECT + k) are renumbered (mend).
 SCROLL_OBJECT = 1440
 SCROLL_LEARNED = range(1400, 1500)
@@ -81,7 +81,7 @@ ITEM_OBJECT, ITEM_SPELL, ITEM_SPELL_AGAIN, ITEM_VALUE, ITEM_LINK = 0x00, 0x02, 0
 
 
 SCROLL_SPELL_FROM = 1  # a scroll names its spell one past the game's number for it (as the
-# rest of the Ledger numbers spells: 1 Burning Hands): one of 29, Haste's, taught Flame Arrow
+# rest of the Loader numbers spells: 1 Burning Hands): one of 29, Haste's, taught Flame Arrow
 
 
 def scroll(spell: int, price: int, k: int = 0) -> bytes:
@@ -101,7 +101,7 @@ def scroll(spell: int, price: int, k: int = 0) -> bytes:
 # The objects file: his OJFF, RDFF and picture
 
 def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of SEGOBJEX: Kalzith's object (the arena Defiler's look) and record
+    """For the Loader's copy of SEGOBJEX: Kalzith's object (the arena Defiler's look) and record
     (a peaceful slave's, Dinos's, named and classed as a defiler)."""
     if any(k not in chunks for k in (("RDFF", DINOS), ("OJFF", DINOS), ("OJFF", DEFILER))):
         return {}
@@ -581,7 +581,7 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
                   vulture: bool = True, ring: bool = True, arms: bool = True,
                   magic: bool = True, cloak: bool = False, tome: bool = False,
                   pens: bool = True) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of GPLDATA: his conversation, and the master script running it (and
+    """For the Loader's copy of GPLDATA: his conversation, and the master script running it (and
     Semyon's, semyon.py; Dinos's and the Trustee's questions, pensasks.py; Alagorn on Kreenfang
     and Shadowseeker, alagorn.py), each part only if switched on (the Options tab's new content)."""
     chunks = read_gff(gpldata)
@@ -635,7 +635,7 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
 
 
 def region_chunks(rgn: bytes, gifts=()) -> Dict[Tuple[str, int], bytes]:
-    """For the Ledger's copy of RGN29.GFF: the pens' entity table with him in it (and with
+    """For the Loader's copy of RGN29.GFF: the pens' entity table with him in it (and with
     GIFTS' clones there, worldgear.py's: the pens' weapon rack's own object)."""
     from . import worldgear
     chunks = read_gff(rgn)
@@ -681,10 +681,10 @@ def watch(gd) -> bool:
 # Ashen Robe (robes.py), given with his scrolls (stock). His shop offers all he has, worn or not,
 # in any of his lists (the game has no mark for an item a merchant won't sell), so these are for
 # sale too. What he leaves when killed: whatever he still carries, which the game puts in a pile
-# where he fell (none if he has nothing); of the scrolls, the Ledger leaves one, at random, and
+# where he fell (none if he has nothing); of the scrolls, the Loader leaves one, at random, and
 # takes the others out of it (once: LOOTED).
 LOOTED = 777
-# Once he carries nothing (the Ledger's flag SOLD_OUT), his shop is no longer offered ("Anything
+# Once he carries nothing (the Loader's flag SOLD_OUT), his shop is no longer offered ("Anything
 # left to sell?" "Nothing."). DRESSED: his gear given (with his scrolls, when stocked).
 DRESSED, SOLD_OUT = 776, 778
 RIGHT_HAND = game.EQUIP_SLOTS.index("right hand")

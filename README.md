@@ -1,11 +1,11 @@
 # Obsidian Edition
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox: rules closer to AD&D, kits, new spells, items and people, the party's
-gear drawn on the map, and every roll shown as it happens. Its companion window,
-**Templar's Ledger**, starts the game with your options and keeps the full dice
-log beside it. (Up to its 1.2.0 release, the whole mod was called Templar's
-Ledger.)
+in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
+party's gear drawn on the map, and every roll shown as it happens. Its window,
+the **Dark Sun Obsidian Edition Loader**, starts the game with your options
+and keeps the full dice log beside it. (The Loader was called Templar's Ledger
+up to 2.2.1, and up to 1.2.0 that was the whole mod's name.)
 
 ![The arena in round 10 of a fight: Cermak's turn, with the combat log over the map's lower right showing a Slig's hits on Gerakis and the new round](darksun-companion/docs/combat-log.png)
 
@@ -49,7 +49,7 @@ Ledger.)
   characters](darksun-companion/README.md#more-saves-and-characters)), a game speed setting, crash
   reports, and no manual check ([No manual check](darksun-companion/README.md#no-manual-check)).
 
-The game's own files are never modified: the Ledger runs a patched copy of the
+The game's own files are never modified: the Loader runs a patched copy of the
 game from its own folder. It writes to the game folder only your saves (pages
 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and your characters (20 to 29 in the
 game's own `CHARSAVE.GFF`).
@@ -65,15 +65,15 @@ game's own `CHARSAVE.GFF`).
    in a download of the repository), double-click **`Start Obsidian Edition.bat`**.
    The first time, it offers to install 64-bit Python if you don't have it.
    If Windows shows "Open File - Security Warning" (it does for any `.bat`
-   from a download), press **Run**: the Ledger then unblocks its own files, so
+   from a download), press **Run**: the Loader then unblocks its own files, so
    it asks only that once. (Or, before unzipping, tick **Unblock** in the zip's
    Properties.)
-3. On the Ledger's **Options** tab, pick the rule changes and additions you
+3. On the Loader's **Options** tab, pick the rule changes and additions you
    want (they're remembered).
 4. Press **Start the game** at the top left. The game starts with your options,
-   and the Ledger follows it.
+   and the Loader follows it.
 
-(`Start Game with Dice Log.bat` starts the game and the Ledger together in one
+(`Start Game with Dice Log.bat` starts the game and the Loader together in one
 double-click, with the options as last set.)
 
 ## What's new

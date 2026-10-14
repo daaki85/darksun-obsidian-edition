@@ -1,4 +1,4 @@
-"""Shadows under the figures on the map (DSCLOG's SHADOWS), kept up by the Ledger.
+"""Shadows under the figures on the map (DSCLOG's SHADOWS), kept up by the Loader.
 
 DSCLOG draws them: after the game draws the floor of the map's view (or of a rectangle of it), each
 figure marked in its table casts a see-through shadow on it, its outline laid down toward the lower
@@ -6,7 +6,7 @@ right (the light on the game's maps comes from the upper left, as the walls' sha
 the walls and figures are drawn, so everything stands on the shadows. A shadow darkens the floor
 through a table of each colour's darker one, which DSCLOG makes from the palette when asked.
 
-The Ledger keeps its table of who casts one (the living creatures among the game's 520 things: the
+The Loader keeps its table of who casts one (the living creatures among the game's 520 things: the
 party, the people, the monsters; not the dead, nor items) and asks for the darker colours again
 when the area, so the palette, changes (once its fade-in is over) and now and then.
 """

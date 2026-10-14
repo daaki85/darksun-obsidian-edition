@@ -148,7 +148,7 @@ def defences(rules: List[Rule], properties: int, undead: bool) -> Defences:
 
 
 def describe(d: Defences) -> List[str]:
-    """Sentences for the Ledger and the game's dialogue window."""
+    """Sentences for the Loader and the game's dialogue window."""
     out = []
     if d.weapon_plus == 4:
         out.append("Weapons can't hurt it.")
