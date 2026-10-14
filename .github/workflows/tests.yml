@@ -1,0 +1,23 @@
+# Runs Obsidian Edition's tests (the mod and the Loader) on Windows, where players run it.
+name: Obsidian Edition tests
+
+on:
+  push:
+    branches: [obsidian-edition]
+    paths: ["obsidian-edition/**", ".github/workflows/tests.yml"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: obsidian-edition
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: x64
+      - name: Tests
+        run: python -m unittest discover -s tests

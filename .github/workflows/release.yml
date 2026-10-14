@@ -1,6 +1,6 @@
-# Publishes a release: the tests, then a zip of the darksun-companion folder with the notes in
+# Publishes a release: the tests, then a zip of the obsidian-edition folder with the notes in
 # release-notes/<tag>.md. Either a version tag (v1.0.0, ...) is pushed, or the workflow is run by
-# hand (Actions -> Release -> Run workflow) on main: then the tag is "v" and dscompanion's
+# hand (Actions -> Release -> Run workflow) on main: then the tag is "v" and dsloader's
 # __version__, made on the commit it runs on.
 name: Release
 
@@ -22,21 +22,21 @@ jobs:
           python-version: "3.12"
           architecture: x64
       - name: Tests
-        working-directory: darksun-companion
+        working-directory: obsidian-edition
         run: python -m unittest discover -s tests
       - name: The version (and the tag, when one was pushed)
         shell: bash
         run: |
-          version=$(python -c "import sys; sys.path.insert(0, 'darksun-companion'); import dscompanion; print(dscompanion.__version__)")
+          version=$(python -c "import sys; sys.path.insert(0, 'obsidian-edition'); import dsloader; print(dsloader.__version__)")
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            test "v$version" = "$GITHUB_REF_NAME" || { echo "dscompanion.__version__ is $version, the tag $GITHUB_REF_NAME"; exit 1; }
+            test "v$version" = "$GITHUB_REF_NAME" || { echo "dsloader.__version__ is $version, the tag $GITHUB_REF_NAME"; exit 1; }
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
           test -f "release-notes/v$version.md" || { echo "no release-notes/v$version.md"; exit 1; }
       - name: Zip
         shell: bash
         run: |
-          git archive --format=zip --prefix="Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION/" -o "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "$GITHUB_SHA":darksun-companion
+          git archive --format=zip --prefix="Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION/" -o "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "$GITHUB_SHA":obsidian-edition
       - name: Release
         shell: bash
         env:

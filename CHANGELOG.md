@@ -8,6 +8,199 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #44 (in progress)
+
+**Added**
+- **A combat log in the game.** In a fight, a panel over the map's lower
+  right shows the dice log's lines as they come, in the game's font and the
+  Ledger's colours, with the round and who acts next above them; at the
+  least, in short (the default) or in detail. An Options switch, off by
+  default. It scrolls back over the fight: the scrollbar's handle, a page
+  at a click on the bar, the mouse wheel over it (on Windows), and a
+  **Latest** chip back to the newest lines. Its header has the level and
+  - / + buttons: collapsed to one line, docked, or expanded with filters
+  (All, Party, Damage, Saves); **L** collapses and opens it.
+- **Saves under their names.** The Ledger keeps a second copy of every save in
+  its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before
+  Scar's battle.SAV`), and the Options tab's new **Saves** section opens the
+  folder and puts a named save back in a slot of the game's list.
+- **Two magic shields.** **Gutterward**, a wooden shield +1, on a skeleton in
+  the Tari's warrens; **Ironbulwark**, a metal shield +3 (the game has no
+  metal shield: a type of the Ledger's), carried by the Guardian of
+  Balkazar's fortress. Each has its icon, its price (25,000 and 65,000) and
+  its story from Alagorn, in his shields' menu.
+- **Three new wizard spells,** with the new spells on: **Reflected Image**
+  (1st level, on the caster: one image, struck instead of the caster half the
+  time; it and Mirror Image replace each other), **Spook** (1st level: one
+  creature flees for 3 rounds unless it saves, at -1 for every 2 caster
+  levels, at most -6; undead aren't affected) and **Friends** (1st level, on
+  the caster: CHA + 2d4, at most 25, for 1d4 rounds and 1 a level, for better
+  prices). Each has its icon (Reflected Image's a hand mirror, named on the
+  Effects screen) and description; preservers and the Shinobi learn all
+  three.
+- **Defilers' scrolls:** each defiler in a fight has a 5% chance of carrying
+  a scroll of a random preserver spell (the game's 69, and the new spells
+  with them on), found on its body when it dies; rolled once a fight, and
+  kept out of the dice log so it isn't given away. A New content box, on by
+  default.
+- **Buying back magical items:** a magical item sold to a merchant (a plus,
+  or a power: rings, wands, scrolls) stays in the merchant's stock to buy
+  back; the game destroys everything sold, and still does other items. An
+  Expanded features box, on by default.
+
+**Changed**
+- **Templar's Ledger is now the Dark Sun Obsidian Edition Loader** (the
+  Loader for short): the window's banner and title, the crash message in the
+  game, and every page of the docs, which now call it what starts the game
+  with the mod rather than a companion window. Its settings, named saves and
+  crash reports stay where they were.
+- **The folder is `obsidian-edition` and the Python package `dsloader`**
+  (they were `darksun-companion` and `dscompanion`): `python -m dsloader`
+  runs the command line, and the tests workflow is `tests.yml`.
+- **More kits that can't go together:** the Grove Warden can't dual to
+  gladiator, nor a gladiator who duals to druid take it (its AC would add to
+  the gladiator's own); the Swashbuckler, Crusader, Battle Mage and Mind
+  Warrior, each giving a warrior's THAC0, can't go with one another.
+- **The Ravager and the Grove Warden can't go together:** a human who has
+  one isn't offered the other after DUAL (each has an AC of its own that
+  betters with level, and they would stack).
+- **The Stalker and the thief:** a human Stalker can't dual to thief, and a
+  thief (with any thief kit or none) who duals to ranger isn't offered the
+  Stalker kit: its +15 to hiding would add to a thief's own skills.
+- **EMS off in the launcher's DOSBox settings:** GOG's settings turn on EMS,
+  whose 64 KB page frame left the helper 1 KB of upper memory; the
+  launcher's config now turns it off (the game uses XMS instead), giving the
+  helper a 64 KB block more, with conventional memory unchanged (632 KB).
+- **Kits in the docs, class by class:** the README's one table of kits is now
+  a table for each class, under a heading of its own, with the level each
+  part of a kit comes at (the Myrmidon's mastery at 5th level and grand
+  mastery at 9th, the Ravager's AC, the Seeker's and Shinobi's slots, the
+  Crusader's, Mind Warrior's and Battle Mage's attacks, the Grove Warden's
+  AC), each kit's starting gear and what else a player should know (the
+  classes and kits it rules out, where its choices are made); the player
+  guide's class sections have the same full rows.
+- **The player's guide is now `PLAYER-GUIDE.md`** (it was `GUIDE.md`), so its
+  name says what it is; the links to it follow.
+- **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each
+  point after, to 40% at 25 (it was 5% at 16 to 25% from 20); shops pay 60%
+  of an item's price when the party sells (the game paid all of it, which
+  with the discount let anything bought be sold at a profit).
+- **Fogbolt's icon is grey** (its cloud on Armor's grey tile, rather than
+  Charm Person's purple).
+- **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the
+  game's five, with the new spells on: offered at a level up as the others
+  are, and cast at the thief level less 5 as they are.
+- **The bone and obsidian axes weigh 30** (35 and 70 before), the game's
+  heaviest a weapon can be without being HEAVY: they are no longer HEAVY, so
+  either can go in the off hand with another weapon, and both can backstab.
+  The metal Axe is the game's own, 70. Drakejaw and Glasshewer, of those
+  types, weigh 30 too.
+
+**Removed**
+- **Each turn's rolls in the game's dialogue window** (the "Show each turn's
+  rolls" switch and `--popups`): the combat log shows them without stopping
+  the game. The game is no longer patched in its combat loop for them, and
+  DSCLOG is about 1 KB smaller.
+
+**Fixed**
+- **The dice log stopped in a fight whose round order named someone it
+  couldn't match** (seen in the arena's opening show, the Defiler and a
+  Slig): the turn's lines now pass over that entry.
+- **The new spells' records shared memory with a stack.** The game kept a
+  small stack where Cat's Grace, Erdlu Claw and Fogbolt's records are; the
+  helper now moves it (and the monster kinds table) into its own memory as
+  the game starts, which also makes room for the three spells above.
+- **New preservers weren't offered their spells.** DONE on the creation
+  screen gave a new preserver (single or multiclass) the game's own starting
+  spells instead of CHOOSE A SPELL: the check meant to leave START GAME's
+  ready-made party alone read the character's status, which says Okay for a
+  character being made too. It now tells the two apart by where the game's
+  spell grants were called from.
+- **Stuck on the creation panel's KITS page.** A single-class warrior on the
+  last weapon page has KITS for its button; adding a class there (a fighter
+  made fighter/thief) kept the button, and pressing it opened a page with no
+  kits, titled KITS, whose KITS button opened the same page again. The last
+  weapon page now changes its button to VIEW PSIONICS as soon as the
+  character can no longer take a kit (and back to KITS if it can again), and
+  KITS pressed for a character with no kit class goes back as VIEW PSIONICS
+  does.
+- **A kit lost on a new roll.** The die's new roll takes a kit away when the
+  character's classes aren't the ones the panel last saw, which it learns
+  from a click on a class. A new character's default class is never clicked,
+  so a fighter given a kit (a Myrmidon, with its two specializations) and
+  then rolled again lost the kit, and with it the second specialization. A
+  kit chosen now records the classes it goes with.
+- **The panel after a new race or sex.** The creation screen empties the
+  classes, opens the panel for a character of no class, then puts the default
+  class back without a click: a fighter was left with the game's VIEW SPHERES
+  (which did nothing) where WEAPON SPEC belongs. The panel now follows the
+  class put back.
+- **Starting gear the classes can't use.** A character of several classes
+  started with each class's gear, what it couldn't wear in the backpack (a
+  fighter/druid/thief's leather armour, which a druid can't wear). With class
+  restrictions, a new character's weapons, armour and shields its classes
+  can't use are left behind, and the dice log says so.
+- **A missile weapon's line on the inventory screen** showed the weapon's own
+  rate of fire and no specialization bonus (a staff sling specialist's `1D4`).
+  It now shows the rate and the bonus the attack uses (`1.5x1D4+2`).
+- **A helm's item box said AC BONUS:0** (beside its name's "(AC 1)") until it
+  had been worn: the rule set the helms' AC only as the game added up a
+  character's. The box now sets it too, and shows 1.
+- **Doors with charges.** A door's box (and a mirror's, a crank's) could say
+  `Charges: 10`: the charges line read bytes that, in scenery, hold something
+  else. Scenery no longer gets the line.
+- **The Cloak of Protection forbidden to druids.** Its type counts for AC as
+  armour does, so class restrictions took it for armour, which a druid (a
+  fighter/druid/thief too) can't wear. It's a cloak, for every class.
+- **A polearm's item box ran out of the box.** The game's Polearm picture is
+  36 pixels tall, where every other item's is 22 at most, and the box puts its
+  lines below the picture: the damage line (Thornwall's, Linebreaker's, the
+  game's own bone polearm's) fell outside. The Ledger now writes the polearms'
+  picture at 22 pixels.
+- **The Trustee stuck at "I have to get back to work".** The game makes him
+  busy after a talk until his rounds of the pens bring him back to their first
+  corner; when his rounds stall (he can't reach his next corner), he stays busy
+  for good and never talks again. What stalls them: a thief with no room for
+  his stolen key drops it at his feet, and after each step of his rounds he
+  makes for it ("There it is!") without picking it up. In the Ledger's copy he
+  leaves the key where it lies (the party can pick it up), and he says the
+  busy line once and is free to talk the next time.
+- **Rows of the creation panel's weapon and kit pages took clicks only at
+  their left.** Each row is a copy of the game's AIR row, a button 33 pixels
+  wide: a click on the rest of a longer name (the middle of MYRMIDON or LNG
+  SWORD) did nothing. Each row's button is now as wide as its name.
+
+**Documentation**
+- **A review of every page for this pull request's changes.** The README's
+  picking pockets section tells of the Trustee's key, its class restrictions
+  that a cloak isn't armour, its kits that a new roll keeps the kit, its new
+  items the axes' weight, its Options list the Saves section and its More
+  saves `cloud_saves`; the More character customization table gains STORE and
+  RECALL, which has a box too. A backstab's weight limit is a metal long
+  sword's 40 (it said a long sword's was 20), and the AC and saves lines point
+  to the rings of protection rather than "the Ring +1". The guide's Equipment
+  has the obsidian axe backstabbing and cloaks for every class, and its Ledger
+  list the named saves; both overviews mention them. DEVELOPMENT.md has the
+  scenery and cloak checks, the kit kept through a roll, the rows' width, the
+  polearm's picture, the Trustee's two script changes (his script is now
+  10,967 bytes), the named saves and the `checks` command.
+- **A second review, after the combat log:** the overviews name the combat
+  log, the six wizard spells, buying back and defilers' scrolls; the top
+  README's overview is a short list linking to the full one; the last
+  mentions of the turn pop-up are gone; the kits' starting gear is said once,
+  in each class's table, not again in a table and list of its own; the
+  Options tab's new spells box names all six, and its screenshot is retaken.
+- **A third review, after the rename:** the full README puts **In the game**
+  (the combat log first) before the Loader's window, and its overview is a
+  list as the top README's is; the player's guide starts with the combat log;
+  the patch notes put the game's changes first and the Loader after them;
+  DEVELOPMENT.md has the combat log under How each part works and Room in the
+  helper as a section of its own (they were inside Kits), and a Shinobi table
+  split by a paragraph is whole again; "viewer" is gone from the docs.
+- **The polearms' icons** in the README's item tables (the bone and metal
+  Polearm, Thornwall, Linebreaker) are redrawn at the 22 pixels the game now
+  shows them at.
+
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 
 **Release**
@@ -701,8 +894,8 @@ have the detail.
 
 **Documentation**
 - **Item icons** in every item table of the guide.
-- **[Every magic item](darksun-companion/README.md#every-magic-item)** and
-  **[Every mundane weapon](darksun-companion/README.md#every-mundane-weapon):**
+- **[Every magic item](obsidian-edition/README.md#every-magic-item)** and
+  **[Every mundane weapon](obsidian-edition/README.md#every-mundane-weapon):**
   each item, the game's and the Ledger's, with its bonus or power and who
   sells or carries it; the magic weapons of each weapon type for weapon
   specialization.
@@ -928,7 +1121,7 @@ have the detail.
 - **The README is shorter** (2,974 lines to about 2,300): how each part works
   (the helper's interrupts, the game's offsets and flags), how the dice log
   works, what's known of the game's data and the development notes are in a
-  new `darksun-companion/DEVELOPMENT.md`, each README section linking to its
+  new `obsidian-edition/DEVELOPMENT.md`, each README section linking to its
   part; "What it does" is a short overview; the thieves' skills and backstabs,
   and the saving throws, are each one section with their rule changes, and the
   two-weapon rule sits with the dice log's two weapons; the new items are one

@@ -1,10 +1,14 @@
 # Obsidian Edition
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox, with its own companion window, **Templar's Ledger**, beside the
-game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
+in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
+party's gear drawn on the map, and every roll shown as it happens. You start
+the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
+with your options and keeps the full dice log while you play. (The Loader was
+called Templar's Ledger up to 2.2.1, and up to 1.2.0 that was the whole mod's
+name.)
 
-![Templar's Ledger during the arena's opening show: the party's character cards, and the dice log of the Defiler's Cone of Cold and the Rampager's acid](darksun-companion/docs/dicelog.png)
+![The arena in round 10 of a fight: Cermak's turn, with the combat log over the map's lower right showing a Slig's hits on Gerakis and the new round](obsidian-edition/docs/combat-log.png)
 
 ## Contents
 
@@ -13,54 +17,47 @@ game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
 - [What's new](#whats-new)
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
 - [Changelog](CHANGELOG.md)
-- [The player's guide](darksun-companion/GUIDE.md): the rules and tables, without spoilers
-- [The full documentation](darksun-companion/README.md): everything in detail
+- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules and tables, without spoilers
+- [The full documentation](obsidian-edition/README.md): everything in detail
 
 ## What it does
 
-It shows what the game keeps hidden. Every roll is logged as it happens:
-attacks, damage, saving throws, thief skills, initiative, even the dice at
-character creation. Each comes with what it needed and where every bonus came
-from ([the dice log](darksun-companion/README.md#the-dice-log)). The game's own
-screens gain THAC0, saves, thief skills and spell slots, and the Look box tells
-you what can hurt a monster ([In the
-game](darksun-companion/README.md#in-the-game)).
+- **Shows what the game keeps hidden.** Every roll is logged as it happens,
+  with what it needed and where each bonus came from ([the dice
+  log](obsidian-edition/README.md#the-dice-log)). The game's own screens gain
+  THAC0, saves, thief skills and spell slots, a combat log scrolls in a corner
+  of the map in a fight, and the Look box tells you what can hurt a monster
+  ([In the game](obsidian-edition/README.md#in-the-game)).
+- **Brings the rules closer to AD&D:** class restrictions, AD&D's class
+  tables, INT's limits on learning spells, saving throws and multiclass hit
+  points as the books have them ([Rule
+  changes](obsidian-edition/README.md#rule-changes)).
+- **More ways to build a character:** weapon specialization and mastery, kits
+  (three for each class), levels up to 10, and STORE and RECALL for a creation
+  roll ([More character
+  customization](obsidian-edition/README.md#more-character-customization)).
+- **Expanded play:** thieves hide in shadows to backstab and pick pockets, the
+  leader's CHA lowers shop prices, and merchants sell back the magical items
+  sold to them ([Expanded
+  features](obsidian-edition/README.md#expanded-features)).
+- **More of Athas:** new weapons, shields and magic items, six wizard spells,
+  Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
+  Semyon's story and a use for the cooked vulture ([New
+  content](obsidian-edition/README.md#new-content)); on the map, the party
+  wears its gear, figures cast shadows and raise dust, and elves and
+  half-elves look their own ([Graphics](obsidian-edition/README.md#graphics)).
+- **Quality of life:** Tab and Enter to choose and attack an enemy, dragging
+  the map with the mouse wheel
+  ([Controls](obsidian-edition/README.md#controls)), 40 saves kept under their
+  names too, 29 saved characters ([More saves and
+  characters](obsidian-edition/README.md#more-saves-and-characters)), a game
+  speed setting, crash reports, and no manual check ([No manual
+  check](obsidian-edition/README.md#no-manual-check)).
 
-It brings the rules closer to AD&D: class restrictions, AD&D's class tables
-(experience, priests' THAC0, spell slots), INT's limits on learning spells,
-saving throws as the books have them, scores and hit points kept as rolled,
-and multiclass hit points as the books have them ([Rule
-changes](darksun-companion/README.md#rule-changes)). It gives more ways to build a character: weapon
-specialization and mastery, kits (three for each class), levels up to 10,
-and STORE and RECALL for a creation roll ([More character
-customization](darksun-companion/README.md#more-character-customization)). And it expands play:
-thieves with AD&D's skills hide in shadows to backstab and pick pockets, and
-the party leader's CHA lowers shop prices ([Expanded
-features](darksun-companion/README.md#expanded-features)).
-
-It adds to Athas: new weapons in every material, magic items with stories of
-their own (robes and bracers among them, for those who wear no armour), three
-wizard spells ([Cat's Grace, Erdlu Claw and
-Fogbolt](darksun-companion/README.md#new-wizard-spells)), Kalzith (a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
-vulture ([New content](darksun-companion/README.md#new-content)). On the
-map, the party wears its weapons and armour, figures cast shadows and kick up
-dust, and elves and half-elves have a look of their own
-([Graphics](darksun-companion/README.md#graphics)).
-
-Quality of life changes: choosing an enemy with Tab and attacking it with Enter,
-scrolling the map by dragging with the mouse wheel
-([Controls](darksun-companion/README.md#controls)), 40 saves and 29 saved
-characters ([More saves and
-characters](darksun-companion/README.md#more-saves-and-characters)), a game
-speed setting ([Game speed](darksun-companion/README.md#game-speed)), crash
-reports, and no dragon asking for a word from the manual, the game's copy
-protection ([No manual check](darksun-companion/README.md#no-manual-check)).
-
-The game's own files are never modified: the Ledger runs a patched copy of the
-game, and copies of its data files, from its own folder. Play writes to the game
-folder only what you'd expect: your saves (pages 2 to 4 as files of their own,
-`SAVB`, `SAVC` and `SAVD`) and your characters (20 to 29 in the game's own
-`CHARSAVE.GFF`).
+The game's own files are never modified: the Loader runs a patched copy of the
+game from its own folder. It writes to the game folder only your saves (pages
+2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and your characters (20 to 29 in the
+game's own `CHARSAVE.GFF`).
 
 ## Getting started
 
@@ -69,22 +66,29 @@ folder only what you'd expect: your saves (pages 2 to 4 as files of their own,
    (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`) and unzip it
    anywhere. (Or this repository as it stands: **Code →
    Download ZIP**.)
-2. In the unzipped folder (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>`, or `darksun-companion`
-   in a download of the repository), double-click **`Start Obsidian Edition.bat`**.
+2. In the unzipped folder (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>`,
+   or `obsidian-edition` in a download of the repository), double-click
+   **`Start Obsidian Edition.bat`**.
    The first time, it offers to install 64-bit Python if you don't have it.
    If Windows shows "Open File - Security Warning" (it does for any `.bat`
-   from a download), press **Run**: the Ledger then unblocks its own files, so
+   from a download), press **Run**: the Loader then unblocks its own files, so
    it asks only that once. (Or, before unzipping, tick **Unblock** in the zip's
    Properties.)
-3. On the Ledger's **Options** tab, pick the rule changes and additions you
+3. On the Loader's **Options** tab, pick the rule changes and additions you
    want (they're remembered).
-4. Press **Start the game** at the top left. The game starts with your options,
-   and the Ledger follows it.
+4. Press **Start the game** at the top left. The game starts with your
+   options, and the Loader shows the party and the dice log as you play.
 
-(`Start Game with Dice Log.bat` starts the game and the Ledger together in one
+(`Start Game with Dice Log.bat` starts the game and the Loader together in one
 double-click, with the options as last set.)
 
 ## What's new
+
+**Coming in the next release** (pull request #44, [in the
+changelog](CHANGELOG.md#pull-request-44-in-progress)): a combat log in the
+game, three more wizard spells (Reflected Image, Spook and Friends), two magic
+shields, defilers' scrolls, buying back magical items, saves kept under their
+names, and Templar's Ledger renamed the Loader.
 
 **Obsidian Edition 2.2.1** is out ([release notes](release-notes/v2.2.1.md)):
 more of the Options tab can be switched (the elves' and half-elves' looks,

@@ -2,7 +2,7 @@
 
 *A Dark Sun: Shattered Lands mod · Current version 2.2.1 · Every change from the original game*
 
-Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. Its companion window, Templar's Ledger, runs beside the game and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
+Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
@@ -10,7 +10,6 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Contents
 
-- [Templar's Ledger](#templars-ledger)
 - [In the Game's Screens](#in-the-games-screens)
 - [Combat](#combat)
 - [Classes and Kits](#classes-and-kits)
@@ -20,26 +19,16 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - [World](#world)
 - [Graphics](#graphics)
 - [Quality of Life](#quality-of-life)
+- [The Loader](#the-loader)
 - [Bug Fixes](#bug-fixes)
-
-## Templar's Ledger
-
-- **[New]** A companion window that starts the game and runs beside it, laid out in the game's own colours.
-- **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
-- **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
-- **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
-- **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
-- **[New]** **Options:** every rule change and addition below has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
-
-> *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Ledger started as a way to see those numbers. Once we could see them, we started fixing them.*
 
 ## In the Game's Screens
 
+- **[New]** Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds it away.
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
-- **[New]** Optionally, the game pauses after each turn in a fight to show that turn's rolls in its own dialogue window.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
 - **[New]** The Effects screen lists your kits and weapon specializations.
 
@@ -107,7 +96,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Magic and Psionics
 
-- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds).
+- **[New]** Six new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds), and at 1st level too **Reflected Image** (one image of the caster, struck instead of it half the time), **Spook** (a creature flees for 3 rounds unless it saves) and **Friends** (CHA +2d4 for a short while, for better prices).
 - **[Changed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 
 ## Improved Thieving
@@ -153,11 +142,13 @@ Fifteen new magic weapons, each with its own icon and a story from the game's ow
 - **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
 - **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
 - **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
+- **[New]** **Gutterward**, a wooden shield +1, and **Ironbulwark**, a metal shield +3: the game had no metal shield.
 
 **Other magic items**
 
 - **[New]** **Tome of Understanding**: read it for +1 WIS for good.
 - **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.
+- **[New]** **Defilers' scrolls**: a defiler in a fight may carry a scroll of a preserver spell, one time in 20, found on its body.
 
 **Mundane items**
 
@@ -177,7 +168,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
-- **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 16 to 25% at 20, as in Baldur's Gate.
+- **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25, and pay 60% of an item's price *(was all of it)*.
+- **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
 
 ## Graphics
 
@@ -191,11 +183,22 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse.
 - **[New]** Press the mouse wheel and drag to scroll the map.
-- **[Changed]** 40 save slots on four pages *(was 10)*, and 29 stored characters *(was 19)*.
+- **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written.
-- **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Ledger.
+- **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
+
+## The Loader
+
+- **[New]** The Loader: it starts the game with the mod and your options, and stays open while you play, laid out in the game's own colours.
+- **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
+- **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
+- **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
+- **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
+- **[New]** **Options:** every rule change and addition below has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
+
+> *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 
 ## Bug Fixes
 
