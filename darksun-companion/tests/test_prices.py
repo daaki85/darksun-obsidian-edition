@@ -15,11 +15,13 @@ class PricesTests(unittest.TestCase):
                          [0, 0, 5, 10, 15, 20, 25, 30, 35, 40, 40])
 
     def test_sell_price(self):
-        """Half, never below 1; never more than the best discounted price (40% off)."""
+        """60%, rounded down, never below 1; never more than the best discounted price (40% off),
+        and the same as it at CHA 25."""
         self.assertEqual([prices.sell_price(v) for v in (0, 1, 3, 1000, prices.NOT_FOR_SALE)],
-                         [0, 1, 1, 500, prices.NOT_FOR_SALE])
+                         [0, 1, 1, 600, prices.NOT_FOR_SALE])
         for value in (1, 2, 7, 15, 3000, 65000):
-            self.assertLessEqual(prices.sell_price(value), prices.price(value, 25))
+            self.assertEqual(prices.sell_price(value), prices.price(value, 25))
+            self.assertLessEqual(prices.sell_price(value), prices.price(value, 24))  # (1 is 1 either way)
 
     def test_price(self):
         self.assertEqual(prices.price(1000, 18), 950)

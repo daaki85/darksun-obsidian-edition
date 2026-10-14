@@ -2363,8 +2363,9 @@ class NewSpellTests(RuleTests):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
 
     def test_sell_price(self):
-        """What a shop pays (SELL_PRICE, "mov si,es:[bx+6]", ES:BX the item): half with the CHA
-        prices rule (RULE_HI 16), never below 1; all of it without; 9999 (not for sale) kept."""
+        """What a shop pays (SELL_PRICE, "mov si,es:[bx+6]", ES:BX the item): with the CHA
+        prices rule (RULE_HI 16) 60%, rounded down, never below 1; all of it without; 9999 (not for
+        sale) kept."""
         from dscompanion import gamepatch
         item = 0x9800 * 16 + 0x40
         def pays(price, rules_hi):
@@ -2372,7 +2373,7 @@ class NewSpellTests(RuleTests):
             self.mu.mem_write(item + 6, struct.pack("<H", price))
             self.site(gamepatch.SELL_PRICE, es=0x9800, ebx=0x40, esi=0x1234)
             return self.mu.reg_read(r.UC_X86_REG_SI)
-        self.assertEqual([pays(p, 16) for p in (3000, 7, 1, 0, 9999)], [1500, 3, 1, 0, 9999])
+        self.assertEqual([pays(p, 16) for p in (3000, 7, 1, 0, 9999, 65000)], [1800, 4, 1, 0, 9999, 39000])
         self.assertEqual(pays(3000, 0), 3000)
 
     def test_sell_keep(self):

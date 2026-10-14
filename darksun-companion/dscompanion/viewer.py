@@ -399,7 +399,7 @@ class Viewer:
                          "page)"),
                 ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
                 ("cha_prices", "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
-                               "point after, to 40% at 25; shops pay half an item's price"),
+                               "point after, to 40% at 25; shops pay 60% of an item's price"),
                 ("buyback", "Merchants keep the magical items the party sells them, to buy back at their price "
                             "(the game destroys whatever is sold; other items still are)"),
                 ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "

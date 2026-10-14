@@ -12101,9 +12101,10 @@ ns_entry:
 
 ; SELL_PRICE: "mov si,es:[bx+6]" (83CCAh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop takes the price it pays for the item the party sells (ES:BX the item; shown in its offer,
-; then paid, times the count for a stack). With RULE_HI_CHA_PRICES, half (never below 1), as
-; Baldur's Gate's shops pay: the leader's CHA takes at most 40% off buying, so nothing bought can
-; be sold for more than it cost (prices.sell_price).
+; then paid, times the count for a stack). With RULE_HI_CHA_PRICES, SELL_PERCENT of it (rounded
+; down, never below 1): the leader's CHA takes at most 40% off buying (rounded down too), so
+; nothing bought can be sold for more than it cost (prices.sell_price).
+SELL_PERCENT equ 60
 sell_price:
         pushad
         push es
@@ -12115,7 +12116,13 @@ sell_price:
         je .set
         cmp ax, 1
         jbe .set
-        shr ax, 1
+        mov cx, SELL_PERCENT
+        mul cx                  ; (DX:AX the price x 60)
+        mov cx, 100
+        div cx
+        or ax, ax
+        jnz .set
+        inc ax
 .set:   mov [ss:di + NS_SI], ax
         pop es
         popad

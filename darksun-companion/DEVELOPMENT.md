@@ -787,8 +787,10 @@ A bought item stays on the pointer until it is put down (the game's held item,
 
 What a shop pays: `SELL_PRICE` (an `INT 98h` site, 83CCAh's `mov si,es:[bx+6]`,
 ES:BX the item sold; the price shown in its offer and paid, times the count
-for a stack) gives half, never below 1, with the same rule (`prices.sell_price`):
-at the best discount (40% off) nothing bought sells for more than it cost.
+for a stack) gives 60% of it (`SELL_PERCENT`; times 60 into DX:AX, divided by
+100, rounded down, never below 1), with the same rule (`prices.sell_price`):
+the best discount (40% off) rounds down the same way, so nothing bought sells
+for more than it cost, and at CHA 25 the two are equal.
 
 ### Buying back magical items
 
@@ -808,7 +810,8 @@ second) puts each queued item first in the merchant's last item list (a new
 one if it has none; a backpack cell of its own), gives the thing back to the
 game's free list (the log says nothing); a merchant that isn't a person (none known)
 has the item freed as the game would. Bought back, it costs its price less
-the CHA discount, at least 60%, more than the half the shop paid. Checked with
+the CHA discount, at least 60%: no less than the shop paid (the same at CHA
+25). Checked with
 the emulator (both sites) and unit tests (the move); not yet in a shop in the
 game, for want of a save beside a merchant.
 

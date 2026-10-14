@@ -2135,7 +2135,7 @@ was.
 
 | Box on the Options tab | What it adds |
 |---|---|
-| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25; shops pay half |
+| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25; shops pay 60% |
 | [Buying back magical items](#buying-back-magical-items) | a magical item sold stays in the merchant's stock, to buy back |
 | [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
 | [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
@@ -2152,10 +2152,11 @@ for each point after, to 40% at 25 (the highest a CHA can be):
 | Discount | none | 5% | 10% | 15% | 20% | 25% | 30% | 35% | 40% |
 
 The price shown under each item, the one charged, and whether the shop's list
-greys an item as too dear all follow it (never below 1). Shops pay **half** an
-item's price for what the party sells (never below 1), as Baldur's Gate's do;
-the game pays all of it, which with the discount would let anything be bought
-and sold back at a profit.
+greys an item as too dear all follow it (never below 1). Shops pay **60%** of
+an item's price for what the party sells (rounded down, never below 1): the
+most the CHA discount takes off is 40%, so nothing can be bought and sold back
+at a profit, and at CHA 25 a round trip comes out even. The game pays all of
+it, which with the discount would let anything be sold at a profit.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
 
@@ -2166,8 +2167,8 @@ items sold to them** ticked (it's ticked by default), a magical item sold (one
 with a plus, or a power: a ring, a wand, a scroll...) goes into the merchant's
 pack instead, and the shop offers it for sale at its price, less the leader's
 CHA discount, so it can be bought back. Anything else sold is gone, as in the
-game. With the CHA rule's half-price selling, buying an item back always costs
-more than it was sold for.
+game. With the CHA rule's selling at 60%, buying an item back costs more than
+it was sold for, or the same at CHA 25.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#buying-back-magical-items).
 

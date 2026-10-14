@@ -46,9 +46,9 @@ have the detail.
 - **The player's guide is now `PLAYER-GUIDE.md`** (it was `GUIDE.md`), so its
   name says what it is; the links to it follow.
 - **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each
-  point after, to 40% at 25 (it was 5% at 16 to 25% from 20); shops pay half
-  an item's price when the party sells (the game paid all of it, which with
-  the discount let anything bought be sold at a profit).
+  point after, to 40% at 25 (it was 5% at 16 to 25% from 20); shops pay 60%
+  of an item's price when the party sells (the game paid all of it, which
+  with the discount let anything bought be sold at a profit).
 - **Fogbolt's icon is grey** (its cloud on Armor's grey tile, rather than
   Charm Person's purple).
 - **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the

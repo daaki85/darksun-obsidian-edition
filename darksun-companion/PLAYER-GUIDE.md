@@ -180,7 +180,7 @@ What the scores do:
   |---|---|---|---|---|---|---|---|---|---|
   | Shops ask | full price | 5% less | 10% less | 15% less | 20% less | 25% less | 30% less | 35% less | 40% less |
 
-  Shops pay half an item's price when you sell. A magical item you sell stays
+  Shops pay 60% of an item's price when you sell. A magical item you sell stays
   in the merchant's stock, to buy back; anything else sold is gone. *Without
   the mod:* CHA makes no difference to prices, shops pay the full price, and
   everything sold is gone.
