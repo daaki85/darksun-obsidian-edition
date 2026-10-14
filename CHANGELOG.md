@@ -43,6 +43,10 @@ have the detail.
   Expanded features box, on by default.
 
 **Changed**
+- **Kits in the docs, class by class:** the README's one table of kits is now
+  a table for each class, with each kit's starting gear and what else a
+  player should know (the classes and kits it rules out, where its choices
+  are made); the player guide's class sections have the same full rows.
 - **The player's guide is now `PLAYER-GUIDE.md`** (it was `GUIDE.md`), so its
   name says what it is; the links to it follow.
 - **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each

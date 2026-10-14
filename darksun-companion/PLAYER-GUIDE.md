@@ -382,14 +382,11 @@ obsidian over sorcery, and spells bite them harder for it.
 scarred hide hardening with every season. They charge in close and stay there:
 bows, slings and shields are for those who mean to live long.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Myrmidon** | a second weapon spec at 1st level, on to mastery as the first | −4 on saves against charms | the fighter's gear, and a plain weapon of its second weapon spec in the backpack |
-| **Sentinel** | AC 2 better with a shield; +2 initiative | −1 on saves against wizards' and priests' spells | the fighter's gear |
-| **Ravager** | +1 to hit and damage in melee; a base AC by level (7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th), armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear with a second of its weapon in place of the shield (none if the weapon takes both hands) |
-
-A Sentinel can't later become a druid or preserver, nor take the Shinobi kit
-as a thief.
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level, on to mastery (5th fighter level) and grand mastery (9th) as the first | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination) | the fighter's gear, and a plain weapon of its second weapon spec in the backpack (a bow in the missile slot, with arrows) | the second weapon spec is picked on the weapon pages after the kit is taken, and lost if another kit is taken |
+| **Sentinel** | AC 2 better with a shield in a hand; +2 initiative | −1 on saves against wizards' and priests' spells | the fighter's gear | can't become a druid or preserver; can't go with the Shinobi |
+| **Ravager** | +1 to hit and damage in melee; a base AC by fighter level (7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th), armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager` |
 
 **Starting gear.** A plain weapon of its weapon spec (in a material its
 classes allow), a shield, leather chest, arm and leg armour.
@@ -455,15 +452,11 @@ needs both hands.
 and mauls that end a bout in one blow. Anything smaller looks like a toy in
 their hands, and they treat it like one.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Arena Champion** | with a shield: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee without a shield | a shield in place of the off-hand club |
-| **Twin-blade** | no penalty for two weapons in light armour | no shield; no two-handed weapon | its weapon and the club as its two weapons |
-| **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind |
-
-An Arena Champion can't later become a druid or preserver, a Brute a
-psionicist or air cleric. Neither goes with the Shinobi kit, a Brute not with
-the Lifebinder, a Twin-blade not with the Healer.
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Arena Champion** | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better | −1 to hit in melee with no shield | a shield in place of the off-hand club | can't become a druid or preserver; can't go with the Shinobi |
+| **Twin-blade** | with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | no shield; no two-handed weapon (a half-giant may hold one in one hand, with the half-giants' rule) | the gladiator's gear: its long sword and club are its two weapons | can't go with the Healer |
+| **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't become a psionicist or air cleric; can't go with the Shinobi or Lifebinder |
 
 **Starting gear.** A plain weapon of its first weapon spec, a club in the off
 hand, leather arm armour.
@@ -522,13 +515,11 @@ else: a tribe's chieftain, a defiler's lair, a beast that has emptied a
 village. They train their weapons to a killer's edge and leave prayer to
 others.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Stalker** | +2 movement in a fight; +15 to hide in shadows and move silently, and hiding not halved indoors | leather armour or none | the ranger's gear |
-| **Seeker** | priest spells from 6th level, cast at its level less 5 | its sphere's weapons only, as a cleric's (but it keeps the bow) | the ranger's gear, its weapon in a material its sphere allows |
-| **Justifier** | its expertise becomes specialization (+1 to hit, +2 damage); no penalty for two weapons in any armour | its only spell slot is one 1st-level slot, from 10th level | the ranger's gear |
-
-A Seeker or Justifier can't later become a cleric or druid.
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear | |
+| **Seeker** | priest spell slots from 6th level, in place of a ranger's: one 1st-level slot at 6th, two at 7th, a 2nd-level slot at 8th, two at 9th, a 3rd-level slot at 10th; cast at the ranger level less 5 (a ranger's: less 7) | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't become a cleric or druid |
+| **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage; with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | one 1st-level priest spell slot from 10th level, in place of a ranger's slots, cast at the ranger level less 9 | the ranger's gear | WIS gives it no bonus slots; can't become a cleric or druid |
 
 **Starting gear.** A plain weapon of its chosen type, bow and arrows, leather
 chest and arm armour.
@@ -593,15 +584,13 @@ little for the quieter arts.
 spells beside their knives. Their masters teach them only what they need; they
 are unable to read magical script, however, and travel light.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Assassin** | hiding in shadows not halved in daylight | −15 to pick pockets and open locks | the thief's gear |
-| **Swashbuckler** | a warrior's THAC0 | −10 to every thief skill | the thief's gear |
-| **Shinobi** | preserver spells from 6th level, from its own list of 18 (with the new spells on), cast at its thief level less 5, in light armour too | no spells from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour; no shield | a bone short sword in place of the long sword |
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks | the thief's gear | |
+| **Swashbuckler** | a warrior's THAC0 (21 less its level) | −10 to every thief skill | the thief's gear | can't become a fighter, gladiator or ranger |
+| **Shinobi** | preserver spells from 6th level, on the Seeker's slots (one 1st-level slot at 6th, two at 7th, a 2nd-level slot at 8th, two at 9th, a 3rd-level slot at 10th), cast at the thief level less 5, in light armour too: its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and Fogbolt, Reflected Image, Spook and Friends with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), one learnt at each level up from 6th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield | a bone short sword in place of the long sword | can't become a preserver; can't go with the Arena Champion, Sentinel or Brute |
 
-A Swashbuckler can't later become a fighter, gladiator or ranger; a Shinobi
-not a preserver, nor go with the Arena Champion, Sentinel or Brute kits. The
-Shinobi's spells and slots are in [kits](#kits).
+The Shinobi's slots by level are in [Kits' spell slots](#kits-spell-slots).
 
 **Starting gear.** Bone long sword, sling, leather chest armour, Thieves'
 Tools.
@@ -669,14 +658,11 @@ is no use if you are dead before you finish it. They fight in leather with a
 chosen weapon and keep casting while others bleed, at the cost of a little of
 their magic.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Arcanist** | a spell slot more at each spell level it has; in a fight, casts two preserver spells each turn instead of one | a d3 hit die | the preserver's gear |
-| **Scholar** | a spell more learnt at each level up | THAC0 1 worse | the preserver's gear |
-| **Battle Mage** | a warrior's THAC0; casts though hit earlier in the round; a d6 hit die; leather armour, cast in; expertise in one weapon type (3/2 attacks a round with it, 2 from 7th level) | one fewer spell slot at each spell level; nothing in the off hand | with weapon specialization, a plain weapon of its chosen type in place of the quarterstaff |
-
-A Battle Mage can't later become a fighter, gladiator or ranger. The
-Battle Mage chooses its weapon on the weapon pages after taking the kit.
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Arcanist** | a spell slot more at each spell level it has slots at; in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
+| **Scholar** | a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
+| **Battle Mage** | a warrior's THAC0; a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at 3/2 attacks a round (2 from 7th level) | one fewer spell slot at each spell level; nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon pages (VIEW PSIONICS on the KIT page, then WEAPON SPEC), the long sword marked to start with; can't become a fighter, gladiator or ranger |
 
 **Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice.
 
@@ -739,15 +725,11 @@ deadly with a weapon as any soldier. Their prayers are fewer for it.
 once and wield both powers. Divided worship comes slowly, and their spells lag
 a level behind.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die | no weapon in the off hand | the cleric's gear |
-| **Crusader** | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level) | one fewer spell slot at each spell level | the cleric's gear |
-| **Elementalist** | a second sphere: its spells and its weapons | spell slots a level behind | the cleric's gear |
-
-A Crusader can't later become a fighter, gladiator or ranger; a Healer doesn't
-go with the Twin-blade kit. The Elementalist chooses its second sphere on the
-CLERICAL SPHERE list.
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in the backpack) | can't go with the Twin-blade |
+| **Crusader** | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level) | one fewer spell slot at each spell level | the cleric's gear | can't become a fighter, gladiator or ranger |
+| **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
 **Starting gear.** Shield, leather chest and arm armour, a club in the
 backpack.
@@ -817,13 +799,11 @@ but they rarely stop long enough to armour themselves properly.
 mending wounds as they would mend a dying field. They fight only with blunt
 weapons, which wound without spilling blood.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Grove Warden** | AC 1 better for every 3 druid levels | no metal weapons | the druid's gear |
-| **Wanderer** | +3 on saves against fire and cold | AC 1 worse | the druid's gear |
-| **Lifebinder** | Cure Wounds spells heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear |
-
-A Lifebinder doesn't go with the Brute kit.
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Grove Warden** | AC 1 better for every 3 druid levels | no metal weapons | the druid's gear | |
+| **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
+| **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
 **Starting gear.** Club, sling.
 
@@ -877,14 +857,13 @@ bending wills. Moving the world with thought alone comes harder to them.
 *Kineticist.* Psionicists who move the world with their minds, throwing stone
 and flame with a thought. Reaching into another mind costs them more.
 
-| Kit | Gives | Costs | Starts with |
-|---|---|---|---|
-| **Mind Warrior** | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level); a d8 hit die | a tenth fewer PSP | the psionicist's gear |
-| **Mind Bender** | telepathy powers cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear |
-| **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers cost 2 PSP more | the psionicist's gear |
+| Kit | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|
+| **Mind Warrior** | a warrior's THAC0; a warrior's extra attacks in melee (3/2 a round from 7th level); a d8 hit die | a tenth fewer PSP (rounded down) | the psionicist's gear | its PSP stay a tenth fewer even with the kit asleep after a change of class; can't become a fighter, gladiator or ranger |
+| **Mind Bender** | telepathy powers (the defence modes too) cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear | the 2 counts both to use a power and to keep it up each round, never below 1 (a power with no upkeep still has none) |
+| **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | the psionicist's gear | as the Mind Bender's, the other way round |
 
-A Mind Warrior can't later become a fighter, gladiator or ranger. The powers
-and their costs are in [Psionics](#psionics).
+The powers and their costs are in [Psionics](#psionics).
 
 **Starting gear.** Club, bow and arrows, leather chest armour.
 
