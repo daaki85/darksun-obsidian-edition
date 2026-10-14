@@ -1826,7 +1826,7 @@ A ranger starts with a bone long sword, bow and arrows, leather chest and arm ar
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear | |
+| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
 | **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric or druid |
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
 
@@ -2071,6 +2071,7 @@ bars), and left off the KIT menu for a human who has had the class:
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
 | Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
 | Brute | psionicist, air cleric | it needs a two-handed melee weapon, which those classes can't use |
+| Stalker | thief | its +15 to hiding would add to a thief's own skills |
 
 And some kits can't go together, whichever came first (a human has one kit for each of its classes, and the game never lets a human change from one warrior class to another, so only these can meet):
 

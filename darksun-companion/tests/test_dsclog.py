@@ -3981,6 +3981,7 @@ class KitTests(unittest.TestCase):
                                                                             r.UC_X86_REG_ES)], [0x2222, new, 0x6666])
         self.assertEqual([kits.dual_banned(kits.SEEKER, c) for c in (1, 8, 9, 11)], [True, True, False, False])
         self.assertEqual([kits.dual_banned(kits.SHINOBI, c) for c in (1, 11)], [False, True])
+        self.assertEqual([kits.dual_banned(kits.STALKER, c) for c in (9, 17)], [False, True])
 
     def picker_sheet(self, cls, kit, level):
         from dscompanion import kitpages
@@ -4127,6 +4128,8 @@ class KitTests(unittest.TestCase):
                     self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1), kits.dual_kit_banned(kid, others, kids))
                     self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), kid)
         self.assertTrue(kits.dual_kit_banned(kits.SHINOBI, [11], []))
+        self.assertTrue(kits.dual_kit_banned(kits.STALKER, [17], []))  # (a thief turned ranger: no Stalker)
+        self.assertFalse(kits.dual_kit_banned(kits.SEEKER, [17], []))
         self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.TWIN_BLADE]))
         self.assertFalse(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION]))
 

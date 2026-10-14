@@ -9005,7 +9005,7 @@ kit_bans:
 ; (kits.DUAL_BANS): slot tables of its own that would take the new class's place (a Seeker's or
 ; Justifier's priest slots, a Shinobi's wizard ones); a warrior's THAC0 (a warrior class instead);
 ; a shield it needs (a class with none: druid, preserver); a two-handed melee weapon it needs (a
-; class with none: psionicist, air cleric). 0 ends it.
+; class with none: psionicist, air cleric); a Stalker's hiding on a thief's own (the thief). 0 ends it.
 DB_PRIEST   equ 0x1FE                   ; (clerics and druids, 1-8)
 DB_WARRIOR  equ 0x1E600                 ; (fighter 9, gladiator 10, rangers 13-16)
 DB_NO_SHIELD equ 0x1E0 | (1 << 11)      ; (druids 5-8, the preserver)
@@ -9029,6 +9029,8 @@ dual_bans   db KIT_SEEKER
             dd DB_NO_SHIELD
             db KIT_BRUTE
             dd (1 << 12) | (1 << 1)     ; (the psionicist, the air cleric)
+            db KIT_STALKER
+            dd 1 << 17                  ; (the thief: its own hiding, the Stalker's on top)
             db 0
 
 ; EL_SPHERES: EAX a spell's mask, for caster [BP+6]: an Elementalist's second sphere's spells its

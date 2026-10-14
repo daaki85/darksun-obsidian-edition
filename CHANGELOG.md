@@ -43,6 +43,9 @@ have the detail.
   Expanded features box, on by default.
 
 **Changed**
+- **The Stalker and the thief:** a human Stalker can't dual to thief, and a
+  thief (with any thief kit or none) who duals to ranger isn't offered the
+  Stalker kit: its +15 to hiding would add to a thief's own skills.
 - **EMS off in the launcher's DOSBox settings:** GOG's settings turn on EMS,
   whose 64 KB page frame left the helper 1 KB of upper memory; the
   launcher's config now turns it off (the game uses XMS instead), giving the
