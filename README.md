@@ -1,10 +1,13 @@
 # Obsidian Edition
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox, with its own companion window, **Templar's Ledger**, beside the
-game. (Up to its 1.2.0 release, the whole mod was called Templar's Ledger.)
+in DOSBox: rules closer to AD&D, kits, new spells, items and people, the party's
+gear drawn on the map, and every roll shown as it happens. Its companion window,
+**Templar's Ledger**, starts the game with your options and keeps the full dice
+log beside it. (Up to its 1.2.0 release, the whole mod was called Templar's
+Ledger.)
 
-![Templar's Ledger during the arena's opening show: the party's character cards, and the dice log of the Defiler's Cone of Cold and the Rampager's acid](darksun-companion/docs/dicelog.png)
+![The arena in round 10 of a fight: Cermak's turn, with the combat log over the map's lower right showing a Slig's hits on Gerakis and the new round](darksun-companion/docs/combat-log.png)
 
 ## Contents
 
