@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.1.1 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.2.0 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. Its companion window, Templar's Ledger, runs beside the game and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
