@@ -574,9 +574,10 @@ so keep it off the front line.
 - AD&D's experience table (1,250 for 2nd level; *without the mod:* 1,200).
 - Up to 10th level, a d6 at 10th; hit dice rolled twice.
 
-**Weapons and armour.** Any as a single class (but only a weapon no heavier
-than a long sword backstabs, see [Equipment](#equipment)); with another class,
-light armour and at most a leather shield.
+**Weapons and armour.** Any as a single class, but of shields only leather ones
+(the game's own rule), and only a weapon no heavier than a long sword
+backstabs (see [Equipment](#equipment)); with another class, light armour and
+at most a leather shield.
 
 **Kits.**
 
@@ -596,7 +597,7 @@ are unable to read magical script, however, and travel light.
 |---|---|---|---|
 | **Assassin** | hiding in shadows not halved in daylight | −15 to pick pockets and open locks | the thief's gear |
 | **Swashbuckler** | a warrior's THAC0 | −10 to every thief skill | the thief's gear |
-| **Shinobi** | preserver spells from 6th level, from its own list of 14, cast at its thief level less 5, in light armour too | no spells from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour; no shield | a bone short sword in place of the long sword |
+| **Shinobi** | preserver spells from 6th level, from its own list of 18 (with the new spells on), cast at its thief level less 5, in light armour too | no spells from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour; no shield | a bone short sword in place of the long sword |
 
 A Swashbuckler can't later become a fighter, gladiator or ranger; a Shinobi
 not a preserver, nor go with the Arena Champion, Sentinel or Brute kits. The
