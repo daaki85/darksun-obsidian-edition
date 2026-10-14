@@ -1,5 +1,6 @@
 """Alagorn tells of the Ledger's magic items: Kreenfang and Shadowseeker (arms.py), Gutterknot,
-Deepbiter, Windlash, Greenbright and the Flame Blade, the Warden's Plate, the Cloak and Boots of
+Deepbiter, Windlash, Greenbright and the Flame Blade, the Warden's Plate, Gutterward and
+Ironbulwark, the Cloak and Boots of
 Elvenkind, the Bracers of Defense, Arrowbane and the Sunking Crown (worldgear.py), and the Tome of
 Understanding (tome.py), Inixhide (npcitems.py), and the Rings and Cloak of Protection (ring.py,
 npcitems.py): one story for each kind, whichever of it the party carries, as the game's own.
@@ -13,7 +14,7 @@ when none is left (a local of the script's: DONE) the menu's loop ends.
 
 With the Ledger, Shadowseeker, Greenbright and the Flame Blade join the swords, Kreenfang,
 Gutterknot, Deepbiter and Windlash the weapons, Inixhide and the Warden's Plate's four pieces the
-armour, the Cloak and Boots of Elvenkind, the bracers, Arrowbane, the crown and the cloak of
+armour, Gutterward and Ironbulwark the shields, the Cloak and Boots of Elvenkind, the bracers, Arrowbane, the crown and the cloak of
 protection the clothes (where the game has its Helm of Contemplation and Chameleon Gloves), the
 rings of protection the rings, and the tome the other items, by their pictures of their own
 (icons.py: without the icons' copy he doesn't know them; the tome's, its object's), each only
@@ -57,9 +58,10 @@ ARMOUR, CLOTHES = ("  Tanelyv's Armor", "You have no magic armor that I know any
     ("  Belt of Might", "Unfortunately, you have no magic clothes that I know anything about. ")
 RINGS, OTHER = ("  Light of Dawn", "However, you have no magic rings that I know anything about. "), \
     ("  Orb of Knowledge", "You have no other magic items that I know anything about. ")
+SHIELDS = ("  El's Shield", "You have no magic shields that I know anything about. ")
 OTHER_SCRIPT = 212  # (rings, armour, clothes and other items: Alagorn's other menus)
-SCRIPT_OF = {SWORDS: SCRIPT, WEAPONS: SCRIPT, RINGS: OTHER_SCRIPT, ARMOUR: OTHER_SCRIPT, CLOTHES: OTHER_SCRIPT,
-             OTHER: OTHER_SCRIPT}
+SCRIPT_OF = {SWORDS: SCRIPT, WEAPONS: SCRIPT, RINGS: OTHER_SCRIPT, ARMOUR: OTHER_SCRIPT, SHIELDS: OTHER_SCRIPT,
+             CLOTHES: OTHER_SCRIPT, OTHER: OTHER_SCRIPT}
 # Scripts 212 and 213 with every story would be longer than the scripts' buffer: 212's clothes, and
 # its rings and other items, and 213's weapons are told by copies of them, each with only those
 # (the Ledger's scripts; Kalzith's 218, Semyon's 219). His talk (script 211) calls each part by its
@@ -187,6 +189,17 @@ MAGIC = {
               "school, a prize he could never wear: it would not sit easy on a defiler. Find the "
               "other three pieces, and the Warden's Plate is whole again for the first time in a "
               "thousand years.")),
+    # the magic shields
+    SHIELDS: (("Gutterward",
+               "Gutterward! Agafari planks bound in sinew and sealed with sewer pitch. A boss of the "
+               "Draj warrens carried it before Churrr's time, until the Tari dragged him down into the "
+               "drains, and it was never seen again. It turns a blow better than any common shield, "
+               "and smells no worse than its last owner did."),
+              ("Ironbulwark",
+               "Ironbulwark! True iron, a whole shield of it, forged in the Green Age for a city's "
+               "champion: its weight in metal would buy a village today. Balkazar set a Guardian "
+               "over his school and armed it with this, and the Guardian never once set it down. "
+               "Blows that would fell a mul glance from it. Few shields on Athas are its equal.")),
     # the Cloak and Boots of Elvenkind
     CLOTHES: (("Cloak of Elvenkind",
                "A Cloak of Elvenkind! The elves weave them of spider silk and songs, a "
@@ -234,7 +247,7 @@ MAGIC = {
 def kinds(arms: bool = True, magic: bool = True, script: int = SCRIPT, pens: bool = True) -> Tuple[Kind, ...]:
     """Each kind of the script's with the new items of the switches on."""
     out = []
-    for kind in (SWORDS, WEAPONS, RINGS, ARMOUR, CLOTHES, OTHER):
+    for kind in (SWORDS, WEAPONS, RINGS, ARMOUR, SHIELDS, CLOTHES, OTHER):
         if SCRIPT_OF[kind] != script:
             continue
         items = (ARMS.get(kind, ()) if arms else ()) + (PENS.get(kind, ()) if pens else ()) \

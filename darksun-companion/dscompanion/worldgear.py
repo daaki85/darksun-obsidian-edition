@@ -35,6 +35,11 @@
   and Stillwater, a bone short sword +1, in the chest Chaya gives as her apology (psionicists',
   alone or with a cleric's); Linebreaker, a metal polearm +2, on the Troop Leader; Thornwall, a
   bone polearm +1, on the slave pens' weapon rack, in place of one of its two plain ones.
+- Magic shields, which the game has two of (the Drake Shield +1 and El's Shield +2, both
+  leather): Gutterward, a wooden shield +1, on a skeleton in the warrens (one of the region's
+  three, given an object of its own: the skeletons of five regions share theirs); Ironbulwark, a
+  metal shield +3 (DSCLOG's type: the game has no metal shield), carried by the Guardian of
+  Balkazar's fortress.
 - Bracers of defense (DSCLOG's BRACERS type, worn on the arms: their plus counts for AC while neither
   armour nor a helm is worn), now that a preserver can't cast in armour: on four
   of the game's wizards, better the later they're met.
@@ -188,6 +193,15 @@ ELVEN_BOOTS = armour(game.ELVEN_BOOTS_TYPE, BOOTS_OF_ELVENKIND, 0x10000 - 2548, 
 FLAME_BLADE_NAME, OBSIDIAN_LONG_SWORD, FOCUS_HEAT = 0x156, 45, 116
 from . import robes  # noqa: E402 (the robes: the Veiled Robe sold by Kel)
 VEILED_ROBE = armour(game.ROBE_TYPE, robes.VEILED, robes.PICTURE_VEILED, robes.VEILED_VALUE, plus=robes.VEILED_PLUS)
+# the magic shields, priced as the game's (the Drake Shield +1 25,400, El's Shield +2 50,200): 25,000
+# a plus, the +3 at 65,000 (a price is a word: the game's dearest, the Wand of Missiles, is 65,000)
+GUTTERWARD, IRONBULWARK = 0x163, 0x164
+NAMES.update({GUTTERWARD: b"Gutterward", IRONBULWARK: b"Ironbulwark"})
+WOODEN_SHIELD_TYPE = 16  # (the game's wooden Shield; its other, 4, is leather)
+WOODEN_SHIELD_1 = armour(WOODEN_SHIELD_TYPE, GUTTERWARD, 0x10000 - 2586, 25000)
+METAL_SHIELD_3 = armour(game.METAL_SHIELD_TYPE, IRONBULWARK, 0x10000 - 2588, 65000, plus=3)
+WARRENS, WARRENS_SKELETON, SKELETON = 0x28, 85, 2266  # (the skeleton at 1913, 577; object 2266 is shared)
+GUARDIAN, BALKAZARS = 216, 0x0D  # (the Guardian of Balkazar's fortress, with the Chatkcha +1)
 NAMES[FLAME_BLADE_NAME] = b"Flame Blade"
 
 
@@ -293,6 +307,10 @@ MAGIC: Tuple[Gift, ...] = (
     Gift("Troop Leader", (weapon(*POLEARM_2),), (18,), 0x21),
     Gift("Weapon Rack", (weapon(*BONE_POLEARM_1),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, 2563),
          instead=(BONE_POLEARM, 0)),
+    # the magic shields: Gutterward on a skeleton in the warrens (its own object), Ironbulwark on
+    # the Guardian of Balkazar's fortress
+    Gift("Skeleton", (WOODEN_SHIELD_1,), (SKELETON,), WARRENS, clone=(WARRENS_SKELETON, 2585)),
+    Gift("Guardian", (METAL_SHIELD_3,), (GUARDIAN,), BALKAZARS),
 )
 
 
@@ -331,7 +349,7 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               game.METAL_POLEARM_TYPE: 19, game.CIRCLET_TYPE: 36, game.CROWN_TYPE: 36, game.PLATE_CHEST_TYPE: 57,
               game.PLATE_ARMS_TYPE: 58, game.PLATE_LEGS_TYPE: 59, game.ELVEN_CLOAK_TYPE: 65, game.ELVEN_BOOTS_TYPE: 68,
               game.AIR_DAGGER_TYPE: 33, game.BONE_GREAT_AXE_TYPE: 2, game.OBSIDIAN_GREAT_AXE_TYPE: 2,
-              game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65}
+              game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65, game.METAL_SHIELD_TYPE: 4}
 
 
 def header_numbers(chunks) -> Dict[int, int]:

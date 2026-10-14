@@ -15,6 +15,12 @@ have the detail.
   its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before
   Scar's battle.SAV`), and the Options tab's new **Saves** section opens the
   folder and puts a named save back in a slot of the game's list.
+- **Two magic shields.** **Gutterward**, a wooden shield +1, on a skeleton in
+  the Tari's warrens; **Ironbulwark**, a metal shield +3 (the game has no
+  metal shield: a type of the Ledger's), carried by the Guardian of
+  Balkazar's fortress. Each has its icon, its price (25,000 and 65,000) and
+  its story from Alagorn, in his shields' menu; neither is for thieves, as
+  the game's wooden shield isn't.
 
 **Changed**
 - **The bone and obsidian axes weigh 30** (35 and 70 before), the game's
@@ -92,6 +98,9 @@ have the detail.
   scenery and cloak checks, the kit kept through a roll, the rows' width, the
   polearm's picture, the Trustee's two script changes (his script is now
   10,967 bytes), the named saves and the `checks` command.
+- **The polearms' icons** in the README's item tables (the bone and metal
+  Polearm, Thornwall, Linebreaker) are redrawn at the 22 pixels the game now
+  shows them at.
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 

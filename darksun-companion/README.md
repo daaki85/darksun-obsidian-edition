@@ -150,7 +150,7 @@ game folder only what you'd expect:
 - in a saved game, the new items, if **New items** is ticked. Some are item
   types the original game doesn't have (the Short Sword, the Cloak of
   Protection, the bracers, the robes, plate mail, the Cloak and Boots of
-  Elvenkind), so load such a save with the Ledger.
+  Elvenkind, a metal shield), so load such a save with the Ledger.
 
 The window is dressed in the game's own colours, sampled from it; no game
 artwork is copied.
@@ -2496,6 +2496,8 @@ character can use.
 | ![](docs/items/cloak-of-elvenkind.png) | **Cloak of Elvenkind** | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) | a grey cloak: [all but invisible](#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only |
 | ![](docs/items/boots-of-elvenkind.png) | **Boots of Elvenkind** | the buried chest of Kel's caravan, with the Cahulaks +1 | soft boots: [silent](#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only |
 | ![](docs/items/bracers-of-defense.png) | **Bracers of Defense** | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) | AC for those wearing no armour: [bracers of defense](#bracers-of-defense) |
+| ![](docs/items/gutterward.png) | **Gutterward** | on a **skeleton** in the Tari's warrens (the sewers): one of the three there | the game's wooden shield +1: AC 2 better in a hand; not for thieves, as the game's wooden shield isn't |
+| ![](docs/items/ironbulwark.png) | **Ironbulwark** | carried by the **Guardian** of Balkazar's fortress (the one with the Chatkcha +1) | a metal shield +3, the game's first: AC 4 better in a hand; for those who may hold the wooden shield |
 
 **Prices** follow the game's own: magic melee weapons 20,800 a plus (41,600
 for a +2; a +1 with a spell 22,000), Windlash 2,800 (as its Sling +1), plain metal weapons 50 to
@@ -2503,7 +2505,10 @@ for a +2; a +1 with a spell 22,000), Windlash 2,800 (as its Sling +1), plain met
 the rings and cloak of protection 15,000, Inixhide 6,000, the
 Cloak of Elvenkind 25,000 and Boots 20,000, the Warden's Arms and Legs 27,000
 each, Chest 36,000 and Helm 30,000, the Ashen Robe 6,000 and the Veiled Robe
-40,000, and the Tome of Understanding AD&D's 43,500.
+40,000, Gutterward 25,000 and Ironbulwark 65,000 (the game's Drake Shield +1 is
+25,400 and El's Shield +2 50,200; a price can't go past 65,535, and the game's
+dearest, the Wand of Missiles, is 65,000), and the Tome of Understanding
+AD&D's 43,500.
 
 ![The Tome of Understanding's box in the game: a night-steel book with a fiery emblem, 43500, Tome/Understand, and the icon to click](docs/tome.png)
 
@@ -2540,8 +2545,8 @@ its own items, the game puts the material first: **Leather Inixhide**,
 **Alagorn**, the wizard of the Painted Badlands who identifies magic items,
 tells the story of every magic item in the table but the plain Gythka +2
 when the party carries it,
-in the menu the game would put it in (swords, weapons, rings, armor, clothes
-or other items), before "Nothing". As with the game's own, one story for each
+in the menu the game would put it in (swords, weapons, rings, armor, shields,
+clothes or other items), before "Nothing". As with the game's own, one story for each
 kind: the four pairs of bracers share one, and so do both rings of
 protection. The Warden's Plate's pieces each tell a part of Haldren's, the last
 of the Wardens.
@@ -2866,6 +2871,8 @@ Tanelyv's Armor also has a chest piece, with no plus.
 |---|---|---|---|---|
 | ![](docs/items/els-shield.png) | Leather | El's Shield | +2 | — |
 | ![](docs/items/drake-shield.png) | Leather | Drake Shield | +1, Resist Fire | the Hot Springs' Templar |
+| ![](docs/items/gutterward.png) | Wooden | **Gutterward** | +1 | a skeleton in the warrens |
+| ![](docs/items/ironbulwark.png) | Metal | **Ironbulwark** | +3 | the Guardian of Balkazar's fortress |
 | ![](docs/items/chameleon-gloves.png) | Leather | Chameleon Gloves | blind whoever they touch | Mikquetzl |
 | ![](docs/items/quicksilver-gauntlets.png) | none | Quicksilver Gauntlets | graft a one-handed weapon to the hand | — |
 

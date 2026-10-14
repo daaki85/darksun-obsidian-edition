@@ -182,19 +182,20 @@ class AlagornTests(unittest.TestCase):
         self.assertEqual(menus, [["  Light of Dawn", "  Ring of Protection", "  Nothing"],
                                  ["  Tanelyv's Armor", "  Inixhide", "  Warden's Helm", "  Warden's Arms", "  Warden's Legs",
                                   "  Warden's Chest", "  Nothing"],
+                                 ["  El's Shield", "  Gutterward", "  Ironbulwark", "  Nothing"],
                                  ["  Belt of Might", "  Cloak of Protection", "  Cloak of Elvenkind",
                                   "  Boots of Elvenkind", "  Bracers of Defense", "  Arrowbane", "  Sunking Crown",
                                   "  Ashen Robe", "  Veiled Robe", "  Nothing"],
                                  ["  Orb of Knowledge", "  Tome of Understanding", "  Nothing"]])
         locals_ = [op.args[1][2] for op in added if op.code == SET and op.args[1][:2] == ("var", 14)
                    and op.args[0][0] in ("op", "expr")]
-        self.assertEqual(locals_, [2, 2, 3, 4, 5, 7, 2, 3, 4, 5, 7, 8, 9, 10, 2])
+        self.assertEqual(locals_, [2, 2, 3, 4, 5, 7, 2, 3, 2, 3, 4, 5, 7, 8, 9, 10, 2])
         sets = [alagorn._sets(op) for op in added if op.code == SET and op.args[0][0] == "op"]
         self.assertIn((2, -tome.TOME_OBJECT), sets)  # (the tome by its own object's picture)
         flags = [op.args for op in added if op.code == SET and op.args[0] == ("n", 1)]
         self.assertTrue(flags and all(f == [("n", 1), ("var", 14, 6)] for f in flags))
         lines = " ".join(gpl.strings(added))
-        for name in ("A Ring of Protection!", "Inixhide!", "The Warden's Chest!", "A Cloak of Protection!", "A Cloak of Elvenkind!",
+        for name in ("A Ring of Protection!", "Inixhide!", "The Warden's Chest!", "Gutterward!", "Ironbulwark!", "A Cloak of Protection!", "A Cloak of Elvenkind!",
                      "Bracers of Defense!", "Arrowbane!", "The Sunking Crown!", "The Tome of Understanding!"):
             self.assertIn(name, lines)
 
@@ -261,17 +262,17 @@ class AlagornTests(unittest.TestCase):
                                 "Boots of Elvenkind", "Tome of Understanding", "Ring of Protection +1",
                                 "Pehtucl's Ring of Protection +1", "Cloak of Protection +1", "Inixhide",
                                 "Drakejaw", "Glasshewer", "Headsman", "Galefang", "Mindshard", "Stillwater",
-                                "Linebreaker", "Thornwall", "Ashen Robe", "Veiled Robe"})
+                                "Linebreaker", "Thornwall", "Ashen Robe", "Veiled Robe", "Gutterward", "Ironbulwark"})
         for name in told - {"Tome of Understanding"}:
             self.assertIn(name, icons.PICTURES)
 
     def test_copies(self):
         """Script 212's clothes told by a copy (220), its rings and other items by another (221),
-        each called from his talk (211) at the same place; its armour by 212 itself."""
+        each called from his talk (211) at the same place; its armour and shields by 212 itself."""
         kinds = alagorn.kinds(script=alagorn.OTHER_SCRIPT)
         script = alagorns(last="Nothing", kinds=kinds, done=6)
         entries = [alagorn._entry(script, FIELDS, k) for k in kinds]
-        self.assertEqual(len(set(entries)), 4)
+        self.assertEqual(len(set(entries)), 5)
         talk = _Script()
         for entry in entries:
             talk.op(alagorn.CALL, ("n", entry), ("n", alagorn.OTHER_SCRIPT))
@@ -280,9 +281,10 @@ class AlagornTests(unittest.TestCase):
         self.assertEqual(sorted(out), [("GPL ", 211), ("GPL ", 212), ("GPL ", 220), ("GPL ", 221)])
         calls = [op.args for op in gpl.decode(out[("GPL ", 211)], FIELDS)]
         self.assertEqual(calls, [[("n", entries[0]), ("n", 221)], [("n", entries[1]), ("n", 212)],
-                                 [("n", entries[2]), ("n", 220)], [("n", entries[3]), ("n", 221)]])
+                                 [("n", entries[2]), ("n", 212)], [("n", entries[3]), ("n", 220)],
+                                 [("n", entries[4]), ("n", 221)]])
         reply = lambda name: gpl.encode_expr(("str", f"  {name}"))
-        for number, has, hasnt in ((212, "Warden's Helm", "Arrowbane"), (220, "Arrowbane", "Tome of Understanding"),
+        for number, has, hasnt in ((212, "Warden's Helm", "Arrowbane"), (212, "Ironbulwark", "Arrowbane"), (220, "Arrowbane", "Tome of Understanding"),
                                    (221, "Tome of Understanding", "Warden's Helm"),
                                    (221, "Ring of Protection", "Cloak of Protection")):
             self.assertIn(reply(has), out[("GPL ", number)])

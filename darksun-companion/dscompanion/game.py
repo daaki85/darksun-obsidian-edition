@@ -101,6 +101,7 @@ AIR_DAGGER_TYPE = GAME_TYPES + 21  # a metal dagger air clerics may use (worldge
 BONE_GREAT_AXE_TYPE, OBSIDIAN_GREAT_AXE_TYPE = GAME_TYPES + 22, GAME_TYPES + 23  # (a new warrior's, weaponchoice.py)
 BONE_DAGGER_TYPE = GAME_TYPES + 24  # (a water cleric's dagger: weaponchoice.py)
 ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armour
+METAL_SHIELD_TYPE = GAME_TYPES + 26  # a metal shield (worldgear.py's Ironbulwark): the game has none
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The companion's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)

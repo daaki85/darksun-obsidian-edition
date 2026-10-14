@@ -941,7 +941,9 @@ body's (object 1204) own gythka made +1 and renamed, its name attribute with
 it. One Castle Guard, one Undermountain miner and one Magera (Drakejaw's) have
 an object of their own (2560, 2561, 2562: copies of their kind's, their record
 renumbered), their entity in the Ledger's copies of `RGN1C.GFF`, `RGN1E.GFF`
-and `RGN08.GFF` pointing to it. So does the slave pens' weapon rack (2563: the
+and `RGN08.GFF` pointing to it; so does one skeleton of the warrens
+(Gutterward's: 2585, entity 85 in the copy of `RGN28.GFF`; its kind's object,
+2266, is the skeletons' of five regions). So does the slave pens' weapon rack (2563: the
 Lower Castle's rack is the same object 1647; a thing's record has its number
 first, a person's at +6), with Thornwall in place of its first bone polearm,
 in Kalzith's copy of `RGN29.GFF` (one copy of the pens: with Kalzith off, the
@@ -967,10 +969,11 @@ the icon can't be clicked). There the helper (`INT B9h`) raises the reader's
 WIS, in the sheet and the creature record, writes its message in the game's
 buffer, and goes on as for a power taught: the game uses the tome up and shows
 it. The short sword, the cloak whose plus counts, the bone helm and the rest
-(25: Galefang's, a metal dagger whose class list has the air cleric's
+(27: Galefang's, a metal dagger whose class list has the air cleric's
 bit, which none of the game's daggers have; then the bone and obsidian great
-axes, the metal one's of those materials, and a bone dagger, the only dagger a
-water cleric may use) are item types the helper adds
+axes, the metal one's of those materials, a bone dagger, the only dagger a
+water cleric may use, the robes', and a metal shield, Ironbulwark's: the
+game's leather shield's type in metal, for the classes of its wooden one) are item types the helper adds
 after the game's 115 each time the game reads its table in (`TYPES_EXTRA`; its
 weapon types by item type, `kind_of_type`, cover them too); the Ledger's item names (`dscompanion/names.py`) are entries it adds
 after the game's 322 (the game puts the item type's material before the name

@@ -73,6 +73,12 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     # a bone dagger (weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of bone, for water
     # clerics and not fire ones (the game's daggers are for neither)
     bytes.fromhex("010020000a00fa000105010104010000fa1f0000"),
+    # a robe (robes.py): the cloak of protection's, worn on the chest, not armour, for preservers,
+    # psionicists and druids
+    bytes.fromhex("000000000a000a00400100000000008" "090010001"),
+    # a metal shield (worldgear.py's Ironbulwark): the game's leather Shield's (4), of metal, for the
+    # classes of its wooden one (126Fh: no thieves)
+    bytes.fromhex("040000003200fa0004050000000000806f120100"),
 )
 TSR_TYPES_OFF, TSR_TYPES_COUNT, TSR_TYPES_FIRST, TSR_TYPES_PTR = 208, 210, 212, 214
 

@@ -214,6 +214,31 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual(icons.which(worldgear.weapon(worldgear.OBSIDIAN_SHORT_SWORD)), "Obsidian Short Sword")
         self.assertEqual(icons.which(worldgear.weapon(worldgear.METAL_POLEARM)), "Metal Polearm")
 
+    def test_magic_shields(self):
+        """Gutterward (the game's wooden Shield +1) on a skeleton of the warrens, its own object;
+        Ironbulwark (DSCLOG's metal shield +3) on the Guardian of Balkazar's fortress: named, priced,
+        their icons; the metal shield a shield (not armour) for those who may hold the wooden one."""
+        import test_restrict
+        cases = ((worldgear.WOODEN_SHIELD_1, 16, 1, 25000, "Gutterward", "Skeleton", (2266,), 0x28, (85, 2585)),
+                 (worldgear.METAL_SHIELD_3, game.METAL_SHIELD_TYPE, 3, 65000, "Ironbulwark", "Guardian", (216,), 0x0D, None))
+        for item, type_, plus, value, name, holder, objects, region, clone in cases:
+            self.assertEqual((struct.unpack_from("<H", item, game.ITEM_TYPE)[0], item[game.ITEM_PLUS]), (type_, plus))
+            self.assertEqual(struct.unpack_from("<H", item, 6)[0], value)
+            self.assertEqual(icons.which(item), name)
+            self.assertEqual(names.NAMES[struct.unpack_from("<H", item, game.ITEM_NAME)[0]], name.encode())
+            g = next(g for g in worldgear.MAGIC if item in g.items)
+            self.assertEqual((g.name, g.objects, g.region, g.clone), (holder, objects, region, clone))
+        metal = npcitems.TYPES[game.METAL_SHIELD_TYPE - game.GAME_TYPES]
+        self.assertTrue(restrict.is_shield(metal))
+        self.assertFalse(restrict.is_armour(metal))
+        self.assertEqual(restrict.material(metal), 4)
+        self.assertEqual(metal[0x10:0x12], test_restrict.record(16)[0x10:0x12])  # (the wooden one's classes)
+        self.assertEqual(worldgear.BASE_TYPES[game.METAL_SHIELD_TYPE], 4)
+        # (a plain wooden shield still the game's own)
+        plain = bytearray(worldgear.WOODEN_SHIELD_1)
+        plain[game.ITEM_PLUS] = 0
+        self.assertIsNone(icons.which(bytes(plain)))
+
     def test_elven_gythka_2(self):
         """The Elven Leader's Gythka +1 a Gythka +2, in his pack and his script's object (an item),
         priced as two pluses; once."""
@@ -335,7 +360,7 @@ class DataTests(unittest.TestCase):
             self.assertGreater(n, 2551)
             self.assertNotIn(n, pictures)
         self.assertEqual(len(set(clones)), len(clones))
-        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x08, 0x1C, 0x1E, 0x29])
+        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x08, 0x1C, 0x1E, 0x28, 0x29])
 
     def test_regions_opened(self):
         """Every region file the Ledger copies for a clone is one DSCLOG opens in the game's place

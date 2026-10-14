@@ -126,6 +126,20 @@ def recolour(rows: Rows, colours: Dict[int, int]) -> Rows:
     return [[colours.get(p, p) if p is not None else None for p in r] for r in rows]
 
 
+def rim(rows: Rows, step: int, colours: Tuple[int, ...]) -> Rows:
+    """The picture's edge (its pixels beside a clear one, or the picture's side), each STEP-th along
+    the diagonals, in colours the game cycles."""
+    def edge(x: int, y: int) -> bool:
+        return any(not (0 <= x + dx < len(rows[0]) and 0 <= y + dy < len(rows)) or rows[y + dy][x + dx] is None
+                   for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+    return [[colours[(x + y) % len(colours)] if p is not None and (x + y) % step == 0 and edge(x, y) else p
+             for x, p in enumerate(r)] for y, r in enumerate(rows)]
+
+
+# the Shield's browns -> the metal long sword's greys, shade for shade (a step lighter than their brightness)
+SHIELD_METAL = {129: 210, 128: 211, 134: 212, 179: 211, 135: 212, 136: 213, 137: 214, 138: 215, 139: 216}
+
+
 GREAT_AXE_TYPE = 2
 MAGIC_KINDS = {18: "Gutterknot", 112: "Deepbiter", 0: "Windlash"}  # (the game's types: none has a plus)
 BLADE = range(0xD1, 0xDA)
@@ -359,6 +373,10 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Ashen Robe", 0xFBE3, 2580, 2581, ashen_robe_icon),
     ("Veiled Robe", 0xFBE3, 2582, 2583, veiled_robe_icon),
     ("Sling +1", 0xFC09, 2644, 2645, lambda r: glow(r, lambda p, x, y: 137 <= p <= 140 and (x + y) % 2 == 0, FIRE)),
+    # the magic shields (worldgear.py): the game's wooden Shield, every other pixel of its rim in
+    # the fire colours; its leather one in the metal long sword's greys, its whole rim burning
+    ("Gutterward", 0xFB5B, 2586, 2587, lambda r: rim(r, 2, FIRE)),
+    ("Ironbulwark", 0xFC04, 2588, 2589, lambda r: rim(recolour(r, SHIELD_METAL), 1, FIRE)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -769,6 +787,7 @@ def _plate_types() -> Dict[int, str]:
 PLATE_TYPES = _plate_types()
 OBSIDIAN_LONG_SWORD, FLAME_BLADE_NAME = 45, 0x156  # (the Flame Blade: worldgear.py)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
+WOODEN_SHIELD_TYPE, GUTTERWARD = 16, 0x163  # (the game's wooden Shield; Gutterward's name: worldgear.py)
 
 
 def which(rec: bytes) -> Optional[str]:
@@ -810,6 +829,10 @@ def which(rec: bytes) -> Optional[str]:
         return "Bracers of Defense"
     if kind == game.ROBE_TYPE:
         return "Veiled Robe" if plus >= 2 else "Ashen Robe"
+    if kind == game.METAL_SHIELD_TYPE:
+        return "Ironbulwark"
+    if kind == WOODEN_SHIELD_TYPE and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == GUTTERWARD:
+        return "Gutterward"
     if kind == game.CIRCLET_TYPE:
         return "Arrowbane"
     if kind == game.CROWN_TYPE:

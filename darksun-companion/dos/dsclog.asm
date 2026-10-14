@@ -10891,9 +10891,9 @@ dex_table:
 
 ; PROBE_DOS_OPEN: the DOS services (INT 21h), hooked. Opening a file (AH=3Dh) whose name ends in
 ; one of COPIES' (SEGOBJEX.GFF, the game's objects and their pictures; RESOURCE.GFF, its screens'
-; pictures and texts; GPLDATA.GFF, its scripts; RGN29.GFF, the slave pens; RGN1C.GFF, RGN1E.GFF
-; and RGN08.GFF, the Upper Castle, the Undermountain and the Gemfields, a person there with an
-; object of their own for a new item) opens the companion's
+; pictures and texts; GPLDATA.GFF, its scripts; RGN29.GFF, the slave pens; RGN1C.GFF, RGN1E.GFF,
+; RGN08.GFF and RGN28.GFF, the Upper Castle, the Undermountain, the Gemfields and the warrens, a
+; person or thing there with an object of its own for a new item) opens the companion's
 ; copy instead (D:\..., which the launcher writes with
 ; the companion's icons added; the game folder is never changed), and notes that it has; with no
 ; copy there, the game's own. Everything else goes on to DOS.
@@ -11018,6 +11018,7 @@ copies:
         COPY 'RGN1C.GFF', 'D:\RGN1C.GFF', others_on   ; (a Castle Guard of its own: worldgear.py)
         COPY 'RGN1E.GFF', 'D:\RGN1E.GFF', others_on   ; (an Undermountain miner of its own)
         COPY 'RGN08.GFF', 'D:\RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
+        COPY 'RGN28.GFF', 'D:\RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
         db 0
 
 ; NEW SPELLS (RULE_NEW_SPELLS): three wizard spells past the game's 196 (0-68 wizard, 69-137 priest,
@@ -11730,7 +11731,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAMES_EXTRA  equ 34
+NAMES_EXTRA  equ 35
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -11791,7 +11792,7 @@ n_fl    dw 0
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 26
+TYPES_EXTRA equ 27
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dscompanion/robes.py)
@@ -11957,6 +11958,11 @@ extra_types:
         ; druids (+10h: 190h)
         db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00
         db 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
+        ; a metal shield (Ironbulwark +3, dscompanion/worldgear.py): the game's leather Shield's
+        ; (4), of metal (+8: 4), for the classes of its wooden one and its chain armour (+10h:
+        ; 126Fh, no thieves); the game has no metal shield
+        db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
 ; the names, numbered from NAMES_OWN (322): the companion's items' (the same as the companion's
 ; NAMES in dscompanion/names.py), the rest blank until it writes more
 extra_names:
@@ -12026,7 +12032,11 @@ extra_names:
         times NAME_SIZE - 10 db 0
         db "Veiled Robe"
         times NAME_SIZE - 11 db 0
-        times (NAMES_EXTRA - 33) * NAME_SIZE db 0
+        db "Gutterward"                 ; (the magic shields of dscompanion/worldgear.py: a wooden
+        times NAME_SIZE - 10 db 0       ; shield +1,
+        db "Ironbulwark"                ; a metal shield +3)
+        times NAME_SIZE - 11 db 0
+        times (NAMES_EXTRA - 35) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the companion rolls both and, when both succeed,
