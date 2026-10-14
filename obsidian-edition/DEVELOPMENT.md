@@ -93,7 +93,7 @@ the party:
 - **`SAVE` chunk 6, character sheets.** 71-byte records (`0x47`).
 
 The game keeps the same records in memory, with the party's sheets one after
-another. Old copies of a record can linger elsewhere in memory, so the viewer
+another. Old copies of a record can linger elsewhere in memory, so the Loader
 prefers the sheet at the party's stride position. Offsets are relative to the
 start of each record. The evidence comes from five save files covering three
 parties, plus the in-game View Character screens.
@@ -129,7 +129,7 @@ parties, plus the in-game View Character screens.
 In memory, the game reaches both tables through far pointers in its data
 segment: `DS:0x1665` points to the creature table and `DS:0x1661` to the
 sheets (a creature's sheet number is its word at `+0x04`). The data segment
-starts with Borland's copyright string at `DS:0x0004`, which is how the viewer
+starts with Borland's copyright string at `DS:0x0004`, which is how the Loader
 finds the party by itself (`dsloader/game.py`).
 
 **Items.** A creature's items hang off its record at `+0x08`, `+0x0a` and
@@ -177,6 +177,33 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 19).
 
 
+## Room in the helper
+
+DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
+The dice log's ring buffer (`NENT` 74 entries of `ESIZE` 192 bytes) follows
+the resident part in memory, in a segment of its own: the install code sets
+`ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
+the resident image, and its last step (`KEEP`, in the resident part, as the
+ring lies over the install code) clears the ring and stays resident with it.
+The text buffer (`TSIZE`) is 4 KB; the Loader reads its size from the
+header and drains it every few tens of milliseconds.
+
+The helper has to load into upper memory, or the game loses 62 KB of
+conventional memory (570 KB free rather than 632 KB). With GOG's settings
+there is one upper memory block of 63 KB, EMS's 64 KB page frame taking the
+rest; the launcher's config turns EMS off (`launch.DOS_LINES`: the game uses
+XMS instead), which leaves the helper a second 64 KB block (65 KB free
+with it loaded; see [the combat log](#what-the-game-allows)).
+The helper's own segment is still at most 64 KB (everything through CS), so
+the second block is room for data kept apart from it, as the ring is. The
+helper asks for its resident part and the ring (`LOAD_EXTRA`); with EMS on,
+`mem` in DOSBox showed 632 KB free and a few KB of upper memory left. A change that adds much code should check that
+again: the ring is 74 entries, not 128 (96 until the new spells' code, when
+the game no longer started for lack of memory; 88 until STORE and RECALL; 84
+until spells 199-201 and `seg_space`, when the helper no longer fitted in the
+block and loaded low), and the text buffer 4 KB,
+not 8, to make that room.
+
 ## Reading the game's memory
 
 DOSBox keeps the emulated PC's RAM in one block of its own process memory. The
@@ -221,9 +248,9 @@ What the `.bat` files do, from a command prompt (`dsloader` is the
 program's internal name):
 
 ```
-python -m dsloader launch                        # start the game with the dice log, and the viewer
-python -m dsloader view                          # the viewer only
-python -m dsloader play                          # the game with the in-game additions, no viewer
+python -m dsloader launch                        # start the game with the dice log, and the Loader's window
+python -m dsloader view                          # the Loader's window only, game not started
+python -m dsloader play                          # the game with the in-game additions, no window
 python -m dsloader dicelog                       # the dice log in the command prompt
 python -m dsloader checks                        # the scripts' thief skill and ability checks (spoilers)
 python -m dsloader save C:\path\to\SAVE01.SAV   # the party stored in a save
@@ -287,6 +314,116 @@ range, where the running script is (which tells the three searches and their
 damage rolls apart) and the three counts (`dsloader/searches.py`). Tested
 in play: a haystack search in the slave pens logged `0-10 = 7, an old, soiled
 loincloth (the party's 2nd find of 6 in hay)`, as the game's own message said.
+
+### The combat log in the game
+
+([In the README](README.md#the-combat-log-in-the-game).)
+
+#### What the game allows
+
+What was measured before the panel was built (Stage 0 of [the design
+brief](docs/combat-log/HANDOFF.md)), with the patched game and the dice log
+running:
+
+- **Pages.** The game keeps a table of pages at `0980:0004` (DSUN.EXE
+  segments, less the load segment; the shadows read it): each page's memory
+  segment (`+4`; a child page, flag `40h` at `+C04h`, names its parent there),
+  its bounds (`+404h` x0, `+604h` y0, `+804h` x1, `+A04h` y1). Pages 0 and 1
+  are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others are
+  windows over them and buffers in the rest of video memory (`A7E8h`, a third
+  320 x 200; smaller ones to `AE55h`).
+- **The flip.** The routine at `0980:5814` (DSUN.EXE 14414h) shows one screen
+  or the other (the CRTC start address; `0980:118E` says which, 1 for `A400h`)
+  and swaps them for -1. It is called from 45 places, all in overlays, for
+  screens and windows: in five seconds of walking on the map the page shown
+  changed three times, on opening and closing windows.
+- **The map draws into the screen shown.** The view's floor, walls and
+  figures go straight into `A400h`, the screen on show (the shadows' `v_seg`
+  read live), a rectangle at a time as things move (`PROBE_REDRAW` 2475Fh,
+  `PROBE_REDRAW_ALL` 24B18h, the floor routines 2700Eh and 27162h). So there is
+  no last moment of a frame on the map: a panel over the view has to be drawn
+  again after each of those redraws that overlaps it (their way back, as
+  `FLOOR_POST` does for the floor), or the figures walking under it would
+  wipe it (the panel is: see below).
+- **Keys.** On the map End and PgUp scroll the view (16 pixels down-left and
+  up-right: the numeric keypad's diagonals; PgDn and Home likely too, at the
+  map's edge here), so they stay the game's; L did nothing on the map, and is
+  the panel's.
+- **Font.** The game's text font is RESOURCE.GFF's FONT 100, 9 pixels high
+  with its shadow (`art.py`): a panel 67 pixels high holds a header and 6
+  lines.
+- **Memory.** With GOG's settings (`ems=true`) DOSBox keeps EMS's 64 KB page
+  frame where upper memory would be, and with the helper loaded `mem` shows 1
+  KB of upper memory free. With `ems=false` (the launcher's own config, after
+  GOG's) it shows 65 KB (largest block 64 KB), conventional memory unchanged
+  at 632 KB, and the panel has its room (see [Room in the
+  helper](#room-in-the-helper)). The game's memory layer (VMEM) takes EMS, XMS
+  or extended memory, whichever there is: without EMS it loaded a save, walked
+  the pens, opened a conversation and a shop, and played the arena's opening
+  fight to the end without a fault (a check, not a whole game).
+
+#### The panel
+
+- **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
+  180 × 78 palette indices in the area's own colours, matched to the palette
+  DSCLOG last read) into an upper memory block DSCLOG takes for it at install
+  (`panel_seg`, header `+328`); the dice log's ring has a block of its own
+  there too. With EMS on there is no such block and no panel.
+- **Putting it on screen.** DSCLOG copies the picture into the screen on
+  show, a plane at a time, from the main loop (`PANEL_TICK`, in
+  `PROBE_SCROLL`) when the floor has been drawn since or the Loader has a new
+  picture (`panel_new`, `+330`), and at the end of each rectangle the game
+  draws again (`REDRAW_POST`, the way back of 2475Fh), so figures walking and
+  the view scrolling don't wipe it.
+- **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
+  switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
+  writes about once a second), DSCLOG has the view drawn again without it.
+- **The game's windows.** A figure's menu, a question or EXIT GAME are shown
+  on the other screen, the view drawn there again first: the panel is not on
+  it, and is back when the window closes. Full screens (USE, View Character)
+  stop the main loop, so it isn't drawn over them. (Drawing it into both
+  screens doesn't work: the game keeps other pictures in the one not shown.)
+- **The lines (Stage 2).** The Loader keeps the fight's dice log lines
+  (`combatlog.Log`, the last 200, from the moment it sees a fight to 5 seconds
+  after) and draws them into the picture: a header line (`round_status`: the
+  round, who is acting, who is next), then the last 6 rows of the well. Each
+  line's level (`shorten`) is worked out from the log's own wording (the
+  attack, save, magic resistance, damage and d100 patterns), an attack's
+  damage put on its line; its kind (`line_kind`, the Loader's colours) from
+  the full line; whose line from the name it starts with (a filled pip for
+  the party, hollow for a monster). The game's font comes from RESOURCE.GFF
+  (`art.Font`); without it the panel has no lines. A new picture is written
+  only when something in it changes.
+- **Scrolling (Stage 3).** DSCLOG's mouse handler (`PANEL_MOUSE`, in
+  `MOUSE_EVENT`) notes where the pointer is (header `+332`, game pixels, as
+  the driver gives them), and a left press on the panel, while the page on
+  show is the one the panel was last drawn into (not under a game window), is
+  counted with where it was (`+338` on) and kept from the game with its
+  release, `+336` set while it is held. The Loader (`Panel.mouse`, each pass
+  of the log) makes it a drag of the handle, a page, or a click on the
+  **Latest** chip; the mouse wheel comes from a Windows low-level mouse hook
+  (`wheel.py`, its own thread), counted only with DOSBox's window in front
+  and the pointer over the panel. Scrolled back, the top row stays put
+  (`Panel.first`; `None` follows the newest).
+- **Drawn again.** Besides the floor and the redrawn rectangles, the game
+  draws parts of the view in a fight as the pointer moves over it (what it is
+  over), through routines not hooked: `PANEL_TICK` puts the panel again when
+  the pointer has moved, on that pass and the next, and every 16 passes
+  anyway.
+- **Sizes (Stage 4).** The Loader sets the panel's top and height
+  (`+344`, `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130,
+  the most); its foot stays at row 198. Smaller than it was, DSCLOG draws the
+  view again under it first. Collapsed is 15 rows (the newest line in the
+  header), docked 78, expanded 130 (11 lines and the filters' row). The
+  header's level chip and - / + buttons, and the filters, are pressed through
+  `PANEL_MOUSE` as the scrollbar is. **L** (`INT 16h`, `our_key`, while the
+  panel is on screen: `PANEL_LIVE`) is counted at `+348` and kept from the
+  game; the keyboard hook is on while the panel is shown, not only with Tab
+  targeting. The level and size are saved in the settings
+  (`combat_log_level`, `combat_log_size`).
+- **Not checked mid-fight:** saving and loading, and area changes, as the
+  game allows neither in a fight; out of one the panel is off. DOSBox's
+  window size doesn't matter (it is drawn into the game's screen).
 
 ### THAC0, saves and thief skills
 
@@ -1510,6 +1647,8 @@ The Shinobi's spells, the game's and four new ones (thief level 6 on, the Seeker
 | Spell level | Spells |
 |---|---|
 | 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image, Spook, Friends |
+| 2nd | Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud |
+| 3rd | Blink, Haste, Protection from Normal Missiles, Hold Person |
 
 Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-wizard-spells), are known by its bit in the sheet
 (`NS_KNOWS`) rather than the game's byte: `SHINOBI_KNOWS` reads either for the
@@ -1518,148 +1657,8 @@ known (not offered) while the new spells are off (or, for 199-201, before
 `SEG_MOVE`). `SHINOBI_WIZARD` gives the
 Shinobi's casting level for the new spells (196-201) as for the game's wizard
 spells (0-68).
-| 2nd | Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud |
-| 3rd | Blink, Haste, Protection from Normal Missiles, Hold Person |
 
 No kit is the kit page's first row, and what a new character has.
-
-### Room in the helper
-
-DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 74 entries of `ESIZE` 192 bytes) follows
-the resident part in memory, in a segment of its own: the install code sets
-`ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
-the resident image, and its last step (`KEEP`, in the resident part, as the
-ring lies over the install code) clears the ring and stays resident with it.
-The text buffer (`TSIZE`) is 4 KB; the Loader reads its size from the
-header and drains it every few tens of milliseconds.
-
-The helper has to load into upper memory, or the game loses 62 KB of
-conventional memory (570 KB free rather than 632 KB). With GOG's settings
-there is one upper memory block of 63 KB, EMS's 64 KB page frame taking the
-rest; the launcher's config turns EMS off (`launch.DOS_LINES`: the game uses
-XMS instead), which leaves the helper a second 64 KB block (65 KB free
-with it loaded; see [the in-game combat log](#the-in-game-combat-log-what-the-game-allows-stage-0)).
-The helper's own segment is still at most 64 KB (everything through CS), so
-the second block is room for data kept apart from it, as the ring is. The
-helper asks for its resident part and the ring (`LOAD_EXTRA`); with EMS on,
-`mem` in DOSBox showed 632 KB free and a few KB of upper memory left. A change that adds much code should check that
-again: the ring is 74 entries, not 128 (96 until the new spells' code, when
-the game no longer started for lack of memory; 88 until STORE and RECALL; 84
-until spells 199-201 and `seg_space`, when the helper no longer fitted in the
-block and loaded low), and the text buffer 4 KB,
-not 8, to make that room.
-
-### The in-game combat log: what the game allows (Stage 0)
-
-Findings for the planned combat log panel ([the design brief](docs/combat-log/HANDOFF.md)),
-measured with the patched game and the dice log running:
-
-- **Pages.** The game keeps a table of pages at `0980:0004` (DSUN.EXE
-  segments, less the load segment; the shadows read it): each page's memory
-  segment (`+4`; a child page, flag `40h` at `+C04h`, names its parent there),
-  its bounds (`+404h` x0, `+604h` y0, `+804h` x1, `+A04h` y1). Pages 0 and 1
-  are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others are
-  windows over them and buffers in the rest of video memory (`A7E8h`, a third
-  320 x 200; smaller ones to `AE55h`).
-- **The flip.** The routine at `0980:5814` (DSUN.EXE 14414h) shows one screen
-  or the other (the CRTC start address; `0980:118E` says which, 1 for `A400h`)
-  and swaps them for -1. It is called from 45 places, all in overlays, for
-  screens and windows: in five seconds of walking on the map the page shown
-  changed three times, on opening and closing windows.
-- **The map draws into the screen shown.** The view's floor, walls and
-  figures go straight into `A400h`, the screen on show (the shadows' `v_seg`
-  read live), a rectangle at a time as things move (`PROBE_REDRAW` 2475Fh,
-  `PROBE_REDRAW_ALL` 24B18h, the floor routines 2700Eh and 27162h). So there is
-  no last moment of a frame on the map: a panel over the view has to be drawn
-  again after each of those redraws that overlaps it (their way back, as
-  `FLOOR_POST` does for the floor), or the figures walking under it would
-  wipe it. How the game keeps its own status box on top through those redraws
-  is not yet known; it may clip the view's rectangles to the windows (the
-  child pages), which would be the cheapest way for a panel too.
-- **Keys.** On the map End and PgUp scroll the view (16 pixels down-left and
-  up-right: the numeric keypad's diagonals; PgDn and Home likely too, at the
-  map's edge here), so the brief's End, PgUp and PgDn are the game's. L did
-  nothing on the map.
-- **Font.** The game's text font is RESOURCE.GFF's FONT 100, 9 pixels high
-  with its shadow (`art.py`): a panel 67 pixels high holds a header and 6
-  lines.
-- **Memory.** With the helper loaded, `mem` in DOSBox (after QUIT) shows 632
-  KB of conventional memory free and **1 KB of upper memory**. The panel's
-  code and its lines have to come out of the helper's other room: the dice
-  log's ring (74 entries of 192 bytes) or the text buffer (4 KB), or the lines
-  kept in video memory past the game's buffers. Or from EMS: GOG's
-  `dosbox_darksun.conf` turns it on (`ems=true`), and DOSBox 0.74 then keeps
-  its 64 KB page frame where the upper memory would be. With `ems=false` (in
-  the launcher's own config, which comes after GOG's) `mem` shows 65 KB of
-  upper memory free (largest block 64 KB) with the helper loaded, conventional
-  memory unchanged at 632 KB. The game's memory layer (VMEM) takes EMS, XMS or
-  extended memory, whichever there is: without EMS it loaded a save, walked
-  the pens, opened a conversation and a shop, and played the arena's opening
-  fight to the end without a fault (a check, not a whole game).
-
-### The in-game combat log: the panel (Stages 1 to 4)
-
-- **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
-  180 × 78 palette indices in the area's own colours, matched to the palette
-  DSCLOG last read) into an upper memory block DSCLOG takes for it at install
-  (`panel_seg`, header `+328`); the dice log's ring has a block of its own
-  there too. With EMS on there is no such block and no panel.
-- **Putting it on screen.** DSCLOG copies the picture into the screen on
-  show, a plane at a time, from the main loop (`PANEL_TICK`, in
-  `PROBE_SCROLL`) when the floor has been drawn since or the Loader has a new
-  picture (`panel_new`, `+330`), and at the end of each rectangle the game
-  draws again (`REDRAW_POST`, the way back of 2475Fh), so figures walking and
-  the view scrolling don't wipe it.
-- **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
-  switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
-  writes about once a second), DSCLOG has the view drawn again without it.
-- **The game's windows.** A figure's menu, a question or EXIT GAME are shown
-  on the other screen, the view drawn there again first: the panel is not on
-  it, and is back when the window closes. Full screens (USE, View Character)
-  stop the main loop, so it isn't drawn over them. (Drawing it into both
-  screens doesn't work: the game keeps other pictures in the one not shown.)
-- **The lines (Stage 2).** The Loader keeps the fight's dice log lines
-  (`combatlog.Log`, the last 200, from the moment it sees a fight to 5 seconds
-  after) and draws them into the picture: a header line (`round_status`: the
-  round, who is acting, who is next), then the last 6 rows of the well. Each
-  line's level (`shorten`) is worked out from the log's own wording (the
-  attack, save, magic resistance, damage and d100 patterns), an attack's
-  damage put on its line; its kind (`line_kind`, the Loader's colours) from
-  the full line; whose line from the name it starts with (a filled pip for
-  the party, hollow for a monster). The game's font comes from RESOURCE.GFF
-  (`art.Font`); without it the panel has no lines. A new picture is written
-  only when something in it changes.
-- **Scrolling (Stage 3).** DSCLOG's mouse handler (`PANEL_MOUSE`, in
-  `MOUSE_EVENT`) notes where the pointer is (header `+332`, game pixels, as
-  the driver gives them), and a left press on the panel, while the page on
-  show is the one the panel was last drawn into (not under a game window), is
-  counted with where it was (`+338` on) and kept from the game with its
-  release, `+336` set while it is held. The Loader (`Panel.mouse`, each pass
-  of the log) makes it a drag of the handle, a page, or a click on the
-  **Latest** chip; the mouse wheel comes from a Windows low-level mouse hook
-  (`wheel.py`, its own thread), counted only with DOSBox's window in front
-  and the pointer over the panel. Scrolled back, the top row stays put
-  (`Panel.first`; `None` follows the newest).
-- **Drawn again.** Besides the floor and the redrawn rectangles, the game
-  draws parts of the view in a fight as the pointer moves over it (what it is
-  over), through routines not hooked: `PANEL_TICK` puts the panel again when
-  the pointer has moved, on that pass and the next, and every 16 passes
-  anyway.
-- **Sizes (Stage 4).** The Loader sets the panel's top and height
-  (`+344`, `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130,
-  the most); its foot stays at row 198. Smaller than it was, DSCLOG draws the
-  view again under it first. Collapsed is 15 rows (the newest line in the
-  header), docked 78, expanded 130 (11 lines and the filters' row). The
-  header's level chip and - / + buttons, and the filters, are pressed through
-  `PANEL_MOUSE` as the scrollbar is. **L** (`INT 16h`, `our_key`, while the
-  panel is on screen: `PANEL_LIVE`) is counted at `+348` and kept from the
-  game; the keyboard hook is on while the panel is shown, not only with Tab
-  targeting. The level and size are saved in the settings
-  (`combat_log_level`, `combat_log_size`).
-- **Not checked mid-fight:** saving and loading, and area changes, as the
-  game allows neither in a fight; out of one the panel is off. DOSBox's
-  window size doesn't matter (it is drawn into the game's screen).
 
 ### The kit's byte
 

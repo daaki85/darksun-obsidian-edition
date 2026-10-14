@@ -52,11 +52,11 @@ have the detail.
 - **Templar's Ledger is now the Dark Sun Obsidian Edition Loader** (the
   Loader for short): the window's banner and title, the crash message in the
   game, and every page of the docs, which now call it what starts the game
-  with the mod rather than a companion window.
+  with the mod rather than a companion window. Its settings, named saves and
+  crash reports stay where they were.
 - **The folder is `obsidian-edition` and the Python package `dsloader`**
   (they were `darksun-companion` and `dscompanion`): `python -m dsloader`
-  runs the command line, and the tests workflow is `tests.yml`. Its settings, named saves and crash
-  reports stay where they were.
+  runs the command line, and the tests workflow is `tests.yml`.
 - **More kits that can't go together:** the Grove Warden can't dual to
   gladiator, nor a gladiator who duals to druid take it (its AC would add to
   the gladiator's own); the Swashbuckler, Crusader, Battle Mage and Mind
@@ -190,6 +190,13 @@ have the detail.
   mentions of the turn pop-up are gone; the kits' starting gear is said once,
   in each class's table, not again in a table and list of its own; the
   Options tab's new spells box names all six, and its screenshot is retaken.
+- **A third review, after the rename:** the full README puts **In the game**
+  (the combat log first) before the Loader's window, and its overview is a
+  list as the top README's is; the player's guide starts with the combat log;
+  the patch notes put the game's changes first and the Loader after them;
+  DEVELOPMENT.md has the combat log under How each part works and Room in the
+  helper as a section of its own (they were inside Kits), and a Shinobi table
+  split by a paragraph is whole again; "viewer" is gone from the docs.
 - **The polearms' icons** in the README's item tables (the bone and metal
   Polearm, Thornwall, Linebreaker) are redrawn at the 22 pixels the game now
   shows them at.

@@ -338,7 +338,7 @@ def main(argv=None) -> int:
     common.add_argument("--pid", type=int, help="DOSBox process id (default: the only DOSBox running)")
     common.add_argument("--host-base", help="skip auto-detection: host address of guest RAM")
 
-    p = argparse.ArgumentParser(prog="dsloader", description="Dark Sun Obsidian Edition Loader: party viewer, dice log and memory tools for Dark Sun: Shattered Lands")
+    p = argparse.ArgumentParser(prog="dsloader", description="Dark Sun Obsidian Edition Loader: starts Dark Sun: Shattered Lands with the mod; party, dice log and memory tools")
     sub = p.add_subparsers(dest="command", required=True)
 
     s = sub.add_parser("view", parents=[common], help="open the party viewer window")

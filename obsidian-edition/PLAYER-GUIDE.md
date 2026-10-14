@@ -60,10 +60,11 @@ The [README](README.md) has every rule in full detail.
 1. Unzip the mod anywhere and double-click **`Start Obsidian Edition.bat`**
    (the first time, it offers to install Python; see the
    [README](README.md#running-it-windows)).
-2. Press **Start the game**. The game opens beside the Loader, whose dice log
-   shows every roll as it happens:
+2. Press **Start the game**. The game starts with the mod and your options,
+   and the Loader's dice log shows every roll as it happens. To see the rolls
+   in the game itself, tick the **combat log** on the Options tab:
 
-   ![The Loader during the arena's opening show: the party's cards on the left, the dice log of a fight on the right](docs/dicelog.png)
+   ![A fight in the arena with the combat log over the map's lower right](docs/combat-log.png)
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
@@ -73,8 +74,8 @@ The [README](README.md) has every rule in full detail.
 
 The pointer has three modes, changed with a right-click: **Walk**, **Attack**
 and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
-**Use** or **Pick Up** it, and at a monster in a fight to see what the Loader
-tells of it. Resting at a fire ring fills hit points, PSP and spell slots.
+**Use** or **Pick Up** it, and at a monster in a fight to see its hit points,
+AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 
 The [quality of life changes](#quality-of-life) list what the mod makes
 easier.
@@ -85,6 +86,7 @@ easier.
 
 | Change | What it does |
 |---|---|
+| **Combat log** (off unless ticked) | In a fight, a panel at the map's lower right with every roll as it comes, at the least, in short or in detail. Drag its scrollbar (or turn the mouse wheel over it, on Windows) to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back. |
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
 | **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
@@ -98,7 +100,6 @@ easier.
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
 | **The Effects screen** | Names each kit and weapon spec, a page at a time when there are many. |
-| **Combat log** (off unless ticked) | In a fight, a panel at the map's lower right with every roll as it comes, at the least, in short or in detail. Drag its scrollbar (or turn the mouse wheel over it, on Windows) to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back. |
 | **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), so the party walks smoothly with shadows and dust. |
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
 | **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |

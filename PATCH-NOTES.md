@@ -10,7 +10,6 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Contents
 
-- [The Loader](#the-loader)
 - [In the Game's Screens](#in-the-games-screens)
 - [Combat](#combat)
 - [Classes and Kits](#classes-and-kits)
@@ -20,26 +19,16 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - [World](#world)
 - [Graphics](#graphics)
 - [Quality of Life](#quality-of-life)
+- [The Loader](#the-loader)
 - [Bug Fixes](#bug-fixes)
-
-## The Loader
-
-- **[New]** The Loader: it starts the game with the mod and your options, and stays open while you play, laid out in the game's own colours.
-- **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
-- **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
-- **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
-- **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
-- **[New]** **Options:** every rule change and addition below has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
-
-> *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 
 ## In the Game's Screens
 
+- **[New]** Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds it away.
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
-- **[New]** Optionally, a combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds it away.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
 - **[New]** The Effects screen lists your kits and weapon specializations.
 
@@ -199,6 +188,17 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written.
 - **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
+
+## The Loader
+
+- **[New]** The Loader: it starts the game with the mod and your options, and stays open while you play, laid out in the game's own colours.
+- **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
+- **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
+- **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
+- **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
+- **[New]** **Options:** every rule change and addition below has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
+
+> *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 
 ## Bug Fixes
 
