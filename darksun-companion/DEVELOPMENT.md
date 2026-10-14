@@ -1242,9 +1242,8 @@ when right-clicked only for objects 1400-1499 (`SCROLL_LEARNED`), and its
 spell is the item's own (`+02h`, one past the spell's number), so one object
 serves every spell; priced at 3000 a level, as the game's scrolls. Checked in
 the game: one given to Cermak, right-clicked, showed SCROLL, 3000 and Shield's
-icon, and taught Shield (`YOU LEARN THE SPELL`). Items of one object show as
-one in a merchant's list, so two such scrolls sold to the same merchant show
-as one there.
+icon, and taught Shield (`YOU LEARN THE SPELL`). The roll gives the dice log
+no line: it would tell the player what the body holds before the fight is won.
 
 ### What the party wears
 

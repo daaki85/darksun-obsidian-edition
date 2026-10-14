@@ -34,8 +34,9 @@ have the detail.
 
 - **Defilers' scrolls:** each defiler in a fight has a 5% chance of carrying
   a scroll of a random preserver spell (the game's 69, and the new spells
-  with them on), found on its body when it dies; rolled once a fight, the
-  roll in the dice log. A New content box, on by default.
+  with them on), found on its body when it dies; rolled once a fight, and
+  kept out of the dice log so it isn't given away. A New content box, on by
+  default.
 
 **Changed**
 - **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each

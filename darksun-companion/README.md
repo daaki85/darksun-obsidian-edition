@@ -2788,9 +2788,8 @@ more, on either side of the fight. Kalzith keeps his own scrolls.
 
 The scroll is the game's own kind: a preserver learns from it as from any
 scroll (right-click it, then click its spell's icon), and it sells for 3,000
-ceramic pieces a spell level. The dice log shows each roll:
-`Defiler's scroll: d100 = 3, needs 5 or less -> a scroll of Haste, dropped
-where Defiler falls`.
+ceramic pieces a spell level. The dice log doesn't show the roll, so whether a
+defiler had a scroll is found out on its body.
 
 Each defiler is rolled for once in each fight. A fight played again from a save
 is a new chance; a game saved mid-fight keeps the scroll a defiler was given.

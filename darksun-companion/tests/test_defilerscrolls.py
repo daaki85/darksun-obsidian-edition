@@ -94,12 +94,12 @@ class DefilerScrollTests(unittest.TestCase):
         rolls = iter([5, 6])
         w = Watch()
         lines = w.watch(self.gd, False, roll=lambda: next(rolls), choose=lambda pool: 36)
-        self.assertEqual(lines, ["Defiler's scroll: d100 = 5, needs 5 or less -> a scroll of Hold Person, "
-                                 "dropped where Defiler falls",
-                                 "Dark Spider's scroll: d100 = 6, needs 5 or less -> none"])
+        self.assertEqual(lines, [])  # (no spoiler in the log)
+        self.assertEqual(w.given, [("Defiler", "Hold Person")])
         self.assertEqual([index for index, _ in self.given], [4])
         self.assertEqual(struct.unpack_from("<H", self.given[0][1], kalzith.ITEM_SPELL)[0], 37)
-        self.assertEqual(w.watch(self.gd, False, roll=lambda: 1), [])  # (rolled: not again)
+        w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)  # (rolled: not again)
+        self.assertEqual(w.given, [("Defiler", "Hold Person")])
 
     def test_not_out_of_a_fight(self):
         self.gd.fighting = False
@@ -110,14 +110,15 @@ class DefilerScrollTests(unittest.TestCase):
         w = Watch()
         w.watch(self.gd, False, roll=lambda: 50)
         w.reset()
-        self.assertEqual(len(w.watch(self.gd, False, roll=lambda: 50)), 2)
+        w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)
+        self.assertEqual(w.given, [("Defiler", "Shield"), ("Dark Spider", "Shield")])
 
     def test_one_already(self):
         """One already carried (a save made mid-fight): no roll, no second."""
         w = Watch()
         w.carrying = (4,)
-        lines = w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)
-        self.assertEqual([line.split("'s")[0] for line in lines], ["Dark Spider"])
+        w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)
+        self.assertEqual(w.given, [("Dark Spider", "Shield")])
         self.assertEqual([index for index, _ in self.given], [8])
 
 

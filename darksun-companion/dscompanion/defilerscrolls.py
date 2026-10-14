@@ -10,7 +10,8 @@ drops with the rest of its things when it dies. Kalzith keeps his own loot (kalz
 
 The roll is remembered for the session (by area, creature and name) and forgotten when a game is
 loaded: a fight played again from a save is rolled again, as the death is a new one. A defiler
-already carrying such a scroll (a save made mid-fight) gets no second.
+already carrying such a scroll (a save made mid-fight) gets no second. The dice log doesn't show
+the roll: what a defiler carries is for the party to find on its body.
 
 The scroll is the game's own kind of item (kalzith.scroll), of the game's first scroll object, 1400
 (one the game teaches from when right-clicked: 1400-1499): the spell is the item's own, so one
@@ -56,11 +57,13 @@ class DefilerScrolls:
         self.chance = chance
         self.rolled: Set[Tuple[int, int, bytes]] = set()  # (area, creature, name) rolled for
         self.defilers: dict = {}  # (area, creature, name) -> whether its sheet is a defiler's
+        self.given: List[Tuple[str, str]] = []  # (defiler, spell) given a scroll, for tests
 
     def reset(self) -> None:
         """Forget the rolls (a game was loaded)."""
         self.rolled.clear()
         self.defilers.clear()
+        self.given.clear()
 
     def _is_defiler(self, gd, index: int, key) -> bool:
         if key not in self.defilers:
@@ -79,7 +82,8 @@ class DefilerScrolls:
     def watch(self, gd, new_spells: bool, roll: Optional[Callable[[], int]] = None,
               choose: Optional[Callable[[List[int]], int]] = None) -> List[str]:
         """In a fight, each living defiler not yet rolled for: d100 (ROLL), and at CHANCE or less a
-        scroll of a spell (CHOOSE among spells()) put in its pack. The log's lines."""
+        scroll of a spell (CHOOSE among spells()) put in its pack (noted in GIVEN). No lines for the
+        log: the roll would tell the player what the body holds before the fight is won."""
         if not gd.in_combat():
             return []
         roll = roll or (lambda: random.randint(1, 100))
@@ -102,18 +106,11 @@ class DefilerScrolls:
             who = name.decode("cp437", "replace")
             if self._carries_one(gd, index):
                 continue  # (given one before this game was saved)
-            die = roll()
-            if die > self.chance:
-                out.append(f"{who}'s scroll: d100 = {die}, needs {self.chance} or less -> none")
+            if roll() > self.chance:
                 continue
             pool = spells(gd.spell_level, new_spells)
-            if not pool:
-                continue
-            spell = choose(pool)
-            if npcitems.add_to(gd, index, scroll(spell, gd.spell_level(spell))):
-                out.append(f"{who}'s scroll: d100 = {die}, needs {self.chance} or less -> a scroll of "
-                           f"{gd.spell_name(spell)}, dropped where {who} falls")
-            else:
-                out.append(f"{who}'s scroll: d100 = {die}, needs {self.chance} or less -> one, but no room "
-                           f"in its pack (none given)")
-        return out
+            if pool:
+                spell = choose(pool)
+                if npcitems.add_to(gd, index, scroll(spell, gd.spell_level(spell))):
+                    self.given.append((who, gd.spell_name(spell)))
+        return []  # (the log keeps quiet: what a defiler carries is found on its body)
