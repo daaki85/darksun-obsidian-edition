@@ -65,6 +65,12 @@ have the detail.
   backstab" where it said "the stealth rule"; DEVELOPMENT.md's "How each part
   works" follows the README's order; the patch notes' Thieves section is
   **Improved Thieving**.
+- **The patch notes' items, one by one,** in four groups: magic weapons
+  (fifteen, each with what it is, and the Elven Leader's Gythka +2), magic
+  armour and worn items (Inixhide among them, missing before; Arrowbane and
+  the Sunking Crown said not to be armour), other magic items (the Tome and
+  Kalzith's six scrolls, by name) and mundane items (Thieves' Tools among
+  them).
 - **"Weapon type" throughout,** where the pages said "kind of weapon" or
   "weapon kind": fighters specialize in one weapon type, gladiators in two,
   the level-up window has a picture of each weapon type, and the item tables'
