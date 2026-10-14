@@ -35,6 +35,12 @@ have the detail.
 - **A helm's item box said AC BONUS:0** (beside its name's "(AC 1)") until it
   had been worn: the rule set the helms' AC only as the game added up a
   character's. The box now sets it too, and shows 1.
+- **Doors with charges.** A door's box (and a mirror's, a crank's) could say
+  `Charges: 10`: the charges line read bytes that, in scenery, hold something
+  else. Scenery no longer gets the line.
+- **The Cloak of Protection forbidden to druids.** Its type counts for AC as
+  armour does, so class restrictions took it for armour, which a druid (a
+  fighter/druid/thief too) can't wear. It's a cloak, for every class.
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 

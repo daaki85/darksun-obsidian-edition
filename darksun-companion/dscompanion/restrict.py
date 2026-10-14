@@ -40,6 +40,7 @@ TYPE_FLAGS, TYPE_MATERIAL, TYPE_KIND_FLAGS, TYPE_CLASSES = 0x00, 0x08, 0x0F, 0x1
 MELEE, MISSILE, SHIELD, THROWN = 0x01, 0x02, 0x04, 0x10
 ARMOUR = 0x80  # (+0Fh: shields have it too)
 BRACERS_SLOT = 3  # (+9: where it is worn, as arm armour)
+CLOAK_SLOT = 8  # (+9: worn as a cloak)
 WOOD, BONE, STONE, OBSIDIAN, METAL, LEATHER = range(6)  # (the material's low nibble)
 NO_MATERIAL = 0x40  # (with a low nibble of 0)
 
@@ -69,8 +70,9 @@ def is_shield(typ: bytes) -> bool:
 
 def is_armour(typ: bytes) -> bool:
     """Body, arm and leg armour and helms: not shields, nor bracers of defense (worn on the arms,
-    of no material: DSCLOG's BRACERS)."""
-    return bool(typ[TYPE_KIND_FLAGS] & ARMOUR) and not is_shield(typ) and not is_bracers(typ) and not is_robe(typ)
+    of no material: DSCLOG's BRACERS), nor a cloak of protection (worn as a cloak)."""
+    return bool(typ[TYPE_KIND_FLAGS] & ARMOUR) and not is_shield(typ) and not is_bracers(typ) \
+        and not is_robe(typ) and typ[9] != CLOAK_SLOT
 
 
 def is_bracers(typ: bytes) -> bool:

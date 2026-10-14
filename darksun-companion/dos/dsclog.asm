@@ -3397,11 +3397,13 @@ class_forbids:
         jz .mat
         mov al, NO_MATERIAL
 .mat:   mov [cs:cu_mat], al
-        xor al, al                      ; armour: +0Fh 80h, and not a shield (nor bracers)
-        push ax
+        xor al, al                      ; armour: +0Fh 80h, and not a shield (nor bracers, nor
+        push ax                         ;   a cloak of protection: worn as a cloak, +09h 8)
         mov ax, dx
         call bracers_ax
         pop ax
+        je .armour
+        cmp byte [si + 9], 8
         je .armour
         test byte [si + 0x0F], 0x80
         jz .armour
@@ -14006,8 +14008,8 @@ probe_hit:
 ; Ledger's rule: stealth.py), or a belt's to picking pockets and opening locks (PROBE_BELT), in the
 ; next row, with the routine's own text routine, as it draws AC BONUS; an item that casts a spell
 ; with charges (a wand, a ring, a necklace: its spell byte, +0Fh, a spell's + 1 below ITEM_SPECIAL;
-; its charges, +0Eh, not 0; not fruit, eaten whole) its charges left there ("Charges: 50"; the
-; item [BP+6]); then the push, as the code would have.
+; its charges, +0Eh, not 0; not fruit, eaten whole; not scenery, a door) its charges left there
+; ("Charges: 50"; the item [BP+6]); then the push, as the code would have.
 IB_DRAW   equ 0x8C19A - 0x8C1A3 ; (DSUN.EXE) the text routine's far address in the call before,
                                 ;   less the way back
 TYPES_PTR equ 0x1669            ; DS: far pointer to the item types, 20 bytes each
@@ -14020,6 +14022,7 @@ ITEM_CHARGES equ 0x0E          ; (an item's charges left and its spell + 1)
 ITEM_SPELL   equ 0x0F
 ITEM_SPECIAL equ 0xF9           ; (spell bytes from here are the game's own effects: a belt's STR...)
 TYPE_FRUIT   equ 60
+TYPE_SCENERY equ 0x60          ; (a type's +08h: doors, haystacks, walls...)
 probe_item_box:
         pushad
         push es
@@ -14091,7 +14094,8 @@ probe_item_box:
         iret
 
 ; IB_CHARGES: DX IB_CHARGES_TEXT with the charges of PROBE_ITEM_BOX's item ([BP+6]; SI its
-; type) if it casts a spell with charges, else 0. DS the game's; others kept.
+; type, ES:BX its type's record) if it casts a spell with charges, else 0. Not for scenery (doors,
+; walls: their +0Eh and +0Fh hold something else). DS the game's; others kept.
 ib_charges:
         xor dx, dx
         cmp si, TYPE_FRUIT
@@ -14099,6 +14103,10 @@ ib_charges:
         push ax
         push bx
         push es
+        mov al, [es:bx + 8]
+        and al, TYPE_SCENERY
+        cmp al, TYPE_SCENERY
+        je .none
         les bx, [0x165D]                ; (the items, 15h bytes each)
         imul ax, [bp + 6], 0x15
         add bx, ax

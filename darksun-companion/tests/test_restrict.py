@@ -112,6 +112,14 @@ class RestrictTests(unittest.TestCase):
             self.assertFalse(ok(sheet(druid, 9), 4))
             self.assertTrue(ok(sheet(druid, 9), 65))
 
+    def test_cloak_of_protection(self):
+        # its type counts for AC (+0Fh 80h) but is worn as a cloak: no armour, for anyone
+        from dscompanion import npcitems
+        cloak = npcitems.TYPES[1]
+        self.assertFalse(restrict.is_armour(cloak))
+        for classes in ((5,), (9, 5, 17), (11,), (12,), (9, 17)):
+            self.assertTrue(restrict.usable(sheet(*classes), game.CLOAK_TYPE, cloak), classes)
+
     def test_cleric_spheres(self):
         allowed = lambda cls: [t for t in TYPES if TYPES[t][0] & 3 and ok(sheet(cls), t)]
         self.assertEqual(allowed(1), [0, 1, 17, 29, 37, 48])   # air: missile, thrown, daggers
