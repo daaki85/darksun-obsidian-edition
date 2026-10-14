@@ -1,5 +1,5 @@
 """Magical items sold kept to buy back (buyback.py): what DSCLOG queued (SELL_KEEP) put in the
-merchant's pack, and the thing that held it given back to the game's free list."""
+merchant's pack, and the thing that held it (the pointer's, 523) emptied as the game leaves it."""
 
 import os
 import struct
@@ -14,12 +14,12 @@ from test_dicelog import CREATURES, DS, ITEMS, LOAD_SEG
 from test_now import ThiefTests
 
 THINGS = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
-SOLD, BAG, MERCHANT, HDR = 330, 451, 77, 0x80000
+SOLD, BAG, MERCHANT, HDR = 523, 451, 77, 0x80000  # (523: the pointer's, past the 520)
 
 
 class BuybackTests(unittest.TestCase):
     def setUp(self):
-        """The item sold (40, a ring +1) alone in thing 330; the merchant, combatant 77, creature 5,
+        """The item sold (40, a ring +1) alone in the pointer's thing; the merchant, combatant 77, creature 5,
         carrying item 41 in its list (thing 451); one sale queued in a header at HDR."""
         thief = ThiefTests()
         thief.setUp()
@@ -45,27 +45,47 @@ class BuybackTests(unittest.TestCase):
         return [index for index, _ in ring.Items(self.gd).chain(thing)]
 
     def test_kept(self):
-        """Into the merchant's list, first, in a backpack cell; thing 330 back on the free list."""
+        """Into the merchant's list, first, in a backpack cell; the pointer's thing zeroed, as the
+        game leaves it with nothing held (not put on the free list), the free lists untouched."""
         b = buyback.Buyback()
         self.assertEqual(b.watch(self.gd, HDR), [])  # (the first look: from now on)
         struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, SOLD, MERCHANT)
         self.assertEqual(b.watch(self.gd, HDR), [])  # (nothing in the log)
         self.assertEqual(b.kept, ["Ring +1"])
         self.assertEqual(self.chain(BAG), [40, 41])
-        self.assertEqual(ring.Items(self.gd).thing(SOLD), (0, 500))
-        self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.FREE_THINGS)[0], SOLD)
-        self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.THINGS_USED)[0], 9)
+        self.assertEqual(bytes(self.m[THINGS + SOLD * 3:THINGS + SOLD * 3 + 3]), bytes(3))  # (as with nothing held)
+        self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.FREE_THINGS)[0], 500)
+        self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.THINGS_USED)[0], 10)
         self.assertEqual(b.watch(self.gd, HDR), [])  # (done once)
 
+    def test_regular_thing(self):
+        """A thing of the 520 (should a shop sell from one): kept the same way, the thing emptied."""
+        struct.pack_into("<Bh", self.m, THINGS + 330 * 3, game.THING_ITEM, 40)
+        struct.pack_into("<Bh", self.m, THINGS + SOLD * 3, 0, 0)
+        b = buyback.Buyback()
+        b.watch(self.gd, HDR)
+        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, 330, MERCHANT)
+        b.watch(self.gd, HDR)
+        self.assertEqual(self.chain(BAG), [40, 41])
+        self.assertEqual(ring.Items(self.gd).thing(330), (game.THING_ITEM, game.NO_ITEM))
+
+    def test_past_the_table(self):
+        """A thing number past the table's few spare ones: left alone."""
+        b = buyback.Buyback()
+        b.watch(self.gd, HDR)
+        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, buyback.LAST_THING, MERCHANT)
+        b.watch(self.gd, HDR)
+        self.assertEqual(self.chain(BAG), [41])
+
     def test_no_merchant(self):
-        """Sold to no creature: gone, as the game has it (the record freed, the thing too)."""
+        """Sold to no creature: gone, as the game has it (the record freed, the thing emptied)."""
         b = buyback.Buyback()
         b.watch(self.gd, HDR)
         struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, SOLD, 499)
         self.assertEqual(b.watch(self.gd, HDR), [])
         self.assertEqual(self.chain(BAG), [41])
         self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.FREE_ITEMS)[0], 40)
-        self.assertEqual(ring.Items(self.gd).thing(SOLD)[0], 0)
+        self.assertEqual(bytes(self.m[THINGS + SOLD * 3:THINGS + SOLD * 3 + 3]), bytes(3))
 
 
 if __name__ == "__main__":

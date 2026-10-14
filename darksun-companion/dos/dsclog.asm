@@ -12129,8 +12129,8 @@ sell_price:
         iret
 
 ; SELL_KEEP: "push word [179Eh]" (83D9Eh; 4 bytes: the site's number and a NOP after the INT) where
-; a shop has paid for the item the party sold and frees the thing holding it (0A0h:1C94h, which
-; frees nothing for 270Fh). With RULE_HI_BUYBACK and a magical item (a plus, +14h, or a power,
+; a shop has paid for the item the party sold and empties the item list of the thing holding it,
+; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_BUYBACK and a magical item (a plus, +14h, or a power,
 ; +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the thing and the merchant
 ; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Ledger, which puts the item in the merchant's pack,
 ; where the shop lists it; any other item is pushed and freed as the game does. The push: the

@@ -796,24 +796,28 @@ for more than it cost, and at CHA 25 the two are equal.
 
 ([In the README](README.md#buying-back-magical-items).)
 
-The shop, once it has paid for the item sold, frees the thing holding it
-(`push word [179Eh]` / `call 0A0h:1C94h` at 83D9Eh; the routine frees nothing
-for 270Fh), and the item with it. `SELL_KEEP` (an `INT 98h` site over the push,
-`RULE_HI_BUYBACK`, the second rules word's 64: `game.RULE_BUYBACK`) looks at the
-thing's first item (things table, kind 1) and, for one with a plus (`+14h`
-above 0) or a power (`+0Fh`), pushes 270Fh in its place (the registers kept,
-the interrupt's frame moved down a word, the word under it) and queues the
-thing and the shop's merchant (`DS:179Ch`, the object whose item lists the
-shop's list is built from at 8347Ah) in the header (`SOLD_SEQ` +308 counted,
-`SOLD_Q` +310, four entries). The Ledger (`buyback.py`, every quarter of a
-second) puts each queued item first in the merchant's last item list (a new
-one if it has none; a backpack cell of its own), gives the thing back to the
-game's free list (the log says nothing); a merchant that isn't a person (none known)
-has the item freed as the game would. Bought back, it costs its price less
-the CHA discount, at least 60%: no less than the shop paid (the same at CHA
-25). Checked with
-the emulator (both sites) and unit tests (the move); not yet in a shop in the
-game, for want of a save beside a merchant.
+The shop, once it has paid for the item sold, empties the item list of the
+thing holding it (`push word [179Eh]` / `call 0A0h:1C94h` at 83D9Eh; the routine
+does nothing for 270Fh), its items back on the free list. That thing is the
+pointer's (`DS:179Eh`, 523: one of the few past the 520 objects), never freed:
+with nothing held the game has it all zeros (kind 0). `SELL_KEEP` (an `INT 98h`
+site over the push, `RULE_HI_BUYBACK`, the second rules word's 64:
+`game.RULE_BUYBACK`) looks at the thing's first item (things table, kind 1) and,
+for one with a plus (`+14h` above 0) or a power (`+0Fh`), pushes 270Fh in its
+place (the registers kept, the interrupt's frame moved down a word, the word
+under it) and queues the thing and the shop's merchant (`DS:179Ch`, the object
+whose item lists the shop's list is built from at 8347Ah: Kalzith's map object,
+229, a person, creature 33) in the header (`SOLD_SEQ` +308 counted, `SOLD_Q`
++310, four entries). The Ledger (`buyback.py`, every quarter of a second) puts
+each queued item first in the merchant's last item list (a new one if it has
+none; a backpack cell of its own) and zeroes the pointer's thing, as the game
+leaves it (left a list, even an empty one, the inventory screen picks nothing up
+after); a merchant that isn't a person (none known) has the item freed as the
+game would. Bought back, it costs its price less the CHA discount, at least 60%:
+no less than the shop paid (the same at CHA 25). Checked with the emulator (both
+sites), unit tests (the move) and in the game: a Shield scroll (price 3000) sold
+to Kalzith for 1,800 went first in his stock at 3000, and a Cloak (24) sold for
+14 was gone, the inventory screen picking things up as before.
 
 ### Thief skills from AD&D's table
 
