@@ -51,9 +51,10 @@ def to_pack(gd, creature: int, item: int) -> bool:
 class Buyback:
     def __init__(self):
         self.seen: Optional[int] = None  # (SOLD_SEQ as last looked at)
+        self.kept: List[str] = []  # (the items kept, by name)
 
     def watch(self, gd, hdr: Optional[int]) -> List[str]:
-        """Each item DSCLOG has kept since the last look: into its merchant's pack. The log's lines."""
+        """Each item DSCLOG has kept since the last look: into its merchant's pack. No lines for the log."""
         if hdr is None:
             return []
         seq = struct.unpack("<H", gd.guest.read(hdr + SOLD_SEQ, 2))[0]
@@ -97,5 +98,5 @@ class Buyback:
                                struct.pack("<H", it.word(ring.FREE_ITEMS)))
                 gd.guest.write(gd.ds * 16 + ring.FREE_ITEMS, struct.pack("<H", index))
         free_thing(gd, ring.Items(gd), thing)
-        who = gd.creature_name(creature)
-        return [f"{who} keeps the {name} for sale: it can be bought back" for name in kept]
+        self.kept += kept  # (for tests: the log says nothing, the shop's list shows it)
+        return []

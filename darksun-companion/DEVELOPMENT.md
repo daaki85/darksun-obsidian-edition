@@ -806,7 +806,7 @@ shop's list is built from at 8347Ah) in the header (`SOLD_SEQ` +308 counted,
 `SOLD_Q` +310, four entries). The Ledger (`buyback.py`, every quarter of a
 second) puts each queued item first in the merchant's last item list (a new
 one if it has none; a backpack cell of its own), gives the thing back to the
-game's free list, and logs it; a merchant that isn't a person (none known)
+game's free list (the log says nothing); a merchant that isn't a person (none known)
 has the item freed as the game would. Bought back, it costs its price less
 the CHA discount, at least 60%, more than the half the shop paid. Checked with
 the emulator (both sites) and unit tests (the move); not yet in a shop in the

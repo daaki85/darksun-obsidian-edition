@@ -2164,8 +2164,7 @@ with a plus, or a power: a ring, a wand, a scroll...) goes into the merchant's
 pack instead, and the shop offers it for sale at its price, less the leader's
 CHA discount, so it can be bought back. Anything else sold is gone, as in the
 game. With the CHA rule's half-price selling, buying an item back always costs
-more than it was sold for. The dice log says so: `Kel keeps the Ring +1 for
-sale: it can be bought back`.
+more than it was sold for.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#buying-back-magical-items).
 
