@@ -1595,7 +1595,15 @@ measured with the patched game and the dice log running:
   KB of conventional memory free and **1 KB of upper memory**. The panel's
   code and its lines have to come out of the helper's other room: the dice
   log's ring (74 entries of 192 bytes) or the text buffer (4 KB), or the lines
-  kept in video memory past the game's buffers.
+  kept in video memory past the game's buffers. Or from EMS: GOG's
+  `dosbox_darksun.conf` turns it on (`ems=true`), and DOSBox 0.74 then keeps
+  its 64 KB page frame where the upper memory would be. With `ems=false` (in
+  the launcher's own config, which comes after GOG's) `mem` shows 65 KB of
+  upper memory free (largest block 64 KB) with the helper loaded, conventional
+  memory unchanged at 632 KB. The game's memory layer (VMEM) takes EMS, XMS or
+  extended memory, whichever there is: without EMS it loaded a save, walked
+  the pens, opened a conversation and a shop, and played the arena's opening
+  fight to the end without a fault (a check, not a whole game).
 
 ### The kit's byte
 
