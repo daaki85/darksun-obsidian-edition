@@ -315,11 +315,11 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 # wizard ones); a warrior's THAC0 is a warrior class's already (Swashbuckler, Crusader, Battle
 # Mage, Mind Warrior); it needs a shield the class can't hold (Arena Champion, Sentinel), or a
 # two-handed melee weapon the class can't use (Brute: a psionicist's, an air cleric's); a Stalker's
-# hiding would add to a thief's own (the thief).
+# hiding would add to a thief's own (the thief); a Grove Warden's AC to a gladiator's own (the gladiator).
 DUAL_BANS = {SEEKER: _PRIEST, JUSTIFIER: _PRIEST, SHINOBI: frozenset((11,)),
              **{k: _WARRIOR for k in WARRIOR_THAC0},
              CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((12, 1)),
-             STALKER: frozenset((17,))}
+             STALKER: frozenset((17,)), GROVE_WARDEN: frozenset((10,))}
 
 
 def dual_banned(kid: int, cls: int) -> bool:
@@ -332,11 +332,12 @@ def dual_banned(kid: int, cls: int) -> bool:
 # forbidding it (Arena Champion, Sentinel; Twin-blade, Shinobi, Ravager); two-weapon fighting and
 # an off hand free of weapons (Twin-blade, Healer); a two-handed weapon and weapons it can't be
 # (Brute; Shinobi, Lifebinder); two ACs that grow by level, one on top of the other (Ravager, Grove
-# Warden).
+# Warden); a warrior's THAC0 twice over (WARRIOR_THAC0: Swashbuckler, Crusader, Battle Mage, Mind Warrior).
 KIT_PAIRS = frozenset(frozenset(p) for p in (
     (CHAMPION, TWIN_BLADE), (CHAMPION, SHINOBI), (CHAMPION, RAVAGER), (SENTINEL, TWIN_BLADE),
     (SENTINEL, SHINOBI), (SENTINEL, RAVAGER), (TWIN_BLADE, HEALER), (BRUTE, SHINOBI), (BRUTE, LIFEBINDER),
-    (RAVAGER, GROVE_WARDEN)))
+    (RAVAGER, GROVE_WARDEN),
+    *((a, b) for a in WARRIOR_THAC0 for b in WARRIOR_THAC0 if a < b)))
 
 
 def dual_kit_banned(kid: int, classes, kids) -> bool:

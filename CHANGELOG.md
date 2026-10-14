@@ -43,6 +43,10 @@ have the detail.
   Expanded features box, on by default.
 
 **Changed**
+- **More kits that can't go together:** the Grove Warden can't dual to
+  gladiator, nor a gladiator who duals to druid take it (its AC would add to
+  the gladiator's own); the Swashbuckler, Crusader, Battle Mage and Mind
+  Warrior, each giving a warrior's THAC0, can't go with one another.
 - **The Ravager and the Grove Warden can't go together:** a human who has
   one isn't offered the other after DUAL (each has an AC of its own that
   betters with level, and they would stack).

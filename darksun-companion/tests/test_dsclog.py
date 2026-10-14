@@ -4134,6 +4134,11 @@ class KitTests(unittest.TestCase):
         self.assertFalse(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION]))
         self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [9], [kits.RAVAGER]))  # (either way round)
         self.assertTrue(kits.dual_kit_banned(kits.RAVAGER, [5], [kits.GROVE_WARDEN]))
+        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [10], []))  # (a gladiator turned druid)
+        self.assertTrue(kits.dual_banned(kits.GROVE_WARDEN, 10))
+        self.assertTrue(kits.dual_kit_banned(kits.MIND_WARRIOR, [1], [kits.CRUSADER]))
+        self.assertTrue(kits.dual_kit_banned(kits.SWASHBUCKLER, [11], [kits.BATTLE_MAGE]))
+        self.assertFalse(kits.dual_kit_banned(kits.ASSASSIN, [11], [kits.BATTLE_MAGE]))
 
     def test_dual_kit(self):
         """PROBE_DUAL_KIT: the new class's kit on the game's three-choice menu (4D0:25h, through its
