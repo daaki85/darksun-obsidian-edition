@@ -1229,7 +1229,7 @@ sound_call dw SOUND_OFF, 0
 ; the companion to see whether the item is its thieving tools and the object someone to rob
 ; (USE_TAKEN), and if so show what came of it (PICK_TEXT) and skip the game's own handling (the
 ; routine's end). Otherwise on as the compare and the JNE would have gone. Overlay code: the
-; way back is put in a frame the overlay manager can fix up, as for PROBE_NEXT.
+; way back is put in a frame the overlay manager can fix up (pushed as a far call's, with BP).
 USE_NONE  equ 0x7361A - 0x73617 ; (DSUN.EXE) SI = -1: "jmp", less the address after the INT
 USE_SOME  equ 0x7361D - 0x73617 ; the JNE's target
 USE_DONE  equ 0x7371D - 0x73617 ; the routine's end
@@ -1807,8 +1807,8 @@ use_draw:                       ; the selected character's slots in the USE scre
 ; for up to three short lines about the monster (LOOK_TEXT), prints them in the rows left
 ; with the game's text routine, as the box prints the monster's level, and moves the game's
 ; row count past them, so its own status lines follow in any row still free. If the
-; companion also gave the whole description (LOOK_FULL), PROBE_TURN shows it in the dialogue
-; window as the box closes (PROBE_UNLOOK).
+; companion also gave the whole description (LOOK_FULL), PROBE_UNLOOK shows it in the dialogue
+; window as the box closes.
 LOOK_PATCH equ 0x5FCDA          ; DSUN.EXE offsets
 LOOK_DRAW  equ 0x5FCB8          ; "lcall 0090h:0A40h" operand: the text routine
 LOOK_ROWS  equ 4                ; the box's status rows: y = (row + 2) * 7 + 10h
@@ -4162,7 +4162,7 @@ kinds_allowed:
 ; in which the PROBE_PK_* probes in it show the weapon window (weaponpages.PICKER) in place of the
 ; powers' and take its clicks. Then on as the compare and the JNZ would have gone. The level-up
 ; routine is overlay code: the way back is put in a frame the overlay manager can fix up, as for
-; PROBE_NEXT.
+; PROBE_USE_ITEM.
 LV_SHEETS   equ 0x1661          ; DS: the sheets (far, 47h bytes each) and creatures (3Ah each)
 LV_PARTY    equ 4
 LV_PSI_CALL equ 0x87AB0 - 0x87A9D  ; the psionicists' pop-up's far call's address, less the INT's

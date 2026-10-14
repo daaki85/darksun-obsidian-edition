@@ -406,8 +406,8 @@ class Viewer:
                                 "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
                             "(no enemy beside them; thieves half the chance in daylight, rangers indoors)"),
-                ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6, at most 24), Erdlu Claw "
-                               "(1st: unarmed attacks do 1d6+1, +1 to hit, as a +1 weapon) and Fogbolt (1st: -3 to hit, AC 2 worse)")):
+                ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
+                               "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends")):
             self.rule_vars[key] = tk.BooleanVar(
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = where.get(key, rules)

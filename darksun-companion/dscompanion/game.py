@@ -106,7 +106,7 @@ GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The companion's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
 RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
-RULE_NEW_SPELLS = 32  # three new wizard spells: Cat's Grace, Erdlu Claw, Fogbolt (NEW_SPELLS)
+RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # class levels go up to 10 (the game stops at 9)
 RULE_THIEF_TABLE = 256  # thief skills from AD&D's table and Dark Sun's DEX adjustments

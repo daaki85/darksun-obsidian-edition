@@ -107,7 +107,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Magic and Psionics
 
-- **[New]** Three new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds).
+- **[New]** Six new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds), and at 1st level too **Reflected Image** (one image of the caster, struck instead of it half the time), **Spook** (a creature flees for 3 rounds unless it saves) and **Friends** (CHA +2d4 for a short while, for better prices).
 - **[Changed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 
 ## Improved Thieving
@@ -153,11 +153,13 @@ Fifteen new magic weapons, each with its own icon and a story from the game's ow
 - **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
 - **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
 - **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
+- **[New]** **Gutterward**, a wooden shield +1, and **Ironbulwark**, a metal shield +3: the game had no metal shield.
 
 **Other magic items**
 
 - **[New]** **Tome of Understanding**: read it for +1 WIS for good.
 - **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.
+- **[New]** **Defilers' scrolls**: a defiler in a fight may carry a scroll of a preserver spell, one time in 20, found on its body.
 
 **Mundane items**
 
@@ -177,7 +179,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
-- **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 16 to 25% at 20, as in Baldur's Gate.
+- **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25, and pay 60% of an item's price *(was all of it)*.
+- **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
 
 ## Graphics
 
@@ -191,7 +194,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse.
 - **[New]** Press the mouse wheel and drag to scroll the map.
-- **[Changed]** 40 save slots on four pages *(was 10)*, and 29 stored characters *(was 19)*.
+- **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Ledger's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written.
 - **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Ledger.

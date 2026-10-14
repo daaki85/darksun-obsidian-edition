@@ -29,7 +29,6 @@ have the detail.
   metal shield: a type of the Ledger's), carried by the Guardian of
   Balkazar's fortress. Each has its icon, its price (25,000 and 65,000) and
   its story from Alagorn, in his shields' menu.
-
 - **Three new wizard spells,** with the new spells on: **Reflected Image**
   (1st level, on the caster: one image, struck instead of the caster half the
   time; it and Mirror Image replace each other), **Spook** (1st level: one
@@ -39,13 +38,11 @@ have the detail.
   prices). Each has its icon (Reflected Image's a hand mirror, named on the
   Effects screen) and description; preservers and the Shinobi learn all
   three.
-
 - **Defilers' scrolls:** each defiler in a fight has a 5% chance of carrying
   a scroll of a random preserver spell (the game's 69, and the new spells
   with them on), found on its body when it dies; rolled once a fight, and
   kept out of the dice log so it isn't given away. A New content box, on by
   default.
-
 - **Buying back magical items:** a magical item sold to a merchant (a plus,
   or a power: rings, wands, scrolls) stays in the merchant's stock to buy
   back; the game destroys everything sold, and still does other items. An
@@ -179,6 +176,12 @@ have the detail.
   scenery and cloak checks, the kit kept through a roll, the rows' width, the
   polearm's picture, the Trustee's two script changes (his script is now
   10,967 bytes), the named saves and the `checks` command.
+- **A second review, after the combat log:** the overviews name the combat
+  log, the six wizard spells, buying back and defilers' scrolls; the top
+  README's overview is a short list linking to the full one; the last
+  mentions of the turn pop-up are gone; the kits' starting gear is said once,
+  in each class's table, not again in a table and list of its own; the
+  Options tab's new spells box names all six, and its screenshot is retaken.
 - **The polearms' icons** in the README's item tables (the bone and metal
   Polearm, Thornwall, Linebreaker) are redrawn at the 22 pixels the game now
   shows them at.

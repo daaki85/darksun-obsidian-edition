@@ -109,8 +109,9 @@ It shows what the game keeps hidden. Every roll is logged as it happens:
 attacks, damage, saving throws, thief skills, initiative, even the dice at
 character creation. Each comes with what it needed and where every bonus came
 from ([the dice log](#the-dice-log)). The game's own screens gain THAC0, saves,
-thief skills and spell slots, and the Look box tells you what can hurt a
-monster ([In the game](#in-the-game)).
+thief skills and spell slots, a combat log can scroll in a corner of the map
+in a fight, and the Look box tells you what can hurt a monster ([In the
+game](#in-the-game)).
 
 It brings the rules closer to AD&D: class restrictions, AD&D's class tables
 (experience, priests' THAC0, spell slots), INT's limits on learning spells,
@@ -120,16 +121,16 @@ changes](#rule-changes)). It gives more ways to build a character: weapon
 specialization and mastery, kits (three for each class), levels up to 10,
 and STORE and RECALL for a creation roll ([More character
 customization](#more-character-customization)). And it expands play:
-thieves with AD&D's skills hide in shadows to backstab and pick pockets, and
-the party leader's CHA lowers shop prices ([Expanded
-features](#expanded-features)).
+thieves with AD&D's skills hide in shadows to backstab and pick pockets,
+the party leader's CHA lowers shop prices, and merchants sell back the magical
+items you sold them ([Expanded features](#expanded-features)).
 
 It adds to Athas: new weapons in every material, magic items with stories of
 their own (robes and bracers among them, for those who wear no armour), six wizard
 spells ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and
 Friends](#new-wizard-spells)), Kalzith
-(a defiler who sells scrolls), more of Semyon's story, and a use for the cooked
-vulture ([New content](#new-content)). On the map, the party
+(a defiler who sells scrolls), defilers who drop scrolls, more of Semyon's
+story, and a use for the cooked vulture ([New content](#new-content)). On the map, the party
 wears its weapons and armour, figures cast shadows and kick up dust, and elves
 and half-elves have a look of their own ([Graphics](#graphics)).
 
@@ -344,11 +345,11 @@ Everything there applies in games started from the Ledger; a switch that says
   customization](#more-character-customization)): weapon specialization, kits,
   levels up to 10, and STORE and RECALL on the creation screen.
 - **Expanded features** ([Expanded features](#expanded-features)): the
-  leader's CHA at shops, and **Improved thieving** (AD&D's thief skills,
+  leader's CHA at shops, buying back magical items, and **Improved thieving** (AD&D's thief skills,
   hiding to backstab, the cloak, boots and belt, and picking pockets).
 - **New content** ([New content](#new-content)): the new spells, at once; the
-  new people, the vulture and the new items, from the next time the game is
-  started (what a saved game already has stays in it).
+  new people, the vulture, defilers' scrolls and the new items, from the next
+  time the game is started (what a saved game already has stays in it).
 - **Graphics** ([Graphics](#graphics)): the elves' and half-elves' looks,
   Cilla drawn as an elf, what the party wears, shadows and dust.
 - **Controls** ([Controls](#controls)) and **Game speed** ([Game
@@ -356,12 +357,13 @@ Everything there applies in games started from the Ledger; a switch that says
 - **Saves** ([Saves under their names](#saves-under-their-names)): the folder
   of saves kept under their names, and putting one back in a slot.
 
-All are on by default except the combat log and the right button, and are remembered for next time. **Restore defaults**, at the bottom
-of the tab, sets them all back (after asking).
+All are on by default except the combat log and the right button, and are
+remembered for next time. **Restore defaults**, at the bottom of the tab, sets
+them all back (after asking).
 In a window too small to show the open sections, the tab scrolls (scrollbar,
 mouse wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with More character customization, Expanded features (Improved thieving among them) and New content open, the other sections closed](docs/options.png)
+![The Options tab with In the game, More character customization, Expanded features (Improved thieving among them) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -472,7 +474,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 
 | Line | Meaning |
 |---|---|
-| `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round of a fight, numbered from the fight's start, and the order everyone acts in (highest first). The order also stays in view above the log for the whole round, however far the log has scrolled: `Round 2. Now: Cilla (30). Still to act: Gerakis 26, Slig 26. Done: K'ratchek 32, Cermak 31. Down: ...`, and the in-game turn summary ends with who is still to act (or the next round's order). The lines under it (shown with **Show details**) give each score's make-up: `    Gerakis 26 = 20 + 6 (0-9 roll), tie broken by 38 (0-199 roll)` (see [Initiative](#initiative)). If the log was started in the middle of a round, the list has only the rolls it saw. |
+| `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round of a fight, numbered from the fight's start, and the order everyone acts in (highest first). The order also stays in view above the log for the whole round, however far the log has scrolled: `Round 2. Now: Cilla (30). Still to act: Gerakis 26, Slig 26. Done: K'ratchek 32, Cermak 31. Down: ...`, and the [combat log in the game](#the-combat-log-in-the-game) begins with who acts and who is next. The lines under it (shown with **Show details**) give each score's make-up: `    Gerakis 26 = 20 + 6 (0-9 roll), tie broken by 38 (0-199 roll)` (see [Initiative](#initiative)). If the log was started in the middle of a round, the list has only the rolls it saw. |
 | `Gerakis's turn` | Whose turn it is now, each time the turn passes in a fight. |
 | `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice. `needs 12+ (45%)` is the d20 this attacker needed against this target (THAC0 − target AC) and the chance of rolling it; `hits on anything but a 1` or `only a 20 hits` when it's out of the ordinary range. `X attacks Y from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and backstabs (see [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)). "Hits AC" is the lowest AC this roll hits (THAC0 − d20); the target AC is the one the game used, with armour, DEX and spells. A natural 20 always hits and a natural 1 always misses, but a 20 does no extra damage: the game has no critical hits (see [No critical hits](#no-critical-hits)). |
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](#two-weapons)), and the difficulty setting for monsters. |
@@ -1180,8 +1182,8 @@ says: **at the least** (`Rampager hits Defiler for 4`), **in short**, the
 default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
 `Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
 the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
-target's AC; a natural 20 always hits, a 1 always misses). The panel is on only in fights, doesn't wait for a click as the
-turn's window does, and goes when the fight ends (or the Ledger is closed). A
+target's AC; a natural 20 always hits, a 1 always misses). The panel is on only in fights, never waits for a click, and goes
+when the fight ends (or the Ledger is closed). A
 window the game opens over the map (a character's menu, a question) hides it
 until it closes. It needs the game started from the Ledger (which turns off
 DOSBox's EMS to make room for it).
@@ -1910,10 +1912,6 @@ a preserver does. Its light armour holds whatever the class restrictions say
 of a preserver. Without weapon specialization it has no weapon spec, only a
 preserver's weapons.
 
-The Myrmidon takes its second weapon spec on the weapon pages after the kit
-is taken (go back to them from the KIT page), and loses it if another kit is
-taken.
-
 The game rolls a new character's hit points and works out its PSP when a
 class is clicked, before a kit can be chosen, so choosing or taking back a
 kit with a die of its own (Battle Mage, Mind Warrior, Arcanist) rolls the hit
@@ -1921,36 +1919,13 @@ points and works out the PSP again, and the screen shows the new numbers.
 
 #### Starting gear
 
-The game hands a new character its gear when DONE is clicked, by its class:
-
-| Class | Starting gear |
-|---|---|
-| Fighter | bone long sword, shield, leather chest, arm and leg armour |
-| Gladiator | bone long sword, club in the off hand, leather arm armour |
-| Ranger | bone long sword, bow and arrows, leather chest and arm armour |
-| Cleric | shield, leather chest and arm armour, a club in the backpack |
-| Druid | club, sling |
-| Preserver | quarterstaff, sling |
-| Psionicist | club, bow and arrows, leather chest armour |
-| Thief | bone long sword, sling, leather chest armour |
-
-With **Kits** ticked, the Ledger fits that gear to the kit while the character
-is new, and the dice log says what it changed: a weapon in the hand the kit
-forbids becomes a plain one it allows (a **Shinobi**'s long sword a bone
-short sword; a **Brute**'s a bone great axe, its club left behind (no use to it);
-a **Seeker**'s long sword one of a material its sphere allows); a shield the
-kit forbids is taken away (a **Ravager**'s), the Ravager getting a second of
-its weapon for that hand (unless the weapon takes both hands), and an
-off-hand weapon it forbids goes to the backpack; with weapon specialization a
-**Myrmidon** gets a plain weapon of its second weapon spec too, in the
-backpack (a bow in the missile slot, with arrows);
-an **Arena Champion**'s off-hand club becomes a shield, the gladiator's kit
-being the one that fights with it; and with weapon specialization a
-**Battle Mage**'s quarterstaff becomes a plain weapon of its chosen weapon spec
-(`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in
-place of the Quarterstaff`). The other kits keep the class's gear: it fits
-them (the Twin-blade's long sword and club are its two weapons, the Healer's
-club is in the backpack, a Lifebinder's club and sling are blunt).
+The game hands a new character its class's gear (named above each class's
+table) when DONE is clicked. With **Kits** ticked, the Ledger fits that gear
+to the kit while the character is new, as each table's **Starts with** says:
+a weapon or shield the kit forbids is swapped or taken away, and a kit with a
+weapon spec of its own gets a plain weapon of it. The dice log says what it
+changed (`T'Jun starts with a plain bone axe for the Battle Mage's weapon
+spec, in place of the Quarterstaff`).
 
 #### The kits in play
 
@@ -1975,15 +1950,6 @@ club is in the backpack, a Lifebinder's club and sling are blunt).
 - **Casting when hit.** A character hit in a fight can't cast until the next
   round: the game won't let it choose a spell, and drops one chosen before
   the hit. The Battle Mage isn't stopped.
-- **PSP.** The Mind Bender's and Kineticist's 2 PSP more or less counts both
-  to use a power and to keep it up each round, never below 1 (a power with no
-  upkeep still has none); psychometabolism is as it was.
-- **The Lifebinder's die** is rolled from the game's own random numbers; the
-  dice log notes it, and the HP line shows what was healed.
-- **The Brute's +2** is for melee: a bow or staff sling, two-handed as it is,
-  doesn't get it.
-- **The Wanderer's resistance** is the game's Resist Fire and Resist Cold,
-  which give +3 on the save but don't halve the damage.
 
 #### Changing class
 
