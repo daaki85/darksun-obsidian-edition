@@ -19,8 +19,7 @@ have the detail.
   the Tari's warrens; **Ironbulwark**, a metal shield +3 (the game has no
   metal shield: a type of the Ledger's), carried by the Guardian of
   Balkazar's fortress. Each has its icon, its price (25,000 and 65,000) and
-  its story from Alagorn, in his shields' menu; neither is for thieves, as
-  the game's wooden shield isn't.
+  its story from Alagorn, in his shields' menu.
 
 - **Three new wizard spells,** with the new spells on: **Reflected Image**
   (1st level, on the caster: one image, struck instead of the caster half the

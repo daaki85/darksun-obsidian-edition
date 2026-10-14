@@ -1528,8 +1528,8 @@ chosen type, often one of these.
 | Ashen Robe | worn on the chest by preservers, psionicists and druids, not armour: AC 1 better with no armour, +1 on saves against spells |
 | Veiled Robe, a robe of the Veiled Alliance | the same, AC 2 better, +1 on every save, and a wizard spell slot more at spell levels 1, 2 and 3 |
 | Inixhide | leather chest armour +1 |
-| Gutterward | a wooden shield +1: AC 2 better in a hand; not for thieves |
-| Ironbulwark | a metal shield +3, the game's only metal shield: AC 4 better in a hand; not for thieves |
+| Gutterward | a wooden shield +1: AC 2 better in a hand |
+| Ironbulwark | a metal shield +3, the game's only metal shield: AC 4 better in a hand |
 | Warden's Chest, Arms, Legs and Helm | plate armour +1 in four pieces: the chest 4 points of AC better, the arms and legs 3 each, the helm 2 (a helm's AC 1, +1): 12 better as a set, so AC 10 becomes −2 before DEX; the chest gives Resist Fire, the helm Cloak of Bravery, while worn |
 | Arrowbane | a circlet: Protection from Normal Missiles while worn; not armour |
 | Sunking Crown | a crown: Protection from Evil while worn; not armour |

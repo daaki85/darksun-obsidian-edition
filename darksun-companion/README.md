@@ -1295,6 +1295,9 @@ own "Cannot use this item":
 | **Druid** | none | none | any |
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
 
+A thief of any kind holds only leather shields, the rule or not: the game's own
+lists leave thieves out of the wooden shield, and the Ledger's metal one.
+
 A **multiclass preserver** may wear what its other classes allow, but casts no
 spells (wizard or priest) while wearing armour (a helm counts, a shield
 doesn't), as the game's own "No spell use" stops them. The **USE** screen
@@ -2536,8 +2539,8 @@ character can use.
 | ![](docs/items/cloak-of-elvenkind.png) | **Cloak of Elvenkind** | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) | a grey cloak: [all but invisible](#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only |
 | ![](docs/items/boots-of-elvenkind.png) | **Boots of Elvenkind** | the buried chest of Kel's caravan, with the Cahulaks +1 | soft boots: [silent](#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only |
 | ![](docs/items/bracers-of-defense.png) | **Bracers of Defense** | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) | AC for those wearing no armour: [bracers of defense](#bracers-of-defense) |
-| ![](docs/items/gutterward.png) | **Gutterward** | on a **skeleton** in the Tari's warrens (the sewers): one of the three there | the game's wooden shield +1: AC 2 better in a hand; not for thieves, as the game's wooden shield isn't |
-| ![](docs/items/ironbulwark.png) | **Ironbulwark** | carried by the **Guardian** of Balkazar's fortress (the one with the Chatkcha +1) | a metal shield +3, the game's first: AC 4 better in a hand; for those who may hold the wooden shield |
+| ![](docs/items/gutterward.png) | **Gutterward** | on a **skeleton** in the Tari's warrens (the sewers): one of the three there | the game's wooden shield +1: AC 2 better in a hand |
+| ![](docs/items/ironbulwark.png) | **Ironbulwark** | carried by the **Guardian** of Balkazar's fortress (the one with the Chatkcha +1) | a metal shield +3, the game's first: AC 4 better in a hand |
 
 **Prices** follow the game's own: magic melee weapons 20,800 a plus (41,600
 for a +2; a +1 with a spell 22,000), Windlash 2,800 (as its Sling +1), plain metal weapons 50 to
