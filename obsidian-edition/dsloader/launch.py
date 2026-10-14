@@ -60,15 +60,36 @@ def candidate_dirs() -> List[str]:
     return [os.path.join(drive, sub) for drive in drives for sub in GOG_SUBDIRS]
 
 
+# Settings saved before version 2 had the combat log off by default (and saved it so): version 2
+# turns it on once, after which the player's own choice stands.
+SETTINGS_VERSION = 2
+
+
+def upgrade_settings(settings: dict) -> bool:
+    """Bring settings saved by an older Loader up to SETTINGS_VERSION; True if anything changed."""
+    if not settings or settings.get("settings_version", 1) >= SETTINGS_VERSION:
+        return False
+    settings["combat_log"] = True
+    settings["settings_version"] = SETTINGS_VERSION
+    return True
+
+
 def load_settings() -> dict:
     try:
         with open(SETTINGS, encoding="utf-8") as f:
-            return json.load(f)
+            settings = json.load(f)
     except (OSError, ValueError):
         return {}
+    if upgrade_settings(settings):
+        try:
+            save_settings(settings)
+        except OSError:
+            pass  # (upgraded again next time)
+    return settings
 
 
 def save_settings(settings: dict) -> None:
+    settings["settings_version"] = SETTINGS_VERSION
     with open(SETTINGS, "w", encoding="utf-8") as f:
         json.dump(settings, f, indent=2)
 
@@ -352,7 +373,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "pickpockets": True,
-                   "show_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": False,
+                   "show_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
                    "targeting": True, "scroll_map": True, "scroll_right": False, "cycles": DEFAULT_SPEED}
 
 

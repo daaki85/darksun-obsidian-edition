@@ -301,7 +301,7 @@ from the Loader (or either `.bat` file).
 ### The combat log in the game
 
 With **Show a combat log in the game, bottom right, in a fight** ticked on the
-Options tab (off unless you tick it), a panel over the map's lower right shows
+Options tab (the default), a panel over the map's lower right shows
 the fight as it goes: the [dice log](#the-dice-log)'s lines in the game's own font, in the
 Loader's colours for each kind of line (hits green, misses grey, damage amber,
 saving throws blue), the party's names in their colours and the monsters' in
@@ -571,7 +571,7 @@ Everything there applies in games started from the Loader; a switch that says
 - **Saves** ([Saves under their names](#saves-under-their-names)): the folder
   of saves kept under their names, and putting one back in a slot.
 
-All are on by default except the combat log and the right button, and are
+All are on by default except the right button, and are
 remembered for next time. **Restore defaults**, at the bottom of the tab, sets
 them all back (after asking).
 In a window too small to show the open sections, the tab scrolls (scrollbar,

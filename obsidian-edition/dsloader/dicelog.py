@@ -615,7 +615,7 @@ class DiceLog:
         self.pickpockets = bool(settings.get("pickpockets", True))
         self.show_gear = bool(settings.get("show_gear", True))
         self.show_shadows = bool(settings.get("shadows", True))
-        self.combat_log = bool(settings.get("combat_log", False))
+        self.combat_log = bool(settings.get("combat_log", True))
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
