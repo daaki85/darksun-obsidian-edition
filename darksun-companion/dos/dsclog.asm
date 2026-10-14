@@ -14012,7 +14012,9 @@ view_again:
 ; PROBE_SCROLL) whenever the floor has been drawn since (FLOOR_ENTER marks it) or the companion has
 ; a new one (PANEL_NEW), and at the end of each redrawn rectangle (REDRAW_POST), into the page on
 ; show (0980:118E: A400h when 1, else A000h). PANEL_ON is the companion's: set, the panel is shown;
-; cleared, the view is drawn again without it.
+; cleared, or the companion silent for STATS_FRESH (its STATS_STAMP), the view is drawn again
+; without it. The game's windows over the map (a figure's menu, a question) are shown on the other
+; screen, the view drawn there again without the panel: it is back when they close.
 PANEL_X0   equ 136              ; (x0 and the width a multiple of 4: whole bytes of the planes)
 PANEL_Y0   equ 128
 PANEL_W    equ 180
@@ -14024,8 +14026,16 @@ panel_dirty db 0
 
 panel_tick:
         cmp word [cs:panel_on], 0
-        jne .on
-        cmp byte [cs:panel_shown], 0
+        je .off
+        push es                         ; (the companion gone: off, as if it had said so)
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        pop es
+        sub ax, [cs:stats_stamp]
+        cmp ax, STATS_FRESH
+        jb .on
+.off:   cmp byte [cs:panel_shown], 0
         je .ret
         mov byte [cs:panel_shown], 0
         call view_again                 ; (the view under it drawn again)

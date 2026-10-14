@@ -1610,6 +1610,31 @@ measured with the patched game and the dice log running:
   the pens, opened a conversation and a shop, and played the arena's opening
   fight to the end without a fault (a check, not a whole game).
 
+### The in-game combat log: the panel (Stage 1)
+
+- **Where it lives.** The Ledger draws the panel's picture (`combatlog.py`:
+  180 × 68 palette indices in the area's own colours, matched to the palette
+  DSCLOG last read) into an upper memory block DSCLOG takes for it at install
+  (`panel_seg`, header `+328`); the dice log's ring has a block of its own
+  there too. With EMS on there is no such block and no panel.
+- **Putting it on screen.** DSCLOG copies the picture into the screen on
+  show, a plane at a time, from the main loop (`PANEL_TICK`, in
+  `PROBE_SCROLL`) when the floor has been drawn since or the Ledger has a new
+  picture (`panel_new`, `+330`), and at the end of each rectangle the game
+  draws again (`REDRAW_POST`, the way back of 2475Fh), so figures walking and
+  the view scrolling don't wipe it.
+- **On and off.** The Ledger sets `panel_on` (`+326`) in a fight with the
+  switch on; off, or the Ledger silent for 5 seconds (`stats_stamp`, which it
+  writes about once a second), DSCLOG has the view drawn again without it.
+- **The game's windows.** A figure's menu, a question or EXIT GAME are shown
+  on the other screen, the view drawn there again first: the panel is not on
+  it, and is back when the window closes. Full screens (USE, View Character)
+  stop the main loop, so it isn't drawn over them. (Drawing it into both
+  screens doesn't work: the game keeps other pictures in the one not shown.)
+- **Not checked mid-fight:** saving and loading, and area changes, as the
+  game allows neither in a fight; out of one the panel is off. DOSBox's
+  window size doesn't matter (it is drawn into the game's screen).
+
 ### The kit's byte
 
 Sheet `+43h`: zero in every sheet of the saves and saved characters at hand
