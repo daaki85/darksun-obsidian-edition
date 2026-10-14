@@ -8,6 +8,18 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #44 (in progress)
+
+**Fixed**
+- **Stuck on the creation panel's KITS page.** A single-class warrior on the
+  last weapon page has KITS for its button; adding a class there (a fighter
+  made fighter/thief) kept the button, and pressing it opened a page with no
+  kits, titled KITS, whose KITS button opened the same page again. The last
+  weapon page now changes its button to VIEW PSIONICS as soon as the
+  character can no longer take a kit (and back to KITS if it can again), and
+  KITS pressed for a character with no kit class goes back as VIEW PSIONICS
+  does.
+
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 
 **Release**

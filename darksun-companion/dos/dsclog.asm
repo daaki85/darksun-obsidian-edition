@@ -7906,7 +7906,25 @@ probe_wp_class:
         call wp_classes
         or al, al
         jz .back
-        call wp_marks
+        cmp byte [cs:wp_page], WP_PAGES - 1     ; the last page: its button KITS only while the
+        jne .marks                              ;   character can take a kit (opened again if not)
+        call kit_class
+        les bx, [WP_SPHERE]
+        mov dx, [es:bx + 8]
+        or al, al
+        jz .no_kit
+        cmp dx, KIT_PAGE4_ID
+        je .marks
+        jmp .reopen
+.no_kit:
+        cmp dx, KIT_PAGE4_ID
+        jne .marks
+.reopen:
+        mov byte [cs:wp_from], 2
+        mov al, WP_PAGES - 1
+        call wp_open
+        jmp .done
+.marks: call wp_marks
         jmp .done
 .back:  mov ax, WP_BACK
         call wp_page_button
@@ -7997,6 +8015,21 @@ wp_click:
 .kits:  sti                     ; KITS: from the disciplines, the spheres or the last weapon page
         pushad
         push es
+        call kit_class          ; (no kit for the character now, as after another class is added:
+        or al, al               ;   back from the spheres or a weapon page, as VIEW PSIONICS goes)
+        jnz .kit_class
+        cmp byte [cs:wp_from], 0
+        je .kit_none
+        mov ax, WP_BACK
+        call wp_page_button
+        pop es
+        popad
+        jmp .end
+.kit_none:
+        pop es
+        popad
+        jmp .sphere
+.kit_class:
         cmp byte [cs:wp_from], 0
         je .kit_open
         les bx, [WP_SPHERE]
