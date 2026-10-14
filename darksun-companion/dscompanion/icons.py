@@ -91,6 +91,27 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
     return out
 
 
+# The item box (right-click an item) puts its text below the picture, in room for one 22 pixels
+# tall (the gythka's, the tallest but one). The Polearm's is 36: its text ran out of the box.
+BOX_PICTURE = 22
+POLEARM_OBJECT = 0x10000 - 0xFB5E
+
+
+def fit_box(rows: Rows, size: int = BOX_PICTURE) -> Rows:
+    """A picture taller or wider than SIZE drawn smaller, each pixel moved to its scaled place
+    (a long thin line stays unbroken); one that fits, as it is."""
+    height, width = len(rows), max((len(r) for r in rows), default=0)
+    if height <= size and width <= size:
+        return rows
+    scale = size / max(height, width)
+    out: Rows = [[None] * max(1, round(width * scale)) for _ in range(max(1, round(height * scale)))]
+    for y, r in enumerate(rows):
+        for x, p in enumerate(r):
+            if p is not None:
+                out[min(int(y * scale), len(out) - 1)][min(int(x * scale), len(out[0]) - 1)] = p
+    return out
+
+
 def glow(rows: Rows, which: Callable[[int, int, int], bool], colours: Tuple[int, ...]) -> Rows:
     """Pixels chosen by WHICH(colour, x, y) in colours the game cycles, stepping along them."""
     return [[colours[(x + y) % len(colours)] if p is not None and which(p, x, y) else p
@@ -345,6 +366,12 @@ PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in 
 def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
     """The objects and pictures to add to the game's SEGOBJEX.GFF."""
     out: gff.Chunks = {}
+    smaller: Dict[int, Rows] = {}
+    if ("OJFF", POLEARM_OBJECT) in chunks:  # (the Polearm's picture, small enough for the item box)
+        pole, = struct.unpack_from("<H", chunks[("OJFF", POLEARM_OBJECT)], OJFF_ICON)
+        if ("BMP ", pole) in chunks:
+            smaller[pole] = fit_box(decode(chunks[("BMP ", pole)]))
+            out[("BMP ", pole)] = encode(smaller[pole])
     for _, plain, number, icon, make in ICONS:
         base = 0x10000 - plain
         record = bytearray(chunks[("OJFF", base)])
@@ -352,7 +379,8 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
         struct.pack_into("<H", record, OJFF_ICON, icon)
         out[("OJFF", number)] = bytes(record)
         out[("BMP ", number)] = chunks[("BMP ", base)]  # its picture on the map: the plain item's
-        out[("BMP ", icon)] = encode(make(decode(chunks[("BMP ", old_icon)])))
+        rows = smaller.get(old_icon) or decode(chunks[("BMP ", old_icon)])
+        out[("BMP ", icon)] = encode(make(rows))
     return out
 
 

@@ -41,6 +41,11 @@ have the detail.
 - **The Cloak of Protection forbidden to druids.** Its type counts for AC as
   armour does, so class restrictions took it for armour, which a druid (a
   fighter/druid/thief too) can't wear. It's a cloak, for every class.
+- **A polearm's item box ran out of the box.** The game's Polearm picture is
+  36 pixels tall, where every other item's is 22 at most, and the box puts its
+  lines below the picture: the damage line (Thornwall's, Linebreaker's, the
+  game's own bone polearm's) fell outside. The Ledger now writes the polearms'
+  picture at 22 pixels.
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 

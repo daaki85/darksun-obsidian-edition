@@ -58,6 +58,16 @@ class PictureTests(unittest.TestCase):
         points = [(x, y) for y, r in enumerate(out) for x, p in enumerate(r) if p is not None]
         self.assertEqual(points, [(i, i) for i in range(4, 12)])
 
+    def test_fit_box(self):
+        """The Polearm's 36x36 diagonal drawn 22x22, unbroken; a picture that fits, as it is."""
+        rows = [[7 if x == y else None for x in range(36)] for y in range(36)]
+        out = icons.fit_box(rows)
+        self.assertEqual((len(out), len(out[0])), (icons.BOX_PICTURE, icons.BOX_PICTURE))
+        self.assertEqual([(x, y) for y, r in enumerate(out) for x, p in enumerate(r) if p is not None],
+                         [(i, i) for i in range(22)])
+        small = [[1, None], [None, 2]]
+        self.assertIs(icons.fit_box(small), small)
+
     def test_glow(self):
         rows = [[1, 2, None]]
         self.assertEqual(icons.glow(rows, lambda p, x, y: p == 2, icons.FIRE), [[1, icons.FIRE[1], None]])
@@ -103,7 +113,8 @@ class CopyTests(unittest.TestCase):
             chunks[("BMP ", base)] = b"map " + bytes([base & 0xFF])
         chunks[("BMP ", 40)] = plain
         new = icons.new_chunks(chunks)
-        self.assertEqual(len(new), 3 * len(icons.ICONS))
+        self.assertEqual(len(new), 3 * len(icons.ICONS) + 1)  # (and the Polearm's picture, fitted)
+        self.assertEqual(new[("BMP ", 40)], plain)  # (16 pixels: it fits as it is)
         for name, number, obj, icon, _ in icons.ICONS:
             self.assertEqual(struct.unpack_from("<H", new[("OJFF", obj)], icons.OJFF_ICON)[0], icon)
             self.assertEqual(new[("BMP ", obj)], chunks[("BMP ", 0x10000 - number)])
