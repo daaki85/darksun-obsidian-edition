@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, combatlog, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
+from . import buyback, combatlog, wheel, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
 from .guestmem import GuestMemory
@@ -372,6 +372,7 @@ class DiceLog:
         self._fight_monsters: set = set()  # ... the monsters' names in it (their colour)
         self._font_tried = False  # ... the game's font looked for (none: the panel without lines)
         self.game_dir: Optional[str] = None  # the game's folder (its font)
+        self._wheel: Optional[wheel.WheelHook] = None  # ... the mouse wheel over it (Windows)
         self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
         self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
         self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
@@ -1050,6 +1051,8 @@ class DiceLog:
             self.missed = 0
         if self.combat_log and out:
             self._panel_lines(out, now)
+        if self.combat_log:
+            self._panel_input(now)
         return out
 
     def _arena_ring(self, now: float) -> List[str]:
@@ -1129,6 +1132,24 @@ class DiceLog:
             pass
         if self._fight_at is not None and now - self._fight_at <= FIGHT_LINES_AFTER:
             self._panel.log.add(lines)
+
+    def _panel_input(self, now: float) -> None:
+        """The mouse on the combat log's panel: the scrollbar and the chip (DSCLOG's), the wheel
+        (wheel.py) with the game's pointer over it; drawn again when it scrolls."""
+        if self._wheel is None:
+            self._wheel = wheel.WheelHook(getattr(getattr(self.guest, "proc", None), "pid", None))
+        notches = self._wheel.take()
+        if self.tsr_hdr is None or self.game is None or not self._panel.shown:
+            return
+        before = self._panel.first
+        try:
+            self._panel.mouse(self.game, self.tsr_hdr)
+            if notches and self._panel.over():
+                self._panel.wheel(notches)
+            if self._panel.first != before:
+                self._update_panel(now)
+        except (struct.error, IndexError, ValueError):
+            pass
 
     def _update_panel(self, now: float) -> None:
         """The combat log's panel: on in a fight, with the fight's lines so far, who acts and

@@ -174,8 +174,106 @@ class DrawingTests(unittest.TestCase):
         y = c.WELL[1] + 2 + (c.ROWS - (len(rows) - last)) * c.LINE_H
         self.assertEqual(picture[y * c.PANEL_W + c.TEXT_X], ink["monster"])
         self.assertEqual(picture[(y + 3) * c.PANEL_W + c.WELL[0] + 2], ink["monster"])
-        # no font: the frame alone
-        self.assertEqual(c.draw(background, None, ink, "Round 1", lines, NAMES), background)
+        # no font: the frame alone, the handle the whole bar
+        self.assertEqual(c.draw(background, None, ink, "Round 1", lines, NAMES),
+                         c.draw(background, None, ink, "", [], {}))
+
+
+class FakeGuest:
+    def __init__(self):
+        self.mem = bytearray(0x10000)
+
+    def read(self, addr, size):
+        return bytes(self.mem[addr:addr + size])
+
+    def write(self, addr, data):
+        self.mem[addr:addr + len(data)] = data
+
+
+class FakeGame:
+    def __init__(self):
+        self.guest = FakeGuest()
+
+
+HDR = 0x1000
+
+
+class ScrollingTests(unittest.TestCase):
+    def test_scroll_to(self):
+        self.assertIsNone(c.scroll_to(None, 50))
+        self.assertEqual(c.scroll_to(10, 50), 10)
+        self.assertEqual(c.scroll_to(-4, 50), 0)
+        self.assertIsNone(c.scroll_to(50 - (c.ROWS - 1), 50))  # the last rows: following again
+        self.assertIsNone(c.scroll_to(0, 3))  # (all of it in view)
+
+    def test_handle(self):
+        top, height = c.handle(None, 4)
+        self.assertEqual((top, height), (c.TRACK[1] + 1, c.TRACK_H))  # all in view: the whole bar
+        top, height = c.handle(None, 60)  # following: at the foot
+        self.assertEqual(top + height, c.TRACK[1] + 1 + c.TRACK_H)
+        self.assertEqual(c.handle(0, 60)[0], c.TRACK[1] + 1)  # the oldest: at the top
+        self.assertGreaterEqual(c.handle(0, 1000)[1], c.HANDLE_MIN)
+
+    def press(self, panel, game, x, y, held=1, at=None):
+        hits = c.struct.unpack_from("<H", game.guest.mem, HDR + c.TSR_MOUSE + 6)[0] + 1
+        mx, my = at or (x, y)
+        game.guest.mem[HDR + c.TSR_MOUSE:HDR + c.TSR_MOUSE + 12] = c.struct.pack(
+            "<hhHHhh", mx, my, held, hits, x, y)
+        panel.mouse(game, HDR)
+
+    def test_mouse(self):
+        panel, game = c.Panel(), FakeGame()
+        panel._rows = 60
+        panel.mouse(game, HDR)  # (the count as it stands: no press)
+        bar_x = c.PANEL_X0 + (c.TRACK[0] + c.TRACK[2]) // 2
+        top, height = c.handle(None, 60)
+        self.press(panel, game, bar_x, c.PANEL_Y0 + top - 3)  # above the handle: a page back
+        self.assertEqual(panel.first, 60 - c.ROWS - (c.ROWS - 1))
+        self.assertEqual(panel._back_rows, 60)
+        # the handle dragged to the top: the oldest rows
+        top, height = c.handle(panel.first, 60)
+        self.press(panel, game, bar_x, c.PANEL_Y0 + top + 1)
+        self.press(panel, game, bar_x, c.PANEL_Y0 + top + 1, at=(bar_x, c.PANEL_Y0))
+        self.assertEqual(panel.first, 0)
+        # ... and to the foot: following again
+        game.guest.mem[HDR + c.TSR_MOUSE + 2:HDR + c.TSR_MOUSE + 4] = c.struct.pack("<h", c.PANEL_Y0 + c.PANEL_H)
+        panel.mouse(game, HDR)
+        self.assertIsNone(panel.first)
+        # let go: moving no longer drags
+        self.press(panel, game, bar_x, c.PANEL_Y0 + c.TRACK[1] + 2)  # (a page back, the handle at the foot)
+        first = panel.first
+        game.guest.mem[HDR + c.TSR_MOUSE + 4:HDR + c.TSR_MOUSE + 6] = bytes(2)
+        panel.mouse(game, HDR)
+        game.guest.mem[HDR + c.TSR_MOUSE + 2:HDR + c.TSR_MOUSE + 4] = c.struct.pack("<h", c.PANEL_Y0)
+        panel.mouse(game, HDR)
+        self.assertEqual(panel.first, first)
+        # the chip: the newest
+        x0, y0, x1, y1 = c.chip_rect()
+        self.press(panel, game, c.PANEL_X0 + x0 + 5, c.PANEL_Y0 + y0 + 3, held=0)
+        self.assertIsNone(panel.first)
+
+    def test_wheel(self):
+        panel = c.Panel()
+        panel._rows = 40
+        panel.wheel(1)
+        self.assertEqual(panel.first, 40 - c.ROWS - c.WHEEL_ROWS)
+        panel.wheel(-5)
+        self.assertIsNone(panel.first)
+        panel.pointer = (c.PANEL_X0 + 5, c.PANEL_Y0 + 5)
+        self.assertTrue(panel.over())
+        panel.pointer = (c.PANEL_X0 - 1, c.PANEL_Y0 + 5)
+        self.assertFalse(panel.over())
+
+    def test_chip(self):
+        dac = bytes(range(256)) * 3
+        ink = c.inks(dac)
+        log = c.Log()
+        log.add(FIGHT)
+        lines = log.at(c.DETAIL, NAMES)
+        picture = c.draw(c.render(dac, ink), FakeFont(), ink, "", lines, NAMES, 0, 3)
+        x0, y0, x1, y1 = c.chip_rect()
+        self.assertEqual(picture[y0 * c.PANEL_W + x0], ink["outline"])
+        self.assertEqual(picture[(y0 + 1) * c.PANEL_W + x0 + 1], ink["stone"])
 
 
 if __name__ == "__main__":

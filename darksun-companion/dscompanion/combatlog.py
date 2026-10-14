@@ -60,6 +60,13 @@ TEXT_X = WELL[0] + 7  # where the lines start (after the pip) ...
 TEXT_RIGHT = WELL[2] - 9  # ... and end (before the scrollbar)
 INDENT = 8  # a wrapped line's rows after its first, and each level of a detail line
 HEADER_X, HEADER_Y = 4, 2
+TSR_MOUSE = 332  # DSCLOG's header: the pointer (x, y), the left button held after a press on the
+#   panel, the presses on it counted and where the last was (x, y): six words, game pixels
+TRACK = (WELL[2] - 6, WELL[1] + 1, WELL[2] - 1, WELL[3] - 1)  # the scrollbar: x0, y0, x1, y1
+HANDLE_X0, HANDLE_X1 = TRACK[0] + 1, TRACK[2] - 1
+TRACK_H = TRACK[3] - TRACK[1] - 1  # (the handle's room, a pixel in from each end)
+HANDLE_MIN = 8
+WHEEL_ROWS = 3  # rows a notch of the mouse wheel scrolls
 
 
 class Line(NamedTuple):
@@ -271,8 +278,7 @@ def render(dac: bytes, ink: Optional[Dict[str, int]] = None) -> bytes:
     for y in range(y0, y1 + 1):  # the well, mottled
         for x in range(x0, x1 + 1):
             rows[y][x] = shades[mottle(x, y)]
-    fill(x1 - 6, y0 + 1, x1 - 1, y1 - 1, ink["dark"])  # the scrollbar ...
-    fill(x1 - 5, y1 - 17, x1 - 2, y1 - 2, ink["handle"])  # ... and its handle
+    fill(TRACK[0], TRACK[1], TRACK[2], TRACK[3], ink["dark"])  # the scrollbar (its handle: draw)
     return b"".join(bytes(r) for r in rows)
 
 
@@ -395,19 +401,56 @@ def rows_of(font, lines: List[Line], names: Dict[str, str]) -> List[Tuple[Option
     return out
 
 
+def visible(first: Optional[int]) -> int:
+    """Rows of lines the well shows: one fewer when scrolled back, for the "Latest" chip."""
+    return ROWS if first is None else ROWS - 1
+
+
+def scroll_to(first: Optional[int], total: int) -> Optional[int]:
+    """FIRST (the top row shown, None following the newest) kept within TOTAL rows: None once it
+    shows the last of them."""
+    if first is None:
+        return None
+    first = max(0, first)
+    return None if first >= total - visible(first) else first
+
+
+def top_row(first: Optional[int], total: int) -> int:
+    """The top row shown."""
+    return max(0, total - ROWS) if first is None else first
+
+
+def handle(first: Optional[int], total: int) -> Tuple[int, int]:
+    """The scrollbar's handle: its top (in the panel) and height."""
+    if total <= ROWS:
+        return TRACK[1] + 1, TRACK_H
+    height = max(HANDLE_MIN, TRACK_H * visible(first) // total)
+    room = total - visible(first)
+    return TRACK[1] + 1 + (TRACK_H - height) * min(top_row(first, total), room) // room, height
+
+
+def chip_rect() -> Tuple[int, int, int, int]:
+    """The "Latest" chip, at the well's foot when scrolled back: x0, y0, x1, y1 in the panel."""
+    y = WELL[1] + 2 + (ROWS - 1) * LINE_H
+    return WELL[0] + 1, y - 1, TRACK[0] - 2, y + LINE_H - 1
+
+
 def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Line], names: Dict[str, str],
-         first_row: Optional[int] = None) -> bytes:
-    """The panel with its lines: the header TOP, and the well's ROWS rows from FIRST_ROW (None:
-    the last ones)."""
+         first_row: Optional[int] = None, new: int = 0) -> bytes:
+    """The panel with its lines: the header TOP, and the well's rows from FIRST_ROW (None: the
+    last ones; else with a chip to go back to them, saying how many rows came since, NEW)."""
     picture = bytearray(background)
+    rows = rows_of(font, lines, names) if font is not None else []
+    hy, hh = handle(first_row, len(rows))
+    for y in range(hy, hy + hh):
+        picture[y * PANEL_W + HANDLE_X0:y * PANEL_W + HANDLE_X1 + 1] = bytes((ink["handle"],)) * (HANDLE_X1 - HANDLE_X0 + 1)
     if font is None:
         return bytes(picture)
     _text(picture, font, HEADER_X, HEADER_Y, coloured(fit(font, top, PANEL_W - 4 - HEADER_X), "log round", names),
           ink, PANEL_W - 4)
-    rows = rows_of(font, lines, names)
-    start = max(0, len(rows) - ROWS) if first_row is None else max(0, min(first_row, len(rows) - ROWS))
+    start = top_row(first_row, len(rows))
     y = WELL[1] + 2
-    for line, x, runs in rows[start:start + ROWS]:
+    for line, x, runs in rows[start:start + visible(first_row)]:
         if line is not None and line.kind == "round":
             label = _width(font, line.text)
             mid = (TEXT_X + TEXT_RIGHT) // 2
@@ -420,6 +463,14 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
                      ink["member0"] if line.side == "party" else ink["monster"])
             _text(picture, font, x, y, runs, ink, TEXT_RIGHT)
         y += LINE_H
+    if first_row is not None:  # the chip: stone, outlined, "Latest" and the rows since
+        x0, y0, x1, y1 = chip_rect()
+        for cy in range(y0, y1 + 1):
+            edge = cy in (y0, y1)
+            for cx in range(x0, x1 + 1):
+                picture[cy * PANEL_W + cx] = ink["outline"] if edge or cx in (x0, x1) else ink["stone"]
+        label = f"Latest: {new} new" if new else "Latest"
+        _text(picture, font, (x0 + x1 - _width(font, label)) // 2, y0 + 1, [(label, "text")], ink, x1 - 1)
     return bytes(picture)
 
 
@@ -433,6 +484,63 @@ class Panel:
         self.log = Log()
         self.font = None  # art.Font: no font, no lines
         self.level = SHORT
+        self.first: Optional[int] = None  # the top row shown when scrolled back (None: the newest)
+        self._back_rows = 0  # ... the rows there were then (the chip's "new")
+        self._rows = 0  # the rows at the last drawing
+        self._hits: Optional[int] = None  # DSCLOG's count of presses on the panel, as last seen
+        self._grab: Optional[int] = None  # dragging the handle: the press's distance below its top
+        self.pointer = (-1, -1)  # where the game's pointer is (DSCLOG's), on the screen
+
+    @property
+    def shown(self) -> bool:
+        return bool(self._on)
+
+    def over(self) -> bool:
+        """The game's pointer is over the panel."""
+        x, y = self.pointer
+        return 0 <= x - PANEL_X0 < PANEL_W and 0 <= y - PANEL_Y0 < PANEL_H
+
+    def _scroll(self, first: Optional[int]) -> None:
+        if first is not None and self.first is None:
+            self._back_rows = self._rows
+        self.first = scroll_to(first, self._rows)
+
+    def wheel(self, notches: int) -> None:
+        """The mouse wheel turned over the panel: NOTCHES up (back) or, below 0, down."""
+        if notches:
+            self._scroll(top_row(self.first, self._rows) - notches * WHEEL_ROWS)
+
+    def mouse(self, gd, tsr_hdr: int) -> None:
+        """The left button on the panel (DSCLOG's TSR_MOUSE): on the scrollbar's handle, dragging
+        it; on the bar above or below it, a page back or on; on the "Latest" chip, the newest."""
+        mx, my, held, hits, hx, hy = struct.unpack("<hhHHhh", gd.guest.read(tsr_hdr + TSR_MOUSE, 12))
+        self.pointer = (mx, my)
+        if self._hits is None:
+            self._hits = hits
+        if hits != self._hits:  # a press
+            self._hits = hits
+            self._grab = None
+            px, py = hx - PANEL_X0, hy - PANEL_Y0
+            top, height = handle(self.first, self._rows)
+            x0, y0, x1, y1 = chip_rect()
+            if self.first is not None and x0 <= px <= x1 and y0 <= py <= y1:
+                self.first = None
+            elif TRACK[0] - 1 <= px <= TRACK[2] + 1 and TRACK[1] <= py <= TRACK[3]:
+                shown = top_row(self.first, self._rows)
+                if top <= py < top + height:
+                    self._grab = py - top
+                elif py < top:
+                    self._scroll(shown - (ROWS - 1))
+                else:
+                    self._scroll(shown + ROWS - 1)
+        if not held:
+            self._grab = None
+        elif self._grab is not None and self._rows > ROWS:
+            _, height = handle(0, self._rows)  # (the height while scrolled back)
+            room = TRACK_H - height
+            if room > 0:
+                pos = my - PANEL_Y0 - self._grab - (TRACK[1] + 1)
+                self._scroll(round(max(0, min(room, pos)) * (self._rows - visible(0)) / room))
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, top: str = "",
                names: Optional[Dict[str, str]] = None) -> None:
@@ -451,13 +559,19 @@ class Panel:
             self._background = render(dac, self._ink)
             self._palettes = palettes
             self._shown = None
+        if not on:
+            self.first, self._grab = None, None  # (the next fight: its newest lines)
         if on and self._ink is not None:
-            now = (self._palettes, top, self.log.version, self.level, tuple(sorted(names.items())))
+            now = (self._palettes, top, self.log.version, self.level, tuple(sorted(names.items())), self.first)
             if now != self._shown:
-                picture = draw(self._background, self.font, self._ink, top, self.log.at(self.level, names), names)
+                lines = self.log.at(self.level, names)
+                self._rows = len(rows_of(self.font, lines, names)) if self.font is not None else 0
+                self.first = scroll_to(self.first, self._rows)
+                picture = draw(self._background, self.font, self._ink, top, lines, names, self.first,
+                               max(0, self._rows - self._back_rows))
                 guest.write(seg * 16, picture)
                 guest.write(tsr_hdr + TSR_PANEL_NEW, struct.pack("<H", 1))
-                self._shown = now
+                self._shown = now[:-1] + (self.first,)
         want = on and self._palettes > 0
         if want != self._on:
             guest.write(tsr_hdr + TSR_PANEL_ON, struct.pack("<H", int(want)))

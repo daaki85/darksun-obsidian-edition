@@ -1225,7 +1225,15 @@ default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
 the log. The panel is on only in fights, doesn't wait for a click as the
 turn's window does, and goes when the fight ends (or the Ledger is closed). A
 window the game opens over the map (a character's menu, a question) hides it
-until it closes. It needs the game started from the Ledger (which turns off
+until it closes.
+
+It scrolls back over the fight (the last 200 lines): drag the scrollbar's
+handle, click the bar above or below it for a page, or turn the mouse wheel
+with the pointer over the panel (on Windows: DOSBox doesn't pass the wheel to
+the game, so the Ledger listens for it itself). Scrolled back, it stays where
+it is as new lines come, and a **Latest** chip at its foot says how many have;
+click it (or scroll to the end) to follow the fight again. Clicks on the panel
+are its own: the party doesn't walk there. It needs the game started from the Ledger (which turns off
 DOSBox's EMS to make room for it).
 
 ### What hurts a monster (the Look box)

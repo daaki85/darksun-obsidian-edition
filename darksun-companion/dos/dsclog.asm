@@ -330,6 +330,13 @@ panel_seg  dw 0                 ; +328 the panel's picture: PANEL_W x PANEL_H pa
                                 ;      memory block (0: none could be had, no panel)
 panel_new  dw 0                 ; +330 the companion sets 1 once it has put a new picture there;
                                 ;      DSCLOG draws it and sets it back to 0
+panel_mx   dw 0                 ; +332 the pointer, as the mouse driver last said (game pixels): x,
+panel_my   dw 0                 ; +334   y (MOUSE_EVENT)
+panel_held dw 0                 ; +336 1 while the left button pressed on the panel is held (the
+                                ;      press and its release kept from the game: PANEL_MOUSE)
+panel_hits dw 0                 ; +338 the presses on the panel, counted, and where the last was:
+panel_hx   dw 0                 ; +340   x,
+panel_hy   dw 0                 ; +342   y
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -13538,6 +13545,7 @@ int33:
 .chain: jmp far [cs:old33]
 
 mouse_event:                            ; AX = events, BX = buttons held, CX, DX = where
+        call panel_mouse
         cmp word [cs:scroll_on], 0
         je .pass
         test byte [cs:scroll_on], SCROLL_MIDDLE
@@ -14023,6 +14031,8 @@ PANEL_BYTES equ PANEL_W * PANEL_H
 SHOWN_PAGE equ 0x118E           ; (in the page routines' segment, PAGES_SEG) 1: A400h shown
 panel_shown db 0
 panel_dirty db 0
+panel_pseg  dw 0                ; the page routines' segment, and the page on show when the panel
+panel_page  dw 0                ;   was last drawn (PANEL_DRAW)
 
 panel_tick:
         cmp word [cs:panel_on], 0
@@ -14047,11 +14057,71 @@ panel_tick:
 .old:   cmp byte [cs:panel_shown], 0
         je .draw
         cmp byte [cs:panel_dirty], 0
-        je .ret
-.draw:  mov byte [cs:panel_dirty], 0
+        jne .draw
+        mov ax, [cs:panel_mx]           ; the pointer moved: the game may have drawn the view
+        cmp ax, [cs:panel_lx]           ;   under it again in ways not hooked (in a fight, what
+        jne .moved                      ;   the pointer is over, later in the pass too): put
+        mov ax, [cs:panel_my]           ;   again, now and on the next pass
+        cmp ax, [cs:panel_ly]
+        jne .moved
+        dec byte [cs:panel_wait]        ; and every PANEL_EVERY passes anyway
+        jnz .ret
+.draw:  mov byte [cs:panel_wait], PANEL_EVERY
+.put:   mov byte [cs:panel_dirty], 0
         mov byte [cs:panel_shown], 1
+        mov ax, [cs:panel_mx]
+        mov [cs:panel_lx], ax
+        mov ax, [cs:panel_my]
+        mov [cs:panel_ly], ax
         call panel_draw
         ret
+.moved: mov byte [cs:panel_wait], 1
+        jmp .put
+PANEL_EVERY equ 16
+panel_wait db PANEL_EVERY
+panel_lx   dw 0
+panel_ly   dw 0
+
+; PANEL_MOUSE: in MOUSE_EVENT (AX the events, BX the buttons held, CX, DX where): the pointer
+; noted for the companion; a left press on the panel, while it is shown, counted and kept from the
+; game with its release (the companion scrolls the log: combatlog.py)
+panel_mouse:
+        mov [cs:panel_mx], cx
+        mov [cs:panel_my], dx
+        cmp word [cs:panel_held], 0
+        jne .held
+        cmp byte [cs:panel_shown], 0
+        je .ret
+        test al, EVENT_LEFT_PRESS
+        jz .ret
+        push es                         ; (not while the game shows the other screen: a window
+        push ax                         ;   over the map, the panel not on it)
+        mov es, [cs:panel_pseg]
+        mov ax, [es:SHOWN_PAGE]
+        cmp ax, [cs:panel_page]
+        pop ax
+        pop es
+        jne .ret
+        push cx
+        push dx
+        sub cx, PANEL_X0
+        cmp cx, PANEL_W
+        jae .out
+        sub dx, PANEL_Y0
+        cmp dx, PANEL_H
+.out:   pop dx
+        pop cx
+        jae .ret
+        mov word [cs:panel_held], 1
+        mov [cs:panel_hx], cx
+        mov [cs:panel_hy], dx
+        inc word [cs:panel_hits]
+.held:  test al, EVENT_LEFT_LEAVE
+        jz .keep
+        mov word [cs:panel_held], 0
+.keep:  and al, ~(EVENT_LEFT_PRESS | EVENT_LEFT_LEAVE)
+        and bx, ~LEFT
+.ret:   ret
 
 ; PANEL_DRAW: the picture into the page on show, a plane at a time (registers kept)
 panel_draw:
@@ -14065,6 +14135,9 @@ panel_draw:
         sub ax, DGROUP_SEG
         add ax, PAGES_SEG
         mov es, ax
+        mov [cs:panel_pseg], ax         ; (where the page on show is said, and which it was:
+        mov ax, [es:SHOWN_PAGE]         ;   PANEL_MOUSE)
+        mov [cs:panel_page], ax
         mov ax, 0xA000
         cmp word [es:SHOWN_PAGE], 0
         je .seg

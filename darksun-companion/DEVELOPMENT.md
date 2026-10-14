@@ -1610,7 +1610,7 @@ measured with the patched game and the dice log running:
   the pens, opened a conversation and a shop, and played the arena's opening
   fight to the end without a fault (a check, not a whole game).
 
-### The in-game combat log: the panel (Stages 1 and 2)
+### The in-game combat log: the panel (Stages 1 to 3)
 
 - **Where it lives.** The Ledger draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
@@ -1642,6 +1642,22 @@ measured with the patched game and the dice log running:
   the party, hollow for a monster). The game's font comes from RESOURCE.GFF
   (`art.Font`); without it the panel has no lines. A new picture is written
   only when something in it changes.
+- **Scrolling (Stage 3).** DSCLOG's mouse handler (`PANEL_MOUSE`, in
+  `MOUSE_EVENT`) notes where the pointer is (header `+332`, game pixels, as
+  the driver gives them), and a left press on the panel, while the page on
+  show is the one the panel was last drawn into (not under a game window), is
+  counted with where it was (`+338` on) and kept from the game with its
+  release, `+336` set while it is held. The Ledger (`Panel.mouse`, each pass
+  of the log) makes it a drag of the handle, a page, or a click on the
+  **Latest** chip; the mouse wheel comes from a Windows low-level mouse hook
+  (`wheel.py`, its own thread), counted only with DOSBox's window in front
+  and the pointer over the panel. Scrolled back, the top row stays put
+  (`Panel.first`; `None` follows the newest).
+- **Drawn again.** Besides the floor and the redrawn rectangles, the game
+  draws parts of the view in a fight as the pointer moves over it (what it is
+  over), through routines not hooked: `PANEL_TICK` puts the panel again when
+  the pointer has moved, on that pass and the next, and every 16 passes
+  anyway.
 - **Not checked mid-fight:** saving and loading, and area changes, as the
   game allows neither in a fight; out of one the panel is off. DOSBox's
   window size doesn't matter (it is drawn into the game's screen).
