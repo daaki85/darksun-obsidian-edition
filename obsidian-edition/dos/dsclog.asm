@@ -14697,8 +14697,8 @@ strip_same:
         ret
 strip_shown_sum dw 0
 
-; STRIP_MIND: from the game's pointer (on every screen; DS the game's): on the map, a new picture
-; of the log put at once (the map's main loop doesn't run while the game plays a scene out, the
+; STRIP_MIND: from the game's pointer (on every screen; DS the game's): on the map, or with the
+; log's picture still in the strip (a talk over the map), a new picture of the log put at once (the map's main loop doesn't run while the game plays a scene out, the
 ; arena's opening show); else the empty strip filled again when the screen calls for another look
 ; (STRIP_WANT), in the colours STRIP_COLOURS found last (no palette read here: the pointer may be
 ; drawn while the game sets colours); registers kept
@@ -14710,9 +14710,11 @@ strip_mind:
         je .empty
         cmp word [cs:panel_on], 0
         je .empty
+        cmp byte [cs:panel_shown], 0    ; (the log's picture still there: its colours too, a
+        jne .put                        ;   talk over the map)
         call strip_on_map
         jne .empty
-        mov word [cs:panel_new], 0
+.put:   mov word [cs:panel_new], 0
         mov byte [cs:panel_shown], 1
         mov byte [cs:strip_mode], 0
         call panel_draw

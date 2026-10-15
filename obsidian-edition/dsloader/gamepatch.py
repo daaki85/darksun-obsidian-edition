@@ -544,12 +544,13 @@ PATCHES = (
     # (0AC0:AC7Ah, the game's own test), the rest as it was (a monster only while the game shows
     # monsters' moves, ES:19h); out of a fight (IN_COMBAT, DS:1168h, 0: the arena's opening, where
     # the party walks out of the view) as the game has it. The figure's spot pushed straight, in
-    # the same 54 bytes.
+    # the same 54 bytes; "mov ax,377Eh" stays at 0AC0:CA15h, its segment one DOS relocates as the
+    # game loads (RELOCATED).
     Patch("camera_still", 0x1C9F2,
           bytes.fromhex("8b1e7949c1e3058b879d668946fc8b1e7949c1e3058b879f668946fa833e7949047e0db87e378ec0"
                         "26833e1900007439ff76faff76fc"),
-          bytes.fromhex("833e7949047e0c687e370726833e1900007456833e681100740dff3679490ee866e25909"
-                        "c075428b1e7949c1e305ffb79f66ffb79d66")),
+          bytes.fromhex("8b1e7949833e681100740a530ee878e25b09c07554c1e30581fb80007e129090909090b8"
+                        "7e378ec026833e190000743966ffb79d6690")),
     # a new race or sex on the creation screen: "add sp,6" after the call that gives the default
     # class, where the panel is set right for it (DSCLOG opens the disciplines' window again)
     Patch("race_panel", 0x63403, bytes.fromhex("83c406"), _interrupt(VEC_RACE_PANEL, 3)),
@@ -629,8 +630,26 @@ STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_sh
          "strip_palette", "strip_colours")  # the combat log below the map (off by default)
 
 
+def relocated(data: bytes) -> set:
+    """The file offsets of the words DOS relocates as it loads the EXE DATA (its relocation
+    table: each such word gets the load segment added, whatever a patch put there)."""
+    if len(data) < 0x1C:
+        return set()
+    count, = struct.unpack_from("<H", data, 6)
+    header = struct.unpack_from("<H", data, 8)[0] * 16
+    table, = struct.unpack_from("<H", data, 0x18)
+    out = set()
+    for i in range(count):
+        if table + i * 4 + 4 > len(data):
+            break
+        off, seg = struct.unpack_from("<HH", data, table + i * 4)
+        out.add(header + seg * 16 + off)
+    return out
+
+
 def patched(original: bytes, skip=frozenset()) -> bytes:
-    """DSUN.EXE's bytes with the dice log patches applied (but those named in SKIP)."""
+    """DSUN.EXE's bytes with the dice log patches applied (but those named in SKIP). A patch
+    must leave the words DOS relocates as they were (RELOCATED: camera_still's "mov ax,377Eh")."""
     if len(original) != GOG_SIZE:
         raise PatchError(f"DSUN.EXE is {len(original)} bytes; the dice log knows the GOG release "
                          f"({GOG_SIZE} bytes) only")
@@ -640,6 +659,11 @@ def patched(original: bytes, skip=frozenset()) -> bytes:
             raise PatchError(f"DSUN.EXE is not the version the dice log knows ({p.name} differs)")
         if p.name not in skip:
             data[p.offset:p.offset + len(p.original)] = p.replacement
+    moved = relocated(original)
+    for p in PATCHES:
+        for at in range(p.offset - 1, p.offset + len(p.original)):
+            if at in moved and data[at:at + 2] != original[at:at + 2]:
+                raise PatchError(f"the patch {p.name} changes a word DOS relocates (at {at:X}h)")
     return bytes(data)
 
 

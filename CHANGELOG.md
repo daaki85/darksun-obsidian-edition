@@ -11,23 +11,26 @@ have the detail.
 ## Pull request #48 (in progress)
 
 **Added**
-- **The combat log below the map** (In the game, on by default; unticked,
-  the panel over the map as before): the game's screen 320 × 222, the log a
-  strip under the map, in the panel's darker shade, with its top line and
-  the newest line, covering none
-  of it; the game's speed and the map's shape as ever. The mouse wheel
-  scrolls it a line a notch, a **Latest** chip in its top line while
-  scrolled back. Between fights it keeps the last fight's lines to scroll
-  back through, and rolls out of fights go in it too (a thief's skills, a
-  scroll learned); it is kept up through the arena's opening show. The
-  panel over the map (the box unticked) can be brought back out of a fight
-  with **L**, with the last fight's lines and the rolls since; **L** again
-  puts it away. An **L** in its top line says so (a click on it does the
-  same). Under a
-  screen in other colours it is the panel's blue-grey, and black on the
-  title, the main menu and in character creation.
+- **The combat log below the map** (In the game, off by default): the game's
+  screen 320 × 222, the log a strip under the map, always shown, in the
+  panel's darker shade, covering none of it; the game's speed and the map's
+  shape as ever. In a fight it shows the round and the newest line, between
+  fights the two newest lines; the mouse wheel scrolls it a line a notch,
+  with a **Latest** chip while scrolled back. It is kept up through the
+  arena's opening show. Under a screen in other colours it is the panel's
+  blue-grey, and black on the title, the main menu and in character
+  creation.
+- **Rolls out of fights in the combat log:** a thief's skills, a scroll
+  learned, the hit points of a new level (the lines with a roll in them), in
+  the panel and the strip alike.
+- **An L in the panel's top line**, a button that hides it as the key does.
 
 **Changed**
+- **The combat log's panel is shown and hidden with L** (2.3.0 opened it in
+  each fight and closed it at the end): it no longer opens by itself, and
+  **L** on the map shows it or hides it, in a fight or out of one, to read
+  back over the last fight or the rolls since. It stays as it was left, from
+  one game to the next too. (L used to collapse it to one line; **-** does.)
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,
   Cermak and Cilla get what a new character would, in the first moments of a
   new game, after their other changes (Gerakis a sling, leather chest and

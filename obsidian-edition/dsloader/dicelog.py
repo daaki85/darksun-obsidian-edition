@@ -621,6 +621,7 @@ class DiceLog:
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
+        self._panel.open = settings.get("combat_log_open") is True  # (hidden till L)
         self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
@@ -1020,39 +1021,40 @@ class DiceLog:
         if self.tsr_hdr is None or self.game is None:
             return
         panel = self._panel
-        if not panel.shown:  # (L out of a fight, the panel over the map off: open it)
+        if not panel.shown:  # (L with the panel over the map hidden: show it)
             try:
                 if panel.keys(self.game, self.tsr_hdr) and self.combat_log and not panel.strip:
-                    panel.asked = True
+                    panel.open = True
+                    _remember({"combat_log_open": True})
                     self._update_panel(now)
             except (struct.error, IndexError, ValueError):
                 pass
             return
-        before = (panel.first, panel.size, panel.level, panel.filter)
+        before = (panel.first, panel.size, panel.level, panel.filter, panel.open)
         try:
             panel.mouse(self.game, self.tsr_hdr)
             if notches and panel.over():
                 panel.wheel(notches)
-            if panel.level != self.combat_log_level or panel.size != before[1]:
+            if panel.level != self.combat_log_level or panel.size != before[1] or panel.open != before[4]:
                 self.combat_log_level = panel.level  # (the panel's level chip: the Options tab's too)
-                _remember({"combat_log_level": panel.level, "combat_log_size": panel.size})
-            if (panel.first, panel.size, panel.level, panel.filter) != before:
+                _remember({"combat_log_level": panel.level, "combat_log_size": panel.size,
+                           "combat_log_open": panel.open})
+            if (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
                 self._update_panel(now)
         except (struct.error, IndexError, ValueError):
             pass
 
     def _update_panel(self, now: float) -> None:
-        """The combat log's panel: on in a fight, with the fight's lines so far, who acts and
-        who is next. The strip below the map stays on between fights, the last fight's lines
-        in it (to scroll back through), the newest again when the next one starts."""
+        """The combat log: the panel over the map while shown (L shows and hides it), the strip
+        below the map always; in a fight with who acts and who is next in the header, the newest
+        lines again when a fight starts."""
         fighting = self.combat_log and self.game.in_combat()
         if fighting:
             if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-            self._panel.asked = False  # (opened with L: it goes at the fight's end, as ever)
-        on = fighting or (self.combat_log and (combatlog.strip_patched(self.game) or self._panel.asked))
+        on = self.combat_log and (combatlog.strip_patched(self.game) or self._panel.open)
         top, names = "", {}
         if on:
             if not self._font_tried:

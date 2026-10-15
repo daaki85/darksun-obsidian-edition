@@ -451,19 +451,22 @@ running:
   `PANEL_MOUSE` as the scrollbar is. **L** (`INT 16h`, `our_key`, while the
   panel is on screen: `PANEL_LIVE`) is counted at `+348` and kept from the
   game; the keyboard hook is on while the panel is shown, not only with Tab
-  targeting. Out of a fight, with the panel off, L is counted too
-  (`L_ON_MAP`) while the map's main loop has run in the last BIOS tick or two
-  (`MAP_TICK`: no game window, menu or save name waiting on keys, where L is
-  the game's) and the Loader is there; the Loader then opens the panel
-  (`Panel.asked`), with the lines kept out of fights that have a roll in
-  them, until L again or the next fight's end. The level and size are saved in the settings
-  (`combat_log_level`, `combat_log_size`).
+  targeting. With the panel hidden, L is counted too (`L_ON_MAP`) while the
+  map's main loop has run in the last BIOS tick or two (`MAP_TICK`: no game
+  window, menu or save name waiting on keys, where L is the game's) and the
+  Loader is there. The Loader shows the panel while `Panel.open` (saved as
+  `combat_log_open`, off at first): L with it hidden shows it, L or the
+  header's **L** button (`combatlog.key_rect`) with it shown hides it, in a
+  fight or out of one. Out of fights the log takes the lines with a roll in
+  them (`Log.add(rolls_only=True)`). The level and size are
+  saved in the settings (`combat_log_level`, `combat_log_size`).
 - **Not checked mid-fight:** saving and loading, and area changes, as the
-  game allows neither in a fight; out of one the panel is off. DOSBox's
-  window size doesn't matter (it is drawn into the game's screen).
+  game allows neither in a fight. DOSBox's window size doesn't matter (it is drawn into the game's
+  screen).
+
 #### The strip below the map
 
-The switch `combat_log_strip` (on by default) adds gamepatch's `STRIP`
+The switch `combat_log_strip` (off by default) adds gamepatch's `STRIP`
 patches when the game is started; the Loader knows the game was started so
 from the patch in its memory (`combatlog.strip_patched`), not the setting,
 which may have changed since.
@@ -1968,7 +1971,11 @@ party members walking as well as monsters. The patch (`camera_still`, a
 switch, `CAMERA`) rewrites that call's 54 bytes of set-up: in a fight
 (`IN_COMBAT`, `DS:1168h`), the game's own on-screen test first, skipping the
 step while the figure is on the screen; the figure's spot pushed straight
-from its record. Out of a fight the same routine runs too (the arena's
+from its record (one `push dword`). The game's `mov ax,377Eh` stays at
+`CA15h`: DOS adds the load segment to that word as the game loads (the EXE's
+relocation table), and a first version, which put other code there, ran
+garbled. `gamepatch.patched` now refuses any patch that changes a word DOS
+relocates (`gamepatch.relocated`). Out of a fight the same routine runs too (the arena's
 opening, the party walking out through the gate: held still, the party never
 left the view and the scene never went on), so there it is as the game has
 it, as is the map's own walking.

@@ -61,10 +61,10 @@ The [README](README.md) has every rule in full detail.
    (the first time, it offers to install Python; see the
    [README](README.md#running-it-windows)).
 2. Press **Start the game**. The game starts with the mod and your options,
-   and every roll shows as it happens: in a fight, in the combat log below
-   the map, and in the Loader's dice log:
+   and every roll shows as it happens in the Loader's dice log, and in the
+   game itself when you press **L**:
 
-   ![A fight in the arena with the combat log in a strip below the map](docs/combat-log-strip.png)
+   ![A fight in the arena with the combat log over the map](docs/combat-log.png)
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
@@ -86,7 +86,7 @@ easier.
 
 | Change | What it does |
 |---|---|
-| **Combat log** | In a fight, every roll as it comes, at the least, in short or in detail: by default in a strip below the map (its top line and the newest roll; the mouse wheel reads back, on Windows; between fights it keeps the last fight's, and rolls out of fights go in it too), or in a panel at the map's lower right with more lines (drag its scrollbar to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back, and out of a fight brings it back with the last fight's lines). |
+| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Or, on the Options tab, a strip always shown below the map (the mouse wheel reads back, on Windows). |
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
@@ -1601,15 +1601,15 @@ AD&D's tables:
 
 | Section | Switch | Default |
 |---|---|---|
-| In the game | show a combat log in the game, in a fight | on |
-| | ... below the map instead of over it | on |
+| In the game | a combat log in the game (L shows and hides it) | on |
+| | ... always shown, below the map instead of over it | off |
 | | describe monsters when you Look at them in a fight | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
 | More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
 | New content | new wizard spells; new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | on |
-| Controls | Tab and Enter; rings under the enemy chosen with Tab; scrolling with the mouse wheel; spells kept on a click on the Effects screen | on |
+| Controls | Tab and Enter; rings under the enemy chosen with Tab; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; spells kept on a click on the Effects screen | on |
 | | scrolling by holding the right button | off |
 | Game speed | GOG's own, faster or fastest | faster |
 

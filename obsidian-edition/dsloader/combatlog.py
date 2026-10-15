@@ -683,7 +683,7 @@ class Panel:
         self._grab: Optional[int] = None  # dragging the handle: the press's distance below its top
         self.pointer = (-1, -1)  # where the game's pointer is (DSCLOG's), on the screen
         self.strip = False  # in the strip below the map (the Options tab's combat_log_strip)
-        self.asked = False  # opened with L out of a fight (the panel over the map: till L or a fight's end)
+        self.open = False  # the panel over the map shown (L shows and hides it, in fights and out)
 
     @property
     def g(self) -> Geometry:
@@ -721,12 +721,8 @@ class Panel:
             self._scroll(top_row(self.first, self._rows, self.g) - notches * step)
 
     def _key_l(self) -> None:
-        """L (or a click on the header's L): opened out of a fight, the panel put away; in one,
-        collapsed or opened again."""
-        if self.asked:
-            self.asked = False
-        else:
-            self.resize(self._open_size if self.size == COLLAPSED else COLLAPSED)
+        """L (or a click on the header's L) with the panel shown: hidden (L shows it again)."""
+        self.open = False
 
     def keys(self, gd, tsr_hdr: int) -> int:
         """L pressed since the last look (DSCLOG's count, TSR_KEYS): on the panel, or out of a fight
@@ -742,8 +738,7 @@ class Panel:
         """The left button on the panel (DSCLOG's TSR_MOUSE): on the scrollbar's handle, dragging
         it; on the bar above or below it, a page back or on; on the "Latest" chip, the newest; on
         the header's level chip, the next level; on + or -, a size bigger or smaller; on a filter,
-        that filter. L (TSR_KEYS), or a click on the header's L, collapses the panel or opens it
-        again (opened with L out of a fight: puts it away)."""
+        that filter. L (TSR_KEYS), or a click on the header's L, hides the panel."""
         mx, my, held, hits, hx, hy = struct.unpack("<hhHHhh", gd.guest.read(tsr_hdr + TSR_MOUSE, 12))
         self.pointer = (mx, my)
         if self.keys(gd, tsr_hdr):

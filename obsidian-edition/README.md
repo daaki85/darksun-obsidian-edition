@@ -90,6 +90,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - [Controls](#controls)
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
+  - [The view in fights](#the-view-in-fights)
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
@@ -249,7 +250,7 @@ command prompt: `--window-scale 2` to `4`, `--fullscreen` or `--windowed` after
 Quadruple has DOSBox stretch its window with OpenGL (`output=opengl`,
 `windowresolution=1280x960`); if your graphics driver doesn't take to that,
 pick Triple. With the [combat log below the map](#the-combat-log-in-the-game)
-(the default) each is a little taller: 640x532, 960x798, 1280x1064.
+(an option) each is a little taller: 640x532, 960x798, 1280x1064.
 
 Load your game. The party's stats fill in by themselves, and rolls appear in
 the **Dice log** tab as they happen.
@@ -302,70 +303,69 @@ from the Loader (or either `.bat` file).
 
 ### The combat log in the game
 
-With **Show a combat log in the game, in a fight** ticked on the Options tab
-(the default), the fight shows as it goes: the [dice log](#the-dice-log)'s
-lines in the game's own font, in the Loader's colours for each kind of line
-(hits green, misses grey, damage amber, saving throws blue), the party's
-names in their colours and the monsters' in red, a filled pip before a party
-member's line and a hollow one before a monster's. Its top line says the
-round, who is acting and who is still to (`Round 2: Gerakis, then Cermak,
-Cilla`). Below the switch, pick how much it says: **at the least**
-(`Rampager hits Defiler for 4`), **in short**, the default (`Rampager attacks
-Defiler: 20 vs 16+ HIT, 4 damage (2d6)`, `Slig's save vs Fireball: 11 vs 16,
-failed`), or **in detail**, every line of the log. `20 vs 16+ HIT` is the d20
-and the roll it needed (THAC0 less the target's AC; a natural 20 always hits,
-a 1 always misses). It never waits for a click; the panel over the map is
-on only in fights and goes when the fight ends (the strip below it stays:
-see below), and either goes when the Loader is closed. It needs the game started
-from the Loader (which turns off DOSBox's EMS to make room for it).
+With **A combat log in the game** ticked on the Options tab (the default),
+**L** on the map shows the [dice log](#the-dice-log)'s lines in the game
+itself, and **L** again hides them: in a fight or out of one, whenever you
+want to read back. It doesn't open by itself, and stays as you left it (from
+one game to the next too). The lines are in the game's own font, in the
+Loader's colours for each kind of line (hits green, misses grey, damage
+amber, saving throws blue), the party's names in their colours and the
+monsters' in red, a filled pip before a party member's line and a hollow one
+before a monster's. In a fight its top line says the round, who is acting
+and who is still to (`Round 2: Gerakis, then Cermak, Cilla`). Out of fights,
+the lines with a roll in them go in too (a thief's skills, a scroll learned,
+the hit points of a new level), so they can be checked after they happen.
 
-**Below the map** (the default: **... below the map instead of over it**,
-from the next start). The game's screen is 22 rows taller, 320 × 222, and
-the combat log is a strip under the map, the full width, in the panel's
-darker shade: its top line and the newest line of the log. Nothing of the map is covered, and the game runs at
-its own speed with the map its usual shape; DOSBox's window is a little
-taller than 4:3. The pointer doesn't go there, so the strip has no buttons:
-on Windows the mouse wheel scrolls it a line a notch wherever the pointer is
-(DOSBox doesn't pass the wheel to the game, so the Loader listens for it
-itself), with a **Latest** chip in its top line while scrolled back; the
-level is set on the Options tab. Between fights it stays, its top line the
-log's line before the newest, so the last fight can be scrolled back through
-(the next one starts again at its newest), and rolls out of fights go in it
-too: a thief's skills, a scroll learned, the hit points of a new level. It
-stays under a talk or a screen over the map, and is kept up while the game
-plays a scene out (the arena's opening show); a screen in other colours has the panel's blue-grey there
-instead, the log back on the map. On the title, the main menu and in
-character creation it is black.
-
-![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
-
-**Over the map instead.** With that box unticked, the combat log is a panel
-over the map's lower right, with more lines and buttons of its own. A window
-the game opens over the map (a character's menu, a question) hides it until
-it closes.
+Below the switch, pick how much it says: **at the least** (`Rampager hits
+Defiler for 4`), **in short**, the default (`Rampager attacks Defiler: 20 vs
+16+ HIT, 4 damage (2d6)`, `Slig's save vs Fireball: 11 vs 16, failed`), or
+**in detail**, every line of the log. `20 vs 16+ HIT` is the d20 and the roll
+it needed (THAC0 less the target's AC; a natural 20 always hits, a 1 always
+misses). It never waits for a click, and needs the game started from the
+Loader (which turns off DOSBox's EMS to make room for it).
 
 ![The combat log in the arena, in short](docs/combat-log.png)
 
-The panel scrolls back over the fight (the last 200 lines): drag the
-scrollbar's handle, click the bar above or below it for a page, or turn the
-mouse wheel with the pointer over the panel (on Windows). Scrolled back, it
-stays where it is as new lines come, and a **Latest** chip at its foot says
-how many have; click it (or scroll to the end) to follow the fight again.
-Clicks on the panel are its own: the party doesn't walk there.
+**The panel** sits over the map's lower right. A window the game opens over
+the map (a character's menu, a question) hides it until it closes.
 
-Its top line has four buttons on the right: **L**, for the key that folds the
-panel away and back (a click on it does the same), the level (**Least**,
-**Short**, **Detail**; a click goes to the next, and the Options tab follows),
-and **-** and **+** to make it smaller or bigger. Collapsed, it is one line, the newest;
-expanded, it is taller (11 lines) and has filters along its top: **All**,
-**Party** (the party's lines), **Damage** (hits, damage and deaths) and
-**Saves** (saving throws and magic resistance). **L** on the map collapses it
-and opens it again. Its size is remembered. Out of a fight, **L** on the map
-brings it back with the last fight's lines and the rolls made since (a
-thief's skills, a scroll learned), to scroll through; **L** again puts it
-away, and the end of the next fight closes it as ever.
+- **Scrolling:** it keeps the last 200 lines. Drag the scrollbar's handle,
+  click the bar above or below it for a page, or turn the mouse wheel with
+  the pointer over the panel (on Windows). Scrolled back, it stays where it
+  is as new lines come, and a **Latest** chip at its foot says how many have;
+  click it (or scroll to the end) to follow again. Clicks on the panel are
+  its own: the party doesn't walk there.
+- **Its buttons**, on the right of its top line: **L**, which hides it as the
+  key does; the level (**Least**, **Short**, **Detail**; a click goes to the
+  next, and the Options tab follows); and **-** and **+** for a smaller or
+  bigger panel. Collapsed, it is one line, the newest; expanded, it is
+  taller (11 lines) and has filters along its top: **All**, **Party** (the
+  party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
+  throws and magic resistance). Its size is remembered.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
+
+**Below the map instead** (**... always shown, below the map instead of over
+it**, from the next start). The game's screen is 22 rows taller, 320 × 222,
+and the log is a strip under the map, the full width, in the panel's darker
+shade, always there: L doesn't hide it. Nothing of the map is covered, and
+the game runs at its own speed with the map its usual shape; DOSBox's window
+is a little taller than 4:3.
+
+- **What it shows:** in a fight, the round and the newest line; between
+  fights, the two newest lines (the next fight starts again at its newest).
+- **Scrolling:** the pointer doesn't go there, so the strip has no buttons.
+  On Windows the mouse wheel scrolls it a line a notch wherever the pointer
+  is (DOSBox doesn't pass the wheel to the game, so the Loader listens for it
+  itself), with a **Latest** chip while scrolled back; under a talk window it
+  moves once the pointer does. The level is set on the Options tab.
+- **On other screens:** it stays under a talk or a screen over the map, and
+  is kept up while the game plays a scene out (the arena's opening show). A
+  screen in other colours has the panel's blue-grey there instead, the log
+  back on the map; the title, the main menu and character creation have it
+  black.
+
+![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
 ### THAC0, saves and thief skills
 
@@ -3249,18 +3249,23 @@ using and looking). The game still scrolls on its own when the pointer touches
 the screen's edge, and still brings the view back to whoever's turn it is in a
 fight.
 
-**The view in a fight.** The game moved the view with a figure walking in a
-fight as soon as it came near the screen's edge, a step at a time, so the
-view drifted after every monster that walked. Now it moves only once the
-figure has walked off the screen, to bring it back into view (on by default:
-**In a fight, the view moves to a figure only when it walks off the screen**
-on the Options tab, from the next start). Walking about out of fights is as
-the game has it.
-
 The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+
+### The view in fights
+
+The game moved the view after a figure walking in a fight as soon as it came
+near the screen's edge, a step at a time, so the view drifted after every
+figure that walked, monsters' too. Now it moves only once the figure has
+walked off the screen, to bring it back into view (on by default: **In a
+fight, the view moves to a figure only when it walks off the screen** on the
+Options tab, from the next start). Out of fights the view follows the party
+as the game has it.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its part
+on the view in a fight).
 
 ### Spells on the Effects screen
 

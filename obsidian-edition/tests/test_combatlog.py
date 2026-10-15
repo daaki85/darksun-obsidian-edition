@@ -372,38 +372,26 @@ class StatesTests(unittest.TestCase):
         self.assertEqual(c.filtered(lines, "party"), [ln for ln in lines if ln.kind == "round"])
 
     def test_l_key(self):
+        """L with the panel shown hides it (the Loader shows it again on the next L)."""
         self.panel.resize(c.EXPANDED)
-        keys = HDR + c.TSR_KEYS
-        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", 1)
-        self.panel.mouse(self.game, HDR)
-        self.assertEqual(self.panel.size, c.COLLAPSED)
-        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", 2)
-        self.panel.mouse(self.game, HDR)
-        self.assertEqual(self.panel.size, c.EXPANDED)  # (back to the size it had)
-
-    def test_l_label(self):
-        """The header's L, left of the level chip: a click on it as L itself."""
-        self.panel.mouse(self.game, HDR)
-        x0, y0, x1, y1 = c.key_rect(self.panel.font, self.panel.g)
-        self.assertLess(x1, c.level_rect(self.panel.font, self.panel.g)[0])
-        self.panel.resize(c.DOCKED)
-        self.press((x0 + x1) // 2, (y0 + y1) // 2)
-        self.assertEqual(self.panel.size, c.COLLAPSED)
-        self.panel.asked = True
-        self.press((x0 + x1) // 2, (y0 + y1) // 2)
-        self.assertFalse(self.panel.asked)
-
-    def test_l_puts_away_a_panel_opened_out_of_a_fight(self):
-        """Opened with L out of a fight (asked), L puts it away again, its size as it was."""
+        self.panel.open = True
         keys = HDR + c.TSR_KEYS
         self.panel.mouse(self.game, HDR)
-        self.panel.asked = True
         count = c.struct.unpack_from("<H", self.game.guest.mem, keys)[0]
         self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", count + 1)
         self.panel.mouse(self.game, HDR)
-        self.assertFalse(self.panel.asked)
-        self.assertNotEqual(self.panel.size, c.COLLAPSED)
+        self.assertFalse(self.panel.open)
+        self.assertEqual(self.panel.size, c.EXPANDED)  # (its size kept for next time)
         self.assertEqual(self.panel.keys(self.game, HDR), 0)  # (counted once)
+
+    def test_l_label(self):
+        """The header's L, left of the level chip: a click on it hides the panel, as L does."""
+        self.panel.mouse(self.game, HDR)
+        x0, y0, x1, y1 = c.key_rect(self.panel.font, self.panel.g)
+        self.assertLess(x1, c.level_rect(self.panel.font, self.panel.g)[0])
+        self.panel.open = True
+        self.press((x0 + x1) // 2, (y0 + y1) // 2)
+        self.assertFalse(self.panel.open)
 
     def test_update_writes_the_size(self):
         g = self.game.guest
