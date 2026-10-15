@@ -8,7 +8,18 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
-## Pull request #45 (in progress)
+## Pull request #46 (in progress)
+
+**Fixed**
+- **The combat log's panel flickered and lost pieces** as figures moved and
+  fought: the game drew the map over it, a rectangle at a time, and DSCLOG
+  only put it back afterwards. The rectangles the game draws again are now
+  drawn round the panel, never over it, and before the screens flip the
+  panel is put on the one about to show. (The old way of putting it back,
+  through the redraw routine's way back, could also go stale if the game
+  moved that code meanwhile.)
+
+## Pull request #45 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/45))
 
 **Changed**
 - **The combat log in the game is on by default** (it was off until

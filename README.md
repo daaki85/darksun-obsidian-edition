@@ -84,7 +84,7 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Coming in the next release** (pull requests #44 and #45, [in the
+**Coming in the next release** (pull requests #44 to #46, [in the
 changelog](CHANGELOG.md)): a combat log in the game, three more wizard spells
 (Reflected Image, Spook and Friends), two magic shields, defilers' scrolls,
 buying back magical items, saves kept under their names, and Templar's Ledger

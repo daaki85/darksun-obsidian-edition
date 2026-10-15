@@ -370,11 +370,26 @@ running:
   (`panel_seg`, header `+328`); the dice log's ring has a block of its own
   there too. With EMS on there is no such block and no panel.
 - **Putting it on screen.** DSCLOG copies the picture into the screen on
-  show, a plane at a time, from the main loop (`PANEL_TICK`, in
-  `PROBE_SCROLL`) when the floor has been drawn since or the Loader has a new
-  picture (`panel_new`, `+330`), and at the end of each rectangle the game
-  draws again (`REDRAW_POST`, the way back of 2475Fh), so figures walking and
-  the view scrolling don't wipe it.
+  show, a plane at a time (`PANEL_BLIT`, its height kept on the screen), from
+  the main loop (`PANEL_TICK`, in `PROBE_SCROLL`) when the floor has been
+  drawn since or the Loader has a new picture (`panel_new`, `+330`).
+- **Kept whole.** The game draws what moves a rectangle at a time, through
+  one routine (2475Fh, 1DF3:142F: a window page the rectangle's size, the
+  floor, walls and figures drawn into it) or the same steps inline in the
+  routine drawing again all that moved (from 24B18h). A rectangle over the
+  panel, while it is on screen, is drawn as its parts round it instead
+  (`CLIP_CHECK`, `REDRAW_PARTS`: above, below, left and right, through
+  2475Fh, `RP_BUSY` letting them by), so nothing the game draws there covers
+  it: the routine itself is left out (its caller's way back kept in a frame of
+  its own shape, for the overlay manager), and the inline one goes on at its
+  end (24C65h). With the routine's last argument the screens are flipped and
+  the rectangle copied to the other, so the panel is put on the screen not
+  shown first (`PANEL_DRAW_OTHER`). Measured in the arena's fight, playing
+  turns: before, the map showed through the panel in every frame grabbed
+  (300), up to 7,000 of its pixels; after, in none. What still reaches it is
+  the view drawn whole (a scroll, centring on whose turn it is), put back on
+  the next pass of the main loop; a scroll can also leave a copy of the
+  panel's edge beside it for a moment, until the game draws that part again.
 - **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
   switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
   writes about once a second), DSCLOG has the view drawn again without it.
