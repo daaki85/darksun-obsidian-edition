@@ -34,9 +34,16 @@ have the detail.
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,
   Cermak and Cilla get what a new character would, in the first moments of a
   new game, after their other changes (Gerakis a sling, leather chest and
-  leg armour, a belt, boots and a dagger; Cermak and Cilla a belt, boots and
-  a dagger). K'ratchek, a thri-kreen, gets nothing more: she keeps the
+  leg armour and a dagger; Cermak and Cilla a dagger). K'ratchek, a thri-kreen, gets nothing more: she keeps the
   game's own chatkcha (see below).
+- **Fuller starting gear gives no belt or boots, and a cloak only to a
+  Stalker, an Assassin or a Shinobi** (2.3.0 gave everyone a belt and boots,
+  and a cloak to every ranger).
+- **The inventory screen's `HIDE` and `MOVE` count a worn cloak and boots**
+  (with hiding to backstab and the cloak, boots and belt switch), for thieves
+  and rangers and their kits alike, as the rolls do: 10 each, to no more than
+  95, or the Cloak or Boots of Elvenkind's 95. The Characters tab's thief and
+  ranger skills too. (A worn belt's 5 was already in `PICK` and `LOCK`.)
 - **The view in a fight** (a switch, on by default): it no longer drifts after
   each figure that walks near the screen's edge, and moves only to bring back
   one that has walked off the screen.

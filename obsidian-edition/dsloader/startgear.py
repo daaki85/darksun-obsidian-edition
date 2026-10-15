@@ -17,12 +17,10 @@ the Loader:
   one, an obsidian chatkcha for the backpack);
 - fills its empty chest, arm and leg slots with leather armour, where it may wear it (not a
   multiclass preserver, for its spells);
-- gives it a plain belt and boots, a Stalker or a ranger a plain cloak, and a dagger for the
-  backpack.
+- gives a Stalker, Assassin or Shinobi a plain cloak, and anyone a dagger for the backpack.
 
 A thri-kreen is given nothing more than the game's own starting gear (K'ratchek keeps her
-chatkcha): its claws serve it better than another weapon, and it wears no armour, cloak, belt
-or boots.
+chatkcha): its claws serve it better than another weapon, and it wears no armour or cloak.
 
 The game's own party (Gerakis, K'ratchek, Cermak, Cilla: already Okay) has it too, once, as the
 game starts (defaultparty.py).
@@ -34,22 +32,20 @@ force, its kit's) and has nothing of the kind already: so given once.
 import struct
 from typing import Callable, List, Optional, Tuple
 
-from . import game, npcitems, restrict, specialize, weaponchoice
+from . import game, kits, npcitems, restrict, specialize, weaponchoice
 
 KIND = specialize.KINDS.index
 SLOT = game.EQUIP_SLOTS.index
 RIGHT, LEFT = game.WEAPON_HANDS
 BACKPACK = 14  # (the first backpack cell: 0-13 are worn)
-THRI_KREEN = 8  # (the race: given nothing, its claws better than a weapon; it wears no armour,
-                #   cloak, belt or boots)
-# the game's own plain items (SEGOBJEX's templates): leather chest, arm and leg armour, a belt,
-# boots, a cloak; and the bone long sword the plain weapons are made from (worldgear.TEMPLATE)
+THRI_KREEN = 8  # (the race: given nothing, its claws better than a weapon; it wears no armour
+                #   or cloak)
+# the game's own plain items (SEGOBJEX's templates): leather chest, arm and leg armour, a cloak; and the bone long sword the plain weapons are made from (worldgear.TEMPLATE)
 LEATHER = ((SLOT("chest"), npcitems._item("02fc000000000a00000006000000000004ff070000")),
            (SLOT("arm"), npcitems._item("01fc000000001400000007000000000004ff080000")),
            (SLOT("legs"), npcitems._item("fefb000000001400000008000000000004ff090000")))
-BELT = npcitems._item("e6fb00000000010000002a000000000005ff2a0000")
-BOOTS = npcitems._item("e5fb000000000100000044000000000005ff2b0000")
 CLOAK = npcitems._item("e3fb000000001400000041003500000003ff0e0000")
+CLOAK_KITS = frozenset((kits.STALKER, kits.ASSASSIN, kits.SHINOBI))  # (given a cloak)
 WEAPON = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")
 # the right hand's weapon, kind by kind, after the weapon spec's
 # (the chatkcha last, thrown from the hand, for one that can use no melee weapon at all)
@@ -175,12 +171,10 @@ def fill_member(gd, member: int) -> List[str]:
             if chatkcha is not None:
                 give(chatkcha[0], None)
 
-    # leather armour, a belt, boots, a cloak
+    # leather armour, and a cloak for the kits that hide
     wear = [] if gd.rules & game.RULE_RESTRICT and preserver_bare(sheet) else list(LEATHER)
-    wear += [(SLOT("waist"), BELT), (SLOT("foot"), BOOTS)]
-    from . import kitpages, kits
-    stalker = bool(game.RULES_IN_FORCE & game.RULE_KITS) and kits.STALKER in kitpages.kit_ids(sheet)
-    if stalker or any(c in restrict.RANGERS for c in classes):
+    from . import kitpages
+    if game.RULES_IN_FORCE & game.RULE_KITS and set(kitpages.kit_ids(sheet)) & CLOAK_KITS:
         wear.append((SLOT("cloak"), CLOAK))
     for slot, item in wear:
         if not any(_type(i) == _type(item) for _, i, _ in mine()) and can_use(gd, sheet, _type(item), read(_type(item))):

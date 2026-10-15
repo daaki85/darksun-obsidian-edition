@@ -387,9 +387,11 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
   and hide in shadows are the ones the Loader rolls (for
   [picking pockets](#picking-pockets) and [hiding to backstab](#hiding-in-shadows-to-backstab)).
-  A worn belt's 5 is in `PICK` and `LOCK`. Hear noise (one script check) and
+  A worn belt's 5 is in `PICK` and `LOCK`, and with
+  [hiding to backstab](#hiding-in-shadows-to-backstab) a worn cloak's 10 in
+  `HIDE` and boots' 10 in `MOVE` (the Cloak and Boots of Elvenkind's 95). Hear noise (one script check) and
   read languages (none) are left out for want of room. A ranger, with
-  [hiding to backstab](#hiding-in-shadows-to-backstab) on, gets their `MOVE` and `HIDE` in the same places (the other four left out);
+  [hiding to backstab](#hiding-in-shadows-to-backstab) on, gets their `MOVE` and `HIDE` in the same places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): -6 at DEX 1 to +5 at DEX 24-25, the
   number the [two-weapon rule](#two-weapons) adds to its penalties, and the
@@ -1685,7 +1687,7 @@ from the next start); untick one and the game is as it was.
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
-| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a belt, boots, a dagger |
+| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a dagger, and a Stalker, Assassin or Shinobi a cloak |
 
 ### Weapon specialization
 
@@ -2160,7 +2162,7 @@ With **Fuller starting gear** ticked, the Loader adds plain gear to a new
 character's own while it is still New, after the class
 restrictions, weapon specs and kits have changed theirs, and the dice log
 lists it (`Swat starts with more gear: Short Sword (in hand), Arm Armor, Leg
-Armor, Belt, Boots, Dagger (in the backpack)`):
+Armor, Dagger (in the backpack)`):
 
 - **A weapon in hand.** A character with an empty right hand takes a weapon
   it can use from its backpack (a cleric's club), else gets a plain one: of
@@ -2175,13 +2177,12 @@ Armor, Belt, Boots, Dagger (in the backpack)`):
 - **Leather armour** in its empty chest, arm and leg places, where it may wear
   it: a thief, gladiator, ranger, psionicist, cleric or Battle Mage goes out
   in a full suit.
-- **A belt and boots** for everyone, **a cloak** for a ranger (a Stalker of
-  another class too), and **a dagger** in the backpack for anyone who can use
-  one. Worn, the cloak, boots and belt help a thief ([Improved
-  thieving](#improved-thieving)).
+- **A cloak** for a Stalker, an Assassin or a Shinobi (with
+  [kits](#kits) on), to hide in ([Improved thieving](#improved-thieving)),
+  and **a dagger** in the backpack for anyone who can use one.
 - **A thri-kreen gets nothing more** than the game's own starting gear: its
-  claws serve it better than another weapon, and it wears no armour, belt,
-  boots or cloak.
+  claws serve it better than another weapon, and it wears no armour or
+  cloak.
 - **A multiclass preserver's armour** goes into the backpack, with the class
   restrictions on: it can't cast in armour. It's there to put on.
 
@@ -2216,8 +2217,7 @@ once, can't have one.
 
 With [fuller starting gear](#fuller-starting-gear), they get what a new
 character would, after the changes above: Gerakis a sling, leather chest and
-leg armour, a belt, boots and a dagger; Cermak and Cilla a belt, boots and a
-dagger. K'ratchek, a thri-kreen, fights with her claws and the game's own
+leg armour and a dagger; Cermak and Cilla a dagger. K'ratchek, a thri-kreen, fights with her claws and the game's own
 chatkcha, and gets nothing more.
 
 Cermak and Cilla keep the game's own starting spells: only a character made

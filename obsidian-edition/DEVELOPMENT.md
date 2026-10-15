@@ -1239,9 +1239,8 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
   type: the game's leather chest, arm and leg armour (SEGOBJEX templates: types
   6, 7, 8; names 07h, 08h, 09h; pictures FC02h, FC01h, FBFEh), not for a
   multiclass preserver with the class restrictions;
-- the waist and foot slots: the plain belt (type 42, name 2Ah, picture FBE6h)
-  and boots (68, 2Bh, FBE5h); the cloak slot, for a ranger or a Stalker: the
-  plain cloak (65, 0Eh, FBE3h);
+- the cloak slot, with kits on, for a Stalker, an Assassin or a Shinobi
+  (`CLOAK_KITS`): the plain cloak (type 65, name 0Eh, picture FBE3h);
 - no dagger: a plain one (the first usable of the obsidian, stone and bone)
   to the backpack.
 
@@ -1270,8 +1269,8 @@ class, place 1, none), and with fuller starting gear, last,
 `startgear.fill_member` for each. Seen in play: Cilla's USE screen lists ARMOR
 among her 1st-level spells and her inventory has no chest armour (AC 5);
 Gerakis holds the gythka and the long sword; the dice log lists each one's
-added gear (Gerakis a sling, leather chest and leg armour, a belt, boots and a
-dagger; Cermak and Cilla a belt, boots and a dagger; K'ratchek nothing).
+added gear (Gerakis a sling, leather chest and leg armour and a dagger;
+Cermak and Cilla a dagger; K'ratchek nothing).
 
 ### The leader's CHA at shops
 

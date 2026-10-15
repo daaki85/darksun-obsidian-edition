@@ -1335,9 +1335,27 @@ class GameData:
                 parts.append((kits.name(kid), kits.stealth(kid)))
         return [(what, n) for what, n in parts if n or what.startswith("ranger")]
 
-    def ranger_skill_now(self, creature: int, skill: int) -> Optional[int]:
+    def gear_skill(self, creature: int, skill: int, chance: int) -> int:
+        """CHANCE at moving silently (3) or hiding in shadows (4) with what the character wears,
+        as the stealth rule's rolls count it (stealth.turn): with the cloak, boots and belt switch
+        (BELT_IN_FORCE), a worn cloak's or boots' bonus, to no more than stealth.MOST (a chance
+        already above it kept); the Cloak or Boots of Elvenkind's chance, if better (the cloak's
+        under the open sky). Without the stealth rule, CHANCE."""
+        from . import stealth
+        if skill not in (3, 4) or not self.rules & RULE_STEALTH:
+            return chance
+        slot, elven, best, bonus = (CLOAK_SLOT, ELVEN_CLOAK_TYPE, stealth.ELVEN_HIDE_OUT, stealth.CLOAK_HIDE) \
+            if skill == 4 else (FOOT, ELVEN_BOOTS_TYPE, stealth.ELVEN_QUIET, stealth.BOOTS_QUIET)
+        if stealth.wears(self, creature, elven, slot):
+            return max(chance, best)
+        if self.belt and any(item[ITEM_SLOT] == slot for _, item, _ in self._worn(creature)):
+            return max(chance, min(stealth.MOST, chance + bonus))
+        return chance
+
+    def ranger_skill_now(self, creature: int, skill: int, gear: bool = True) -> Optional[int]:
         """A ranger's chance as it stands: effects that rule hiding out or make it certain count
-        as for a thief (no equipment penalty). None without ranger levels."""
+        as for a thief (no equipment penalty); with GEAR, a worn cloak's or boots' (gear_skill).
+        None without ranger levels."""
         parts = self.ranger_skill_parts(creature, skill)
         if parts is None:
             return None
@@ -1346,17 +1364,22 @@ class GameData:
             return 100
         if self.creature(creature)[CREATURE_STATUS] not in STATUS_ABLE or any(skill in THIEF_BLOCKED.get(e, ()) for e in ids):
             return 0
-        return max(0, min(255, sum(n for _, n in parts)))
+        chance = sum(n for _, n in parts)
+        if gear:
+            chance = self.gear_skill(creature, skill, chance)
+        return max(0, min(255, chance))
 
     def ranger_skills_now(self, creature: int) -> List[Tuple[str, int]]:
         """[(skill, chance), ...]: a ranger's move silently and hide in shadows as they stand
-        (the stealth rule's), or [] without ranger levels."""
+        (the stealth rule's, with what it wears), or [] without ranger levels."""
         out = [(THIEF_SKILLS[skill], self.ranger_skill_now(creature, skill)) for skill in (3, 4)]
         return [(name, n) for name, n in out if n is not None]
 
-    def thief_skills_now(self, creature: int, skills: Tuple[int, ...] = ROLLED_SKILLS) -> List[Tuple[str, int]]:
+    def thief_skills_now(self, creature: int, skills: Tuple[int, ...] = ROLLED_SKILLS,
+                         gear: bool = True) -> List[Tuple[str, int]]:
         """[(skill, chance), ...] for the skills the game rolls, as they stand now: with the
-        equipment penalty, a worn belt's bonus (BELT_IN_FORCE), 0 for a skill an effect rules out (or when the thief isn't Okay or New), 100
+        equipment penalty, a worn belt's bonus (BELT_IN_FORCE), with GEAR a worn cloak's or boots'
+        (gear_skill), 0 for a skill an effect rules out (or when the thief isn't Okay or New), 100
         for one an effect makes certain. Not the situation's bonus (a hard lock...). [] for
         someone without thief levels. `skills`: which (numbers in THIEF_SKILLS)."""
         rec = self.creature(creature)
@@ -1381,6 +1404,8 @@ class GameData:
             for kid in kids:  # (an Assassin's, a Swashbuckler's: no less than 0, as DSCLOG's PROBE_BELT)
                 if kits.thief_skill(kid, skill):
                     chance = max(0, chance + kits.thief_skill(kid, skill))
+            if gear:
+                chance = self.gear_skill(creature, skill, chance)
             if any(skill in THIEF_CERTAIN.get(e, ()) for e in ids):
                 chance = 100
             elif not okay or any(skill in THIEF_BLOCKED.get(e, ()) for e in ids):

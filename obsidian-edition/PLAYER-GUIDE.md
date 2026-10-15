@@ -328,8 +328,8 @@ fighter or ranger, cleric, thief, psionicist, preserver and druid), less what
 its classes can't use. The mod then adds plain gear, as each section says: a
 weapon in hand it can use (a thief/psionicist, which can't use the long
 sword, gets a bone short sword), a sling if it has no bow or sling, leather
-armour where it may wear it, a belt, boots and a dagger, and a cloak for a
-ranger. A thri-kreen gets nothing more than the game's own starting gear: its
+armour where it may wear it and a dagger, and a cloak for a Stalker, an
+Assassin or a Shinobi. A thri-kreen gets nothing more than the game's own starting gear: its
 claws serve it better than another weapon, and it wears none of the rest. A multiclass preserver's
 armour goes into the backpack, so it can cast. Nothing is given that the
 character can't use or already has. The game's own party gets the same.
@@ -406,7 +406,7 @@ bows, slings and shields are for those who mean to live long.
 
 **Starting gear.** A plain weapon of its weapon spec (in a material its
 classes allow), a shield, leather chest, arm and leg armour; with fuller
-starting gear, also a sling, a belt, boots and a dagger.
+starting gear, also a sling and a dagger.
 
 **More than one class.**
 
@@ -477,7 +477,7 @@ their hands, and they treat it like one.
 
 **Starting gear.** A plain weapon of its first weapon spec, a club in the off
 hand, leather arm armour; with fuller starting gear, also leather chest and
-leg armour, a sling, a belt, boots and a dagger.
+leg armour, a sling and a dagger.
 
 **More than one class.**
 
@@ -535,13 +535,13 @@ others.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
+| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear; with fuller starting gear, a cloak | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
 | **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric or druid |
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
 
 **Starting gear.** A plain weapon of its chosen type, bow and arrows, leather
-chest and arm armour; with fuller starting gear, also leather leg armour, a
-cloak, a belt, boots and a dagger.
+chest and arm armour; with fuller starting gear, also leather leg armour and a
+dagger (a Stalker a cloak too).
 
 **More than one class.**
 
@@ -605,15 +605,15 @@ can't read magical script, and they travel light.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks | the thief's gear | |
+| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks | the thief's gear; with fuller starting gear, a cloak | |
 | **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
-| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and Fogbolt, Reflected Image, Spook and Friends with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield | a bone short sword in place of the long sword | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
+| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and Fogbolt, Reflected Image, Spook and Friends with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
 
 The Shinobi's slots by level are in [Kits' spell slots](#kits-spell-slots).
 
 **Starting gear.** Bone long sword, sling, leather chest armour, Thieves'
-Tools; with fuller starting gear, also leather arm and leg armour, a belt,
-boots and a dagger.
+Tools; with fuller starting gear, also leather arm and leg armour and a
+dagger (an Assassin or Shinobi a cloak too).
 
 **More than one class.**
 
@@ -685,7 +685,7 @@ their magic.
 | **Battle Mage** | a warrior's THAC0 (21 less its level); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon pages (VIEW PSIONICS on the KIT page, then WEAPON SPEC), the long sword marked to start with; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 
 **Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice;
-with fuller starting gear, also a belt, boots and a dagger.
+with fuller starting gear, also a dagger.
 
 **More than one class.**
 
@@ -755,7 +755,7 @@ a level behind.
 **Starting gear.** Shield, leather chest and arm armour, a club in the
 backpack. With fuller starting gear, a weapon of its sphere in hand (the club;
 an air cleric an obsidian dagger, a fire cleric an obsidian mace), and
-leather leg armour, a belt, boots, a missile weapon its sphere allows (air a
+leather leg armour, a missile weapon its sphere allows (air a
 sling, earth and fire a chatkcha; water none) and a dagger.
 
 **More than one class.**
@@ -828,8 +828,8 @@ weapons, which wound without spilling blood.
 | **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
-**Starting gear.** Club, sling; with fuller starting gear, also a belt, boots
-and a dagger (not a Lifebinder).
+**Starting gear.** Club, sling; with fuller starting gear, also a dagger (not
+a Lifebinder).
 
 **More than one class.**
 
@@ -890,7 +890,7 @@ and flame with a thought. Reaching into another mind costs them more.
 The powers and their costs are in [Psionics](#psionics).
 
 **Starting gear.** Club, bow and arrows, leather chest armour; with fuller
-starting gear, also leather arm and leg armour, a belt, boots and a dagger.
+starting gear, also leather arm and leg armour and a dagger.
 
 **More than one class.**
 
@@ -1100,7 +1100,7 @@ first.
   is halved indoors instead.
 - A worn cloak adds 10 to hiding in shadows and worn boots 10 to moving
   silently, up to 95. A worn belt adds 5 to a thief's picking pockets and
-  opening locks.
+  opening locks. The inventory screen's thief skills count them.
 
 *Without the mod:* thieves backstab only a target that has turned to face
 someone else, and no one hides in a fight.
