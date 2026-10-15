@@ -451,7 +451,12 @@ running:
   `PANEL_MOUSE` as the scrollbar is. **L** (`INT 16h`, `our_key`, while the
   panel is on screen: `PANEL_LIVE`) is counted at `+348` and kept from the
   game; the keyboard hook is on while the panel is shown, not only with Tab
-  targeting. The level and size are saved in the settings
+  targeting. Out of a fight, with the panel off, L is counted too
+  (`L_ON_MAP`) while the map's main loop has run in the last BIOS tick or two
+  (`MAP_TICK`: no game window, menu or save name waiting on keys, where L is
+  the game's) and the Loader is there; the Loader then opens the panel
+  (`Panel.asked`), with the lines kept out of fights that have a roll in
+  them, until L again or the next fight's end. The level and size are saved in the settings
   (`combat_log_level`, `combat_log_size`).
 - **Not checked mid-fight:** saving and loading, and area changes, as the
   game allows neither in a fight; out of one the panel is off. DOSBox's

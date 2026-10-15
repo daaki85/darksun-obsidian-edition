@@ -339,7 +339,8 @@ panel_hy   dw 0                 ; +342   y
 panel_top  dw PANEL_Y0          ; +344 the Loader's: where the panel's top is on the screen,
 panel_rows dw PANEL_H           ; +346   and its height (at most PANEL_H_MOST), set before PANEL_NEW
 panel_keys dw 0                 ; +348 L pressed on the map with the panel shown, counted (the
-                                ;      companion collapses or opens it); the key kept from the game
+                                ;      companion collapses or opens it), or out of a fight with the
+                                ;      panel off (it opens it); the key kept from the game
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -14153,6 +14154,12 @@ panel_page  dw 0                ;   was last drawn (PANEL_DRAW), and its top the
 panel_drawn dw PANEL_Y0
 
 panel_tick:
+        push es                         ; (the map's main loop ran: L_ON_MAP)
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        pop es
+        mov [cs:map_tick], ax
         cmp word [cs:panel_on], 0
         je .off
         push es                         ; (the Loader gone: off, as if it had said so)
@@ -15398,7 +15405,11 @@ int16:
         cmp word [cs:target_on], 0
         jne .on
         cmp byte [cs:panel_shown], 0    ; (L for the combat log's panel)
+        jne .on
+        cmp word [cs:panel_seg], 0      ; (... or to open it, over the map)
         je .chain
+        cmp byte [cs:strip_on], 0
+        jne .chain
 .on:
         cmp ah, 0x00
         je .read
@@ -15444,14 +15455,47 @@ int16:
         add sp, 2
         iret
 
+; L_ON_MAP: ZF set if L should open the panel over the map: the panel there (not the strip), not
+; on screen, the map's main loop run within the last BIOS tick or two (no game window, save name
+; or menu waiting on keys) and the Loader there; registers kept
+L_FRESH    equ 2
+l_on_map:
+        push ax
+        push es
+        cmp word [cs:panel_seg], 0
+        je .no
+        cmp byte [cs:strip_on], 0
+        jne .no
+        cmp byte [cs:panel_shown], 0
+        jne .no
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:map_tick]
+        cmp ax, L_FRESH
+        ja .no
+        mov ax, [es:0x46C]
+        sub ax, [cs:stats_stamp]
+        cmp ax, STATS_FRESH
+        jae .no
+        xor ax, ax                      ; (ZF set)
+        jmp .out
+.no:    or ax, 1                        ; (ZF clear)
+.out:   pop es
+        pop ax
+        ret
+map_tick   dw 0
+
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
         jne .tabs
 .l:     call panel_live                 ; L on the map, the panel on it: the Loader's
+        je .count
+        call l_on_map                   ; ... or the panel off, to open it
         jne .no
-        inc word [cs:panel_keys]
+.count: inc word [cs:panel_keys]
         stc
         ret
 .tabs:  cmp word [cs:target_on], 0

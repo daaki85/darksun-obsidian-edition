@@ -19,7 +19,10 @@ have the detail.
   scrolls it a line a notch, a **Latest** chip in its top line while
   scrolled back. Between fights it keeps the last fight's lines to scroll
   back through, and rolls out of fights go in it too (a thief's skills, a
-  scroll learned); it is kept up through the arena's opening show. Under a
+  scroll learned); it is kept up through the arena's opening show. The
+  panel over the map (the box unticked) can be brought back out of a fight
+  with **L**, with the last fight's lines and the rolls since; **L** again
+  puts it away. Under a
   screen in other colours it is the panel's blue-grey, and black on the
   title, the main menu and in character creation.
 

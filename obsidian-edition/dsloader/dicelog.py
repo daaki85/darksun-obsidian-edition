@@ -997,8 +997,8 @@ class DiceLog:
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
         """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);
-        in the strip below the map, out of fights too, those with a roll (a thief's skills, a scroll
-        learned)."""
+        out of fights, those with a roll (a thief's skills, a scroll learned), for the strip below
+        the map and for the panel opened with L."""
         try:
             if self.game is not None and self.game.in_combat():
                 if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
@@ -1008,7 +1008,7 @@ class DiceLog:
             pass
         if self._fight_at is not None and now - self._fight_at <= FIGHT_LINES_AFTER:
             self._panel.log.add(lines)
-        elif self._panel.strip:
+        else:
             self._panel.log.add(lines, rolls_only=True)
 
     def _panel_input(self, now: float) -> None:
@@ -1017,9 +1017,17 @@ class DiceLog:
         if self._wheel is None:
             self._wheel = wheel.WheelHook(getattr(getattr(self.guest, "proc", None), "pid", None))
         notches = self._wheel.take()
-        if self.tsr_hdr is None or self.game is None or not self._panel.shown:
+        if self.tsr_hdr is None or self.game is None:
             return
         panel = self._panel
+        if not panel.shown:  # (L out of a fight, the panel over the map off: open it)
+            try:
+                if panel.keys(self.game, self.tsr_hdr) and self.combat_log and not panel.strip:
+                    panel.asked = True
+                    self._update_panel(now)
+            except (struct.error, IndexError, ValueError):
+                pass
+            return
         before = (panel.first, panel.size, panel.level, panel.filter)
         try:
             panel.mouse(self.game, self.tsr_hdr)
@@ -1043,7 +1051,8 @@ class DiceLog:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-        on = fighting or (self.combat_log and combatlog.strip_patched(self.game))
+            self._panel.asked = False  # (opened with L: it goes at the fight's end, as ever)
+        on = fighting or (self.combat_log and (combatlog.strip_patched(self.game) or self._panel.asked))
         top, names = "", {}
         if on:
             if not self._font_tried:

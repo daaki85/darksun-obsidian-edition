@@ -381,6 +381,18 @@ class StatesTests(unittest.TestCase):
         self.panel.mouse(self.game, HDR)
         self.assertEqual(self.panel.size, c.EXPANDED)  # (back to the size it had)
 
+    def test_l_puts_away_a_panel_opened_out_of_a_fight(self):
+        """Opened with L out of a fight (asked), L puts it away again, its size as it was."""
+        keys = HDR + c.TSR_KEYS
+        self.panel.mouse(self.game, HDR)
+        self.panel.asked = True
+        count = c.struct.unpack_from("<H", self.game.guest.mem, keys)[0]
+        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", count + 1)
+        self.panel.mouse(self.game, HDR)
+        self.assertFalse(self.panel.asked)
+        self.assertNotEqual(self.panel.size, c.COLLAPSED)
+        self.assertEqual(self.panel.keys(self.game, HDR), 0)  # (counted once)
+
     def test_update_writes_the_size(self):
         g = self.game.guest
         g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)

@@ -675,6 +675,7 @@ class Panel:
         self._grab: Optional[int] = None  # dragging the handle: the press's distance below its top
         self.pointer = (-1, -1)  # where the game's pointer is (DSCLOG's), on the screen
         self.strip = False  # in the strip below the map (the Options tab's combat_log_strip)
+        self.asked = False  # opened with L out of a fight (the panel over the map: till L or a fight's end)
 
     @property
     def g(self) -> Geometry:
@@ -711,19 +712,28 @@ class Panel:
             step = 1 if self.strip else WHEEL_ROWS  # (the strip's one row: a line a notch)
             self._scroll(top_row(self.first, self._rows, self.g) - notches * step)
 
+    def keys(self, gd, tsr_hdr: int) -> int:
+        """L pressed since the last look (DSCLOG's count, TSR_KEYS): on the panel, or out of a fight
+        with the panel off (to open it)."""
+        keys, = struct.unpack("<H", gd.guest.read(tsr_hdr + TSR_KEYS, 2))
+        if self._keys is None:
+            self._keys = keys
+        new = (keys - self._keys) & 0xFFFF
+        self._keys = keys
+        return new
+
     def mouse(self, gd, tsr_hdr: int) -> None:
         """The left button on the panel (DSCLOG's TSR_MOUSE): on the scrollbar's handle, dragging
         it; on the bar above or below it, a page back or on; on the "Latest" chip, the newest; on
         the header's level chip, the next level; on + or -, a size bigger or smaller; on a filter,
         that filter. L (TSR_KEYS) collapses the panel or opens it again."""
         mx, my, held, hits, hx, hy = struct.unpack("<hhHHhh", gd.guest.read(tsr_hdr + TSR_MOUSE, 12))
-        keys, = struct.unpack("<H", gd.guest.read(tsr_hdr + TSR_KEYS, 2))
         self.pointer = (mx, my)
-        if self._keys is None:
-            self._keys = keys
-        if keys != self._keys:
-            self._keys = keys
-            self.resize(self._open_size if self.size == COLLAPSED else COLLAPSED)
+        if self.keys(gd, tsr_hdr):
+            if self.asked:  # (opened with L out of a fight: L puts it away)
+                self.asked = False
+            else:
+                self.resize(self._open_size if self.size == COLLAPSED else COLLAPSED)
         if self._hits is None:
             self._hits = hits
         g = self.g

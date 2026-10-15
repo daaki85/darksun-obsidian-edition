@@ -359,7 +359,10 @@ and **+** to make it smaller or bigger. Collapsed, it is one line, the newest;
 expanded, it is taller (11 lines) and has filters along its top: **All**,
 **Party** (the party's lines), **Damage** (hits, damage and deaths) and
 **Saves** (saving throws and magic resistance). **L** on the map collapses it
-and opens it again. Its size is remembered.
+and opens it again. Its size is remembered. Out of a fight, **L** on the map
+brings it back with the last fight's lines and the rolls made since (a
+thief's skills, a scroll learned), to scroll through; **L** again puts it
+away, and the end of the next fight closes it as ever.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
 
