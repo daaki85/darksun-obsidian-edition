@@ -422,6 +422,11 @@ class Viewer:
         ttk.Checkbutton(custom, text="STORE and RECALL on the creation screen: keep a roll, try the die again, "
                         "and bring the kept roll back (from the next start)", variable=self.roll_store,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
+        ttk.Checkbutton(custom, text="Fuller starting gear: new characters also get a weapon in hand they can use, "
+                        "a sling, leather armour where they may wear it, a belt, boots and a dagger (rangers "
+                        "and Stalkers a cloak); a multiclass preserver's armour goes in the backpack",
+                        variable=self.starting_gear, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}
         for key, text in (
@@ -577,8 +582,8 @@ class Viewer:
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
         for var in (self.monster_info, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
-                    self.show_gear, self.show_shadows, self.show_dust, self.use_targeting, self.scroll_map,
-                    self.effects_kept):
+                    self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
+                    self.scroll_map, self.effects_kept):
             var.set(True)
         for var in (self.scroll_right, self.combat_log):
             var.set(False)
@@ -919,6 +924,7 @@ class Viewer:
                 self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
                 self.dice.pickpockets = self.pickpockets.get()
                 self.dice.show_gear = self.show_gear.get()
+                self.dice.starting_gear = self.starting_gear.get()
                 self.dice.show_shadows = self.show_shadows.get()
                 self.dice.combat_log = self.combat_log.get()
                 self.dice.combat_log_level = self.combat_log_level.get()
@@ -1026,6 +1032,7 @@ class Viewer:
         settings["combat_log_level"] = self.combat_log_level.get()
         settings["pickpockets"] = self.pickpockets.get()
         settings["show_gear"] = self.show_gear.get()
+        settings["starting_gear"] = self.starting_gear.get()
         settings["shadows"] = self.show_shadows.get()
         settings["dust"] = self.show_dust.get()
         settings["elf_looks"] = self.elf_looks.get()
@@ -1047,6 +1054,7 @@ class Viewer:
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
             self.dice.set_pickpockets(self.pickpockets.get())
             self.dice.show_gear = self.show_gear.get()
+            self.dice.starting_gear = self.starting_gear.get()
             self.dice.show_shadows = self.show_shadows.get()
             self.dice.show_dust = self.show_dust.get()
             self.dice.combat_log = self.combat_log.get()

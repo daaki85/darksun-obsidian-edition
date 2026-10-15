@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, combatlog, wheel, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, stealth, tools, vulture, weaponchoice
+from . import buyback, combatlog, wheel, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
 from .guestmem import GuestMemory
@@ -355,6 +355,7 @@ class DiceLog:
         self.arena_ring = True  # put the Ring +1 on the Tied-up Prisoner's body in the arena (ring.py)
         self.pickpockets = True  # the thieving tools pick a pocket (pickpocket.py, tools.py)
         self.show_gear = True  # the party's map sprites dressed in what they wear (sprites.py)
+        self.starting_gear = True  # new characters' starting gear filled out (startgear.py)
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
         self.combat_log = False  # the combat log's panel in the game, in a fight (combatlog.py)
@@ -614,6 +615,7 @@ class DiceLog:
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
         self.pickpockets = bool(settings.get("pickpockets", True))
         self.show_gear = bool(settings.get("show_gear", True))
+        self.starting_gear = bool(settings.get("starting_gear", True))
         self.show_shadows = bool(settings.get("shadows", True))
         self.combat_log = bool(settings.get("combat_log", True))
         self.combat_log_level = combat_log_level(settings)
@@ -943,6 +945,8 @@ class DiceLog:
                 out += weaponchoice.finish_new(self.game)
             if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
                 out += weaponchoice.kit_gear(self.game)
+            if self.starting_gear:  # (new characters' starting gear filled out)
+                out += startgear.fill(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done)  # (the game's own party, once)
             if self.cilla_elf:
                 out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)

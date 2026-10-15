@@ -12301,6 +12301,7 @@ ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
 GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
 GREYS_LEGS  equ 24              ; (PROBE_TYPES_FILL)
+AIR_CLERIC  equ 1               ; a type's +10h (the classes that may use it): the air cleric's bit
 
 ; PROBE_TYPES_SIZE: INT VEC_TYPES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) before the
 ; game reserves memory for the IT1R chunk, its size the dword at [BP-4]: adds the room.
@@ -12318,8 +12319,10 @@ probe_types_size:
 
 ; PROBE_TYPES_FILL: INT VEC_TYPES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the
 ; call that reads the chunk in (AX 0: read). Does the add, then, if it was read, copies
-; EXTRA_TYPES after the game's own (the room made, [BP-4], less theirs) and notes where; and
-; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3.
+; EXTRA_TYPES after the game's own (the room made, [BP-4], less theirs) and notes where;
+; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3; and lets air
+; clerics use the game's daggers (17, 33, 84, 94: none had their bit; their sphere's weapons
+; are daggers and missile and thrown ones).
 probe_types_fill:
         pop word [cs:n_ip]
         pop word [cs:n_cs]
@@ -12342,6 +12345,10 @@ probe_types_fill:
         mov [cs:types_ptr+2], es
         mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
+        or byte [es:di+17*TYPE_SIZE+0x10], AIR_CLERIC
+        or byte [es:di+33*TYPE_SIZE+0x10], AIR_CLERIC
+        or byte [es:di+84*TYPE_SIZE+0x10], AIR_CLERIC
+        or byte [es:di+94*TYPE_SIZE+0x10], AIR_CLERIC
         mov ax, [bp-4]
         sub ax, TYPES_EXTRA * TYPE_SIZE
         add di, ax              ; after the game's own
@@ -12402,9 +12409,9 @@ extra_types:
         db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
         ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
         ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
-        ; 2, earth's): the Dagger's (33)
+        ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
         db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF2, 0x1F, 0x00, 0x00
+        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
         ; the Mace's (20)
         db 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
@@ -12438,8 +12445,9 @@ extra_types:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
         db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
-        ; a metal dagger air clerics may use too (Galefang, dsloader/worldgear.py): the metal
-        ; Dagger's, with the air cleric's class bit (+10h: 1FF3h; fire and water clerics still not)
+        ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
+        ; fire and water clerics not); the type its own, as it was made when no other dagger was
+        ; an air cleric's
         db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
         ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
@@ -12450,9 +12458,10 @@ extra_types:
         db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
         db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
         ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
-        ; bone (+8: 1), for water clerics and not fire ones (+10h: 1FFAh; the game's daggers 1FF6h)
+        ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
+        ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
         db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xFA, 0x1F, 0x00, 0x00
+        db 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
         ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
         ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
         ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and
@@ -12685,35 +12694,63 @@ FIGURE_MOST  equ 128            ; (the widest and tallest a figure's picture may
 
 ; PROBE_REDRAW: INT VEC_REDRAW replaces "push bp / mov bp,sp / sub sp,8" (6 bytes: INT + 4 NOPs)
 ; at the start of the routine that draws a rectangle of the view again (camera x, y, page, x0,
-; y0, x1, y1, ...): with shadows on, the rectangle reaches further right and down.
+; y0, x1, y1, a flag: then shown by a flip of the screens and copied to the other): with shadows
+; on, the rectangle reaches further right and down. With the combat log's panel on screen, a
+; rectangle over it is drawn as the parts of it around the panel (REDRAW_PARTS), so nothing the
+; game draws there covers it; the routine itself is then left out, its caller's way back kept in a
+; frame of the routine's own shape (BP, the way back, the arguments), which the overlay manager
+; can fix up. The parts come back through here (RP_BUSY): as they are.
+REDRAW_SEG equ 0x1DF3           ; (DSUN.EXE 2475Fh: 1DF3:142F, the routine's own address)
+REDRAW_OFF equ 0x142F
 probe_redraw:
+        cmp byte [cs:rp_busy], 0
+        jne .go
         push bp
         mov bp, sp
         cmp word [cs:shadows_on], 0
         jne .wide
         cmp word [cs:rings_on], 0
-        je .go
+        je .wided
 .wide:
         add word [bp+22], SHADOW_RIGHT  ; x1 (after BP, the interrupt's IP, CS and flags, and the
         add word [bp+24], SHADOW_DOWN   ;   caller's way back); y1 (the routine keeps both on screen)
-.go:    pop bp
-        pop word [cs:resume]
+.wided: pop bp
+.go:    pop word [cs:resume]
         pop word [cs:resume + 2]
         popf
-        cmp word [cs:panel_on], 0       ; (the combat log's panel: drawn again over what this draws,
-        je .plain                       ;   at its end: REDRAW_POST)
-        cmp byte [cs:redraw_busy], 0
+        cmp byte [cs:rp_busy], 0
         jne .plain
-        mov byte [cs:redraw_busy], 1
-        push bp
+        push bp                         ; (the routine's frame: x0 [BP+0Ch], y0, x1, y1, flag)
         mov bp, sp
         push ax
-        mov ax, [bp+2]                  ; the caller's way back, kept, and REDRAW_POST in its place
-        mov [cs:redraw_ret], ax
-        mov ax, [bp+4]
-        mov [cs:redraw_ret + 2], ax
-        mov word [bp+2], redraw_post
-        mov [bp+4], cs
+        push bx
+        push cx
+        push dx
+        mov ax, [bp+0x0C]
+        mov bx, [bp+0x0E]
+        mov cx, [bp+0x10]
+        mov dx, [bp+0x12]
+        call clip_check
+        jnc .whole
+        mov ax, [bp+6]
+        mov [cs:rp_camx], ax
+        mov ax, [bp+8]
+        mov [cs:rp_camy], ax
+        mov ax, [bp+0x0A]
+        mov [cs:rp_page], ax
+        mov ax, [bp+0x14]
+        mov [cs:rp_flag], ax
+        call redraw_parts
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        mov ax, 1                       ; (drawn, as the routine says)
+        pop bp
+        retf                            ; (to the caller, which takes its arguments off)
+.whole: pop dx
+        pop cx
+        pop bx
         pop ax
         pop bp
 .plain: push bp
@@ -12721,25 +12758,168 @@ probe_redraw:
         sub sp, 8
         jmp far [cs:resume]
 
-; the rectangle drawn again: the panel over it, if the floor was drawn under it, then back to the
-; caller (its arguments still on the stack)
-redraw_post:
-        pushf
-        mov byte [cs:redraw_busy], 0
-        cmp byte [cs:panel_dirty], 0
-        je .back
-        cmp byte [cs:panel_shown], 0
-        je .back
-        mov byte [cs:panel_dirty], 0
+; CLIP_CHECK: CF set if the rectangle (AX x0, BX y0, CX x1, DX y1) is to be drawn in parts round
+; the panel: the panel on screen and the rectangle over it (on screen, in whole bytes of the planes,
+; as the routine draws it). Its bounds then in RP_X0 to RP_Y1. Keeps all.
+clip_check:
+        cmp word [cs:panel_on], 0
+        je .no
+        call panel_live
+        jne .no
+        push ax
+        push bx
+        push cx
+        push dx
+        or ax, ax
+        jge .x0
+        xor ax, ax
+.x0:    or bx, bx
+        jge .y0
+        xor bx, bx
+.y0:    cmp cx, 0x13F
+        jle .x1
+        mov cx, 0x13F
+.x1:    cmp dx, 0xC7
+        jle .y1
+        mov dx, 0xC7
+.y1:    and ax, 0xFFFC
+        or cx, 3
+        cmp cx, PANEL_X0
+        jl .out
+        cmp ax, PANEL_X0 + PANEL_W - 1
+        jg .out
+        cmp dx, [cs:panel_top]
+        jl .out
+        push si
+        mov si, [cs:panel_top]
+        add si, [cs:panel_rows]
+        dec si
+        cmp bx, si
+        pop si
+        jg .out
+        mov [cs:rp_x0], ax
+        mov [cs:rp_y0], bx
+        mov [cs:rp_x1], cx
+        mov [cs:rp_y1], dx
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        stc
+        ret
+.out:   pop dx
+        pop cx
+        pop bx
+        pop ax
+.no:    clc
+        ret
+
+; REDRAW_PARTS: the rectangle RP_X0 to RP_Y1 drawn by the routine (RP_CAMX, RP_CAMY, RP_PAGE,
+; RP_FLAG as given) as up to four parts round the panel: above it, below it, and to its left and
+; right. With the flag (the screens flipped, the parts copied to the other), the panel is put on
+; the other screen first, so whichever is shown has it. DS the game's; BP kept (the caller's frame,
+; for the overlay manager); keeps all.
+redraw_parts:
+        pusha
+        push es
+        mov byte [cs:rp_busy], 1
+        mov ax, ds
+        sub ax, DGROUP_SEG - REDRAW_SEG
+        mov [cs:redraw_far + 2], ax
+        cmp word [cs:rp_flag], 0
+        je .parts
+        call panel_draw_other
+.parts: mov si, [cs:panel_top]          ; SI the panel's top, DI its bottom row
+        mov di, si
+        add di, [cs:panel_rows]
+        dec di
+        mov bx, [cs:rp_y0]              ; above it
+        cmp bx, si
+        jge .below
+        mov dx, si
+        dec dx
+        cmp dx, [cs:rp_y1]
+        jle .a
+        mov dx, [cs:rp_y1]
+.a:     mov ax, [cs:rp_x0]
+        mov cx, [cs:rp_x1]
+        call rp_call
+.below: mov dx, [cs:rp_y1]
+        cmp dx, di
+        jle .mid
+        mov bx, di
+        inc bx
+        cmp bx, [cs:rp_y0]
+        jge .b
+        mov bx, [cs:rp_y0]
+.b:     mov ax, [cs:rp_x0]
+        mov cx, [cs:rp_x1]
+        call rp_call
+.mid:   mov bx, [cs:rp_y0]              ; its rows: to the left and right of it
+        cmp bx, si
+        jge .m0
+        mov bx, si
+.m0:    mov dx, [cs:rp_y1]
+        cmp dx, di
+        jle .m1
+        mov dx, di
+.m1:    mov [cs:rp_ym0], bx
+        mov [cs:rp_ym1], dx
+        mov ax, [cs:rp_x0]
+        cmp ax, PANEL_X0
+        jge .right
+        mov cx, PANEL_X0 - 1
+        call rp_call
+.right: mov cx, [cs:rp_x1]
+        cmp cx, PANEL_X0 + PANEL_W - 1
+        jle .done
+        mov ax, PANEL_X0 + PANEL_W
+        mov bx, [cs:rp_ym0]
+        mov dx, [cs:rp_ym1]
+        call rp_call
+.done:  cmp word [cs:rp_flag], 0        ; (flipped: the screen shown now the one it is drawn into)
+        je .out
+        call panel_live
+        je .out
         call panel_draw
-.back:  popf
-        jmp far [cs:redraw_ret]
-redraw_busy db 0
-redraw_ret  dd 0
+.out:   mov byte [cs:rp_busy], 0
+        pop es
+        popa
+        ret
+
+; RP_CALL: the routine for the part AX x0, BX y0, CX x1, DX y1 (AX to DX and ES not kept)
+rp_call:
+        push word [cs:rp_flag]
+        push dx
+        push cx
+        push bx
+        push ax
+        push word [cs:rp_page]
+        push word [cs:rp_camy]
+        push word [cs:rp_camx]
+        call far [cs:redraw_far]
+        add sp, 16
+        ret
+redraw_far dw REDRAW_OFF, 0
+rp_busy  db 0
+rp_camx  dw 0
+rp_camy  dw 0
+rp_page  dw 0
+rp_flag  dw 0
+rp_x0    dw 0
+rp_y0    dw 0
+rp_x1    dw 0
+rp_y1    dw 0
+rp_ym0   dw 0
+rp_ym1   dw 0
 
 ; PROBE_REDRAW_ALL: INT VEC_REDRAW_ALL replaces "push word [bp+8] / push word [bp+6]" (6 bytes:
 ; INT + 4 NOPs) where the routine drawing again what moved, having made the rectangle round it all
-; (x1 at [BP-0Ah], y1 at [BP-0Eh]), starts to draw: with shadows on, it reaches further right and down.
+; (x0 at [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]), starts to draw: with shadows on, it
+; reaches further right and down; over the combat log's panel, it is drawn in parts round it by
+; the routine PROBE_REDRAW is in (REDRAW_PARTS), and this one goes on at its end (24C65h).
+REDRAW_ALL_AT  equ 0x24B1A      ; (DSUN.EXE: the way back of the INT)
+REDRAW_ALL_END equ 0x24C65      ; ("mov ax,1", then its return)
 probe_redraw_all:
         pop word [cs:resume]
         pop word [cs:resume + 2]
@@ -12757,6 +12937,38 @@ probe_redraw_all:
         jle .dust
         mov word [bp-0x0E], 0xC7
 .dust:  call dust_union
+        push ax                         ; (over the combat log's panel: drawn in parts round it,
+        push bx                         ;   the routine's own drawing left out: on at its end)
+        push cx
+        push dx
+        mov ax, [bp-8]
+        mov bx, [bp-0x0C]
+        mov cx, [bp-0x0A]
+        mov dx, [bp-0x0E]
+        call clip_check
+        jnc .whole
+        mov ax, [bp+6]
+        mov [cs:rp_camx], ax
+        mov ax, [bp+8]
+        mov [cs:rp_camy], ax
+        mov ax, [bp+0x0A]
+        mov [cs:rp_page], ax
+        mov ax, [bp+0x0E]
+        mov [cs:rp_flag], ax
+        call redraw_parts
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        add word [cs:resume], REDRAW_ALL_END - REDRAW_ALL_AT
+        push word [cs:resume_fl]
+        push word [cs:resume + 2]
+        push word [cs:resume]
+        iret
+.whole: pop dx
+        pop cx
+        pop bx
+        pop ax
 .go:    push word [bp+8]
         push word [bp+6]
         push word [cs:resume_fl]
@@ -14056,7 +14268,52 @@ panel_draw:
         cmp word [es:SHOWN_PAGE], 0
         je .seg
         mov ax, 0xA400
-.seg:   mov es, ax
+.seg:   call panel_blit
+        pop es
+        pop ds
+        popa
+.none:  ret
+
+; PANEL_DRAW_OTHER: the picture into the screen not on show (a redraw about to flip to it: the
+; game's map on both); registers kept
+panel_draw_other:
+        cmp word [cs:panel_seg], 0
+        je .none
+        pusha
+        push ds
+        push es
+        cld
+        mov ax, ds
+        sub ax, DGROUP_SEG
+        add ax, PAGES_SEG
+        mov es, ax
+        mov ax, 0xA400
+        cmp word [es:SHOWN_PAGE], 0
+        je .seg
+        mov ax, 0xA000
+.seg:   call panel_blit
+        pop es
+        pop ds
+        popa
+.none:  ret
+
+; PANEL_BLIT: the picture into the screen at segment AX, a plane at a time (AX to DI, DS, ES not
+; kept). Its top and height read once, the height kept within the screen (never past row 199).
+panel_blit:
+        mov es, ax
+        mov ax, [cs:panel_top]
+        cmp ax, 199
+        ja .ret
+        mov [cs:pb_top], ax
+        mov cx, 200
+        sub cx, ax
+        mov ax, [cs:panel_rows]
+        cmp ax, cx
+        jbe .rows
+        mov ax, cx
+.rows:  or ax, ax
+        jz .ret
+        mov [cs:pb_rows], ax
         call vga_save
         mov ds, [cs:panel_seg]
         xor bx, bx                      ; (BX: the plane)
@@ -14067,12 +14324,12 @@ panel_draw:
         mov al, 2
         out dx, ax
         mov si, bx                      ; the picture's first pixel of this plane ...
-        mov ax, [cs:panel_top]          ; ... and the screen's byte for it
+        mov ax, [cs:pb_top]             ; ... and the screen's byte for it
         mov dx, 80
         mul dx
         add ax, PANEL_X0 / 4
         mov di, ax
-        mov dx, [cs:panel_rows]
+        mov dx, [cs:pb_rows]
 .row:   mov cx, PANEL_W / 4
 .pix:   mov al, [si]
         stosb
@@ -14085,10 +14342,9 @@ panel_draw:
         cmp bx, 4
         jb .plane
         call vga_restore
-        pop es
-        pop ds
-        popa
-.none:  ret
+.ret:   ret
+pb_top  dw 0
+pb_rows dw 0
 
 ; DUST_UNION: in PROBE_REDRAW_ALL (x0 [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]: on screen),
 ; the puffs' ground taken in, as far as it is on screen

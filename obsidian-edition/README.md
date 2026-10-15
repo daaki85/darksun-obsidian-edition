@@ -59,6 +59,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Kits](#kits)
   - [Levels up to 10](#levels-up-to-10)
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
+  - [Fuller starting gear](#fuller-starting-gear)
   - [The game's own party](#the-games-own-party)
 - [Expanded features](#expanded-features)
   - [The leader's CHA at shops](#the-leaders-cha-at-shops)
@@ -117,8 +118,8 @@ and tables in one place, without spoilers, with a section for each class.
   saving throws and multiclass hit points as the books have them, and scores
   and hit points kept as rolled ([Rule changes](#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class), levels up to 10, and STORE and RECALL for a creation
-  roll ([More character customization](#more-character-customization)).
+  (three for each class), levels up to 10, STORE and RECALL for a creation
+  roll, and fuller starting gear ([More character customization](#more-character-customization)).
 - **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
   and pick pockets, the party leader's CHA lowers shop prices, and merchants
   sell back the magical items you sold them ([Expanded
@@ -132,7 +133,7 @@ and tables in one place, without spoilers, with a section for each class.
   weapons and armour, figures cast shadows and kick up dust, and elves and
   half-elves have a look of their own ([Graphics](#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
-  scrolling the map by dragging with the mouse wheel ([Controls](#controls)),
+  dragging the map with the mouse wheel held down ([Controls](#controls)),
   40 saves, each also kept under its name, and 29 saved characters ([More
   saves and characters](#more-saves-and-characters)), a game speed setting
   ([Game speed](#game-speed)), crash reports, and no dragon asking for a word
@@ -158,8 +159,8 @@ game artwork is copied.
 
 ## Requirements
 
-- **Windows** with DOSBox (plain DOSBox 0.74, DOSBox Staging, or the DOSBox
-  bundled with the GOG/Steam release).
+- **Windows** and the **GOG release** of Dark Sun: Shattered Lands. The
+  Loader runs it in the DOSBox that comes with it.
 - **64-bit Python 3.8+** from python.org. If it isn't installed, the `.bat`
   files offer to install it for you (see below). Python includes tkinter and
   needs no extra packages. It has to be 64-bit because 64-bit DOSBox can't be
@@ -557,7 +558,8 @@ Everything there applies in games started from the Loader; a switch that says
   to AD&D.
 - **More character customization** ([More character
   customization](#more-character-customization)): weapon specialization, kits,
-  levels up to 10, and STORE and RECALL on the creation screen.
+  levels up to 10, STORE and RECALL on the creation screen, and fuller
+  starting gear.
 - **Expanded features** ([Expanded features](#expanded-features)): the
   leader's CHA at shops, buying back magical items, and **Improved thieving** (AD&D's thief skills,
   hiding to backstab, the cloak, boots and belt, and picking pockets).
@@ -571,7 +573,7 @@ Everything there applies in games started from the Loader; a switch that says
 - **Saves** ([Saves under their names](#saves-under-their-names)): the folder
   of saves kept under their names, and putting one back in a slot.
 
-All are on by default except the right button, and are
+All are on by default except scrolling by holding the right button, and are
 remembered for next time. **Restore defaults**, at the bottom of the tab, sets
 them all back (after asking).
 In a window too small to show the open sections, the tab scrolls (scrollbar,
@@ -1033,10 +1035,13 @@ DEX.
 ### How the game works out thief skills
 
 The game never shows thief skills, but it rolls them: for traps, and for the
-locks, walls and so on its scripts ask for (see Where the game rolls thief skills). The
-roll is a d100 that must come in under the skill's chance. The game's code works
-the chance out as:
-- a base for each skill (28, 18, 13, 28, 18, 23, 78, −4),
+locks, walls and so on its scripts ask for (see [Where the game rolls thief
+skills](#where-the-game-rolls-thief-skills)). The game gives the skills no
+names; its eight are AD&D's in AD&D's order (pick pockets, open locks,
+find/remove traps, move silently, hide in shadows, hear noise, climb walls,
+read languages), which the checks below fit. The roll is a d100 that must
+come in under the skill's chance. The game's code works the chance out as:
+- a base for each skill, in that order (28, 18, 13, 28, 18, 23, 78, −4),
 - plus 4 for each thief level,
 - plus a racial adjustment. These are AD&D's, for example a dwarf gets +10 to
   open locks, +15 to find traps, −10 to climb walls and −5 to read languages.
@@ -1085,10 +1090,6 @@ it, so the roll can't succeed, and making it certain adds 1000. (One more rule
 in the code would make move silently certain, and hearing noise impossible, for
 someone wearing one particular item on their legs, but the game passes that
 check its two lists the wrong way round, so it never applies.)
-
-The game gives the skills no names. The eight are AD&D's in AD&D's order (pick
-pockets, open locks, find/remove traps, move silently, hide in shadows, hear
-noise, climb walls, read languages): the checks above fit them.
 
 ### Where the game rolls thief skills
 
@@ -1299,8 +1300,9 @@ A **multiclass preserver** may wear what its other classes allow, but casts no
 spells (wizard or priest) while wearing armour (a helm counts, a shield
 doesn't), as the game's own "No spell use" stops them. The **USE** screen
 heads its spell slots **NO SPELLS IN ARMOUR**, and the Characters tab adds
-"(no spells in armour)" to them. A human who has
-changed class is held by the class it has now; another race by all of its
+"(no spells in armour)" to them.
+
+A human who has changed class is held by the class it has now; another race by all of its
 classes. A ranger turned cleric uses both spheres' weapons, and a warrior who
 dual-classed uses the weapons it specialized in once the new class's level
 passes the old (a fighter's, gladiator's or ranger's chosen weapon specs, and a
@@ -1309,11 +1311,14 @@ fire sphere allows only obsidian weapons, may still use bows. Cloaks,
 the Cloak of Protection among them, aren't armour: any class may wear one.
 
 A new character starts without the weapons, armour and shields its classes
-can't use. The game gives a character of several classes each class's gear,
-and puts what it may not wear in the backpack: the Loader leaves that behind
-and says so in the dice log (`Yilballa's Chest Armor is left behind: their
-classes can't use it`, for a druid's leather armour given for its fighter
-class).
+can't use. The game gives a character of several classes one class's gear,
+the first of fighter or ranger, cleric, thief, psionicist, preserver and
+druid, and puts what it may not wear in the backpack: the Loader leaves that
+behind and says so in the dice log (`Yilballa's Chest Armor is left behind:
+their classes can't use it`, for a fighter/druid's leather armour, given for
+its fighter class). A character left without a weapon this way (a
+thief/psionicist loses its long sword) gets one it can use with [Fuller
+starting gear](#fuller-starting-gear).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#class-restrictions).
 
@@ -1364,7 +1369,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hit-dice-the-better-of-two).
 ### Scores and hit points as rolled
 
 The game's creation screen lets a click change what the die rolled: a left
-click raises a score by 1 (round to the least from the most), a right click
+click raises a score by 1 (from its most, round to its least), a right click
 lowers it, and a click on the hit points sets them anywhere the classes could
 roll. Every score can go to its most that way. With **Scores and hit points as
 rolled** ticked:
@@ -1606,7 +1611,7 @@ follow the AD&D rules for them:
 
 Armour here is what is worn on the arms, legs, head or chest; something only
 carried in a backpack doesn't count. Untick it and every ring and cloak worn
-counts, whatever else is worn (the game's way with the patched game).
+counts in full, whatever else is worn.
 
 ### Half-giants' two-handed weapons
 
@@ -1640,11 +1645,11 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 ## More character customization
 
 More choices for each character: a weapon to specialize in, a kit, a 10th
-level to reach, and a roll to keep while trying the die again. Each has a
-box in the Options tab's **More character customization** section. All are on
-by default and, like the rule changes, take effect at once in games started
-with the dice log (STORE and RECALL from the next start); untick one and the
-game is as it was.
+level to reach, a roll to keep while trying the die again, and fuller
+starting gear. Each has a box in the Options tab's **More character
+customization** section. All are on by default and, like the rule changes,
+take effect at once in games started with the dice log (STORE and RECALL
+from the next start); untick one and the game is as it was.
 
 | Box on the Options tab | What it adds |
 |---|---|
@@ -1652,6 +1657,7 @@ game is as it was.
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
+| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a belt, boots, a dagger |
 
 ### Weapon specialization
 
@@ -1717,7 +1723,7 @@ character may use, in any material. The rest stay greyed:
 |---|---|---|
 | …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
 | …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
-| …with air cleric (missile weapons, and the dagger that can be thrown) | dagger, chatkcha, bow, sling, staff sling | an obsidian dagger |
+| …with air cleric (missile and thrown weapons, daggers) | dagger, chatkcha, bow, sling, staff sling | an obsidian dagger |
 | …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the Loader's metal) | an obsidian long sword |
 | …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
 | …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
@@ -1793,8 +1799,8 @@ and costs something. A human who changes class may take a kit for the new
 class too ([Changing class](#changing-class)). Each class's three kits have a
 table of their own below: what the kit gives (with the level each part comes
 at), what it costs, what a new character with it starts with ([Starting
-gear](#starting-gear)), and what else to know, the classes and kits it rules
-out among it ([Kits that rule out classes and each other](#kits-that-rule-out-classes-and-each-other)).
+gear](#starting-gear)), and what else to know, such as the classes and kits
+it rules out ([Kits that rule out classes and each other](#kits-that-rule-out-classes-and-each-other)).
 Levels are the kit's own class's.
 
 #### Fighter kits
@@ -1853,7 +1859,7 @@ A cleric starts with a shield, leather chest and arm armour, a club in the backp
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in the backpack) | can't go with the Twin-blade |
+| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
@@ -1923,7 +1929,8 @@ to the kit while the character is new, as each table's **Starts with** says:
 a weapon or shield the kit forbids is swapped or taken away, and a kit with a
 weapon spec of its own gets a plain weapon of it. The dice log says what it
 changed (`T'Jun starts with a plain bone axe for the Battle Mage's weapon
-spec, in place of the Quarterstaff`).
+spec, in place of the Quarterstaff`). [Fuller starting
+gear](#fuller-starting-gear) adds more on top.
 
 #### The kits in play
 
@@ -1998,6 +2005,8 @@ With **Weapon specialization** ticked, a human who becomes a fighter,
 gladiator or ranger (or a Battle Mage) then picks the weapon types it is due
 on the same window as at a level up (**PICK A WEAPON SPECIALTY**), less any it
 has already.
+
+#### Preservers' first spells
 
 A human who becomes a preserver picks its first two spells on the game's
 **CHOOSE A SPELL** window, twice over, from the 1st-level ones (the game gave
@@ -2112,12 +2121,44 @@ better comes, RECALL puts the stored one back, AC and damage with it.
 Changing the race, sex, classes or kit forgets the stored roll (its hit
 points were rolled for those), even if they are changed back: RECALL then
 does nothing until STORE keeps another. STORE again keeps the new roll in
-place of the old. With **STORE and RECALL on the creation screen** unticked
-in the Options tab's More character customization section (it's ticked by
-default), the screen is as the game has it, from the next time the game is
-started.
+place of the old. Unticked, the screen is as the game has it, from the next
+time the game is started.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
+
+### Fuller starting gear
+
+With **Fuller starting gear** ticked, the Loader adds plain gear to a new
+character's own while it is still New, after the class
+restrictions, weapon specs and kits have changed theirs, and the dice log
+lists it (`Swat starts with more gear: Short Sword (in hand), Arm Armor, Leg
+Armor, Belt, Boots, Dagger (in the backpack)`):
+
+- **A weapon in hand.** A character with an empty right hand takes a weapon
+  it can use from its backpack (a cleric's club), else gets a plain one: of
+  its weapon spec, else a short sword, club, mace, dagger or quarterstaff (a
+  cleric the club and mace first), in a material it can use. So a
+  thief/psionicist, whose long sword the class restrictions take, gets a bone
+  short sword, a fire cleric an obsidian mace, and an air cleric an obsidian
+  dagger.
+- **A missile weapon.** A sling in the missile slot for one with no bow or
+  sling; an earth or fire cleric, who can't use one, an obsidian chatkcha in
+  the backpack (a water cleric neither).
+- **Leather armour** in its empty chest, arm and leg places, where it may wear
+  it: a thief, gladiator, ranger, psionicist, cleric or Battle Mage goes out
+  in a full suit.
+- **A belt and boots** for everyone, **a cloak** for a ranger (a Stalker of
+  another class too), and **a dagger** in the backpack for anyone who can use
+  one. Worn, the cloak, boots and belt help a thief ([Improved
+  thieving](#improved-thieving)).
+- **A multiclass preserver's armour** goes into the backpack, with the class
+  restrictions on: it can't cast in armour. It's there to put on.
+
+Nothing is given that the character can't use or already has something of
+the kind, so each item comes once. Unticked, a new character starts with the
+game's gear, changed only by the rules above.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fuller-starting-gear).
 
 ### The game's own party
 
@@ -2142,7 +2183,7 @@ level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
 once, can't have one.
 
 Cermak and Cilla keep the game's own starting spells: only a character made
-on the creation screen [picks its own](#changing-class).
+on the creation screen [picks its own](#preservers-first-spells).
 
 ![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
 
@@ -2187,7 +2228,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
 ### Buying back magical items
 
 The game destroys whatever the party sells. With **Merchants keep magical
-items sold to them** ticked (it's ticked by default), a magical item sold (one
+items sold to them** ticked, a magical item sold (one
 with a plus, or a power: a ring, a wand, a scroll...) goes into the merchant's
 pack instead, and the shop offers it for sale at its price, less the leader's
 CHA discount, so it can be bought back. Anything else sold is gone, as in the
@@ -2357,7 +2398,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
 #### Picking pockets
 
 The game has one pocket to pick, in the Trustee's conversation (his key). With
-**Picking pockets** ticked on the Options tab (it is by default), a thief can
+**Picking pockets** ticked, a thief can
 try anyone's with **Thieves' Tools**. Every thief starts a new game with a set
 (a satchel) in the first free backpack cell, and a thief who joins later gets
 one too (the log says so). A thief who loses or sells theirs can buy another
@@ -2467,7 +2508,7 @@ in the character's sheet, so it saves with the game and the character.
   does: CHA + 2d4, the dice log showing the roll (`Friends: 2d4 = [4 + 3] = 7
   -> Xan's CHA +7 while it lasts (at most 25)`). Shop prices follow
   the party leader's CHA, so a leader who casts it before trading buys and
-  sells better (see [CHA and prices](#expanded-features)). A second casting
+  sells better (see [the leader's CHA at shops](#the-leaders-cha-at-shops)). A second casting
   replaces the first rather than adding to it; a CHA of 25 or more already is
   left as it is.
 
@@ -2476,8 +2517,7 @@ A Shinobi can learn Reflected Image, Spook and Friends, as well as Fogbolt.
 Each has sounds of its own: Cat's Grace lands with Haste's shimmer, Erdlu Claw
 with Shocking Grasp's snap, and Fogbolt is cast and lands with Fog Cloud's.
 
-With the **New wizard spells** box unticked (it's ticked by default) the
-spells are gone from the lists and the game is as it was.
+With the **New wizard spells** box unticked the spells are gone from the lists and the game is as it was.
 
 ![The descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
 
@@ -2499,6 +2539,11 @@ own. A changed switch takes effect in regions the party hasn't visited yet;
 start a new game to have them all. The log doesn't say where they are: they're
 there to be found. [Every magic item](#every-magic-item) lists the magic ones
 with the game's own.
+
+**New items, magical and mundane** on the Options tab places them all, the
+arena's ring too; a thief's tools come with picking pockets. A thief can
+[lift](#picking-pockets) Pehtucl's ring, Shadowseeker, Gutterknot and
+Mindshard (200 XP for each weapon).
 
 **Mundane items.** The game has no short sword at all, no bone or obsidian
 axe or great axe, no bone dagger and few plain metal weapons; the
@@ -2547,7 +2592,7 @@ character can use.
 | ![](docs/items/drakejaw.png) | **Drakejaw** | carried by one of the **Magera** guarding the wagon's prisoners | a bone axe +1 (1d8+1): a water cleric can wield it |
 | ![](docs/items/glasshewer.png) | **Glasshewer** | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it |
 | ![](docs/items/headsman.png) | **Headsman** | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems | a metal great axe +2 |
-| ![](docs/items/galefang.png) | **Galefang** | carried by the **Rogue Shaman**, with his Shaman Followers | a metal dagger +2 an **air cleric** can wield (none of the game's daggers are) |
+| ![](docs/items/galefang.png) | **Galefang** | carried by the **Rogue Shaman**, with his Shaman Followers | a metal dagger +2 an **air cleric** can wield |
 | ![](docs/items/mindshard.png) | **Mindshard** | carried by **Maris**; a thief can lift it (200 XP) | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric |
 | ![](docs/items/stillwater.png) | **Stillwater** | in the chest **Chaya** gives as her apology | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric |
 | ![](docs/items/linebreaker.png) | **Linebreaker** | carried by the **Troop Leader** | a metal polearm +2 |
@@ -2567,16 +2612,23 @@ character can use.
 | ![](docs/items/gutterward.png) | **Gutterward** | on a **skeleton** in the Tari's warrens (the sewers): one of the three there | the game's wooden shield +1: AC 2 better in a hand |
 | ![](docs/items/ironbulwark.png) | **Ironbulwark** | carried by the **Guardian** of Balkazar's fortress (the one with the Chatkcha +1) | a metal shield +3, the game's first: AC 4 better in a hand |
 
-**Prices** follow the game's own: magic melee weapons 20,800 a plus (41,600
-for a +2; a +1 with a spell 22,000), Windlash 2,800 (as its Sling +1), plain metal weapons 50 to
-300, bracers 5,000 a point of AC, Arrowbane 30,000, the Sunking Crown 40,000,
-the rings and cloak of protection 15,000, Inixhide 6,000, the
-Cloak of Elvenkind 25,000 and Boots 20,000, the Warden's Arms and Legs 27,000
-each, Chest 36,000 and Helm 30,000, the Ashen Robe 6,000 and the Veiled Robe
-40,000, Gutterward 25,000 and Ironbulwark 65,000 (the game's Drake Shield +1 is
-25,400 and El's Shield +2 50,200; a price can't go past 65,535, and the game's
-dearest, the Wand of Missiles, is 65,000), and the Tome of Understanding
-AD&D's 43,500.
+**Prices** follow the game's own (a price can't go past 65,535; the game's
+dearest, the Wand of Missiles, is 65,000):
+
+| Items | Price |
+|---|---|
+| Magic melee weapons | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000) |
+| Windlash | 2,800 (as the game's Sling +1) |
+| Plain metal weapons | 50 to 300 |
+| Bracers of defense | 5,000 a point of AC |
+| Rings and Cloak of Protection | 15,000 |
+| Inixhide; the Ashen Robe | 6,000 |
+| Veiled Robe | 40,000 |
+| Cloak and Boots of Elvenkind | 25,000 and 20,000 |
+| Warden's Arms and Legs; Chest; Helm | 27,000 each; 36,000; 30,000 |
+| Arrowbane; Sunking Crown | 30,000; 40,000 |
+| Gutterward; Ironbulwark | 25,000; 65,000 (the game's Drake Shield +1 is 25,400, El's Shield +2 50,200) |
+| Tome of Understanding | 43,500 (AD&D's) |
 
 ![The Tome of Understanding's box in the game: a night-steel book with a fiery emblem, 43500, Tome/Understand, and the icon to click](docs/tome.png)
 
@@ -2590,11 +2642,6 @@ is metal armour, worn by the classes
 that can wear the game's chain (no single-class thieves), and kept from more
 with [class restrictions](#class-restrictions). **Grey's Scale**'s arm and
 leg armour is AC 3 each (the game's is 2).
-
-**New items, magical and mundane** on the Options tab places them all, the
-arena's ring too; a thief's tools come with picking pockets. A thief can
-[lift](#picking-pockets) Pehtucl's ring, Shadowseeker, Gutterknot and
-Mindshard (200 XP for each weapon).
 
 ![The inventory screen in the game: Arrowbane, a silver circlet, in a backpack cell; the Sunking Crown, a gold crown, in the head's slot](docs/head-items.png)
 
@@ -2820,7 +2867,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-cooked-vulture).
 ### Defilers' scrolls
 
 A defiler may carry a spell scroll it was studying: with **Defilers' scrolls**
-ticked (it's ticked by default), each defiler in a fight has a 5% chance
+ticked, each defiler in a fight has a 5% chance
 (1 in 20) of carrying a scroll of a random preserver spell, any of the game's
 69 (1st to 5th level) or, with the new spells on, the Loader's new ones. When
 it dies the scroll is on its body, with the rest of what it carried.
@@ -3065,14 +3112,14 @@ golden hair up in a bun, pointed ears, a purple cloak, purple wristbands and
 red boots. Anything worn is drawn over these in its own colours, so a worn
 cloak or boots replace the purple and the red.
 
-With **Elves have pointed ears, and half-elves figures of their own** unticked
-(it's ticked by default), elves are as the game draws them, and half-elves
+With **Elves have pointed ears, and half-elves figures of their own** unticked,
+elves are as the game draws them, and half-elves
 are the human figures in their own colours. It counts from the next time the
 game is started.
 
 Cilla, in the game's own party, is an elf, but the game gives her the figure it
 gives half-elf women. With **Cilla, an elf in the game's own party, drawn as
-an elf** ticked (the default), the Loader gives her the elf woman's, in a new
+an elf** ticked, the Loader gives her the elf woman's, in a new
 game and in one already begun (there from the next area or load on), whatever
 the switch above. Unticked, she keeps the game's half-elf woman's figure, from
 the next time the game is started (a game where she already has the elf's
@@ -3230,13 +3277,14 @@ roster deleted the character in the row clicked counting from the top of the
 list, not from the top of what was shown. With the list scrolled down,
 another character was deleted. Now it deletes the one chosen.
 
-A character made with CREATE CHARACTERS is **New** until the game starts,
-when the game makes it Okay (and gives a New one the starting gear). The game's
+A character made with CREATE CHARACTERS is **New** (with its starting gear,
+given when DONE is clicked) until the game starts, when the game makes it
+Okay. The game's
 tests for Okay left New out, so a New thief's skills all showed 0 on the
 inventory screen, and the Loader did the same. The patched game counts New as
 Okay wherever it tests for Okay, and so does the Loader. Left as they were: the
-status under the portrait still reads New, and the game still gives the
-starting gear and makes New characters Okay when the game starts.
+status under the portrait still reads New, and the game still makes New
+characters Okay when the game starts.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-characters).
 

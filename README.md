@@ -33,8 +33,8 @@ name.)
   points as the books have them ([Rule
   changes](obsidian-edition/README.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class), levels up to 10, and STORE and RECALL for a creation
-  roll ([More character
+  (three for each class), levels up to 10, STORE and RECALL for a creation
+  roll, and fuller starting gear ([More character
   customization](obsidian-edition/README.md#more-character-customization)).
 - **Expanded play:** thieves hide in shadows to backstab and pick pockets, the
   leader's CHA lowers shop prices, and merchants sell back the magical items
@@ -47,7 +47,7 @@ name.)
   wears its gear, figures cast shadows and raise dust, and elves and
   half-elves look their own ([Graphics](obsidian-edition/README.md#graphics)).
 - **Quality of life:** Tab and Enter to choose and attack an enemy, dragging
-  the map with the mouse wheel
+  the map with the mouse wheel held down
   ([Controls](obsidian-edition/README.md#controls)), 40 saves kept under their
   names too, 29 saved characters ([More saves and
   characters](obsidian-edition/README.md#more-saves-and-characters)), a game
@@ -84,11 +84,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Coming in the next release** (pull requests #44 and #45, [in the
+**Coming in the next release** (pull requests #44 to #46, [in the
 changelog](CHANGELOG.md)): a combat log in the game, three more wizard spells
 (Reflected Image, Spook and Friends), two magic shields, defilers' scrolls,
-buying back magical items, saves kept under their names, and Templar's Ledger
-renamed the Loader.
+buying back magical items, saves kept under their names, fuller starting gear,
+and Templar's Ledger renamed the Loader.
 
 **Obsidian Edition 2.2.1** is out ([release notes](release-notes/v2.2.1.md)):
 more of the Options tab can be switched (the elves' and half-elves' looks,

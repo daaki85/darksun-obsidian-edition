@@ -8,7 +8,51 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
-## Pull request #45 (in progress)
+## Pull request #46 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/46))
+
+**Added**
+- **Fuller starting gear** (More character customization, on by default).
+  Before a new character is first played, the Loader adds plain gear the
+  character can use and hasn't got: a weapon in an empty right hand (from
+  the backpack, as a cleric's club, else a plain one of its weapon spec or a
+  short sword, club, mace, dagger or quarterstaff), a sling if it has no
+  missile weapon (an earth or fire cleric a chatkcha), leather chest, arm
+  and leg armour in empty places,
+  a belt, boots, a dagger, and a cloak for a ranger or Stalker. With the
+  class restrictions, a multiclass preserver's armour goes into the
+  backpack, so it can cast. A thief/psionicist (its long sword left behind)
+  and an air or fire cleric (its club) had started with no melee weapon.
+
+**Changed**
+- **An air cleric of one class may use daggers**, as its sphere allows:
+  none of the game's daggers had the air cleric in its class list, so only
+  Galefang would do (or another class's list, for a multiclass one). DSCLOG
+  now adds it to every dagger type, the game's and the Loader's.
+- **The documentation reviewed** for clarity and repetition: DEVELOPMENT.md's
+  kits chapter moved among the other parts, after weapon specialization, as
+  in the README; the README's new-item prices in a table, a preserver's
+  first spells under a heading of their own, the requirements naming the GOG
+  release only, and repeated "ticked by default" notes cut.
+
+**Fixed**
+- **The docs said a multiclass character gets each class's gear**: the game
+  gives one class's, the first of fighter or ranger, cleric, thief,
+  psionicist, preserver and druid (seen in play for each two-class
+  combination a half-elf can take).
+- **The combat log's panel flickered and lost pieces** as figures moved and
+  fought: the game drew the map over it, a rectangle at a time, and DSCLOG
+  only put it back afterwards. The rectangles the game draws again are now
+  drawn round the panel, never over it, and before the screens flip the
+  panel is put on the one about to show. (The old way of putting it back,
+  through the redraw routine's way back, could also go stale if the game
+  moved that code meanwhile.)
+- **A fighter/druid kept the shield it can't use.** A New character's
+  starting gear its classes can't use is left behind, but the last item of
+  one of its lists was kept (as a container's must be): with the druid's
+  armour gone, the shield was that item. A character's list may now empty,
+  for the kits' gear too (a Ravager's shield, a Brute's club).
+
+## Pull request #45 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/45))
 
 **Changed**
 - **The combat log in the game is on by default** (it was off until

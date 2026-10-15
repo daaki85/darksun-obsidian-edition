@@ -252,7 +252,7 @@ def class_gear(gd) -> List[str]:
             if len(typ) < game.ITEM_TYPE_SIZE or not (restrict.is_weapon(typ) or restrict.is_armour(typ)
                                                       or restrict.is_shield(typ)):
                 continue
-            if restrict.usable(sheet, type_, typ) or not ring.unlink(gd, ring.Items(gd), item_index, "class gear"):
+            if restrict.usable(sheet, type_, typ) or not ring.unlink(gd, ring.Items(gd), item_index, "class gear", empty=True):
                 continue
             name = gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
             out.append(f"{gd.creature_name(member)}'s {name} is left behind: their classes can't use it")
@@ -313,7 +313,7 @@ def kit_gear(gd) -> List[str]:
             at = items + item_index * game.ITEM_SIZE
             new = _replacement(sheet, chosen, read) if slot == right and typ[0] & 0x01 else None
             if new is None:
-                if typ[0] & kits.SHIELD and ring.unlink(gd, ring.Items(gd), item_index, "kit gear"):
+                if typ[0] & kits.SHIELD and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                     out.append(f"{who}'s {name(item)} is left behind: a {kit} fights without a shield")
                     continue  # (a shield the kit forbids: no use in the backpack)
                 cell = pickpocket.free_cell(gd, ring.Items(gd), member)
@@ -350,7 +350,7 @@ def kit_gear(gd) -> List[str]:
                 type_ = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
                 typ = read(type_)
                 if typ[0] & 0x01 and restrict.kit_forbids(sheet, type_, typ) \
-                        and ring.unlink(gd, ring.Items(gd), item_index, "kit gear"):
+                        and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                     out.append(f"{who}'s {name(item)} is left behind: a Brute fights with two-handed weapons only")
         owned = list(gd._worn(member))
         out += _kit_second_weapon(gd, member, sheet, kid, chosen, owned, read)

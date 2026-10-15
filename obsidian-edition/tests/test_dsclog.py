@@ -2696,6 +2696,9 @@ class TypesTests(unittest.TestCase):
         self.assertEqual((first, off, seg), (115, 0, self.TYPES_SEG))
         for kind in (24, 54):  # (Grey's Scale's legs and arms)
             self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + kind * 20 + 0x12, 1)[0], 3)
+        for dagger in (17, 33, 84, 94):  # (the game's daggers: the air cleric's bit set, the rest kept)
+            self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + dagger * 20 + 0x10, 2), b"\x01\x00")
+        self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 18 * 20 + 0x10, 2), b"\x00\x00")  # (a club: not)
         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS)], [0, GAME_DS])
 
     def test_not_read(self):

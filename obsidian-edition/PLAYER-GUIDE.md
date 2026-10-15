@@ -321,6 +321,18 @@ AD&D's tables; a character of several classes uses its best.
 The [THAC0](#thac0-by-level) and [experience](#experience-and-levels) tables
 cover every class; [new items](#new-items) lists what the mod adds to find.
 
+**Starting gear.** Each class's section names what a new character starts
+with. A character of several classes gets one class's gear (the first of
+fighter or ranger, cleric, thief, psionicist, preserver and druid), less what
+its classes can't use. The mod then adds plain gear, as each section says: a
+weapon in hand it can use (a thief/psionicist, which can't use the long
+sword, gets a bone short sword), a sling if it has no bow or sling, leather
+armour where it may wear it, a belt, boots and a dagger, and a cloak for a
+ranger. A multiclass preserver's armour goes into the backpack, so it can
+cast. Nothing is given that the character can't use or already has.
+*Without the mod:* the class's gear only, armour it can't use in the
+backpack.
+
 ### What each class may use
 
 A character may use an item only if **every** one of its classes allows it,
@@ -390,7 +402,8 @@ bows, slings and shields are for those who mean to live long.
 | **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
 **Starting gear.** A plain weapon of its weapon spec (in a material its
-classes allow), a shield, leather chest, arm and leg armour.
+classes allow), a shield, leather chest, arm and leg armour; with fuller
+starting gear, also a sling, a belt, boots and a dagger.
 
 **More than one class.**
 
@@ -460,7 +473,8 @@ their hands, and they treat it like one.
 | **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't dual to psionicist or air cleric; can't go with the Shinobi or Lifebinder |
 
 **Starting gear.** A plain weapon of its first weapon spec, a club in the off
-hand, leather arm armour.
+hand, leather arm armour; with fuller starting gear, also leather chest and
+leg armour, a sling, a belt, boots and a dagger.
 
 **More than one class.**
 
@@ -523,7 +537,8 @@ others.
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
 
 **Starting gear.** A plain weapon of its chosen type, bow and arrows, leather
-chest and arm armour.
+chest and arm armour; with fuller starting gear, also leather leg armour, a
+cloak, a belt, boots and a dagger.
 
 **More than one class.**
 
@@ -582,8 +597,8 @@ as handy with a blade as any soldier. All that time spent fighting leaves
 little for the quieter arts.
 
 *Shinobi.* Spies trained in secret by the Veiled Alliance, who carry a few
-spells beside their knives. Their masters teach them only what they need; they
-are unable to read magical script, however, and travel light.
+spells beside their knives. Their masters teach them only what they need: they
+can't read magical script, and they travel light.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
@@ -594,7 +609,8 @@ are unable to read magical script, however, and travel light.
 The Shinobi's slots by level are in [Kits' spell slots](#kits-spell-slots).
 
 **Starting gear.** Bone long sword, sling, leather chest armour, Thieves'
-Tools.
+Tools; with fuller starting gear, also leather arm and leg armour, a belt,
+boots and a dagger.
 
 **More than one class.**
 
@@ -665,7 +681,8 @@ their magic.
 | **Scholar** | a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
 | **Battle Mage** | a warrior's THAC0 (21 less its level); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon pages (VIEW PSIONICS on the KIT page, then WEAPON SPEC), the long sword marked to start with; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 
-**Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice.
+**Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice;
+with fuller starting gear, also a belt, boots and a dagger.
 
 **More than one class.**
 
@@ -708,7 +725,7 @@ has the most, air and fire the fewest.
 
 | Sphere | May wield | Plain weapons |
 |---|---|---|
-| Air | missile and thrown weapons, daggers | chatkcha, bow, sling, staff sling |
+| Air | missile and thrown weapons, daggers | daggers (any material), chatkcha, bow, sling, staff sling |
 | Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; chatkcha; bow |
 | Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe and great axe; chatkcha |
 | Water | bone, wood | bone long sword, dagger, short sword, mace, axe, great axe and polearm; club; quarterstaff; gythka; cahulaks; bow |
@@ -728,12 +745,15 @@ a level behind.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in the backpack) | can't go with the Twin-blade |
+| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
 **Starting gear.** Shield, leather chest and arm armour, a club in the
-backpack.
+backpack. With fuller starting gear, a weapon of its sphere in hand (the club;
+an air cleric an obsidian dagger, a fire cleric an obsidian mace), and
+leather leg armour, a belt, boots, a missile weapon its sphere allows (air a
+sling, earth and fire a chatkcha; water none) and a dagger.
 
 **More than one class.**
 
@@ -761,10 +781,9 @@ backpack.
   Chatkcha +1.
 - **Fire:** Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1,
   Glasshewer\* +2, Blackmace +1, Chatkcha +1.
-- **Water:** Stillwater\* +1,
-  Drakejaw\* +1, Gythka +3, Gythka +2\*,
-  Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs,
-  Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1.
+- **Water:** Stillwater\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*,
+  Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
+  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1.
 
 An Elementalist adds its second sphere's.
 
@@ -806,7 +825,8 @@ weapons, which wound without spilling blood.
 | **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
-**Starting gear.** Club, sling.
+**Starting gear.** Club, sling; with fuller starting gear, also a belt, boots
+and a dagger (not a Lifebinder).
 
 **More than one class.**
 
@@ -866,7 +886,8 @@ and flame with a thought. Reaching into another mind costs them more.
 
 The powers and their costs are in [Psionics](#psionics).
 
-**Starting gear.** Club, bow and arrows, leather chest armour.
+**Starting gear.** Club, bow and arrows, leather chest armour; with fuller
+starting gear, also leather arm and leg armour, a belt, boots and a dagger.
 
 **More than one class.**
 
@@ -1580,7 +1601,7 @@ AD&D's tables:
 | In the game | show a combat log in the game, bottom right, in a fight | on |
 | | describe monsters when you Look at them in a fight | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
-| More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen | all on |
+| More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
 | New content | new wizard spells; new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | on |

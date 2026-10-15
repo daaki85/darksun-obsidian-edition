@@ -31,7 +31,7 @@
   Glasshewer, an obsidian axe +2, on the elven slavers' Templar; Headsman, a metal great axe +2,
   in the arena Announcer's stash. And the Elven Leader's Gythka +1 made +2.
 - Weapons for those who had too few magic ones: Galefang, a metal dagger +2 of DSCLOG's own type
-  that air clerics may use, on the Rogue Shaman; Mindshard, an obsidian short sword +1, on Maris,
+  (made when no dagger was an air cleric's; now every one is), on the Rogue Shaman; Mindshard, an obsidian short sword +1, on Maris,
   and Stillwater, a bone short sword +1, in the chest Chaya gives as her apology (psionicists',
   alone or with a cleric's); Linebreaker, a metal polearm +2, on the Troop Leader; Thornwall, a
   bone polearm +1, on the slave pens' weapon rack, in place of one of its two plain ones.

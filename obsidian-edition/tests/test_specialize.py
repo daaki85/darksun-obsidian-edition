@@ -406,7 +406,7 @@ class ClassGearTests(FinishNewTests):
 
         def unlink(gd, it, item, what, empty=False):
             taken.append(item)
-            return True
+            return empty  # (as ring.unlink does for a list's only item: the character's may empty)
         kinds = {armour: "armour", sword: "weapon"}
         with mock.patch("dsloader.ring.unlink", unlink), \
                 mock.patch.object(restrict, "is_weapon", lambda typ: kinds.get(typ[0]) == "weapon"), \
@@ -417,6 +417,32 @@ class ClassGearTests(FinishNewTests):
             out = weaponchoice.class_gear(self.gd)
         self.assertEqual(taken, [0])  # (the armour: a druid wears none; the sword stays)
         self.assertIn("left behind", out[0])
+
+    def test_druid_leaves_the_shield_the_last_of_its_list(self):
+        """A half-elf fighter/druid's shield, alone in its list once the armour is gone, goes too
+        (it stayed: the list's only item was kept, as a container's must be)."""
+        from dsloader import restrict, weaponchoice
+        s = bytearray(sheet((), classes=(9, 5, 0)))
+        s[game.SHEET_RACE] = 7
+        s[game.SHEET_FLAGS:game.SHEET_FLAGS + 2] = b"\xff\xff"
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        shield = 4
+        at = self.TYPES + shield * game.ITEM_TYPE_SIZE
+        self.mem[at + 0x10:at + 0x12] = b"\xff\xff"
+        self.mem[at] = shield
+        self.give(shield, 0x05, game.WEAPON_HANDS[1])
+        asked = []
+
+        def unlink(gd, it, item, what, empty=False):
+            asked.append(empty)
+            return empty
+        with mock.patch("dsloader.ring.unlink", unlink), \
+                mock.patch.object(restrict, "is_weapon", lambda typ: False), \
+                mock.patch.object(restrict, "is_armour", lambda typ: False), \
+                mock.patch.object(restrict, "is_shield", lambda typ: typ[0] == shield):
+            out = weaponchoice.class_gear(self.gd)
+        self.assertEqual(asked, [True])
+        self.assertIn("Shield is left behind", out[0])
 
 
 class KitGearTests(FinishNewTests):
