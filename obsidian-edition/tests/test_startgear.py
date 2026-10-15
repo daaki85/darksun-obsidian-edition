@@ -140,15 +140,11 @@ class FillTests(FinishNewTests):
         self.assertEqual(self.worn()[CLOAK], SLOT("cloak"))
 
     def test_a_thri_kreen_wears_none(self):
-        """A thri-kreen ranger: no armour, belt, boots or cloak; still a sling and a dagger."""
+        """A thri-kreen ranger is given nothing: its claws, and no armour, belt, boots or cloak."""
         self.character((13, 0, 0), race=startgear.THRI_KREEN)
-        self.give(CHATKCHA, 0x00, game.WEAPON_HANDS[0])
-        startgear.fill(self.gd)
-        worn = self.worn()
-        for t in (CHEST, ARM, LEGS, BELT, BOOTS, CLOAK):
-            self.assertNotIn(t, worn)
-        self.assertEqual(worn[SLING], weaponchoice.MISSILE_SLOT)
-        self.assertGreaterEqual(worn[DAGGER], startgear.BACKPACK)
+        self.give(CHATKCHA, 0x00, weaponchoice.MISSILE_SLOT)
+        self.assertEqual(startgear.fill(self.gd), [])
+        self.assertEqual(self.given, [])
 
     def test_an_okay_member_by_name(self):
         """fill_member gives an Okay character (the game's own party) the same; fill passes it by."""

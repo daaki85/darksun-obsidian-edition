@@ -1159,15 +1159,14 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
   multiclass preserver with the class restrictions;
 - the waist and foot slots: the plain belt (type 42, name 2Ah, picture FBE6h)
   and boots (68, 2Bh, FBE5h); the cloak slot, for a ranger or a Stalker: the
-  plain cloak (65, 0Eh, FBE3h); none of these, nor the armour, for a
-  thri-kreen (race 8, `THRI_KREEN`);
+  plain cloak (65, 0Eh, FBE3h);
 - no dagger: a plain one (the first usable of the obsidian, stone and bone)
   to the backpack.
 
 Items are made by `npcitems.add_to` (a worn slot only when it's free). Each
 step is skipped once its item or kind is there, so `fill` leaves nothing to do
-the next time; one line for the log lists what it gave. `fill_member` does
-one character whatever its status: the game's own party (already Okay) gets it
+the next time; one line for the log lists what it gave. `fill_member` gives a thri-kreen
+(race 8, `THRI_KREEN`) nothing, and does one character whatever its status: the game's own party (already Okay) gets it
 through `defaultparty.ready`'s last step, `gear`.
 
 ### The game's own party
@@ -1190,8 +1189,7 @@ class, place 1, none), and with fuller starting gear, last,
 among her 1st-level spells and her inventory has no chest armour (AC 5);
 Gerakis holds the gythka and the long sword; the dice log lists each one's
 added gear (Gerakis a sling, leather chest and leg armour, a belt, boots and a
-dagger; K'ratchek a chatkcha in hand and a dagger; Cermak and Cilla a belt,
-boots and a dagger).
+dagger; Cermak and Cilla a belt, boots and a dagger; K'ratchek nothing).
 
 ### The leader's CHA at shops
 

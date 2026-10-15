@@ -17,8 +17,11 @@ the Loader:
   one, an obsidian chatkcha for the backpack);
 - fills its empty chest, arm and leg slots with leather armour, where it may wear it (not a
   multiclass preserver, for its spells);
-- gives it a plain belt and boots, a Stalker or a ranger a plain cloak (a thri-kreen none of
-  these, nor armour), and a dagger for the backpack.
+- gives it a plain belt and boots, a Stalker or a ranger a plain cloak, and a dagger for the
+  backpack.
+
+A thri-kreen is given nothing: its claws serve it better than a weapon, and it wears no armour,
+cloak, belt or boots.
 
 The game's own party (Gerakis, K'ratchek, Cermak, Cilla: already Okay) has it too, once, as the
 game starts (defaultparty.py).
@@ -36,7 +39,8 @@ KIND = specialize.KINDS.index
 SLOT = game.EQUIP_SLOTS.index
 RIGHT, LEFT = game.WEAPON_HANDS
 BACKPACK = 14  # (the first backpack cell: 0-13 are worn)
-THRI_KREEN = 8  # (the race: no armour, cloak, belt or boots)
+THRI_KREEN = 8  # (the race: given nothing, its claws better than a weapon; it wears no armour,
+                #   cloak, belt or boots)
 # the game's own plain items (SEGOBJEX's templates): leather chest, arm and leg armour, a belt,
 # boots, a cloak; and the bone long sword the plain weapons are made from (worldgear.TEMPLATE)
 LEATHER = ((SLOT("chest"), npcitems._item("02fc000000000a00000006000000000004ff070000")),
@@ -109,6 +113,8 @@ def fill_member(gd, member: int) -> List[str]:
     owned = list(gd._worn(member))
     if len(sheet) < game.SHEET_SIZE or not owned:
         return out  # (no gear yet: the game gives it when the character is made)
+    if sheet[game.SHEET_RACE] == THRI_KREEN:
+        return out  # (its claws serve it better than a weapon, and it wears none of the rest)
     who = gd.creature_name(member)
     classes = [c for c in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] if c]
     given: List[str] = []
@@ -168,15 +174,13 @@ def fill_member(gd, member: int) -> List[str]:
             if chatkcha is not None:
                 give(chatkcha[0], None)
 
-    # leather armour, a belt, boots, a cloak (none for a thri-kreen, who wears none of them)
+    # leather armour, a belt, boots, a cloak
     wear = [] if gd.rules & game.RULE_RESTRICT and preserver_bare(sheet) else list(LEATHER)
     wear += [(SLOT("waist"), BELT), (SLOT("foot"), BOOTS)]
     from . import kitpages, kits
     stalker = bool(game.RULES_IN_FORCE & game.RULE_KITS) and kits.STALKER in kitpages.kit_ids(sheet)
     if stalker or any(c in restrict.RANGERS for c in classes):
         wear.append((SLOT("cloak"), CLOAK))
-    if sheet[game.SHEET_RACE] == THRI_KREEN:
-        wear = []
     for slot, item in wear:
         if not any(_type(i) == _type(item) for _, i, _ in mine()) and can_use(gd, sheet, _type(item), read(_type(item))):
             give(item, slot)

@@ -2149,8 +2149,10 @@ Armor, Belt, Boots, Dagger (in the backpack)`):
   in a full suit.
 - **A belt and boots** for everyone, **a cloak** for a ranger (a Stalker of
   another class too), and **a dagger** in the backpack for anyone who can use
-  one. A thri-kreen gets no armour, belt, boots or cloak: it wears none. Worn, the cloak, boots and belt help a thief ([Improved
+  one. Worn, the cloak, boots and belt help a thief ([Improved
   thieving](#improved-thieving)).
+- **A thri-kreen gets nothing:** its claws serve it better than a weapon, and
+  it wears no armour, belt, boots or cloak.
 - **A multiclass preserver's armour** goes into the backpack, with the class
   restrictions on: it can't cast in armour. It's there to put on.
 
@@ -2185,9 +2187,8 @@ once, can't have one.
 
 With [fuller starting gear](#fuller-starting-gear), they get what a new
 character would, after the changes above: Gerakis a sling, leather chest and
-leg armour, a belt, boots and a dagger; K'ratchek a chatkcha in hand and a
-dagger (a thri-kreen wears no armour, belt or boots); Cermak and Cilla a belt,
-boots and a dagger.
+leg armour, a belt, boots and a dagger; Cermak and Cilla a belt, boots and a
+dagger. K'ratchek, a thri-kreen, fights with her claws and gets nothing.
 
 Cermak and Cilla keep the game's own starting spells: only a character made
 on the creation screen [picks its own](#preservers-first-spells).
