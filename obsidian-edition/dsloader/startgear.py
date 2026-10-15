@@ -40,7 +40,8 @@ RIGHT, LEFT = game.WEAPON_HANDS
 BACKPACK = 14  # (the first backpack cell: 0-13 are worn)
 THRI_KREEN = 8  # (the race: given nothing, its claws better than a weapon; it wears no armour
                 #   or cloak)
-# the game's own plain items (SEGOBJEX's templates): leather chest, arm and leg armour, a cloak; and the bone long sword the plain weapons are made from (worldgear.TEMPLATE)
+# the game's own plain items (SEGOBJEX's templates): leather chest, arm and leg armour, a cloak;
+# and the bone long sword the plain weapons are made from (worldgear.TEMPLATE)
 LEATHER = ((SLOT("chest"), npcitems._item("02fc000000000a00000006000000000004ff070000")),
            (SLOT("arm"), npcitems._item("01fc000000001400000007000000000004ff080000")),
            (SLOT("legs"), npcitems._item("fefb000000001400000008000000000004ff090000")))
