@@ -20,8 +20,9 @@ the Loader:
 - gives it a plain belt and boots, a Stalker or a ranger a plain cloak, and a dagger for the
   backpack.
 
-A thri-kreen is given nothing: its claws serve it better than a weapon, and it wears no armour,
-cloak, belt or boots.
+A thri-kreen is given nothing more than the game's own starting gear (K'ratchek keeps her
+chatkcha): its claws serve it better than another weapon, and it wears no armour, cloak, belt
+or boots.
 
 The game's own party (Gerakis, K'ratchek, Cermak, Cilla: already Okay) has it too, once, as the
 game starts (defaultparty.py).

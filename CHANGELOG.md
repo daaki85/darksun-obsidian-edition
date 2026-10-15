@@ -26,7 +26,8 @@ have the detail.
   Cermak and Cilla get what a new character would, in the first moments of a
   new game, after their other changes (Gerakis a sling, leather chest and
   leg armour, a belt, boots and a dagger; Cermak and Cilla a belt, boots and
-  a dagger). K'ratchek, a thri-kreen, gets nothing: see below.
+  a dagger). K'ratchek, a thri-kreen, gets nothing more: she keeps the
+  game's own chatkcha (see below).
 
 **Fixed**
 - **The game quit ("Return code 01h") or froze in fights with the combat
@@ -38,7 +39,8 @@ have the detail.
   stack while the parts are drawn.
 - **A new thri-kreen given gear** with fuller starting gear (2.3.0): armour,
   a belt, boots or a cloak it can't wear, and a weapon and a dagger when its
-  claws serve it better. A thri-kreen is now given nothing.
+  claws serve it better. A thri-kreen now gets nothing more than the game's
+  own starting gear (K'ratchek her chatkcha).
 - **The pointer over the combat log's panel** (2.3.0): the panel, put on over the
   pointer, hid it, and moving the pointer across the panel could leave a
   patch of the map or no pointer at all. The game takes its pointer off by
