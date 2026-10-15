@@ -330,9 +330,10 @@ on Windows the mouse wheel scrolls it a line a notch wherever the pointer is
 itself), with a **Latest** chip in its top line while scrolled back; the
 level is set on the Options tab. Between fights it stays, with the last
 fight's lines to scroll back through ("The last fight" in its top line;
-the next fight starts again at its newest); on the game's other screens (a
-character's, the inventory) it is the panel's blue-grey without lines, and
-on the title, the main menu and in character creation it is black.
+the next fight starts again at its newest), and under a talk or a screen
+over the map; a screen in other colours has the panel's blue-grey there
+instead, the log back on the map. On the title, the main menu and in
+character creation it is black.
 
 ![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
