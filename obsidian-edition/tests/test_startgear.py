@@ -121,6 +121,18 @@ class FillTests(FinishNewTests):
         self.assertNotIn(LEGS, self.given)
         self.assertIn("can't cast in armour", out[0])
 
+    def test_an_air_cleric_gets_a_dagger_in_hand(self):
+        """With the class restrictions: an air cleric's sphere allows daggers (and DSCLOG gives every
+        dagger type its class bit), so an obsidian dagger in hand, a sling, no dagger more."""
+        self.gd.rules = game.RULE_RESTRICT
+        self.character((1, 0, 0), race=game.HUMAN)
+        self.give(4, 0x05, game.WEAPON_HANDS[1])
+        startgear.fill(self.gd)
+        worn = self.worn()
+        self.assertEqual(worn[DAGGER], game.WEAPON_HANDS[0])
+        self.assertEqual(worn[SLING], weaponchoice.MISSILE_SLOT)
+        self.assertEqual(self.given.count(DAGGER), 1)
+
     def test_a_ranger_gets_a_cloak(self):
         self.character((13, 0, 0), race=game.HUMAN)
         self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, game.WEAPON_HANDS[0])

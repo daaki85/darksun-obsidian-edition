@@ -12301,6 +12301,7 @@ ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
 GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
 GREYS_LEGS  equ 24              ; (PROBE_TYPES_FILL)
+AIR_CLERIC  equ 1               ; a type's +10h (the classes that may use it): the air cleric's bit
 
 ; PROBE_TYPES_SIZE: INT VEC_TYPES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) before the
 ; game reserves memory for the IT1R chunk, its size the dword at [BP-4]: adds the room.
@@ -12318,8 +12319,10 @@ probe_types_size:
 
 ; PROBE_TYPES_FILL: INT VEC_TYPES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the
 ; call that reads the chunk in (AX 0: read). Does the add, then, if it was read, copies
-; EXTRA_TYPES after the game's own (the room made, [BP-4], less theirs) and notes where; and
-; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3.
+; EXTRA_TYPES after the game's own (the room made, [BP-4], less theirs) and notes where;
+; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3; and lets air
+; clerics use the game's daggers (17, 33, 84, 94: none had their bit; their sphere's weapons
+; are daggers and missile and thrown ones).
 probe_types_fill:
         pop word [cs:n_ip]
         pop word [cs:n_cs]
@@ -12342,6 +12345,10 @@ probe_types_fill:
         mov [cs:types_ptr+2], es
         mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
+        or byte [es:di+17*TYPE_SIZE+0x10], AIR_CLERIC
+        or byte [es:di+33*TYPE_SIZE+0x10], AIR_CLERIC
+        or byte [es:di+84*TYPE_SIZE+0x10], AIR_CLERIC
+        or byte [es:di+94*TYPE_SIZE+0x10], AIR_CLERIC
         mov ax, [bp-4]
         sub ax, TYPES_EXTRA * TYPE_SIZE
         add di, ax              ; after the game's own
@@ -12402,9 +12409,9 @@ extra_types:
         db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
         ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
         ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
-        ; 2, earth's): the Dagger's (33)
+        ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
         db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF2, 0x1F, 0x00, 0x00
+        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
         ; the Mace's (20)
         db 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
@@ -12438,8 +12445,9 @@ extra_types:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
         db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
-        ; a metal dagger air clerics may use too (Galefang, dsloader/worldgear.py): the metal
-        ; Dagger's, with the air cleric's class bit (+10h: 1FF3h; fire and water clerics still not)
+        ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
+        ; fire and water clerics not); the type its own, as it was made when no other dagger was
+        ; an air cleric's
         db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
         ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
@@ -12450,9 +12458,10 @@ extra_types:
         db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
         db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
         ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
-        ; bone (+8: 1), for water clerics and not fire ones (+10h: 1FFAh; the game's daggers 1FF6h)
+        ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
+        ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
         db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xFA, 0x1F, 0x00, 0x00
+        db 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
         ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
         ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
         ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and

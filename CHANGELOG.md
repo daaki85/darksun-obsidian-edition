@@ -15,13 +15,18 @@ have the detail.
   Before a new character is first played, the Loader adds plain gear the
   character can use and hasn't got: a weapon in an empty right hand (from
   the backpack, as a cleric's club, else a plain one of its weapon spec or a
-  short sword, club, mace, dagger or quarterstaff; an air cleric, allowed no
-  melee weapon, a chatkcha), a sling if it has no missile weapon (an earth or
+  short sword, club, mace, dagger or quarterstaff), a sling if it has no missile weapon (an earth or
   fire cleric a chatkcha), leather chest, arm and leg armour in empty places,
   a belt, boots, a dagger, and a cloak for a ranger or Stalker. With the
   class restrictions, a multiclass preserver's armour goes into the
   backpack, so it can cast. A thief/psionicist (its long sword left behind)
   and an air or fire cleric (its club) had started with no melee weapon.
+
+**Changed**
+- **An air cleric of one class may use daggers**, as its sphere allows:
+  none of the game's daggers had the air cleric in its class list, so only
+  Galefang would do (or another class's list, for a multiclass one). DSCLOG
+  now adds it to every dagger type, the game's and the Loader's.
 
 **Fixed**
 - **The docs said a multiclass character gets each class's gear**: the game

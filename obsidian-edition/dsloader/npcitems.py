@@ -45,8 +45,8 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     # bracers of defense (bracers.py): the cloak of protection's, worn on the arms
     bytes.fromhex("000000000a000a00400300000000008" "0ff1f0001"),
     # metal versions (worldgear.py): the Dagger's, the Mace's, the Great Axe's, the pick's, the
-    # Polearm's, of metal, for the metal long sword's clerics
-    bytes.fromhex("010020000a00fa000405010104010000f21f0000"),
+    # Polearm's, of metal, for the metal long sword's clerics (the dagger an air cleric's too)
+    bytes.fromhex("010020000a00fa000405010104010000f31f0000"),
     bytes.fromhex("010008006400fa00040501010601010072160001"),
     bytes.fromhex("010010004600fa00040501010a01004062160002"),
     bytes.fromhex("010020002800fa00040501010401010072170000"),
@@ -62,8 +62,8 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     # for thieves and rangers (their class bits, 600h)
     bytes.fromhex("000000000a000a00050800000000000" "000060001"),
     bytes.fromhex("0000000001000a00850400000000000" "000060000"),
-    # a metal dagger air clerics may use too (worldgear.py's Galefang): the metal Dagger's, its
-    # classes' air cleric bit (1) set; fire and water clerics still not, as the game's daggers
+    # Galefang's (worldgear.py): the metal Dagger's, air clerics' too (DSCLOG gives every dagger
+    # type the air cleric's bit, 1); fire and water clerics not
     bytes.fromhex("010020000a00fa000405010104010000f31f0000"),
     # bone and obsidian great axes (weaponchoice.py, worldgear.py): the metal one's, of bone
     # (lighter, 50, still too heavy to backstab with; for water clerics) and of obsidian (for earth,
@@ -71,8 +71,8 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     bytes.fromhex("010010003200fa00010501010a01004068160002"),
     bytes.fromhex("010010004600fa00030501010a0100406e160002"),
     # a bone dagger (weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of bone, for water
-    # clerics and not fire ones (the game's daggers are for neither)
-    bytes.fromhex("010020000a00fa000105010104010000fa1f0000"),
+    # and air clerics and not fire ones
+    bytes.fromhex("010020000a00fa000105010104010000fb1f0000"),
     # a robe (robes.py): the cloak of protection's, worn on the chest, not armour, for preservers,
     # psionicists and druids
     bytes.fromhex("000000000a000a00400100000000008" "090010001"),

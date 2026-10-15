@@ -9,8 +9,8 @@ the Loader:
 
 - puts a melee weapon in its right hand if that is empty: one from its backpack (a cleric's club),
   else a plain one it can use (its weapon spec's kind first; then a short sword, club, mace,
-  dagger or quarterstaff, a cleric the club and mace first; else a chatkcha, an air cleric's), of
-  a material it can use (a fire cleric's obsidian mace);
+  dagger or quarterstaff, a cleric the club and mace first; else a chatkcha), of a material it
+  can use (a fire cleric's obsidian mace, an air cleric's obsidian dagger);
 - with the class restrictions, takes a multiclass preserver's armour off into the backpack (it
   can't cast in it; the shield stays);
 - gives a sling for the missile slot to one with no missile weapon (a fire cleric, who can't use
@@ -43,8 +43,7 @@ BOOTS = npcitems._item("e5fb000000000100000044000000000005ff2b0000")
 CLOAK = npcitems._item("e3fb000000001400000041003500000003ff0e0000")
 WEAPON = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")
 # the right hand's weapon, kind by kind, after the weapon spec's
-# (the chatkcha last, thrown from the hand: an air cleric's, whose sphere and the game's lists give it no
-# melee weapon)
+# (the chatkcha last, thrown from the hand, for one that can use no melee weapon at all)
 HAND_ORDER = tuple(KIND(k) for k in ("short sword", "club", "mace", "dagger", "quarterstaff", "chatkcha"))
 CLERIC_HAND_ORDER = tuple(KIND(k) for k in ("club", "mace", "dagger", "short sword", "quarterstaff", "chatkcha"))
 

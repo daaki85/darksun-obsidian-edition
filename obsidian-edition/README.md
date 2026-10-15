@@ -2138,8 +2138,8 @@ Armor, Belt, Boots, Dagger (in the backpack)`):
   its weapon spec, else a short sword, club, mace, dagger or quarterstaff (a
   cleric the club and mace first), in a material it can use. So a
   thief/psionicist, whose long sword the class restrictions take, gets a bone
-  short sword, a fire cleric an obsidian mace, and an air cleric, whose sphere
-  and the game allow it no melee weapon, a chatkcha to throw.
+  short sword, a fire cleric an obsidian mace, and an air cleric an obsidian
+  dagger.
 - **A missile weapon.** A sling in the missile slot for one with no bow or
   sling; an earth or fire cleric, who can't use one, an obsidian chatkcha in
   the backpack (a water cleric neither).
@@ -2587,7 +2587,7 @@ character can use.
 | ![](docs/items/drakejaw.png) | **Drakejaw** | carried by one of the **Magera** guarding the wagon's prisoners | a bone axe +1 (1d8+1): a water cleric can wield it |
 | ![](docs/items/glasshewer.png) | **Glasshewer** | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it |
 | ![](docs/items/headsman.png) | **Headsman** | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems | a metal great axe +2 |
-| ![](docs/items/galefang.png) | **Galefang** | carried by the **Rogue Shaman**, with his Shaman Followers | a metal dagger +2 an **air cleric** can wield (none of the game's daggers are) |
+| ![](docs/items/galefang.png) | **Galefang** | carried by the **Rogue Shaman**, with his Shaman Followers | a metal dagger +2 an **air cleric** can wield |
 | ![](docs/items/mindshard.png) | **Mindshard** | carried by **Maris**; a thief can lift it (200 XP) | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric |
 | ![](docs/items/stillwater.png) | **Stillwater** | in the chest **Chaya** gives as her apology | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric |
 | ![](docs/items/linebreaker.png) | **Linebreaker** | carried by the **Troop Leader** | a metal polearm +2 |

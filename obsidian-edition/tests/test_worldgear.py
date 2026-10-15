@@ -205,7 +205,11 @@ class WorldGearTests(unittest.TestCase):
         record = lambda t: npcitems.TYPES[t - game.GAME_TYPES]
         air = test_restrict.sheet(1, race=game.HUMAN)
         self.assertTrue(restrict.usable(air, game.AIR_DAGGER_TYPE, record(game.AIR_DAGGER_TYPE)))
-        self.assertFalse(restrict.usable(air, game.METAL_DAGGER_TYPE, record(game.METAL_DAGGER_TYPE)))
+        # (every dagger an air cleric's: DSCLOG gives the game's its bit too: test_dsclog)
+        for t in (game.METAL_DAGGER_TYPE, game.BONE_DAGGER_TYPE):
+            self.assertTrue(restrict.usable(air, t, record(t)))
+        fire = test_restrict.sheet(3, race=game.HUMAN)
+        self.assertFalse(restrict.usable(fire, game.AIR_DAGGER_TYPE, record(game.AIR_DAGGER_TYPE)))
         psionicist = test_restrict.sheet(12, race=game.HUMAN)
         for t in (game.OBSIDIAN_SHORT_SWORD_TYPE, game.BONE_SHORT_SWORD_TYPE):
             self.assertTrue(restrict.usable(psionicist, t, record(t)))

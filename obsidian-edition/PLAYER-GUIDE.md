@@ -724,7 +724,7 @@ has the most, air and fire the fewest.
 
 | Sphere | May wield | Plain weapons |
 |---|---|---|
-| Air | missile and thrown weapons, daggers | chatkcha, bow, sling, staff sling |
+| Air | missile and thrown weapons, daggers | daggers (any material), chatkcha, bow, sling, staff sling |
 | Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; chatkcha; bow |
 | Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe and great axe; chatkcha |
 | Water | bone, wood | bone long sword, dagger, short sword, mace, axe, great axe and polearm; club; quarterstaff; gythka; cahulaks; bow |
@@ -750,9 +750,9 @@ a level behind.
 
 **Starting gear.** Shield, leather chest and arm armour, a club in the
 backpack. With fuller starting gear, a weapon of its sphere in hand (the club;
-an air cleric a chatkcha, a fire cleric an obsidian mace), and leather leg
-armour, a belt, boots, a missile weapon its sphere allows (air a sling, earth
-and fire a chatkcha; water none) and a dagger (not air).
+an air cleric an obsidian dagger, a fire cleric an obsidian mace), and
+leather leg armour, a belt, boots, a missile weapon its sphere allows (air a
+sling, earth and fire a chatkcha; water none) and a dagger.
 
 **More than one class.**
 
