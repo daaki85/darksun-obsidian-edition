@@ -117,7 +117,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
-- **[New]** **Picking pockets**: every thief starts with a set of Thieves' Tools (Kel sells more); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
+- **[New]** **Picking pockets** with Thieves' Tools (Mirlon in the slave pens carries a set, Kel sells two); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.
 
@@ -174,7 +174,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Daggers** in metal, and in bone: the only dagger a water cleric can use.
 - **[New]** **Maces** in obsidian and metal.
 - **[New]** A **metal pick** and a **metal polearm**.
-- **[New]** **Thieves' Tools**: every thief starts with a set, and Kel sells more, for picking pockets.
+- **[New]** **Thieves' Tools**: on Mirlon in the slave pens, and two sets sold by Kel, for picking pockets.
 - **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
 
 ## World

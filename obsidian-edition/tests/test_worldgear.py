@@ -38,7 +38,7 @@ class WorldGearTests(unittest.TestCase):
     def test_merchants(self):
         """The Weapon Merchant stocks every new plain weapon (the great axes in every material, a
         warrior's starting one being bone; every Wild Mul carries a bone one too), Jark all but the obsidian axe and the metal ones;
-        Kel a pair of Thieves' Tools; the kinds of people carry theirs each; no one the party
+        Kel a pair of Thieves' Tools, Mirlon a set; the kinds of people carry theirs each; no one the party
         wouldn't fight has one (Krikor, Uskuye, Lt. Kwerin)."""
         from dsloader import tools
         sold = [icons.which(r) for r in gift("Weapon Merchant").items]
@@ -54,6 +54,8 @@ class WorldGearTests(unittest.TestCase):
         kel = [g for g in worldgear.GIFTS if g.name == "Kel"][0]
         self.assertEqual(len(kel.items), 2)
         self.assertTrue(all(tools.is_tools(r) and struct.unpack_from("<H", r, 6)[0] == 30 for r in kel.items))
+        mirlon = gift("Mirlon")  # (a set on him in the slave pens, his object of his own: no thief starts with one)
+        self.assertEqual((mirlon.objects, mirlon.region, [tools.is_tools(r) for r in mirlon.items]), ((88,), 0x29, [True]))
         self.assertFalse({"Krikor", "Uskuye", "Kwerin"} & {g.name for g in worldgear.GIFTS + worldgear.MAGIC})
         self.assertEqual([gift(n).objects for n in ("Tari", "Renegade", "Wild Mul")], [(60, 243), (289,), (290,)])
 

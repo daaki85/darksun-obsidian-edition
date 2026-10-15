@@ -950,7 +950,6 @@ class Viewer:
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.stealth_gear = self.stealth_gear.get()
                 self.dice.load_picked(launch.pickpocketed())
-                self.dice.tools_given = launch.tools_given()
                 self.dice.set_rules(self._rules())
             try:
                 self.dice_status.set(self.dice.attach())
@@ -972,9 +971,6 @@ class Viewer:
         picked = self.dice.take_picked()
         if picked is not None:
             launch.set_pickpocketed(picked)
-        given = self.dice.take_tools_given()
-        if given:
-            launch.add_tools_given(given)
         learned = self.dice.take_speakers()
         if learned:  # names worked out from conversations: keep them, and show them on earlier lines
             launch.add_learned_speakers(learned)

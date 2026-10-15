@@ -389,11 +389,8 @@ class DiceLog:
         self._picked_changed = False
         self._clock: Optional[int] = None
         self._mended_in: Optional[int] = None  # the area Kalzith's scrolls were last mended in
-        self.tools_given: set = set()  # the thieves given thieving tools (tools.py)
         self._party_done: set = set()  # the game's own party's changes made (defaultparty.py)
-        self._tools_session: set = set()  # ... while this runs
         self._swap_seq = 0  # DSCLOG's text swaps seen (the arena ring's search, ring.py)
-        self._tools_new: List[str] = []
         self.rules = 0  # RULE_HELMS ...: rule changes DSCLOG makes (set_rules)
         self.stealth_roll: Callable[[], int] = lambda: random.randint(1, 100)  # hiding, moving silently
         self._ring_check = 0.0
@@ -548,11 +545,6 @@ class DiceLog:
         self._picked_changed = self._picked_changed or bool(undone)
         self._clock = now
 
-    def take_tools_given(self) -> List[str]:
-        """The thieves given tools since the last call, for the caller to remember."""
-        new, self._tools_new = self._tools_new, []
-        return new
-
     def _write_pick_text(self, text: str) -> None:
         offset = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_PICK_OFF, 2))[0]
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
@@ -637,7 +629,6 @@ class DiceLog:
         self.use_targeting = bool(settings.get("targeting", True))
         self.scroll_right = bool(settings.get("scroll_right", False))
         self.load_picked(settings.get("pickpocketed", []))
-        self.tools_given = set(settings.get("tools_given", []))
         self.rules = game.rules_from_settings(settings)
 
     def set_rules(self, rules: int) -> None:
@@ -1002,10 +993,7 @@ class DiceLog:
                 kalzith.mend(self.game)
                 self._mended_in = region
             if self.pickpockets:
-                tools.repaint(self.game)
-                before = set(self.tools_given)
-                out += tools.give_tools(self.game, self.tools_given, session=self._tools_session)
-                self._tools_new += sorted(self.tools_given - before)
+                tools.repaint(self.game)  # (the tools themselves are Mirlon's, and Kel's to sell: worldgear.py)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
         except (struct.error, IndexError, ValueError):

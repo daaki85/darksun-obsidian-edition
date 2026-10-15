@@ -17,6 +17,9 @@ have the detail.
   shield, when it's a one-handed melee weapon (a bow still goes in the
   missile slot, a two-handed weapon in the backpack).
 
+- **Thieves' Tools are Mirlon's** (in the slave pens), for a party that
+  kills him, as well as Kel's to sell: no thief starts with a set any more,
+  and none is put in a thief's backpack later.
 - **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
   shows `AC BONUS:1` with the helms rule, which says the same.
 

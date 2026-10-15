@@ -167,59 +167,20 @@ class ToolsTests(unittest.TestCase):
         struct.pack_into("<HH", self.pick.m, DS * 16 + ring.FREE_ITEMS, 90, 0)
         struct.pack_into("<h", self.pick.m, ITEMS + 90 * game.ITEM_SIZE + game.ITEM_NEXT, 91)
 
-    def test_a_set_for_each_thief_once(self):
-        given = set()
-        lines = tools.give_tools(self.gd, given)
-        self.assertEqual(len(lines), 1)  # Dag only: the others aren't thieves
-        self.assertIn((90, 14), self.pick.dag_items())
-        self.assertTrue(tools.is_tools(ring.Items(self.gd).item(90)))
-        self.assertEqual(tools.give_tools(self.gd, given), [])
-
-    def clock(self, seconds, region=tools.ARENA):
-        m, clock = self.pick.m, 0x7F000
-        m[DS * 16 + game.GAME_TIME_PTR:DS * 16 + game.GAME_TIME_PTR + 4] = struct.pack("<HH", clock & 0xF, clock >> 4)
-        m[DS * 16 + game.GAME_TIME_SCALE] = 1
-        struct.pack_into("<i", m, clock, seconds)
-        struct.pack_into("<H", m, DS * 16 + game.REGION, region)
-
-    def test_new_game(self):
-        """A new game (its first hour, in the arena): the thief gets a set even though one of
-        the same name had one before, and not a second while carrying it."""
-        self.clock(70)
-        given = {"Dag|Dag"}
-        self.assertEqual(len(tools.give_tools(self.gd, given)), 1)
-        self.assertEqual(tools.give_tools(self.gd, given), [])
-
-    def test_button(self):
-        """The Loader's button: a set for a thief without one, whatever was given before."""
-        self.clock(90000)
-        given = {"Dag|Dag"}
-        self.assertEqual(len(tools.give_tools(self.gd, given, now=True)), 1)
-        self.assertEqual(tools.give_tools(self.gd, given, now=True), [])  # carrying them now
-
-    def test_new_game_once_a_session(self):
-        """Moved on the inventory screen, the tools are on the pointer, in no one's lists: no
-        second set for that, nor later in the same session (the button still gives one)."""
-        self.clock(70)
-        given, session = set(), set()
-        self.assertEqual(len(tools.give_tools(self.gd, given, session=session)), 1)
-        m = self.pick.m
-        thing, = struct.unpack_from("<h", m, CREATURES + pickpocket.PACK_LIST)  # take the set out of Dag's list
-        struct.pack_into("<Bh", m, THINGS + thing * 3, game.THING_ITEM, game.NO_ITEM)
-        struct.pack_into("<h", m, DS * 16 + tools.HELD, 0)
-        struct.pack_into("<H", m, DS * 16 + tools.HELD_TABLE + tools.HELD_ITEM, 90)
-        self.assertEqual(tools.give_tools(self.gd, given, session=session), [])  # on the pointer
-        struct.pack_into("<h", m, DS * 16 + tools.HELD, -1)
-        self.assertEqual(tools.give_tools(self.gd, given, session=session), [])  # given this session
-        self.assertEqual(len(tools.give_tools(self.gd, given, now=True, session=session)), 1)
-
-    def test_later_once(self):
-        self.clock(90000)
-        self.assertEqual(tools.give_tools(self.gd, {"Dag|Dag"}), [])
+    def give(self):
+        """A set of tools put in Dag's backpack (item 90, from the free list), as Kel's or Mirlon's
+        would be carried."""
+        gd = self.gd
+        member = next(m for m in range(game.PARTY_SIZE) if gd.creature_name(m) == "Dag")
+        it = ring.Items(gd)
+        cell = pickpocket.free_cell(gd, it, member)
+        gd.guest.write(gd.ds * 16 + ring.FREE_ITEMS, it.item(90)[game.ITEM_NEXT:game.ITEM_NEXT + 2])
+        gd.guest.write(it.items + 90 * game.ITEM_SIZE, tools.ITEM)
+        self.assertTrue(pickpocket.give(gd, ring.Items(gd), member, 90, cell))
 
     def test_earlier_tools_renamed(self):
         """Tools an earlier version gave (named "pick") get today's name entry."""
-        tools.give_tools(self.gd, set(), now=True)
+        self.give()
         m = self.pick.m
         struct.pack_into("<H", m, ITEMS + 90 * game.ITEM_SIZE + game.ITEM_NAME, 0xAD)
         self.assertTrue(tools.is_tools(ring.Items(self.gd).item(90)))
