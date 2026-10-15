@@ -2149,23 +2149,24 @@ Armor, Belt, Boots, Dagger (in the backpack)`):
   in a full suit.
 - **A belt and boots** for everyone, **a cloak** for a ranger (a Stalker of
   another class too), and **a dagger** in the backpack for anyone who can use
-  one. Worn, the cloak, boots and belt help a thief ([Improved
+  one. A thri-kreen gets no armour, belt, boots or cloak: it wears none. Worn, the cloak, boots and belt help a thief ([Improved
   thieving](#improved-thieving)).
 - **A multiclass preserver's armour** goes into the backpack, with the class
   restrictions on: it can't cast in armour. It's there to put on.
 
 Nothing is given that the character can't use or already has something of
-the kind, so each item comes once. Unticked, a new character starts with the
-game's gear, changed only by the rules above.
+the kind, so each item comes once. The [game's own party](#the-games-own-party)
+gets it too, in the first moments of a new game. Unticked, a new character
+starts with the game's gear, changed only by the rules above.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fuller-starting-gear).
 
 ### The game's own party
 
 START GAME with no party made plays the game's own four, who were made before
-any of these choices existed. With weapon specialization, kits and class
-restrictions on, the Loader fits them to those in the first moments of a new
-game, and says so in the dice log (Cilla also gets the elf's figure, with its
+any of these choices existed. With weapon specialization, kits, class
+restrictions and fuller starting gear on, the Loader fits them to those in the
+first moments of a new game, and says so in the dice log (Cilla also gets the elf's figure, with its
 own switch: see [Elves and half-elves](#elves-and-half-elves)):
 
 | Character | With weapon specialization | With class restrictions |
@@ -2181,6 +2182,12 @@ in a fight. His gear stays as it is (an Arcanist has none of its own), and so
 do the hit points the game gave him: the Arcanist's d3 counts from his next
 level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
 once, can't have one.
+
+With [fuller starting gear](#fuller-starting-gear), they get what a new
+character would, after the changes above: Gerakis a sling, leather chest and
+leg armour, a belt, boots and a dagger; K'ratchek a chatkcha in hand and a
+dagger (a thri-kreen wears no armour, belt or boots); Cermak and Cilla a belt,
+boots and a dagger.
 
 Cermak and Cilla keep the game's own starting spells: only a character made
 on the creation screen [picks its own](#preservers-first-spells).

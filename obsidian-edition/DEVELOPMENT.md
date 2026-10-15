@@ -1159,13 +1159,16 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
   multiclass preserver with the class restrictions;
 - the waist and foot slots: the plain belt (type 42, name 2Ah, picture FBE6h)
   and boots (68, 2Bh, FBE5h); the cloak slot, for a ranger or a Stalker: the
-  plain cloak (65, 0Eh, FBE3h);
+  plain cloak (65, 0Eh, FBE3h); none of these, nor the armour, for a
+  thri-kreen (race 8, `THRI_KREEN`);
 - no dagger: a plain one (the first usable of the obsidian, stone and bone)
   to the backpack.
 
 Items are made by `npcitems.add_to` (a worn slot only when it's free). Each
 step is skipped once its item or kind is there, so `fill` leaves nothing to do
-the next time; one line for the log lists what it gave.
+the next time; one line for the log lists what it gave. `fill_member` does
+one character whatever its status: the game's own party (already Okay) gets it
+through `defaultparty.ready`'s last step, `gear`.
 
 ### The game's own party
 
@@ -1182,9 +1185,13 @@ its place, Cilla's plain armour given back to the free item list (her chest
 armour is alone in its list, which is left empty, as a new list is), and her
 byte for spell 0 set in the known-spells table, and with kits Cermak's kit
 byte (`+43h`) the Arcanist for his preserver class (place 0; his gladiator
-class, place 1, none). Seen in play: Cilla's USE screen lists ARMOR among her
-1st-level spells and her inventory has no chest armour (AC 5); Gerakis holds
-the gythka and the long sword.
+class, place 1, none), and with fuller starting gear, last,
+`startgear.fill_member` for each. Seen in play: Cilla's USE screen lists ARMOR
+among her 1st-level spells and her inventory has no chest armour (AC 5);
+Gerakis holds the gythka and the long sword; the dice log lists each one's
+added gear (Gerakis a sling, leather chest and leg armour, a belt, boots and a
+dagger; K'ratchek a chatkcha in hand and a dagger; Cermak and Cilla a belt,
+boots and a dagger).
 
 ### The leader's CHA at shops
 

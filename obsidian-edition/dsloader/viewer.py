@@ -423,7 +423,7 @@ class Viewer:
                         "and bring the kept roll back (from the next start)", variable=self.roll_store,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
-        ttk.Checkbutton(custom, text="Fuller starting gear: new characters also get a weapon in hand they can use, "
+        ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon in hand they can use, "
                         "a sling, leather armour where they may wear it, a belt, boots and a dagger (rangers "
                         "and Stalkers a cloak); a multiclass preserver's armour goes in the backpack",
                         variable=self.starting_gear, command=self._options_changed).pack(anchor="w", pady=(4, 0))

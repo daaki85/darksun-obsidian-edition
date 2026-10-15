@@ -10,6 +10,13 @@ have the detail.
 
 ## Pull request #48 (in progress)
 
+**Changed**
+- **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,
+  Cermak and Cilla get what a new character would, in the first moments of a
+  new game, after their other changes (Gerakis a sling, leather chest and
+  leg armour, a belt, boots and a dagger; K'ratchek a chatkcha in hand and a
+  dagger; Cermak and Cilla a belt, boots and a dagger).
+
 **Fixed**
 - **The game quit ("Return code 01h") or froze in fights with the combat
   log on** (2.3.0): the routine drawing again all that moved, drawn in parts
@@ -18,6 +25,8 @@ have the detail.
   ran on from the wrong place, writing over its own memory (garbled names,
   stripes across the screen) until it quit. The way back is now kept on the
   stack while the parts are drawn.
+- **A new thri-kreen given armour, a belt, boots or a cloak** with fuller
+  starting gear (2.3.0): a thri-kreen wears none of them, and now gets none.
 - **The pointer over the combat log's panel:** the panel, put on over the
   pointer, hid it, and moving the pointer across the panel could leave a
   patch of the map or no pointer at all. The game takes its pointer off by

@@ -139,6 +139,28 @@ class FillTests(FinishNewTests):
         startgear.fill(self.gd)
         self.assertEqual(self.worn()[CLOAK], SLOT("cloak"))
 
+    def test_a_thri_kreen_wears_none(self):
+        """A thri-kreen ranger: no armour, belt, boots or cloak; still a sling and a dagger."""
+        self.character((13, 0, 0), race=startgear.THRI_KREEN)
+        self.give(CHATKCHA, 0x00, game.WEAPON_HANDS[0])
+        startgear.fill(self.gd)
+        worn = self.worn()
+        for t in (CHEST, ARM, LEGS, BELT, BOOTS, CLOAK):
+            self.assertNotIn(t, worn)
+        self.assertEqual(worn[SLING], weaponchoice.MISSILE_SLOT)
+        self.assertGreaterEqual(worn[DAGGER], startgear.BACKPACK)
+
+    def test_an_okay_member_by_name(self):
+        """fill_member gives an Okay character (the game's own party) the same; fill passes it by."""
+        self.character((17, 12, 0))
+        self.give(CHEST, 0x07, SLOT("chest"))
+        rec = bytearray(self.gd.creature(0))
+        self.gd.creature = lambda member, rec=bytes(rec[:game.CREATURE_STATUS]) + bytes((game.STATUS_NEW + 1,)) \
+            + bytes(rec[game.CREATURE_STATUS + 1:]): rec
+        self.assertEqual(startgear.fill(self.gd), [])
+        self.assertIn("starts with more gear", startgear.fill_member(self.gd, 0)[0])
+        self.assertEqual(self.worn()[SHORT_SWORD], game.WEAPON_HANDS[0])
+
     def test_no_gear_yet(self):
         """Before the game gives a character its gear: nothing."""
         self.character((9, 0, 0))

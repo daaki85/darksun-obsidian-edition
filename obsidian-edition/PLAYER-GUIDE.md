@@ -328,8 +328,9 @@ its classes can't use. The mod then adds plain gear, as each section says: a
 weapon in hand it can use (a thief/psionicist, which can't use the long
 sword, gets a bone short sword), a sling if it has no bow or sling, leather
 armour where it may wear it, a belt, boots and a dagger, and a cloak for a
-ranger. A multiclass preserver's armour goes into the backpack, so it can
-cast. Nothing is given that the character can't use or already has.
+ranger (a thri-kreen none of the worn things). A multiclass preserver's
+armour goes into the backpack, so it can cast. Nothing is given that the
+character can't use or already has. The game's own party gets the same.
 *Without the mod:* the class's gear only, armour it can't use in the
 backpack.
 

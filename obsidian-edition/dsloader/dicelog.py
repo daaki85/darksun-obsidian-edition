@@ -947,7 +947,7 @@ class DiceLog:
                 out += weaponchoice.kit_gear(self.game)
             if self.starting_gear:  # (new characters' starting gear filled out)
                 out += startgear.fill(self.game)
-            out += defaultparty.ready(self.game, self.rules, self._party_done)  # (the game's own party, once)
+            out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
             if self.cilla_elf:
                 out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)

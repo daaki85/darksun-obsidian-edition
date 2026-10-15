@@ -46,7 +46,7 @@ class DefaultPartyTests(unittest.TestCase):
                          bytes((kinds.index("long sword") + 1, kinds.index("axe") + 1, 0, 0)))
         self.assertEqual(dp.kinds_bytes(dp.PARTY["Cilla"]), bytes(4))
 
-    def ready(self, rules, done=None, new=True):
+    def ready(self, rules, done=None, new=True, gear=False):
         calls = []
         stub = lambda key: (lambda gd, member, name: calls.append((name, key)) or [f"{name} {key}"])
         with mock.patch("dsloader.tools.new_game", return_value=new), \
@@ -54,8 +54,9 @@ class DefaultPartyTests(unittest.TestCase):
                 mock.patch.object(dp, "club_to_gythka", stub("gythka")), \
                 mock.patch.object(dp, "take_armour", stub("armour")), \
                 mock.patch.object(dp, "learn", stub("armor spell")), \
-                mock.patch.object(dp, "set_kit", stub("kit")):
-            lines = dp.ready(FakeGame(DEFAULT), rules, set() if done is None else done)
+                mock.patch.object(dp, "set_kit", stub("kit")), \
+                mock.patch.object(dp, "gear", stub("gear")):
+            lines = dp.ready(FakeGame(DEFAULT), rules, set() if done is None else done, gear)
         return calls, lines
 
     def test_by_the_rules(self):
@@ -69,6 +70,13 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertEqual(calls, [("Cilla", "armour"), ("Cilla", "armor spell")])
         calls, _ = self.ready(game.RULE_KITS)  # (Cermak alone: Gerakis has no kit)
         self.assertEqual(calls, [("Cermak", "kit")])
+
+    def test_starting_gear(self):
+        """Fuller starting gear: each of them, after the other changes (Cilla's armour gone first)."""
+        calls, _ = self.ready(game.RULE_RESTRICT, gear=True)
+        self.assertEqual(calls, [("Gerakis", "gear"), ("K'ratchek", "gear"), ("Cermak", "gear"),
+                                 ("Cilla", "armour"), ("Cilla", "armor spell"), ("Cilla", "gear")])
+        self.assertNotIn("gear", [key for _, key in self.ready(game.RULE_RESTRICT)[0]])
 
     def test_cermak_arcanist(self):
         """Set_kit writes Cermak's kit byte: the Arcanist for his preserver class (place 0, the
