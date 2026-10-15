@@ -485,7 +485,8 @@ which may have changed since.
   27,904 of 33,072 (the strip doesn't make the game use more). Places later
   in the game aren't measured.
 - **Drawing it.** `STRIP_DRAW` puts the Loader's 320 × 22 picture there
-  (`combatlog.STRIP`: the header and the newest row, no buttons; scrolled
+  (`combatlog.STRIP`: all of it the well's mottled shades, the header and the
+  newest row, no buttons; scrolled
   back, the **Latest** chip in the header and a notch of the wheel a line);
   `PANEL_LIVE` is never set, so the clipping and the pointer's handling are
   left out. Like the panel, it isn't drawn again while the main loop waits

@@ -347,6 +347,17 @@ def render(dac: bytes, ink: Optional[Dict[str, int]] = None, g: Geometry = SIZES
         for y in range(y0, y1 + 1):
             rows[y][x0:x1 + 1] = bytes((colour,)) * (x1 - x0 + 1)
 
+    shades = [ink["well0"], ink["well1"], ink["well2"], ink["well3"]]
+    if g.strip:  # the strip: all of it the well's darker shade, the top line too
+        for y in range(h):
+            for x in range(w):
+                rows[y][x] = shades[mottle(x, y)]
+        fill(0, 0, w - 1, 0, ink["outline"])  # (its edge against the map)
+        fill(3, 10, w - 4, 10, ink["well0"])  # (the top line's rule, faint)
+        t = g.track
+        fill(t[0], t[1], t[2], t[3], ink["dark"])
+        return b"".join(bytes(r) for r in rows)
+
     fill(0, 0, w - 1, h - 1, ink["outline"])
     for y in range(1, h - 1):  # the stone, speckled (as the screen's, wherever it is)
         for x in range(1, w - 1):
@@ -357,13 +368,10 @@ def render(dac: bytes, ink: Optional[Dict[str, int]] = None, g: Geometry = SIZES
     fill(1, 1, 1, h - 2, ink["light"])
     fill(2, h - 2, w - 2, h - 2, ink["dark"])
     fill(w - 2, 2, w - 2, h - 2, ink["dark"])
-    if g.rows and g.strip:
-        fill(3, 10, w - 4, 10, ink["dark"])  # the header's groove
-    elif g.rows:
+    if g.rows:
         fill(3, 12, w - 4, 12, ink["dark"])  # the header's groove
         fill(3, 13, w - 4, 13, ink["light"])
         x0, y0, x1, y1 = g.well
-        shades = [ink["well0"], ink["well1"], ink["well2"], ink["well3"]]
         for y in range(y0, y1 + 1):  # the well, mottled
             for x in range(x0, x1 + 1):
                 rows[y][x] = shades[mottle(x, y)]

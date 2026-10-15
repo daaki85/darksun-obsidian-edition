@@ -320,8 +320,8 @@ from the Loader (which turns off DOSBox's EMS to make room for it).
 
 **Below the map** (the default: **... below the map instead of over it**,
 from the next start). The game's screen is 22 rows taller, 320 × 222, and
-the combat log is a strip under the map, the full width: its top line and the
-newest line of the log. Nothing of the map is covered, and the game runs at
+the combat log is a strip under the map, the full width, in the panel's
+darker shade: its top line and the newest line of the log. Nothing of the map is covered, and the game runs at
 its own speed with the map its usual shape; DOSBox's window is a little
 taller than 4:3. The pointer doesn't go there, so the strip has no buttons:
 on Windows the mouse wheel scrolls it a line a notch wherever the pointer is
