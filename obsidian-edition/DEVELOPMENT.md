@@ -523,8 +523,10 @@ for the off hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
 A New character's starting weapons, armour and shields its classes can't use
 (`restrict.usable`) are taken out of its lists (`weaponchoice.class_gear`, with
 the rule on; `ring.unlink` with `empty`, as a list of a character's may be left
-empty): the game gives a character of several classes each class's gear and
-puts what it can't wear in the backpack.
+empty): the game gives a character of several classes one class's gear (the
+first of fighter or ranger, cleric, thief, psionicist, preserver and druid:
+seen in play, every two-class combination as a half-elf) and puts what it
+can't wear in the backpack.
 
 ### Multiclass hit points
 
@@ -880,6 +882,49 @@ from where it has rolled the hit points (659D0h, with its stack frame and DI
 1): the hit points shown, the PSP worked out again (65B39h, which rolls
 nothing) and shown, then the AC and damage. The overlay's segment is the
 INT's return.
+
+### Fuller starting gear
+
+([In the README](README.md#fuller-starting-gear).)
+
+`dsloader/startgear.py`'s `fill`, from the dice log after
+`weaponchoice.class_gear`, `finish_new` and `kit_gear` (the `starting_gear`
+switch, a Python-only one as `pickpockets` is: `launch.SWITCH_DEFAULTS`,
+`DiceLog.starting_gear`), for each party member whose status is New and who
+has items (the game gives a character its gear when DONE is clicked; before
+that it has none). What a character "can use" (`can_use`) is the game's class
+lists (or `restrict.kit_allows`) and, with the class restrictions on,
+`restrict.usable`; never what `restrict.kit_forbids`. In order:
+
+- with the class restrictions, a multiclass preserver's (`preserver_bare`: not
+  a human, two classes or more, one of them preserver) worn armour
+  (`restrict.is_armour`: not its shield) goes to a backpack cell
+  (`pickpocket.free_cell`);
+- an empty right hand gets a usable melee weapon from the backpack (cells 14
+  and up), else a plain weapon (`weaponchoice.plain_weapon` on the game's
+  bone long sword record, `WEAPON`) of the first kind with a usable type in
+  `PLAIN` or `OTHERS`: the sheet's chosen kinds (not missile ones), then
+  `HAND_ORDER` (short sword, club, mace, dagger, quarterstaff, chatkcha) or,
+  for a cleric, `CLERIC_HAND_ORDER` (club, mace, dagger, short sword,
+  quarterstaff, chatkcha); not one taking both hands with the left hand full.
+  The game's own lists give an air cleric no melee weapon (its dagger types'
+  class masks leave the air cleric's bit out), so it gets the chatkcha (type
+  48, thrown);
+- no bow, sling or staff sling: a sling (type 64) to the missile slot, else
+  an obsidian chatkcha (48) to the backpack;
+- the chest, arm and leg slots, if free and the character has no item of the
+  type: the game's leather chest, arm and leg armour (SEGOBJEX templates: types
+  6, 7, 8; names 07h, 08h, 09h; pictures FC02h, FC01h, FBFEh), not for a
+  multiclass preserver with the class restrictions;
+- the waist and foot slots: the plain belt (type 42, name 2Ah, picture FBE6h)
+  and boots (68, 2Bh, FBE5h); the cloak slot, for a ranger or a Stalker: the
+  plain cloak (65, 0Eh, FBE3h);
+- no dagger: a plain one (the first usable of the obsidian, stone and bone)
+  to the backpack.
+
+Items are made by `npcitems.add_to` (a worn slot only when it's free). Each
+step is skipped once its item or kind is there, so `fill` leaves nothing to do
+the next time; one line for the log lists what it gave.
 
 ### The game's own party
 

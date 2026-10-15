@@ -10,7 +10,24 @@ have the detail.
 
 ## Pull request #46 (in progress)
 
+**Added**
+- **Fuller starting gear** (More character customization, on by default).
+  Before a new character is first played, the Loader adds plain gear the
+  character can use and hasn't got: a weapon in an empty right hand (from
+  the backpack, as a cleric's club, else a plain one of its weapon spec or a
+  short sword, club, mace, dagger or quarterstaff; an air cleric, allowed no
+  melee weapon, a chatkcha), a sling if it has no missile weapon (an earth or
+  fire cleric a chatkcha), leather chest, arm and leg armour in empty places,
+  a belt, boots, a dagger, and a cloak for a ranger or Stalker. With the
+  class restrictions, a multiclass preserver's armour goes into the
+  backpack, so it can cast. A thief/psionicist (its long sword left behind)
+  and an air or fire cleric (its club) had started with no melee weapon.
+
 **Fixed**
+- **The docs said a multiclass character gets each class's gear**: the game
+  gives one class's, the first of fighter or ranger, cleric, thief,
+  psionicist, preserver and druid (seen in play for every two-class
+  combination).
 - **The combat log's panel flickered and lost pieces** as figures moved and
   fought: the game drew the map over it, a rectangle at a time, and DSCLOG
   only put it back afterwards. The rectangles the game draws again are now

@@ -59,6 +59,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Kits](#kits)
   - [Levels up to 10](#levels-up-to-10)
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
+  - [Fuller starting gear](#fuller-starting-gear)
   - [The game's own party](#the-games-own-party)
 - [Expanded features](#expanded-features)
   - [The leader's CHA at shops](#the-leaders-cha-at-shops)
@@ -117,8 +118,8 @@ and tables in one place, without spoilers, with a section for each class.
   saving throws and multiclass hit points as the books have them, and scores
   and hit points kept as rolled ([Rule changes](#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class), levels up to 10, and STORE and RECALL for a creation
-  roll ([More character customization](#more-character-customization)).
+  (three for each class), levels up to 10, STORE and RECALL for a creation
+  roll, and fuller starting gear ([More character customization](#more-character-customization)).
 - **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
   and pick pockets, the party leader's CHA lowers shop prices, and merchants
   sell back the magical items you sold them ([Expanded
@@ -557,7 +558,8 @@ Everything there applies in games started from the Loader; a switch that says
   to AD&D.
 - **More character customization** ([More character
   customization](#more-character-customization)): weapon specialization, kits,
-  levels up to 10, and STORE and RECALL on the creation screen.
+  levels up to 10, STORE and RECALL on the creation screen, and fuller
+  starting gear.
 - **Expanded features** ([Expanded features](#expanded-features)): the
   leader's CHA at shops, buying back magical items, and **Improved thieving** (AD&D's thief skills,
   hiding to backstab, the cloak, boots and belt, and picking pockets).
@@ -1309,11 +1311,13 @@ fire sphere allows only obsidian weapons, may still use bows. Cloaks,
 the Cloak of Protection among them, aren't armour: any class may wear one.
 
 A new character starts without the weapons, armour and shields its classes
-can't use. The game gives a character of several classes each class's gear,
-and puts what it may not wear in the backpack: the Loader leaves that behind
-and says so in the dice log (`Yilballa's Chest Armor is left behind: their
-classes can't use it`, for a druid's leather armour given for its fighter
-class).
+can't use. The game gives a character of several classes one class's gear,
+the first of fighter or ranger, cleric, thief, psionicist, preserver and
+druid, and puts what it may not wear in the backpack: the Loader leaves that
+behind and says so in the dice log (`Yilballa's Chest Armor is left behind:
+their classes can't use it`, for a fighter/druid's leather armour, given for
+its fighter class). [Fuller starting gear](#fuller-starting-gear) gives one
+left without a weapon (a thief/psionicist, whose long sword goes) another.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#class-restrictions).
 
@@ -1640,11 +1644,11 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 ## More character customization
 
 More choices for each character: a weapon to specialize in, a kit, a 10th
-level to reach, and a roll to keep while trying the die again. Each has a
-box in the Options tab's **More character customization** section. All are on
-by default and, like the rule changes, take effect at once in games started
-with the dice log (STORE and RECALL from the next start); untick one and the
-game is as it was.
+level to reach, a roll to keep while trying the die again, and fuller
+starting gear. Each has a box in the Options tab's **More character
+customization** section. All are on by default and, like the rule changes,
+take effect at once in games started with the dice log (STORE and RECALL
+from the next start); untick one and the game is as it was.
 
 | Box on the Options tab | What it adds |
 |---|---|
@@ -1652,6 +1656,7 @@ game is as it was.
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
+| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a belt, boots, a dagger |
 
 ### Weapon specialization
 
@@ -1853,7 +1858,7 @@ A cleric starts with a shield, leather chest and arm armour, a club in the backp
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in the backpack) | can't go with the Twin-blade |
+| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in the backpack; in hand with fuller starting gear) | can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
@@ -1923,7 +1928,8 @@ to the kit while the character is new, as each table's **Starts with** says:
 a weapon or shield the kit forbids is swapped or taken away, and a kit with a
 weapon spec of its own gets a plain weapon of it. The dice log says what it
 changed (`T'Jun starts with a plain bone axe for the Battle Mage's weapon
-spec, in place of the Quarterstaff`).
+spec, in place of the Quarterstaff`). [Fuller starting
+gear](#fuller-starting-gear) adds more on top.
 
 #### The kits in play
 
@@ -2118,6 +2124,40 @@ default), the screen is as the game has it, from the next time the game is
 started.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
+
+### Fuller starting gear
+
+With **Fuller starting gear** ticked (it's ticked by default), the Loader adds
+plain gear to a new character's own while it is still New, after the class
+restrictions, weapon specs and kits have changed theirs, and the dice log
+lists it (`Swat starts with more gear: Short Sword (in hand), Arm Armor, Leg
+Armor, Belt, Boots, Dagger (in the backpack)`):
+
+- **A weapon in hand.** A character with an empty right hand takes a weapon
+  it can use from its backpack (a cleric's club), else gets a plain one: of
+  its weapon spec, else a short sword, club, mace, dagger or quarterstaff (a
+  cleric the club and mace first), in a material it can use. So a
+  thief/psionicist, whose long sword the class restrictions take, gets a bone
+  short sword, a fire cleric an obsidian mace, and an air cleric, whose sphere
+  and the game allow it no melee weapon, a chatkcha to throw.
+- **A missile weapon.** A sling in the missile slot for one with no bow or
+  sling; an earth or fire cleric, who can't use one, an obsidian chatkcha in
+  the backpack (a water cleric neither).
+- **Leather armour** in its empty chest, arm and leg places, where it may wear
+  it: a thief, gladiator, ranger, psionicist, cleric or Battle Mage goes out
+  in a full suit.
+- **A belt and boots** for everyone, **a cloak** for a ranger (a Stalker of
+  another class too), and **a dagger** in the backpack for anyone who can use
+  one. Worn, the cloak, boots and belt help a thief ([Improved
+  thieving](#improved-thieving)).
+- **A multiclass preserver's armour** goes into the backpack, with the class
+  restrictions on: it can't cast in armour. It's there to put on.
+
+Nothing is given that the character can't use or already has something of
+the kind, so each item comes once. Unticked, a new character starts with the
+game's gear, changed only by the rules above.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fuller-starting-gear).
 
 ### The game's own party
 
