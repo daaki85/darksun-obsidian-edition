@@ -166,7 +166,7 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
 def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:
     """Whether the character's kit (kits.allows, the rule for kits in force) lets it use an item
     type whatever its classes' lists and restrictions: a Battle Mage its chosen weapon spec's
-    weapons and light armour."""
+    weapons and light armour, a Battle Dancer long swords and bows."""
     from . import kitpages, kits
     if not game.RULES_IN_FORCE & game.RULE_KITS:
         return False

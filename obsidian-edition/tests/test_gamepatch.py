@@ -39,6 +39,34 @@ class GamePatchTests(unittest.TestCase):
             self.assertEqual(got, p.original if p.name in gamepatch.EFFECTS_KEPT else p.replacement, p.name)
         self.assertTrue(set(gamepatch.ROLL_STORE) <= names)  # (STORE and RECALL, switched the same way)
 
+    def test_relocated_words_kept(self):
+        """A word DOS relocates (from the EXE's relocation table) must be left as it was: the
+        camera patch keeps its "mov ax,377Eh" at 1CA15h; a patch changing such a word is refused."""
+        import struct
+        data = fake_dsun()
+        struct.pack_into("<HHH", data, 6, 1, 0, 0)  # (one entry, the image at offset 0)
+        struct.pack_into("<H", data, 0x18, 0x40)
+        struct.pack_into("<HH", data, 0x40, 0x26, 0x1C9F)  # (1C9F:0026 = 1CA16h)
+        gamepatch.patched(bytes(data))
+        struct.pack_into("<HH", data, 0x40, 0x20, 0x1C9F)  # (1CA10h: changed by the patch)
+        with self.assertRaises(gamepatch.PatchError):
+            gamepatch.patched(bytes(data))
+
+    def test_camera_still(self):
+        """The fight's step tests whether its figure is on the screen (the game's own routine,
+        0AC0:AC7Ah, from 0AC0:C9F2h: a near call) before the view is moved, and pushes the same
+        spot it did; a switch (CAMERA)."""
+        p = next(p for p in gamepatch.PATCHES if p.name == "camera_still")
+        self.assertEqual(gamepatch.CAMERA, ("camera_still",))
+        self.assertEqual(p.offset, 0x1C9F2)
+        r = p.replacement
+        call = r.index(bytes.fromhex("0ee8")) + 1
+        rel = int.from_bytes(r[call + 1:call + 3], "little", signed=True)
+        self.assertEqual(0xC9F2 + call + 3 + rel, 0xAC7A)
+        self.assertIn(bytes.fromhex("66ffb79d66"), r)  # (y, then x, as the game's: one push dword)
+        self.assertEqual(r[0x23:0x26], bytes.fromhex("b87e37"))  # (mov ax,377Eh where the game has it)
+        self.assertIn(bytes.fromhex("833e681100"), r)  # (in a fight only: IN_COMBAT, DS:1168h)
+
     def test_enter_out_of_the_save_windows_keys(self):
         """The save/load window's key table (Esc, Enter, Up, Down) without Enter, which PROBE_SAVE_PAGE
         then takes."""

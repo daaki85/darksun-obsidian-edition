@@ -18,6 +18,8 @@ starts. Each is known by name, race and classes together.
 - With class restrictions: Cilla (a preserver, druid and thief) can't wear armour (the druid's
   rule), so her leather armour is taken away and she knows Armor, the first wizard spell (0),
   the one Old One-Eye's scroll in the fields teaches.
+- With fuller starting gear: what a new character would be given (startgear.fill_member), after
+  the rest.
 
 Cilla is an elf, but the game gives her the half-elf woman's figure (7, object 307: the human
 woman's pictures in the game, the half-elf woman's in the Loader's copy, figures.py). She has
@@ -175,9 +177,16 @@ def learn(gd: GameData, member: int, name: str, spell: int = ARMOR) -> List[str]
     return [f"{name} knows {gd.spell_name(spell)}."]
 
 
-def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]]) -> List[str]:
+def gear(gd: GameData, member: int, name: str) -> List[str]:
+    """MEMBER's starting gear filled out, as a new character's (startgear.py)."""
+    from . import startgear
+    return startgear.fill_member(gd, member)
+
+
+def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]], starting_gear: bool = False) -> List[str]:
     """The default party's changes, each once (DONE: what has been done, in this session), while
-    the game is new; lines for the log."""
+    the game is new; with STARTING_GEAR, their starting gear filled out too (after the others);
+    lines for the log."""
     from . import tools
     if not tools.new_game(gd):
         return []
@@ -195,6 +204,8 @@ def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]]) -> List[str]:
             steps.append(("kit", set_kit))
         if name == "Cilla" and rules & game.RULE_RESTRICT:
             steps += [("armour", take_armour), ("armor spell", learn)]
+        if starting_gear:
+            steps.append(("gear", gear))
         for key, step in steps:
             if (name, key) in done:
                 continue

@@ -25,17 +25,17 @@ name.)
 - **Shows what the game keeps hidden.** Every roll is logged as it happens,
   with what it needed and where each bonus came from ([the dice
   log](obsidian-edition/README.md#the-dice-log)). The game's own screens gain
-  THAC0, saves, thief skills and spell slots, a combat log scrolls in a corner
-  of the map in a fight, and the Look box tells you what can hurt a monster
+  THAC0, saves, thief skills and spell slots, a combat log shows with **L**,
+  and the Look box tells you what can hurt a monster
   ([In the game](obsidian-edition/README.md#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class
   tables, INT's limits on learning spells, saving throws and multiclass hit
   points as the books have them ([Rule
   changes](obsidian-edition/README.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class), levels up to 10, STORE and RECALL for a creation
-  roll, and fuller starting gear ([More character
-  customization](obsidian-edition/README.md#more-character-customization)).
+  (three for each class, and seven for races' pairs of classes), levels up to
+  10, STORE and RECALL for a creation roll, and fuller starting gear
+  ([More character customization](obsidian-edition/README.md#more-character-customization)).
 - **Expanded play:** thieves hide in shadows to backstab and pick pockets, the
   leader's CHA lowers shop prices, and merchants sell back the magical items
   sold to them ([Expanded
@@ -46,8 +46,8 @@ name.)
   content](obsidian-edition/README.md#new-content)); on the map, the party
   wears its gear, figures cast shadows and raise dust, and elves and
   half-elves look their own ([Graphics](obsidian-edition/README.md#graphics)).
-- **Quality of life:** Tab and Enter to choose and attack an enemy, dragging
-  the map with the mouse wheel held down
+- **Quality of life:** Tab and Enter to choose and attack an enemy, a view
+  that stays put in fights, dragging the map with the mouse wheel held down
   ([Controls](obsidian-edition/README.md#controls)), 40 saves kept under their
   names too, 29 saved characters ([More saves and
   characters](obsidian-edition/README.md#more-saves-and-characters)), a game

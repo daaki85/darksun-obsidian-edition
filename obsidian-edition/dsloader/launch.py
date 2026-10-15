@@ -168,8 +168,9 @@ def display_lines(settings: dict) -> List[str]:
         return []
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
-    if scale == 4:
-        return ["[sdl]", "fullscreen=false", "output=opengl", "windowresolution=1280x960", "[render]",
+    if scale == 4:  # (the strip below the map: 22 rows taller, 266 with the aspect correction)
+        size = "1280x1064" if settings.get("combat_log_strip") is True else "1280x960"
+        return ["[sdl]", "fullscreen=false", "output=opengl", "windowresolution=" + size, "[render]",
                 "aspect=true", "scaler=normal2x", ""]
     return ["[sdl]", "fullscreen=false", "[render]", "aspect=true",
             "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
@@ -229,7 +230,7 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
 # The Options tab's new content and game changes (settings keys), each on unless switched off;
 # the game's copies are written with them as they stand when it is started
 CONTENT = ("kalzith", "semyon", "vulture", "pens_gear", "magic_arms", "world_gear", "world_magic", "effects_kept", "stealth_gear", "arena_ring",
-           "elf_looks", "roll_store", "cilla_elf")
+           "elf_looks", "roll_store", "cilla_elf", "camera_still")
 # the new items' parts (worldgear.data_chunks', and the arena's ring, ring.py), all switched by
 # one box: NEW_ITEMS
 ITEM_PARTS, NEW_ITEMS = ("pens_gear", "magic_arms", "world_gear", "world_magic", "arena_ring"), "new_items"
@@ -249,8 +250,11 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
     the saved settings if none given). Returns why the game can't be patched, or None."""
     on = content(load_settings() if settings is None else settings)
+    strip = (load_settings() if settings is None else settings).get("combat_log_strip") is True
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
-        | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE))
+        | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
+        | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
+        | (frozenset() if strip else frozenset(gamepatch.STRIP))
     try:
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
@@ -373,7 +377,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "pickpockets": True,
-                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
+                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True, "combat_log_strip": False,
                    "targeting": True, "scroll_map": True, "scroll_right": False, "cycles": DEFAULT_SPEED}
 
 

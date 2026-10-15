@@ -65,6 +65,25 @@ SPELL_LAST = 137  # (the wizards' and priests' spells: 0 to this; psionic powers
 FIRE, COLD = 0x02, 0x04  # (a spell record's +1Ah: what it is, as the game's Resist Fire and Resist Cold read it)
 # a Ravager's base AC by level, 1-10, the highest the game goes (DSCLOG's RAVAGER_AC)
 RAVAGER_AC = (7, 7, 6, 6, 5, 5, 4, 4, 3, 3)
+# the multiclass kits (kitpages.MULTI)
+BATTLE_DANCER, SHADOWBLADE, SCOUT = KIT_IDS["Battle Dancer"], KIT_IDS["Shadowblade"], KIT_IDS["Military Scout"]
+AVENGER, RESCUER = KIT_IDS["Wilderness Avenger"], KIT_IDS["Rescuer"]
+GHETTO, WAYFINDER = KIT_IDS["Ghetto Fighter"], KIT_IDS["Wayfinder"]
+# a Battle Dancer's weapon kinds: the long sword and the bow (DSCLOG's kit_dancer)
+DANCER_KINDS = frozenset((0, BOW))
+DAGGER = 2  # (the dagger's weapon kind: a Ghetto Fighter's +1)
+# by kit, what it adds to each thief skill (pick pockets, open locks, find/remove traps, move
+# silently, hide in shadows, hear noise, climb walls, read languages: DSCLOG's KIT_SKILLS)
+SKILLS = {SWASHBUCKLER: (-10,) * 8, ASSASSIN: (-15, -15, 0, 0, 0, 0, 0, 0),
+          SHADOWBLADE: (-10, 0, 0, 5, 10, 0, 0, 0), GHETTO: (5, 0, -5, 0, 5, 0, 0, 0),
+          WAYFINDER: (-10, 0, 0, 10, 10, 0, 0, 0)}
+# a Military Scout's skills that change with the sky: +10 under the open sky, -5 under a roof
+SCOUT_SKILLS, SCOUT_OUT, SCOUT_IN = frozenset((2, 3, 4, 6)), 10, -5
+# a Battle Dancer's dance (rolled by the Loader as a fight starts: dance.py): d20 against DEX, +1
+# to hit, to damage and on AC for DEX less the roll in rounds (at least 1); failed, -1 for 1d8 rounds
+DANCE_FAIL_DIE = 8
+UNDEAD_RACE = 9  # (a Wilderness Avenger's +1 to hit and damage against them)
+AVENGER_STEALTH = 5  # (its hiding and moving silently: 5 a level of its best class, as a ranger's)
 
 
 def name(kid: int) -> str:
@@ -87,12 +106,38 @@ def warrior_attacks(halves: int, sheet: bytes) -> int:
     return halves
 
 
-def melee(kid: int, two_handed: bool) -> int:
+def melee(kid: int, two_handed: bool, kind: Optional[int] = None) -> int:
     """Added to hit and to damage with a melee weapon (KIT_MELEE; TWO_HANDED: one that takes both
-    hands, its type's +0Fh 40h): a Ravager's 1, a Brute's 2 with a two-handed one."""
+    hands, its type's +0Fh 40h; KIND its weapon kind): a Ravager's 1, a Brute's 2 with a
+    two-handed one, a Ghetto Fighter's 1 with a dagger."""
     if kid == RAVAGER:
         return 1
+    if kid == GHETTO:
+        return int(kind == DAGGER)
     return 2 if kid == BRUTE and two_handed else 0
+
+
+def extra(kid: int, dance: int = 0, undead: bool = False) -> int:
+    """Added to hit and to damage with any weapon, melee or missile (KIT_EXTRA): a Battle Dancer's
+    DANCE (+1 or -1, while it lasts), a Wilderness Avenger's 1 against undead (UNDEAD)."""
+    if kid == BATTLE_DANCER:
+        return dance
+    return int(kid == AVENGER and undead)
+
+
+def dance(dex: int, d20: int, fail_roll: int) -> Tuple[int, int]:
+    """A Battle Dancer's dance as a fight starts: (bonus, rounds) for a D20 against DEX (+0, as the
+    Dancing proficiency): danced, +1 for DEX less the roll in rounds (at least 1); stumbled, -1 for
+    FAIL_ROLL (a d8) rounds."""
+    if d20 <= dex:
+        return 1, max(1, dex - d20)
+    return -1, fail_roll
+
+
+def two_weapon_base(kid: int, base: int) -> int:
+    """AD&D's penalty for two weapons in a hand (BASE: -2 the main hand, -4 the off hand) with the
+    kit's: a Ghetto Fighter's 2 better (none, -2)."""
+    return base + 2 if kid == GHETTO else base
 
 
 def ac(kid: int, shield: bool, level: int = 0, base: int = 10) -> int:
@@ -112,6 +157,12 @@ def ac(kid: int, shield: bool, level: int = 0, base: int = 10) -> int:
     if kid == GROVE_WARDEN:
         return -(level // 3)
     return 0
+
+
+def dance_ac(kid: int, dance: int) -> int:
+    """Added to AC by a Battle Dancer's dance (KIT_AC; lower is better): 1 better while it danced
+    well, 1 worse while it stumbled."""
+    return -dance if kid == BATTLE_DANCER else 0
 
 
 def thac0(kid: int, level: int, game_thac0: int) -> int:
@@ -170,10 +221,10 @@ def psp_cost(kid: int, power: int, cost: int) -> int:
     return max(1, cost + change)
 
 
-def cure_bonus(kid: int, spell: int) -> int:
+def cure_bonus(kid: int, spell: int, outdoors: bool = False) -> int:
     """Added to the healing of SPELL cast by a character of kit KID (PROBE_CURE): a Healer's 1 a
-    die of Cure Light, Serious and Critical Wounds."""
-    if kid == HEALER and spell in CURE_DICE and spell != BLOOD_FLOW:
+    die of Cure Light, Serious and Critical Wounds; a Rescuer's too, under the open sky (OUTDOORS)."""
+    if (kid == HEALER or kid == RESCUER and outdoors) and spell in CURE_DICE and spell != BLOOD_FLOW:
         return CURE_DICE[spell][0]
     return 0
 
@@ -286,12 +337,14 @@ def champion(kid: int, shield: bool, melee: bool) -> Tuple[int, int]:
     return (1, 1) if shield else (-1, 0)
 
 
-def thief_skill(kid: int, skill: int) -> int:
-    """Added to a thief skill (game.THIEF_SKILLS' numbers; the helper's PROBE_BELT): an Assassin's
-    -15 to pick pockets (0) and open locks (1), a Swashbuckler's -10 to every one."""
-    if kid == SWASHBUCKLER:
-        return -10
-    return -15 if kid == ASSASSIN and skill in (0, 1) else 0
+def thief_skill(kid: int, skill: int, outdoors: bool = False) -> int:
+    """Added to a thief skill (game.THIEF_SKILLS' numbers; the helper's KIT_SKILL): SKILLS' (an
+    Assassin's -15 to pick pockets and open locks, a Swashbuckler's -10 to every one, a
+    Shadowblade's, Ghetto Fighter's and Wayfinder's); a Military Scout's +10 to finding traps,
+    moving silently, hiding and climbing under the open sky (OUTDOORS), -5 under a roof."""
+    if kid == SCOUT:
+        return (SCOUT_OUT if outdoors else SCOUT_IN) if skill in SCOUT_SKILLS else 0
+    return SKILLS[kid][skill] if kid in SKILLS and 0 <= skill < 8 else 0
 
 
 def stealth(kid: int) -> int:
@@ -361,7 +414,10 @@ def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], spe
     """Whether the kit lets a character use an item type whatever its classes' lists and
     restrictions (TYP its record, KIND its weapon kind or None), as DSCLOG's KIT_ALLOWS: a Battle
     Mage the weapons of its chosen weapon spec (CHOSEN, with weapon specialization on: SPECIALIZE)
-    and light armour (leather, or of no material; not a shield)."""
+    and light armour (leather, or of no material; not a shield); a Battle Dancer long swords and
+    bows (DANCER_KINDS), whatever its cleric's sphere."""
+    if kid == BATTLE_DANCER:
+        return kind in DANCER_KINDS
     if kid != BATTLE_MAGE:
         return False
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
@@ -418,4 +474,6 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         if kinds & ARMOUR:
             return mat not in (LEATHER, NO_MATERIAL)
         return kind is not None and kind not in SHINOBI_KINDS
+    if kid == BATTLE_DANCER:
+        return kind is not None and kind not in DANCER_KINDS
     return False

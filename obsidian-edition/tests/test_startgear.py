@@ -9,12 +9,12 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import game, restrict, specialize, startgear, weaponchoice  # noqa: E402
+from dsloader import game, kits, restrict, specialize, startgear, weaponchoice  # noqa: E402
 from test_specialize import FinishNewTests, sheet  # noqa: E402
 
 KIND = specialize.KINDS.index
 SLOT = game.EQUIP_SLOTS.index
-CHEST, ARM, LEGS, BELT, BOOTS, CLOAK = 6, 7, 8, 42, 68, 65
+CHEST, ARM, LEGS, BELT, BOOTS, CLOAK = 6, 7, 8, 42, 68, 65  # (no belt or boots given)
 CLUB, SLING, CHATKCHA = 18, 64, 48
 DAGGER = weaponchoice.PLAIN[KIND("dagger")][0]
 SHORT_SWORD = weaponchoice.PLAIN[KIND("short sword")][0]
@@ -70,17 +70,18 @@ class FillTests(FinishNewTests):
 
     def test_a_thief_gets_a_weapon_in_hand_and_the_rest(self):
         """A thief/psionicist's long sword left behind: a short sword in hand; leather arm and leg
-        armour to go with its chest armour; a belt, boots and a dagger; its sling kept."""
+        armour to go with its chest armour; a dagger; its sling kept; no belt, boots or cloak."""
         self.character((17, 12, 0))
         self.give(CHEST, 0x07, SLOT("chest"))
         self.give(SLING, 0x00, weaponchoice.MISSILE_SLOT)
         out = startgear.fill(self.gd)
         worn = self.worn()
         self.assertEqual(worn[SHORT_SWORD], game.WEAPON_HANDS[0])
-        self.assertEqual((worn[ARM], worn[LEGS], worn[BELT], worn[BOOTS]),
-                         (SLOT("arm"), SLOT("legs"), SLOT("waist"), SLOT("foot")))
+        self.assertEqual((worn[ARM], worn[LEGS]), (SLOT("arm"), SLOT("legs")))
+        self.assertNotIn(BELT, worn)
+        self.assertNotIn(BOOTS, worn)
         self.assertGreaterEqual(worn[DAGGER], startgear.BACKPACK)
-        self.assertNotIn(CLOAK, worn)  # (a ranger's or a Stalker's)
+        self.assertNotIn(CLOAK, worn)  # (a Stalker's, Assassin's or Shinobi's)
         self.assertEqual(self.given.count(SLING), 0)
         self.assertIn("starts with more gear", out[0])
         self.assertEqual(startgear.fill(self.gd), [])  # (once)
@@ -133,11 +134,44 @@ class FillTests(FinishNewTests):
         self.assertEqual(worn[SLING], weaponchoice.MISSILE_SLOT)
         self.assertEqual(self.given.count(DAGGER), 1)
 
-    def test_a_ranger_gets_a_cloak(self):
-        self.character((13, 0, 0), race=game.HUMAN)
+    def test_a_cloak_for_the_kits_that_hide(self):
+        """A Stalker, Assassin or Shinobi gets a cloak, with kits on; a ranger of another kit, or
+        with kits off, none."""
+        game.RULES_IN_FORCE = game.RULE_KITS
+        for kit, cloak in ((kits.STALKER, True), (kits.ASSASSIN, True), (kits.SHINOBI, True),
+                           (kits.RAVAGER, False), (None, False)):
+            with self.subTest(kit=kit):
+                self.items = 0
+                self.character((13, 0, 0), race=game.HUMAN)
+                self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, game.WEAPON_HANDS[0])
+                with mock.patch("dsloader.kitpages.kit_ids", lambda sheet: [kit] if kit else []):
+                    startgear.fill(self.gd)
+                self.assertEqual(self.worn().get(CLOAK), SLOT("cloak") if cloak else None)
+        game.RULES_IN_FORCE = 0
+        self.items = 0
+        self.character((17, 0, 0), race=game.HUMAN)
         self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, game.WEAPON_HANDS[0])
-        startgear.fill(self.gd)
-        self.assertEqual(self.worn()[CLOAK], SLOT("cloak"))
+        with mock.patch("dsloader.kitpages.kit_ids", lambda sheet: [kits.ASSASSIN]):
+            startgear.fill(self.gd)
+        self.assertNotIn(CLOAK, self.worn())  # (kits off)
+
+    def test_a_thri_kreen_wears_none(self):
+        """A thri-kreen ranger is given nothing: its claws, and no armour or cloak."""
+        self.character((13, 0, 0), race=startgear.THRI_KREEN)
+        self.give(CHATKCHA, 0x00, weaponchoice.MISSILE_SLOT)
+        self.assertEqual(startgear.fill(self.gd), [])
+        self.assertEqual(self.given, [])
+
+    def test_an_okay_member_by_name(self):
+        """fill_member gives an Okay character (the game's own party) the same; fill passes it by."""
+        self.character((17, 12, 0))
+        self.give(CHEST, 0x07, SLOT("chest"))
+        rec = bytearray(self.gd.creature(0))
+        self.gd.creature = lambda member, rec=bytes(rec[:game.CREATURE_STATUS]) + bytes((game.STATUS_NEW + 1,)) \
+            + bytes(rec[game.CREATURE_STATUS + 1:]): rec
+        self.assertEqual(startgear.fill(self.gd), [])
+        self.assertIn("starts with more gear", startgear.fill_member(self.gd, 0)[0])
+        self.assertEqual(self.worn()[SHORT_SWORD], game.WEAPON_HANDS[0])
 
     def test_no_gear_yet(self):
         """Before the game gives a character its gear: nothing."""

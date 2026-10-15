@@ -8,6 +8,91 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
+
+**Added**
+- **Multiclass kits** (with Kits ticked): seven kits for two classes taken at
+  once, each for one race only. Elf cleric/fighter: **Battle Dancer**, which
+  dances as each fight starts (a d20 against DEX: +1 to hit, damage and AC
+  for DEX less the roll in rounds, or −1 for 1d8 rounds); long swords and
+  bows only, but any of them, whatever its cleric's sphere allows. Half-elf fighter/thief: **Shadowblade** (+10 hide, +5 move, −10
+  pick pockets) and **Military Scout** (+10 to traps, move, hide and climb
+  under the open sky, −5 under a roof). Half-elf druid/fighter: **Wilderness
+  Avenger** (+1 to hit and damage against undead; hides and moves as a
+  ranger). Half-elf cleric/ranger: **Rescuer** (cures heal 1 more a die under
+  the open sky). Dwarf fighter/thief: **Ghetto Fighter** (+1 with a dagger;
+  two weapons at 0 and −2; +5 pick pockets and hide, −5 traps) and
+  **Wayfinder** (+10 hide and move, −10 pick pockets). Chosen on the
+  creation panel's KIT page as a class's kit is.
+- **The combat log below the map** (In the game, off by default): the game's
+  screen 320 × 222, the log a strip under the map, always shown, in the
+  panel's darker shade, covering none of it; the game's speed and the map's
+  shape as ever. In a fight it shows the round and the newest line, between
+  fights the two newest lines; the mouse wheel scrolls it a line a notch,
+  with a **Latest** chip while scrolled back. It is kept up through the
+  arena's opening show. Under a screen in other colours it is the panel's
+  blue-grey, and black on the title, the main menu and in character
+  creation.
+- **Rolls out of fights in the combat log:** a thief's skills, a scroll
+  learned, the hit points of a new level (the lines with a roll in them), in
+  the panel and the strip alike.
+- **An L in the panel's top line**, a button that hides it as the key does.
+
+**Changed**
+- **The combat log's panel is shown and hidden with L** (2.3.0 opened it in
+  each fight and closed it at the end): it no longer opens by itself, and
+  **L** on the map shows it or hides it, in a fight or out of one, to read
+  back over the last fight or the rolls since. It stays as it was left, from
+  one game to the next too. (L used to collapse it to one line; **-** does.)
+- **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,
+  Cermak and Cilla get what a new character would, in the first moments of a
+  new game, after their other changes (Gerakis a sling, leather chest and
+  leg armour and a dagger; Cermak and Cilla a dagger). K'ratchek, a thri-kreen, gets nothing more: she keeps the
+  game's own chatkcha (see below).
+- **Fuller starting gear gives no belt or boots, and a cloak only to a
+  Stalker, an Assassin or a Shinobi** (2.3.0 gave everyone a belt and boots,
+  and a cloak to every ranger).
+- **The inventory screen's `HIDE` and `MOVE` count a worn cloak and boots**
+  (with hiding to backstab and the cloak, boots and belt switch), for thieves
+  and rangers and their kits alike, as the rolls do: 10 each, to no more than
+  95, or the Cloak or Boots of Elvenkind's 95. The Characters tab's thief and
+  ranger skills too. (A worn belt's 5 was already in `PICK` and `LOCK`.)
+- **The view in a fight** (a switch, on by default): it no longer drifts after
+  each figure that walks near the screen's edge, and moves only to bring back
+  one that has walked off the screen.
+
+**Fixed**
+- **The backpack's dagger fought with** (fuller starting gear, 2.3.0): the
+  Loader put the dagger for the backpack (and Thieves' Tools, the arena's
+  Ring +1 and what's lifted from pockets) in the character's list of what it wears and
+  holds, where the game counts every weapon as in hand, whatever cell it shows
+  it in. So Gerakis fought with the dagger in place of his long sword, and
+  Cermak struck with it as a second weapon. Items for the backpack now go in
+  the backpack's list, as the inventory screen puts them; what the Loader
+  takes in hand or puts away moves between the lists too; and games where it
+  happened are put right the next time they're played out of a fight (the
+  dice log says `... is put away in the backpack`).
+- **The game quit ("Return code 01h") or froze in fights with the combat
+  log on** (2.3.0): the routine drawing again all that moved, drawn in parts
+  round the panel, went on afterwards from a way back that the parts' own
+  drawing had overwritten (a variable the other probes share), so the game
+  ran on from the wrong place, writing over its own memory (garbled names,
+  stripes across the screen) until it quit. The way back is now kept on the
+  stack while the parts are drawn.
+- **A new thri-kreen given gear** with fuller starting gear (2.3.0): armour,
+  a belt, boots or a cloak it can't wear, and a weapon and a dagger when its
+  claws serve it better. A thri-kreen now gets nothing more than the game's
+  own starting gear (K'ratchek her chatkcha).
+- **The pointer over the combat log's panel** (2.3.0): the panel, put on over the
+  pointer, hid it, and moving the pointer across the panel could leave a
+  patch of the map or no pointer at all. The game takes its pointer off by
+  putting back the map it kept from under it (without the panel). Now the
+  panel is put on before the game draws its pointer over it (a probe in that
+  routine), the pointer is drawn again after the panel, and the panel's
+  regular refresh leaves the pointer's box alone. Held still over the panel
+  for 48 frames, and moved across it, the pointer showed every time and no
+  map came through.
+
 ## Pull request #46 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/46))
 
 **Release**

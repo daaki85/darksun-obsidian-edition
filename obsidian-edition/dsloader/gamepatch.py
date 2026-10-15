@@ -33,7 +33,7 @@ from typing import NamedTuple
 GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
-VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK = 0xF2, 0xF3, 0xF4, 0xF5, 0xF6  # (F1h, F7h free) not 66h-6Fh: the game calls those itself, looking for drivers
+VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK = 0xF2, 0xF3, 0xF4, 0xF5, 0xF6  # (none free) not 66h-6Fh: the game calls those itself, looking for drivers
 VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD
 VEC_TWO, VEC_DOUBLE = 0xFE, 0xF0
 VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY = 0xED, 0xEE, 0xEF
@@ -78,6 +78,10 @@ VEC_CR_SPELLS, VEC_EF_CLICK = 0x98, 0x97
 VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN = 0x96, 0x95, 0x94, 0x93
 VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
+VEC_POINTER = 0xF1
+VEC_STRIP = 0xF7
+VEC_PALETTE = 0x8B
+VEC_COLOURS = 0xCB
 VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
 VEC_RACE_PANEL = 0x89
@@ -313,6 +317,29 @@ PATCHES = (
     # ... and where the routine drawing again what moved starts to, its rectangle made:
     # "push word [bp+8] / push word [bp+6]"
     Patch("redraw_all", 0x24B18, bytes.fromhex("ff7608ff7606"), _interrupt(VEC_REDRAW_ALL, 6)),
+    # the combat log's panel under the pointer (DSCLOG's PROBE_POINTER): the stack check, "cmp
+    # [9Ch],sp", of the routine that draws the game's pointer (28D1:093D)
+    Patch("pointer", 0x2EA55, bytes.fromhex("39269c00"), _interrupt(VEC_POINTER, 4)),
+    # the combat log below the map (DSCLOG's STRIP; a switch, STRIP): the game's screen 320 x 222,
+    # its rows and the split below row 200 set at the end of its mode X set up ("mov al,2 / mov
+    # ah,1 / out dx,ax"); the strip shown there is video memory's first 1760 bytes, so the screens
+    # move up, each to a multiple of 256 bytes (the page flip sets the high byte of where the
+    # screen starts only): A070h and A460h, the pages kept in video memory after them from A848h
+    # (to AFFBh as before). Where the screens are set up (0980:271Bh: "mov cx,0FFBh / mov
+    # ax,0A000h", the second's "add ax,400h") and in the page flip ("mov ax,0A000h / mov
+    # bx,0A400h"; "mov ax,0A000h"; "mov ax,0A400h")
+    Patch("strip_lines", 0x11640, bytes.fromhex("b002b401ef"), _interrupt(VEC_STRIP, 5)),
+    Patch("strip_screens", 0x11323, bytes.fromhex("b9fb0fb800a0"), bytes.fromhex("b98b0fb870a0")),
+    Patch("strip_second", 0x11356, bytes.fromhex("050004"), bytes.fromhex("05f003")),
+    Patch("strip_flip", 0x1442F, bytes.fromhex("b800a0bb00a4"), bytes.fromhex("b870a0bb60a4")),
+    Patch("strip_shown0", 0x14444, bytes.fromhex("b800a0"), bytes.fromhex("b870a0")),
+    Patch("strip_shown1", 0x1444E, bytes.fromhex("b800a4"), bytes.fromhex("b860a4")),
+    # ... and the strip dark in each new palette: "sti / pop di" at the end of the routine that
+    # sets the whole palette (DSCLOG's PROBE_PALETTE)
+    Patch("strip_palette", 0x144F5, bytes.fromhex("fb5f"), bytes((0xCD, VEC_PALETTE))),
+    # ... and "pop dx / pop cx" at the end of the one that sets a run of colours (the title's, a
+    # fade's steps: DSCLOG's PROBE_COLOURS)
+    Patch("strip_colours", 0x288BA, bytes.fromhex("5a59"), bytes((0xCD, VEC_COLOURS))),
     # scrolling (DSCLOG's SCROLLING): the main loop asking where the pointer is, "call far
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)
@@ -511,6 +538,19 @@ PATCHES = (
     # STORE and RECALL on the creation screen (rollstore.py): the screen's click routine looking up
     # its buttons
     Patch("roll_store", 0x6625D, bytes.fromhex("b91600"), _interrupt(VEC_RS_CLICK, 3)),
+    # the view in a fight (a switch, CAMERA): the routine moving a fight's figure a step (0AC0:C7B3)
+    # had the view follow it, a step of the view's each time it came near an edge (2191:0BE3h, the
+    # map's own walking's too: its margins at DS:2F6Fh); now only when the figure is off the screen
+    # (0AC0:AC7Ah, the game's own test), the rest as it was (a monster only while the game shows
+    # monsters' moves, ES:19h); out of a fight (IN_COMBAT, DS:1168h, 0: the arena's opening, where
+    # the party walks out of the view) as the game has it. The figure's spot pushed straight, in
+    # the same 54 bytes; "mov ax,377Eh" stays at 0AC0:CA15h, its segment one DOS relocates as the
+    # game loads (RELOCATED).
+    Patch("camera_still", 0x1C9F2,
+          bytes.fromhex("8b1e7949c1e3058b879d668946fc8b1e7949c1e3058b879f668946fa833e7949047e0db87e378ec0"
+                        "26833e1900007439ff76faff76fc"),
+          bytes.fromhex("8b1e7949833e681100740a530ee878e25b09c07554c1e30581fb80007e129090909090b8"
+                        "7e378ec026833e190000743966ffb79d6690")),
     # a new race or sex on the creation screen: "add sp,6" after the call that gives the default
     # class, where the panel is set right for it (DSCLOG opens the disciplines' window again)
     Patch("race_panel", 0x63403, bytes.fromhex("83c406"), _interrupt(VEC_RACE_PANEL, 3)),
@@ -585,10 +625,31 @@ class PatchError(Exception):
 # Patches that are switches on the Options tab: left out when off (their bytes still checked)
 EFFECTS_KEPT = ("effects_click_low", "effects_click_high")  # a click on the Effects screen keeps a spell
 ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
+CAMERA = ("camera_still",)  # the view in a fight following a figure only off the screen
+STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_shown0", "strip_shown1",
+         "strip_palette", "strip_colours")  # the combat log below the map (off by default)
+
+
+def relocated(data: bytes) -> set:
+    """The file offsets of the words DOS relocates as it loads the EXE DATA (its relocation
+    table: each such word gets the load segment added, whatever a patch put there)."""
+    if len(data) < 0x1C:
+        return set()
+    count, = struct.unpack_from("<H", data, 6)
+    header = struct.unpack_from("<H", data, 8)[0] * 16
+    table, = struct.unpack_from("<H", data, 0x18)
+    out = set()
+    for i in range(count):
+        if table + i * 4 + 4 > len(data):
+            break
+        off, seg = struct.unpack_from("<HH", data, table + i * 4)
+        out.add(header + seg * 16 + off)
+    return out
 
 
 def patched(original: bytes, skip=frozenset()) -> bytes:
-    """DSUN.EXE's bytes with the dice log patches applied (but those named in SKIP)."""
+    """DSUN.EXE's bytes with the dice log patches applied (but those named in SKIP). A patch
+    must leave the words DOS relocates as they were (RELOCATED: camera_still's "mov ax,377Eh")."""
     if len(original) != GOG_SIZE:
         raise PatchError(f"DSUN.EXE is {len(original)} bytes; the dice log knows the GOG release "
                          f"({GOG_SIZE} bytes) only")
@@ -598,6 +659,11 @@ def patched(original: bytes, skip=frozenset()) -> bytes:
             raise PatchError(f"DSUN.EXE is not the version the dice log knows ({p.name} differs)")
         if p.name not in skip:
             data[p.offset:p.offset + len(p.original)] = p.replacement
+    moved = relocated(original)
+    for p in PATCHES:
+        for at in range(p.offset - 1, p.offset + len(p.original)):
+            if at in moved and data[at:at + 2] != original[at:at + 2]:
+                raise PatchError(f"the patch {p.name} changes a word DOS relocates (at {at:X}h)")
     return bytes(data)
 
 

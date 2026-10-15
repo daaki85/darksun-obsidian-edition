@@ -138,6 +138,10 @@ VEC_LEARN_REFUSED equ 0x91 ; PROBE_LEARN_REFUSED
 VEC_XP equ 0x90            ; PROBE_XP
 VEC_PRIEST_THAC0 equ 0x8F  ; PROBE_PRIEST_THAC0
 VEC_ADND_SLOTS equ 0x8E    ; PROBE_ADND_SLOTS
+VEC_POINTER equ 0xF1       ; PROBE_POINTER
+VEC_STRIP equ 0xF7         ; PROBE_STRIP
+VEC_PALETTE equ 0x8B       ; PROBE_PALETTE
+VEC_COLOURS equ 0xCB       ; PROBE_COLOURS
 VEC_PRICE equ 0x8D         ; PROBE_PRICE
 VEC_PRICE_EAX equ 0x8C     ; PROBE_PRICE_EAX
 VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
@@ -335,7 +339,15 @@ panel_hy   dw 0                 ; +342   y
 panel_top  dw PANEL_Y0          ; +344 the Loader's: where the panel's top is on the screen,
 panel_rows dw PANEL_H           ; +346   and its height (at most PANEL_H_MOST), set before PANEL_NEW
 panel_keys dw 0                 ; +348 L pressed on the map with the panel shown, counted (the
-                                ;      companion collapses or opens it); the key kept from the game
+                                ;      companion collapses or opens it), or out of a fight with the
+                                ;      panel off (it opens it); the key kept from the game
+kit_outdoors db 0               ; +350 the Loader sets bit N while party member N stands under the
+                                ;      open sky (stealth.daylight: the Military Scout's skills, the
+                                ;      Rescuer's cures)
+kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance, the Loader's (it
+                                ;      rolls it as a fight starts and counts its rounds): +1 danced
+                                ;      well, -1 stumbled, 0 none; to hit, to damage and on AC (KIT_EXTRA)
+           db 0                 ; +355
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -2501,6 +2513,8 @@ probe_attacks:
         push ax
         call kit_to_hit         ; (a Ravager's, a Brute's, an Arena Champion's)
         sub [bp + 0x0A], ax
+        call kit_extra          ; (a Battle Dancer's dance, a Wilderness Avenger's against undead)
+        sub [bp + 0x0A], ax
         pop ax
         test word [cs:rules], RULE_SPECIALIZE
         jz .store
@@ -2746,6 +2760,10 @@ war_kit_halves:
 probe_spec_damage:
         add [bp - 0x12], ax
         call kit_attack_damage
+        push ax
+        call kit_extra
+        add [bp - 0x12], ax
+        pop ax
         test word [cs:rules], RULE_SPECIALIZE
         jz .done
         push dx
@@ -3178,6 +3196,9 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 .blunt: mov si, kit_blunt
         cmp cl, KIT_LIFEBINDER
         je .kind
+        mov si, kit_dancer      ; a Battle Dancer: the long sword and the bow only
+        cmp cl, KIT_BATTLE_DANCER
+        je .kind
         cmp cl, KIT_SHINOBI
         jne .ok
         test al, KT_SHIELD      ; a Shinobi: no shield, light armour, its own weapons
@@ -3220,7 +3241,8 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 ; KIT_ALLOWS: carry set if the kit of the character whose sheet is at ES:BX lets it use item type
 ; DX whatever its classes' lists and restrictions (kits.allows): a Battle Mage the weapons of its
 ; chosen weapon spec (SPEC_SLOTS' first, with RULE_SPECIALIZE) and light armour (leather, or of no
-; material; not a shield). DS the game's; all registers kept.
+; material; not a shield); a Battle Dancer long swords and bows (kit_dancer), whatever its cleric's
+; sphere. DS the game's; all registers kept.
 kit_allows:
         push ax
         push bx
@@ -3228,6 +3250,20 @@ kit_allows:
         push si
         push es
         call kit_is_b
+        db KIT_BATTLE_DANCER
+        jne .mage
+        cmp dx, KIND_TYPES
+        jae .no
+        mov si, dx
+        movzx cx, byte [cs:si + kind_of_type]
+        jcxz .no                ; (not a weapon of a kind)
+        dec cx
+        mov ax, [cs:kit_dancer]
+        shr ax, cl
+        test al, 1
+        jnz .yes
+        jmp .no
+.mage:  call kit_is_b
         db KIT_BATTLE_MAGE
         jne .no
         mov cl, [es:bx + SPEC_SLOTS]
@@ -3272,6 +3308,7 @@ kit_allows:
         ret
 
 kit_blunt  dw KIT_BLUNT
+kit_dancer dw 0x2001           ; bits by kind: the long sword, the bow (a Battle Dancer's)
 kit_shinobi dw 0xF10C           ; bits by kind: dagger, short sword, quarterstaff, chatkcha, bow, sling,
                                 ;   staff sling
 kf_spec    db 0
@@ -3880,6 +3917,18 @@ KIT_SEEKER   equ 31
 KIT_SWASHBUCKLER equ 33
 KIT_ASSASSIN equ 34
 KIT_SHINOBI  equ 35
+; the multiclass kits (kitpages.MULTI): their groups, 9-13, numbered on from the classes, and the kits
+; (KIT_IS's numbers) as a class's
+MULTI_FIRST  equ 9
+KIT_GROUPS   equ 13             ; (the classes' and the multiclass groups' pages)
+MULTI_ROW    equ 0x88A          ; (a group's rows: + 3 * (group - 9) + kit - 1)
+KIT_BATTLE_DANCER equ 37
+KIT_SHADOWBLADE equ 41
+KIT_SCOUT    equ 42
+KIT_AVENGER  equ 45
+KIT_RESCUER  equ 49
+KIT_GHETTO   equ 53
+KIT_WAYFINDER equ 54
 WP_DISC      equ 0xEA2              ; DS: the panel's windows (far)
 WP_SPHERE    equ 0xEA6
 WP_DISC_MASK equ 0x4980             ; DS: the disciplines and spheres marked, kept while hidden
@@ -4000,7 +4049,8 @@ wp_ids:
         ret
 
 ; KIT_CLASS: AL the class of the sheet being made (1-8, as the creation screen numbers them) if it
-; has kits to choose (the rule on, and one class), else 0. Others kept.
+; has kits to choose (the rule on, and one class), or its multiclass group (9-13: MULTI_GROUP_CR) for
+; two classes at once, else 0. Others kept.
 kit_class:
         push bx
         push es
@@ -4009,14 +4059,86 @@ kit_class:
         jz .out
         les bx, [WP_CREATION]
         cmp word [es:bx + 0x22], 0
-        jne .out
+        jne .multi
         mov al, [es:bx + 0x21]
         cmp al, 8
         jbe .out
         xor al, al
+        jmp .out
+.multi: call multi_group_cr
 .out:   pop es
         pop bx
         ret
+
+; MULTI_GROUP: AL the multiclass group (9-13, kitpages.MULTI) of sheet ES:BX, its classes 1-17
+; (KIT_CLASS_OF); MULTI_GROUP_CR the same for the sheet being made, its classes 1-8: two classes at
+; once (none at +23h), not a human's, its race and their pair one of MULTI_TABLE's; 0 for none.
+; Others kept.
+multi_group:
+        push si
+        mov si, kit_class_of
+        jmp multi_find
+multi_group_cr:
+        push si
+        mov si, multi_same
+multi_find:
+        push cx
+        push dx
+        push di
+        xor al, al
+        xor dx, dx              ; DX the pair's bits (1 shl the creation class)
+        cmp byte [es:bx + 0x18], 1
+        je .out
+        cmp byte [es:bx + 0x23], 0
+        jne .out
+        mov di, 0x21
+.class: movzx cx, byte [es:bx + di]
+        dec cx
+        cmp cx, 16
+        ja .out                 ; (none: one class)
+        push si
+        add si, cx
+        mov cl, [cs:si]
+        pop si
+        or cl, cl
+        jz .out
+        bts dx, cx
+        inc di
+        cmp di, 0x23
+        jb .class
+        mov ch, [es:bx + 0x18]
+        mov si, multi_table
+        mov al, MULTI_FIRST
+.find:  cmp byte [cs:si], 0
+        je .none
+        cmp [cs:si], ch
+        jne .skip
+        cmp [cs:si + 1], dx
+        je .out
+.skip:  add si, 3
+        inc al
+        jmp .find
+.none:  xor al, al
+.out:   pop di
+        pop dx
+        pop cx
+        pop si
+        ret
+; (race, the pair's bits) by group from 9; then each group's kits, how many
+multi_table db 3
+            dw (1 << 1) | (1 << 3)      ; elf cleric/fighter: Battle Dancer
+            db 4
+            dw (1 << 3) | (1 << 8)      ; half-elf fighter/thief: Shadowblade, Military Scout
+            db 4
+            dw (1 << 2) | (1 << 3)      ; half-elf druid/fighter: Wilderness Avenger
+            db 4
+            dw (1 << 1) | (1 << 7)      ; half-elf cleric/ranger: Rescuer
+            db 2
+            dw (1 << 3) | (1 << 8)      ; dwarf fighter/thief: Ghetto Fighter, Wayfinder
+            db 0
+multi_count db 1, 2, 1, 1, 2
+km_rows     db 4                ; (KIT_MARKS: the page's rows)
+multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
 ; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's own windows wanted).
 ; All registers kept.
@@ -4913,12 +5035,22 @@ kit_at:
         and ch, 3
         jz .none
         dec ch
-        movzx di, byte [es:bx + di + 0x21]  ; (its class, 1-17: the creation screen's)
+        push ax                 ; (two classes at once: their multiclass group's kit, one it has)
+        call multi_group
+        mov cl, al
+        pop ax
+        or cl, cl
+        jz .class
+        movzx di, cl
+        cmp ch, [cs:di + multi_count - MULTI_FIRST]
+        jae .none
+        jmp .kit
+.class: movzx di, byte [es:bx + di + 0x21]  ; (its class, 1-17: the creation screen's)
         dec di
         cmp di, 16
         ja .none
         mov cl, [cs:di + kit_class_of]
-        shl cl, 2
+.kit:   shl cl, 2
         add cl, ch
         inc cl
         jmp .out
@@ -4931,21 +5063,26 @@ kit_at:
 
 ; KIT_PLACE: DI the place (0-2) among sheet ES:BX's classes of the class its kit was chosen with:
 ; 0 for one class; for a human who has changed class (DUAL: the classes move down, the new one
-; first), its first class, the last of its classes. CF set for more than one class but not a
-; human's (no kit). Others kept.
+; first), its first class, the last of its classes; 0 for two classes at once with a multiclass
+; group (MULTI_GROUP). CF set for more than one class otherwise (no kit). Others kept.
 kit_place:
         xor di, di
         cmp word [es:bx + 0x22], 0
         je .ok
         cmp byte [es:bx + 0x18], 1
-        jne .none
+        jne .multi
         inc di
         cmp byte [es:bx + 0x23], 0
         je .ok
         inc di
 .ok:    clc
         ret
-.none:  stc
+.multi: push ax                 ; (two classes at once: place 0, with a multiclass group)
+        call multi_group
+        or al, al
+        pop ax
+        jnz .ok
+        stc
         ret
 
 ; KIT_AWAKE: CF set if the kit of sheet ES:BX, its class at place DI (KIT_PLACE), sleeps: a human's
@@ -5045,6 +5182,17 @@ kit_ac:
         jne .out                ; (not a creature)
         mov ax, [es:bx + THINGS + 1]
         call creature_sheet     ; (each of its kits' awake: a human may have two or three)
+        call kit_is_b           ; (a Battle Dancer's dance: 1 better, or 1 worse, KIT_DANCE)
+        db KIT_BATTLE_DANCER
+        jne .wanderer
+        cmp ax, 3
+        ja .wanderer
+        push si
+        mov si, ax
+        movsx si, byte [cs:si + kit_dance]
+        sub cx, si
+        pop si
+.wanderer:
         call kit_is_b
         db KIT_WANDERER
         jne .ravager
@@ -5114,7 +5262,8 @@ RAVAGER_LEVELS equ $ - ravager_ac
 
 ; KIT_MELEE: AX what the kit of sheet ES:BX adds to hit and to damage with item type SI unless it
 ; is a missile weapon's (its type's +0, bit 2): a Ravager's 1; a Brute's 2 with a two-handed weapon
-; (+0Fh, 40h); else 0 (kits.melee). DS the game's; others kept.
+; (+0Fh, 40h); a Ghetto Fighter's 1 with a dagger; else 0 (kits.melee). DS the game's; others kept.
+DAGGER_KIND equ 2
 kit_melee:
         push bx
         push cx
@@ -5122,6 +5271,15 @@ kit_melee:
         xor cx, cx
         call kit_is_b
         db KIT_RAVAGER
+        jne .ghetto
+        inc cx
+.ghetto:
+        call kit_is_b
+        db KIT_GHETTO
+        jne .brute
+        cmp si, KIND_TYPES
+        jae .brute
+        cmp byte [cs:si + kind_of_type], DAGGER_KIND + 1
         jne .brute
         inc cx
 .brute: call kit_is_b
@@ -5201,6 +5359,49 @@ kit_attack_damage:
         pop bx
         pop ax
 .ret:   ret
+
+; KIT_EXTRA: AX what the attacker's kit adds to hit and to damage in the weapon attack routine,
+; melee or missile (the attacker its [BP+0Eh], the target's combatant the game's DS:494Ah)
+; (kits.extra): a Battle Dancer's dance (KIT_DANCE, the Loader's: +1 or -1); a Wilderness
+; Avenger's 1 against undead (race 9). DS the game's; others kept.
+TARGET_COMBATANT equ 0x494A
+UNDEAD_RACE equ 9
+kit_extra:
+        push bx
+        push cx
+        push si
+        push es
+        xor cx, cx
+        mov ax, [bp + 0x0E]
+        call creature_sheet
+        call kit_is_b
+        db KIT_BATTLE_DANCER
+        jne .avenger
+        cmp ax, 3
+        ja .avenger
+        mov si, ax
+        movsx cx, byte [cs:si + kit_dance]
+.avenger:
+        call kit_is_b
+        db KIT_AVENGER
+        jne .out
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [TARGET_COMBATANT], 3
+        cmp byte [es:bx + THINGS], 2
+        jne .out                ; (not a creature)
+        mov ax, [es:bx + THINGS + 1]
+        call creature_sheet
+        cmp byte [es:bx + 0x18], UNDEAD_RACE
+        jne .out
+        inc cx
+.out:   mov ax, cx
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
 
 ; KIT_CHAMPION: AX 1 if the attacker in the weapon attack routine (its thing [BP+18h], its sheet
 ; [BP+10h]) is an Arena Champion with a shield in a hand, -1 if one without, else 0 (kits.champion:
@@ -5634,9 +5835,22 @@ probe_cure:
         mov ax, dx
         call cr_is
         db KIT_LIFEBINDER
-        jne .out
+        jne .rescuer
         movzx ax, byte [cs:bx + 2]
         call game_die
+        add [bp + 0x0C], ax
+.rescuer:                       ; (a Rescuer under the open sky: 1 more a die of the cures)
+        mov ax, dx
+        call cr_is
+        db KIT_RESCUER
+        jne .out
+        cmp byte [cs:bx], 108
+        je .out
+        cmp dx, 3
+        ja .out
+        bt word [cs:kit_outdoors], dx
+        jnc .out
+        movzx ax, byte [cs:bx + 1]
         add [bp + 0x0C], ax
 .out:   popa
         pop bp
@@ -7659,12 +7873,18 @@ kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
              db 'MIND BENDER', 0, 'MIND WARRIOR', 0, 'KINETICIST', 0
              db 'STALKER', 0, 'JUSTIFIER', 0, 'SEEKER', 0
              db 'SWASHBUCKLER', 0, 'ASSASSIN', 0, 'SHINOBI', 0
+             db 'BATTLE DANCER', 0, 0, 0                ; (the multiclass groups', three to each)
+             db 'SHADOWBLADE', 0, 'MILITARY SCOUT', 0, 0
+             db 'WILDERNESS AVENGER', 0, 0, 0
+             db 'RESCUER', 0, 0, 0
+             db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
 kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the screen's)
 kit_asleep   db ' (ASLEEP)', 0
 ; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.
 kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, KIT_ELEMENTALIST, 'ELEMENTAL', 0
              db KIT_GROVE_WARDEN, 'WARDEN', 0, KIT_BATTLE_MAGE, 'BATTLMAGE', 0, KIT_MIND_BENDER, 'M-BENDER', 0
-             db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, 0
+             db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, KIT_BATTLE_DANCER, 'B-DANCER', 0, KIT_SHADOWBLADE, 'SHADOWBLD', 0
+             db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0, 0
 ef_more      db 'MORE: CLICK HERE', 0
 ef_drawing   db 0
 ef_index     dw 0
@@ -7908,7 +8128,7 @@ probe_wp_class:
         cmp ax, GAME_SPHERES_ID
         je .spheres
         sub ax, KIT_WIN_ID
-        cmp ax, 8
+        cmp ax, KIT_GROUPS
         jb .kit
         add ax, KIT_WIN_ID - WP_PAGE_ID
         cmp ax, KIT_PAGE4_ID - WP_PAGE_ID
@@ -8059,8 +8279,8 @@ wp_click:
         jne .game
         cmp ax, WP_ROW
         jb .sphere
-        cmp ax, KIT_VIEW
-        ja .game
+        cmp ax, MULTI_ROW + 3 * (KIT_GROUPS - MULTI_FIRST + 1)
+        jae .game               ; (the multiclass groups' rows come after KITS: theirs too)
         sti
         pushad
         push es
@@ -8495,7 +8715,11 @@ kit_row:
         xor dl, dl
         cmp ax, KIT_NONE
         je .row
-        sub ax, KIT_ROW
+        mov cx, KIT_ROW
+        cmp ax, MULTI_ROW
+        jb .sub
+        mov cx, MULTI_ROW       ; (a multiclass group's rows)
+.sub:   sub ax, cx
         mov cl, 3
         div cl
         mov dl, ah
@@ -8519,8 +8743,8 @@ kit_row:
         call wp_two             ; (no Myrmidon now: its second kind gone)
         jnz kit_marks
         mov byte [es:bx + SPEC_SLOTS + 1], 0
-; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits) marked as the creation
-; sheet's kit, the rest not, as WP_MARKS marks a weapon page's
+; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits, or a multiclass group's one
+; or two) marked as the creation sheet's kit, the rest not, as WP_MARKS marks a weapon page's
 kit_marks:
         push es
         push bx
@@ -8530,13 +8754,22 @@ kit_marks:
         les bx, [WP_CREATION]
         mov dl, [es:bx + KIT_BYTE]
         movzx bx, al
+        mov byte [cs:km_rows], 4
+        cmp al, MULTI_FIRST
+        jb .class
+        mov cl, [cs:bx + multi_count - MULTI_FIRST]
+        inc cl
+        mov [cs:km_rows], cl
         imul bx, bx, 3
+        add bx, MULTI_ROW - 3 * MULTI_FIRST - 1   ; (NO KIT first, then the group's)
+        jmp .first
+.class: imul bx, bx, 3
         add bx, KIT_ROW - 4     ; (NO KIT first, then the class's three)
-        xor dh, dh              ; (the row's kit)
-        mov cx, 4
+.first: xor dh, dh              ; (the row's kit)
+        mov cx, 4               ; (WP_MARK's row: 4 - CX)
 .row:   mov ax, bx
-        cmp cx, 4
-        jne .kit
+        or dh, dh
+        jnz .kit
         mov ax, KIT_NONE
 .kit:   cmp dh, dl
         je .chosen
@@ -8559,6 +8792,8 @@ kit_marks:
 .next:  call wp_mark
         inc bx
         inc dh
+        cmp dh, [cs:km_rows]    ; (a multiclass group's page: its one or two kits' rows)
+        jae .out
         loop .row
 .out:   pop bx
         pop es
@@ -9018,6 +9253,7 @@ wp_far     dd 0
 wp_mine    dw WP_WSPHERE_ID, WP_PAGE_ID, WP_PAGE_ID + 1, WP_PAGE_ID + 2, WP_PAGE_ID + 3
            dw KIT_SPHERE_ID, KIT_PAGE4_ID, KIT_WIN_ID, KIT_WIN_ID + 1, KIT_WIN_ID + 2
            dw KIT_WIN_ID + 3, KIT_WIN_ID + 4, KIT_WIN_ID + 5, KIT_WIN_ID + 6, KIT_WIN_ID + 7
+           dw KIT_WIN_ID + 8, KIT_WIN_ID + 9, KIT_WIN_ID + 10, KIT_WIN_ID + 11, KIT_WIN_ID + 12
 wp_mine_end:
 wp_calls:                   ; each: the call's file offset (low word), then its far address
            dw WP_CALL_CLOSE & 0xFFFF
@@ -10084,10 +10320,17 @@ probe_two:
         cmp byte [es:bx+THINGS], 2
         jne .out                ; not a creature
         mov ax, [es:bx+THINGS+1]
-        push ax                 ; (a Twin-blade in light armour: none, as a ranger; kits.py)
+        call cr_is              ; (a Ghetto Fighter: none in the main hand, -2 in the off hand)
+        db KIT_GHETTO
+        jne .twin
+        add word [cs:t_base], 2
+.twin:  push ax                 ; (a Twin-blade or Battle Dancer in light armour: none, as a ranger; kits.py)
         call cr_is
         db KIT_TWIN_BLADE
-        pop ax
+        je .light
+        call cr_is
+        db KIT_BATTLE_DANCER
+.light: pop ax
         jne .scan
         push dx
         mov dx, ax
@@ -12881,7 +13124,7 @@ redraw_parts:
         je .out
         call panel_live
         je .out
-        call panel_draw
+        call panel_draw_pointer         ; (the parts drew the pointer again: kept over the panel)
 .out:   mov byte [cs:rp_busy], 0
         pop es
         popa
@@ -12955,7 +13198,13 @@ probe_redraw_all:
         mov [cs:rp_page], ax
         mov ax, [bp+0x0E]
         mov [cs:rp_flag], ax
+        push word [cs:resume_fl]        ; (the way back kept: the parts' routine, and the floor's
+        push word [cs:resume + 2]       ;   within it, come through probes that use RESUME too)
+        push word [cs:resume]
         call redraw_parts
+        pop word [cs:resume]
+        pop word [cs:resume + 2]
+        pop word [cs:resume_fl]
         pop dx
         pop cx
         pop bx
@@ -14143,6 +14392,12 @@ panel_page  dw 0                ;   was last drawn (PANEL_DRAW), and its top the
 panel_drawn dw PANEL_Y0
 
 panel_tick:
+        push es                         ; (the map's main loop ran: L_ON_MAP)
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        pop es
+        mov [cs:map_tick], ax
         cmp word [cs:panel_on], 0
         je .off
         push es                         ; (the Loader gone: off, as if it had said so)
@@ -14153,12 +14408,25 @@ panel_tick:
         sub ax, [cs:stats_stamp]
         cmp ax, STATS_FRESH
         jb .on
-.off:   cmp byte [cs:panel_shown], 0
+.off:   cmp byte [cs:strip_on], 0       ; (the strip: kept empty, in the palette of the moment)
+        je .off2
+        dec word [cs:strip_wait]
+        jnz .off2
+        mov word [cs:strip_wait], STRIP_EVERY
+        call strip_clear
+.off2:  cmp byte [cs:panel_shown], 0
         je .ret
         mov byte [cs:panel_shown], 0
+        cmp byte [cs:strip_on], 0
+        jne .unstrip
         call view_again                 ; (the view under it drawn again)
 .ret:   ret
-.on:    cmp word [cs:panel_new], 0
+.unstrip:
+        call strip_clear                ; (the strip: emptied)
+        ret
+.on:    cmp byte [cs:strip_on], 0
+        jne .strip
+        cmp word [cs:panel_new], 0
         je .old
         mov word [cs:panel_new], 0
         cmp byte [cs:panel_shown], 0
@@ -14178,8 +14446,11 @@ panel_tick:
         mov ax, [cs:panel_my]           ;   again, now and on the next pass
         cmp ax, [cs:panel_ly]
         jne .moved
-        dec byte [cs:panel_wait]        ; and every PANEL_EVERY passes anyway
-        jnz .ret
+        dec byte [cs:panel_wait]        ; and every PANEL_EVERY passes anyway (round the pointer:
+        jnz .ret                        ;   PANEL_DRAW_AROUND, the panel itself unchanged)
+        mov byte [cs:panel_wait], PANEL_EVERY
+        call panel_draw_around
+        ret
 .draw:  mov byte [cs:panel_wait], PANEL_EVERY
 .put:   mov byte [cs:panel_dirty], 0
         mov byte [cs:panel_shown], 1
@@ -14187,11 +14458,27 @@ panel_tick:
         mov [cs:panel_lx], ax
         mov ax, [cs:panel_my]
         mov [cs:panel_ly], ax
-        call panel_draw
+        call panel_draw_pointer
         ret
 .moved: mov byte [cs:panel_wait], 1
         jmp .put
+.strip: cmp word [cs:panel_new], 0      ; the strip below the map: put when new, and now and
+        jne .sput                       ;   then (nothing of the game's goes there; the game's
+        cmp byte [cs:panel_shown], 0    ;   mode setting clears it)
+        je .sput
+        dec byte [cs:panel_wait]
+        jnz .ret
+.sput:  mov word [cs:panel_new], 0
+        mov byte [cs:panel_wait], PANEL_EVERY
+        mov byte [cs:panel_shown], 1
+        mov byte [cs:strip_mode], 0
+        call strip_sum                  ; (the colours it is in: STRIP_SAME)
+        mov [cs:strip_shown_sum], ax
+        call panel_draw
+        ret
 PANEL_EVERY equ 16
+STRIP_EVERY equ 512             ; (passes between the strip's emptying again, the log off)
+strip_wait dw 1
 panel_wait db PANEL_EVERY
 panel_lx   dw 0
 panel_ly   dw 0
@@ -14199,6 +14486,8 @@ panel_ly   dw 0
 ; PANEL_LIVE: ZF set if the panel is on screen: shown, and the page on show the one it was last
 ; drawn into (not while the game shows the other screen: a window over the map, the panel not on it)
 panel_live:
+        cmp byte [cs:strip_on], 0       ; (in the strip: never over the map)
+        jne .no
         cmp byte [cs:panel_shown], 0
         je .no
         push es
@@ -14251,6 +14540,8 @@ panel_mouse:
 panel_draw:
         cmp word [cs:panel_seg], 0
         je .none
+        cmp byte [cs:strip_on], 0
+        jne strip_draw
         pusha
         push ds
         push es
@@ -14273,6 +14564,119 @@ panel_draw:
         pop ds
         popa
 .none:  ret
+
+; PANEL_DRAW_POINTER: PANEL_DRAW, then the game's pointer drawn again over it (28D1:093D, as the
+; game draws it). Not taken off first: what the game keeps under its pointer, to put back when it
+; moves, is the map without the panel (taken off, it showed as a patch of map until put again).
+; DS the game's; registers kept.
+POINTER_SEG  equ 0x28D1         ; (DSUN.EXE 2E8E0h: the pointer's routines' segment)
+POINTER_ON   equ 0x093D         ; put it on (what is under it kept first)
+panel_draw_pointer:
+        pusha
+        push es
+        mov ax, ds
+        sub ax, DGROUP_SEG - POINTER_SEG
+        mov [cs:pointer_far + 2], ax
+        mov word [cs:pointer_far], POINTER_ON
+        call panel_draw
+        mov byte [cs:pointer_busy], 1   ; (the panel just drawn: PROBE_POINTER leaves it)
+        call far [cs:pointer_far]
+        mov byte [cs:pointer_busy], 0
+        pop es
+        popa
+        ret
+pointer_far dw 0, 0
+pointer_busy db 0
+
+; PANEL_DRAW_AROUND: PANEL_DRAW with the box the pointer was last drawn in left as it is, the
+; pointer kept on screen (PANEL_TICK's put now and then, the panel unchanged); if the game shows
+; no pointer, PANEL_DRAW. DS the game's; registers kept.
+POINTER_HIDE equ 0x3C46         ; (set: the game draws no pointer)
+POINTER_XY   equ 0xA137         ; where it is to be drawn, top left (x, y)
+POINTER_WAS  equ 0xA13F         ; where it was last drawn (x, y)
+POINTER_KIND equ 0xA17F         ; and its kind then (-1: none)
+POINTER_MOST equ 32             ; (the widest and tallest a pointer may be)
+panel_draw_around:
+        cmp word [POINTER_HIDE], 0
+        jne .whole
+        cmp word [POINTER_KIND], -1
+        je .whole
+        push ax
+        mov ax, [POINTER_WAS]
+        sar ax, 2
+        mov [cs:pb_sx0], ax
+        add ax, POINTER_MOST / 4 + 1
+        mov [cs:pb_sx1], ax
+        mov ax, [POINTER_WAS + 2]
+        mov [cs:pb_sy0], ax
+        add ax, POINTER_MOST
+        mov [cs:pb_sy1], ax
+        pop ax
+        mov byte [cs:pb_skip], 1
+        call panel_draw
+        mov byte [cs:pb_skip], 0
+        ret
+.whole: jmp panel_draw
+
+; PROBE_POINTER: INT VEC_POINTER replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack check)
+; in the game's routine that draws its pointer (28D1:093D). The panel is put first if the pointer
+; is to go over it: the game takes its pointer off by putting back the map that was under it, over
+; the panel. The stack check, with the routine's SP; RETF 2 keeps its flags. DS the game's.
+probe_pointer:
+        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        mov [cs:strip_ds], ds
+        call strip_mind
+        call pointer_panel
+        push ax
+        mov ax, sp
+        add ax, 8               ; (the routine's SP: past this push and INT's IP, CS and flags)
+        cmp [0x9C], ax
+        pop ax
+        retf 2
+
+; POINTER_PANEL: the panel put (PANEL_DRAW) if it is on screen and the pointer about to be drawn
+; over it, or last drawn over it; registers kept
+pointer_panel:
+        cmp byte [cs:pointer_busy], 0
+        jne .ret
+        cmp word [POINTER_HIDE], 0
+        jne .ret
+        call panel_live
+        jne .ret
+        push si
+        mov si, POINTER_XY
+        call pointer_over
+        je .draw
+        mov si, POINTER_WAS
+        call pointer_over
+        jne .out
+.draw:  call panel_draw
+.out:   pop si
+.ret:   ret
+
+; POINTER_OVER: ZF set if a pointer at DS:SI (x, y: top left) is over the panel; registers kept
+pointer_over:
+        push ax
+        mov ax, [si]
+        cmp ax, PANEL_X0 + PANEL_W
+        jge .no
+        add ax, POINTER_MOST
+        cmp ax, PANEL_X0
+        jle .no
+        mov ax, [si + 2]
+        add ax, POINTER_MOST
+        cmp ax, [cs:panel_top]
+        jle .no
+        sub ax, POINTER_MOST
+        sub ax, [cs:panel_top]
+        cmp ax, [cs:panel_rows]
+        jge .no
+        cmp ax, ax                      ; (ZF set)
+        pop ax
+        ret
+.no:    cmp sp, 0                       ; (ZF clear)
+        pop ax
+        ret
 
 ; PANEL_DRAW_OTHER: the picture into the screen not on show (a redraw about to flip to it: the
 ; game's map on both); registers kept
@@ -14301,11 +14705,14 @@ panel_draw_other:
 ; kept). Its top and height read once, the height kept within the screen (never past row 199).
 panel_blit:
         mov es, ax
-        mov ax, [cs:panel_top]
-        cmp ax, 199
-        ja .ret
+        mov word [cs:pb_x4], PANEL_X0 / 4 ; (the panel over the map; STRIP_BLIT sets the strip's)
+        mov word [cs:pb_w4], PANEL_W / 4
+        mov word [cs:pb_end], 200
+pb_go:  mov ax, [cs:panel_top]
+        cmp ax, [cs:pb_end]
+        jae .ret
         mov [cs:pb_top], ax
-        mov cx, 200
+        mov cx, [cs:pb_end]
         sub cx, ax
         mov ax, [cs:panel_rows]
         cmp ax, cx
@@ -14314,6 +14721,16 @@ panel_blit:
 .rows:  or ax, ax
         jz .ret
         mov [cs:pb_rows], ax
+        mov ax, [cs:pb_sx0]             ; (the pointer's box, in bytes of the panel's rows: those
+        sub ax, [cs:pb_x4]              ;   left of it, and its own)
+        call pb_clamp
+        mov [cs:pb_left], ax
+        mov ax, [cs:pb_sx1]
+        sub ax, [cs:pb_x4]
+        call pb_clamp
+        sub ax, [cs:pb_left]
+        mov [cs:pb_mid], ax
+        push bp
         call vga_save
         mov ds, [cs:panel_seg]
         xor bx, bx                      ; (BX: the plane)
@@ -14325,26 +14742,417 @@ panel_blit:
         out dx, ax
         mov si, bx                      ; the picture's first pixel of this plane ...
         mov ax, [cs:pb_top]             ; ... and the screen's byte for it
+        sub ax, [cs:pb_row0]
         mov dx, 80
         mul dx
-        add ax, PANEL_X0 / 4
+        add ax, [cs:pb_x4]
         mov di, ax
         mov dx, [cs:pb_rows]
-.row:   mov cx, PANEL_W / 4
+        mov bp, [cs:pb_top]             ; (BP: the row on screen)
+.row:   mov cx, [cs:pb_w4]
+        cmp byte [cs:pb_skip], 0
+        je .pix
+        cmp bp, [cs:pb_sy0]
+        jl .pix
+        cmp bp, [cs:pb_sy1]
+        jge .pix
+        mov cx, [cs:pb_left]            ; the pointer's row: the bytes left of its box, its box
+        jcxz .box                       ;   left as it is, then the bytes right of it
+.lpix:  mov al, [si]
+        stosb
+        add si, 4
+        loop .lpix
+.box:   mov cx, [cs:pb_mid]
+        add di, cx
+        shl cx, 2
+        add si, cx
+        mov cx, [cs:pb_w4]
+        sub cx, [cs:pb_left]
+        sub cx, [cs:pb_mid]
+        jcxz .next
 .pix:   mov al, [si]
         stosb
         add si, 4
         loop .pix
-        add di, 80 - PANEL_W / 4
+.next:  add di, 80
+        sub di, [cs:pb_w4]
+        inc bp
         dec dx
         jnz .row
         inc bx
         cmp bx, 4
         jb .plane
         call vga_restore
+        pop bp
 .ret:   ret
 pb_top  dw 0
 pb_rows dw 0
+pb_x4   dw PANEL_X0 / 4         ; where the picture goes, its width (bytes of a plane's row), and
+pb_w4   dw PANEL_W / 4          ;   the screen's rows (the panel: 200; the strip: 240)
+pb_end  dw 200
+pb_row0 dw 0                    ; (the screen row at the memory's first: the strip's 200)
+pb_skip db 0                    ; set: the box PB_SX0 to PB_SX1 (bytes of a row, the last not in
+pb_sx0  dw 0                    ;   it), PB_SY0 to PB_SY1 (rows, the last not in it) left as it is
+pb_sx1  dw 0
+pb_sy0  dw 0
+pb_sy1  dw 0
+pb_left dw 0
+pb_mid  dw 0
+
+; PB_CLAMP: AX kept within 0 to PB_W4
+pb_clamp:
+        cmp ax, 0
+        jge .lo
+        xor ax, ax
+.lo:    cmp ax, [cs:pb_w4]
+        jle .hi
+        mov ax, [cs:pb_w4]
+.hi:    ret
+
+; STRIP: with the Options tab's "combat log below the map" the game's screen is 320 x 222 (its
+; mode X set up as ever, then 22 rows more in the same timing: PROBE_STRIP), and the game, which
+; knows nothing of it, draws its 200 rows as before. Below row 200 the VGA's split screen (its line
+; compare) shows video memory from its start whichever screen is up: the strip, 22 rows of 80 bytes
+; a plane (1760), the game's two screens moved up past it (A070h, A460h: each at a multiple of 256
+; bytes, as the game's page flip sets only the high byte of where the screen starts; gamepatch's
+; STRIP). The strip is the
+; combat log's: the Loader's picture, STRIP_W x STRIP_H, put there (STRIP_DRAW); the panel's top
+; and height are the Loader's as ever (200, 40). The pointer never goes there.
+STRIP_W   equ 320
+STRIP_ROWS equ 222
+strip_on  db 0                  ; set once the game's screen is 320 x 222
+
+; PROBE_STRIP: INT VEC_STRIP replaces "mov al,2 / mov ah,1 / out dx,ax" (5 bytes: INT + 3 NOPs) at
+; the end of the game's mode X set up (0980:2A40h, DSUN.EXE 11640h; DX 3C4h): that, then the
+; screen 222 rows in the game's own timing (70 a second, 449 scan lines a frame, each row drawn
+; twice: the speed and shape as ever): the picture to scan line 443 (12h: 1BBh), the blanking from
+; 444 (15h, to 16h: 3Fh, the frame's end) and the sync at 445 to 447 (10h, 11h, keeping registers
+; 0-7 locked), and the split after scan line 399 (the line compare, 18h: 18Fh; its bit 9, in 09h,
+; cleared). Their bit 8s are in the overflow (07h, 1Fh: set) as the game has it. Keeps all.
+probe_strip:
+        push ax
+        push dx
+        push si
+        push cx
+        mov dx, 0x3D4
+        mov si, strip_crtc
+        mov cx, STRIP_CRTC_N
+.crtc:  mov ax, [cs:si]
+        out dx, ax
+        add si, 2
+        loop .crtc
+        pop cx
+        pop si
+        mov byte [cs:strip_on], 1
+        mov dx, 0x3C4
+        mov ax, 0x0102                  ; (as the game: all planes off but the first)
+        out dx, ax
+        pop dx
+        pop ax
+        iret
+strip_crtc dw 0x0109, 0xBB12, 0xBC15, 0x3F16, 0xBD10, 0x8F11, 0x8F18
+STRIP_CRTC_N equ ($ - strip_crtc) / 2
+
+; PROBE_PALETTE: INT VEC_PALETTE replaces "sti / pop di" (2 bytes) at the end of the game's
+; routine that sets the whole palette (0980:58F5h, DSUN.EXE 144F5h: a new screen or area): those,
+; then STRIP_NEW_PALETTE. Keeps all.
+probe_palette:
+        push bp
+        mov bp, sp
+        mov di, [bp + 8]                ; (pop di: the word under INT's IP, CS and flags)
+        push word [bp + 6]              ; (the frame moved up over it, interrupts on: sti)
+        push word [bp + 4]
+        push word [bp + 2]
+        pop word [bp + 4]
+        pop word [bp + 6]
+        pop word [bp + 8]
+        or word [bp + 8], 0x200
+        pop bp
+        add sp, 2
+        call strip_new_palette
+        iret
+
+; PROBE_COLOURS: INT VEC_COLOURS replaces "pop dx / pop cx" (2 bytes) at the end of the game's
+; routine that sets a run of colours (DSUN.EXE 288BAh: BX the first, CX how many; the title's,
+; and each step of a fade): those, then as PROBE_PALETTE if the run reaches below the colours
+; the game animates (DARK_LAST). Keeps all but DX and CX, as the routine leaves them.
+probe_colours:
+        push bp
+        mov bp, sp
+        cmp bx, DARK_LAST
+        mov dx, [bp + 8]                ; (pop dx / pop cx: the words under INT's IP, CS, flags)
+        mov cx, [bp + 10]
+        push word [bp + 6]              ; (the frame moved up over them; the flags as they were)
+        push word [bp + 4]
+        push word [bp + 2]
+        pop word [bp + 6]
+        pop word [bp + 8]
+        pop word [bp + 10]
+        pop bp
+        lea sp, [esp + 4]               ; (keeps the flags: the CMP's above)
+        ja .ret
+        call strip_new_palette
+.ret:   iret
+
+; STRIP_NEW_PALETTE: the strip in the new palette: emptied (STRIP_CLEAR) unless the log's picture
+; is in it and the colours it was put in are still those on screen (STRIP_SAME: a window over the
+; map); else it is put again when the map's main loop runs again;
+; registers kept
+strip_new_palette:
+        cmp byte [cs:strip_on], 0
+        je .ret
+        cmp byte [cs:panel_shown], 0
+        je .clear
+        call strip_same
+        je .ret
+        mov byte [cs:panel_shown], 0
+.clear: call strip_clear
+.ret:   ret
+
+; STRIP_SUM: AX a sum of the VGA's colours DARK_FIRST to DARK_LAST (STRIP_SAME's); BX, CX, DX not kept
+strip_sum:
+        mov dx, 0x3C7
+        mov al, DARK_FIRST
+        out dx, al
+        mov dx, 0x3C9
+        mov cx, (DARK_LAST - DARK_FIRST + 1) * 3
+        xor bx, bx
+        xor ah, ah
+.next:  in al, dx
+        rol bx, 1
+        add bx, ax
+        loop .next
+        mov ax, bx
+        ret
+
+; STRIP_SAME: ZF set if the VGA's colours are still those the log's picture was put in (STRIP_SUM as
+; the main loop last put it: STRIP_SHOWN_SUM); registers kept
+strip_same:
+        pusha
+        call strip_sum
+        cmp ax, [cs:strip_shown_sum]
+        popa
+        ret
+strip_shown_sum dw 0
+
+; STRIP_MIND: from the game's pointer (on every screen; DS the game's): on the map, or with the
+; log's picture still in the strip (a talk over the map), a new picture of the log put at once (the map's main loop doesn't run while the game plays a scene out, the
+; arena's opening show); else the empty strip filled again when the screen calls for another look
+; (STRIP_WANT), in the colours STRIP_COLOURS found last (no palette read here: the pointer may be
+; drawn while the game sets colours); registers kept
+strip_mind:
+        cmp byte [cs:strip_on], 0
+        je .ret
+        push ax
+        cmp word [cs:panel_new], 0
+        je .empty
+        cmp word [cs:panel_on], 0
+        je .empty
+        cmp byte [cs:panel_shown], 0    ; (the log's picture still there: its colours too, a
+        jne .put                        ;   talk over the map)
+        call strip_on_map
+        jne .empty
+.put:   mov word [cs:panel_new], 0
+        mov byte [cs:panel_shown], 1
+        mov byte [cs:strip_mode], 0
+        call panel_draw
+        jmp .out
+.empty: cmp byte [cs:panel_shown], 0
+        jne .out
+        call strip_want
+        cmp al, [cs:strip_mode]
+        je .out
+        mov [cs:strip_mode], al
+        call strip_fill
+.out:   pop ax
+.ret:   ret
+
+; SCREEN_IS: the game's DS:0BC9h, 1 on the map, 2 with a character's screen or a talk over it,
+; 0 on the title, the menus and in character creation
+SCREEN_IS  equ 0x0BC9
+
+; STRIP_ON_MAP: ZF set if the game is on the map (SCREEN_IS 1); registers kept
+strip_on_map:
+        push es
+        push ax
+        mov ax, [cs:strip_ds]
+        cmp ax, 1                       ; (not known yet: ZF clear)
+        jb .out
+        mov es, ax
+        cmp word [es:SCREEN_IS], 1
+.out:   pop ax
+        pop es
+        ret
+
+; STRIP_WANT: AL the look of the empty strip: STRIP_STONE (the panel's blue-grey) in a game (the
+; map, or a character's screen over it), else STRIP_BLACK (the title, the menus, character creation)
+STRIP_BLACK equ 1
+STRIP_STONE equ 2
+strip_want:
+        push es
+        mov al, STRIP_BLACK
+        cmp word [cs:strip_ds], 0
+        je .out
+        mov es, [cs:strip_ds]
+        cmp word [es:SCREEN_IS], 0
+        je .out
+        mov al, STRIP_STONE
+.out:   pop es
+        ret
+
+strip_ds    dw 0                ; the game's DS (PROBE_POINTER's)
+strip_mode  db 0                ; the strip now: 0 the log's picture (or not yet filled), else STRIP_WANT's
+
+; STRIP_DRAW: the picture into the strip (PANEL_DRAW, in the strip: PANEL_BLIT at the strip's
+; place and width, video memory's first rows showing screen rows 200 on; registers kept)
+strip_draw:
+        pusha
+        push ds
+        push es
+        cld
+        mov ax, 0xA000
+        mov es, ax
+        mov word [cs:pb_x4], 0
+        mov word [cs:pb_w4], STRIP_W / 4
+        mov word [cs:pb_end], STRIP_ROWS
+        mov word [cs:pb_row0], 200
+        mov byte [cs:pb_skip], 0
+        call pb_go
+        mov word [cs:pb_x4], PANEL_X0 / 4
+        mov word [cs:pb_w4], PANEL_W / 4
+        mov word [cs:pb_end], 200
+        mov word [cs:pb_row0], 0
+        pop es
+        pop ds
+        popa
+        ret
+
+; STRIP_COLOURS: from the VGA's palette (from the main loop or after the game has set colours), the
+; empty strip's colours: STRIP_DARKEST the darkest of all 256 (the title's black is among the
+; last), STRIP_EDGE and STRIP_DEEP the colours nearest the panel's outline and its well (combatlog.py
+; COLOURS: palette.SHADOW #202038, palette.DEEP #30304D) among those the game doesn't animate
+; (AX, BX, CX, DX, SI not kept)
+strip_colours:
+        mov dx, 0x3C7
+        xor al, al
+        out dx, al
+        mov dx, 0x3C9
+        xor bx, bx
+        mov word [cs:sc_dark], 0xFFFF
+        mov word [cs:sc_edge], 0xFFFF
+        mov word [cs:sc_deep], 0xFFFF
+.next:  in al, dx
+        mov [cs:sc_rgb], al
+        in al, dx
+        mov [cs:sc_rgb + 1], al
+        in al, dx
+        mov [cs:sc_rgb + 2], al
+        xor ah, ah                      ; the darkest: the least red, green and blue (a byte)
+        mov al, [cs:sc_rgb]
+        add al, [cs:sc_rgb + 1]
+        add al, [cs:sc_rgb + 2]
+        cmp ax, [cs:sc_dark]
+        jae .lit
+        mov [cs:sc_dark], ax
+        mov [cs:strip_darkest], bl
+.lit:   cmp bx, DARK_FIRST
+        jb .skip
+        cmp bx, DARK_LAST
+        ja .skip
+        mov si, sc_deep_rgb
+        call sc_distance
+        cmp ax, [cs:sc_deep]
+        jae .edge
+        mov [cs:sc_deep], ax
+        mov [cs:strip_deep], bl
+.edge:  mov si, sc_edge_rgb
+        call sc_distance
+        cmp ax, [cs:sc_edge]
+        jae .skip
+        mov [cs:sc_edge], ax
+        mov [cs:strip_edge], bl
+.skip:  inc bx
+        cmp bx, 255
+        jbe .next
+        ret
+
+; SC_DISTANCE: AX the square of the distance between SC_RGB and the colour at CS:SI (0-63 a
+; channel); registers but AX kept
+sc_distance:
+        push cx
+        push si
+        push di
+        push bx
+        xor di, di
+        mov bx, sc_rgb
+        mov cx, 3
+.ch:    mov al, [cs:bx]
+        sub al, [cs:si]
+        cbw
+        imul ax, ax
+        add di, ax
+        inc bx
+        inc si
+        loop .ch
+        mov ax, di
+        pop bx
+        pop di
+        pop si
+        pop cx
+        ret
+
+sc_rgb      db 0, 0, 0
+sc_deep_rgb db 0x30 / 4, 0x30 / 4, 0x4D / 4     ; (palette.DEEP)
+sc_edge_rgb db 0x20 / 4, 0x20 / 4, 0x38 / 4     ; (palette.SHADOW)
+sc_dark     dw 0
+sc_deep     dw 0
+sc_edge     dw 0
+strip_darkest db 0
+strip_deep  db 0
+strip_edge  db 0
+
+; STRIP_FILL: the strip emptied as STRIP_MODE has it: all STRIP_DARKEST (STRIP_BLACK), or the
+; panel's look without its lines (STRIP_STONE: its top line STRIP_EDGE, the rest STRIP_DEEP);
+; registers kept
+strip_fill:
+        pusha
+        push es
+        call vga_save
+        mov dx, 0x3C4
+        mov ax, 0x0F02                  ; (all four planes)
+        out dx, ax
+        cld
+        mov bx, 0xA000
+        mov es, bx
+        xor di, di
+        mov al, [cs:strip_darkest]
+        mov ah, al
+        mov cx, (STRIP_ROWS - 200) * 80 / 2
+        cmp byte [cs:strip_mode], STRIP_STONE
+        jne .fill
+        mov al, [cs:strip_edge]
+        mov ah, al
+        mov cx, 80 / 2
+        rep stosw
+        mov al, [cs:strip_deep]
+        mov ah, al
+        mov cx, (STRIP_ROWS - 201) * 80 / 2
+.fill:  rep stosw
+        call vga_restore
+        pop es
+        popa
+        ret
+
+; STRIP_CLEAR: the strip emptied (the log not in it), in the palette of the moment (STRIP_COLOURS),
+; as the screen calls for (STRIP_WANT); registers kept
+strip_clear:
+        pusha
+        call strip_colours
+        call strip_want
+        mov [cs:strip_mode], al
+        call strip_fill
+        popa
+        ret
 
 ; DUST_UNION: in PROBE_REDRAW_ALL (x0 [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]: on screen),
 ; the puffs' ground taken in, as far as it is on screen
@@ -14837,7 +15645,11 @@ int16:
         cmp word [cs:target_on], 0
         jne .on
         cmp byte [cs:panel_shown], 0    ; (L for the combat log's panel)
+        jne .on
+        cmp word [cs:panel_seg], 0      ; (... or to open it, over the map)
         je .chain
+        cmp byte [cs:strip_on], 0
+        jne .chain
 .on:
         cmp ah, 0x00
         je .read
@@ -14883,14 +15695,47 @@ int16:
         add sp, 2
         iret
 
+; L_ON_MAP: ZF set if L should open the panel over the map: the panel there (not the strip), not
+; on screen, the map's main loop run within the last BIOS tick or two (no game window, save name
+; or menu waiting on keys) and the Loader there; registers kept
+L_FRESH    equ 2
+l_on_map:
+        push ax
+        push es
+        cmp word [cs:panel_seg], 0
+        je .no
+        cmp byte [cs:strip_on], 0
+        jne .no
+        cmp byte [cs:panel_shown], 0
+        jne .no
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:map_tick]
+        cmp ax, L_FRESH
+        ja .no
+        mov ax, [es:0x46C]
+        sub ax, [cs:stats_stamp]
+        cmp ax, STATS_FRESH
+        jae .no
+        xor ax, ax                      ; (ZF set)
+        jmp .out
+.no:    or ax, 1                        ; (ZF clear)
+.out:   pop es
+        pop ax
+        ret
+map_tick   dw 0
+
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
         jne .tabs
 .l:     call panel_live                 ; L on the map, the panel on it: the Loader's
+        je .count
+        call l_on_map                   ; ... or the panel off, to open it
         jne .no
-        inc word [cs:panel_keys]
+.count: inc word [cs:panel_keys]
         stc
         ret
 .tabs:  cmp word [cs:target_on], 0
@@ -15171,9 +16016,9 @@ ib_elf_quiet db 'Move 95%', 0
 ; PROBE_BELT: INT VEC_BELT replaces "mov ax,si" (2 bytes) at the end of the game's thief skill
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
-; gets BELT_BONUS more to pick pockets (0) and open locks (1); an Assassin (kits.py) 15 less to
-; those, a Swashbuckler 10 less to every skill, no less than 0, as the Loader counts them (game.py's thief_skills_now); then AX = the chance, as
-; the code would have.
+; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), no less
+; than 0, as the Loader counts them (game.py's thief_skills_now); then AX = the chance, as the
+; code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
 BELT_BONUS equ 5
 COMBATANT_CREATURE equ 0xC37    ; in the things table: an object's creature (3 bytes an object)
@@ -15207,19 +16052,13 @@ probe_belt:
         je .kit
         add dx, BELT_BONUS
 .kit:   mov ax, cx              ; the kit's (kits.thief_skill), no less than 0
-        call cr_is
-        db KIT_SWASHBUCKLER
-        jne .assassin
-        sub dx, 10
-        jmp .least
-.assassin:
-        call cr_is
-        db KIT_ASSASSIN
-        jne .done
-        cmp word [bp + 8], 1
-        ja .done
-        sub dx, 15
-.least: or dx, dx
+        push si
+        mov si, [bp + 8]
+        call kit_skill
+        pop si
+        or ax, ax
+        jz .done
+        add dx, ax
         jns .done
         xor dx, dx
 .done:  mov ax, dx
@@ -15228,6 +16067,62 @@ probe_belt:
         pop cx
         pop bx
 .out:   iret
+
+; KIT_SKILL: AX what the kit of creature AX adds to thief skill SI (0-7: game.THIEF_SKILLS' order)
+; (kits.thief_skill): KIT_SKILLS' row for each of its kits; a Military Scout's 10 to finding traps,
+; moving silently, hiding and climbing while under the open sky (KIT_OUTDOORS), 5 less under a roof.
+; DS the game's; others kept.
+kit_skills db KIT_SWASHBUCKLER, -10, -10, -10, -10, -10, -10, -10, -10  ; (pick pockets, open locks,
+           db KIT_ASSASSIN, -15, -15, 0, 0, 0, 0, 0, 0                  ;  traps, move silently, hide,
+           db KIT_SHADOWBLADE, -10, 0, 0, 5, 10, 0, 0, 0                ;  hear noise, climb, read)
+           db KIT_GHETTO, 5, 0, -5, 0, 5, 0, 0, 0
+           db KIT_WAYFINDER, -10, 0, 0, 10, 10, 0, 0, 0
+           db 0
+SCOUT_SKILLS equ 0x5C           ; (bits: traps, move silently, hide, climb)
+kit_skill:
+        push bx
+        push cx
+        push dx
+        push di
+        push es
+        mov cx, ax
+        call creature_sheet
+        xor dx, dx
+        cmp si, 7
+        ja .out
+        mov di, kit_skills
+.kit:   mov al, [cs:di]
+        or al, al
+        jz .scout
+        call kit_is
+        jne .next
+        push bx
+        mov bx, di
+        movsx ax, byte [cs:bx + si + 1]
+        pop bx
+        add dx, ax
+.next:  add di, 9
+        jmp .kit
+.scout: mov al, KIT_SCOUT
+        call kit_is
+        jne .out
+        bt word [cs:scout_bits], si
+        jnc .out
+        mov ax, -5
+        cmp cx, 3
+        ja .add
+        bt word [cs:kit_outdoors], cx
+        jnc .add
+        mov ax, 10
+.add:   add dx, ax
+.out:   mov ax, dx
+        pop es
+        pop di
+        pop dx
+        pop cx
+        pop bx
+        ret
+scout_bits dw SCOUT_SKILLS
 
 old16      dd 0
 t_click    db 0
@@ -15268,6 +16163,37 @@ gc_regs    db 1, 3, 4, 5, 8
 gc_saved   times 5 db 0
 zero       dw 0
 game_ds    dw 0
+%ifdef CAMTRACE
+; (a test build's only: INT 3 put over "push bp" at the start of the game's routine that centres
+; the view on a creature, by hand: each caller's return address kept, 16 of them, then "push bp")
+cam_trace:
+        push bp
+        mov bp, sp
+        push ax
+        push bx
+        mov bx, [cs:cam_n]
+        and bx, 0x3C
+        mov ax, [bp + 8]
+        mov [cs:cam_log + bx], ax
+        mov ax, [bp + 10]
+        mov [cs:cam_log + bx + 2], ax
+        add word [cs:cam_n], 4
+        mov ax, [bp]
+        mov bx, [bp + 2]
+        mov [bp], bx
+        mov bx, [bp + 4]
+        mov [bp + 2], bx
+        mov bx, [bp + 6]
+        mov [bp + 4], bx
+        mov [bp + 6], ax
+        pop bx
+        pop ax
+        mov bp, [bp + 6]
+        iret
+        db "CAMTRACE"
+cam_n   dw 0
+cam_log times 64 db 0
+%endif
 load_seg   dw 0
 clip_x0    dw 0
 clip_y0    dw 0
@@ -15459,6 +16385,23 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov ax, 2500h + VEC_REDRAW_ALL
         mov dx, probe_redraw_all
+        int 21h
+        mov ax, 2500h + VEC_POINTER
+        mov dx, probe_pointer
+        int 21h
+        mov ax, 2500h + VEC_STRIP
+        mov dx, probe_strip
+        int 21h
+%ifdef CAMTRACE
+        mov ax, 2503h
+        mov dx, cam_trace
+        int 21h
+%endif
+        mov ax, 2500h + VEC_PALETTE
+        mov dx, probe_palette
+        int 21h
+        mov ax, 2500h + VEC_COLOURS
+        mov dx, probe_colours
         int 21h
         mov ax, 2500h + VEC_SCROLL
         mov dx, probe_scroll
@@ -15802,7 +16745,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
 all_vectors_end:
 
         align 16, db 0

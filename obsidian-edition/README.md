@@ -90,6 +90,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - [Controls](#controls)
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
+  - [The view in fights](#the-view-in-fights)
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
@@ -109,8 +110,8 @@ and tables in one place, without spoilers, with a section for each class.
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
   character creation, each with what it needed and where every bonus came
-  from ([the dice log](#the-dice-log)). In a fight a combat log can scroll in
-  a corner of the map, the game's own screens gain THAC0, saves, thief skills
+  from ([the dice log](#the-dice-log)). In a fight a combat log runs below
+  the map, the game's own screens gain THAC0, saves, thief skills
   and spell slots, and the Look box tells you what can hurt a monster ([In
   the game](#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
@@ -248,7 +249,8 @@ command prompt: `--window-scale 2` to `4`, `--fullscreen` or `--windowed` after
 `launch` or `play` do the same.) GOG's DOSBox has no four-times scaler, so
 Quadruple has DOSBox stretch its window with OpenGL (`output=opengl`,
 `windowresolution=1280x960`); if your graphics driver doesn't take to that,
-pick Triple.
+pick Triple. With the [combat log below the map](#the-combat-log-in-the-game)
+(an option) each is a little taller: 640x532, 960x798, 1280x1064.
 
 Load your game. The party's stats fill in by themselves, and rolls appear in
 the **Dice log** tab as they happen.
@@ -301,43 +303,69 @@ from the Loader (or either `.bat` file).
 
 ### The combat log in the game
 
-With **Show a combat log in the game, bottom right, in a fight** ticked on the
-Options tab (the default), a panel over the map's lower right shows
-the fight as it goes: the [dice log](#the-dice-log)'s lines in the game's own font, in the
-Loader's colours for each kind of line (hits green, misses grey, damage amber,
-saving throws blue), the party's names in their colours and the monsters' in
-red, a filled pip before a party member's line and a hollow one before a
-monster's. Its top line says the round, who is acting and who is still to
-(`Round 2: Gerakis, then Cermak, Cilla`). Below the switch, pick how much it
-says: **at the least** (`Rampager hits Defiler for 4`), **in short**, the
-default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`, `Slig's
-save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of the log.
-`20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the target's AC;
-a natural 20 always hits, a 1 always misses). The panel is on only in fights,
-never waits for a click, and goes when the fight ends (or the Loader is
-closed). A window the game opens over the map (a character's menu, a question)
-hides it until it closes. It needs the game started from the Loader (which
-turns off DOSBox's EMS to make room for it).
+With **A combat log in the game** ticked on the Options tab (the default),
+**L** on the map shows the [dice log](#the-dice-log)'s lines in the game
+itself, and **L** again hides them: in a fight or out of one, whenever you
+want to read back. It doesn't open by itself, and stays as you left it (from
+one game to the next too). The lines are in the game's own font, in the
+Loader's colours for each kind of line (hits green, misses grey, damage
+amber, saving throws blue), the party's names in their colours and the
+monsters' in red, a filled pip before a party member's line and a hollow one
+before a monster's. In a fight its top line says the round, who is acting
+and who is still to (`Round 2: Gerakis, then Cermak, Cilla`). Out of fights,
+the lines with a roll in them go in too (a thief's skills, a scroll learned,
+the hit points of a new level), so they can be checked after they happen.
+
+Below the switch, pick how much it says: **at the least** (`Rampager hits
+Defiler for 4`), **in short**, the default (`Rampager attacks Defiler: 20 vs
+16+ HIT, 4 damage (2d6)`, `Slig's save vs Fireball: 11 vs 16, failed`), or
+**in detail**, every line of the log. `20 vs 16+ HIT` is the d20 and the roll
+it needed (THAC0 less the target's AC; a natural 20 always hits, a 1 always
+misses). It never waits for a click, and needs the game started from the
+Loader (which turns off DOSBox's EMS to make room for it).
 
 ![The combat log in the arena, in short](docs/combat-log.png)
 
-It scrolls back over the fight (the last 200 lines): drag the scrollbar's
-handle, click the bar above or below it for a page, or turn the mouse wheel
-with the pointer over the panel (on Windows: DOSBox doesn't pass the wheel to
-the game, so the Loader listens for it itself). Scrolled back, it stays where
-it is as new lines come, and a **Latest** chip at its foot says how many have;
-click it (or scroll to the end) to follow the fight again. Clicks on the panel
-are its own: the party doesn't walk there.
+**The panel** sits over the map's lower right. A window the game opens over
+the map (a character's menu, a question) hides it until it closes.
 
-Its top line has three buttons on the right: the level (**Least**, **Short**,
-**Detail**; a click goes to the next, and the Options tab follows), and **-**
-and **+** to make it smaller or bigger. Collapsed, it is one line, the newest;
-expanded, it is taller (11 lines) and has filters along its top: **All**,
-**Party** (the party's lines), **Damage** (hits, damage and deaths) and
-**Saves** (saving throws and magic resistance). **L** on the map collapses it
-and opens it again. Its size is remembered.
+- **Scrolling:** it keeps the last 200 lines. Drag the scrollbar's handle,
+  click the bar above or below it for a page, or turn the mouse wheel with
+  the pointer over the panel (on Windows). Scrolled back, it stays where it
+  is as new lines come, and a **Latest** chip at its foot says how many have;
+  click it (or scroll to the end) to follow again. Clicks on the panel are
+  its own: the party doesn't walk there.
+- **Its buttons**, on the right of its top line: **L**, which hides it as the
+  key does; the level (**Least**, **Short**, **Detail**; a click goes to the
+  next, and the Options tab follows); and **-** and **+** for a smaller or
+  bigger panel. Collapsed, it is one line, the newest; expanded, it is
+  taller (11 lines) and has filters along its top: **All**, **Party** (the
+  party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
+  throws and magic resistance). Its size is remembered.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
+
+**Below the map instead** (**... always shown, below the map instead of over
+it**, from the next start). The game's screen is 22 rows taller, 320 × 222,
+and the log is a strip under the map, the full width, in the panel's darker
+shade, always there: L doesn't hide it. Nothing of the map is covered, and
+the game runs at its own speed with the map its usual shape; DOSBox's window
+is a little taller than 4:3.
+
+- **What it shows:** in a fight, the round and the newest line; between
+  fights, the two newest lines (the next fight starts again at its newest).
+- **Scrolling:** the pointer doesn't go there, so the strip has no buttons.
+  On Windows the mouse wheel scrolls it a line a notch wherever the pointer
+  is (DOSBox doesn't pass the wheel to the game, so the Loader listens for it
+  itself), with a **Latest** chip while scrolled back; under a talk window it
+  moves once the pointer does. The level is set on the Options tab.
+- **On other screens:** it stays under a talk or a screen over the map, and
+  is kept up while the game plays a scene out (the arena's opening show). A
+  screen in other colours has the panel's blue-grey there instead, the log
+  back on the map; the title, the main menu and character creation have it
+  black.
+
+![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
 ### THAC0, saves and thief skills
 
@@ -359,9 +387,11 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
   and hide in shadows are the ones the Loader rolls (for
   [picking pockets](#picking-pockets) and [hiding to backstab](#hiding-in-shadows-to-backstab)).
-  A worn belt's 5 is in `PICK` and `LOCK`. Hear noise (one script check) and
+  A worn belt's 5 is in `PICK` and `LOCK`, and with
+  [hiding to backstab](#hiding-in-shadows-to-backstab) a worn cloak's 10 in
+  `HIDE` and boots' 10 in `MOVE` (the Cloak and Boots of Elvenkind's 95). Hear noise (one script check) and
   read languages (none) are left out for want of room. A ranger, with
-  [hiding to backstab](#hiding-in-shadows-to-backstab) on, gets their `MOVE` and `HIDE` in the same places (the other four left out);
+  [hiding to backstab](#hiding-in-shadows-to-backstab) on, gets their `MOVE` and `HIDE` in the same places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): -6 at DEX 1 to +5 at DEX 24-25, the
   number the [two-weapon rule](#two-weapons) adds to its penalties, and the
@@ -552,8 +582,8 @@ open it, ▸ when closed and ▾ when open. Which sections are open is remembere
 Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
-- **In the game**: the combat log and how much it says, monster
-  descriptions ([In the game](#in-the-game)).
+- **In the game**: the combat log, where it goes and how much it says,
+  monster descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](#rule-changes)): the game's rules closer
   to AD&D.
 - **More character customization** ([More character
@@ -1654,10 +1684,10 @@ from the next start); untick one and the game is as it was.
 | Box on the Options tab | What it adds |
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
-| [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
+| [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes have kits of their own |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
-| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a belt, boots, a dagger |
+| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a dagger, and a Stalker, Assassin or Shinobi a cloak |
 
 ### Weapon specialization
 
@@ -1794,7 +1824,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
 ### Kits
 
 With **Kits** ticked, a character of one class may take one of three kits for
-its class when it is made, or none (the class as it is). Each gives something
+its class when it is made, or none (the class as it is). A few pairs of
+classes taken at once by one race have kits of their own ([Multiclass
+kits](#multiclass-kits)). Each gives something
 and costs something. A human who changes class may take a kit for the new
 class too ([Changing class](#changing-class)). Each class's three kits have a
 table of their own below: what the kit gives (with the level each part comes
@@ -1883,6 +1915,30 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 | **Mind Bender** | telepathy powers (the defence modes too) cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear | the 2 counts both to use a power and to keep it up each round, never below 1 (a power with no upkeep still has none) |
 | **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | the psionicist's gear | as the Mind Bender's, the other way round |
 
+#### Multiclass kits
+
+A character of two classes at once may take a kit if its race and pair of
+classes have one. Only that race may take it: a dwarf fighter/thief has the
+Ghetto Fighter and Wayfinder, and a half-elf fighter/thief has the Shadowblade
+and Military Scout. "Under the open sky" means an outdoor map, or open ground
+outside the buildings on a city map. The Loader works that out about once a
+second.
+
+| Kit | Race and classes | Gives | Costs | Also |
+|---|---|---|---|---|
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX (the Dancing proficiency, +0); at DEX or under, **+1 to hit, to damage and to AC** for DEX less the roll in rounds (at least 1); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over DEX, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | with fuller starting gear, a bow and arrows if it has no missile weapon; the dice log shows the dance's roll and its end |
+| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently | −10 pick pockets | |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls | under a roof, −5 to the same four | the panel's and the dice log's numbers follow where it stands |
+| **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | none beyond its classes' own | its hiding counts for backstabs as a ranger's does |
+| **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | none under a roof | the dice log says ", under the open sky" |
+| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps | DEX's adjustment still applies to the two-weapons penalty |
+| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently | −10 pick pockets | |
+
+A thief skill a kit lowers never goes below 0. The kits start with their
+classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)).
+A multiclass character can't change class, so these kits rule nothing else
+out.
+
 #### Choosing a kit
 
 The kit is chosen on the creation panel's **KIT** page, opened with **KITS**,
@@ -1893,7 +1949,11 @@ last weapon page for a fighter, gladiator or ranger choosing weapon specs.
 NO KIT, the first row, is what a new character has. As with the clerical
 spheres, the rows not chosen are greyed: click the marked row to take it back,
 then click the kit you want. A few names are shortened to fit the panel
-(CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR). Choosing
+(CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR,
+B-DANCER, SHADOWBLD, M-SCOUT, W-AVENGER, G-FIGHTER). A multiclass character with
+kits finds KITS where its classes put it: on the last weapon page with weapon
+specialization (each of these pairs has a warrior class), otherwise under the
+clerical spheres if one class has them, else under the psionic disciplines. Choosing
 another class puts the kit back to none; a new roll of the die keeps it. The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Loader's Characters tab.
 
@@ -2132,7 +2192,7 @@ With **Fuller starting gear** ticked, the Loader adds plain gear to a new
 character's own while it is still New, after the class
 restrictions, weapon specs and kits have changed theirs, and the dice log
 lists it (`Swat starts with more gear: Short Sword (in hand), Arm Armor, Leg
-Armor, Belt, Boots, Dagger (in the backpack)`):
+Armor, Dagger (in the backpack)`):
 
 - **A weapon in hand.** A character with an empty right hand takes a weapon
   it can use from its backpack (a cleric's club), else gets a plain one: of
@@ -2147,25 +2207,28 @@ Armor, Belt, Boots, Dagger (in the backpack)`):
 - **Leather armour** in its empty chest, arm and leg places, where it may wear
   it: a thief, gladiator, ranger, psionicist, cleric or Battle Mage goes out
   in a full suit.
-- **A belt and boots** for everyone, **a cloak** for a ranger (a Stalker of
-  another class too), and **a dagger** in the backpack for anyone who can use
-  one. Worn, the cloak, boots and belt help a thief ([Improved
-  thieving](#improved-thieving)).
+- **A cloak** for a Stalker, an Assassin or a Shinobi (with
+  [kits](#kits) on), to hide in ([Improved thieving](#improved-thieving)),
+  and **a dagger** in the backpack for anyone who can use one.
+- **A thri-kreen gets nothing more** than the game's own starting gear: its
+  claws serve it better than another weapon, and it wears no armour or
+  cloak.
 - **A multiclass preserver's armour** goes into the backpack, with the class
   restrictions on: it can't cast in armour. It's there to put on.
 
 Nothing is given that the character can't use or already has something of
-the kind, so each item comes once. Unticked, a new character starts with the
-game's gear, changed only by the rules above.
+the kind, so each item comes once. The [game's own party](#the-games-own-party)
+gets it too, in the first moments of a new game. Unticked, a new character
+starts with the game's gear, changed only by the rules above.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fuller-starting-gear).
 
 ### The game's own party
 
 START GAME with no party made plays the game's own four, who were made before
-any of these choices existed. With weapon specialization, kits and class
-restrictions on, the Loader fits them to those in the first moments of a new
-game, and says so in the dice log (Cilla also gets the elf's figure, with its
+any of these choices existed. With weapon specialization, kits, class
+restrictions and fuller starting gear on, the Loader fits them to those in the
+first moments of a new game, and says so in the dice log (Cilla also gets the elf's figure, with its
 own switch: see [Elves and half-elves](#elves-and-half-elves)):
 
 | Character | With weapon specialization | With class restrictions |
@@ -2181,6 +2244,11 @@ in a fight. His gear stays as it is (an Arcanist has none of its own), and so
 do the hit points the game gave him: the Arcanist's d3 counts from his next
 level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
 once, can't have one.
+
+With [fuller starting gear](#fuller-starting-gear), they get what a new
+character would, after the changes above: Gerakis a sling, leather chest and
+leg armour and a dagger; Cermak and Cilla a dagger. K'ratchek, a thri-kreen, fights with her claws and the game's own
+chatkcha, and gets nothing more.
 
 Cermak and Cilla keep the game's own starting spells: only a character made
 on the creation screen [picks its own](#preservers-first-spells).
@@ -3215,6 +3283,19 @@ The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+
+### The view in fights
+
+The game moved the view after a figure walking in a fight as soon as it came
+near the screen's edge, a step at a time, so the view drifted after every
+figure that walked, monsters' too. Now it moves only once the figure has
+walked off the screen, to bring it back into view (on by default: **In a
+fight, the view moves to a figure only when it walks off the screen** on the
+Options tab, from the next start). Out of fights the view follows the party
+as the game has it.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its part
+on the view in a fight).
 
 ### Spells on the Effects screen
 

@@ -55,6 +55,16 @@ class LinesTests(unittest.TestCase):
     def test_not_the_fight(self):
         self.assertFalse(any(line.startswith("Dice:") for _, line in self.log.lines))
 
+    def test_rolls_only(self):
+        """Out of a fight (the strip's), only lines with a roll, and those under them."""
+        log = c.Log()
+        log.add(["Cilla starts with more gear: Belt, Boots", "Cilla hides in shadows: d100 = 81, needs 25 or "
+                 "less -> seen", "  (her cloak's +10)", "Character creation: STR 3d6 = 12", "Gerakis HP: 1d12 = 7"],
+                rolls_only=True)
+        self.assertEqual([line for _, line in log.lines], [
+            "Cilla hides in shadows: d100 = 81, needs 25 or less -> seen", "  (her cloak's +10)",
+            "Gerakis HP: 1d12 = 7"])
+
     def test_short(self):
         texts = [line.text for line in self.log.at(c.SHORT, NAMES)]
         self.assertEqual(texts, [
@@ -277,6 +287,34 @@ class ScrollingTests(unittest.TestCase):
         self.assertEqual(picture[(y0 + 1) * c.PANEL_W + x0 + 1], ink["stone"])
 
 
+    def test_strip_scrolled_back(self):
+        """The strip's one row: scrolled back it still shows a line (the "Latest" chip in its
+        header instead), the handle within its bar, the wheel a line a notch."""
+        dac = bytes(range(256)) * 3
+        ink = c.inks(dac)
+        g = c.STRIP
+        log = c.Log()
+        log.add(FIGHT)
+        lines = log.at(c.DETAIL, NAMES)
+        rows = c.rows_of(FakeFont(), lines, NAMES, g)
+        self.assertEqual(c.visible(0, g), 1)
+        self.assertEqual(c.scroll_to(0, len(rows), g), 0)
+        top, height = c.handle(0, len(rows), g)
+        self.assertGreaterEqual(top, g.track[1] + 1)
+        self.assertLessEqual(top + height, g.track[1] + 1 + g.track_h)
+        background = c.render(dac, ink, g)
+        picture = c.draw(background, FakeFont(), ink, "Round 1", lines, NAMES, 0, 3, g)
+        row = picture[g.text_y * g.width:(g.text_y + c.LINE_H) * g.width]
+        self.assertNotEqual(row, background[g.text_y * g.width:(g.text_y + c.LINE_H) * g.width])
+        self.assertIn(ink["outline"], picture[1 * g.width + 200:1 * g.width + g.track[0] - 1])  # (the chip)
+        panel = c.Panel()
+        panel.strip, panel._rows = True, len(rows)
+        panel.wheel(1)
+        self.assertEqual(panel.first, len(rows) - 2)
+        panel.wheel(-1)
+        self.assertIsNone(panel.first)  # (back at the newest: following again)
+
+
 class StatesTests(unittest.TestCase):
     def setUp(self):
         self.panel, self.game = c.Panel(), FakeGame()
@@ -334,14 +372,26 @@ class StatesTests(unittest.TestCase):
         self.assertEqual(c.filtered(lines, "party"), [ln for ln in lines if ln.kind == "round"])
 
     def test_l_key(self):
+        """L with the panel shown hides it (the Loader shows it again on the next L)."""
         self.panel.resize(c.EXPANDED)
+        self.panel.open = True
         keys = HDR + c.TSR_KEYS
-        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", 1)
         self.panel.mouse(self.game, HDR)
-        self.assertEqual(self.panel.size, c.COLLAPSED)
-        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", 2)
+        count = c.struct.unpack_from("<H", self.game.guest.mem, keys)[0]
+        self.game.guest.mem[keys:keys + 2] = c.struct.pack("<H", count + 1)
         self.panel.mouse(self.game, HDR)
-        self.assertEqual(self.panel.size, c.EXPANDED)  # (back to the size it had)
+        self.assertFalse(self.panel.open)
+        self.assertEqual(self.panel.size, c.EXPANDED)  # (its size kept for next time)
+        self.assertEqual(self.panel.keys(self.game, HDR), 0)  # (counted once)
+
+    def test_l_label(self):
+        """The header's L, left of the level chip: a click on it hides the panel, as L does."""
+        self.panel.mouse(self.game, HDR)
+        x0, y0, x1, y1 = c.key_rect(self.panel.font, self.panel.g)
+        self.assertLess(x1, c.level_rect(self.panel.font, self.panel.g)[0])
+        self.panel.open = True
+        self.press((x0 + x1) // 2, (y0 + y1) // 2)
+        self.assertFalse(self.panel.open)
 
     def test_update_writes_the_size(self):
         g = self.game.guest
@@ -354,6 +404,42 @@ class StatesTests(unittest.TestCase):
         self.assertEqual(c.struct.unpack_from("<HH", g.mem, HDR + c.TSR_PANEL_TOP),
                          (c.SIZES[c.COLLAPSED].top, c.SIZES[c.COLLAPSED].height))
         self.assertEqual(c.struct.unpack_from("<H", g.mem, HDR + c.TSR_PANEL_NEW)[0], 1)
+
+
+    def test_the_strip(self):
+        """With the strip's patch in the game's code: the strip, 320 x 22 at row 200, one row."""
+        g = self.game.guest
+        g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
+        g.mem[HDR + c.TSR_HDR_OFF:HDR + c.TSR_HDR_OFF + 2] = c.struct.pack("<H", 0)
+        g.mem[HDR + c.TSR_DAC:HDR + c.TSR_DAC + 2] = c.struct.pack("<H", 0x2000)
+        self.game.ds = c.DGROUP_SEG + 0x10
+        at = 0x100 + c.STRIP_AT
+        g.mem[at:at + 2] = c.STRIP_INT
+        self.panel.log.add(FIGHT)
+        self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES)
+        self.assertTrue(self.panel.strip)
+        self.assertTrue(self.panel.over())  # (the wheel scrolls it wherever the pointer is)
+        self.assertEqual(c.struct.unpack_from("<HH", g.mem, HDR + c.TSR_PANEL_TOP), (200, 22))
+        g0 = c.STRIP
+        self.assertEqual(len(c.render(bytes(768), None, g0)), 320 * 22)
+        self.assertLessEqual(g0.text_y + g0.rows * c.LINE_H, g0.well[3] + 1)  # (the rows within the well)
+
+    def test_strip_between_fights(self):
+        """The strip with no header (between fights): the row before the newest in its top line."""
+        dac = bytes(range(256)) * 3
+        ink = c.inks(dac)
+        g = c.STRIP
+        background = c.render(dac, ink, g)
+        log = c.Log()
+        log.add(FIGHT)
+        lines = log.at(c.SHORT, NAMES)
+        rows = c.rows_of(FakeFont(), lines, NAMES, g)
+        empty = c.draw(background, FakeFont(), ink, "", lines[:0], NAMES, None, 0, g)
+        with_top = c.draw(background, FakeFont(), ink, "", lines, NAMES, None, 0, g)
+        header = slice(g.header_y * g.width, (g.header_y + 1) * g.width)
+        self.assertEqual(empty[header], background[header])
+        self.assertNotEqual(with_top[header], background[header])  # (the row before: its letters)
+        self.assertGreater(len(rows), 1)
 
 
 if __name__ == "__main__":

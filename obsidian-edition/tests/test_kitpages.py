@@ -12,21 +12,23 @@ class KitPageTests(unittest.TestCase):
         """The kit pages' buttons come after the weapon pages' and the level-up window's rows (to
         86Fh), and their windows are none of the game's (3000-3013, 3020, 3024) nor the weapon
         pages' (3014-3019, 3021)."""
-        buttons = [kitpages.KIT_ROW + i for i in range(24)] + [kitpages.KIT_NONE, kitpages.KIT_VIEW]
-        self.assertEqual(len(set(buttons)), 26)
-        self.assertTrue(all(0x870 <= b < 0xBB8 for b in buttons))
+        buttons = [kitpages.row_id(g, k + 1) for g, names in kitpages.KITS.items() for k in range(len(names))] \
+            + [kitpages.KIT_NONE, kitpages.KIT_VIEW]
+        self.assertEqual(len(set(buttons)), 33)
+        self.assertTrue(all(0x870 <= b < 0x8A0 for b in buttons))  # (STORE and RECALL after them: rollstore.py)
         windows = [kitpages.KIT_DISCIPLINES, kitpages.KIT_SPHERES, kitpages.KIT_LAST_PAGE] \
-            + [kitpages.KIT_WINDOW + c for c in range(8)]
+            + [kitpages.KIT_WINDOW + c for c in range(len(kitpages.KITS))]
         taken = set(range(3000, 3014)) | {3020, 3024, weaponpages.PICKER, weaponpages.WARRIOR_DISCIPLINES,
                                           weaponpages.WARRIOR_SPHERES} | set(weaponpages.PAGES)
-        self.assertEqual(len(set(windows)), 11)
+        self.assertEqual(len(set(windows)), 16)
         self.assertFalse(taken & set(windows))
 
     def test_rows(self):
-        self.assertEqual(sorted(kitpages.KITS), list(game.CREATION_CLASS_NAMES))
+        self.assertEqual(sorted(kitpages.KITS), list(game.CREATION_CLASS_NAMES) + sorted(kitpages.MULTI))
         self.assertEqual(kitpages.KITS[4], ("Arena Champion", "Twin-blade", "Brute"))
         texts = [kitpages.row_text(n) for names in kitpages.KITS.values() for n in names]
-        self.assertEqual(len(texts), 24)
+        self.assertEqual(len(texts), 31)
+        self.assertIn("W-AVENGER", texts)
         self.assertIn("CHAMPION", texts)
         self.assertIn("M-WARRIOR", texts)
         self.assertIn("BATTLMAGE", texts)
@@ -40,7 +42,7 @@ class KitPageTests(unittest.TestCase):
         from dsloader import gff
         with open(os.environ["DSUN_RESOURCE"], "rb") as f:
             widths = kitpages.row_widths(gff.read_gff(f.read()))
-        self.assertEqual(len(widths), 25)
+        self.assertEqual(len(widths), 32)
         self.assertEqual({n: w for n, w in widths.items() if w > kitpages.ROW_WIDTH}, {})
 
     def test_kit_names(self):
@@ -160,11 +162,38 @@ class DormantKitTests(unittest.TestCase):
         self.assertEqual(kitpages.kit_byte(s, 1, 3), 0b101101)
 
     def test_multiclass_no_kit(self):
+        """Two classes at once with no group of their race and pair: no kit."""
         from dsloader import kits
         s = self.sheet((9, 11), (3, 3), 2, race=2)
         self.assertIsNone(kitpages.kit_place(s))
         self.assertEqual((kitpages.kits_of(s), kitpages.kit_ids(s), kitpages.kit_level(s, kits.BATTLE_MAGE)),
                          ([], [], 0))
+        self.assertIsNone(kitpages.kit_place(self.sheet((9, 17), (3, 3), 1, race=3)))  # (an elf fighter/thief)
+
+    def test_multiclass_kits(self):
+        """A race's pair of classes with a group (kitpages.MULTI): its kit in KIT_BYTE, place 0; the
+        pair the other way round too; only the group's own kits."""
+        from dsloader import kits
+        for classes, race, kit, name in (((9, 17), 4, 1, "Shadowblade"), ((17, 9), 4, 2, "Military Scout"),
+                                         ((9, 17), 2, 2, "Wayfinder"), ((3, 9), 3, 1, "Battle Dancer"),
+                                         ((6, 9), 4, 1, "Wilderness Avenger"), ((2, 14), 4, 1, "Rescuer")):
+            with self.subTest(classes=classes, race=race):
+                s = self.sheet(classes, (2, 2), kit, race=race)
+                self.assertEqual(kitpages.kit_place(s), 0)
+                self.assertEqual(kitpages.kit_names(s), [name])
+                self.assertEqual(kitpages.kit_ids(s), [kitpages.KIT_IDS[name]])
+                self.assertEqual(kitpages.kit_level(s, kitpages.KIT_IDS[name]), 2)
+        self.assertEqual(kitpages.kit_ids(self.sheet((3, 9), (2, 2), 2, race=3)), [])  # (the elf's group has one)
+        self.assertEqual(kitpages.kit_ids(self.sheet((9, 17), (2, 2), 0, race=4)), [])
+        self.assertEqual(kitpages.KIT_IDS["Battle Dancer"], 37)
+        self.assertEqual(kitpages.multi_group(4, (8, 3, 0)), 10)
+        self.assertEqual(kitpages.multi_group(1, (3, 8, 0)), 0)
+        self.assertEqual(kitpages.multi_group(4, (3, 8, 6)), 0)
+        self.assertEqual(kitpages.kit_class((3, 8, 0), game.RULE_KITS, race=2), 13)
+        self.assertEqual(kitpages.kit_class((3, 8, 0), 0, race=2), 0)
+        self.assertEqual(kitpages.panel_windows((3, 8, 0), game.RULE_KITS, race=4), (3022, 3023))
+        self.assertEqual(kitpages.row_id(13, 2), 0x897)
+        self.assertEqual(kitpages.row_id(8, 3), 0x887)
 
     def test_battle_mage_weapon_spec(self):
         """Its chosen weapon spec the kit's alone: nothing for the fighter while asleep, expertise

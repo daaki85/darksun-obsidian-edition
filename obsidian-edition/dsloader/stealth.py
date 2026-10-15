@@ -100,12 +100,13 @@ def enemy_beside(gd: GameData, combatant: int) -> Optional[str]:
 
 
 def chance(gd: GameData, creature: int, skill: int) -> Optional[int]:
-    skills = gd.thief_skills_now(creature, (skill,))
+    """A thief's chance before what it wears (turn adds that, and says so)."""
+    skills = gd.thief_skills_now(creature, (skill,), gear=False)
     return skills[0][1] if skills else None
 
 
 def ranger_chance(gd: GameData, creature: int, skill: int) -> Optional[int]:
-    return gd.ranger_skill_now(creature, skill)
+    return gd.ranger_skill_now(creature, skill, gear=False)
 
 
 CLOAK_HIDE, BOOTS_QUIET = 10, 10  # worn, a cloak helps hide in shadows and boots move silently
@@ -167,8 +168,8 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
     elven_cloak = wears(gd, creature, game.ELVEN_CLOAK_TYPE, game.CLOAK_SLOT)
     extra, note = worn_bonus(gd, creature, game.CLOAK_SLOT, CLOAK_HIDE, "cloak") \
         if gear and not elven_cloak else (0, "")
-    shown = f"{hide}{note} = {min(MOST, hide + extra)}" if extra else f"{hide}"
-    hide = min(MOST, hide + extra)
+    shown = f"{hide}{note} = {max(hide, min(MOST, hide + extra))}" if extra else f"{hide}"
+    hide = max(hide, min(MOST, hide + extra))  # (as gd.gear_skill: a chance above MOST kept)
     who = gd.creature_name(creature)
     enemy = enemy_beside(gd, combatant)
     if enemy:
@@ -176,9 +177,10 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
     sun = daylight(gd, combatant)
     if ranger and not sun and kits.STALKER in gd.kit_ids(creature):  # (kits.py: not halved indoors)
         need, why = hide, f"{shown}, a Stalker: not halved indoors"
-    elif ranger:  # at home under the open sky
+    elif ranger:  # at home under the open sky (a Wilderness Avenger too: game.ranger_skill_parts)
         need = hide if sun else hide // 2
-        why = f"{shown}, a ranger under the open sky" if sun else f"{shown}, halved indoors for a ranger"
+        kind = "a ranger" if gd.ranger_level(creature) else "a Wilderness Avenger"
+        why = f"{shown}, {kind} under the open sky" if sun else f"{shown}, halved indoors for {kind}"
     elif sun and kits.ASSASSIN in gd.kit_ids(creature):  # (kits.py: not halved in daylight)
         need, why = hide, f"{shown}, an Assassin: not halved in daylight"
     else:
@@ -200,7 +202,7 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
     else:
         extra, note = worn_bonus(gd, creature, game.FOOT, BOOTS_QUIET, "boots") if gear else (0, "")
         boots = f" ({quiet}{note})" if extra else ""
-        quiet = min(MOST, quiet + extra)
+        quiet = max(quiet, min(MOST, quiet + extra))
     d100 = roll()
     unheard = d100 <= quiet
     behind = "from behind" if ranger else "from behind (a backstab with a weapon that can)"

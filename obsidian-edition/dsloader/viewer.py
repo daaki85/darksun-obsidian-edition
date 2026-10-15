@@ -319,9 +319,9 @@ class Viewer:
         # long lines wrap to the window (as with larger text) instead of running out of it
         options.bind("<Configure>", lambda e: [ttk.Style().configure(
             kind, wraplength=max(200, e.width - 60)) for kind in ("TCheckbutton", "TRadiobutton")], add="+")
-        # the combat log's panel over the map in a fight (combatlog.py), at a level of its own
+        # the combat log's panel over the map, shown and hidden with L (combatlog.py), at a level of its own
         self.combat_log = tk.BooleanVar(value=bool(settings.get("combat_log", True)))
-        ttk.Checkbutton(in_game, text="Show a combat log in the game, bottom right, in a fight",
+        ttk.Checkbutton(in_game, text="A combat log in the game: L on the map shows and hides it",
                         variable=self.combat_log, command=self._options_changed).pack(anchor="w")
         self.combat_log_level = tk.StringVar(value=dicelog.combat_log_level(settings))
         for value, text in ((combatlog.MINIMAL, "... at the least: what came of each attack and spell"),
@@ -329,6 +329,11 @@ class Viewer:
                             (combatlog.DETAIL, "... in detail, as in the log")):
             ttk.Radiobutton(in_game, text=text, value=value, variable=self.combat_log_level,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
+        # ... or in a strip below the map, the game's screen 22 rows taller (gamepatch.STRIP)
+        self.combat_log_strip = tk.BooleanVar(value=settings.get("combat_log_strip") is True)
+        ttk.Checkbutton(in_game, text="... always shown, below the map instead of over it: the round and the newest line; "
+                        "the game's screen 22 rows taller (from the next start)",
+                        variable=self.combat_log_strip, command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
@@ -423,9 +428,9 @@ class Viewer:
                         "and bring the kept roll back (from the next start)", variable=self.roll_store,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
-        ttk.Checkbutton(custom, text="Fuller starting gear: new characters also get a weapon in hand they can use, "
-                        "a sling, leather armour where they may wear it, a belt, boots and a dagger (rangers "
-                        "and Stalkers a cloak); a multiclass preserver's armour goes in the backpack",
+        ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon in hand they can use, "
+                        "a sling, leather armour where they may wear it and a dagger (Stalkers, Assassins and "
+                        "Shinobi a cloak); a multiclass preserver's armour goes in the backpack",
                         variable=self.starting_gear, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}
@@ -483,6 +488,10 @@ class Viewer:
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
         ttk.Checkbutton(controls, text="Scroll the map by pressing the mouse wheel and moving", variable=self.scroll_map,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
+        ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
+                        "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scroll_right = tk.BooleanVar(value=bool(settings.get("scroll_right", False)))
         ttk.Checkbutton(controls, text="... or by holding the right mouse button and moving (a right "
@@ -583,11 +592,12 @@ class Viewer:
             var.set(True)
         for var in (self.monster_info, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
-                    self.scroll_map, self.effects_kept):
+                    self.scroll_map, self.effects_kept, self.camera_still):
             var.set(True)
         for var in (self.scroll_right, self.combat_log):
             var.set(False)
         self.combat_log_level.set(dicelog.combat_log_level({}))
+        self.combat_log_strip.set(False)
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self._options_changed()
@@ -1030,6 +1040,7 @@ class Viewer:
         settings["monster_info"] = self.monster_info.get()
         settings["combat_log"] = self.combat_log.get()
         settings["combat_log_level"] = self.combat_log_level.get()
+        settings["combat_log_strip"] = self.combat_log_strip.get()
         settings["pickpockets"] = self.pickpockets.get()
         settings["show_gear"] = self.show_gear.get()
         settings["starting_gear"] = self.starting_gear.get()
@@ -1046,6 +1057,7 @@ class Viewer:
         settings["effects_kept"] = self.effects_kept.get()
         settings["stealth_gear"] = self.stealth_gear.get()
         settings["roll_store"] = self.roll_store.get()
+        settings["camera_still"] = self.camera_still.get()
         for key, var in self.rule_vars.items():
             settings[key] = var.get()
         launch.save_settings(settings)

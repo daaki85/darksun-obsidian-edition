@@ -155,6 +155,38 @@ class ThiefTests(unittest.TestCase):
         m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 20  # (in the pack)
         self.assertEqual(self.now(), plain)
 
+    def test_cloak_and_boots(self):
+        """With the stealth rule and the cloak, boots and belt switch: a worn cloak adds 10 to hiding
+        in shadows, boots 10 to moving silently (no more than 95); the Cloak and Boots of Elvenkind
+        their 95. Without the rule or the switch, nothing; nor for the rolls' own chance (gear=False)."""
+        m, gd = self.log.guest.mem, self.log.game
+        m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = game.CLOAK_SLOT  # (no equipment penalty)
+        m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = game.FOOT
+        plain = [16, 39, 16, 16, 16, 16]
+        gd.belt, gd.rules = True, game.RULE_STEALTH
+        skills = lambda **kw: [n for _, n in gd.thief_skills_now(0, game.PANEL_SKILLS, **kw)]
+        self.assertEqual(skills(), [16, 39, 16, 26, 26, 16])  # (pick, lock, traps, move, hide, climb)
+        self.assertEqual(skills(gear=False), plain)
+        gd.belt = False
+        self.assertEqual(skills(), plain)
+        gd.belt, gd.rules = True, 0
+        self.assertEqual(skills(), plain)
+        gd.rules = game.RULE_STEALTH
+        struct.pack_into("<H", m, ITEMS + 5 * game.ITEM_SIZE + game.ITEM_TYPE, game.ELVEN_CLOAK_TYPE)
+        struct.pack_into("<H", m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_TYPE, game.ELVEN_BOOTS_TYPE)
+        self.assertEqual(skills(), [16, 39, 16, 95, 95, 16])
+
+    def test_a_rangers_cloak_and_boots(self):
+        """A ranger's move silently and hide in shadows in the panel count a worn cloak and boots."""
+        m = self.log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES + 1], m[SHEETS + game.SHEET_LEVELS + 1] = 13, 10
+        m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = game.CLOAK_SLOT
+        m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = game.FOOT
+        self.log.game.belt = True
+        self.log.rules = self.log.game.rules = game.RULE_STEALTH
+        self.assertEqual(list(self.log.stats_entry(0)[17:24]), [dicelog.STATS_RANGER, 0, 0, 0, 88, 73, 0])
+        self.assertEqual(self.log.game.ranger_skill_now(0, 4, gear=False), 63)
+
     def test_panel_shows_a_rangers(self):
         """A ranger (10th, no thief levels) with the stealth rule: move silently and hide in
         shadows in a thief's places (AD&D's 78 and 63), the rest 0; nothing without the rule."""

@@ -313,9 +313,14 @@ class FinishNewTests(unittest.TestCase):
         self.items = 0
         for patch in (mock.patch("dsloader.pickpocket.free_cell", lambda gd, it, m: 30),
                       mock.patch("dsloader.ring.Items", lambda gd: None),
-                      mock.patch("dsloader.restrict.allowed_kinds", lambda sheet, read: list(range(16)))):
+                      mock.patch("dsloader.restrict.allowed_kinds", lambda sheet, read: list(range(16))),
+                      mock.patch("dsloader.pickpocket.place", self.place)):
             patch.start()
             self.addCleanup(patch.stop)
+
+    def place(self, gd, member, item, slot):  # (the harness has no lists: the slot byte alone)
+        self.mem[self.ITEMS + item * game.ITEM_SIZE + game.ITEM_SLOT] = slot
+        return True
 
     def give(self, type_, name, slot):
         rec = bytearray(game.ITEM_SIZE)

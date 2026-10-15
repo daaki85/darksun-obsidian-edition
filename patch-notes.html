@@ -140,7 +140,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
     <section id="ui">
       <h2>In the Game's Screens</h2>
       <ul>
-        <li><span class="tag new">New</span>A combat log over the map's lower right in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. It scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and <span class="num">L</span> folds it away.</li>
+        <li><span class="tag new">New</span>A combat log in the game: <span class="num">L</span> on the map shows every roll in the game's own lettering and the Loader's colours, at the least, in short or in detail, and <span class="num">L</span> again hides it, in a fight or after one (a thief's roll, a new level's hit points). A panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves); or, as an option, a strip always shown below the map (the game's screen 22 rows taller).</li>
         <li><span class="tag new">New</span>The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.</li>
         <li><span class="tag new">New</span>View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.</li>
         <li><span class="tag new">New</span>The USE screen shows the spell slots left at each spell level, and the most you get after resting.</li>
@@ -186,7 +186,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag chg">Changed</span>Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as <code>SUM:99/101</code>), and the hit points stay as rolled, moving only with CON's bonus <span class="was">(was any score clicked up to its most, and the hit points set by a click)</span>.</li>
         <li><span class="tag new">New</span><strong>STORE</strong> and <strong>RECALL</strong> on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.</li>
         <li><span class="tag chg">Changed</span>An air cleric can use daggers, as its sphere allows <span class="was">(was only Galefang: none of the game's daggers listed the air cleric)</span>.</li>
-        <li><span class="tag new">New</span>New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, a belt, boots and a dagger, and a ranger a cloak. A multiclass preserver's armour starts in the backpack, so it can cast.</li>
+        <li><span class="tag new">New</span>New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it and a dagger, and a Stalker, Assassin or Shinobi a cloak. A multiclass preserver's armour starts in the backpack, so it can cast.</li>
         <li><span class="tag chg">Changed</span>Class restrictions hold: a character may use an item only if <em>every</em> one of its classes allows it, and a multiclass preserver can't cast in armour <span class="was">(was any one class allowing it)</span>.</li>
         <li><span class="tag chg">Changed</span>Multiclass characters gain hit points as in AD&amp;D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.</li>
         <li><span class="tag chg">Changed</span>Experience, priests' THAC0 and spell slots follow AD&amp;D's tables: a gladiator needs <span class="num">2,250</span> XP for 2nd level <span class="was">(was 2,000)</span>, a preserver has <span class="num">4 2 1</span> slots at 5th <span class="was">(was 3 2 1)</span>, a cleric <span class="num">3 3 1</span> <span class="was">(was 3 2 1)</span>.</li>
@@ -208,13 +208,26 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
           <tr><td>Psionicist</td><td>Mind Warrior, Mind Bender, Kineticist</td></tr>
         </tbody>
       </table></div>
+      <ul><li><span class="tag new">New</span>Seven kits for two classes taken at once, each for one race only:</li></ul>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Race and classes</th><th>Kits</th></tr></thead>
+        <tbody>
+          <tr><td>Elf cleric/fighter</td><td>Battle Dancer</td></tr>
+          <tr><td>Half-elf fighter/thief</td><td>Shadowblade, Military Scout</td></tr>
+          <tr><td>Half-elf druid/fighter</td><td>Wilderness Avenger</td></tr>
+          <tr><td>Half-elf cleric/ranger</td><td>Rescuer</td></tr>
+          <tr><td>Dwarf fighter/thief</td><td>Ghetto Fighter, Wayfinder</td></tr>
+        </tbody>
+      </table></div>
       <ul>
         <li><strong>Arcanist:</strong> one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.</li>
         <li><strong>Battle Mage:</strong> a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.</li>
         <li><strong>Shinobi:</strong> a thief trained by the Veiled Alliance who casts preserver spells from 6th level, but is unable to read magical script.</li>
         <li><strong>Ravager:</strong> fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.</li>
+        <li><strong>Battle Dancer:</strong> dances as each fight starts, a roll against DEX: +1 to hit, damage and AC for a few rounds, or &minus;1 if it stumbles. Long swords and bows only.</li>
+        <li><strong>Military Scout:</strong> better at stealth, traps and climbing under the open sky, worse under a roof.</li>
       </ul>
-      <div class="dev"><b>Developers' Notes</b>Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 24, with a short description of who takes each one on Athas.</div>
+      <div class="dev"><b>Developers' Notes</b>Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 31, with a short description of who takes each one on Athas.</div>
     </section>
 
     <section id="magic">
@@ -231,7 +244,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag chg">Changed</span>Thief skills follow AD&amp;D's table by level, with Dark Sun's race and DEX adjustments <span class="was">(was a 3rd-level elf with move silently 66 and hide in shadows 61)</span>.</li>
         <li><span class="tag new">New</span>Thieves <strong>hide in shadows and move silently</strong> in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky <span class="was">(was a backstab only on a target turned to face someone else)</span>.</li>
         <li><span class="tag new">New</span><strong>Picking pockets</strong>: every thief starts with a set of Thieves' Tools (Kel sells more); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.</li>
-        <li><span class="tag new">New</span>A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks.</li>
+        <li><span class="tag new">New</span>A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.</li>
         <li><span class="tag fix">Fixed</span>Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.</li>
       </ul>
     </section>
@@ -319,6 +332,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <ul>
         <li><span class="tag new">New</span><strong>Tab</strong> chooses the nearest enemy and <strong>Enter</strong> attacks it, with no aiming of the mouse.</li>
         <li><span class="tag new">New</span>Press the mouse wheel and drag to scroll the map.</li>
+        <li><span class="tag chg">Changed</span>In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen <span class="was">(was: it followed each one near the edge)</span>.</li>
         <li><span class="tag chg">Changed</span><span class="num">40</span> save slots on four pages <span class="was">(was 10)</span>, each also kept under its name in a folder of the Loader's, and <span class="num">29</span> stored characters <span class="was">(was 19)</span>.</li>
         <li><span class="tag new">New</span>A game speed setting, so the whole party walks as smoothly as one.</li>
         <li><span class="tag new">New</span>Crash reports: if the game stops with an error, the message stays on screen and a report is written.</li>
