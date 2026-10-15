@@ -22,7 +22,8 @@ have the detail.
   scroll learned); it is kept up through the arena's opening show. The
   panel over the map (the box unticked) can be brought back out of a fight
   with **L**, with the last fight's lines and the rolls since; **L** again
-  puts it away. Under a
+  puts it away. An **L** in its top line says so (a click on it does the
+  same). Under a
   screen in other colours it is the panel's blue-grey, and black on the
   title, the main menu and in character creation.
 

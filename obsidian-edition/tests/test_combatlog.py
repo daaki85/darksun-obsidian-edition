@@ -381,6 +381,18 @@ class StatesTests(unittest.TestCase):
         self.panel.mouse(self.game, HDR)
         self.assertEqual(self.panel.size, c.EXPANDED)  # (back to the size it had)
 
+    def test_l_label(self):
+        """The header's L, left of the level chip: a click on it as L itself."""
+        self.panel.mouse(self.game, HDR)
+        x0, y0, x1, y1 = c.key_rect(self.panel.font, self.panel.g)
+        self.assertLess(x1, c.level_rect(self.panel.font, self.panel.g)[0])
+        self.panel.resize(c.DOCKED)
+        self.press((x0 + x1) // 2, (y0 + y1) // 2)
+        self.assertEqual(self.panel.size, c.COLLAPSED)
+        self.panel.asked = True
+        self.press((x0 + x1) // 2, (y0 + y1) // 2)
+        self.assertFalse(self.panel.asked)
+
     def test_l_puts_away_a_panel_opened_out_of_a_fight(self):
         """Opened with L out of a fight (asked), L puts it away again, its size as it was."""
         keys = HDR + c.TSR_KEYS

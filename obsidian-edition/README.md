@@ -353,9 +353,10 @@ stays where it is as new lines come, and a **Latest** chip at its foot says
 how many have; click it (or scroll to the end) to follow the fight again.
 Clicks on the panel are its own: the party doesn't walk there.
 
-Its top line has three buttons on the right: the level (**Least**, **Short**,
-**Detail**; a click goes to the next, and the Options tab follows), and **-**
-and **+** to make it smaller or bigger. Collapsed, it is one line, the newest;
+Its top line has four buttons on the right: **L**, for the key that folds the
+panel away and back (a click on it does the same), the level (**Least**,
+**Short**, **Detail**; a click goes to the next, and the Options tab follows),
+and **-** and **+** to make it smaller or bigger. Collapsed, it is one line, the newest;
 expanded, it is taller (11 lines) and has filters along its top: **All**,
 **Party** (the party's lines), **Damage** (hits, damage and deaths) and
 **Saves** (saving throws and magic resistance). **L** on the map collapses it

@@ -556,6 +556,13 @@ def level_rect(font, g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
     return g.minus_x0 - 2 - width, HEADER_Y0, g.minus_x0 - 2, HEADER_Y1
 
 
+def key_rect(font, g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
+    """The header's L (the key that folds the panel away and back; a click does the same), before
+    the level chip."""
+    x1 = level_rect(font, g)[0] - 2
+    return x1 - BUTTON_W, HEADER_Y0, x1, HEADER_Y1
+
+
 def filter_rects(font, g: Geometry) -> List[Tuple[str, Tuple[int, int, int, int]]]:
     """The filters' chips along the top of the well (expanded): (the filter, its x0, y0, x1, y1)."""
     if not g.filters or font is None:
@@ -616,7 +623,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
     if font is None:
         return bytes(picture)
     level = None if g.strip else level  # (the strip: no buttons, out of the pointer's reach)
-    room = (level_rect(font, g)[0] if level else w - 4) - 2
+    room = (key_rect(font, g)[0] if level else w - 4) - 2
     chip = f"Latest: {new} new" if new else "Latest"
     if g.strip and first_row is not None:  # (the strip's chip: in its header, at the right)
         chip_w = _width(font, chip) + 6
@@ -630,6 +637,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
         _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names),
               ink, room)
     if level:
+        _button(picture, font, key_rect(font, g), "L", ink)
         _button(picture, font, level_rect(font, g), LEVEL_NAMES.get(level, level), ink)
         if g != SIZES[COLLAPSED]:
             _button(picture, font, (g.minus_x0, HEADER_Y0, g.minus_x0 + BUTTON_W - 1, HEADER_Y1), "-", ink)
@@ -712,6 +720,14 @@ class Panel:
             step = 1 if self.strip else WHEEL_ROWS  # (the strip's one row: a line a notch)
             self._scroll(top_row(self.first, self._rows, self.g) - notches * step)
 
+    def _key_l(self) -> None:
+        """L (or a click on the header's L): opened out of a fight, the panel put away; in one,
+        collapsed or opened again."""
+        if self.asked:
+            self.asked = False
+        else:
+            self.resize(self._open_size if self.size == COLLAPSED else COLLAPSED)
+
     def keys(self, gd, tsr_hdr: int) -> int:
         """L pressed since the last look (DSCLOG's count, TSR_KEYS): on the panel, or out of a fight
         with the panel off (to open it)."""
@@ -726,14 +742,12 @@ class Panel:
         """The left button on the panel (DSCLOG's TSR_MOUSE): on the scrollbar's handle, dragging
         it; on the bar above or below it, a page back or on; on the "Latest" chip, the newest; on
         the header's level chip, the next level; on + or -, a size bigger or smaller; on a filter,
-        that filter. L (TSR_KEYS) collapses the panel or opens it again."""
+        that filter. L (TSR_KEYS), or a click on the header's L, collapses the panel or opens it
+        again (opened with L out of a fight: puts it away)."""
         mx, my, held, hits, hx, hy = struct.unpack("<hhHHhh", gd.guest.read(tsr_hdr + TSR_MOUSE, 12))
         self.pointer = (mx, my)
         if self.keys(gd, tsr_hdr):
-            if self.asked:  # (opened with L out of a fight: L puts it away)
-                self.asked = False
-            else:
-                self.resize(self._open_size if self.size == COLLAPSED else COLLAPSED)
+            self._key_l()
         if self._hits is None:
             self._hits = hits
         g = self.g
@@ -745,6 +759,10 @@ class Panel:
             if HEADER_Y0 <= py <= HEADER_Y1 and px >= g.minus_x0:  # - and +
                 order = SIZE_ORDER.index(self.size)
                 self.resize(SIZE_ORDER[max(0, order - 1)] if px < g.plus_x0 else SIZE_ORDER[min(2, order + 1)])
+                return
+            kx0, ky0, kx1, ky1 = key_rect(self.font, g)
+            if ky0 <= py <= ky1 and kx0 <= px <= kx1:
+                self._key_l()
                 return
             lx0, ly0, lx1, ly1 = level_rect(self.font, g)
             if ly0 <= py <= ly1 and lx0 <= px <= lx1:
