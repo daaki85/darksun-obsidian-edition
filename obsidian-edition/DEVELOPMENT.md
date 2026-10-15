@@ -400,8 +400,12 @@ running:
   turns: before, the map showed through the panel in every frame grabbed
   (300), up to 7,000 of its pixels; after, in none. What still reaches it is
   the view drawn whole (a scroll, centring on whose turn it is), put back on
-  the next pass of the main loop; a scroll can also leave a copy of the
-  panel's edge beside it for a moment, until the game draws that part again.
+  the next pass of the main loop. The game's own scrolling (at the screen's
+  edge, following who walks) copies the screen as it is, the panel too, and
+  draws only what comes into view, which left copies of the panel on the map;
+  so when `PANEL_TICK` finds the view moved since its last pass (`CAM_X`,
+  `CAM_Y` against `panel_cx`, `panel_cy`), it has the view drawn again whole
+  (`VIEW_AGAIN`), round the panel, and then puts the panel.
   The inline routine's way back (`RESUME`, which the floor's and the
   rectangle routine's probes also use, and which the parts come through) is
   kept on the stack while the parts are drawn: overwritten, the game went on

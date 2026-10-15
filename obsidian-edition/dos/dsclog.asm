@@ -14438,7 +14438,19 @@ panel_tick:
         ret
 .on:    cmp byte [cs:strip_on], 0
         jne .strip
-        cmp word [cs:panel_new], 0
+        mov ax, [CAM_X]                 ; the view moved by the game's own scrolling (at the edge,
+        xchg ax, [cs:panel_cx]          ;   following who walks): that copies the screen as it is,
+        cmp ax, [cs:panel_cx]           ;   the panel too, and draws only what comes into view, so
+        mov ax, [CAM_Y]                 ;   copies of the panel stayed on the map. The view drawn
+        xchg ax, [cs:panel_cy]          ;   again whole, round the panel, then the panel
+        jne .cam
+        cmp ax, [cs:panel_cy]
+        je .still
+.cam:   cmp byte [cs:panel_shown], 0
+        je .still
+        call view_again
+        jmp .draw
+.still: cmp word [cs:panel_new], 0
         je .old
         mov word [cs:panel_new], 0
         cmp byte [cs:panel_shown], 0
@@ -14494,6 +14506,8 @@ strip_wait dw 1
 panel_wait db PANEL_EVERY
 panel_lx   dw 0
 panel_ly   dw 0
+panel_cx   dw 0                 ; (the view's top left at the last pass: PANEL_TICK)
+panel_cy   dw 0
 
 ; PANEL_LIVE: ZF set if the panel is on screen: shown, and the page on show the one it was last
 ; drawn into (not while the game shows the other screen: a window over the map, the panel not on it)

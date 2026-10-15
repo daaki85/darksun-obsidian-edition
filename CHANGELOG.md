@@ -29,6 +29,10 @@ have the detail.
   stayed in use: the helper asked about the wrong character, reading it from
   a register the game's own test had changed by then. It now reads the
   character the game asked about.
+- **Copies of the combat log's panel left on the map** (2.3.0) when the view
+  scrolled by the game's own scrolling (at the screen's edge, following who
+  walks): that copies the screen, the panel with it. When the view has moved,
+  the helper now has it drawn again whole, round the panel.
 - **Yellow text on the character creation screen** (since 2.3.0). The game's
   screens print in a colour each leaves set; the creation screen never sets
   its own, and the mod's `SUM:` line printed in it, so after a character
