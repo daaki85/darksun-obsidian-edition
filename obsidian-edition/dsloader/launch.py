@@ -168,8 +168,9 @@ def display_lines(settings: dict) -> List[str]:
         return []
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
-    if scale == 4:
-        return ["[sdl]", "fullscreen=false", "output=opengl", "windowresolution=1280x960", "[render]",
+    if scale == 4:  # (the strip below the map: 22 rows taller, 266 with the aspect correction)
+        size = "1280x1064" if settings.get("combat_log_strip", True) is not False else "1280x960"
+        return ["[sdl]", "fullscreen=false", "output=opengl", "windowresolution=" + size, "[render]",
                 "aspect=true", "scaler=normal2x", ""]
     return ["[sdl]", "fullscreen=false", "[render]", "aspect=true",
             "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]

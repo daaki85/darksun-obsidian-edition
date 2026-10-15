@@ -331,7 +331,9 @@ running:
   its bounds (`+404h` x0, `+604h` y0, `+804h` x1, `+A04h` y1). Pages 0 and 1
   are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others are
   windows over them and buffers in the rest of video memory (`A7E8h`, a third
-  320 x 200; smaller ones to `AE55h`).
+  320 x 200; smaller ones to `AE55h`). With the strip below the map the two
+  screens are at `A070h` and `A460h` and the rest from `A848h` (see [The strip
+  below the map](#the-strip-below-the-map)).
 - **The flip.** The routine at `0980:5814` (DSUN.EXE 14414h) shows one screen
   or the other (the CRTC start address; `0980:118E` says which, 1 for `A400h`)
   and swaps them for -1. It is called from 45 places, all in overlays, for
@@ -454,39 +456,49 @@ running:
 - **Not checked mid-fight:** saving and loading, and area changes, as the
   game allows neither in a fight; out of one the panel is off. DOSBox's
   window size doesn't matter (it is drawn into the game's screen).
-- **Below the map (the strip).** The switch `combat_log_strip` (on by
-  default) adds gamepatch's `STRIP` patches when the game is started:
-  `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X set up, 0980:2A40h)
-  makes the screen 222 rows within the game's own timing (the clock and the
-  totals untouched: 70 frames a second, 449 scan lines, each row drawn
-  twice): the picture to scan line 443, the blanking from 444 and the sync
-  at 445 to 447; and the line compare at 18Fh, so below scan line 399
-  (row 200) the VGA shows video memory from its start whichever screen is
-  up. Those 1760 bytes a plane are the strip; the game's two screens move up
-  past it, each to a multiple of 256 bytes as the page flip (0980:5814h)
-  writes only the start address's high byte: A070h and A460h (in the
-  screens' set up at 0980:271Bh, and the flip's three segment constants).
-  The pages the game keeps in video memory (a bump allocator, `[0E4Eh]` up
-  to `[0E4Ch]`, AFFBh) then start at A848h, not A7E8h: 1.5 KB fewer of its
-  33 (the arena's fights used 26). `STRIP_DRAW` puts the Loader's 320 × 22
-  picture there (`combatlog.STRIP`: the header and the newest row, no
-  buttons); `PANEL_LIVE` is never set, so the clipping and the
-  pointer's handling are left out, and `STRIP_CLEAR` fills it with the
-  palette's darkest colour (`STRIP_DARK`, the darkest of the 256, read from
-  the VGA) when the fight ends, every 512 passes of the main loop out of a
-  fight, and each time the game sets colours: `PROBE_COLOURS` (INT CBh at
-  288BAh, the end of the routine that sets a run of colours, as the title and
-  each step of a fade do; only when the run reaches below the colours the
-  game animates) and `PROBE_PALETTE` (INT 8Bh at 144F5h, the end of the one
-  that sets all 256). So the title screen's strip is black, not the colour 0
-  video memory is cleared to (lavender there). The Loader knows the game was
-  started so from the patch in its memory (`combatlog.strip_patched`), not the
-  setting, which may have changed since. DOSBox's aspect correction works out
-  the shape from the timing, unchanged, so each row is stretched by 1.2 as
-  ever (the window 320 × 266). A 240-row screen was tried first: in a 480-line
-  timing DOSBox shows square pixels (the map a sixth flatter) and the frame
-  comes 60 times a second, not 70 (the game about 14% slower); a longer line
-  with the 28 MHz clock gave back the shape at 56 a second.
+#### The strip below the map
+
+The switch `combat_log_strip` (on by default) adds gamepatch's `STRIP`
+patches when the game is started; the Loader knows the game was started so
+from the patch in its memory (`combatlog.strip_patched`), not the setting,
+which may have changed since.
+
+- **The screen.** `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X
+  set up, 0980:2A40h) makes the screen 222 rows within the game's own timing
+  (the clock and the totals untouched: 70 frames a second, 449 scan lines,
+  each row drawn twice): the picture to scan line 443, the blanking from 444
+  and the sync at 445 to 447; and the line compare at 18Fh, so below scan
+  line 399 (row 200) the VGA shows video memory from its start whichever
+  screen is up. DOSBox's aspect correction works out the shape from the
+  timing, unchanged, so each row is stretched by 1.2 as ever (the window
+  320 × 266).
+- **Video memory.** The strip is video memory's first 1760 bytes a plane;
+  the game's two screens move up past it, each to a multiple of 256 bytes as
+  the page flip (0980:5814h) writes only the start address's high byte:
+  `A070h` and `A460h` (in the screens' set up at 0980:271Bh, and the flip's
+  three segment constants). The pages the game keeps in video memory (a bump
+  allocator, `[0E4Eh]` up to `[0E4Ch]`, `AFFBh`, which gives -1 when full)
+  then start at `A848h`, not `A7E8h`: 31,536 bytes instead of 33,072.
+  Measured with the strip on, loading saves (the arena's fights, the pens),
+  opening the USE screen and walking: at most 26,416 bytes used, 5 KB to spare.
+- **Drawing it.** `STRIP_DRAW` puts the Loader's 320 × 22 picture there
+  (`combatlog.STRIP`: the header and the newest row, no buttons; scrolled
+  back, the **Latest** chip in the header and a notch of the wheel a line);
+  `PANEL_LIVE` is never set, so the clipping and the pointer's handling are
+  left out.
+- **Kept dark.** `STRIP_CLEAR` fills it with the palette's darkest colour
+  (`STRIP_DARK`, the darkest of the 256, read from the VGA) when the fight
+  ends, every 512 passes of the main loop out of a fight, and each time the
+  game sets colours: `PROBE_COLOURS` (INT CBh at 288BAh, the end of the
+  routine that sets a run of colours, as the title and each step of a fade
+  do; only when the run reaches below the colours the game animates) and
+  `PROBE_PALETTE` (INT 8Bh at 144F5h, the end of the one that sets all 256).
+  So the title screen's strip is black, not the colour 0 video memory is
+  cleared to (lavender there).
+- **Tried first:** a 240-row screen in a 480-line timing. DOSBox showed
+  square pixels (the map a sixth flatter) and the frame came 60 times a
+  second, not 70 (the game about 14% slower); a longer line with the 28 MHz
+  clock gave back the shape at 56 a second.
 
 ### THAC0, saves and thief skills
 

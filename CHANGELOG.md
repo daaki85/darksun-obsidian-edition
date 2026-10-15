@@ -36,7 +36,7 @@ have the detail.
 - **A new thri-kreen given gear** with fuller starting gear (2.3.0): armour,
   a belt, boots or a cloak it can't wear, and a weapon and a dagger when its
   claws serve it better. A thri-kreen is now given nothing.
-- **The pointer over the combat log's panel:** the panel, put on over the
+- **The pointer over the combat log's panel** (2.3.0): the panel, put on over the
   pointer, hid it, and moving the pointer across the panel could leave a
   patch of the map or no pointer at all. The game takes its pointer off by
   putting back the map it kept from under it (without the panel). Now the

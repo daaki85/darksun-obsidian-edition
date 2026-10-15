@@ -109,8 +109,8 @@ and tables in one place, without spoilers, with a section for each class.
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
   character creation, each with what it needed and where every bonus came
-  from ([the dice log](#the-dice-log)). In a fight a combat log can scroll in
-  a corner of the map, the game's own screens gain THAC0, saves, thief skills
+  from ([the dice log](#the-dice-log)). In a fight a combat log runs below
+  the map, the game's own screens gain THAC0, saves, thief skills
   and spell slots, and the Look box tells you what can hurt a monster ([In
   the game](#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
@@ -248,7 +248,8 @@ command prompt: `--window-scale 2` to `4`, `--fullscreen` or `--windowed` after
 `launch` or `play` do the same.) GOG's DOSBox has no four-times scaler, so
 Quadruple has DOSBox stretch its window with OpenGL (`output=opengl`,
 `windowresolution=1280x960`); if your graphics driver doesn't take to that,
-pick Triple.
+pick Triple. With the [combat log below the map](#the-combat-log-in-the-game)
+(the default) each is a little taller: 640x532, 960x798, 1280x1064.
 
 Load your game. The party's stats fill in by themselves, and rolls appear in
 the **Dice log** tab as they happen.
@@ -568,8 +569,8 @@ open it, ▸ when closed and ▾ when open. Which sections are open is remembere
 Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
-- **In the game**: the combat log and how much it says, monster
-  descriptions ([In the game](#in-the-game)).
+- **In the game**: the combat log, where it goes and how much it says,
+  monster descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](#rule-changes)): the game's rules closer
   to AD&D.
 - **More character customization** ([More character
