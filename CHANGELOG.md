@@ -15,8 +15,9 @@ have the detail.
   Before a new character is first played, the Loader adds plain gear the
   character can use and hasn't got: a weapon in an empty right hand (from
   the backpack, as a cleric's club, else a plain one of its weapon spec or a
-  short sword, club, mace, dagger or quarterstaff), a sling if it has no missile weapon (an earth or
-  fire cleric a chatkcha), leather chest, arm and leg armour in empty places,
+  short sword, club, mace, dagger or quarterstaff), a sling if it has no
+  missile weapon (an earth or fire cleric a chatkcha), leather chest, arm
+  and leg armour in empty places,
   a belt, boots, a dagger, and a cloak for a ranger or Stalker. With the
   class restrictions, a multiclass preserver's armour goes into the
   backpack, so it can cast. A thief/psionicist (its long sword left behind)
@@ -27,12 +28,17 @@ have the detail.
   none of the game's daggers had the air cleric in its class list, so only
   Galefang would do (or another class's list, for a multiclass one). DSCLOG
   now adds it to every dagger type, the game's and the Loader's.
+- **The documentation reviewed** for clarity and repetition: DEVELOPMENT.md's
+  kits chapter moved among the other parts, after weapon specialization, as
+  in the README; the README's new-item prices in a table, a preserver's
+  first spells under a heading of their own, the requirements naming the GOG
+  release only, and repeated "ticked by default" notes cut.
 
 **Fixed**
 - **The docs said a multiclass character gets each class's gear**: the game
   gives one class's, the first of fighter or ranger, cleric, thief,
-  psionicist, preserver and druid (seen in play for every two-class
-  combination).
+  psionicist, preserver and druid (seen in play for each two-class
+  combination a half-elf can take).
 - **The combat log's panel flickered and lost pieces** as figures moved and
   fought: the game drew the map over it, a rectangle at a time, and DSCLOG
   only put it back afterwards. The rectangles the game draws again are now

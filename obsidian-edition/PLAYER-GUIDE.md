@@ -322,15 +322,16 @@ The [THAC0](#thac0-by-level) and [experience](#experience-and-levels) tables
 cover every class; [new items](#new-items) lists what the mod adds to find.
 
 **Starting gear.** Each class's section names what a new character starts
-with. A character of several classes gets one class's gear, the first of
-fighter or ranger, cleric, thief, psionicist, preserver and druid, less what
-its classes can't use. With **fuller starting gear** (on by default) the mod
-adds plain gear before the character is first played, as each section says:
-a weapon in hand it can use (a thief/psionicist, whose long sword it can't
-use, a bone short sword), a sling if it has no bow or sling, leather armour
-where it may wear it, a belt, boots and a dagger, and a cloak for a ranger. A
-multiclass preserver's armour goes into the backpack: it can't cast in it.
-Nothing is given that the character can't use or already has.
+with. A character of several classes gets one class's gear (the first of
+fighter or ranger, cleric, thief, psionicist, preserver and druid), less what
+its classes can't use. The mod then adds plain gear, as each section says: a
+weapon in hand it can use (a thief/psionicist, which can't use the long
+sword, gets a bone short sword), a sling if it has no bow or sling, leather
+armour where it may wear it, a belt, boots and a dagger, and a cloak for a
+ranger. A multiclass preserver's armour goes into the backpack, so it can
+cast. Nothing is given that the character can't use or already has.
+*Without the mod:* the class's gear only, armour it can't use in the
+backpack.
 
 ### What each class may use
 
@@ -596,8 +597,8 @@ as handy with a blade as any soldier. All that time spent fighting leaves
 little for the quieter arts.
 
 *Shinobi.* Spies trained in secret by the Veiled Alliance, who carry a few
-spells beside their knives. Their masters teach them only what they need; they
-are unable to read magical script, however, and travel light.
+spells beside their knives. Their masters teach them only what they need: they
+can't read magical script, and they travel light.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
@@ -744,7 +745,7 @@ a level behind.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in the backpack) | can't go with the Twin-blade |
+| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
@@ -780,10 +781,9 @@ sling, earth and fire a chatkcha; water none) and a dagger.
   Chatkcha +1.
 - **Fire:** Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1,
   Glasshewer\* +2, Blackmace +1, Chatkcha +1.
-- **Water:** Stillwater\* +1,
-  Drakejaw\* +1, Gythka +3, Gythka +2\*,
-  Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs,
-  Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1.
+- **Water:** Stillwater\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*,
+  Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
+  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1.
 
 An Elementalist adds its second sphere's.
 

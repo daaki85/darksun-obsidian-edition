@@ -47,7 +47,7 @@ name.)
   wears its gear, figures cast shadows and raise dust, and elves and
   half-elves look their own ([Graphics](obsidian-edition/README.md#graphics)).
 - **Quality of life:** Tab and Enter to choose and attack an enemy, dragging
-  the map with the mouse wheel
+  the map with the mouse wheel held down
   ([Controls](obsidian-edition/README.md#controls)), 40 saves kept under their
   names too, 29 saved characters ([More saves and
   characters](obsidian-edition/README.md#more-saves-and-characters)), a game
@@ -87,8 +87,8 @@ double-click, with the options as last set.)
 **Coming in the next release** (pull requests #44 to #46, [in the
 changelog](CHANGELOG.md)): a combat log in the game, three more wizard spells
 (Reflected Image, Spook and Friends), two magic shields, defilers' scrolls,
-buying back magical items, saves kept under their names, and Templar's Ledger
-renamed the Loader.
+buying back magical items, saves kept under their names, fuller starting gear,
+and Templar's Ledger renamed the Loader.
 
 **Obsidian Edition 2.2.1** is out ([release notes](release-notes/v2.2.1.md)):
 more of the Options tab can be switched (the elves' and half-elves' looks,
