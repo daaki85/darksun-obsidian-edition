@@ -1098,7 +1098,10 @@ The Loader writes two things to the helper's header for these kits: at `+350`
 map, or a square not of a building's floor: `stealth.daylight`), once a second;
 at `+351` to `+354` (`KIT_DANCE`) each member's Battle Dancer's dance, +1, −1 or
 0, which `dance.py` rolls as a fight's first round begins (a d20 against DEX)
-and counts down.
+and counts down. It ends with the fight as the rounds count it: the game's clock
+`FIGHT_GAP` past the last round. The game's fight flag isn't enough, because
+it is still clear as round 1's initiative is rolled and between the arena's
+waves.
 
 #### Where each effect goes
 

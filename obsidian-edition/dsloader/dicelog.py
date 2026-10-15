@@ -866,7 +866,12 @@ class DiceLog:
             bits = sum(1 << m for m in range(game.PARTY_SIZE) if self.game.outdoors(m))
             self.guest.write(self.tsr_hdr + TSR_KIT_OUTDOORS, bytes((bits,)))
             if (self._dances.left or self.game.dance) and not self.game.in_combat():
-                self._dances.stop(self.game, self.tsr_hdr)
+                # (ended with the fight as the rounds count it, FIGHT_GAP of the game's clock past
+                # the last round: the game drops its fight flag as the first round's initiative
+                # is rolled, and between the arena's waves)
+                now_game = self.game.game_time()
+                if now_game is not None and self._round_time is not None and now_game - self._round_time > FIGHT_GAP:
+                    self._dances.stop(self.game, self.tsr_hdr)
         except (struct.error, IndexError, ValueError):
             pass
 

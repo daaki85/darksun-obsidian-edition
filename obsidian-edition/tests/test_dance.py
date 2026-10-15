@@ -6,7 +6,9 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dance, game, kits  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+
+from dsloader import dance, dicelog, game, kits  # noqa: E402
 
 
 class FakeGd:
@@ -64,6 +66,25 @@ class DanceTests(unittest.TestCase):
         self.assertEqual((gd.dance, d.left), ({}, {}))
         self.assertEqual(kits.dance(17, 17, 4), (1, 1))  # (the roll DEX itself: danced, one round)
         self.assertEqual(kits.dance(10, 1, 4), (1, 9))
+
+    def test_kept_through_a_break(self):
+        """Out of the fight with the game's clock within FIGHT_GAP of the last round (round 1's
+        initiative, a break between the arena's waves): the dance is kept; past it, it ends."""
+        gd, d = FakeGd(), dance.Dances()
+        gd.rules, gd.clock = game.RULE_KITS, 1000
+        gd.in_combat = lambda: False
+        gd.outdoors = lambda member: False
+        gd.game_time = lambda: gd.clock
+        d.round(gd, 0x100, 1, lambda a, b: 12)
+        log = SimpleNamespace(game=gd, tsr_hdr=0x100, _kit_check=0.0, guest=gd.guest, _dances=d,
+                              _round_time=1000)
+        tick = lambda now: dicelog.DiceLog._kit_tick(log, now)
+        gd.clock = 1000 + dicelog.FIGHT_GAP
+        tick(1.0)
+        self.assertEqual(gd.dance, {1: 1})
+        gd.clock += 1
+        tick(2.0)
+        self.assertEqual((gd.dance, d.left), ({}, {}))
 
 
 if __name__ == "__main__":
