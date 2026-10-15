@@ -49,6 +49,16 @@ have the detail.
   one that has walked off the screen.
 
 **Fixed**
+- **The backpack's dagger fought with** (fuller starting gear, 2.3.0): the
+  Loader put the dagger for the backpack (and Thieves' Tools, the arena's
+  Ring +1 and what's lifted from pockets) in the character's list of what it wears and
+  holds, where the game counts every weapon as in hand, whatever cell it shows
+  it in. So Gerakis fought with the dagger in place of his long sword, and
+  Cermak struck with it as a second weapon. Items for the backpack now go in
+  the backpack's list, as the inventory screen puts them; what the Loader
+  takes in hand or puts away moves between the lists too; and games where it
+  happened are put right the next time they're played out of a fight (the
+  dice log says `... is put away in the backpack`).
 - **The game quit ("Return code 01h") or froze in fights with the combat
   log on** (2.3.0): the routine drawing again all that moved, drawn in parts
   round the panel, went on afterwards from a way back that the parts' own

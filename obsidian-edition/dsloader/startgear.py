@@ -138,7 +138,7 @@ def fill_member(gd, member: int) -> List[str]:
                 cell = pickpocket.free_cell(gd, ring.Items(gd), member)
                 if cell is None:
                     break
-                gd.guest.write(items + item_index * game.ITEM_SIZE + game.ITEM_SLOT, bytes((cell,)))
+                pickpocket.place(gd, member, item_index, cell)
                 out.append(f"{who}'s {name(item)} goes into the backpack: a multiclass preserver can't "
                            f"cast in armour")
 
@@ -149,7 +149,7 @@ def fill_member(gd, member: int) -> List[str]:
         spare = next(((i, item) for i, item, _ in mine() if item[game.ITEM_SLOT] >= BACKPACK and melee(item)
                       and not both(_type(item))), None)
         if spare is not None:
-            gd.guest.write(items + spare[0] * game.ITEM_SIZE + game.ITEM_SLOT, bytes((RIGHT,)))
+            pickpocket.place(gd, member, spare[0], RIGHT)
             out.append(f"{who} takes the {name(spare[1])} from the backpack in hand")
         else:
             cleric = any(c in restrict.CLERICS for c in classes)

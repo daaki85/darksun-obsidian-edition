@@ -173,7 +173,7 @@ def _shield_off(gd, member: int, owned, items: int) -> List[str]:
             cell = pickpocket.free_cell(gd, ring.Items(gd), member)
             if cell is None:
                 return []
-            gd.guest.write(items + item_index * game.ITEM_SIZE + game.ITEM_SLOT, bytes((cell,)))
+            pickpocket.place(gd, member, item_index, cell)
             name = gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
             return [f"    {gd.creature_name(member)}'s {name} goes into the backpack: "
                     f"the weapon takes both hands"]
@@ -318,7 +318,7 @@ def kit_gear(gd) -> List[str]:
                     continue  # (a shield the kit forbids: no use in the backpack)
                 cell = pickpocket.free_cell(gd, ring.Items(gd), member)
                 if cell is not None:
-                    gd.guest.write(at + game.ITEM_SLOT, bytes((cell,)))
+                    pickpocket.place(gd, member, item_index, cell)
                     out.append(f"{who}'s {name(item)} goes into the backpack: a {kit} can't use it")
                 continue
             kind, weapon = new

@@ -151,7 +151,9 @@ def _new_list(gd: GameData, it, creature: int, lists) -> Optional[int]:
 def add_to(gd: GameData, creature: int, rec: bytes, slot: Optional[int] = None) -> bool:
     """An item from the game's free list, made `rec`, put first in the creature's (last
     non-empty) item list, or a new one if they have none: worn in `slot` if given and free,
-    else in a backpack cell of its own. False if there's nowhere (or no item record) for it."""
+    else in a backpack cell of its own. A party member's in the list for that slot
+    (pickpocket.party_list: worn or in the backpack). False if there's nowhere (or no item
+    record) for it."""
     it = ring.Items(gd)
     lists = [struct.unpack_from("<h", gd.creature(creature), o)[0] for o in game.CREATURE_ITEM_LISTS]
     thing = next((t for t in reversed(lists) if 0 <= t < ring.THING_COUNT), None)
@@ -160,7 +162,12 @@ def add_to(gd: GameData, creature: int, rec: bytes, slot: Optional[int] = None) 
     item = it.word(ring.FREE_ITEMS)
     if cell is None or item >= game.NO_ITEM:
         return False
-    if thing is None:  # no list yet (no things of their own): one, as the game's allocator gives it
+    if creature < game.PARTY_SIZE:
+        thing = pickpocket.party_list(gd, it, creature, cell)
+        if thing is None:
+            return False
+        it = ring.Items(gd)  # (read again: the list may be new)
+    elif thing is None:  # no list yet (no things of their own): one, as the game's allocator gives it
         thing = _new_list(gd, it, creature, lists)
         if thing is None:
             return False

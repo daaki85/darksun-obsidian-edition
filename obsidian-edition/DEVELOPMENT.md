@@ -135,8 +135,18 @@ finds the party by itself (`dsloader/game.py`).
 **Items.** A creature's items hang off its record at `+0x08`, `+0x0a` and
 `+0x0c`: each is an object number (the object table has a kind, 1 for an item
 and 2 for a creature, and an index), the first item of a list, whose own
-records then name the next. Items are 21-byte records (`DS:0x165D`), item
-types 20-byte ones (`DS:0x1669`, 115 of them, from GPLDATA.GFF):
+records then name the next. A party member keeps what it wears or holds in
+its `+0x0a` list and what's in its backpack in its `+0x0c` one: the inventory
+screen moves an item from one to the other as it's put on or away (a new list
+when there's none). The game fights with every weapon in the `+0x0a` list,
+whatever the item's slot byte says: a dagger put in a backpack cell but left
+in that list is a weapon in hand to the game (its inventory panel lists it,
+and it attacks with it). So the Loader gives and moves the party's items
+through `pickpocket.party_list` and `pickpocket.place`, and `mend_lists` puts
+away backpack items an earlier version left in the worn list. (The game's own
+party starts with worn armour in `+0x0c`, so worn items found there are left
+alone.) Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
+(`DS:0x1669`, 115 of them, from GPLDATA.GFF):
 
 | Record | Offset | Field |
 |---|---|---|
@@ -1244,7 +1254,9 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
 - no dagger: a plain one (the first usable of the obsidian, stone and bone)
   to the backpack.
 
-Items are made by `npcitems.add_to` (a worn slot only when it's free). Each
+Items are made by `npcitems.add_to` (a worn slot only when it's free; in the
+worn list or the backpack's, as the slot is), and moved with
+`pickpocket.place`. Each
 step is skipped once its item or kind is there, so `fill` leaves nothing to do
 the next time; one line for the log lists what it gave. `fill_member` gives a thri-kreen
 (race 8, `THRI_KREEN`) nothing, and does one character whatever its status: the game's own party (already Okay) gets it

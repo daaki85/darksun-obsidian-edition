@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, ring
+from dsloader import game, pickpocket, ring
 from test_dicelog import CREATURES, DS, ITEM_TYPES, ITEMS, LOAD_SEG, NAMES, make_game
 
 THINGS = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
@@ -42,7 +42,7 @@ class SearchTests(unittest.TestCase):
         m = log.guest.mem
         self.assertTrue(ring.ring_needed(log.game))
         self.assertEqual(ring.give_ring(log.game), ring.MESSAGE.format(who=log.game.creature_name(0)))
-        thing, = struct.unpack_from("<h", m, CREATURES + 8)
+        thing, = struct.unpack_from("<h", m, CREATURES + pickpocket.PACK_LIST)  # (the backpack's list)
         self.assertEqual(struct.unpack_from("<Bh", m, THINGS + thing * 3), (game.THING_ITEM, 60))
         rec = bytearray(ring.RING)
         rec[game.ITEM_SLOT] = 14
