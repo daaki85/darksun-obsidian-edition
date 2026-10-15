@@ -522,8 +522,9 @@ for the off hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
 
 A New character's starting weapons, armour and shields its classes can't use
 (`restrict.usable`) are taken out of its lists (`weaponchoice.class_gear`, with
-the rule on): the game gives a character of several classes each class's gear
-and puts what it can't wear in the backpack.
+the rule on; `ring.unlink` with `empty`, as a list of a character's may be left
+empty): the game gives a character of several classes each class's gear and
+puts what it can't wear in the backpack.
 
 ### Multiclass hit points
 

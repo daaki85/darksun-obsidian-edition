@@ -18,6 +18,11 @@ have the detail.
   panel is put on the one about to show. (The old way of putting it back,
   through the redraw routine's way back, could also go stale if the game
   moved that code meanwhile.)
+- **A fighter/druid kept the shield it can't use.** A New character's
+  starting gear its classes can't use is left behind, but the last item of
+  one of its lists was kept (as a container's must be): with the druid's
+  armour gone, the shield was that item. A character's list may now empty,
+  for the kits' gear too (a Ravager's shield, a Brute's club).
 
 ## Pull request #45 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/45))
 
