@@ -8,7 +8,7 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
-## Pull request #48 (in progress)
+## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
 
 **Added**
 - **Multiclass kits** (with Kits ticked): seven kits for two classes taken at
