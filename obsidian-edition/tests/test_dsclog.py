@@ -1326,6 +1326,36 @@ class CanUseTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    def test_battle_dancer(self):
+        """KIT_ALLOWS: a Battle Dancer (an elf cleric/fighter) long swords and bows whatever its
+        cleric's sphere (an air cleric's no long sword, a fire cleric's no bow, without the kit)."""
+        from dsloader import kitpages
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        old = game.RULES_IN_FORCE
+        try:
+            self.mu.mem_write(hdr + 270, struct.pack("<H", 1))
+            rules = game.RULE_SPECIALIZE | game.RULE_RESTRICT
+            game.RULES_IN_FORCE = rules | game.RULE_KITS
+            for cleric in (1, 2, 3, 4):
+                for kit in (1, 0):
+                    s = bytearray(test_restrict.sheet(cleric, 9, race=kitpages.ELF))
+                    s[0x43] = kit
+                    for t in test_restrict.TYPES:
+                        for slot in (7, 14):
+                            with self.subTest(cleric=cleric, kit=kit, type=t, slot=slot):
+                                self.assertEqual(self.can_use(bytes(s), t, rules=rules, slot=slot),
+                                                 self.expected(s, t, off_hand=slot == 14))
+                    if kit:
+                        for t in (1, 45, 81):  # (the bow, the obsidian and bone long swords)
+                            with self.subTest(cleric=cleric, type=t):
+                                self.assertNotEqual(self.can_use(bytes(s), t, rules=rules), 0)
+                        self.assertEqual(self.can_use(bytes(s), 18, rules=rules), 0)  # (a club: not a dancer's)
+            no_kit = [self.can_use(test_restrict.sheet(c, 9, race=kitpages.ELF), t, rules=rules)
+                      for c in (1, 2, 3, 4) for t in (1, 45, 81)]
+            self.assertIn(0, no_kit)  # (some sphere forbids one of them without the kit)
+        finally:
+            game.RULES_IN_FORCE = old
+
     def test_elementalist(self):
         """An Elementalist's second sphere's weapons as well as its own sphere's (CLASS_FORBIDS's
         EL_SECOND; restrict.elementalist_sphere)."""

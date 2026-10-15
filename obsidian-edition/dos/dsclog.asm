@@ -3241,7 +3241,8 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 ; KIT_ALLOWS: carry set if the kit of the character whose sheet is at ES:BX lets it use item type
 ; DX whatever its classes' lists and restrictions (kits.allows): a Battle Mage the weapons of its
 ; chosen weapon spec (SPEC_SLOTS' first, with RULE_SPECIALIZE) and light armour (leather, or of no
-; material; not a shield). DS the game's; all registers kept.
+; material; not a shield); a Battle Dancer long swords and bows (kit_dancer), whatever its cleric's
+; sphere. DS the game's; all registers kept.
 kit_allows:
         push ax
         push bx
@@ -3249,6 +3250,20 @@ kit_allows:
         push si
         push es
         call kit_is_b
+        db KIT_BATTLE_DANCER
+        jne .mage
+        cmp dx, KIND_TYPES
+        jae .no
+        mov si, dx
+        movzx cx, byte [cs:si + kind_of_type]
+        jcxz .no                ; (not a weapon of a kind)
+        dec cx
+        mov ax, [cs:kit_dancer]
+        shr ax, cl
+        test al, 1
+        jnz .yes
+        jmp .no
+.mage:  call kit_is_b
         db KIT_BATTLE_MAGE
         jne .no
         mov cl, [es:bx + SPEC_SLOTS]

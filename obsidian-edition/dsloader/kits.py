@@ -414,7 +414,10 @@ def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], spe
     """Whether the kit lets a character use an item type whatever its classes' lists and
     restrictions (TYP its record, KIND its weapon kind or None), as DSCLOG's KIT_ALLOWS: a Battle
     Mage the weapons of its chosen weapon spec (CHOSEN, with weapon specialization on: SPECIALIZE)
-    and light armour (leather, or of no material; not a shield)."""
+    and light armour (leather, or of no material; not a shield); a Battle Dancer long swords and
+    bows (DANCER_KINDS), whatever its cleric's sphere."""
+    if kid == BATTLE_DANCER:
+        return kind in DANCER_KINDS
     if kid != BATTLE_MAGE:
         return False
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F

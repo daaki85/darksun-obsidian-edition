@@ -15,7 +15,7 @@ have the detail.
   once, each for one race only. Elf cleric/fighter: **Battle Dancer**, which
   dances as each fight starts (a d20 against DEX: +1 to hit, damage and AC
   for DEX less the roll in rounds, or −1 for 1d8 rounds); long swords and
-  bows only. Half-elf fighter/thief: **Shadowblade** (+10 hide, +5 move, −10
+  bows only, but any of them, whatever its cleric's sphere allows. Half-elf fighter/thief: **Shadowblade** (+10 hide, +5 move, −10
   pick pockets) and **Military Scout** (+10 to traps, move, hide and climb
   under the open sky, −5 under a roof). Half-elf druid/fighter: **Wilderness
   Avenger** (+1 to hit and damage against undead; hides and moves as a
