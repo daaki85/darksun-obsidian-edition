@@ -454,7 +454,7 @@ running:
 - **Not checked mid-fight:** saving and loading, and area changes, as the
   game allows neither in a fight; out of one the panel is off. DOSBox's
   window size doesn't matter (it is drawn into the game's screen).
-- **Below the map (the strip).** The switch `combat_log_strip` (off by
+- **Below the map (the strip).** The switch `combat_log_strip` (on by
   default) adds gamepatch's `STRIP` patches when the game is started:
   `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X set up, 0980:2A40h)
   makes the screen 222 rows within the game's own timing (the clock and the

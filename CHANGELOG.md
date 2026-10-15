@@ -11,10 +11,12 @@ have the detail.
 ## Pull request #48 (in progress)
 
 **Added**
-- **The combat log below the map** (In the game, off by default): the
-  game's screen 320 × 222, the log a strip under the map with its top line
-  and the newest line, covering none of it; the game's speed and the map's
-  shape as ever.
+- **The combat log below the map** (In the game, on by default; unticked,
+  the panel over the map as before): the game's screen 320 × 222, the log a
+  strip under the map with its top line and the newest line, covering none
+  of it; the game's speed and the map's shape as ever. The mouse wheel
+  scrolls it a line a notch, a **Latest** chip in its top line while
+  scrolled back; dark out of fights and on the title screen.
 
 **Changed**
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,

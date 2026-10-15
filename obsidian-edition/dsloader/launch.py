@@ -249,7 +249,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
     the saved settings if none given). Returns why the game can't be patched, or None."""
     on = content(load_settings() if settings is None else settings)
-    strip = (load_settings() if settings is None else settings).get("combat_log_strip", False) is True
+    strip = (load_settings() if settings is None else settings).get("combat_log_strip", True) is not False
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
         | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
         | (frozenset() if strip else frozenset(gamepatch.STRIP))
@@ -375,7 +375,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "pickpockets": True,
-                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
+                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True, "combat_log_strip": True,
                    "targeting": True, "scroll_map": True, "scroll_right": False, "cycles": DEFAULT_SPEED}
 
 

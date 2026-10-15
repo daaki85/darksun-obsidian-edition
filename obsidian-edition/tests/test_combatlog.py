@@ -277,6 +277,34 @@ class ScrollingTests(unittest.TestCase):
         self.assertEqual(picture[(y0 + 1) * c.PANEL_W + x0 + 1], ink["stone"])
 
 
+    def test_strip_scrolled_back(self):
+        """The strip's one row: scrolled back it still shows a line (the "Latest" chip in its
+        header instead), the handle within its bar, the wheel a line a notch."""
+        dac = bytes(range(256)) * 3
+        ink = c.inks(dac)
+        g = c.STRIP
+        log = c.Log()
+        log.add(FIGHT)
+        lines = log.at(c.DETAIL, NAMES)
+        rows = c.rows_of(FakeFont(), lines, NAMES, g)
+        self.assertEqual(c.visible(0, g), 1)
+        self.assertEqual(c.scroll_to(0, len(rows), g), 0)
+        top, height = c.handle(0, len(rows), g)
+        self.assertGreaterEqual(top, g.track[1] + 1)
+        self.assertLessEqual(top + height, g.track[1] + 1 + g.track_h)
+        background = c.render(dac, ink, g)
+        picture = c.draw(background, FakeFont(), ink, "Round 1", lines, NAMES, 0, 3, g)
+        row = picture[g.text_y * g.width:(g.text_y + c.LINE_H) * g.width]
+        self.assertNotEqual(row, background[g.text_y * g.width:(g.text_y + c.LINE_H) * g.width])
+        self.assertIn(ink["outline"], picture[1 * g.width + 200:1 * g.width + g.track[0] - 1])  # (the chip)
+        panel = c.Panel()
+        panel.strip, panel._rows = True, len(rows)
+        panel.wheel(1)
+        self.assertEqual(panel.first, len(rows) - 2)
+        panel.wheel(-1)
+        self.assertIsNone(panel.first)  # (back at the newest: following again)
+
+
 class StatesTests(unittest.TestCase):
     def setUp(self):
         self.panel, self.game = c.Panel(), FakeGame()

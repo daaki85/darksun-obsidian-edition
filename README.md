@@ -25,8 +25,8 @@ name.)
 - **Shows what the game keeps hidden.** Every roll is logged as it happens,
   with what it needed and where each bonus came from ([the dice
   log](obsidian-edition/README.md#the-dice-log)). The game's own screens gain
-  THAC0, saves, thief skills and spell slots, a combat log scrolls in a corner
-  of the map in a fight, and the Look box tells you what can hurt a monster
+  THAC0, saves, thief skills and spell slots, a combat log runs below the map
+  in a fight, and the Look box tells you what can hurt a monster
   ([In the game](obsidian-edition/README.md#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class
   tables, INT's limits on learning spells, saving throws and multiclass hit

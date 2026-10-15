@@ -321,7 +321,7 @@ class Viewer:
             kind, wraplength=max(200, e.width - 60)) for kind in ("TCheckbutton", "TRadiobutton")], add="+")
         # the combat log's panel over the map in a fight (combatlog.py), at a level of its own
         self.combat_log = tk.BooleanVar(value=bool(settings.get("combat_log", True)))
-        ttk.Checkbutton(in_game, text="Show a combat log in the game, bottom right, in a fight",
+        ttk.Checkbutton(in_game, text="Show a combat log in the game, in a fight",
                         variable=self.combat_log, command=self._options_changed).pack(anchor="w")
         self.combat_log_level = tk.StringVar(value=dicelog.combat_log_level(settings))
         for value, text in ((combatlog.MINIMAL, "... at the least: what came of each attack and spell"),
@@ -330,7 +330,7 @@ class Viewer:
             ttk.Radiobutton(in_game, text=text, value=value, variable=self.combat_log_level,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # ... or in a strip below the map, the game's screen 22 rows taller (gamepatch.STRIP)
-        self.combat_log_strip = tk.BooleanVar(value=settings.get("combat_log_strip", False) is True)
+        self.combat_log_strip = tk.BooleanVar(value=settings.get("combat_log_strip", True) is not False)
         ttk.Checkbutton(in_game, text="... below the map instead of over it: the round and the newest line, the game's "
                         "screen 22 rows taller (from the next start)",
                         variable=self.combat_log_strip, command=self._options_changed).pack(anchor="w", padx=(20, 0))
@@ -593,7 +593,7 @@ class Viewer:
         for var in (self.scroll_right, self.combat_log):
             var.set(False)
         self.combat_log_level.set(dicelog.combat_log_level({}))
-        self.combat_log_strip.set(False)
+        self.combat_log_strip.set(True)
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self._options_changed()

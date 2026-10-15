@@ -301,33 +301,49 @@ from the Loader (or either `.bat` file).
 
 ### The combat log in the game
 
-With **Show a combat log in the game, bottom right, in a fight** ticked on the
-Options tab (the default), a panel over the map's lower right shows
-the fight as it goes: the [dice log](#the-dice-log)'s lines in the game's own font, in the
-Loader's colours for each kind of line (hits green, misses grey, damage amber,
-saving throws blue), the party's names in their colours and the monsters' in
-red, a filled pip before a party member's line and a hollow one before a
-monster's. Its top line says the round, who is acting and who is still to
-(`Round 2: Gerakis, then Cermak, Cilla`). Below the switch, pick how much it
-says: **at the least** (`Rampager hits Defiler for 4`), **in short**, the
-default (`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`, `Slig's
-save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of the log.
-`20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the target's AC;
-a natural 20 always hits, a 1 always misses). The panel is on only in fights,
-never waits for a click, and goes when the fight ends (or the Loader is
-closed). A window the game opens over the map (a character's menu, a question)
-hides it until it closes. It needs the game started from the Loader (which
-turns off DOSBox's EMS to make room for it).
+With **Show a combat log in the game, in a fight** ticked on the Options tab
+(the default), the fight shows as it goes: the [dice log](#the-dice-log)'s
+lines in the game's own font, in the Loader's colours for each kind of line
+(hits green, misses grey, damage amber, saving throws blue), the party's
+names in their colours and the monsters' in red, a filled pip before a party
+member's line and a hollow one before a monster's. Its top line says the
+round, who is acting and who is still to (`Round 2: Gerakis, then Cermak,
+Cilla`). Below the switch, pick how much it says: **at the least**
+(`Rampager hits Defiler for 4`), **in short**, the default (`Rampager attacks
+Defiler: 20 vs 16+ HIT, 4 damage (2d6)`, `Slig's save vs Fireball: 11 vs 16,
+failed`), or **in detail**, every line of the log. `20 vs 16+ HIT` is the d20
+and the roll it needed (THAC0 less the target's AC; a natural 20 always hits,
+a 1 always misses). It is on only in fights, never waits for a click, and
+goes when the fight ends (or the Loader is closed). It needs the game started
+from the Loader (which turns off DOSBox's EMS to make room for it).
+
+**Below the map** (the default: **... below the map instead of over it**,
+from the next start). The game's screen is 22 rows taller, 320 × 222, and
+the combat log is a strip under the map, the full width: its top line and the
+newest line of the log. Nothing of the map is covered, and the game runs at
+its own speed with the map its usual shape; DOSBox's window is a little
+taller than 4:3. The pointer doesn't go there, so the strip has no buttons:
+on Windows the mouse wheel scrolls it a line a notch wherever the pointer is
+(DOSBox doesn't pass the wheel to the game, so the Loader listens for it
+itself), with a **Latest** chip in its top line while scrolled back; the
+level is set on the Options tab. Out of fights, and on the title screen, the
+strip is dark.
+
+![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
+
+**Over the map instead.** With that box unticked, the combat log is a panel
+over the map's lower right, with more lines and buttons of its own. A window
+the game opens over the map (a character's menu, a question) hides it until
+it closes.
 
 ![The combat log in the arena, in short](docs/combat-log.png)
 
-It scrolls back over the fight (the last 200 lines): drag the scrollbar's
-handle, click the bar above or below it for a page, or turn the mouse wheel
-with the pointer over the panel (on Windows: DOSBox doesn't pass the wheel to
-the game, so the Loader listens for it itself). Scrolled back, it stays where
-it is as new lines come, and a **Latest** chip at its foot says how many have;
-click it (or scroll to the end) to follow the fight again. Clicks on the panel
-are its own: the party doesn't walk there.
+The panel scrolls back over the fight (the last 200 lines): drag the
+scrollbar's handle, click the bar above or below it for a page, or turn the
+mouse wheel with the pointer over the panel (on Windows). Scrolled back, it
+stays where it is as new lines come, and a **Latest** chip at its foot says
+how many have; click it (or scroll to the end) to follow the fight again.
+Clicks on the panel are its own: the party doesn't walk there.
 
 Its top line has three buttons on the right: the level (**Least**, **Short**,
 **Detail**; a click goes to the next, and the Options tab follows), and **-**
@@ -338,19 +354,6 @@ expanded, it is taller (11 lines) and has filters along its top: **All**,
 and opens it again. Its size is remembered.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
-
-**Below the map instead.** With **... below the map instead of over it**
-ticked (off by default; from the next start), the game's screen is 22 rows
-taller, 320 × 222, and the combat log is a strip under the map, the full
-width: its top line (the round, who acts and who is next) and the newest
-line of the log. Nothing of the map is covered, and the game runs at its own
-speed with the map its usual shape; DOSBox's window is a little taller than
-4:3. The pointer doesn't go there, so the strip has no buttons: the mouse
-wheel scrolls it wherever the pointer is (on Windows), and the level is set
-on the Options tab. Out of fights the strip is dark. For more lines, use the
-panel over the map.
-
-![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
 ### THAC0, saves and thief skills
 

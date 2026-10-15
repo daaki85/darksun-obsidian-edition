@@ -498,8 +498,9 @@ def rows_of(font, lines: List[Line], names: Dict[str, str],
 
 
 def visible(first: Optional[int], g: Geometry = SIZES[DOCKED]) -> int:
-    """Rows of lines the well shows: one fewer when scrolled back, for the "Latest" chip."""
-    return g.rows if first is None else g.rows - 1
+    """Rows of lines the well shows: one fewer when scrolled back, for the "Latest" chip (the
+    strip's chip is in its header)."""
+    return g.rows if first is None or g.strip else g.rows - 1
 
 
 def scroll_to(first: Optional[int], total: int, g: Geometry = SIZES[DOCKED]) -> Optional[int]:
@@ -520,7 +521,7 @@ def handle(first: Optional[int], total: int, g: Geometry = SIZES[DOCKED]) -> Tup
     """The scrollbar's handle: its top (in the panel) and height."""
     if total <= g.rows:
         return g.track[1] + 1, g.track_h
-    height = max(HANDLE_MIN, g.track_h * visible(first, g) // total)
+    height = min(g.track_h, max(HANDLE_MIN, g.track_h * visible(first, g) // total))
     room = total - visible(first, g)
     return g.track[1] + 1 + (g.track_h - height) * min(top_row(first, total, g), room) // room, height
 
@@ -598,6 +599,11 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
         return bytes(picture)
     level = None if g.strip else level  # (the strip: no buttons, out of the pointer's reach)
     room = (level_rect(font, g)[0] if level else w - 4) - 2
+    chip = f"Latest: {new} new" if new else "Latest"
+    if g.strip and first_row is not None:  # (the strip's chip: in its header, at the right)
+        chip_w = _width(font, chip) + 6
+        strip_chip = (g.track[0] - 2 - chip_w, 1, g.track[0] - 2, 10)
+        room = strip_chip[0] - 2
     _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names), ink,
           room)
     if level:
@@ -625,7 +631,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
             _text(picture, font, x, y, runs, ink, right)
         y += LINE_H
     if first_row is not None and g.rows:  # the chip: "Latest" and the rows since
-        _button(picture, font, chip_rect(g), f"Latest: {new} new" if new else "Latest", ink)
+        _button(picture, font, strip_chip if g.strip else chip_rect(g), chip, ink)
     return bytes(picture)
 
 
@@ -683,7 +689,8 @@ class Panel:
     def wheel(self, notches: int) -> None:
         """The mouse wheel turned over the panel: NOTCHES up (back) or, below 0, down."""
         if notches and self.g.rows:
-            self._scroll(top_row(self.first, self._rows, self.g) - notches * WHEEL_ROWS)
+            step = 1 if self.strip else WHEEL_ROWS  # (the strip's one row: a line a notch)
+            self._scroll(top_row(self.first, self._rows, self.g) - notches * step)
 
     def mouse(self, gd, tsr_hdr: int) -> None:
         """The left button on the panel (DSCLOG's TSR_MOUSE): on the scrollbar's handle, dragging

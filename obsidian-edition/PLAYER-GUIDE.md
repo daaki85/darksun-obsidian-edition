@@ -61,10 +61,10 @@ The [README](README.md) has every rule in full detail.
    (the first time, it offers to install Python; see the
    [README](README.md#running-it-windows)).
 2. Press **Start the game**. The game starts with the mod and your options,
-   and every roll shows as it happens: in a fight, in the combat log over the
-   map (**L** folds it away), and in the Loader's dice log:
+   and every roll shows as it happens: in a fight, in the combat log below
+   the map, and in the Loader's dice log:
 
-   ![A fight in the arena with the combat log over the map's lower right](docs/combat-log.png)
+   ![A fight in the arena with the combat log in a strip below the map](docs/combat-log-strip.png)
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
@@ -86,7 +86,7 @@ easier.
 
 | Change | What it does |
 |---|---|
-| **Combat log** | In a fight, a panel at the map's lower right with every roll as it comes, at the least, in short or in detail. Drag its scrollbar (or turn the mouse wheel over it, on Windows) to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back. |
+| **Combat log** | In a fight, every roll as it comes, at the least, in short or in detail: by default in a strip below the map (its top line and the newest roll; the mouse wheel reads back, on Windows), or in a panel at the map's lower right with more lines (drag its scrollbar to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back). |
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
 | **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
@@ -1600,7 +1600,8 @@ AD&D's tables:
 
 | Section | Switch | Default |
 |---|---|---|
-| In the game | show a combat log in the game, bottom right, in a fight | on |
+| In the game | show a combat log in the game, in a fight | on |
+| | ... below the map instead of over it | on |
 | | describe monsters when you Look at them in a fight | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
 | More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen; fuller starting gear | all on |
