@@ -33,7 +33,7 @@ from typing import NamedTuple
 GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
-VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK = 0xF2, 0xF3, 0xF4, 0xF5, 0xF6  # (F7h free) not 66h-6Fh: the game calls those itself, looking for drivers
+VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK = 0xF2, 0xF3, 0xF4, 0xF5, 0xF6  # (none free) not 66h-6Fh: the game calls those itself, looking for drivers
 VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD
 VEC_TWO, VEC_DOUBLE = 0xFE, 0xF0
 VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY = 0xED, 0xEE, 0xEF
@@ -79,6 +79,7 @@ VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN = 0x96, 0x95, 0x94, 0
 VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
 VEC_POINTER = 0xF1
+VEC_STRIP = 0xF7
 VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
 VEC_RACE_PANEL = 0x89
@@ -317,6 +318,20 @@ PATCHES = (
     # the combat log's panel under the pointer (DSCLOG's PROBE_POINTER): the stack check, "cmp
     # [9Ch],sp", of the routine that draws the game's pointer (28D1:093D)
     Patch("pointer", 0x2EA55, bytes.fromhex("39269c00"), _interrupt(VEC_POINTER, 4)),
+    # the combat log below the map (DSCLOG's STRIP; a switch, STRIP): the game's screen 320 x 240,
+    # 240 lines and the split below row 200 set at the end of its mode X set up ("mov al,2 / mov
+    # ah,1 / out dx,ax"); the strip shown there is video memory's first 3200 bytes, so the screens
+    # move up, each to a multiple of 256 bytes (the page flip sets the high byte of where the
+    # screen starts only): A0D0h and A500h, the pages kept in video memory after them from A8E8h
+    # (to AFFBh as before). Where the screens are set up (0980:271Bh: "mov cx,0FFBh / mov
+    # ax,0A000h", the second's "add ax,400h") and in the page flip ("mov ax,0A000h / mov
+    # bx,0A400h"; "mov ax,0A000h"; "mov ax,0A400h")
+    Patch("strip_lines", 0x11640, bytes.fromhex("b002b401ef"), _interrupt(VEC_STRIP, 5)),
+    Patch("strip_screens", 0x11323, bytes.fromhex("b9fb0fb800a0"), bytes.fromhex("b92b0fb8d0a0")),
+    Patch("strip_second", 0x11356, bytes.fromhex("050004"), bytes.fromhex("053004")),
+    Patch("strip_flip", 0x1442F, bytes.fromhex("b800a0bb00a4"), bytes.fromhex("b8d0a0bb00a5")),
+    Patch("strip_shown0", 0x14444, bytes.fromhex("b800a0"), bytes.fromhex("b8d0a0")),
+    Patch("strip_shown1", 0x1444E, bytes.fromhex("b800a4"), bytes.fromhex("b800a5")),
     # scrolling (DSCLOG's SCROLLING): the main loop asking where the pointer is, "call far
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)
@@ -589,6 +604,7 @@ class PatchError(Exception):
 # Patches that are switches on the Options tab: left out when off (their bytes still checked)
 EFFECTS_KEPT = ("effects_click_low", "effects_click_high")  # a click on the Effects screen keeps a spell
 ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
+STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_shown0", "strip_shown1")  # the combat log below the map (off by default)
 
 
 def patched(original: bytes, skip=frozenset()) -> bytes:

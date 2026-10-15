@@ -356,5 +356,24 @@ class StatesTests(unittest.TestCase):
         self.assertEqual(c.struct.unpack_from("<H", g.mem, HDR + c.TSR_PANEL_NEW)[0], 1)
 
 
+    def test_the_strip(self):
+        """With the strip's patch in the game's code: the strip, 320 x 40 at row 200, three rows."""
+        g = self.game.guest
+        g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
+        g.mem[HDR + c.TSR_HDR_OFF:HDR + c.TSR_HDR_OFF + 2] = c.struct.pack("<H", 0)
+        g.mem[HDR + c.TSR_DAC:HDR + c.TSR_DAC + 2] = c.struct.pack("<H", 0x2000)
+        self.game.ds = c.DGROUP_SEG + 0x10
+        at = 0x100 + c.STRIP_AT
+        g.mem[at:at + 2] = c.STRIP_INT
+        self.panel.log.add(FIGHT)
+        self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES)
+        self.assertTrue(self.panel.strip)
+        self.assertTrue(self.panel.over())  # (the wheel scrolls it wherever the pointer is)
+        self.assertEqual(c.struct.unpack_from("<HH", g.mem, HDR + c.TSR_PANEL_TOP), (200, 40))
+        g0 = c.STRIP
+        self.assertEqual(len(c.render(bytes(768), None, g0)), 320 * 40)
+        self.assertLessEqual(g0.text_y + g0.rows * c.LINE_H, g0.well[3] + 1)  # (the rows within the well)
+
+
 if __name__ == "__main__":
     unittest.main()

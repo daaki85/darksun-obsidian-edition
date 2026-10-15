@@ -339,6 +339,18 @@ and opens it again. Its size is remembered.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
 
+**Below the map instead.** With **... below the map instead of over it**
+ticked (off by default; from the next start), the game's screen is 40 rows
+taller, 320 × 240, and the combat log is a strip under the map, the full
+width, with its top line and three lines of the log; nothing of the map is
+covered. The pointer doesn't go there, so it has no buttons: the mouse wheel
+scrolls it wherever the pointer is (on Windows), and the level is set on the
+Options tab. Out of fights the strip is dark. The cost: DOSBox shows a
+320 × 240 screen with square pixels, so the map, drawn for a 320 × 200 screen
+stretched to 4:3, looks about a sixth flatter than usual.
+
+![The combat log in a strip below the map, the screen 320 x 240](docs/combat-log-strip.png)
+
 ### THAC0, saves and thief skills
 
 Started with the dice log, the game's own inventory screen (the one with the

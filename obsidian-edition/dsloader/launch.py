@@ -249,8 +249,10 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
     the saved settings if none given). Returns why the game can't be patched, or None."""
     on = content(load_settings() if settings is None else settings)
+    strip = (load_settings() if settings is None else settings).get("combat_log_strip", False) is True
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
-        | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE))
+        | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
+        | (frozenset() if strip else frozenset(gamepatch.STRIP))
     try:
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:

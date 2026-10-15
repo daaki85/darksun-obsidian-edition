@@ -264,18 +264,39 @@ def inks(dac: bytes) -> Dict[str, int]:
 
 class Geometry(NamedTuple):
     """A size of the panel: its height (its foot stays at PANEL_Y0 + PANEL_H), the rows of lines
-    in its well (none: collapsed, the newest line in its header), and the filters' row."""
+    in its well (none: collapsed, the newest line in its header), and the filters' row. The strip
+    below the map (STRIP) is wider, at the screen's left, its header and well closer together."""
     height: int
     rows: int
     filters: bool = False
+    width: int = PANEL_W
+    x0: int = PANEL_X0
+    foot: int = PANEL_Y0 + PANEL_H
+    strip: bool = False
 
     @property
     def top(self) -> int:
-        return PANEL_Y0 + PANEL_H - self.height
+        return self.foot - self.height
 
     @property
     def well(self) -> Tuple[int, int, int, int]:
-        return 4, 15, PANEL_W - 5, self.height - 5
+        return (4, 11, self.width - 5, self.height - 2) if self.strip else (4, 15, self.width - 5, self.height - 5)
+
+    @property
+    def header_y(self) -> int:
+        return 1 if self.strip else HEADER_Y
+
+    @property
+    def plus_x0(self) -> int:
+        return self.width - 5 - BUTTON_W
+
+    @property
+    def minus_x0(self) -> int:
+        return self.plus_x0 - 1 - BUTTON_W
+
+    @property
+    def text_right(self) -> int:
+        return self.well[2] - 9
 
     @property
     def track(self) -> Tuple[int, int, int, int]:
@@ -289,11 +310,22 @@ class Geometry(NamedTuple):
 
     @property
     def text_y(self) -> int:
-        return self.well[1] + 2 + (LINE_H if self.filters else 0)
+        return self.well[1] + (1 if self.strip else 2) + (LINE_H if self.filters else 0)
 
 
 COLLAPSED, DOCKED, EXPANDED = "collapsed", "docked", "expanded"
 SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 11, True)}
+STRIP_W, STRIP_H, STRIP_Y0 = 320, 40, 200  # the strip below the map (the 320 x 240 screen: DSCLOG's STRIP)
+STRIP = Geometry(STRIP_H, 3, False, STRIP_W, 0, STRIP_Y0 + STRIP_H, True)
+DGROUP_SEG = 0x4356  # (the game's data segment, less its load segment: DSCLOG's DGROUP_SEG)
+STRIP_AT, STRIP_INT = 0x11640 - 0x5400, bytes((0xCD, 0xF7))  # the game's code there with the
+#   strip's patch (gamepatch's strip_lines: INT VEC_STRIP), from its load segment
+
+
+def strip_patched(gd) -> bool:
+    """The game was started with the combat log below the map (its screen 320 x 240)."""
+    ds = getattr(gd, "ds", None)
+    return ds is not None and gd.guest.read((ds - DGROUP_SEG) * 16 + STRIP_AT, 2) == STRIP_INT
 SIZE_ORDER = (COLLAPSED, DOCKED, EXPANDED)
 LEVEL_ORDER = (MINIMAL, SHORT, DETAIL)
 LEVEL_NAMES = {MINIMAL: "Least", SHORT: "Short", DETAIL: "Detail"}
@@ -308,7 +340,7 @@ def render(dac: bytes, ink: Optional[Dict[str, int]] = None, g: Geometry = SIZES
     """The panel's frame and well, PANEL_W x G.height palette indices row by row, in the colours
     of DAC (no lines)."""
     ink = ink or inks(dac)
-    w, h = PANEL_W, g.height
+    w, h = g.width, g.height
     rows: List[bytearray] = [bytearray(w) for _ in range(h)]
 
     def fill(x0: int, y0: int, x1: int, y1: int, colour: int) -> None:
@@ -318,14 +350,16 @@ def render(dac: bytes, ink: Optional[Dict[str, int]] = None, g: Geometry = SIZES
     fill(0, 0, w - 1, h - 1, ink["outline"])
     for y in range(1, h - 1):  # the stone, speckled (as the screen's, wherever it is)
         for x in range(1, w - 1):
-            n = _speckle(x + PANEL_X0, y + g.top)
+            n = _speckle(x + g.x0, y + g.top)
             rows[y][x] = ink["grain_hi"] if n < GRAIN_HI_N else ink["grain_lo"] if n < GRAIN_HI_N + GRAIN_LO_N \
                 else ink["stone"]
     fill(1, 1, w - 2, 1, ink["light"])  # the bevel, lit from the upper left
     fill(1, 1, 1, h - 2, ink["light"])
     fill(2, h - 2, w - 2, h - 2, ink["dark"])
     fill(w - 2, 2, w - 2, h - 2, ink["dark"])
-    if g.rows:
+    if g.rows and g.strip:
+        fill(3, 10, w - 4, 10, ink["dark"])  # the header's groove
+    elif g.rows:
         fill(3, 12, w - 4, 12, ink["dark"])  # the header's groove
         fill(3, 13, w - 4, 13, ink["light"])
         x0, y0, x1, y1 = g.well
@@ -411,17 +445,20 @@ def wrap(font, runs: List[Run], first: int, rest: int) -> List[List[Run]]:
     return out
 
 
+_picture_w = PANEL_W  # the width of the picture being drawn (draw: its geometry's)
+
+
 def _text(picture: bytearray, font, x: int, y: int, runs: List[Run], ink: Dict[str, int], right: int,
           shadow_key: str = "shadow") -> None:
-    """RUNS into PICTURE (PANEL_W wide) at x, y, cut at x RIGHT, the letters' shadow in SHADOW_KEY's
-    colour."""
+    """RUNS into PICTURE (_PICTURE_W wide) at x, y, cut at x RIGHT, the letters' shadow in
+    SHADOW_KEY's colour."""
     shadow = ink[shadow_key]
     for text, key in runs:
         colour = ink.get(key, ink["text"])
         for ch in text:
             width, data = font.glyph(ch)
             for gy in range(font.height):
-                row = (y + gy) * PANEL_W
+                row = (y + gy) * _picture_w
                 for gx in range(width):
                     if x + gx > right:
                         break
@@ -440,14 +477,15 @@ def _pip(picture: bytearray, x: int, y: int, filled: bool, colour: int) -> None:
     for dy in range(3):
         for dx in range(3):
             if filled or dx != 1 or dy != 1:
-                picture[(y + dy) * PANEL_W + x + dx] = colour
+                picture[(y + dy) * _picture_w + x + dx] = colour
 
 
-def rows_of(font, lines: List[Line], names: Dict[str, str]) -> List[Tuple[Optional[Line], int, List[Run]]]:
-    """Every line's rows as the well shows them: (the line, on its first row, else None; the
-    row's x; its runs)."""
+def rows_of(font, lines: List[Line], names: Dict[str, str],
+            g: Geometry = SIZES[DOCKED]) -> List[Tuple[Optional[Line], int, List[Run]]]:
+    """Every line's rows as the well (of G's width) shows them: (the line, on its first row, else
+    None; the row's x; its runs)."""
     out: List[Tuple[Optional[Line], int, List[Run]]] = []
-    width = TEXT_RIGHT - TEXT_X
+    width = g.text_right - TEXT_X
     for line in lines:
         indent = INDENT * line.depth
         if line.kind == "round":  # a rule across, the round in the middle
@@ -493,10 +531,10 @@ def chip_rect(g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
     return g.well[0] + 1, y - 1, g.track[0] - 2, y + LINE_H - 1
 
 
-def level_rect(font) -> Tuple[int, int, int, int]:
+def level_rect(font, g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
     """The header's level chip, before the - and + buttons."""
     width = max(_width(font, name) for name in LEVEL_NAMES.values()) + 6 if font is not None else 34
-    return MINUS_X0 - 2 - width, HEADER_Y0, MINUS_X0 - 2, HEADER_Y1
+    return g.minus_x0 - 2 - width, HEADER_Y0, g.minus_x0 - 2, HEADER_Y1
 
 
 def filter_rects(font, g: Geometry) -> List[Tuple[str, Tuple[int, int, int, int]]]:
@@ -529,7 +567,7 @@ def _box(picture: bytearray, rect: Tuple[int, int, int, int], ink: Dict[str, int
     for cy in range(y0, y1 + 1):
         for cx in range(x0, x1 + 1):
             edge = cy in (y0, y1) or cx in (x0, x1)
-            picture[cy * PANEL_W + cx] = ink["outline"] if edge else ink[fill]
+            picture[cy * _picture_w + cx] = ink["outline"] if edge else ink[fill]
 
 
 def _button(picture: bytearray, font, rect, label: str, ink: Dict[str, int], on: bool = False) -> None:
@@ -547,23 +585,27 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
     last ones; else with a chip to go back to them, saying how many rows came since, NEW). With
     LEVEL, the header's level chip and size buttons; G its size (collapsed: TOP is the newest
     line); FILT the filter chosen, when it has the filters' row."""
+    global _picture_w
+    _picture_w = w = g.width
     picture = bytearray(background)
-    rows = rows_of(font, lines, names) if font is not None and g.rows else []
+    rows = rows_of(font, lines, names, g) if font is not None and g.rows else []
     if g.rows:
         hy, hh = handle(first_row, len(rows), g)
         x0, x1 = g.track[0] + 1, g.track[2] - 1
         for y in range(hy, hy + hh):
-            picture[y * PANEL_W + x0:y * PANEL_W + x1 + 1] = bytes((ink["handle"],)) * (x1 - x0 + 1)
+            picture[y * w + x0:y * w + x1 + 1] = bytes((ink["handle"],)) * (x1 - x0 + 1)
     if font is None:
         return bytes(picture)
-    room = (level_rect(font)[0] if level else PANEL_W - 4) - 2
-    _text(picture, font, HEADER_X, HEADER_Y, coloured(fit(font, top, room - HEADER_X), "log round", names), ink, room)
+    level = None if g.strip else level  # (the strip: no buttons, out of the pointer's reach)
+    room = (level_rect(font, g)[0] if level else w - 4) - 2
+    _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names), ink,
+          room)
     if level:
-        _button(picture, font, level_rect(font), LEVEL_NAMES.get(level, level), ink)
+        _button(picture, font, level_rect(font, g), LEVEL_NAMES.get(level, level), ink)
         if g != SIZES[COLLAPSED]:
-            _button(picture, font, (MINUS_X0, HEADER_Y0, MINUS_X0 + BUTTON_W - 1, HEADER_Y1), "-", ink)
+            _button(picture, font, (g.minus_x0, HEADER_Y0, g.minus_x0 + BUTTON_W - 1, HEADER_Y1), "-", ink)
         if g != SIZES[EXPANDED]:
-            _button(picture, font, (PLUS_X0, HEADER_Y0, PLUS_X0 + BUTTON_W - 1, HEADER_Y1), "+", ink)
+            _button(picture, font, (g.plus_x0, HEADER_Y0, g.plus_x0 + BUTTON_W - 1, HEADER_Y1), "+", ink)
     for key, rect in filter_rects(font, g):
         _button(picture, font, rect, dict(FILTERS)[key], ink, on=key == filt)
     start = top_row(first_row, len(rows), g)
@@ -574,7 +616,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
             label = _width(font, line.text)
             mid = (TEXT_X + right) // 2
             for rx in list(range(TEXT_X, mid - label // 2 - 3)) + list(range(mid + label // 2 + 3, right)):
-                picture[(y + 4) * PANEL_W + rx] = ink["log round"]
+                picture[(y + 4) * w + rx] = ink["log round"]
             _text(picture, font, mid - label // 2, y, runs, ink, right)
         else:
             if line is not None and line.side is not None:
@@ -607,17 +649,20 @@ class Panel:
         self._keys: Optional[int] = None  # ... and of L
         self._grab: Optional[int] = None  # dragging the handle: the press's distance below its top
         self.pointer = (-1, -1)  # where the game's pointer is (DSCLOG's), on the screen
+        self.strip = False  # in the strip below the map (the Options tab's combat_log_strip)
 
     @property
     def g(self) -> Geometry:
-        return SIZES[self.size]
+        return STRIP if self.strip else SIZES[self.size]
 
     @property
     def shown(self) -> bool:
         return bool(self._on)
 
     def over(self) -> bool:
-        """The game's pointer is over the panel."""
+        """The game's pointer is over the panel (the strip: anywhere, as it can't reach it)."""
+        if self.strip:
+            return True
         x, y = self.pointer
         return 0 <= x - PANEL_X0 < PANEL_W and 0 <= y - self.g.top < self.g.height
 
@@ -659,13 +704,13 @@ class Panel:
         if hits != self._hits:  # a press
             self._hits = hits
             self._grab = None
-            px, py = hx - PANEL_X0, hy - g.top
+            px, py = hx - g.x0, hy - g.top
             filters = filter_rects(self.font, g)
-            if HEADER_Y0 <= py <= HEADER_Y1 and px >= MINUS_X0:  # - and +
+            if HEADER_Y0 <= py <= HEADER_Y1 and px >= g.minus_x0:  # - and +
                 order = SIZE_ORDER.index(self.size)
-                self.resize(SIZE_ORDER[max(0, order - 1)] if px < PLUS_X0 else SIZE_ORDER[min(2, order + 1)])
+                self.resize(SIZE_ORDER[max(0, order - 1)] if px < g.plus_x0 else SIZE_ORDER[min(2, order + 1)])
                 return
-            lx0, ly0, lx1, ly1 = level_rect(self.font)
+            lx0, ly0, lx1, ly1 = level_rect(self.font, g)
             if ly0 <= py <= ly1 and lx0 <= px <= lx1:
                 self.level = LEVEL_ORDER[(LEVEL_ORDER.index(self.level) + 1) % len(LEVEL_ORDER)] \
                     if self.level in LEVEL_ORDER else SHORT
@@ -704,6 +749,7 @@ class Panel:
         """ON: the panel shown (once it is drawn in a palette DSCLOG has read: PALETTES counts the
         reads), with the header TOP and the log's lines, NAMES their colours' keys."""
         guest = gd.guest
+        self.strip = strip_patched(gd)
         seg, = struct.unpack("<H", guest.read(tsr_hdr + TSR_PANEL_SEG, 2))
         if not seg:  # (no memory for it: no panel)
             on = False
@@ -720,18 +766,18 @@ class Panel:
             self.first, self._grab = None, None  # (the next fight: its newest lines)
         if on and self._ink is not None:
             now = (self._palettes, top, self.log.version, self.level, tuple(sorted(names.items())), self.first,
-                   self.size, self.filter)
+                   "strip" if self.strip else self.size, self.filter)
             if now != self._shown:
-                g = self.g
-                if self.size not in self._backgrounds:
-                    self._backgrounds[self.size] = render(self._dac, self._ink, g)
+                g, size = self.g, now[6]
+                if size not in self._backgrounds:
+                    self._backgrounds[size] = render(self._dac, self._ink, g)
                 lines = filtered(self.log.at(self.level, names), self.filter)
                 if g.rows:
-                    self._rows = len(rows_of(self.font, lines, names)) if self.font is not None else 0
+                    self._rows = len(rows_of(self.font, lines, names, g)) if self.font is not None else 0
                     self.first = scroll_to(self.first, self._rows, g)
                 else:  # collapsed: the newest line in the header
                     top = lines[-1].text if lines else top
-                picture = draw(self._backgrounds[self.size], self.font, self._ink, top, lines, names, self.first,
+                picture = draw(self._backgrounds[size], self.font, self._ink, top, lines, names, self.first,
                                max(0, self._rows - self._back_rows), g, self.level, self.filter)
                 guest.write(seg * 16, picture)
                 guest.write(tsr_hdr + TSR_PANEL_TOP, struct.pack("<HH", g.top, g.height))

@@ -10,6 +10,12 @@ have the detail.
 
 ## Pull request #48 (in progress)
 
+**Added**
+- **The combat log below the map** (In the game, off by default): the
+  game's screen 320 × 240, the log a strip of three lines and its top line
+  under the map, covering none of it. The map's pixels come out square (it
+  looks a sixth flatter than usual).
+
 **Changed**
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,
   Cermak and Cilla get what a new character would, in the first moments of a
