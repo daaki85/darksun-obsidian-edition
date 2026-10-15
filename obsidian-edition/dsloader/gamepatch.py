@@ -538,6 +538,18 @@ PATCHES = (
     # STORE and RECALL on the creation screen (rollstore.py): the screen's click routine looking up
     # its buttons
     Patch("roll_store", 0x6625D, bytes.fromhex("b91600"), _interrupt(VEC_RS_CLICK, 3)),
+    # the view in a fight (a switch, CAMERA): the routine moving a fight's figure a step (0AC0:C7B3)
+    # had the view follow it, a step of the view's each time it came near an edge (2191:0BE3h, the
+    # map's own walking's too: its margins at DS:2F6Fh); now only when the figure is off the screen
+    # (0AC0:AC7Ah, the game's own test), the rest as it was (a monster only while the game shows
+    # monsters' moves, ES:19h); out of a fight (IN_COMBAT, DS:1168h, 0: the arena's opening, where
+    # the party walks out of the view) as the game has it. The figure's spot pushed straight, in
+    # the same 54 bytes.
+    Patch("camera_still", 0x1C9F2,
+          bytes.fromhex("8b1e7949c1e3058b879d668946fc8b1e7949c1e3058b879f668946fa833e7949047e0db87e378ec0"
+                        "26833e1900007439ff76faff76fc"),
+          bytes.fromhex("833e7949047e0c687e370726833e1900007456833e681100740dff3679490ee866e25909"
+                        "c075428b1e7949c1e305ffb79f66ffb79d66")),
     # a new race or sex on the creation screen: "add sp,6" after the call that gives the default
     # class, where the panel is set right for it (DSCLOG opens the disciplines' window again)
     Patch("race_panel", 0x63403, bytes.fromhex("83c406"), _interrupt(VEC_RACE_PANEL, 3)),
@@ -612,6 +624,7 @@ class PatchError(Exception):
 # Patches that are switches on the Options tab: left out when off (their bytes still checked)
 EFFECTS_KEPT = ("effects_click_low", "effects_click_high")  # a click on the Effects screen keeps a spell
 ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
+CAMERA = ("camera_still",)  # the view in a fight following a figure only off the screen
 STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_shown0", "strip_shown1",
          "strip_palette", "strip_colours")  # the combat log below the map (off by default)
 

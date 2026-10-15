@@ -489,6 +489,10 @@ class Viewer:
         self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
         ttk.Checkbutton(controls, text="Scroll the map by pressing the mouse wheel and moving", variable=self.scroll_map,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
+        ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
+                        "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scroll_right = tk.BooleanVar(value=bool(settings.get("scroll_right", False)))
         ttk.Checkbutton(controls, text="... or by holding the right mouse button and moving (a right "
                         "click still changes the pointer)", variable=self.scroll_right,
@@ -588,7 +592,7 @@ class Viewer:
             var.set(True)
         for var in (self.monster_info, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
-                    self.scroll_map, self.effects_kept):
+                    self.scroll_map, self.effects_kept, self.camera_still):
             var.set(True)
         for var in (self.scroll_right, self.combat_log):
             var.set(False)
@@ -1053,6 +1057,7 @@ class Viewer:
         settings["effects_kept"] = self.effects_kept.get()
         settings["stealth_gear"] = self.stealth_gear.get()
         settings["roll_store"] = self.roll_store.get()
+        settings["camera_still"] = self.camera_still.get()
         for key, var in self.rule_vars.items():
             settings[key] = var.get()
         launch.save_settings(settings)

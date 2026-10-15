@@ -24,7 +24,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## In the Game's Screens
 
-- **[New]** A combat log in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. By default it is a strip below the map (the game's screen 22 rows taller: the round and the newest roll, the mouse wheel scrolling back on Windows; between fights it keeps the last fight's); or a panel over the map's lower right that scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds away.
+- **[New]** A combat log in a fight: every roll as it happens, in the game's own lettering and the Loader's colours, at the least, in short or in detail. By default it is a strip below the map (the game's screen 22 rows taller: the round and the newest roll, the mouse wheel scrolling back on Windows; between fights it keeps the last fight's, and rolls out of fights go in it too); or a panel over the map's lower right that scrolls back over the fight (its scrollbar, or the mouse wheel on Windows), collapses to one line or opens up with filters (All, Party, Damage, Saves), and **L** folds away.
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
@@ -185,6 +185,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse.
 - **[New]** Press the mouse wheel and drag to scroll the map.
+- **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was: it followed each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written.

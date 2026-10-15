@@ -996,7 +996,9 @@ class DiceLog:
         return out
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
-        """A fight's lines into the combat log's panel (and those just after it: XP, the last kill)."""
+        """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);
+        in the strip below the map, out of fights too, those with a roll (a thief's skills, a scroll
+        learned)."""
         try:
             if self.game is not None and self.game.in_combat():
                 if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
@@ -1006,6 +1008,8 @@ class DiceLog:
             pass
         if self._fight_at is not None and now - self._fight_at <= FIGHT_LINES_AFTER:
             self._panel.log.add(lines)
+        elif self._panel.strip:
+            self._panel.log.add(lines, rolls_only=True)
 
     def _panel_input(self, now: float) -> None:
         """The mouse on the combat log's panel: the scrollbar and the chip (DSCLOG's), the wheel
@@ -1056,8 +1060,6 @@ class DiceLog:
                 if index >= game.PARTY_SIZE and name and not name.startswith("creature "):
                     self._fight_monsters.add(name)
             top = combatlog.header(self.round_status())
-        elif on:
-            top = combatlog.BETWEEN_FIGHTS if self._panel.log.version else combatlog.NO_FIGHT
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
         self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names)
 

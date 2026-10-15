@@ -39,6 +39,20 @@ class GamePatchTests(unittest.TestCase):
             self.assertEqual(got, p.original if p.name in gamepatch.EFFECTS_KEPT else p.replacement, p.name)
         self.assertTrue(set(gamepatch.ROLL_STORE) <= names)  # (STORE and RECALL, switched the same way)
 
+    def test_camera_still(self):
+        """The fight's step tests whether its figure is on the screen (the game's own routine,
+        0AC0:AC7Ah, from 0AC0:C9F2h: a near call) before the view is moved, and pushes the same
+        spot it did; a switch (CAMERA)."""
+        p = next(p for p in gamepatch.PATCHES if p.name == "camera_still")
+        self.assertEqual(gamepatch.CAMERA, ("camera_still",))
+        self.assertEqual(p.offset, 0x1C9F2)
+        r = p.replacement
+        call = r.index(bytes.fromhex("0ee8")) + 1
+        rel = int.from_bytes(r[call + 1:call + 3], "little", signed=True)
+        self.assertEqual(0xC9F2 + call + 3 + rel, 0xAC7A)
+        self.assertTrue(r.endswith(bytes.fromhex("ffb79f66ffb79d66")))  # (y, then x, as the game's)
+        self.assertIn(bytes.fromhex("833e681100"), r)  # (in a fight only: IN_COMBAT, DS:1168h)
+
     def test_enter_out_of_the_save_windows_keys(self):
         """The save/load window's key table (Esc, Enter, Up, Down) without Enter, which PROBE_SAVE_PAGE
         then takes."""

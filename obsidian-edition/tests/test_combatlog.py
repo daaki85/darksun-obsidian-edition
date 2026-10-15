@@ -55,6 +55,16 @@ class LinesTests(unittest.TestCase):
     def test_not_the_fight(self):
         self.assertFalse(any(line.startswith("Dice:") for _, line in self.log.lines))
 
+    def test_rolls_only(self):
+        """Out of a fight (the strip's), only lines with a roll, and those under them."""
+        log = c.Log()
+        log.add(["Cilla starts with more gear: Belt, Boots", "Cilla hides in shadows: d100 = 81, needs 25 or "
+                 "less -> seen", "  (her cloak's +10)", "Character creation: STR 3d6 = 12", "Gerakis HP: 1d12 = 7"],
+                rolls_only=True)
+        self.assertEqual([line for _, line in log.lines], [
+            "Cilla hides in shadows: d100 = 81, needs 25 or less -> seen", "  (her cloak's +10)",
+            "Gerakis HP: 1d12 = 7"])
+
     def test_short(self):
         texts = [line.text for line in self.log.at(c.SHORT, NAMES)]
         self.assertEqual(texts, [
@@ -401,6 +411,23 @@ class StatesTests(unittest.TestCase):
         g0 = c.STRIP
         self.assertEqual(len(c.render(bytes(768), None, g0)), 320 * 22)
         self.assertLessEqual(g0.text_y + g0.rows * c.LINE_H, g0.well[3] + 1)  # (the rows within the well)
+
+    def test_strip_between_fights(self):
+        """The strip with no header (between fights): the row before the newest in its top line."""
+        dac = bytes(range(256)) * 3
+        ink = c.inks(dac)
+        g = c.STRIP
+        background = c.render(dac, ink, g)
+        log = c.Log()
+        log.add(FIGHT)
+        lines = log.at(c.SHORT, NAMES)
+        rows = c.rows_of(FakeFont(), lines, NAMES, g)
+        empty = c.draw(background, FakeFont(), ink, "", lines[:0], NAMES, None, 0, g)
+        with_top = c.draw(background, FakeFont(), ink, "", lines, NAMES, None, 0, g)
+        header = slice(g.header_y * g.width, (g.header_y + 1) * g.width)
+        self.assertEqual(empty[header], background[header])
+        self.assertNotEqual(with_top[header], background[header])  # (the row before: its letters)
+        self.assertGreater(len(rows), 1)
 
 
 if __name__ == "__main__":

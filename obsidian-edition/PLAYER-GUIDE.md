@@ -86,9 +86,10 @@ easier.
 
 | Change | What it does |
 |---|---|
-| **Combat log** | In a fight, every roll as it comes, at the least, in short or in detail: by default in a strip below the map (its top line and the newest roll; the mouse wheel reads back, on Windows; between fights it keeps the last fight's), or in a panel at the map's lower right with more lines (drag its scrollbar to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back). |
+| **Combat log** | In a fight, every roll as it comes, at the least, in short or in detail: by default in a strip below the map (its top line and the newest roll; the mouse wheel reads back, on Windows; between fights it keeps the last fight's, and rolls out of fights go in it too), or in a panel at the map's lower right with more lines (drag its scrollbar to read back; **-** and **+** collapse it to one line or open it up with filters; **L** folds it away and back). |
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
+| **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
 | **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
 | **DELETE in the roster** | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |

@@ -14690,15 +14690,28 @@ strip_same:
         ret
 strip_shown_sum dw 0
 
-; STRIP_MIND: from the game's pointer (on every screen; DS the game's): the empty strip filled again
-; when the screen calls for another look (STRIP_WANT), in the colours STRIP_COLOURS found last (no
-; palette read here: the pointer may be drawn while the game sets colours); registers kept
+; STRIP_MIND: from the game's pointer (on every screen; DS the game's): on the map, a new picture
+; of the log put at once (the map's main loop doesn't run while the game plays a scene out, the
+; arena's opening show); else the empty strip filled again when the screen calls for another look
+; (STRIP_WANT), in the colours STRIP_COLOURS found last (no palette read here: the pointer may be
+; drawn while the game sets colours); registers kept
 strip_mind:
         cmp byte [cs:strip_on], 0
         je .ret
-        cmp byte [cs:panel_shown], 0
-        jne .ret
         push ax
+        cmp word [cs:panel_new], 0
+        je .empty
+        cmp word [cs:panel_on], 0
+        je .empty
+        call strip_on_map
+        jne .empty
+        mov word [cs:panel_new], 0
+        mov byte [cs:panel_shown], 1
+        mov byte [cs:strip_mode], 0
+        call panel_draw
+        jmp .out
+.empty: cmp byte [cs:panel_shown], 0
+        jne .out
         call strip_want
         cmp al, [cs:strip_mode]
         je .out
@@ -14710,6 +14723,19 @@ strip_mind:
 ; SCREEN_IS: the game's DS:0BC9h, 1 on the map, 2 with a character's screen or a talk over it,
 ; 0 on the title, the menus and in character creation
 SCREEN_IS  equ 0x0BC9
+
+; STRIP_ON_MAP: ZF set if the game is on the map (SCREEN_IS 1); registers kept
+strip_on_map:
+        push es
+        push ax
+        mov ax, [cs:strip_ds]
+        cmp ax, 1                       ; (not known yet: ZF clear)
+        jb .out
+        mov es, ax
+        cmp word [es:SCREEN_IS], 1
+.out:   pop ax
+        pop es
+        ret
 
 ; STRIP_WANT: AL the look of the empty strip: STRIP_STONE (the panel's blue-grey) in a game (the
 ; map, or a character's screen over it), else STRIP_BLACK (the title, the menus, character creation)
@@ -15803,6 +15829,37 @@ gc_regs    db 1, 3, 4, 5, 8
 gc_saved   times 5 db 0
 zero       dw 0
 game_ds    dw 0
+%ifdef CAMTRACE
+; (a test build's only: INT 3 put over "push bp" at the start of the game's routine that centres
+; the view on a creature, by hand: each caller's return address kept, 16 of them, then "push bp")
+cam_trace:
+        push bp
+        mov bp, sp
+        push ax
+        push bx
+        mov bx, [cs:cam_n]
+        and bx, 0x3C
+        mov ax, [bp + 8]
+        mov [cs:cam_log + bx], ax
+        mov ax, [bp + 10]
+        mov [cs:cam_log + bx + 2], ax
+        add word [cs:cam_n], 4
+        mov ax, [bp]
+        mov bx, [bp + 2]
+        mov [bp], bx
+        mov bx, [bp + 4]
+        mov [bp + 2], bx
+        mov bx, [bp + 6]
+        mov [bp + 4], bx
+        mov [bp + 6], ax
+        pop bx
+        pop ax
+        mov bp, [bp + 6]
+        iret
+        db "CAMTRACE"
+cam_n   dw 0
+cam_log times 64 db 0
+%endif
 load_seg   dw 0
 clip_x0    dw 0
 clip_y0    dw 0
@@ -16001,6 +16058,11 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_STRIP
         mov dx, probe_strip
         int 21h
+%ifdef CAMTRACE
+        mov ax, 2503h
+        mov dx, cam_trace
+        int 21h
+%endif
         mov ax, 2500h + VEC_PALETTE
         mov dx, probe_palette
         int 21h

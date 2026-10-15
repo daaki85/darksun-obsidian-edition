@@ -328,10 +328,12 @@ taller than 4:3. The pointer doesn't go there, so the strip has no buttons:
 on Windows the mouse wheel scrolls it a line a notch wherever the pointer is
 (DOSBox doesn't pass the wheel to the game, so the Loader listens for it
 itself), with a **Latest** chip in its top line while scrolled back; the
-level is set on the Options tab. Between fights it stays, with the last
-fight's lines to scroll back through ("The last fight" in its top line;
-the next fight starts again at its newest), and under a talk or a screen
-over the map; a screen in other colours has the panel's blue-grey there
+level is set on the Options tab. Between fights it stays, its top line the
+log's line before the newest, so the last fight can be scrolled back through
+(the next one starts again at its newest), and rolls out of fights go in it
+too: a thief's skills, a scroll learned, the hit points of a new level. It
+stays under a talk or a screen over the map, and is kept up while the game
+plays a scene out (the arena's opening show); a screen in other colours has the panel's blue-grey there
 instead, the log back on the map. On the title, the main menu and in
 character creation it is black.
 
@@ -3242,6 +3244,14 @@ let go before the pointer has moved, still changes the pointer between walking,
 using and looking). The game still scrolls on its own when the pointer touches
 the screen's edge, and still brings the view back to whoever's turn it is in a
 fight.
+
+**The view in a fight.** The game moved the view with a figure walking in a
+fight as soon as it came near the screen's edge, a step at a time, so the
+view drifted after every monster that walked. Now it moves only once the
+figure has walked off the screen, to bring it back into view (on by default:
+**In a fight, the view moves to a figure only when it walks off the screen**
+on the Options tab, from the next start). Walking about out of fights is as
+the game has it.
 
 The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.

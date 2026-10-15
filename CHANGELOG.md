@@ -18,8 +18,10 @@ have the detail.
   of it; the game's speed and the map's shape as ever. The mouse wheel
   scrolls it a line a notch, a **Latest** chip in its top line while
   scrolled back. Between fights it keeps the last fight's lines to scroll
-  back through; on the game's other screens it is the panel's blue-grey,
-  and black on the title, the main menu and in character creation.
+  back through, and rolls out of fights go in it too (a thief's skills, a
+  scroll learned); it is kept up through the arena's opening show. Under a
+  screen in other colours it is the panel's blue-grey, and black on the
+  title, the main menu and in character creation.
 
 **Changed**
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,
@@ -28,6 +30,9 @@ have the detail.
   leg armour, a belt, boots and a dagger; Cermak and Cilla a belt, boots and
   a dagger). K'ratchek, a thri-kreen, gets nothing more: she keeps the
   game's own chatkcha (see below).
+- **The view in a fight** (a switch, on by default): it no longer drifts after
+  each figure that walks near the screen's edge, and moves only to bring back
+  one that has walked off the screen.
 
 **Fixed**
 - **The game quit ("Return code 01h") or froze in fights with the combat

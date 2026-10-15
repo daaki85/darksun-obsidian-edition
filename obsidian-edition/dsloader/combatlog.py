@@ -101,6 +101,8 @@ DAMAGE_ROLL = re.compile(r"(?P<what>.+?) damage: (?P<dice>\S+) = (?:\[[^\]]*\](?
 PERCENT = re.compile(r"(?P<what>.+?): d100 = (?P<roll>\d+), needs (?P<need>-?\d+) or less.*-> (?P<result>.+)")
 ROUND = re.compile(r"Round (?P<n>\d+)")
 NOT_THE_FIGHT = ("Message: ", "Dice: ", "Look: ", "Chosen with Tab", "(")
+A_ROLL = re.compile(r"\bd\d+ = |\b\d+d\d+\b")  # (a line with a die cast in it)
+NOT_A_FIGHT_ROLL = ("Character creation",)  # (rolls out of the game: not the strip's)
 
 
 def shorten(line: str, level: str) -> Optional[str]:
@@ -160,10 +162,18 @@ class Log:
         self.lines: Deque[Tuple[str, str]] = deque(maxlen=HISTORY)  # (kind, the log's line)
         self.version = 0  # counts changes
 
-    def add(self, lines: Sequence[str]) -> None:
+    def add(self, lines: Sequence[str], rolls_only: bool = False) -> None:
+        """LINES into the log; ROLLS_ONLY (out of a fight), only those with a roll in them (a
+        thief's skill, a save, a scroll learned) and the lines under them."""
+        keep = True
         for line in lines:
             if not line.strip() or line.startswith(NOT_THE_FIGHT):
                 continue
+            if rolls_only:
+                if not line.startswith(" "):
+                    keep = bool(A_ROLL.search(line)) and not line.startswith(NOT_A_FIGHT_ROLL)
+                if not keep:
+                    continue
             self.lines.append((line_kind(line), line))
             self.version += 1
 
@@ -202,10 +212,6 @@ def _side(text: str, names: Dict[str, str]) -> Optional[str]:
         if text.startswith(name) and text[len(name):len(name) + 1] in ("", " ", "'"):
             return "monster" if names[name] == "monster" else "party"
     return None
-
-
-# the strip's top line between fights (it keeps the last one's lines)
-BETWEEN_FIGHTS, NO_FIGHT = "The last fight", "No fight yet"
 
 
 def header(status: Optional[dict]) -> str:
@@ -616,8 +622,13 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
         chip_w = _width(font, chip) + 6
         strip_chip = (g.track[0] - 2 - chip_w, 1, g.track[0] - 2, 10)
         room = strip_chip[0] - 2
-    _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names), ink,
-          room)
+    start = top_row(first_row, len(rows), g)
+    shown = [(row, g.text_y + i * LINE_H, g.track[0] - 3) for i, row in enumerate(rows[start:start + visible(first_row, g)])]
+    if g.strip and not top and start > 0:  # (the strip between fights: the row before in the top line)
+        shown.insert(0, (rows[start - 1], g.header_y, room))
+    else:
+        _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names),
+              ink, room)
     if level:
         _button(picture, font, level_rect(font, g), LEVEL_NAMES.get(level, level), ink)
         if g != SIZES[COLLAPSED]:
@@ -626,10 +637,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
             _button(picture, font, (g.plus_x0, HEADER_Y0, g.plus_x0 + BUTTON_W - 1, HEADER_Y1), "+", ink)
     for key, rect in filter_rects(font, g):
         _button(picture, font, rect, dict(FILTERS)[key], ink, on=key == filt)
-    start = top_row(first_row, len(rows), g)
-    y = g.text_y
-    right = g.track[0] - 3
-    for line, x, runs in rows[start:start + visible(first_row, g)]:
+    for (line, x, runs), y, right in shown:
         if line is not None and line.kind == "round":
             label = _width(font, line.text)
             mid = (TEXT_X + right) // 2
@@ -641,7 +649,6 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
                 _pip(picture, g.well[0] + 2, y + 3, line.side == "party",
                      ink["member0"] if line.side == "party" else ink["monster"])
             _text(picture, font, x, y, runs, ink, right)
-        y += LINE_H
     if first_row is not None and g.rows:  # the chip: "Latest" and the rows since
         _button(picture, font, strip_chip if g.strip else chip_rect(g), chip, ink)
     return bytes(picture)

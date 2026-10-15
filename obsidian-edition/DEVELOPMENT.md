@@ -493,10 +493,15 @@ which may have changed since.
   on a game menu (it shows what it had). Scrolling and the map dragged with
   the wheel pressed were checked in the arena's fight.
 - **Between fights.** The Loader keeps the strip on whenever the game runs
-  (`DiceLog._update_panel`: on in a fight, or with `strip_patched`), the
-  last fight's lines in it under "The last fight" (`combatlog.BETWEEN_FIGHTS`;
-  "No fight yet" before one), scrolled to the newest again when a fight
-  starts.
+  (`DiceLog._update_panel`: on in a fight, or with `strip_patched`), scrolled
+  to the newest again when a fight starts. Out of fights its top line has no
+  header: `draw` puts the row before the newest there. The lines that come
+  out of fights go in too, those with a die cast in them and the lines
+  under them (`Log.add(rolls_only=True)`: `A_ROLL`, not character
+  creation's).
+- **Scenes.** The map's main loop doesn't run while the game plays a scene
+  out (the arena's opening show), so `STRIP_MIND`, from the game's pointer,
+  also puts a new picture of the log there when the game is on the map.
 - **Empty: blue-grey or black.** Where the picture isn't, `STRIP_CLEAR`
   fills the strip as `STRIP_WANT` says: black (the darkest of the 256) when
   the game's `DS:0BC9h` is 0 (the title, the main menu, character creation),
@@ -1941,6 +1946,27 @@ the game centre its view where the drag puts it, with the game's own routine
 keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
+
+**The view in a fight.** The game writes the view's place (`DS:1178h`,
+`117Ah`) in two routines that centre it (on a figure, `191F:01FFh`, and on a
+spot, `191F:0281h`; their callers test first whether the figure is off the
+screen, `0AC0:AC7Ah`) and in one that steps it toward a spot (`2191:0BE3h`,
+with `27845h` deciding: the spot off the screen, or within the margins at
+`DS:2F6Fh` to `2F75h` of an edge it is heading for). The drift in a fight is
+the last, called from the routine that moves a fight's figure a step
+(`0AC0:C7B3h`, at `C9F2h`) on every step (a monster's only while the game
+shows monsters' moves, `ES:19h` of segment `377Eh`). Found with `INT 3` put
+over the first byte of each routine in a test build of DSCLOG, which kept its
+callers' return addresses: in a fight the centring routine was never called,
+and every move of the view came from that call (returning to `1CA37h`), for
+party members walking as well as monsters. The patch (`camera_still`, a
+switch, `CAMERA`) rewrites that call's 54 bytes of set-up: in a fight
+(`IN_COMBAT`, `DS:1168h`), the game's own on-screen test first, skipping the
+step while the figure is on the screen; the figure's spot pushed straight
+from its record. Out of a fight the same routine runs too (the arena's
+opening, the party walking out through the gate: held still, the party never
+left the view and the scene never went on), so there it is as the game has
+it, as is the map's own walking.
 
 ### More saves
 
