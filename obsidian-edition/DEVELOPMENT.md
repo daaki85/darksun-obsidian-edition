@@ -457,18 +457,20 @@ running:
 - **Below the map (the strip).** The switch `combat_log_strip` (off by
   default) adds gamepatch's `STRIP` patches when the game is started:
   `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X set up, 0980:2A40h)
-  makes the screen 240 lines (Abrash's 320 × 240: the 25 MHz clock, 480 scan
-  lines, each row drawn twice) and sets the line compare to 18Fh, so below
-  scan line 399 (row 200) the VGA shows video memory from its start whichever
-  screen is up. Those 3200 bytes a plane are the strip; the game's two
-  screens move up past it, each to a multiple of 256 bytes as the page flip
-  (0980:5814h) writes only the start address's high byte: A0D0h and A500h
-  (in the screens' set up at 0980:271Bh, and the flip's three segment
-  constants). The pages the game keeps in video memory (a bump allocator,
-  `[0E4Eh]` up to `[0E4Ch]`, AFFBh) then start at A8E8h, not A7E8h: 4 KB
-  fewer of its 33 (the arena's fights used 26). `STRIP_DRAW` puts the
-  Loader's 320 × 40 picture there (`combatlog.STRIP`: the header and three
-  rows, no buttons); `PANEL_LIVE` is never set, so the clipping and the
+  makes the screen 222 rows within the game's own timing (the clock and the
+  totals untouched: 70 frames a second, 449 scan lines, each row drawn
+  twice): the picture to scan line 443, the blanking from 444 and the sync
+  at 445 to 447; and the line compare at 18Fh, so below scan line 399
+  (row 200) the VGA shows video memory from its start whichever screen is
+  up. Those 1760 bytes a plane are the strip; the game's two screens move up
+  past it, each to a multiple of 256 bytes as the page flip (0980:5814h)
+  writes only the start address's high byte: A070h and A460h (in the
+  screens' set up at 0980:271Bh, and the flip's three segment constants).
+  The pages the game keeps in video memory (a bump allocator, `[0E4Eh]` up
+  to `[0E4Ch]`, AFFBh) then start at A848h, not A7E8h: 1.5 KB fewer of its
+  33 (the arena's fights used 26). `STRIP_DRAW` puts the Loader's 320 × 22
+  picture there (`combatlog.STRIP`: the header and the newest row, no
+  buttons); `PANEL_LIVE` is never set, so the clipping and the
   pointer's handling are left out, and `STRIP_CLEAR` fills it with the
   palette's darkest colour (`STRIP_DARK`, read from the VGA) when the fight
   ends, and every 512 passes of the main loop out of a fight (the palette
@@ -476,7 +478,11 @@ running:
   it shows the palette's colour 0. The Loader knows the game was
   started so from the patch in its memory (`combatlog.strip_patched`), not the
   setting, which may have changed since. DOSBox's aspect correction works out
-  the shape from the frame's 525 lines, so the pixels come out square.
+  the shape from the timing, unchanged, so each row is stretched by 1.2 as
+  ever (the window 320 × 266). A 240-row screen was tried first: in a 480-line
+  timing DOSBox shows square pixels (the map a sixth flatter) and the frame
+  comes 60 times a second, not 70 (the game about 14% slower); a longer line
+  with the 28 MHz clock gave back the shape at 56 a second.
 
 ### THAC0, saves and thief skills
 

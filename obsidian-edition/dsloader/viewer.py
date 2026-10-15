@@ -329,10 +329,10 @@ class Viewer:
                             (combatlog.DETAIL, "... in detail, as in the log")):
             ttk.Radiobutton(in_game, text=text, value=value, variable=self.combat_log_level,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
-        # ... or in a strip below the map, the game's screen 40 rows taller (gamepatch.STRIP)
+        # ... or in a strip below the map, the game's screen 22 rows taller (gamepatch.STRIP)
         self.combat_log_strip = tk.BooleanVar(value=settings.get("combat_log_strip", False) is True)
-        ttk.Checkbutton(in_game, text="... below the map instead of over it: the game's screen 40 rows taller "
-                        "(320 x 240), the map's pixels square (from the next start)",
+        ttk.Checkbutton(in_game, text="... below the map instead of over it: the round and the newest line, the game's "
+                        "screen 22 rows taller (from the next start)",
                         variable=self.combat_log_strip, command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))

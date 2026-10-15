@@ -12,9 +12,9 @@ have the detail.
 
 **Added**
 - **The combat log below the map** (In the game, off by default): the
-  game's screen 320 × 240, the log a strip of three lines and its top line
-  under the map, covering none of it. The map's pixels come out square (it
-  looks a sixth flatter than usual).
+  game's screen 320 × 222, the log a strip under the map with its top line
+  and the newest line, covering none of it; the game's speed and the map's
+  shape as ever.
 
 **Changed**
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,

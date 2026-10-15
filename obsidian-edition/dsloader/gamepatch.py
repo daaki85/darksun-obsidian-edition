@@ -318,20 +318,20 @@ PATCHES = (
     # the combat log's panel under the pointer (DSCLOG's PROBE_POINTER): the stack check, "cmp
     # [9Ch],sp", of the routine that draws the game's pointer (28D1:093D)
     Patch("pointer", 0x2EA55, bytes.fromhex("39269c00"), _interrupt(VEC_POINTER, 4)),
-    # the combat log below the map (DSCLOG's STRIP; a switch, STRIP): the game's screen 320 x 240,
-    # 240 lines and the split below row 200 set at the end of its mode X set up ("mov al,2 / mov
-    # ah,1 / out dx,ax"); the strip shown there is video memory's first 3200 bytes, so the screens
+    # the combat log below the map (DSCLOG's STRIP; a switch, STRIP): the game's screen 320 x 222,
+    # its rows and the split below row 200 set at the end of its mode X set up ("mov al,2 / mov
+    # ah,1 / out dx,ax"); the strip shown there is video memory's first 1760 bytes, so the screens
     # move up, each to a multiple of 256 bytes (the page flip sets the high byte of where the
-    # screen starts only): A0D0h and A500h, the pages kept in video memory after them from A8E8h
+    # screen starts only): A070h and A460h, the pages kept in video memory after them from A848h
     # (to AFFBh as before). Where the screens are set up (0980:271Bh: "mov cx,0FFBh / mov
     # ax,0A000h", the second's "add ax,400h") and in the page flip ("mov ax,0A000h / mov
     # bx,0A400h"; "mov ax,0A000h"; "mov ax,0A400h")
     Patch("strip_lines", 0x11640, bytes.fromhex("b002b401ef"), _interrupt(VEC_STRIP, 5)),
-    Patch("strip_screens", 0x11323, bytes.fromhex("b9fb0fb800a0"), bytes.fromhex("b92b0fb8d0a0")),
-    Patch("strip_second", 0x11356, bytes.fromhex("050004"), bytes.fromhex("053004")),
-    Patch("strip_flip", 0x1442F, bytes.fromhex("b800a0bb00a4"), bytes.fromhex("b8d0a0bb00a5")),
-    Patch("strip_shown0", 0x14444, bytes.fromhex("b800a0"), bytes.fromhex("b8d0a0")),
-    Patch("strip_shown1", 0x1444E, bytes.fromhex("b800a4"), bytes.fromhex("b800a5")),
+    Patch("strip_screens", 0x11323, bytes.fromhex("b9fb0fb800a0"), bytes.fromhex("b98b0fb870a0")),
+    Patch("strip_second", 0x11356, bytes.fromhex("050004"), bytes.fromhex("05f003")),
+    Patch("strip_flip", 0x1442F, bytes.fromhex("b800a0bb00a4"), bytes.fromhex("b870a0bb60a4")),
+    Patch("strip_shown0", 0x14444, bytes.fromhex("b800a0"), bytes.fromhex("b870a0")),
+    Patch("strip_shown1", 0x1444E, bytes.fromhex("b800a4"), bytes.fromhex("b860a4")),
     # scrolling (DSCLOG's SCROLLING): the main loop asking where the pointer is, "call far
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)

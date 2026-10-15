@@ -14557,45 +14557,32 @@ pb_clamp:
         mov ax, [cs:pb_w4]
 .hi:    ret
 
-; STRIP: with the Options tab's "combat log below the map" the game's screen is 320 x 240 (its
-; mode X set up as ever, then 240 lines: PROBE_STRIP), and the game, which knows nothing of it,
-; draws its 200 rows as before. Below row 200 the VGA's split screen (its line compare) shows video
-; memory from its start whichever screen is up: the strip, 40 rows of 80 bytes a plane (3200), the
-; game's two screens moved up past it (A0D0h, A500h: each at a multiple of 256 bytes, as the
-; game's page flip sets only the high byte of where the screen starts; gamepatch's STRIP). The strip is the
+; STRIP: with the Options tab's "combat log below the map" the game's screen is 320 x 222 (its
+; mode X set up as ever, then 22 rows more in the same timing: PROBE_STRIP), and the game, which
+; knows nothing of it, draws its 200 rows as before. Below row 200 the VGA's split screen (its line
+; compare) shows video memory from its start whichever screen is up: the strip, 22 rows of 80 bytes
+; a plane (1760), the game's two screens moved up past it (A070h, A460h: each at a multiple of 256
+; bytes, as the game's page flip sets only the high byte of where the screen starts; gamepatch's
+; STRIP). The strip is the
 ; combat log's: the Loader's picture, STRIP_W x STRIP_H, put there (STRIP_DRAW); the panel's top
 ; and height are the Loader's as ever (200, 40). The pointer never goes there.
 STRIP_W   equ 320
-STRIP_ROWS equ 240
-strip_on  db 0                  ; set once the game's screen is 320 x 240
+STRIP_ROWS equ 222
+strip_on  db 0                  ; set once the game's screen is 320 x 222
 
 ; PROBE_STRIP: INT VEC_STRIP replaces "mov al,2 / mov ah,1 / out dx,ax" (5 bytes: INT + 3 NOPs) at
-; the end of the game's mode X set up (0980:2A40h, DSUN.EXE 11640h; DX 3C4h): that, then 240 lines
-; (as Abrash's 320 x 240: the 25 MHz clock, 480 lines a frame, each drawn twice), the split after
-; scan line 399 (the line compare 18Fh: its bit 8 in the overflow, 07h, bit 9 cleared in 09h,
-; which keeps each line drawn twice). Keeps all.
+; the end of the game's mode X set up (0980:2A40h, DSUN.EXE 11640h; DX 3C4h): that, then the
+; screen 222 rows in the game's own timing (70 a second, 449 scan lines a frame, each row drawn
+; twice: the speed and shape as ever): the picture to scan line 443 (12h: 1BBh), the blanking from
+; 444 (15h, to 16h: 3Fh, the frame's end) and the sync at 445 to 447 (10h, 11h, keeping registers
+; 0-7 locked), and the split after scan line 399 (the line compare, 18h: 18Fh; its bit 9, in 09h,
+; cleared). Their bit 8s are in the overflow (07h, 1Fh: set) as the game has it. Keeps all.
 probe_strip:
         push ax
         push dx
-        mov dx, 0x3C4
-        mov ax, 0x0100                  ; (the sequencer held in reset while the clock changes)
-        out dx, ax
-        mov dx, 0x3C2
-        mov al, 0xE3
-        out dx, al
-        mov dx, 0x3C4
-        mov ax, 0x0300
-        out dx, ax
-        mov dx, 0x3D4
-        mov al, 0x11                    ; (the CRTC's registers 0-7 unlocked)
-        out dx, al
-        inc dx
-        in al, dx
-        and al, 0x7F
-        out dx, al
-        dec dx
         push si
         push cx
+        mov dx, 0x3D4
         mov si, strip_crtc
         mov cx, STRIP_CRTC_N
 .crtc:  mov ax, [cs:si]
@@ -14611,7 +14598,7 @@ probe_strip:
         pop dx
         pop ax
         iret
-strip_crtc dw 0x0D06, 0x3E07, 0x0109, 0xEA10, 0xAC11, 0xDF12, 0xE715, 0x0616, 0x8F18
+strip_crtc dw 0x0109, 0xBB12, 0xBC15, 0x3F16, 0xBD10, 0x8F11, 0x8F18
 STRIP_CRTC_N equ ($ - strip_crtc) / 2
 
 ; STRIP_DRAW: the picture into the strip (PANEL_DRAW, in the strip: PANEL_BLIT at the strip's

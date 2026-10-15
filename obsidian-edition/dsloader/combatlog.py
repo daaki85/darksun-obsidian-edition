@@ -315,15 +315,15 @@ class Geometry(NamedTuple):
 
 COLLAPSED, DOCKED, EXPANDED = "collapsed", "docked", "expanded"
 SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 11, True)}
-STRIP_W, STRIP_H, STRIP_Y0 = 320, 40, 200  # the strip below the map (the 320 x 240 screen: DSCLOG's STRIP)
-STRIP = Geometry(STRIP_H, 3, False, STRIP_W, 0, STRIP_Y0 + STRIP_H, True)
+STRIP_W, STRIP_H, STRIP_Y0 = 320, 22, 200  # the strip below the map (the 320 x 222 screen: DSCLOG's STRIP)
+STRIP = Geometry(STRIP_H, 1, False, STRIP_W, 0, STRIP_Y0 + STRIP_H, True)
 DGROUP_SEG = 0x4356  # (the game's data segment, less its load segment: DSCLOG's DGROUP_SEG)
 STRIP_AT, STRIP_INT = 0x11640 - 0x5400, bytes((0xCD, 0xF7))  # the game's code there with the
 #   strip's patch (gamepatch's strip_lines: INT VEC_STRIP), from its load segment
 
 
 def strip_patched(gd) -> bool:
-    """The game was started with the combat log below the map (its screen 320 x 240)."""
+    """The game was started with the combat log below the map (its screen 320 x 222)."""
     ds = getattr(gd, "ds", None)
     return ds is not None and gd.guest.read((ds - DGROUP_SEG) * 16 + STRIP_AT, 2) == STRIP_INT
 SIZE_ORDER = (COLLAPSED, DOCKED, EXPANDED)
