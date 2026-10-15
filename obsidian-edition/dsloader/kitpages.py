@@ -1,7 +1,10 @@
 """Kits: the creation panel's KIT page (DSCLOG's KIT_* routines) and the kits' names.
 
 A character of one class may take one of its class's three kits, or none (the class as it is).
-The kit is the sheet's byte KIT_BYTE: 0 none, 1 to 3 the class's kits in KITS's order. It is
+The kit is the sheet's byte KIT_BYTE: 0 none, 1 to 3 the class's kits in KITS's order. A
+character of two classes at once (not a human) may take a kit of its race and pair of classes, if
+they have any (MULTI: a group numbered on from the classes, 9-13, its kits in KITS as a class's),
+in KIT_BYTE the same way. It is
 chosen on the creation panel, on a page of its own (a window for each class, its rows the
 NO KIT and the class's kits, its button VIEW PSIONICS back to the disciplines), which KITS opens:
 the button of the disciplines' window for a class with no sphere, of the spheres' for a
@@ -24,10 +27,21 @@ KITS = {1: ("Elementalist", "Healer", "Crusader"),
         5: ("Scholar", "Battle Mage", "Arcanist"),
         6: ("Mind Bender", "Mind Warrior", "Kineticist"),
         7: ("Stalker", "Justifier", "Seeker"),
-        8: ("Swashbuckler", "Assassin", "Shinobi")}
+        8: ("Swashbuckler", "Assassin", "Shinobi"),
+        9: ("Battle Dancer",), 10: ("Shadowblade", "Military Scout"), 11: ("Wilderness Avenger",),
+        12: ("Rescuer",), 13: ("Ghetto Fighter", "Wayfinder")}
+# the multiclass kits' groups: (race, the pair of classes as the creation screen numbers them)
+ELF, HALF_ELF, DWARF = 3, 4, 2
+MULTI = {9: (ELF, frozenset((1, 3))),  # elf cleric/fighter
+         10: (HALF_ELF, frozenset((3, 8))),  # half-elf fighter/thief
+         11: (HALF_ELF, frozenset((2, 3))),  # half-elf druid/fighter
+         12: (HALF_ELF, frozenset((1, 7))),  # half-elf cleric/ranger
+         13: (DWARF, frozenset((3, 8)))}  # dwarf fighter/thief
 # the rows' text where the name is too long for the panel
 SHORT = {"Arena Champion": "CHAMPION", "Swashbuckler": "SWASHBUCK", "Elementalist": "ELEMENTAL",
-         "Grove Warden": "WARDEN", "Battle Mage": "BATTLMAGE", "Mind Bender": "M-BENDER", "Mind Warrior": "M-WARRIOR"}
+         "Grove Warden": "WARDEN", "Battle Mage": "BATTLMAGE", "Mind Bender": "M-BENDER", "Mind Warrior": "M-WARRIOR",
+         "Battle Dancer": "B-DANCER", "Shadowblade": "SHADOWBLD", "Military Scout": "M-SCOUT",
+         "Wilderness Avenger": "W-AVENGER", "Ghetto Fighter": "G-FIGHTER"}
 # the widest a row's picture may be, its mark's room in: the panel's frame comes in to about 95
 # pixels past the rows' left at the second kit's row, and a few more are kept clear of it
 ROW_WIDTH = 88
@@ -36,8 +50,9 @@ CREATION_CLASS = {**{c: 1 for c in range(1, 5)}, **{c: 2 for c in range(5, 9)}, 
                   **{c: 7 for c in range(13, 17)}, 17: 8}
 
 KIT_DISCIPLINES, KIT_SPHERES, KIT_LAST_PAGE = 3022, 3023, 3025  # (3020 and 3024 are the game's)
-KIT_WINDOW = 3026  # + creation class - 1
+KIT_WINDOW = 3026  # + creation class (or multiclass group) - 1
 KIT_ROW, KIT_NONE, KIT_VIEW = 0x870, 0x888, 0x889  # rows: KIT_ROW + 3 * (class - 1) + kit - 1
+MULTI_ROW = 0x88A  # a multiclass group's rows: MULTI_ROW + 3 * (group - 9) + kit - 1
 DRAWN = {
     "J": ("..####",
           "...##.",
@@ -64,16 +79,40 @@ def row_text(name: str) -> str:
     return SHORT.get(name, name.upper())
 
 
+def row_id(group: int, kit: int) -> int:
+    """The kit page's row for kit KIT (1-3) of a class or multiclass group."""
+    if group >= min(MULTI):
+        return MULTI_ROW + 3 * (group - min(MULTI)) + kit - 1
+    return KIT_ROW + 3 * (group - 1) + kit - 1
+
+
+def multi_group(race: int, classes: Sequence[int]) -> int:
+    """The multiclass group (9-13) of a character of RACE and two CLASSES at once, as the creation
+    screen numbers them (0 for none), or 0: none of that race and pair (DSCLOG's MULTI_GROUP)."""
+    pair = frozenset(c for c in classes if c)
+    if len(pair) != 2 or len([c for c in classes if c]) != 2:
+        return 0
+    return next((g for g, (r, cs) in MULTI.items() if r == race and cs == pair), 0)
+
+
+def sheet_group(sheet: bytes) -> int:
+    """The multiclass group of a sheet (its classes 1-17), or 0: one class, a human, or none."""
+    if len(sheet) <= KIT_BYTE or sheet[0x18] == 1 or not sheet[0x22]:
+        return 0
+    return multi_group(sheet[0x18], [CREATION_CLASS.get(c, 0) for c in sheet[0x21:0x24]])
+
+
 def kit_place(sheet: bytes) -> Optional[int]:
     """The place (0-2) among the sheet's classes of its oldest class, as DSCLOG's KIT_PLACE: 0 for
-    one class; for a human who has changed class (the classes move down, the new one first) its
-    first class, the last of its classes; None for more than one class otherwise (no kits)."""
+    one class, or for two classes at once with a multiclass group (sheet_group); for a human who
+    has changed class (the classes move down, the new one first) its first class, the last of its
+    classes; None for more than one class otherwise (no kits)."""
     if len(sheet) <= KIT_BYTE:
         return None
     if not sheet[0x22] and not sheet[0x23]:
         return 0
     if sheet[0x18] != 1:  # (a human's: game.HUMAN)
-        return None
+        return 0 if sheet_group(sheet) else None
     return 2 if sheet[0x23] else 1
 
 
@@ -84,7 +123,9 @@ def kit_at(sheet: bytes, place: int) -> int:
     oldest = kit_place(sheet)
     if oldest is None or not 0 <= place <= oldest or sheet[KIT_BYTE] == 0xFF:  # (0xFF: KIT_OPEN)
         return 0
-    kit, cls = sheet[KIT_BYTE] >> 2 * (oldest - place) & 3, CREATION_CLASS.get(sheet[0x21 + place])
+    kit, cls = sheet[KIT_BYTE] >> 2 * (oldest - place) & 3, sheet_group(sheet) or CREATION_CLASS.get(sheet[0x21 + place])
+    if cls in KITS and kit > len(KITS[cls]):
+        return 0  # (a group's kit it hasn't)
     return cls * 4 + kit if cls is not None and kit else 0
 
 
@@ -147,15 +188,18 @@ def kit_byte(sheet: bytes, place: int, kit: int) -> int:
     return byte & ~(3 << shift) & 0xFF | kit << shift
 
 
-def kit_class(classes: Sequence[int], rules: int) -> int:
+def kit_class(classes: Sequence[int], rules: int, race: int = 0) -> int:
     """The creation class with kits to choose (CLASSES as the creation sheet has them, 0 for
-    none), or 0: the rule off, or more than one class."""
-    if not rules & KITS_ON or any(classes[1:3]) or not 1 <= classes[0] <= 8:
+    none), or for two classes the multiclass group of RACE and them (multi_group), or 0: the rule
+    off, or more than one class without a group."""
+    if not rules & KITS_ON:
         return 0
-    return classes[0]
+    if any(classes[1:3]):
+        return multi_group(race, classes)
+    return classes[0] if 1 <= classes[0] <= 8 else 0
 
 
-def panel_windows(classes: Sequence[int], rules: int, kit: int = 0) -> Tuple[int, int]:
+def panel_windows(classes: Sequence[int], rules: int, kit: int = 0, race: int = 0) -> Tuple[int, int]:
     """The windows the panel shows for the sheet being made: the disciplines' and the spheres'
     (DSCLOG's WP_IDS); KIT its kit byte (a Battle Mage, a preserver's second, counts as a warrior
     with weapon specialization, for its weapon spec)."""
@@ -163,7 +207,7 @@ def panel_windows(classes: Sequence[int], rules: int, kit: int = 0) -> Tuple[int
     sphere = any(c in SPHERES for c in classes)
     if rules & SPECIALIZE and warrior:
         return (wp.DISCIPLINES if sphere else wp.WARRIOR_DISCIPLINES), wp.WARRIOR_SPHERES
-    if kit_class(classes, rules):
+    if kit_class(classes, rules, race):
         return (wp.DISCIPLINES if sphere else KIT_DISCIPLINES), KIT_SPHERES
     return wp.DISCIPLINES, wp.SPHERES
 
@@ -178,7 +222,7 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     toggle_colours = wp._colours(resource[("ICON", wp.TOGGLE_TEMPLATE)])
     row_button, toggle_button = resource[("BUTN", wp.ROW_TEMPLATE)], resource[("BUTN", wp.TOGGLE_TEMPLATE)]
     added: Dict[Tuple[str, int], bytes] = {}
-    rows: List[Tuple[int, str]] = [(KIT_ROW + 3 * (cls - 1) + k, row_text(name))
+    rows: List[Tuple[int, str]] = [(row_id(cls, k + 1), row_text(name))
                                    for cls, names in KITS.items() for k, name in enumerate(names)]
     for cid, text in rows + [(KIT_NONE, "NO KIT")]:
         added[("ICON", cid)] = wp.picture(font, text, wp.ROW_PAD, row_colours)
@@ -190,7 +234,7 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     rows_at = [(x, y) for _, x, y in sphere_items[:4]]
     toggle_at = sphere_items[4][1:]
     for cls in KITS:
-        ids = [KIT_NONE] + [KIT_ROW + 3 * (cls - 1) + k for k in range(3)]
+        ids = [KIT_NONE] + [row_id(cls, k + 1) for k in range(len(KITS[cls]))]
         items = [(cid, x, y) for cid, (x, y) in zip(ids, rows_at)] + [(wp.BACK, *toggle_at)]
         added[("WIND", KIT_WINDOW + cls - 1)] = wp._window(spheres, KIT_WINDOW + cls - 1, items)
     added[("WIND", KIT_SPHERES)] = wp._window(

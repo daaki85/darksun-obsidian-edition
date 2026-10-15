@@ -918,7 +918,8 @@ earth, Stillwater with water).
 
 A character of one class takes one of three kits for its class when it is
 made, or none, on the creation panel's **KIT** page; a human who changes class
-can take one for its new class. Each gives something and costs something; the
+can take one for its new class. A few races' pairs of classes have kits of
+their own ([Multiclass kits](#multiclass-kits)). Each gives something and costs something; the
 class sections above have each kit's details and starting gear.
 
 - The **Myrmidon** and **Battle Mage** choose their extra weapon spec on the
@@ -949,6 +950,42 @@ class sections above have each kit's details and starting gear.
   | Swashbuckler, Crusader, Battle Mage, Mind Warrior | each other |
 
 - The dice log names each change a kit makes to a new character's gear.
+
+### Multiclass kits
+
+Only the race named may take these, with both classes taken at once. "Under the
+open sky" is an outdoor map, or open ground outside a city's buildings.
+
+*Battle Dancer* (elf cleric/fighter). Elven warrior-priests whose battle is a
+dance, sword and bow moving to a rhythm only they hear. A good start lifts the
+whole fight; a stumble costs them dearly.
+
+*Shadowblade* and *Military Scout* (half-elf fighter/thief). Shadowblades are
+half-elves who learnt that no one notices someone who belongs nowhere. Scouts
+range ahead of armies and caravans: in the open they are at home, under a roof
+less so.
+
+*Wilderness Avenger* (half-elf druid/fighter). Sworn to the land's living
+things, they hunt the undead that profane it, and move through the wild as
+quietly as any ranger.
+
+*Rescuer* (half-elf cleric/ranger). They bring the lost back from the wastes
+alive. Under the open sky their healing runs strongest.
+
+*Ghetto Fighter* and *Wayfinder* (dwarf fighter/thief). Ghetto Fighters grew
+up in the cities' poorest quarters, where a dagger in each hand settles most
+arguments. Wayfinders are dwarves whose focus is the hidden road: they slip
+past unseen, but have little use for other people's purses.
+
+| Kit | Gives | Costs |
+|---|---|---|
+| **Battle Dancer** | as each fight starts, a d20 against DEX: at DEX or under, +1 to hit, damage and AC for DEX less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only; over DEX, −1 to hit, damage and AC for 1d8 rounds |
+| **Shadowblade** | +10 hide in shadows, +5 move silently | −10 pick pockets |
+| **Military Scout** | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls | under a roof, −5 to the same |
+| **Wilderness Avenger** | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | — |
+| **Rescuer** | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | — |
+| **Ghetto Fighter** | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps |
+| **Wayfinder** | +10 hide in shadows and move silently | −10 pick pockets |
 
 ### Kits' spell slots
 

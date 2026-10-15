@@ -89,12 +89,24 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Druid | Grove Warden, Wanderer, Lifebinder |
 | Psionicist | Mind Warrior, Mind Bender, Kineticist |
 
+- **[New]** Seven kits for two classes taken at once, each for one race only:
+
+| Race and classes | Kits |
+|---|---|
+| Elf cleric/fighter | Battle Dancer |
+| Half-elf fighter/thief | Shadowblade, Military Scout |
+| Half-elf druid/fighter | Wilderness Avenger |
+| Half-elf cleric/ranger | Rescuer |
+| Dwarf fighter/thief | Ghetto Fighter, Wayfinder |
+
 - **Arcanist:** one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, but is unable to read magical script.
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
+- **Battle Dancer:** dances as each fight starts, a roll against DEX: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
+- **Military Scout:** better at stealth, traps and climbing under the open sky, worse under a roof.
 
-> *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 24, with a short description of who takes each one on Athas.*
+> *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 31, with a short description of who takes each one on Athas.*
 
 ## Magic and Psionics
 

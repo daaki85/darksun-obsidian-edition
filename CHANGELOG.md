@@ -11,6 +11,19 @@ have the detail.
 ## Pull request #48 (in progress)
 
 **Added**
+- **Multiclass kits** (with Kits ticked): seven kits for two classes taken at
+  once, each for one race only. Elf cleric/fighter: **Battle Dancer**, which
+  dances as each fight starts (a d20 against DEX: +1 to hit, damage and AC
+  for DEX less the roll in rounds, or −1 for 1d8 rounds); long swords and
+  bows only. Half-elf fighter/thief: **Shadowblade** (+10 hide, +5 move, −10
+  pick pockets) and **Military Scout** (+10 to traps, move, hide and climb
+  under the open sky, −5 under a roof). Half-elf druid/fighter: **Wilderness
+  Avenger** (+1 to hit and damage against undead; hides and moves as a
+  ranger). Half-elf cleric/ranger: **Rescuer** (cures heal 1 more a die under
+  the open sky). Dwarf fighter/thief: **Ghetto Fighter** (+1 with a dagger;
+  two weapons at 0 and −2; +5 pick pockets and hide, −5 traps) and
+  **Wayfinder** (+10 hide and move, −10 pick pockets). Chosen on the
+  creation panel's KIT page as a class's kit is.
 - **The combat log below the map** (In the game, off by default): the game's
   screen 320 × 222, the log a strip under the map, always shown, in the
   panel's darker shade, covering none of it; the game's speed and the map's

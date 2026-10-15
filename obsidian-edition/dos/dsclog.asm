@@ -341,6 +341,13 @@ panel_rows dw PANEL_H           ; +346   and its height (at most PANEL_H_MOST), 
 panel_keys dw 0                 ; +348 L pressed on the map with the panel shown, counted (the
                                 ;      companion collapses or opens it), or out of a fight with the
                                 ;      panel off (it opens it); the key kept from the game
+kit_outdoors db 0               ; +350 the Loader sets bit N while party member N stands under the
+                                ;      open sky (stealth.daylight: the Military Scout's skills, the
+                                ;      Rescuer's cures)
+kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance, the Loader's (it
+                                ;      rolls it as a fight starts and counts its rounds): +1 danced
+                                ;      well, -1 stumbled, 0 none; to hit, to damage and on AC (KIT_EXTRA)
+           db 0                 ; +355
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -2506,6 +2513,8 @@ probe_attacks:
         push ax
         call kit_to_hit         ; (a Ravager's, a Brute's, an Arena Champion's)
         sub [bp + 0x0A], ax
+        call kit_extra          ; (a Battle Dancer's dance, a Wilderness Avenger's against undead)
+        sub [bp + 0x0A], ax
         pop ax
         test word [cs:rules], RULE_SPECIALIZE
         jz .store
@@ -2751,6 +2760,10 @@ war_kit_halves:
 probe_spec_damage:
         add [bp - 0x12], ax
         call kit_attack_damage
+        push ax
+        call kit_extra
+        add [bp - 0x12], ax
+        pop ax
         test word [cs:rules], RULE_SPECIALIZE
         jz .done
         push dx
@@ -3183,6 +3196,9 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 .blunt: mov si, kit_blunt
         cmp cl, KIT_LIFEBINDER
         je .kind
+        mov si, kit_dancer      ; a Battle Dancer: the long sword and the bow only
+        cmp cl, KIT_BATTLE_DANCER
+        je .kind
         cmp cl, KIT_SHINOBI
         jne .ok
         test al, KT_SHIELD      ; a Shinobi: no shield, light armour, its own weapons
@@ -3277,6 +3293,7 @@ kit_allows:
         ret
 
 kit_blunt  dw KIT_BLUNT
+kit_dancer dw 0x2001           ; bits by kind: the long sword, the bow (a Battle Dancer's)
 kit_shinobi dw 0xF10C           ; bits by kind: dagger, short sword, quarterstaff, chatkcha, bow, sling,
                                 ;   staff sling
 kf_spec    db 0
@@ -3885,6 +3902,18 @@ KIT_SEEKER   equ 31
 KIT_SWASHBUCKLER equ 33
 KIT_ASSASSIN equ 34
 KIT_SHINOBI  equ 35
+; the multiclass kits (kitpages.MULTI): their groups, 9-13, numbered on from the classes, and the kits
+; (KIT_IS's numbers) as a class's
+MULTI_FIRST  equ 9
+KIT_GROUPS   equ 13             ; (the classes' and the multiclass groups' pages)
+MULTI_ROW    equ 0x88A          ; (a group's rows: + 3 * (group - 9) + kit - 1)
+KIT_BATTLE_DANCER equ 37
+KIT_SHADOWBLADE equ 41
+KIT_SCOUT    equ 42
+KIT_AVENGER  equ 45
+KIT_RESCUER  equ 49
+KIT_GHETTO   equ 53
+KIT_WAYFINDER equ 54
 WP_DISC      equ 0xEA2              ; DS: the panel's windows (far)
 WP_SPHERE    equ 0xEA6
 WP_DISC_MASK equ 0x4980             ; DS: the disciplines and spheres marked, kept while hidden
@@ -4005,7 +4034,8 @@ wp_ids:
         ret
 
 ; KIT_CLASS: AL the class of the sheet being made (1-8, as the creation screen numbers them) if it
-; has kits to choose (the rule on, and one class), else 0. Others kept.
+; has kits to choose (the rule on, and one class), or its multiclass group (9-13: MULTI_GROUP_CR) for
+; two classes at once, else 0. Others kept.
 kit_class:
         push bx
         push es
@@ -4014,14 +4044,86 @@ kit_class:
         jz .out
         les bx, [WP_CREATION]
         cmp word [es:bx + 0x22], 0
-        jne .out
+        jne .multi
         mov al, [es:bx + 0x21]
         cmp al, 8
         jbe .out
         xor al, al
+        jmp .out
+.multi: call multi_group_cr
 .out:   pop es
         pop bx
         ret
+
+; MULTI_GROUP: AL the multiclass group (9-13, kitpages.MULTI) of sheet ES:BX, its classes 1-17
+; (KIT_CLASS_OF); MULTI_GROUP_CR the same for the sheet being made, its classes 1-8: two classes at
+; once (none at +23h), not a human's, its race and their pair one of MULTI_TABLE's; 0 for none.
+; Others kept.
+multi_group:
+        push si
+        mov si, kit_class_of
+        jmp multi_find
+multi_group_cr:
+        push si
+        mov si, multi_same
+multi_find:
+        push cx
+        push dx
+        push di
+        xor al, al
+        xor dx, dx              ; DX the pair's bits (1 shl the creation class)
+        cmp byte [es:bx + 0x18], 1
+        je .out
+        cmp byte [es:bx + 0x23], 0
+        jne .out
+        mov di, 0x21
+.class: movzx cx, byte [es:bx + di]
+        dec cx
+        cmp cx, 16
+        ja .out                 ; (none: one class)
+        push si
+        add si, cx
+        mov cl, [cs:si]
+        pop si
+        or cl, cl
+        jz .out
+        bts dx, cx
+        inc di
+        cmp di, 0x23
+        jb .class
+        mov ch, [es:bx + 0x18]
+        mov si, multi_table
+        mov al, MULTI_FIRST
+.find:  cmp byte [cs:si], 0
+        je .none
+        cmp [cs:si], ch
+        jne .skip
+        cmp [cs:si + 1], dx
+        je .out
+.skip:  add si, 3
+        inc al
+        jmp .find
+.none:  xor al, al
+.out:   pop di
+        pop dx
+        pop cx
+        pop si
+        ret
+; (race, the pair's bits) by group from 9; then each group's kits, how many
+multi_table db 3
+            dw (1 << 1) | (1 << 3)      ; elf cleric/fighter: Battle Dancer
+            db 4
+            dw (1 << 3) | (1 << 8)      ; half-elf fighter/thief: Shadowblade, Military Scout
+            db 4
+            dw (1 << 2) | (1 << 3)      ; half-elf druid/fighter: Wilderness Avenger
+            db 4
+            dw (1 << 1) | (1 << 7)      ; half-elf cleric/ranger: Rescuer
+            db 2
+            dw (1 << 3) | (1 << 8)      ; dwarf fighter/thief: Ghetto Fighter, Wayfinder
+            db 0
+multi_count db 1, 2, 1, 1, 2
+km_rows     db 4                ; (KIT_MARKS: the page's rows)
+multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
 ; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's own windows wanted).
 ; All registers kept.
@@ -4918,12 +5020,22 @@ kit_at:
         and ch, 3
         jz .none
         dec ch
-        movzx di, byte [es:bx + di + 0x21]  ; (its class, 1-17: the creation screen's)
+        push ax                 ; (two classes at once: their multiclass group's kit, one it has)
+        call multi_group
+        mov cl, al
+        pop ax
+        or cl, cl
+        jz .class
+        movzx di, cl
+        cmp ch, [cs:di + multi_count - MULTI_FIRST]
+        jae .none
+        jmp .kit
+.class: movzx di, byte [es:bx + di + 0x21]  ; (its class, 1-17: the creation screen's)
         dec di
         cmp di, 16
         ja .none
         mov cl, [cs:di + kit_class_of]
-        shl cl, 2
+.kit:   shl cl, 2
         add cl, ch
         inc cl
         jmp .out
@@ -4936,21 +5048,26 @@ kit_at:
 
 ; KIT_PLACE: DI the place (0-2) among sheet ES:BX's classes of the class its kit was chosen with:
 ; 0 for one class; for a human who has changed class (DUAL: the classes move down, the new one
-; first), its first class, the last of its classes. CF set for more than one class but not a
-; human's (no kit). Others kept.
+; first), its first class, the last of its classes; 0 for two classes at once with a multiclass
+; group (MULTI_GROUP). CF set for more than one class otherwise (no kit). Others kept.
 kit_place:
         xor di, di
         cmp word [es:bx + 0x22], 0
         je .ok
         cmp byte [es:bx + 0x18], 1
-        jne .none
+        jne .multi
         inc di
         cmp byte [es:bx + 0x23], 0
         je .ok
         inc di
 .ok:    clc
         ret
-.none:  stc
+.multi: push ax                 ; (two classes at once: place 0, with a multiclass group)
+        call multi_group
+        or al, al
+        pop ax
+        jnz .ok
+        stc
         ret
 
 ; KIT_AWAKE: CF set if the kit of sheet ES:BX, its class at place DI (KIT_PLACE), sleeps: a human's
@@ -5050,6 +5167,17 @@ kit_ac:
         jne .out                ; (not a creature)
         mov ax, [es:bx + THINGS + 1]
         call creature_sheet     ; (each of its kits' awake: a human may have two or three)
+        call kit_is_b           ; (a Battle Dancer's dance: 1 better, or 1 worse, KIT_DANCE)
+        db KIT_BATTLE_DANCER
+        jne .wanderer
+        cmp ax, 3
+        ja .wanderer
+        push si
+        mov si, ax
+        movsx si, byte [cs:si + kit_dance]
+        sub cx, si
+        pop si
+.wanderer:
         call kit_is_b
         db KIT_WANDERER
         jne .ravager
@@ -5119,7 +5247,8 @@ RAVAGER_LEVELS equ $ - ravager_ac
 
 ; KIT_MELEE: AX what the kit of sheet ES:BX adds to hit and to damage with item type SI unless it
 ; is a missile weapon's (its type's +0, bit 2): a Ravager's 1; a Brute's 2 with a two-handed weapon
-; (+0Fh, 40h); else 0 (kits.melee). DS the game's; others kept.
+; (+0Fh, 40h); a Ghetto Fighter's 1 with a dagger; else 0 (kits.melee). DS the game's; others kept.
+DAGGER_KIND equ 2
 kit_melee:
         push bx
         push cx
@@ -5127,6 +5256,15 @@ kit_melee:
         xor cx, cx
         call kit_is_b
         db KIT_RAVAGER
+        jne .ghetto
+        inc cx
+.ghetto:
+        call kit_is_b
+        db KIT_GHETTO
+        jne .brute
+        cmp si, KIND_TYPES
+        jae .brute
+        cmp byte [cs:si + kind_of_type], DAGGER_KIND + 1
         jne .brute
         inc cx
 .brute: call kit_is_b
@@ -5206,6 +5344,49 @@ kit_attack_damage:
         pop bx
         pop ax
 .ret:   ret
+
+; KIT_EXTRA: AX what the attacker's kit adds to hit and to damage in the weapon attack routine,
+; melee or missile (the attacker its [BP+0Eh], the target's combatant the game's DS:494Ah)
+; (kits.extra): a Battle Dancer's dance (KIT_DANCE, the Loader's: +1 or -1); a Wilderness
+; Avenger's 1 against undead (race 9). DS the game's; others kept.
+TARGET_COMBATANT equ 0x494A
+UNDEAD_RACE equ 9
+kit_extra:
+        push bx
+        push cx
+        push si
+        push es
+        xor cx, cx
+        mov ax, [bp + 0x0E]
+        call creature_sheet
+        call kit_is_b
+        db KIT_BATTLE_DANCER
+        jne .avenger
+        cmp ax, 3
+        ja .avenger
+        mov si, ax
+        movsx cx, byte [cs:si + kit_dance]
+.avenger:
+        call kit_is_b
+        db KIT_AVENGER
+        jne .out
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [TARGET_COMBATANT], 3
+        cmp byte [es:bx + THINGS], 2
+        jne .out                ; (not a creature)
+        mov ax, [es:bx + THINGS + 1]
+        call creature_sheet
+        cmp byte [es:bx + 0x18], UNDEAD_RACE
+        jne .out
+        inc cx
+.out:   mov ax, cx
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
 
 ; KIT_CHAMPION: AX 1 if the attacker in the weapon attack routine (its thing [BP+18h], its sheet
 ; [BP+10h]) is an Arena Champion with a shield in a hand, -1 if one without, else 0 (kits.champion:
@@ -5639,9 +5820,22 @@ probe_cure:
         mov ax, dx
         call cr_is
         db KIT_LIFEBINDER
-        jne .out
+        jne .rescuer
         movzx ax, byte [cs:bx + 2]
         call game_die
+        add [bp + 0x0C], ax
+.rescuer:                       ; (a Rescuer under the open sky: 1 more a die of the cures)
+        mov ax, dx
+        call cr_is
+        db KIT_RESCUER
+        jne .out
+        cmp byte [cs:bx], 108
+        je .out
+        cmp dx, 3
+        ja .out
+        bt word [cs:kit_outdoors], dx
+        jnc .out
+        movzx ax, byte [cs:bx + 1]
         add [bp + 0x0C], ax
 .out:   popa
         pop bp
@@ -7664,12 +7858,18 @@ kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
              db 'MIND BENDER', 0, 'MIND WARRIOR', 0, 'KINETICIST', 0
              db 'STALKER', 0, 'JUSTIFIER', 0, 'SEEKER', 0
              db 'SWASHBUCKLER', 0, 'ASSASSIN', 0, 'SHINOBI', 0
+             db 'BATTLE DANCER', 0, 0, 0                ; (the multiclass groups', three to each)
+             db 'SHADOWBLADE', 0, 'MILITARY SCOUT', 0, 0
+             db 'WILDERNESS AVENGER', 0, 0, 0
+             db 'RESCUER', 0, 0, 0
+             db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
 kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the screen's)
 kit_asleep   db ' (ASLEEP)', 0
 ; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.
 kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, KIT_ELEMENTALIST, 'ELEMENTAL', 0
              db KIT_GROVE_WARDEN, 'WARDEN', 0, KIT_BATTLE_MAGE, 'BATTLMAGE', 0, KIT_MIND_BENDER, 'M-BENDER', 0
-             db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, 0
+             db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, KIT_BATTLE_DANCER, 'B-DANCER', 0, KIT_SHADOWBLADE, 'SHADOWBLD', 0
+             db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0, 0
 ef_more      db 'MORE: CLICK HERE', 0
 ef_drawing   db 0
 ef_index     dw 0
@@ -7913,7 +8113,7 @@ probe_wp_class:
         cmp ax, GAME_SPHERES_ID
         je .spheres
         sub ax, KIT_WIN_ID
-        cmp ax, 8
+        cmp ax, KIT_GROUPS
         jb .kit
         add ax, KIT_WIN_ID - WP_PAGE_ID
         cmp ax, KIT_PAGE4_ID - WP_PAGE_ID
@@ -8064,8 +8264,8 @@ wp_click:
         jne .game
         cmp ax, WP_ROW
         jb .sphere
-        cmp ax, KIT_VIEW
-        ja .game
+        cmp ax, MULTI_ROW + 3 * (KIT_GROUPS - MULTI_FIRST + 1)
+        jae .game               ; (the multiclass groups' rows come after KITS: theirs too)
         sti
         pushad
         push es
@@ -8500,7 +8700,11 @@ kit_row:
         xor dl, dl
         cmp ax, KIT_NONE
         je .row
-        sub ax, KIT_ROW
+        mov cx, KIT_ROW
+        cmp ax, MULTI_ROW
+        jb .sub
+        mov cx, MULTI_ROW       ; (a multiclass group's rows)
+.sub:   sub ax, cx
         mov cl, 3
         div cl
         mov dl, ah
@@ -8524,8 +8728,8 @@ kit_row:
         call wp_two             ; (no Myrmidon now: its second kind gone)
         jnz kit_marks
         mov byte [es:bx + SPEC_SLOTS + 1], 0
-; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits) marked as the creation
-; sheet's kit, the rest not, as WP_MARKS marks a weapon page's
+; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits, or a multiclass group's one
+; or two) marked as the creation sheet's kit, the rest not, as WP_MARKS marks a weapon page's
 kit_marks:
         push es
         push bx
@@ -8535,13 +8739,22 @@ kit_marks:
         les bx, [WP_CREATION]
         mov dl, [es:bx + KIT_BYTE]
         movzx bx, al
+        mov byte [cs:km_rows], 4
+        cmp al, MULTI_FIRST
+        jb .class
+        mov cl, [cs:bx + multi_count - MULTI_FIRST]
+        inc cl
+        mov [cs:km_rows], cl
         imul bx, bx, 3
+        add bx, MULTI_ROW - 3 * MULTI_FIRST - 1   ; (NO KIT first, then the group's)
+        jmp .first
+.class: imul bx, bx, 3
         add bx, KIT_ROW - 4     ; (NO KIT first, then the class's three)
-        xor dh, dh              ; (the row's kit)
-        mov cx, 4
+.first: xor dh, dh              ; (the row's kit)
+        mov cx, 4               ; (WP_MARK's row: 4 - CX)
 .row:   mov ax, bx
-        cmp cx, 4
-        jne .kit
+        or dh, dh
+        jnz .kit
         mov ax, KIT_NONE
 .kit:   cmp dh, dl
         je .chosen
@@ -8564,6 +8777,8 @@ kit_marks:
 .next:  call wp_mark
         inc bx
         inc dh
+        cmp dh, [cs:km_rows]    ; (a multiclass group's page: its one or two kits' rows)
+        jae .out
         loop .row
 .out:   pop bx
         pop es
@@ -9023,6 +9238,7 @@ wp_far     dd 0
 wp_mine    dw WP_WSPHERE_ID, WP_PAGE_ID, WP_PAGE_ID + 1, WP_PAGE_ID + 2, WP_PAGE_ID + 3
            dw KIT_SPHERE_ID, KIT_PAGE4_ID, KIT_WIN_ID, KIT_WIN_ID + 1, KIT_WIN_ID + 2
            dw KIT_WIN_ID + 3, KIT_WIN_ID + 4, KIT_WIN_ID + 5, KIT_WIN_ID + 6, KIT_WIN_ID + 7
+           dw KIT_WIN_ID + 8, KIT_WIN_ID + 9, KIT_WIN_ID + 10, KIT_WIN_ID + 11, KIT_WIN_ID + 12
 wp_mine_end:
 wp_calls:                   ; each: the call's file offset (low word), then its far address
            dw WP_CALL_CLOSE & 0xFFFF
@@ -10089,10 +10305,17 @@ probe_two:
         cmp byte [es:bx+THINGS], 2
         jne .out                ; not a creature
         mov ax, [es:bx+THINGS+1]
-        push ax                 ; (a Twin-blade in light armour: none, as a ranger; kits.py)
+        call cr_is              ; (a Ghetto Fighter: none in the main hand, -2 in the off hand)
+        db KIT_GHETTO
+        jne .twin
+        add word [cs:t_base], 2
+.twin:  push ax                 ; (a Twin-blade or Battle Dancer in light armour: none, as a ranger; kits.py)
         call cr_is
         db KIT_TWIN_BLADE
-        pop ax
+        je .light
+        call cr_is
+        db KIT_BATTLE_DANCER
+.light: pop ax
         jne .scan
         push dx
         mov dx, ax
@@ -15778,9 +16001,9 @@ ib_elf_quiet db 'Move 95%', 0
 ; PROBE_BELT: INT VEC_BELT replaces "mov ax,si" (2 bytes) at the end of the game's thief skill
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
-; gets BELT_BONUS more to pick pockets (0) and open locks (1); an Assassin (kits.py) 15 less to
-; those, a Swashbuckler 10 less to every skill, no less than 0, as the Loader counts them (game.py's thief_skills_now); then AX = the chance, as
-; the code would have.
+; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), no less
+; than 0, as the Loader counts them (game.py's thief_skills_now); then AX = the chance, as the
+; code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
 BELT_BONUS equ 5
 COMBATANT_CREATURE equ 0xC37    ; in the things table: an object's creature (3 bytes an object)
@@ -15814,19 +16037,13 @@ probe_belt:
         je .kit
         add dx, BELT_BONUS
 .kit:   mov ax, cx              ; the kit's (kits.thief_skill), no less than 0
-        call cr_is
-        db KIT_SWASHBUCKLER
-        jne .assassin
-        sub dx, 10
-        jmp .least
-.assassin:
-        call cr_is
-        db KIT_ASSASSIN
-        jne .done
-        cmp word [bp + 8], 1
-        ja .done
-        sub dx, 15
-.least: or dx, dx
+        push si
+        mov si, [bp + 8]
+        call kit_skill
+        pop si
+        or ax, ax
+        jz .done
+        add dx, ax
         jns .done
         xor dx, dx
 .done:  mov ax, dx
@@ -15835,6 +16052,62 @@ probe_belt:
         pop cx
         pop bx
 .out:   iret
+
+; KIT_SKILL: AX what the kit of creature AX adds to thief skill SI (0-7: game.THIEF_SKILLS' order)
+; (kits.thief_skill): KIT_SKILLS' row for each of its kits; a Military Scout's 10 to finding traps,
+; moving silently, hiding and climbing while under the open sky (KIT_OUTDOORS), 5 less under a roof.
+; DS the game's; others kept.
+kit_skills db KIT_SWASHBUCKLER, -10, -10, -10, -10, -10, -10, -10, -10  ; (pick pockets, open locks,
+           db KIT_ASSASSIN, -15, -15, 0, 0, 0, 0, 0, 0                  ;  traps, move silently, hide,
+           db KIT_SHADOWBLADE, -10, 0, 0, 5, 10, 0, 0, 0                ;  hear noise, climb, read)
+           db KIT_GHETTO, 5, 0, -5, 0, 5, 0, 0, 0
+           db KIT_WAYFINDER, -10, 0, 0, 10, 10, 0, 0, 0
+           db 0
+SCOUT_SKILLS equ 0x5C           ; (bits: traps, move silently, hide, climb)
+kit_skill:
+        push bx
+        push cx
+        push dx
+        push di
+        push es
+        mov cx, ax
+        call creature_sheet
+        xor dx, dx
+        cmp si, 7
+        ja .out
+        mov di, kit_skills
+.kit:   mov al, [cs:di]
+        or al, al
+        jz .scout
+        call kit_is
+        jne .next
+        push bx
+        mov bx, di
+        movsx ax, byte [cs:bx + si + 1]
+        pop bx
+        add dx, ax
+.next:  add di, 9
+        jmp .kit
+.scout: mov al, KIT_SCOUT
+        call kit_is
+        jne .out
+        bt word [cs:scout_bits], si
+        jnc .out
+        mov ax, -5
+        cmp cx, 3
+        ja .add
+        bt word [cs:kit_outdoors], cx
+        jnc .add
+        mov ax, 10
+.add:   add dx, ax
+.out:   mov ax, dx
+        pop es
+        pop di
+        pop dx
+        pop cx
+        pop bx
+        ret
+scout_bits dw SCOUT_SKILLS
 
 old16      dd 0
 t_click    db 0

@@ -1684,7 +1684,7 @@ from the next start); untick one and the game is as it was.
 | Box on the Options tab | What it adds |
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
-| [Kits](#kits) | a character of one class takes one of three kits for its class, or none |
+| [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes have kits of their own |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 | [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a dagger, and a Stalker, Assassin or Shinobi a cloak |
@@ -1824,7 +1824,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
 ### Kits
 
 With **Kits** ticked, a character of one class may take one of three kits for
-its class when it is made, or none (the class as it is). Each gives something
+its class when it is made, or none (the class as it is). A few pairs of
+classes taken at once by one race have kits of their own ([Multiclass
+kits](#multiclass-kits)). Each gives something
 and costs something. A human who changes class may take a kit for the new
 class too ([Changing class](#changing-class)). Each class's three kits have a
 table of their own below: what the kit gives (with the level each part comes
@@ -1913,6 +1915,30 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 | **Mind Bender** | telepathy powers (the defence modes too) cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear | the 2 counts both to use a power and to keep it up each round, never below 1 (a power with no upkeep still has none) |
 | **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | the psionicist's gear | as the Mind Bender's, the other way round |
 
+#### Multiclass kits
+
+A character of two classes at once may take a kit if its race and pair of
+classes have one. Only that race may take it: a dwarf fighter/thief has the
+Ghetto Fighter and Wayfinder, and a half-elf fighter/thief has the Shadowblade
+and Military Scout. "Under the open sky" means an outdoor map, or open ground
+outside the buildings on a city map. The Loader works that out about once a
+second.
+
+| Kit | Race and classes | Gives | Costs | Also |
+|---|---|---|---|---|
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX (the Dancing proficiency, +0); at DEX or under, **+1 to hit, to damage and to AC** for DEX less the roll in rounds (at least 1); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only; over DEX, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | with fuller starting gear, a bow and arrows if it has no missile weapon; the dice log shows the dance's roll and its end |
+| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently | −10 pick pockets | |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls | under a roof, −5 to the same four | the panel's and the dice log's numbers follow where it stands |
+| **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | none beyond its classes' own | its hiding counts for backstabs as a ranger's does |
+| **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | none under a roof | the dice log says ", under the open sky" |
+| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps | DEX's adjustment still applies to the two-weapons penalty |
+| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently | −10 pick pockets | |
+
+A thief skill a kit lowers never goes below 0. The kits start with their
+classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)).
+A multiclass character can't change class, so these kits rule nothing else
+out.
+
 #### Choosing a kit
 
 The kit is chosen on the creation panel's **KIT** page, opened with **KITS**,
@@ -1923,7 +1949,11 @@ last weapon page for a fighter, gladiator or ranger choosing weapon specs.
 NO KIT, the first row, is what a new character has. As with the clerical
 spheres, the rows not chosen are greyed: click the marked row to take it back,
 then click the kit you want. A few names are shortened to fit the panel
-(CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR). Choosing
+(CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR,
+B-DANCER, SHADOWBLD, M-SCOUT, W-AVENGER, G-FIGHTER). A multiclass character with
+kits finds KITS where its classes put it: on the last weapon page with weapon
+specialization (each of these pairs has a warrior class), otherwise under the
+clerical spheres if one class has them, else under the psionic disciplines. Choosing
 another class puts the kit back to none; a new roll of the die keeps it. The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Loader's Characters tab.
 

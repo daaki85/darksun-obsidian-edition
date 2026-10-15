@@ -177,9 +177,10 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
     sun = daylight(gd, combatant)
     if ranger and not sun and kits.STALKER in gd.kit_ids(creature):  # (kits.py: not halved indoors)
         need, why = hide, f"{shown}, a Stalker: not halved indoors"
-    elif ranger:  # at home under the open sky
+    elif ranger:  # at home under the open sky (a Wilderness Avenger too: game.ranger_skill_parts)
         need = hide if sun else hide // 2
-        why = f"{shown}, a ranger under the open sky" if sun else f"{shown}, halved indoors for a ranger"
+        kind = "a ranger" if gd.ranger_level(creature) else "a Wilderness Avenger"
+        why = f"{shown}, {kind} under the open sky" if sun else f"{shown}, halved indoors for {kind}"
     elif sun and kits.ASSASSIN in gd.kit_ids(creature):  # (kits.py: not halved in daylight)
         need, why = hide, f"{shown}, an Assassin: not halved in daylight"
     else:

@@ -738,6 +738,7 @@ class GameData:
             guest.guarded["the game's data segment's start"] = (ds * 16, ds * 16 + NULL_AREA)
         self.rules = RULES_IN_FORCE if rules is None else rules
         self.belt = BELT_IN_FORCE
+        self.dance: Dict[int, int] = {}  # each party member's Battle Dancer's dance now (+1, -1: dance.py)
 
     def _word(self, offset: int) -> int:
         return struct.unpack("<h", self.guest.read(self.ds * 16 + offset, 2))[0]
@@ -1315,21 +1316,35 @@ class GameData:
     def ranger_level(self, creature: int) -> int:
         return max((self.class_level(creature, cls) for cls in RANGER_CLASSES), default=0)
 
+    def outdoors(self, creature: int) -> bool:
+        """A party member stands under the open sky (stealth.daylight, its combatant its own number):
+        the Military Scout's skills, the Rescuer's cures (DSCLOG's KIT_OUTDOORS)."""
+        from . import stealth
+        try:
+            return creature < PARTY_SIZE and stealth.daylight(self, creature)
+        except (struct.error, IndexError, ValueError):
+            return False
+
     def ranger_skill_parts(self, creature: int, skill: int) -> Optional[List[Tuple[str, int]]]:
         """A ranger's hide in shadows (4) or move silently (3), as thief_skill_parts: AD&D's
         chance for the ranger level, the race's and DEX's adjustments. None without ranger levels."""
         sheet, rec = self.sheet(creature), self.creature(creature)
+        from . import kits
         level = self.ranger_level(creature) if len(sheet) >= SHEET_SIZE else 0
+        avenger = not level and len(sheet) >= SHEET_SIZE and kits.AVENGER in self.kit_ids(creature)
+        if avenger:  # (a Wilderness Avenger: 5 a level of its best class)
+            level = max(sheet[SHEET_LEVELS:SHEET_LEVELS + 3])
         if not level or len(rec) < CREATURE_SIZE or skill not in (3, 4):
             return None
         table = self.guest.read((self.load_seg + THIEF_TABLE_SEG) * 16, THIEF_ARMOUR + 8)
         signed_byte = lambda offset: struct.unpack_from("b", table, offset)[0]
         race, dex = sheet[SHEET_RACE], rec[CREATURE_ABILITIES + 1]
         parts = [(f"ranger level {level}", (RANGER_HIDE if skill == 4 else RANGER_MOVE)[min(level, 10) - 1])]
+        if avenger:
+            parts = [(f"ranger as a Wilderness Avenger, level {level}", kits.AVENGER_STEALTH * level)]
         if 1 <= race <= 8:
             parts.append((RACE_NAMES[race], signed_byte(THIEF_RACE + race * 8 + skill)))
         parts.append((f"DEX {dex}", self._dex_part(table, dex, skill)))
-        from . import kits
         for kid in self.kit_ids(creature):
             if kits.stealth(kid):  # (a Stalker's)
                 parts.append((kits.name(kid), kits.stealth(kid)))
@@ -1401,9 +1416,10 @@ class GameData:
             chance = sum(n for _, n in parts) - (table[skill] if penalty and len(table) == 8 else 0)
             if belt and skill in BELT_SKILLS:
                 chance += BELT_BONUS
-            for kid in kids:  # (an Assassin's, a Swashbuckler's: no less than 0, as DSCLOG's PROBE_BELT)
-                if kits.thief_skill(kid, skill):
-                    chance = max(0, chance + kits.thief_skill(kid, skill))
+            outdoors = self.outdoors(creature) if kits.SCOUT in kids else False
+            for kid in kids:  # (an Assassin's, a Swashbuckler's...: no less than 0, as DSCLOG's PROBE_BELT)
+                if kits.thief_skill(kid, skill, outdoors):
+                    chance = max(0, chance + kits.thief_skill(kid, skill, outdoors))
             if gear:
                 chance = self.gear_skill(creature, skill, chance)
             if any(skill in THIEF_CERTAIN.get(e, ()) for e in ids):
@@ -1553,10 +1569,15 @@ class GameData:
                 parts.append(self.two_weapons(creature, slot))
             skill = 0
             halves = typ[0x0B] if missile else None  # (the game's rate of fire: the weapon's own)
-            # the kit's (DSCLOG's KIT_TO_HIT): a Ravager's, a Brute's, an Arena Champion's
+            # the kit's (DSCLOG's KIT_TO_HIT, KIT_EXTRA): a Ravager's, a Brute's, an Arena Champion's,
+            # a Ghetto Fighter's with a dagger, a Battle Dancer's dance (not the target's: a Wilderness
+            # Avenger's against undead)
+            from . import specialize as spec
+            kind = spec.kind_of(struct.unpack_from("<H", item, ITEM_TYPE)[0])
             for kid in kids:
                 kit = kits.champion(kid, shield, not missile)[0] \
-                    + (kits.melee(kid, bool(typ[0x0F] & 0x40)) if not missile and not typ[0] & 2 else 0)
+                    + (kits.melee(kid, bool(typ[0x0F] & 0x40), kind) if not missile and not typ[0] & 2 else 0) \
+                    + kits.extra(kid, self.dance.get(creature, 0))
                 if kit:
                     parts.append((kits.name(kid), kit))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
@@ -1609,12 +1630,17 @@ class GameData:
         light = not self.heavy_armour_worn(creature)
         if ranger and light:
             return f"two weapons, {hand} (ranger)", 0
-        if light and kits.TWIN_BLADE in self.kit_ids(creature):
-            return f"two weapons, {hand} (Twin-blade)", 0
+        kids = self.kit_ids(creature)
+        for kid in (kits.TWIN_BLADE, kits.BATTLE_DANCER):
+            if light and kid in kids:
+                return f"two weapons, {hand} ({kits.name(kid)})", 0
         if slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):
             return "two weapons", 0  # not a hand's weapon, or nothing to fight with in the other hand
-        return (f"two weapons, {hand} at DEX {dex}",
-                min(0, TWO_WEAPON_PENALTY.get(slot, -2) + self.dex_initiative(dex)))
+        base = TWO_WEAPON_PENALTY.get(slot, -2)
+        for kid in kids:  # (a Ghetto Fighter's: none in the main hand, -2 in the off hand)
+            if kits.two_weapon_base(kid, base) != base:
+                base, hand = kits.two_weapon_base(kid, base), f"{hand}, {kits.name(kid)}"
+        return (f"two weapons, {hand} at DEX {dex}", min(0, base + self.dex_initiative(dex)))
 
     def heavy_armour_worn(self, creature: int) -> bool:
         """Armour worn that isn't light (not leather, and of a material: DSCLOG's HEAVY_WORN),

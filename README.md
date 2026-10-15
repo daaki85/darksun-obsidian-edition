@@ -33,9 +33,9 @@ name.)
   points as the books have them ([Rule
   changes](obsidian-edition/README.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class), levels up to 10, STORE and RECALL for a creation
-  roll, and fuller starting gear ([More character
-  customization](obsidian-edition/README.md#more-character-customization)).
+  (three for each class, and seven for races' pairs of classes), levels up to
+  10, STORE and RECALL for a creation roll, and fuller starting gear
+  ([More character customization](obsidian-edition/README.md#more-character-customization)).
 - **Expanded play:** thieves hide in shadows to backstab and pick pockets, the
   leader's CHA lowers shop prices, and merchants sell back the magical items
   sold to them ([Expanded
