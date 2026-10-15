@@ -111,7 +111,12 @@ class SpecializationsTests(unittest.TestCase):
     def test_names(self):
         s = sheet((0, 5), classes=(10, 0, 0), levels=(9, 0, 0))
         self.assertEqual(self.gd(s).specializations(0), [("long sword", "specialized"), ("axe", "specialized")])
-        self.assertEqual(self.gd(sheet((0,), classes=(13, 0, 0))).specializations(0), [("long sword", "expertise")])
+        self.assertEqual(self.gd(sheet((0,), classes=(13, 0, 0))).specializations(0),
+                         [("long sword", "expertise"), ("bow", "expertise")])   # (a ranger's bow, unchosen)
+        self.assertEqual(self.gd(sheet((0,), classes=(1, 13, 0), levels=(3, 3, 0))).specializations(0),
+                         [("long sword", "expertise"), ("bow", "expertise")])   # a cleric/ranger too
+        bow = specialize.KINDS.index("bow")
+        self.assertEqual(self.gd(sheet((bow,), classes=(13, 0, 0))).specializations(0), [("bow", "expertise")])
         self.assertEqual(self.gd(sheet((0,), levels=(9, 0, 0))).specializations(0), [("long sword", "grand mastery")])
         self.assertEqual(self.gd(s, rules=0).specializations(0), [])
 

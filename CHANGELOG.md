@@ -22,6 +22,9 @@ have the detail.
   and none is put in a thief's backpack later.
 - **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
   shows `AC BONUS:1` with the helms rule, which says the same.
+- **A ranger's bow is listed** on the Effects screen and the Characters tab
+  (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
+  expert with the bow, chosen or not, but only the chosen weapons were listed.
 
 **Fixed**
 - **A multiclass preserver could cast in armour** (class restrictions on,

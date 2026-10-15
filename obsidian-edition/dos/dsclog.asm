@@ -4875,7 +4875,24 @@ ef_lines_of:
 .specs: test word [cs:rules], RULE_SPECIALIZE
         jz .ret
         xor di, di
-.slot:  movzx si, byte [es:bx + di + SPEC_SLOTS]
+.slot:  cmp di, SPEC_COUNT
+        jb .chosen
+        mov si, BOW_KIND                ; (then the bow, a ranger's whether chosen or not, unless
+        push di                         ;   it is among the chosen: SPEC_OF_SHEET's skill with it)
+        xor di, di
+.bow:   cmp byte [es:bx + di + SPEC_SLOTS], BOW_KIND
+        je .bow_had
+        inc di
+        cmp di, SPEC_COUNT
+        jb .bow
+        pop di
+        jmp .kind_of
+.bow_had:
+        pop di
+        jmp .ret
+.chosen:
+        movzx si, byte [es:bx + di + SPEC_SLOTS]
+.kind_of:
         or si, si
         jz .next
         dec si
@@ -4905,7 +4922,7 @@ ef_lines_of:
         call ef_line
 .next:  inc di
         cmp di, SPEC_COUNT
-        jb .slot
+        jbe .slot
 .ret:   ret
 
 ; KIT_OF_SHEET: CS:SI the line naming kit AL (KIT_AT's, not 0: "KIT: RAVAGER", in KIT_LINE), a long

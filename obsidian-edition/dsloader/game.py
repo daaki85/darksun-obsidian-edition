@@ -1775,7 +1775,8 @@ class GameData:
     def specializations(self, creature: int) -> List[Tuple[str, str]]:
         """With weapon specialization, (kind, skill) for each weapon kind the creature has chosen:
         "specialized", "mastery", "grand mastery", "expertise", or "not yet" for a dual-classed
-        warrior whose warrior class isn't back yet."""
+        warrior whose warrior class isn't back yet; then a ranger's bow, chosen or not (DSCLOG's
+        EF_LINES_OF)."""
         if not self.rules & RULE_SPECIALIZE:
             return []
         from . import specialize, weaponchoice
@@ -1788,6 +1789,11 @@ class GameData:
             if 0 < k <= len(specialize.KINDS):
                 skill = specialize.skill(sheet, weaponchoice.PLAIN[k - 1][0])
                 out.append((specialize.KINDS[k - 1], names.get(skill, "")))
+        bow = specialize.KINDS.index("bow")
+        if bow + 1 not in sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT]:
+            skill = specialize.skill(sheet, weaponchoice.PLAIN[bow][0])
+            if skill != specialize.PLAIN:
+                out.append(("bow", names.get(skill, "")))
         return out
 
     def no_spells(self, creature: int) -> bool:

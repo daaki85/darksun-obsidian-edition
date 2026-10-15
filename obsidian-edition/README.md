@@ -1804,8 +1804,8 @@ them (**Weapons: long sword (grand mastery)**) and gives the attacks a
 round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
 round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
 each attack (`+1 specialized`, `+3 grand mastery`, `(d10 for d8: grand
-mastery)`). A ranger's expertise with the bow isn't a chosen weapon spec, so neither
-list shows it, but it counts; and View Character, as the game has it, gives a
+mastery)`). Both lists end with a ranger's bow, which every ranger is an
+expert with, chosen or not; and View Character, as the game has it, gives a
 character's melee rate whatever weapon is ready.
 
 ![The Effects screen: Daaki, a 9th-level fighter, GRAND MASTER OF LONG SWORD](docs/effects-weapons.png)

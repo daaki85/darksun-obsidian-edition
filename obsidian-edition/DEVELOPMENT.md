@@ -940,7 +940,8 @@ specialist's a band lower), and the Loader's Characters tab does the same
 (`specialize.missile_attacks`).
 Every ranger's expertise with the bow is in `SPEC_OF_SHEET` (`specialize.skill`),
 not in its chosen weapon types, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
-the bow out of a ranger's choices.
+the bow out of a ranger's choices, and `EF_LINES_OF` (`GameData.specializations`)
+lists it after the chosen types, by `SPEC_OF_SHEET`'s skill (none for a non-ranger).
 
 The inventory screen's line for a missile weapon (`1D4`) comes from a branch of
 the same routine as the DAM line, with the weapon's own rate of fire (its type's

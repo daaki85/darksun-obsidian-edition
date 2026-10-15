@@ -3408,6 +3408,38 @@ class KitTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    def test_effects_specs(self):
+        """EF_LINES_OF: the Effects screen's weapon lines, the chosen kinds' and then a ranger's bow,
+        chosen or not (as GameData.specializations): a cleric/ranger's long sword and bow."""
+        import re
+        from unicorn import UC_HOOK_CODE
+        self.rules(game.RULE_SPECIALIZE)
+        line = re.search(rb"\x50\x2e\xa1..\x2e\xff\x06..\x2e\x80\x3e..\x00", self.image, re.S).start()
+        lines = []
+
+        def seen(mu, address, size, data):
+            si = mu.reg_read(r.UC_X86_REG_SI)
+            lines.append(bytes(mu.mem_read(TSR * 16 + si, 24)).split(b"\0")[0].decode().strip())
+        hook = self.mu.hook_add(UC_HOOK_CODE, seen, begin=TSR * 16 + line, end=TSR * 16 + line)
+        bow = 13
+        cases = (((1, 13, 0), (0,), ["EXPERT IN", "LONG SWORD", "BOW"]),     # the Rescuer's
+                 ((13, 0, 0), (bow,), ["EXPERT IN", "BOW"]),                # chosen: once
+                 ((9, 0, 0), (0,), ["SPECIALIZED IN", "LONG SWORD"]))       # a fighter: no bow
+        try:
+            for classes, chosen, want in cases:
+                with self.subTest(classes=classes):
+                    sheet = bytearray(game.SHEET_SIZE)
+                    sheet[0x21:0x24] = bytes(classes)
+                    sheet[0x24:0x27] = bytes(3 if c else 0 for c in classes)
+                    for i, k in enumerate(chosen):
+                        sheet[0x14 + i] = k + 1
+                    self.mu.mem_write(self.SHEET * 16, bytes(sheet))
+                    del lines[:]
+                    self.call(rb"\x2e\xc6\x06..\xff\x2e\xc7\x06..\x00\x00\xe8", es=self.SHEET, ebx=0)
+                    self.assertEqual(lines, want)
+        finally:
+            self.mu.hook_del(hook)
+
     def test_effects_line(self):
         """KIT_OF_SHEET: the Effects screen's line for kit AL ("KIT: RAVAGER")."""
         from dsloader import kitpages
