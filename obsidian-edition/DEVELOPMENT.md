@@ -479,13 +479,18 @@ which may have changed since.
   three segment constants). The pages the game keeps in video memory (a bump
   allocator, `[0E4Eh]` up to `[0E4Ch]`, `AFFBh`, which gives -1 when full)
   then start at `A848h`, not `A7E8h`: 31,536 bytes instead of 33,072.
-  Measured with the strip on, loading saves (the arena's fights, the pens),
-  opening the USE screen and walking: at most 26,416 bytes used, 5 KB to spare.
+  Measured with the strip on, loading the ten saves of the first page (the
+  arena's fights and the pens), opening the USE screen and walking: at most
+  26,416 bytes used, 5 KB to spare; the first of them without the strip,
+  27,904 of 33,072 (the strip doesn't make the game use more). Places later
+  in the game aren't measured.
 - **Drawing it.** `STRIP_DRAW` puts the Loader's 320 × 22 picture there
   (`combatlog.STRIP`: the header and the newest row, no buttons; scrolled
   back, the **Latest** chip in the header and a notch of the wheel a line);
   `PANEL_LIVE` is never set, so the clipping and the pointer's handling are
-  left out.
+  left out. Like the panel, it isn't drawn again while the main loop waits
+  on a game menu (it shows what it had). Scrolling and the map dragged with
+  the wheel pressed were checked in the arena's fight.
 - **Kept dark.** `STRIP_CLEAR` fills it with the palette's darkest colour
   (`STRIP_DARK`, the darkest of the 256, read from the VGA) when the fight
   ends, every 512 passes of the main loop out of a fight, and each time the
