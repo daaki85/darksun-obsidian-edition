@@ -14163,7 +14163,7 @@ panel_tick:
         sub ax, [cs:stats_stamp]
         cmp ax, STATS_FRESH
         jb .on
-.off:   cmp byte [cs:strip_on], 0       ; (the strip: kept dark, in the palette of the moment)
+.off:   cmp byte [cs:strip_on], 0       ; (the strip: kept empty, in the palette of the moment)
         je .off2
         dec word [cs:strip_wait]
         jnz .off2
@@ -14226,10 +14226,13 @@ panel_tick:
 .sput:  mov word [cs:panel_new], 0
         mov byte [cs:panel_wait], PANEL_EVERY
         mov byte [cs:panel_shown], 1
+        mov byte [cs:strip_mode], 0
+        call strip_sum                  ; (the colours it is in: STRIP_SAME)
+        mov [cs:strip_shown_sum], ax
         call panel_draw
         ret
 PANEL_EVERY equ 16
-STRIP_EVERY equ 512             ; (passes between the strip's darkening out of a fight)
+STRIP_EVERY equ 512             ; (passes between the strip's emptying again, the log off)
 strip_wait dw 1
 panel_wait db PANEL_EVERY
 panel_lx   dw 0
@@ -14376,6 +14379,8 @@ panel_draw_around:
 ; the panel. The stack check, with the routine's SP; RETF 2 keeps its flags. DS the game's.
 probe_pointer:
         sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        mov [cs:strip_ds], ds
+        call strip_mind
         call pointer_panel
         push ax
         mov ax, sp
@@ -14605,8 +14610,7 @@ STRIP_CRTC_N equ ($ - strip_crtc) / 2
 
 ; PROBE_PALETTE: INT VEC_PALETTE replaces "sti / pop di" (2 bytes) at the end of the game's
 ; routine that sets the whole palette (0980:58F5h, DSUN.EXE 144F5h: a new screen or area): those,
-; and with the strip and no log in it, the strip made the new palette's darkest colour (from the
-; title screen on: the main loop, which keeps it so, isn't running yet there). Keeps all.
+; then STRIP_NEW_PALETTE. Keeps all.
 probe_palette:
         push bp
         mov bp, sp
@@ -14645,15 +14649,86 @@ probe_colours:
         call strip_new_palette
 .ret:   iret
 
-; STRIP_NEW_PALETTE: with the strip and no log in it, the strip made the palette's darkest colour
-; (the main loop, which keeps it so, isn't running on the title screen); registers kept
+; STRIP_NEW_PALETTE: the strip in the new palette: emptied (STRIP_CLEAR) unless the log's picture
+; is in it and the colours it was put in are still those on screen (STRIP_SAME: a window over the
+; map); else it is put again when the map's main loop runs again;
+; registers kept
 strip_new_palette:
         cmp byte [cs:strip_on], 0
         je .ret
         cmp byte [cs:panel_shown], 0
-        jne .ret
-        call strip_clear
+        je .clear
+        call strip_same
+        je .ret
+        mov byte [cs:panel_shown], 0
+.clear: call strip_clear
 .ret:   ret
+
+; STRIP_SUM: AX a sum of the VGA's colours DARK_FIRST to DARK_LAST (STRIP_SAME's); BX, CX, DX not kept
+strip_sum:
+        mov dx, 0x3C7
+        mov al, DARK_FIRST
+        out dx, al
+        mov dx, 0x3C9
+        mov cx, (DARK_LAST - DARK_FIRST + 1) * 3
+        xor bx, bx
+        xor ah, ah
+.next:  in al, dx
+        rol bx, 1
+        add bx, ax
+        loop .next
+        mov ax, bx
+        ret
+
+; STRIP_SAME: ZF set if the VGA's colours are still those the log's picture was put in (STRIP_SUM as
+; the main loop last put it: STRIP_SHOWN_SUM); registers kept
+strip_same:
+        pusha
+        call strip_sum
+        cmp ax, [cs:strip_shown_sum]
+        popa
+        ret
+strip_shown_sum dw 0
+
+; STRIP_MIND: from the game's pointer (on every screen; DS the game's): the empty strip filled again
+; when the screen calls for another look (STRIP_WANT), in the colours STRIP_COLOURS found last (no
+; palette read here: the pointer may be drawn while the game sets colours); registers kept
+strip_mind:
+        cmp byte [cs:strip_on], 0
+        je .ret
+        cmp byte [cs:panel_shown], 0
+        jne .ret
+        push ax
+        call strip_want
+        cmp al, [cs:strip_mode]
+        je .out
+        mov [cs:strip_mode], al
+        call strip_fill
+.out:   pop ax
+.ret:   ret
+
+; SCREEN_IS: the game's DS:0BC9h, 1 on the map, 2 with a character's screen or a talk over it,
+; 0 on the title, the menus and in character creation
+SCREEN_IS  equ 0x0BC9
+
+; STRIP_WANT: AL the look of the empty strip: STRIP_STONE (the panel's blue-grey) in a game (the
+; map, or a character's screen over it), else STRIP_BLACK (the title, the menus, character creation)
+STRIP_BLACK equ 1
+STRIP_STONE equ 2
+strip_want:
+        push es
+        mov al, STRIP_BLACK
+        cmp word [cs:strip_ds], 0
+        je .out
+        mov es, [cs:strip_ds]
+        cmp word [es:SCREEN_IS], 0
+        je .out
+        mov al, STRIP_STONE
+.out:   pop es
+        ret
+
+strip_ds    dw 0                ; the game's DS (PROBE_POINTER's)
+strip_mode  db 0                ; the strip now: 0 the log's picture (or not yet filled), else STRIP_WANT's
 
 ; STRIP_DRAW: the picture into the strip (PANEL_DRAW, in the strip: PANEL_BLIT at the strip's
 ; place and width, video memory's first rows showing screen rows 200 on; registers kept)
@@ -14679,38 +14754,94 @@ strip_draw:
         popa
         ret
 
-; STRIP_DARK: AL the darkest of the palette's 256 colours (the title's black is among the last,
-; which the game may animate on the map: the main loop makes the strip dark again often), read
-; from the VGA (from the main loop or after the game has set colours)
-; (AX, BX, CX, DX not kept)
-strip_dark:
+; STRIP_COLOURS: from the VGA's palette (from the main loop or after the game has set colours), the
+; empty strip's colours: STRIP_DARKEST the darkest of all 256 (the title's black is among the
+; last), STRIP_EDGE and STRIP_DEEP the colours nearest the panel's outline and its well (combatlog.py
+; COLOURS: palette.SHADOW #202038, palette.DEEP #30304D) among those the game doesn't animate
+; (AX, BX, CX, DX, SI not kept)
+strip_colours:
         mov dx, 0x3C7
         xor al, al
         out dx, al
         mov dx, 0x3C9
         xor bx, bx
-        mov cx, 0xFFFF                  ; (CX: the darkest's sum of red, green and blue)
+        mov word [cs:sc_dark], 0xFFFF
+        mov word [cs:sc_edge], 0xFFFF
+        mov word [cs:sc_deep], 0xFFFF
 .next:  in al, dx
-        mov ah, al
+        mov [cs:sc_rgb], al
         in al, dx
-        add ah, al
+        mov [cs:sc_rgb + 1], al
         in al, dx
-        add ah, al                      ; (at most 3 x 63: a byte)
-        mov al, ah
-        xor ah, ah
-        cmp ax, cx
+        mov [cs:sc_rgb + 2], al
+        xor ah, ah                      ; the darkest: the least red, green and blue (a byte)
+        mov al, [cs:sc_rgb]
+        add al, [cs:sc_rgb + 1]
+        add al, [cs:sc_rgb + 2]
+        cmp ax, [cs:sc_dark]
+        jae .lit
+        mov [cs:sc_dark], ax
+        mov [cs:strip_darkest], bl
+.lit:   cmp bx, DARK_FIRST
+        jb .skip
+        cmp bx, DARK_LAST
+        ja .skip
+        mov si, sc_deep_rgb
+        call sc_distance
+        cmp ax, [cs:sc_deep]
+        jae .edge
+        mov [cs:sc_deep], ax
+        mov [cs:strip_deep], bl
+.edge:  mov si, sc_edge_rgb
+        call sc_distance
+        cmp ax, [cs:sc_edge]
         jae .skip
-        mov cx, ax
-        mov [cs:.best], bl
+        mov [cs:sc_edge], ax
+        mov [cs:strip_edge], bl
 .skip:  inc bx
         cmp bx, 255
         jbe .next
-        mov al, [cs:.best]
         ret
-.best   db 0
 
-; STRIP_CLEAR: the strip emptied, in the darkest colour (the fight over); registers kept
-strip_clear:
+; SC_DISTANCE: AX the square of the distance between SC_RGB and the colour at CS:SI (0-63 a
+; channel); registers but AX kept
+sc_distance:
+        push cx
+        push si
+        push di
+        push bx
+        xor di, di
+        mov bx, sc_rgb
+        mov cx, 3
+.ch:    mov al, [cs:bx]
+        sub al, [cs:si]
+        cbw
+        imul ax, ax
+        add di, ax
+        inc bx
+        inc si
+        loop .ch
+        mov ax, di
+        pop bx
+        pop di
+        pop si
+        pop cx
+        ret
+
+sc_rgb      db 0, 0, 0
+sc_deep_rgb db 0x30 / 4, 0x30 / 4, 0x4D / 4     ; (palette.DEEP)
+sc_edge_rgb db 0x20 / 4, 0x20 / 4, 0x38 / 4     ; (palette.SHADOW)
+sc_dark     dw 0
+sc_deep     dw 0
+sc_edge     dw 0
+strip_darkest db 0
+strip_deep  db 0
+strip_edge  db 0
+
+; STRIP_FILL: the strip emptied as STRIP_MODE has it: all STRIP_DARKEST (STRIP_BLACK), or the
+; panel's look without its lines (STRIP_STONE: its top line STRIP_EDGE, the rest STRIP_DEEP);
+; registers kept
+strip_fill:
         pusha
         push es
         call vga_save
@@ -14718,15 +14849,35 @@ strip_clear:
         mov ax, 0x0F02                  ; (all four planes)
         out dx, ax
         cld
-        call strip_dark
-        mov ah, al
         mov bx, 0xA000
         mov es, bx
         xor di, di
+        mov al, [cs:strip_darkest]
+        mov ah, al
         mov cx, (STRIP_ROWS - 200) * 80 / 2
+        cmp byte [cs:strip_mode], STRIP_STONE
+        jne .fill
+        mov al, [cs:strip_edge]
+        mov ah, al
+        mov cx, 80 / 2
         rep stosw
+        mov al, [cs:strip_deep]
+        mov ah, al
+        mov cx, (STRIP_ROWS - 201) * 80 / 2
+.fill:  rep stosw
         call vga_restore
         pop es
+        popa
+        ret
+
+; STRIP_CLEAR: the strip emptied (the log not in it), in the palette of the moment (STRIP_COLOURS),
+; as the screen calls for (STRIP_WANT); registers kept
+strip_clear:
+        pusha
+        call strip_colours
+        call strip_want
+        mov [cs:strip_mode], al
+        call strip_fill
         popa
         ret
 

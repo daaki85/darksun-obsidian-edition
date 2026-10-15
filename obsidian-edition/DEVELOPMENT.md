@@ -492,15 +492,33 @@ which may have changed since.
   left out. Like the panel, it isn't drawn again while the main loop waits
   on a game menu (it shows what it had). Scrolling and the map dragged with
   the wheel pressed were checked in the arena's fight.
-- **Kept dark.** `STRIP_CLEAR` fills it with the palette's darkest colour
-  (`STRIP_DARK`, the darkest of the 256, read from the VGA) when the fight
-  ends, every 512 passes of the main loop out of a fight, and each time the
-  game sets colours: `PROBE_COLOURS` (INT CBh at 288BAh, the end of the
-  routine that sets a run of colours, as the title and each step of a fade
-  do; only when the run reaches below the colours the game animates) and
-  `PROBE_PALETTE` (INT 8Bh at 144F5h, the end of the one that sets all 256).
-  So the title screen's strip is black, not the colour 0 video memory is
-  cleared to (lavender there).
+- **Between fights.** The Loader keeps the strip on whenever the game runs
+  (`DiceLog._update_panel`: on in a fight, or with `strip_patched`), the
+  last fight's lines in it under "The last fight" (`combatlog.BETWEEN_FIGHTS`;
+  "No fight yet" before one), scrolled to the newest again when a fight
+  starts.
+- **Empty: blue-grey or black.** Where the picture isn't, `STRIP_CLEAR`
+  fills the strip as `STRIP_WANT` says: black (the darkest of the 256) when
+  the game's `DS:0BC9h` is 0 (the title, the main menu, character creation),
+  else the panel's look without lines (its top line the colour nearest
+  `palette.SHADOW`, the rest nearest `palette.DEEP`, among 16 to 223:
+  `STRIP_COLOURS`, read from the VGA). `0BC9h` is 1 on the map, 2 with a
+  character's screen or a talk over it. It is filled every 512 passes of the
+  main loop with the log off, and each time the game sets colours:
+  `PROBE_COLOURS` (INT CBh at 288BAh, the end of the routine that sets a run
+  of colours, as the title and each step of a fade do; only when the run
+  reaches below the colours the game animates) and `PROBE_PALETTE` (INT 8Bh
+  at 144F5h, the end of the one that sets all 256). The log's picture stays
+  through those while the colours 16 to 223 are still those it was put in
+  (`STRIP_SAME`: a sum of them, taken as the main loop puts it; a talk or
+  the game's menu over the map); otherwise it
+  goes, and the main loop puts it again on the map. The title's strip is so
+  black, not the colour 0 video memory is cleared to (lavender there).
+  Screens changed with no new colours (main menu to character creation) are
+  caught from the game's pointer (`PROBE_POINTER` → `STRIP_MIND`, which also
+  learns the game's DS there), filling in the colours found last: the VGA's
+  palette isn't read there, as the pointer may be drawn while the game sets
+  colours.
 - **Tried first:** a 240-row screen in a 480-line timing. DOSBox showed
   square pixels (the map a sixth flatter) and the frame came 60 times a
   second, not 70 (the game about 14% slower); a longer line with the 28 MHz

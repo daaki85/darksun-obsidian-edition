@@ -17,7 +17,9 @@ have the detail.
   the newest line, covering none
   of it; the game's speed and the map's shape as ever. The mouse wheel
   scrolls it a line a notch, a **Latest** chip in its top line while
-  scrolled back; dark out of fights and on the title screen.
+  scrolled back. Between fights it keeps the last fight's lines to scroll
+  back through; on the game's other screens it is the panel's blue-grey,
+  and black on the title, the main menu and in character creation.
 
 **Changed**
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,

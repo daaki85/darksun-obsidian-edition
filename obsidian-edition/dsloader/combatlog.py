@@ -204,6 +204,10 @@ def _side(text: str, names: Dict[str, str]) -> Optional[str]:
     return None
 
 
+# the strip's top line between fights (it keeps the last one's lines)
+BETWEEN_FIGHTS, NO_FIGHT = "The last fight", "No fight yet"
+
+
 def header(status: Optional[dict]) -> str:
     """The panel's top line from DiceLog.round_status: "Round 2: Gerakis, then Cermak, Cilla" (who
     is acting, then who is still to)."""

@@ -314,8 +314,9 @@ Cilla`). Below the switch, pick how much it says: **at the least**
 Defiler: 20 vs 16+ HIT, 4 damage (2d6)`, `Slig's save vs Fireball: 11 vs 16,
 failed`), or **in detail**, every line of the log. `20 vs 16+ HIT` is the d20
 and the roll it needed (THAC0 less the target's AC; a natural 20 always hits,
-a 1 always misses). It is on only in fights, never waits for a click, and
-goes when the fight ends (or the Loader is closed). It needs the game started
+a 1 always misses). It never waits for a click; the panel over the map is
+on only in fights and goes when the fight ends (the strip below it stays:
+see below), and either goes when the Loader is closed. It needs the game started
 from the Loader (which turns off DOSBox's EMS to make room for it).
 
 **Below the map** (the default: **... below the map instead of over it**,
@@ -327,8 +328,11 @@ taller than 4:3. The pointer doesn't go there, so the strip has no buttons:
 on Windows the mouse wheel scrolls it a line a notch wherever the pointer is
 (DOSBox doesn't pass the wheel to the game, so the Loader listens for it
 itself), with a **Latest** chip in its top line while scrolled back; the
-level is set on the Options tab. Out of fights, and on the title screen, the
-strip is dark.
+level is set on the Options tab. Between fights it stays, with the last
+fight's lines to scroll back through ("The last fight" in its top line;
+the next fight starts again at its newest); on the game's other screens (a
+character's, the inventory) it is the panel's blue-grey without lines, and
+on the title, the main menu and in character creation it is black.
 
 ![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 

@@ -1031,14 +1031,17 @@ class DiceLog:
 
     def _update_panel(self, now: float) -> None:
         """The combat log's panel: on in a fight, with the fight's lines so far, who acts and
-        who is next."""
+        who is next. The strip below the map stays on between fights, the last fight's lines
+        in it (to scroll back through), the newest again when the next one starts."""
         fighting = self.combat_log and self.game.in_combat()
         if fighting:
             if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
                 self._fight_monsters = set()  # (a new fight)
+                self._panel.first = None
             self._fight_at = now
+        on = fighting or (self.combat_log and combatlog.strip_patched(self.game))
         top, names = "", {}
-        if fighting:
+        if on:
             if not self._font_tried:
                 self._font_tried = True
                 self._panel.font = _game_font(self.game_dir)
@@ -1047,13 +1050,16 @@ class DiceLog:
                 name = self.game.creature_name(n)
                 if name and not name.startswith("creature "):
                     names.setdefault(name, f"member{n}")
+        if fighting:
             for index in set(self.game.combatants().values()):
                 name = self.game.creature_name(index)
                 if index >= game.PARTY_SIZE and name and not name.startswith("creature "):
                     self._fight_monsters.add(name)
-            names.update({m: "monster" for m in self._fight_monsters if m not in names})
             top = combatlog.header(self.round_status())
-        self._panel.update(self.game, self.tsr_hdr, fighting, self._shadows.palettes, top, names)
+        elif on:
+            top = combatlog.BETWEEN_FIGHTS if self._panel.log.version else combatlog.NO_FIGHT
+        names.update({m: "monster" for m in self._fight_monsters if m not in names})
+        self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names)
 
     def _learn_lines(self) -> List[str]:
         """A preserver's tries at a scroll's spell since the last look (the rule for INT's chance:
