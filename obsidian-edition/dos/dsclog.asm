@@ -12955,7 +12955,13 @@ probe_redraw_all:
         mov [cs:rp_page], ax
         mov ax, [bp+0x0E]
         mov [cs:rp_flag], ax
+        push word [cs:resume_fl]        ; (the way back kept: the parts' routine, and the floor's
+        push word [cs:resume + 2]       ;   within it, come through probes that use RESUME too)
+        push word [cs:resume]
         call redraw_parts
+        pop word [cs:resume]
+        pop word [cs:resume + 2]
+        pop word [cs:resume_fl]
         pop dx
         pop cx
         pop bx
@@ -14187,7 +14193,7 @@ panel_tick:
         mov [cs:panel_lx], ax
         mov ax, [cs:panel_my]
         mov [cs:panel_ly], ax
-        call panel_draw
+        call panel_draw_pointer
         ret
 .moved: mov byte [cs:panel_wait], 1
         jmp .put
@@ -14273,6 +14279,30 @@ panel_draw:
         pop ds
         popa
 .none:  ret
+
+; PANEL_DRAW_POINTER: PANEL_DRAW in the main loop, the game's pointer taken off first and put on
+; again after (as the game does round its own drawing: 28D1:0B7F, 28D1:093D). The game draws the
+; pointer into the screen itself, keeping what was under it to put back when it moves; drawn over
+; by the panel, that would put the map back over it (and the pointer would be hidden under it).
+; Now what it keeps is the panel, and the pointer shows over it. DS the game's; registers kept.
+POINTER_SEG  equ 0x28D1         ; (DSUN.EXE 2E8E0h: the pointer's routines' segment)
+POINTER_OFF  equ 0x0B7F         ; take it off (what was under it put back)
+POINTER_ON   equ 0x093D         ; put it on (what is under it kept first)
+panel_draw_pointer:
+        pusha
+        push es
+        mov ax, ds
+        sub ax, DGROUP_SEG - POINTER_SEG
+        mov [cs:pointer_far + 2], ax
+        mov word [cs:pointer_far], POINTER_OFF
+        call far [cs:pointer_far]
+        call panel_draw
+        mov word [cs:pointer_far], POINTER_ON
+        call far [cs:pointer_far]
+        pop es
+        popa
+        ret
+pointer_far dw 0, 0
 
 ; PANEL_DRAW_OTHER: the picture into the screen not on show (a redraw about to flip to it: the
 ; game's map on both); registers kept

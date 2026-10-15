@@ -390,6 +390,18 @@ running:
   the view drawn whole (a scroll, centring on whose turn it is), put back on
   the next pass of the main loop; a scroll can also leave a copy of the
   panel's edge beside it for a moment, until the game draws that part again.
+  The inline routine's way back (`RESUME`, which the floor's and the
+  rectangle routine's probes also use, and which the parts come through) is
+  kept on the stack while the parts are drawn: overwritten, the game went on
+  from the wrong place and wrote over its own memory until it quit.
+- **The pointer.** The game draws its pointer into the screen on show
+  itself: 28D1:093D keeps what is under it (a page the pointer's size, copied
+  from the screen) and draws it; 28D1:0B7F puts what it kept back. The game
+  calls the two round its own drawing. `PANEL_DRAW_POINTER`, the main loop's
+  way of putting the panel on, does the same (pointer off, panel, pointer
+  on), so what the game keeps under the pointer is the panel and the pointer
+  shows over it. The game's own redraws of what the pointer is over, in a
+  fight, can still leave a patch of the map under it for a moment.
 - **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
   switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
   writes about once a second), DSCLOG has the view drawn again without it.

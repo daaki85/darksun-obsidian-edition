@@ -8,6 +8,23 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #48 (in progress)
+
+**Fixed**
+- **The game quit ("Return code 01h") or froze in fights with the combat
+  log on** (2.3.0): the routine drawing again all that moved, drawn in parts
+  round the panel, went on afterwards from a way back that the parts' own
+  drawing had overwritten (a variable the other probes share), so the game
+  ran on from the wrong place, writing over its own memory (garbled names,
+  stripes across the screen) until it quit. The way back is now kept on the
+  stack while the parts are drawn.
+- **The pointer over the combat log's panel:** the game draws its pointer
+  into the screen itself, keeping what is under it to put back when it
+  moves; the panel, put on over it, hid it, and the map the game had kept
+  came back over the panel as a stripe. The panel is now put on with the
+  pointer taken off first and put on again after, as the game does round
+  its own drawing, so the pointer shows over the panel.
+
 ## Pull request #46 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/46))
 
 **Release**
