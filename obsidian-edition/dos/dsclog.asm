@@ -138,6 +138,7 @@ VEC_LEARN_REFUSED equ 0x91 ; PROBE_LEARN_REFUSED
 VEC_XP equ 0x90            ; PROBE_XP
 VEC_PRIEST_THAC0 equ 0x8F  ; PROBE_PRIEST_THAC0
 VEC_ADND_SLOTS equ 0x8E    ; PROBE_ADND_SLOTS
+VEC_POINTER equ 0xF1       ; PROBE_POINTER
 VEC_PRICE equ 0x8D         ; PROBE_PRICE
 VEC_PRICE_EAX equ 0x8C     ; PROBE_PRICE_EAX
 VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
@@ -12881,7 +12882,7 @@ redraw_parts:
         je .out
         call panel_live
         je .out
-        call panel_draw
+        call panel_draw_pointer         ; (the parts drew the pointer again: kept over the panel)
 .out:   mov byte [cs:rp_busy], 0
         pop es
         popa
@@ -14184,8 +14185,11 @@ panel_tick:
         mov ax, [cs:panel_my]           ;   again, now and on the next pass
         cmp ax, [cs:panel_ly]
         jne .moved
-        dec byte [cs:panel_wait]        ; and every PANEL_EVERY passes anyway
-        jnz .ret
+        dec byte [cs:panel_wait]        ; and every PANEL_EVERY passes anyway (round the pointer:
+        jnz .ret                        ;   PANEL_DRAW_AROUND, the panel itself unchanged)
+        mov byte [cs:panel_wait], PANEL_EVERY
+        call panel_draw_around
+        ret
 .draw:  mov byte [cs:panel_wait], PANEL_EVERY
 .put:   mov byte [cs:panel_dirty], 0
         mov byte [cs:panel_shown], 1
@@ -14280,13 +14284,11 @@ panel_draw:
         popa
 .none:  ret
 
-; PANEL_DRAW_POINTER: PANEL_DRAW in the main loop, the game's pointer taken off first and put on
-; again after (as the game does round its own drawing: 28D1:0B7F, 28D1:093D). The game draws the
-; pointer into the screen itself, keeping what was under it to put back when it moves; drawn over
-; by the panel, that would put the map back over it (and the pointer would be hidden under it).
-; Now what it keeps is the panel, and the pointer shows over it. DS the game's; registers kept.
+; PANEL_DRAW_POINTER: PANEL_DRAW, then the game's pointer drawn again over it (28D1:093D, as the
+; game draws it). Not taken off first: what the game keeps under its pointer, to put back when it
+; moves, is the map without the panel (taken off, it showed as a patch of map until put again).
+; DS the game's; registers kept.
 POINTER_SEG  equ 0x28D1         ; (DSUN.EXE 2E8E0h: the pointer's routines' segment)
-POINTER_OFF  equ 0x0B7F         ; take it off (what was under it put back)
 POINTER_ON   equ 0x093D         ; put it on (what is under it kept first)
 panel_draw_pointer:
         pusha
@@ -14294,15 +14296,104 @@ panel_draw_pointer:
         mov ax, ds
         sub ax, DGROUP_SEG - POINTER_SEG
         mov [cs:pointer_far + 2], ax
-        mov word [cs:pointer_far], POINTER_OFF
-        call far [cs:pointer_far]
-        call panel_draw
         mov word [cs:pointer_far], POINTER_ON
+        call panel_draw
+        mov byte [cs:pointer_busy], 1   ; (the panel just drawn: PROBE_POINTER leaves it)
         call far [cs:pointer_far]
+        mov byte [cs:pointer_busy], 0
         pop es
         popa
         ret
 pointer_far dw 0, 0
+pointer_busy db 0
+
+; PANEL_DRAW_AROUND: PANEL_DRAW with the box the pointer was last drawn in left as it is, the
+; pointer kept on screen (PANEL_TICK's put now and then, the panel unchanged); if the game shows
+; no pointer, PANEL_DRAW. DS the game's; registers kept.
+POINTER_HIDE equ 0x3C46         ; (set: the game draws no pointer)
+POINTER_XY   equ 0xA137         ; where it is to be drawn, top left (x, y)
+POINTER_WAS  equ 0xA13F         ; where it was last drawn (x, y)
+POINTER_KIND equ 0xA17F         ; and its kind then (-1: none)
+POINTER_MOST equ 32             ; (the widest and tallest a pointer may be)
+panel_draw_around:
+        cmp word [POINTER_HIDE], 0
+        jne .whole
+        cmp word [POINTER_KIND], -1
+        je .whole
+        push ax
+        mov ax, [POINTER_WAS]
+        sar ax, 2
+        mov [cs:pb_sx0], ax
+        add ax, POINTER_MOST / 4 + 1
+        mov [cs:pb_sx1], ax
+        mov ax, [POINTER_WAS + 2]
+        mov [cs:pb_sy0], ax
+        add ax, POINTER_MOST
+        mov [cs:pb_sy1], ax
+        pop ax
+        mov byte [cs:pb_skip], 1
+        call panel_draw
+        mov byte [cs:pb_skip], 0
+        ret
+.whole: jmp panel_draw
+
+; PROBE_POINTER: INT VEC_POINTER replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack check)
+; in the game's routine that draws its pointer (28D1:093D). The panel is put first if the pointer
+; is to go over it: the game takes its pointer off by putting back the map that was under it, over
+; the panel. The stack check, with the routine's SP; RETF 2 keeps its flags. DS the game's.
+probe_pointer:
+        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        call pointer_panel
+        push ax
+        mov ax, sp
+        add ax, 8               ; (the routine's SP: past this push and INT's IP, CS and flags)
+        cmp [0x9C], ax
+        pop ax
+        retf 2
+
+; POINTER_PANEL: the panel put (PANEL_DRAW) if it is on screen and the pointer about to be drawn
+; over it, or last drawn over it; registers kept
+pointer_panel:
+        cmp byte [cs:pointer_busy], 0
+        jne .ret
+        cmp word [POINTER_HIDE], 0
+        jne .ret
+        call panel_live
+        jne .ret
+        push si
+        mov si, POINTER_XY
+        call pointer_over
+        je .draw
+        mov si, POINTER_WAS
+        call pointer_over
+        jne .out
+.draw:  call panel_draw
+.out:   pop si
+.ret:   ret
+
+; POINTER_OVER: ZF set if a pointer at DS:SI (x, y: top left) is over the panel; registers kept
+pointer_over:
+        push ax
+        mov ax, [si]
+        cmp ax, PANEL_X0 + PANEL_W
+        jge .no
+        add ax, POINTER_MOST
+        cmp ax, PANEL_X0
+        jle .no
+        mov ax, [si + 2]
+        add ax, POINTER_MOST
+        cmp ax, [cs:panel_top]
+        jle .no
+        sub ax, POINTER_MOST
+        sub ax, [cs:panel_top]
+        cmp ax, [cs:panel_rows]
+        jge .no
+        cmp ax, ax                      ; (ZF set)
+        pop ax
+        ret
+.no:    cmp sp, 0                       ; (ZF clear)
+        pop ax
+        ret
 
 ; PANEL_DRAW_OTHER: the picture into the screen not on show (a redraw about to flip to it: the
 ; game's map on both); registers kept
@@ -14344,6 +14435,16 @@ panel_blit:
 .rows:  or ax, ax
         jz .ret
         mov [cs:pb_rows], ax
+        mov ax, [cs:pb_sx0]             ; (the pointer's box, in bytes of the panel's rows: those
+        sub ax, PANEL_X0 / 4            ;   left of it, and its own)
+        call pb_clamp
+        mov [cs:pb_left], ax
+        mov ax, [cs:pb_sx1]
+        sub ax, PANEL_X0 / 4
+        call pb_clamp
+        sub ax, [cs:pb_left]
+        mov [cs:pb_mid], ax
+        push bp
         call vga_save
         mov ds, [cs:panel_seg]
         xor bx, bx                      ; (BX: the plane)
@@ -14360,21 +14461,61 @@ panel_blit:
         add ax, PANEL_X0 / 4
         mov di, ax
         mov dx, [cs:pb_rows]
+        mov bp, [cs:pb_top]             ; (BP: the row on screen)
 .row:   mov cx, PANEL_W / 4
+        cmp byte [cs:pb_skip], 0
+        je .pix
+        cmp bp, [cs:pb_sy0]
+        jl .pix
+        cmp bp, [cs:pb_sy1]
+        jge .pix
+        mov cx, [cs:pb_left]            ; the pointer's row: the bytes left of its box, its box
+        jcxz .box                       ;   left as it is, then the bytes right of it
+.lpix:  mov al, [si]
+        stosb
+        add si, 4
+        loop .lpix
+.box:   mov cx, [cs:pb_mid]
+        add di, cx
+        shl cx, 2
+        add si, cx
+        mov cx, PANEL_W / 4
+        sub cx, [cs:pb_left]
+        sub cx, [cs:pb_mid]
+        jcxz .next
 .pix:   mov al, [si]
         stosb
         add si, 4
         loop .pix
-        add di, 80 - PANEL_W / 4
+.next:  add di, 80 - PANEL_W / 4
+        inc bp
         dec dx
         jnz .row
         inc bx
         cmp bx, 4
         jb .plane
         call vga_restore
+        pop bp
 .ret:   ret
 pb_top  dw 0
 pb_rows dw 0
+pb_skip db 0                    ; set: the box PB_SX0 to PB_SX1 (bytes of a row, the last not in
+pb_sx0  dw 0                    ;   it), PB_SY0 to PB_SY1 (rows, the last not in it) left as it is
+pb_sx1  dw 0
+pb_sy0  dw 0
+pb_sy1  dw 0
+pb_left dw 0
+pb_mid  dw 0
+
+; PB_CLAMP: AX kept within 0 to PANEL_W / 4
+pb_clamp:
+        cmp ax, 0
+        jge .lo
+        xor ax, ax
+.lo:    cmp ax, PANEL_W / 4
+        jle .hi
+        mov ax, PANEL_W / 4
+.hi:    ret
 
 ; DUST_UNION: in PROBE_REDRAW_ALL (x0 [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]: on screen),
 ; the puffs' ground taken in, as far as it is on screen
@@ -15490,6 +15631,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_REDRAW_ALL
         mov dx, probe_redraw_all
         int 21h
+        mov ax, 2500h + VEC_POINTER
+        mov dx, probe_pointer
+        int 21h
         mov ax, 2500h + VEC_SCROLL
         mov dx, probe_scroll
         int 21h
@@ -15832,7 +15976,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
 all_vectors_end:
 
         align 16, db 0

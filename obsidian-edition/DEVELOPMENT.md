@@ -395,13 +395,16 @@ running:
   kept on the stack while the parts are drawn: overwritten, the game went on
   from the wrong place and wrote over its own memory until it quit.
 - **The pointer.** The game draws its pointer into the screen on show
-  itself: 28D1:093D keeps what is under it (a page the pointer's size, copied
-  from the screen) and draws it; 28D1:0B7F puts what it kept back. The game
-  calls the two round its own drawing. `PANEL_DRAW_POINTER`, the main loop's
-  way of putting the panel on, does the same (pointer off, panel, pointer
-  on), so what the game keeps under the pointer is the panel and the pointer
-  shows over it. The game's own redraws of what the pointer is over, in a
-  fight, can still leave a patch of the map under it for a moment.
+  itself: 28D1:093D keeps what is under it (from page `[A05Dh]`, the map
+  without the panel) and draws it; 28D1:0B7F puts what it kept back, so taking
+  the pointer off over the panel leaves a patch of map. `PROBE_POINTER` (the
+  stack check at the start of 093D, 2EA55h) puts the panel first when the
+  pointer is to be drawn over it, or was last drawn over it (`[A137h]`,
+  `[A13Fh]`; `POINTER_MOST`, 32, the box). `PANEL_DRAW_POINTER` puts the panel
+  and then calls 093D, without taking the pointer off. `PANEL_TICK`'s refresh
+  every 16 passes, with the panel unchanged, is `PANEL_DRAW_AROUND`: the panel
+  without the pointer's box (`PB_SKIP` in `PANEL_BLIT`), so the pointer stays
+  on screen.
 - **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
   switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
   writes about once a second), DSCLOG has the view drawn again without it.
@@ -436,7 +439,7 @@ running:
   draws parts of the view in a fight as the pointer moves over it (what it is
   over), through routines not hooked: `PANEL_TICK` puts the panel again when
   the pointer has moved, on that pass and the next, and every 16 passes
-  anyway.
+  anyway (round the pointer: see **The pointer**).
 - **Sizes (Stage 4).** The Loader sets the panel's top and height
   (`+344`, `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130,
   the most); its foot stays at row 198. Smaller than it was, DSCLOG draws the

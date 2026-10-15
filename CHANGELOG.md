@@ -18,12 +18,15 @@ have the detail.
   ran on from the wrong place, writing over its own memory (garbled names,
   stripes across the screen) until it quit. The way back is now kept on the
   stack while the parts are drawn.
-- **The pointer over the combat log's panel:** the game draws its pointer
-  into the screen itself, keeping what is under it to put back when it
-  moves; the panel, put on over it, hid it, and the map the game had kept
-  came back over the panel as a stripe. The panel is now put on with the
-  pointer taken off first and put on again after, as the game does round
-  its own drawing, so the pointer shows over the panel.
+- **The pointer over the combat log's panel:** the panel, put on over the
+  pointer, hid it, and moving the pointer across the panel could leave a
+  patch of the map or no pointer at all. The game takes its pointer off by
+  putting back the map it kept from under it (without the panel). Now the
+  panel is put on before the game draws its pointer over it (a probe in that
+  routine), the pointer is drawn again after the panel, and the panel's
+  regular refresh leaves the pointer's box alone. Held still over the panel
+  for 48 frames, and moved across it, the pointer showed every time and no
+  map came through.
 
 ## Pull request #46 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/46))
 

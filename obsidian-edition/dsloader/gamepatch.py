@@ -33,7 +33,7 @@ from typing import NamedTuple
 GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
-VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK = 0xF2, 0xF3, 0xF4, 0xF5, 0xF6  # (F1h, F7h free) not 66h-6Fh: the game calls those itself, looking for drivers
+VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK = 0xF2, 0xF3, 0xF4, 0xF5, 0xF6  # (F7h free) not 66h-6Fh: the game calls those itself, looking for drivers
 VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM = 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD
 VEC_TWO, VEC_DOUBLE = 0xFE, 0xF0
 VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY = 0xED, 0xEE, 0xEF
@@ -78,6 +78,7 @@ VEC_CR_SPELLS, VEC_EF_CLICK = 0x98, 0x97
 VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN = 0x96, 0x95, 0x94, 0x93
 VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
+VEC_POINTER = 0xF1
 VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
 VEC_RACE_PANEL = 0x89
@@ -313,6 +314,9 @@ PATCHES = (
     # ... and where the routine drawing again what moved starts to, its rectangle made:
     # "push word [bp+8] / push word [bp+6]"
     Patch("redraw_all", 0x24B18, bytes.fromhex("ff7608ff7606"), _interrupt(VEC_REDRAW_ALL, 6)),
+    # the combat log's panel under the pointer (DSCLOG's PROBE_POINTER): the stack check, "cmp
+    # [9Ch],sp", of the routine that draws the game's pointer (28D1:093D)
+    Patch("pointer", 0x2EA55, bytes.fromhex("39269c00"), _interrupt(VEC_POINTER, 4)),
     # scrolling (DSCLOG's SCROLLING): the main loop asking where the pointer is, "call far
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)
