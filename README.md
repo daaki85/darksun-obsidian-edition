@@ -84,24 +84,18 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Coming in the next release** (pull requests #44 to #46, [in the
-changelog](CHANGELOG.md)): a combat log in the game, three more wizard spells
-(Reflected Image, Spook and Friends), two magic shields, defilers' scrolls,
-buying back magical items, saves kept under their names, fuller starting gear,
-and Templar's Ledger renamed the Loader.
-
-**Obsidian Edition 2.2.1** is out ([release notes](release-notes/v2.2.1.md)):
-more of the Options tab can be switched (the elves' and half-elves' looks,
-Cilla's elf figure, STORE and RECALL), and **Restore defaults** sets it all
-back. 2.2.0 before it ([release notes](release-notes/v2.2.0.md)) brought two
-new wizard spells (Erdlu Claw and Fogbolt, beside Cat's Grace),
-half-elves and elves with a look of their own on the map, STORE and RECALL
-on the creation screen, multiclass hit points as Demihuman Deities has them,
-and the Options tab in four clearer groups.
+**Obsidian Edition 2.3.0** is out ([release notes](release-notes/v2.3.0.md)):
+a combat log in the game, three more wizard spells (Reflected Image, Spook
+and Friends), two magic shields, defilers' scrolls, buying back magical
+items, saves kept under their names, fuller starting gear, and Templar's
+Ledger renamed the Loader. 2.2.1 before it ([release
+notes](release-notes/v2.2.1.md)) made more of the Options tab switchable,
+with **Restore defaults** to set it all back.
 
 Earlier changes, pull request by pull request, are in
 [`CHANGELOG.md`](CHANGELOG.md). Releases have notes of their own:
-[2.2.1](release-notes/v2.2.1.md) (pull request #43),
+[2.3.0](release-notes/v2.3.0.md) (pull requests #44 to #46),
+[2.2.1](release-notes/v2.2.1.md) (#43),
 [2.2.0](release-notes/v2.2.0.md) (#39 to #42),
 [2.1.1](release-notes/v2.1.1.md) (#37),
 [2.1.0](release-notes/v2.1.0.md) (#35),
