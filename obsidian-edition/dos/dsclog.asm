@@ -140,6 +140,8 @@ VEC_PRIEST_THAC0 equ 0x8F  ; PROBE_PRIEST_THAC0
 VEC_ADND_SLOTS equ 0x8E    ; PROBE_ADND_SLOTS
 VEC_POINTER equ 0xF1       ; PROBE_POINTER
 VEC_STRIP equ 0xF7         ; PROBE_STRIP
+VEC_PALETTE equ 0x8B       ; PROBE_PALETTE
+VEC_COLOURS equ 0xCB       ; PROBE_COLOURS
 VEC_PRICE equ 0x8D         ; PROBE_PRICE
 VEC_PRICE_EAX equ 0x8C     ; PROBE_PRICE_EAX
 VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
@@ -14601,6 +14603,58 @@ probe_strip:
 strip_crtc dw 0x0109, 0xBB12, 0xBC15, 0x3F16, 0xBD10, 0x8F11, 0x8F18
 STRIP_CRTC_N equ ($ - strip_crtc) / 2
 
+; PROBE_PALETTE: INT VEC_PALETTE replaces "sti / pop di" (2 bytes) at the end of the game's
+; routine that sets the whole palette (0980:58F5h, DSUN.EXE 144F5h: a new screen or area): those,
+; and with the strip and no log in it, the strip made the new palette's darkest colour (from the
+; title screen on: the main loop, which keeps it so, isn't running yet there). Keeps all.
+probe_palette:
+        push bp
+        mov bp, sp
+        mov di, [bp + 8]                ; (pop di: the word under INT's IP, CS and flags)
+        push word [bp + 6]              ; (the frame moved up over it, interrupts on: sti)
+        push word [bp + 4]
+        push word [bp + 2]
+        pop word [bp + 4]
+        pop word [bp + 6]
+        pop word [bp + 8]
+        or word [bp + 8], 0x200
+        pop bp
+        add sp, 2
+        call strip_new_palette
+        iret
+
+; PROBE_COLOURS: INT VEC_COLOURS replaces "pop dx / pop cx" (2 bytes) at the end of the game's
+; routine that sets a run of colours (DSUN.EXE 288BAh: BX the first, CX how many; the title's,
+; and each step of a fade): those, then as PROBE_PALETTE if the run reaches below the colours
+; the game animates (DARK_LAST). Keeps all but DX and CX, as the routine leaves them.
+probe_colours:
+        push bp
+        mov bp, sp
+        cmp bx, DARK_LAST
+        mov dx, [bp + 8]                ; (pop dx / pop cx: the words under INT's IP, CS, flags)
+        mov cx, [bp + 10]
+        push word [bp + 6]              ; (the frame moved up over them; the flags as they were)
+        push word [bp + 4]
+        push word [bp + 2]
+        pop word [bp + 6]
+        pop word [bp + 8]
+        pop word [bp + 10]
+        pop bp
+        lea sp, [esp + 4]               ; (keeps the flags: the CMP's above)
+        ja .ret
+        call strip_new_palette
+.ret:   iret
+
+; STRIP_NEW_PALETTE: with the strip and no log in it, the strip made the palette's darkest colour
+; (the main loop, which keeps it so, isn't running on the title screen); registers kept
+strip_new_palette:
+        cmp byte [cs:strip_on], 0
+        je .ret
+        cmp byte [cs:panel_shown], 0
+        jne .ret
+        call strip_clear
+.ret:   ret
+
 ; STRIP_DRAW: the picture into the strip (PANEL_DRAW, in the strip: PANEL_BLIT at the strip's
 ; place and width, video memory's first rows showing screen rows 200 on; registers kept)
 strip_draw:
@@ -14625,15 +14679,16 @@ strip_draw:
         popa
         ret
 
-; STRIP_DARK: AL the darkest of the palette's colours the game doesn't animate (DARK_FIRST to
-; DARK_LAST), read from the VGA (from the main loop: the game isn't setting colours then)
+; STRIP_DARK: AL the darkest of the palette's 256 colours (the title's black is among the last,
+; which the game may animate on the map: the main loop makes the strip dark again often), read
+; from the VGA (from the main loop or after the game has set colours)
 ; (AX, BX, CX, DX not kept)
 strip_dark:
         mov dx, 0x3C7
-        mov al, DARK_FIRST
+        xor al, al
         out dx, al
         mov dx, 0x3C9
-        mov bx, DARK_FIRST
+        xor bx, bx
         mov cx, 0xFFFF                  ; (CX: the darkest's sum of red, green and blue)
 .next:  in al, dx
         mov ah, al
@@ -14648,7 +14703,7 @@ strip_dark:
         mov cx, ax
         mov [cs:.best], bl
 .skip:  inc bx
-        cmp bx, DARK_LAST
+        cmp bx, 255
         jbe .next
         mov al, [cs:.best]
         ret
@@ -15795,6 +15850,12 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_STRIP
         mov dx, probe_strip
         int 21h
+        mov ax, 2500h + VEC_PALETTE
+        mov dx, probe_palette
+        int 21h
+        mov ax, 2500h + VEC_COLOURS
+        mov dx, probe_colours
+        int 21h
         mov ax, 2500h + VEC_SCROLL
         mov dx, probe_scroll
         int 21h
@@ -16137,7 +16198,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
 all_vectors_end:
 
         align 16, db 0

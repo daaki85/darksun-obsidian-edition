@@ -472,10 +472,14 @@ running:
   picture there (`combatlog.STRIP`: the header and the newest row, no
   buttons); `PANEL_LIVE` is never set, so the clipping and the
   pointer's handling are left out, and `STRIP_CLEAR` fills it with the
-  palette's darkest colour (`STRIP_DARK`, read from the VGA) when the fight
-  ends, and every 512 passes of the main loop out of a fight (the palette
-  changes with the area). Before the map's main loop runs (the title screen)
-  it shows the palette's colour 0. The Loader knows the game was
+  palette's darkest colour (`STRIP_DARK`, the darkest of the 256, read from
+  the VGA) when the fight ends, every 512 passes of the main loop out of a
+  fight, and each time the game sets colours: `PROBE_COLOURS` (INT CBh at
+  288BAh, the end of the routine that sets a run of colours, as the title and
+  each step of a fade do; only when the run reaches below the colours the
+  game animates) and `PROBE_PALETTE` (INT 8Bh at 144F5h, the end of the one
+  that sets all 256). So the title screen's strip is black, not the colour 0
+  video memory is cleared to (lavender there). The Loader knows the game was
   started so from the patch in its memory (`combatlog.strip_patched`), not the
   setting, which may have changed since. DOSBox's aspect correction works out
   the shape from the timing, unchanged, so each row is stretched by 1.2 as

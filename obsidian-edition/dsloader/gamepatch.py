@@ -80,6 +80,8 @@ VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
 VEC_POINTER = 0xF1
 VEC_STRIP = 0xF7
+VEC_PALETTE = 0x8B
+VEC_COLOURS = 0xCB
 VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
 VEC_RACE_PANEL = 0x89
@@ -332,6 +334,12 @@ PATCHES = (
     Patch("strip_flip", 0x1442F, bytes.fromhex("b800a0bb00a4"), bytes.fromhex("b870a0bb60a4")),
     Patch("strip_shown0", 0x14444, bytes.fromhex("b800a0"), bytes.fromhex("b870a0")),
     Patch("strip_shown1", 0x1444E, bytes.fromhex("b800a4"), bytes.fromhex("b860a4")),
+    # ... and the strip dark in each new palette: "sti / pop di" at the end of the routine that
+    # sets the whole palette (DSCLOG's PROBE_PALETTE)
+    Patch("strip_palette", 0x144F5, bytes.fromhex("fb5f"), bytes((0xCD, VEC_PALETTE))),
+    # ... and "pop dx / pop cx" at the end of the one that sets a run of colours (the title's, a
+    # fade's steps: DSCLOG's PROBE_COLOURS)
+    Patch("strip_colours", 0x288BA, bytes.fromhex("5a59"), bytes((0xCD, VEC_COLOURS))),
     # scrolling (DSCLOG's SCROLLING): the main loop asking where the pointer is, "call far
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)
@@ -604,7 +612,8 @@ class PatchError(Exception):
 # Patches that are switches on the Options tab: left out when off (their bytes still checked)
 EFFECTS_KEPT = ("effects_click_low", "effects_click_high")  # a click on the Effects screen keeps a spell
 ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
-STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_shown0", "strip_shown1")  # the combat log below the map (off by default)
+STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_shown0", "strip_shown1",
+         "strip_palette", "strip_colours")  # the combat log below the map (off by default)
 
 
 def patched(original: bytes, skip=frozenset()) -> bytes:
