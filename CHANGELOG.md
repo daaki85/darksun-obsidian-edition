@@ -8,6 +8,27 @@ Released pull requests are summarised in a line or two each; the release notes
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
 
+## Pull request #49 (in progress)
+
+**Changed**
+- **A Battle Dancer starts with two long swords** (with kits on): a second
+  long sword in the left hand, in place of the shield.
+- **A Myrmidon's second weapon starts in the left hand**, in place of the
+  shield, when it's a one-handed melee weapon (a bow still goes in the
+  missile slot, a two-handed weapon in the backpack).
+
+**Fixed**
+- **A multiclass preserver could cast in armour** (class restrictions on,
+  since 2.0.0). The USE screen said NO SPELLS IN ARMOUR, but the spells
+  stayed in use: the helper asked about the wrong character, reading it from
+  a register the game's own test had changed by then. It now reads the
+  character the game asked about.
+- **Yellow text on the character creation screen** (since 2.3.0). The game's
+  screens print in a colour each leaves set; the creation screen never sets
+  its own, and the mod's `SUM:` line printed in it, so after a character
+  screen (whose selected portrait is yellow) the scores and the lines below
+  them came out yellow. The creation screen's white is now set as it rolls.
+
 ## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
 
 **Added**

@@ -371,10 +371,12 @@ def kit_gear(gd) -> List[str]:
 
 
 def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int], owned, read) -> List[str]:
-    """A Myrmidon's plain weapon of its second weapon spec (to the backpack, or the missile slot,
-    a bow with arrows), and a Ravager's second weapon for the hand its shield left (a plain one
-    of its right hand's kind, unless that takes both hands): lines for the log. Given once: not
-    while the character has a weapon of that kind (two, the Ravager)."""
+    """A Myrmidon's plain weapon of its second weapon spec (in the left hand in place of the shield,
+    for a one-handed melee weapon; else the missile slot, a bow with arrows, or the backpack), and a
+    Ravager's or Battle Dancer's second weapon for the left hand (a plain one of its right hand's
+    kind, unless that takes both hands; a Battle Dancer's in place of its shield): lines for the
+    log. Given once: not while the character has a weapon of that kind (the Myrmidon's), or a
+    weapon in the left hand (the Ravager's and the Battle Dancer's)."""
     from . import kits, npcitems
     right, left = game.WEAPON_HANDS
     kind_of = lambda item: specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])
@@ -387,22 +389,45 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
         if new is None or new[0] != chosen[1]:
             return []
         rec, slot = plain_weapon(hand, *new)
+        material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
+        if slot is None and not two_handed(gd, sheet, new[1][0]) and not two_handed(
+                gd, sheet, struct.unpack_from("<H", hand, game.ITEM_TYPE)[0]):
+            shield = _shield_away(gd, owned)
+            if not any(item[game.ITEM_SLOT] == left for _, item, _ in list(gd._worn(member))) \
+                    and npcitems.add_to(gd, member, rec, left):
+                instead = f", in place of the {shield}" if shield else ""
+                return [f"{who} starts with a plain {material}{specialize.KINDS[new[0]]} in the left hand"
+                        f"{instead}: a Myrmidon's second weapon spec"]
         if not npcitems.add_to(gd, member, rec, slot):
             return []
         if new[0] == BOW:
             npcitems.add_to(gd, member, arrows(rec), AMMO_SLOT)
-        material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
         where = "" if slot is not None else " in the backpack"
         return [f"{who} starts with a plain {material}{specialize.KINDS[new[0]]}{where} too: a Myrmidon's "
                 f"second weapon spec"]
-    if kid == kits.RAVAGER and hand is not None:
+    if kid in (kits.RAVAGER, kits.BATTLE_DANCER) and hand is not None:
         kind, type_ = kind_of(hand), struct.unpack_from("<H", hand, game.ITEM_TYPE)[0]
         if kind is None or kind in MISSILE_KINDS or two_handed(gd, sheet, type_) \
-                or any(item[game.ITEM_SLOT] == left for _, item, _ in owned) \
-                or sum(1 for _, item, _ in owned if struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == type_) > 1:
-            return []
-        if not npcitems.add_to(gd, member, hand, left):
+                or any(item[game.ITEM_SLOT] == left and kind_of(item) is not None for _, item, _ in owned):
+            return []  # (a weapon in the left hand already: given, or the character's own)
+        shield = _shield_away(gd, owned) if kid == kits.BATTLE_DANCER else None
+        if any(item[game.ITEM_SLOT] == left for _, item, _ in list(gd._worn(member))) \
+                or not npcitems.add_to(gd, member, hand, left):
             return []
         name = gd.item_name(struct.unpack_from("<H", hand, game.ITEM_NAME)[0])
-        return [f"{who} starts with a second {name} in the left hand: a Ravager fights without a shield"]
+        if kid == kits.RAVAGER:
+            return [f"{who} starts with a second {name} in the left hand: a Ravager fights without a shield"]
+        instead = f", in place of the {shield}" if shield else ""
+        return [f"{who} starts with a second {name} in the left hand{instead}: a Battle Dancer fights with two"]
     return []
+
+
+def _shield_away(gd, owned) -> Optional[str]:
+    """A shield in the left hand left behind (for a second weapon): its name, or None."""
+    from . import kits, ring
+    left = game.WEAPON_HANDS[1]
+    for item_index, item, typ in owned:
+        if item[game.ITEM_SLOT] == left and len(typ) > 0 and typ[0] & kits.SHIELD \
+                and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
+            return gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
+    return None

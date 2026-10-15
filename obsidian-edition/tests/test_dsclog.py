@@ -1494,7 +1494,7 @@ class NoCastTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        at = image.find(bytes.fromhex("5589e5508b460689460a"), image.find(bytes.fromhex("26234712")))
+        at = image.find(bytes.fromhex("5589e5508b46082ea3"), image.find(bytes.fromhex("26234712")))
         self.assertGreater(at, 0)
         mu.mem_write(VEC_NO_CAST * 4, struct.pack("<HH", at, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -1522,11 +1522,11 @@ class NoCastTests(unittest.TestCase):
             mu.mem_write(self.ITEMS * 16 + (10 + n) * 0x15, bytes(item))
         mu.mem_write(SS * 16 + 0x7F8, struct.pack("<HH", self.WHO, 0))
         for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x7F8, ebp=BP, eflags=IF | 2, eax=ax,
-                                ebx=0x2222, ecx=0x3333, edx=self.WHO, esi=0x5555, edi=0x7777, es=0x6666).items():
-            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                                ebx=0x2222, ecx=0x3333, edx=0x4444, esi=0x5555, edi=0x7777, es=0x6666).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)  # (DX the test's own by now: the character on the stack)
         mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
         self.assertEqual([mu.reg_read(getattr(r, "UC_X86_REG_" + x)) for x in ("SP", "BP", "BX", "CX", "DX", "SI", "DI", "ES", "DS")],
-                         [0x7FC, BP, 0x2222, 0x3333, self.WHO, 0x5555, 0x7777, 0x6666, GAME_DS])
+                         [0x7FC, BP, 0x2222, 0x3333, 0x4444, 0x5555, 0x7777, 0x6666, GAME_DS])
         return mu.reg_read(r.UC_X86_REG_AX)
 
     def test_preserver_in_armour(self):
@@ -4492,7 +4492,8 @@ class KitTests(unittest.TestCase):
         """PROBE_CR_DIE: AL the class's die at creation (ES:BX+14Ah), the kit's (kits.hit_die) for
         the sheet being made; a kit left from other classes (a class just clicked) taken away from it
         and from the party's sheet ([348h:25Bh] its number, the segment read from the overlay's code
-        past the INT), the class's die then."""
+        past the INT), the class's die then; and the screen's text colour (DS:326Eh) its own white,
+        34h, whatever the screen before left."""
         from dsloader import kits, kitpages
         from dsloader.gamepatch import VEC_CR_DIE
         table, member_seg = 0x8800, 0x8900
@@ -4509,7 +4510,9 @@ class KitTests(unittest.TestCase):
                             self.made(cls, kit, seen)
                             self.mu.mem_write(self.SHEET * 16 + 2 * 0x47 + kitpages.KIT_BYTE, bytes((kit,)))
                             self.mu.mem_write(table * 16 + cls + 0x14A, bytes((die,)))
+                            self.mu.mem_write(self.DS * 16 + 0x326E, struct.pack("<H", 0x2F))  # (a character screen's yellow)
                             self.run_vector(VEC_CR_DIE, 5, eax=0x1100, ebx=cls, ecx=0x3333, es=table)
+                            self.assertEqual(struct.unpack("<H", self.mu.mem_read(self.DS * 16 + 0x326E, 2))[0], 0x34)
                             kid = cls * 4 + kit if rules and seen else 0
                             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x1100 | kits.hit_die(kid, die))
                             self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX,

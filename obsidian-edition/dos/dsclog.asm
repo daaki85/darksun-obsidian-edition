@@ -3709,15 +3709,18 @@ cu_others  dw 0
 ; PROBE_NO_CAST: INT VEC_NO_CAST replaces "add sp,4" (3 bytes: INT + NOP; DSUN.EXE 89B84h) at the
 ; end of the game's test of whether a character can't cast spells, which the USE screen asks
 ; before it shows a spell as one to cast and before it casts one, wizard or priest (not a
-; psionic power), and so does a spell queued in a fight: DX the character, AX not 0 if it can't
-; (its "No spell use" effect). With RULE_RESTRICT, a multiclass preserver (not a human, who
-; dual-classes) can't either while it wears armour, a helm too (ARMOUR_WORN; a shield doesn't
-; count).
+; psionic power), and so does a spell queued in a fight: the character the test's first argument
+; (the "push dx" before its call, under the interrupt frame: DX itself is the test's to change,
+; and was, so the check once looked at someone else), AX not 0 if it can't (its "No spell use"
+; effect). With RULE_RESTRICT, a multiclass preserver (not a human, who dual-classes) can't
+; either while it wears armour, a helm too (ARMOUR_WORN; a shield doesn't count).
 PRESERVER_CLASS equ 11
 probe_no_cast:
         push bp                 ; the replaced "add sp,4": move the interrupt frame (and BP)
         mov bp, sp              ; up over the 4 bytes, so IRET returns with them gone
         push ax
+        mov ax, [bp + 8]        ; (the test's first argument: the character)
+        mov [cs:nc_who], ax
         mov ax, [bp + 6]
         mov [bp + 10], ax       ; flags
         mov ax, [bp + 4]
@@ -3736,7 +3739,9 @@ probe_no_cast:
         jz .done
         push bx
         push cx
+        push dx
         push es
+        mov dx, [cs:nc_who]
         mov bx, dx
         imul bx, bx, 0x47
         les cx, [0x1661]
@@ -3754,9 +3759,11 @@ probe_no_cast:
 .pres:  call armour_worn
         adc ax, 0                       ; (AX was 0)
 .out:   pop es
+        pop dx
         pop cx
         pop bx
 .done:  iret
+nc_who  dw 0                            ; (the character the test was asked about)
 
 ; ARMOUR_WORN: carry set if creature DX (DS = the game's) wears armour, a helm too: an item of
 ; a type the game marks armour (+0Fh 80h), not a shield, on its arms, legs, head or chest.
@@ -10491,10 +10498,15 @@ probe_max_psp:
 ; points it can give (ES:BX the table, by class): AL that, a Battle Mage's 6, a Mind Warrior's 8,
 ; an Arcanist's 3 (kits.hit_die). A kit left from the classes before a click on a class
 ; (PROBE_WP_CLASS takes it away only after the rolls) is taken away first, from the party's sheet
-; too, so the rolls go by the class's own die.
+; too, so the rolls go by the class's own die. It also sets the text colour (DS:326Eh, CR_INK) the
+; creation screen prints in: the screen never sets it, so it kept the last screen's (a character
+; screen's yellow, 2Fh) and the scores and lines below them came out yellow.
 CR_MEMBER_SEG equ 0x65689 - 0x65679   ; ("mov ax,348h": the member's number's segment, +25Bh)
 CR_MEMBER     equ 0x25B
+TEXT_INK      equ 0x326E              ; DS: the colour the game's screens print in (34h, 2Fh, 27h)
+CR_INK        equ 0x34                ; (the creation screen's white)
 probe_cr_die:
+        mov word [TEXT_INK], CR_INK
         push cx
         mov cl, [es:bx + 0x14A]
         call kit_stale
