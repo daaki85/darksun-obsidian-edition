@@ -47,11 +47,12 @@ NAME = b"Ring/Protection"  # the game's own way of shortening ("Helm/Contempltn"
 # The box an item's Look opens is only so wide: the game's own names are at most 15 letters
 # long (with its plus after them), and longer ones run out of it
 NAME_FIT = 15
-# The items the rule changes make better, named for it while the rule is on (the game shows
-# no description of an item, only its name): entry, the game's own name, rule, what it gives
+# The items the rule changes once named for what they gave (before the item box showed it: a
+# helm's AC as its AC BONUS line): entry, the game's own name, rule, what the name said. NO_RULE
+# for all now (never on), so their names go back to the game's
 NO_RULE = 0
-RULE_NAMES = ((6, "Helm", game.RULE_HELMS, " (AC 1)"), (145, "Dapartea's Helm", game.RULE_HELMS, " (AC 1)"),
-              (107, "Helm/Contempltn", game.RULE_HELMS, " (AC 1)"), (236, "Helm of Might", game.RULE_HELMS, " (AC 1)"),
+RULE_NAMES = ((6, "Helm", NO_RULE, " (AC 1)"), (145, "Dapartea's Helm", NO_RULE, " (AC 1)"),
+              (107, "Helm/Contempltn", NO_RULE, " (AC 1)"), (236, "Helm of Might", NO_RULE, " (AC 1)"),
               (43, "Boots", NO_RULE, " (Speed+1)"), (286, "Serpent Boots", NO_RULE, " (Speed+1)"))
 # what earlier versions named them: boots gave a move in a fight once, a rule since gone (NO_RULE:
 # never on, so their names go back to the game's)

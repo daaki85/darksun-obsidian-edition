@@ -1663,12 +1663,8 @@ ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
 Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
 the game's tables). It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
-
-The game has no descriptions of items, only their names, so while the rule is
-on the Loader renames the plain helm **Helm (AC 1)**. The named ones
-(Dapartea's Helm, Helm/Contempltn, Helm of Might) keep their names, which
-would be too long for the game's Look box with the note. With the rule off,
-or without the Loader, the names are the game's own.
+The helms keep the game's own names (earlier versions called the plain one
+**Helm (AC 1)**; the Loader names it back).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 

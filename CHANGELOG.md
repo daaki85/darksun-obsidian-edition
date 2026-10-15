@@ -17,6 +17,9 @@ have the detail.
   shield, when it's a one-handed melee weapon (a bow still goes in the
   missile slot, a two-handed weapon in the backpack).
 
+- **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
+  shows `AC BONUS:1` with the helms rule, which says the same.
+
 **Fixed**
 - **A multiclass preserver could cast in armour** (class restrictions on,
   since 2.0.0). The USE screen said NO SPELLS IN ARMOUR, but the spells
