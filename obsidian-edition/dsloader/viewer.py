@@ -401,9 +401,9 @@ class Viewer:
                                           "rangers have expertise, every ranger with the bow; specialists and "
                                           "rangers shoot missiles faster; other weapons at a warrior's plain rate "
                                           "(chosen on the creation panel's WEAPON SPEC pages)"),
-                ("kits", "Kits: a character of one class may take one of its class's three kits, each "
-                         "giving something and costing something (chosen on the creation panel's KIT "
-                         "page)"),
+                ("kits", "Kits: a character of one class may take one of its class's three kits, and some "
+                         "races' pairs of classes have kits of their own, each giving something and "
+                         "costing something (chosen on the creation panel's KIT page)"),
                 ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
                 ("cha_prices", "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
                                "point after, to 40% at 25; shops pay 60% of an item's price"),
