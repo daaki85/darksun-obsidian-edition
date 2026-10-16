@@ -208,7 +208,8 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
         quiet = max(quiet, min(MOST, quiet + extra))
     d100 = roll()
     unheard = d100 <= quiet
-    behind = "from behind" if ranger else "from behind (a backstab with a weapon that can)"
+    stabs = all(kits.backstabs(k) for k in gd.kit_ids(creature))  # (a Military Scout never backstabs)
+    behind = "from behind" if ranger or not stabs else "from behind (a backstab with a weapon that can)"
     lines.append(f"  {who} moves silently: d100 = {d100}, needs {quiet}{boots} or less -> "
                  + (f"unheard: their next attack this turn is {behind}" if unheard else "heard"))
     return lines, unheard

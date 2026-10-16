@@ -890,6 +890,8 @@ class DiceLog:
                 hit += kits.missile_to_hit(kid, kind, g.outdoors(attacker))
             if kid == kits.POISONER and mode is not None:
                 hit += kits.POISONER_TO_HIT
+            if mode is not None:  # (DSCLOG's KIT_TO_HIT: anything but a dagger, unarmed too)
+                hit += kits.ghetto_to_hit(kid, kind)
             if kid == kits.BLOOD_FURY and attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*)
                 if g.wild[attacker]:
                     dam += kits.WILD_DAMAGE
@@ -1597,6 +1599,8 @@ class DiceLog:
                         " under the open sky" if kid == kits.SCOUT else "")))
             if index < game.PARTY_SIZE and g.path_finder():
                 parts.append((kits.PATH_INITIATIVE, "Wayfinder's Path-finder"))
+            elif index < game.PARTY_SIZE and g.path_lost():
+                parts.append((-kits.PATH_INITIATIVE, "Wayfinder down"))
             score = INITIATIVE_BASE + roll + sum(v for v, _ in parts)
             stored = table[index][0]
             if stored >= 0 and stored != score:  # not acted yet, and something else counted
@@ -1738,11 +1742,13 @@ class DiceLog:
         parts: List[Tuple[str, int]] = []
         if None in (after_f1, hit_bonus) or after_f1 - hit_bonus != thac0 + skill[1] + sum(v for _, v in kit):
             return f"THAC0 {base} base, {signed(base - thac0)} in bonuses = {thac0}"
+        rear_hit = min((kits.rear_to_hit(k) for k in g.kit_ids(attacker)), default=kits.REAR) \
+            if attacker < game.PARTY_SIZE else kits.REAR  # (DSCLOG's KIT_REAR)
         if rear:
-            parts.append(("from behind", 2))
+            parts.append(("from behind" + (" (Rescuer)" if rear_hit != kits.REAR else ""), rear_hit))
         if backstab:
             parts.append(("backstab", 2))
-        situational = base - after_f1 - 2 * bool(rear) - 2 * bool(backstab)
+        situational = base - after_f1 - rear_hit * bool(rear) - 2 * bool(backstab)
         # the spell effects the game checks here (from its code)
         effects = g.effects()
         on = lambda combatant, eid: any(x.owner == combatant and x.id == eid for x in effects)

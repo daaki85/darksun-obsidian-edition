@@ -1004,12 +1004,12 @@ hour to come back.
 | Kit | Gives | Costs |
 |---|---|---|
 | **Battle Dancer** | as each fight starts, a d20 against DEX: at DEX or under, +1 to hit, damage and AC for DEX less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only (any, whatever its cleric's sphere allows); over DEX, −1 to hit, damage and AC for 1d8 rounds |
-| **Shadowblade** | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets |
-| **Military Scout** | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings | under a roof, −5 to the same skills |
-| **Wilderness Avenger** | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | — |
-| **Rescuer** | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | — |
-| **Ghetto Fighter** | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps |
-| **Wayfinder** | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets |
+| **Shadowblade** | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets; no shield |
+| **Military Scout** | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings | under a roof, −5 to the same skills; never backstabs (from behind still +2 to hit) |
+| **Wilderness Avenger** | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | 1 fewer druid spell slot at each spell level |
+| **Rescuer** | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | attacking from behind, +1 to hit instead of +2 |
+| **Ghetto Fighter** | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps; −1 to hit with anything but a dagger; no shield |
+| **Wayfinder** | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets; while it's down, the whole party has −1 initiative and −1 movement in a fight |
 | **Spellarcher** | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow |
 | **Titan Mind** | psychometabolism powers cost 2 PSP less | telepathy powers cost 2 PSP more |
 | **Poisoner** | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything |

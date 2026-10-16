@@ -938,7 +938,8 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual([kits.extra(kits.AVENGER, 0, u) for u in (True, False)], [1, 0])
         ghetto = dict(classes=(9, 17, 0), levels=(3, 3, 0), race=2, kit=1, rules=on)
         self.assertEqual(self.attack(2, self.DAGGER, **ghetto)[1:3], (14, 4))
-        self.assertEqual(self.attack(2, self.AXE, **ghetto)[1:3], (15, 3))
+        self.assertEqual(self.attack(2, self.AXE, **ghetto)[1:3], (15 - kits.GHETTO_OTHER_TO_HIT, 3))  # (1 worse)
+        self.assertEqual(self.attack(2, self.BOW, missile=True, **ghetto)[1:3], (16, 3))
         self.assertEqual(self.attack(2, self.DAGGER, rules=0, classes=(9, 17, 0), race=2, kit=1)[1:3], (15, 3))
         self.assertEqual([kits.melee(kits.GHETTO, False, k) for k in (2, 22)], [1, 0])
 
@@ -1376,6 +1377,31 @@ class CanUseTests(unittest.TestCase):
             self.assertIn(0, no_kit)  # (some sphere forbids one of them without the kit)
         finally:
             game.RULES_IN_FORCE = old
+
+    def test_no_shield_kits(self):
+        """KIT_FORBIDS: a Shadowblade (a half-elf fighter/thief) and a Ghetto Fighter (a dwarf
+        fighter/thief) no shield, as kits.forbids; the same classes with no kit, or a Military
+        Scout, as the game has them."""
+        from dsloader import kitpages
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        old = game.RULES_IN_FORCE
+        try:
+            self.mu.mem_write(hdr + 270, struct.pack("<H", 1))
+            rules = game.RULE_RESTRICT
+            game.RULES_IN_FORCE = rules | game.RULE_KITS
+            for race, kit, shield in ((kitpages.HALF_ELF, 1, False), (kitpages.DWARF, 1, False),
+                                      (kitpages.HALF_ELF, 2, True), (kitpages.DWARF, 0, True)):
+                s = bytearray(test_restrict.sheet(9, 17, race=race))
+                s[0x24:0x26] = bytes((3, 3))
+                s[0x43] = kit
+                for t in test_restrict.TYPES:
+                    with self.subTest(race=race, kit=kit, type=t):
+                        self.assertEqual(self.can_use(bytes(s), t, rules=rules), self.expected(s, t))
+                with self.subTest(race=race, kit=kit):
+                    self.assertEqual(self.can_use(bytes(s), 4, rules=rules) != 0, shield)  # (a leather shield)
+        finally:
+            game.RULES_IN_FORCE = old
+            self.mu.mem_write(hdr + 270, struct.pack("<H", 0))
 
     def test_elementalist(self):
         """An Elementalist's second sphere's weapons as well as its own sphere's (CLASS_FORBIDS's
@@ -2865,6 +2891,37 @@ class StealthTests(unittest.TestCase):
         self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))
         self.assertEqual(self.attack(), (0, 0, 15, 0, 0b0100, 0))
 
+    def test_kits(self):
+        """KIT_REAR (kits on): a Military Scout's backstab taken back, its +2 with it, from behind
+        kept (kits.backstabs); a Rescuer's attack from behind +1, not +2 (kits.rear_to_hit); a
+        fighter as the game has it."""
+        from dsloader import kits
+        creatures = 0xA000
+        self.mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, creatures))
+        self.mu.mem_write(creatures * 16 + 2 * 0x3A + 4, struct.pack("<H", 5))  # (creature 2: sheet 5)
+        self.mu.mem_write(self.hdr + 270, struct.pack("<H", 1))  # (kits on)
+
+        def make(classes, race, kit):
+            at = self.SHEETS * 16 + 5 * 0x47
+            self.mu.mem_write(at + 0x18, bytes((race,)))
+            self.mu.mem_write(at + 0x21, bytes(classes[:2] + (0,) + classes[2:] + (0,)))  # (classes, levels)
+            self.mu.mem_write(at + 0x43, bytes((kit,)))
+        try:
+            make((9, 17, 3, 3), 4, 2)  # a half-elf fighter/thief Military Scout
+            self.assertFalse(kits.backstabs(kits.SCOUT))
+            self.assertEqual(self.attack()[:4], (1, 0, 13, 1))  # (from behind, no backstab)
+            self.assertEqual(self.attack(behind=1, stab=1, thac0=11, hidden=0)[:4], (1, 0, 13, 1))  # (the game's)
+            make((9, 17, 3, 3), 4, 1)  # a Shadowblade: as the game has it
+            self.assertEqual(self.attack()[:4], (1, 1, 11, 1))
+            make((1, 13, 3, 3), 4, 1)  # a half-elf cleric/ranger Rescuer
+            self.assertEqual(kits.rear_to_hit(kits.RESCUER), 1)
+            self.assertEqual(self.attack(behind=1, thac0=13, hidden=0, thief=False)[:4], (1, 0, 14, 1))
+            self.assertEqual(self.attack(behind=0, thac0=15, hidden=0, thief=False)[:4], (0, 0, 15, 0))
+            make((9, 0, 3, 0), 1, 0)
+            self.assertEqual(self.attack(behind=1, thac0=13, hidden=0, thief=False)[:4], (1, 0, 13, 1))
+        finally:
+            self.mu.mem_write(self.hdr + 270, struct.pack("<H", 0))
+
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class TypesTests(unittest.TestCase):
@@ -3767,10 +3824,15 @@ class KitTests(unittest.TestCase):
             self.assertEqual([kits.missile_to_hit(kits.SCOUT, k, True) for k in (13, 14, 15, 0, 12)], [1, 1, 1, 0, 0])
             self.assertEqual(kits.missile_to_hit(kits.SCOUT, 13, False), 0)
             self.creature(9, 2, index=3, second=17, race=2)  # a dwarf fighter/thief Wayfinder
-            for st, up in ((1, True), (0, True), (3, False), (5, False)):
+            # (up, New or Okay: 1 more; down, stunned to petrified: 1 less; Gone: none)
+            for st, more in ((1, 1), (0, 1), (2, -1), (3, -1), (5, -1), (7, -1), (8, 0)):
                 with self.subTest(status=st):
                     status(3, st)
-                    self.assertEqual((initiative(1), move(1), initiative(0)), (1, 10, 3) if up else (0, 0, 2))
+                    self.assertEqual((initiative(1), move(1), initiative(0)), (more, 10 * more, 2 + more))
+            status(2, 3)  # (a second Wayfinder, down: the one up counts)
+            self.creature(9, 2, index=2, second=17, race=2)
+            status(3, 1)
+            self.assertEqual((initiative(1), move(1)), (1, 10))
             status(3, 1)
             self.assertEqual((initiative(5), move(5)), (0, 0))  # (not a party member)
         finally:
@@ -3970,6 +4032,20 @@ class KitTests(unittest.TestCase):
         self.assertEqual([kits.slots(kits.SEEKER, kits.PRIEST, lv, sl, 9) for lv in (5, 6, 8, 10, 15) for sl in (1, 3)],
                          [0, 0, 1, 0, 2, 0, 2, 1, 2, 1])
         self.assertEqual([kits.slots(kits.ARCANIST, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 3])
+        # a Wilderness Avenger (a half-elf druid/fighter): its priest slots 1 fewer, none below 0
+        self.rules(game.RULE_KITS)
+        self.creature(6, 1, level=5, second=9, race=4)
+        self.assertEqual(self.kit_of(6, 1, game.RULE_KITS, 9, 4), kits.AVENGER)
+        for magic in (kits.WIZARD, kits.PRIEST):
+            for given in (0, 1, 3):
+                with self.subTest(avenger=True, magic=magic, given=given):
+                    self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", given))
+                    self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<HHH", 7, magic, 2))
+                    for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2).items():
+                        self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                    self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
+                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), kits.slots(kits.AVENGER, magic, 5, 2, given))
+        self.assertEqual([kits.slots(kits.AVENGER, kits.PRIEST, 5, 2, n) for n in (0, 1, 3)], [0, 0, 2])
 
     def test_slot_level(self):
         """PROBE_SLOT_LEVEL: the class level the slot rules are given (ES:BX the sheet + DI), an

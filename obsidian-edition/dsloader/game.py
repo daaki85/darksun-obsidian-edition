@@ -1585,7 +1585,8 @@ class GameData:
                     + (kits.melee(kid, bool(typ[0x0F] & 0x40), kind) if not missile and not typ[0] & 2 else 0) \
                     + kits.extra(kid, self.dance.get(creature, 0)) \
                     + (kits.missile_to_hit(kid, kind, self.outdoors(creature)) if missile else 0) \
-                    + (kits.POISONER_TO_HIT if kid == kits.POISONER else 0)
+                    + (kits.POISONER_TO_HIT if kid == kits.POISONER else 0) \
+                    + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
                 if kid == kits.BLOOD_FURY and self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT)
@@ -1764,6 +1765,18 @@ class GameData:
 
     def has_kit(self, creature: int, kid: int) -> bool:
         return kid in self.kit_ids(creature)
+
+    def path_lost(self) -> bool:
+        """No party member up is a Wayfinder, and one down (stunned to petrified; not Gone) is:
+        Path-finder lost, the party's 1 less (DSCLOG's PATH_DOWN)."""
+        from . import kits
+        if self.path_finder():
+            return False
+        for m in range(PARTY_SIZE):
+            rec = self.creature(m)
+            if len(rec) > CREATURE_STATUS and 2 <= rec[CREATURE_STATUS] <= 7 and kits.WAYFINDER in self.kit_ids(m):
+                return True
+        return False
 
     def path_finder(self) -> bool:
         """A party member up (New or Okay) is a Wayfinder: the party's Path-finder (DSCLOG's

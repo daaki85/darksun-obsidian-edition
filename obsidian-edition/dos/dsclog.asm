@@ -3261,6 +3261,15 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 .ravager:
         cmp byte [cs:kf_chosen], 0
         jne .ok
+        cmp cl, KIT_SHADOWBLADE ; a Shadowblade or Ghetto Fighter: no shield
+        je .unshielded
+        cmp cl, KIT_GHETTO
+        jne .ravager_kit
+.unshielded:
+        test al, KT_SHIELD
+        jnz .no
+        jmp .ok
+.ravager_kit:
         cmp cl, KIT_RAVAGER     ; a Ravager: no shield, no missile or thrown weapon, light armour only
         jne .twin
         test al, KT_SHIELD
@@ -5577,8 +5586,21 @@ kit_to_hit:
         pop ax
         call kit_is_b
         db KIT_POISONER
-        jne .ret
+        jne .ghetto
         dec ax
+.ghetto:
+        call kit_is_b           ; (a Ghetto Fighter 1 worse with anything but a dagger)
+        db KIT_GHETTO
+        jne .ret
+        push si
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .worse
+        cmp byte [cs:si + kind_of_type], DAGGER_KIND + 1
+        je .dagger
+.worse: dec ax
+.dagger:
+        pop si
 .ret:   pop es
         pop bx
         jmp wild_to_hit
@@ -5739,8 +5761,12 @@ probe_init:
         jnc .path
         add dx, 2
 .path:  call path_up
-        jne .out
+        jne .down
         inc dx
+        jmp .out
+.down:  call path_down          ; (a Wayfinder down, none up: 1 less)
+        jne .out
+        dec dx
 .out:   pop ax
         iret
 
@@ -5832,9 +5858,13 @@ probe_slots:
         jcxz .crusader
         dec cx
 .crusader:
-        call kit_is_b
+        call kit_is_b           ; (a Crusader's, a Wilderness Avenger's priest slots 1 fewer)
         db KIT_CRUSADER
+        je .priest
+        call kit_is_b
+        db KIT_AVENGER
         jne .tables
+.priest:
         cmp byte [bp + 8], SLOT_PRIEST
         jne .tables
         jcxz .tables
@@ -8146,11 +8176,15 @@ kit_move:
         pop ax
         jne .path
         add ax, 20
-.path:  cmp si, 3               ; (a party member, while a Wayfinder of the party is up: 1 more)
-        ja .ret
+.path:  cmp si, 3               ; (a party member, while a Wayfinder of the party is up: 1 more;
+        ja .ret                 ;   while one is down and none up, 1 less: PATH_DOWN)
         call path_up
-        jne .ret
+        jne .down
         add ax, 10
+        ret
+.down:  call path_down
+        jne .ret
+        sub ax, 10
 .ret:   ret
 
 ; PATH_UP: ZF set if a party member up (creatures 0-3, status New or Okay) is a Wayfinder (kit
@@ -8167,6 +8201,41 @@ path_up:
         imul ax, ax, 0x3A
         add bx, ax
         cmp byte [es:bx + 0x1C], 1      ; (New or Okay)
+        pop ax
+        ja .next
+        call cr_is
+        db KIT_WAYFINDER
+        je .out
+.next:  inc ax
+        cmp ax, 4
+        jb .member
+        or ax, ax               ; (ZF clear: none)
+.out:   pop es
+        pop bx
+        pop ax
+        ret
+
+; PATH_DOWN: ZF set if no party member up is a Wayfinder (PATH_UP) and one not up (status 2-7:
+; stunned to petrified; not Gone) is: Path-finder lost, the party's 1 less Move in a fight and 1
+; less initiative (kits.path_finder). DS the game's; all registers kept.
+path_down:
+        call path_up
+        jne .scan
+        or sp, sp               ; (ZF clear: one is up)
+        ret
+.scan:
+        push ax
+        push bx
+        push es
+        xor ax, ax
+.member:
+        push ax
+        les bx, [CREATURES]
+        imul ax, ax, 0x3A
+        add bx, ax
+        mov ah, [es:bx + 0x1C]
+        sub ah, 2               ; (not New or Okay, and not Gone: 2 to 7)
+        cmp ah, 7 - 2
         pop ax
         ja .next
         call cr_is
@@ -13248,7 +13317,8 @@ probe_stealth:
 .done:  pop es
         pop bx
         pop ax
-.push:  push word [bp-0x1A]
+.push:  call kit_rear
+        push word [bp-0x1A]
         push word [cs:s_fl]
         push word [cs:s_cs]
         push word [cs:s_ip]
@@ -13256,6 +13326,34 @@ probe_stealth:
 s_ip    dw 0
 s_cs    dw 0
 s_fl    dw 0
+
+; KIT_REAR: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with kits on, after the
+; game's (and the stealth rule's) from behind and backstab: a Military Scout's backstab taken back
+; ([BP-24h] cleared, the 2 to hit it gave with it; kits.backstabs), a Rescuer's attack from behind
+; 1 better to hit, not 2 (kits.REAR). All registers kept.
+kit_rear:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        cmp si, 3
+        ja .ret
+        push ax
+        mov ax, si
+        cmp word [bp-0x24], 0
+        je .rescuer
+        call cr_is
+        db KIT_SCOUT
+        jne .rescuer
+        mov word [bp-0x24], 0
+        add word [bp-0x20], 2
+.rescuer:
+        cmp word [bp-0x1A], 0
+        je .out
+        call cr_is
+        db KIT_RESCUER
+        jne .out
+        inc word [bp-0x20]
+.out:   pop ax
+.ret:   ret
 
 L_LINE_SIZE equ 24
 LOOK_SIZE   equ 80

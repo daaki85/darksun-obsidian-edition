@@ -188,12 +188,13 @@ def slot_level(kid: int, level: int) -> int:
 def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
     giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): an Arcanist's wizard slots 1 more
-    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer; a
+    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's and a Wilderness
+    Avenger's priest slots 1 fewer; a
     Seeker's and a Justifier's priest slots their own tables' (SEEKER_SLOTS), WIS's left out, and a
     Shinobi's wizard slots the Seeker's by its thief level."""
     if kid == ARCANIST and magic == WIZARD:
         return game_slots + 1 if game_slots else 0
-    if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
+    if (kid == BATTLE_MAGE and magic == WIZARD) or (kid in (CRUSADER, AVENGER) and magic == PRIEST):
         return max(0, game_slots - 1)
     if kid == SHINOBI and magic == WIZARD:
         kid = SEEKER
@@ -338,8 +339,31 @@ def initiative(kid: int, outdoors: bool = False) -> int:
 
 
 # Path-finder: while a Wayfinder of the party is up, each party member's Move in a fight and
-# initiative 1 more (DSCLOG's PATH_UP, in KIT_MOVE and PROBE_INIT)
+# initiative 1 more (DSCLOG's PATH_UP, in KIT_MOVE and PROBE_INIT); while one is down (stunned to
+# petrified) and none up, 1 less (PATH_DOWN)
 PATH_MOVE, PATH_INITIATIVE = 1, 1
+# attacking from behind: 2 to hit (the game's), a Rescuer's 1 (DSCLOG's KIT_REAR); a Military
+# Scout never backstabs (KIT_REAR takes it back)
+REAR, RESCUER_REAR = 2, 1
+
+
+def rear_to_hit(kid: int) -> int:
+    """What attacking from behind adds to hit for a character of kit KID (KIT_REAR)."""
+    return RESCUER_REAR if kid == RESCUER else REAR
+
+
+def backstabs(kid: int) -> bool:
+    """Whether a character of kit KID can backstab (KIT_REAR: a Military Scout can't)."""
+    return kid != SCOUT
+
+
+GHETTO_OTHER_TO_HIT = -1  # (a Ghetto Fighter with anything but a dagger, melee or missile: KIT_TO_HIT)
+
+
+def ghetto_to_hit(kid: int, kind: Optional[int]) -> int:
+    """A Ghetto Fighter's 1 worse to hit with anything but a dagger (KIND the weapon kind, None
+    for none)."""
+    return GHETTO_OTHER_TO_HIT if kid == GHETTO and kind != DAGGER else 0
 SCOUT_MISSILE_KINDS = frozenset((BOW, BOW + 1, BOW + 2))  # (the bow, sling and staff sling)
 
 
@@ -504,7 +528,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     armour that isn't light; a Grove Warden a metal weapon; a Lifebinder a weapon of a kind not
     blunt; a Shinobi a shield, armour that isn't light, a weapon not of SHINOBI_KINDS; a Seeker a
     weapon (of a kind) its SPHERE (0 air to 3 water) doesn't allow, as a cleric's
-    (restrict.sphere_allows), but the bow. Going to the off hand (OFF_HAND): nothing for a Battle
+    (restrict.sphere_allows), but the bow; a Shadowblade and a Ghetto Fighter a shield. Going to the off hand (OFF_HAND): nothing for a Battle
     Mage, no weapon for a Healer."""
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
     weapon = bool(flags & (MELEE | MISSILE))
@@ -538,4 +562,6 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         return kind is not None and kind not in SHINOBI_KINDS
     if kid == BATTLE_DANCER:
         return kind is not None and kind not in DANCER_KINDS
+    if kid in (SHADOWBLADE, GHETTO):
+        return bool(flags & SHIELD)
     return False

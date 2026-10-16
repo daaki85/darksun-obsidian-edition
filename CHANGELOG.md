@@ -35,6 +35,13 @@ have the detail.
   to hit), **Spirit Caller** (halfling cleric/psionicist) and **Wasteland Seer**
   (thri-kreen druid/fighter): spells cast 2 levels higher under the open sky,
   1 lower under a roof.
+- **Stronger costs for six multiclass kits:** the Shadowblade can't use a
+  shield; the Military Scout never backstabs (from behind is still +2 to
+  hit); the Wilderness Avenger has 1 fewer druid spell slot at each spell
+  level; the Rescuer gets +1 to hit from behind, not +2; the Ghetto Fighter is
+  −1 to hit with anything but a dagger and can't use a shield; while a
+  Wayfinder is down (and no other is up), the party has −1 initiative and −1
+  Move in a fight.
 - **A mul kit, the Blood-Fury** (mul cleric/fighter), with **Wild Fighting**
   (the AD&D proficiency): as each fight starts, a d20 against CON. Passed, 1
   more attack a round in melee and +3 damage for the fight; failed, −3 to hit
