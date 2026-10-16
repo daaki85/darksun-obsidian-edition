@@ -6,7 +6,7 @@ PROBE_CAN_USE does this in the game; this is its model, for the tests and the Lo
 - A psionicist, whatever its other classes allow: light armour only (leather, hide, silk), a
   leather shield only, and of weapons only daggers, short swords, maces, clubs, chatkchas, bows
   and slings.
-- A multiclass thief: light armour only, and a shield only a leather one that another of its
+- A thief: light armour only; a multiclass one a shield only a leather one that another of its
   classes allows.
 - A preserver of that one class: no armour and no shield (a Battle Mage, kits.py, may wear light
   armour all the same: kit_allows).
@@ -194,9 +194,9 @@ def allowed(sheet: bytes, item_type: int, typ: bytes) -> bool:
             return False
         if kind is not None and kind not in PSIONICIST_KINDS:
             return False
+    if THIEF in holding and armour and not is_light(typ):
+        return False
     if THIEF in holding and multiclass:
-        if armour and not is_light(typ):
-            return False
         if shield:
             others = int.from_bytes(typ[TYPE_CLASSES:TYPE_CLASSES + 2], "little")
             others &= int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & ~THIEF_BIT

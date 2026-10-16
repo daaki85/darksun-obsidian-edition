@@ -3518,8 +3518,8 @@ kf_chosen  db 0                 ; (KIT_FORBIDS: a weapon of a kind it specialize
 EQUIP_OFF_HAND equ 14          ; the equip routine's slot for the off (left) hand
 
 ; CLASS_FORBIDS: carry set if the classes of the character whose sheet is at ES:BX keep it from
-; item type DX (dsloader/restrict.py, which says why): a psionicist, a multiclass thief, a
-; preserver of that class alone, a druid, a cleric. A human's first class alone holds it (the one
+; item type DX (dsloader/restrict.py, which says why): a psionicist, a thief (light armour; a
+; multiclass one its shields too), a preserver of that class alone, a druid, a cleric. A human's first class alone holds it (the one
 ; it has now, if it has changed class); another race's every class. All registers kept.
 RESTRICT_TYPE equ 0x14          ; (the item type record's size)
 NO_MATERIAL equ 0xFF            ; (CU_MAT: none)
@@ -3739,10 +3739,10 @@ class_forbids_one:
         ret
 .thief: cmp al, 17
         jne .pres
-        or ch, ch
-        jz .ok
-        call heavy
+        call heavy                      ; (any thief: light armour only)
         jc .ret
+        or ch, ch                       ; (a multiclass one: a leather shield another class allows)
+        jz .ok
         call shield_not_leather
         jc .ret
         test byte [cs:cu_flags], 4
@@ -4196,12 +4196,13 @@ probe_wp_disc_win:
         call wp_ids
         mov [bp + 8], ax
         pop dx
-        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit)
-        jne .keep
+        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit, and
+        jne .keep                   ;   no weapon spec until one is chosen: WP_MARKS's default)
         push es
         push bx
         les bx, [WP_CREATION]
         mov byte [es:bx + KIT_BYTE], 0
+        mov dword [es:bx + SPEC_SLOTS], 0
         pop bx
         pop es
 .keep:  mov byte [cs:kit_keep], 0
@@ -8583,7 +8584,8 @@ probe_wp_class:
         mov [cs:wp_classes_seen], eax
         mov byte [cs:wp_touched], 0
         mov byte [es:bx + KIT_BYTE], 0
-.same:  pop bx
+        mov dword [es:bx + SPEC_SLOTS], 0  ; (the weapon specs too: the game keeps the sheet from one
+.same:  pop bx                          ;   character to the next, so the last one's were kept)
         pop es
         pop eax
         push ax
@@ -15167,8 +15169,10 @@ panel_ly   dw 0
 panel_cx   dw 0                 ; (the view's top left at the last pass: PANEL_TICK)
 panel_cy   dw 0
 
-; PANEL_LIVE: ZF set if the panel is on screen: shown, and the page on show the one it was last
-; drawn into (not while the game shows the other screen: a window over the map, the panel not on it)
+; PANEL_LIVE: ZF set if the panel is on screen: shown, the page on show the one it was last drawn
+; into (not while the game shows the other screen: a window over the map, the panel not on it), and
+; the game on the map (SCREEN_IS 1: not a full screen, USE or the inventory, drawn on that page over
+; the map, which would else be drawn round the panel and its clicks kept from it)
 panel_live:
         cmp byte [cs:strip_on], 0       ; (in the strip: never over the map)
         jne .no
@@ -15181,7 +15185,9 @@ panel_live:
         cmp ax, [cs:panel_page]
         pop ax
         pop es
-        ret
+        jne .ret
+        call strip_on_map
+.ret:   ret
 .no:    cmp sp, 0                       ; (ZF clear)
         ret
 

@@ -88,8 +88,10 @@ class RestrictTests(unittest.TestCase):
         self.assertFalse(ok(sheet(9, 12), 45))
         self.assertTrue(ok(sheet(9, 12), 4))
 
-    def test_multiclass_thief(self):
-        self.assertTrue(ok(sheet(17), 57))  # (one class: the game's own lists)
+    def test_thief(self):
+        self.assertFalse(ok(sheet(17), 57))  # light armour only, one class too
+        self.assertTrue(ok(sheet(17), 6))
+        self.assertTrue(ok(sheet(17), 90))
         self.assertFalse(ok(sheet(9, 17), 57))
         self.assertTrue(ok(sheet(9, 17), 6))
         self.assertTrue(ok(sheet(9, 17), 90))

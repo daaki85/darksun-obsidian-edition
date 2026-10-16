@@ -1354,7 +1354,7 @@ own "Cannot use this item":
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
 | **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings |
-| **Thief**, multiclass | light only | a leather one, and only if another of its classes allows shields | as its classes allow |
+| **Thief** | light only | leather ones; a multiclass thief only if another of its classes allows shields | as its classes allow |
 | **Preserver**, one class | none | none | as the game has it |
 | **Druid** | none | none | any |
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |

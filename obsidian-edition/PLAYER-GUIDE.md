@@ -313,8 +313,8 @@ AD&D's tables; a character of several classes uses its best.
 |---|---|---|---|---|---|---|
 | [Fighter](#fighter) | d10 | STR | all | any | any | Myrmidon, Sentinel, Ravager |
 | [Gladiator](#gladiator) | d10 | STR | all | any | any | Arena Champion, Twin-blade, Brute |
-| [Ranger](#ranger) | d10 | WIS | not dwarf, mul | any | any | Stalker, Seeker, Justifier |
-| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | any (light with another class) | any | Assassin, Swashbuckler, Shinobi |
+| [Ranger](#ranger) | d10 | WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
+| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light | any | Assassin, Swashbuckler, Shinobi |
 | [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Arcanist, Scholar, Battle Mage |
 | [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Healer, Crusader, Elementalist |
 | [Druid](#druid) | d8 | WIS | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
@@ -345,7 +345,7 @@ the strictest winning:
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
 | Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (as the game's lists allow) |
-| Thief with another class | light only | a leather one, if another class allows shields | as its classes allow |
+| Thief | light only | leather ones; with another class, only if that class allows shields | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any |
 | Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
@@ -584,10 +584,10 @@ so keep it off the front line.
 - AD&D's experience table (1,250 for 2nd level; *without the mod:* 1,200).
 - Up to 10th level, a d6 at 10th; hit dice rolled twice.
 
-**Weapons and armour.** Any as a single class, but of shields only leather ones
-(the game's own rule), and only a weapon no heavier than a long sword
-backstabs (see [Equipment](#equipment)); with another class, light armour and
-at most a leather shield.
+**Weapons and armour.** Any weapon, but only one no heavier than a long sword
+backstabs (see [Equipment](#equipment)); light armour only (leather, hide,
+silk), and of shields only leather ones (the game's own rule), with another
+class only if that class allows shields.
 
 **Kits.**
 
@@ -607,7 +607,7 @@ can't read magical script, and they travel light.
 |---|---|---|---|---|
 | **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks | the thief's gear; with fuller starting gear, a cloak | |
 | **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
-| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and Fogbolt, Reflected Image, Spook and Friends with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only; no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
+| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and Fogbolt, Reflected Image, Spook and Friends with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (with Class restrictions off too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
 
 The Shinobi's slots by level are in [Kits' spell slots](#kits-spell-slots).
 

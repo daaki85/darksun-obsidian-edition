@@ -63,6 +63,10 @@ have the detail.
   and none is put in a thief's backpack later.
 - **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
   shows `AC BONUS:1` with the helms rule, which says the same.
+- **Thieves wear light armour only** (leather, hide, silk), with class
+  restrictions on, as well as leather shields only (a multiclass thief: only
+  if another of its classes allows shields). Before, a thief of one class
+  could wear any armour.
 - **A ranger's bow is listed** on the Effects screen and the Characters tab
   (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
   expert with the bow, chosen or not, but only the chosen weapons were listed.
@@ -102,6 +106,14 @@ have the detail.
   sets its own, so after a character screen (whose selected portrait is
   yellow) they came out yellow. The creation screen's white is now set as it
   rolls, and the labels are drawn in it.
+- **The combat log's panel on the USE screen**, where it hid the screen's
+  right side and took its clicks (2.3.0): the panel stayed on with the map
+  left behind. It now shows on the map only.
+- **A new character's weapon specialization carried over** from the
+  character made before it: the game keeps one sheet for every character it
+  creates, and changing the classes cleared the kit but not the specs (a
+  druid/fighter after a fighter/preserver started specialized in the bow). The
+  specs are now cleared with the kit.
 
 ## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
 

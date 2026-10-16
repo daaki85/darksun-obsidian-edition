@@ -464,7 +464,10 @@ dice log running:
 - **The game's windows.** A figure's menu, a question or EXIT GAME are shown
   on the other screen, the view drawn there again first: the panel is not on
   it, and is back when the window closes. Full screens (USE, View Character)
-  stop the main loop, so it isn't drawn over them. (Drawing it into both
+  stop the main loop, and `PANEL_LIVE` counts the panel as on screen only on
+  the map (`SCREEN_IS` 1): else the hooks that draw the view round the panel
+  and keep its clicks from the game drew a full screen round it too, the panel
+  left over it and the clicks there lost. (Drawing it into both
   screens doesn't work: the game keeps other pictures in the one not shown.)
 - **The lines (Stage 2).** The Loader keeps the fight's dice log lines
   (`combatlog.Log`, the last 200, from the moment it sees a fight to 5 seconds
