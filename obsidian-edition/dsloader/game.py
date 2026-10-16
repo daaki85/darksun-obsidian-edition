@@ -408,9 +408,10 @@ EFFECT_RULES[8] += "; can't cast spells that need sight"
 EFFECT_RULES[47] += ", half movement and attacks, loses every other turn; ends Haste (Free Action and " \
                     "Protection from Paralysis prevent it)"
 EFFECT_RULES[22] = "double movement and attacks; ends Slow"
-# AD&D 2e strength damage adjustments (Dark Sun has no exceptional strength). The
-# game adds these after rolling melee damage; seen in play for STR 20 and 24.
-STR_DAMAGE = {1: -4, 2: -2, 3: -1, 4: -1, 5: -1, 16: 1, 17: 1, 18: 2, 19: 7, 20: 8, 21: 9,
+# The strength damage adjustments the game adds after rolling melee damage: its own table
+# (STR_DAMAGE_TABLE), which gives STR 18 +4 (AD&D's 18/76-90; Dark Sun has no exceptional
+# strength); these if it can't be read. Seen in play for STR 17, 18, 19, 20, 22 and 24.
+STR_DAMAGE = {1: -4, 2: -2, 3: -1, 4: -1, 5: -1, 16: 1, 17: 1, 18: 4, 19: 7, 20: 8, 21: 9,
               22: 10, 23: 11, 24: 12, 25: 14}
 
 
@@ -515,6 +516,7 @@ SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen 
 # To hit, as the game's attack setup adds it: STR (melee) or DEX (missiles) from these tables,
 # the attacker's effects, the weapon's plus or its material's penalty
 STR_TO_HIT, DEX_MISSILE = 0x7C2, 0x7DC  # DS: a byte per ability score
+STR_DAMAGE_TABLE = 0x7A8  # DS: the same, for melee damage (just before STR_TO_HIT)
 HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3))  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
 WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
@@ -746,6 +748,15 @@ class GameData:
 
     def _word(self, offset: int) -> int:
         return struct.unpack("<h", self.guest.read(self.ds * 16 + offset, 2))[0]
+
+    def str_damage(self, strength: int) -> int:
+        """What STRENGTH adds to melee damage: the game's table (STR_DAMAGE_TABLE, taken as the
+        game's when it starts as STR_DAMAGE does), else STR_DAMAGE."""
+        if 1 <= strength <= 25:
+            data = self.guest.read(self.ds * 16 + STR_DAMAGE_TABLE + 1, 25)
+            if len(data) == 25 and struct.unpack_from("b", data)[0] == STR_DAMAGE[1]:
+                return struct.unpack_from("b", data, strength - 1)[0]
+        return STR_DAMAGE.get(strength, 0)
 
     def creature(self, index: int) -> bytes:
         if not 0 <= index < 512:

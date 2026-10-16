@@ -114,6 +114,9 @@ have the detail.
   creates, and changing the classes cleared the kit but not the specs (a
   druid/fighter after a fighter/preserver started specialized in the bow). The
   specs are now cleared with the kit.
+- **The dice log's damage for a STR 18 character was 2 short**: it added +2
+  for STR 18, but the game's own table adds +4, so a hit logged as 10 took 12
+  hit points. The Loader now reads the game's table (as it does STR's to-hit).
 
 ## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
 

@@ -88,6 +88,20 @@ class HitTests(unittest.TestCase):
             self.assertEqual([(h.name, h.thac0) for h in g.weapon_hits(0)], [("unarmed", thac0)], kits.name(kid))
 
 
+class StrengthDamageTests(unittest.TestCase):
+    def test_the_games_table(self):
+        g = dag().game
+        m, ds = g.guest.mem, DS * 16
+        table = [game.STR_DAMAGE.get(n, 0) for n in range(1, 26)]
+        table[17] = 5  # (STR 18, as the game's table might have it)
+        m[ds + game.STR_DAMAGE_TABLE + 1:ds + game.STR_DAMAGE_TABLE + 26] = struct.pack("25b", *table)
+        self.assertEqual((g.str_damage(18), g.str_damage(1), g.str_damage(24)), (5, -4, 12))
+
+    def test_unread_table(self):  # (not the game's: the AD&D table, STR 18 as the game has it)
+        g = dag().game
+        self.assertEqual((g.str_damage(17), g.str_damage(18), g.str_damage(10)), (1, 4, 0))
+
+
 class SaveTests(unittest.TestCase):
     def test_con_on_paralysis_poison_death(self):
         """Dag, a half-giant: CON 21 is +2 on his first save only."""

@@ -26,7 +26,7 @@ from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, 
 
 from . import buyback, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
-                   EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
+                   EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
@@ -1930,7 +1930,7 @@ class DiceLog:
             steps += " (raised to the minimum of 1)"
         if mode is not None and mode <= 1:  # melee: the game adds the attacker's STR bonus
             strength = g.creature(attacker)[CREATURE_ABILITIES]
-            str_bonus = STR_DAMAGE.get(strength, 0)
+            str_bonus = g.str_damage(strength)
             if str_bonus:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
