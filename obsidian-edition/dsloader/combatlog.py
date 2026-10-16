@@ -1,6 +1,6 @@
 """The combat log's panel in the game (DSCLOG's PANEL), drawn and kept up by the Loader.
 
-The Loader draws the panel, a picture of PANEL_W x PANEL_H palette indices (render), and puts it
+The Loader draws the panel, a picture of PANEL_W x PANEL_H palette indices (render), and puts it (planar)
 in the memory block DSCLOG keeps for it (TSR_PANEL_SEG); DSCLOG puts the picture over the map,
 bottom right, from the game's main loop and after each rectangle of the view the game draws again
 (the map is drawn straight into the screen on show, a rectangle at a time). The Loader turns it on
@@ -344,6 +344,18 @@ BUTTON_W = 9  # the header's + and - buttons, at its right; the level chip befor
 PLUS_X0 = PANEL_W - 5 - BUTTON_W
 MINUS_X0 = PLUS_X0 - 1 - BUTTON_W
 HEADER_Y0, HEADER_Y1 = 2, 11  # (the buttons' rows)
+
+
+def planar(picture: bytes, width: int) -> bytes:
+    """PICTURE (rows of WIDTH palette indices) as DSCLOG copies it to the screen (PANEL_BLIT): each
+    row its four planes' bytes in turn (the 1st, 5th, 9th ... pixels, then the 2nd, 6th ...), so a
+    plane's part of a row is a run of bytes, copied whole."""
+    out = bytearray()
+    for y in range(0, len(picture), width):
+        row = picture[y:y + width]
+        for plane in range(4):
+            out += row[plane::4]
+    return bytes(out)
 
 
 def render(dac: bytes, ink: Optional[Dict[str, int]] = None, g: Geometry = SIZES[DOCKED]) -> bytes:
@@ -828,7 +840,7 @@ class Panel:
                     top = lines[-1].text if lines else top
                 picture = draw(self._backgrounds[size], self.font, self._ink, top, lines, names, self.first,
                                max(0, self._rows - self._back_rows), g, self.level, self.filter)
-                guest.write(seg * 16, picture)
+                guest.write(seg * 16, planar(picture, g.width))
                 guest.write(tsr_hdr + TSR_PANEL_TOP, struct.pack("<HH", g.top, g.height))
                 guest.write(tsr_hdr + TSR_PANEL_NEW, struct.pack("<H", 1))
                 self._shown = now[:5] + (self.first,) + now[6:]

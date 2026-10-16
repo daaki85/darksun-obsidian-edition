@@ -397,7 +397,9 @@ running:
   (`panel_seg`, header `+328`); the dice log's ring has a block of its own
   there too. With EMS on there is no such block and no panel.
 - **Putting it on screen.** DSCLOG copies the picture into the screen on
-  show, a plane at a time (`PANEL_BLIT`, its height kept on the screen), from
+  show, a plane at a time (`PANEL_BLIT`, its height kept on the screen; the
+  Loader stores each row as its four planes' bytes in turn, `combatlog.planar`,
+  so a plane's part of a row is copied whole with `REP MOVSW`), from
   the main loop (`PANEL_TICK`, in `PROBE_SCROLL`) when the floor has been
   drawn since or the Loader has a new picture (`panel_new`, `+330`).
 - **Kept whole.** The game draws what moves a rectangle at a time, through
@@ -433,7 +435,7 @@ running:
   pointer is to be drawn over it, or was last drawn over it (`[A137h]`,
   `[A13Fh]`; `POINTER_MOST`, 32, the box). `PANEL_DRAW_POINTER` puts the panel
   and then calls 093D, without taking the pointer off. `PANEL_TICK`'s refresh
-  every 16 passes, with the panel unchanged, is `PANEL_DRAW_AROUND`: the panel
+  with the panel unchanged (at most once a BIOS tick), is `PANEL_DRAW_AROUND`: the panel
   without the pointer's box (`PB_SKIP` in `PANEL_BLIT`), so the pointer stays
   on screen.
 - **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
@@ -469,8 +471,10 @@ running:
 - **Drawn again.** Besides the floor and the redrawn rectangles, the game
   draws parts of the view in a fight as the pointer moves over it (what it is
   over), through routines not hooked: `PANEL_TICK` puts the panel again when
-  the pointer has moved, on that pass and the next, and every 16 passes
-  anyway (round the pointer: see **The pointer**).
+  the pointer has moved, and anyway (round the pointer: see **The
+  pointer**), at most once a BIOS tick (`PANEL_TICKS`; counted in passes of
+  the main loop, it was most of what the game's CPU did with the pointer
+  moving).
 - **Sizes (Stage 4).** The Loader sets the panel's top and height
   (`+344`, `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130,
   the most); its foot stays at row 198. Smaller than it was, DSCLOG draws the

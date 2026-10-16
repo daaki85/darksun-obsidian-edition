@@ -61,6 +61,15 @@ have the detail.
   copy of the game's memory.
 
 **Fixed**
+- **The game slowed down with the combat log's panel shown** (2.3.0). The
+  helper put the panel on screen again on every pass of the game's main loop
+  while the pointer moved, and every 16 passes when it didn't, with a slow
+  copy (a byte at a time, picked out of the picture); with the game's CPU at
+  a fixed speed, that took most of it (in a fight, the game's idle loop ran
+  1,100 to 1,500 times a second with the panel shown, against 3,600 without).
+  The panel is now put again at most once a BIOS tick (18 a second), and the
+  Loader stores the picture so that each plane's part of a row is copied
+  whole: with the panel shown, the loop runs 3,500 to 3,600 times a second.
 - **A multiclass preserver could cast in armour** (class restrictions on,
   since 2.0.0). The USE screen said NO SPELLS IN ARMOUR, but the spells
   stayed in use: the helper asked about the wrong character, reading it from

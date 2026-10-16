@@ -328,7 +328,8 @@ sold_q     times 4 * 2 dw 0     ; +310 the last SOLD_SLOTS of them: the thing ho
 panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log's panel drawn
                                 ;      over the map (PANEL), 0 to have it gone (the view drawn again)
 panel_seg  dw 0                 ; +328 the panel's picture: PANEL_W x PANEL_H palette indices, row
-                                ;      by row, the Loader's to draw (combatlog.py); its own
+                                ;      by row, each row its four planes' bytes in turn (PANEL_BLIT),
+                                ;      the Loader's to draw (combatlog.py); its own
                                 ;      memory block (0: none could be had, no panel)
 panel_new  dw 0                 ; +330 the Loader sets 1 once it has put a new picture there;
                                 ;      DSCLOG draws it and sets it back to 0
@@ -14904,8 +14905,8 @@ view_again:
         ret
 
 ; PANEL: the combat log's panel over the map, bottom right. The Loader draws it (combatlog.py:
-; its frame and, in time, the log's lines), PANEL_W x PANEL_H palette indices in PANEL_SEG, and this
-; puts that picture on screen. The map is drawn straight into the screen on show (no page flip on
+; its frame and, in time, the log's lines), PANEL_W x PANEL_H palette indices in PANEL_SEG (each
+; row its planes in turn), and this puts that picture on screen. The map is drawn straight into the screen on show (no page flip on
 ; the map), a rectangle at a time, so the picture is put again from the main loop (PANEL_TICK, from
 ; PROBE_SCROLL) whenever the floor has been drawn since (FLOOR_ENTER marks it) or the Loader has
 ; a new one (PANEL_NEW), and at the end of each redrawn rectangle (REDRAW_POST), into the page on
@@ -14987,19 +14988,23 @@ panel_tick:
         je .draw
         cmp byte [cs:panel_dirty], 0
         jne .draw
+        mov ax, [cs:map_tick]           ; put again at most once a BIOS tick (PANEL_TICKS: a pass
+        sub ax, [cs:panel_at]           ;   at a time it was most of what the game's CPU did)
+        cmp ax, PANEL_TICKS
+        jb .ret
         mov ax, [cs:panel_mx]           ; the pointer moved: the game may have drawn the view
         cmp ax, [cs:panel_lx]           ;   under it again in ways not hooked (in a fight, what
-        jne .moved                      ;   the pointer is over, later in the pass too): put
-        mov ax, [cs:panel_my]           ;   again, now and on the next pass
+        jne .draw                       ;   the pointer is over, later in the pass too): put
+        mov ax, [cs:panel_my]           ;   again, the pointer over it
         cmp ax, [cs:panel_ly]
-        jne .moved
-        dec byte [cs:panel_wait]        ; and every PANEL_EVERY passes anyway (round the pointer:
-        jnz .ret                        ;   PANEL_DRAW_AROUND, the panel itself unchanged)
-        mov byte [cs:panel_wait], PANEL_EVERY
+        jne .draw
+        mov ax, [cs:map_tick]           ; and anyway (round the pointer: PANEL_DRAW_AROUND, the
+        mov [cs:panel_at], ax           ;   panel itself unchanged)
         call panel_draw_around
         ret
-.draw:  mov byte [cs:panel_wait], PANEL_EVERY
-.put:   mov byte [cs:panel_dirty], 0
+.draw:  mov ax, [cs:map_tick]
+        mov [cs:panel_at], ax
+        mov byte [cs:panel_dirty], 0
         mov byte [cs:panel_shown], 1
         mov ax, [cs:panel_mx]
         mov [cs:panel_lx], ax
@@ -15007,26 +15012,28 @@ panel_tick:
         mov [cs:panel_ly], ax
         call panel_draw_pointer
         ret
-.moved: mov byte [cs:panel_wait], 1
-        jmp .put
 .strip: cmp word [cs:panel_new], 0      ; the strip below the map: put when new, and now and
         jne .sput                       ;   then (nothing of the game's goes there; the game's
         cmp byte [cs:panel_shown], 0    ;   mode setting clears it)
         je .sput
-        dec byte [cs:panel_wait]
-        jnz .ret
+        mov ax, [cs:map_tick]
+        sub ax, [cs:panel_at]
+        cmp ax, STRIP_TICKS
+        jb .ret
 .sput:  mov word [cs:panel_new], 0
-        mov byte [cs:panel_wait], PANEL_EVERY
+        mov ax, [cs:map_tick]
+        mov [cs:panel_at], ax
         mov byte [cs:panel_shown], 1
         mov byte [cs:strip_mode], 0
         call strip_sum                  ; (the colours it is in: STRIP_SAME)
         mov [cs:strip_shown_sum], ax
         call panel_draw
         ret
-PANEL_EVERY equ 16
+PANEL_TICKS equ 1               ; (BIOS ticks, 18.2 a second, between puts with nothing new)
+STRIP_TICKS equ 9
+panel_at   dw 0                 ; (the BIOS tick of the last put: PANEL_TICK)
 STRIP_EVERY equ 512             ; (passes between the strip's emptying again, the log off)
 strip_wait dw 1
-panel_wait db PANEL_EVERY
 panel_lx   dw 0
 panel_ly   dw 0
 panel_cx   dw 0                 ; (the view's top left at the last pass: PANEL_TICK)
@@ -15335,13 +15342,15 @@ pb_go:  mov ax, [cs:panel_top]
         shl ah, cl
         mov al, 2
         out dx, ax
-        mov si, bx                      ; the picture's first pixel of this plane ...
-        mov ax, [cs:pb_top]             ; ... and the screen's byte for it
+        mov ax, [cs:pb_top]             ; the screen's byte for the picture's first row ...
         sub ax, [cs:pb_row0]
         mov dx, 80
         mul dx
         add ax, [cs:pb_x4]
         mov di, ax
+        mov ax, [cs:pb_w4]              ; ... and this plane's bytes of it (each of the picture's
+        mul bx                          ;   rows its four planes' bytes in turn: combatlog.py
+        mov si, ax                      ;   PLANAR), copied whole
         mov dx, [cs:pb_rows]
         mov bp, [cs:pb_top]             ; (BP: the row on screen)
 .row:   mov cx, [cs:pb_w4]
@@ -15352,25 +15361,23 @@ pb_go:  mov ax, [cs:panel_top]
         cmp bp, [cs:pb_sy1]
         jge .pix
         mov cx, [cs:pb_left]            ; the pointer's row: the bytes left of its box, its box
-        jcxz .box                       ;   left as it is, then the bytes right of it
-.lpix:  mov al, [si]
-        stosb
-        add si, 4
-        loop .lpix
-.box:   mov cx, [cs:pb_mid]
+        rep movsb                       ;   left as it is, then the bytes right of it
+        mov cx, [cs:pb_mid]
         add di, cx
-        shl cx, 2
         add si, cx
         mov cx, [cs:pb_w4]
         sub cx, [cs:pb_left]
         sub cx, [cs:pb_mid]
-        jcxz .next
-.pix:   mov al, [si]
-        stosb
-        add si, 4
-        loop .pix
-.next:  add di, 80
+.pix:   shr cx, 1
+        rep movsw
+        adc cx, cx
+        rep movsb
+        add di, 80
         sub di, [cs:pb_w4]
+        mov ax, [cs:pb_w4]              ; (past the other planes' bytes of the row)
+        add si, ax
+        add si, ax
+        add si, ax
         inc bp
         dec dx
         jnz .row

@@ -190,6 +190,13 @@ class DrawingTests(unittest.TestCase):
                          c.draw(background, None, ink, "", [], {}))
 
 
+class PlanarTests(unittest.TestCase):
+    def test_planar(self):
+        """Each row its four planes' bytes in turn (DSCLOG's PANEL_BLIT copies a plane's run whole)."""
+        picture = bytes(range(16))  # two rows of 8
+        self.assertEqual(c.planar(picture, 8), bytes((0, 4, 1, 5, 2, 6, 3, 7, 8, 12, 9, 13, 10, 14, 11, 15)))
+
+
 class FakeGuest:
     def __init__(self):
         self.mem = bytearray(0x10000)
