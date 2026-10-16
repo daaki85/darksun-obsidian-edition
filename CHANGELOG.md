@@ -2,8 +2,8 @@
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first. Released pull requests are summarised
-in a line or two each; the release notes ([2.3.0](release-notes/v2.3.0.md):
-#44 to #46; [2.2.1](release-notes/v2.2.1.md): #43;
+in a line or two each; the release notes ([2.4.0](release-notes/v2.4.0.md):
+#48 and #49; [2.3.0](release-notes/v2.3.0.md): #44 to #46; [2.2.1](release-notes/v2.2.1.md): #43;
 [2.2.0](release-notes/v2.2.0.md): #39 to #42;
 [2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35;
 [2.0.0](release-notes/v2.0.0.md): #31 and #32;
