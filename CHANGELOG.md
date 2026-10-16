@@ -75,6 +75,9 @@ have the detail.
   its pointer on the screen not on show and copies the box round it to the
   one on show; the panel was only on the one on show, so the copy brought
   the map back over it. The panel is now put on both.
+- **No THAC0 (T) on an "Arrows" line** on the inventory screen: when the
+  game lists a character's arrows in place of the bow that shoots them, the
+  helper now gives the line the bow's THAC0.
 - **Yellow ability labels on the character creation screen** (STR: to CHR:),
   still, after the fix below: the routine that draws them uses the colour the
   last screen left, and runs before the creation screen sets its own. It now

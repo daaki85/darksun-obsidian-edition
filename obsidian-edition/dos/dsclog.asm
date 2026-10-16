@@ -2266,6 +2266,20 @@ probe_weapon:
         inc cx
         cmp cx, 3
         jb .find
+        mov ax, AMMO_SLOT       ; (the game lists the ammunition a missile weapon shoots, its
+        call w_slot             ;   arrows: the THAC0 is the missile weapon's)
+        jne .done
+        xor cx, cx
+.missile:
+        mov di, cx
+        shl di, 1
+        mov dx, [cs:bx + di + 8]
+        mov ax, MISSILE_SLOT_W
+        call w_slot
+        je .found
+        inc cx
+        cmp cx, 3
+        jb .missile
         jmp .done
 .found: mov di, cx
         mov al, [cs:bx + di + 14]
@@ -2294,6 +2308,27 @@ probe_weapon:
         push word [cs:w_cs]
         push word [cs:w_ip]
         iret
+
+; W_SLOT: ZF set if item DX (0270Fh and above: none) is in slot AX (its +11h). DS the game's;
+; registers kept.
+AMMO_SLOT      equ 1
+MISSILE_SLOT_W equ 2
+w_slot:
+        cmp dx, 0x270F
+        jae .no
+        push bx
+        push es
+        push ax
+        imul bx, dx, 0x15
+        les ax, [0x165D]
+        add bx, ax
+        pop ax
+        cmp [es:bx + 0x11], al
+        pop es
+        pop bx
+        ret
+.no:    cmp sp, 0               ; (ZF clear)
+        ret
 
 w_ip    dw 0
 w_cs    dw 0
