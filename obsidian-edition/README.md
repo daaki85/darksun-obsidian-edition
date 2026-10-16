@@ -758,7 +758,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](#two-weapons)), and the difficulty setting for monsters. |
 | `  X hits Y for 14: 1d8 = [6] +8 STR 20` | The damage of that hit: the dice, the weapon's bonus, and the STR bonus the game adds for melee. Damage is at least 1. |
 | `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](#attacks-from-behind-and-backstabs)) multiplies the whole damage, STR bonus included. |
-| `Mistra dances: d20 = 3, needs 22 or less (DEX 22) -> +1 to hit, damage and AC for 19 rounds` / `Halton fights wild: d20 = 9, needs 15 or less (CON 15) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Blood-Fury's Wild Fighting as a fight starts (see [Multiclass kits](#multiclass-kits)). |
+| `Mistra dances: d20 = 3, needs 22 or less (DEX 22) -> +1 to hit, damage and AC for 19 rounds` / `Halton fights wild: d20 = 9, needs 15 or less (CON 15) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](#choosing-an-enemy-tab-enter-and-the-rings)). |
 
 **Spells, saves and effects**
@@ -1976,7 +1976,7 @@ Loader works that out about once a second.
 | **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile | its classes' gear | the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | the spells it may cast and its slots are its own level's |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | as the Spirit Caller's |
-| **Blood-Fury** | mul cleric/fighter | **Wild Fighting** as each fight starts: a d20 against CON (the proficiency, +0); at CON or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight | over CON, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
+| **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON (the proficiency, +0); at CON or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight | over CON, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
 
 A thief skill a kit lowers never goes below 0. The kits start with their
 classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)).

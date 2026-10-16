@@ -71,7 +71,7 @@ AVENGER, RESCUER = KIT_IDS["Wilderness Avenger"], KIT_IDS["Rescuer"]
 GHETTO, WAYFINDER = KIT_IDS["Ghetto Fighter"], KIT_IDS["Wayfinder"]
 SPELLARCHER, TITAN_MIND, POISONER = KIT_IDS["Spellarcher"], KIT_IDS["Titan Mind"], KIT_IDS["Poisoner"]
 SPIRIT_CALLER, WASTE_SEER = KIT_IDS["Spirit Caller"], KIT_IDS["Wasteland Seer"]
-BLOOD_FURY = KIT_IDS["Blood-Fury"]
+WILD_FURY = KIT_IDS["Wild Fury"]
 # a Battle Dancer's weapon kinds: the long sword and the bow (DSCLOG's kit_dancer)
 DANCER_KINDS = frozenset((0, BOW))
 DAGGER = 2  # (the dagger's weapon kind: a Ghetto Fighter's +1)
@@ -377,14 +377,14 @@ POISONER_TO_HIT = -1  # (every attack, melee or missile: KIT_TO_HIT)
 POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's first hit in a fight (PROBE_POISON)
 
 
-# a Blood-Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON as a fight starts,
+# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON as a fight starts,
 # for the fight. Passed, 1 more attack a round in melee (2 halves) and 3 more damage; failed, 3
 # worse to hit and AC 3 worse (no worse than WILD_AC_MOST), every fight.
 WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
 
 
 def wild_check(con: int, d20: int) -> bool:
-    """A Blood-Fury's Wild Fighting check: a D20 of CON or less (the proficiency's, +0)."""
+    """A Wild Fury's Wild Fighting check: a D20 of CON or less (the proficiency's, +0)."""
     return d20 <= con
 
 

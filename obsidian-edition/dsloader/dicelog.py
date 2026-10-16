@@ -407,7 +407,7 @@ class DiceLog:
         self._tables: Optional[monsters.MonsterTables] = None  # the monster kinds (read once)
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
-        self._wild = wild.WildFights()  # (the Blood-Furies' Wild Fighting, fight by fight)
+        self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
@@ -892,7 +892,7 @@ class DiceLog:
                 hit += kits.POISONER_TO_HIT
             if mode is not None:  # (DSCLOG's KIT_TO_HIT: anything but a dagger, unarmed too)
                 hit += kits.ghetto_to_hit(kid, kind)
-            if kid == kits.BLOOD_FURY and attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*)
+            if kid == kits.WILD_FURY and attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*)
                 if g.wild[attacker]:
                     dam += kits.WILD_DAMAGE
                 else:
@@ -900,7 +900,7 @@ class DiceLog:
             if weapon or hit or dam or more:
                 names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
                              + (" under the open sky" if kid == kits.SCOUT else "")
-                             + (" fighting wild" if kid == kits.BLOOD_FURY and attacker in g.wild else ""))
+                             + (" fighting wild" if kid == kits.WILD_FURY and attacker in g.wild else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
         return " and ".join(names), to_hit, damage
 

@@ -18,7 +18,7 @@ have the detail.
   fighter/thief: its first hit in each fight poisons, a save or 10 damage; −1
   to hit), **Spirit Caller** (halfling cleric/psionicist) and **Wasteland
   Seer** (thri-kreen druid/fighter: spells cast 2 levels higher under the open
-  sky, 1 lower under a roof), and the **Blood-Fury** (mul cleric/fighter), with
+  sky, 1 lower under a roof), and the **Wild Fury** (mul druid/fighter), with
   **Wild Fighting** (the AD&D proficiency): as each fight starts, a d20 against
   CON. Passed, 1 more attack a round in melee and +3 damage for the fight;
   failed, −3 to hit and AC 3 worse. The dice log shows the check.

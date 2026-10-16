@@ -742,7 +742,7 @@ class GameData:
         self.rules = RULES_IN_FORCE if rules is None else rules
         self.belt = BELT_IN_FORCE
         self.dance: Dict[int, int] = {}  # each party member's Battle Dancer's dance now (+1, -1: dance.py)
-        self.wild: Dict[int, bool] = {}  # each Blood-Fury fighting wild this fight: whether its check passed (wild.py)
+        self.wild: Dict[int, bool] = {}  # each Wild Fury fighting wild this fight: whether its check passed (wild.py)
 
     def _word(self, offset: int) -> int:
         return struct.unpack("<h", self.guest.read(self.ds * 16 + offset, 2))[0]
@@ -1589,7 +1589,7 @@ class GameData:
                     + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
-                if kid == kits.BLOOD_FURY and self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT)
+                if kid == kits.WILD_FURY and self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT)
                     parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
                 from . import specialize
@@ -1605,7 +1605,7 @@ class GameData:
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
                 if kits.warrior_attacks(have, self.sheet(creature)) != have:
                     halves = kits.warrior_attacks(have, self.sheet(creature))
-            if not missile and self.wild.get(creature) and kits.BLOOD_FURY in kids:
+            if not missile and self.wild.get(creature) and kits.WILD_FURY in kids:
                 # (Wild Fighting, its check passed: 1 more attack a round in melee; DSCLOG's WILD_HALVES)
                 halves = (self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves) + kits.WILD_HALVES
             if not missile and self.rules & RULE_TWO_WEAPONS and slot == WEAPON_HANDS[1]:

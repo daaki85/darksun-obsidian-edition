@@ -351,7 +351,7 @@ kit_outdoors db 0               ; +350 the Loader sets bit N while party member 
 kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance, the Loader's (it
                                 ;      rolls it as a fight starts and counts its rounds): +1 danced
                                 ;      well, -1 stumbled, 0 none; to hit, to damage and on AC (KIT_EXTRA)
-kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py: it rolls each Blood-Fury's
+kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py: it rolls each Wild Fury's
                                 ;      check as a fight starts, clears it as the fight ends): bit N
                                 ;      party member N's check failed (3 worse to hit, AC 3 worse), bit
                                 ;      N + 4 it passed (1 more attack a round in melee, 3 more damage)
@@ -4141,7 +4141,7 @@ KIT_TITAN_MIND equ 61
 KIT_POISONER equ 65
 KIT_SPIRIT_CALLER equ 69
 KIT_WASTE_SEER equ 73
-KIT_BLOOD_FURY equ 77
+KIT_WILD_FURY equ 77
 WP_DISC      equ 0xEA2              ; DS: the panel's windows (far)
 WP_SPHERE    equ 0xEA6
 WP_DISC_MASK equ 0x4980             ; DS: the disciplines and spheres marked, kept while hidden
@@ -4359,7 +4359,7 @@ multi_table db 3
             db 8
             dw (1 << 2) | (1 << 3)      ; thri-kreen druid/fighter: Wasteland Seer
             db 7
-            dw (1 << 1) | (1 << 3)      ; mul cleric/fighter: Blood-Fury
+            dw (1 << 2) | (1 << 3)      ; mul druid/fighter: Wild Fury
             db 0
 multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1
 km_rows     db 4                ; (KIT_MARKS: the page's rows)
@@ -5413,7 +5413,7 @@ kit_is_b:
 ; the creature's kit's (kits.ac): a Ravager's base AC by its level (RAVAGER_AC) where it is better
 ; than its sheet's (+27h), its armour improving it as before; a Wanderer's 1 worse; a Sentinel's 2
 ; better with a shield in a hand, an Arena Champion's 1; a Grove Warden's 1 better for every 3 druid levels. DS the game's;
-; a Blood-Fury whose Wild Fighting check failed (KIT_WILD) 3 worse, no worse than 10.
+; a Wild Fury whose Wild Fighting check failed (KIT_WILD) 3 worse, no worse than 10.
 ; others kept.
 kit_ac:
         test word [cs:rules_hi], RULE_HI_KITS
@@ -8374,7 +8374,7 @@ kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
              db 'POISONER', 0, 0, 0
              db 'SPIRIT CALLER', 0, 0, 0
              db 'WASTELAND SEER', 0, 0, 0
-             db 'BLOOD-FURY', 0, 0, 0
+             db 'WILD FURY', 0, 0, 0
 kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the screen's)
 kit_asleep   db ' (ASLEEP)', 0
 ; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.

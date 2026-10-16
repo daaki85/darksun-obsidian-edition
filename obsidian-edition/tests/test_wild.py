@@ -1,4 +1,4 @@
-"""A Blood-Fury's Wild Fighting (wild.py): checked as each fight's first round begins, kept for
+"""A Wild Fury's Wild Fighting (wild.py): checked as each fight's first round begins, kept for
 the fight."""
 
 import os
@@ -13,7 +13,7 @@ HDR = 0x100
 
 
 class FakeGd:
-    """Party member 2 a Blood-Fury with CON 18, member 0 none."""
+    """Party member 2 a Wild Fury with CON 18, member 0 none."""
 
     def __init__(self):
         self.wild = {}
@@ -38,7 +38,7 @@ class FakeGd:
         return "Mul" if member == 2 else "Other"
 
     def kit_ids(self, member):
-        return [kits.BLOOD_FURY] if member == 2 else []
+        return [kits.WILD_FURY] if member == 2 else []
 
     def bits(self):
         return self.written[HDR + wild.TSR_WILD][0]

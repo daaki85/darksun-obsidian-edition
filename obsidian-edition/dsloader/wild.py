@@ -1,4 +1,4 @@
-"""A Blood-Fury's Wild Fighting (kits.py): checked for each one as a fight's first round begins,
+"""A Wild Fury's Wild Fighting (kits.py): checked for each one as a fight's first round begins,
 kept for the fight, and given to DSCLOG (its KIT_WILD bits) for to hit, damage, attacks and AC.
 
 The check is the Wild Fighting proficiency's (The Complete Barbarian's Handbook): a d20 against
@@ -42,7 +42,7 @@ class WildFights:
             rec = gd.creature(member)
             if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] \
                     or rec[game.CREATURE_STATUS] not in game.STATUS_ABLE \
-                    or kits.BLOOD_FURY not in gd.kit_ids(member):
+                    or kits.WILD_FURY not in gd.kit_ids(member):
                 continue
             who = gd.creature_name(member)
             con, d20 = rec[game.CREATURE_ABILITIES + 2], roll(1, 20)

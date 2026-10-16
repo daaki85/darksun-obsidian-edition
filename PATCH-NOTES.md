@@ -103,7 +103,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Halfling fighter/thief | Poisoner |
 | Halfling cleric/psionicist | Spirit Caller |
 | Thri-kreen druid/fighter | Wasteland Seer |
-| Mul cleric/fighter | Blood-Fury |
+| Mul druid/fighter | Wild Fury |
 
 - **Arcanist:** one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
@@ -111,7 +111,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there; worse under a roof, and it never backstabs.
-- **Blood-Fury:** Wild Fighting as each fight starts, a roll against CON: one more attack a round and +3 damage, or −3 to hit and AC 3 worse if it fails.
+- **Wild Fury:** Wild Fighting as each fight starts, a roll against CON: one more attack a round and +3 damage, or −3 to hit and AC 3 worse if it fails.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 

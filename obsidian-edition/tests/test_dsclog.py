@@ -890,13 +890,13 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.attack(3, self.AXE, **glad)[1:3], (15, 3))
         self.assertEqual(self.attack(2, self.BOW, missile=True, **glad)[1:3], (15, 3))
 
-    def test_blood_fury(self):
-        """Wild Fighting for a Blood-Fury (a mul cleric/fighter, party member 2; the header's +355,
+    def test_wild_fury(self):
+        """Wild Fighting for a Wild Fury (a mul druid/fighter, party member 2; the header's +355,
         KIT_WILD, the Loader's): its check passed (bit 6), 1 more attack a round in melee and 3 more
         damage, melee or missile; failed (bit 2), 3 worse to hit; another member's bits nothing."""
         from dsloader import kits
         hdr = TSR * 16 + load_image().find(HDR_SIG)
-        fury = dict(classes=(1, 9, 0), levels=(3, 3, 0), race=7, kit=1, rules=game.RULE_KITS, me=2)
+        fury = dict(classes=(5, 9, 0), levels=(3, 3, 0), race=7, kit=1, rules=game.RULE_KITS, me=2)
         try:
             for bits, melee, missile in ((0, (3, 15, 3, 8), (15, 3)),
                                          (0x40, (3 + kits.WILD_HALVES, 15, 3 + kits.WILD_DAMAGE, 8), (15, 6)),
@@ -3660,16 +3660,17 @@ class KitTests(unittest.TestCase):
             self.mu.mem_write(hdr + 351, bytes(4))
 
     def test_wild_ac(self):
-        """KIT_AC for a Blood-Fury (a mul cleric/fighter, party member 2) whose Wild Fighting check
+        """KIT_AC for a Wild Fury (a mul druid/fighter, party member 2) whose Wild Fighting check
         failed (the header's +355, KIT_WILD bit 2): 3 worse, no worse than 10 (kits.wild_ac);
         passed (bit 6), as it is."""
         from dsloader import kits
         self.rules(game.RULE_KITS)
         hdr = TSR * 16 + self.image.find(HDR_SIG)
         try:
-            self.creature(1, 1, index=2, second=9, race=7)
-            self.assertEqual(self.kit_of(1, 1, game.RULE_KITS, 9, 7), kits.BLOOD_FURY)
-            self.assertNotEqual(self.kit_of(1, 1, game.RULE_KITS, 9, 3), kits.BLOOD_FURY)  # (an elf's: Battle Dancer)
+            self.creature(5, 1, index=2, second=9, race=7)
+            self.assertEqual(self.kit_of(5, 1, game.RULE_KITS, 9, 7), kits.WILD_FURY)
+            self.assertNotEqual(self.kit_of(1, 1, game.RULE_KITS, 9, 7), kits.WILD_FURY)  # (a mul cleric/fighter: none)
+            self.assertNotEqual(self.kit_of(1, 1, game.RULE_KITS, 9, 3), kits.WILD_FURY)  # (an elf's: Battle Dancer)
             for bits in (0x04, 0x40, 0x0B):
                 for ac in (-2, 3, 8, 10, 12):
                     with self.subTest(bits=bits, ac=ac):

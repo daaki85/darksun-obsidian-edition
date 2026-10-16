@@ -996,9 +996,10 @@ loudly; behind walls, hardly at all.
 *Wasteland Seer* (thri-kreen druid/fighter). Thri-kreen who read the wastes as
 others read books. The open land lends their spells its strength.
 
-*Blood-Fury* (mul cleric/fighter). Muls bred for the fighting pits, who call on
-something older than their gods when the blood starts to flow. Some days the
-fury answers; some days it only makes them reckless.
+*Wild Fury* (mul druid/fighter). Muls who broke out of the fighting pits for
+the wastes, and found the land's own fury waiting there. When the blood starts
+to flow they call on it: some days it answers; some days it only makes them
+reckless.
 
 | Kit | Race and classes | Gives | Costs |
 |---|---|---|---|
@@ -1014,7 +1015,7 @@ fury answers; some days it only makes them reckless.
 | **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower |
-| **Blood-Fury** | mul cleric/fighter | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight |
+| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight |
 
 ### Kits' spell slots
 

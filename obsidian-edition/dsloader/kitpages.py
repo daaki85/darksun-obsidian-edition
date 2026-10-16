@@ -30,7 +30,7 @@ KITS = {1: ("Elementalist", "Healer", "Crusader"),
         8: ("Swashbuckler", "Assassin", "Shinobi"),
         9: ("Battle Dancer",), 10: ("Shadowblade", "Military Scout"), 11: ("Wilderness Avenger",),
         12: ("Rescuer",), 13: ("Ghetto Fighter", "Wayfinder"), 14: ("Spellarcher",), 15: ("Titan Mind",),
-        16: ("Poisoner",), 17: ("Spirit Caller",), 18: ("Wasteland Seer",), 19: ("Blood-Fury",)}
+        16: ("Poisoner",), 17: ("Spirit Caller",), 18: ("Wasteland Seer",), 19: ("Wild Fury",)}
 # the multiclass kits' groups: (race, the pair of classes as the creation screen numbers them)
 ELF, HALF_ELF, DWARF, HALF_GIANT, HALFLING, MUL, THRI_KREEN = 3, 4, 2, 5, 6, 7, 8
 MULTI = {9: (ELF, frozenset((1, 3))),  # elf cleric/fighter
@@ -43,7 +43,7 @@ MULTI = {9: (ELF, frozenset((1, 3))),  # elf cleric/fighter
          16: (HALFLING, frozenset((3, 8))),  # halfling fighter/thief
          17: (HALFLING, frozenset((1, 6))),  # halfling cleric/psionicist
          18: (THRI_KREEN, frozenset((2, 3))),  # thri-kreen druid/fighter
-         19: (MUL, frozenset((1, 3)))}  # mul cleric/fighter
+         19: (MUL, frozenset((2, 3)))}  # mul druid/fighter
 # the rows' text where the name is too long for the panel
 SHORT = {"Arena Champion": "CHAMPION", "Swashbuckler": "SWASHBUCK", "Elementalist": "ELEMENTAL",
          "Grove Warden": "WARDEN", "Battle Mage": "BATTLMAGE", "Mind Bender": "M-BENDER", "Mind Warrior": "M-WARRIOR",
