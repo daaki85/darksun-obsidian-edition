@@ -51,6 +51,7 @@ TSR_SKILLS_ON = 266  # bits: item boxes name a cloak's and boots' bonus to hidin
 SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and opening locks (and its box says)
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
+TSR_POISONED = 360  # bit N: party member N, a Poisoner, has used its poison this fight (DSCLOG's PROBE_POISON)
 TSR_KIT_OUTDOORS = 350  # bit N: party member N under the open sky (the Loader's: _kit_tick)
 TSR_RULES_HI = 270  # the rules' bits past 16 (game.RULE_KITS), shifted down
 TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT, chance, d100, result (intlearn.py)
@@ -885,6 +886,8 @@ class DiceLog:
             more = kits.extra(kid, g.dance.get(attacker, 0), undead)
             if mode is not None and mode > 1 and attacker is not None and attacker < game.PARTY_SIZE:  # (DSCLOG's KIT_TO_HIT)
                 hit += kits.missile_to_hit(kid, kind, g.outdoors(attacker))
+            if kid == kits.POISONER and mode is not None:
+                hit += kits.POISONER_TO_HIT
             if weapon or hit or dam or more:
                 names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
                              + (" under the open sky" if kid == kits.SCOUT else ""))
@@ -1598,6 +1601,8 @@ class DiceLog:
         number = self._round_number()
         self.round_number = number
         danced = self._dances.round(g, self.tsr_hdr, number)
+        if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
+            self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief

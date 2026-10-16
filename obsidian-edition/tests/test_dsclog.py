@@ -2711,6 +2711,12 @@ class NamesTests(unittest.TestCase):
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 1)
 
 
+def kits_to_level():
+    """PROBE_POISON's way to 508:2Ah's far address: from the INT's way back (DSUN.EXE 7A6DFh) to
+    7A7ADh."""
+    return 0x7A7AD - 0x7A6DF
+
+
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class TickTests(unittest.TestCase):
     """PROBE_TICK: the game's timer handler's first instruction done, and every TICK_EVERY
@@ -3719,6 +3725,66 @@ class KitTests(unittest.TestCase):
         finally:
             self.mu.mem_write(hdr + 350, bytes(1))
 
+    def test_poisoner(self):
+        """PROBE_POISON: a Poisoner's (halfling fighter/thief) first hit in a fight queues the
+        monsters' poison (power 176) on the target through the game's routine (790D2h: target,
+        attacker, power, level; the level from 508:2Ah's far call), marking its KIT_POISONED bit;
+        then on to the routine's end. KIT_TO_HIT: -1 for it, melee or missile."""
+        from dsloader import kits
+        from dsloader.gamepatch import VEC_POISON
+        from unicorn import UC_HOOK_CODE
+        at = self.image.find(bytes.fromhex("5589e5666006") + b"\x8b\x5e\x00")
+        self.assertGreater(at, 0)
+        mu = self.mu
+        mu.mem_write(VEC_POISON * 4, struct.pack("<HH", at, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        hdr = TSR * 16 + self.image.find(HDR_SIG)
+        site = 0x2000
+        mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_POISON, 0x90)))
+        back = site + 2
+        mu.mem_write(CALLER * 16 + back + kits_to_level(), struct.pack("<HH", 0x3000, CALLER))
+        mu.mem_write(CALLER * 16 + 0x3000, bytes.fromhex("b80700cb"))  # (mov ax,7 / retf: level 7)
+        queue = back + (0x790D2 - 0x7A6DF)
+        mu.mem_write(CALLER * 16 + queue, bytes((0xCB,)))
+        queued = []
+
+        def seen(uc, address, size, data):
+            sp = uc.reg_read(r.UC_X86_REG_SP)
+            queued.append(struct.unpack("<4H", uc.mem_read(SS * 16 + sp + 4, 8)))
+        mu.hook_add(UC_HOOK_CODE, seen, begin=CALLER * 16 + queue, end=CALLER * 16 + queue)
+        self.rules(game.RULE_KITS)
+
+        def hit(creature):
+            del queued[:]
+            mu.mem_write(SS * 16 + BP - 6, struct.pack("<H", creature))
+            for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F0, ebp=BP, eflags=IF | 2, esi=0x21,
+                                    edi=0x02, eax=0x1111).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(CALLER * 16 + site, CALLER * 16 + site + 2 + (0x7A7C5 - 0x7A6DF))
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_SI, r.UC_X86_REG_DI,
+                                                       r.UC_X86_REG_AX, r.UC_X86_REG_BP)],
+                             [0x7F0, 0x21, 0x02, 0x1111, BP])
+            return list(queued), mu.mem_read(hdr + 360, 1)[0]
+        try:
+            mu.mem_write(hdr + 360, bytes(1))
+            self.creature(9, 1, index=2, second=17, race=6)  # a halfling fighter/thief Poisoner
+            self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 17, 6), kits.POISONER)
+            self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 4))
+            self.assertEqual(hit(2), ([], 4))  # (once a fight)
+            mu.mem_write(hdr + 360, bytes(1))
+            self.assertEqual(hit(5), ([], 0))  # (not a party member)
+            self.creature(9, 1, index=2, second=17, race=4)  # a half-elf fighter/thief: a Shadowblade
+            self.assertEqual(hit(2), ([], 0))
+            # its -1 to hit, melee and missile
+            self.creature(9, 1, index=2, second=17, race=6)
+            for mode in (1, 2):
+                mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<HHHH", 2, 2, 0, 45))
+                mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", mode))
+                self.call(rb"\x83\x7e\x16\x01\x7e.\x56\x31\xc0", eax=0x7777, ebp=BP)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0xFFFF)
+        finally:
+            mu.mem_write(hdr + 360, bytes(1))
+
     def test_thac0(self):
         """PROBE_THAC0: 20 less SI, and kits.thac0 (a warrior's for the Swashbuckler, Crusader,
         Battle Mage and Mind Warrior where better; the Scholar's 1 worse); kits off, the game's."""
@@ -3770,10 +3836,11 @@ class KitTests(unittest.TestCase):
 
     KIT_CASES = ((11, 3), (11, 2), (11, 1), (1, 3), (1, 1), (13, 3), (13, 2), (13, 1), (17, 1), (9, 0))
 
-    def kit_of(self, cls, kit, rules=game.RULE_KITS):
+    def kit_of(self, cls, kit, rules=game.RULE_KITS, second=0, race=0):
         from dsloader import kitpages
         sheet = bytearray(game.SHEET_SIZE)
         sheet[0x21], sheet[kitpages.KIT_BYTE] = cls, kit
+        sheet[0x22], sheet[0x18] = second, race
         return first_kit(bytes(sheet)) if rules & game.RULE_KITS else 0
 
     def test_slots(self):
@@ -3867,7 +3934,7 @@ class KitTests(unittest.TestCase):
         self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x604)
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 7)
 
-    PSP_CASES = ((12, 1), (12, 3), (12, 2), (12, 0), (11, 1))
+    PSP_CASES = ((12, 1), (12, 3), (12, 2), (12, 0), (11, 1), (9, 1, 12, 5))  # (a half-giant fighter/psionicist Titan Mind)
 
     def run_int(self, vector, handler_hex, code_len, **regs):
         """INT VECTOR (its handler found by HANDLER_HEX) and the NOPs after it, CODE_LEN in all, run
@@ -3895,9 +3962,9 @@ class KitTests(unittest.TestCase):
         table = 0x8500
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
-            for cls, kit in self.PSP_CASES:
-                kid = self.kit_of(cls, kit, rules)
-                self.creature(cls, kit)  # (combatant 7, creature 5)
+            for cls, kit, *two in self.PSP_CASES:
+                kid = self.kit_of(cls, kit, rules, *two)
+                self.creature(cls, kit, second=two[0] if two else 0, race=two[1] if two else 0)  # (combatant 7, creature 5)
                 for power in (0, 5, 6, 19, 20, 33):
                     for cost in (0, 1, 2, 9):
                         with self.subTest(rules=rules, cls=cls, kit=kit, power=power, cost=cost):
@@ -3923,6 +3990,8 @@ class KitTests(unittest.TestCase):
                             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x3333)
         self.assertEqual([kits.psp_cost(kits.MIND_BENDER, p, 9) for p in (0, 6, 20)], [11, 9, 7])
         self.assertEqual([kits.psp_cost(kits.KINETICIST, p, 2) for p in (0, 6, 20)], [1, 2, 4])
+        self.assertEqual([kits.psp_cost(kits.TITAN_MIND, p, 2) for p in (0, 6, 19, 20, 33)], [2, 1, 1, 4, 4])
+        self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 12, 5), kits.TITAN_MIND)
 
     SEED = 0x4122  # (DS: the game's rand() seed, the header's seed_off)
 
@@ -4016,9 +4085,9 @@ class KitTests(unittest.TestCase):
         table = 0x8500
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
-            for cls, kit in self.PSP_CASES:
-                kid = self.kit_of(cls, kit, rules)
-                self.creature(cls, kit)
+            for cls, kit, *two in self.PSP_CASES:
+                kid = self.kit_of(cls, kit, rules, *two)
+                self.creature(cls, kit, second=two[0] if two else 0, race=two[1] if two else 0)
                 for power in (0, 6, 20):
                     for keep in (0, 1, 4, 0x63):
                         with self.subTest(rules=rules, cls=cls, kit=kit, power=power, keep=keep):
@@ -4153,6 +4222,37 @@ class KitTests(unittest.TestCase):
                                                                                     r.UC_X86_REG_DI, r.UC_X86_REG_ES)],
                                                      [0x2222, 0x3333, di, 0x6666])
         self.assertEqual([kits.shinobi_cast(n) for n in (1, 5, 6, 8, 10)], [0, 0, 1, 3, 5])
+
+    def test_sky_level(self):
+        """PROBE_SPELL_LEVEL: a Spirit Caller's (halfling cleric/psionicist) or Wasteland Seer's
+        (thri-kreen druid/fighter) priest spells 2 levels more under the open sky (its KIT_OUTDOORS
+        bit), 1 less under a roof, no less than 1 (kits.sky_level); wizard spells, and others, as
+        they are."""
+        from dsloader import kits
+        from dsloader.gamepatch import VEC_SPELL_LEVEL
+        hdr = TSR * 16 + self.image.find(HDR_SIG)
+        self.rules(game.RULE_KITS)
+        try:
+            for cls, second, race, kid in ((1, 12, 6, kits.SPIRIT_CALLER), (5, 9, 8, kits.WASTE_SEER),
+                                           (1, 12, 4, 0)):
+                self.creature(cls, 1, index=2, second=second, race=race, level=5)
+                self.assertEqual(self.kit_of(cls, 1, game.RULE_KITS, second, race), kid)
+                for outdoors in (False, True):
+                    self.mu.mem_write(hdr + 350, bytes((4 if outdoors else 0,)))
+                    for spell in (30, 69, 100, 137, 138):
+                        for given in (1, 2, 5):
+                            with self.subTest(kid=kid, outdoors=outdoors, spell=spell, given=given):
+                                self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<HH", 7, spell))
+                                self.run_vector(VEC_SPELL_LEVEL, 2, eax=0x1111, ebx=0x2222, ecx=0x3333, edi=given)
+                                want = kits.sky_level(kid, spell, given, outdoors)
+                                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), want)
+                                self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX)],
+                                                 [0x2222, 0x3333])
+            self.assertEqual([kits.sky_level(kits.SPIRIT_CALLER, 69, n, o) for n, o in ((5, True), (5, False), (1, False))],
+                             [7, 4, 1])
+            self.assertEqual(kits.sky_level(kits.WASTE_SEER, 30, 5, True), 5)  # (a wizard spell)
+        finally:
+            self.mu.mem_write(hdr + 350, bytes(1))
 
     def test_elementalist_spells(self):
         """PROBE_EL_CAST and PROBE_EL_LEVEL: the spell's mask read (EDX, EBX), an Elementalist's

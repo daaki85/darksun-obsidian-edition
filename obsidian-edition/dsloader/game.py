@@ -1578,7 +1578,8 @@ class GameData:
                 kit = kits.champion(kid, shield, not missile)[0] \
                     + (kits.melee(kid, bool(typ[0x0F] & 0x40), kind) if not missile and not typ[0] & 2 else 0) \
                     + kits.extra(kid, self.dance.get(creature, 0)) \
-                    + (kits.missile_to_hit(kid, kind, self.outdoors(creature)) if missile else 0)
+                    + (kits.missile_to_hit(kid, kind, self.outdoors(creature)) if missile else 0) \
+                    + (kits.POISONER_TO_HIT if kid == kits.POISONER else 0)
                 if kit:
                     parts.append((kits.name(kid), kit))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)

@@ -148,6 +148,7 @@ VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
 VEC_RACE_PANEL equ 0x89    ; PROBE_RACE_PANEL
 VEC_BOX_AC equ 0x88        ; PROBE_BOX_AC
 VEC_TICK equ 0x87          ; PROBE_TICK
+VEC_POISON equ 0x86        ; PROBE_POISON
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
 NENT    equ 74          ; entries in the ring (74: the helper and it fit in upper memory)
@@ -354,6 +355,10 @@ tick_off   dw ticks             ; +356 offset of TICKS: where the game was as it
                                 ;      Loader's freeze report
 tick_seq   dw 0                 ; +358 records taken, counted: the newest in slot (TICK_SEQ - 1)
                                 ;      mod TICK_SLOTS
+kit_poisoned db 0               ; +360 bit N set once party member N, a Poisoner, has poisoned a
+                                ;      foe this fight (PROBE_POISON); the Loader clears it as a fight
+                                ;      starts
+           db 0                 ; +361
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1975,6 +1980,57 @@ probe_tick:
         iret
 tick_count dw 0
 ticks   times TICK_SLOTS * TICK_SIZE db 0
+
+; PROBE_POISON: INT VEC_POISON replaces "jmp 7A7C5h" (3 bytes: INT + NOP; DSUN.EXE 7A6DDh) in the
+; routine giving a hit's special effects (DI the attacker's combatant, SI the target's; the
+; attacker's creature at its [BP-6]), where a person who isn't a thri-kreen has none and goes on to
+; the end. A Poisoner's first hit in a fight (KIT_POISONED's bit for it clear) queues the monsters'
+; poison on the target as a monster's poisoned hit does (the routine at 790D2h: the target, the
+; attacker, power 176, "poison (10 damage)", its save the game's, and the attacker's level from
+; 508:2Ah, whose far call is at 7A7ACh), and marks it used. Then on to the end, as the jump went.
+POISON_POWER  equ 176
+PZ_TO_END     equ 0x7A7C5 - 0x7A6DF   ; (from the INT's way back)
+PZ_TO_QUEUE   equ 0x790D2 - 0x7A6DF
+PZ_TO_LEVEL   equ 0x7A7AD - 0x7A6DF   ; (the far call's address)
+probe_poison:
+        push bp
+        mov bp, sp              ; BP+2 the INT's way back, [BP] the routine's BP
+        pushad
+        push es
+        mov bx, [bp]
+        mov ax, [ss:bx - 6]     ; (the attacker's creature)
+        cmp ax, 3
+        ja .out                 ; (not a party member)
+        call cr_is
+        db KIT_POISONER
+        jne .out
+        bts word [cs:kit_poisoned], ax
+        jc .out                 ; (its poison used this fight)
+        mov es, [bp + 4]
+        mov bx, [bp + 2]
+        mov eax, [es:bx + PZ_TO_LEVEL]
+        mov [cs:pz_far], eax
+        push di
+        call far [cs:pz_far]    ; (the attacker's level)
+        add sp, 2
+        xor ah, ah
+        push ax
+        push word POISON_POWER
+        push di
+        push si
+        mov ax, [bp + 2]
+        add ax, PZ_TO_QUEUE
+        mov [cs:pz_far], ax
+        mov ax, [bp + 4]
+        mov [cs:pz_far + 2], ax
+        call far [cs:pz_far]
+        add sp, 8
+.out:   add word [bp + 2], PZ_TO_END
+        pop es
+        popad
+        pop bp
+        iret
+pz_far  dd 0
 
 ; PROBE_UNLOOK: INT VEC_UNLOOK replaces "mov word [0844h],270Fh" (6 bytes: INT + 4 NOPs) at the
 ; end of the routine that closes the Look box (the game forgets whom it was looking at). Does
@@ -5399,7 +5455,8 @@ kit_melee:
 ; KIT_TO_HIT: AX what the attacker's kit adds to hit in the weapon attack routine (the attacker
 ; its [BP+0Eh], the sheet its [BP+10h], the item type [BP+14h], [BP+16h] above 1 for a missile):
 ; for a melee attack KIT_CHAMPION's and KIT_MELEE's; for a missile a Military Scout's 1 with a bow,
-; sling or staff sling under the open sky (its KIT_OUTDOORS bit; kits.missile_to_hit). Others kept.
+; sling or staff sling under the open sky (its KIT_OUTDOORS bit; kits.missile_to_hit); and either
+; way a Poisoner's -1 (kits.POISONER_TO_HIT). Others kept.
 kit_to_hit:
         cmp word [bp + 0x16], 1
         jle .melee
@@ -5424,7 +5481,7 @@ kit_to_hit:
         inc ax
 .missile:
         pop si
-        ret
+        jmp .poisoner
 .melee:
         call kit_champion
         push bx
@@ -5442,7 +5499,21 @@ kit_to_hit:
         pop si
         pop dx
         pop bx
-.ret:   ret
+.poisoner:                      ; (a Poisoner 1 worse, melee or missile)
+        push bx
+        push es
+        push ax
+        les bx, [0x1661]
+        imul ax, [bp + 0x10], 0x47
+        add bx, ax
+        pop ax
+        call kit_is_b
+        db KIT_POISONER
+        jne .ret
+        dec ax
+.ret:   pop es
+        pop bx
+        ret
 
 ; KIT_ATTACK_DAMAGE: the weapon attack's damage bonus ([BP-12h]) with the attacker's kit's
 ; (KIT_MELEE, for a melee attack: [BP+16h] 1 or less; the sheet [BP+10h], the item type
@@ -5766,8 +5837,8 @@ probe_slot_level:
 
 ; KIT_PSP: AX the PSP a power (BX, 0-33: psychokinesis to 5, psychometabolism to 19, telepathy
 ; from 20) costs combatant SI to use, from the game's AX (kits.psp_cost): a Mind Bender's telepathy
-; 2 less, its psychokinesis 2 more, a Kineticist's the other way about, never below 1 (a cost of
-; 0 or less as it was). KIT_PSP_OF: the same for the kit in CL. DS the game's; others kept.
+; 2 less, its psychokinesis 2 more, a Kineticist's the other way about; a Titan Mind's
+; psychometabolism 2 less, its telepathy 2 more; never below 1 (a cost of 0 or less as it was). KIT_PSP_OF: the same for the kit in CL. DS the game's; others kept.
 PSP_PK_LAST  equ 5
 WHOSE_TURN   equ 0x4979         ; DS: the combatant whose turn it is in a fight
 PSP_TP_FIRST equ 20
@@ -5788,12 +5859,15 @@ kit_psp:
         pop es
         pop cx
         ret
-; PSI_KIT: AL the psionicist kit of creature AX that changes costs (KIT_MIND_BENDER, KIT_KINETICIST),
-; awake, or 0. DS the game's; others but AH kept.
+; PSI_KIT: AL the psionicist kit of creature AX that changes costs (KIT_MIND_BENDER, KIT_KINETICIST,
+; KIT_TITAN_MIND), awake, or 0. DS the game's; others but AH kept.
 psi_kit:
         call cr_is
         db KIT_MIND_BENDER
         je .bender
+        call cr_is
+        db KIT_TITAN_MIND
+        je .titan
         call cr_is
         db KIT_KINETICIST
         mov al, KIT_KINETICIST
@@ -5803,11 +5877,23 @@ psi_kit:
 .bender:
         mov al, KIT_MIND_BENDER
         ret
+.titan: mov al, KIT_TITAN_MIND
+        ret
 kit_psp_of:
         or ax, ax
         jle .ret
         push dx
         xor dx, dx              ; DX what the kit adds to telepathy (psychokinesis the opposite)
+        cmp cl, KIT_TITAN_MIND
+        jne .bender
+        cmp bx, PSP_PK_LAST
+        jbe .out                ; (a Titan Mind's psychokinesis: as it was)
+        mov dx, -2              ; (its psychometabolism 2 less, its telepathy 2 more)
+        cmp bx, PSP_TP_FIRST
+        jb .add
+        mov dx, 2
+        jmp .add
+.bender:
         cmp cl, KIT_MIND_BENDER
         jne .kineticist
         mov dx, -2
@@ -6153,10 +6239,52 @@ probe_cast_level:
 ; PROBE_SPELL_LEVEL: INT VEC_SPELL_LEVEL replaces "mov ax,di" (2 bytes; DSUN.EXE 5E3D1h) at the end of
 ; the routine giving the level a spell is cast at, for its duration and damage (5E25Ch; the same
 ; arguments; DI the best level of the caster's classes that cast it, PROBE_RANGER_LEVEL's for a
-; ranger): AX that, for a wizard spell a Shinobi's as PROBE_CAST_LEVEL's.
+; ranger): AX that, for a wizard spell a Shinobi's as PROBE_CAST_LEVEL's; for a priest spell a
+; Spirit Caller's or Wasteland Seer's 2 more under the open sky (its KIT_OUTDOORS bit), 1 less
+; under a roof, no less than 1 (SKY_LEVEL; kits.sky_level).
 probe_spell_level:
         mov ax, di
+        call sky_level
         jmp shinobi_wizard
+
+; SKY_LEVEL: AX (the level priest spell [BP+8] is cast at by combatant [BP+6]) with a Spirit
+; Caller's or Wasteland Seer's: 2 more under the open sky, 1 less under a roof (no less than 1).
+; DS the game's; others kept.
+SKY_MORE equ 2
+sky_level:
+        cmp word [bp + 8], WIZARD_LAST
+        jbe .ret
+        cmp word [bp + 8], KIT_SPELL_LAST
+        ja .ret                 ; (not a priest spell)
+        push bx
+        push cx
+        push es
+        mov cx, ax
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [bp + 6], 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        cmp ax, 3
+        ja .out                 ; (not a party member)
+        call cr_is
+        db KIT_SPIRIT_CALLER
+        je .sky
+        call cr_is
+        db KIT_WASTE_SEER
+        jne .out
+.sky:   bt word [cs:kit_outdoors], ax
+        jnc .roof
+        add cx, SKY_MORE
+        jmp .out
+.roof:  cmp cx, 1
+        jle .out
+        dec cx
+.out:   mov ax, cx
+        pop es
+        pop cx
+        pop bx
+.ret:   ret
 
 ; PROBE_RANGER_LEVEL: INT VEC_RANGER_LEVEL replaces "mov al,es:[bx+24h]" (4 bytes: INT + 2 NOPs;
 ; DSUN.EXE 5E3B8h) where that routine takes the level of a class of the caster's that casts the
@@ -16507,6 +16635,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_TICK
         mov dx, probe_tick
         int 21h
+        mov ax, 2500h + VEC_POISON
+        mov dx, probe_poison
+        int 21h
         mov ax, 2500h + VEC_TWO
         mov dx, probe_two
         int 21h
@@ -16929,7 +17060,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON
 all_vectors_end:
 
         align 16, db 0

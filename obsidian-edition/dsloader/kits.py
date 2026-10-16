@@ -69,6 +69,8 @@ RAVAGER_AC = (7, 7, 6, 6, 5, 5, 4, 4, 3, 3)
 BATTLE_DANCER, SHADOWBLADE, SCOUT = KIT_IDS["Battle Dancer"], KIT_IDS["Shadowblade"], KIT_IDS["Military Scout"]
 AVENGER, RESCUER = KIT_IDS["Wilderness Avenger"], KIT_IDS["Rescuer"]
 GHETTO, WAYFINDER = KIT_IDS["Ghetto Fighter"], KIT_IDS["Wayfinder"]
+SPELLARCHER, TITAN_MIND, POISONER = KIT_IDS["Spellarcher"], KIT_IDS["Titan Mind"], KIT_IDS["Poisoner"]
+SPIRIT_CALLER, WASTE_SEER = KIT_IDS["Spirit Caller"], KIT_IDS["Wasteland Seer"]
 # a Battle Dancer's weapon kinds: the long sword and the bow (DSCLOG's kit_dancer)
 DANCER_KINDS = frozenset((0, BOW))
 DAGGER = 2  # (the dagger's weapon kind: a Ghetto Fighter's +1)
@@ -210,9 +212,12 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -
 def psp_cost(kid: int, power: int, cost: int) -> int:
     """The PSP power POWER (0-33) costs a character of kit KID to use, the game asking COST
     (KIT_PSP): a Mind Bender's telepathy 2 less and its psychokinesis 2 more, a Kineticist's the
-    other way about, never below 1; psychometabolism, and a cost of 0, as they are."""
-    if cost <= 0 or kid not in (MIND_BENDER, KINETICIST):
+    other way about (psychometabolism as it is); a Titan Mind's psychometabolism 2 less and its
+    telepathy 2 more (psychokinesis as it is); never below 1, and a cost of 0 as it is."""
+    if cost <= 0 or kid not in (MIND_BENDER, KINETICIST, TITAN_MIND):
         return cost
+    if kid == TITAN_MIND:
+        return cost if power <= PK_LAST else max(1, cost + (2 if power >= TP_FIRST else -2))
     change = -2 if kid == MIND_BENDER else 2
     if power <= PK_LAST:
         change = -change
@@ -265,6 +270,18 @@ def cast_level(kid: int, spell: int, level: int, thief_level: int) -> int:
     if kid == SHINOBI and (spell <= WIZARD_LAST or spell in NEW_SPELLS):
         return max(level, shinobi_cast(thief_level))
     return level
+
+
+SKY_KITS, SKY_MORE = frozenset((SPIRIT_CALLER, WASTE_SEER)), 2
+
+
+def sky_level(kid: int, spell: int, level: int, outdoors: bool) -> int:
+    """The level priest spell SPELL takes for its duration and damage, LEVEL the game's, with a
+    Spirit Caller's or Wasteland Seer's (PROBE_SPELL_LEVEL's SKY_LEVEL): 2 more under the open sky
+    (OUTDOORS), 1 less under a roof, no less than 1."""
+    if kid not in SKY_KITS or not WIZARD_LAST < spell <= SPELL_LAST:
+        return level
+    return level + SKY_MORE if outdoors else level - 1 if level > 1 else level
 
 
 def spell_class_level(kid: int, cls: int, level: int, ranger_rule: bool) -> int:
@@ -323,6 +340,10 @@ def initiative(kid: int, outdoors: bool = False) -> int:
 # initiative 1 more (DSCLOG's PATH_UP, in KIT_MOVE and PROBE_INIT)
 PATH_MOVE, PATH_INITIATIVE = 1, 1
 SCOUT_MISSILE_KINDS = frozenset((BOW, BOW + 1, BOW + 2))  # (the bow, sling and staff sling)
+
+
+POISONER_TO_HIT = -1  # (every attack, melee or missile: KIT_TO_HIT)
+POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's first hit in a fight (PROBE_POISON)
 
 
 def missile_to_hit(kid: int, kind: Optional[int], outdoors: bool) -> int:
