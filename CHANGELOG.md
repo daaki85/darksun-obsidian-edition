@@ -54,6 +54,12 @@ have the detail.
   expert with the bow, chosen or not, but only the chosen weapons were listed.
 
 **Added**
+- **Crash reports say why the game quit.** When the game stops on its own
+  error (as after the opening arena fight, where it quit with "return code
+  01h" and a blank screen), its message used to be lost: the game prints it
+  while the screen is in graphics, then clears it switching back to text. The
+  helper now keeps what the game last wrote and saves it, with the calls that
+  led there, and the Loader's crash report shows it.
 - **Freeze report:** when the game stops but DOSBox stays open, the Loader's
   **Freeze report** button saves a zip in `crash-logs` with where the game was
   running for its last few seconds (noted by the helper from the game's timer),

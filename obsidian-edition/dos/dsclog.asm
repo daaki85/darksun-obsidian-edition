@@ -11613,6 +11613,10 @@ dex_table:
 ; copy there, the game's own. Everything else goes on to DOS.
 OBJ_NAME_LEN equ 12
 probe_dos_open:
+        cmp ah, 40h
+        je dos_write
+        cmp ah, 4Ch
+        je dos_quit
         cmp ah, 3Dh
         jne .chain
         call seg_move
@@ -11708,6 +11712,130 @@ probe_dos_open:
         pop ax
 .chain: jmp far [cs:old21]
 old21       dd 0
+
+; DOS_WRITE (INT 21h AH=40h): what the game writes to the screen (handles 1 and 2: stdout,
+; stderr) kept, its last MSG_BYTES in MSG_RING, then on to DOS. The game prints its fatal errors
+; ("Mel Fatal Error", "ABEND: VMDelHeap() ...") while the screen is still in graphics, and puts
+; it back in text mode, clearing it, on its way out: GAMEEND.COM found nothing to read.
+MSG_BYTES   equ 256
+dos_write:
+        cmp bx, 2
+        ja .chain
+        cmp bx, 1
+        jb .chain
+        push ax
+        push cx
+        push si
+        push di
+        mov si, dx
+        jcxz .done
+.byte:  mov al, [si]
+        inc si
+        mov di, [cs:msg_at]
+        mov [cs:msg_ring + di], al
+        inc di
+        and di, MSG_BYTES - 1
+        mov [cs:msg_at], di
+        cmp word [cs:msg_len], MSG_BYTES
+        jae .full
+        inc word [cs:msg_len]
+.full:  loop .byte
+.done:  pop di
+        pop si
+        pop cx
+        pop ax
+.chain: jmp far [cs:old21]
+
+; DOS_QUIT (INT 21h AH=4Ch): a program ending with a code other than 0, the first time (the
+; game: GAMEEND.COM, after it, also ends with 1), saves D:\GAMEMSG.BIN for the Loader's crash
+; report (launch.game_message): "GMSG", the code, the game's load segment, SS, SP, the stack's
+; first STACK_BYTES there (the ways back of the calls that led to the exit), the length of the
+; text kept and the text (DOS_WRITE). Then on to DOS.
+STACK_BYTES equ 256
+dos_quit:
+        or al, al
+        jz .chain
+        cmp byte [cs:quit_saved], 0
+        jne .chain
+        mov byte [cs:quit_saved], 1
+        pusha
+        push ds
+        push es
+        mov [cs:qm_code], al
+        mov [cs:qm_ss], ss
+        mov [cs:qm_sp], sp
+        add word [cs:qm_sp], 20         ; (the INT's way back: past PUSHA, DS and ES)
+        mov ah, 62h
+        pushf
+        call far [cs:old21]
+        add bx, 10h
+        mov [cs:qm_load], bx
+        push ss                         ; the stack, copied
+        pop ds
+        mov si, [cs:qm_sp]
+        push cs
+        pop es
+        mov di, qm_stack
+        mov cx, STACK_BYTES / 2
+        cld
+        rep movsw
+        mov ax, [cs:msg_len]
+        mov [cs:qm_len], ax
+        push cs
+        pop ds
+        mov ah, 3Ch
+        xor cx, cx
+        mov dx, qm_name
+        pushf
+        call far [cs:old21]
+        jc .out
+        mov bx, ax
+        mov ah, 40h
+        mov cx, qm_end - qm_head
+        mov dx, qm_head
+        pushf
+        call far [cs:old21]
+        mov si, [msg_at]                ; the text, oldest first: from its start to the ring's
+        sub si, [msg_len]               ;   end, then from the ring's start
+        and si, MSG_BYTES - 1
+        mov cx, MSG_BYTES
+        sub cx, si
+        cmp cx, [msg_len]
+        jbe .first
+        mov cx, [msg_len]
+.first: lea dx, [msg_ring + si]
+        push cx
+        mov ah, 40h
+        pushf
+        call far [cs:old21]
+        pop ax
+        mov cx, [msg_len]
+        sub cx, ax
+        jcxz .close
+        mov dx, msg_ring
+        mov ah, 40h
+        pushf
+        call far [cs:old21]
+.close: mov ah, 3Eh
+        pushf
+        call far [cs:old21]
+.out:   pop es
+        pop ds
+        popa
+.chain: jmp far [cs:old21]
+quit_saved  db 0
+msg_at      dw 0
+msg_len     dw 0
+qm_name     db "D:\GAMEMSG.BIN", 0
+qm_head     db "GMSG"
+qm_code     db 0
+qm_load     dw 0
+qm_ss       dw 0
+qm_sp       dw 0
+qm_stack    times STACK_BYTES db 0
+qm_len      dw 0
+qm_end:
+msg_ring    times MSG_BYTES db 0
 
 ; SEG_MOVE: once, at a file open (AH=3Dh) of the game's (DSUNLOG.EXE the program running, its
 ; segment table where it should be, SEGTAB_AT), before any of its overlays is in: the game's segments

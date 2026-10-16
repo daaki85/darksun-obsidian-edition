@@ -267,6 +267,16 @@ built the same way:
 nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
 ```
 
+GAMEEND.COM only reads what is left on the screen, and the game's own fatal
+errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
+engine's "Mel Fatal Error #: N Trap #: N") are printed while the screen is in
+graphics, then cleared as the game puts it back in text mode on its way out.
+So DSCLOG keeps the last 256 bytes the game writes to handles 1 and 2 (INT 21h
+AH=40h: `DOS_WRITE`). At the first non-zero exit (AH=4Ch: `DOS_QUIT`), it writes
+them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
+stack. `launch.game_message` turns that into the crash report's lines: the
+text, then the stack's likely far returns as places in DSUN.EXE.
+
 ### From a command prompt
 
 What the `.bat` files do, from a command prompt (`dsloader` is the
