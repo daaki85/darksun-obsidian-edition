@@ -128,16 +128,6 @@ def set_pickpocketed(entries: List[str]) -> None:
     save_settings(settings)
 
 
-def tools_given() -> set:
-    """The thieves given thieving tools already (tools.py)."""
-    return set(load_settings().get("tools_given", []))
-
-
-def add_tools_given(keys: List[str]) -> None:
-    settings = load_settings()
-    settings["tools_given"] = sorted(set(settings.get("tools_given", [])) | set(keys))
-    save_settings(settings)
-
 
 def add_learned_speakers(learned: Dict[int, str]) -> None:
     settings = load_settings()
@@ -350,14 +340,57 @@ CRASH_DIR = os.path.join(HERE, "crash-logs")
 DOSBOX_OUTPUT = ("stdout.txt", "stderr.txt")  # DOSBox's own messages with -noconsole (its folder)
 
 
+# DSCLOG's GAMEMSG.BIN (DOS_QUIT): the game's last text to the screen and its stack as it quit
+# with an error code ("GMSG", the code, the load segment, SS, SP, MSG_STACK bytes, the text's
+# length, the text)
+GAME_MESSAGE = os.path.join(DOS_DIR, "GAMEMSG.BIN")
+MSG_STACK = 256
+DGROUP_SEG = 0x4356  # (the game's code segments lie below its data, from its load segment)
+EXE_HEADER = 0x5400
+
+
+def game_message(data: bytes) -> Optional[str]:
+    """GAMEMSG.BIN as lines for the crash report: what the game printed (its fatal error's text,
+    which the game clears from the screen as it quits), and the far calls' ways back on its stack
+    as places in DSUN.EXE (each a guess: any word pair that looks like one), or None."""
+    head = 4 + 1 + 2 + 2 + 2
+    if len(data) < head + MSG_STACK + 2 or data[:4] != b"GMSG":
+        return None
+    code, load, ss, sp = struct.unpack_from("<BHHH", data, 4)
+    stack = data[head:head + MSG_STACK]
+    size, = struct.unpack_from("<H", data, head + MSG_STACK)
+    text = data[head + MSG_STACK + 2:head + MSG_STACK + 2 + size].decode("cp437", "replace")
+    text = "\n".join(line.rstrip() for line in text.replace("\r", "").splitlines()).strip()
+    lines = [f"The game quit with code {code}. What it last wrote to the screen:",
+             text or "(nothing)"]
+    places = []
+    for at in range(0, MSG_STACK - 3, 2):
+        ip, cs = struct.unpack_from("<HH", stack, at)
+        if load <= cs < load + DGROUP_SEG and ip >= 5 and not any(f"{cs - load:04X}:{ip:04X})" in p for p in places):
+            places.append(f"DSUN {(cs - load) * 16 + ip + EXE_HEADER:X}h (+{at:02X}: {cs - load:04X}:{ip:04X})")
+    lines += ["", f"Its stack (SS:SP {ss:04X}:{sp:04X}, load segment {load:04X}), the ways back it seems to hold:"]
+    lines += ["  " + p for p in places] or ["  (none)"]
+    lines += ["  " + stack[i:i + 32].hex(" ") for i in range(0, MSG_STACK, 32)]
+    return "\n".join(lines)
+
+
 def game_end_note() -> Optional[str]:
     """What GAMEEND.COM saved of the game stopping with an error (its return code, video mode,
-    and the screen's text), or None if it ended as usual."""
+    and the screen's text), and DSCLOG's GAMEMSG.BIN (game_message), or None if it ended as usual."""
+    notes = []
     try:
         with open(GAME_END, encoding="cp437", errors="replace") as f:
-            return f.read().rstrip()
+            notes.append(f.read().rstrip())
     except OSError:
-        return None
+        pass
+    try:
+        with open(GAME_MESSAGE, "rb") as f:
+            message = game_message(f.read())
+        if message:
+            notes.append(message)
+    except OSError:
+        pass
+    return "\n\n".join(notes) or None
 
 
 def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
@@ -438,10 +471,11 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
     if not dosbox_dir or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Shattered Lands")
     problem = prepare_patched_game(game_dir)
-    try:
-        os.remove(GAME_END)  # (the last game's)
-    except OSError:
-        pass
+    for old in (GAME_END, GAME_MESSAGE):  # (the last game's)
+        try:
+            os.remove(old)
+        except OSError:
+            pass
     conf = write_conf(game_dir, dice_log=problem is None)
     return subprocess.Popen(
         [_find_file(dosbox_dir, "DOSBox.exe"), "-conf", settings_conf, "-conf", conf, "-noconsole"],

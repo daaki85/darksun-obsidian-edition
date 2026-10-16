@@ -11,13 +11,13 @@ the Loader:
   else a plain one it can use (its weapon spec's kind first; then a short sword, club, mace,
   dagger or quarterstaff, a cleric the club and mace first; else a chatkcha), of a material it
   can use (a fire cleric's obsidian mace, an air cleric's obsidian dagger);
-- with the class restrictions, takes a multiclass preserver's armour off into the backpack (it
-  can't cast in it; the shield stays);
-- gives a sling for the missile slot to one with no missile weapon (a Battle Dancer a bow and
+- with the class restrictions, leaves a multiclass preserver's armour out (it can't cast in it;
+  the shield stays);
+- gives a sling for the missile slot to one with no missile weapon (a Battle Dancer or Spellarcher a bow and
   arrows; a fire cleric, who can't use one, an obsidian chatkcha for the backpack);
 - fills its empty chest, arm and leg slots with leather armour, where it may wear it (not a
   multiclass preserver, for its spells);
-- gives a Stalker, Assassin or Shinobi a plain cloak, and anyone a dagger for the backpack.
+- gives a Stalker, Assassin or Shinobi a plain cloak.
 
 A thri-kreen is given nothing more than the game's own starting gear (K'ratchek keeps her
 chatkcha): its claws serve it better than another weapon, and it wears no armour or cloak.
@@ -131,16 +131,12 @@ def fill_member(gd, member: int) -> List[str]:
         given.append(f"{gd.item_name(struct.unpack_from('<H', rec_, game.ITEM_NAME)[0])}{where}")
         return True
 
-    # a multiclass preserver's armour off, into the backpack
+    # a multiclass preserver's armour left out
     if gd.rules & game.RULE_RESTRICT and preserver_bare(sheet):
         for item_index, item, _ in owned:
-            if item[game.ITEM_SLOT] < BACKPACK and restrict.is_armour(read(_type(item))):
-                cell = pickpocket.free_cell(gd, ring.Items(gd), member)
-                if cell is None:
-                    break
-                pickpocket.place(gd, member, item_index, cell)
-                out.append(f"{who}'s {name(item)} goes into the backpack: a multiclass preserver can't "
-                           f"cast in armour")
+            if restrict.is_armour(read(_type(item))) \
+                    and ring.unlink(gd, ring.Items(gd), item_index, "starting gear", empty=True):
+                out.append(f"{who}'s {name(item)} is left behind: a multiclass preserver can't cast in armour")
 
     # a melee weapon in the right hand
     melee = lambda item: bool(read(_type(item))[0] & restrict.MELEE) and can_use(gd, sheet, _type(item), read(_type(item)))
@@ -162,15 +158,17 @@ def fill_member(gd, member: int) -> List[str]:
                     give(new[0], RIGHT, " (in hand)")
                     break
 
-    # a missile weapon (a Battle Dancer's the bow, with arrows: kits.DANCER_KINDS)
+    # a missile weapon (a Battle Dancer's or Spellarcher's the bow, with arrows: kits.DANCER_KINDS)
     if not any(specialize.kind_of(_type(item)) in weaponchoice.MISSILE_KINDS for _, item, _ in mine()):
         from . import kitpages
-        dancer = bool(game.RULES_IN_FORCE & game.RULE_KITS) and kits.BATTLE_DANCER in kitpages.kit_ids(sheet)
+        dancer = bool(game.RULES_IN_FORCE & game.RULE_KITS) \
+            and bool({kits.BATTLE_DANCER, kits.SPELLARCHER} & set(kitpages.kit_ids(sheet)))
         bow = _weapon(gd, sheet, KIND("bow"), read) if dancer else None
         sling = _weapon(gd, sheet, KIND("sling"), read)
         if bow is not None:
             if give(bow[0], weaponchoice.MISSILE_SLOT):
                 give(weaponchoice.arrows(bow[0]), weaponchoice.AMMO_SLOT)
+                weaponchoice.bow_ahead(gd, member)
         elif sling is not None:
             give(sling[0], weaponchoice.MISSILE_SLOT)
         elif not any(specialize.kind_of(_type(item)) == KIND("chatkcha") for _, item, _ in mine()):
@@ -187,11 +185,6 @@ def fill_member(gd, member: int) -> List[str]:
         if not any(_type(i) == _type(item) for _, i, _ in mine()) and can_use(gd, sheet, _type(item), read(_type(item))):
             give(item, slot)
 
-    # a dagger for the backpack
-    if not any(specialize.kind_of(_type(item)) == KIND("dagger") for _, item, _ in mine()):
-        dagger = _weapon(gd, sheet, KIND("dagger"), read)
-        if dagger is not None:
-            give(dagger[0], None, " (in the backpack)")
     if given:
         out.append(f"{who} starts with more gear: {', '.join(given)}")
     return out

@@ -102,6 +102,22 @@ class LaunchTests(unittest.TestCase):
             finally:
                 launch.SETTINGS = saved_path
 
+    def test_game_message(self):
+        """DSCLOG's GAMEMSG.BIN: the text the game wrote as it quit, and far returns on its stack
+        as places in DSUN.EXE."""
+        import struct
+        load = 0x1000
+        stack = bytearray(launch.MSG_STACK)
+        struct.pack_into("<HH", stack, 4, 0x01A9, load + 0x2FA6)  # (a way back into the game)
+        text = b"\r\nABEND: VMDelHeap() returned error 3\r\n"
+        data = b"GMSG" + struct.pack("<BHHH", 1, load, 0x5000, 0xFF00) + bytes(stack) \
+            + struct.pack("<H", len(text)) + text
+        out = launch.game_message(data)
+        self.assertIn("quit with code 1", out)
+        self.assertIn("ABEND: VMDelHeap() returned error 3", out)
+        self.assertIn(f"DSUN {0x2FA60 + 0x1A9 + 0x5400:X}h (+04: 2FA6:01A9)", out)
+        self.assertIsNone(launch.game_message(b"nope"))
+
     def test_crash_report(self):
         """What DOSBox and the game left, the switches, and the end of the logs, in a file of its
         own in crash-logs."""

@@ -143,6 +143,25 @@ def plain_weapon(start: bytes, kind: int, weapon: Optional[Tuple[int, int, int, 
     return bytes(rec), slot
 
 
+def bow_ahead(gd, member: int) -> None:
+    """A party member's missile weapon put ahead of its ammunition in its item list, where the
+    ammunition came first (given after it: an item is added at the list's head): the game's weapon
+    lines (the inventory screen) show the first of the two it meets, so the bow was listed as its
+    arrows ("Arrows 1D6") until it was taken off and put on again. The two records' contents are
+    swapped, each keeping its place in the list."""
+    worn = [(index, item) for index, item, _ in gd._worn(member)]
+    order = [item[game.ITEM_SLOT] for _, item in worn]
+    if AMMO_SLOT not in order or MISSILE_SLOT not in order or order.index(AMMO_SLOT) > order.index(MISSILE_SLOT):
+        return
+    (ammo, ammo_rec), (bow, bow_rec) = worn[order.index(AMMO_SLOT)], worn[order.index(MISSILE_SLOT)]
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    link = slice(game.ITEM_NEXT, game.ITEM_NEXT + 2)
+    first, second = bytearray(bow_rec), bytearray(ammo_rec)
+    first[link], second[link] = ammo_rec[link], bow_rec[link]
+    gd.guest.write(items + ammo * game.ITEM_SIZE, bytes(first))
+    gd.guest.write(items + bow * game.ITEM_SIZE, bytes(second))
+
+
 def arrows(template: bytes) -> bytes:
     picture, type_, name, price, count = ARROWS
     rec = bytearray(template)
@@ -216,6 +235,7 @@ def finish_new(gd) -> List[str]:
                 gd.guest.write(items + item_index * game.ITEM_SIZE, new)
                 if kind == BOW:
                     npcitems.add_to(gd, member, arrows(new), AMMO_SLOT)
+                    bow_ahead(gd, member)
                 # (a two-handed weapon in a hand needs the other free; the game asks nothing of a
                 # bow or a staff sling in the missile slot: the shield stays)
                 if slot is None and two_handed(gd, sheet, weapon[0]):
@@ -354,6 +374,10 @@ def kit_gear(gd) -> List[str]:
                     out.append(f"{who}'s {name(item)} is left behind: a Brute fights with two-handed weapons only")
         owned = list(gd._worn(member))
         out += _kit_second_weapon(gd, member, sheet, kid, chosen, owned, read)
+        if kid == kits.POISONER:
+            out += _poisoner_daggers(gd, member, sheet, read)
+        if kid == kits.GHETTO:
+            out += _ghetto_dagger(gd, member, sheet, read)
         if kid == kits.BATTLE_MAGE and chosen and gd.rules & game.RULE_SPECIALIZE \
                 and not any(specialize.kind_of(struct.unpack_from("<H", i, game.ITEM_TYPE)[0]) == chosen[0]
                             for _, i, _ in owned):
@@ -371,10 +395,12 @@ def kit_gear(gd) -> List[str]:
 
 
 def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int], owned, read) -> List[str]:
-    """A Myrmidon's plain weapon of its second weapon spec (to the backpack, or the missile slot,
-    a bow with arrows), and a Ravager's second weapon for the hand its shield left (a plain one
-    of its right hand's kind, unless that takes both hands): lines for the log. Given once: not
-    while the character has a weapon of that kind (two, the Ravager)."""
+    """A Myrmidon's plain weapon of its second weapon spec (in the left hand in place of the shield,
+    for a one-handed melee weapon; else the missile slot, a bow with arrows, or the backpack), and a
+    Ravager's or Battle Dancer's second weapon for the left hand (a plain one of its right hand's
+    kind, unless that takes both hands; a Battle Dancer's in place of its shield): lines for the
+    log. Given once: not while the character has a weapon of that kind (the Myrmidon's), or a
+    weapon in the left hand or two of its right hand's kind (the Ravager's and the Battle Dancer's)."""
     from . import kits, npcitems
     right, left = game.WEAPON_HANDS
     kind_of = lambda item: specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])
@@ -387,22 +413,105 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
         if new is None or new[0] != chosen[1]:
             return []
         rec, slot = plain_weapon(hand, *new)
+        material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
+        if slot is None and not two_handed(gd, sheet, new[1][0]) and not two_handed(
+                gd, sheet, struct.unpack_from("<H", hand, game.ITEM_TYPE)[0]):
+            shield = _shield_away(gd, owned)
+            if not any(item[game.ITEM_SLOT] == left for _, item, _ in list(gd._worn(member))) \
+                    and npcitems.add_to(gd, member, rec, left):
+                instead = f", in place of the {shield}" if shield else ""
+                return [f"{who} starts with a plain {material}{specialize.KINDS[new[0]]} in the left hand"
+                        f"{instead}: a Myrmidon's second weapon spec"]
         if not npcitems.add_to(gd, member, rec, slot):
             return []
         if new[0] == BOW:
             npcitems.add_to(gd, member, arrows(rec), AMMO_SLOT)
-        material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
+            bow_ahead(gd, member)
         where = "" if slot is not None else " in the backpack"
         return [f"{who} starts with a plain {material}{specialize.KINDS[new[0]]}{where} too: a Myrmidon's "
                 f"second weapon spec"]
-    if kid == kits.RAVAGER and hand is not None:
+    if kid in (kits.RAVAGER, kits.BATTLE_DANCER) and hand is not None:
         kind, type_ = kind_of(hand), struct.unpack_from("<H", hand, game.ITEM_TYPE)[0]
         if kind is None or kind in MISSILE_KINDS or two_handed(gd, sheet, type_) \
-                or any(item[game.ITEM_SLOT] == left for _, item, _ in owned) \
-                or sum(1 for _, item, _ in owned if struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == type_) > 1:
-            return []
-        if not npcitems.add_to(gd, member, hand, left):
+                or any(item[game.ITEM_SLOT] == left and kind_of(item) is not None for _, item, _ in owned) \
+                or sum(kind_of(item) == kind for _, item, _ in owned) > 1:
+            return []  # (a weapon in the left hand already, or two of the kind anywhere: given, or its own)
+        shield = _shield_away(gd, owned) if kid == kits.BATTLE_DANCER else None
+        if any(item[game.ITEM_SLOT] == left for _, item, _ in list(gd._worn(member))) \
+                or not npcitems.add_to(gd, member, hand, left):
             return []
         name = gd.item_name(struct.unpack_from("<H", hand, game.ITEM_NAME)[0])
-        return [f"{who} starts with a second {name} in the left hand: a Ravager fights without a shield"]
+        if kid == kits.RAVAGER:
+            return [f"{who} starts with a second {name} in the left hand: a Ravager fights without a shield"]
+        instead = f", in place of the {shield}" if shield else ""
+        return [f"{who} starts with a second {name} in the left hand{instead}: a Battle Dancer fights with two"]
     return []
+
+
+def _poisoner_daggers(gd, member: int, sheet: bytes, read) -> List[str]:
+    """A Poisoner's two daggers, one in each hand: the right hand's weapon made a plain dagger (of a
+    material it can use), and a second in the left hand, in place of its shield: lines for the
+    log. Made once: not while it holds a dagger in the left hand."""
+    from . import kits, npcitems, ring
+    right, left = game.WEAPON_HANDS
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    kind_of = lambda item: specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])
+    name = lambda item: gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
+    owned = list(gd._worn(member))
+    if any(item[game.ITEM_SLOT] == left and kind_of(item) == kits.DAGGER for _, item, _ in owned):
+        return []
+    new = start_weapon(sheet, [kits.DAGGER + 1], read)
+    if new is None or new[0] != kits.DAGGER:
+        return []
+    who, out = gd.creature_name(member), []
+    material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
+    hand = next(((i, item) for i, item, _ in owned if item[game.ITEM_SLOT] == right), None)
+    if hand is None:
+        return []  # (no weapon to make a dagger of: the starting gear's fill gives one)
+    if kind_of(hand[1]) != kits.DAGGER:
+        gd.guest.write(items + hand[0] * game.ITEM_SIZE, plain_weapon(hand[1], *new)[0])
+        out.append(f"{who} starts with a plain {material}dagger in place of the {name(hand[1])}: a "
+                   f"Poisoner fights with two daggers")
+    dagger = next(item for _, item, _ in gd._worn(member) if item[game.ITEM_SLOT] == right)
+    shield = None
+    for item_index, item, _ in list(gd._worn(member)):  # (its shield left behind)
+        if item[game.ITEM_SLOT] == left and read(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])[0] & kits.SHIELD \
+                and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
+            shield = name(item)
+    if any(item[game.ITEM_SLOT] == left for _, item, _ in gd._worn(member)) \
+            or not npcitems.add_to(gd, member, dagger, left):
+        return out
+    instead = f", in place of the {shield}" if shield else ""
+    return out + [f"{who} starts with a second {name(dagger)} in the left hand{instead}: a Poisoner fights "
+                  f"with two daggers"]
+
+
+def _ghetto_dagger(gd, member: int, sheet: bytes, read) -> List[str]:
+    """A Ghetto Fighter's dagger: the right hand's weapon made a plain dagger (of a material it can
+    use), whatever its weapon spec, as its +1 is with a dagger: lines for the log. Made once: not
+    while it holds a dagger there."""
+    from . import kits
+    right = game.WEAPON_HANDS[0]
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    hand = next(((i, item) for i, item, _ in gd._worn(member) if item[game.ITEM_SLOT] == right), None)
+    if hand is None or specialize.kind_of(struct.unpack_from("<H", hand[1], game.ITEM_TYPE)[0]) == kits.DAGGER:
+        return []
+    new = start_weapon(sheet, [kits.DAGGER + 1], read)
+    if new is None or new[0] != kits.DAGGER:
+        return []
+    name = gd.item_name(struct.unpack_from("<H", hand[1], game.ITEM_NAME)[0])
+    gd.guest.write(items + hand[0] * game.ITEM_SIZE, plain_weapon(hand[1], *new)[0])
+    material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
+    return [f"{gd.creature_name(member)} starts with a plain {material}dagger in place of the {name}: a "
+            f"Ghetto Fighter fights best with one"]
+
+
+def _shield_away(gd, owned) -> Optional[str]:
+    """A shield in the left hand left behind (for a second weapon): its name, or None."""
+    from . import kits, ring
+    left = game.WEAPON_HANDS[1]
+    for item_index, item, typ in owned:
+        if item[game.ITEM_SLOT] == left and len(typ) > 0 and typ[0] & kits.SHIELD \
+                and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
+            return gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
+    return None

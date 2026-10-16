@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -92,6 +92,8 @@ class Viewer:
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
         ttk.Button(top, text="Reconnect", command=self.reconnect).pack(side="right")
+        # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
+        ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
         # for when the Loader was opened on its own: start the game (with the dice log) from here
         self.start_button = ttk.Button(top, text="Start the game", command=self.start_game)
         self.start_button.pack(side="left")
@@ -362,7 +364,9 @@ class Viewer:
         for key, text in (
                 ("class_restrictions", "Class restrictions on armour, shields and weapons, the strictest class "
                                        "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
-                                       "spheres); a multiclass preserver casts no spells in armour"),
+                                       "spheres); a multiclass preserver, or a human preserver who was a warrior, casts "
+                                       "no spells in armour, and a thief with another class (now or before) has "
+                                       "no thief skills in armour that isn't light"),
                 ("multiclass_hp", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
                                   "a class is a warrior), the total shared between the classes"),
                 ("best_hit_die", "Hit dice rolled twice, the better kept, at creation and at every level "
@@ -399,9 +403,10 @@ class Viewer:
                                           "rangers have expertise, every ranger with the bow; specialists and "
                                           "rangers shoot missiles faster; other weapons at a warrior's plain rate "
                                           "(chosen on the creation panel's WEAPON SPEC pages)"),
-                ("kits", "Kits: a character of one class may take one of its class's three kits, each "
-                         "giving something and costing something (chosen on the creation panel's KIT "
-                         "page)"),
+                ("kits", "Kits: a character of one class may take one of its class's three kits, and some "
+                         "races' pairs of classes have kits of their own, each giving something and "
+                         "costing something (chosen on the creation panel's KIT page); the game's own "
+                         "party gets features of its own"),
                 ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
                 ("cha_prices", "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
                                "point after, to 40% at 25; shops pay 60% of an item's price"),
@@ -410,7 +415,8 @@ class Viewer:
                 ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
                                 "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
-                            "(no enemy beside them; thieves half the chance in daylight, rangers indoors)"),
+                            "(no enemy beside them; thieves half the chance in daylight, but for a few kits, "
+                            "rangers indoors)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
                                "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends")):
             self.rule_vars[key] = tk.BooleanVar(
@@ -429,8 +435,9 @@ class Viewer:
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
         ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon in hand they can use, "
-                        "a sling, leather armour where they may wear it and a dagger (Stalkers, Assassins and "
-                        "Shinobi a cloak); a multiclass preserver's armour goes in the backpack",
+                        "a sling, leather armour where they may wear it (Stalkers, Assassins and "
+                        "Shinobi a cloak, some kits their own weapons); a multiclass preserver starts "
+                        "with no armour",
                         variable=self.starting_gear, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}
@@ -667,6 +674,30 @@ class Viewer:
         if path:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(widget.get("1.0", "end-1c"))
+
+    def freeze_report(self) -> None:
+        """Save a freeze report (freeze.py) in crash-logs/ and say where; for when the game has
+        stopped but DOSBox hasn't."""
+        if not self.guest:
+            messagebox.showinfo("Freeze report", "The Loader isn't connected to DOSBox, so there is nothing "
+                                "to report. Start the game from the Loader, or press Reconnect.", parent=self.root)
+            return
+        attached = self.dice is not None and self.dice.attached
+        hdr = self.dice.tsr_hdr if attached else None
+        ds = self.dice.game.ds if attached and self.dice.game is not None else None
+        self.status.set("Writing a freeze report...")
+        self.root.update_idletasks()
+        try:
+            path = freeze.freeze_report(self.guest.read, hdr, ds, __version__,
+                                        launch.effective_switches(launch.load_settings()),
+                                        self.dice_text.get("1.0", "end-1c"), self.talk_text.get("1.0", "end-1c"),
+                                        launch.CRASH_DIR)
+        except Exception as e:  # (DOSBox gone, say): said, not raised
+            self.status.set(f"No freeze report: {e}")
+            return
+        self.status.set(f"Freeze report saved: {path}")
+        messagebox.showinfo("Freeze report", f"Saved in\n{path}\n\nSend it along with what you were doing "
+                            "when the game stopped.", parent=self.root)
 
     def _drop_dice(self) -> None:
         if self.dice is not None:
@@ -950,7 +981,6 @@ class Viewer:
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.stealth_gear = self.stealth_gear.get()
                 self.dice.load_picked(launch.pickpocketed())
-                self.dice.tools_given = launch.tools_given()
                 self.dice.set_rules(self._rules())
             try:
                 self.dice_status.set(self.dice.attach())
@@ -972,9 +1002,6 @@ class Viewer:
         picked = self.dice.take_picked()
         if picked is not None:
             launch.set_pickpocketed(picked)
-        given = self.dice.take_tools_given()
-        if given:
-            launch.add_tools_given(given)
         learned = self.dice.take_speakers()
         if learned:  # names worked out from conversations: keep them, and show them on earlier lines
             launch.add_learned_speakers(learned)
@@ -1370,6 +1397,8 @@ class Viewer:
             known = gd and addr is not None and table is not None
             thief = gd.thief_skills_now(index, game.LEDGER_SKILLS) if known else []
             label = "Thief skills now"
+            if known and thief and index < game.PARTY_SIZE and gd.thief_heavy(index):
+                label = "Thief skills now (none in armour that isn't light)"
             if known and not thief and self.rule_vars["stealth"].get():  # a ranger's, for the stealth rule
                 thief, label = gd.ranger_skills_now(index), "Ranger skills now"
             equipment = gd.equipment(index) if known else []
@@ -1383,10 +1412,17 @@ class Viewer:
                 no_spells = bool(known and index < game.PARTY_SIZE and gd.no_spells(index))
                 kit = gd.kit(index) if known and index < game.PARTY_SIZE else None
                 kit_move = sum(kits.move(k) for k in gd.kit_ids(index)) if kit else 0
+                move_why = [kit] if kit_move else []
+                if known and index < game.PARTY_SIZE:  # (DSCLOG's KIT_MOVE: a Wayfinder's, the party's)
+                    path = kits.PATH_MOVE if gd.path_finder() else -kits.PATH_MOVE if gd.path_lost() else 0
+                    if path:
+                        kit_move += path
+                        move_why.append("Path-finder" if path > 0 else "Wayfinder down")
             except (struct.error, IndexError, ValueError):
-                weapons, no_spells, kit, kit_move = [], False, None, 0
+                weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
             card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,
-                      skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move)
+                      skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move,
+                      move_why=", ".join(move_why))
 
     def _hex_base(self) -> Optional[int]:
         record = self.layout.records.get(self.hex_record.get())

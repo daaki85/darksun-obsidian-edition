@@ -149,6 +149,9 @@ ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 
 # the game's attacks that destroy items, as the dice log names them
 ACID, TOUCH_ARMOUR, TOUCH_WEAPON = 178, 186, 187
 ITEM_ATTACKS = {ACID: "acid", TOUCH_ARMOUR: "corroding touch", TOUCH_WEAPON: "corroding touch"}
+# the powers a monster's hit casts for its poison properties (monsters.SPECIAL_ATTACKS: bits 13 and
+# 14, the routine giving a hit's special effects, DSUN.EXE 7A776h)
+POISON_POWERS = {176: "Poison (10 damage)", 177: "Poison (30 damage)"}
 # the Options' setting for each, all on unless unticked
 RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("spell_save", RULE_SPELL_SAVE), ("no_doubled_save", RULE_NO_DOUBLE),
@@ -405,9 +408,10 @@ EFFECT_RULES[8] += "; can't cast spells that need sight"
 EFFECT_RULES[47] += ", half movement and attacks, loses every other turn; ends Haste (Free Action and " \
                     "Protection from Paralysis prevent it)"
 EFFECT_RULES[22] = "double movement and attacks; ends Slow"
-# AD&D 2e strength damage adjustments (Dark Sun has no exceptional strength). The
-# game adds these after rolling melee damage; seen in play for STR 20 and 24.
-STR_DAMAGE = {1: -4, 2: -2, 3: -1, 4: -1, 5: -1, 16: 1, 17: 1, 18: 2, 19: 7, 20: 8, 21: 9,
+# The strength damage adjustments the game adds after rolling melee damage: its own table
+# (STR_DAMAGE_TABLE), which gives STR 18 +4 (AD&D's 18/76-90; Dark Sun has no exceptional
+# strength); these if it can't be read. Seen in play for STR 17, 18, 19, 20, 22 and 24.
+STR_DAMAGE = {1: -4, 2: -2, 3: -1, 4: -1, 5: -1, 16: 1, 17: 1, 18: 4, 19: 7, 20: 8, 21: 9,
               22: 10, 23: 11, 24: 12, 25: 14}
 
 
@@ -512,6 +516,7 @@ SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen 
 # To hit, as the game's attack setup adds it: STR (melee) or DEX (missiles) from these tables,
 # the attacker's effects, the weapon's plus or its material's penalty
 STR_TO_HIT, DEX_MISSILE = 0x7C2, 0x7DC  # DS: a byte per ability score
+STR_DAMAGE_TABLE = 0x7A8  # DS: the same, for melee damage (just before STR_TO_HIT)
 HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3))  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
 WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
@@ -739,9 +744,19 @@ class GameData:
         self.rules = RULES_IN_FORCE if rules is None else rules
         self.belt = BELT_IN_FORCE
         self.dance: Dict[int, int] = {}  # each party member's Battle Dancer's dance now (+1, -1: dance.py)
+        self.wild: Dict[int, bool] = {}  # each Wild Fury (or Gerakis) fighting wild this fight: whether its check passed (wild.py)
 
     def _word(self, offset: int) -> int:
         return struct.unpack("<h", self.guest.read(self.ds * 16 + offset, 2))[0]
+
+    def str_damage(self, strength: int) -> int:
+        """What STRENGTH adds to melee damage: the game's table (STR_DAMAGE_TABLE, taken as the
+        game's when it starts as STR_DAMAGE does), else STR_DAMAGE."""
+        if 1 <= strength <= 25:
+            data = self.guest.read(self.ds * 16 + STR_DAMAGE_TABLE + 1, 25)
+            if len(data) == 25 and struct.unpack_from("b", data)[0] == STR_DAMAGE[1]:
+                return struct.unpack_from("b", data, strength - 1)[0]
+        return STR_DAMAGE.get(strength, 0)
 
     def creature(self, index: int) -> bytes:
         if not 0 <= index < 512:
@@ -926,6 +941,22 @@ class GameData:
         data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
         return [Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]) for i in range(count)]
 
+    def _power_dice(self, spell: int) -> str:
+        """" (1d10 crushing)": a monster's power's damage dice and kinds, from its record, to tell
+        it by (the game has no name for it), or ""."""
+        from . import spellbook
+        try:
+            rule = self.spell_damage(spell)
+            rec = self.spell_record(spell)
+        except (struct.error, IndexError, ValueError):
+            return ""
+        if rule is None or len(rec) < 0x1C or rule.sides <= 1 or not rule.base_dice \
+                or rule.step_dice or rule.step_bonus:
+            return ""
+        kinds = struct.unpack_from("<H", rec, 0x1A)[0]
+        names = [name for bit, name in spellbook.DAMAGE_KINDS if kinds & bit]
+        return f" ({rule.base_dice}d{rule.sides}{' ' + ', '.join(names) if names else ''})"
+
     def spell_name(self, spell: int) -> str:
         if PSIONIC_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT:
             # the psionic powers' names come first in the names list, in number order
@@ -936,8 +967,10 @@ class GameData:
             return NEW_SPELLS[spell]
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)
             return ITEM_ATTACKS[spell].capitalize()
-        if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch
-            return f"special attack {spell}"
+        if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
+            return POISON_POWERS[spell]
+        if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch: the game names none
+            return f"special attack {spell}{self._power_dice(spell)}"
         if SPELL_FIRST <= spell <= SPELL_COUNT:
             info = self.load_seg * 16 + SPELL_INFO_OFF + (spell - 1) * SPELL_INFO_SIZE
             name = struct.unpack("<H", self.guest.read(info + 5, 2))[0]
@@ -1394,7 +1427,7 @@ class GameData:
                          gear: bool = True) -> List[Tuple[str, int]]:
         """[(skill, chance), ...] for the skills the game rolls, as they stand now: with the
         equipment penalty, a worn belt's bonus (BELT_IN_FORCE), with GEAR a worn cloak's or boots'
-        (gear_skill), 0 for a skill an effect rules out (or when the thief isn't Okay or New), 100
+        (gear_skill), 0 for a skill an effect rules out (or when the thief isn't Okay or New, or wears armour that isn't light: thief_heavy), 100
         for one an effect makes certain. Not the situation's bonus (a hard lock...). [] for
         someone without thief levels. `skills`: which (numbers in THIEF_SKILLS)."""
         rec = self.creature(creature)
@@ -1404,7 +1437,7 @@ class GameData:
         slots = self.thief_penalty_slots()
         penalty = any(item[ITEM_SLOT] in slots for _, item, _ in self._worn(creature))
         ids = {e.id for e in self._mine(creature, self.effects())}
-        okay = rec[CREATURE_STATUS] in STATUS_ABLE
+        okay = rec[CREATURE_STATUS] in STATUS_ABLE and not self.thief_heavy(creature)
         belt = self.belt and any(item[ITEM_SLOT] == WAIST for _, item, _ in self._worn(creature))
         from . import kits
         kids = self.kit_ids(creature)
@@ -1577,9 +1610,14 @@ class GameData:
             for kid in kids:
                 kit = kits.champion(kid, shield, not missile)[0] \
                     + (kits.melee(kid, bool(typ[0x0F] & 0x40), kind) if not missile and not typ[0] & 2 else 0) \
-                    + kits.extra(kid, self.dance.get(creature, 0))
+                    + kits.extra(kid, self.dance.get(creature, 0)) \
+                    + (kits.missile_to_hit(kid, kind, self.outdoors(creature)) if missile else 0) \
+                    + (kits.POISONER_TO_HIT if kid == kits.POISONER else 0) \
+                    + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
+            if self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis)
+                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
                 from . import specialize
                 kind = struct.unpack_from("<H", item, ITEM_TYPE)[0]
@@ -1594,6 +1632,12 @@ class GameData:
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
                 if kits.warrior_attacks(have, self.sheet(creature)) != have:
                     halves = kits.warrior_attacks(have, self.sheet(creature))
+            if missile and kind == kits.CHATKCHA and self.own_race(creature) == kits.THRI_KREEN:
+                # (K'ratchek's chatkcha comes back as if she had several: DSCLOG's OWN_THROWS)
+                halves = (typ[0x0B] if halves is None else halves) + kits.OWN_THROWS_MORE
+            if not missile and self.wild.get(creature):
+                # (Wild Fighting, its check passed: 1 more attack a round in melee; DSCLOG's WILD_HALVES)
+                halves = (self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves) + kits.WILD_HALVES
             if not missile and self.rules & RULE_TWO_WEAPONS and slot == WEAPON_HANDS[1]:
                 # (AD&D's two weapons: the off hand one a round, the extra attacks the main hand's;
                 # DSCLOG's OFF_HAND_HALVES)
@@ -1607,6 +1651,12 @@ class GameData:
             parts = [("STR", table(STR_TO_HIT, strength))] + common
             if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in ids:
                 parts.append((EFFECT_NAMES[CLAW_EFFECT], 1))  # (DSCLOG's NS_FIST)
+            for kid in kids:  # (DSCLOG's KIT_TO_HIT and WILD_TO_HIT, unarmed too)
+                kit = (kits.POISONER_TO_HIT if kid == kits.POISONER else 0) + kits.ghetto_to_hit(kid, None)
+                if kit:
+                    parts.append((kits.name(kid), kit))
+            if self.wild.get(creature) is False:
+                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
@@ -1749,12 +1799,48 @@ class GameData:
         from . import kitpages
         return kitpages.kit_ids(self.sheet(creature))
 
+    def own_race(self, creature: int) -> int:
+        """With kits, the race of one of the game's own party given a feature of its own
+        (kits.own_race: Gerakis, K'ratchek, Cilla), else 0."""
+        if not self.rules & RULE_KITS:
+            return 0
+        from . import kits
+        return kits.own_race(self.sheet(creature))
+
+    def own_features(self, creature: int) -> List[str]:
+        """The names of those features (kits.OWN_FEATURES), as the Effects screen lists them."""
+        from . import kits
+        return list(kits.OWN_FEATURES.get(self.own_race(creature), ()))
+
     def has_kit(self, creature: int, kid: int) -> bool:
         return kid in self.kit_ids(creature)
 
+    def path_lost(self) -> bool:
+        """No party member up is a Wayfinder, and one down (stunned to petrified; not Gone) is:
+        Path-finder lost, the party's 1 less (DSCLOG's PATH_DOWN)."""
+        from . import kits
+        if self.path_finder():
+            return False
+        for m in range(PARTY_SIZE):
+            rec = self.creature(m)
+            if len(rec) > CREATURE_STATUS and 2 <= rec[CREATURE_STATUS] <= 7 and kits.WAYFINDER in self.kit_ids(m):
+                return True
+        return False
+
+    def path_finder(self) -> bool:
+        """A party member up (New or Okay) is a Wayfinder: the party's Path-finder (DSCLOG's
+        PATH_UP: kits.PATH_MOVE, kits.PATH_INITIATIVE)."""
+        from . import kits
+        for m in range(PARTY_SIZE):
+            rec = self.creature(m)
+            if len(rec) > CREATURE_STATUS and rec[CREATURE_STATUS] <= 1 and kits.WAYFINDER in self.kit_ids(m):
+                return True
+        return False
+
     def kit(self, creature: int) -> Optional[str]:
-        """With kits, the kits the creature took (kitpages.KITS), the oldest class's first, or None;
-        an Elementalist's with its second sphere ("Elementalist (and water)"), a kit asleep with the
+        """With kits, the kits the creature took (kitpages.KITS), the oldest class's first, then the
+        features of its own of one of the game's own party (kits.OWN_FEATURES), or None; an
+        Elementalist's with its second sphere ("Elementalist (and water)"), a kit asleep with the
         level its class sleeps till."""
         if not self.rules & RULE_KITS:
             return None
@@ -1770,12 +1856,14 @@ class GameData:
                 name += (f", dormant until the {CLASS_NAMES[sheet[SHEET_CLASSES]].split(' (')[0].lower()} level "
                          f"passes {sheet[SHEET_LEVELS + place]}")
             names.append(name)
+        names += kits.OWN_FEATURES.get(kits.own_race(sheet), ())  # (the game's own party's: Gerakis...)
         return "; ".join(names) or None
 
     def specializations(self, creature: int) -> List[Tuple[str, str]]:
         """With weapon specialization, (kind, skill) for each weapon kind the creature has chosen:
         "specialized", "mastery", "grand mastery", "expertise", or "not yet" for a dual-classed
-        warrior whose warrior class isn't back yet."""
+        warrior whose warrior class isn't back yet; then a ranger's bow, chosen or not (DSCLOG's
+        EF_LINES_OF)."""
         if not self.rules & RULE_SPECIALIZE:
             return []
         from . import specialize, weaponchoice
@@ -1788,7 +1876,21 @@ class GameData:
             if 0 < k <= len(specialize.KINDS):
                 skill = specialize.skill(sheet, weaponchoice.PLAIN[k - 1][0])
                 out.append((specialize.KINDS[k - 1], names.get(skill, "")))
+        bow = specialize.KINDS.index("bow")
+        if bow + 1 not in sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT]:
+            skill = specialize.skill(sheet, weaponchoice.PLAIN[bow][0])
+            if skill not in (specialize.NONE, specialize.PLAIN):  # (a ranger's expertise)
+                out.append(("bow", names.get(skill, "")))
         return out
+
+    def thief_heavy(self, creature: int) -> bool:
+        """With class restrictions, whether a character with a thief class wears armour that isn't
+        light: no thief skills and no backstab (DSCLOG's THIEF_HEAVY; restrict.thief_heavy)."""
+        if not self.rules & RULE_RESTRICT:
+            return False
+        from . import restrict
+        worn = [typ for _, item, typ in self._worn(creature) if item[ITEM_SLOT] in ARMOUR_SLOTS]
+        return restrict.thief_heavy(self.sheet(creature), worn)
 
     def no_spells(self, creature: int) -> bool:
         """With class restrictions, whether a multiclass preserver can't cast for the armour it

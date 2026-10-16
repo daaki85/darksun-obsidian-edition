@@ -1,8 +1,9 @@
 """A Battle Dancer's dance (kits.py): rolled for each one as a fight's first round begins, counted
 down round by round, and given to DSCLOG (its KIT_DANCE bytes) to add to hit, to damage and to AC.
 
-The dance is the Dancing proficiency's check: a d20 against DEX (+0). Danced well (the roll DEX or
-less), +1 for as many rounds as DEX is above the roll (at least 1); stumbled, -1 for 1d8 rounds.
+The dance is the Dancing proficiency's check at -4: a d20 against DEX - 4 (a natural 20 always
+fails). Danced well (the roll that or less), +1 for as many rounds as it is above the roll (at
+least 1); stumbled, -1 for 1d8 rounds.
 The round it's rolled in is the first; it ends before the round after its last, and with the fight.
 """
 
@@ -53,10 +54,10 @@ class Dances:
                 who = gd.creature_name(member)
                 plural = "s" if rounds != 1 else ""
                 if bonus > 0:
-                    out.append(f"{who} dances: d20 = {d20}, needs {dex} or less (DEX {dex}) -> +1 to hit, "
+                    out.append(f"{who} dances: d20 = {d20}, needs {min(dex + kits.DANCE_CHECK, 19)} or less (DEX {dex} {kits.DANCE_CHECK}) -> +1 to hit, "
                                f"damage and AC for {rounds} round{plural}")
                 else:
-                    out.append(f"{who} dances: d20 = {d20}, needs {dex} or less (DEX {dex}) -> stumbles: "
+                    out.append(f"{who} dances: d20 = {d20}, needs {min(dex + kits.DANCE_CHECK, 19)} or less (DEX {dex} {kits.DANCE_CHECK}) -> stumbles: "
                                f"-1 to hit, damage and AC for {rounds} round{plural} (d{kits.DANCE_FAIL_DIE} = {fail})")
             return out
         for member in list(self.left):

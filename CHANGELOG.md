@@ -1,29 +1,170 @@
 # Changelog
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
-request by pull request, newest first.
-Released pull requests are summarised in a line or two each; the release notes
-([2.3.0](release-notes/v2.3.0.md): #44 to #46; [2.2.1](release-notes/v2.2.1.md): #43; [2.2.0](release-notes/v2.2.0.md): #39 to #42; [2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35; [2.0.0](release-notes/v2.0.0.md): #31 and #32; [1.2.0](release-notes/v1.2.0.md):
+request by pull request, newest first. Released pull requests are summarised
+in a line or two each; the release notes ([2.3.0](release-notes/v2.3.0.md):
+#44 to #46; [2.2.1](release-notes/v2.2.1.md): #43;
+[2.2.0](release-notes/v2.2.0.md): #39 to #42;
+[2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35;
+[2.0.0](release-notes/v2.0.0.md): #31 and #32;
+[1.2.0](release-notes/v1.2.0.md):
 #19 to #29; [1.1.0](release-notes/v1.1.0.md): #14 to #18;
 [1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
 have the detail.
+
+## Pull request #49 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/49))
+
+**Added**
+- **The game's own party, features of their own** (with kits): Gerakis fights
+  wild (the Wild Fury's Wild Fighting); K'ratchek casts as a Wasteland Seer
+  (druid spells 2 levels higher under the open sky, 1 lower under a roof), and
+  her chatkcha comes back as if she had several (one more throw a round);
+  Cilla is an Elven Wanderer, her hiding never halved in daylight. No character
+  made on the creation screen can have them. The Effects screen lists them
+  (WILD FIGHTING; OPEN SKY SPELLS and CHATKCHA 2/ROUND; KIT: E-WANDERER), the
+  Characters tab beside the kit, and the dice log says so as a new game starts.
+- **Six new multiclass kits:** the **Spellarcher** (half-elf
+  fighter/preserver: its arrows 1 better and at least +1, magical; its weapon
+  spec the bow only), **Titan Mind** (half-giant fighter/psionicist:
+  psychometabolism 2 PSP less, telepathy 2 more), **Poisoner** (halfling
+  fighter/thief: its first hit in each fight poisons, a save or 10 damage; −1
+  to hit), **Spirit Caller** (halfling cleric/psionicist) and **Wasteland
+  Seer** (thri-kreen druid/fighter: spells cast 2 levels higher under the open
+  sky, 1 lower under a roof), and the **Wild Fury** (mul druid/fighter), with
+  **Wild Fighting** (the AD&D proficiency): as each fight starts, a d20 against
+  CON − 4, a natural 20 always failing. Passed, 1 more attack a round in melee
+  and +3 damage for the fight; failed, −3 to hit and AC 3 worse. The dice log
+  shows the check.
+- **Crash reports say why the game quit.** When the game stops on its own
+  error (as after the opening arena fight, where it quit with "return code
+  01h" and a blank screen), its message used to be lost: the game prints it
+  while the screen is in graphics, then clears it switching back to text. The
+  helper now keeps what the game last wrote and saves it, with the calls that
+  led there, and the Loader's crash report shows it.
+- **Monsters' powers told apart in the dice log:** the game has no name for
+  them, so the log now adds the power's damage dice and kinds, as in
+  "special attack 195 (1d10 crushing)" (Daggoran's).
+- **Freeze report:** when the game stops but DOSBox stays open, the Loader's
+  **Freeze report** button saves a zip in `crash-logs` with where the game was
+  running for its last few seconds (noted by the helper from the game's timer),
+  the helper's state, the switches, the end of the dice log and dialogue, and a
+  copy of the game's memory.
+
+**Changed**
+- **The Battle Dancer's dance rolls at −4:** a d20 against DEX − 4, a natural
+  20 always failing (as a proficiency check, and as Wild Fighting's); it lasts
+  that less the roll in rounds.
+- **More for three multiclass kits:** the Military Scout, under the open sky,
+  has +2 initiative and +1 to hit with a bow, sling or staff sling, and its
+  hiding isn't halved in daylight; the Shadowblade tries to hide in shadows
+  even with an enemy right beside it (both with the stealth rule). The Wayfinder gets **Path-finder**: while it's up, every
+  party member has +1 initiative and +1 Move in a fight.
+- **Stronger costs for six multiclass kits:** the Shadowblade can't use a
+  shield; the Military Scout never backstabs (from behind is still +2 to
+  hit); the Wilderness Avenger has 1 fewer druid spell slot at each spell
+  level; the Rescuer gets +1 to hit from behind, not +2; the Ghetto Fighter is
+  −1 to hit with anything but a dagger and can't use a shield; while a
+  Wayfinder is down (and no other is up), the party has −1 initiative and −1
+  Move in a fight.
+- **Thieves' Tools are Mirlon's** (in the slave pens), for a party that
+  kills him, as well as Kel's to sell: no thief starts with a set any more,
+  and none is put in a thief's backpack later.
+- **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
+  shows `AC BONUS:1` with the helms rule, which says the same.
+- **Thieves wear light armour only** (leather, hide, silk), with class
+  restrictions on (before, a thief of one class could wear any armour). A
+  multiclass thief (a fighter/thief, a cleric/thief), or a human thief who was
+  a fighter, gladiator, ranger or cleric, may wear the heavier armour its other
+  class allows, but **has no thief skills** (all 0, on the inventory screen too) and
+  **no backstab** in it, as a multiclass preserver casts no spells in armour.
+  A human who has been a preserver and a warrior (either order) may wear the
+  warrior's armour too, and casts no spells in it.
+- **Light armour only** for the Assassin, Shinobi, Shadowblade, Poisoner and
+  Spellarcher, even with the kit asleep after changing class.
+- **Starting gear:** with kits, a Battle Dancer starts with two long swords
+  (the second in the left hand, in place of the shield), a Myrmidon with its
+  second weapon in the left hand when it's a one-handed melee weapon (a bow
+  still goes in the missile slot, a two-handed weapon in the backpack), a
+  Poisoner with a dagger in each hand (its long sword made one, its shield
+  left behind) and a Ghetto Fighter with a dagger in its hand, whatever its
+  weapon spec. A multiclass preserver's armour is left out, not put in its
+  backpack, and fuller starting gear no longer adds a dagger to every
+  backpack (a character whose classes start with one keeps it). Weapon specs start as the chatkcha for a
+  thri-kreen whose classes allow it, as the dagger for a Ghetto Fighter or
+  Poisoner and as the long sword for a Battle Dancer (the kits' unless the
+  player picks another on the weapon pages).
+- **A ranger's bow is listed** on the Effects screen and the Characters tab
+  (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
+  expert with the bow, chosen or not, but only the chosen weapons were listed.
+
+**Fixed**
+- **A Battle Dancer whose cleric sphere bars long swords couldn't specialize
+  in one** on the creation screen (it was given the bow, and started with a
+  bow and a shield): the weapon pages left out what the kit allows whatever
+  the classes do. It now starts with a long sword in each hand.
+- **The game slowed down with the combat log's panel shown** (2.3.0). The
+  helper put the panel on screen again on every pass of the game's main loop
+  while the pointer moved, and every 16 passes when it didn't, with a slow
+  copy (a byte at a time, picked out of the picture); with the game's CPU at
+  a fixed speed, that took most of it (in a fight, the game's idle loop ran
+  1,100 to 1,500 times a second with the panel shown, against 3,600 without).
+  The panel is now put again at most once a BIOS tick (18 a second), and the
+  Loader stores the picture so that each plane's part of a row is copied
+  whole: with the panel shown, the loop runs 3,500 to 3,600 times a second.
+- **A multiclass preserver could cast in armour** (class restrictions on,
+  since 2.0.0). The USE screen said NO SPELLS IN ARMOUR, but the spells
+  stayed in use: the helper asked about the wrong character, reading it from
+  a register the game's own test had changed by then. It now reads the
+  character the game asked about.
+- **Copies of the combat log's panel left on the map** (2.3.0) when the view
+  scrolled by the game's own scrolling (at the screen's edge, following who
+  walks): that copies the screen, the panel with it. When the view has moved,
+  the helper now has it drawn again whole, round the panel.
+- **A patch of map under the pointer on the combat log's panel** (2.3.0),
+  sometimes staying while the pointer was still. In a fight the game moves
+  its pointer on the screen not on show and copies the box round it to the
+  one on show; the panel was only on the one on show, so the copy brought
+  the map back over it. The panel is now put on both.
+- **A new character's bow listed as "Arrows 1D6"**, with no THAC0, on the
+  inventory screen, until it was taken off and put back on: the mod gave the
+  arrows after the bow, which put them ahead of it in the character's items,
+  and the game lists whichever of the two comes first. The bow now goes
+  ahead, and an "Arrows" line the game still shows gets the bow's THAC0.
+- **Yellow text on the character creation screen** (since 2.3.0): the scores,
+  the lines below them and the ability labels (STR: to CHR:). The game's
+  screens print in a colour each leaves set, and the creation screen never
+  sets its own, so after a character screen (whose selected portrait is
+  yellow) they came out yellow. The creation screen's white is now set as it
+  rolls, and the labels are drawn in it.
+- **The combat log's panel on the USE screen**, where it hid the screen's
+  right side and took its clicks (2.3.0): the panel stayed on with the map
+  left behind. It now shows on the map only.
+- **A new character's weapon specialization carried over** from the
+  character made before it: the game keeps one sheet for every character it
+  creates, and changing the classes cleared the kit but not the specs (a
+  druid/fighter after a fighter/preserver started specialized in the bow). The
+  specs are now cleared with the kit.
+- **The dice log's damage for a STR 18 character was 2 short**: it added +2
+  for STR 18, but the game's own table adds +4, so a hit logged as 10 took 12
+  hit points. The Loader now reads the game's table (as it does STR's to-hit).
 
 ## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
 
 **Added**
 - **Multiclass kits** (with Kits ticked): seven kits for two classes taken at
   once, each for one race only. Elf cleric/fighter: **Battle Dancer**, which
-  dances as each fight starts (a d20 against DEX: +1 to hit, damage and AC
-  for DEX less the roll in rounds, or −1 for 1d8 rounds); long swords and
-  bows only, but any of them, whatever its cleric's sphere allows. Half-elf fighter/thief: **Shadowblade** (+10 hide, +5 move, −10
-  pick pockets) and **Military Scout** (+10 to traps, move, hide and climb
-  under the open sky, −5 under a roof). Half-elf druid/fighter: **Wilderness
-  Avenger** (+1 to hit and damage against undead; hides and moves as a
-  ranger). Half-elf cleric/ranger: **Rescuer** (cures heal 1 more a die under
-  the open sky). Dwarf fighter/thief: **Ghetto Fighter** (+1 with a dagger;
-  two weapons at 0 and −2; +5 pick pockets and hide, −5 traps) and
-  **Wayfinder** (+10 hide and move, −10 pick pockets). Chosen on the
-  creation panel's KIT page as a class's kit is.
+  dances as each fight starts (a d20 against DEX: +1 to hit, damage and AC for
+  DEX less the roll in rounds, or −1 for 1d8 rounds); long swords and bows
+  only, but any of them, whatever its cleric's sphere allows. Half-elf
+  fighter/thief: **Shadowblade** (+10 hide, +5 move, −10 pick pockets) and
+  **Military Scout** (+10 to traps, move, hide and climb under the open sky,
+  −5 under a roof). Half-elf druid/fighter: **Wilderness Avenger** (+1 to hit
+  and damage against undead; hides and moves as a ranger). Half-elf
+  cleric/ranger: **Rescuer** (cures heal 1 more a die under the open sky).
+  Dwarf fighter/thief: **Ghetto Fighter** (+1 with a dagger; two weapons at 0
+  and −2; +5 pick pockets and hide, −5 traps) and **Wayfinder** (+10 hide and
+  move, −10 pick pockets). Chosen on the creation panel's KIT page as a
+  class's kit is.
 - **The combat log below the map** (In the game, off by default): the game's
   screen 320 × 222, the log a strip under the map, always shown, in the
   panel's darker shade, covering none of it; the game's speed and the map's
@@ -46,9 +187,9 @@ have the detail.
   one game to the next too. (L used to collapse it to one line; **-** does.)
 - **Fuller starting gear for the game's own party too:** Gerakis, K'ratchek,
   Cermak and Cilla get what a new character would, in the first moments of a
-  new game, after their other changes (Gerakis a sling, leather chest and
-  leg armour and a dagger; Cermak and Cilla a dagger). K'ratchek, a thri-kreen, gets nothing more: she keeps the
-  game's own chatkcha (see below).
+  new game, after their other changes (Gerakis a sling, leather chest and leg
+  armour and a dagger; Cermak and Cilla a dagger). K'ratchek, a thri-kreen,
+  gets nothing more: she keeps the game's own chatkcha (see below).
 - **Fuller starting gear gives no belt or boots, and a cloak only to a
   Stalker, an Assassin or a Shinobi** (2.3.0 gave everyone a belt and boots,
   and a cloak to every ranger).
@@ -63,22 +204,22 @@ have the detail.
 
 **Fixed**
 - **The backpack's dagger fought with** (fuller starting gear, 2.3.0): the
-  Loader put the dagger for the backpack (and Thieves' Tools, the arena's
-  Ring +1 and what's lifted from pockets) in the character's list of what it wears and
-  holds, where the game counts every weapon as in hand, whatever cell it shows
-  it in. So Gerakis fought with the dagger in place of his long sword, and
-  Cermak struck with it as a second weapon. Items for the backpack now go in
-  the backpack's list, as the inventory screen puts them; what the Loader
+  Loader put the dagger for the backpack (and Thieves' Tools, the arena's Ring
+  +1 and what's lifted from pockets) in the character's list of what it wears
+  and holds, where the game counts every weapon as in hand, whatever cell it
+  shows it in. So Gerakis fought with the dagger in place of his long sword,
+  and Cermak struck with it as a second weapon. Items for the backpack now go
+  in the backpack's list, as the inventory screen puts them; what the Loader
   takes in hand or puts away moves between the lists too; and games where it
-  happened are put right the next time they're played out of a fight (the
-  dice log says `... is put away in the backpack`).
-- **The game quit ("Return code 01h") or froze in fights with the combat
-  log on** (2.3.0): the routine drawing again all that moved, drawn in parts
-  round the panel, went on afterwards from a way back that the parts' own
-  drawing had overwritten (a variable the other probes share), so the game
-  ran on from the wrong place, writing over its own memory (garbled names,
-  stripes across the screen) until it quit. The way back is now kept on the
-  stack while the parts are drawn.
+  happened are put right the next time they're played out of a fight (the dice
+  log says `... is put away in the backpack`).
+- **The game quit ("Return code 01h") or froze in fights with the combat log
+  on** (2.3.0): the routine drawing again all that moved, drawn in parts round
+  the panel, went on afterwards from a way back that the parts' own drawing
+  had overwritten (a variable the other probes share), so the game ran on from
+  the wrong place, writing over its own memory (garbled names, stripes across
+  the screen) until it quit. The way back is now kept on the stack while the
+  parts are drawn.
 - **A new thri-kreen given gear** with fuller starting gear (2.3.0): armour,
   a belt, boots or a cloak it can't wear, and a weapon and a dagger when its
   claws serve it better. A thri-kreen now gets nothing more than the game's
@@ -103,21 +244,21 @@ have the detail.
 **Added**
 - **Fuller starting gear** (More character customization, on by default).
   Before a new character is first played, the Loader adds plain gear the
-  character can use and hasn't got: a weapon in an empty right hand (from
-  the backpack, as a cleric's club, else a plain one of its weapon spec or a
-  short sword, club, mace, dagger or quarterstaff), a sling if it has no
-  missile weapon (an earth or fire cleric a chatkcha), leather chest, arm
-  and leg armour in empty places,
-  a belt, boots, a dagger, and a cloak for a ranger or Stalker. With the
-  class restrictions, a multiclass preserver's armour goes into the
-  backpack, so it can cast. A thief/psionicist (its long sword left behind)
-  and an air or fire cleric (its club) had started with no melee weapon.
+  character can use and hasn't got: a weapon in an empty right hand (from the
+  backpack, as a cleric's club, else a plain one of its weapon spec or a short
+  sword, club, mace, dagger or quarterstaff), a sling if it has no missile
+  weapon (an earth or fire cleric a chatkcha), leather chest, arm and leg
+  armour in empty places, a belt, boots, a dagger, and a cloak for a ranger or
+  Stalker. With the class restrictions, a multiclass preserver's armour goes
+  into the backpack, so it can cast. A thief/psionicist (its long sword left
+  behind) and an air or fire cleric (its club) had started with no melee
+  weapon.
 
 **Changed**
-- **An air cleric of one class may use daggers**, as its sphere allows:
-  none of the game's daggers had the air cleric in its class list, so only
-  Galefang would do (or another class's list, for a multiclass one). DSCLOG
-  now adds it to every dagger type, the game's and the Loader's.
+- **An air cleric of one class may use daggers**, as its sphere allows: none
+  of the game's daggers had the air cleric in its class list, so only Galefang
+  would do (or another class's list, for a multiclass one). DSCLOG now adds it
+  to every dagger type, the game's and the Loader's.
 - **The documentation reviewed** for clarity and repetition: DEVELOPMENT.md's
   kits chapter moved among the other parts, after weapon specialization, as
   in the README; the README's new-item prices in a table, a preserver's
@@ -145,29 +286,30 @@ have the detail.
 ## Pull request #45 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/45))
 
 **Changed**
-- **The combat log in the game is on by default** (it was off until
-  ticked): in a fight its panel shows the rolls over the map's lower right;
-  **L** or its **-** button folds it to one line, and the Options tab's
-  switch turns it off. Settings saved by an earlier version have it turned
-  on once (`settings_version` 2 in `settings.json`); after that the player's
-  choice stands.
+- **The combat log in the game is on by default** (it was off until ticked):
+  in a fight its panel shows the rolls over the map's lower right; **L** or
+  its **-** button folds it to one line, and the Options tab's switch turns it
+  off. Settings saved by an earlier version have it turned on once
+  (`settings_version` 2 in `settings.json`); after that the player's choice
+  stands.
 
 ## Pull request #44 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/44))
 
 **Added**
-- **A combat log in the game.** In a fight, a panel over the map's lower
-  right shows the dice log's lines as they come, in the game's font and the
-  Ledger's colours, with the round and who acts next above them; at the
-  least, in short (the default) or in detail. An Options switch, off by
-  default. It scrolls back over the fight: the scrollbar's handle, a page
-  at a click on the bar, the mouse wheel over it (on Windows), and a
-  **Latest** chip back to the newest lines. Its header has the level and
+- **A combat log in the game.** In a fight, a panel over the map's lower right
+  shows the dice log's lines as they come, in the game's font and the Ledger's
+  colours, with the round and who acts next above them; at the least, in short
+  (the default) or in detail. An Options switch, off by default. It scrolls
+  back over the fight: the scrollbar's handle, a page at a click on the bar,
+  the mouse wheel over it (on Windows), and a **Latest** chip back to the
+  newest lines. Its header has the level and
   - / + buttons: collapsed to one line, docked, or expanded with filters
   (All, Party, Damage, Saves); **L** collapses and opens it.
 - **Saves under their names.** The Ledger keeps a second copy of every save in
-  its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before
-  Scar's battle.SAV`), and the Options tab's new **Saves** section opens the
-  folder and puts a named save back in a slot of the game's list.
+  its **Named saves** folder, named as in the game
+  (`Page 2 slot 05 - Before Scar's battle.SAV`), and the Options tab's new
+  **Saves** section opens the folder and puts a named save back in a slot of
+  the game's list.
 - **Two magic shields.** **Gutterward**, a wooden shield +1, on a skeleton in
   the Tari's warrens; **Ironbulwark**, a metal shield +3 (the game has no
   metal shield: a type of the Ledger's), carried by the Guardian of
@@ -384,12 +526,12 @@ have the detail.
 
 **Added**
 - **STORE and RECALL on the creation screen,** as Baldur's Gate has them:
-  STORE keeps the roll on screen (the six scores and the die's total, the
-  hit points and PSP), RECALL brings it back however many times the die has
-  been rolled since, AC and damage shown with it. Changing the race, sex,
-  classes or kit forgets the stored roll. The two
-  buttons are carved like the game's own, under the hit points; the dice
-  log's ring is 84 entries (was 88) to make room in upper memory.
+  STORE keeps the roll on screen (the six scores and the die's total, the hit
+  points and PSP), RECALL brings it back however many times the die has been
+  rolled since, AC and damage shown with it. Changing the race, sex, classes
+  or kit forgets the stored roll. The two buttons are carved like the game's
+  own, under the hit points; the dice log's ring is 84 entries (was 88) to
+  make room in upper memory.
 - **Half-elves have their own figures** on the map and in fights (the game
   draws them with the human pictures). The man is built on the elf's figure,
   a little broader, with short fair hair, a linen shirt under a leather
@@ -431,12 +573,11 @@ have the detail.
   thieving, and New content (the new wizard spells first). The guide's
   Options table and both READMEs' overviews follow, and the Options tab's
   screenshot is new.
-- **The game's own party** is under More character customization (its
-  weapon specs and Cermak's kit), and points to Cilla's elf figure; the
-  bracers and robes are parts of New items; the README says "hiding to
-  backstab" where it said "the stealth rule"; DEVELOPMENT.md's "How each part
-  works" follows the README's order; the patch notes' Thieves section is
-  **Improved Thieving**.
+- **The game's own party** is under More character customization (its weapon
+  specs and Cermak's kit), and points to Cilla's elf figure; the bracers and
+  robes are parts of New items; the README says "hiding to backstab" where it
+  said "the stealth rule"; DEVELOPMENT.md's "How each part works" follows the
+  README's order; the patch notes' Thieves section is **Improved Thieving**.
 - **The patch notes' items, one by one,** in four groups: magic weapons
   (fifteen, each with what it is, and the Elven Leader's Gythka +2), magic
   armour and worn items (Inixhide among them, missing before; Arrowbane and
@@ -460,21 +601,21 @@ have the detail.
 ## Pull request #39 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/39))
 
 **Added**
-- **Two new wizard spells, and Cat's Grace is a spell of its own.** Erdlu
-  Claw (1st level: 5 rounds a caster level, natural and unarmed attacks do
-  1d6+1 where that's better, or Body Weaponry's and Animal Affinity's dice +1,
-  are +1 to hit and count as a +1 magical weapon) and Fogbolt (1st level: a
-  dark grey bolt of its own, so Magic Missile's stays blue, which needs a clear
+- **Two new wizard spells, and Cat's Grace is a spell of its own.** Erdlu Claw
+  (1st level: 5 rounds a caster level, natural and unarmed attacks do 1d6+1
+  where that's better, or Body Weaponry's and Animal Affinity's dice +1, are
+  +1 to hit and count as a +1 magical weapon) and Fogbolt (1st level: a dark
+  grey bolt of its own, so Magic Missile's stays blue, which needs a clear
   line to its target; 2d4 rounds unless saved against, -3 to the fogged
   creature's attacks and +2 to attacks on it). Each has its own sounds: Cat's
   Grace Haste's, Erdlu Claw Shocking Grasp's, Fogbolt Fog Cloud's (Cat's Grace
   and Erdlu Claw, cast on a party member's portrait, show the game's usual
-  star). Cat's Grace no longer takes
-  Flaming Sphere's place: the three are spells 196-198, learnt, listed, cast
-  and shown on the Effects screen like the game's own, each with its icon and
-  description; who knows them is kept in the character's sheet. The switch is
-  **New wizard spells** (was Cat's Grace). The dice log's ring is 88 entries
-  (was 96), so the helper still fits in upper memory.
+  star). Cat's Grace no longer takes Flaming Sphere's place: the three are
+  spells 196-198, learnt, listed, cast and shown on the Effects screen like
+  the game's own, each with its icon and description; who knows them is kept
+  in the character's sheet. The switch is **New wizard spells** (was Cat's
+  Grace). The dice log's ring is 88 entries (was 96), so the helper still fits
+  in upper memory.
 
 **Changed**
 - **Multiclass hit points follow Demihuman Deities (TSR 1998).** CON's bonus
@@ -511,10 +652,10 @@ have the detail.
 **Fixed**
 - **A save line read as if the save succeeded** ("Thrikreen saves vs Fogbolt
   ... -> failed"). It is now the creature's saving throw, then the result:
-  `Wild Mul's saving throw vs Fogbolt from Daaki (spell): d20 = 16, needs 14
-  (35% to save) -> saved`; "cannot save" and "saves automatically" read
-  `none allowed (cannot save) -> failed` and `not needed (saves
-  automatically) -> saved`.
+  `Wild Mul's saving throw vs Fogbolt from Daaki (spell): d20 = 16, needs 14 (35% to save) -> saved`;
+  "cannot save" and "saves automatically" read
+  `none allowed (cannot save) -> failed` and
+  `not needed (saves automatically) -> saved`.
 - **The dice log showed XP for every kill,** the creature's value from its
   character sheet, even where the party gains none (the opening fight in the
   arena, whoever dies). A kill now reads "Rampager is killed"; the XP shows
@@ -553,7 +694,8 @@ have the detail.
 ## Pull request #38 ([merged 2026-10-10](https://github.com/daaki85/darksun-obsidian-edition/pull/38))
 
 **Release**
-- **The release zip is `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`**, unzipping to a
+- **The release zip is
+  `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`**, unzipping to a
   folder of that name, to match the releases' title (it was
   `Obsidian-Edition-<version>.zip`).
 
@@ -592,9 +734,10 @@ have the detail.
   points for another, and a click on the hit points does nothing. Under CHR
   the screen shows the six's total and the die's (`SUM:99/101`); a new class
   that raises a score to its minimum raises the die's total with it. The dice
-  log adds each roll's total (`Character creation: the six scores add up to
-  101`). No interrupt vectors were left, so the new sites share the one for
-  choosing a preserver's spells, a site number after the `INT`.
+  log adds each roll's total
+  (`Character creation: the six scores add up to 101`). No interrupt vectors
+  were left, so the new sites share the one for choosing a preserver's spells,
+  a site number after the `INT`.
 
 **Fixed**
 - **A click on a score on the creation screen stopped the game** (since
@@ -633,21 +776,20 @@ have the detail.
 ## Pull request #31 ([merged 2026-10-09](https://github.com/daaki85/darksun-obsidian-edition/pull/31))
 
 **Added**
-- **Kits:** a character of one class may take one of three kits
-  for its class, or none, on the creation panel's new KIT page (KITS, at the
-  end of the panel's pages: the disciplines' for a class with no sphere, the
-  spheres' for a cleric, druid or ranger, the last weapon page for a warrior
-  with weapon specialization), NO KIT first and what a new character has, the
-  rows not chosen greyed as the spheres' are. The kit is kept with the
-  character (sheet `+43h`), and the Effects screen (`KIT: RAVAGER`) and the
-  Ledger's Characters tab name it. A new switch on the Options tab, under Rule
-  changes.
+- **Kits:** a character of one class may take one of three kits for its class,
+  or none, on the creation panel's new KIT page (KITS, at the end of the
+  panel's pages: the disciplines' for a class with no sphere, the spheres' for
+  a cleric, druid or ranger, the last weapon page for a warrior with weapon
+  specialization), NO KIT first and what a new character has, the rows not
+  chosen greyed as the spheres' are. The kit is kept with the character (sheet
+  `+43h`), and the Effects screen (`KIT: RAVAGER`) and the Ledger's Characters
+  tab name it. A new switch on the Options tab, under Rule changes.
 - **What the kits do:** the Myrmidon, Sentinel and Ravager (fighter); the
   Arena Champion, Twin-blade and Brute (gladiator); the Stalker (ranger); the
   Assassin (thief); the Grove Warden and Wanderer (druid); the Lifebinder's
-  weapons, and the Shinobi's weapons and armour. The guide's
-  Kits has what each does. The dice log and the Ledger show each kit's part; a
-  new probe in the game (INT B8h) makes the Sentinel's initiative.
+  weapons, and the Shinobi's weapons and armour. The guide's Kits has what
+  each does. The dice log and the Ledger show each kit's part; a new probe in
+  the game (INT B8h) makes the Sentinel's initiative.
 - **Kits' THAC0:** the Swashbuckler, Crusader, Battle Mage and Mind Warrior
   get a warrior's THAC0, the Scholar's is 1 worse, through a new probe at the
   end of the game's THAC0 routine (INT B7h); the Swashbuckler's −10 to every
@@ -669,9 +811,9 @@ have the detail.
   anyone else: INT ADh), and holds nothing in the off hand.
 - **Kits' casting level:** the Seeker casts at its ranger level less 5 and the
   Justifier less 9 (a ranger's: less 7), which also lets a Seeker of 6th level
-  choose 1st-level priest spells for its slots (INT AFh). The level a
-  spell's duration and damage take, which the game works out apart from
-  that (with a ranger's whole level), now has the kits' too (INT A6h).
+  choose 1st-level priest spells for its slots (INT AFh). The level a spell's
+  duration and damage take, which the game works out apart from that (with a
+  ranger's whole level), now has the kits' too (INT A6h).
 - **Rangers' casting level (a rule, on by default):** a ranger's spells last
   and do damage as cast at its level less 7, as the spell levels it may cast
   already count it; the game took the whole ranger level (a 9th-level
@@ -724,9 +866,9 @@ have the detail.
   preserver (no shield); a Brute no psionicist or air cleric (no two-handed
   melee weapon).
 - **Weapon specs are weapons learnt for good,** while the class or kit that
-  gave them is awake: no kit forbids a weapon type the character specialized in (but
-  for the off hand's rules). A dual-classed human's chosen weapon types sleep with
-  their class, as before, and come back when it wakes.
+  gave them is awake: no kit forbids a weapon type the character specialized
+  in (but for the off hand's rules). A dual-classed human's chosen weapon
+  types sleep with their class, as before, and come back when it wakes.
 - **A human who becomes a preserver picks its two spells** on the game's
   CHOOSE A SPELL window (1st level only), not Grease and Magic Missile (INT
   9Ch).
@@ -735,9 +877,9 @@ have the detail.
   the character's other classes or kits left off), and a new Elementalist's
   second sphere; with weapon specialization a new fighter, gladiator, ranger
   or Battle Mage then picks the weapon types it is due, as at a level up. Up
-  to three kits, one for each class, each asleep with its class. A human
-  who becomes a preserver and takes the Scholar kit picks three spells, not
-  two. Kits that can't go together (Arena Champion or Sentinel with Shinobi;
+  to three kits, one for each class, each asleep with its class. A human who
+  becomes a preserver and takes the Scholar kit picks three spells, not two.
+  Kits that can't go together (Arena Champion or Sentinel with Shinobi;
   Twin-blade with Healer; Brute with Shinobi or Lifebinder), and kits a class
   bars, both ways (INT 99h).
 - **The Effects screen a page at a time:** its lower panel has room for five
@@ -755,25 +897,24 @@ have the detail.
 - **Starting gear fitted to the kit:** the game's class gear, given at DONE,
   is changed while the character is new where the kit can't use it: a
   Shinobi's long sword becomes a bone short sword, a Brute's a bone great axe
-  (its club to the backpack), a Seeker's of its sphere's material, a
-  Ravager's shield is taken away (a kit that can't use a shield has no use for it in
-  the backpack); an Arena Champion's off-hand club
-  becomes a shield, and a Battle Mage's quarterstaff its weapon spec's weapon.
-  The dice log names each change. The guide lists each class's starting gear.
+  (its club to the backpack), a Seeker's of its sphere's material, a Ravager's
+  shield is taken away (a kit that can't use a shield has no use for it in the
+  backpack); an Arena Champion's off-hand club becomes a shield, and a Battle
+  Mage's quarterstaff its weapon spec's weapon. The dice log names each
+  change. The guide lists each class's starting gear.
 - **Two magic robes** for preservers, psionicists and druids, worn on the
   chest and not armour (cast in them; their AC with no armour worn, as
   bracers'): the **Ashen Robe** (+1 AC, +1 on saves against spells), which
-  Kalzith wears and sells and leaves when killed, and the
-  **Veiled Robe** (+2 AC, +1 on every save, a wizard slot more at spell levels
-  1-3), sold by Kel. Drawn icons, Alagorn's stories, the Ledger's saves and
-  slots count them.
-- **The Warden's Plate's AC explained:** 12 points better as a set (the
-  helm 2: a helm's AC 1 and its +1), not "AC 11".
-- **Kits' starting gear, more:** a Myrmidon gets a plain weapon of its
-  second weapon spec as well (in the backpack; a bow in the missile slot,
-  with arrows), a Ravager a second of its weapon for the hand its shield
-  left (none for a two-handed one), and a Brute's club is left behind
-  rather than carried.
+  Kalzith wears and sells and leaves when killed, and the **Veiled Robe** (+2
+  AC, +1 on every save, a wizard slot more at spell levels 1-3), sold by Kel.
+  Drawn icons, Alagorn's stories, the Ledger's saves and slots count them.
+- **The Warden's Plate's AC explained:** 12 points better as a set (the helm
+  2: a helm's AC 1 and its +1), not "AC 11".
+- **Kits' starting gear, more:** a Myrmidon gets a plain weapon of its second
+  weapon spec as well (in the backpack; a bow in the missile slot, with
+  arrows), a Ravager a second of its weapon for the hand its shield left (none
+  for a two-handed one), and a Brute's club is left behind rather than
+  carried.
 - **Charges in an item's box:** a wand, the Storm Ring or a necklace shows the
   charges it has left (`Charges: 50`) in its item box.
 - **Preservers' INT**, a new rule change (on by default): AD&D's table for
@@ -876,13 +1017,13 @@ have the detail.
   and class list and the game's hot keys (not checked against the game) are
   gone. Corrected: a warrior's attacks with weapon specialization, and picking
   pockets (a failed try rolls move silently, never hide in shadows).
-- **The player's guide, more:** the quality of life changes in a table;
-  each kit's starting gear; the spell slots of the kits that change them
-  (Arcanist, Battle Mage, Crusader, Elementalist, Seeker, Justifier, Shinobi)
-  and the Shinobi's spell list; the preservers' and priests' spells by level,
-  sphere and class (read from the game's spell records: the common 4th and
-  5th-level priest spells are druids' alone); and a list of things worth
-  knowing in play.
+- **The player's guide, more:** the quality of life changes in a table; each
+  kit's starting gear; the spell slots of the kits that change them (Arcanist,
+  Battle Mage, Crusader, Elementalist, Seeker, Justifier, Shinobi) and the
+  Shinobi's spell list; the preservers' and priests' spells by level, sphere
+  and class (read from the game's spell records: the common 4th and 5th-level
+  priest spells are druids' alone); and a list of things worth knowing in
+  play.
 - **The player's guide by class:** a section for each class, with how it
   plays, what the mod changes, its weapons and armour, its kits (what each
   gives, costs and starts with), its starting gear, its races, every
@@ -955,13 +1096,13 @@ have the detail.
   specs), rather than showing a blank one.
 
 **Documentation**
-- **Guide reorganised:** Every magic item and Every mundane weapon in a section
-  of their own, Item tables (they list the game's items too, not only new
-  content); Suggested system requirements under Requirements, linked from Game
-  speed; Picking pockets moved to Thieves; weapon specialization tidied
+- **Guide reorganised:** Every magic item and Every mundane weapon in a
+  section of their own, Item tables (they list the game's items too, not only
+  new content); Suggested system requirements under Requirements, linked from
+  Game speed; Picking pockets moved to Thieves; weapon specialization tidied
   (repeated notes gone, one table heading for every warrior, "weapon spec" for
-  the weapon types throughout, as the creation pages call them, and every ranger's bow
-  expertise said first).
+  the weapon types throughout, as the creation pages call them, and every
+  ranger's bow expertise said first).
 - The two Two weapons sections are one; the Effects screen's click (a spell
   left on) has a section under Controls, where its box is.
 - **Guide read through:** the game's own saving throws (petrification/
@@ -979,9 +1120,9 @@ have the detail.
 ## Pull request #27 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/27))
 
 **Changed**
-- **No bow to choose for a ranger** at creation (nor in the catch-up pick at
-  a level gained, for a ranger with no weapon type yet): every ranger has expertise
-  with the bow already.
+- **No bow to choose for a ranger** at creation (nor in the catch-up pick at a
+  level gained, for a ranger with no weapon type yet): every ranger has
+  expertise with the bow already.
 
 **Documentation**
 - Where a ranger's bow expertise and missile weapons' rates show, and the
@@ -1002,9 +1143,9 @@ have the detail.
   gives the same rate of fire, with no other bonus.
 
 **Documentation**
-- **Attacks a round:** a table in the guide by skill (non-warriors, a weapon type not
-  chosen, expertise, specialized, mastery, grand mastery) and level, for
-  melee, bows and the other missile weapons.
+- **Attacks a round:** a table in the guide by skill (non-warriors, a weapon
+  type not chosen, expertise, specialized, mastery, grand mastery) and level,
+  for melee, bows and the other missile weapons.
 
 ## Pull request #25 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/25))
 
@@ -1096,24 +1237,24 @@ have the detail.
   it gives the reader a point of WIS for good (at most 25) and is used up.
   The game's book, with a night-steel cover and an emblem in the fire colours
   of its magic items.
-- **The game's own party made ready for the rule changes,** for a new
-  player who presses START GAME: Gerakis specializes in the long sword and
-  the gythka and carries a bone gythka in place of his club, K'ratchek
-  specializes in the chatkcha, Cermak in the long sword and the club, and
-  Cilla, a druid who can't wear armour, has her leather armour taken away
-  and knows Armor instead.
+- **The game's own party made ready for the rule changes,** for a new player
+  who presses START GAME: Gerakis specializes in the long sword and the gythka
+  and carries a bone gythka in place of his club, K'ratchek specializes in the
+  chatkcha, Cermak in the long sword and the club, and Cilla, a druid who
+  can't wear armour, has her leather armour taken away and knows Armor
+  instead.
 - **The Warden's Plate,** plate mail +1 in four pieces (with the magic
   weapons' switch): the **Helm** on Dagolar's body (Cloak of Bravery while
   worn), the **Arms** in the Lower Castle's treasure chest with Dark Flame,
   the **Legs** in the Gemfields' chest, the **Chest** on Balkazar's body
   (Resist Fire while worn). Plate is AC 3 chest, 2 arms, 2 legs (DSCLOG's new
-  item types), each +1; the helm is the game's metal helm +1. Each piece
-  has an icon of its own and is drawn on the figures.
+  item types), each +1; the helm is the game's metal helm +1. Each piece has
+  an icon of its own and is drawn on the figures.
 - **The Cloak and Boots of Elvenkind** (with the magic weapons' switch): the
-  cloak is the Elven Leader's gift with his Gythka +1, the boots are in
-  the buried chest of Kel's caravan. Thieves and rangers only (multiclasses
-  too). With the hiding rule, the cloak's wearer hides in shadows on 95 or
-  less under the open sky, 90 under a roof (not halved by the light), and the
+  cloak is the Elven Leader's gift with his Gythka +1, the boots are in the
+  buried chest of Kel's caravan. Thieves and rangers only (multiclasses too).
+  With the hiding rule, the cloak's wearer hides in shadows on 95 or less
+  under the open sky, 90 under a roof (not halved by the light), and the
   boots' moves silently on 95 or less; their item boxes say so (`Hide 90-95%`,
   `Move 95%`).
 - **The Flame Blade,** an obsidian long sword +1 (with the magic weapons'
@@ -1165,10 +1306,10 @@ have the detail.
 - **The magic weapons and Legcrusher's leather have names:** the Club +1 is
   **Gutterknot**, the Pick +1 **Deepbiter**, the Staff Sling +1 **Windlash**,
   the Short Sword +2 **Greenbright** and the Leather Chest Armor +1
-  **Inixhide**, each with a story from Alagorn. Greenbright is now on **Arant**, who holds the captured
-  gladiators (the Elite Guards are only in the final fight). A thief can
-  lift Gutterknot from Churrr's pocket, for 200 XP, as Shadowseeker from
-  Kurzak's.
+  **Inixhide**, each with a story from Alagorn. Greenbright is now on
+  **Arant**, who holds the captured gladiators (the Elite Guards are only in
+  the final fight). A thief can lift Gutterknot from Churrr's pocket, for 200
+  XP, as Shadowseeker from Kurzak's.
 - **A circlet and a crown, worn on the head and not armour** (with the magic
   weapons' switch): **Arrowbane**, a silver circlet sold by Kel, keeps
   Protection from Normal Missiles on its wearer; the **Sunking Crown**, worn
@@ -1196,8 +1337,9 @@ have the detail.
   Mul has one as loot.
 - **Bracers of defense** (a new content switch with the magic weapons, on by
   default): AC 6 on Mikquetzl, AC 5 on Wyrmias, AC 4 on Balkazar and AC 2 on
-  Dagolar, 20,000 to 40,000; worn on the arms, nothing while armour is worn on the arms, legs or
-  chest, and not armour to the class rules (a preserver casts in them).
+  Dagolar, 20,000 to 40,000; worn on the arms, nothing while armour is worn on
+  the arms, legs or chest, and not armour to the class rules (a preserver
+  casts in them).
 - **Magic weapons of the weapon types the game has none of:** a Club +1 on Churrr
   in the warrens, a stone Pick +1 on one of the Undermountain folk, a Staff
   Sling +1 sold by the Bowyer and a metal Short Sword +2 on an Elite Guard,
@@ -1209,31 +1351,31 @@ have the detail.
   and a Castle Guard; an earth cleric may now take the great axe and the
   polearm, and starts with a metal one.
 - **Weapon specialization** (a new rule change, on by default): fighters and
-  gladiators specialize in weapon types (+1 to hit, +2 damage), fighters
-  on to mastery at 5th level (+3, +3) and grand mastery at 9th (the damage
-  die a size larger and an attack more), rangers take expertise; a warrior
-  with a weapon of another type attacks at AD&D's plain rate. Sixteen weapon types,
+  gladiators specialize in weapon types (+1 to hit, +2 damage), fighters on to
+  mastery at 5th level (+3, +3) and grand mastery at 9th (the damage die a
+  size larger and an attack more), rangers take expertise; a warrior with a
+  weapon of another type attacks at AD&D's plain rate. Sixteen weapon types,
   chosen on the creation screen's new **WEAPON SPEC** pages (greyed as the
-  game's disciplines are, a multiclass warrior's limited to the weapon types it may
-  use some weapon of, in any material: a fire cleric's obsidian long sword),
-  a new warrior starting with a plain weapon of its type in a material it may
-  use (new bone short swords and axes, obsidian ones for fire and earth
+  game's disciplines are, a multiclass warrior's limited to the weapon types
+  it may use some weapon of, in any material: a fire cleric's obsidian long
+  sword), a new warrior starting with a plain weapon of its type in a material
+  it may use (new bone short swords and axes, obsidian ones for fire and earth
   clerics, as the game has only Kurzak's short sword and a metal axe; an
   obsidian mace pictured without Blackmace's glow; a plain great axe pictured
-  without the Great Axe +3's gem; a two-handed weapon puts
-  the starting shield in the backpack); a
-  gladiator's 3rd and 4th (and any warrior's from before the rule) picked at
-  a level gained, in the game's own pop-up for a psionicist's new power; the
-  weapon types listed on the **Effects** screen and counted on the DAM lines and in
-  the dice log. The Characters tab lists each character's weapon types
-  (`Weapons: long sword (grand mastery)`) and gives the attacks a round with
-  each weapon held (`Attacks: 3/2 a round with Long Sword, 1 with Axe`).
+  without the Great Axe +3's gem; a two-handed weapon puts the starting shield
+  in the backpack); a gladiator's 3rd and 4th (and any warrior's from before
+  the rule) picked at a level gained, in the game's own pop-up for a
+  psionicist's new power; the weapon types listed on the **Effects** screen
+  and counted on the DAM lines and in the dice log. The Characters tab lists
+  each character's weapon types (`Weapons: long sword (grand mastery)`) and
+  gives the attacks a round with each weapon held
+  (`Attacks: 3/2 a round with Long Sword, 1 with Axe`).
 - **Class restrictions** (a new rule change, on by default): psionicists,
   multiclass thieves, preservers, druids and clerics held to their own limits
   on armour, shields and weapons whatever their other classes allow, the
   strictest winning; a multiclass preserver casts no spells in armour (its
-  spell slots headed **NO SPELLS IN ARMOUR** on the USE screen, and
-  "(no spells in armour)" on the Characters tab).
+  spell slots headed **NO SPELLS IN ARMOUR** on the USE screen, and "(no
+  spells in armour)" on the Characters tab).
 - **Multiclass hit points** (a new rule change, on by default): each level's
   die and CON's bonus divided between a character's classes, as in AD&D, at
   creation and at every level; the dice log shows the share. Meant for a new
@@ -1244,8 +1386,8 @@ have the detail.
   better roll kept; the dice log shows both.
 
 **Fixed**
-- **The Characters tab read the game as if every rule were off** (its
-  THAC0, attacks and specialization lines): it now uses the rules ticked.
+- **The Characters tab read the game as if every rule were off** (its THAC0,
+  attacks and specialization lines): it now uses the rules ticked.
 - **Character creation in the dice log:** one click on the die rolls a whole
   character several times while it tumbles, and the log gave every one; when
   rolls came too fast to record, the hit point line took CON from an earlier
@@ -1279,10 +1421,9 @@ have the detail.
   than one class, the XP in brackets on the experience line now names the
   class that reaches its next level there: `EXP:87230 (90000 Pr)`. A letter
   for each class, but **Pr** and **Ps** for preserver and psionicist (both
-  start with P); both named when two level up at the same XP
-  (`(20000 Pr/T)`); a class already at the highest level never named. One
-  class: as before. (The patched game's `INT D2h`, where the game adds the
-  bracket.)
+  start with P); both named when two level up at the same XP (`(20000 Pr/T)`);
+  a class already at the highest level never named. One class: as before. (The
+  patched game's `INT D2h`, where the game adds the bracket.)
 
 **Fixed**
 - **Kalzith's prices:** Blur 6,000 (was 3,000) and Haste 9,000 (was 12,000).

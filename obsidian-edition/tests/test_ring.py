@@ -67,14 +67,14 @@ class SearchTests(unittest.TestCase):
 
 class NameTests(unittest.TestCase):
     def test_rule_names(self):
-        """Helms named for their rule while it's on, and back without it; boots, whose rule is gone,
-        always by the game's own name."""
+        """Helms and boots by the game's own names, the rule on or off (the item box shows a helm's
+        AC as AC BONUS), and an earlier version's "Helm (AC 1)" and "Boots (Speed+1)" put back."""
         log = arena()
         m = log.guest.mem
-        for entry, text in ((6, b"Helm"), (43, b"Boots")):
+        for entry, text in ((6, b"Helm (AC 1)"), (43, b"Boots (Speed+1)")):
             m[NAMES + 3 + entry * game.ITEM_NAME_SIZE:NAMES + 3 + entry * game.ITEM_NAME_SIZE + len(text)] = text
         ring.name_items(log.game, game.RULE_HELMS)
-        self.assertEqual((log.game.item_name(6), log.game.item_name(43)), ("Helm (AC 1)", "Boots"))
+        self.assertEqual((log.game.item_name(6), log.game.item_name(43)), ("Helm", "Boots"))
         ring.name_items(log.game, 0)
         self.assertEqual((log.game.item_name(6), log.game.item_name(43)), ("Helm", "Boots"))
 

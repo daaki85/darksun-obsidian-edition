@@ -3,7 +3,7 @@
 A character of one class may take one of its class's three kits, or none (the class as it is).
 The kit is the sheet's byte KIT_BYTE: 0 none, 1 to 3 the class's kits in KITS's order. A
 character of two classes at once (not a human) may take a kit of its race and pair of classes, if
-they have any (MULTI: a group numbered on from the classes, 9-13, its kits in KITS as a class's),
+they have any (MULTI: a group numbered on from the classes, 9-19, its kits in KITS as a class's),
 in KIT_BYTE the same way. It is
 chosen on the creation panel, on a page of its own (a window for each class, its rows the
 NO KIT and the class's kits, its button VIEW PSIONICS back to the disciplines), which KITS opens:
@@ -29,19 +29,27 @@ KITS = {1: ("Elementalist", "Healer", "Crusader"),
         7: ("Stalker", "Justifier", "Seeker"),
         8: ("Swashbuckler", "Assassin", "Shinobi"),
         9: ("Battle Dancer",), 10: ("Shadowblade", "Military Scout"), 11: ("Wilderness Avenger",),
-        12: ("Rescuer",), 13: ("Ghetto Fighter", "Wayfinder")}
+        12: ("Rescuer",), 13: ("Ghetto Fighter", "Wayfinder"), 14: ("Spellarcher",), 15: ("Titan Mind",),
+        16: ("Poisoner",), 17: ("Spirit Caller",), 18: ("Wasteland Seer",), 19: ("Wild Fury",)}
 # the multiclass kits' groups: (race, the pair of classes as the creation screen numbers them)
-ELF, HALF_ELF, DWARF = 3, 4, 2
+ELF, HALF_ELF, DWARF, HALF_GIANT, HALFLING, MUL, THRI_KREEN = 3, 4, 2, 5, 6, 7, 8
 MULTI = {9: (ELF, frozenset((1, 3))),  # elf cleric/fighter
          10: (HALF_ELF, frozenset((3, 8))),  # half-elf fighter/thief
          11: (HALF_ELF, frozenset((2, 3))),  # half-elf druid/fighter
          12: (HALF_ELF, frozenset((1, 7))),  # half-elf cleric/ranger
-         13: (DWARF, frozenset((3, 8)))}  # dwarf fighter/thief
+         13: (DWARF, frozenset((3, 8))),  # dwarf fighter/thief
+         14: (HALF_ELF, frozenset((3, 5))),  # half-elf fighter/preserver
+         15: (HALF_GIANT, frozenset((3, 6))),  # half-giant fighter/psionicist
+         16: (HALFLING, frozenset((3, 8))),  # halfling fighter/thief
+         17: (HALFLING, frozenset((1, 6))),  # halfling cleric/psionicist
+         18: (THRI_KREEN, frozenset((2, 3))),  # thri-kreen druid/fighter
+         19: (MUL, frozenset((2, 3)))}  # mul druid/fighter
 # the rows' text where the name is too long for the panel
 SHORT = {"Arena Champion": "CHAMPION", "Swashbuckler": "SWASHBUCK", "Elementalist": "ELEMENTAL",
          "Grove Warden": "WARDEN", "Battle Mage": "BATTLMAGE", "Mind Bender": "M-BENDER", "Mind Warrior": "M-WARRIOR",
          "Battle Dancer": "B-DANCER", "Shadowblade": "SHADOWBLD", "Military Scout": "M-SCOUT",
-         "Wilderness Avenger": "W-AVENGER", "Ghetto Fighter": "G-FIGHTER"}
+         "Wilderness Avenger": "W-AVENGER", "Ghetto Fighter": "G-FIGHTER",
+         "Spellarcher": "SPELLARCH", "Spirit Caller": "S-CALLER", "Wasteland Seer": "WASTE SEER"}
 # the widest a row's picture may be, its mark's room in: the panel's frame comes in to about 95
 # pixels past the rows' left at the second kit's row, and a few more are kept clear of it
 ROW_WIDTH = 88

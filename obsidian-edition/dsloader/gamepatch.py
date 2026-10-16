@@ -86,6 +86,9 @@ VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
 VEC_RACE_PANEL = 0x89
 VEC_BOX_AC = 0x88
+VEC_TICK = 0x87
+VEC_POISON = 0x86
+VEC_ARROW = 0x85
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -557,6 +560,15 @@ PATCHES = (
     # the item box's "AC BONUS:": "mov al,es:[bx+12h]", the type's AC (a helm's AC 1 with the rule,
     # set there as the AC routine sets it, for a helm not worn yet)
     Patch("box_ac", 0x8C15A, bytes.fromhex("268a4712"), _interrupt(VEC_BOX_AC, 4)),
+    # the game's timer handler (IRQ 0), its first instruction: inc word cs:[0004h] (DSCLOG does
+    # it, and notes now and then where the game was, for the Loader's freeze report)
+    Patch("tick", 0x3925C, bytes.fromhex("2eff060400"), _interrupt(VEC_TICK, 5)),
+    # the routine giving a hit's special effects, where a person who isn't a thri-kreen has none:
+    # jmp to its end (DSCLOG queues a Poisoner's poison on its first hit in a fight, then jumps)
+    Patch("poison", 0x7A6DD, bytes.fromhex("e9e500"), _interrupt(VEC_POISON, 3)),
+    # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
+    # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
+    Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),
@@ -569,6 +581,10 @@ PATCHES = (
     Patch("rl_roll_4", 0x65944, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
     Patch("rl_roll_6", 0x65979, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
     Patch("rl_roll_7", 0x659AE, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
+    # the creation screen's ability labels (STR: to CHR:, 6511Fh) in its own white (34h): the
+    # routine prints them in the colour the last screen left (DS:326Eh: a character screen's
+    # yellow, 2Fh), and the creation screen never sets it before they're drawn
+    Patch("cr_labels", 0x65135, bytes.fromhex("ff366e32"), bytes.fromhex("6a349090")),
     Patch("rl_sum", 0x65185, bytes.fromhex("83c404"), bytes((0xCD, VEC_CR_SPELLS, RL_SUM))),
     # a click on CON moving the hit points with the most they may be, and each ability's 4d4 kept
     # for the dice log (whatever the rule)

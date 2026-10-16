@@ -243,9 +243,10 @@ GIFTS: Tuple[Gift, ...] = (
                                                               METAL_GREAT_AXE, METAL_PICK, BONE_DAGGER)), (285,), 0x0B),
     Gift("Jark", tuple(weapon(w) for w in (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_MACE,
                                            BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE, BONE_DAGGER)), (106,), 0x1A),
-    # Thieves' Tools, a pair, from Kel (the caravan's merchant of everything else), for a thief who
-    # has lost theirs
+    # Thieves' Tools, a pair, from Kel (the caravan's merchant of everything else), and a set on
+    # Mirlon in the slave pens, for a party that kills him: no thief starts with them
     Gift("Kel", 2 * (TOOLS,), (107,), 0x1A),
+    Gift("Mirlon", (TOOLS,), (88,), 0x29),
     Gift("Merzol", (weapon(OBSIDIAN_AXE),), (180,), 0x29),  # the slave pens' gladiator
     Gift("Chaero", (weapon(OBSIDIAN_SHORT_SWORD),), (41,), 0x1D),
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one

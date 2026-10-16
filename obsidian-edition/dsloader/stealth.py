@@ -3,7 +3,8 @@
 The game never rolls hide in shadows, and a backstab needs the thief to stand behind a target
 that has turned to face someone else. With the rule on, a thief whose turn comes with no enemy
 next to them tries to hide in shadows (the chance halved in daylight: on open ground under
-Athas's sun), and if they do, to move silently up to someone. Both succeeding, the thief's next
+Athas's sun; a Shadowblade even with an enemy beside them), and if they do, to move silently
+up to someone. Both succeeding, the thief's next
 attack this turn counts as one from behind (DSCLOG's PROBE_STEALTH), and so as a backstab with
 a weapon that can backstab; attacking gives them away, and the turn ending ends the hiding.
 Worn, a cloak adds CLOAK_HIDE to hiding in shadows and boots BOOTS_QUIET to moving silently
@@ -172,7 +173,7 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
     hide = max(hide, min(MOST, hide + extra))  # (as gd.gear_skill: a chance above MOST kept)
     who = gd.creature_name(creature)
     enemy = enemy_beside(gd, combatant)
-    if enemy:
+    if enemy and kits.SHADOWBLADE not in gd.kit_ids(creature):  # (a Shadowblade hides even so: kits.py)
         return [f"{who} can't hide in shadows: {enemy} is right beside them"], False
     sun = daylight(gd, combatant)
     if ranger and not sun and kits.STALKER in gd.kit_ids(creature):  # (kits.py: not halved indoors)
@@ -181,14 +182,16 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
         need = hide if sun else hide // 2
         kind = "a ranger" if gd.ranger_level(creature) else "a Wilderness Avenger"
         why = f"{shown}, {kind} under the open sky" if sun else f"{shown}, halved indoors for {kind}"
-    elif sun and kits.ASSASSIN in gd.kit_ids(creature):  # (kits.py: not halved in daylight)
-        need, why = hide, f"{shown}, an Assassin: not halved in daylight"
+    elif sun and kits.not_halved_by_sun(gd.kit_ids(creature), gd.own_race(creature)):  # (kits.py)
+        need, why = hide, f"{shown}, {kits.not_halved_by_sun(gd.kit_ids(creature), gd.own_race(creature))}: not halved in daylight"
     else:
         need = hide // 2 if sun else hide
         why = f"{shown}, halved in daylight" if sun else f"{shown}, out of the sun"
     elven = ELVEN_HIDE_OUT if sun else ELVEN_HIDE_IN
     if elven_cloak and elven > need:  # all but invisible, whatever the light
         need, why = elven, f"Cloak of Elvenkind, {'under the open sky' if sun else 'under a roof'}"
+    if enemy:
+        why += f"; a Shadowblade, with {enemy} beside them"
     d100 = roll()
     hidden = d100 <= need
     lines = [f"{who} hides in shadows: d100 = {d100}, needs {need} or less ({why}) -> "
@@ -205,7 +208,8 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
         quiet = max(quiet, min(MOST, quiet + extra))
     d100 = roll()
     unheard = d100 <= quiet
-    behind = "from behind" if ranger else "from behind (a backstab with a weapon that can)"
+    stabs = all(kits.backstabs(k) for k in gd.kit_ids(creature))  # (a Military Scout never backstabs)
+    behind = "from behind" if ranger or not stabs else "from behind (a backstab with a weapon that can)"
     lines.append(f"  {who} moves silently: d100 = {d100}, needs {quiet}{boots} or less -> "
                  + (f"unheard: their next attack this turn is {behind}" if unheard else "heard"))
     return lines, unheard

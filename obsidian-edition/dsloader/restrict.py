@@ -6,17 +6,20 @@ PROBE_CAN_USE does this in the game; this is its model, for the tests and the Lo
 - A psionicist, whatever its other classes allow: light armour only (leather, hide, silk), a
   leather shield only, and of weapons only daggers, short swords, maces, clubs, chatkchas, bows
   and slings.
-- A multiclass thief: light armour only, and a shield only a leather one that another of its
-  classes allows.
+- A thief: light armour only, but a multiclass one (a fighter/thief, a cleric/thief), or a human
+  thief who was a fighter, gladiator, ranger or cleric (dual_warrior), may wear what its other class
+  allows; it then has no thief skills and no backstab in armour that isn't light (thief_heavy).
+  A multiclass one a shield only a leather one that another of its classes allows.
 - A preserver of that one class: no armour and no shield (a Battle Mage, kits.py, may wear light
-  armour all the same: kit_allows).
+  armour all the same: kit_allows); a human preserver who was a warrior may (dual_warrior).
 - A druid: no armour, no shield.
 - A cleric: only the weapons of its sphere, or of any of its spheres (a ranger who became a
   cleric keeps the ranger's): air, missile and thrown weapons and daggers; earth, stone,
   obsidian, metal and wood; fire, obsidian; water, bone and wood.
 
-- A multiclass preserver: no spells, wizard or priest, while it wears armour (DSCLOG's
-  PROBE_NO_CAST, at the game's test for its "No spell use" effect); a shield doesn't count.
+- A multiclass preserver, or a human who has been a preserver and a fighter, gladiator or ranger
+  (in either order): no spells, wizard or priest, while it wears armour (DSCLOG's PROBE_NO_CAST,
+  at the game's test for its "No spell use" effect); a shield doesn't count.
 
 A human who was a fighter, gladiator or ranger and has changed class keeps the weapons it
 specialized in, whatever the new class allows, once its new class's level has passed the old
@@ -148,6 +151,8 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
     from . import kitpages, kits
     if not game.RULES_IN_FORCE & game.RULE_KITS:
         return False
+    if any(kits.light_only(kid, typ) for kid, _, _ in kitpages.kits_of(sheet)):
+        return True  # (a thief's or archer's kit, asleep too: light armour only)
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     chosen = not spec and kind is not None and kind + 1 in sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT] \
         and specs_awake(sheet)
@@ -194,15 +199,15 @@ def allowed(sheet: bytes, item_type: int, typ: bytes) -> bool:
             return False
         if kind is not None and kind not in PSIONICIST_KINDS:
             return False
+    if THIEF in holding and armour and not is_light(typ) and not multiclass and not dual_warrior(sheet):
+        return False
     if THIEF in holding and multiclass:
-        if armour and not is_light(typ):
-            return False
         if shield:
             others = int.from_bytes(typ[TYPE_CLASSES:TYPE_CLASSES + 2], "little")
             others &= int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & ~THIEF_BIT
             if material(typ) != LEATHER or not others:
                 return False
-    if holding == [PRESERVER] and (armour or shield):
+    if holding == [PRESERVER] and (armour or shield) and not dual_warrior(sheet):
         return False
     if any(c in DRUIDS for c in holding) and (armour or shield):
         return False
@@ -212,13 +217,42 @@ def allowed(sheet: bytes, item_type: int, typ: bytes) -> bool:
     return True
 
 
+def dual_warrior(sheet: bytes) -> bool:
+    """A human whose class now is thief or preserver and who was a fighter, gladiator or ranger
+    before, or a thief who was a cleric before: it may wear what the warrior or cleric could
+    (DSCLOG's DUAL_WARRIOR)."""
+    classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    before = set(WARRIORS) | (set(CLERICS) if classes[0] == THIEF else set())
+    return sheet[game.SHEET_RACE] == game.HUMAN and classes[0] in (THIEF, PRESERVER) \
+        and any(c in before for c in classes[1:])
+
+
+def class_and_warrior(sheet: bytes, cls: int) -> bool:
+    """Whether the character has class CLS and a fighter, gladiator or ranger class (DSCLOG's
+    CLASS_AND_WARRIOR)."""
+    classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    return cls in classes and any(c in WARRIORS for c in classes)
+
+
 def no_spells(sheet: bytes, worn: Iterable[bytes]) -> bool:
     """Whether a character can't cast for the armour it wears (the type records of what it has on
-    its arms, legs, head and chest)."""
+    its arms, legs, head and chest): a multiclass preserver, or a human who has been a preserver
+    and a warrior."""
     classes = [c for c in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] if c]
-    if sheet[game.SHEET_RACE] == game.HUMAN or len(classes) < 2 or PRESERVER not in classes:
+    if sheet[game.SHEET_RACE] == game.HUMAN:
+        if not class_and_warrior(sheet, PRESERVER):
+            return False
+    elif len(classes) < 2 or PRESERVER not in classes:
         return False
     return any(is_armour(t) for t in worn)
+
+
+def thief_heavy(sheet: bytes, worn: Iterable[bytes]) -> bool:
+    """Whether a character with a thief class wears armour that isn't light (the type records of
+    what it has on its arms, legs, head and chest): no thief skills, no backstab (DSCLOG's
+    THIEF_HEAVY)."""
+    return THIEF in sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] \
+        and any(is_armour(t) and not is_light(t) for t in worn)
 
 
 def usable(sheet: bytes, type_: int, typ: bytes) -> bool:
@@ -235,10 +269,12 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     material: a fire cleric's long sword the obsidian one) that it can use (a fighter/psionicist,
     say, only the psionicist's). TYPE_RECORD(type) gives an item type's record. DSCLOG's
     KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already. A Battle Mage
-    (kits.py) its own, whatever its class."""
+    (kits.py) its own, whatever its class; a Spellarcher the bow only."""
     from . import kitpages, kits
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.BATTLE_MAGE in kitpages.kit_ids(sheet):
         return sorted(kits.BATTLE_MAGE_KINDS)
+    if game.RULES_IN_FORCE & game.RULE_KITS and kits.SPELLARCHER in kitpages.kit_ids(sheet):
+        return [kits.BOW]
     ranger = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & 0x200
     return [kind for kind, name in enumerate(specialize.KINDS)
             if not (ranger and name == "bow")

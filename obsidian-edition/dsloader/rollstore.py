@@ -17,7 +17,7 @@ from .art import decode_frame
 from .weaponpages import BUTN_SIZE, ITEM_AT, ITEM_SIZE, WIND_COUNT, _button, _encode, _items
 
 CREATION = 3011  # the creation screen's window
-STORE, RECALL = 0x8A0, 0x8A1  # (the buttons' ids, past the kit page's)
+STORE, RECALL = 0x8B0, 0x8B1  # (the buttons' ids, past the kit page's)
 SAVE, EXIT, LOAD, DROP, DELETE = 2057, 2058, 6031, 6039, 2097  # the game's carved buttons
 STORE_WIDTH, RECALL_WIDTH = 52, 62
 STORE_AT, RECALL_AT = (88, 185), (144, 185)  # (under the hit points and PSP, clear of DONE)

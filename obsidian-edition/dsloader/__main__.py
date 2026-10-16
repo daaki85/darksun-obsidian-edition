@@ -138,8 +138,7 @@ def cmd_dicelog(args) -> None:
     from .dicelog import DiceLog
     from .dicelog import DiceLogError
     from .guestmem import GuestMemoryError
-    from .launch import (add_learned_speakers, set_pickpocketed, add_tools_given, learned_speakers, load_settings,
-                         speaker_names)
+    from .launch import add_learned_speakers, set_pickpocketed, learned_speakers, load_settings, speaker_names
     while True:  # DOSBox may still be starting
         try:
             guest = connect(args)
@@ -176,14 +175,11 @@ def cmd_dicelog(args) -> None:
             learned = log.take_speakers()
             if learned:
                 add_learned_speakers(learned)
+                for portrait, name in learned.items():
+                    print(f"(Portrait {portrait} is {name})", flush=True)
             picked = log.take_picked()
             if picked is not None:
                 set_pickpocketed(picked)
-            given = log.take_tools_given()
-            if given:
-                add_tools_given(given)
-                for portrait, name in learned.items():
-                    print(f"(Portrait {portrait} is {name})", flush=True)
             for entry in log.take_dialogue():
                 if entry.chosen:
                     print(f"    > {entry.chosen}", flush=True)
@@ -310,9 +306,6 @@ def cmd_play(args) -> None:
             picked = log.take_picked()
             if picked is not None:
                 launch.set_pickpocketed(picked)
-            given = log.take_tools_given()
-            if given:
-                launch.add_tools_given(given)
             time.sleep(0.02)
         crash = launch.game_end_note()
         if dosbox.returncode != 0 or crash:

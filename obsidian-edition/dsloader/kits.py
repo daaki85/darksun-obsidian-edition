@@ -69,6 +69,9 @@ RAVAGER_AC = (7, 7, 6, 6, 5, 5, 4, 4, 3, 3)
 BATTLE_DANCER, SHADOWBLADE, SCOUT = KIT_IDS["Battle Dancer"], KIT_IDS["Shadowblade"], KIT_IDS["Military Scout"]
 AVENGER, RESCUER = KIT_IDS["Wilderness Avenger"], KIT_IDS["Rescuer"]
 GHETTO, WAYFINDER = KIT_IDS["Ghetto Fighter"], KIT_IDS["Wayfinder"]
+SPELLARCHER, TITAN_MIND, POISONER = KIT_IDS["Spellarcher"], KIT_IDS["Titan Mind"], KIT_IDS["Poisoner"]
+SPIRIT_CALLER, WASTE_SEER = KIT_IDS["Spirit Caller"], KIT_IDS["Wasteland Seer"]
+WILD_FURY = KIT_IDS["Wild Fury"]
 # a Battle Dancer's weapon kinds: the long sword and the bow (DSCLOG's kit_dancer)
 DANCER_KINDS = frozenset((0, BOW))
 DAGGER = 2  # (the dagger's weapon kind: a Ghetto Fighter's +1)
@@ -79,8 +82,9 @@ SKILLS = {SWASHBUCKLER: (-10,) * 8, ASSASSIN: (-15, -15, 0, 0, 0, 0, 0, 0),
           WAYFINDER: (-10, 0, 0, 10, 10, 0, 0, 0)}
 # a Military Scout's skills that change with the sky: +10 under the open sky, -5 under a roof
 SCOUT_SKILLS, SCOUT_OUT, SCOUT_IN = frozenset((2, 3, 4, 6)), 10, -5
-# a Battle Dancer's dance (rolled by the Loader as a fight starts: dance.py): d20 against DEX, +1
-# to hit, to damage and on AC for DEX less the roll in rounds (at least 1); failed, -1 for 1d8 rounds
+# a Battle Dancer's dance (rolled by the Loader as a fight starts: dance.py): d20 against DEX - 4
+# (DANCE_CHECK), +1 to hit, to damage and on AC for that less the roll in rounds (at least 1);
+# failed, -1 for 1d8 rounds
 DANCE_FAIL_DIE = 8
 UNDEAD_RACE = 9  # (a Wilderness Avenger's +1 to hit and damage against them)
 AVENGER_STEALTH = 5  # (its hiding and moving silently: 5 a level of its best class, as a ranger's)
@@ -125,12 +129,61 @@ def extra(kid: int, dance: int = 0, undead: bool = False) -> int:
     return int(kid == AVENGER and undead)
 
 
+# The game's own party (defaultparty.py), three of them given features of their own, which no
+# character made on the creation screen can have: the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
+# classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
+# race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
+# thri-kreen) a Wasteland Seer's casting (SKY_LEVEL) and one more chatkcha throw a round
+# (OWN_THROWS); Cilla (an elf) the Elven Wanderer's hiding, never halved in daylight (stealth.py).
+OWN_BIT, KIT_OPEN = 0x40, 0xFF
+HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
+OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells", "Chatkcha 2 a round"),
+                ELF: ("Elven Wanderer",)}
+CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
+
+
+def own_race(sheet: bytes) -> int:
+    """The race of SHEET if it is one of the game's own party given a feature of its own (OWN_BIT),
+    else 0 (the kits rule is the caller's to weigh)."""
+    if len(sheet) <= 0x43 or sheet[0x43] == KIT_OPEN or not sheet[0x43] & OWN_BIT:
+        return 0
+    return sheet[0x18] if sheet[0x18] in OWN_FEATURES else 0
+
+
+def wild_fighter(kids, race: int) -> bool:
+    """Whether a character fights wild (Wild Fighting): a Wild Fury, or Gerakis (own race HALF_GIANT)."""
+    return WILD_FURY in kids or race == HALF_GIANT
+
+
+def default_kind(kid: int) -> Optional[int]:
+    """The weapon spec a kit puts in place of the weapon page's default, if the player hasn't
+    picked one (DSCLOG's KIT_ROW): a Ghetto Fighter's and a Poisoner's the dagger, a Battle Dancer's
+    the long sword (kind 0), if its classes and kit allow it; None for the others."""
+    return {GHETTO: DAGGER, POISONER: DAGGER, BATTLE_DANCER: 0}.get(kid)
+
+
+def not_halved_by_sun(kids, race: int) -> str:
+    """Who hides with their whole chance in daylight (stealth.py), named, or "": an Assassin, a
+    Military Scout, or Cilla, the Elven Wanderer (own race ELF)."""
+    if ASSASSIN in kids:
+        return "an Assassin"
+    if SCOUT in kids:
+        return "a Military Scout"
+    return "the Elven Wanderer" if race == ELF else ""
+
+
+# the dance's and Wild Fighting's checks: a d20 against DEX or CON with this (a proficiency check's
+# modifier: the score 4 lower)
+DANCE_CHECK = WILD_CHECK = -4
+
+
 def dance(dex: int, d20: int, fail_roll: int) -> Tuple[int, int]:
-    """A Battle Dancer's dance as a fight starts: (bonus, rounds) for a D20 against DEX (+0, as the
-    Dancing proficiency): danced, +1 for DEX less the roll in rounds (at least 1); stumbled, -1 for
-    FAIL_ROLL (a d8) rounds."""
-    if d20 <= dex:
-        return 1, max(1, dex - d20)
+    """A Battle Dancer's dance as a fight starts: (bonus, rounds) for a D20 against DEX - 4
+    (DANCE_CHECK, the Dancing proficiency's check at -4; a natural 20 always fails): danced, +1 for
+    that less the roll in rounds (at least 1); stumbled, -1 for FAIL_ROLL (a d8) rounds."""
+    target = dex + DANCE_CHECK
+    if d20 <= target and d20 != 20:  # (a natural 20 always fails, as a proficiency check does)
+        return 1, max(1, target - d20)
     return -1, fail_roll
 
 
@@ -185,12 +238,13 @@ def slot_level(kid: int, level: int) -> int:
 def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
     giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): an Arcanist's wizard slots 1 more
-    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer; a
+    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's and a Wilderness
+    Avenger's priest slots 1 fewer; a
     Seeker's and a Justifier's priest slots their own tables' (SEEKER_SLOTS), WIS's left out, and a
     Shinobi's wizard slots the Seeker's by its thief level."""
     if kid == ARCANIST and magic == WIZARD:
         return game_slots + 1 if game_slots else 0
-    if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
+    if (kid == BATTLE_MAGE and magic == WIZARD) or (kid in (CRUSADER, AVENGER) and magic == PRIEST):
         return max(0, game_slots - 1)
     if kid == SHINOBI and magic == WIZARD:
         kid = SEEKER
@@ -210,9 +264,12 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -
 def psp_cost(kid: int, power: int, cost: int) -> int:
     """The PSP power POWER (0-33) costs a character of kit KID to use, the game asking COST
     (KIT_PSP): a Mind Bender's telepathy 2 less and its psychokinesis 2 more, a Kineticist's the
-    other way about, never below 1; psychometabolism, and a cost of 0, as they are."""
-    if cost <= 0 or kid not in (MIND_BENDER, KINETICIST):
+    other way about (psychometabolism as it is); a Titan Mind's psychometabolism 2 less and its
+    telepathy 2 more (psychokinesis as it is); never below 1, and a cost of 0 as it is."""
+    if cost <= 0 or kid not in (MIND_BENDER, KINETICIST, TITAN_MIND):
         return cost
+    if kid == TITAN_MIND:
+        return cost if power <= PK_LAST else max(1, cost + (2 if power >= TP_FIRST else -2))
     change = -2 if kid == MIND_BENDER else 2
     if power <= PK_LAST:
         change = -change
@@ -267,6 +324,18 @@ def cast_level(kid: int, spell: int, level: int, thief_level: int) -> int:
     return level
 
 
+SKY_KITS, SKY_MORE = frozenset((SPIRIT_CALLER, WASTE_SEER)), 2
+
+
+def sky_level(kid: int, spell: int, level: int, outdoors: bool) -> int:
+    """The level priest spell SPELL takes for its duration and damage, LEVEL the game's, with a
+    Spirit Caller's or Wasteland Seer's (PROBE_SPELL_LEVEL's SKY_LEVEL): 2 more under the open sky
+    (OUTDOORS), 1 less under a roof, no less than 1."""
+    if kid not in SKY_KITS or not WIZARD_LAST < spell <= SPELL_LAST:
+        return level
+    return level + SKY_MORE if outdoors else level - 1 if level > 1 else level
+
+
 def spell_class_level(kid: int, cls: int, level: int, ranger_rule: bool) -> int:
     """The level of class CLS (LEVEL) that a spell's duration and damage count (the game's routine
     at 5E25Ch, which takes the best of the caster's classes that cast the spell), with
@@ -311,9 +380,75 @@ def move(kid: int) -> int:
     return 2 if kid == STALKER else 0
 
 
-def initiative(kid: int) -> int:
-    """Added to initiative (PROBE_INIT): a Sentinel's 2."""
-    return 2 if kid == SENTINEL else 0
+def initiative(kid: int, outdoors: bool = False) -> int:
+    """Added to initiative (PROBE_INIT): a Sentinel's 2, a Military Scout's 2 under the open sky
+    (OUTDOORS)."""
+    if kid == SENTINEL:
+        return 2
+    return 2 if kid == SCOUT and outdoors else 0
+
+
+# Path-finder: while a Wayfinder of the party is up, each party member's Move in a fight and
+# initiative 1 more (DSCLOG's PATH_UP, in KIT_MOVE and PROBE_INIT); while one is down (stunned to
+# petrified) and none up, 1 less (PATH_DOWN)
+PATH_MOVE, PATH_INITIATIVE = 1, 1
+# attacking from behind: 2 to hit (the game's), a Rescuer's 1 (DSCLOG's KIT_REAR); a Military
+# Scout never backstabs (KIT_REAR takes it back)
+REAR, RESCUER_REAR = 2, 1
+
+
+def rear_to_hit(kid: int) -> int:
+    """What attacking from behind adds to hit for a character of kit KID (KIT_REAR)."""
+    return RESCUER_REAR if kid == RESCUER else REAR
+
+
+def backstabs(kid: int) -> bool:
+    """Whether a character of kit KID can backstab (KIT_REAR: a Military Scout can't)."""
+    return kid != SCOUT
+
+
+GHETTO_OTHER_TO_HIT = -1  # (a Ghetto Fighter with anything but a dagger, melee or missile: KIT_TO_HIT)
+
+
+def ghetto_to_hit(kid: int, kind: Optional[int]) -> int:
+    """A Ghetto Fighter's 1 worse to hit with anything but a dagger (KIND the weapon kind, None
+    for none)."""
+    return GHETTO_OTHER_TO_HIT if kid == GHETTO and kind != DAGGER else 0
+SCOUT_MISSILE_KINDS = frozenset((BOW, BOW + 1, BOW + 2))  # (the bow, sling and staff sling)
+
+
+def arrow_plus(kid: int, plus: int) -> int:
+    """An arrow's plus as a character of kit KID shoots it from a bow (PROBE_ARROW): a Spellarcher's
+    1 better, and at least +1 (magical, so it hurts what only magic weapons hurt)."""
+    return max(plus, 0) + 1 if kid == SPELLARCHER else plus
+
+
+POISONER_TO_HIT = -1  # (every attack, melee or missile: KIT_TO_HIT)
+POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's first hit in a fight (PROBE_POISON)
+
+
+# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
+# for the fight. Passed, 1 more attack a round in melee (2 halves) and 3 more damage; failed, 3
+# worse to hit and AC 3 worse (no worse than WILD_AC_MOST), every fight.
+WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
+
+
+def wild_check(con: int, d20: int) -> bool:
+    """Wild Fighting's check: a D20 of CON - 4 or less (the proficiency's, at WILD_CHECK); a natural
+    20 always fails."""
+    return d20 <= con + WILD_CHECK and d20 != 20
+
+
+def wild_ac(ac: int) -> int:
+    """AC (lower is better) fighting wild: WILD_AC worse, but no worse than WILD_AC_MOST (one
+    already worse kept as it is)."""
+    return ac if ac >= WILD_AC_MOST else min(ac + WILD_AC, WILD_AC_MOST)
+
+
+def missile_to_hit(kid: int, kind: Optional[int], outdoors: bool) -> int:
+    """Added to hit with a missile weapon of KIND (KIT_TO_HIT): a Military Scout's 1 with a bow,
+    sling or staff sling under the open sky."""
+    return int(kid == SCOUT and outdoors and kind in SCOUT_MISSILE_KINDS)
 
 
 def save(kid: int, spell: int, kinds: int = 0) -> int:
@@ -432,6 +567,18 @@ def forbids_off_hand(kid: int, typ: bytes) -> bool:
     return kid == BATTLE_MAGE or kid == HEALER and bool(typ[0] & (MELEE | MISSILE | THROWN))
 
 
+# the kits held to light armour asleep too (DSCLOG's KIT_LIGHT): a thief's own limit kept after
+# dual-classing, and an archer's
+LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER, SPELLARCHER))
+
+
+def light_only(kid: int, typ: bytes) -> bool:
+    """Whether kit KID, awake or asleep, keeps its character from item type TYP: armour that isn't
+    light, for LIGHT_KITS (DSCLOG's KIT_LIGHT)."""
+    return kid in LIGHT_KITS and bool(typ[0x0F] & ARMOUR) and not typ[0] & SHIELD \
+        and typ[8] & 0x4F not in (LEATHER, NO_MATERIAL)
+
+
 def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: bool = False,
             off_hand: bool = False, sphere: int = 0) -> bool:
     """Whether the kit keeps a character from an item type (TYP its record; KIND its weapon kind,
@@ -442,7 +589,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     armour that isn't light; a Grove Warden a metal weapon; a Lifebinder a weapon of a kind not
     blunt; a Shinobi a shield, armour that isn't light, a weapon not of SHINOBI_KINDS; a Seeker a
     weapon (of a kind) its SPHERE (0 air to 3 water) doesn't allow, as a cleric's
-    (restrict.sphere_allows), but the bow. Going to the off hand (OFF_HAND): nothing for a Battle
+    (restrict.sphere_allows), but the bow; a Shadowblade and a Ghetto Fighter a shield. Going to the off hand (OFF_HAND): nothing for a Battle
     Mage, no weapon for a Healer."""
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
     weapon = bool(flags & (MELEE | MISSILE))
@@ -476,4 +623,6 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         return kind is not None and kind not in SHINOBI_KINDS
     if kid == BATTLE_DANCER:
         return kind is not None and kind not in DANCER_KINDS
+    if kid in (SHADOWBLADE, GHETTO):
+        return bool(flags & SHIELD)
     return False

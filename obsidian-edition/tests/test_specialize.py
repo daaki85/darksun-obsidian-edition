@@ -111,9 +111,16 @@ class SpecializationsTests(unittest.TestCase):
     def test_names(self):
         s = sheet((0, 5), classes=(10, 0, 0), levels=(9, 0, 0))
         self.assertEqual(self.gd(s).specializations(0), [("long sword", "specialized"), ("axe", "specialized")])
-        self.assertEqual(self.gd(sheet((0,), classes=(13, 0, 0))).specializations(0), [("long sword", "expertise")])
+        self.assertEqual(self.gd(sheet((0,), classes=(13, 0, 0))).specializations(0),
+                         [("long sword", "expertise"), ("bow", "expertise")])   # (a ranger's bow, unchosen)
+        self.assertEqual(self.gd(sheet((0,), classes=(1, 13, 0), levels=(3, 3, 0))).specializations(0),
+                         [("long sword", "expertise"), ("bow", "expertise")])   # a cleric/ranger too
+        bow = specialize.KINDS.index("bow")
+        self.assertEqual(self.gd(sheet((bow,), classes=(13, 0, 0))).specializations(0), [("bow", "expertise")])
         self.assertEqual(self.gd(sheet((0,), levels=(9, 0, 0))).specializations(0), [("long sword", "grand mastery")])
         self.assertEqual(self.gd(s, rules=0).specializations(0), [])
+        self.assertEqual(self.gd(sheet((), classes=(1, 0, 0))).specializations(0), [])   # none chosen: no bow line
+        self.assertEqual(self.gd(sheet((), classes=(9, 0, 0))).specializations(0), [])
 
 
 class PageLabelTests(unittest.TestCase):
@@ -483,6 +490,57 @@ class KitGearTests(FinishNewTests):
         self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("short sword")][0], right))
         self.assertIn("a Shinobi can't use it", out[0])
         self.assertEqual(weaponchoice.kit_gear(self.gd), [])  # (once)
+
+    def test_poisoner_daggers(self):
+        """A Poisoner (a halfling fighter/thief): a dagger in each hand, its long sword made one and
+        its shield left behind; once."""
+        from dsloader import weaponchoice
+        right, left = self.character(9, 1)
+        s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
+        s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 6, 17
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
+        self.give(4, 0x05, left)
+        taken = []
+
+        def unlink(gd, it, item, what, empty=False):
+            taken.append(item)
+            at = self.ITEMS + item * game.ITEM_SIZE
+            self.mem[at:at + game.ITEM_SIZE] = bytes(game.ITEM_SIZE)
+            return True
+
+        def add_to(gd, creature, rec, slot=None):
+            at = self.ITEMS + self.items * game.ITEM_SIZE
+            rec = bytearray(rec)
+            rec[game.ITEM_SLOT] = slot
+            self.mem[at:at + game.ITEM_SIZE] = rec
+            self.items += 1
+            return True
+        with mock.patch("dsloader.ring.unlink", unlink), mock.patch("dsloader.npcitems.add_to", add_to):
+            out = weaponchoice.kit_gear(self.gd)
+            self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+        dagger = weaponchoice.PLAIN[specialize.KINDS.index("dagger")][0]
+        self.assertEqual(self.item(0), (dagger, right))
+        self.assertEqual(taken, [1])
+        self.assertEqual(self.item(2), (dagger, left))
+        self.assertIn("in place of the", out[0])
+        self.assertIn("second", out[1])
+
+    def test_ghetto_dagger(self):
+        """A Ghetto Fighter (a dwarf fighter/thief): its long sword made a dagger, whatever its spec;
+        once."""
+        from dsloader import weaponchoice
+        right, left = self.character(9, 1)
+        s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
+        s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 2, 17
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
+        out = weaponchoice.kit_gear(self.gd)
+        self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+        dagger = weaponchoice.PLAIN[specialize.KINDS.index("dagger")][0]
+        self.assertEqual(self.item(0), (dagger, right))
+        self.assertEqual(len(out), 1)
+        self.assertIn("Ghetto Fighter fights best with one", out[0])
 
     def test_ravager_shield(self):
         from dsloader import weaponchoice

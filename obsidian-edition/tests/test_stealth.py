@@ -54,6 +54,22 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(lines[0], "Dag hides in shadows: d100 = 8, needs 8 or less (16, halved in daylight) -> hidden")
         self.assertTrue(lines[1].startswith("  Dag moves silently: d100 = 16, needs 16 or less -> unheard"))
 
+    def test_not_halved_by_the_sun(self):
+        """A Military Scout, and Cilla (the game's own party's elf, the Elven Wanderer: kits.own_race),
+        hide with their whole chance in daylight (the Scout with its +10 under the open sky)."""
+        from unittest import mock
+        from dsloader import kits
+        with mock.patch.object(self.gd, "kit_ids", lambda creature: [kits.SCOUT]):
+            lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
+        self.assertEqual(lines[0], "Dag hides in shadows: d100 = 16, needs 26 or less (26, a Military Scout: "
+                                   "not halved in daylight) -> hidden")
+        with mock.patch.object(self.gd, "own_race", lambda creature: kits.ELF):
+            lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
+        self.assertIn("(16, the Elven Wanderer: not halved in daylight) -> hidden", lines[0])
+        with mock.patch.object(self.gd, "own_race", lambda creature: kits.THRI_KREEN):
+            lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
+        self.assertIn("halved in daylight) -> seen", lines[0])
+
     def test_cloak_and_boots(self):
         """Worn, a cloak adds 10 to hiding in shadows (before daylight halves it) and boots 10 to
         moving silently; carried, nothing."""
@@ -145,6 +161,15 @@ class StealthTests(unittest.TestCase):
         self.place(0x29, 11, 11)
         self.assertEqual(stealth.turn(self.gd, 0, rolls()),
                          (["Dag can't hide in shadows: Mountain Stalker is right beside them"], False))
+
+    def test_shadowblade_beside(self):
+        """A Shadowblade (a half-elf fighter/thief's kit) hides with an enemy right beside them."""
+        from dsloader import kits
+        self.place(0x29, 11, 11)
+        self.gd.kit_ids = lambda creature: [kits.SHADOWBLADE] if creature == 0 else []
+        lines, hidden = stealth.turn(self.gd, 0, rolls(1, 1))
+        self.assertTrue(hidden)
+        self.assertIn("a Shadowblade, with Mountain Stalker beside them", lines[0])
 
     def test_fallen_enemy_beside(self):
         self.place(0x29, 11, 11)

@@ -24,9 +24,9 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, combatlog, dance, wheel, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
-                   EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
+                   EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
@@ -51,6 +51,7 @@ TSR_SKILLS_ON = 266  # bits: item boxes name a cloak's and boots' bonus to hidin
 SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and opening locks (and its box says)
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
+TSR_POISONED = 360  # bit N: party member N, a Poisoner, has used its poison this fight (DSCLOG's PROBE_POISON)
 TSR_KIT_OUTDOORS = 350  # bit N: party member N under the open sky (the Loader's: _kit_tick)
 TSR_RULES_HI = 270  # the rules' bits past 16 (game.RULE_KITS), shifted down
 TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT, chance, d100, result (intlearn.py)
@@ -389,11 +390,8 @@ class DiceLog:
         self._picked_changed = False
         self._clock: Optional[int] = None
         self._mended_in: Optional[int] = None  # the area Kalzith's scrolls were last mended in
-        self.tools_given: set = set()  # the thieves given thieving tools (tools.py)
         self._party_done: set = set()  # the game's own party's changes made (defaultparty.py)
-        self._tools_session: set = set()  # ... while this runs
         self._swap_seq = 0  # DSCLOG's text swaps seen (the arena ring's search, ring.py)
-        self._tools_new: List[str] = []
         self.rules = 0  # RULE_HELMS ...: rule changes DSCLOG makes (set_rules)
         self.stealth_roll: Callable[[], int] = lambda: random.randint(1, 100)  # hiding, moving silently
         self._ring_check = 0.0
@@ -409,6 +407,7 @@ class DiceLog:
         self._tables: Optional[monsters.MonsterTables] = None  # the monster kinds (read once)
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
+        self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
@@ -548,11 +547,6 @@ class DiceLog:
         self._picked_changed = self._picked_changed or bool(undone)
         self._clock = now
 
-    def take_tools_given(self) -> List[str]:
-        """The thieves given tools since the last call, for the caller to remember."""
-        new, self._tools_new = self._tools_new, []
-        return new
-
     def _write_pick_text(self, text: str) -> None:
         offset = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_PICK_OFF, 2))[0]
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
@@ -637,7 +631,6 @@ class DiceLog:
         self.use_targeting = bool(settings.get("targeting", True))
         self.scroll_right = bool(settings.get("scroll_right", False))
         self.load_picked(settings.get("pickpocketed", []))
-        self.tools_given = set(settings.get("tools_given", []))
         self.rules = game.rules_from_settings(settings)
 
     def set_rules(self, rules: int) -> None:
@@ -865,13 +858,14 @@ class DiceLog:
                 return
             bits = sum(1 << m for m in range(game.PARTY_SIZE) if self.game.outdoors(m))
             self.guest.write(self.tsr_hdr + TSR_KIT_OUTDOORS, bytes((bits,)))
-            if (self._dances.left or self.game.dance) and not self.game.in_combat():
+            if (self._dances.left or self.game.dance or self._wild.fighting) and not self.game.in_combat():
                 # (ended with the fight as the rounds count it, FIGHT_GAP of the game's clock past
                 # the last round: the game drops its fight flag as the first round's initiative
                 # is rolled, and between the arena's waves)
                 now_game = self.game.game_time()
                 if now_game is not None and self._round_time is not None and now_game - self._round_time > FIGHT_GAP:
                     self._dances.stop(self.game, self.tsr_hdr)
+                    self._wild.stop(self.game, self.tsr_hdr)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -892,8 +886,21 @@ class DiceLog:
             weapon = kits.melee(kid, g.two_handed_type(item_type), kind) if melee and not g.missile_type(item_type) else 0
             hit, dam = kits.champion(kid, g.holds_shield(attacker), melee)
             more = kits.extra(kid, g.dance.get(attacker, 0), undead)
+            if mode is not None and mode > 1 and attacker is not None and attacker < game.PARTY_SIZE:  # (DSCLOG's KIT_TO_HIT)
+                hit += kits.missile_to_hit(kid, kind, g.outdoors(attacker))
+            if kid == kits.POISONER and mode is not None:
+                hit += kits.POISONER_TO_HIT
+            if mode is not None:  # (DSCLOG's KIT_TO_HIT: anything but a dagger, unarmed too)
+                hit += kits.ghetto_to_hit(kid, kind)
+            if kid == kits.WILD_FURY and attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*)
+                if g.wild[attacker]:
+                    dam += kits.WILD_DAMAGE
+                else:
+                    hit += kits.WILD_TO_HIT
             if weapon or hit or dam or more:
-                names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else ""))
+                names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
+                             + (" under the open sky" if kid == kits.SCOUT else "")
+                             + (" fighting wild" if kid == kits.WILD_FURY and attacker in g.wild else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
         return " and ".join(names), to_hit, damage
 
@@ -1002,10 +1009,7 @@ class DiceLog:
                 kalzith.mend(self.game)
                 self._mended_in = region
             if self.pickpockets:
-                tools.repaint(self.game)
-                before = set(self.tools_given)
-                out += tools.give_tools(self.game, self.tools_given, session=self._tools_session)
-                self._tools_new += sorted(self.tools_given - before)
+                tools.repaint(self.game)  # (the tools themselves are Mirlon's, and Kel's to sell: worldgear.py)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
         except (struct.error, IndexError, ValueError):
@@ -1573,7 +1577,7 @@ class DiceLog:
         combatants = g.combatants()
         table = g.initiative(max(combatants.values(), default=0) + 1)
         effects = g.effects()
-        rows, used = [], set()
+        rows, used, path = [], set(), None
         for roll, tie in pairs:
             # the game keeps each creature's tie-break roll: that says whose rolls these were
             found = [(c, i) for c, i in sorted(combatants.items()) if i not in used and table[i][1] == tie]
@@ -1588,9 +1592,16 @@ class DiceLog:
                 parts.append((dex, "DEX"))
             ids = {x.id for x in effects if x.owner == combatant and x.id in game.INITIATIVE_EFFECTS}
             parts += [(game.INITIATIVE_EFFECTS[eid], EFFECT_NAMES[eid]) for eid in sorted(ids)]
+            outdoors = index < game.PARTY_SIZE and g.outdoors(index)
             for kid in g.kit_ids(index):
-                if kits.initiative(kid):
-                    parts.append((kits.initiative(kid), kits.name(kid)))
+                if kits.initiative(kid, outdoors):
+                    parts.append((kits.initiative(kid, outdoors), kits.name(kid) + (
+                        " under the open sky" if kid == kits.SCOUT else "")))
+            if index < game.PARTY_SIZE and path is None:  # (the same for the whole party: once a round)
+                path = (kits.PATH_INITIATIVE, "Wayfinder's Path-finder") if g.path_finder() else \
+                    (-kits.PATH_INITIATIVE, "Wayfinder down") if g.path_lost() else ()
+            if index < game.PARTY_SIZE and path:
+                parts.append(path)
             score = INITIATIVE_BASE + roll + sum(v for v, _ in parts)
             stored = table[index][0]
             if stored >= 0 and stored != score:  # not acted yet, and something else counted
@@ -1603,6 +1614,9 @@ class DiceLog:
         number = self._round_number()
         self.round_number = number
         danced = self._dances.round(g, self.tsr_hdr, number)
+        danced += self._wild.round(g, self.tsr_hdr, number)
+        if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
+            self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief
@@ -1729,11 +1743,13 @@ class DiceLog:
         parts: List[Tuple[str, int]] = []
         if None in (after_f1, hit_bonus) or after_f1 - hit_bonus != thac0 + skill[1] + sum(v for _, v in kit):
             return f"THAC0 {base} base, {signed(base - thac0)} in bonuses = {thac0}"
+        rear_hit = min((kits.rear_to_hit(k) for k in g.kit_ids(attacker)), default=kits.REAR) \
+            if attacker < game.PARTY_SIZE else kits.REAR  # (DSCLOG's KIT_REAR)
         if rear:
-            parts.append(("from behind", 2))
+            parts.append(("from behind" + (" (Rescuer)" if rear_hit != kits.REAR else ""), rear_hit))
         if backstab:
             parts.append(("backstab", 2))
-        situational = base - after_f1 - 2 * bool(rear) - 2 * bool(backstab)
+        situational = base - after_f1 - rear_hit * bool(rear) - 2 * bool(backstab)
         # the spell effects the game checks here (from its code)
         effects = g.effects()
         on = lambda combatant, eid: any(x.owner == combatant and x.id == eid for x in effects)
@@ -1914,7 +1930,7 @@ class DiceLog:
             steps += " (raised to the minimum of 1)"
         if mode is not None and mode <= 1:  # melee: the game adds the attacker's STR bonus
             strength = g.creature(attacker)[CREATURE_ABILITIES]
-            str_bonus = STR_DAMAGE.get(strength, 0)
+            str_bonus = g.str_damage(strength)
             if str_bonus:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
