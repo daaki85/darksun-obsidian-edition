@@ -147,6 +147,7 @@ VEC_PRICE_EAX equ 0x8C     ; PROBE_PRICE_EAX
 VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
 VEC_RACE_PANEL equ 0x89    ; PROBE_RACE_PANEL
 VEC_BOX_AC equ 0x88        ; PROBE_BOX_AC
+VEC_TICK equ 0x87          ; PROBE_TICK
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
 NENT    equ 74          ; entries in the ring (74: the helper and it fit in upper memory)
@@ -348,6 +349,11 @@ kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance
                                 ;      rolls it as a fight starts and counts its rounds): +1 danced
                                 ;      well, -1 stumbled, 0 none; to hit, to damage and on AC (KIT_EXTRA)
            db 0                 ; +355
+tick_off   dw ticks             ; +356 offset of TICKS: where the game was as its timer struck
+                                ;      (PROBE_TICK), TICK_SLOTS records of TICK_SIZE bytes, for the
+                                ;      Loader's freeze report
+tick_seq   dw 0                 ; +358 records taken, counted: the newest in slot (TICK_SEQ - 1)
+                                ;      mod TICK_SLOTS
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1923,6 +1929,52 @@ probe_look:
         pop es
         popad
         iret
+
+; PROBE_TICK: INT VEC_TICK replaces "inc word cs:[0004h]" (5 bytes: INT + 3 NOPs; DSUN.EXE
+; 3925Ch), the first instruction of the game's timer handler (IRQ 0, the timer its own: the
+; game's timers run from it). Does that, and every TICK_EVERY strikes notes where the game was
+; (what the timer interrupted) in TICKS, for the Loader's freeze report: its CS:IP, flags, SS,
+; SP (before the interrupt), BP, DS and ES, and the strikes counted. Interrupts stay off.
+TICK_EVERY equ 16
+TICK_SLOTS equ 32
+TICK_SIZE  equ 16
+probe_tick:
+        push bp
+        mov bp, sp              ; BP+2 this interrupt's frame (in the handler), BP+8 the timer's
+        push ds
+        push ax
+        push bx
+        mov ds, [bp + 4]        ; the handler's CS
+        inc word [4]            ; the replaced instruction
+        inc word [cs:tick_count]
+        test byte [cs:tick_count], TICK_EVERY - 1
+        jnz .out
+        mov bx, [cs:tick_seq]
+        and bx, TICK_SLOTS - 1
+        shl bx, 4               ; (TICK_SIZE)
+        add bx, ticks
+        mov ax, [bp + 8]
+        mov [cs:bx], ax         ; +0 IP
+        mov ax, [bp + 10]
+        mov [cs:bx + 2], ax     ; +2 CS
+        mov ax, [bp + 12]
+        mov [cs:bx + 4], ax     ; +4 flags
+        mov [cs:bx + 6], ss     ; +6 SS
+        lea ax, [bp + 14]
+        mov [cs:bx + 8], ax     ; +8 SP
+        mov ax, [bp]
+        mov [cs:bx + 10], ax    ; +10 BP
+        mov ax, [bp - 2]
+        mov [cs:bx + 12], ax    ; +12 DS
+        mov [cs:bx + 14], es    ; +14 ES
+        inc word [cs:tick_seq]
+.out:   pop bx
+        pop ax
+        pop ds
+        pop bp
+        iret
+tick_count dw 0
+ticks   times TICK_SLOTS * TICK_SIZE db 0
 
 ; PROBE_UNLOOK: INT VEC_UNLOOK replaces "mov word [0844h],270Fh" (6 bytes: INT + 4 NOPs) at the
 ; end of the routine that closes the Look box (the game forgets whom it was looking at). Does
@@ -16366,6 +16418,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_BOX_AC
         mov dx, probe_box_ac
         int 21h
+        mov ax, 2500h + VEC_TICK
+        mov dx, probe_tick
+        int 21h
         mov ax, 2500h + VEC_TWO
         mov dx, probe_two
         int 21h
@@ -16788,7 +16843,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK
 all_vectors_end:
 
         align 16, db 0

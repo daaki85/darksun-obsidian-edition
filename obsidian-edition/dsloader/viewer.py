@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -92,6 +92,8 @@ class Viewer:
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
         ttk.Button(top, text="Reconnect", command=self.reconnect).pack(side="right")
+        # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
+        ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
         # for when the Loader was opened on its own: start the game (with the dice log) from here
         self.start_button = ttk.Button(top, text="Start the game", command=self.start_game)
         self.start_button.pack(side="left")
@@ -667,6 +669,30 @@ class Viewer:
         if path:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(widget.get("1.0", "end-1c"))
+
+    def freeze_report(self) -> None:
+        """Save a freeze report (freeze.py) in crash-logs/ and say where; for when the game has
+        stopped but DOSBox hasn't."""
+        if not self.guest:
+            messagebox.showinfo("Freeze report", "The Loader isn't connected to DOSBox, so there is nothing "
+                                "to report. Start the game from the Loader, or press Reconnect.", parent=self.root)
+            return
+        attached = self.dice is not None and self.dice.attached
+        hdr = self.dice.tsr_hdr if attached else None
+        ds = self.dice.game.ds if attached and self.dice.game is not None else None
+        self.status.set("Writing a freeze report...")
+        self.root.update_idletasks()
+        try:
+            path = freeze.freeze_report(self.guest.read, hdr, ds, __version__,
+                                        launch.effective_switches(launch.load_settings()),
+                                        self.dice_text.get("1.0", "end-1c"), self.talk_text.get("1.0", "end-1c"),
+                                        launch.CRASH_DIR)
+        except Exception as e:  # (DOSBox gone, say): said, not raised
+            self.status.set(f"No freeze report: {e}")
+            return
+        self.status.set(f"Freeze report saved: {path}")
+        messagebox.showinfo("Freeze report", f"Saved in\n{path}\n\nSend it along with what you were doing "
+                            "when the game stopped.", parent=self.root)
 
     def _drop_dice(self) -> None:
         if self.dice is not None:

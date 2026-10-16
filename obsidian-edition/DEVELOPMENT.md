@@ -214,6 +214,21 @@ until spells 199-201 and `seg_space`, when the helper no longer fitted in the
 block and loaded low), and the text buffer 4 KB,
 not 8, to make that room.
 
+## The freeze report
+
+The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
+start; its timers run from it) begins with `INT VEC_TICK` (`PROBE_TICK`). Every
+16th strike (about 8 a second) DSCLOG notes what the timer interrupted: CS:IP,
+flags, SS:SP before the interrupt, BP, DS and ES, in `TICKS` (32 records of 16
+bytes; the header's +356 its offset, +358 the records taken). The Loader's
+**Freeze report** (`freeze.py`) reads them newest first, names each place
+(DSCLOG's, the BIOS's, or the game's segment and DSUN.EXE offset, which overlaid
+code doesn't keep), shows the code there now and the newest stack, counts the
+notes and the map's main loop for a second, and zips that with the memory below
+1 MB + 64 KB. The handler itself loops forever on `INT 3` if the word at its
+CS:1B2h is no longer "Test" (its check for memory written over), so notes all
+at 33A5:04D9h to 04DBh (load-segment relative) point there.
+
 ## Reading the game's memory
 
 DOSBox keeps the emulated PC's RAM in one block of its own process memory. The

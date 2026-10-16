@@ -26,6 +26,13 @@ have the detail.
   (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
   expert with the bow, chosen or not, but only the chosen weapons were listed.
 
+**Added**
+- **Freeze report:** when the game stops but DOSBox stays open, the Loader's
+  **Freeze report** button saves a zip in `crash-logs` with where the game was
+  running for its last few seconds (noted by the helper from the game's timer),
+  the helper's state, the switches, the end of the dice log and dialogue, and a
+  copy of the game's memory.
+
 **Fixed**
 - **A multiclass preserver could cast in armour** (class restrictions on,
   since 2.0.0). The USE screen said NO SPELLS IN ARMOUR, but the spells

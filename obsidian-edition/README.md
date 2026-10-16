@@ -296,6 +296,23 @@ usual way (Exit to DOS, or closing DOSBox's window) writes no report. With the
 game started from GOG's own shortcut, the Loader can't see how it closed, so
 there is no report.
 
+### If the game freezes
+
+If the game stops responding but DOSBox stays open, leave DOSBox as it is,
+switch to the Loader and press **Freeze report**. The Loader watches the game for
+a second, then saves a zip in `crash-logs`, such as
+`crash-logs\freeze-2026-10-16-213012.zip`, and says where. It holds:
+- where the game was running for the last few seconds (the helper notes it
+  about 8 times a second), and whether the game's timer and the map are still
+  moving;
+- the helper's own state, the Loader's switches, the last 300 lines of the dice
+  log and the last 80 of the dialogue;
+- a copy of the game's memory (about 1 MB; the party, the map and the fight as they
+  stood, with no part of your computer outside DOSBox).
+
+Send it along with what you were doing when the game froze. The report needs
+the game started from the Loader.
+
 ## In the game
 
 The game itself shows more, in its own lettering and windows, when it is started

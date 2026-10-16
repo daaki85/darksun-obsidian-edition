@@ -86,6 +86,7 @@ VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
 VEC_RACE_PANEL = 0x89
 VEC_BOX_AC = 0x88
+VEC_TICK = 0x87
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -557,6 +558,9 @@ PATCHES = (
     # the item box's "AC BONUS:": "mov al,es:[bx+12h]", the type's AC (a helm's AC 1 with the rule,
     # set there as the AC routine sets it, for a helm not worn yet)
     Patch("box_ac", 0x8C15A, bytes.fromhex("268a4712"), _interrupt(VEC_BOX_AC, 4)),
+    # the game's timer handler (IRQ 0), its first instruction: inc word cs:[0004h] (DSCLOG does
+    # it, and notes now and then where the game was, for the Loader's freeze report)
+    Patch("tick", 0x3925C, bytes.fromhex("2eff060400"), _interrupt(VEC_TICK, 5)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),

@@ -2711,6 +2711,51 @@ class NamesTests(unittest.TestCase):
 
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
+class TickTests(unittest.TestCase):
+    """PROBE_TICK: the game's timer handler's first instruction done, and every TICK_EVERY
+    strikes where the game was noted in TICKS (the header's +356, counted at +358)."""
+    VEC_TICK, EVERY, SLOTS = 0x87, 16, 32
+
+    def setUp(self):
+        self.image = image = load_image()
+        self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, image)
+        at = image.find(bytes.fromhex("5589e51e50538e5e04ff060400"))
+        self.assertGreater(at, 0)
+        self.assertEqual(image.count(bytes.fromhex("5589e51e50538e5e04ff060400")), 1)
+        mu.mem_write(self.VEC_TICK * 4, struct.pack("<HH", at, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        self.hdr = TSR * 16 + image.find(HDR_SIG)
+
+    def strike(self, ip):
+        """The timer strikes at 5678h:IP, SP 800h: the handler (CALLER:600h) runs its first
+        instruction."""
+        mu = self.mu
+        mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, self.VEC_TICK, 0x90, 0x90, 0x90)))
+        mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", ip, 0x5678, 0x0246))
+        for name, value in dict(cs=CALLER, ds=GAME_DS, es=0x4321, ss=SS, esp=0x7FA, ebp=BP, eflags=2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x605)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_DS, r.UC_X86_REG_BP,
+                                                   r.UC_X86_REG_ES)], [0x7FA, GAME_DS, BP, 0x4321])
+
+    def test_noted(self):
+        mu = self.mu
+        ticks, = struct.unpack("<H", mu.mem_read(self.hdr + 356, 2))
+        for n in range(self.EVERY * (self.SLOTS + 2)):
+            self.strike(0x1000 + n)
+        self.assertEqual(struct.unpack("<H", mu.mem_read(CALLER * 16 + 4, 2))[0], self.EVERY * (self.SLOTS + 2))
+        self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 358, 2))[0], self.SLOTS + 2)
+        slots = [struct.unpack("<8H", mu.mem_read(TSR * 16 + ticks + 16 * k, 16)) for k in range(self.SLOTS)]
+        # the newest (the 34th) in slot 1, the 33rd in slot 0, the 3rd in slot 2
+        want = lambda k: (0x1000 + self.EVERY * k - 1, 0x5678, 0x0246, SS, 0x800, BP, GAME_DS, 0x4321)
+        self.assertEqual(slots[1], want(34))
+        self.assertEqual(slots[0], want(33))
+        self.assertEqual(slots[2], want(3))
+
+
+@unittest.skipIf(Uc is None, "unicorn not installed")
 class StealthTests(unittest.TestCase):
     """A hidden thief's attack (RULE_STEALTH, 64): from behind, a backstab when it can be."""
     SHEETS, TYPES = 0x8000, 0x9000
