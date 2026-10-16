@@ -1,42 +1,46 @@
 # Obsidian Edition: development
 
-How Obsidian Edition and the Dark Sun Obsidian Edition Loader, which starts the game with it, work inside:
-the patched game and its helper, what's known of the game's data, the tools
-for mapping it, and how each part of the [README](README.md) is done.
+How Obsidian Edition and the Dark Sun Obsidian Edition Loader, which starts
+the game with it, work inside: the patched game and its helper, what's known
+of the game's data, the tools for mapping it, and how each part of the
+[README](README.md) is done.
 
 ## How the dice log works
 
 Every roll in the game goes through one function, Borland C++'s `rand()`.
 
 1. When you start the game with the dice log, the launcher writes
-   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with 185 small
-   changes, listed in `PATCHES` in `dsloader/gamepatch.py`. Most replace a
-   few bytes of the game's code with an `INT` (60h to 65h, and 8Ch to FEh;
-   all of them are taken, so later sites share one, a site number after the
-   `INT`, as in [Scores and hit points as
-   rolled](#scores-and-hit-points-as-rolled)) that the helper answers: `rand()`, the saving throw, AC, the dialogue
-   window and message boxes for the dice log; the inventory, View Character,
-   USE and Effects screens and the Look box for what the Loader adds to them;
-   and the places each rule change, new item and screen addition needs. The
-   sections under [How each part works](#how-each-part-works) name the patches
-   each part uses. One, at the start of a monster's turn, is in overlay code
-   the game moves or unloads to load the dialogue window's, so the helper puts
-   its way back in a stack frame the game's overlay manager fixes up (a stale
+   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with 253 small changes,
+   listed in `PATCHES` in `dsloader/gamepatch.py`. Most replace a few bytes of
+   the game's code with an `INT` (60h to 65h, and 8Ch to FEh; all of them are
+   taken, so later sites share one, a site number after the `INT`, as in
+   [Scores and hit points as rolled](#scores-and-hit-points-as-rolled)) that
+   the helper answers: `rand()`, the saving throw, AC, the dialogue window and
+   message boxes for the dice log; the inventory, View Character, USE and
+   Effects screens and the Look box for what the Loader adds to them; and the
+   places each rule change, new item and screen addition needs. The sections
+   under [How each part works](#how-each-part-works) name the patches each
+   part uses. One, at the start of a monster's turn, is in overlay code the
+   game moves or unloads to load the dialogue window's, so the helper puts its
+   way back in a stack frame the game's overlay manager fixes up (a stale
    address used to restart a fight, or stop the game with "Stack overflow!").
    A few patches change the game outright: 29 saved characters rather than 19,
    DELETE deleting the one chosen and a New character counting as Okay (see
    [more characters](README.md#more-characters)), Enter loading only a save
    that is there (see [more saves](README.md#more-saves)), a script buffer of
-   11,776 bytes rather than 10,000 (for
-   [Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)),
-   and data files looked for in the current folder rather than next to the
-   program. The helper also hooks DOS's `INT 21h`, to open the launcher's
-   copies of `SEGOBJEX.GFF`, `RESOURCE.GFF`, `GPLDATA.GFF` and some regions'
-   files (for the [new items](README.md#new-items), [Kalzith](README.md#kalzith),
-   [Semyon](README.md#semyon) and [no manual check](README.md#no-manual-check)),
-   the mouse driver's `INT 33h` (for [scrolling the map](README.md#scrolling-the-map))
-   and the keyboard's `INT 16h` (for Tab and Enter). DOSBox runs it from the
-   game folder, so it uses your saves as usual.
+   11,776 bytes rather than 10,000 (for [Dinos and the
+   Trustee](README.md#what-dinos-and-the-trustee-say-about-them)), and data
+   files looked for in the current folder rather than next to the program. The
+   helper also hooks DOS's `INT 21h`, to open the launcher's copies of
+   `SEGOBJEX.GFF`, `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (for
+   the [new items](README.md#new-items), [Kalzith](README.md#kalzith),
+   [Semyon](README.md#semyon) and [no manual
+   check](README.md#no-manual-check)), and to keep what the game last wrote to
+   the screen for a crash report (see [the crash report](#the-freeze-report)),
+   the mouse driver's `INT 33h` (for [scrolling the
+   map](README.md#scrolling-the-map)) and the keyboard's `INT 16h` (for Tab
+   and Enter). DOSBox runs it from the game folder, so it uses your saves as
+   usual.
 2. `dos\DSCLOG.EXE` (source in `dos\dsclog.asm`) is a tiny DOS program loaded
    into upper memory before the game, so the game loses no memory. It answers
    those interrupts. Its `rand()` returns exactly the numbers the original
@@ -58,9 +62,10 @@ pockets, the [rule changes](README.md#rule-changes)), the Loader's other
 additions (the new items and the Ring +1, the cooked vulture, Kalzith, Semyon,
 what the party wears, shadows, dust, rings, Tab and Enter, scrolling) and the
 fixes always in the patched copy: no equipment penalty on thief skills (see
-[Thief skills](README.md#how-the-game-works-out-thief-skills)), the roster's DELETE and New characters counting
-as Okay (see [More characters](README.md#more-characters)), and no manual check
-(see [No manual check](README.md#no-manual-check)).
+[Thief skills](README.md#how-the-game-works-out-thief-skills)), the roster's
+DELETE and New characters counting as Okay (see [More
+characters](README.md#more-characters)), and no manual check (see [No manual
+check](README.md#no-manual-check)).
 
 Limitations:
 - Only the GOG release (`DSUN.EXE` of 611,408 bytes) is supported. With
@@ -202,19 +207,22 @@ The helper has to load into upper memory, or the game loses 62 KB of
 conventional memory (570 KB free rather than 632 KB). With GOG's settings
 there is one upper memory block of 63 KB, EMS's 64 KB page frame taking the
 rest; the launcher's config turns EMS off (`launch.DOS_LINES`: the game uses
-XMS instead), which leaves the helper a second 64 KB block (65 KB free
-with it loaded; see [the combat log](#what-the-game-allows)).
-The helper's own segment is still at most 64 KB (everything through CS), so
-the second block is room for data kept apart from it, as the ring is. The
-helper asks for its resident part and the ring (`LOAD_EXTRA`); with EMS on,
-`mem` in DOSBox showed 632 KB free and a few KB of upper memory left. A change that adds much code should check that
-again: the ring is 74 entries, not 128 (96 until the new spells' code, when
-the game no longer started for lack of memory; 88 until STORE and RECALL; 84
-until spells 199-201 and `seg_space`, when the helper no longer fitted in the
-block and loaded low), and the text buffer 4 KB,
-not 8, to make that room.
+XMS instead), which leaves the helper a second 64 KB block (65 KB free with it
+loaded; see [the combat log](#what-the-game-allows)). The helper's own segment
+is still at most 64 KB (everything through CS), so the second block is room
+for data kept apart from it, as the ring is. The helper asks for its resident
+part and the ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB
+free and a few KB of upper memory left. A change that adds much code should
+check that again: the ring is 74 entries, not 128 (96 until the new spells'
+code, when the game no longer started for lack of memory; 88 until STORE and
+RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
+fitted in the block and loaded low), and the text buffer 4 KB, not 8, to make
+that room.
 
 ## The freeze report
+
+(For a crash, the game's own error message: `DOS_WRITE` and `DOS_QUIT`, under
+[Development](#development).)
 
 The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
 start; its timers run from it) begins with `INT VEC_TICK` (`PROBE_TICK`). Every
@@ -307,8 +315,9 @@ mapping new fields, or for other layouts:
    in memory, as they do in save files. Otherwise assign each slot by name.
 3. The **character sheet** (XP, classes, levels, saves) is found automatically:
    it carries the same ability scores and entity ID as the creature record.
-4. **Save layout** (beside **Search**) stores the addresses. They may change when you load a save
-   or restart the game. If a slot starts showing garbage, locate it again.
+4. **Save layout** (beside **Search**) stores the addresses. They may change
+   when you load a save or restart the game. If a slot starts showing garbage,
+   locate it again.
 
 The **Record bytes** panel shows the raw record. Bytes that change light up
 orange, and clicking a byte decodes it as u8/s8/u16/s16/u32. Use it to map
@@ -437,17 +446,17 @@ running:
   rectangle routine's probes also use, and which the parts come through) is
   kept on the stack while the parts are drawn: overwritten, the game went on
   from the wrong place and wrote over its own memory until it quit.
-- **The pointer.** The game draws its pointer into the screen on show
-  itself: 28D1:093D keeps what is under it (from page `[A05Dh]`, the map
-  without the panel) and draws it; 28D1:0B7F puts what it kept back, so taking
-  the pointer off over the panel leaves a patch of map. `PROBE_POINTER` (the
-  stack check at the start of 093D, 2EA55h) puts the panel first when the
-  pointer is to be drawn over it, or was last drawn over it (`[A137h]`,
-  `[A13Fh]`; `POINTER_MOST`, 32, the box). `PANEL_DRAW_POINTER` puts the panel
-  and then calls 093D, without taking the pointer off. `PANEL_TICK`'s refresh
-  with the panel unchanged (at most once a BIOS tick), is `PANEL_DRAW_AROUND`: the panel
-  without the pointer's box (`PB_SKIP` in `PANEL_BLIT`), so the pointer stays
-  on screen.
+- **The pointer.** The game draws its pointer into the screen on show itself:
+  28D1:093D keeps what is under it (from page `[A05Dh]`, the map without the
+  panel) and draws it; 28D1:0B7F puts what it kept back, so taking the pointer
+  off over the panel leaves a patch of map. `PROBE_POINTER` (the stack check
+  at the start of 093D, 2EA55h) puts the panel first when the pointer is to be
+  drawn over it, or was last drawn over it (`[A137h]`, `[A13Fh]`;
+  `POINTER_MOST`, 32, the box). `PANEL_DRAW_POINTER` puts the panel and then
+  calls 093D, without taking the pointer off. `PANEL_TICK`'s refresh with the
+  panel unchanged (at most once a BIOS tick), is `PANEL_DRAW_AROUND`: the
+  panel without the pointer's box (`PB_SKIP` in `PANEL_BLIT`), so the pointer
+  stays on screen.
 - **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
   switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
   writes about once a second), DSCLOG has the view drawn again without it.
@@ -503,9 +512,9 @@ running:
   fight or out of one. Out of fights the log takes the lines with a roll in
   them (`Log.add(rolls_only=True)`). The level and size are
   saved in the settings (`combat_log_level`, `combat_log_size`).
-- **Not checked mid-fight:** saving and loading, and area changes, as the
-  game allows neither in a fight. DOSBox's window size doesn't matter (it is drawn into the game's
-  screen).
+- **Not checked mid-fight:** saving and loading, and area changes, as the game
+  allows neither in a fight. DOSBox's window size doesn't matter (it is drawn
+  into the game's screen).
 
 #### The strip below the map
 
@@ -588,14 +597,15 @@ How: the patched game calls the helper (`INT 65h`) just after the panel's
 weapon lines; the helper prints the lines with the game's own text routine,
 whose address, like the selected character, it reads from the game's code
 around the patch (overlays move, so nothing is fixed in advance). The View
-Character screen does the same through `INT F3h`, called once it has drawn
-the character's two panels (the saves under the item icons; MOVE, the
-creature record's +1Bh, and THAC0 at x D8h on HP's and PSI's lines, 7Fh and
-86h, clear of HP's value at its longest), and the routine that lists the weapons through `INT FAh`
-after each one. The Loader keeps the numbers in the helper's memory, with the
-time it last did: older than 5 seconds, the helper shows the sheet's numbers
-instead. Before a screen is drawn, the helper asks the Loader to update them
-and waits for its answer, half a second at most. Nothing else in the game changes.
+Character screen does the same through `INT F3h`, called once it has drawn the
+character's two panels (the saves under the item icons; MOVE, the creature
+record's +1Bh, and THAC0 at x D8h on HP's and PSI's lines, 7Fh and 86h, clear
+of HP's value at its longest), and the routine that lists the weapons through
+`INT FAh` after each one. The Loader keeps the numbers in the helper's memory,
+with the time it last did: older than 5 seconds, the helper shows the sheet's
+numbers instead. Before a screen is drawn, the helper asks the Loader to
+update them and waits for its answer, half a second at most. Nothing else in
+the game changes.
 
 Which class levels up next, on View Character: the game looks up the XP for
 each class's next level in its tables and shows the lowest. Where it adds the
@@ -607,10 +617,10 @@ belongs to and adds their letters first.
 ([In the README](README.md#what-hurts-a-monster-the-look-box).)
 
 How: the patched game calls the helper (`INT F5h`; INT 66h-6Fh can't be used:
-the game calls those itself, looking for sound drivers) where the box has drawn its
-first status rows; the helper asks the Loader and waits a moment for its
-answer, and prints the lines with the game's text routine. `INT F6h`, at the end of the
-routine that closes the box, shows the whole description.
+the game calls those itself, looking for sound drivers) where the box has
+drawn its first status rows; the helper asks the Loader and waits a moment for
+its answer, and prints the lines with the game's text routine. `INT F6h`, at
+the end of the routine that closes the box, shows the whole description.
 
 ### Charges in item boxes
 
@@ -618,13 +628,13 @@ routine that closes the box, shows the whole description.
 
 An item that casts a spell has the spell + 1 in its `+0Fh` and its charges
 left in `+0Eh` (the routine finishing an item's use takes one off, 721E4h,
-unless its type's `+0Fh` has 2). `PROBE_ITEM_BOX` (`INT DAh`, at the end of the routine filling an item's box,
-8C1A1h, the item `[BP+6]`) draws `Charges: n` in the row after the box's own
-lines (`IB_CHARGES`) when the spell byte is below F9h (from there the game's
-own effects: a belt's STR, a ring's AC...) and the charges aren't 0, but not
-for fruit (type 60, eaten whole) nor scenery (a type whose `+08h` has both 20h
-and 40h: a door, a mirror, a crank), where those bytes hold something else
-(`TYPE_SCENERY`).
+unless its type's `+0Fh` has 2). `PROBE_ITEM_BOX` (`INT DAh`, at the end of
+the routine filling an item's box, 8C1A1h, the item `[BP+6]`) draws `Charges:
+n` in the row after the box's own lines (`IB_CHARGES`) when the spell byte is
+below F9h (from there the game's own effects: a belt's STR, a ring's AC...)
+and the charges aren't 0, but not for fruit (type 60, eaten whole) nor scenery
+(a type whose `+08h` has both 20h and 40h: a door, a mirror, a crank), where
+those bytes hold something else (`TYPE_SCENERY`).
 
 ### No manual check
 
@@ -649,16 +659,17 @@ the classes allowed to use it (`INT CDh`), and a multiclass preserver's armour
 where the game checks for "No spell use" (`INT CCh`). (`dsloader/restrict.py`
 says the same in Python, for the tests.) A cloak's type (worn in the cloak
 slot, `+09h` 8) counts for AC as armour does but isn't armour to the limits:
-the Cloak of Protection is for every class (`CLASS_FORBIDS`, `restrict.is_armour`).
-A weapon the character has made its own is left as the game has it, past the
-classes' limits (`SPECIALIZED_BACK`, `restrict.specialized_back`): a dual-classed
-human's chosen weapon specs once its new class's level has passed the warrior
-class's, and a ranger's bow (every ranger has expertise with it, but never
-chooses it): a multiclass ranger's always, a human's while a ranger or once past.
-`KIT_FORBIDS` likewise passes a weapon of a type in the sheet's `SPEC_SLOTS`
-(`KF_CHOSEN`) while the specs count (`SPECS_AWAKE`, `restrict.specs_awake`: one
-class; a human's warrior class now or passed; a Battle Mage's kit awake), but
-for the off hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
+the Cloak of Protection is for every class (`CLASS_FORBIDS`,
+`restrict.is_armour`). A weapon the character has made its own is left as the
+game has it, past the classes' limits (`SPECIALIZED_BACK`,
+`restrict.specialized_back`): a dual-classed human's chosen weapon specs once
+its new class's level has passed the warrior class's, and a ranger's bow
+(every ranger has expertise with it, but never chooses it): a multiclass
+ranger's always, a human's while a ranger or once past. `KIT_FORBIDS` likewise
+passes a weapon of a type in the sheet's `SPEC_SLOTS` (`KF_CHOSEN`) while the
+specs count (`SPECS_AWAKE`, `restrict.specs_awake`: one class; a human's
+warrior class now or passed; a Battle Mage's kit awake), but for the off
+hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
 
 A New character's starting weapons, armour and shields its classes can't use
 (`restrict.usable`) are taken out of its lists (`weaponchoice.class_gear`, with
@@ -726,10 +737,10 @@ its scores from `+22h`; `DS:119Ch` the sheet, the hit points its `+8`):
   of ten), then draws each value with the game's text routine.
 
 How (`RULE_HI_ROLLED`, the second rules word's 32: `game.RULE_ROLLED`): no
-interrupt vectors are left, so the eight sites share `PROBE_CR_SPELLS`'s
-(`INT 98h`), the byte after the `INT` saying which (`RL_SCORE` 1, `RL_HP` 2,
-`RL_ROLL` 3, `RL_SUM` 4, `RL_CON` 5, `RL_TRY` 6) where `PROBE_CR_SPELLS`'s own has its NOP; the
-helper moves the return address past it.
+interrupt vectors are left, so the eight sites share `PROBE_CR_SPELLS`'s (`INT
+98h`), the byte after the `INT` saying which (`RL_SCORE` 1, `RL_HP` 2,
+`RL_ROLL` 3, `RL_SUM` 4, `RL_CON` 5, `RL_TRY` 6) where `PROBE_CR_SPELLS`'s own
+has its NOP; the helper moves the return address past it.
 
 * `RL_ROLL` (the three loops' write, `INT` + site + NOP) writes the score; at
   CHR it keeps the six's total as the most (`RL_POOL`): with DI 1 the total,
@@ -762,12 +773,12 @@ counts them (`+280`); the log reads them once the count has been still for
 
 Checked in the game: three rolls of the die, every ability's line complete
 (none "too fast"); CON 14 to 15 to 16 took a 3rd-level preserver's hit points
-from 8 to 11 to 14, and back down; a preserver rolled 101 (`SUM:101/101`); DEX lowered and
-STR raised by one, a second raise refused; the hit points unchanged by left
-and right clicks (with the rule off, 16 to 17); the die's next roll
-`SUM:98/98`, as the dice log's line; a new class raising INT from 14 to 17
-took a fighter's 98 to 101. DONE on a preserver still opened CHOOSE A SPELL
-(`PROBE_CR_SPELLS`).
+from 8 to 11 to 14, and back down; a preserver rolled 101 (`SUM:101/101`); DEX
+lowered and STR raised by one, a second raise refused; the hit points
+unchanged by left and right clicks (with the rule off, 16 to 17); the die's
+next roll `SUM:98/98`, as the dice log's line; a new class raising INT from 14
+to 17 took a fighter's 98 to 101. DONE on a preserver still opened CHOOSE A
+SPELL (`PROBE_CR_SPELLS`).
 
 ### Rangers' casting level
 
@@ -862,7 +873,8 @@ save), and puts it back when the rule is unticked.
 
 ### Fire, cold and electricity: DEX instead of a doubled d20
 
-([In the README](README.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
+([In the
+README](README.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
 
 How: the helper does the save's doubling (`INT F0h`) only while this rule is
 off, and the Loader marks the fire, cold and electricity spells with the game's
@@ -922,55 +934,57 @@ answers both for the character on show, "not two-handed" for a half-giant.
 
 How: the helper sets the helm types' AC as the game's AC routine reads it
 (`INT F8h`, the Ring +1's place), and as the item box reads it for its "AC
-BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An earlier rule gave boots a move in a
-fight; it is gone, and the boots' names it changed go back to the game's.)
+BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An
+earlier rule gave boots a move in a fight; it is gone, and the boots' names it
+changed go back to the game's.)
 
 ### Weapon specialization
 
 ([In the README](README.md#weapon-specialization).)
 
-How: the chosen weapon types are kept in four bytes of each character's own record that the
-game never uses (+14h to +17h), so saves and the saved-characters roster keep
-them. The helper adds the bonuses and attacks where the game makes a weapon
-attack (`INT D1h`, `INT D0h`), on the DAM lines (`INT CFh`, `INT CEh`), runs
-the creation pages (`INT C8h` to `INT C3h`, windows 3014 to 3019 in the
-Loader's copy of `RESOURCE.GFF`), calls the game's psionic pop-up in weapon
-mode at a level gained (`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up,
-window 3021), and prints the Effects screen's lines (`INT BBh`).
+How: the chosen weapon types are kept in four bytes of each character's own
+record that the game never uses (+14h to +17h), so saves and the
+saved-characters roster keep them. The helper adds the bonuses and attacks
+where the game makes a weapon attack (`INT D1h`, `INT D0h`), on the DAM lines
+(`INT CFh`, `INT CEh`), runs the creation pages (`INT C8h` to `INT C3h`,
+windows 3014 to 3019 in the Loader's copy of `RESOURCE.GFF`), calls the game's
+psionic pop-up in weapon mode at a level gained (`INT C2h`, then `INT C1h` to
+`INT BCh` in the pop-up, window 3021), and prints the Effects screen's lines
+(`INT BBh`).
 
 The pop-up in weapon mode is the psionicists' window (17501) made bigger:
-window 3021 is 214 by 156 (its marble, BMP 3022, the psionicists' 17001 carried
-on to that size), with a slot for each weapon type, six to a row: a button 0x860 +
-type whose picture (ICON, same number) is the game's inventory picture of a
-weapon of that type (`weaponpages.PICTURES`, objects in `SEGOBJEX.GFF`; the
-polearm's made smaller) on a slot, in three frames as the game uses them: as
-it is, lit (the pointer on a button in use), and out of use (the weapon a grey
-shape). The game puts the window where it would centre the psionicists'
-(`push 2B0050h` before `PROBE_PK_WIN`), so `PROBE_PK_WIN` gives it the place
-that centres 214 by 156; `PROBE_PK_TITLE` puts the two lines under the slots,
-centred in the wider window (the routine's width and y, pushed as bytes after
-it). Naming the slot under the pointer: a button in use takes the pointer
-itself (its lit frame), so no cell handler of the window (530:43h, as the
-powers' cells have) ever hears of it; instead `PK_HOVER` (a site of `INT 98h`,
-new: `or ax,ax / jnz 85F5Dh`, 4 bytes at 85F44h, in the pop-up's event loop
-85F2Ch, the jump done by the probe) reads the pointer each time round
-(`INT 33h` function 3), finds the slot from the window's place and the slots'
-(`PK_SLOTS_X`, `PK_PITCH`; `test_picker_matches_dsclog` keeps them
+window 3021 is 214 by 156 (its marble, BMP 3022, the psionicists' 17001
+carried on to that size), with a slot for each weapon type, six to a row: a
+button 0x860 + type whose picture (ICON, same number) is the game's inventory
+picture of a weapon of that type (`weaponpages.PICTURES`, objects in
+`SEGOBJEX.GFF`; the polearm's made smaller) on a slot, in three frames as the
+game uses them: as it is, lit (the pointer on a button in use), and out of use
+(the weapon a grey shape). The game puts the window where it would centre the
+psionicists' (`push 2B0050h` before `PROBE_PK_WIN`), so `PROBE_PK_WIN` gives
+it the place that centres 214 by 156; `PROBE_PK_TITLE` puts the two lines
+under the slots, centred in the wider window (the routine's width and y,
+pushed as bytes after it). Naming the slot under the pointer: a button in use
+takes the pointer itself (its lit frame), so no cell handler of the window
+(530:43h, as the powers' cells have) ever hears of it; instead `PK_HOVER` (a
+site of `INT 98h`, new: `or ax,ax / jnz 85F5Dh`, 4 bytes at 85F44h, in the
+pop-up's event loop 85F2Ch, the jump done by the probe) reads the pointer each
+time round (`INT 33h` function 3), finds the slot from the window's place and
+the slots' (`PK_SLOTS_X`, `PK_PITCH`; `test_picker_matches_dsclog` keeps them
 weaponpages'), and when it changes draws **SPECIALIZE IN** (or **EXPERT IN**:
 `PK_WORD` puts the type in the sheet's first empty slot for a moment and asks
-`SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name
-with the routine the powers' handler names a power with (85CC9h, which rubs
-out the lines it drew before), or the title again off the slots.
-A missile weapon's attacks a round are its item type's (+0Bh, in halves: a
-bow 4, the rest 2), not the character's (sheet +2Ah) as in melee; `INT D1h`
-raises them to a specialist's (`MISSILE_RATE`, by the fighter, gladiator or
-ranger level; a grand master one more; a weapon type not chosen, from 7th level, a
+`SPEC_OF_SHEET`, as `weaponchoice.pick_word`) and the type's name with the
+routine the powers' handler names a power with (85CC9h, which rubs out the
+lines it drew before), or the title again off the slots. A missile weapon's
+attacks a round are its item type's (+0Bh, in halves: a bow 4, the rest 2),
+not the character's (sheet +2Ah) as in melee; `INT D1h` raises them to a
+specialist's (`MISSILE_RATE`, by the fighter, gladiator or ranger level; a
+grand master one more; a weapon type not chosen, from 7th level, a
 specialist's a band lower), and the Loader's Characters tab does the same
-(`specialize.missile_attacks`).
-Every ranger's expertise with the bow is in `SPEC_OF_SHEET` (`specialize.skill`),
-not in its chosen weapon types, so `KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves
-the bow out of a ranger's choices, and `EF_LINES_OF` (`GameData.specializations`)
-lists it after the chosen types, by `SPEC_OF_SHEET`'s skill (none for a non-ranger).
+(`specialize.missile_attacks`). Every ranger's expertise with the bow is in
+`SPEC_OF_SHEET` (`specialize.skill`), not in its chosen weapon types, so
+`KINDS_ALLOWED` (`restrict.allowed_kinds`) leaves the bow out of a ranger's
+choices, and `EF_LINES_OF` (`GameData.specializations`) lists it after the
+chosen types, by `SPEC_OF_SHEET`'s skill (none for a non-ranger).
 
 The inventory screen's line for a missile weapon (`1D4`) comes from a branch of
 the same routine as the DAM line, with the weapon's own rate of fire (its type's
@@ -1006,7 +1020,8 @@ of it):
 | Seeker: 1st, 2nd, 3rd level slots | 1 | 2 | 2, 1 | 2, 2 | 2, 2, 1 |
 | Justifier: casting level, slots | | | | | 1; one 1st-level |
 
-The Shinobi's spells, the game's and four new ones (thief level 6 on, the Seeker's slots):
+The Shinobi's spells, the game's and four new ones (thief level 6 on, the
+Seeker's slots):
 
 | Spell level | Spells |
 |---|---|
@@ -1014,13 +1029,13 @@ The Shinobi's spells, the game's and four new ones (thief level 6 on, the Seeker
 | 2nd | Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud |
 | 3rd | Blink, Haste, Protection from Normal Missiles, Hold Person |
 
-Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-wizard-spells), are known by its bit in the sheet
-(`NS_KNOWS`) rather than the game's byte: `SHINOBI_KNOWS` reads either for the
-level up's offer (`SHINOBI_UNKNOWN`, `PROBE_PICK_LIST`), and counts them as
-known (not offered) while the new spells are off (or, for 199-201, before
-`SEG_MOVE`). `SHINOBI_WIZARD` gives the
-Shinobi's casting level for the new spells (196-201) as for the game's wizard
-spells (0-68).
+Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-wizard-spells),
+are known by its bit in the sheet (`NS_KNOWS`) rather than the game's byte:
+`SHINOBI_KNOWS` reads either for the level up's offer (`SHINOBI_UNKNOWN`,
+`PROBE_PICK_LIST`), and counts them as known (not offered) while the new
+spells are off (or, for 199-201, before `SEG_MOVE`). `SHINOBI_WIZARD` gives
+the Shinobi's casting level for the new spells (196-201) as for the game's
+wizard spells (0-68).
 
 No kit is the kit page's first row, and what a new character has.
 
@@ -1049,26 +1064,27 @@ chain, opened with a **KITS** button where the last page's button was:
 
 `WP_IDS` (`kitpages.panel_windows`) picks the windows for the classes being
 made, for the probes that open them (`PROBE_WP_DISC_WIN`,
-`PROBE_WP_SPHERE_WIN`, and `PROBE_WP_CLASS` when the classes change). The
-kit page itself is a window for each class (3026 to 3033, by the creation
-screen's class numbers), its rows NO KIT and the class's three kits
-(buttons `888h`, and `870h` + 3 × (class − 1) + kit − 1), its button VIEW
-PSIONICS (the weapon pages' `851h`) back to the disciplines. Like the weapon
-pages, it is kept at `DS:EA6h` with the spheres' own routine answering its
-buttons, so `PROBE_WP_SPHERE_CLICK` gets its clicks and `PROBE_WP_SHOWN`
-lets the game close it when another class is clicked. `KIT_ROW` puts the
-kit in the creation sheet's `+43h`, and `KIT_MARKS` marks the rows. As the
-game's spheres do, the rows not chosen are out of use (greyed) while one is;
-the one chosen, clicked, is taken back (`KIT_OPEN`, `FFh`: none chosen, no
-kit), and the rows are all in use again. The game keeps the whole sheet when DONE is pressed: `+43h`
-is in the roster's CHAR record (the sheet at its `+4Eh`). It also keeps the
+`PROBE_WP_SPHERE_WIN`, and `PROBE_WP_CLASS` when the classes change). The kit
+page itself is a window for each class (3026 to 3033, by the creation screen's
+class numbers), its rows NO KIT and the class's three kits (buttons `888h`,
+and `870h` + 3 × (class − 1) + kit − 1), its button VIEW PSIONICS (the weapon
+pages' `851h`) back to the disciplines. Like the weapon pages, it is kept at
+`DS:EA6h` with the spheres' own routine answering its buttons, so
+`PROBE_WP_SPHERE_CLICK` gets its clicks and `PROBE_WP_SHOWN` lets the game
+close it when another class is clicked. `KIT_ROW` puts the kit in the creation
+sheet's `+43h`, and `KIT_MARKS` marks the rows. As the game's spheres do, the
+rows not chosen are out of use (greyed) while one is; the one chosen, clicked,
+is taken back (`KIT_OPEN`, `FFh`: none chosen, no kit), and the rows are all
+in use again. The game keeps the whole sheet when DONE is pressed: `+43h` is
+in the roster's CHAR record (the sheet at its `+4Eh`). It also keeps the
 creation sheet from one character to the next, so the kit is put back to none
 whenever the disciplines' window is opened other than on the way back to it
-(`KIT_KEEP`, set by VIEW PSIONICS): for a new character, or another class.
-The die's new roll clears a kit too when the classes aren't the ones the panel
-last saw (`kit_stale` against `wp_classes_seen`, which `PROBE_WP_CLASS` sets on
-a class click); a new character's default class is never clicked, so `KIT_ROW`
-sets `wp_classes_seen` as well, to the classes the kit is chosen for.
+(`KIT_KEEP`, set by VIEW PSIONICS): for a new character, or another class. The
+die's new roll clears a kit too when the classes aren't the ones the panel
+last saw (`kit_stale` against `wp_classes_seen`, which `PROBE_WP_CLASS` sets
+on a class click); a new character's default class is never clicked, so
+`KIT_ROW` sets `wp_classes_seen` as well, to the classes the kit is chosen
+for.
 
 The rows' letters are carved from the game's own labels, as the weapon
 pages' (`kitpages.py`, with a J and a hyphen drawn). The panel's frame comes
@@ -1119,16 +1135,17 @@ window again for the class put in.
 A few pairs of classes taken at once by one race have kits of their own
 (`kitpages.MULTI`): groups numbered on from the classes, 9 elf cleric/fighter,
 10 half-elf fighter/thief, 11 half-elf druid/fighter, 12 half-elf
-cleric/ranger, 13 dwarf fighter/thief, 14 half-elf fighter/preserver,
-15 half-giant fighter/psionicist, 16 halfling fighter/thief, 17 halfling
-cleric/psionicist, 18 thri-kreen druid/fighter. `MULTI_GROUP` (`multi_table`) finds a
-sheet's group from its race and classes; `KIT_PLACE` gives such a sheet place
-0, so its kit is the kit byte's low two bits (1-2, a group having one or two
-kits), and its number is group × 4 + kit, as a class's. The KIT page has a
-window for each group (`KIT_WINDOW` + group − 1: 3034-3043), its rows
-`MULTI_ROW` (`88Ah`) + 3 × (group − 9) + kit − 1, past KITS's own `889h`, so
-`WP_CLICK` passes button numbers up to the last group's (`8A5h`) to
-`wp_page_button`; STORE and RECALL are `8B0h` and `8B1h`, past them.
+cleric/ranger, 13 dwarf fighter/thief, 14 half-elf fighter/preserver, 15
+half-giant fighter/psionicist, 16 halfling fighter/thief, 17 halfling
+cleric/psionicist, 18 thri-kreen druid/fighter, 19 mul cleric/fighter.
+`MULTI_GROUP` (`multi_table`) finds a sheet's group from its race and classes;
+`KIT_PLACE` gives such a sheet place 0, so its kit is the kit byte's low two
+bits (1-2, a group having one or two kits), and its number is group × 4 + kit,
+as a class's. The KIT page has a window for each group (`KIT_WINDOW` + group −
+1: 3034-3044), its rows `MULTI_ROW` (`88Ah`) + 3 × (group − 9) + kit − 1, past
+KITS's own `889h`, so `WP_CLICK` passes button numbers up to the last group's
+(`8A8h`) to `wp_page_button`; STORE and RECALL are `8B0h` and `8B1h`, past
+them.
 
 The Loader writes two things to the helper's header for these kits: at `+350`
 (`KIT_OUTDOORS`) a bit for each party member under the open sky (an outdoor
@@ -1160,7 +1177,7 @@ in `kitpages.kit_ids`), and emulated tests hold the helper to it:
 | damage with a weapon | Ravager, Brute, Ghetto Fighter (melee: `KIT_MELEE`, by the item type; the Ghetto Fighter's a dagger's kind), Battle Dancer and Wilderness Avenger (melee or missile: `KIT_EXTRA`, the dance's `KIT_DANCE` byte, or the target, `DS:494Ah`, of race 9, undead), Arena Champion (melee, a shield in a hand: `KIT_CHAMPION`, by `PROT_SCAN` of the attacker's thing, `[BP+18h]`), Blood-Fury (Wild Fighting passed: +3, melee or missile, `WILD_PASSED`) | `PROBE_SPEC_DAMAGE` (`KIT_ATTACK_DAMAGE`), and the DAM lines (`PROBE_DAM_LINE`, `PROBE_VIEW_DAM`: `KIT_MELEE` only) |
 | to hit | Ravager, Brute, Ghetto Fighter (and 1 worse with anything but a dagger), Arena Champion, Battle Dancer, Wilderness Avenger, Blood-Fury (Wild Fighting failed: −3, `WILD_TO_HIT` by `KIT_WILD`) | `PROBE_ATTACKS` (`KIT_TO_HIT`: `KIT_CHAMPION`, `KIT_EXTRA`, and `KIT_MELEE` in melee) |
 | AC | Ravager (`RAVAGER_AC` by level against the sheet's base AC, `+27h`), Wanderer, Sentinel and Arena Champion (a shield in a hand: `PROT_SCAN`), Grove Warden, Battle Dancer (its dance: `KIT_DANCE`), Blood-Fury (Wild Fighting failed: 3 worse, no worse than 10, `KIT_WILD`) | `PROBE_AC` (`INT 62h`, the end of the AC routine: `KIT_AC`) |
-| movement | Stalker; Wayfinder's Path-finder (each party member 1 more while a Wayfinder of the party is New or Okay: `PATH_UP`) | `PROBE_MOVE` (`KIT_MOVE`) |
+| movement | Stalker | `PROBE_MOVE` (`KIT_MOVE`) |
 | spell slots | Arcanist (+1 wizard), Battle Mage (−1 wizard), Crusader and Wilderness Avenger (−1 priest), Seeker and Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's), Elementalist (a level behind) | `PROBE_SLOTS` (`INT B6h`, new: the end of the game's slot routine, `mov ax,[bp-2]` at DSUN.EXE 5E255h) and `PROBE_SLOT_LEVEL` (`INT B5h`, new: where it takes a class's level, `mov al,es:[bx+24h]` at 5E1F6h); `GameData.max_spell_slots` with `kits.slots` and `kits.slot_level` |
 | a power's PSP | Mind Bender, Kineticist, Titan Mind (psychometabolism 2 less, telepathy 2 more) (by discipline: powers 0-5 psychokinesis, 6-19 psychometabolism, 20-33 telepathy, the defence modes among them; never below 1) | the powers' table (8 bytes a power, at the load segment + 3FB9h: `+1` the cost to use, `+2` to keep up, 63h for none; `+5` FEh for a defence mode). `PROBE_PSP_USE` (`INT B4h`, new: where the routine using a power has its cost in DI, its table's or worked out for Enhanced Strength and Domination, DSUN.EXE 5CBE7h), `PROBE_PSP_TABLE` (`INT B3h`, new: the table's cost read in the check whether a power can be used, 5CAA3h, and for the half a failed power costs, 5CCA2h), `PROBE_PSP_DEFENCE` (`INT B2h`, new: a defence mode's cost taken off, 5D820h); `kits.psp_cost`. Monsters' powers (5A773h) are left alone |
 | a cure's healing | Healer (+1 a die of Cure Light, Serious, Critical Wounds: spells 71, 112, 127), Lifebinder (a die more: a d8, Blood Flow's, 108, a d6, rolled from the game's rand() seed by `GAME_DIE`), Rescuer (as the Healer, its caster's `KIT_OUTDOORS` bit set) | `PROBE_CURE` (`INT B1h`, new: "nop / push cs" at DSUN.EXE 79619h in the handler for spells with rules of their own, where the healing, pushed with the target, goes to the routine that heals; the caster its `[BP+8]`, the spell `[BP+0Eh]`; the probe pushes CS itself). The Cell Adjustment's jump into 79618h is clear of it |
@@ -1172,7 +1189,7 @@ in `kitpages.kit_ids`), and emulated tests hold the helper to it:
 | casting though hit | Battle Mage | a hit's damage marks its creature hit this round (`mov byte es:[si+0AFh],1`, 58733h, in the routine taking damage off; cleared at a round's start, 57621h), and a marked character can't choose a spell on the USE screen (892F3h, 55898h) and has a queued one dropped (8991Bh): `PROBE_HIT_ROUND` (`INT ADh`, new) doesn't mark a Battle Mage |
 | two spells in a turn | Arcanist (preserver spells, in a fight) | a spell aimed on the map ends the caster's turn in two ways: the routine casting it marks the caster as a hit does (845F0h; so no spell is offered again), and the routine finishing any use of what the USE screen armed (720F4h: it takes the slot or the item's charge; `DS:[54FBh]` the kind, 0 a wizard spell from a slot, `[54FCh]` the party member) asks the fight's routine that sets a combatant's actions (59256h) for none, as do the routines that cast, from their own code segments. A spell on a party member from the USE screen does neither (the game's own: the turn goes on). `PROBE_CAST_MARK` (`INT 96h`, new) doesn't mark an Arcanist for its first preserver spell of the turn; `PROBE_CAST_DONE` (`INT 94h`, new: the finishing routine's `cmp word es:[19h],0`, 722AFh) counts its preserver spells (`ARC_CASTS`) and sets `ARC_HOLD` for the first; `PROBE_END_TURN` (`INT 93h`, new: `mov si,[bp+8]`, 5925Dh) then returns at once when ending that member's turn is asked from another code segment (the fight's own routines, a turn ended from the combat menu among them, ask from its own), till the map's main loop runs again (`PROBE_SCROLL`) or a turn starts; `PROBE_ROUND_MARK` (`INT 95h`, new: the turn's start clearing the mark, 57621h) clears the count. Checked in the game: two Magic Missiles in a turn, the second marking it and ending the turn; ended from the combat menu after one |
 | THAC0 | Swashbuckler, Crusader, Battle Mage, Mind Warrior (a warrior's: 21 less the level, where better), Scholar (1 worse) | `PROBE_THAC0` (`INT B7h`, new: the end of the game's THAC0 routine, `mov ax,14h / sub ax,si` at DSUN.EXE 876BBh, which every write of a creature's THAC0, `+1Fh`, uses: on making a character, 66CE0h, and at a level up, 86D7Eh and 87A91h) |
-| initiative | Sentinel; Military Scout (its `KIT_OUTDOORS` bit); Path-finder (`PATH_UP`) | `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh) |
+| initiative | Sentinel; Military Scout (its `KIT_OUTDOORS` bit) | `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh) |
 | to hit with a missile | Military Scout (a bow, sling or staff sling, its `KIT_OUTDOORS` bit); Poisoner (−1, melee too) | `KIT_TO_HIT` in `PROBE_ATTACKS` (`kits.missile_to_hit`, `kits.POISONER_TO_HIT`) |
 | a hit's poison | Poisoner (its first hit in a fight: `KIT_POISONED`, the header's +360, a bit a member, which the Loader clears as round 1 begins) | `PROBE_POISON` (`INT 86h`, new: the `jmp 7A7C5h` at DSUN.EXE 7A6DDh, in the routine giving a hit's special effects, 7A5xxh, where a person who isn't a thri-kreen has none; DI the attacker, SI the target, `[BP-6]` the attacker's creature): it queues power 176, the monsters' "poison (10 damage)", through the routine a monster's poisoned hit uses (790D2h: target, attacker, power, level; the level from 508:2Ah, whose far call is at 7A7ACh), then jumps on. The game rolls the save (paralysis/poison/death) and deals the damage |
 | an arrow's plus | Spellarcher (1 better, at least +1, from a bow) | `PROBE_ARROW` (`INT 85h`, new: `mov es:[0006h],al`, DSUN.EXE 58D27h, in the routine finding a missile weapon's ammunition, 58C8Fh, `[BP+0Ch]` the weapon's type): `ES:[6]` is the plus the shot's damage adds (58992h) and its +1/+2/+3 damage kinds take where better than the bow's (581C4h). The shooter is `WHOSE_TURN`'s combatant; `kits.arrow_plus`. The weapon spec: `KINDS_ALLOWED` gives a Spellarcher the bow only, and `KIT_ROW` makes the spec the bow when the kit is chosen (`WP_ALLOWED`'s answer only the bow) |
@@ -1180,7 +1197,7 @@ in `kitpages.kit_ids`), and emulated tests hold the helper to it:
 | saves | Myrmidon (charms), Sentinel (spells, 0-137), Wanderer (fire and cold: the spell record's `+1Ah`, 2 or 4, as the game's Resist Fire and Resist Cold read it) | `PROBE_RING_SAVE` (the modifier routine's start: `KIT_SAVE`) |
 | thief skills | Assassin (pick pockets, open locks), Swashbuckler (all), Shadowblade, Ghetto Fighter, Wayfinder (`KIT_SKILLS`, a signed byte a skill), Military Scout (+10 or −5 by its `KIT_OUTDOORS` bit) | `PROBE_BELT` (the thief skill routine's end: `KIT_SKILL`, no lower than 0) |
 | from behind, backstab | Military Scout (a backstab taken back: `[BP-24h]` cleared, its 2 to hit with it), Rescuer (from behind +1, not +2) | `PROBE_STEALTH`'s `KIT_REAR` (`kits.backstabs`, `kits.rear_to_hit`), after the game's own setting of `[BP-1Ah]` and `[BP-24h]` and the stealth rule's; the backstab flag is pushed for the attack after it (DSUN.EXE 5838Ah) |
-| initiative, Move in a fight | Wayfinder (Path-finder: 1 more while one is up; `PATH_DOWN`, 1 less while one is down and none up) | `PROBE_INIT`, `KIT_MOVE`; `GameData.path_finder`, `GameData.path_lost` |
+| initiative, Move in a fight | Wayfinder (Path-finder: each party member 1 more while a Wayfinder of the party is New or Okay, `PATH_UP`; 1 less while one is down and none up, `PATH_DOWN`) | `PROBE_INIT`, `KIT_MOVE`; `GameData.path_finder`, `GameData.path_lost` |
 | shields | Shadowblade, Ghetto Fighter | `KIT_FORBIDS` (`kits.forbids`) |
 | hiding, moving silently | Stalker, Assassin, Wilderness Avenger (a ranger's, 5 a level of its best class), Shadowblade (hides with an enemy beside it) | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
 | the two-weapon penalty | Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier (in any armour); Ghetto Fighter (2 less in each hand) | `PROBE_TWO`; `RG_TWO` |
@@ -1208,11 +1225,12 @@ kit byte goes with it; a kit left from the classes before a click on a class
 (`PROBE_WP_CLASS` clears it only after the click's rolls) is cleared first
 (`KIT_STALE`), so the class's own die is rolled.
 
-The Elementalist's second sphere is the sheet's `+45h` (`SPHERE2`: 0 none, else the sphere + 1),
-free since the Arcanist's CON change went. The game gives each class a mask (load + 3800h, `+118h`,
-a dword a class: 1 wizard, 2 priest, then a bit a class, 4 the air cleric to 20h the water cleric)
-and each spell one (load + 3FB9h, `+19Dh`, 7 bytes a spell); a class casts the spells whose masks
-meet its:
+The Elementalist's second sphere is the sheet's `+45h` (`SPHERE2`: 0 none,
+else the sphere + 1), free since the Arcanist's CON change went. The game
+gives each class a mask (load + 3800h, `+118h`, a dword a class: 1 wizard, 2
+priest, then a bit a class, 4 the air cleric to 20h the water cleric) and each
+spell one (load + 3FB9h, `+19Dh`, 7 bytes a spell); a class casts the spells
+whose masks meet its:
 
 | Effect | Kits | Where |
 |---|---|---|
@@ -1235,9 +1253,10 @@ helper's code (emulated) to the Python.
 #### How they're checked
 
 Each kit's helper code is held to its Python by emulated tests
-(`tests/test_dsclog.py` runs the helper's routines in a CPU emulator), and each was played in the game: the creation screen's KIT page and
-hit dice, the level ups (Shinobi and Scholar spells, Seeker slots), the KIT
-menu after DUAL with its bans, and the Effects screen's pages.
+(`tests/test_dsclog.py` runs the helper's routines in a CPU emulator), and
+each was played in the game: the creation screen's KIT page and hit dice, the
+level ups (Shinobi and Scholar spells, Seeker slots), the KIT menu after DUAL
+with its bans, and the Effects screen's pages.
 
 ### Levels up to 10
 
@@ -1319,17 +1338,16 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
   6, 7, 8; names 07h, 08h, 09h; pictures FC02h, FC01h, FBFEh), not for a
   multiclass preserver with the class restrictions;
 - the cloak slot, with kits on, for a Stalker, an Assassin or a Shinobi
-  (`CLOAK_KITS`): the plain cloak (type 65, name 0Eh, picture FBE3h);
-- no dagger: a plain one (the first usable of the obsidian, stone and bone)
-  to the backpack.
+  (`CLOAK_KITS`): the plain cloak (type 65, name 0Eh, picture FBE3h).
 
 Items are made by `npcitems.add_to` (a worn slot only when it's free; in the
 worn list or the backpack's, as the slot is), and moved with
 `pickpocket.place`. Each
 step is skipped once its item or kind is there, so `fill` leaves nothing to do
-the next time; one line for the log lists what it gave. `fill_member` gives a thri-kreen
-(race 8, `THRI_KREEN`) nothing, and does one character whatever its status: the game's own party (already Okay) gets it
-through `defaultparty.ready`'s last step, `gear`.
+the next time; one line for the log lists what it gave. `fill_member` gives a
+thri-kreen (race 8, `THRI_KREEN`) nothing, and does one character whatever its
+status: the game's own party (already Okay) gets it through
+`defaultparty.ready`'s last step, `gear`.
 
 ### The game's own party
 
@@ -1339,7 +1357,7 @@ How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307, 308
 and 313 for their figures), a creature record and a sheet each, already Okay
 and with no items; the game gives them their gear and spells as it starts. So
 the Loader (`dsloader/defaultparty.py`) changes them in memory while the
-game is new (its first hour, in the arena, as with Thieves' Tools), each
+game is new (its first hour, in the arena: `tools.NEW_GAME`), each
 change once, knowing each by name, race and classes together: their weapon
 kinds in the sheet's spare bytes, Gerakis's club item made a bone gythka in
 its place, Cilla's plain armour given back to the free item list (her chest
@@ -1350,8 +1368,8 @@ class, place 1, none), and with fuller starting gear, last,
 `startgear.fill_member` for each. Seen in play: Cilla's USE screen lists ARMOR
 among her 1st-level spells and her inventory has no chest armour (AC 5);
 Gerakis holds the gythka and the long sword; the dice log lists each one's
-added gear (Gerakis a sling, leather chest and leg armour and a dagger;
-Cermak and Cilla a dagger; K'ratchek nothing).
+added gear (Gerakis a sling and leather chest and leg armour; Cermak, Cilla
+and K'ratchek nothing).
 
 ### The leader's CHA at shops
 
@@ -1427,18 +1445,18 @@ work the chances out the same way.
 
 ([In the README](README.md#hiding-in-shadows-to-backstab).)
 
-How (the cloak, boots and belt): the patched game's item box (`INT DAh`, where it has drawn the name) asks
-the helper, which draws the line with the game's own text routine when the
-item's type is worn as a cloak, on the feet or as a belt; and at the end of the
-game's thief skill routine (`INT D9h`, where it returns the chance, armour and
-effects counted) the helper adds the belt's 5 to picking pockets and opening
-locks for a thief wearing one.
+How (the cloak, boots and belt): the patched game's item box (`INT DAh`, where
+it has drawn the name) asks the helper, which draws the line with the game's
+own text routine when the item's type is worn as a cloak, on the feet or as a
+belt; and at the end of the game's thief skill routine (`INT D9h`, where it
+returns the chance, armour and effects counted) the helper adds the belt's 5
+to picking pockets and opening locks for a thief wearing one.
 
-How (the rolls): the Loader rolls both when the turn passes to the thief and tells the
-helper, which, where the game has just worked out whether an attack is from
-behind and a backstab (`INT EAh`), makes the hidden thief's next one so, by
-the game's own conditions for a backstab (a thief, in melee, a weapon of
-weight 40 or less).
+How (the rolls): the Loader rolls both when the turn passes to the thief and
+tells the helper, which, where the game has just worked out whether an attack
+is from behind and a backstab (`INT EAh`), makes the hidden thief's next one
+so, by the game's own conditions for a backstab (a thief, in melee, a weapon
+of weight 40 or less).
 
 ### Picking pockets
 
@@ -1472,26 +1490,26 @@ Reflected Image 199, Spook 200, Friends 201.
 
 **Room for 199-201 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
 game's segment table (load + 4137h, 8 bytes a selector: segment, length) has
-selector 3B8h, a small stack of 60h bytes, there, and selector 3C0h the monster
-kinds table (192h bytes) right after. The overlay loader fixes up its code's
-selectors from that table each time it loads an overlay (3BD7Ch), and the
-table's own entries are the only relocations to the two segments. So at the
-first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP from
-`AH=62h`, the load segment 10h past it) checks both entries, copies the 200h
-bytes from 3E3Fh to `seg_space` in its own resident image and points the two
-selectors there (`seg_moved`, the header's +306). The records then run to 211.
-The stack had been written over records 196-198's room all along; with it
+selector 3B8h, a small stack of 60h bytes, there, and selector 3C0h the
+monster kinds table (192h bytes) right after. The overlay loader fixes up its
+code's selectors from that table each time it loads an overlay (3BD7Ch), and
+the table's own entries are the only relocations to the two segments. So at
+the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
+from `AH=62h`, the load segment 10h past it) checks both entries, copies the
+200h bytes from 3E3Fh to `seg_space` in its own resident image and points the
+two selectors there (`seg_moved`, the header's +306). The records then run to
+211. The stack had been written over records 196-198's room all along; with it
 moved, nothing writes there but the helper. Spells 199-201 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
-`monsters.py` reads the kinds table's segment from the selector. The spell rows
-for 196 on run past the game's table (3FB9h:19Ch, 7 bytes each) into segment
-4010h from 188h, short of its data at 357h. When the rule switches on, the helper (`NS_SETUP`) copies in each
-one's record from a game spell it works like, Strength (23), Enlarge (5) and
-Charm Person (2), with its own effect number and, for Fogbolt, its own
-duration (2d4 rounds) and save, and each one's sounds and Fogbolt's bolt
-(below); writes their rows in the spell rows (level,
-mask, name, `3FB9:19Ch`, 7 bytes each); and gives the effects' table (6 bytes
-each, from 3F8Dh) their names and icons.
+`monsters.py` reads the kinds table's segment from the selector. The spell
+rows for 196 on run past the game's table (3FB9h:19Ch, 7 bytes each) into
+segment 4010h from 188h, short of its data at 357h. When the rule switches on,
+the helper (`NS_SETUP`) copies in each one's record from a game spell it works
+like, Strength (23), Enlarge (5) and Charm Person (2), with its own effect
+number and, for Fogbolt, its own duration (2d4 rounds) and save, and each
+one's sounds and Fogbolt's bolt (below); writes their rows in the spell rows
+(level, mask, name, `3FB9:19Ch`, 7 bytes each); and gives the effects' table
+(6 bytes each, from 3F8Dh) their names and icons.
 
 **Known.** The game keeps a party member's known spells in a table of its own
 (8Ah bytes each), with no room for more. A new spell's is a bit in the sheet's
@@ -1565,18 +1583,18 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
 
 **Fogbolt's bolt.** A record's `+10h` names what flies from caster to target
 (FFh: nothing): a place in a table of 16 flights just before the records (3
-bytes each: the object flying, then a byte, Magic Missile's 8), which the cast reads at
-7530Ch (`imul ax,ax,3`, the object made at 0B8:55Ah and sent off by 600:2Ah);
-nothing else reads the table. Magic Missile's is place 4, object 8109, whose
-OJFF names BMP 2227 (36 frames, a direction each). The launcher's SEGOBJEX.GFF
-copy adds object 8118 (8109's record naming BMP 2584) and BMP 2584, 2227's
-frames with its white, cyan and blue (46, 220, 161) in the greys 214, 211 and
-209 (`icons.bolt_chunks`; the 208-217 ramp is the same in every region's
-palette). No record names place 15, so `NS_SETUP` points it at object 8118 (at
-Magic Missile's speed byte) and gives Fogbolt's record `+10h` 15, only when
-the game has opened the copy (`objects_on`, part of `NS_STATE`); else, and
-with the rule off, place 15 is the game's (8116) and Fogbolt flies nothing, as
-Charm Person.
+bytes each: the object flying, then a byte, Magic Missile's 8), which the cast
+reads at 7530Ch (`imul ax,ax,3`, the object made at 0B8:55Ah and sent off by
+600:2Ah); nothing else reads the table. Magic Missile's is place 4, object
+8109, whose OJFF names BMP 2227 (36 frames, a direction each). The launcher's
+SEGOBJEX.GFF copy adds object 8118 (8109's record naming BMP 2584) and BMP
+2584, 2227's frames with its white, cyan and blue (46, 220, 161) in the greys
+214, 211 and 209 (`icons.bolt_chunks`; the 208-217 ramp is the same in every
+region's palette). No record names place 15, so `NS_SETUP` points it at object
+8118 (at Magic Missile's speed byte) and gives Fogbolt's record `+10h` 15,
+only when the game has opened the copy (`objects_on`, part of `NS_STATE`);
+else, and with the rule off, place 15 is the game's (8116) and Fogbolt flies
+nothing, as Charm Person.
 
 **Its sounds.** A record names three sounds (RESOURCE.GFF's BVOC chunks, the
 game's Creative Voice files), all played by 90:A6Fh: `+0Fh` with the glow on
@@ -1610,65 +1628,67 @@ ends, as stopping it there is how a power is dropped.
 
 How: the new items (the slave pens' and the world's, the bone scale set,
 Kreenfang) are in the game's data (`dsloader/dataitems.py`, `worldgear.py`,
-`npcitems.py`, `arms.py`): in the
-Loader's copy of `SEGOBJEX.GFF`, each person's or chest's object (its RDFF: the
-object's record, then its items, each a child or the next of the one before,
-with its type and name as attributes) has the new items after its own, so the
-game makes them where it makes the object. Kreenfang is the arena's dead
-body's (object 1204) own gythka made +1 and renamed, its name attribute with
-it. One Castle Guard, one Undermountain miner and one Magera (Drakejaw's) have
-an object of their own (2560, 2561, 2562: copies of their kind's, their record
-renumbered), their entity in the Loader's copies of `RGN1C.GFF`, `RGN1E.GFF`
-and `RGN08.GFF` pointing to it; so does one skeleton of the warrens
-(Gutterward's: 2585, entity 85 in the copy of `RGN28.GFF`; its kind's object,
-2266, is the skeletons' of five regions). So does the slave pens' weapon rack (2563: the
+`npcitems.py`, `arms.py`): in the Loader's copy of `SEGOBJEX.GFF`, each
+person's or chest's object (its RDFF: the object's record, then its items,
+each a child or the next of the one before, with its type and name as
+attributes) has the new items after its own, so the game makes them where it
+makes the object. Kreenfang is the arena's dead body's (object 1204) own
+gythka made +1 and renamed, its name attribute with it. One Castle Guard, one
+Undermountain miner and one Magera (Drakejaw's) have an object of their own
+(2560, 2561, 2562: copies of their kind's, their record renumbered), their
+entity in the Loader's copies of `RGN1C.GFF`, `RGN1E.GFF` and `RGN08.GFF`
+pointing to it; so does one skeleton of the warrens (Gutterward's: 2585,
+entity 85 in the copy of `RGN28.GFF`; its kind's object, 2266, is the
+skeletons' of five regions). So does the slave pens' weapon rack (2563: the
 Lower Castle's rack is the same object 1647; a thing's record has its number
 first, a person's at +6), with Thornwall in place of its first bone polearm,
 in Kalzith's copy of `RGN29.GFF` (one copy of the pens: with Kalzith off, the
-rack's alone). The Elven Leader's Gythka +2 is his own
-Gythka +1 (in his pack, object 124, and the item object 2534 his script gives)
-made +2. (People of a kind share an
-object, so every Tari, Renegade and Wild Mul carries theirs; the caravan's
-buried chest is an object the dig's script makes, and has the Boots of
-Elvenkind in it.) The Elven Leader's script (46, in
-the scripts' copy: `elvenleader.py`) gives the Cloak of Elvenkind (object 2546,
-an item object of its own) after the Gythka, as the game's scripts give items
-(command 39h, a new item of the object; 25h on the ground when it can't be
-carried); Father Garyn's (174: `garyn.py`) gives the Tome of Understanding the
-same way, the first time the pith is delivered (flag 625). The tome
-(`dsloader/tome.py`) is a scroll of the game's kind: object 1446, among the
-game's scrolls' numbers (1400-1499: its object record the first scroll's, as
-only a scroll's kind of object has its box's icon clicked; the picture that
-number had, the icon of two objects, moved to 2552), its spell byte one past
+rack's alone). The Elven Leader's Gythka +2 is his own Gythka +1 (in his pack,
+object 124, and the item object 2534 his script gives) made +2. (People of a
+kind share an object, so every Tari, Renegade and Wild Mul carries theirs; the
+caravan's buried chest is an object the dig's script makes, and has the Boots
+of Elvenkind in it.) The Elven Leader's script (46, in the scripts' copy:
+`elvenleader.py`) gives the Cloak of Elvenkind (object 2546, an item object of
+its own) after the Gythka, as the game's scripts give items (command 39h, a
+new item of the object; 25h on the ground when it can't be carried); Father
+Garyn's (174: `garyn.py`) gives the Tome of Understanding the same way, the
+first time the pith is delivered (flag 625). The tome (`dsloader/tome.py`) is
+a scroll of the game's kind: object 1446, among the game's scrolls' numbers
+(1400-1499: its object record the first scroll's, as only a scroll's kind of
+object has its box's icon clicked; the picture that number had, the icon of
+two objects, moved to 2552), its spell byte one past
 176. Clicked, the icon has the game's routine (DSUN.EXE 8B690h) teach a scroll
-of those numbers its spell, or a psionic power from 138 to 171; from 172 to 195
-it would show "CANNOT LEARN FROM THIS ITEM" and keep the scroll (from 196 on,
-the icon can't be clicked). There the helper (`INT B9h`) raises the reader's
-WIS, in the sheet and the creature record, writes its message in the game's
-buffer, and goes on as for a power taught: the game uses the tome up and shows
-it. The short sword, the cloak whose plus counts, the bone helm and the rest
-(27: Galefang's, a metal dagger whose class list has the air cleric's
-bit, which none of the game's daggers had when it was made (now every dagger
-type has it: below); then the bone and obsidian great
-axes, the metal one's of those materials, a bone dagger, the only dagger a
-water cleric may use, the robes', and a metal shield, Ironbulwark's: the
-game's leather shield's type in metal, for the classes of its wooden one) are item types the helper adds
-after the game's 115 each time the game reads its table in (`TYPES_EXTRA`; its
-weapon types by item type, `kind_of_type`, cover them too). As it copies them in
-(`PROBE_TYPES_FILL`) it also sets the air cleric's class bit (+10h, 1) on the
-game's dagger types (17, 33, 84, 94), as its own daggers have it, so an air
-cleric of one class may use any dagger, as its sphere allows; the Loader's item names (`dsloader/names.py`) are entries it adds
-after the game's 322 (the game puts the item type's material before the name
-when it shows one); and the icons are objects in the Loader's copy of
-`SEGOBJEX.GFF` (`dsloader/icons.py`), which the helper has the game open
-instead of its own (its `INT 21h` hook). The copy also has the game's Polearm
-picture made 22 pixels tall (`icons.fit_box`): at its own 36, the item box's
-lines, which start below the picture, ran out of the box. Where the game adds up AC and saving
-throws, the helper counts the rings and the cloak (`INT F8h` and the save
-probes). Shadowseeker's sight is the game's own way with a magic item's spell:
-readied, it puts Detect Invisibility on its wielder. In the original game the
-rings are plain rings without a name, and the sword, cloak and helm types it
-doesn't have: don't load a save that has them without the dice log.
+     of those numbers its spell, or a psionic power from 138 to 171; from 172
+     to 195 it would show "CANNOT LEARN FROM THIS ITEM" and keep the scroll
+     (from 196 on, the icon can't be clicked). There the helper (`INT B9h`)
+     raises the reader's WIS, in the sheet and the creature record, writes its
+     message in the game's buffer, and goes on as for a power taught: the game
+     uses the tome up and shows it. The short sword, the cloak whose plus
+     counts, the bone helm and the rest (27: Galefang's, a metal dagger whose
+     class list has the air cleric's bit, which none of the game's daggers had
+     when it was made (now every dagger type has it: below); then the bone and
+     obsidian great axes, the metal one's of those materials, a bone dagger,
+     the only dagger a water cleric may use, the robes', and a metal shield,
+     Ironbulwark's: the game's leather shield's type in metal, for the classes
+     of its wooden one) are item types the helper adds after the game's 115
+     each time the game reads its table in (`TYPES_EXTRA`; its weapon types by
+     item type, `kind_of_type`, cover them too). As it copies them in
+     (`PROBE_TYPES_FILL`) it also sets the air cleric's class bit (+10h, 1) on
+     the game's dagger types (17, 33, 84, 94), as its own daggers have it, so
+     an air cleric of one class may use any dagger, as its sphere allows; the
+     Loader's item names (`dsloader/names.py`) are entries it adds after the
+     game's 322 (the game puts the item type's material before the name when
+     it shows one); and the icons are objects in the Loader's copy of
+     `SEGOBJEX.GFF` (`dsloader/icons.py`), which the helper has the game open
+     instead of its own (its `INT 21h` hook). The copy also has the game's
+     Polearm picture made 22 pixels tall (`icons.fit_box`): at its own 36, the
+     item box's lines, which start below the picture, ran out of the box.
+     Where the game adds up AC and saving throws, the helper counts the rings
+     and the cloak (`INT F8h` and the save probes). Shadowseeker's sight is
+     the game's own way with a magic item's spell: readied, it puts Detect
+     Invisibility on its wielder. In the original game the rings are plain
+     rings without a name, and the sword, cloak and helm types it doesn't
+     have: don't load a save that has them without the dice log.
 
 Alagorn's new menu lines are in the Loader's copy of his scripts
 (`dsloader/alagorn.py`); he knows an item by its picture.
@@ -1750,11 +1770,11 @@ originals:
 His state is in the game's own flags (760 to 763: met, friendly, cold, his
 scrolls given; the game uses flags up to 755), so a save keeps it. The first
 time the party is in the pens, the Loader puts his six scrolls among his
-things (from the game's free list, as for [the arena's ring](README.md#new-items)),
-once a game. If he is killed, the Loader marks it (flag 772) and the others
-speak of him as dead (see
-[Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)); after
-the party's escape he is gone from the pens with everyone else.
+things (from the game's free list, as for [the arena's
+ring](README.md#new-items)), once a game. If he is killed, the Loader marks it
+(flag 772) and the others speak of him as dead (see [Dinos and the
+Trustee](README.md#what-dinos-and-the-trustee-say-about-them)); after the
+party's escape he is gone from the pens with everyone else.
 
 With his scrolls the Loader gives him his gear, worn (`kalzith.gear`, flag
 776): a Quarterstaff in the right hand, a Cloak (the game's own) and his Ashen
@@ -1820,33 +1840,35 @@ How: in the Loader's copy of `GPLDATA.GFF`, their scripts (139 and 146) keep
 every byte where it was, since the game's jumps go to fixed places. Two
 commands become jumps to code after the script's end: the one starting the
 menu's part goes to the same command followed by the new questions' flags
-(766-769, 773, 774), and the menu goes to a copy of it (the game's own bytes) with the
-new questions after its last about someone. Each then jumps back to where the
-game's script carries on.
+(766-769, 773, 774), and the menu goes to a copy of it (the game's own bytes)
+with the new questions after its last about someone. Each then jumps back to
+where the game's script carries on.
 
-That (with [his busy line](#picking-pockets)) makes the Trustee's script 10,967 bytes, and the game reads every script
-into one buffer of 10,000 bytes (a script that calls into another reads it in
-over its own). One of 9,800 bytes ran; one of 10,000 ended with "BAD GPL
-EXIT" (the game's own largest is 9,792). So the Loader's copy of the game
-makes the buffer 11,776 bytes where it is allocated (`push dword 10000` at
-6A692h becomes 2E00h), about 1.7 KB more of the game's memory.
+That (with [his busy line](#picking-pockets)) makes the Trustee's script
+10,967 bytes, and the game reads every script into one buffer of 10,000 bytes
+(a script that calls into another reads it in over its own). One of 9,800
+bytes ran; one of 10,000 ended with "BAD GPL EXIT" (the game's own largest is
+9,792). So the Loader's copy of the game makes the buffer 11,776 bytes where
+it is allocated (`push dword 10000` at 6A692h becomes 2E00h), about 1.7 KB
+more of the game's memory.
 
 ### The cooked vulture
 
 ([In the README](README.md#the-cooked-vulture).)
 
 How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
-question in its first menu (a copy of the game's with the question added, as for
-the questions about Kalzith and Semyon, see
-[Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)), shown
-while the game's own test says someone in the party carries the cooked vulture
-(33h, as the campfire's script asks about the plucked one; the game's object
-A4Ch), the test being the question's own condition in the menu. Chosen, the script takes it (5Ch, as the campfire takes the plucked one)
-and sets the Loader's flag 780, then gives the XP through the game's own routine
-for quests (the amount in its variable, then script 74 at 135: the window, the
-words and the quest's sound), as Dinos's own script does when he heals Gilal
-(350). The Loader then refills the party, once (flag 781), only while the party
-is talking with him (never from a game being loaded).
+question in its first menu (a copy of the game's with the question added, as
+for the questions about Kalzith and Semyon, see [Dinos and the
+Trustee](README.md#what-dinos-and-the-trustee-say-about-them)), shown while
+the game's own test says someone in the party carries the cooked vulture (33h,
+as the campfire's script asks about the plucked one; the game's object A4Ch),
+the test being the question's own condition in the menu. Chosen, the script
+takes it (5Ch, as the campfire takes the plucked one) and sets the Loader's
+flag 780, then gives the XP through the game's own routine for quests (the
+amount in its variable, then script 74 at 135: the window, the words and the
+quest's sound), as Dinos's own script does when he heals Gilal (350). The
+Loader then refills the party, once (flag 781), only while the party is
+talking with him (never from a game being loaded).
 
 ### Defilers' scrolls
 
@@ -1881,29 +1903,29 @@ no line: it would tell the player what the body holds before the fight is won.
 
 ([In the README](README.md#what-the-party-wears).)
 
-How: the party's figures are objects 300 to 313 in `SEGOBJEX.GFF` (300 and
-the figure picked at character creation). The launcher's copy of the file
-(see [Item icons](README.md#new-items)) gives each its own walking and fighting
+How: the party's figures are objects 300 to 313 in `SEGOBJEX.GFF` (300 and the
+figure picked at character creation). The launcher's copy of the file (see
+[Item icons](README.md#new-items)) gives each its own walking and fighting
 pictures, the game's with room round them for gear (walking, 6 pixels at the
 sides and 2 above, as much as anything worn reaches; in a fight, 10), and free
 space after each in the file. The game draws a figure's whole picture at every
 step, so each picture is exactly as long as it needs to be. While the game
 runs, when someone's worn items change, the Loader draws their pictures anew
 (`dsloader/spritegear.py`, from where `dsloader/spriteparts.py` finds the
-head, hair, hands and the rest in each frame), writes them into its copy of the
-file with their new lengths in the file's index (the game reads a picture's
-place and length there each time it loads one), takes the old ones out of the
-game's table of loaded pictures (the game frees them itself, as any it no
-longer uses), and empties the figure's slot on the map: the game loads the new
-pictures and draws them at once, in a few thousandths of a second
+head, hair, hands and the rest in each frame), writes them into its copy of
+the file with their new lengths in the file's index (the game reads a
+picture's place and length there each time it loads one), takes the old ones
+out of the game's table of loaded pictures (the game frees them itself, as any
+it no longer uses), and empties the figure's slot on the map: the game loads
+the new pictures and draws them at once, in a few thousandths of a second
 (`dsloader/sprites.py`). It then has the helper draw the view again (see
-[Shadows](README.md#shadows)), so the shadows show the new outfit too. A picture the
-game loads later (in a fight, in another area) comes dressed, from the file.
-The copy also has a spare pair of pictures for each party place. Each thing on
-the map names the picture it is drawn with and the slot in the game's picture
-table it is drawn from; for a second member of the same figure the Loader names
-their spare there and empties the slot, and the game loads the picture and
-fills it.
+[Shadows](README.md#shadows)), so the shadows show the new outfit too. A
+picture the game loads later (in a fight, in another area) comes dressed, from
+the file. The copy also has a spare pair of pictures for each party place.
+Each thing on the map names the picture it is drawn with and the slot in the
+game's picture table it is drawn from; for a second member of the same figure
+the Loader names their spare there and empties the slot, and the game loads
+the picture and fills it.
 
 ### Elves and half-elves
 
@@ -1974,12 +1996,13 @@ current picture, flattened and stretched, onto the floor just drawn, darkening
 each pixel to the closest clearly darker colour of the area's palette (a table
 it makes from the palette when the Loader asks: after each area change, once
 its fade-in is over, and now and then; the colours the game cycles, for water
-and fire, are never picked as darker ones). The rectangles the game draws again when a figure
-moves are widened by the length of a shadow, so none is left behind. The
-Loader keeps DSCLOG's list of who casts one (`dsloader/shadows.py`) and has
-DSCLOG draw the view again when it changes (from the game's main loop, as
-centring the view does: marking the figures changed instead, as the game's own
-code does to draw one again, can set one in a fight walking again).
+and fire, are never picked as darker ones). The rectangles the game draws
+again when a figure moves are widened by the length of a shadow, so none is
+left behind. The Loader keeps DSCLOG's list of who casts one
+(`dsloader/shadows.py`) and has DSCLOG draw the view again when it changes
+(from the game's main loop, as centring the view does: marking the figures
+changed instead, as the game's own code does to draw one again, can set one in
+a fight walking again).
 
 The list can be up to half a second old, so as it draws DSCLOG also checks
 the creature's status (`SHADOW_GONE`: the things table, then the creature's
@@ -2050,15 +2073,15 @@ and every move of the view came from that call (returning to `1CA37h`), for
 party members walking as well as monsters. The patch (`camera_still`, a
 switch, `CAMERA`) rewrites that call's 54 bytes of set-up: in a fight
 (`IN_COMBAT`, `DS:1168h`), the game's own on-screen test first, skipping the
-step while the figure is on the screen; the figure's spot pushed straight
-from its record (one `push dword`). The game's `mov ax,377Eh` stays at
-`CA15h`: DOS adds the load segment to that word as the game loads (the EXE's
-relocation table), and a first version, which put other code there, ran
-garbled. `gamepatch.patched` now refuses any patch that changes a word DOS
-relocates (`gamepatch.relocated`). Out of a fight the same routine runs too (the arena's
+step while the figure is on the screen; the figure's spot pushed straight from
+its record (one `push dword`). The game's `mov ax,377Eh` stays at `CA15h`: DOS
+adds the load segment to that word as the game loads (the EXE's relocation
+table), and a first version, which put other code there, ran garbled.
+`gamepatch.patched` now refuses any patch that changes a word DOS relocates
+(`gamepatch.relocated`). Out of a fight the same routine runs too (the arena's
 opening, the party walking out through the gate: held still, the party never
-left the view and the scene never went on), so there it is as the game has
-it, as is the map's own walking.
+left the view and the scene never went on), so there it is as the game has it,
+as is the map's own walking.
 
 ### More saves
 

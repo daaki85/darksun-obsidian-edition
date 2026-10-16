@@ -10,49 +10,18 @@ have the detail.
 
 ## Pull request #49 (in progress)
 
-**Changed**
-- **A Battle Dancer starts with two long swords** (with kits on): a second
-  long sword in the left hand, in place of the shield.
-- **A Myrmidon's second weapon starts in the left hand**, in place of the
-  shield, when it's a one-handed melee weapon (a bow still goes in the
-  missile slot, a two-handed weapon in the backpack).
-
-- **Thieves' Tools are Mirlon's** (in the slave pens), for a party that
-  kills him, as well as Kel's to sell: no thief starts with a set any more,
-  and none is put in a thief's backpack later.
-- **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
-  shows `AC BONUS:1` with the helms rule, which says the same.
-- **Kits:** the Military Scout, under the open sky, has +2 initiative and +1 to
-  hit with a bow, sling or staff sling. The Shadowblade tries to hide in
-  shadows even with an enemy right beside it (the stealth rule). The Wayfinder
-  gets **Path-finder**: while it's up, every party member has +1 initiative and
-  +1 Move in a fight.
-- **Five new multiclass kits:** the **Spellarcher** (half-elf
+**Added**
+- **Six new multiclass kits:** the **Spellarcher** (half-elf
   fighter/preserver: its arrows 1 better and at least +1, magical; its weapon
   spec the bow only), **Titan Mind** (half-giant fighter/psionicist:
   psychometabolism 2 PSP less, telepathy 2 more), **Poisoner** (halfling
   fighter/thief: its first hit in each fight poisons, a save or 10 damage; −1
-  to hit), **Spirit Caller** (halfling cleric/psionicist) and **Wasteland Seer**
-  (thri-kreen druid/fighter): spells cast 2 levels higher under the open sky,
-  1 lower under a roof.
-- **Stronger costs for six multiclass kits:** the Shadowblade can't use a
-  shield; the Military Scout never backstabs (from behind is still +2 to
-  hit); the Wilderness Avenger has 1 fewer druid spell slot at each spell
-  level; the Rescuer gets +1 to hit from behind, not +2; the Ghetto Fighter is
-  −1 to hit with anything but a dagger and can't use a shield; while a
-  Wayfinder is down (and no other is up), the party has −1 initiative and −1
-  Move in a fight.
-- **No more dagger in every new character's backpack**: fuller starting gear
-  no longer adds one (a character whose classes start with a dagger keeps it).
-- **A mul kit, the Blood-Fury** (mul cleric/fighter), with **Wild Fighting**
-  (the AD&D proficiency): as each fight starts, a d20 against CON. Passed, 1
-  more attack a round in melee and +3 damage for the fight; failed, −3 to hit
-  and AC 3 worse. The check comes every fight; the dice log shows it.
-- **A ranger's bow is listed** on the Effects screen and the Characters tab
-  (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
-  expert with the bow, chosen or not, but only the chosen weapons were listed.
-
-**Added**
+  to hit), **Spirit Caller** (halfling cleric/psionicist) and **Wasteland
+  Seer** (thri-kreen druid/fighter: spells cast 2 levels higher under the open
+  sky, 1 lower under a roof), and the **Blood-Fury** (mul cleric/fighter), with
+  **Wild Fighting** (the AD&D proficiency): as each fight starts, a d20 against
+  CON. Passed, 1 more attack a round in melee and +3 damage for the fight;
+  failed, −3 to hit and AC 3 worse. The dice log shows the check.
 - **Crash reports say why the game quit.** When the game stops on its own
   error (as after the opening arena fight, where it quit with "return code
   01h" and a blank screen), its message used to be lost: the game prints it
@@ -64,6 +33,35 @@ have the detail.
   running for its last few seconds (noted by the helper from the game's timer),
   the helper's state, the switches, the end of the dice log and dialogue, and a
   copy of the game's memory.
+
+**Changed**
+- **More for three multiclass kits:** the Military Scout, under the open sky,
+  has +2 initiative and +1 to hit with a bow, sling or staff sling. The
+  Shadowblade tries to hide in shadows even with an enemy right beside it (the
+  stealth rule). The Wayfinder gets **Path-finder**: while it's up, every
+  party member has +1 initiative and +1 Move in a fight.
+- **Stronger costs for six multiclass kits:** the Shadowblade can't use a
+  shield; the Military Scout never backstabs (from behind is still +2 to
+  hit); the Wilderness Avenger has 1 fewer druid spell slot at each spell
+  level; the Rescuer gets +1 to hit from behind, not +2; the Ghetto Fighter is
+  −1 to hit with anything but a dagger and can't use a shield; while a
+  Wayfinder is down (and no other is up), the party has −1 initiative and −1
+  Move in a fight.
+- **A Battle Dancer starts with two long swords** (with kits on): a second
+  long sword in the left hand, in place of the shield.
+- **A Myrmidon's second weapon starts in the left hand**, in place of the
+  shield, when it's a one-handed melee weapon (a bow still goes in the
+  missile slot, a two-handed weapon in the backpack).
+- **No more dagger in every new character's backpack**: fuller starting gear
+  no longer adds one (a character whose classes start with a dagger keeps it).
+- **Thieves' Tools are Mirlon's** (in the slave pens), for a party that
+  kills him, as well as Kel's to sell: no thief starts with a set any more,
+  and none is put in a thief's backpack later.
+- **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
+  shows `AC BONUS:1` with the helms rule, which says the same.
+- **A ranger's bow is listed** on the Effects screen and the Characters tab
+  (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
+  expert with the bow, chosen or not, but only the chosen weapons were listed.
 
 **Fixed**
 - **The game slowed down with the combat log's panel shown** (2.3.0). The
@@ -89,22 +87,17 @@ have the detail.
   its pointer on the screen not on show and copies the box round it to the
   one on show; the panel was only on the one on show, so the copy brought
   the map back over it. The panel is now put on both.
-- **A new character's bow listed as "Arrows 1D6"** on the inventory screen,
-  until it was taken off and put back on: the mod gave the arrows after the
-  bow, which put them ahead of it in the character's items, and the game
-  lists whichever of the two comes first. The bow now goes ahead.
-- **No THAC0 (T) on an "Arrows" line** on the inventory screen: when the
-  game lists a character's arrows in place of the bow that shoots them, the
-  helper now gives the line the bow's THAC0.
-- **Yellow ability labels on the character creation screen** (STR: to CHR:),
-  still, after the fix below: the routine that draws them uses the colour the
-  last screen left, and runs before the creation screen sets its own. It now
-  draws them in the creation screen's white.
-- **Yellow text on the character creation screen** (since 2.3.0). The game's
-  screens print in a colour each leaves set; the creation screen never sets
-  its own, and the mod's `SUM:` line printed in it, so after a character
-  screen (whose selected portrait is yellow) the scores and the lines below
-  them came out yellow. The creation screen's white is now set as it rolls.
+- **A new character's bow listed as "Arrows 1D6"**, with no THAC0, on the
+  inventory screen, until it was taken off and put back on: the mod gave the
+  arrows after the bow, which put them ahead of it in the character's items,
+  and the game lists whichever of the two comes first. The bow now goes
+  ahead, and an "Arrows" line the game still shows gets the bow's THAC0.
+- **Yellow text on the character creation screen** (since 2.3.0): the scores,
+  the lines below them and the ability labels (STR: to CHR:). The game's
+  screens print in a colour each leaves set, and the creation screen never
+  sets its own, so after a character screen (whose selected portrait is
+  yellow) they came out yellow. The creation screen's white is now set as it
+  rolls, and the labels are drawn in it.
 
 ## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
 

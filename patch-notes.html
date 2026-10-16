@@ -186,7 +186,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag chg">Changed</span>Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as <code>SUM:99/101</code>), and the hit points stay as rolled, moving only with CON's bonus <span class="was">(was any score clicked up to its most, and the hit points set by a click)</span>.</li>
         <li><span class="tag new">New</span><strong>STORE</strong> and <strong>RECALL</strong> on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.</li>
         <li><span class="tag chg">Changed</span>An air cleric can use daggers, as its sphere allows <span class="was">(was only Galefang: none of the game's daggers listed the air cleric)</span>.</li>
-        <li><span class="tag new">New</span>New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it and a dagger, and a Stalker, Assassin or Shinobi a cloak. A multiclass preserver's armour starts in the backpack, so it can cast.</li>
+        <li><span class="tag new">New</span>New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, and a Stalker, Assassin or Shinobi a cloak. A multiclass preserver's armour starts in the backpack, so it can cast.</li>
         <li><span class="tag chg">Changed</span>Class restrictions hold: a character may use an item only if <em>every</em> one of its classes allows it, and a multiclass preserver can't cast in armour <span class="was">(was any one class allowing it)</span>.</li>
         <li><span class="tag chg">Changed</span>Multiclass characters gain hit points as in AD&amp;D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.</li>
         <li><span class="tag chg">Changed</span>Experience, priests' THAC0 and spell slots follow AD&amp;D's tables: a gladiator needs <span class="num">2,250</span> XP for 2nd level <span class="was">(was 2,000)</span>, a preserver has <span class="num">4 2 1</span> slots at 5th <span class="was">(was 3 2 1)</span>, a cleric <span class="num">3 3 1</span> <span class="was">(was 3 2 1)</span>.</li>
@@ -208,7 +208,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
           <tr><td>Psionicist</td><td>Mind Warrior, Mind Bender, Kineticist</td></tr>
         </tbody>
       </table></div>
-      <ul><li><span class="tag new">New</span>Seven kits for two classes taken at once, each for one race only:</li></ul>
+      <ul><li><span class="tag new">New</span>Thirteen kits for two classes taken at once, each for one race only:</li></ul>
       <div class="tablewrap"><table>
         <thead><tr><th>Race and classes</th><th>Kits</th></tr></thead>
         <tbody>
@@ -217,6 +217,12 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
           <tr><td>Half-elf druid/fighter</td><td>Wilderness Avenger</td></tr>
           <tr><td>Half-elf cleric/ranger</td><td>Rescuer</td></tr>
           <tr><td>Dwarf fighter/thief</td><td>Ghetto Fighter, Wayfinder</td></tr>
+          <tr><td>Half-elf fighter/preserver</td><td>Spellarcher</td></tr>
+          <tr><td>Half-giant fighter/psionicist</td><td>Titan Mind</td></tr>
+          <tr><td>Halfling fighter/thief</td><td>Poisoner</td></tr>
+          <tr><td>Halfling cleric/psionicist</td><td>Spirit Caller</td></tr>
+          <tr><td>Thri-kreen druid/fighter</td><td>Wasteland Seer</td></tr>
+          <tr><td>Mul cleric/fighter</td><td>Blood-Fury</td></tr>
         </tbody>
       </table></div>
       <ul>
@@ -225,9 +231,10 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><strong>Shinobi:</strong> a thief trained by the Veiled Alliance who casts preserver spells from 6th level, but is unable to read magical script.</li>
         <li><strong>Ravager:</strong> fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.</li>
         <li><strong>Battle Dancer:</strong> dances as each fight starts, a roll against DEX: +1 to hit, damage and AC for a few rounds, or &minus;1 if it stumbles. Long swords and bows only.</li>
-        <li><strong>Military Scout:</strong> better at stealth, traps and climbing under the open sky, worse under a roof.</li>
+        <li><strong>Military Scout:</strong> better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there; worse under a roof, and it never backstabs.</li>
+        <li><strong>Blood-Fury:</strong> Wild Fighting as each fight starts, a roll against CON: one more attack a round and +3 damage, or −3 to hit and AC 3 worse if it fails.</li>
       </ul>
-      <div class="dev"><b>Developers' Notes</b>Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 31, with a short description of who takes each one on Athas.</div>
+      <div class="dev"><b>Developers' Notes</b>Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.</div>
     </section>
 
     <section id="magic">
@@ -335,7 +342,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag chg">Changed</span>In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen <span class="was">(was: it followed each one near the edge)</span>.</li>
         <li><span class="tag chg">Changed</span><span class="num">40</span> save slots on four pages <span class="was">(was 10)</span>, each also kept under its name in a folder of the Loader's, and <span class="num">29</span> stored characters <span class="was">(was 19)</span>.</li>
         <li><span class="tag new">New</span>A game speed setting, so the whole party walks as smoothly as one.</li>
-        <li><span class="tag new">New</span>Crash reports: if the game stops with an error, the message stays on screen and a report is written.</li>
+        <li><span class="tag new">New</span>Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message in it; if it freezes, a freeze report saves what it was doing.</li>
         <li><span class="tag new">New</span>The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.</li>
         <li><span class="tag chg">Changed</span>No more copy protection: the dragon asking for a word from the manual never comes.</li>
       </ul>

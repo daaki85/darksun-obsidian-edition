@@ -67,7 +67,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
 - **[Changed]** An air cleric can use daggers, as its sphere allows *(was only Galefang: none of the game's daggers listed the air cleric)*.
-- **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it and a dagger, and a Stalker, Assassin or Shinobi a cloak. A multiclass preserver's armour starts in the backpack, so it can cast.
+- **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, and a Stalker, Assassin or Shinobi a cloak. A multiclass preserver's armour starts in the backpack, so it can cast.
 - **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*.
 - **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.
 - **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
@@ -89,7 +89,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Druid | Grove Warden, Wanderer, Lifebinder |
 | Psionicist | Mind Warrior, Mind Bender, Kineticist |
 
-- **[New]** Seven kits for two classes taken at once, each for one race only:
+- **[New]** Thirteen kits for two classes taken at once, each for one race only:
 
 | Race and classes | Kits |
 |---|---|
@@ -98,15 +98,22 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Half-elf druid/fighter | Wilderness Avenger |
 | Half-elf cleric/ranger | Rescuer |
 | Dwarf fighter/thief | Ghetto Fighter, Wayfinder |
+| Half-elf fighter/preserver | Spellarcher |
+| Half-giant fighter/psionicist | Titan Mind |
+| Halfling fighter/thief | Poisoner |
+| Halfling cleric/psionicist | Spirit Caller |
+| Thri-kreen druid/fighter | Wasteland Seer |
+| Mul cleric/fighter | Blood-Fury |
 
 - **Arcanist:** one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, but is unable to read magical script.
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
-- **Military Scout:** better at stealth, traps and climbing under the open sky, worse under a roof.
+- **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there; worse under a roof, and it never backstabs.
+- **Blood-Fury:** Wild Fighting as each fight starts, a roll against CON: one more attack a round and +3 damage, or −3 to hit and AC 3 worse if it fails.
 
-> *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 31, with a short description of who takes each one on Athas.*
+> *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 
 ## Magic and Psionics
 
@@ -200,7 +207,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was: it followed each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
-- **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written.
+- **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message in it; if it freezes, a freeze report saves what it was doing.
 - **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
 
