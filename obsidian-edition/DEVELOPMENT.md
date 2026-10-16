@@ -1140,9 +1140,7 @@ and counts down. It ends with the fight as the rounds count it: the game's clock
 it is still clear as round 1's initiative is rolled and between the arena's
 waves. At `+355` (`KIT_WILD`) each Blood-Fury's Wild Fighting, which `wild.py`
 rolls as a fight's first round begins (a d20 against CON) and clears as the
-dances end: bit N, member N's check failed; bit N + 4, it passed. It keeps the
-game's clock as each wild fight ends, and gives no check in a fight that starts
-within an hour (`kits.WILD_REST`) of it.
+dances end: bit N, member N's check failed; bit N + 4, it passed.
 
 #### Where each effect goes
 

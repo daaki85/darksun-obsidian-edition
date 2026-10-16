@@ -996,8 +996,7 @@ others read books. The open land lends their spells its strength.
 
 *Blood-Fury* (mul cleric/fighter). Muls bred for the fighting pits, who call on
 something older than their gods when the blood starts to flow. Some days the
-fury answers; some days it only makes them reckless. Either way, it takes an
-hour to come back.
+fury answers; some days it only makes them reckless.
 
 | Kit | Gives | Costs |
 |---|---|---|
@@ -1013,7 +1012,7 @@ hour to come back.
 | **Poisoner** | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything |
 | **Spirit Caller** | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower |
 | **Wasteland Seer** | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower |
-| **Blood-Fury** | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight; an hour's rest between wild fights |
+| **Blood-Fury** | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight |
 
 ### Kits' spell slots
 

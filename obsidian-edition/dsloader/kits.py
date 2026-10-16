@@ -379,10 +379,8 @@ POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's first hit
 
 # a Blood-Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON as a fight starts,
 # for the fight. Passed, 1 more attack a round in melee (2 halves) and 3 more damage; failed, 3
-# worse to hit and AC 3 worse (no worse than WILD_AC_MOST). An hour of the game's clock
-# (WILD_REST game seconds) after a wild fight ends before the next.
+# worse to hit and AC 3 worse (no worse than WILD_AC_MOST), every fight.
 WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
-WILD_REST = 3600
 
 
 def wild_check(con: int, d20: int) -> bool:

@@ -865,7 +865,7 @@ class DiceLog:
                 now_game = self.game.game_time()
                 if now_game is not None and self._round_time is not None and now_game - self._round_time > FIGHT_GAP:
                     self._dances.stop(self.game, self.tsr_hdr)
-                    self._wild.stop(self.game, self.tsr_hdr, self._round_time)
+                    self._wild.stop(self.game, self.tsr_hdr)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -1613,7 +1613,7 @@ class DiceLog:
         number = self._round_number()
         self.round_number = number
         danced = self._dances.round(g, self.tsr_hdr, number)
-        danced += self._wild.round(g, self.tsr_hdr, number, g.game_time())
+        danced += self._wild.round(g, self.tsr_hdr, number)
         if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
             self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
