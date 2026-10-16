@@ -14913,15 +14913,61 @@ panel_draw:
         mov [cs:panel_page], ax
         mov ax, [cs:panel_top]          ; (and where its top was: PANEL_TICK)
         mov [cs:panel_drawn], ax
+        call panel_staging
         mov ax, 0xA000
         cmp word [es:SHOWN_PAGE], 0
         je .seg
         mov ax, 0xA400
 .seg:   call panel_blit
-        pop es
+        mov ax, [cs:stage_seg]          ; (and into the screen the pointer is moved on)
+        or ax, ax
+        jz .done
+        mov bl, 0
+        xchg bl, [cs:pb_skip]           ;   (whole: no pointer is left there)
+        push bx
+        call panel_blit
+        pop bx
+        mov [cs:pb_skip], bl
+.done:  pop es
         pop ds
         popa
 .none:  ret
+
+; PANEL_STAGING: in PANEL_DRAW (DS the game's, ES the page routines' segment): the picture also
+; into the screen the game moves its pointer on, when it does so (28D1:0B7F, 28D1:1360: set
+; [3C4Ah] and windows [3CD0h], shown, and [3CD2h] apart). There the pointer is drawn, the box round
+; its old and new places copied from that screen to the one on show, and it is taken off again,
+; so without the picture there the map came back over the panel wherever the pointer went (and
+; stayed under a still one: PANEL_DRAW_AROUND leaves its box). Drawn whole: no pointer is left
+; there. STAGE_SEG: that screen's segment, or 0; AX, BX not kept.
+PTR_STAGING  equ 0x3C4A         ; (the game's DS) set: the pointer moved on another screen
+PTR_SHOWN_W  equ 0x3CD0         ;   the window shown, and the one it is moved on
+PTR_STAGE_W  equ 0x3CD2
+WIN_SEGS     equ 4              ; (the page routines' segment) each window's segment, a word each
+panel_staging:
+        mov word [cs:stage_seg], 0
+        cmp word [PTR_STAGING], 0
+        je .ret
+        mov bx, [PTR_STAGE_W]
+        cmp bx, [PTR_SHOWN_W]
+        je .ret
+        cmp bx, 1                       ; (the two screens' windows: 0 and 1)
+        ja .ret
+        shl bx, 1
+        mov ax, [es:WIN_SEGS + bx]
+        mov bx, 0xA000
+        cmp word [es:SHOWN_PAGE], 0
+        je .shown
+        mov bx, 0xA400
+.shown: cmp ax, bx
+        je .ret
+        cmp ax, 0xA000
+        je .blit
+        cmp ax, 0xA400
+        jne .ret
+.blit:  mov [cs:stage_seg], ax
+.ret:   ret
+stage_seg dw 0
 
 ; PANEL_DRAW_POINTER: PANEL_DRAW, then the game's pointer drawn again over it (28D1:093D, as the
 ; game draws it). Not taken off first: what the game keeps under its pointer, to put back when it

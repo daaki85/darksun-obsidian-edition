@@ -56,6 +56,11 @@ have the detail.
   scrolled by the game's own scrolling (at the screen's edge, following who
   walks): that copies the screen, the panel with it. When the view has moved,
   the helper now has it drawn again whole, round the panel.
+- **A patch of map under the pointer on the combat log's panel** (2.3.0),
+  sometimes staying while the pointer was still. In a fight the game moves
+  its pointer on the screen not on show and copies the box round it to the
+  one on show; the panel was only on the one on show, so the copy brought
+  the map back over it. The panel is now put on both.
 - **Yellow text on the character creation screen** (since 2.3.0). The game's
   screens print in a colour each leaves set; the creation screen never sets
   its own, and the mod's `SUM:` line printed in it, so after a character
