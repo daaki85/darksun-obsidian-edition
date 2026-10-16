@@ -364,8 +364,9 @@ class Viewer:
         for key, text in (
                 ("class_restrictions", "Class restrictions on armour, shields and weapons, the strictest class "
                                        "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
-                                       "spheres); a multiclass preserver casts no spells in armour, and a "
-                                       "multiclass thief has no thief skills in armour that isn't light"),
+                                       "spheres); a multiclass preserver, or a human preserver who was a warrior, casts "
+                                       "no spells in armour, and a thief with another class (now or before) has "
+                                       "no thief skills in armour that isn't light"),
                 ("multiclass_hp", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
                                   "a class is a warrior), the total shared between the classes"),
                 ("best_hit_die", "Hit dice rolled twice, the better kept, at creation and at every level "
@@ -404,7 +405,8 @@ class Viewer:
                                           "(chosen on the creation panel's WEAPON SPEC pages)"),
                 ("kits", "Kits: a character of one class may take one of its class's three kits, and some "
                          "races' pairs of classes have kits of their own, each giving something and "
-                         "costing something (chosen on the creation panel's KIT page)"),
+                         "costing something (chosen on the creation panel's KIT page); the game's own "
+                         "party gets features of its own"),
                 ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
                 ("cha_prices", "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
                                "point after, to 40% at 25; shops pay 60% of an item's price"),
@@ -413,7 +415,8 @@ class Viewer:
                 ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
                                 "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
-                            "(no enemy beside them; thieves half the chance in daylight, rangers indoors)"),
+                            "(no enemy beside them; thieves half the chance in daylight, but for a few kits, "
+                            "rangers indoors)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
                                "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends")):
             self.rule_vars[key] = tk.BooleanVar(
@@ -433,7 +436,8 @@ class Viewer:
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
         ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon in hand they can use, "
                         "a sling, leather armour where they may wear it (Stalkers, Assassins and "
-                        "Shinobi a cloak); a multiclass preserver's armour goes in the backpack",
+                        "Shinobi a cloak, some kits their own weapons); a multiclass preserver starts "
+                        "with no armour",
                         variable=self.starting_gear, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}

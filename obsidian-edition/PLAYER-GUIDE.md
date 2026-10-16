@@ -314,7 +314,7 @@ AD&D's tables; a character of several classes uses its best.
 | [Fighter](#fighter) | d10 | STR | all | any | any | Myrmidon, Sentinel, Ravager |
 | [Gladiator](#gladiator) | d10 | STR | all | any | any | Arena Champion, Twin-blade, Brute |
 | [Ranger](#ranger) | d10 | WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
-| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (multiclass: heavier, without thief skills) | any | Assassin, Swashbuckler, Shinobi |
+| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (with another class: heavier, without thief skills) | any | Assassin, Swashbuckler, Shinobi |
 | [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Arcanist, Scholar, Battle Mage |
 | [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Healer, Crusader, Elementalist |
 | [Druid](#druid) | d8 | WIS | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
@@ -329,13 +329,13 @@ fighter or ranger, cleric, thief, psionicist, preserver and druid), less what
 its classes can't use. The mod then adds plain gear, as each section says: a
 weapon in hand it can use (a thief/psionicist, which can't use the long sword,
 gets a bone short sword), a sling if it has no bow or sling, leather armour
-where it may wear it, and a cloak for a Stalker, an Assassin or a Shinobi. A
-thri-kreen gets nothing more than the game's own starting gear: its claws
-serve it better than another weapon, and it wears none of the rest; its weapon
-spec starts as the chatkcha. A multiclass preserver starts with no armour, so
-it can cast. Nothing
-is given that the character can't use or already has. The game's own party
-gets the same. *Without the mod:* the class's gear only, armour it can't use
+where it may wear it, and a cloak for a Stalker, an Assassin or a Shinobi
+(some kits get weapons of their own: see [Kits](#kits)). A thri-kreen gets
+nothing more than the game's own starting gear: its claws serve it better than
+another weapon, and it wears none of the rest; its weapon spec starts as the
+chatkcha. A multiclass preserver starts with no armour, so it can cast.
+Nothing is given that the character can't use or already has. The game's own
+party gets the same. *Without the mod:* the class's gear only, armour it can't use
 in the backpack.
 
 ### What each class may use
@@ -364,7 +364,7 @@ the strictest winning:
   skills.
 - A ranger may always use a bow.
 - A human who changed class is held by its new class (but for the warrior's
-  armour above), and may use the weapon types it specialized in once its old
+  or cleric's armour above), and may use the weapon types it specialized in once its old
   class wakes.
 
 *Without the mod:* an item was allowed if **any** of the character's classes
@@ -1012,21 +1012,21 @@ the wastes, and found the land's own fury waiting there. When the blood starts
 to flow they call on it: some days it answers; some days it only makes them
 reckless.
 
-| Kit | Race and classes | Gives | Costs |
-|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | as each fight starts, a d20 against DEX − 4 (a 20 always fails): at that or under, +1 to hit, damage and AC for that less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only (any, whatever its cleric's sphere allows); over it, −1 to hit, damage and AC for 1d8 rounds |
-| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets; no shield; light armour only |
-| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings; its hiding isn't halved in daylight | under a roof, −5 to the same skills; never backstabs (from behind still +2 to hit) |
-| **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | 1 fewer druid spell slot at each spell level |
-| **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | attacking from behind, +1 to hit instead of +2 |
-| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows; starts with a dagger in hand, and the dagger as its weapon spec unless you pick another | −5 find traps; −1 to hit with anything but a dagger; no shield |
-| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets; while it's down, the whole party has −1 initiative and −1 movement in a fight |
-| **Spellarcher** | half-elf fighter/preserver | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow; light armour only |
-| **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers cost 2 PSP more |
-| **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage; starts with a dagger in each hand, and the dagger as its weapon spec unless you pick another | −1 to hit with everything; light armour only |
-| **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower |
-| **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower |
-| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON − 4 (a 20 always fails): at that or under, 1 more attack a round in melee and +3 damage for the fight | over it, −3 to hit and AC 3 worse for the fight |
+| Kit | Race and classes | Gives | Costs | Starts with | Also |
+|---|---|---|---|---|---|
+| **Battle Dancer** | elf cleric/fighter | as each fight starts, a d20 against DEX − 4 (a 20 always fails): at that or under, +1 to hit, damage and AC for that less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only (any, whatever its cleric's sphere allows); over it, −1 to hit, damage and AC for 1d8 rounds | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows | its weapon spec starts as the long sword |
+| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets; no shield; light armour only | its classes' gear, without the shield |  |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings; its hiding isn't halved in daylight | under a roof, −5 to the same skills; never backstabs (from behind still +2 to hit) | its classes' gear | its hiding gives an attack from behind, not a backstab |
+| **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | 1 fewer druid spell slot at each spell level | its classes' gear | its hiding counts for backstabs as a ranger's |
+| **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | attacking from behind, +1 to hit instead of +2 | its classes' gear |  |
+| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps; −1 to hit with anything but a dagger; no shield | its classes' gear, without the shield, with a dagger in its hand | its weapon spec starts as the dagger |
+| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets; while it's down, the whole party has −1 initiative and −1 movement in a fight | its classes' gear |  |
+| **Spellarcher** | half-elf fighter/preserver | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow; light armour only | a bow and arrows |  |
+| **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers cost 2 PSP more | its classes' gear | the 2 counts to use a power and to keep it up, never below 1 |
+| **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything; light armour only | a dagger in each hand, no shield | its weapon spec starts as the dagger |
+| **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower | its classes' gear |  |
+| **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower | its classes' gear |  |
+| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON − 4 (a 20 always fails): at that or under, 1 more attack a round in melee and +3 damage for the fight | over it, −3 to hit and AC 3 worse for the fight | its classes' gear |  |
 
 **The game's own party** (START GAME with no party made), with kits on: Cermak
 is an Arcanist, and the other three have something no character you make can

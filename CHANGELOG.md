@@ -32,8 +32,9 @@ have the detail.
   Seer** (thri-kreen druid/fighter: spells cast 2 levels higher under the open
   sky, 1 lower under a roof), and the **Wild Fury** (mul druid/fighter), with
   **Wild Fighting** (the AD&D proficiency): as each fight starts, a d20 against
-  CON. Passed, 1 more attack a round in melee and +3 damage for the fight;
-  failed, −3 to hit and AC 3 worse. The dice log shows the check.
+  CON − 4, a natural 20 always failing. Passed, 1 more attack a round in melee
+  and +3 damage for the fight; failed, −3 to hit and AC 3 worse. The dice log
+  shows the check.
 - **Crash reports say why the game quit.** When the game stops on its own
   error (as after the opening arena fight, where it quit with "return code
   01h" and a blank screen), its message used to be lost: the game prints it
@@ -50,18 +51,12 @@ have the detail.
   copy of the game's memory.
 
 **Changed**
-- **The Battle Dancer's dance and Wild Fighting roll at −4:** a d20 against
-  DEX − 4 or CON − 4, and a natural 20 always fails (as a proficiency check).
-  The dance lasts that less the roll in rounds.
-- **The Military Scout's hiding isn't halved in daylight** (the stealth rule).
-- **The Ghetto Fighter's and Poisoner's weapon spec is the dagger, the Battle
-  Dancer's the long sword**, if the player leaves the weapon page as it was
-  when choosing the kit; a Ghetto Fighter starts with a dagger in its hand
-  whatever its spec.
-- **A human thief who was a cleric** may wear the cleric's armour, as one who
-  was a warrior may: no thief skills or backstab in armour that isn't light.
+- **The Battle Dancer's dance rolls at −4:** a d20 against DEX − 4, a natural
+  20 always failing (as a proficiency check, and as Wild Fighting's); it lasts
+  that less the roll in rounds.
 - **More for three multiclass kits:** the Military Scout, under the open sky,
-  has +2 initiative and +1 to hit with a bow, sling or staff sling. The
+  has +2 initiative and +1 to hit with a bow, sling or staff sling, and its
+  hiding isn't halved in daylight (the stealth rule). The
   Shadowblade tries to hide in shadows even with an enemy right beside it (the
   stealth rule). The Wayfinder gets **Path-finder**: while it's up, every
   party member has +1 initiative and +1 Move in a fight.
@@ -87,8 +82,8 @@ have the detail.
 - **Thieves wear light armour only** (leather, hide, silk), with class
   restrictions on (before, a thief of one class could wear any armour). A
   multiclass thief (a fighter/thief, a cleric/thief), or a human thief who was
-  a fighter, gladiator or ranger, may wear the heavier armour its other class
-  allows, but **has no thief skills** (all 0, on the inventory screen too) and
+  a fighter, gladiator, ranger or cleric, may wear the heavier armour its other
+  class allows, but **has no thief skills** (all 0, on the inventory screen too) and
   **no backstab** in it, as a multiclass preserver casts no spells in armour.
   A human who has been a preserver and a warrior (either order) may wear the
   warrior's armour too, and casts no spells in it.
@@ -96,8 +91,11 @@ have the detail.
   Spellarcher, even with the kit asleep after changing class.
 - **Starting gear:** a multiclass preserver's armour is left out, not put in
   its backpack; a Poisoner starts with a dagger in each hand (its long sword
-  made one, its shield left behind); a thri-kreen's weapon spec starts as the
-  chatkcha, where its classes allow it.
+  made one, its shield left behind), and a Ghetto Fighter with a dagger in its
+  hand, whatever its weapon spec. Weapon specs start as the chatkcha for a
+  thri-kreen whose classes allow it, as the dagger for a Ghetto Fighter or
+  Poisoner and as the long sword for a Battle Dancer (the kits' unless the
+  player picks another on the weapon pages).
 - **A ranger's bow is listed** on the Effects screen and the Characters tab
   (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
   expert with the bow, chosen or not, but only the chosen weapons were listed.

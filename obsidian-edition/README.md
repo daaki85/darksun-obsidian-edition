@@ -121,7 +121,8 @@ class.
   and hit points kept as rolled ([Rule changes](#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels up
-  to 10, STORE and RECALL for a creation roll, and fuller starting gear
+  to 10, STORE and RECALL for a creation roll, fuller starting gear, and
+  features of their own for the game's own party
   ([More character customization](#more-character-customization)).
 - **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
   and pick pockets, the party leader's CHA lowers shop prices, and merchants
@@ -785,7 +786,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 |---|---|
 | `X DEX check: d20 = 9, needs 16 or less (DEX 16) -> success` | An ability check. A natural 20 always fails. |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](#how-the-game-works-out-thief-skills)), and what its chance is made of. |
-| `Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Cilla moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](#hiding-in-shadows-to-backstab) on). |
+| `Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Tezral moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](#hiding-in-shadows-to-backstab) on). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
 | `    X's Bone Long Sword nearly broke: 0 on 0-7, then 12 on 0-19 (needed 0)` / `... BREAKS` | The weapon check the game makes after an attack sequence whose last attack hit. Only non-magical wood, bone, stone and obsidian weapons can break (and not every kind: clubs and quarterstaffs can't): they break when a 0-7 roll and then a 0-19 roll both come up 0, 1 chance in 160. The line only appears when the first roll comes up 0. |
 | `  Rampager's acid on Gerakis's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe` | An item the Rampager's acid or the Babau's corroding touch could destroy: the d20, the number it needed and whose number that was (see [Items saving against acid](#items-saving-against-acid)). |
@@ -1328,7 +1329,7 @@ last set. Untick one and the game's own rule is back at once.
 
 | Rule | What it changes |
 |---|---|
-| [Class restrictions](#class-restrictions) | each class's limits on armour, shields and weapons hold, the strictest winning; a multiclass preserver casts no spells in armour |
+| [Class restrictions](#class-restrictions) | each class's limits on armour, shields and weapons hold, the strictest winning; a multiclass preserver casts no spells in armour, and a thief with another class has no thief skills in armour that isn't light |
 | [Multiclass hit points](#multiclass-hit-points) | CON's bonus on every hit die (a warrior's for a character with a warrior class), the total shared between the classes |
 | [Hit dice: the better of two](#hit-dice-the-better-of-two) | each hit die rolled twice, the better kept, for every character |
 | [Scores and hit points as rolled](#scores-and-hit-points-as-rolled) | on the creation screen, a click raises a score only while the six add up to no more than the die gave (lower one to raise another), and doesn't change the hit points |
@@ -1354,7 +1355,7 @@ own "Cannot use this item":
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
 | **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings |
-| **Thief** | light only; a multiclass thief, or a human thief once a warrior, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields | as its classes allow |
+| **Thief** | light only; a multiclass thief, or a human thief once a warrior or cleric, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields | as its classes allow |
 | **Preserver**, one class | none (a human preserver once a warrior: as the warrior could, but no spells in armour) | none | as the game has it |
 | **Druid** | none | none | any |
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
@@ -1875,7 +1876,8 @@ With **Kits** ticked, a character of one class may take one of three kits for
 its class when it is made, or none (the class as it is). A few pairs of
 classes taken at once by one race have kits of their own
 ([Multiclass kits](#multiclass-kits)). Each gives something and costs
-something. A human who changes class may take a kit for the new class too
+something. The game's own party gets features of its own
+([The game's own party](#the-games-own-party)). A human who changes class may take a kit for the new class too
 ([Changing class](#changing-class)). Each class's three kits have a table of
 their own below: what the kit gives (with the level each part comes at), what
 it costs, what a new character with it starts with
@@ -1979,16 +1981,16 @@ Loader works that out about once a second.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon; its weapon spec the long sword unless the player picks another | the dice log shows the dance's roll and its end |
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec starts as the long sword; the dice log shows the dance's roll and its end |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets; **no shield**; light armour only | its classes' gear, without the shield | |
-| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; with the stealth rule, its hiding is never halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands; with the stealth rule its hiding gives an attack from behind, not a backstab |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; hiding in shadows not halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands; with the stealth rule its hiding gives an attack from behind, not a backstab |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | **1 fewer druid spell slot at each spell level** (none below 0) | its classes' gear | its hiding counts for backstabs as a ranger's does |
 | **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | attacking from behind gives **+1 to hit, not +2** | its classes' gear | the dice log says ", under the open sky", and "from behind (Rescuer)" |
-| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield, with a dagger in its hand (whatever its weapon spec); its weapon spec the dagger unless the player picks another | DEX's adjustment still applies to the two-weapons penalty |
+| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield, with a dagger in its hand (whatever its weapon spec) | its weapon spec starts as the dagger; DEX's adjustment still applies to the two-weapons penalty |
 | **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative and +1 Move in a fight | −10 pick pockets; **while it's down** (stunned, out cold, dying, dead, animated or petrified) and no other Wayfinder is up, every party member has **−1 initiative and −1 Move** in a fight | its classes' gear | the dice log's initiative lines say "Wayfinder's Path-finder" or "Wayfinder down" |
 | **Spellarcher** | half-elf fighter/preserver | arrows it shoots from a bow are **1 better and at least +1**: a plain arrow +1, an Arrows +1 +2, and so on, so they hurt what only magic weapons hurt, and do 1 more damage | its weapon spec is the bow, and only the bow (choosing the kit makes it so; the weapon pages offer nothing else); light armour only | a bow and arrows | sling stones and other missiles as they are |
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | its classes' gear | as the Mind Bender's: to use a power and to keep it up, never below 1 |
-| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile; light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind); its weapon spec the dagger unless the player picks another | the dice log shows the save as "vs Poison (10 damage)" |
+| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile; light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind) | its weapon spec starts as the dagger; the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | the spells it may cast and its slots are its own level's |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | as the Spirit Caller's |
 | **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON − 4 (the proficiency's check at −4; a natural 20 always fails); at CON − 4 or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight | over it, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
@@ -2013,7 +2015,10 @@ multiclass character with kits finds KITS where its classes put it: on the
 last weapon page with weapon specialization (each of these pairs has a warrior
 class), otherwise under the clerical spheres if one class has them, else under
 the psionic disciplines. Choosing another class puts the kit back to none; a
-new roll of the die keeps it. The Effects screen names the kit
+new roll of the die keeps it. Choosing a kit sets the weapon spec for a few:
+the Spellarcher's to the bow, always; the Ghetto Fighter's and Poisoner's to
+the dagger and the Battle Dancer's to the long sword, unless a weapon spec was
+picked on the weapon pages. The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Loader's Characters tab.
 
 The Elementalist chooses its second sphere on the creation panel's
@@ -2290,26 +2295,18 @@ first moments of a new game, and says so in the dice log (Cilla also gets the
 elf's figure, with its own switch: see
 [Elves and half-elves](#elves-and-half-elves)):
 
-| Character | With weapon specialization | With class restrictions |
-|---|---|---|
-| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | |
-| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place |
+| Character | With weapon specialization | With class restrictions | With kits |
+|---|---|---|---|
+| **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as the [Wild Fury](#multiclass-kits)'s: as each fight starts, a d20 against CON − 4; at that or under, 1 more attack a round in melee and +3 damage for the fight; over it, −3 to hit and AC 3 worse |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts as a [Wasteland Seer](#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
+| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: a spell slot more at each spell level and two preserver spells a turn in a fight |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Wanderer**: with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
-With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
-class: a spell slot more at each spell level and two preserver spells a turn
-in a fight. His gear stays as it is (an Arcanist has none of its own), and so
-do the hit points the game gave him: the Arcanist's d3 counts from his next
-level. The other three get features of their own, which no character made on
-the creation screen can have (the Effects screen lists them, and the
-Characters tab beside the kit):
-
-| Character | Feature |
-|---|---|
-| **Gerakis** | **Wild Fighting**, as the [Wild Fury](#multiclass-kits)'s: as each fight starts, a d20 against CON − 4; at that or under, 1 more attack a round in melee and +3 damage for the fight; over it, −3 to hit and AC 3 worse |
-| **K'ratchek** | casts as a [Wasteland Seer](#multiclass-kits): her druid spells 2 levels higher under the open sky, 1 lower under a roof; and her **chatkcha comes back as if she had several**: one more throw a round with it (2 instead of 1, or more with its weapon spec) |
-| **Cilla** | an **Elven Wanderer**: with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
+Gerakis's, K'ratchek's and Cilla's features are their own: no character made
+on the creation screen can have them. The Effects screen lists them (as it
+does kits), and the Characters tab beside the kit. Cermak's gear stays as it
+is (an Arcanist has none of its own), and so do the hit points the game gave
+him: the Arcanist's d3 counts from his next level.
 
 With [fuller starting gear](#fuller-starting-gear), they get what a new
 character would, after the changes above: Gerakis a sling and leather chest
@@ -2459,46 +2456,20 @@ the thief away, and so does the turn ending without one. An enemy next to the
 thief when the turn comes means no hiding at all: get clear first (a
 [Shadowblade](#multiclass-kits) tries anyway). A
 [Military Scout](#multiclass-kits) never backstabs: its hiding gives an attack
-from behind. A worn cloak adds 10 to hiding in shadows (before daylight halves
-it) and worn boots add 10 to moving silently, for rangers too, up to 95:
-`needs 18 or less (26 +10 cloak = 36, halved in daylight)`. With that switched
-on, a cloak's or boots' item box (right-click it on the inventory screen) says
-so under its name, `Hide +10` or `Move +10` (the skills' short names, as the
-inventory screen's thief rows have them).
-
-![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Move +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
-
-The [Cloak and Boots of Elvenkind](#new-items) do more (whatever the plain
-gear's switch). Only thieves and rangers can wear them (multiclasses too; for
-anyone else, the game's "Cannot use this item"). In the cloak, hiding in
-shadows needs 95 or less under the open sky and 90 under a roof, not halved by
-the light (AD&D's: all but invisible in the wild, 90% among buildings), unless
-their own chance is better; in the boots, moving silently needs 95 or less.
-Their boxes say `Hide 90-95%` and `Move 95%`.
-
-![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Move 95%", 20,000](docs/elvenkind.png)
-
-The same switch has a worn **belt** add 5 to a thief's **picking pockets and
-opening locks**, whether hiding is on or not: the game's own lock picking
-counts it, and so do the Loader's pockets and its thief rows (`PICK 80`,
-`LOCK 64`). A belt's box says `Pick +5, Lock +5`.
-
-Plain cloaks, boots and belts cost 24 (the game's Leather Cloak is 20), anywhere
-in the region, shops included; magic ones (with a plus, or dearer than 100)
-keep their prices.
+from behind.
 
 ```
-Cilla's turn
-Cilla hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden
-  Cilla moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
-Cilla attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
+Tezral's turn
+Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden
+  Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
+Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
     THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
-  Cilla hits Slig for 16: (1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19) x2 backstab
+  Tezral hits Slig for 16: (1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19) x2 backstab
 ```
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for
-an Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are under the open
-sky goes by the game's regions: open desert and rock, the villages' open
+an Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are
+under the open sky goes by the game's regions: open desert and rock, the villages' open
 ground and the arena are; the slave pens, the sewers, the lava caverns and
 the other underground or roofed places aren't. Three maps have both, buildings
 with floors of their own standing on open ground: there it goes by the floor
@@ -2525,10 +2496,39 @@ and the game's inventory screen shows them where a thief's `MOVE` and `HIDE`
 go. Someone with thief levels hides as a thief.
 
 ```
-Gerakis hides in shadows: d100 = 15, needs 63 or less (63, a ranger under the open sky) -> hidden
-  Gerakis moves silently: d100 = 42, needs 78 or less -> unheard: their next attack this turn is from behind
-Gerakis attacks Slig from behind with Wooden Club (1d6): d20 = 12, needs 10+ (55%), hits AC 1, target AC 3 -> HIT
+Semyon hides in shadows: d100 = 15, needs 63 or less (63, a ranger under the open sky) -> hidden
+  Semyon moves silently: d100 = 42, needs 78 or less -> unheard: their next attack this turn is from behind
+Semyon attacks Slig from behind with Wooden Club (1d6): d20 = 12, needs 10+ (55%), hits AC 1, target AC 3 -> HIT
 ```
+
+**Cloaks, boots and belts.** With the box under this one ticked, a worn cloak
+adds 10 to hiding in shadows (before daylight halves it) and worn boots add 10
+to moving silently, for rangers too, up to 95:
+`needs 18 or less (26 +10 cloak = 36, halved in daylight)`. A cloak's or
+boots' item box (right-click it on the inventory screen) says so under its
+name, `Hide +10` or `Move +10` (the skills' short names, as the
+inventory screen's thief rows have them).
+
+![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Move +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
+
+The [Cloak and Boots of Elvenkind](#new-items) do more (whatever the plain
+gear's switch). Only thieves and rangers can wear them (multiclasses too; for
+anyone else, the game's "Cannot use this item"). In the cloak, hiding in
+shadows needs 95 or less under the open sky and 90 under a roof, not halved by
+the light (AD&D's: all but invisible in the wild, 90% among buildings), unless
+their own chance is better; in the boots, moving silently needs 95 or less.
+Their boxes say `Hide 90-95%` and `Move 95%`.
+
+![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Move 95%", 20,000](docs/elvenkind.png)
+
+The same switch has a worn **belt** add 5 to a thief's **picking pockets and
+opening locks**, whether hiding is on or not: the game's own lock picking
+counts it, and so do the Loader's pockets and its thief rows (`PICK 80`,
+`LOCK 64`). A belt's box says `Pick +5, Lock +5`.
+
+Plain cloaks, boots and belts cost 24 (the game's Leather Cloak is 20), anywhere
+in the region, shops included; magic ones (with a plus, or dearer than 100)
+keep their prices.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
 
