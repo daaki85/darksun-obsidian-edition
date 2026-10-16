@@ -15,6 +15,14 @@ have the detail.
 ## Pull request #49 (in progress)
 
 **Added**
+- **The game's own party, features of their own** (with kits): Gerakis fights
+  wild (the Wild Fury's Wild Fighting); K'ratchek casts as a Wasteland Seer
+  (druid spells 2 levels higher under the open sky, 1 lower under a roof), and
+  her chatkcha comes back as if she had several (one more throw a round);
+  Cilla is an Elven Wanderer, her hiding never halved in daylight. No character
+  made on the creation screen can have them. The Effects screen lists them
+  (WILD FIGHTING; OPEN SKY SPELLS and CHATKCHA 2/ROUND; KIT: E-WANDERER), the
+  Characters tab beside the kit, and the dice log says so as a new game starts.
 - **Six new multiclass kits:** the **Spellarcher** (half-elf
   fighter/preserver: its arrows 1 better and at least +1, magical; its weapon
   spec the bow only), **Titan Mind** (half-giant fighter/psionicist:
@@ -42,6 +50,16 @@ have the detail.
   copy of the game's memory.
 
 **Changed**
+- **The Battle Dancer's dance and Wild Fighting roll at −4:** a d20 against
+  DEX − 4 or CON − 4, and a natural 20 always fails (as a proficiency check).
+  The dance lasts that less the roll in rounds.
+- **The Military Scout's hiding isn't halved in daylight** (the stealth rule).
+- **The Ghetto Fighter's and Poisoner's weapon spec is the dagger, the Battle
+  Dancer's the long sword**, if the player leaves the weapon page as it was
+  when choosing the kit; a Ghetto Fighter starts with a dagger in its hand
+  whatever its spec.
+- **A human thief who was a cleric** may wear the cleric's armour, as one who
+  was a warrior may: no thief skills or backstab in armour that isn't light.
 - **More for three multiclass kits:** the Military Scout, under the open sky,
   has +2 initiative and +1 to hit with a bow, sling or staff sling. The
   Shadowblade tries to hide in shadows even with an enemy right beside it (the
@@ -85,6 +103,10 @@ have the detail.
   expert with the bow, chosen or not, but only the chosen weapons were listed.
 
 **Fixed**
+- **A Battle Dancer whose cleric sphere bars long swords couldn't specialize
+  in one** on the creation screen (it was given the bow, and started with a
+  bow and a shield): the weapon pages left out what the kit allows whatever
+  the classes do. It now starts with a long sword in each hand.
 - **The game slowed down with the combat log's panel shown** (2.3.0). The
   helper put the panel on screen again on every pass of the game's main loop
   while the pointer moved, and every 16 passes when it didn't, with a slow

@@ -128,12 +128,61 @@ def extra(kid: int, dance: int = 0, undead: bool = False) -> int:
     return int(kid == AVENGER and undead)
 
 
+# The game's own party (defaultparty.py), three of them given features of their own, which no
+# character made on the creation screen can have: the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
+# classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
+# race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
+# thri-kreen) a Wasteland Seer's casting (SKY_LEVEL) and one more chatkcha throw a round
+# (OWN_THROWS); Cilla (an elf) the Elven Wanderer's hiding, never halved in daylight (stealth.py).
+OWN_BIT, KIT_OPEN = 0x40, 0xFF
+HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
+OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells", "Chatkcha 2 a round"),
+                ELF: ("Elven Wanderer",)}
+CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
+
+
+def own_race(sheet: bytes) -> int:
+    """The race of SHEET if it is one of the game's own party given a feature of its own (OWN_BIT),
+    else 0 (the kits rule is the caller's to weigh)."""
+    if len(sheet) <= 0x43 or sheet[0x43] == KIT_OPEN or not sheet[0x43] & OWN_BIT:
+        return 0
+    return sheet[0x18] if sheet[0x18] in OWN_FEATURES else 0
+
+
+def wild_fighter(kids, race: int) -> bool:
+    """Whether a character fights wild (Wild Fighting): a Wild Fury, or Gerakis (own race HALF_GIANT)."""
+    return WILD_FURY in kids or race == HALF_GIANT
+
+
+def default_kind(kid: int) -> Optional[int]:
+    """The weapon spec a kit puts in place of the weapon page's default, if the player hasn't
+    picked one (DSCLOG's KIT_ROW): a Ghetto Fighter's and a Poisoner's the dagger, a Battle Dancer's
+    the long sword (kind 0), if its classes and kit allow it; None for the others."""
+    return {GHETTO: DAGGER, POISONER: DAGGER, BATTLE_DANCER: 0}.get(kid)
+
+
+def not_halved_by_sun(kids, race: int) -> str:
+    """Who hides with their whole chance in daylight (stealth.py), named, or "": an Assassin, a
+    Military Scout, or Cilla, the Elven Wanderer (own race ELF)."""
+    if ASSASSIN in kids:
+        return "an Assassin"
+    if SCOUT in kids:
+        return "a Military Scout"
+    return "the Elven Wanderer" if race == ELF else ""
+
+
+# the dance's and Wild Fighting's checks: a d20 against DEX or CON with this (a proficiency check's
+# modifier: the score 4 lower)
+DANCE_CHECK = WILD_CHECK = -4
+
+
 def dance(dex: int, d20: int, fail_roll: int) -> Tuple[int, int]:
-    """A Battle Dancer's dance as a fight starts: (bonus, rounds) for a D20 against DEX (+0, as the
-    Dancing proficiency): danced, +1 for DEX less the roll in rounds (at least 1); stumbled, -1 for
-    FAIL_ROLL (a d8) rounds."""
-    if d20 <= dex:
-        return 1, max(1, dex - d20)
+    """A Battle Dancer's dance as a fight starts: (bonus, rounds) for a D20 against DEX - 4
+    (DANCE_CHECK, the Dancing proficiency's check at -4; a natural 20 always fails): danced, +1 for
+    that less the roll in rounds (at least 1); stumbled, -1 for FAIL_ROLL (a d8) rounds."""
+    target = dex + DANCE_CHECK
+    if d20 <= target and d20 != 20:  # (a natural 20 always fails, as a proficiency check does)
+        return 1, max(1, target - d20)
     return -1, fail_roll
 
 
@@ -377,15 +426,16 @@ POISONER_TO_HIT = -1  # (every attack, melee or missile: KIT_TO_HIT)
 POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's first hit in a fight (PROBE_POISON)
 
 
-# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON as a fight starts,
+# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
 # for the fight. Passed, 1 more attack a round in melee (2 halves) and 3 more damage; failed, 3
 # worse to hit and AC 3 worse (no worse than WILD_AC_MOST), every fight.
 WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
 
 
 def wild_check(con: int, d20: int) -> bool:
-    """A Wild Fury's Wild Fighting check: a D20 of CON or less (the proficiency's, +0)."""
-    return d20 <= con
+    """Wild Fighting's check: a D20 of CON - 4 or less (the proficiency's, at WILD_CHECK); a natural
+    20 always fails."""
+    return d20 <= con + WILD_CHECK and d20 != 20
 
 
 def wild_ac(ac: int) -> int:

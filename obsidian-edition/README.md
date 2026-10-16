@@ -759,7 +759,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](#two-weapons)), and the difficulty setting for monsters. |
 | `  X hits Y for 14: 1d8 = [6] +8 STR 20` | The damage of that hit: the dice, the weapon's bonus, and the STR bonus the game adds for melee. Damage is at least 1. |
 | `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](#attacks-from-behind-and-backstabs)) multiplies the whole damage, STR bonus included. |
-| `Mistra dances: d20 = 3, needs 22 or less (DEX 22) -> +1 to hit, damage and AC for 19 rounds` / `Halton fights wild: d20 = 9, needs 15 or less (CON 15) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](#multiclass-kits)). |
+| `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](#choosing-an-enemy-tab-enter-and-the-rings)). |
 
 **Spells, saves and effects**
@@ -1371,7 +1371,7 @@ fighter, gladiator or ranger, in either order: it may wear what the warrior
 could, and casts no spells in armour.
 
 A **multiclass thief** (a fighter/thief, a cleric/thief), or a human thief who
-was a fighter, gladiator or ranger, may wear the armour its other class
+was a fighter, gladiator, ranger or cleric, may wear the armour its other class
 allows; in armour that isn't light, every **thief skill is 0** (the inventory
 screen's PICK to CLMB, the Characters tab's "none in armour that isn't light")
 and it can't **backstab** (nor hide, for the stealth rule). A human warrior who
@@ -1979,19 +1979,19 @@ Loader works that out about once a second.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX (the Dancing proficiency, +0); at DEX or under, **+1 to hit, to damage and to AC** for DEX less the roll in rounds (at least 1); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over DEX, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | the dice log shows the dance's roll and its end |
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon; its weapon spec the long sword unless the player picks another | the dice log shows the dance's roll and its end |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets; **no shield**; light armour only | its classes' gear, without the shield | |
-| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands; with the stealth rule its hiding gives an attack from behind, not a backstab |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; with the stealth rule, its hiding is never halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands; with the stealth rule its hiding gives an attack from behind, not a backstab |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | **1 fewer druid spell slot at each spell level** (none below 0) | its classes' gear | its hiding counts for backstabs as a ranger's does |
 | **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | attacking from behind gives **+1 to hit, not +2** | its classes' gear | the dice log says ", under the open sky", and "from behind (Rescuer)" |
-| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield | DEX's adjustment still applies to the two-weapons penalty |
+| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield, with a dagger in its hand (whatever its weapon spec); its weapon spec the dagger unless the player picks another | DEX's adjustment still applies to the two-weapons penalty |
 | **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative and +1 Move in a fight | −10 pick pockets; **while it's down** (stunned, out cold, dying, dead, animated or petrified) and no other Wayfinder is up, every party member has **−1 initiative and −1 Move** in a fight | its classes' gear | the dice log's initiative lines say "Wayfinder's Path-finder" or "Wayfinder down" |
 | **Spellarcher** | half-elf fighter/preserver | arrows it shoots from a bow are **1 better and at least +1**: a plain arrow +1, an Arrows +1 +2, and so on, so they hurt what only magic weapons hurt, and do 1 more damage | its weapon spec is the bow, and only the bow (choosing the kit makes it so; the weapon pages offer nothing else); light armour only | a bow and arrows | sling stones and other missiles as they are |
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | its classes' gear | as the Mind Bender's: to use a power and to keep it up, never below 1 |
-| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile; light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind) | the dice log shows the save as "vs Poison (10 damage)" |
+| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile; light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind); its weapon spec the dagger unless the player picks another | the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | the spells it may cast and its slots are its own level's |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | as the Spirit Caller's |
-| **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON (the proficiency, +0); at CON or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight | over CON, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
+| **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON − 4 (the proficiency's check at −4; a natural 20 always fails); at CON − 4 or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight | over it, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
 
 A thief skill a kit lowers never goes below 0. The kits start with their
 classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)). A
@@ -2301,8 +2301,15 @@ With [kits](#kits), Cermak is an **Arcanist**, the kit of his preserver
 class: a spell slot more at each spell level and two preserver spells a turn
 in a fight. His gear stays as it is (an Arcanist has none of its own), and so
 do the hit points the game gave him: the Arcanist's d3 counts from his next
-level. Gerakis has no kit; K'ratchek and Cilla, with more than one class at
-once, can't have one.
+level. The other three get features of their own, which no character made on
+the creation screen can have (the Effects screen lists them, and the
+Characters tab beside the kit):
+
+| Character | Feature |
+|---|---|
+| **Gerakis** | **Wild Fighting**, as the [Wild Fury](#multiclass-kits)'s: as each fight starts, a d20 against CON − 4; at that or under, 1 more attack a round in melee and +3 damage for the fight; over it, −3 to hit and AC 3 worse |
+| **K'ratchek** | casts as a [Wasteland Seer](#multiclass-kits): her druid spells 2 levels higher under the open sky, 1 lower under a roof; and her **chatkcha comes back as if she had several**: one more throw a round with it (2 instead of 1, or more with its weapon spec) |
+| **Cilla** | an **Elven Wanderer**: with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
 With [fuller starting gear](#fuller-starting-gear), they get what a new
 character would, after the changes above: Gerakis a sling and leather chest
@@ -2489,7 +2496,8 @@ Cilla attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%
   Cilla hits Slig for 16: (1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19) x2 backstab
 ```
 
-The chance to hide is **halved in daylight**. Which maps are under the open
+The chance to hide is **halved in daylight** (with [kits](#kits) on, not for
+an Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are under the open
 sky goes by the game's regions: open desert and rock, the villages' open
 ground and the arena are; the slave pens, the sewers, the lava caverns and
 the other underground or roofed places aren't. Three maps have both, buildings

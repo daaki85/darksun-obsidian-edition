@@ -376,6 +376,8 @@ def kit_gear(gd) -> List[str]:
         out += _kit_second_weapon(gd, member, sheet, kid, chosen, owned, read)
         if kid == kits.POISONER:
             out += _poisoner_daggers(gd, member, sheet, read)
+        if kid == kits.GHETTO:
+            out += _ghetto_dagger(gd, member, sheet, read)
         if kid == kits.BATTLE_MAGE and chosen and gd.rules & game.RULE_SPECIALIZE \
                 and not any(specialize.kind_of(struct.unpack_from("<H", i, game.ITEM_TYPE)[0]) == chosen[0]
                             for _, i, _ in owned):
@@ -482,6 +484,26 @@ def _poisoner_daggers(gd, member: int, sheet: bytes, read) -> List[str]:
     instead = f", in place of the {shield}" if shield else ""
     return out + [f"{who} starts with a second {name(dagger)} in the left hand{instead}: a Poisoner fights "
                   f"with two daggers"]
+
+
+def _ghetto_dagger(gd, member: int, sheet: bytes, read) -> List[str]:
+    """A Ghetto Fighter's dagger: the right hand's weapon made a plain dagger (of a material it can
+    use), whatever its weapon spec, as its +1 is with a dagger: lines for the log. Made once: not
+    while it holds a dagger there."""
+    from . import kits
+    right = game.WEAPON_HANDS[0]
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    hand = next(((i, item) for i, item, _ in gd._worn(member) if item[game.ITEM_SLOT] == right), None)
+    if hand is None or specialize.kind_of(struct.unpack_from("<H", hand[1], game.ITEM_TYPE)[0]) == kits.DAGGER:
+        return []
+    new = start_weapon(sheet, [kits.DAGGER + 1], read)
+    if new is None or new[0] != kits.DAGGER:
+        return []
+    name = gd.item_name(struct.unpack_from("<H", hand[1], game.ITEM_NAME)[0])
+    gd.guest.write(items + hand[0] * game.ITEM_SIZE, plain_weapon(hand[1], *new)[0])
+    material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
+    return [f"{gd.creature_name(member)} starts with a plain {material}dagger in place of the {name}: a "
+            f"Ghetto Fighter fights best with one"]
 
 
 def _shield_away(gd, owned) -> Optional[str]:

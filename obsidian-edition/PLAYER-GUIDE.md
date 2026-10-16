@@ -359,7 +359,9 @@ the strictest winning:
   no thief skills (all 0) and no backstab.
 - A human who was a fighter, gladiator or ranger and is now a thief or a
   preserver (or the other way round) is treated the same way: it may wear the
-  warrior's armour, losing its thief skills, or its spells, while it does.
+  warrior's armour, losing its thief skills, or its spells, while it does. So
+  is a human cleric who became a thief: the cleric's armour, without thief
+  skills.
 - A ranger may always use a bow.
 - A human who changed class is held by its new class (but for the warrior's
   armour above), and may use the weapon types it specialized in once its old
@@ -1012,19 +1014,25 @@ reckless.
 
 | Kit | Race and classes | Gives | Costs |
 |---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | as each fight starts, a d20 against DEX: at DEX or under, +1 to hit, damage and AC for DEX less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only (any, whatever its cleric's sphere allows); over DEX, −1 to hit, damage and AC for 1d8 rounds |
+| **Battle Dancer** | elf cleric/fighter | as each fight starts, a d20 against DEX − 4 (a 20 always fails): at that or under, +1 to hit, damage and AC for that less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only (any, whatever its cleric's sphere allows); over it, −1 to hit, damage and AC for 1d8 rounds |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets; no shield; light armour only |
-| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings | under a roof, −5 to the same skills; never backstabs (from behind still +2 to hit) |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings; its hiding isn't halved in daylight | under a roof, −5 to the same skills; never backstabs (from behind still +2 to hit) |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | 1 fewer druid spell slot at each spell level |
 | **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | attacking from behind, +1 to hit instead of +2 |
-| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps; −1 to hit with anything but a dagger; no shield |
+| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows; starts with a dagger in hand, and the dagger as its weapon spec unless you pick another | −5 find traps; −1 to hit with anything but a dagger; no shield |
 | **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets; while it's down, the whole party has −1 initiative and −1 movement in a fight |
 | **Spellarcher** | half-elf fighter/preserver | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow; light armour only |
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers cost 2 PSP more |
-| **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage; starts with a dagger in each hand | −1 to hit with everything; light armour only |
+| **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage; starts with a dagger in each hand, and the dagger as its weapon spec unless you pick another | −1 to hit with everything; light armour only |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower |
-| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round in melee and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight |
+| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON − 4 (a 20 always fails): at that or under, 1 more attack a round in melee and +3 damage for the fight | over it, −3 to hit and AC 3 worse for the fight |
+
+**The game's own party** (START GAME with no party made), with kits on: Cermak
+is an Arcanist, and the other three have something no character you make can
+have. Gerakis fights wild as a Wild Fury does; K'ratchek casts as a Wasteland
+Seer, and her chatkcha comes back as if she had several (one more throw a
+round); Cilla is an Elven Wanderer, whose hiding is never halved in daylight.
 
 ### Kits' spell slots
 
@@ -1173,7 +1181,8 @@ a backstab with a light enough weapon (not a Military Scout's). Attacking, or
 ending the turn, gives them away. An enemy beside them when the turn comes
 means no hiding: get clear first (a Shadowblade tries anyway).
 
-- Thieves' hiding is **halved in daylight** (under the open sky); rangers'
+- Thieves' hiding is **halved in daylight** (under the open sky; not an
+  Assassin's, a Military Scout's or Cilla's); rangers'
   is halved indoors instead.
 - A worn cloak adds 10 to hiding in shadows and worn boots 10 to moving
   silently, up to 95. A worn belt adds 5 to a thief's picking pockets and

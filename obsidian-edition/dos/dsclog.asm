@@ -2728,7 +2728,10 @@ probe_attacks:
 .done:  pop dx
 .store: call war_kit_of        ; (a Crusader's or Mind Warrior's extra attacks, in melee)
         cmp word [bp + 0x16], 1
-        jg .kept
+        jle .melee_kit
+        call own_throws         ; (K'ratchek's chatkcha: one more a round)
+        jmp .kept
+.melee_kit:
         call wild_passed        ; (Wild Fighting, its check passed: 1 more a round in melee)
         jnc .tame
         add ax, WILD_HALVES
@@ -2752,6 +2755,64 @@ probe_attacks:
         pop si
         pop bx
         jmp .hit
+
+; OWN_THROWS: AX (the attacks a round in halves) one more a round (OWN_THROWS_MORE) for a missile
+; attack ([BP+16h] above 1) with a chatkcha (item type [BP+14h]) by K'ratchek, the game's own
+; party's thri-kreen (OWN_RACE_B; sheet number [BP+10h]): her chatkcha comes back as if she had
+; several (kits.OWN_THROWS). DS the game's; others kept.
+OWN_THROWS_MORE equ 2
+own_throws:
+        push bx
+        push si
+        push es
+        mov si, [bp + 0x10]
+        imul si, si, 0x47
+        les bx, [0x1661]
+        add bx, si
+        push ax
+        call own_race_b
+        cmp al, THRI_KREEN_RACE
+        pop ax
+        jne .out
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .out
+        cmp byte [cs:si + kind_of_type], MISSILE_KIND
+        jne .out
+        add ax, OWN_THROWS_MORE
+.out:   pop es
+        pop si
+        pop bx
+        ret
+
+; OWN_RACE_B: AL the race of sheet ES:BX if it is one of the game's own party given a feature of
+; its own (KIT_BYTE's OWN_BIT, set by the Loader as a new game starts: defaultparty.py), with the
+; kits on (RULE_HI_KITS): Gerakis (half-giant) Wild Fighting (the Loader's, KIT_WILD), K'ratchek
+; (thri-kreen) a Wasteland Seer's casting (SKY_LEVEL) and OWN_THROWS, Cilla (elf) the Elven
+; Wanderer's hiding (the Loader's); else 0, ZF set. CR_OWN_RACE the same for creature AX (DS the
+; game's). Others kept.
+OWN_BIT equ 0x40
+own_race_b:
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .none
+        mov al, [es:bx + KIT_BYTE]
+        cmp al, KIT_OPEN
+        je .none
+        test al, OWN_BIT
+        jz .none
+        mov al, [es:bx + 0x18]
+        or al, al
+        ret
+.none:  xor al, al
+        ret
+cr_own_race:
+        push bx
+        push es
+        call creature_sheet
+        call own_race_b
+        pop es
+        pop bx
+        ret
 
 ; MISSILE_RATE: AX (the attacks a round in halves: the weapon type's, +0Bh, as the game has a
 ; missile's) made a specialist's rate of fire when greater, for skill DL (SPEC_EXPERT or above: a
@@ -3037,11 +3098,10 @@ probe_dam_line:
 ; "1D4"), ES:BX its item type's record, SI the type, the routine's [BP-6] the creature (0 for
 ; none), the damage bonus, the dice's sides and their count pushed as for PROBE_DAM_LINE. AL: the
 ; weapon's attacks a round (halves). With RULE_SPECIALIZE, the rate of fire as PROBE_ATTACKS gives
-; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does.
+; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does; K'ratchek's chatkcha one
+; more a round, as OWN_THROWS (with the kits on, whatever the specialization rule).
 probe_missile_line:
         mov al, [es:bx + 0x0B]
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .ret
         cmp dword [bp - 6], 0
         je .ret
         push di
@@ -3056,18 +3116,32 @@ probe_missile_line:
         imul ax, ax, 0x47
         les bx, [0x1661]
         add bx, ax
+        pop ax
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .own
+        push ax
         call spec_of_sheet
         pop ax
         call missile_rate
         cmp dl, SPEC_SPECIAL
-        jb .out
+        jb .own
         ja .three
         add word [ss:di + 0x0C], 2
-        jmp .out
+        jmp .own
 .three: add word [ss:di + 0x0C], 3
         cmp dl, SPEC_GRAND
-        jne .out
+        jne .own
         add word [ss:di + 0x0A], 2
+.own:   push ax                 ; (K'ratchek's chatkcha: one more a round, as OWN_THROWS)
+        call own_race_b
+        cmp al, THRI_KREEN_RACE
+        pop ax
+        jne .out
+        cmp si, KIND_TYPES
+        jae .out
+        cmp byte [cs:si + kind_of_type], MISSILE_KIND
+        jne .out
+        add ax, OWN_THROWS_MORE
 .out:   pop es
         pop dx
         pop bx
@@ -3850,27 +3924,42 @@ class_forbids_one:
 .ret:   ret
 
 ; DUAL_WARRIOR: CU_DUAL 1 if the character (sheet ES:BX) is a human whose class now is thief or
-; preserver and who was a fighter, gladiator or ranger before (restrict.dual_warrior), else 0.
-; All registers kept.
+; preserver and who was a fighter, gladiator or ranger before, or a thief who was a cleric before
+; (restrict.dual_warrior), else 0. All registers kept.
 dual_warrior:
         push ax
+        push cx
         mov byte [cs:cu_dual], 0
         cmp byte [es:bx + 0x18], 1
         jne .out
-        mov al, [es:bx + 0x21]
-        cmp al, 17
+        mov cl, [es:bx + 0x21]
+        cmp cl, 17
         je .was
-        cmp al, 11
+        cmp cl, 11
         jne .out
 .was:   mov al, [es:bx + 0x22]
-        call warrior_al
+        call .before
         jc .yes
         mov al, [es:bx + 0x23]
-        call warrior_al
+        call .before
         jnc .out
 .yes:   mov byte [cs:cu_dual], 1
-.out:   pop ax
+.out:   pop cx
+        pop ax
         ret
+.before:                        ; (carry set: class AL a warrior, or a cleric for a thief, CL, now)
+        call warrior_al
+        jc .ret
+        cmp cl, 17
+        jne .no
+        cmp al, 1
+        jb .no
+        cmp al, 4
+        ja .no
+        stc
+        ret
+.no:    clc
+.ret:   ret
 cu_dual db 0
 
 ; WARRIOR_AL: carry set if class AL is a fighter, gladiator or ranger. All registers kept.
@@ -4575,7 +4664,7 @@ wp_allowed:
 ; use (a fire cleric's long sword the obsidian one, not the plain bone one); not the bow for a
 ; ranger (its class flags, +12h: 200h), who has expertise with it already; a Battle Mage the
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
-; the bow only.
+; the bow only; a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword).
 ; DS = the game's. Others kept.
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
 kinds_allowed:
@@ -4602,6 +4691,8 @@ kinds_allowed:
         jc .no
         bt di, cx
         jc .no                  ; (one of its types already let in)
+        call kit_allows         ; (a Battle Dancer's long sword, whatever its cleric's sphere)
+        jc .let
         push es
         push bx
         imul ax, dx, 0x14
@@ -4617,7 +4708,7 @@ kinds_allowed:
         mov byte [cs:kf_spec], 1
         call kit_forbids
         jc .no
-        movzx cx, cl
+.let:   movzx cx, cl
         bts di, cx
 .no:    inc dx
         cmp dx, KIND_TYPES
@@ -5223,7 +5314,22 @@ ef_lines_of:
 .kit_next:
         dec di
         jns .kit
-.specs: test word [cs:rules], RULE_SPECIALIZE
+.specs: call own_race_b         ; (the game's own party's features: a line each, OWN_LINES)
+        jz .spec_rule
+        mov si, own_lines
+.own:   cmp byte [cs:si], 0
+        je .spec_rule
+        cmp [cs:si], al
+        lea si, [si + 1]
+        jne .own_skip
+        call ef_line
+.own_skip:
+        cmp byte [cs:si], 0
+        lea si, [si + 1]
+        jne .own_skip
+        jmp .own
+.spec_rule:
+        test word [cs:rules], RULE_SPECIALIZE
         jz .ret
         xor di, di
 .slot:  cmp di, SPEC_COUNT
@@ -6534,7 +6640,7 @@ probe_cast_level:
 ; the routine giving the level a spell is cast at, for its duration and damage (5E25Ch; the same
 ; arguments; DI the best level of the caster's classes that cast it, PROBE_RANGER_LEVEL's for a
 ; ranger): AX that, for a wizard spell a Shinobi's as PROBE_CAST_LEVEL's; for a priest spell a
-; Spirit Caller's or Wasteland Seer's 2 more under the open sky (its KIT_OUTDOORS bit), 1 less
+; Spirit Caller's or Wasteland Seer's (or K'ratchek's: OWN_RACE_B) 2 more under the open sky (its KIT_OUTDOORS bit), 1 less
 ; under a roof, no less than 1 (SKY_LEVEL; kits.sky_level).
 probe_spell_level:
         mov ax, di
@@ -6566,6 +6672,11 @@ sky_level:
         je .sky
         call cr_is
         db KIT_WASTE_SEER
+        je .sky
+        push ax                 ; (K'ratchek, as a Wasteland Seer: OWN_RACE_B)
+        call cr_own_race
+        cmp al, THRI_KREEN_RACE
+        pop ax
         jne .out
 .sky:   bt word [cs:kit_outdoors], ax
         jnc .roof
@@ -8510,6 +8621,9 @@ kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, K
              db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0
              db KIT_SPELLARCHER, 'SPELLARCH', 0, KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTE SEER', 0, 0
 ef_more      db 'MORE: CLICK HERE', 0
+; The game's own party's features on the Effects screen (OWN_RACE_B): the race, the line. 0 ends it.
+own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS', 0, 8, 'CHATKCHA 2/ROUND', 0
+             db 3, 'KIT: E-WANDERER', 0, 0
 ef_drawing   db 0
 ef_index     dw 0
 ef_first     dw 0
@@ -9374,8 +9488,29 @@ kit_row:
         call kit_rolls
         call wp_allowed         ; (a Spellarcher, the bow its only kind: its weapon spec the bow,
         cmp ax, 1 << (BOW_KIND - 1) ;   whatever was chosen)
-        jne .two
+        jne .dagger
         mov byte [es:bx + SPEC_SLOTS], BOW_KIND
+.dagger:                        ; (a Ghetto Fighter's or Poisoner's the dagger, a Battle Dancer's
+        cmp byte [cs:wp_touched], 0 ;   the long sword, if the player left the weapon page's
+        jne .two                ;   default: kits.default_kind)
+        push cx
+        mov cx, ax              ; (the kinds its classes and kit allow)
+        call kit_made
+        mov ah, DAGGER_KIND
+        cmp al, KIT_GHETTO
+        je .kind
+        cmp al, KIT_POISONER
+        je .kind
+        mov ah, 0               ; (the long sword)
+        cmp al, KIT_BATTLE_DANCER
+        jne .kept
+.kind:  movzx ax, ah
+        bt cx, ax
+        jnc .kept
+        inc al
+        mov [es:bx + SPEC_SLOTS], al
+.kept:  mov ax, cx
+        pop cx
 .two:   call wp_two             ; (no Myrmidon now: its second kind gone)
         jnz kit_marks
         mov byte [es:bx + SPEC_SLOTS + 1], 0

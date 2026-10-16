@@ -526,6 +526,22 @@ class KitGearTests(FinishNewTests):
         self.assertIn("in place of the", out[0])
         self.assertIn("second", out[1])
 
+    def test_ghetto_dagger(self):
+        """A Ghetto Fighter (a dwarf fighter/thief): its long sword made a dagger, whatever its spec;
+        once."""
+        from dsloader import weaponchoice
+        right, left = self.character(9, 1)
+        s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
+        s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 2, 17
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
+        out = weaponchoice.kit_gear(self.gd)
+        self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+        dagger = weaponchoice.PLAIN[specialize.KINDS.index("dagger")][0]
+        self.assertEqual(self.item(0), (dagger, right))
+        self.assertEqual(len(out), 1)
+        self.assertIn("Ghetto Fighter fights best with one", out[0])
+
     def test_ravager_shield(self):
         from dsloader import weaponchoice
         right, left = self.character(9, 3)

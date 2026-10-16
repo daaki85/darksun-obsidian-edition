@@ -109,9 +109,10 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, but is unable to read magical script.
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
-- **Battle Dancer:** dances as each fight starts, a roll against DEX: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
-- **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there; worse under a roof, and it never backstabs.
-- **Wild Fury:** Wild Fighting as each fight starts, a roll against CON: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
+- **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
+- **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
+- **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
+- **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, and Cilla, an Elven Wanderer, hides as well in the sun as out of it.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 

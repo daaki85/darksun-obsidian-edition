@@ -55,6 +55,7 @@ class DefaultPartyTests(unittest.TestCase):
                 mock.patch.object(dp, "take_armour", stub("armour")), \
                 mock.patch.object(dp, "learn", stub("armor spell")), \
                 mock.patch.object(dp, "set_kit", stub("kit")), \
+                mock.patch.object(dp, "set_own", stub("own")), \
                 mock.patch.object(dp, "gear", stub("gear")):
             lines = dp.ready(FakeGame(DEFAULT), rules, set() if done is None else done, gear)
         return calls, lines
@@ -68,8 +69,8 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertNotIn(("Gerakis", "gythka"), calls)
         calls, _ = self.ready(game.RULE_RESTRICT)
         self.assertEqual(calls, [("Cilla", "armour"), ("Cilla", "armor spell")])
-        calls, _ = self.ready(game.RULE_KITS)  # (Cermak alone: Gerakis has no kit)
-        self.assertEqual(calls, [("Cermak", "kit")])
+        calls, _ = self.ready(game.RULE_KITS)  # (Cermak's kit; the others' features of their own)
+        self.assertEqual(calls, [("Gerakis", "own"), ("K'ratchek", "own"), ("Cermak", "kit"), ("Cilla", "own")])
 
     def test_starting_gear(self):
         """Fuller starting gear: each of them, after the other changes (Cilla's armour gone first)."""
@@ -116,6 +117,22 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertEqual(kitpages.kit_ids(gd.sheet(0)), [kits.ARCANIST])
         self.assertEqual(kitpages.kit_names(gd.sheet(0)), ["Arcanist"])
         self.assertEqual(dp.set_kit(gd, 0, "Cermak"), [])
+
+        # Cilla's own feature: the kit byte's OWN_BIT, her (no) kits as they were; once
+        cilla = bytearray(sheet(3, (11, 6, 17)))
+        cilla[kitpages.KIT_BYTE] = 0xFF
+        gd = Gd(bytes(cilla))
+        self.assertEqual(kits.own_race(gd.sheet(0)), 0)
+        self.assertEqual(dp.set_own(gd, 0, "Cilla"), [dp.OWN_LINES["Cilla"]])
+        self.assertEqual((kits.own_race(gd.sheet(0)), gd.sheet(0)[kitpages.KIT_BYTE]), (kits.ELF, kits.OWN_BIT))
+        self.assertEqual(kitpages.kit_ids(gd.sheet(0)), [])
+        self.assertEqual(dp.set_own(gd, 0, "Cilla"), [])
+        # Gerakis, a gladiator with a kit: kept with it
+        gerakis = bytearray(sheet(5, (10, 0, 0)))
+        gerakis[kitpages.KIT_BYTE] = 1
+        gd = Gd(bytes(gerakis))
+        dp.set_own(gd, 0, "Gerakis")
+        self.assertEqual((kits.own_race(gd.sheet(0)), kitpages.kit_ids(gd.sheet(0))), (kits.HALF_GIANT, [kits.CHAMPION]))
 
     def test_once_and_only_while_new(self):
         done = set()

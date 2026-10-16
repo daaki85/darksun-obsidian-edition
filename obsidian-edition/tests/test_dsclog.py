@@ -1089,6 +1089,18 @@ class SpecializeTests(unittest.TestCase):
                 sheet[0x21:0x24], sheet[0x24:0x27] = bytes(classes), bytes(levels)
                 self.assertEqual(specialize.missile_attacks(halves, specialize.skill(bytes(sheet), weapon), weapon,
                                                             bytes(sheet)), want[0])
+        # K'ratchek (the game's own party's thri-kreen: kits.OWN_BIT) one more chatkcha throw a round, with
+        # weapon specialization or without, its kind chosen or not; not with the kits off, another
+        # missile weapon, or without the bit
+        from dsloader import kits
+        both, kits_on = 4096 | game.RULE_KITS, game.RULE_KITS
+        for rules, weapon, kit, chosen, want in ((both, CHATKCHA, kits.OWN_BIT, (), 4), (kits_on, CHATKCHA, kits.OWN_BIT, (), 4),
+                                                 (both, CHATKCHA, kits.OWN_BIT, (12,), 5),
+                                                 (both, SLING, kits.OWN_BIT, (), 2), (both, CHATKCHA, 0, (), 2),
+                                                 (4096, CHATKCHA, kits.OWN_BIT, (), 2)):
+            with self.subTest(rules=rules, weapon=weapon, kit=kit, chosen=chosen):
+                self.assertEqual(self.attack(2, weapon, chosen=chosen, classes=(9, 7, 12), levels=(2, 2, 2),
+                                             missile=True, race=8, kit=kit, rules=rules)[0], want)
         # (a human ranger turned preserver: no bow expertise until the preserver level passes the ranger's)
         self.assertEqual(self.attack(4, BOW, chosen=(0,), classes=(11, 13, 0), levels=(3, 5, 0), missile=True,
                                      race=1), (4, 15, 3, 8))
@@ -1782,6 +1794,18 @@ class KindsAllowedTests(unittest.TestCase):
             mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
             self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), 1 << specialize.KINDS.index("bow"))
             self.assertEqual(restrict.allowed_kinds(bytes(s), self.record), [specialize.KINDS.index("bow")])
+            for cls in (1, 2, 3, 4):  # an elf cleric/fighter Battle Dancer: the long sword and bow, whatever its sphere
+                s = bytearray(sheet(9, cls))
+                s[0x18], s[0x43] = 3, 1
+                with self.subTest(dancer=cls):
+                    mu.mem_write(SS * 16 + 0x500, bytes(s))
+                    mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+                    for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
+                        mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                    mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
+                    got = mu.reg_read(r.UC_X86_REG_AX)
+                    self.assertEqual([k for k in range(16) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
+                    self.assertEqual(restrict.allowed_kinds(bytes(s), self.record), [0, specialize.KINDS.index("bow")])
             game.RULES_IN_FORCE = game.RULE_KITS | game.RULE_RESTRICT  # an Elementalist's second sphere's kinds too
             for cls, second in ((1, 3), (3, 3), (3, 0), (2, 2)):
                 s = bytearray(sheet(cls))
@@ -4434,6 +4458,20 @@ class KitTests(unittest.TestCase):
                                 self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), want)
                                 self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX)],
                                                  [0x2222, 0x3333])
+            # K'ratchek (the game's own party's thri-kreen: kits.OWN_BIT, no kit) as a Wasteland Seer;
+            # a thri-kreen without the bit, or with the kits off, as she is
+            for own, rules, seer in ((kits.OWN_BIT, game.RULE_KITS, True), (0, game.RULE_KITS, False),
+                                     (kits.OWN_BIT, 0, False)):
+                self.rules(rules)
+                self.creature(9, own, index=2, second=7, race=8, level=5)
+                for outdoors in (False, True):
+                    self.mu.mem_write(hdr + 350, bytes((4 if outdoors else 0,)))
+                    with self.subTest(own=own, rules=rules, outdoors=outdoors):
+                        self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<HH", 7, 100))
+                        self.run_vector(VEC_SPELL_LEVEL, 2, eax=0x1111, ebx=0x2222, ecx=0x3333, edi=5)
+                        want = kits.sky_level(kits.WASTE_SEER if seer else 0, 100, 5, outdoors)
+                        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), want)
+            self.rules(game.RULE_KITS)
             self.assertEqual([kits.sky_level(kits.SPIRIT_CALLER, 69, n, o) for n, o in ((5, True), (5, False), (1, False))],
                              [7, 4, 1])
             self.assertEqual(kits.sky_level(kits.WASTE_SEER, 30, 5, True), 5)  # (a wizard spell)

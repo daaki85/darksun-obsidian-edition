@@ -657,7 +657,7 @@ line).
 
 How: the helper adds the classes' limits where the game checks an item against
 the classes allowed to use it (`INT CDh`; `DUAL_WARRIOR` lets a human thief
-or preserver who was a warrior wear the warrior's armour), a multiclass (or
+or preserver who was a warrior, or a thief who was a cleric, wear that class's armour), a multiclass (or
 warrior-and-preserver human's) armour where the game checks for "No spell
 use" (`INT CCh`, `CLASS_AND_WARRIOR`), and a thief's armour that isn't light
 at the end of the thief skill routine (`PROBE_BELT`: every skill 0) and where
@@ -1155,12 +1155,14 @@ The Loader writes two things to the helper's header for these kits: at `+350`
 (`KIT_OUTDOORS`) a bit for each party member under the open sky (an outdoor
 map, or a square not of a building's floor: `stealth.daylight`), once a second;
 at `+351` to `+354` (`KIT_DANCE`) each member's Battle Dancer's dance, +1, −1 or
-0, which `dance.py` rolls as a fight's first round begins (a d20 against DEX)
+0, which `dance.py` rolls as a fight's first round begins (a d20 against DEX
+− 4, a natural 20 failing: `kits.DANCE_CHECK`)
 and counts down. It ends with the fight as the rounds count it: the game's clock
 `FIGHT_GAP` past the last round. The game's fight flag isn't enough, because
 it is still clear as round 1's initiative is rolled and between the arena's
-waves. At `+355` (`KIT_WILD`) each Wild Fury's Wild Fighting, which `wild.py`
-rolls as a fight's first round begins (a d20 against CON) and clears as the
+waves. At `+355` (`KIT_WILD`) each Wild Fury's (and Gerakis's) Wild Fighting,
+which `wild.py` rolls as a fight's first round begins (a d20 against CON − 4, a
+natural 20 failing: `kits.WILD_CHECK`) and clears as the
 dances end: bit N, member N's check failed; bit N + 4, it passed.
 
 #### Where each effect goes
@@ -1205,7 +1207,7 @@ emulated tests hold the helper to it:
 | shields | Shadowblade, Ghetto Fighter | `KIT_FORBIDS` (`kits.forbids`) |
 | hiding, moving silently | Stalker, Assassin, Wilderness Avenger (a ranger's, 5 a level of its best class), Shadowblade (hides with an enemy beside it) | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
 | the two-weapon penalty | Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier (in any armour); Ghetto Fighter (2 less in each hand) | `PROBE_TWO`; `RG_TWO` |
-| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (`kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`), whatever the class restrictions |
+| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (`kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. `KIT_ROW` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword when the kit is chosen, if the player hasn't clicked a kind (`WP_TOUCHED`) and the kit allows it (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
 | skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
 | weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one); the creation panel counts a Battle Mage as a warrior (`WP_CLASSES`, so `WP_IDS` gives the disciplines' window with WEAPON SPEC; `kitpages.panel_windows`) |
 | attacks a round | Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons-adds-penalties)) |
@@ -1370,6 +1372,24 @@ for each. Seen in play: Cilla's USE screen lists ARMOR among her 1st-level
 spells and her inventory has no chest armour (AC 5); Gerakis holds the gythka
 and the long sword; the dice log lists each one's added gear (Gerakis a sling
 and leather chest and leg armour; Cermak, Cilla and K'ratchek nothing).
+
+Their features of their own (with kits: `set_own`) go by a bit no character
+made on the creation screen has: the kit byte's bit 6 (`kits.OWN_BIT`, DSCLOG's
+`OWN_BIT`; bits 0 to 5 are the classes' kits, two each, and bit 7 Friends
+known; every reader of a kit masks its own two bits), and which feature by the
+race (`OWN_RACE_B`, `kits.own_race`; with `RULE_HI_KITS` only). Gerakis (the
+half-giant): Wild Fighting, `wild.py` rolling for him as for a Wild Fury
+(`kits.wild_fighter`), DSCLOG's effects going by the `KIT_WILD` bits alone.
+K'ratchek (the thri-kreen): `SKY_LEVEL` as a Wasteland Seer's (`CR_OWN_RACE`),
+and `OWN_THROWS` in `PROBE_ATTACKS` (and the inventory's `PROBE_MISSILE_LINE`)
+2 more halves a round with a chatkcha, whatever the specialization rule
+(`GameData.weapon_hits` the same). Cilla (the elf): `stealth.py`'s hiding not
+halved in daylight (`kits.not_halved_by_sun`, as an Assassin's and a Military
+Scout's). The Effects screen's lines are `OWN_LINES` (after the kits', in
+`EF_LINES_OF`); the Characters tab's `GameData.kit` adds `kits.OWN_FEATURES`.
+Seen in play: the dice log's lines as the game starts, Gerakis's check
+("needs 18 or less (CON 22 -4)"), Cilla's hiding at 50 in the arena, the four
+Effects screens, K'ratchek's inventory line `Chatkcha 2.5x1D6+4` (1.5x before).
 
 ### The leader's CHA at shops
 

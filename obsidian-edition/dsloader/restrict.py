@@ -7,7 +7,7 @@ PROBE_CAN_USE does this in the game; this is its model, for the tests and the Lo
   leather shield only, and of weapons only daggers, short swords, maces, clubs, chatkchas, bows
   and slings.
 - A thief: light armour only, but a multiclass one (a fighter/thief, a cleric/thief), or a human
-  thief who was a fighter, gladiator or ranger (dual_warrior), may wear what its other class
+  thief who was a fighter, gladiator, ranger or cleric (dual_warrior), may wear what its other class
   allows; it then has no thief skills and no backstab in armour that isn't light (thief_heavy).
   A multiclass one a shield only a leather one that another of its classes allows.
 - A preserver of that one class: no armour and no shield (a Battle Mage, kits.py, may wear light
@@ -219,10 +219,12 @@ def allowed(sheet: bytes, item_type: int, typ: bytes) -> bool:
 
 def dual_warrior(sheet: bytes) -> bool:
     """A human whose class now is thief or preserver and who was a fighter, gladiator or ranger
-    before: it may wear what the warrior could (DSCLOG's DUAL_WARRIOR)."""
+    before, or a thief who was a cleric before: it may wear what the warrior or cleric could
+    (DSCLOG's DUAL_WARRIOR)."""
     classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    before = set(WARRIORS) | (set(CLERICS) if classes[0] == THIEF else set())
     return sheet[game.SHEET_RACE] == game.HUMAN and classes[0] in (THIEF, PRESERVER) \
-        and any(c in WARRIORS for c in classes[1:])
+        and any(c in before for c in classes[1:])
 
 
 def class_and_warrior(sheet: bytes, cls: int) -> bool:

@@ -1616,8 +1616,8 @@ class GameData:
                     + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
-                if kid == kits.WILD_FURY and self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT)
-                    parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
+            if self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis)
+                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
                 from . import specialize
                 kind = struct.unpack_from("<H", item, ITEM_TYPE)[0]
@@ -1632,7 +1632,10 @@ class GameData:
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
                 if kits.warrior_attacks(have, self.sheet(creature)) != have:
                     halves = kits.warrior_attacks(have, self.sheet(creature))
-            if not missile and self.wild.get(creature) and kits.WILD_FURY in kids:
+            if missile and kind == kits.CHATKCHA and self.own_race(creature) == kits.THRI_KREEN:
+                # (K'ratchek's chatkcha comes back as if she had several: DSCLOG's OWN_THROWS)
+                halves = (typ[0x0B] if halves is None else halves) + kits.OWN_THROWS_MORE
+            if not missile and self.wild.get(creature):
                 # (Wild Fighting, its check passed: 1 more attack a round in melee; DSCLOG's WILD_HALVES)
                 halves = (self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves) + kits.WILD_HALVES
             if not missile and self.rules & RULE_TWO_WEAPONS and slot == WEAPON_HANDS[1]:
@@ -1652,8 +1655,8 @@ class GameData:
                 kit = (kits.POISONER_TO_HIT if kid == kits.POISONER else 0) + kits.ghetto_to_hit(kid, None)
                 if kit:
                     parts.append((kits.name(kid), kit))
-                if kid == kits.WILD_FURY and self.wild.get(creature) is False:
-                    parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
+            if self.wild.get(creature) is False:
+                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
@@ -1796,6 +1799,19 @@ class GameData:
         from . import kitpages
         return kitpages.kit_ids(self.sheet(creature))
 
+    def own_race(self, creature: int) -> int:
+        """With kits, the race of one of the game's own party given a feature of its own
+        (kits.own_race: Gerakis, K'ratchek, Cilla), else 0."""
+        if not self.rules & RULE_KITS:
+            return 0
+        from . import kits
+        return kits.own_race(self.sheet(creature))
+
+    def own_features(self, creature: int) -> List[str]:
+        """The names of those features (kits.OWN_FEATURES), as the Effects screen lists them."""
+        from . import kits
+        return list(kits.OWN_FEATURES.get(self.own_race(creature), ()))
+
     def has_kit(self, creature: int, kid: int) -> bool:
         return kid in self.kit_ids(creature)
 
@@ -1822,8 +1838,9 @@ class GameData:
         return False
 
     def kit(self, creature: int) -> Optional[str]:
-        """With kits, the kits the creature took (kitpages.KITS), the oldest class's first, or None;
-        an Elementalist's with its second sphere ("Elementalist (and water)"), a kit asleep with the
+        """With kits, the kits the creature took (kitpages.KITS), the oldest class's first, then the
+        features of its own of one of the game's own party (kits.OWN_FEATURES), or None; an
+        Elementalist's with its second sphere ("Elementalist (and water)"), a kit asleep with the
         level its class sleeps till."""
         if not self.rules & RULE_KITS:
             return None
@@ -1839,6 +1856,7 @@ class GameData:
                 name += (f", dormant until the {CLASS_NAMES[sheet[SHEET_CLASSES]].split(' (')[0].lower()} level "
                          f"passes {sheet[SHEET_LEVELS + place]}")
             names.append(name)
+        names += kits.OWN_FEATURES.get(kits.own_race(sheet), ())  # (the game's own party's: Gerakis...)
         return "; ".join(names) or None
 
     def specializations(self, creature: int) -> List[Tuple[str, str]]:

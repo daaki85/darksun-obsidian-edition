@@ -1,9 +1,10 @@
-"""A Wild Fury's Wild Fighting (kits.py): checked for each one as a fight's first round begins,
-kept for the fight, and given to DSCLOG (its KIT_WILD bits) for to hit, damage, attacks and AC.
+"""Wild Fighting (kits.py), a Wild Fury's and Gerakis's (the game's own party: kits.own_race):
+checked for each one as a fight's first round begins, kept for the fight, and given to DSCLOG
+(its KIT_WILD bits) for to hit, damage, attacks and AC.
 
 The check is the Wild Fighting proficiency's (The Complete Barbarian's Handbook): a d20 against
-CON (+0). Passed, 1 more attack a round in melee and 3 more damage; failed, 3 worse to hit and AC 3
-worse (no worse than 10); either for the whole fight.
+CON - 4 (the check at -4; a natural 20 always fails). Passed, 1 more attack a round in melee and
+3 more damage; failed, 3 worse to hit and AC 3 worse (no worse than 10); either for the whole fight.
 """
 
 import random
@@ -42,13 +43,13 @@ class WildFights:
             rec = gd.creature(member)
             if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] \
                     or rec[game.CREATURE_STATUS] not in game.STATUS_ABLE \
-                    or kits.WILD_FURY not in gd.kit_ids(member):
+                    or not kits.wild_fighter(gd.kit_ids(member), gd.own_race(member)):
                 continue
             who = gd.creature_name(member)
             con, d20 = rec[game.CREATURE_ABILITIES + 2], roll(1, 20)
             passed = kits.wild_check(con, d20)
             self.fighting[member] = passed
-            check = f"{who} fights wild: d20 = {d20}, needs {con} or less (CON {con})"
+            check = f"{who} fights wild: d20 = {d20}, needs {min(con + kits.WILD_CHECK, 19)} or less (CON {con} {kits.WILD_CHECK})"
             if passed:
                 out.append(f"{check} -> 1 more attack a round and +3 damage for the fight")
             else:

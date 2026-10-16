@@ -14,7 +14,10 @@ starts. Each is known by name, race and classes together.
   preserver) the long sword and the axe, which count once his gladiator levels do again.
 - With kits: Cermak an Arcanist (his preserver class's kit; none for his gladiator class), with
   no change to his gear (an Arcanist has none of its own) or to the hit points the game gave him
-  (the Arcanist's d3 counts from his next level).
+  (the Arcanist's d3 counts from his next level). The other three get features of their own, which
+  no character made on the creation screen can have (kits.own_race: the kit byte's OWN_BIT):
+  Gerakis Wild Fighting, K'ratchek a Wasteland Seer's casting and a chatkcha that comes back as if
+  she had several, Cilla the Elven Wanderer's hiding, never halved in daylight.
 - With class restrictions: Cilla (a preserver, druid and thief) can't wear armour (the druid's
   rule), so her leather armour is taken away and she knows Armor, the first wizard spell (0),
   the one Old One-Eye's scroll in the fields teaches.
@@ -169,6 +172,26 @@ def set_kit(gd: GameData, member: int, name: str) -> List[str]:
     return [f"{name} is an Arcanist."]
 
 
+OWN_LINES = {"Gerakis": "Gerakis fights wild: Wild Fighting, as a fight starts.",
+             "K'ratchek": "K'ratchek casts as a Wasteland Seer, and her chatkcha comes back as if she had several.",
+             "Cilla": "Cilla is an Elven Wanderer: her hiding is never halved in daylight."}
+
+
+def set_own(gd: GameData, member: int, name: str) -> List[str]:
+    """Gerakis, K'ratchek and Cilla given their features of their own (kits.own_race): the kit
+    byte's OWN_BIT, which no character made on the creation screen has."""
+    from . import kits, kitpages
+    sheet = gd.sheet(member)
+    byte = sheet[kitpages.KIT_BYTE]
+    if byte != kits.KIT_OPEN and byte & kits.OWN_BIT:
+        return []
+    byte = (0 if byte == kits.KIT_OPEN else byte) | kits.OWN_BIT
+    index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
+    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    gd.guest.write(sheets + index * game.SHEET_SIZE + kitpages.KIT_BYTE, bytes([byte]))
+    return [OWN_LINES[name]]
+
+
 def learn(gd: GameData, member: int, name: str, spell: int = ARMOR) -> List[str]:
     known = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * KNOWN_STRIDE + spell
     if gd.guest.read(known, 1) == b"\x01":
@@ -202,6 +225,8 @@ def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]], starting_gear: b
                 steps.append(("gythka", club_to_gythka))
         if name == "Cermak" and rules & game.RULE_KITS:
             steps.append(("kit", set_kit))
+        if name in OWN_LINES and rules & game.RULE_KITS:
+            steps.append(("own", set_own))
         if name == "Cilla" and rules & game.RULE_RESTRICT:
             steps += [("armour", take_armour), ("armor spell", learn)]
         if starting_gear:
