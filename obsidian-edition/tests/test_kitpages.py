@@ -42,7 +42,7 @@ class KitPageTests(unittest.TestCase):
         from dsloader import gff
         with open(os.environ["DSUN_RESOURCE"], "rb") as f:
             widths = kitpages.row_widths(gff.read_gff(f.read()))
-        self.assertEqual(len(widths), 32)
+        self.assertEqual(len(widths), 37)
         self.assertEqual({n: w for n, w in widths.items() if w > kitpages.ROW_WIDTH}, {})
 
     def test_kit_names(self):

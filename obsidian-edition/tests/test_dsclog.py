@@ -1709,6 +1709,15 @@ class KindsAllowedTests(unittest.TestCase):
                     mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
                     got = mu.reg_read(r.UC_X86_REG_AX)
                     self.assertEqual([k for k in range(16) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
+            s = bytearray(sheet(9, 11))  # a half-elf fighter/preserver Spellarcher: the bow only
+            s[0x18], s[0x43] = 4, 1
+            mu.mem_write(SS * 16 + 0x500, bytes(s))
+            mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), 1 << specialize.KINDS.index("bow"))
+            self.assertEqual(restrict.allowed_kinds(bytes(s), self.record), [specialize.KINDS.index("bow")])
             game.RULES_IN_FORCE = game.RULE_KITS | game.RULE_RESTRICT  # an Elementalist's second sphere's kinds too
             for cls, second in ((1, 3), (3, 3), (3, 0), (2, 2)):
                 s = bytearray(sheet(cls))
@@ -3784,6 +3793,47 @@ class KitTests(unittest.TestCase):
                 self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0xFFFF)
         finally:
             mu.mem_write(hdr + 360, bytes(1))
+
+    def test_spellarcher_arrows(self):
+        """PROBE_ARROW: the ammunition's plus kept (ES:[6]) for a shot, 1 better and at least +1
+        for a Spellarcher (half-elf fighter/preserver) whose turn it is shooting from a bow; as it
+        is for a sling, or for anyone else (kits.arrow_plus)."""
+        from dsloader import kits
+        from dsloader.gamepatch import VEC_ARROW
+        mu = self.mu
+        at = self.image.find(bytes.fromhex("53568b760c"))
+        self.assertGreater(at, 0)
+        mu.mem_write(VEC_ARROW * 4, struct.pack("<HH", at, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        mu.mem_write(CALLER * 16 + 0x700, bytes((0xCD, VEC_ARROW, 0x90, 0x90)))
+        self.rules(game.RULE_KITS)
+        things = ((self.DS + 0x3972 - 0x4356) & 0xFFFF) * 16 + 0xC36
+        ammo_seg = 0x7800
+
+        def shot(plus, weapon_type, turn=7):
+            mu.mem_write(self.DS * 16 + 0x4979, struct.pack("<H", turn))
+            mu.mem_write(SS * 16 + BP + 0x0C, struct.pack("<H", weapon_type))
+            mu.mem_write(ammo_seg * 16 + 6, bytes((0x55,)))
+            for name, value in dict(cs=CALLER, ds=self.DS, es=ammo_seg, ss=SS, esp=0x7F0, ebp=BP, eflags=IF | 2,
+                                    eax=0x1100 | plus & 0xFF, ebx=0x2222, esi=0x3333).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(CALLER * 16 + 0x700, CALLER * 16 + 0x704)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_SI, r.UC_X86_REG_ES)],
+                             [0x2222, 0x3333, ammo_seg])
+            return struct.unpack("b", mu.mem_read(ammo_seg * 16 + 6, 1))[0]
+        self.creature(9, 1, index=2, second=11, race=4)  # thing 7 is creature 2: a Spellarcher
+        self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 11, 4), kits.SPELLARCHER)
+        for plus in (0, 1, 3, -1):
+            with self.subTest(plus=plus):
+                self.assertEqual(shot(plus, 1), kits.arrow_plus(kits.SPELLARCHER, plus))  # (a bow)
+                self.assertEqual(shot(plus, 69), kits.arrow_plus(kits.SPELLARCHER, plus))  # (Phrain's Bow)
+                self.assertEqual(shot(plus, 64), plus)  # (a sling: its stones as they are)
+        self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p) for p in (0, 1, 3, -1)], [1, 2, 4, 1])
+        mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, 5))  # (creature 5: not a party member)
+        self.creature(9, 1, index=5, second=11, race=4)
+        self.assertEqual(shot(0, 1), 0)
+        self.creature(9, 1, index=2, second=17, race=4)  # (a Shadowblade)
+        self.assertEqual(shot(2, 1), 2)
 
     def test_thac0(self):
         """PROBE_THAC0: 20 less SI, and kits.thac0 (a warrior's for the Swashbuckler, Crusader,

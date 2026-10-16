@@ -48,7 +48,7 @@ SHORT = {"Arena Champion": "CHAMPION", "Swashbuckler": "SWASHBUCK", "Elementalis
          "Grove Warden": "WARDEN", "Battle Mage": "BATTLMAGE", "Mind Bender": "M-BENDER", "Mind Warrior": "M-WARRIOR",
          "Battle Dancer": "B-DANCER", "Shadowblade": "SHADOWBLD", "Military Scout": "M-SCOUT",
          "Wilderness Avenger": "W-AVENGER", "Ghetto Fighter": "G-FIGHTER",
-         "Spirit Caller": "S-CALLER", "Wasteland Seer": "WASTESEER"}
+         "Spellarcher": "SPELLARCH", "Spirit Caller": "S-CALLER", "Wasteland Seer": "WASTE SEER"}
 # the widest a row's picture may be, its mark's room in: the panel's frame comes in to about 95
 # pixels past the rows' left at the second kit's row, and a few more are kept clear of it
 ROW_WIDTH = 88

@@ -342,6 +342,12 @@ PATH_MOVE, PATH_INITIATIVE = 1, 1
 SCOUT_MISSILE_KINDS = frozenset((BOW, BOW + 1, BOW + 2))  # (the bow, sling and staff sling)
 
 
+def arrow_plus(kid: int, plus: int) -> int:
+    """An arrow's plus as a character of kit KID shoots it from a bow (PROBE_ARROW): a Spellarcher's
+    1 better, and at least +1 (magical, so it hurts what only magic weapons hurt)."""
+    return max(plus, 0) + 1 if kid == SPELLARCHER else plus
+
+
 POISONER_TO_HIT = -1  # (every attack, melee or missile: KIT_TO_HIT)
 POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's first hit in a fight (PROBE_POISON)
 

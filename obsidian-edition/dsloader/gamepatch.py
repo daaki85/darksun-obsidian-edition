@@ -88,6 +88,7 @@ VEC_RACE_PANEL = 0x89
 VEC_BOX_AC = 0x88
 VEC_TICK = 0x87
 VEC_POISON = 0x86
+VEC_ARROW = 0x85
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -565,6 +566,9 @@ PATCHES = (
     # the routine giving a hit's special effects, where a person who isn't a thri-kreen has none:
     # jmp to its end (DSCLOG queues a Poisoner's poison on its first hit in a fight, then jumps)
     Patch("poison", 0x7A6DD, bytes.fromhex("e9e500"), _interrupt(VEC_POISON, 3)),
+    # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
+    # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
+    Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),

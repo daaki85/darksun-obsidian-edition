@@ -975,7 +975,26 @@ alive. Under the open sky their healing runs strongest.
 *Ghetto Fighter* and *Wayfinder* (dwarf fighter/thief). Ghetto Fighters grew
 up in the cities' poorest quarters, where a dagger in each hand settles most
 arguments. Wayfinders are dwarves whose focus is the hidden road: they slip
-past unseen, but have little use for other people's purses.
+past unseen, but have little use for other people's purses, and a party they
+guide moves and acts that little bit quicker.
+
+*Spellarcher* (half-elf fighter/preserver). Half-elf freedom fighters who
+weave a little magic into every arrow. The technique is a secret, and the bow
+is all they train with.
+
+*Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
+inward, to their own great bodies; other minds remain a puzzle to them.
+
+*Poisoner* (halfling fighter/thief). Hunters from the Forest Ridge whose blades
+carry the jungle's venoms. The first wound in a fight is the one that counts,
+and they've never quite taken to fighting fair.
+
+*Spirit Caller* (halfling cleric/psionicist). Shamans of the halfling tribes,
+who speak to the spirits of sky and land. Under the open sky the spirits answer
+loudly; behind walls, hardly at all.
+
+*Wasteland Seer* (thri-kreen druid/fighter). Thri-kreen who read the wastes as
+others read books. The open land lends their spells its strength.
 
 | Kit | Gives | Costs |
 |---|---|---|
@@ -986,6 +1005,11 @@ past unseen, but have little use for other people's purses.
 | **Rescuer** | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | — |
 | **Ghetto Fighter** | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps |
 | **Wayfinder** | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets |
+| **Spellarcher** | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow |
+| **Titan Mind** | psychometabolism powers cost 2 PSP less | telepathy powers cost 2 PSP more |
+| **Poisoner** | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything |
+| **Spirit Caller** | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower |
+| **Wasteland Seer** | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower |
 
 ### Kits' spell slots
 

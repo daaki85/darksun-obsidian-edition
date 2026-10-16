@@ -1933,7 +1933,7 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 A character of two classes at once may take a kit if its race and pair of
 classes have one. Only that race may take it: a dwarf fighter/thief has the
 Ghetto Fighter and Wayfinder, and a half-elf fighter/thief has the Shadowblade
-and Military Scout. "Under the open sky" means an outdoor map, or open ground
+and Military Scout (a halfling fighter/thief has the Poisoner). "Under the open sky" means an outdoor map, or open ground
 outside the buildings on a city map. The Loader works that out about once a
 second.
 
@@ -1946,6 +1946,11 @@ second.
 | **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | none under a roof | the dice log says ", under the open sky" |
 | **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps | DEX's adjustment still applies to the two-weapons penalty |
 | **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative and +1 Move in a fight | −10 pick pockets | the dice log's initiative lines say "Wayfinder's Path-finder" |
+| **Spellarcher** | half-elf fighter/preserver | arrows it shoots from a bow are **1 better and at least +1**: a plain arrow +1, an Arrows +1 +2, and so on, so they hurt what only magic weapons hurt, and do 1 more damage | its weapon spec is the bow, and only the bow (choosing the kit makes it so; the weapon pages offer nothing else) | a bow and arrows to start; sling stones and other missiles as they are |
+| **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | as the Mind Bender's: to use a power and to keep it up, never below 1 |
+| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile | the dice log shows the save as "vs Poison (10 damage)" |
+| **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | the spells it may cast and its slots are its own level's |
+| **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | as the Spirit Caller's |
 
 A thief skill a kit lowers never goes below 0. The kits start with their
 classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)).

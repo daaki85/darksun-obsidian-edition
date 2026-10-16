@@ -149,6 +149,7 @@ VEC_RACE_PANEL equ 0x89    ; PROBE_RACE_PANEL
 VEC_BOX_AC equ 0x88        ; PROBE_BOX_AC
 VEC_TICK equ 0x87          ; PROBE_TICK
 VEC_POISON equ 0x86        ; PROBE_POISON
+VEC_ARROW equ 0x85         ; PROBE_ARROW
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
 NENT    equ 74          ; entries in the ring (74: the helper and it fit in upper memory)
@@ -2031,6 +2032,43 @@ probe_poison:
         pop bp
         iret
 pz_far  dd 0
+
+; PROBE_ARROW: INT VEC_ARROW replaces "mov es:[0006h],al" (4 bytes: INT + 2 NOPs; DSUN.EXE 58D27h)
+; in the routine that finds a missile weapon's ammunition (58C8Fh; [BP+0Ch] the weapon's item
+; type), where it keeps the ammunition's plus (AL) for the shot's damage and magic (the game takes
+; the better of the weapon's and the ammunition's plus for the hit's +1/+2/+3 damage kinds). For a
+; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), arrows shot from a bow
+; are 1 better and at least +1.
+probe_arrow:
+        push bx
+        push si
+        mov si, [bp + 0x0C]
+        cmp si, KIND_TYPES
+        jae .store
+        cmp byte [cs:si + kind_of_type], BOW_KIND
+        jne .store              ; (not a bow: sling stones as they are)
+        push ax
+        push es
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [WHOSE_TURN], 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        pop es
+        cmp ax, 3
+        ja .not                 ; (not a party member)
+        call cr_is
+        db KIT_SPELLARCHER
+.not:   pop ax
+        jne .store
+        cmp al, 0
+        jge .plus
+        xor al, al              ; (a cursed arrow: +1 all the same)
+.plus:  inc al
+.store: mov [es:0x6], al
+        pop si
+        pop bx
+        iret
 
 ; PROBE_UNLOOK: INT VEC_UNLOOK replaces "mov word [0844h],270Fh" (6 bytes: INT + 4 NOPs) at the
 ; end of the routine that closes the Look box (the game forgets whom it was looking at). Does
@@ -4353,7 +4391,8 @@ wp_allowed:
 ; choose: those with an item type (KIND_OF_TYPE) the game's class lists and CLASS_FORBIDS let it
 ; use (a fire cleric's long sword the obsidian one, not the plain bone one); not the bow for a
 ; ranger (its class flags, +12h: 200h), who has expertise with it already; a Battle Mage the
-; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use.
+; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
+; the bow only.
 ; DS = the game's. Others kept.
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
 kinds_allowed:
@@ -4363,8 +4402,14 @@ kinds_allowed:
         push di
         call kit_is_b             ; (a Battle Mage: its own, whatever its class)
         db KIT_BATTLE_MAGE
-        jne .types
+        jne .archer
         mov di, KIT_BM_KINDS
+        jmp .all
+.archer:
+        call kit_is_b             ; (a Spellarcher: the bow only)
+        db KIT_SPELLARCHER
+        jne .types
+        mov di, 1 << (BOW_KIND - 1)
         jmp .all
 .types: xor dx, dx              ; DX each item type of a kind, CL its kind
         xor di, di
@@ -8174,7 +8219,7 @@ kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, K
              db KIT_GROVE_WARDEN, 'WARDEN', 0, KIT_BATTLE_MAGE, 'BATTLMAGE', 0, KIT_MIND_BENDER, 'M-BENDER', 0
              db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, KIT_BATTLE_DANCER, 'B-DANCER', 0, KIT_SHADOWBLADE, 'SHADOWBLD', 0
              db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0
-             db KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTESEER', 0, 0
+             db KIT_SPELLARCHER, 'SPELLARCH', 0, KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTE SEER', 0, 0
 ef_more      db 'MORE: CLICK HERE', 0
 ef_drawing   db 0
 ef_index     dw 0
@@ -9030,7 +9075,11 @@ kit_row:
         mov [es:bx + KIT_BYTE], dl
         call kit_made
         call kit_rolls
-        call wp_two             ; (no Myrmidon now: its second kind gone)
+        call wp_allowed         ; (a Spellarcher, the bow its only kind: its weapon spec the bow,
+        cmp ax, 1 << (BOW_KIND - 1) ;   whatever was chosen)
+        jne .two
+        mov byte [es:bx + SPEC_SLOTS], BOW_KIND
+.two:   call wp_two             ; (no Myrmidon now: its second kind gone)
         jnz kit_marks
         mov byte [es:bx + SPEC_SLOTS + 1], 0
 ; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits, or a multiclass group's one
@@ -16638,6 +16687,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_POISON
         mov dx, probe_poison
         int 21h
+        mov ax, 2500h + VEC_ARROW
+        mov dx, probe_arrow
+        int 21h
         mov ax, 2500h + VEC_TWO
         mov dx, probe_two
         int 21h
@@ -17060,7 +17112,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW
 all_vectors_end:
 
         align 16, db 0

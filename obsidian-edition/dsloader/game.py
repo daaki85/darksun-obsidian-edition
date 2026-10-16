@@ -149,6 +149,9 @@ ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 
 # the game's attacks that destroy items, as the dice log names them
 ACID, TOUCH_ARMOUR, TOUCH_WEAPON = 178, 186, 187
 ITEM_ATTACKS = {ACID: "acid", TOUCH_ARMOUR: "corroding touch", TOUCH_WEAPON: "corroding touch"}
+# the powers a monster's hit casts for its poison properties (monsters.SPECIAL_ATTACKS: bits 13 and
+# 14, the routine giving a hit's special effects, DSUN.EXE 7A776h)
+POISON_POWERS = {176: "Poison (10 damage)", 177: "Poison (30 damage)"}
 # the Options' setting for each, all on unless unticked
 RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("spell_save", RULE_SPELL_SAVE), ("no_doubled_save", RULE_NO_DOUBLE),
@@ -936,6 +939,8 @@ class GameData:
             return NEW_SPELLS[spell]
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)
             return ITEM_ATTACKS[spell].capitalize()
+        if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
+            return POISON_POWERS[spell]
         if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch
             return f"special attack {spell}"
         if SPELL_FIRST <= spell <= SPELL_COUNT:

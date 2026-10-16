@@ -27,6 +27,14 @@ have the detail.
   shadows even with an enemy right beside it (the stealth rule). The Wayfinder
   gets **Path-finder**: while it's up, every party member has +1 initiative and
   +1 Move in a fight.
+- **Five new multiclass kits:** the **Spellarcher** (half-elf
+  fighter/preserver: its arrows 1 better and at least +1, magical; its weapon
+  spec the bow only), **Titan Mind** (half-giant fighter/psionicist:
+  psychometabolism 2 PSP less, telepathy 2 more), **Poisoner** (halfling
+  fighter/thief: its first hit in each fight poisons, a save or 10 damage; −1
+  to hit), **Spirit Caller** (halfling cleric/psionicist) and **Wasteland Seer**
+  (thri-kreen druid/fighter): spells cast 2 levels higher under the open sky,
+  1 lower under a roof.
 - **A ranger's bow is listed** on the Effects screen and the Characters tab
   (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
   expert with the bow, chosen or not, but only the chosen weapons were listed.
