@@ -119,6 +119,8 @@ class SpecializationsTests(unittest.TestCase):
         self.assertEqual(self.gd(sheet((bow,), classes=(13, 0, 0))).specializations(0), [("bow", "expertise")])
         self.assertEqual(self.gd(sheet((0,), levels=(9, 0, 0))).specializations(0), [("long sword", "grand mastery")])
         self.assertEqual(self.gd(s, rules=0).specializations(0), [])
+        self.assertEqual(self.gd(sheet((), classes=(1, 0, 0))).specializations(0), [])   # none chosen: no bow line
+        self.assertEqual(self.gd(sheet((), classes=(9, 0, 0))).specializations(0), [])
 
 
 class PageLabelTests(unittest.TestCase):

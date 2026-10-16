@@ -1621,6 +1621,12 @@ class GameData:
             parts = [("STR", table(STR_TO_HIT, strength))] + common
             if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in ids:
                 parts.append((EFFECT_NAMES[CLAW_EFFECT], 1))  # (DSCLOG's NS_FIST)
+            for kid in kids:  # (DSCLOG's KIT_TO_HIT and WILD_TO_HIT, unarmed too)
+                kit = (kits.POISONER_TO_HIT if kid == kits.POISONER else 0) + kits.ghetto_to_hit(kid, None)
+                if kit:
+                    parts.append((kits.name(kid), kit))
+                if kid == kits.WILD_FURY and self.wild.get(creature) is False:
+                    parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
@@ -1828,7 +1834,7 @@ class GameData:
         bow = specialize.KINDS.index("bow")
         if bow + 1 not in sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT]:
             skill = specialize.skill(sheet, weaponchoice.PLAIN[bow][0])
-            if skill != specialize.PLAIN:
+            if skill not in (specialize.NONE, specialize.PLAIN):  # (a ranger's expertise)
                 out.append(("bow", names.get(skill, "")))
         return out
 

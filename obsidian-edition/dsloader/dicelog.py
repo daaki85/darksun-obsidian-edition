@@ -1577,7 +1577,7 @@ class DiceLog:
         combatants = g.combatants()
         table = g.initiative(max(combatants.values(), default=0) + 1)
         effects = g.effects()
-        rows, used = [], set()
+        rows, used, path = [], set(), None
         for roll, tie in pairs:
             # the game keeps each creature's tie-break roll: that says whose rolls these were
             found = [(c, i) for c, i in sorted(combatants.items()) if i not in used and table[i][1] == tie]
@@ -1597,10 +1597,11 @@ class DiceLog:
                 if kits.initiative(kid, outdoors):
                     parts.append((kits.initiative(kid, outdoors), kits.name(kid) + (
                         " under the open sky" if kid == kits.SCOUT else "")))
-            if index < game.PARTY_SIZE and g.path_finder():
-                parts.append((kits.PATH_INITIATIVE, "Wayfinder's Path-finder"))
-            elif index < game.PARTY_SIZE and g.path_lost():
-                parts.append((-kits.PATH_INITIATIVE, "Wayfinder down"))
+            if index < game.PARTY_SIZE and path is None:  # (the same for the whole party: once a round)
+                path = (kits.PATH_INITIATIVE, "Wayfinder's Path-finder") if g.path_finder() else \
+                    (-kits.PATH_INITIATIVE, "Wayfinder down") if g.path_lost() else ()
+            if index < game.PARTY_SIZE and path:
+                parts.append(path)
             score = INITIATIVE_BASE + roll + sum(v for v, _ in parts)
             stored = table[index][0]
             if stored >= 0 and stored != score:  # not acted yet, and something else counted

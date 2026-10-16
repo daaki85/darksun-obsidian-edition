@@ -1405,10 +1405,17 @@ class Viewer:
                 no_spells = bool(known and index < game.PARTY_SIZE and gd.no_spells(index))
                 kit = gd.kit(index) if known and index < game.PARTY_SIZE else None
                 kit_move = sum(kits.move(k) for k in gd.kit_ids(index)) if kit else 0
+                move_why = [kit] if kit_move else []
+                if known and index < game.PARTY_SIZE:  # (DSCLOG's KIT_MOVE: a Wayfinder's, the party's)
+                    path = kits.PATH_MOVE if gd.path_finder() else -kits.PATH_MOVE if gd.path_lost() else 0
+                    if path:
+                        kit_move += path
+                        move_why.append("Path-finder" if path > 0 else "Wayfinder down")
             except (struct.error, IndexError, ValueError):
-                weapons, no_spells, kit, kit_move = [], False, None, 0
+                weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
             card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,
-                      skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move)
+                      skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move,
+                      move_why=", ".join(move_why))
 
     def _hex_base(self) -> Optional[int]:
         record = self.layout.records.get(self.hex_record.get())

@@ -74,6 +74,19 @@ class HitTests(unittest.TestCase):
         struct.pack_into("<h", log.guest.mem, CREATURES + 8, game.NO_ITEM)
         self.assertEqual([(h.item, h.name, h.thac0) for h in log.game.weapon_hits(0)], [(-1, "unarmed", 10)])
 
+    def test_unarmed_kits(self):
+        """The kits' to-hit unarmed too, as DSCLOG's KIT_TO_HIT and WILD_TO_HIT: a Poisoner's -1, a
+        Ghetto Fighter's -1 (no dagger), a Wild Fury's -3 with its check failed (none when passed)."""
+        from dsloader import kits
+        log = dag()
+        struct.pack_into("<h", log.guest.mem, CREATURES + 8, game.NO_ITEM)
+        g = log.game
+        for kid, wild, thac0 in ((kits.POISONER, None, 11), (kits.GHETTO, None, 11),
+                                 (kits.WILD_FURY, False, 13), (kits.WILD_FURY, True, 10)):
+            g.kit_ids = lambda creature, kid=kid: [kid]
+            g.wild = {} if wild is None else {0: wild}
+            self.assertEqual([(h.name, h.thac0) for h in g.weapon_hits(0)], [("unarmed", thac0)], kits.name(kid))
+
 
 class SaveTests(unittest.TestCase):
     def test_con_on_paralysis_poison_death(self):

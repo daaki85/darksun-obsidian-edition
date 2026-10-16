@@ -175,11 +175,11 @@ def cmd_dicelog(args) -> None:
             learned = log.take_speakers()
             if learned:
                 add_learned_speakers(learned)
+                for portrait, name in learned.items():
+                    print(f"(Portrait {portrait} is {name})", flush=True)
             picked = log.take_picked()
             if picked is not None:
                 set_pickpocketed(picked)
-                for portrait, name in learned.items():
-                    print(f"(Portrait {portrait} is {name})", flush=True)
             for entry in log.take_dialogue():
                 if entry.chosen:
                     print(f"    > {entry.chosen}", flush=True)

@@ -396,7 +396,7 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
     Ravager's or Battle Dancer's second weapon for the left hand (a plain one of its right hand's
     kind, unless that takes both hands; a Battle Dancer's in place of its shield): lines for the
     log. Given once: not while the character has a weapon of that kind (the Myrmidon's), or a
-    weapon in the left hand (the Ravager's and the Battle Dancer's)."""
+    weapon in the left hand or two of its right hand's kind (the Ravager's and the Battle Dancer's)."""
     from . import kits, npcitems
     right, left = game.WEAPON_HANDS
     kind_of = lambda item: specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])
@@ -429,8 +429,9 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
     if kid in (kits.RAVAGER, kits.BATTLE_DANCER) and hand is not None:
         kind, type_ = kind_of(hand), struct.unpack_from("<H", hand, game.ITEM_TYPE)[0]
         if kind is None or kind in MISSILE_KINDS or two_handed(gd, sheet, type_) \
-                or any(item[game.ITEM_SLOT] == left and kind_of(item) is not None for _, item, _ in owned):
-            return []  # (a weapon in the left hand already: given, or the character's own)
+                or any(item[game.ITEM_SLOT] == left and kind_of(item) is not None for _, item, _ in owned) \
+                or sum(kind_of(item) == kind for _, item, _ in owned) > 1:
+            return []  # (a weapon in the left hand already, or two of the kind anywhere: given, or its own)
         shield = _shield_away(gd, owned) if kid == kits.BATTLE_DANCER else None
         if any(item[game.ITEM_SLOT] == left for _, item, _ in list(gd._worn(member))) \
                 or not npcitems.add_to(gd, member, hand, left):
