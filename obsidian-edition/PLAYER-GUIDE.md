@@ -176,8 +176,8 @@ What the scores do:
   many spells of each level they can know
   ([learning spells](#learning-preserver-spells)).
 - **WIS:** priests' bonus spell slots, and saves against mind-affecting magic.
-- **CHA:** how some people take to the party, and the **party leader's**
-  CHA lowers what shops ask:
+- **CHA:** how some people take to the party, and the **party leader's** CHA
+  lowers what shops ask:
 
   | Leader's CHA | 17 or less | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 |
   |---|---|---|---|---|---|---|---|---|---|
@@ -225,10 +225,10 @@ or chaotic good). The others may be any good or neutral alignment.
 
 ### More than one class
 
-**Multiclass (any race but human).** A character takes two or three classes
-at once. Experience is split evenly between them, so each rises more slowly;
-hit points are shared out ([hit points](#hit-points)); and the strictest
-class decides what may be worn and wielded
+**Multiclass (any race but human).** A character takes two or three classes at
+once. Experience is split evenly between them, so each rises more slowly; hit
+points are shared out ([hit points](#hit-points)); and the strictest class
+decides what may be worn and wielded
 ([what each class may use](#what-each-class-may-use)). **Gladiators never
 multiclass.** Each class's section below lists its combinations and the races
 that can take them; in all:
@@ -376,8 +376,8 @@ with care: it is the fighter's weapon for the whole game.
 
 - [Weapon specialization](#weapon-specialization-and-attacks): one weapon
   type, +1 to hit and +2 damage with 3/2 attacks a round; **mastery** at 5th
-  level (+3 and +3), **grand mastery** at 9th (the damage die a size larger and
-  one more attack). Other weapons attack once a round until 7th level.
+  level (+3 and +3), **grand mastery** at 9th (the damage die a size larger
+  and one more attack). Other weapons attack once a round until 7th level.
   *Without the mod:* 3/2 attacks with any weapon, no other bonus.
 - Up to 10th level; hit dice rolled twice.
 - [Two weapons](#two-weapons) cost to-hit, and the off hand attacks once a round.
@@ -497,9 +497,9 @@ melee, and any missile weapon.
 *d10 · WIS · elf, half-elf, half-giant, halfling, human, thri-kreen · good
 alignment · XP for 2nd level 2,250, for 10th 600,000*
 
-**How it plays.** A warrior of the wastes: the bow and one more weapon
-type, two weapons at no penalty, hiding and moving silently under the open
-sky to strike from behind, and a little priest magic late on.
+**How it plays.** A warrior of the wastes: the bow and one more weapon type,
+two weapons at no penalty, hiding and moving silently under the open sky to
+strike from behind, and a little priest magic late on.
 
 **What the mod changes.**
 
@@ -540,7 +540,7 @@ others.
 | **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric or druid |
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
 
-**Starting gear.** A plain weapon of its chosen type, bow and arrows, leather
+**Starting gear.** A plain weapon of its weapon spec, bow and arrows, leather
 chest and arm armour; with fuller starting gear, also leather leg armour (a
 Stalker a cloak too).
 
@@ -559,8 +559,7 @@ Stalker a cloak too).
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
 only its sphere's, and every bow: air, the daggers, bows, slings, Windlash\*,
 Chatkcha +1; earth, the metal, obsidian, stone and wooden ones (no bone, no
-slings);
-fire, the obsidian ones and the bows; water, the bone and wooden ones.
+slings); fire, the obsidian ones and the bows; water, the bone and wooden ones.
 
 ### Thief
 
@@ -613,8 +612,8 @@ can't read magical script, and they travel light.
 The Shinobi's slots by level are in [Kits' spell slots](#kits-spell-slots).
 
 **Starting gear.** Bone long sword, sling, leather chest armour; with fuller
-starting gear, also leather arm and leg armour (an
-Assassin or Shinobi a cloak too).
+starting gear, also leather arm and leg armour (an Assassin or Shinobi a cloak
+too).
 
 **More than one class.**
 
@@ -859,14 +858,13 @@ other character has one discipline and uses it as a 1st-level psionicist.
 
 **What the mod changes.**
 
-- Its limits on armour and weapons hold whatever its other classes.
-  *Without the mod:* another class's lists were enough.
+- Its limits on armour and weapons hold whatever its other classes. *Without
+  the mod:* another class's lists were enough.
 - Up to 10th level; hit dice rolled twice.
 
 **Weapons and armour.** Light armour, a leather shield, or one of the mod's
-robes. Daggers, bone and
-obsidian short swords, clubs, chatkchas and bows (the game's lists leave out
-its maces, slings and the metal short sword).
+robes. Daggers, bone and obsidian short swords, clubs, chatkchas and bows (the
+game's lists leave out its maces, slings and the metal short sword).
 
 **Kits.**
 
@@ -1015,7 +1013,7 @@ reckless.
 | **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower |
-| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight |
+| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round in melee and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight |
 
 ### Kits' spell slots
 
@@ -1056,10 +1054,9 @@ The kits that change spell slots, by the level of the kit's class (spells of
 
 ## Weapon specialization and attacks
 
-Warriors train in weapon types. Choose them on the creation panel's
-**WEAPON SPEC** pages; picks due later come in a window at the level up, a
-picture of each weapon type (point at one for its name; those you can't
-pick are greyed).
+Warriors train in weapon types. Choose them on the creation panel's **WEAPON
+SPEC** pages; picks due later come in a window at the level up, a picture of
+each weapon type (point at one for its name; those you can't pick are greyed).
 
 ![The level-up window: a picture of each weapon type, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the types this fighter/cleric can't use greyed](docs/weapon-picker.png)
 
@@ -1215,10 +1212,9 @@ Monsters have defences of their own: some need magic weapons, some are hurt
 only by edged weapons or immune to crushing ones, some shrug off fire, cold,
 poison or the powers of the mind, some can't be charmed or held. **Look** at
 one in a fight: the box shows its hit points, AC, THAC0, alignment, magic
-resistance and chief defence (`NEEDS +1 WEAPON`, `IMM FIRE COLD`, `NO
-CRUSH`, `HALF FROM WPNS`, `UNDEAD`), and closing it tells the rest. Undead
-take nothing from poison or draining, and mind-affecting spells don't work on
-them.
+resistance and chief defence (`NEEDS +1 WEAPON`, `IMM FIRE COLD`, `NO CRUSH`,
+`HALF FROM WPNS`, `UNDEAD`), and closing it tells the rest. Undead take
+nothing from poison or draining, and mind-affecting spells don't work on them.
 
 ## Thieves' skills and picking pockets
 
@@ -1312,8 +1308,8 @@ AD&D's tables:
 | 10 | 4 4 3 3 2 | 4 4 3 2 2 |
 
 (The slots at 1st, 2nd, 3rd... spell level.) *Without the mod:* one table for
-all three: 1; 2; 2 1; 2 2; 3 2 1; 3 2 2; 4 3 2 1; 4 3 2 2; 5 4 3 2 1;
-5 4 3 2 2.
+all three: 1; 2; 2 1; 2 2; 3 2 1; 3 2 2; 4 3 2 1; 4 3 2 2; 5 4 3 2 1; 5 4 3 2
+2.
 
 **Rangers** have one 1st-level slot at 8th level, two at 9th, and a 2nd-level
 slot at 10th, as in AD&D. No spell is above 5th level.
@@ -1387,22 +1383,20 @@ can cast. INT sets two limits:
   Critical Wounds heal 1d8, 2d8+1 and 3d8+3.
 - Six **new wizard spells**, learnt like any other:
   - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for
-    an hour of game
-    time a caster level, which betters AC, initiative, thief skills and
-    dodging.
+    an hour of game time a caster level, which betters AC, initiative, thief
+    skills and dodging.
   - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a
-    caster level. Unarmed
-    attacks, a thri-kreen's claws and bite too, do 1d6+1 where that's better,
-    are +1 to hit and count as a +1 magical weapon. With Body Weaponry or
+    caster level. Unarmed attacks, a thri-kreen's claws and bite too, do 1d6+1
+    where that's better, are +1 to hit and count as a +1 magical weapon. With Body Weaponry or
     Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
-    in a clear line, for 2d4 rounds unless it saves: -3 to its attacks, +2 to
+    in a clear line, for 2d4 rounds unless it saves: −3 to its attacks, +2 to
     attacks on it.
   - **Reflected Image** (1st level, on the caster): one image, which an attack
     strikes half the time instead of the caster, and which then vanishes.
     It and Mirror Image replace each other; Dispel Magic ends it.
   - **Spook** (1st level): one creature flees in fear for 3 rounds unless it
-    saves, at -1 for every 2 caster levels (at most -6). Undead aren't
+    saves, at −1 for every 2 caster levels (at most −6). Undead aren't
     affected; magic resistance applies.
   - **Friends** (1st level, on the caster): CHA + 2d4 (at most 25) for 1d4
     rounds and 1 a caster level, for better prices. Casting it again replaces
@@ -1534,15 +1528,15 @@ materials, the short sword among them.
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
 
-**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**.
-*Without the mod:* helms give no AC.
+**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**. *Without
+the mod:* helms give no AC.
 
-**Protection.** Rings and cloaks of protection give +1 AC and +1 on every save,
-by AD&D's rules: two rings don't add up; a ring gives no AC with magical armour
-(its saves still count); a cloak does nothing with magical or metal armour or
-a shield. A cloak isn't armour: any class may wear one, druids too.
-**Bracers of defense** give their AC (6, 5, 4 or 2), and the mod's
-two **robes** their plus, only with no armour worn, and a preserver casts in
+**Protection.** Rings and cloaks of protection give +1 AC and +1 on every
+save, by AD&D's rules: two rings don't add up; a ring gives no AC with magical
+armour (its saves still count); a cloak does nothing with magical or metal
+armour or a shield. A cloak isn't armour: any class may wear one, druids too.
+**Bracers of defense** give their AC (6, 5, 4 or 2), and the mod's two
+**robes** their plus, only with no armour worn, and a preserver casts in
 either. These are rare finds.
 
 **Acid.** Some monsters' acid or corroding touch can destroy worn armour or a
@@ -1658,7 +1652,7 @@ AD&D's tables:
   Twin-blade in light armour, and the off hand attacks only once a round.
 - **A warrior's weapon specs matter:** outside them it attacks once a round
   until 7th level.
-- **Multi-class preservers take off their armour to cast** (a helm counts).
+- **Multiclass preservers take off their armour to cast** (a helm counts).
 - **Thieves hide with no enemy beside them** when their turn comes; step away
   first. Daylight halves their chance, and rangers' indoors.
 - **Plain wood, bone, stone and obsidian weapons can break** (clubs and

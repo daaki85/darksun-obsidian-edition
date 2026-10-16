@@ -28,19 +28,19 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    DELETE deleting the one chosen and a New character counting as Okay (see
    [more characters](README.md#more-characters)), Enter loading only a save
    that is there (see [more saves](README.md#more-saves)), a script buffer of
-   11,776 bytes rather than 10,000 (for [Dinos and the
-   Trustee](README.md#what-dinos-and-the-trustee-say-about-them)), and data
-   files looked for in the current folder rather than next to the program. The
-   helper also hooks DOS's `INT 21h`, to open the launcher's copies of
-   `SEGOBJEX.GFF`, `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (for
-   the [new items](README.md#new-items), [Kalzith](README.md#kalzith),
-   [Semyon](README.md#semyon) and [no manual
-   check](README.md#no-manual-check)), and to keep what the game last wrote to
-   the screen for a crash report (see [the crash report](#the-freeze-report)),
-   the mouse driver's `INT 33h` (for [scrolling the
-   map](README.md#scrolling-the-map)) and the keyboard's `INT 16h` (for Tab
-   and Enter). DOSBox runs it from the game folder, so it uses your saves as
-   usual.
+   11,776 bytes rather than 10,000 (for
+   [Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)),
+   and data files looked for in the current folder rather than next to the
+   program. The helper also hooks DOS's `INT 21h`, to open the launcher's
+   copies of `SEGOBJEX.GFF`, `RESOURCE.GFF`, `GPLDATA.GFF` and some regions'
+   files (for the [new items](README.md#new-items),
+   [Kalzith](README.md#kalzith), [Semyon](README.md#semyon) and
+   [no manual check](README.md#no-manual-check)), and to keep what the game
+   last wrote to the screen for a crash report (see
+   [the crash report](#the-freeze-report)), the mouse driver's `INT 33h` (for
+   [scrolling the map](README.md#scrolling-the-map)) and the keyboard's
+   `INT 16h` (for Tab and Enter). DOSBox runs it from the game folder, so it
+   uses your saves as usual.
 2. `dos\DSCLOG.EXE` (source in `dos\dsclog.asm`) is a tiny DOS program loaded
    into upper memory before the game, so the game loses no memory. It answers
    those interrupts. Its `rand()` returns exactly the numbers the original
@@ -63,9 +63,9 @@ additions (the new items and the Ring +1, the cooked vulture, Kalzith, Semyon,
 what the party wears, shadows, dust, rings, Tab and Enter, scrolling) and the
 fixes always in the patched copy: no equipment penalty on thief skills (see
 [Thief skills](README.md#how-the-game-works-out-thief-skills)), the roster's
-DELETE and New characters counting as Okay (see [More
-characters](README.md#more-characters)), and no manual check (see [No manual
-check](README.md#no-manual-check)).
+DELETE and New characters counting as Okay (see
+[More characters](README.md#more-characters)), and no manual check (see
+[No manual check](README.md#no-manual-check)).
 
 Limitations:
 - Only the GOG release (`DSUN.EXE` of 611,408 bytes) is supported. With
@@ -73,9 +73,8 @@ Limitations:
   why.
 - Outside combat, the thief skill, trap and ability checks, the character
   creation rolls and searching junk, hay and wardrobes are labelled; other
-  rolls there (for example treasure or
-  random encounters) show up only with **Show unlabelled rolls**, as raw
-  numbers.
+  rolls there (for example treasure or random encounters) show up only with
+  **Show unlabelled rolls**, as raw numbers.
 - A save-file load from the main menu is recognised, so the spells already
   active in it aren't reported as new. Loading a save of the same party in the
   middle of play isn't, and its effects may be listed as if just cast.
@@ -200,8 +199,8 @@ the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
 ring lies over the install code) clears the ring and stays resident with it.
-The text buffer (`TSIZE`) is 4 KB; the Loader reads its size from the
-header and drains it every few tens of milliseconds.
+The text buffer (`TSIZE`) is 4 KB; the Loader reads its size from the header
+and drains it every few tens of milliseconds.
 
 The helper has to load into upper memory, or the game loses 62 KB of
 conventional memory (570 KB free rather than 632 KB). With GOG's settings
@@ -287,8 +286,8 @@ text, then the stack's likely far returns as places in DSUN.EXE.
 
 ### From a command prompt
 
-What the `.bat` files do, from a command prompt (`dsloader` is the
-program's internal name):
+What the `.bat` files do, from a command prompt (`dsloader` is the program's
+internal name):
 
 ```
 python -m dsloader launch                        # start the game with the dice log, and the Loader's window
@@ -308,11 +307,11 @@ For Shattered Lands the party is found automatically. The steps below are for
 mapping new fields, or for other layouts:
 
 1. Type a party member's name under **Locate by name** and press **Search**.
-2. Select the hit that is the character's record and press **Assign**.
-   In the hit list, the record shows its name followed by dots, since binary
-   data follows the name. A copy in a text buffer is followed by more text.
-   Slots 2–4 follow automatically if the party's records sit next to each other
-   in memory, as they do in save files. Otherwise assign each slot by name.
+2. Select the hit that is the character's record and press **Assign**. In the
+   hit list, the record shows its name followed by dots, since binary data
+   follows the name. A copy in a text buffer is followed by more text. Slots
+   2–4 follow automatically if the party's records sit next to each other in
+   memory, as they do in save files. Otherwise assign each slot by name.
 3. The **character sheet** (XP, classes, levels, saves) is found automatically:
    it carries the same ability scores and entity ID as the creature record.
 4. **Save layout** (beside **Search**) stores the addresses. They may change
@@ -355,9 +354,10 @@ reads the reply's text from the game's own list.
 How: the scripts' random command has a routine of its own in the game; the
 patched game has DSCLOG look in there (`INT D3h`), which records the roll, its
 range, where the running script is (which tells the three searches and their
-damage rolls apart) and the three counts (`dsloader/searches.py`). Tested
-in play: a haystack search in the slave pens logged `0-10 = 7, an old, soiled
-loincloth (the party's 2nd find of 6 in hay)`, as the game's own message said.
+damage rolls apart) and the three counts (`dsloader/searches.py`). Tested in
+play: a haystack search in the slave pens logged
+`0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)`, as
+the game's own message said.
 
 ### The combat log in the game
 
@@ -365,22 +365,22 @@ loincloth (the party's 2nd find of 6 in hay)`, as the game's own message said.
 
 #### What the game allows
 
-What was measured before the panel was built (Stage 0 of [the design
-brief](docs/combat-log/HANDOFF.md)), with the patched game and the dice log
-running:
+What was measured before the panel was built (Stage 0 of
+[the design brief](docs/combat-log/HANDOFF.md)), with the patched game and the
+dice log running:
 
 - **Pages.** The game keeps a table of pages at `0980:0004` (DSUN.EXE
   segments, less the load segment; the shadows read it): each page's memory
   segment (`+4`; a child page, flag `40h` at `+C04h`, names its parent there),
   its bounds (`+404h` x0, `+604h` y0, `+804h` x1, `+A04h` y1). Pages 0 and 1
-  are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others are
-  windows over them and buffers in the rest of video memory (`A7E8h`, a third
-  320 x 200; smaller ones to `AE55h`). With the strip below the map the two
-  screens are at `A070h` and `A460h` and the rest from `A848h` (see [The strip
-  below the map](#the-strip-below-the-map)).
+  are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others
+  are windows over them and buffers in the rest of video memory (`A7E8h`, a
+  third 320 x 200; smaller ones to `AE55h`). With the strip below the map the
+  two screens are at `A070h` and `A460h` and the rest from `A848h` (see
+  [The strip below the map](#the-strip-below-the-map)).
 - **The flip.** The routine at `0980:5814` (DSUN.EXE 14414h) shows one screen
   or the other (the CRTC start address; `0980:118E` says which, 1 for `A400h`)
-  and swaps them for -1. It is called from 45 places, all in overlays, for
+  and swaps them for −1. It is called from 45 places, all in overlays, for
   screens and windows: in five seconds of walking on the map the page shown
   changed three times, on opening and closing windows.
 - **The map draws into the screen shown.** The view's floor, walls and
@@ -402,11 +402,12 @@ running:
   frame where upper memory would be, and with the helper loaded `mem` shows 1
   KB of upper memory free. With `ems=false` (the launcher's own config, after
   GOG's) it shows 65 KB (largest block 64 KB), conventional memory unchanged
-  at 632 KB, and the panel has its room (see [Room in the
-  helper](#room-in-the-helper)). The game's memory layer (VMEM) takes EMS, XMS
-  or extended memory, whichever there is: without EMS it loaded a save, walked
-  the pens, opened a conversation and a shop, and played the arena's opening
-  fight to the end without a fault (a check, not a whole game).
+  at 632 KB, and the panel has its room (see
+  [Room in the helper](#room-in-the-helper)). The game's memory layer (VMEM)
+  takes EMS, XMS or extended memory, whichever there is: without EMS it loaded
+  a save, walked the pens, opened a conversation and a shop, and played the
+  arena's opening fight to the end without a fault (a check, not a whole
+  game).
 
 #### The panel
 
@@ -415,37 +416,37 @@ running:
   DSCLOG last read) into an upper memory block DSCLOG takes for it at install
   (`panel_seg`, header `+328`); the dice log's ring has a block of its own
   there too. With EMS on there is no such block and no panel.
-- **Putting it on screen.** DSCLOG copies the picture into the screen on
-  show, a plane at a time (`PANEL_BLIT`, its height kept on the screen; the
-  Loader stores each row as its four planes' bytes in turn, `combatlog.planar`,
-  so a plane's part of a row is copied whole with `REP MOVSW`), from
-  the main loop (`PANEL_TICK`, in `PROBE_SCROLL`) when the floor has been
-  drawn since or the Loader has a new picture (`panel_new`, `+330`).
-- **Kept whole.** The game draws what moves a rectangle at a time, through
-  one routine (2475Fh, 1DF3:142F: a window page the rectangle's size, the
-  floor, walls and figures drawn into it) or the same steps inline in the
-  routine drawing again all that moved (from 24B18h). A rectangle over the
-  panel, while it is on screen, is drawn as its parts round it instead
-  (`CLIP_CHECK`, `REDRAW_PARTS`: above, below, left and right, through
-  2475Fh, `RP_BUSY` letting them by), so nothing the game draws there covers
-  it: the routine itself is left out (its caller's way back kept in a frame of
-  its own shape, for the overlay manager), and the inline one goes on at its
-  end (24C65h). With the routine's last argument the screens are flipped and
-  the rectangle copied to the other, so the panel is put on the screen not
-  shown first (`PANEL_DRAW_OTHER`). Measured in the arena's fight, playing
-  turns: before, the map showed through the panel in every frame grabbed
-  (300), up to 7,000 of its pixels; after, in none. What still reaches it is
-  the view drawn whole (a scroll, centring on whose turn it is), put back on
-  the next pass of the main loop. The game's own scrolling (at the screen's
-  edge, following who walks) copies the screen as it is, the panel too, and
-  draws only what comes into view, which left copies of the panel on the map;
-  so when `PANEL_TICK` finds the view moved since its last pass (`CAM_X`,
-  `CAM_Y` against `panel_cx`, `panel_cy`), it has the view drawn again whole
-  (`VIEW_AGAIN`), round the panel, and then puts the panel.
-  The inline routine's way back (`RESUME`, which the floor's and the
-  rectangle routine's probes also use, and which the parts come through) is
-  kept on the stack while the parts are drawn: overwritten, the game went on
-  from the wrong place and wrote over its own memory until it quit.
+- **Putting it on screen.** DSCLOG copies the picture into the screen on show,
+  a plane at a time (`PANEL_BLIT`, its height kept on the screen; the Loader
+  stores each row as its four planes' bytes in turn, `combatlog.planar`, so a
+  plane's part of a row is copied whole with `REP MOVSW`), from the main loop
+  (`PANEL_TICK`, in `PROBE_SCROLL`) when the floor has been drawn since or the
+  Loader has a new picture (`panel_new`, `+330`).
+- **Kept whole.** The game draws what moves a rectangle at a time, through one
+  routine (2475Fh, 1DF3:142F: a window page the rectangle's size, the floor,
+  walls and figures drawn into it) or the same steps inline in the routine
+  drawing again all that moved (from 24B18h). A rectangle over the panel,
+  while it is on screen, is drawn as its parts round it instead (`CLIP_CHECK`,
+  `REDRAW_PARTS`: above, below, left and right, through 2475Fh, `RP_BUSY`
+  letting them by), so nothing the game draws there covers it: the routine
+  itself is left out (its caller's way back kept in a frame of its own shape,
+  for the overlay manager), and the inline one goes on at its end (24C65h).
+  With the routine's last argument the screens are flipped and the rectangle
+  copied to the other, so the panel is put on the screen not shown first
+  (`PANEL_DRAW_OTHER`). Measured in the arena's fight, playing turns: before,
+  the map showed through the panel in every frame grabbed (300), up to 7,000
+  of its pixels; after, in none. What still reaches it is the view drawn whole
+  (a scroll, centring on whose turn it is), put back on the next pass of the
+  main loop. The game's own scrolling (at the screen's edge, following who
+  walks) copies the screen as it is, the panel too, and draws only what comes
+  into view, which left copies of the panel on the map; so when `PANEL_TICK`
+  finds the view moved since its last pass (`CAM_X`, `CAM_Y` against
+  `panel_cx`, `panel_cy`), it has the view drawn again whole (`VIEW_AGAIN`),
+  round the panel, and then puts the panel. The inline routine's way back
+  (`RESUME`, which the floor's and the rectangle routine's probes also use,
+  and which the parts come through) is kept on the stack while the parts are
+  drawn: overwritten, the game went on from the wrong place and wrote over its
+  own memory until it quit.
 - **The pointer.** The game draws its pointer into the screen on show itself:
   28D1:093D keeps what is under it (from page `[A05Dh]`, the map without the
   panel) and draws it; 28D1:0B7F puts what it kept back, so taking the pointer
@@ -494,24 +495,24 @@ running:
   pointer**), at most once a BIOS tick (`PANEL_TICKS`; counted in passes of
   the main loop, it was most of what the game's CPU did with the pointer
   moving).
-- **Sizes (Stage 4).** The Loader sets the panel's top and height
-  (`+344`, `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130,
-  the most); its foot stays at row 198. Smaller than it was, DSCLOG draws the
-  view again under it first. Collapsed is 15 rows (the newest line in the
-  header), docked 78, expanded 130 (11 lines and the filters' row). The
-  header's level chip and - / + buttons, and the filters, are pressed through
-  `PANEL_MOUSE` as the scrollbar is. **L** (`INT 16h`, `our_key`, while the
-  panel is on screen: `PANEL_LIVE`) is counted at `+348` and kept from the
-  game; the keyboard hook is on while the panel is shown, not only with Tab
-  targeting. With the panel hidden, L is counted too (`L_ON_MAP`) while the
-  map's main loop has run in the last BIOS tick or two (`MAP_TICK`: no game
-  window, menu or save name waiting on keys, where L is the game's) and the
-  Loader is there. The Loader shows the panel while `Panel.open` (saved as
-  `combat_log_open`, off at first): L with it hidden shows it, L or the
-  header's **L** button (`combatlog.key_rect`) with it shown hides it, in a
-  fight or out of one. Out of fights the log takes the lines with a roll in
-  them (`Log.add(rolls_only=True)`). The level and size are
-  saved in the settings (`combat_log_level`, `combat_log_size`).
+- **Sizes (Stage 4).** The Loader sets the panel's top and height (`+344`,
+  `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130, the most);
+  its foot stays at row 198. Smaller than it was, DSCLOG draws the view again
+  under it first. Collapsed is 15 rows (the newest line in the header), docked
+  78, expanded 130 (11 lines and the filters' row). The header's level chip
+  and - / + buttons, and the filters, are pressed through `PANEL_MOUSE` as the
+  scrollbar is. **L** (`INT 16h`, `our_key`, while the panel is on screen:
+  `PANEL_LIVE`) is counted at `+348` and kept from the game; the keyboard hook
+  is on while the panel is shown, not only with Tab targeting. With the panel
+  hidden, L is counted too (`L_ON_MAP`) while the map's main loop has run in
+  the last BIOS tick or two (`MAP_TICK`: no game window, menu or save name
+  waiting on keys, where L is the game's) and the Loader is there. The Loader
+  shows the panel while `Panel.open` (saved as `combat_log_open`, off at
+  first): L with it hidden shows it, L or the header's **L** button
+  (`combatlog.key_rect`) with it shown hides it, in a fight or out of one. Out
+  of fights the log takes the lines with a roll in them
+  (`Log.add(rolls_only=True)`). The level and size are saved in the settings
+  (`combat_log_level`, `combat_log_size`).
 - **Not checked mid-fight:** saving and loading, and area changes, as the game
   allows neither in a fight. DOSBox's window size doesn't matter (it is drawn
   into the game's screen).
@@ -523,21 +524,20 @@ patches when the game is started; the Loader knows the game was started so
 from the patch in its memory (`combatlog.strip_patched`), not the setting,
 which may have changed since.
 
-- **The screen.** `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X
-  set up, 0980:2A40h) makes the screen 222 rows within the game's own timing
-  (the clock and the totals untouched: 70 frames a second, 449 scan lines,
-  each row drawn twice): the picture to scan line 443, the blanking from 444
-  and the sync at 445 to 447; and the line compare at 18Fh, so below scan
-  line 399 (row 200) the VGA shows video memory from its start whichever
-  screen is up. DOSBox's aspect correction works out the shape from the
-  timing, unchanged, so each row is stretched by 1.2 as ever (the window
-  320 × 266).
+- **The screen.** `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X set
+  up, 0980:2A40h) makes the screen 222 rows within the game's own timing (the
+  clock and the totals untouched: 70 frames a second, 449 scan lines, each row
+  drawn twice): the picture to scan line 443, the blanking from 444 and the
+  sync at 445 to 447; and the line compare at 18Fh, so below scan line 399
+  (row 200) the VGA shows video memory from its start whichever screen is up.
+  DOSBox's aspect correction works out the shape from the timing, unchanged,
+  so each row is stretched by 1.2 as ever (the window 320 × 266).
 - **Video memory.** The strip is video memory's first 1760 bytes a plane;
   the game's two screens move up past it, each to a multiple of 256 bytes as
   the page flip (0980:5814h) writes only the start address's high byte:
   `A070h` and `A460h` (in the screens' set up at 0980:271Bh, and the flip's
   three segment constants). The pages the game keeps in video memory (a bump
-  allocator, `[0E4Eh]` up to `[0E4Ch]`, `AFFBh`, which gives -1 when full)
+  allocator, `[0E4Eh]` up to `[0E4Ch]`, `AFFBh`, which gives −1 when full)
   then start at `A848h`, not `A7E8h`: 31,536 bytes instead of 33,072.
   Measured with the strip on, loading the ten saves of the first page (the
   arena's fights and the pens), opening the USE screen and walking: at most
@@ -546,44 +546,42 @@ which may have changed since.
   in the game aren't measured.
 - **Drawing it.** `STRIP_DRAW` puts the Loader's 320 × 22 picture there
   (`combatlog.STRIP`: all of it the well's mottled shades, the header and the
-  newest row, no buttons; scrolled
-  back, the **Latest** chip in the header and a notch of the wheel a line);
-  `PANEL_LIVE` is never set, so the clipping and the pointer's handling are
-  left out. Like the panel, it isn't drawn again while the main loop waits
-  on a game menu (it shows what it had). Scrolling and the map dragged with
-  the wheel pressed were checked in the arena's fight.
+  newest row, no buttons; scrolled back, the **Latest** chip in the header and
+  a notch of the wheel a line); `PANEL_LIVE` is never set, so the clipping and
+  the pointer's handling are left out. Like the panel, it isn't drawn again
+  while the main loop waits on a game menu (it shows what it had). Scrolling
+  and the map dragged with the wheel pressed were checked in the arena's
+  fight.
 - **Between fights.** The Loader keeps the strip on whenever the game runs
   (`DiceLog._update_panel`: on in a fight, or with `strip_patched`), scrolled
   to the newest again when a fight starts. Out of fights its top line has no
-  header: `draw` puts the row before the newest there. The lines that come
-  out of fights go in too, those with a die cast in them and the lines
-  under them (`Log.add(rolls_only=True)`: `A_ROLL`, not character
-  creation's).
+  header: `draw` puts the row before the newest there. The lines that come out
+  of fights go in too, those with a die cast in them and the lines under them
+  (`Log.add(rolls_only=True)`: `A_ROLL`, not character creation's).
 - **Scenes.** The map's main loop doesn't run while the game plays a scene
   out (the arena's opening show), so `STRIP_MIND`, from the game's pointer,
   also puts a new picture of the log there when the game is on the map.
-- **Empty: blue-grey or black.** Where the picture isn't, `STRIP_CLEAR`
-  fills the strip as `STRIP_WANT` says: black (the darkest of the 256) when
-  the game's `DS:0BC9h` is 0 (the title, the main menu, character creation),
-  else the panel's look without lines (its top line the colour nearest
+- **Empty: blue-grey or black.** Where the picture isn't, `STRIP_CLEAR` fills
+  the strip as `STRIP_WANT` says: black (the darkest of the 256) when the
+  game's `DS:0BC9h` is 0 (the title, the main menu, character creation), else
+  the panel's look without lines (its top line the colour nearest
   `palette.SHADOW`, the rest nearest `palette.DEEP`, among 16 to 223:
   `STRIP_COLOURS`, read from the VGA). `0BC9h` is 1 on the map, 2 with a
   character's screen or a talk over it. It is filled every 512 passes of the
   main loop with the log off, and each time the game sets colours:
   `PROBE_COLOURS` (INT CBh at 288BAh, the end of the routine that sets a run
   of colours, as the title and each step of a fade do; only when the run
-  reaches below the colours the game animates) and `PROBE_PALETTE` (INT 8Bh
-  at 144F5h, the end of the one that sets all 256). The log's picture stays
+  reaches below the colours the game animates) and `PROBE_PALETTE` (INT 8Bh at
+  144F5h, the end of the one that sets all 256). The log's picture stays
   through those while the colours 16 to 223 are still those it was put in
-  (`STRIP_SAME`: a sum of them, taken as the main loop puts it; a talk or
-  the game's menu over the map); otherwise it
-  goes, and the main loop puts it again on the map. The title's strip is so
-  black, not the colour 0 video memory is cleared to (lavender there).
-  Screens changed with no new colours (main menu to character creation) are
-  caught from the game's pointer (`PROBE_POINTER` → `STRIP_MIND`, which also
-  learns the game's DS there), filling in the colours found last: the VGA's
-  palette isn't read there, as the pointer may be drawn while the game sets
-  colours.
+  (`STRIP_SAME`: a sum of them, taken as the main loop puts it; a talk or the
+  game's menu over the map); otherwise it goes, and the main loop puts it
+  again on the map. The title's strip is so black, not the colour 0 video
+  memory is cleared to (lavender there). Screens changed with no new colours
+  (main menu to character creation) are caught from the game's pointer
+  (`PROBE_POINTER` → `STRIP_MIND`, which also learns the game's DS there),
+  filling in the colours found last: the VGA's palette isn't read there, as
+  the pointer may be drawn while the game sets colours.
 - **Tried first:** a 240-row screen in a 480-line timing. DOSBox showed
   square pixels (the map a sixth flatter) and the frame came 60 times a
   second, not 70 (the game about 14% slower); a longer line with the 28 MHz
@@ -629,12 +627,12 @@ the end of the routine that closes the box, shows the whole description.
 An item that casts a spell has the spell + 1 in its `+0Fh` and its charges
 left in `+0Eh` (the routine finishing an item's use takes one off, 721E4h,
 unless its type's `+0Fh` has 2). `PROBE_ITEM_BOX` (`INT DAh`, at the end of
-the routine filling an item's box, 8C1A1h, the item `[BP+6]`) draws `Charges:
-n` in the row after the box's own lines (`IB_CHARGES`) when the spell byte is
-below F9h (from there the game's own effects: a belt's STR, a ring's AC...)
-and the charges aren't 0, but not for fruit (type 60, eaten whole) nor scenery
-(a type whose `+08h` has both 20h and 40h: a door, a mirror, a crank), where
-those bytes hold something else (`TYPE_SCENERY`).
+the routine filling an item's box, 8C1A1h, the item `[BP+6]`) draws
+`Charges: n` in the row after the box's own lines (`IB_CHARGES`) when the
+spell byte is below F9h (from there the game's own effects: a belt's STR, a
+ring's AC...) and the charges aren't 0, but not for fruit (type 60, eaten
+whole) nor scenery (a type whose `+08h` has both 20h and 40h: a door, a
+mirror, a crank), where those bytes hold something else (`TYPE_SCENERY`).
 
 ### No manual check
 
@@ -645,10 +643,10 @@ call into another script, command 14h) when the party leaves the warrens
 (region 28h) until bit 12 of the game's variable (135, 73) is set. The right
 answer goes on to script 86 at 1087, which sets 255 in the variable (7, 4)
 and, in region 28h, that bit. In the Loader's copy of the scripts
-(`dsloader/manualcheck.py`), script 20 does just that and ends: the same
-start (offset 1, its one entry in the game's table of entry points), no words
-and no question. It is replaced only if it is the dragon's (its
-`" word on page "` line).
+(`dsloader/manualcheck.py`), script 20 does just that and ends: the same start
+(offset 1, its one entry in the game's table of entry points), no words and no
+question. It is replaced only if it is the dragon's (its `" word on page "`
+line).
 
 ### Class restrictions
 
@@ -737,8 +735,8 @@ its scores from `+22h`; `DS:119Ch` the sheet, the hit points its `+8`):
   of ten), then draws each value with the game's text routine.
 
 How (`RULE_HI_ROLLED`, the second rules word's 32: `game.RULE_ROLLED`): no
-interrupt vectors are left, so the eight sites share `PROBE_CR_SPELLS`'s (`INT
-98h`), the byte after the `INT` saying which (`RL_SCORE` 1, `RL_HP` 2,
+interrupt vectors are left, so the eight sites share `PROBE_CR_SPELLS`'s
+(`INT 98h`), the byte after the `INT` saying which (`RL_SCORE` 1, `RL_HP` 2,
 `RL_ROLL` 3, `RL_SUM` 4, `RL_CON` 5, `RL_TRY` 6) where `PROBE_CR_SPELLS`'s own
 has its NOP; the helper moves the return address past it.
 
@@ -762,14 +760,14 @@ has its NOP; the helper moves the return address past it.
   The scores' box is made a line taller and wider (`rl_sum_box`: x2 48 to 77,
   y2 178 to 185, in the game's data) so the copy put back clears them.
 
-The dice log adds the six's total to the creation lines. The die rolls a
-whole character many times while it tumbles, about 100 `rand()` calls each,
-more than the ring holds between two reads, so the log used to miss a
-character's rolls. `RL_TRY` (6, whatever the rule, in place of
-`add ax,[499Ah]` + NOP at 6498Bh, in 6490Dh: AX a 4d4, `[BP+8]` the ability,
-DI the try) keeps each 4d4 in the header (`+282`, four for each ability) and
-counts them (`+280`); the log reads them once the count has been still for
-0.3 s, and doesn't report the ring's missed rolls while it moves.
+The dice log adds the six's total to the creation lines. The die rolls a whole
+character many times while it tumbles, about 100 `rand()` calls each, more
+than the ring holds between two reads, so the log used to miss a character's
+rolls. `RL_TRY` (6, whatever the rule, in place of `add ax,[499Ah]` + NOP at
+6498Bh, in 6490Dh: AX a 4d4, `[BP+8]` the ability, DI the try) keeps each 4d4
+in the header (`+282`, four for each ability) and counts them (`+280`); the
+log reads them once the count has been still for 0.3 s, and doesn't report the
+ring's missed rolls while it moves.
 
 Checked in the game: three rolls of the die, every ability's line complete
 (none "too fast"); CON 14 to 15 to 16 took a 3rd-level preserver's hit points
@@ -810,31 +808,31 @@ rounds (caster level 2; 27 without the rule).
 
 When a scroll's icon is clicked in its box, the game's routine (DSUN.EXE
 8B690h) asks whether the character on show may learn the scroll's spell
-(500:39h: only whether it already knows it; then 8B6D3h's `or ax,ax`), and
-if so teaches it (500:43h sets the low four bits of its byte in the known
-spells' table), uses the scroll up and says YOU LEARN THE SPELL (`push
-ds / push 33F1h`, 8B712h); if not, YOU ALREADY KNOW THIS SPELL (`push ds /
-push 3405h`, 8B719h) and the scroll is kept. Each spell's level is a byte of
-the game's table of spells at the load segment + 3FB9h, 19Ch + 7 a spell
-(`SPELL_LEVELS`; `GameData.spell_level`).
+(500:39h: only whether it already knows it; then 8B6D3h's `or ax,ax`), and if
+so teaches it (500:43h sets the low four bits of its byte in the known spells'
+table), uses the scroll up and says YOU LEARN THE SPELL
+(`push ds / push 33F1h`, 8B712h); if not, YOU ALREADY KNOW THIS SPELL
+(`push ds / push 3405h`, 8B719h) and the scroll is kept. Each spell's level is
+a byte of the game's table of spells at the load segment + 3FB9h, 19Ch + 7 a
+spell (`SPELL_LEVELS`; `GameData.spell_level`).
 
 How (`RULE_HI_INT`, the second rules word's 4: `game.RULE_INT_LEARN`):
 `PROBE_SCROLL_LEARN` (`INT A9h`) goes on to `INT_LEARN` for a preserver (the
-class among its sheet's) and a wizard spell. Its INT is the creature
-record's (`+25h`), its row of `INT_CHANCE` and `INT_MOST` (`intlearn.py`);
-`LEVEL_FULL` counts the wizard spells of the scroll's level it knows. Full:
-AX 0 (the game refuses, the scroll kept), and `PROBE_LEARN_REFUSED` (`INT
-91h`, new, 8B719h) pushes TOO MANY SPELLS OF THAT LEVEL in place of the
-game's message. Else a d100 of the helper's own (`D100`: a generator
-stirred by the BIOS's timer ticks); over the chance, the game teaches the
-spell and uses the scroll up, and `PROBE_LEARN_SAID` (`INT 92h`, new, 8B712h)
-takes it back (the four bits cleared) and pushes YOU FAIL TO LEARN THE SPELL.
-Each try is told to the Loader in the helper's header (`+272`: a count, then
-the member, spell, INT, chance, d100 or spells known, result;
-`DiceLog._learn_lines`). At a level up (and a new preserver's picks),
-`PROBE_PICK_LIST` drops the game's list's spells of a full level, and
-`PROBE_PICK_ANY` (`PICK_INT_ANY`) doesn't open CHOOSE A SPELL when no unknown
-wizard spell is left at a level on offer that isn't full.
+class among its sheet's) and a wizard spell. Its INT is the creature record's
+(`+25h`), its row of `INT_CHANCE` and `INT_MOST` (`intlearn.py`); `LEVEL_FULL`
+counts the wizard spells of the scroll's level it knows. Full: AX 0 (the game
+refuses, the scroll kept), and `PROBE_LEARN_REFUSED` (`INT 91h`, new, 8B719h)
+pushes TOO MANY SPELLS OF THAT LEVEL in place of the game's message. Else a
+d100 of the helper's own (`D100`: a generator stirred by the BIOS's timer
+ticks); over the chance, the game teaches the spell and uses the scroll up,
+and `PROBE_LEARN_SAID` (`INT 92h`, new, 8B712h) takes it back (the four bits
+cleared) and pushes YOU FAIL TO LEARN THE SPELL. Each try is told to the
+Loader in the helper's header (`+272`: a count, then the member, spell, INT,
+chance, d100 or spells known, result; `DiceLog._learn_lines`). At a level up
+(and a new preserver's picks), `PROBE_PICK_LIST` drops the game's list's
+spells of a full level, and `PROBE_PICK_ANY` (`PICK_INT_ANY`) doesn't open
+CHOOSE A SPELL when no unknown wizard spell is left at a level on offer that
+isn't full.
 
 ### AD&D's class tables
 
@@ -852,16 +850,15 @@ level, WIS, the spell level 1-5), which applies one rule word for each byte
 of the pair (`GameData.max_spell_slots`).
 
 How (`RULE_HI_TABLES`, the second rules word's 8: `game.RULE_ADND_TABLES`):
-`PROBE_XP` (`INT 90h`) replaces `imul eax,eax,64h` where a level up
-(87BBBh) and View Character (67D41h) read the table: `XP_NEED` gives the row
-and level's from `ADND_XP` (`PROBE_XP_NEXT` uses it too). `PROBE_PRIEST_THAC0`
-(`INT 8Fh`) replaces `mov [bp-2],ax` (876ABh) in the THAC0 routine's loop:
-for the priest group (CX 0), 2 x (level - 1) / 3. `PROBE_ADND_SLOTS`
-(`INT 8Eh`) replaces `nop / push cs / call 5E4C2h` (5E240h): for a cleric,
-druid or preserver it calls the routine with the level byte 0 (WIS's part
-alone; the routine keeps only SI, DI and BP, so the probe keeps the rest)
-and adds `ADND_SLOTS`; anyone else, or with the rule off, the routine as it
-was.
+`PROBE_XP` (`INT 90h`) replaces `imul eax,eax,64h` where a level up (87BBBh)
+and View Character (67D41h) read the table: `XP_NEED` gives the row and
+level's from `ADND_XP` (`PROBE_XP_NEXT` uses it too). `PROBE_PRIEST_THAC0`
+(`INT 8Fh`) replaces `mov [bp-2],ax` (876ABh) in the THAC0 routine's loop: for
+the priest group (CX 0), 2 x (level - 1) / 3. `PROBE_ADND_SLOTS` (`INT 8Eh`)
+replaces `nop / push cs / call 5E4C2h` (5E240h): for a cleric, druid or
+preserver it calls the routine with the level byte 0 (WIS's part alone; the
+routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
+`ADND_SLOTS`; anyone else, or with the rule off, the routine as it was.
 
 ### Spells saved against with the spell save
 
@@ -873,8 +870,7 @@ save), and puts it back when the rule is unticked.
 
 ### Fire, cold and electricity: DEX instead of a doubled d20
 
-([In the
-README](README.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
+([In the README](README.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
 
 How: the helper does the save's doubling (`INT F0h`) only while this rule is
 off, and the Loader marks the fire, cold and electricity spells with the game's
@@ -1044,9 +1040,9 @@ No kit is the kit page's first row, and what a new character has.
 Sheet `+43h`: zero in every sheet of the saves and saved characters at hand
 (176), and nothing in DSUN.EXE reads or writes it (no `es:[bx+43h]` access of
 any kind), as with the weapon specs' `+14h` to `+17h`, which saves and the
-roster keep. `+45h` is the same, if a second byte is needed (the Arcanist's CON
-change used it, once, before that became its d3). 0: no kit; 1 to 3
-the class's kits.
+roster keep. `+45h` is the same, if a second byte is needed (the Arcanist's
+CON change used it, once, before that became its d3). 0: no kit; 1 to 3 the
+class's kits.
 
 #### Choosing one
 
@@ -1161,16 +1157,16 @@ dances end: bit N, member N's check failed; bit N + 4, it passed.
 
 #### Where each effect goes
 
-A kit has one number (the creation class × 4 + the kit:
-`kitpages.KIT_IDS`). A human may have a kit for each of its classes (up to
-three), so every rule asks whether the sheet has a given kit awake: `KIT_IS`
-(kit in AL; `KIT_HAS` asleep too), or inline, `call kit_is_b` / `db KIT_X` for a
-sheet at ES:BX, `cr_is` for a creature (AX), `cb_is` for a combatant
-(`[BP+6]`); each leaves the kit's class's place in `KIT_WHERE` for `KIT_LEVEL`
-and `KIT_CLASS_OF_SHEET`. Rules that several kits touch (AC, THAC0, slots,
-saves, to hit and damage, cures) take each kit's part in turn. Each effect has
-its twin in `kits.py`, which the Loader and the dice log use (once for each kit
-in `kitpages.kit_ids`), and emulated tests hold the helper to it:
+A kit has one number (the creation class × 4 + the kit: `kitpages.KIT_IDS`). A
+human may have a kit for each of its classes (up to three), so every rule asks
+whether the sheet has a given kit awake: `KIT_IS` (kit in AL; `KIT_HAS` asleep
+too), or inline, `call kit_is_b` / `db KIT_X` for a sheet at ES:BX, `cr_is`
+for a creature (AX), `cb_is` for a combatant (`[BP+6]`); each leaves the kit's
+class's place in `KIT_WHERE` for `KIT_LEVEL` and `KIT_CLASS_OF_SHEET`. Rules
+that several kits touch (AC, THAC0, slots, saves, to hit and damage, cures)
+take each kit's part in turn. Each effect has its twin in `kits.py`, which the
+Loader and the dice log use (once for each kit in `kitpages.kit_ids`), and
+emulated tests hold the helper to it:
 
 | Effect | Kits | Where |
 |---|---|---|
@@ -1294,15 +1290,14 @@ most PSP (`+8`, `+0Ah`, `+0Ch` of DS:119Ch), the creature's hit points, PSP
 and six scores (`+0`, `+2`, `+22h` of DS:11A0h), the least and most hit points
 the classes could roll (DS:4996h), and the die's total (`RL_POOL`). STORE
 keeps those with the sheet's race, sex, classes and kit (`+18h`, `+19h`,
-`+21h` to `+23h`, `+43h`); at each button pressed the probe forgets the
-stored roll if those have changed (`RS_SAME`), so RECALL finds none. RECALL
-then shows them as the game would: the scores through the screen's
-own redraw (the creation overlay's stub, entry BBh, which a score's click
-calls; `RL_SUM` adds the totals), and the rest by running the die's routine
-from where it has rolled the hit points (659D0h, with its stack frame and DI
-1): the hit points shown, the PSP worked out again (65B39h, which rolls
-nothing) and shown, then the AC and damage. The overlay's segment is the
-INT's return.
+`+21h` to `+23h`, `+43h`); at each button pressed the probe forgets the stored
+roll if those have changed (`RS_SAME`), so RECALL finds none. RECALL then
+shows them as the game would: the scores through the screen's own redraw (the
+creation overlay's stub, entry BBh, which a score's click calls; `RL_SUM` adds
+the totals), and the rest by running the die's routine from where it has
+rolled the hit points (659D0h, with its stack frame and DI 1): the hit points
+shown, the PSP worked out again (65B39h, which rolls nothing) and shown, then
+the AC and damage. The overlay's segment is the INT's return.
 
 ### Fuller starting gear
 
@@ -1342,12 +1337,11 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
 
 Items are made by `npcitems.add_to` (a worn slot only when it's free; in the
 worn list or the backpack's, as the slot is), and moved with
-`pickpocket.place`. Each
-step is skipped once its item or kind is there, so `fill` leaves nothing to do
-the next time; one line for the log lists what it gave. `fill_member` gives a
-thri-kreen (race 8, `THRI_KREEN`) nothing, and does one character whatever its
-status: the game's own party (already Okay) gets it through
-`defaultparty.ready`'s last step, `gear`.
+`pickpocket.place`. Each step is skipped once its item or kind is there, so
+`fill` leaves nothing to do the next time; one line for the log lists what it
+gave. `fill_member` gives a thri-kreen (race 8, `THRI_KREEN`) nothing, and
+does one character whatever its status: the game's own party (already Okay)
+gets it through `defaultparty.ready`'s last step, `gear`.
 
 ### The game's own party
 
@@ -1356,20 +1350,19 @@ status: the game's own party (already Okay) gets it through
 How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307, 308
 and 313 for their figures), a creature record and a sheet each, already Okay
 and with no items; the game gives them their gear and spells as it starts. So
-the Loader (`dsloader/defaultparty.py`) changes them in memory while the
-game is new (its first hour, in the arena: `tools.NEW_GAME`), each
-change once, knowing each by name, race and classes together: their weapon
-kinds in the sheet's spare bytes, Gerakis's club item made a bone gythka in
-its place, Cilla's plain armour given back to the free item list (her chest
-armour is alone in its list, which is left empty, as a new list is), and her
-byte for spell 0 set in the known-spells table, and with kits Cermak's kit
-byte (`+43h`) the Arcanist for his preserver class (place 0; his gladiator
-class, place 1, none), and with fuller starting gear, last,
-`startgear.fill_member` for each. Seen in play: Cilla's USE screen lists ARMOR
-among her 1st-level spells and her inventory has no chest armour (AC 5);
-Gerakis holds the gythka and the long sword; the dice log lists each one's
-added gear (Gerakis a sling and leather chest and leg armour; Cermak, Cilla
-and K'ratchek nothing).
+the Loader (`dsloader/defaultparty.py`) changes them in memory while the game
+is new (its first hour, in the arena: `tools.NEW_GAME`), each change once,
+knowing each by name, race and classes together: their weapon kinds in the
+sheet's spare bytes, Gerakis's club item made a bone gythka in its place,
+Cilla's plain armour given back to the free item list (her chest armour is
+alone in its list, which is left empty, as a new list is), and her byte for
+spell 0 set in the known-spells table, and with kits Cermak's kit byte
+(`+43h`) the Arcanist for his preserver class (place 0; his gladiator class,
+place 1, none), and with fuller starting gear, last, `startgear.fill_member`
+for each. Seen in play: Cilla's USE screen lists ARMOR among her 1st-level
+spells and her inventory has no chest armour (AC 5); Gerakis holds the gythka
+and the long sword; the dice log lists each one's added gear (Gerakis a sling
+and leather chest and leg armour; Cermak, Cilla and K'ratchek nothing).
 
 ### The leader's CHA at shops
 
@@ -1377,11 +1370,11 @@ and K'ratchek nothing).
 
 The shop (overlay at 83000h) reads an item's price, the word at its `+6`,
 straight from the item: `mov cx,es:[bx+6]` to charge it (8384Bh: times the
-count for a stack, against the party's money, the dword at 2C0:357h; NO
-DEAL!, DS:2EE7h, if short) and to show it under the item (83BB1h, as
-`%d$`), and `movsx eax,word es:[bx+6]` where the list colours an item the party
-can't afford (8310Ch). Selling (83CCAh) is left alone; 9999 there is "I
-COULDN'T SELL THAT".
+count for a stack, against the party's money, the dword at 2C0:357h; NO DEAL!,
+DS:2EE7h, if short) and to show it under the item (83BB1h, as `%d$`), and
+`movsx eax,word es:[bx+6]` where the list colours an item the party can't
+afford (8310Ch). Selling (83CCAh) is left alone; 9999 there is "I COULDN'T
+SELL THAT".
 
 How (`RULE_HI_CHA_PRICES`, the second rules word's 16: `game.RULE_CHA_PRICES`):
 `PROBE_PRICE` (`INT 8Dh`) at the first two and `PROBE_PRICE_EAX` (`INT 8Ch`)
@@ -1393,9 +1386,9 @@ each point of CHA past 17, at most 40 at CHA 25) / 100, never below 1, and
 
 Checked in the game (with the table of the time, 25% at CHA 20): Kalzith's
 scrolls showed 2,250, 4,500 and 6,750 (25% off 3,000, 6,000 and 9,000) and
-each was charged that.
-A bought item stays on the pointer until it is put down (the game's held item,
-`DS:17A0h`), and the shop takes no other click meanwhile.
+each was charged that. A bought item stays on the pointer until it is put down
+(the game's held item, `DS:17A0h`), and the shop takes no other click
+meanwhile.
 
 What a shop pays: `SELL_PRICE` (an `INT 98h` site, 83CCAh's `mov si,es:[bx+6]`,
 ES:BX the item sold; the price shown in its offer and paid, times the count
@@ -1516,22 +1509,22 @@ one's sounds and Fogbolt's bolt (below); writes their rows in the spell rows
 `+45h` (bits 4-6 for 196-198, bit 3 Reflected Image, bit 7 Spook; bits 0-2 are
 the Elementalist's second sphere), or Friends' bit 7 of the kit byte `+43h`
 (whose FFh, no kit yet, counts as not known; `NS_SHEET_KNOWS`,
-`NS_SHEET_LEARN`, `NS_SHEET_FORGET`): the
-routine that finds a spell's known byte (500:48h, `NS_KNOWN` at 5DD04h) and
-the one that teaches it (500:43h, `NS_LEARN` at 5E3F7h) go to the helper for
-them, and the three lists that end at 8Ah end at 0C7h (5DDEFh, 5DE72h,
-5DF06h). Creation and DUAL clear the bits with the rest of the spells; the
-level-up pick, the starting picks and the INT limits count them.
+`NS_SHEET_LEARN`, `NS_SHEET_FORGET`): the routine that finds a spell's known
+byte (500:48h, `NS_KNOWN` at 5DD04h) and the one that teaches it (500:43h,
+`NS_LEARN` at 5E3F7h) go to the helper for them, and the three lists that end
+at 8Ah end at 0C7h (5DDEFh, 5DE72h, 5DF06h). Creation and DUAL clear the bits
+with the rest of the spells; the level-up pick, the starting picks and the INT
+limits count them.
 
 **A wizard's spell.** About 35 places tell spells apart by comparing the
 number with 45h, 8Ah, 0ACh or 0C4h (the USE screen, the cast, the caster's
 level, a scroll used...). Each such compare is `INT 98h` and a site number
-(`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's
-`ns_cmp_sites`); the helper makes a new spell compare as a wizard's
-spell does, and hands back the flags. The name routine (500:61h,
-`NS_NAME` at 5E560h) gives their names; their descriptions (RESOURCE.GFF's
-SPIN 197-199, which the game hasn't) come from the helper after the read; the
-icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
+(`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's `ns_cmp_sites`);
+the helper makes a new spell compare as a wizard's spell does, and hands back
+the flags. The name routine (500:61h, `NS_NAME` at 5E560h) gives their names;
+their descriptions (RESOURCE.GFF's SPIN 197-199, which the game hasn't) come
+from the helper after the read; the icons (21196-21198) are in the launcher's
+copy of RESOURCE.GFF.
 
 **The effects.**
 - Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of
@@ -1543,7 +1536,7 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   1d6+1 where that's better on average than its own. In the melee attack
   routine (58019h, `NS_FIST` at 58226h), where a hit gets its weapon's magic
   (`[BP-0Ch]`, which becomes damage kinds 1000h/2000h/8000h, PLUS1-PLUS3 in
-  `monsters.py`), an unarmed attack (`[BP-2]` -1) is +1 to hit (`[BP-8]`,
+  `monsters.py`), an unarmed attack (`[BP-2]` −1) is +1 to hit (`[BP-8]`,
   taken off the THAC0) and at least a +1 weapon. The natural-attack routine
   applies Body Weaponry (2d4) and Animal Affinity (at least 1d10) to the first
   attack after `NS_CLAW`, changing the dice but not the bonus: with the claw,
@@ -1552,10 +1545,10 @@ icons (21196-21198) are in the launcher's copy of RESOURCE.GFF.
   routine adding up an attack's to-hit adjustments from effects (7C3E9h,
   `NS_HIT` at 7C430h, beside the target's Blur), it takes 3 off for a fogged
   attacker and gives 2 against a fogged target.
-- Reflected Image is Mirror Image's record (19) with one image (`+4` 11h, 1d1),
-  so it is Mirror Image's effect 25 and replaces it, and either recast
-  replaces the last, as the game does for Mirror Image; Dispel Magic ends
-  it as it ends Mirror Image. Where an attack rolls d100 against the images
+- Reflected Image is Mirror Image's record (19) with one image (`+4` 11h,
+  1d1), so it is Mirror Image's effect 25 and replaces it, and either recast
+  replaces the last, as the game does for Mirror Image; Dispel Magic ends it
+  as it ends Mirror Image. Where an attack rolls d100 against the images
   (7A5BFh, `cmp ax,4Bh` at 7A5CDh, `NS_IMAGE`), the helper looks up the
   target's effect 25 and makes the chance 50 when the effect's spell is 199.
   Where the game finds an effect's entry in the effects' table (its number
@@ -1598,7 +1591,7 @@ nothing, as Charm Person.
 
 **Its sounds.** A record names three sounds (RESOURCE.GFF's BVOC chunks, the
 game's Creative Voice files), all played by 90:A6Fh: `+0Fh` with the glow on
-the caster (only when `+0Dh`, the glow's object, isn't -1), `+13h` while
+the caster (only when `+0Dh`, the glow's object, isn't −1), `+13h` while
 something flies (only when `+10h` isn't FFh), `+16h` as the spell lands.
 Fogbolt has Fog Cloud's 82 and 98 for the first and last, and keeps Charm
 Person's 75 for the flight (`FOG_CAST_SOUND`, `FOG_HIT_SOUND`). Cat's Grace and
@@ -1618,8 +1611,8 @@ A click on an effect's icon on the Effects screen
 ([In the README](README.md#spells-on-the-effects-screen)) ends it in the game;
 with the switch on, a spell's effect is left on: two jumps in the screen's
 click handler (DSUN.EXE 7F226h and 7F236h, `effects_click_low` and
-`effects_click_high` in `dsloader/gamepatch.py`) go to its way out instead
-of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still
+`effects_click_high` in `dsloader/gamepatch.py`) go to its way out instead of
+to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still
 ends, as stopping it there is how a power is dropped.
 
 ### New items
@@ -1770,11 +1763,11 @@ originals:
 His state is in the game's own flags (760 to 763: met, friendly, cold, his
 scrolls given; the game uses flags up to 755), so a save keeps it. The first
 time the party is in the pens, the Loader puts his six scrolls among his
-things (from the game's free list, as for [the arena's
-ring](README.md#new-items)), once a game. If he is killed, the Loader marks it
-(flag 772) and the others speak of him as dead (see [Dinos and the
-Trustee](README.md#what-dinos-and-the-trustee-say-about-them)); after the
-party's escape he is gone from the pens with everyone else.
+things (from the game's free list, as for
+[the arena's ring](README.md#new-items)), once a game. If he is killed, the
+Loader marks it (flag 772) and the others speak of him as dead (see
+[Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them));
+after the party's escape he is gone from the pens with everyone else.
 
 With his scrolls the Loader gives him his gear, worn (`kalzith.gear`, flag
 776): a Quarterstaff in the right hand, a Cloak (the game's own) and his Ashen
@@ -1858,15 +1851,15 @@ more of the game's memory.
 
 How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
 question in its first menu (a copy of the game's with the question added, as
-for the questions about Kalzith and Semyon, see [Dinos and the
-Trustee](README.md#what-dinos-and-the-trustee-say-about-them)), shown while
-the game's own test says someone in the party carries the cooked vulture (33h,
-as the campfire's script asks about the plucked one; the game's object A4Ch),
-the test being the question's own condition in the menu. Chosen, the script
-takes it (5Ch, as the campfire takes the plucked one) and sets the Loader's
-flag 780, then gives the XP through the game's own routine for quests (the
-amount in its variable, then script 74 at 135: the window, the words and the
-quest's sound), as Dinos's own script does when he heals Gilal (350). The
+for the questions about Kalzith and Semyon, see
+[Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)),
+shown while the game's own test says someone in the party carries the cooked
+vulture (33h, as the campfire's script asks about the plucked one; the game's
+object A4Ch), the test being the question's own condition in the menu. Chosen,
+the script takes it (5Ch, as the campfire takes the plucked one) and sets the
+Loader's flag 780, then gives the XP through the game's own routine for quests
+(the amount in its variable, then script 74 at 135: the window, the words and
+the quest's sound), as Dinos's own script does when he heals Gilal (350). The
 Loader then refills the party, once (flag 781), only while the party is
 talking with him (never from a game being loaded).
 
@@ -1931,13 +1924,13 @@ the picture and fills it.
 
 ([In the README](README.md#elves-and-half-elves).)
 
-How: elves (objects 304 and 305) get pointed ears (`dsloader/figures.py`):
-2 pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their
-place is read from each frame's parts (beside the head, two rows above the
-eyes from the front; at the eyes from behind; behind the face from the side),
-or set by hand for the poses whose parts can't be read (`EAR_PLAN`: lunges,
-the bow, hit, dead). They are drawn after the gear, only on pixels the gear
-left as they were, so a shield or a weapon in front hides them.
+How: elves (objects 304 and 305) get pointed ears (`dsloader/figures.py`): 2
+pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their place
+is read from each frame's parts (beside the head, two rows above the eyes from
+the front; at the eyes from behind; behind the face from the side), or set by
+hand for the poses whose parts can't be read (`EAR_PLAN`: lunges, the bow,
+hit, dead). They are drawn after the gear, only on pixels the gear left as
+they were, so a shield or a weapon in front hides them.
 
 Half-elves (objects 306 and 307) name the human pictures, as 300 and 301 do.
 The Loader's copy of the file gives them figures of their own instead
@@ -1972,8 +1965,8 @@ With the switch off (`elf_looks`, `sprites.Pictures(looks=False)`), or if the
 palette or the pictures they are made from are missing, or making them fails,
 a half-elf is the human figure recoloured (`halfelf.py`), as before, and elves
 have no ears. The switch counts when the launcher writes the copy; the Loader
-dresses the party with the setting it had then. A
-spare is drawn as the figure it stands for.
+dresses the party with the setting it had then. A spare is drawn as the figure
+it stands for.
 
 Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)
 in her record (object 32003's RDFF, its word +22h, the creature's +18h), and
@@ -1989,17 +1982,17 @@ the game draws her as an elf from its next area or load
 
 ([In the README](README.md#shadows).)
 
-How: the launcher's copy of `DSUN.EXE` (see [How the dice log
-works](#how-the-dice-log-works)) calls DSCLOG when the game draws the floor of
-the view or of a rectangle of it. DSCLOG then lays each casting figure's
-current picture, flattened and stretched, onto the floor just drawn, darkening
-each pixel to the closest clearly darker colour of the area's palette (a table
-it makes from the palette when the Loader asks: after each area change, once
-its fade-in is over, and now and then; the colours the game cycles, for water
-and fire, are never picked as darker ones). The rectangles the game draws
-again when a figure moves are widened by the length of a shadow, so none is
-left behind. The Loader keeps DSCLOG's list of who casts one
-(`dsloader/shadows.py`) and has DSCLOG draw the view again when it changes
+How: the launcher's copy of `DSUN.EXE` (see
+[How the dice log works](#how-the-dice-log-works)) calls DSCLOG when the game
+draws the floor of the view or of a rectangle of it. DSCLOG then lays each
+casting figure's current picture, flattened and stretched, onto the floor just
+drawn, darkening each pixel to the closest clearly darker colour of the area's
+palette (a table it makes from the palette when the Loader asks: after each
+area change, once its fade-in is over, and now and then; the colours the game
+cycles, for water and fire, are never picked as darker ones). The rectangles
+the game draws again when a figure moves are widened by the length of a
+shadow, so none is left behind. The Loader keeps DSCLOG's list of who casts
+one (`dsloader/shadows.py`) and has DSCLOG draw the view again when it changes
 (from the game's main loop, as centring the view does: marking the figures
 changed instead, as the game's own code does to draw one again, can set one in
 a fight walking again).

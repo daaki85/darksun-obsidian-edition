@@ -23,36 +23,36 @@ name.)
 ## What it does
 
 - **Shows what the game keeps hidden.** Every roll is logged as it happens,
-  with what it needed and where each bonus came from ([the dice
-  log](obsidian-edition/README.md#the-dice-log)). The game's own screens gain
-  THAC0, saves, thief skills and spell slots, a combat log shows with **L**,
-  and the Look box tells you what can hurt a monster
+  with what it needed and where each bonus came from
+  ([the dice log](obsidian-edition/README.md#the-dice-log)). The game's own
+  screens gain THAC0, saves, thief skills and spell slots, a combat log shows
+  with **L**, and the Look box tells you what can hurt a monster
   ([In the game](obsidian-edition/README.md#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class
   tables, INT's limits on learning spells, saving throws and multiclass hit
-  points as the books have them ([Rule
-  changes](obsidian-edition/README.md#rule-changes)).
+  points as the books have them
+  ([Rule changes](obsidian-edition/README.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and seven for races' pairs of classes), levels up to
+  (three for each class, and thirteen for races' pairs of classes), levels up to
   10, STORE and RECALL for a creation roll, and fuller starting gear
   ([More character customization](obsidian-edition/README.md#more-character-customization)).
 - **Expanded play:** thieves hide in shadows to backstab and pick pockets, the
   leader's CHA lowers shop prices, and merchants sell back the magical items
-  sold to them ([Expanded
-  features](obsidian-edition/README.md#expanded-features)).
+  sold to them
+  ([Expanded features](obsidian-edition/README.md#expanded-features)).
 - **More of Athas:** new weapons, shields and magic items, six wizard spells,
   Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
-  Semyon's story and a use for the cooked vulture ([New
-  content](obsidian-edition/README.md#new-content)); on the map, the party
-  wears its gear, figures cast shadows and raise dust, and elves and
+  Semyon's story and a use for the cooked vulture
+  ([New content](obsidian-edition/README.md#new-content)); on the map, the
+  party wears its gear, figures cast shadows and raise dust, and elves and
   half-elves look their own ([Graphics](obsidian-edition/README.md#graphics)).
 - **Quality of life:** Tab and Enter to choose and attack an enemy, a view
   that stays put in fights, dragging the map with the mouse wheel held down
   ([Controls](obsidian-edition/README.md#controls)), 40 saves kept under their
-  names too, 29 saved characters ([More saves and
-  characters](obsidian-edition/README.md#more-saves-and-characters)), a game
-  speed setting, crash reports, and no manual check ([No manual
-  check](obsidian-edition/README.md#no-manual-check)).
+  names too, 29 saved characters
+  ([More saves and characters](obsidian-edition/README.md#more-saves-and-characters)),
+  a game speed setting, crash reports, and no manual check
+  ([No manual check](obsidian-edition/README.md#no-manual-check)).
 
 The game's own files are never modified: the Loader runs a patched copy of the
 game from its own folder. It writes to the game folder only your saves (pages
@@ -64,16 +64,15 @@ game's own `CHARSAVE.GFF`).
 1. Download the latest release from the
    [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases)
    (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`) and unzip it
-   anywhere. (Or this repository as it stands: **Code →
-   Download ZIP**.)
-2. In the unzipped folder (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>`,
-   or `obsidian-edition` in a download of the repository), double-click
-   **`Start Obsidian Edition.bat`**.
-   The first time, it offers to install 64-bit Python if you don't have it.
-   If Windows shows "Open File - Security Warning" (it does for any `.bat`
-   from a download), press **Run**: the Loader then unblocks its own files, so
-   it asks only that once. (Or, before unzipping, tick **Unblock** in the zip's
-   Properties.)
+   anywhere. (Or this repository as it stands: **Code → Download ZIP**.)
+2. In the unzipped folder
+   (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>`, or
+   `obsidian-edition` in a download of the repository), double-click
+   **`Start Obsidian Edition.bat`**. The first time, it offers to install
+   64-bit Python if you don't have it. If Windows shows "Open File - Security
+   Warning" (it does for any `.bat` from a download), press **Run**: the
+   Loader then unblocks its own files, so it asks only that once. (Or, before
+   unzipping, tick **Unblock** in the zip's Properties.)
 3. On the Loader's **Options** tab, pick the rule changes and additions you
    want (they're remembered).
 4. Press **Start the game** at the top left. The game starts with your
@@ -85,21 +84,19 @@ double-click, with the options as last set.)
 ## What's new
 
 **Obsidian Edition 2.3.0** is out ([release notes](release-notes/v2.3.0.md)):
-a combat log in the game, three more wizard spells (Reflected Image, Spook
-and Friends), two magic shields, defilers' scrolls, buying back magical
-items, saves kept under their names, fuller starting gear, and Templar's
-Ledger renamed the Loader. 2.2.1 before it ([release
-notes](release-notes/v2.2.1.md)) made more of the Options tab switchable,
-with **Restore defaults** to set it all back.
+a combat log in the game, three more wizard spells (Reflected Image, Spook and
+Friends), two magic shields, defilers' scrolls, buying back magical items,
+saves kept under their names, fuller starting gear, and Templar's Ledger
+renamed the Loader. 2.2.1 before it ([release notes](release-notes/v2.2.1.md))
+made more of the Options tab switchable, with **Restore defaults** to set it
+all back.
 
 Earlier changes, pull request by pull request, are in
 [`CHANGELOG.md`](CHANGELOG.md). Releases have notes of their own:
 [2.3.0](release-notes/v2.3.0.md) (pull requests #44 to #46),
-[2.2.1](release-notes/v2.2.1.md) (#43),
-[2.2.0](release-notes/v2.2.0.md) (#39 to #42),
-[2.1.1](release-notes/v2.1.1.md) (#37),
-[2.1.0](release-notes/v2.1.0.md) (#35),
-[2.0.0](release-notes/v2.0.0.md) (#31 and #32),
-[1.2.0](release-notes/v1.2.0.md) (#19 to #29),
+[2.2.1](release-notes/v2.2.1.md) (#43), [2.2.0](release-notes/v2.2.0.md) (#39
+to #42), [2.1.1](release-notes/v2.1.1.md) (#37),
+[2.1.0](release-notes/v2.1.0.md) (#35), [2.0.0](release-notes/v2.0.0.md) (#31
+and #32), [1.2.0](release-notes/v1.2.0.md) (#19 to #29),
 [1.1.0](release-notes/v1.1.0.md) (#14 to #18) and
 [1.0.0](release-notes/v1.0.0.md) (#1 to #13).
