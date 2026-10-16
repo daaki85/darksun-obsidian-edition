@@ -350,7 +350,10 @@ kit_outdoors db 0               ; +350 the Loader sets bit N while party member 
 kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance, the Loader's (it
                                 ;      rolls it as a fight starts and counts its rounds): +1 danced
                                 ;      well, -1 stumbled, 0 none; to hit, to damage and on AC (KIT_EXTRA)
-           db 0                 ; +355
+kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py: it rolls each Blood-Fury's
+                                ;      check as a fight starts, clears it as the fight ends): bit N
+                                ;      party member N's check failed (3 worse to hit, AC 3 worse), bit
+                                ;      N + 4 it passed (1 more attack a round in melee, 3 more damage)
 tick_off   dw ticks             ; +356 offset of TICKS: where the game was as its timer struck
                                 ;      (PROBE_TICK), TICK_SLOTS records of TICK_SIZE bytes, for the
                                 ;      Loader's freeze report
@@ -2690,7 +2693,10 @@ probe_attacks:
 .store: call war_kit_of        ; (a Crusader's or Mind Warrior's extra attacks, in melee)
         cmp word [bp + 0x16], 1
         jg .kept
-        push bx
+        call wild_passed        ; (Wild Fighting, its check passed: 1 more a round in melee)
+        jnc .tame
+        add ax, WILD_HALVES
+.tame:  push bx
         mov bx, [bp + 0x12]     ; (the weapon's item)
         call off_hand_halves    ; (RULE_TWO_WEAPONS: the off hand's one a round)
         pop bx
@@ -2909,7 +2915,10 @@ probe_spec_damage:
         push ax
         call kit_extra
         add [bp - 0x12], ax
-        pop ax
+        call wild_passed        ; (Wild Fighting, its check passed: 3 more)
+        jnc .wild
+        add word [bp - 0x12], WILD_DAMAGE
+.wild:  pop ax
         test word [cs:rules], RULE_SPECIALIZE
         jz .done
         push dx
@@ -4073,7 +4082,7 @@ KIT_SHINOBI  equ 35
 ; the multiclass kits (kitpages.MULTI): their groups, 9-13, numbered on from the classes, and the kits
 ; (KIT_IS's numbers) as a class's
 MULTI_FIRST  equ 9
-KIT_GROUPS   equ 18             ; (the classes' and the multiclass groups' pages)
+KIT_GROUPS   equ 19             ; (the classes' and the multiclass groups' pages)
 MULTI_ROW    equ 0x88A          ; (a group's rows: + 3 * (group - 9) + kit - 1)
 KIT_BATTLE_DANCER equ 37
 KIT_SHADOWBLADE equ 41
@@ -4087,6 +4096,7 @@ KIT_TITAN_MIND equ 61
 KIT_POISONER equ 65
 KIT_SPIRIT_CALLER equ 69
 KIT_WASTE_SEER equ 73
+KIT_BLOOD_FURY equ 77
 WP_DISC      equ 0xEA2              ; DS: the panel's windows (far)
 WP_SPHERE    equ 0xEA6
 WP_DISC_MASK equ 0x4980             ; DS: the disciplines and spheres marked, kept while hidden
@@ -4303,8 +4313,10 @@ multi_table db 3
             dw (1 << 1) | (1 << 6)      ; halfling cleric/psionicist: Spirit Caller
             db 8
             dw (1 << 2) | (1 << 3)      ; thri-kreen druid/fighter: Wasteland Seer
+            db 7
+            dw (1 << 1) | (1 << 3)      ; mul cleric/fighter: Blood-Fury
             db 0
-multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1
+multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1
 km_rows     db 4                ; (KIT_MARKS: the page's rows)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
@@ -5356,6 +5368,7 @@ kit_is_b:
 ; the creature's kit's (kits.ac): a Ravager's base AC by its level (RAVAGER_AC) where it is better
 ; than its sheet's (+27h), its armour improving it as before; a Wanderer's 1 worse; a Sentinel's 2
 ; better with a shield in a hand, an Arena Champion's 1; a Grove Warden's 1 better for every 3 druid levels. DS the game's;
+; a Blood-Fury whose Wild Fighting check failed (KIT_WILD) 3 worse, no worse than 10.
 ; others kept.
 kit_ac:
         test word [cs:rules_hi], RULE_HI_KITS
@@ -5373,7 +5386,17 @@ kit_ac:
         cmp byte [es:bx + THINGS], 2
         jne .out                ; (not a creature)
         mov ax, [es:bx + THINGS + 1]
-        call creature_sheet     ; (each of its kits' awake: a human may have two or three)
+        cmp ax, 3               ; (Wild Fighting failed: 3 worse, no worse than 10)
+        ja .sheet
+        bt word [cs:kit_wild], ax
+        jnc .sheet
+        cmp cx, WILD_AC_MOST
+        jge .sheet
+        add cx, WILD_AC
+        cmp cx, WILD_AC_MOST
+        jle .sheet
+        mov cx, WILD_AC_MOST
+.sheet: call creature_sheet     ; (each of its kits' awake: a human may have two or three)
         call kit_is_b           ; (a Battle Dancer's dance: 1 better, or 1 worse, KIT_DANCE)
         db KIT_BATTLE_DANCER
         jne .wanderer
@@ -5558,6 +5581,40 @@ kit_to_hit:
         dec ax
 .ret:   pop es
         pop bx
+        jmp wild_to_hit
+
+; WILD_TO_HIT: AX (what the attacker's kit adds to hit) 3 less if the attacker in the weapon attack
+; routine ([BP+0Eh]) is a party member whose Wild Fighting check failed (KIT_WILD: kits.WILD_TO_HIT).
+; Others kept.
+WILD_TO_HIT  equ 3
+WILD_DAMAGE  equ 3
+WILD_HALVES  equ 2              ; (1 more attack a round)
+WILD_AC      equ 3              ; (AC that much worse, but no worse than WILD_AC_MOST)
+WILD_AC_MOST equ 10
+wild_to_hit:
+        push si
+        mov si, [bp + 0x0E]
+        cmp si, 3
+        ja .ret
+        bt word [cs:kit_wild], si
+        jnc .ret
+        sub ax, WILD_TO_HIT
+.ret:   pop si
+        ret
+
+; WILD_PASSED: CF set if the attacker in the weapon attack routine ([BP+0Eh]) is a party member
+; whose Wild Fighting check passed this fight (KIT_WILD's bit N + 4). All registers kept.
+wild_passed:
+        push si
+        mov si, [bp + 0x0E]
+        cmp si, 3
+        ja .no
+        add si, 4
+        bt word [cs:kit_wild], si
+        pop si
+        ret
+.no:    pop si
+        clc
         ret
 
 ; KIT_ATTACK_DAMAGE: the weapon attack's damage bonus ([BP-12h]) with the attacker's kit's
@@ -8212,6 +8269,7 @@ kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
              db 'POISONER', 0, 0, 0
              db 'SPIRIT CALLER', 0, 0, 0
              db 'WASTELAND SEER', 0, 0, 0
+             db 'BLOOD-FURY', 0, 0, 0
 kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the screen's)
 kit_asleep   db ' (ASLEEP)', 0
 ; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.

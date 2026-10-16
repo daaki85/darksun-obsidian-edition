@@ -14,20 +14,20 @@ class KitPageTests(unittest.TestCase):
         pages' (3014-3019, 3021)."""
         buttons = [kitpages.row_id(g, k + 1) for g, names in kitpages.KITS.items() for k in range(len(names))] \
             + [kitpages.KIT_NONE, kitpages.KIT_VIEW]
-        self.assertEqual(len(set(buttons)), 38)
+        self.assertEqual(len(set(buttons)), 39)
         self.assertTrue(all(0x870 <= b < 0x8B0 for b in buttons))  # (STORE and RECALL after them: rollstore.py)
         windows = [kitpages.KIT_DISCIPLINES, kitpages.KIT_SPHERES, kitpages.KIT_LAST_PAGE] \
             + [kitpages.KIT_WINDOW + c for c in range(len(kitpages.KITS))]
         taken = set(range(3000, 3014)) | {3020, 3024, weaponpages.PICKER, weaponpages.WARRIOR_DISCIPLINES,
                                           weaponpages.WARRIOR_SPHERES} | set(weaponpages.PAGES)
-        self.assertEqual(len(set(windows)), 21)
+        self.assertEqual(len(set(windows)), 22)
         self.assertFalse(taken & set(windows))
 
     def test_rows(self):
         self.assertEqual(sorted(kitpages.KITS), list(game.CREATION_CLASS_NAMES) + sorted(kitpages.MULTI))
         self.assertEqual(kitpages.KITS[4], ("Arena Champion", "Twin-blade", "Brute"))
         texts = [kitpages.row_text(n) for names in kitpages.KITS.values() for n in names]
-        self.assertEqual(len(texts), 36)
+        self.assertEqual(len(texts), 37)
         self.assertIn("W-AVENGER", texts)
         self.assertIn("CHAMPION", texts)
         self.assertIn("M-WARRIOR", texts)
@@ -42,7 +42,7 @@ class KitPageTests(unittest.TestCase):
         from dsloader import gff
         with open(os.environ["DSUN_RESOURCE"], "rb") as f:
             widths = kitpages.row_widths(gff.read_gff(f.read()))
-        self.assertEqual(len(widths), 37)
+        self.assertEqual(len(widths), 38)
         self.assertEqual({n: w for n, w in widths.items() if w > kitpages.ROW_WIDTH}, {})
 
     def test_kit_names(self):

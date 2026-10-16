@@ -890,6 +890,27 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.attack(3, self.AXE, **glad)[1:3], (15, 3))
         self.assertEqual(self.attack(2, self.BOW, missile=True, **glad)[1:3], (15, 3))
 
+    def test_blood_fury(self):
+        """Wild Fighting for a Blood-Fury (a mul cleric/fighter, party member 2; the header's +355,
+        KIT_WILD, the Loader's): its check passed (bit 6), 1 more attack a round in melee and 3 more
+        damage, melee or missile; failed (bit 2), 3 worse to hit; another member's bits nothing."""
+        from dsloader import kits
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        fury = dict(classes=(1, 9, 0), levels=(3, 3, 0), race=7, kit=1, rules=game.RULE_KITS, me=2)
+        try:
+            for bits, melee, missile in ((0, (3, 15, 3, 8), (15, 3)),
+                                         (0x40, (3 + kits.WILD_HALVES, 15, 3 + kits.WILD_DAMAGE, 8), (15, 6)),
+                                         (0x04, (3, 15 - kits.WILD_TO_HIT, 3, 8), (18, 3)),
+                                         (0xBB, (3, 15, 3, 8), (15, 3))):  # (members 0, 1 and 3's)
+                with self.subTest(bits=bits):
+                    self.mu.mem_write(hdr + 355, bytes((bits,)))
+                    self.assertEqual(self.attack(3, self.AXE, **fury), melee)
+                    self.assertEqual(self.attack(2, self.BOW, missile=True, **fury)[1:3], missile)
+            self.mu.mem_write(hdr + 355, bytes((0x44,)))
+            self.assertEqual(self.attack(3, self.AXE, **dict(fury, me=5)), (3, 15, 3, 8))  # (not a party member)
+        finally:
+            self.mu.mem_write(hdr + 355, bytes(1))
+
     def test_multiclass_kits(self):
         """KIT_EXTRA and KIT_MELEE for the multiclass kits (kits on): a Battle Dancer's dance (the
         header's +351, party member 2's) to hit and damage, melee or missile; a Wilderness Avenger's
@@ -3581,10 +3602,31 @@ class KitTests(unittest.TestCase):
         finally:
             self.mu.mem_write(hdr + 351, bytes(4))
 
-    def kit_ac(self):
-        """KIT_AC for thing 7, the game's AC 10: the AC."""
+    def test_wild_ac(self):
+        """KIT_AC for a Blood-Fury (a mul cleric/fighter, party member 2) whose Wild Fighting check
+        failed (the header's +355, KIT_WILD bit 2): 3 worse, no worse than 10 (kits.wild_ac);
+        passed (bit 6), as it is."""
+        from dsloader import kits
+        self.rules(game.RULE_KITS)
+        hdr = TSR * 16 + self.image.find(HDR_SIG)
+        try:
+            self.creature(1, 1, index=2, second=9, race=7)
+            self.assertEqual(self.kit_of(1, 1, game.RULE_KITS, 9, 7), kits.BLOOD_FURY)
+            self.assertNotEqual(self.kit_of(1, 1, game.RULE_KITS, 9, 3), kits.BLOOD_FURY)  # (an elf's: Battle Dancer)
+            for bits in (0x04, 0x40, 0x0B):
+                for ac in (-2, 3, 8, 10, 12):
+                    with self.subTest(bits=bits, ac=ac):
+                        self.mu.mem_write(hdr + 355, bytes((bits,)))
+                        self.assertEqual(self.kit_ac(ac), kits.wild_ac(ac) if bits == 0x04 else ac)
+            self.assertEqual([kits.wild_ac(a) for a in (-2, 8, 10, 12)], [1, 10, 10, 12])
+        finally:
+            self.mu.mem_write(hdr + 355, bytes(1))
+
+    def kit_ac(self, ac=10):
+        """KIT_AC for thing 7, the game's AC AC: the AC."""
         self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 7))
-        self.call(rb"\x2e\xf7\x06..\x01\x00(?:\x74.|\x0f\x84..)\x53\x51\x52\x06\x89\xc1", eax=10, ebp=BP)
+        self.call(rb"\x2e\xf7\x06..\x01\x00(?:\x74.|\x0f\x84..)\x53\x51\x52\x06\x89\xc1", eax=ac & 0xFFFF,
+                  ebp=BP)
         return struct.unpack("<h", struct.pack("<H", self.mu.reg_read(r.UC_X86_REG_AX)))[0]
 
     def creature(self, cls, kit, index=5, level=1, base=10, shield=False, second=0, race=0):

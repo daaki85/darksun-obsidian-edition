@@ -1933,7 +1933,7 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 A character of two classes at once may take a kit if its race and pair of
 classes have one. Only that race may take it: a dwarf fighter/thief has the
 Ghetto Fighter and Wayfinder, and a half-elf fighter/thief has the Shadowblade
-and Military Scout (a halfling fighter/thief has the Poisoner). "Under the open sky" means an outdoor map, or open ground
+and Military Scout (a halfling fighter/thief has the Poisoner, a mul cleric/fighter the Blood-Fury). "Under the open sky" means an outdoor map, or open ground
 outside the buildings on a city map. The Loader works that out about once a
 second.
 
@@ -1951,6 +1951,7 @@ second.
 | **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile | the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | the spells it may cast and its slots are its own level's |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | as the Spirit Caller's |
+| **Blood-Fury** | mul cleric/fighter | **Wild Fighting** as each fight starts: a d20 against CON (the proficiency, +0); at CON or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight | over CON, **−3 to hit and AC 3 worse** (no worse than 10) for the fight; after a wild fight, an hour of the game's clock before the next (a fight sooner, it fights as it is) | the dice log shows the check, or that it's still too tired |
 
 A thief skill a kit lowers never goes below 0. The kits start with their
 classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)).

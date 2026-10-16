@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from types import SimpleNamespace  # noqa: E402
 
-from dsloader import dance, dicelog, game, kits  # noqa: E402
+from dsloader import dance, dicelog, game, kits, wild  # noqa: E402
 
 
 class FakeGd:
@@ -77,6 +77,7 @@ class DanceTests(unittest.TestCase):
         gd.game_time = lambda: gd.clock
         d.round(gd, 0x100, 1, lambda a, b: 12)
         log = SimpleNamespace(game=gd, tsr_hdr=0x100, _kit_check=0.0, guest=gd.guest, _dances=d,
+                              _wild=wild.WildFights(),
                               _round_time=1000)
         tick = lambda now: dicelog.DiceLog._kit_tick(log, now)
         gd.clock = 1000 + dicelog.FIGHT_GAP

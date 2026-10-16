@@ -35,6 +35,11 @@ have the detail.
   to hit), **Spirit Caller** (halfling cleric/psionicist) and **Wasteland Seer**
   (thri-kreen druid/fighter): spells cast 2 levels higher under the open sky,
   1 lower under a roof.
+- **A mul kit, the Blood-Fury** (mul cleric/fighter), with **Wild Fighting**
+  (the AD&D proficiency): as each fight starts, a d20 against CON. Passed, 1
+  more attack a round in melee and +3 damage for the fight; failed, −3 to hit
+  and AC 3 worse. After a wild fight it needs an hour of the game's clock
+  before the next; the dice log shows the check.
 - **A ranger's bow is listed** on the Effects screen and the Characters tab
   (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
   expert with the bow, chosen or not, but only the chosen weapons were listed.

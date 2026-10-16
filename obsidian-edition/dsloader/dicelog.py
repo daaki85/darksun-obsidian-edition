@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, combatlog, dance, wheel, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, STR_DAMAGE, GameData)
 from .guestmem import GuestMemory
@@ -407,6 +407,7 @@ class DiceLog:
         self._tables: Optional[monsters.MonsterTables] = None  # the monster kinds (read once)
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
+        self._wild = wild.WildFights()  # (the Blood-Furies' Wild Fighting, fight by fight)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
@@ -857,13 +858,14 @@ class DiceLog:
                 return
             bits = sum(1 << m for m in range(game.PARTY_SIZE) if self.game.outdoors(m))
             self.guest.write(self.tsr_hdr + TSR_KIT_OUTDOORS, bytes((bits,)))
-            if (self._dances.left or self.game.dance) and not self.game.in_combat():
+            if (self._dances.left or self.game.dance or self._wild.fighting) and not self.game.in_combat():
                 # (ended with the fight as the rounds count it, FIGHT_GAP of the game's clock past
                 # the last round: the game drops its fight flag as the first round's initiative
                 # is rolled, and between the arena's waves)
                 now_game = self.game.game_time()
                 if now_game is not None and self._round_time is not None and now_game - self._round_time > FIGHT_GAP:
                     self._dances.stop(self.game, self.tsr_hdr)
+                    self._wild.stop(self.game, self.tsr_hdr, self._round_time)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -888,9 +890,15 @@ class DiceLog:
                 hit += kits.missile_to_hit(kid, kind, g.outdoors(attacker))
             if kid == kits.POISONER and mode is not None:
                 hit += kits.POISONER_TO_HIT
+            if kid == kits.BLOOD_FURY and attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*)
+                if g.wild[attacker]:
+                    dam += kits.WILD_DAMAGE
+                else:
+                    hit += kits.WILD_TO_HIT
             if weapon or hit or dam or more:
                 names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
-                             + (" under the open sky" if kid == kits.SCOUT else ""))
+                             + (" under the open sky" if kid == kits.SCOUT else "")
+                             + (" fighting wild" if kid == kits.BLOOD_FURY and attacker in g.wild else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
         return " and ".join(names), to_hit, damage
 
@@ -1601,6 +1609,7 @@ class DiceLog:
         number = self._round_number()
         self.round_number = number
         danced = self._dances.round(g, self.tsr_hdr, number)
+        danced += self._wild.round(g, self.tsr_hdr, number, g.game_time())
         if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
             self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
