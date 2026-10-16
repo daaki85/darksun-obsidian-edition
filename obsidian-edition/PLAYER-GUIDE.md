@@ -69,7 +69,8 @@ The [README](README.md) has every rule in full detail.
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
-   none, are given weapon specs to suit them, but no kits.
+   none, are given weapon specs to suit them, and with kits on, a kit or
+   features of their own (see [Multiclass kits](#multiclass-kits)).
 
 ## Playing
 
@@ -1182,8 +1183,8 @@ ending the turn, gives them away. An enemy beside them when the turn comes
 means no hiding: get clear first (a Shadowblade tries anyway).
 
 - Thieves' hiding is **halved in daylight** (under the open sky; not an
-  Assassin's, a Military Scout's or Cilla's); rangers'
-  is halved indoors instead.
+  Assassin's, a Military Scout's or Cilla's); rangers' is halved indoors
+  instead.
 - A worn cloak adds 10 to hiding in shadows and worn boots 10 to moving
   silently, up to 95. A worn belt adds 5 to a thief's picking pockets and
   opening locks. The inventory screen's thief skills count them.

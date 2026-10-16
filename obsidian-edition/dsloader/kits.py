@@ -82,8 +82,9 @@ SKILLS = {SWASHBUCKLER: (-10,) * 8, ASSASSIN: (-15, -15, 0, 0, 0, 0, 0, 0),
           WAYFINDER: (-10, 0, 0, 10, 10, 0, 0, 0)}
 # a Military Scout's skills that change with the sky: +10 under the open sky, -5 under a roof
 SCOUT_SKILLS, SCOUT_OUT, SCOUT_IN = frozenset((2, 3, 4, 6)), 10, -5
-# a Battle Dancer's dance (rolled by the Loader as a fight starts: dance.py): d20 against DEX, +1
-# to hit, to damage and on AC for DEX less the roll in rounds (at least 1); failed, -1 for 1d8 rounds
+# a Battle Dancer's dance (rolled by the Loader as a fight starts: dance.py): d20 against DEX - 4
+# (DANCE_CHECK), +1 to hit, to damage and on AC for that less the roll in rounds (at least 1);
+# failed, -1 for 1d8 rounds
 DANCE_FAIL_DIE = 8
 UNDEAD_RACE = 9  # (a Wilderness Avenger's +1 to hit and damage against them)
 AVENGER_STEALTH = 5  # (its hiding and moving silently: 5 a level of its best class, as a ranger's)

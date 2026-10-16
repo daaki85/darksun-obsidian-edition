@@ -56,9 +56,8 @@ have the detail.
   that less the roll in rounds.
 - **More for three multiclass kits:** the Military Scout, under the open sky,
   has +2 initiative and +1 to hit with a bow, sling or staff sling, and its
-  hiding isn't halved in daylight (the stealth rule). The
-  Shadowblade tries to hide in shadows even with an enemy right beside it (the
-  stealth rule). The Wayfinder gets **Path-finder**: while it's up, every
+  hiding isn't halved in daylight; the Shadowblade tries to hide in shadows
+  even with an enemy right beside it (both with the stealth rule). The Wayfinder gets **Path-finder**: while it's up, every
   party member has +1 initiative and +1 Move in a fight.
 - **Stronger costs for six multiclass kits:** the Shadowblade can't use a
   shield; the Military Scout never backstabs (from behind is still +2 to
@@ -67,13 +66,6 @@ have the detail.
   −1 to hit with anything but a dagger and can't use a shield; while a
   Wayfinder is down (and no other is up), the party has −1 initiative and −1
   Move in a fight.
-- **A Battle Dancer starts with two long swords** (with kits on): a second
-  long sword in the left hand, in place of the shield.
-- **A Myrmidon's second weapon starts in the left hand**, in place of the
-  shield, when it's a one-handed melee weapon (a bow still goes in the
-  missile slot, a two-handed weapon in the backpack).
-- **No more dagger in every new character's backpack**: fuller starting gear
-  no longer adds one (a character whose classes start with a dagger keeps it).
 - **Thieves' Tools are Mirlon's** (in the slave pens), for a party that
   kills him, as well as Kel's to sell: no thief starts with a set any more,
   and none is put in a thief's backpack later.
@@ -89,10 +81,15 @@ have the detail.
   warrior's armour too, and casts no spells in it.
 - **Light armour only** for the Assassin, Shinobi, Shadowblade, Poisoner and
   Spellarcher, even with the kit asleep after changing class.
-- **Starting gear:** a multiclass preserver's armour is left out, not put in
-  its backpack; a Poisoner starts with a dagger in each hand (its long sword
-  made one, its shield left behind), and a Ghetto Fighter with a dagger in its
-  hand, whatever its weapon spec. Weapon specs start as the chatkcha for a
+- **Starting gear:** with kits, a Battle Dancer starts with two long swords
+  (the second in the left hand, in place of the shield), a Myrmidon with its
+  second weapon in the left hand when it's a one-handed melee weapon (a bow
+  still goes in the missile slot, a two-handed weapon in the backpack), a
+  Poisoner with a dagger in each hand (its long sword made one, its shield
+  left behind) and a Ghetto Fighter with a dagger in its hand, whatever its
+  weapon spec. A multiclass preserver's armour is left out, not put in its
+  backpack, and fuller starting gear no longer adds a dagger to every
+  backpack (a character whose classes start with one keeps it). Weapon specs start as the chatkcha for a
   thri-kreen whose classes allow it, as the dagger for a Ghetto Fighter or
   Poisoner and as the long sword for a Battle Dancer (the kits' unless the
   player picks another on the weapon pages).

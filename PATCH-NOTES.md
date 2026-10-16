@@ -67,7 +67,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
 - **[Changed]** An air cleric can use daggers, as its sphere allows *(was only Galefang: none of the game's daggers listed the air cleric)*.
-- **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, and a Stalker, Assassin or Shinobi a cloak. A multiclass preserver starts with no armour, so it can cast.
+- **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, a Stalker, Assassin or Shinobi a cloak, and some kits weapons of their own (a Battle Dancer two long swords, a Poisoner two daggers). A multiclass preserver starts with no armour, so it can cast.
 - **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
 - **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.
 - **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
@@ -219,7 +219,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
-- **[New]** **Options:** every rule change and addition below has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
+- **[New]** **Options:** every rule change and addition in these notes has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 

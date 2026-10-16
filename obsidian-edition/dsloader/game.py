@@ -744,7 +744,7 @@ class GameData:
         self.rules = RULES_IN_FORCE if rules is None else rules
         self.belt = BELT_IN_FORCE
         self.dance: Dict[int, int] = {}  # each party member's Battle Dancer's dance now (+1, -1: dance.py)
-        self.wild: Dict[int, bool] = {}  # each Wild Fury fighting wild this fight: whether its check passed (wild.py)
+        self.wild: Dict[int, bool] = {}  # each Wild Fury (or Gerakis) fighting wild this fight: whether its check passed (wild.py)
 
     def _word(self, offset: int) -> int:
         return struct.unpack("<h", self.guest.read(self.ds * 16 + offset, 2))[0]
