@@ -3979,7 +3979,7 @@ KIT_SHINOBI  equ 35
 ; the multiclass kits (kitpages.MULTI): their groups, 9-13, numbered on from the classes, and the kits
 ; (KIT_IS's numbers) as a class's
 MULTI_FIRST  equ 9
-KIT_GROUPS   equ 13             ; (the classes' and the multiclass groups' pages)
+KIT_GROUPS   equ 18             ; (the classes' and the multiclass groups' pages)
 MULTI_ROW    equ 0x88A          ; (a group's rows: + 3 * (group - 9) + kit - 1)
 KIT_BATTLE_DANCER equ 37
 KIT_SHADOWBLADE equ 41
@@ -3988,6 +3988,11 @@ KIT_AVENGER  equ 45
 KIT_RESCUER  equ 49
 KIT_GHETTO   equ 53
 KIT_WAYFINDER equ 54
+KIT_SPELLARCHER equ 57
+KIT_TITAN_MIND equ 61
+KIT_POISONER equ 65
+KIT_SPIRIT_CALLER equ 69
+KIT_WASTE_SEER equ 73
 WP_DISC      equ 0xEA2              ; DS: the panel's windows (far)
 WP_SPHERE    equ 0xEA6
 WP_DISC_MASK equ 0x4980             ; DS: the disciplines and spheres marked, kept while hidden
@@ -4194,8 +4199,18 @@ multi_table db 3
             dw (1 << 1) | (1 << 7)      ; half-elf cleric/ranger: Rescuer
             db 2
             dw (1 << 3) | (1 << 8)      ; dwarf fighter/thief: Ghetto Fighter, Wayfinder
+            db 4
+            dw (1 << 3) | (1 << 5)      ; half-elf fighter/preserver: Spellarcher
+            db 5
+            dw (1 << 3) | (1 << 6)      ; half-giant fighter/psionicist: Titan Mind
+            db 6
+            dw (1 << 3) | (1 << 8)      ; halfling fighter/thief: Poisoner
+            db 6
+            dw (1 << 1) | (1 << 6)      ; halfling cleric/psionicist: Spirit Caller
+            db 8
+            dw (1 << 2) | (1 << 3)      ; thri-kreen druid/fighter: Wasteland Seer
             db 0
-multi_count db 1, 2, 1, 1, 2
+multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1
 km_rows     db 4                ; (KIT_MARKS: the page's rows)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
@@ -5381,13 +5396,34 @@ kit_melee:
         pop bx
         ret
 
-; KIT_TO_HIT: AX what the attacker's kit adds to hit in the weapon attack routine (the sheet its
-; [BP+10h], the item type [BP+14h], [BP+16h] above 1 for a missile): for a melee attack
-; KIT_CHAMPION's and KIT_MELEE's, for a missile nothing. Others kept.
+; KIT_TO_HIT: AX what the attacker's kit adds to hit in the weapon attack routine (the attacker
+; its [BP+0Eh], the sheet its [BP+10h], the item type [BP+14h], [BP+16h] above 1 for a missile):
+; for a melee attack KIT_CHAMPION's and KIT_MELEE's; for a missile a Military Scout's 1 with a bow,
+; sling or staff sling under the open sky (its KIT_OUTDOORS bit; kits.missile_to_hit). Others kept.
 kit_to_hit:
         cmp word [bp + 0x16], 1
         jle .melee
-        xor ax, ax              ; (nothing for a missile)
+        push si
+        xor ax, ax
+        mov si, [bp + 0x0E]
+        cmp si, 3
+        ja .missile             ; (not a party member)
+        bt word [cs:kit_outdoors], si
+        jnc .missile
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .missile
+        cmp byte [cs:si + kind_of_type], BOW_KIND
+        jb .missile             ; (the bow, sling and staff sling: kinds 13 to 15)
+        push ax
+        mov ax, [bp + 0x0E]
+        call cr_is
+        db KIT_SCOUT
+        pop ax
+        jne .missile
+        inc ax
+.missile:
+        pop si
         ret
 .melee:
         call kit_champion
@@ -5510,15 +5546,28 @@ kit_champion:
 
 ; PROBE_INIT: INT VEC_INIT replaces "add dx,14h" (3 bytes: INT + NOP; DSUN.EXE 5750Eh) where a
 ; combatant's initiative for the round is made (DX the 0-9 roll and its adjustments, SI the
-; creature): the game's 20 added, and a Sentinel's 2 more (kits.initiative).
+; creature): the game's 20 added, and a Sentinel's 2 more, a Military Scout's 2 under the open sky
+; (its KIT_OUTDOORS bit), and 1 for each party member while a Wayfinder of the party is up
+; (PATH_UP; kits.initiative).
 probe_init:
         add dx, 20
         push ax
         mov ax, si
         call cr_is
         db KIT_SENTINEL
-        jne .out
+        jne .scout
         add dx, 2
+.scout: cmp si, 3
+        ja .out                 ; (not a party member)
+        call cr_is
+        db KIT_SCOUT
+        jne .path
+        bt word [cs:kit_outdoors], si
+        jnc .path
+        add dx, 2
+.path:  call path_up
+        jne .out
+        inc dx
 .out:   pop ax
         iret
 
@@ -7864,11 +7913,42 @@ kit_move:
         mov ax, si
         call cr_is
         db KIT_STALKER
-        jne .none
         pop ax
+        jne .path
         add ax, 20
-        ret
-.none:  pop ax
+.path:  cmp si, 3               ; (a party member, while a Wayfinder of the party is up: 1 more)
+        ja .ret
+        call path_up
+        jne .ret
+        add ax, 10
+.ret:   ret
+
+; PATH_UP: ZF set if a party member up (creatures 0-3, status New or Okay) is a Wayfinder (kit
+; awake): Path-finder, the party's 1 more Move in a fight and 1 more initiative (kits.path_finder).
+; DS the game's; all registers kept.
+path_up:
+        push ax
+        push bx
+        push es
+        xor ax, ax
+.member:
+        push ax
+        les bx, [CREATURES]
+        imul ax, ax, 0x3A
+        add bx, ax
+        cmp byte [es:bx + 0x1C], 1      ; (New or Okay)
+        pop ax
+        ja .next
+        call cr_is
+        db KIT_WAYFINDER
+        je .out
+.next:  inc ax
+        cmp ax, 4
+        jb .member
+        or ax, ax               ; (ZF clear: none)
+.out:   pop es
+        pop bx
+        pop ax
         ret
 
 ; EF_LINE: CS:SI EF_DRAW's next line: counted (EF_INDEX), and put on the panel (EF_PUT) if drawing
@@ -7954,13 +8034,19 @@ kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
              db 'WILDERNESS AVENGER', 0, 0, 0
              db 'RESCUER', 0, 0, 0
              db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
+             db 'SPELLARCHER', 0, 0, 0
+             db 'TITAN MIND', 0, 0, 0
+             db 'POISONER', 0, 0, 0
+             db 'SPIRIT CALLER', 0, 0, 0
+             db 'WASTELAND SEER', 0, 0, 0
 kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the screen's)
 kit_asleep   db ' (ASLEEP)', 0
 ; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.
 kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, KIT_ELEMENTALIST, 'ELEMENTAL', 0
              db KIT_GROVE_WARDEN, 'WARDEN', 0, KIT_BATTLE_MAGE, 'BATTLMAGE', 0, KIT_MIND_BENDER, 'M-BENDER', 0
              db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, KIT_BATTLE_DANCER, 'B-DANCER', 0, KIT_SHADOWBLADE, 'SHADOWBLD', 0
-             db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0, 0
+             db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0
+             db KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTESEER', 0, 0
 ef_more      db 'MORE: CLICK HERE', 0
 ef_drawing   db 0
 ef_index     dw 0
@@ -9880,8 +9966,8 @@ class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 
 ; with the totals), then the rest as the die shows a roll: its routine from where it has rolled
 ; the hit points (RS_TAIL, with its frame and DI 1), which shows them and the PSP (worked out
 ; again from the same scores: no dice), then the AC and damage.
-RS_STORE  equ 0x8A0
-RS_RECALL equ 0x8A1
+RS_STORE  equ 0x8B0
+RS_RECALL equ 0x8B1
 RS_DONE   equ 0x66377 - 0x6625F    ; (the routine's way on for another button, less the INT's return)
 RS_TAIL   equ 0x659D0 - 0x65480    ; (in the die's routine, 657BBh: the overlay's from 65480h)
 RS_SCORES equ 0xBB

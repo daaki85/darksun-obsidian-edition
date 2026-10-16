@@ -883,8 +883,11 @@ class DiceLog:
             weapon = kits.melee(kid, g.two_handed_type(item_type), kind) if melee and not g.missile_type(item_type) else 0
             hit, dam = kits.champion(kid, g.holds_shield(attacker), melee)
             more = kits.extra(kid, g.dance.get(attacker, 0), undead)
+            if mode is not None and mode > 1 and attacker is not None and attacker < game.PARTY_SIZE:  # (DSCLOG's KIT_TO_HIT)
+                hit += kits.missile_to_hit(kid, kind, g.outdoors(attacker))
             if weapon or hit or dam or more:
-                names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else ""))
+                names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
+                             + (" under the open sky" if kid == kits.SCOUT else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
         return " and ".join(names), to_hit, damage
 
@@ -1576,9 +1579,13 @@ class DiceLog:
                 parts.append((dex, "DEX"))
             ids = {x.id for x in effects if x.owner == combatant and x.id in game.INITIATIVE_EFFECTS}
             parts += [(game.INITIATIVE_EFFECTS[eid], EFFECT_NAMES[eid]) for eid in sorted(ids)]
+            outdoors = index < game.PARTY_SIZE and g.outdoors(index)
             for kid in g.kit_ids(index):
-                if kits.initiative(kid):
-                    parts.append((kits.initiative(kid), kits.name(kid)))
+                if kits.initiative(kid, outdoors):
+                    parts.append((kits.initiative(kid, outdoors), kits.name(kid) + (
+                        " under the open sky" if kid == kits.SCOUT else "")))
+            if index < game.PARTY_SIZE and g.path_finder():
+                parts.append((kits.PATH_INITIATIVE, "Wayfinder's Path-finder"))
             score = INITIATIVE_BASE + roll + sum(v for v, _ in parts)
             stored = table[index][0]
             if stored >= 0 and stored != score:  # not acted yet, and something else counted

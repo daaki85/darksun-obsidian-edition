@@ -311,9 +311,24 @@ def move(kid: int) -> int:
     return 2 if kid == STALKER else 0
 
 
-def initiative(kid: int) -> int:
-    """Added to initiative (PROBE_INIT): a Sentinel's 2."""
-    return 2 if kid == SENTINEL else 0
+def initiative(kid: int, outdoors: bool = False) -> int:
+    """Added to initiative (PROBE_INIT): a Sentinel's 2, a Military Scout's 2 under the open sky
+    (OUTDOORS)."""
+    if kid == SENTINEL:
+        return 2
+    return 2 if kid == SCOUT and outdoors else 0
+
+
+# Path-finder: while a Wayfinder of the party is up, each party member's Move in a fight and
+# initiative 1 more (DSCLOG's PATH_UP, in KIT_MOVE and PROBE_INIT)
+PATH_MOVE, PATH_INITIATIVE = 1, 1
+SCOUT_MISSILE_KINDS = frozenset((BOW, BOW + 1, BOW + 2))  # (the bow, sling and staff sling)
+
+
+def missile_to_hit(kid: int, kind: Optional[int], outdoors: bool) -> int:
+    """Added to hit with a missile weapon of KIND (KIT_TO_HIT): a Military Scout's 1 with a bow,
+    sling or staff sling under the open sky."""
+    return int(kid == SCOUT and outdoors and kind in SCOUT_MISSILE_KINDS)
 
 
 def save(kid: int, spell: int, kinds: int = 0) -> int:

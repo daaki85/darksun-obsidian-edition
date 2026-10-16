@@ -2458,6 +2458,7 @@ class NewSpellTests(RuleTests):
         entries); anything else, or the rule off, the thing pushed."""
         from dsloader import gamepatch
         hdr = TSR * 16 + load_image().find(HDR_SIG)
+        GAME_DS = 0x3800  # (the things table 9E4h paragraphs below DS: clear of DSCLOG's image)
         things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
         self.mu.mem_write(GAME_DS * 16 + 0x165D, struct.pack("<HH", 0, 0x9800))
         self.mu.mem_write(things + 330 * 3, struct.pack("<BH", 1, 5))
@@ -3660,6 +3661,63 @@ class KitTests(unittest.TestCase):
                 self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
                 self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 25 + kits.initiative(first_kit(bytes(sheet))))
                 self.assertEqual((self.mu.reg_read(r.UC_X86_REG_AX), self.mu.reg_read(r.UC_X86_REG_SP)), (0x1111, 0x7FC))
+
+    def test_scout_and_path_finder(self):
+        """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky
+        (its KIT_OUTDOORS bit), and the Wayfinder's Path-finder: 1 more initiative and 10 more Move
+        (1 square) for each party member while a Wayfinder of the party is up (New or Okay)."""
+        from dsloader import kits
+        from dsloader.gamepatch import VEC_INIT
+        at = self.image.find(bytes.fromhex("83c214"))
+        self.mu.mem_write(VEC_INIT * 4, struct.pack("<HH", at, TSR))
+        self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        self.mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_INIT, 0x90)))
+        hdr = TSR * 16 + self.image.find(HDR_SIG)
+        self.rules(game.RULE_KITS)
+
+        def initiative(member):
+            for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, eflags=IF | 2, edx=5, esi=member,
+                                    eax=0x1111).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
+            return self.mu.reg_read(r.UC_X86_REG_DX) - 25
+
+        def move(member):
+            self.call(rb"\x50\x89\xf0\xe8..\x1d", eax=120, esi=member)
+            return self.mu.reg_read(r.UC_X86_REG_AX) - 120
+
+        def to_hit(member, item_type, mode=2):
+            self.mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", member))
+            self.mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<HH", item_type, mode))
+            self.call(rb"\x83\x7e\x16\x01\x7e.\x56\x31\xc0", eax=0x7777, ebp=BP, esi=0x5151)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SI), 0x5151)
+            return self.mu.reg_read(r.UC_X86_REG_AX)
+
+        def status(member, value):
+            self.mu.mem_write(self.CREATURES * 16 + member * 0x3A + 0x1C, bytes((value,)))
+        try:
+            self.creature(9, 2, index=0, second=17, race=4)  # a half-elf fighter/thief Military Scout
+            self.creature(9, 0, index=1)  # a fighter
+            self.creature(9, 0, index=2)
+            self.creature(9, 0, index=3)
+            self.mu.mem_write(hdr + 350, bytes((0,)))
+            self.assertEqual((initiative(0), move(0), to_hit(0, 1)), (0, 0, 0))
+            self.mu.mem_write(hdr + 350, bytes((1,)))  # (under the open sky)
+            self.assertEqual((initiative(0), initiative(1), move(0)), (2, 0, 0))
+            self.assertEqual([to_hit(0, t) for t in (1, 64, 0, 45, 48)], [1, 1, 1, 0, 0])  # bow, slings; not a sword, chatkcha
+            self.assertEqual(to_hit(1, 1), 0)
+            self.assertEqual(kits.initiative(kits.SCOUT, True), 2)
+            self.assertEqual([kits.missile_to_hit(kits.SCOUT, k, True) for k in (13, 14, 15, 0, 12)], [1, 1, 1, 0, 0])
+            self.assertEqual(kits.missile_to_hit(kits.SCOUT, 13, False), 0)
+            self.creature(9, 2, index=3, second=17, race=2)  # a dwarf fighter/thief Wayfinder
+            for st, up in ((1, True), (0, True), (3, False), (5, False)):
+                with self.subTest(status=st):
+                    status(3, st)
+                    self.assertEqual((initiative(1), move(1), initiative(0)), (1, 10, 3) if up else (0, 0, 2))
+            status(3, 1)
+            self.assertEqual((initiative(5), move(5)), (0, 0))  # (not a party member)
+        finally:
+            self.mu.mem_write(hdr + 350, bytes(1))
 
     def test_thac0(self):
         """PROBE_THAC0: 20 less SI, and kits.thac0 (a warrior's for the Swashbuckler, Crusader,

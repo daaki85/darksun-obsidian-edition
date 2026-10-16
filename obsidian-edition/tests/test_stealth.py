@@ -146,6 +146,15 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(stealth.turn(self.gd, 0, rolls()),
                          (["Dag can't hide in shadows: Mountain Stalker is right beside them"], False))
 
+    def test_shadowblade_beside(self):
+        """A Shadowblade (a half-elf fighter/thief's kit) hides with an enemy right beside them."""
+        from dsloader import kits
+        self.place(0x29, 11, 11)
+        self.gd.kit_ids = lambda creature: [kits.SHADOWBLADE] if creature == 0 else []
+        lines, hidden = stealth.turn(self.gd, 0, rolls(1, 1))
+        self.assertTrue(hidden)
+        self.assertIn("a Shadowblade, with Mountain Stalker beside them", lines[0])
+
     def test_fallen_enemy_beside(self):
         self.place(0x29, 11, 11)
         struct.pack_into("<h", self.m, CREATURES + STALKER * game.CREATURE_SIZE, 0)

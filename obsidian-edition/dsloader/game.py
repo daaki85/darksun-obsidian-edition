@@ -1577,7 +1577,8 @@ class GameData:
             for kid in kids:
                 kit = kits.champion(kid, shield, not missile)[0] \
                     + (kits.melee(kid, bool(typ[0x0F] & 0x40), kind) if not missile and not typ[0] & 2 else 0) \
-                    + kits.extra(kid, self.dance.get(creature, 0))
+                    + kits.extra(kid, self.dance.get(creature, 0)) \
+                    + (kits.missile_to_hit(kid, kind, self.outdoors(creature)) if missile else 0)
                 if kit:
                     parts.append((kits.name(kid), kit))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
@@ -1751,6 +1752,16 @@ class GameData:
 
     def has_kit(self, creature: int, kid: int) -> bool:
         return kid in self.kit_ids(creature)
+
+    def path_finder(self) -> bool:
+        """A party member up (New or Okay) is a Wayfinder: the party's Path-finder (DSCLOG's
+        PATH_UP: kits.PATH_MOVE, kits.PATH_INITIATIVE)."""
+        from . import kits
+        for m in range(PARTY_SIZE):
+            rec = self.creature(m)
+            if len(rec) > CREATURE_STATUS and rec[CREATURE_STATUS] <= 1 and kits.WAYFINDER in self.kit_ids(m):
+                return True
+        return False
 
     def kit(self, creature: int) -> Optional[str]:
         """With kits, the kits the creature took (kitpages.KITS), the oldest class's first, or None;

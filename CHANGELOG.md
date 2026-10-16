@@ -22,6 +22,11 @@ have the detail.
   and none is put in a thief's backpack later.
 - **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
   shows `AC BONUS:1` with the helms rule, which says the same.
+- **Kits:** the Military Scout, under the open sky, has +2 initiative and +1 to
+  hit with a bow, sling or staff sling. The Shadowblade tries to hide in
+  shadows even with an enemy right beside it (the stealth rule). The Wayfinder
+  gets **Path-finder**: while it's up, every party member has +1 initiative and
+  +1 Move in a fight.
 - **A ranger's bow is listed** on the Effects screen and the Characters tab
   (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
   expert with the bow, chosen or not, but only the chosen weapons were listed.

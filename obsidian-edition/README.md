@@ -1940,12 +1940,12 @@ second.
 | Kit | Race and classes | Gives | Costs | Also |
 |---|---|---|---|---|
 | **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX (the Dancing proficiency, +0); at DEX or under, **+1 to hit, to damage and to AC** for DEX less the roll in rounds (at least 1); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over DEX, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon; the dice log shows the dance's roll and its end |
-| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently | −10 pick pockets | |
-| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls | under a roof, −5 to the same four | the panel's and the dice log's numbers follow where it stands |
+| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets | |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling | under a roof, −5 to the same four skills | the panel's and the dice log's numbers follow where it stands |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | none beyond its classes' own | its hiding counts for backstabs as a ranger's does |
 | **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | none under a roof | the dice log says ", under the open sky" |
 | **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps | DEX's adjustment still applies to the two-weapons penalty |
-| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently | −10 pick pockets | |
+| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative and +1 Move in a fight | −10 pick pockets | the dice log's initiative lines say "Wayfinder's Path-finder" |
 
 A thief skill a kit lowers never goes below 0. The kits start with their
 classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)).
