@@ -75,6 +75,10 @@ have the detail.
   its pointer on the screen not on show and copies the box round it to the
   one on show; the panel was only on the one on show, so the copy brought
   the map back over it. The panel is now put on both.
+- **A new character's bow listed as "Arrows 1D6"** on the inventory screen,
+  until it was taken off and put back on: the mod gave the arrows after the
+  bow, which put them ahead of it in the character's items, and the game
+  lists whichever of the two comes first. The bow now goes ahead.
 - **No THAC0 (T) on an "Arrows" line** on the inventory screen: when the
   game lists a character's arrows in place of the bow that shoots them, the
   helper now gives the line the bow's THAC0.

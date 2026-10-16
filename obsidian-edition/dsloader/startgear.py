@@ -172,6 +172,7 @@ def fill_member(gd, member: int) -> List[str]:
         if bow is not None:
             if give(bow[0], weaponchoice.MISSILE_SLOT):
                 give(weaponchoice.arrows(bow[0]), weaponchoice.AMMO_SLOT)
+                weaponchoice.bow_ahead(gd, member)
         elif sling is not None:
             give(sling[0], weaponchoice.MISSILE_SLOT)
         elif not any(specialize.kind_of(_type(item)) == KIND("chatkcha") for _, item, _ in mine()):

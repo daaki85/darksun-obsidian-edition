@@ -143,6 +143,25 @@ def plain_weapon(start: bytes, kind: int, weapon: Optional[Tuple[int, int, int, 
     return bytes(rec), slot
 
 
+def bow_ahead(gd, member: int) -> None:
+    """A party member's missile weapon put ahead of its ammunition in its item list, where the
+    ammunition came first (given after it: an item is added at the list's head): the game's weapon
+    lines (the inventory screen) show the first of the two it meets, so the bow was listed as its
+    arrows ("Arrows 1D6") until it was taken off and put on again. The two records' contents are
+    swapped, each keeping its place in the list."""
+    worn = [(index, item) for index, item, _ in gd._worn(member)]
+    order = [item[game.ITEM_SLOT] for _, item in worn]
+    if AMMO_SLOT not in order or MISSILE_SLOT not in order or order.index(AMMO_SLOT) > order.index(MISSILE_SLOT):
+        return
+    (ammo, ammo_rec), (bow, bow_rec) = worn[order.index(AMMO_SLOT)], worn[order.index(MISSILE_SLOT)]
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    link = slice(game.ITEM_NEXT, game.ITEM_NEXT + 2)
+    first, second = bytearray(bow_rec), bytearray(ammo_rec)
+    first[link], second[link] = ammo_rec[link], bow_rec[link]
+    gd.guest.write(items + ammo * game.ITEM_SIZE, bytes(first))
+    gd.guest.write(items + bow * game.ITEM_SIZE, bytes(second))
+
+
 def arrows(template: bytes) -> bytes:
     picture, type_, name, price, count = ARROWS
     rec = bytearray(template)
@@ -216,6 +235,7 @@ def finish_new(gd) -> List[str]:
                 gd.guest.write(items + item_index * game.ITEM_SIZE, new)
                 if kind == BOW:
                     npcitems.add_to(gd, member, arrows(new), AMMO_SLOT)
+                    bow_ahead(gd, member)
                 # (a two-handed weapon in a hand needs the other free; the game asks nothing of a
                 # bow or a staff sling in the missile slot: the shield stays)
                 if slot is None and two_handed(gd, sheet, weapon[0]):
@@ -402,6 +422,7 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
             return []
         if new[0] == BOW:
             npcitems.add_to(gd, member, arrows(rec), AMMO_SLOT)
+            bow_ahead(gd, member)
         where = "" if slot is not None else " in the backpack"
         return [f"{who} starts with a plain {material}{specialize.KINDS[new[0]]}{where} too: a Myrmidon's "
                 f"second weapon spec"]
