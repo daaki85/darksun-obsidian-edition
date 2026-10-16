@@ -70,7 +70,7 @@ class FillTests(FinishNewTests):
 
     def test_a_thief_gets_a_weapon_in_hand_and_the_rest(self):
         """A thief/psionicist's long sword left behind: a short sword in hand; leather arm and leg
-        armour to go with its chest armour; a dagger; its sling kept; no belt, boots or cloak."""
+        armour to go with its chest armour; its sling kept; no dagger, belt, boots or cloak."""
         self.character((17, 12, 0))
         self.give(CHEST, 0x07, SLOT("chest"))
         self.give(SLING, 0x00, weaponchoice.MISSILE_SLOT)
@@ -80,7 +80,7 @@ class FillTests(FinishNewTests):
         self.assertEqual((worn[ARM], worn[LEGS]), (SLOT("arm"), SLOT("legs")))
         self.assertNotIn(BELT, worn)
         self.assertNotIn(BOOTS, worn)
-        self.assertGreaterEqual(worn[DAGGER], startgear.BACKPACK)
+        self.assertNotIn(DAGGER, worn)  # (no dagger for the backpack any more)
         self.assertNotIn(CLOAK, worn)  # (a Stalker's, Assassin's or Shinobi's)
         self.assertEqual(self.given.count(SLING), 0)
         self.assertIn("starts with more gear", out[0])
@@ -96,7 +96,7 @@ class FillTests(FinishNewTests):
 
     def test_a_fire_cleric_gets_an_obsidian_mace(self):
         """With the class restrictions: obsidian weapons only, so a mace in hand, a chatkcha in place
-        of a sling, an obsidian dagger."""
+        of a sling, no dagger."""
         self.gd.rules = game.RULE_RESTRICT
         self.character((3, 0, 0), race=game.HUMAN)
         self.give(4, 0x05, game.WEAPON_HANDS[1])  # (its shield)
@@ -105,7 +105,7 @@ class FillTests(FinishNewTests):
         self.assertEqual(worn[OBSIDIAN_MACE], game.WEAPON_HANDS[0])
         self.assertNotIn(SLING, worn)
         self.assertGreaterEqual(worn[CHATKCHA], startgear.BACKPACK)
-        self.assertGreaterEqual(worn[DAGGER], startgear.BACKPACK)
+        self.assertNotIn(DAGGER, worn)
 
     def test_a_multiclass_preserver_takes_its_armour_off(self):
         """With the class restrictions, a fighter/preserver's armour goes in the backpack (it can't

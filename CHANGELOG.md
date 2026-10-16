@@ -42,6 +42,8 @@ have the detail.
   −1 to hit with anything but a dagger and can't use a shield; while a
   Wayfinder is down (and no other is up), the party has −1 initiative and −1
   Move in a fight.
+- **No more dagger in every new character's backpack**: fuller starting gear
+  no longer adds one (a character whose classes start with a dagger keeps it).
 - **A mul kit, the Blood-Fury** (mul cleric/fighter), with **Wild Fighting**
   (the AD&D proficiency): as each fight starts, a d20 against CON. Passed, 1
   more attack a round in melee and +3 damage for the fight; failed, −3 to hit

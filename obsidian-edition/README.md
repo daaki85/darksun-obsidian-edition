@@ -1700,7 +1700,7 @@ from the next start); untick one and the game is as it was.
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes have kits of their own |
 | [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
-| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, a dagger, and a Stalker, Assassin or Shinobi a cloak |
+| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
 
 ### Weapon specialization
 
@@ -2211,7 +2211,7 @@ With **Fuller starting gear** ticked, the Loader adds plain gear to a new
 character's own while it is still New, after the class
 restrictions, weapon specs and kits have changed theirs, and the dice log
 lists it (`Swat starts with more gear: Short Sword (in hand), Arm Armor, Leg
-Armor, Dagger (in the backpack)`):
+Armor`):
 
 - **A weapon in hand.** A character with an empty right hand takes a weapon
   it can use from its backpack (a cleric's club), else gets a plain one: of
@@ -2227,8 +2227,7 @@ Armor, Dagger (in the backpack)`):
   it: a thief, gladiator, ranger, psionicist, cleric or Battle Mage goes out
   in a full suit.
 - **A cloak** for a Stalker, an Assassin or a Shinobi (with
-  [kits](#kits) on), to hide in ([Improved thieving](#improved-thieving)),
-  and **a dagger** in the backpack for anyone who can use one.
+  [kits](#kits) on), to hide in ([Improved thieving](#improved-thieving)).
 - **A thri-kreen gets nothing more** than the game's own starting gear: its
   claws serve it better than another weapon, and it wears no armour or
   cloak.

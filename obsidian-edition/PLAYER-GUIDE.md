@@ -328,7 +328,7 @@ fighter or ranger, cleric, thief, psionicist, preserver and druid), less what
 its classes can't use. The mod then adds plain gear, as each section says: a
 weapon in hand it can use (a thief/psionicist, which can't use the long
 sword, gets a bone short sword), a sling if it has no bow or sling, leather
-armour where it may wear it and a dagger, and a cloak for a Stalker, an
+armour where it may wear it, and a cloak for a Stalker, an
 Assassin or a Shinobi. A thri-kreen gets nothing more than the game's own starting gear: its
 claws serve it better than another weapon, and it wears none of the rest. A multiclass preserver's
 armour goes into the backpack, so it can cast. Nothing is given that the
@@ -406,7 +406,7 @@ bows, slings and shields are for those who mean to live long.
 
 **Starting gear.** A plain weapon of its weapon spec (in a material its
 classes allow), a shield, leather chest, arm and leg armour; with fuller
-starting gear, also a sling and a dagger.
+starting gear, also a sling.
 
 **More than one class.**
 
@@ -477,7 +477,7 @@ their hands, and they treat it like one.
 
 **Starting gear.** A plain weapon of its first weapon spec, a club in the off
 hand, leather arm armour; with fuller starting gear, also leather chest and
-leg armour, a sling and a dagger.
+leg armour and a sling.
 
 **More than one class.**
 
@@ -540,8 +540,8 @@ others.
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
 
 **Starting gear.** A plain weapon of its chosen type, bow and arrows, leather
-chest and arm armour; with fuller starting gear, also leather leg armour and a
-dagger (a Stalker a cloak too).
+chest and arm armour; with fuller starting gear, also leather leg armour (a
+Stalker a cloak too).
 
 **More than one class.**
 
@@ -612,8 +612,8 @@ can't read magical script, and they travel light.
 The Shinobi's slots by level are in [Kits' spell slots](#kits-spell-slots).
 
 **Starting gear.** Bone long sword, sling, leather chest armour, Thieves'
-Tools; with fuller starting gear, also leather arm and leg armour and a
-dagger (an Assassin or Shinobi a cloak too).
+Tools; with fuller starting gear, also leather arm and leg armour (an
+Assassin or Shinobi a cloak too).
 
 **More than one class.**
 
@@ -684,8 +684,7 @@ their magic.
 | **Scholar** | a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
 | **Battle Mage** | a warrior's THAC0 (21 less its level); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon pages (VIEW PSIONICS on the KIT page, then WEAPON SPEC), the long sword marked to start with; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 
-**Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice;
-with fuller starting gear, also a dagger.
+**Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice.
 
 **More than one class.**
 
@@ -828,8 +827,7 @@ weapons, which wound without spilling blood.
 | **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
-**Starting gear.** Club, sling; with fuller starting gear, also a dagger (not
-a Lifebinder).
+**Starting gear.** Club, sling.
 
 **More than one class.**
 
@@ -890,7 +888,7 @@ and flame with a thought. Reaching into another mind costs them more.
 The powers and their costs are in [Psionics](#psionics).
 
 **Starting gear.** Club, bow and arrows, leather chest armour; with fuller
-starting gear, also leather arm and leg armour and a dagger.
+starting gear, also leather arm and leg armour.
 
 **More than one class.**
 

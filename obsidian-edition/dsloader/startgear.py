@@ -17,7 +17,7 @@ the Loader:
   arrows; a fire cleric, who can't use one, an obsidian chatkcha for the backpack);
 - fills its empty chest, arm and leg slots with leather armour, where it may wear it (not a
   multiclass preserver, for its spells);
-- gives a Stalker, Assassin or Shinobi a plain cloak, and anyone a dagger for the backpack.
+- gives a Stalker, Assassin or Shinobi a plain cloak.
 
 A thri-kreen is given nothing more than the game's own starting gear (K'ratchek keeps her
 chatkcha): its claws serve it better than another weapon, and it wears no armour or cloak.
@@ -188,11 +188,6 @@ def fill_member(gd, member: int) -> List[str]:
         if not any(_type(i) == _type(item) for _, i, _ in mine()) and can_use(gd, sheet, _type(item), read(_type(item))):
             give(item, slot)
 
-    # a dagger for the backpack
-    if not any(specialize.kind_of(_type(item)) == KIND("dagger") for _, item, _ in mine()):
-        dagger = _weapon(gd, sheet, KIND("dagger"), read)
-        if dagger is not None:
-            give(dagger[0], None, " (in the backpack)")
     if given:
         out.append(f"{who} starts with more gear: {', '.join(given)}")
     return out
