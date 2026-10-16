@@ -581,6 +581,10 @@ PATCHES = (
     Patch("rl_roll_4", 0x65944, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
     Patch("rl_roll_6", 0x65979, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
     Patch("rl_roll_7", 0x659AE, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
+    # the creation screen's ability labels (STR: to CHR:, 6511Fh) in its own white (34h): the
+    # routine prints them in the colour the last screen left (DS:326Eh: a character screen's
+    # yellow, 2Fh), and the creation screen never sets it before they're drawn
+    Patch("cr_labels", 0x65135, bytes.fromhex("ff366e32"), bytes.fromhex("6a349090")),
     Patch("rl_sum", 0x65185, bytes.fromhex("83c404"), bytes((0xCD, VEC_CR_SPELLS, RL_SUM))),
     # a click on CON moving the hit points with the most they may be, and each ability's 4d4 kept
     # for the dice log (whatever the rule)

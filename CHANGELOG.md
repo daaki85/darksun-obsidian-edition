@@ -73,6 +73,10 @@ have the detail.
   its pointer on the screen not on show and copies the box round it to the
   one on show; the panel was only on the one on show, so the copy brought
   the map back over it. The panel is now put on both.
+- **Yellow ability labels on the character creation screen** (STR: to CHR:),
+  still, after the fix below: the routine that draws them uses the colour the
+  last screen left, and runs before the creation screen sets its own. It now
+  draws them in the creation screen's white.
 - **Yellow text on the character creation screen** (since 2.3.0). The game's
   screens print in a colour each leaves set; the creation screen never sets
   its own, and the mod's `SUM:` line printed in it, so after a character
