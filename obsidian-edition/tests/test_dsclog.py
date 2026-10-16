@@ -1505,6 +1505,21 @@ class CanUseTests(unittest.TestCase):
             self.assertEqual([t for t in (17, 1, 3, 0, 6, 90, 22, 45, 4, 57, 48)
                               if not restrict.kit_forbids(bytes(shinobi), t, test_restrict.record(t))],
                              [17, 1, 3, 0, 6, 90, 48])  # (dagger, bow, quarterstaff, staff sling, leather, silk, chatkcha)
+            # light armour only (KIT_LIGHT): an Assassin, a Poisoner (halfling fighter/thief), a
+            # Shadowblade and Spellarcher (half-elf), and an Assassin asleep (a human thief, now a
+            # fighter of a level not past it); the same thief with no kit may wear it
+            game.RULES_IN_FORCE = game.RULE_RESTRICT | game.RULE_KITS
+            for classes, race, kit, levels, light in (((17,), 2, 2, (1,), True), ((9, 17), 6, 1, (1, 1), True),
+                                                      ((9, 17), 4, 1, (1, 1), True), ((9, 11), 4, 1, (1, 1), True),
+                                                      ((9, 17), game.HUMAN, 2, (2, 5), True),
+                                                      ((9, 17), game.HUMAN, 0, (2, 5), False)):
+                s = bytearray(test_restrict.sheet(*classes, race=race))
+                s[0x43] = kit
+                s[0x24:0x24 + len(levels)] = bytes(levels)
+                self.assertEqual(restrict.kit_forbids(bytes(s), 57, test_restrict.record(57)), light)
+                for t in test_restrict.TYPES:
+                    with self.subTest(classes=classes, race=race, kit=kit, type=t):
+                        self.assertEqual(self.can_use(bytes(s), t, rules=game.RULE_RESTRICT), self.expected(s, t))
         finally:
             game.RULES_IN_FORCE = old
             self.mu.mem_write(hdr + 270, struct.pack("<H", 0))
@@ -1585,7 +1600,9 @@ class NoCastTests(unittest.TestCase):
         self.assertEqual(self.no_cast(sheet(9, 11), [(6, 20)]), 0)  # (carried, not worn)
         self.assertEqual(self.no_cast(sheet(9, 11), []), 0)
         self.assertEqual(self.no_cast(sheet(11), [(6, chest)]), 0)
-        self.assertEqual(self.no_cast(sheet(11, 9, race=game.HUMAN), [(6, chest)]), 0)
+        self.assertEqual(self.no_cast(sheet(11, 9, race=game.HUMAN), [(6, chest)]), 1)  # (a fighter once)
+        self.assertEqual(self.no_cast(sheet(9, 11, race=game.HUMAN), [(6, chest)]), 1)  # (a preserver once)
+        self.assertEqual(self.no_cast(sheet(11, 1, race=game.HUMAN), [(6, chest)]), 0)  # (a cleric once)
         self.assertEqual(self.no_cast(sheet(9, 11), [(6, chest)], rules=0), 0)
         self.assertEqual(self.no_cast(sheet(9, 17), [(6, chest)], ax=1), 1)  # (the game's own reasons)
 

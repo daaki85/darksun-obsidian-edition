@@ -314,7 +314,7 @@ AD&D's tables; a character of several classes uses its best.
 | [Fighter](#fighter) | d10 | STR | all | any | any | Myrmidon, Sentinel, Ravager |
 | [Gladiator](#gladiator) | d10 | STR | all | any | any | Arena Champion, Twin-blade, Brute |
 | [Ranger](#ranger) | d10 | WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
-| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light | any | Assassin, Swashbuckler, Shinobi |
+| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (multiclass: heavier, without thief skills) | any | Assassin, Swashbuckler, Shinobi |
 | [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Arcanist, Scholar, Battle Mage |
 | [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Healer, Crusader, Elementalist |
 | [Druid](#druid) | d8 | WIS | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
@@ -331,8 +331,9 @@ weapon in hand it can use (a thief/psionicist, which can't use the long sword,
 gets a bone short sword), a sling if it has no bow or sling, leather armour
 where it may wear it, and a cloak for a Stalker, an Assassin or a Shinobi. A
 thri-kreen gets nothing more than the game's own starting gear: its claws
-serve it better than another weapon, and it wears none of the rest. A
-multiclass preserver's armour goes into the backpack, so it can cast. Nothing
+serve it better than another weapon, and it wears none of the rest; its weapon
+spec starts as the chatkcha. A multiclass preserver starts with no armour, so
+it can cast. Nothing
 is given that the character can't use or already has. The game's own party
 gets the same. *Without the mod:* the class's gear only, armour it can't use
 in the backpack.
@@ -345,7 +346,7 @@ the strictest winning:
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
 | Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (as the game's lists allow) |
-| Thief | light only | leather ones; with another class, only if that class allows shields | as its classes allow |
+| Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones; with another class, only if that class allows shields | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any |
 | Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
@@ -353,9 +354,16 @@ the strictest winning:
 - A preserver with another class may wear what that class allows, but casts
   no spells while wearing armour (a helm counts, a shield doesn't). Bracers
   of defense aren't armour.
+- A thief with another class (a fighter/thief, a cleric/thief) may wear what
+  that class allows, but in armour heavier than leather, hide or silk it has
+  no thief skills (all 0) and no backstab.
+- A human who was a fighter, gladiator or ranger and is now a thief or a
+  preserver (or the other way round) is treated the same way: it may wear the
+  warrior's armour, losing its thief skills, or its spells, while it does.
 - A ranger may always use a bow.
-- A human who changed class is held by its new class, but may use the weapon
-  types it specialized in once its old class wakes.
+- A human who changed class is held by its new class (but for the warrior's
+  armour above), and may use the weapon types it specialized in once its old
+  class wakes.
 
 *Without the mod:* an item was allowed if **any** of the character's classes
 allowed it, and a preserver with another class cast in armour.
@@ -587,7 +595,10 @@ so keep it off the front line.
 **Weapons and armour.** Any weapon, but only one no heavier than a long sword
 backstabs (see [Equipment](#equipment)); light armour only (leather, hide,
 silk), and of shields only leather ones (the game's own rule), with another
-class only if that class allows shields.
+class only if that class allows shields. A thief with a warrior or cleric
+class, or a human once a warrior, may wear heavier armour that class allows,
+but has no thief skills and no backstab while it does; an Assassin or Shinobi
+never may, even after changing class.
 
 **Kits.**
 
@@ -605,7 +616,7 @@ can't read magical script, and they travel light.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks | the thief's gear; with fuller starting gear, a cloak | |
+| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear; with fuller starting gear, a cloak | |
 | **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
 | **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and Fogbolt, Reflected Image, Spook and Friends with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (with Class restrictions off too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
 
@@ -1002,15 +1013,15 @@ reckless.
 | Kit | Race and classes | Gives | Costs |
 |---|---|---|---|
 | **Battle Dancer** | elf cleric/fighter | as each fight starts, a d20 against DEX: at DEX or under, +1 to hit, damage and AC for DEX less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only (any, whatever its cleric's sphere allows); over DEX, −1 to hit, damage and AC for 1d8 rounds |
-| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets; no shield |
+| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets; no shield; light armour only |
 | **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings | under a roof, −5 to the same skills; never backstabs (from behind still +2 to hit) |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | 1 fewer druid spell slot at each spell level |
 | **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | attacking from behind, +1 to hit instead of +2 |
 | **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps; −1 to hit with anything but a dagger; no shield |
 | **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets; while it's down, the whole party has −1 initiative and −1 movement in a fight |
-| **Spellarcher** | half-elf fighter/preserver | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow |
+| **Spellarcher** | half-elf fighter/preserver | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow; light armour only |
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers cost 2 PSP more |
-| **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything |
+| **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage; starts with a dagger in each hand | −1 to hit with everything; light armour only |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower |
 | **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON: at CON or under, 1 more attack a round in melee and +3 damage for the fight | over CON, −3 to hit and AC 3 worse for the fight |
@@ -1652,7 +1663,8 @@ AD&D's tables:
   Twin-blade in light armour, and the off hand attacks only once a round.
 - **A warrior's weapon specs matter:** outside them it attacks once a round
   until 7th level.
-- **Multiclass preservers take off their armour to cast** (a helm counts).
+- **Multiclass preservers take off their armour to cast** (a helm counts),
+  and multiclass thieves to use their thief skills (light armour is fine).
 - **Thieves hide with no enemy beside them** when their turn comes; step away
   first. Daylight halves their chance, and rangers' indoors.
 - **Plain wood, bone, stone and obsidian weapons can break** (clubs and

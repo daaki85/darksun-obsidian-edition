@@ -107,16 +107,19 @@ class FillTests(FinishNewTests):
         self.assertGreaterEqual(worn[CHATKCHA], startgear.BACKPACK)
         self.assertNotIn(DAGGER, worn)
 
-    def test_a_multiclass_preserver_takes_its_armour_off(self):
-        """With the class restrictions, a fighter/preserver's armour goes in the backpack (it can't
-        cast in it), and none is given; the shield stays."""
+    def test_a_multiclass_preserver_leaves_its_armour_out(self):
+        """With the class restrictions, a fighter/preserver's armour is left out (it can't cast in
+        it), and none is given; the shield stays."""
         self.gd.rules = game.RULE_RESTRICT
         self.character((9, 11, 0))
         self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, game.WEAPON_HANDS[0])
         self.give(CHEST, 0x07, SLOT("chest"))
         self.give(4, 0x05, game.WEAPON_HANDS[1])
-        out = startgear.fill(self.gd)
-        self.assertEqual(self.item(1), (CHEST, 30))  # (pickpocket.free_cell, as the harness has it)
+        gone = []
+        with mock.patch("dsloader.ring.Items", lambda gd: None), \
+                mock.patch("dsloader.ring.unlink", lambda gd, it, item, what, empty=False: gone.append(item) or True):
+            out = startgear.fill(self.gd)
+        self.assertEqual(gone, [1])
         self.assertEqual(self.item(2), (4, game.WEAPON_HANDS[1]))
         self.assertNotIn(ARM, self.given)
         self.assertNotIn(LEGS, self.given)

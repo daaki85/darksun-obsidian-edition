@@ -64,9 +64,19 @@ have the detail.
 - **The leather helm keeps its own name** (no more `Helm (AC 1)`): its box
   shows `AC BONUS:1` with the helms rule, which says the same.
 - **Thieves wear light armour only** (leather, hide, silk), with class
-  restrictions on, as well as leather shields only (a multiclass thief: only
-  if another of its classes allows shields). Before, a thief of one class
-  could wear any armour.
+  restrictions on (before, a thief of one class could wear any armour). A
+  multiclass thief (a fighter/thief, a cleric/thief), or a human thief who was
+  a fighter, gladiator or ranger, may wear the heavier armour its other class
+  allows, but **has no thief skills** (all 0, on the inventory screen too) and
+  **no backstab** in it, as a multiclass preserver casts no spells in armour.
+  A human who has been a preserver and a warrior (either order) may wear the
+  warrior's armour too, and casts no spells in it.
+- **Light armour only** for the Assassin, Shinobi, Shadowblade, Poisoner and
+  Spellarcher, even with the kit asleep after changing class.
+- **Starting gear:** a multiclass preserver's armour is left out, not put in
+  its backpack; a Poisoner starts with a dagger in each hand (its long sword
+  made one, its shield left behind); a thri-kreen's weapon spec starts as the
+  chatkcha, where its classes allow it.
 - **A ranger's bow is listed** on the Effects screen and the Characters tab
   (`EXPERT IN / LONG SWORD / BOW` for a cleric/ranger): every ranger is an
   expert with the bow, chosen or not, but only the chosen weapons were listed.

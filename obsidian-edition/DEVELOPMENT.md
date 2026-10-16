@@ -656,8 +656,13 @@ line).
 ([In the README](README.md#class-restrictions).)
 
 How: the helper adds the classes' limits where the game checks an item against
-the classes allowed to use it (`INT CDh`), and a multiclass preserver's armour
-where the game checks for "No spell use" (`INT CCh`). (`dsloader/restrict.py`
+the classes allowed to use it (`INT CDh`; `DUAL_WARRIOR` lets a human thief
+or preserver who was a warrior wear the warrior's armour), a multiclass (or
+warrior-and-preserver human's) armour where the game checks for "No spell
+use" (`INT CCh`, `CLASS_AND_WARRIOR`), and a thief's armour that isn't light
+at the end of the thief skill routine (`PROBE_BELT`: every skill 0) and where
+an attack's backstab is set (`PROBE_STEALTH`'s `THIEF_REAR`), both through
+`THIEF_HEAVY`. (`dsloader/restrict.py`
 says the same in Python, for the tests.) A cloak's type (worn in the cloak
 slot, `+09h` 8) counts for AC as armour does but isn't armour to the limits:
 the Cloak of Protection is for every class (`CLASS_FORBIDS`,
@@ -1317,8 +1322,7 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
 
 - with the class restrictions, a multiclass preserver's (`preserver_bare`: not
   a human, two classes or more, one of them preserver) worn armour
-  (`restrict.is_armour`: not its shield) goes to a backpack cell
-  (`pickpocket.free_cell`);
+  (`restrict.is_armour`: not its shield) is left out (`ring.unlink`);
 - an empty right hand gets a usable melee weapon from the backpack (cells 14
   and up), else a plain weapon (`weaponchoice.plain_weapon` on the game's
   bone long sword record, `WEAPON`) of the first kind with a usable type in

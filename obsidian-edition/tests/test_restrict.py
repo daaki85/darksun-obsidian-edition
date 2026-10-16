@@ -92,7 +92,11 @@ class RestrictTests(unittest.TestCase):
         self.assertFalse(ok(sheet(17), 57))  # light armour only, one class too
         self.assertTrue(ok(sheet(17), 6))
         self.assertTrue(ok(sheet(17), 90))
-        self.assertFalse(ok(sheet(9, 17), 57))
+        self.assertTrue(ok(sheet(9, 17), 57))  # a multiclass thief: as its other class allows
+        self.assertTrue(ok(sheet(1, 17), 57))  #   (a cleric/thief too)
+        self.assertFalse(ok(sheet(12, 17), 57))  #   (not a psionicist/thief)
+        self.assertTrue(ok(sheet(17, 9, race=game.HUMAN), 57))  # a human thief once a fighter
+        self.assertFalse(ok(sheet(17, 1, race=game.HUMAN), 57))  # once a cleric: light only
         self.assertTrue(ok(sheet(9, 17), 6))
         self.assertTrue(ok(sheet(9, 17), 90))
         self.assertTrue(ok(sheet(9, 17), 4))   # a leather shield the fighter may use
@@ -146,8 +150,20 @@ class RestrictTests(unittest.TestCase):
         self.assertTrue(restrict.no_spells(sheet(11, 17), [record(6)]))
         self.assertFalse(restrict.no_spells(sheet(9, 11), [record(4), record(65)]))  # shield, cloak
         self.assertFalse(restrict.no_spells(sheet(11), worn))
-        self.assertFalse(restrict.no_spells(sheet(11, 9, race=game.HUMAN), worn))
+        self.assertTrue(restrict.no_spells(sheet(11, 9, race=game.HUMAN), worn))  # (dual-classed)
+        self.assertTrue(restrict.no_spells(sheet(9, 11, race=game.HUMAN), worn))
+        self.assertFalse(restrict.no_spells(sheet(11, 1, race=game.HUMAN), worn))
         self.assertFalse(restrict.no_spells(sheet(9, 17), worn))
+
+    def test_dual_preserver_wears_armour(self):
+        self.assertTrue(ok(sheet(11, 9, race=game.HUMAN), 57))  # a preserver once a fighter
+        self.assertFalse(ok(sheet(11, 1, race=game.HUMAN), 57))  # once a cleric: none
+
+    def test_thief_heavy(self):
+        self.assertTrue(restrict.thief_heavy(sheet(9, 17), [record(57)]))
+        self.assertFalse(restrict.thief_heavy(sheet(9, 17), [record(6), record(4)]))  # leather, a shield
+        self.assertTrue(restrict.thief_heavy(sheet(9, 17, race=game.HUMAN), [record(57)]))  # a thief once
+        self.assertFalse(restrict.thief_heavy(sheet(9, 1), [record(57)]))
 
 
     def test_dual_class_keeps_specialized_weapons(self):

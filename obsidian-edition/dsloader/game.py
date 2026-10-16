@@ -1411,7 +1411,7 @@ class GameData:
                          gear: bool = True) -> List[Tuple[str, int]]:
         """[(skill, chance), ...] for the skills the game rolls, as they stand now: with the
         equipment penalty, a worn belt's bonus (BELT_IN_FORCE), with GEAR a worn cloak's or boots'
-        (gear_skill), 0 for a skill an effect rules out (or when the thief isn't Okay or New), 100
+        (gear_skill), 0 for a skill an effect rules out (or when the thief isn't Okay or New, or wears armour that isn't light: thief_heavy), 100
         for one an effect makes certain. Not the situation's bonus (a hard lock...). [] for
         someone without thief levels. `skills`: which (numbers in THIEF_SKILLS)."""
         rec = self.creature(creature)
@@ -1421,7 +1421,7 @@ class GameData:
         slots = self.thief_penalty_slots()
         penalty = any(item[ITEM_SLOT] in slots for _, item, _ in self._worn(creature))
         ids = {e.id for e in self._mine(creature, self.effects())}
-        okay = rec[CREATURE_STATUS] in STATUS_ABLE
+        okay = rec[CREATURE_STATUS] in STATUS_ABLE and not self.thief_heavy(creature)
         belt = self.belt and any(item[ITEM_SLOT] == WAIST for _, item, _ in self._worn(creature))
         from . import kits
         kids = self.kit_ids(creature)
@@ -1848,6 +1848,15 @@ class GameData:
             if skill not in (specialize.NONE, specialize.PLAIN):  # (a ranger's expertise)
                 out.append(("bow", names.get(skill, "")))
         return out
+
+    def thief_heavy(self, creature: int) -> bool:
+        """With class restrictions, whether a character with a thief class wears armour that isn't
+        light: no thief skills and no backstab (DSCLOG's THIEF_HEAVY; restrict.thief_heavy)."""
+        if not self.rules & RULE_RESTRICT:
+            return False
+        from . import restrict
+        worn = [typ for _, item, typ in self._worn(creature) if item[ITEM_SLOT] in ARMOUR_SLOTS]
+        return restrict.thief_heavy(self.sheet(creature), worn)
 
     def no_spells(self, creature: int) -> bool:
         """With class restrictions, whether a multiclass preserver can't cast for the armour it

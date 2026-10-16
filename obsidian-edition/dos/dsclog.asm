@@ -3207,7 +3207,8 @@ probe_can_use:
 ; light; a Twin-blade a shield, and a two-handed weapon (but a half-giant's,
 ; with RULE_HALF_GIANT); a Brute a one-handed melee weapon, and a shield (but a half-giant's,
 ; with the rule), and with KF_SPEC set (a weapon spec chosen) a missile weapon; a Stalker armour
-; that isn't light (leather, or of no material); a Grove Warden a metal weapon; a Lifebinder a
+; that isn't light (leather, or of no material); an Assassin, Shinobi, Shadowblade, Poisoner or
+; Spellarcher the same, asleep too (KIT_LIGHT); a Grove Warden a metal weapon; a Lifebinder a
 ; weapon of a kind not blunt (KIT_BLUNT); a Shinobi a shield, armour that isn't light, and a
 ; weapon not of its kinds (KIT_SHINOBI); a Seeker a weapon its sphere doesn't allow (as a
 ; cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
@@ -3229,6 +3230,8 @@ kit_forbids:
         jc .ok
 .place: call kit_at
         jz .next
+        call kit_light          ; (the light-armour kits, asleep too)
+        jc .out
         call kit_awake
         jc .next
         mov [cs:kit_where], di
@@ -3241,6 +3244,45 @@ kit_forbids:
         pop cx
         pop ax
         ret
+; KIT_LIGHT: carry set if kit AL keeps its character to light armour whether awake or asleep (an
+; Assassin, Shinobi, Shadowblade, Poisoner or Spellarcher: kits.LIGHT_KITS, a thief's own limit
+; kept after dual-classing) and item type DX is armour that isn't light (leather, or of no
+; material; not a shield). All registers kept.
+kit_light:
+        push ax
+        push bx
+        push si
+        push es
+        mov si, light_kits
+.kit:   cmp byte [cs:si], 0
+        je .no
+        cmp [cs:si], al
+        je .type
+        inc si
+        jmp .kit
+.type:  les bx, [ITEM_TYPES]
+        imul ax, dx, 0x14
+        add bx, ax
+        test byte [es:bx + 0x0F], KT_ARMOUR
+        jz .no
+        test byte [es:bx], KT_SHIELD
+        jnz .no
+        mov al, [es:bx + 8]
+        and al, 0x4F
+        cmp al, LEATHER
+        je .no
+        cmp al, 0x40
+        je .no
+        stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop si
+        pop bx
+        pop ax
+        ret
+light_kits db KIT_ASSASSIN, KIT_SHINOBI, KIT_SHADOWBLADE, KIT_POISONER, KIT_SPELLARCHER, 0
+
 kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         push ax
         push bx
@@ -3518,9 +3560,11 @@ kf_chosen  db 0                 ; (KIT_FORBIDS: a weapon of a kind it specialize
 EQUIP_OFF_HAND equ 14          ; the equip routine's slot for the off (left) hand
 
 ; CLASS_FORBIDS: carry set if the classes of the character whose sheet is at ES:BX keep it from
-; item type DX (dsloader/restrict.py, which says why): a psionicist, a thief (light armour; a
-; multiclass one its shields too), a preserver of that class alone, a druid, a cleric. A human's first class alone holds it (the one
-; it has now, if it has changed class); another race's every class. All registers kept.
+; item type DX (dsloader/restrict.py, which says why): a psionicist, a thief (light armour, but
+; a multiclass one, or a human thief once a warrior, as its other class allows: CU_DUAL; a
+; multiclass one its shields too), a preserver of that class alone (or a human once a warrior),
+; a druid, a cleric. A human's first class alone holds it (the one it has now, if it has changed
+; class); another race's every class. All registers kept.
 RESTRICT_TYPE equ 0x14          ; (the item type record's size)
 NO_MATERIAL equ 0xFF            ; (CU_MAT: none)
 LEATHER equ 5
@@ -3584,6 +3628,7 @@ class_forbids:
         jnc .holds0
         mov byte [cs:cu_kind], 0xFF
 .holds0:
+        call dual_warrior       ; (CU_DUAL: a human thief or preserver now, a warrior before)
         mov cx, 3                       ; CL the classes that hold, CH more than one (not human)
         cmp byte [es:bx + 0x18], 1
         jne .multi
@@ -3739,8 +3784,15 @@ class_forbids_one:
         ret
 .thief: cmp al, 17
         jne .pres
-        call heavy                      ; (any thief: light armour only)
-        jc .ret
+        call heavy                      ; (a thief: light armour only, but a multiclass one, or a
+        jnc .tshield                    ;   human once a warrior: as its other class allows, its
+        or ch, ch                       ;   thief skills lost in it: THIEF_HEAVY)
+        jnz .tshield
+        cmp byte [cs:cu_dual], 0
+        jne .ok
+        stc
+        ret
+.tshield:
         or ch, ch                       ; (a multiclass one: a leather shield another class allows)
         jz .ok
         call shield_not_leather
@@ -3755,6 +3807,8 @@ class_forbids_one:
         jne .druid
         or ch, ch
         jnz .ok
+        cmp byte [cs:cu_dual], 0        ; (a human once a warrior: as a multiclass one, no spells
+        jne .ok                         ;   in armour: PROBE_NO_CAST)
         jmp .bare
 .druid: cmp al, 5
         jb .cleric
@@ -3794,6 +3848,71 @@ class_forbids_one:
 .yes:   pop si
 .ok:    clc
 .ret:   ret
+
+; DUAL_WARRIOR: CU_DUAL 1 if the character (sheet ES:BX) is a human whose class now is thief or
+; preserver and who was a fighter, gladiator or ranger before (restrict.dual_warrior), else 0.
+; All registers kept.
+dual_warrior:
+        push ax
+        mov byte [cs:cu_dual], 0
+        cmp byte [es:bx + 0x18], 1
+        jne .out
+        mov al, [es:bx + 0x21]
+        cmp al, 17
+        je .was
+        cmp al, 11
+        jne .out
+.was:   mov al, [es:bx + 0x22]
+        call warrior_al
+        jc .yes
+        mov al, [es:bx + 0x23]
+        call warrior_al
+        jnc .out
+.yes:   mov byte [cs:cu_dual], 1
+.out:   pop ax
+        ret
+cu_dual db 0
+
+; WARRIOR_AL: carry set if class AL is a fighter, gladiator or ranger. All registers kept.
+warrior_al:
+        cmp al, FIGHTER_CLASS
+        je .yes
+        cmp al, GLADIATOR_CLASS
+        je .yes
+        cmp al, 13
+        jb .no
+        cmp al, 16
+        ja .no
+.yes:   stc
+        ret
+.no:    clc
+        ret
+
+; CLASS_AND_WARRIOR: carry set if the character (sheet ES:BX) has class AL and a warrior class
+; (WARRIOR_AL) among its classes. All registers kept.
+class_and_warrior:
+        push si
+        push cx
+        xor cx, cx                      ; CL class AL found, CH a warrior
+        xor si, si
+.each:  cmp [es:bx + si + 0x21], al
+        jne .war
+        mov cl, 1
+.war:   push ax
+        mov al, [es:bx + si + 0x21]
+        call warrior_al
+        pop ax
+        jnc .next
+        mov ch, 1
+.next:  inc si
+        cmp si, 3
+        jb .each
+        and cl, ch
+        cmp cl, 1                       ; (CF set if CL < 1)
+        cmc
+        pop cx
+        pop si
+        ret
 
 ; HEAVY: carry set for armour not light (not leather, and of a material)
 heavy:  cmp byte [cs:cu_armour], 0
@@ -3912,8 +4031,9 @@ cu_others  dw 0
 ; psionic power), and so does a spell queued in a fight: the character the test's first argument
 ; (the "push dx" before its call, under the interrupt frame: DX itself is the test's to change,
 ; and was, so the check once looked at someone else), AX not 0 if it can't (its "No spell use"
-; effect). With RULE_RESTRICT, a multiclass preserver (not a human, who dual-classes) can't
-; either while it wears armour, a helm too (ARMOUR_WORN; a shield doesn't count).
+; effect). With RULE_RESTRICT, a multiclass preserver can't either while it wears armour, a helm
+; too (ARMOUR_WORN; a shield doesn't count); nor can a human who has been a preserver and a
+; fighter, gladiator or ranger, in either order (CLASS_AND_WARRIOR).
 PRESERVER_CLASS equ 11
 probe_no_cast:
         push bp                 ; the replaced "add sp,4": move the interrupt frame (and BP)
@@ -3946,9 +4066,14 @@ probe_no_cast:
         imul bx, bx, 0x47
         les cx, [0x1661]
         add bx, cx
-        cmp byte [es:bx + 0x18], 1      ; a human: none
-        je .out
-        cmp byte [es:bx + 0x22], 0      ; one class: none
+        cmp byte [es:bx + 0x18], 1      ; a human: a preserver and a warrior, dual-classed
+        jne .multi
+        mov al, PRESERVER_CLASS
+        call class_and_warrior
+        mov ax, 0
+        jc .pres
+        jmp .out
+.multi: cmp byte [es:bx + 0x22], 0      ; one class: none
         je .out
         cmp byte [es:bx + 0x21], PRESERVER_CLASS
         je .pres
@@ -9018,8 +9143,10 @@ wp_marked:
         pop bp
         ret
 
+CHATKCHA_KIND equ 12             ; (specialize.KINDS' number, less 1 than SPEC_SLOTS')
+THRI_KREEN_RACE equ 8
 ; WP_MARKS: the page's rows, the kinds marked (the creation sheet's: a gladiator's two, anyone
-; else's one; none yet: the long sword, and a gladiator's club, put in) chosen and the rest not,
+; else's one; none yet: the long sword (a thri-kreen's the chatkcha, if allowed), and a gladiator's club, put in) chosen and the rest not,
 ; as 63FEEh marks the spheres.
 wp_marks:
         push es
@@ -9035,7 +9162,12 @@ wp_marks:
         mov word [es:bx + SPEC_SLOTS], 0
 .none:  cmp byte [cs:wp_touched], 0
         jne .first
-        xor cx, cx
+        mov cx, CHATKCHA_KIND           ; (a thri-kreen: the chatkcha, if its classes allow it)
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
+        jne .sword
+        bt ax, cx
+        jc .put
+.sword: xor cx, cx
         bt ax, 0
         jc .put
         bsf cx, ax
@@ -13483,7 +13615,8 @@ probe_stealth:
 .done:  pop es
         pop bx
         pop ax
-.push:  call kit_rear
+.push:  call thief_rear
+        call kit_rear
         push word [bp-0x1A]
         push word [cs:s_fl]
         push word [cs:s_cs]
@@ -13519,6 +13652,22 @@ kit_rear:
         jne .out
         inc word [bp-0x20]
 .out:   pop ax
+.ret:   ret
+
+; THIEF_REAR: in PROBE_STEALTH (SI the attacker), a thief in armour that isn't light
+; (THIEF_HEAVY) backstabs no more: [BP-24h] cleared, the 2 to hit it gave with it. All kept.
+thief_rear:
+        cmp si, 3
+        ja .ret
+        cmp word [bp-0x24], 0
+        je .ret
+        push ax
+        mov ax, si
+        call thief_heavy
+        pop ax
+        jnc .ret
+        mov word [bp-0x24], 0
+        add word [bp-0x20], 2
 .ret:   ret
 
 L_LINE_SIZE equ 24
@@ -16753,8 +16902,8 @@ ib_elf_quiet db 'Move 95%', 0
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
 ; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), no less
-; than 0, as the Loader counts them (game.py's thief_skills_now); then AX = the chance, as the
-; code would have.
+; than 0, as the Loader counts them (game.py's thief_skills_now); 0 for a thief in armour that
+; isn't light (THIEF_HEAVY); then AX = the chance, as the code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
 BELT_BONUS equ 5
 COMBATANT_CREATURE equ 0xC37    ; in the things table: an object's creature (3 bytes an object)
@@ -16797,12 +16946,43 @@ probe_belt:
         add dx, ax
         jns .done
         xor dx, dx
-.done:  mov ax, dx
+.done:  mov ax, cx
+        call thief_heavy
+        jnc .chance
+        xor dx, dx
+.chance:
+        mov ax, dx
         pop es
         pop dx
         pop cx
         pop bx
 .out:   iret
+
+; THIEF_HEAVY: carry set if, with RULE_RESTRICT, creature AX (DS the game's) has a thief class and
+; wears armour that isn't light (HEAVY_WORN): a multiclass thief, or a human thief once a warrior
+; (or a warrior once a thief), may wear it, but loses its thief skills and backstab in it
+; (restrict.thief_heavy). All registers kept.
+thief_heavy:
+        test word [cs:rules], RULE_RESTRICT
+        jz .no
+        pusha
+        push es
+        call creature_sheet
+        mov cx, 3
+        xor si, si
+.class: cmp byte [es:bx + si + 0x21], THIEF_CLASS
+        je .thief
+        inc si
+        loop .class
+        pop es
+        popa
+.no:    clc
+        ret
+.thief: mov dx, ax
+        call heavy_worn
+        pop es
+        popa
+        ret
 
 ; KIT_SKILL: AX what the kit of creature AX adds to thief skill SI (0-7: game.THIEF_SKILLS' order)
 ; (kits.thief_skill): KIT_SKILLS' row for each of its kits; a Military Scout's 10 to finding traps,

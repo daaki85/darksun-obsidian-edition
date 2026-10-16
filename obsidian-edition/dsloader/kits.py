@@ -516,6 +516,18 @@ def forbids_off_hand(kid: int, typ: bytes) -> bool:
     return kid == BATTLE_MAGE or kid == HEALER and bool(typ[0] & (MELEE | MISSILE | THROWN))
 
 
+# the kits held to light armour asleep too (DSCLOG's KIT_LIGHT): a thief's own limit kept after
+# dual-classing, and an archer's
+LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER, SPELLARCHER))
+
+
+def light_only(kid: int, typ: bytes) -> bool:
+    """Whether kit KID, awake or asleep, keeps its character from item type TYP: armour that isn't
+    light, for LIGHT_KITS (DSCLOG's KIT_LIGHT)."""
+    return kid in LIGHT_KITS and bool(typ[0x0F] & ARMOUR) and not typ[0] & SHIELD \
+        and typ[8] & 0x4F not in (LEATHER, NO_MATERIAL)
+
+
 def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: bool = False,
             off_hand: bool = False, sphere: int = 0) -> bool:
     """Whether the kit keeps a character from an item type (TYP its record; KIND its weapon kind,

@@ -364,7 +364,8 @@ class Viewer:
         for key, text in (
                 ("class_restrictions", "Class restrictions on armour, shields and weapons, the strictest class "
                                        "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
-                                       "spheres); a multiclass preserver casts no spells in armour"),
+                                       "spheres); a multiclass preserver casts no spells in armour, and a "
+                                       "multiclass thief has no thief skills in armour that isn't light"),
                 ("multiclass_hp", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
                                   "a class is a warrior), the total shared between the classes"),
                 ("best_hit_die", "Hit dice rolled twice, the better kept, at creation and at every level "
@@ -1392,6 +1393,8 @@ class Viewer:
             known = gd and addr is not None and table is not None
             thief = gd.thief_skills_now(index, game.LEDGER_SKILLS) if known else []
             label = "Thief skills now"
+            if known and thief and index < game.PARTY_SIZE and gd.thief_heavy(index):
+                label = "Thief skills now (none in armour that isn't light)"
             if known and not thief and self.rule_vars["stealth"].get():  # a ranger's, for the stealth rule
                 thief, label = gd.ranger_skills_now(index), "Ranger skills now"
             equipment = gd.equipment(index) if known else []
