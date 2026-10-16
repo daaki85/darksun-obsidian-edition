@@ -32,6 +32,9 @@ have the detail.
   while the screen is in graphics, then clears it switching back to text. The
   helper now keeps what the game last wrote and saves it, with the calls that
   led there, and the Loader's crash report shows it.
+- **Monsters' powers told apart in the dice log:** the game has no name for
+  them, so the log now adds the power's damage dice and kinds, as in
+  "special attack 195 (1d10 crushing)" (Daggoran's).
 - **Freeze report:** when the game stops but DOSBox stays open, the Loader's
   **Freeze report** button saves a zip in `crash-logs` with where the game was
   running for its last few seconds (noted by the helper from the game's timer),

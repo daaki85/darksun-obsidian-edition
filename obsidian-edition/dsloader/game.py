@@ -941,6 +941,22 @@ class GameData:
         data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
         return [Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]) for i in range(count)]
 
+    def _power_dice(self, spell: int) -> str:
+        """" (1d10 crushing)": a monster's power's damage dice and kinds, from its record, to tell
+        it by (the game has no name for it), or ""."""
+        from . import spellbook
+        try:
+            rule = self.spell_damage(spell)
+            rec = self.spell_record(spell)
+        except (struct.error, IndexError, ValueError):
+            return ""
+        if rule is None or len(rec) < 0x1C or rule.sides <= 1 or not rule.base_dice \
+                or rule.step_dice or rule.step_bonus:
+            return ""
+        kinds = struct.unpack_from("<H", rec, 0x1A)[0]
+        names = [name for bit, name in spellbook.DAMAGE_KINDS if kinds & bit]
+        return f" ({rule.base_dice}d{rule.sides}{' ' + ', '.join(names) if names else ''})"
+
     def spell_name(self, spell: int) -> str:
         if PSIONIC_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT:
             # the psionic powers' names come first in the names list, in number order
@@ -953,8 +969,8 @@ class GameData:
             return ITEM_ATTACKS[spell].capitalize()
         if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
             return POISON_POWERS[spell]
-        if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch
-            return f"special attack {spell}"
+        if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch: the game names none
+            return f"special attack {spell}{self._power_dice(spell)}"
         if SPELL_FIRST <= spell <= SPELL_COUNT:
             info = self.load_seg * 16 + SPELL_INFO_OFF + (spell - 1) * SPELL_INFO_SIZE
             name = struct.unpack("<H", self.guest.read(info + 5, 2))[0]

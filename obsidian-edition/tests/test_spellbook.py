@@ -78,5 +78,25 @@ class TextTests(unittest.TestCase):
         self.assertIn("its own code", spellbook.damage_text(gd, 3, record(kinds=0x200)))
 
 
+class PowerNameTests(unittest.TestCase):
+    """A monster's power has no name in the game: the log tells it by its damage dice and kinds."""
+
+    def gd(self, damage, kinds):
+        gd = object.__new__(game.GameData)
+        gd.spell_damage = lambda spell: damage
+        gd.spell_record = lambda spell: bytes(0x1A) + struct.pack("<H", kinds)
+        return gd
+
+    def test_dice_and_kinds(self):
+        gd = self.gd(SpellDamage(1, 0, 0, 1, 0, 10), 0x08)
+        self.assertEqual(gd.spell_name(195), "special attack 195 (1d10 crushing)")
+
+    def test_no_dice(self):
+        gd = self.gd(None, 0)
+        self.assertEqual(gd.spell_name(190), "special attack 190")
+        gd = self.gd(SpellDamage(1, 1, 0, 1, 0, 6), 0x02)  # grows with level: no fixed dice to show
+        self.assertEqual(gd.spell_name(190), "special attack 190")
+
+
 if __name__ == "__main__":
     unittest.main()
