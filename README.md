@@ -83,17 +83,19 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.3.0** is out ([release notes](release-notes/v2.3.0.md)):
-a combat log in the game, three more wizard spells (Reflected Image, Spook and
-Friends), two magic shields, defilers' scrolls, buying back magical items,
-saves kept under their names, fuller starting gear, and Templar's Ledger
-renamed the Loader. 2.2.1 before it ([release notes](release-notes/v2.2.1.md))
-made more of the Options tab switchable, with **Restore defaults** to set it
-all back.
+**Obsidian Edition 2.4.0** is out ([release notes](release-notes/v2.4.0.md)):
+thirteen multiclass kits, features of their own for the game's own party,
+thieves in light armour, the combat log shown with **L** and fixed (2.3.0's
+could make fights quit or freeze), a steady view in fights, and crash and
+freeze reports that say why. 2.3.0 before it
+([release notes](release-notes/v2.3.0.md)) brought the combat log in the
+game, three more wizard spells, two magic shields, defilers' scrolls, buying
+back magical items, saves kept under their names and fuller starting gear.
 
 Earlier changes, pull request by pull request, are in
 [`CHANGELOG.md`](CHANGELOG.md). Releases have notes of their own:
-[2.3.0](release-notes/v2.3.0.md) (pull requests #44 to #46),
+[2.4.0](release-notes/v2.4.0.md) (pull requests #48 and #49),
+[2.3.0](release-notes/v2.3.0.md) (#44 to #46),
 [2.2.1](release-notes/v2.2.1.md) (#43), [2.2.0](release-notes/v2.2.0.md) (#39
 to #42), [2.1.1](release-notes/v2.1.1.md) (#37),
 [2.1.0](release-notes/v2.1.0.md) (#35), [2.0.0](release-notes/v2.0.0.md) (#31
