@@ -173,8 +173,8 @@ def add_to(gd: GameData, creature: int, rec: bytes, slot: Optional[int] = None) 
             return False
         it = ring.Items(gd)  # (read again: the list is new)
     kind, first = it.thing(thing)
-    if kind != game.THING_ITEM:
-        return False
+    if kind != game.THING_ITEM or it.word(ring.FREE_ITEMS) != item:
+        return False  # (the free list changed meanwhile: the game's own doing, left alone)
     gd.guest.write(gd.ds * 16 + ring.FREE_ITEMS, it.item(item)[game.ITEM_NEXT:game.ITEM_NEXT + 2])
     ring.took(item, f"an item (picture {struct.unpack_from('<H', rec, 0)[0]:04X}h) for creature {creature}")
     rec = bytearray(rec)

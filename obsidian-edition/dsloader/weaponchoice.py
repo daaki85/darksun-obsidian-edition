@@ -251,9 +251,11 @@ def finish_new(gd) -> List[str]:
 def class_gear(gd) -> List[str]:
     """The party's New characters' starting weapons, armour and shields that their classes can't
     use (restrict.usable: a druid's leather armour, given for its fighter class) left behind:
-    lines for the log. The game gives a character of several classes the gear of each and puts
+    lines for the log; armour its kit forbids too (a Shadowblade's that isn't light). A weapon or
+    shield only the kit forbids is kit_gear's, fitted to the kit (a Brute's long sword made a
+    two-handed weapon). The game gives a character of several classes the gear of each and puts
     what it may not wear in the backpack, where it would only weigh."""
-    from . import ring
+    from . import kitpages, ring
     out: List[str] = []
     sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
@@ -272,10 +274,15 @@ def class_gear(gd) -> List[str]:
             if len(typ) < game.ITEM_TYPE_SIZE or not (restrict.is_weapon(typ) or restrict.is_armour(typ)
                                                       or restrict.is_shield(typ)):
                 continue
-            if restrict.usable(sheet, type_, typ) or not ring.unlink(gd, ring.Items(gd), item_index, "class gear", empty=True):
+            classes_let = restrict.usable(sheet, type_, typ, kit=False)
+            if restrict.usable(sheet, type_, typ) or classes_let and not restrict.is_armour(typ):
+                continue  # (a weapon or shield only the kit forbids: kit_gear's)
+            if not ring.unlink(gd, ring.Items(gd), item_index, "class gear", empty=True):
                 continue
             name = gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
-            out.append(f"{gd.creature_name(member)}'s {name} is left behind: their classes can't use it")
+            why = f"a {kitpages.name_of(kitpages.kit_at(sheet, 0))} can't wear it" if classes_let \
+                else "their classes can't use it"
+            out.append(f"{gd.creature_name(member)}'s {name} is left behind: {why}")
     return out
 
 

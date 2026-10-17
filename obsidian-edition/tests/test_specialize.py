@@ -619,6 +619,24 @@ class KitGearTests(FinishNewTests):
         self.assertEqual(taken, [1])
         self.assertIn("left behind", out[-1])
 
+    def test_brute_class_restrictions(self):
+        """With class restrictions too: the long sword and club, which only the kit forbids, are
+        kept for kit_gear (a great axe, the club left behind), not left behind as the classes'."""
+        from dsloader import weaponchoice
+        game.RULES_IN_FORCE |= game.RULE_RESTRICT
+        right, left = self.character(10, 3)
+        self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
+        self.give(18, 0x11, left)
+
+        def unlink(gd, it, item, what, empty=False):
+            at = self.ITEMS + item * game.ITEM_SIZE
+            self.mem[at:at + game.ITEM_SIZE] = bytes(game.ITEM_SIZE)
+            return True
+        with mock.patch("dsloader.ring.unlink", unlink):
+            self.assertEqual(weaponchoice.class_gear(self.gd), [])
+            weaponchoice.kit_gear(self.gd)
+        self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("great axe")][0], right))
+
     def test_arena_champion_shield(self):
         from dsloader import weaponchoice
         right, left = self.character(10, 1)

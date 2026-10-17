@@ -719,6 +719,24 @@ class SaveTests(unittest.TestCase):
 
 
 class OtherTests(unittest.TestCase):
+    def test_map_running(self):
+        """The item lists are changed only while the map's main loop runs (DSCLOG's count of it
+        moves): not on the creation screen, in a menu or as the game starts, when it builds them."""
+        from unittest import mock
+        log = make_game()
+        m = log.guest.mem
+        self.assertFalse(log._map_running())  # (the count still)
+
+        def sleep(seconds):
+            struct.pack_into("<H", m, HDR + dicelog.TSR_MAIN_TICKS,
+                             struct.unpack_from("<H", m, HDR + dicelog.TSR_MAIN_TICKS)[0] + 50)
+        with mock.patch("dsloader.dicelog.time.sleep", sleep):
+            self.assertTrue(log._map_running())
+        with mock.patch("dsloader.weaponchoice.class_gear") as gear, mock.patch("dsloader.names.update", lambda *a: True):
+            log.rules |= game.RULE_RESTRICT
+            log._arena_ring(1e9)
+            gear.assert_not_called()
+
     def test_ac_probe_remembers_the_ac(self):
         log = make_game()
         self.assertEqual(log.describe(entry(-2, frame=words(0, 0, 0x29, 0), kind=KIND_AC)), [])

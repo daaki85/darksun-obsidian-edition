@@ -199,6 +199,7 @@ THIEF = 17  # class number
 
 EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
+MAP_RUN_WAIT = 0.06  # seconds the map's main loop is watched for (it runs thousands of times a second)
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
@@ -980,17 +981,18 @@ class DiceLog:
             ring.name_items(self.game, self.rules)
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
-            if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
-                out += weaponchoice.class_gear(self.game)
-            if self.rules & game.RULE_SPECIALIZE:  # (new characters' weapon kinds and starting weapon)
-                out += weaponchoice.finish_new(self.game)
-            if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
-                out += weaponchoice.kit_gear(self.game)
-            if self.starting_gear:  # (new characters' starting gear filled out)
-                out += startgear.fill(self.game)
-            out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
-            if not self.game.in_combat():  # (items an earlier version put in the wrong list)
-                out += pickpocket.mend_lists(self.game)
+            if self._map_running():  # (the item lists changed only while the game leaves them be)
+                if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
+                    out += weaponchoice.class_gear(self.game)
+                if self.rules & game.RULE_SPECIALIZE:  # (new characters' weapon kinds and starting weapon)
+                    out += weaponchoice.finish_new(self.game)
+                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
+                    out += weaponchoice.kit_gear(self.game)
+                if self.starting_gear:  # (new characters' starting gear filled out)
+                    out += startgear.fill(self.game)
+                out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
+                if not self.game.in_combat():  # (items an earlier version put in the wrong list)
+                    out += pickpocket.mend_lists(self.game)
             if self.cilla_elf:
                 out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
@@ -1130,6 +1132,22 @@ class DiceLog:
                                   roll, result, self.game.spell_level(spell))]
         except (struct.error, IndexError, ValueError):
             return []
+
+    def _map_running(self) -> bool:
+        """The map's main loop running now (DSCLOG's count of it goes up within MAP_RUN_WAIT): no
+        talk, menu or creation screen open, and the game not starting or loading an area, when it
+        builds its item lists afresh. The Loader's changes to them are made only then: one made
+        across START GAME took the game's free list of item records from it (its head written
+        over with the end of a party member's list), and the arena's things, the announcer among
+        them, were never put on the map."""
+        if self.tsr_hdr is None:
+            return False
+        try:
+            before = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_MAIN_TICKS, 2))[0]
+            time.sleep(MAP_RUN_WAIT)
+            return struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_MAIN_TICKS, 2))[0] != before
+        except (struct.error, IndexError, ValueError):
+            return False
 
     def _kalzith_sold_out(self) -> None:
         """All six of Kalzith's scrolls bought: no more shop, and he carries his two, put on him

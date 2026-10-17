@@ -255,13 +255,14 @@ def thief_heavy(sheet: bytes, worn: Iterable[bytes]) -> bool:
         and any(is_armour(t) and not is_light(t) for t in worn)
 
 
-def usable(sheet: bytes, type_: int, typ: bytes) -> bool:
+def usable(sheet: bytes, type_: int, typ: bytes, kit: bool = True) -> bool:
     """Whether the game's class lists, these restrictions and the kit's let the character use an
-    item of this type (TYP its record)."""
+    item of this type (TYP its record); KIT false: the classes' alone (what the kit forbids not
+    counted)."""
     flags = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little")
     game_lets = bool(int.from_bytes(typ[TYPE_CLASSES:TYPE_CLASSES + 2], "little") & flags)
     return (game_lets or kit_allows(sheet, type_, typ)) and allowed(sheet, type_, typ) \
-        and not kit_forbids(sheet, type_, typ)
+        and not (kit and kit_forbids(sheet, type_, typ))
 
 
 def allowed_kinds(sheet: bytes, type_record) -> List[int]:
