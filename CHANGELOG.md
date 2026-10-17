@@ -24,6 +24,10 @@ have the detail.
   thief agrees to fetch his gem ("It's a deal!"), he hands his set over.
 
 **Fixed**
+- **Figures hold the Loader's own weapons**: the bone and obsidian short swords
+  and axes a new warrior starts with, the metal daggers, maces, great axes,
+  picks and polearms, and the other new weapons were drawn as nothing, so a
+  figure carrying one swung empty-handed (the game's own weapons were drawn).
 - **Dinos's talk after the cooked vulture**: once he had given the meal's XP,
   his menu came back with only "Goodbye.", and a stray "Goodbye." followed in
   a window with no portrait. The XP is now given within his talk, as the
