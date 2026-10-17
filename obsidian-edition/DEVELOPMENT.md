@@ -1984,9 +1984,11 @@ shown while the game's own test says someone in the party carries the cooked
 vulture (33h, as the campfire's script asks about the plucked one; the game's
 object A4Ch), the test being the question's own condition in the menu. Chosen,
 the script takes it (5Ch, as the campfire takes the plucked one) and sets the
-Loader's flag 780, then gives the XP through the game's own routine for quests
-(the amount in its variable, then script 74 at 135: the window, the words and
-the quest's sound), as Dinos's own script does when he heals Gilal (350). The
+Loader's flag 780, then gives the XP as the game's quests do in the middle of a
+talk (the Tari's, script 125: the words, the quest's sound, then 21h). Not
+through the game's routine for it (script 74 at 135, which Dinos's script calls
+when he heals Gilal and the talk ends): it opens a narration window and ends
+there, and the menu came back after it with only "Goodbye." The
 Loader then refills the party, once (flag 781), only while the party is
 talking with him (never from a game being loaded).
 

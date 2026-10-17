@@ -177,8 +177,11 @@ class PensAsksTests(unittest.TestCase):
         self.assertIn((0x16, [("n", 1), ("var", 13, vulture.MEAL)]), codes)
         said = " ".join(gpl.strings(ops)).replace("  ", " ")
         self.assertIn("A vulture! Give it here.", said)
-        xp = codes.index((0x16, [("n", vulture.XP_REWARD), pensasks.PARTY_XP]))  # (the game's XP routine)
-        self.assertEqual(codes[xp + 1], (pensasks.CALL, list(pensasks.XP_ROUTINE)))
+        self.assertIn("Each party member receives 100 experience points!", said)
+        self.assertIn((pensasks.SOUND, [("n", pensasks.QUEST_SOUND)]), codes)
+        self.assertIn((pensasks.GIVE_XP, [("n", pensasks.PARTY), ("n", vulture.XP_REWARD)]), codes)
+        # (not through the game's routine in script 74: its narration window ended the talk's menu)
+        self.assertFalse([c for c in codes if c[0] == 0x14 and c[1][-1] == ("n", 74)])
         self.assertEqual([m[1] for m in pensasks.MENUS if pensasks.VULTURE in m[2]], ["<name>"])
 
     def test_buffer(self):

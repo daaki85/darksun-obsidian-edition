@@ -71,11 +71,12 @@ class Ask(NamedTuple):
 # The cooked vulture (vulture.py): the party asks Dinos about it while one of them carries it (the
 # game's 33h test, as the campfire's script asks about the plucked one). He takes it (5Ch, as the
 # campfire takes the plucked one), and they eat together: the Loader's flag MEAL, on which it
-# gives each a full rest, and the XP as the game's quests give theirs (its routine: the window,
-# the words and the quest's sound).
-PARTY, TAKE = 32766, 0x5C
-PARTY_XP = ("var", 7, 16)  # the experience points the game's routine gives each party member
-CALL, XP_ROUTINE = 0x14, (("n", 135), ("n", 74))  # (offset, script): its routine for them
+# gives each a full rest, and the XP as the game's quests give theirs in the middle of a talk (the
+# Tari's, script 125: the words, the quest's sound, then 21h). Not the game's routine for it
+# (script 74 at 135): that one starts a narration window (2Ah) and ends there, and Dinos's menu
+# came back after it with only "Goodbye." and a stray "Goodbye." with no portrait.
+PARTY, TAKE, GIVE_XP, SOUND, QUEST_SOUND = 32766, 0x5C, 0x21, 0x5D, 53
+NARRATES = 98  # (the window's narration lines, as the game's XP words)
 CARRIED = ("op", (0x33, [("n", PARTY), 77, 80, [(72, 4, ("n", -vulture.COOKED))]]))
 
 
@@ -83,11 +84,10 @@ def _meal(s: _Script) -> None:
     s.op(TAKE, ("n", 1), ("n", -vulture.COOKED), ("n", PARTY), ("n", 9999))
     s.flag(vulture.MEAL, 1)
     s.page()
-    # the XP as the game's quests give it: the amount, then the game's routine for it (script 74
-    # at 135: its own window, "Each party member receives 100 experience points!", and the
-    # quest's sound), as Dinos's own script does for Gilal (350)
-    s.op(0x16, ("n", vulture.XP_REWARD), PARTY_XP)
-    s.op(CALL, *XP_ROUTINE)
+    s.say(f"Each party member receives {vulture.XP_REWARD} experience points!", NARRATES)
+    s.op(SOUND, ("n", QUEST_SOUND))
+    s.page()
+    s.op(GIVE_XP, ("n", PARTY), ("n", vulture.XP_REWARD))
 
 
 # As the game's people do for the dead: the Trustee asks "What was X like?" instead, Dinos keeps

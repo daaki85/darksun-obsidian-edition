@@ -24,6 +24,10 @@ have the detail.
   thief agrees to fetch his gem ("It's a deal!"), he hands his set over.
 
 **Fixed**
+- **Dinos's talk after the cooked vulture**: once he had given the meal's XP,
+  his menu came back with only "Goodbye.", and a stray "Goodbye." followed in
+  a window with no portrait. The XP is now given within his talk, as the
+  game's own quests do, and his questions come back after it.
 - **Mirror Image works as it says** (seen in 2.4.0). The game's images
   stopped no weapon blow, and took the caster's own spells: Armor cast on
   oneself under Mirror Image was lost three times in four, an image with it.
