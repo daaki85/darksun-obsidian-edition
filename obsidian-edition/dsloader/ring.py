@@ -218,14 +218,16 @@ def unlink(gd: GameData, it: "Items", item: int, what: str, empty: bool = False)
             rec = it.item(index)
             after = struct.unpack_from("<h", rec, game.ITEM_NEXT)[0]
             if index == item:
+                head = it.word(FREE_ITEMS)
                 if before is None:
                     if not 0 <= after < game.NO_ITEM and not empty:
                         return False  # (the only one: left)
                     gd.guest.write(it.things + thing * 3 + 1, struct.pack("<h", after))
                 else:
                     gd.guest.write(it.items + before * game.ITEM_SIZE + game.ITEM_NEXT, struct.pack("<h", after))
-                gd.guest.write(it.items + item * game.ITEM_SIZE + game.ITEM_NEXT,
-                               struct.pack("<H", it.word(FREE_ITEMS)))
+                gd.guest.write(it.items + item * game.ITEM_SIZE + game.ITEM_NEXT, struct.pack("<H", head))
+                if it.word(FREE_ITEMS) != head:  # (the game's own free list moved meanwhile: left to it)
+                    return False
                 gd.guest.write(gd.ds * 16 + FREE_ITEMS, struct.pack("<H", item))
                 took(item, what)
                 return True

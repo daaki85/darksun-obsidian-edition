@@ -637,6 +637,24 @@ class KitGearTests(FinishNewTests):
             weaponchoice.kit_gear(self.gd)
         self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("great axe")][0], right))
 
+    def test_brute_packed_sword(self):
+        """The game puts a Brute's long sword and club in the backpack (the kit forbids them in
+        hand): the sword is made a great axe and put in the right hand, the club left behind."""
+        from dsloader import weaponchoice
+        right, left = self.character(10, 3)
+        self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, 15)
+        self.give(18, 0x11, 14)
+
+        def unlink(gd, it, item, what, empty=False):
+            at = self.ITEMS + item * game.ITEM_SIZE
+            self.mem[at:at + game.ITEM_SIZE] = bytes(game.ITEM_SIZE)
+            return True
+        with mock.patch("dsloader.ring.unlink", unlink):
+            out = weaponchoice.kit_gear(self.gd)
+            self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+        self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("great axe")][0], right))
+        self.assertIn("left behind", out[-1])
+
     def test_arena_champion_shield(self):
         from dsloader import weaponchoice
         right, left = self.character(10, 1)

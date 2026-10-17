@@ -719,23 +719,25 @@ class SaveTests(unittest.TestCase):
 
 
 class OtherTests(unittest.TestCase):
-    def test_map_running(self):
-        """The item lists are changed only while the map's main loop runs (DSCLOG's count of it
-        moves): not on the creation screen, in a menu or as the game starts, when it builds them."""
+    def test_items_still(self):
+        """The item lists are changed only while the game's free lists stay as they are (not as
+        START GAME builds them afresh)."""
         from unittest import mock
+        from dsloader import ring
         log = make_game()
         m = log.guest.mem
-        self.assertFalse(log._map_running())  # (the count still)
+        self.assertTrue(log._items_still())
 
-        def sleep(seconds):
-            struct.pack_into("<H", m, HDR + dicelog.TSR_MAIN_TICKS,
-                             struct.unpack_from("<H", m, HDR + dicelog.TSR_MAIN_TICKS)[0] + 50)
+        def sleep(seconds):  # (the game takes an item record meanwhile)
+            at = DS * 16 + ring.FREE_ITEMS
+            struct.pack_into("<H", m, at, struct.unpack_from("<H", m, at)[0] + 1)
         with mock.patch("dsloader.dicelog.time.sleep", sleep):
-            self.assertTrue(log._map_running())
-        with mock.patch("dsloader.weaponchoice.class_gear") as gear, mock.patch("dsloader.names.update", lambda *a: True):
-            log.rules |= game.RULE_RESTRICT
-            log._arena_ring(1e9)
-            gear.assert_not_called()
+            self.assertFalse(log._items_still())
+            with mock.patch("dsloader.weaponchoice.class_gear") as gear, \
+                    mock.patch("dsloader.names.update", lambda *a: True):
+                log.rules |= game.RULE_RESTRICT
+                log._arena_ring(1e9)
+                gear.assert_not_called()
 
     def test_ac_probe_remembers_the_ac(self):
         log = make_game()

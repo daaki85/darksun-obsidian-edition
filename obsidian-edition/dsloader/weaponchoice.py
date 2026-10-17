@@ -31,6 +31,7 @@ START_TYPE, START_NAME = 81, 0x1C  # the bone long sword the game starts warrior
 MISSILE_SLOT = game.EQUIP_SLOTS.index("missile")
 AMMO_SLOT = game.EQUIP_SLOTS.index("ammo")
 LEFT_HAND = game.EQUIP_SLOTS.index("left hand")
+RIGHT_HAND = game.EQUIP_SLOTS.index("right hand")
 MATERIALS = {0x00: "wooden ", 0x01: "bone ", 0x02: "stone ", 0x03: "obsidian ", 0x04: "metal ", 0x05: "leather "}  # (type +8)
 TWO_HANDED = 0x40  # a weapon type's +0Fh: it takes both hands (the inventory screen's test)
 ITEM_PICTURE, ITEM_COUNT, ITEM_VALUE = 0x00, 0x02, 0x06
@@ -199,10 +200,20 @@ def _shield_off(gd, member: int, owned, items: int) -> List[str]:
     return []
 
 
+def _packed_start(item: bytes, owned) -> bool:
+    """The game's starting long sword in a backpack cell, the right hand empty: the game puts it
+    there for a character whose kit forbids it (a Brute's), to be made the weapon it may use."""
+    return item[game.ITEM_SLOT] >= len(game.EQUIP_SLOTS) and item[game.ITEM_PLUS] == 0 \
+        and struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == START_TYPE \
+        and struct.unpack_from("<H", item, game.ITEM_NAME)[0] == START_NAME \
+        and not any(other[game.ITEM_SLOT] == RIGHT_HAND for _, other, _ in owned)
+
+
 def finish_new(gd) -> List[str]:
-    """The party's New characters' kinds made whole, and their starting weapons changed: lines
-    for the log."""
-    from . import npcitems
+    """The party's New characters' kinds made whole, and their starting weapons changed (the
+    game's long sword in the hand, or in the backpack with the hand empty: then into the hand):
+    lines for the log."""
+    from . import npcitems, pickpocket
     out: List[str] = []
     sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
@@ -228,11 +239,14 @@ def finish_new(gd) -> List[str]:
         if any(struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == weapon[0] for _, item, _ in owned):
             continue  # (made already: a long sword handed over later stays one)
         for item_index, item, _ in owned:
+            packed = _packed_start(item, owned)
             if struct.unpack_from("<H", item, game.ITEM_TYPE)[0] == START_TYPE \
                     and struct.unpack_from("<H", item, game.ITEM_NAME)[0] == START_NAME \
-                    and item[game.ITEM_SLOT] in game.WEAPON_HANDS and item[game.ITEM_PLUS] == 0:
+                    and (item[game.ITEM_SLOT] in game.WEAPON_HANDS or packed) and item[game.ITEM_PLUS] == 0:
                 new, slot = plain_weapon(item, kind, weapon)
                 gd.guest.write(items + item_index * game.ITEM_SIZE, new)
+                if packed and slot is None:
+                    pickpocket.place(gd, member, item_index, RIGHT_HAND)
                 if kind == BOW:
                     npcitems.add_to(gd, member, arrows(new), AMMO_SLOT)
                     bow_ahead(gd, member)
@@ -335,10 +349,14 @@ def kit_gear(gd) -> List[str]:
         for item_index, item, _ in owned:
             slot, type_ = item[game.ITEM_SLOT], struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
             typ = read(type_)
-            if slot not in (right, left) or not restrict.kit_forbids(sheet, type_, typ, off_hand=slot == left):
+            packed = _packed_start(item, owned)  # (the game's long sword in the backpack: the kit forbids it)
+            if slot not in (right, left) and not packed \
+                    or not restrict.kit_forbids(sheet, type_, typ, off_hand=slot == left):
                 continue
             at = items + item_index * game.ITEM_SIZE
-            new = _replacement(sheet, chosen, read) if slot == right and typ[0] & 0x01 else None
+            new = _replacement(sheet, chosen, read) if (slot == right or packed) and typ[0] & 0x01 else None
+            if new is None and packed:
+                continue
             if new is None:
                 if typ[0] & kits.SHIELD and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                     out.append(f"{who}'s {name(item)} is left behind: a {kit} fights without a shield")
@@ -350,6 +368,8 @@ def kit_gear(gd) -> List[str]:
                 continue
             kind, weapon = new
             gd.guest.write(at, plain_weapon(item, kind, weapon)[0])
+            if packed:
+                pickpocket.place(gd, member, item_index, right)
             material = MATERIALS.get(read(weapon[0])[8] & 0x4F, "")
             out.append(f"{who} starts with a plain {material}{specialize.KINDS[kind]} in place of the "
                        f"{name(item)}: a {kit} can't use it")
