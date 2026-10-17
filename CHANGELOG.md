@@ -30,6 +30,16 @@ have the detail.
   Now each hit has a 75% chance (50% for Reflected Image) to strike an image
   instead, and so does a foe's spell for one creature; spells from the
   target's own side always get through. The dice log shows each d100.
+- **Armor lasts as long as it should**: it used a charge each time any spell
+  or blow landed on its wearer, as well as for the damage, so each hit cost
+  two and a friend's Bless one. Now one for each damaging hit.
+- **Share Strength's strength goes when the power ends**: the game looked for
+  it under the psionicist rather than the one who got it, who kept it (and
+  could end another of the psionicist's own effects instead).
+- **The preserver's Dispel Magic no longer silences**: it laid "No spell use"
+  on everyone it caught, the party too, which no dispelling ended. Now it only
+  dispels, as the cleric's does.
+- **Hold Undead holds only the undead**: it held living creatures too.
 - **A new game's arena could be left without its announcer, and new characters
   without their gear** (seen in 2.4.0): the Loader's starting gear, fitted
   just as START GAME rebuilt the game's item records, could use up the game's

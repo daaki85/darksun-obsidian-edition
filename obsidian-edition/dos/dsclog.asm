@@ -12994,6 +12994,7 @@ NS_ENTRY_STATUS equ NS_IMAGE + 3 ; 71DF5h: the status under a portrait
 SELL_KEEP equ NS_IMAGE + 4      ; 83D9Eh: a shop freeing an item sold
 SELL_PRICE equ NS_IMAGE + 5     ; 83CCAh: what a shop pays for an item
 NS_BLOW   equ NS_IMAGE + 6       ; 58A00h: a weapon's hit, which an image may take
+NS_HOLD   equ NS_IMAGE + 7       ; 7A333h: Hold Undead only on the undead
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13011,6 +13012,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_image
         cmp byte [cs:rl_site], NS_BLOW
         je ns_blow
+        cmp byte [cs:rl_site], NS_HOLD
+        je ns_hold
         cmp byte [cs:rl_site], SELL_KEEP
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
@@ -13335,6 +13338,26 @@ ns_blow:
         iret
 
 blow_chance dw 0
+
+; NS_HOLD: "or al,al / je +22h" (7A333h; 4 bytes) in the checks of what a spell (SI) can't do to
+; thing DI (7A1BFh), just after the game's test whether DI is undead (7BE20h: AL). Undead: on as
+; before, to the undead's immunities (7A337h). Not: on to the next check (7A359h), but for Hold
+; Undead (spell 31), which the game let hold anything: to the immunity's return (7A1F0h: the
+; spell does nothing).
+HOLD_UNDEAD equ 31
+HOLD_LIVING equ 0x7A359 - 0x7A336 ; (less the way back: the site's NOP)
+HOLD_IMMUNE equ 0x7A1F0 - 0x7A336
+ns_hold:
+        push bp
+        mov bp, sp
+        or al, al
+        jnz .out
+        add word [bp + 2], HOLD_LIVING
+        cmp si, HOLD_UNDEAD
+        jne .out
+        add word [bp + 2], HOLD_IMMUNE - HOLD_LIVING
+.out:   pop bp
+        iret
 blow_rand dw RAND_OFF, 0
 blow_charge dw CHARGE_OFF, 0
 

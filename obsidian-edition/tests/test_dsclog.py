@@ -2594,6 +2594,29 @@ class NewSpellTests(RuleTests):
         self.assertEqual(blow(41, d100(51))[0], 5)
         self.assertEqual(blow(40, d100(75))[0], miss)
 
+    def test_hold_undead(self):
+        """NS_HOLD (7A333h, "or al,al / jz", AL nonzero for an undead target, SI the spell): an
+        undead target goes on as before (the site's NOP); a living one is immune (7A1F0h) to Hold
+        Undead (spell 31) and takes any other spell as before (7A359h)."""
+        from dsloader import gamepatch
+        mu = self.mu
+        def hold(al, si):
+            self.at += 0x80
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_HOLD, 0x90)))
+            for back in (3, 0x7A359 - 0x7A333, 0x7A1F0 - 0x7A333):  # (a HLT at each way out)
+                mu.mem_write(CALLER * 16 + ((self.at + back) & 0xFFFF), b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    eax=al, esi=si).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_SI)), (0x800, si))
+            return (mu.reg_read(r.UC_X86_REG_IP) - self.at - 1) & 0xFFFF
+        self.assertEqual(hold(1, 31), 3)
+        self.assertEqual(hold(1, 40), 3)
+        self.assertEqual(hold(0, 31), (0x7A1F0 - 0x7A333) & 0xFFFF)
+        self.assertEqual(hold(0, 40), 0x7A359 - 0x7A333)
+
     def rules_hi(self, value):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
 

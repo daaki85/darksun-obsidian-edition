@@ -229,4 +229,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
 - **[Fixed]** The game's Sling +1 had no icon.
 - **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
+- **[Fixed]** **Armor** used up two charges for each hit, and one for any spell cast on its wearer, even a friend's Bless. Now one charge for each damaging hit.
+- **[Fixed]** **Share Strength** left its strength on the one who got it after the power ended.
+- **[Fixed]** The preserver's **Dispel Magic** also stopped everyone it caught from casting spells, your own party included. Now it only dispels.
+- **[Fixed]** **Hold Undead** held living creatures too. Now only the undead.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).

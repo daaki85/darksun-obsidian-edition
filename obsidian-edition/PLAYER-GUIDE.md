@@ -1407,6 +1407,13 @@ can cast. INT sets two limits:
   vanishing and the blow or spell lost; your own side's spells always get
   through. *Without the mod:* the images stopped no weapon blow, and took the
   caster's own Armor.
+- **Armor** uses a charge for each damaging hit. *Without the mod:* two for
+  each hit, and one for any spell landing on its wearer, a friend's Bless too.
+- **Share Strength** ends on its receiver when the power ends. *Without the
+  mod:* the receiver kept the strength.
+- **Dispel Magic** only dispels. *Without the mod:* the preserver's also stopped
+  everyone it caught casting spells, your own party too.
+- **Hold Undead** holds the undead only. *Without the mod:* it held anyone.
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
 - Cause Serious and Critical Wounds roll 2d9 and 3d9; Cure Light, Serious and
   Critical Wounds heal 1d8, 2d8+1 and 3d8+3.

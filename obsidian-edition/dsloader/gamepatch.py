@@ -129,6 +129,7 @@ NS_ENTRY_EF, NS_ENTRY_LOOK, NS_ENTRY_STATUS = NS_IMAGE + 1, NS_IMAGE + 2, NS_IMA
 SELL_KEEP = NS_IMAGE + 4  # (a shop freeing an item sold: DSCLOG keeps a magical one, buyback.py)
 SELL_PRICE = NS_IMAGE + 5  # (what a shop pays: half with the CHA prices rule, prices.sell_price)
 NS_BLOW = NS_IMAGE + 6  # (an attack's hit, which an image may take instead)
+NS_HOLD = NS_IMAGE + 7  # (Hold Undead on a target that isn't undead: immune)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -275,6 +276,32 @@ PATCHES = (
     # ... and the lists' ends
     *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"), bytes((0x81, 0xFE, NS_END, 0x00)))
       for offset in NS_LIST_ENDS),
+    # Bugs of the game's spells, fixed whatever the rules (DEVELOPMENT.md's "The game's spells"):
+    # Armor used a charge where any spell or blow landed on its wearer (7A557h, "je" past it
+    # unless the target has Armor, 2), as well as where damage is taken (79A3Eh): the jump
+    # always taken, so a damaging hit uses one charge and a friend's spell none ...
+    Patch("armor_charge", 0x7A557, bytes.fromhex("740b"), bytes.fromhex("eb0b")),
+    # ... a psionicist ending a maintained power removed each of its effects by the psionicist
+    # and the effect's handle (5CEBDh), not by the creature it is on (Share Strength's on the
+    # one it was shared with: another effect of the psionicist's went): pushed as the record's
+    # owner and handle (ES:BX still the record), the slot looked at again after a removal (the
+    # records move down), and only slots below the live count (DS:1E24h) looked at, not 192
+    # (the body skipped past it, where the loop's top had already set ES:BX); the "mov ax,390h"
+    # and the far call left where they were (their segments are fixed up) ...
+    Patch("power_end_live", 0x5CF00, bytes.fromhex("8bde6bdb0a"), bytes.fromhex("3b36241e90")),
+    Patch("power_end_skip", 0x5CF08, bytes.fromhex("8ec0"), bytes.fromhex("7d20")),
+    Patch("power_end_handle", 0x5CF11, bytes.fromhex("8bde6bdb0a"), bytes.fromhex("26ffb70d01")),
+    Patch("power_end_owner", 0x5CF19, bytes.fromhex("8ec0268a870d015057"),
+          bytes.fromhex("26ffb70601") + b"\x90" * 4),
+    Patch("power_end_again", 0x5CF27, bytes.fromhex("83c404"), bytes.fromhex("59594e")),
+    Patch("power_end_count", 0x5CF2B, bytes.fromhex("81fec0007cbb"), bytes.fromhex("3b36241e7cbb")),
+    # ... the preserver's Dispel Magic (spell 26) put "No spell use" (effect 50, which Dispel
+    # Magic itself never ends) on all it caught, the cleric's none: its record's effect 0 ...
+    Patch("dispel_effect", 0x422C9, bytes((50,)), bytes((0,))),
+    # ... and Hold Undead held anything: where the game has just asked whether the target is
+    # undead (7BE20h, AL), "or al,al / je +22h" (DSCLOG's NS_HOLD: Hold Undead on a living
+    # target goes to the immunity's return, 7A1F0h)
+    Patch("hold_undead", 0x7A333, bytes.fromhex("0ac07422"), _site(NS_HOLD, 4)),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:
     # the memory reserved for it, "push dword 1" before the size (DSCLOG adds room for more
     # names) ...

@@ -1561,6 +1561,32 @@ four, an image with it, and weapon blows come to that routine with no spell
   others over the attack's, and adding to the way back after the call would
   add to the manager's INT 3Fh stub.
 
+### The game's spells
+
+([In the README](README.md#spells-and-effects).) Four bugs mended whatever the
+rules (`gamepatch.py`, after `ns_blow`):
+
+- **Armor** (effect 2): the spell-landing routine (7A539h) used a charge when
+  any spell or blow landed on a target with Armor (7A557h, `je` past it
+  unless effect 2 is on), and the damage routine (79A3Eh) used another for the
+  damage. `armor_charge` makes the first jump always taken.
+- **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
+  removed each record of the power cast by DI with 598:48h (owner, handle), but
+  passed DI as the owner, so a receiver's record stayed (and a record of the
+  psionicist's own with that handle went instead); and after a removal
+  the records move down, so the next was skipped. `power_end_*` push each
+  record's own owner (+0) and handle (+7), step SI back after a removal, and
+  count to the live count (DS:1E24h) rather than 192; the `mov ax,390h` and
+  the far call are left where they were (their segments are fixed up).
+- **Dispel Magic** (spell 26, the preserver's): its record's effect (+19h) was
+  50, "No spell use", which Dispel Magic itself doesn't end; the cleric's
+  record has none. `dispel_effect` makes it 0.
+- **Hold Undead** (spell 31): the landing routine asks whether the target is
+  undead (7BE20h, AL) and, if not, goes on to 7A359h for any spell.
+  `hold_undead` puts DSCLOG's `NS_HOLD` site over its `or al,al / je +22h`
+  (7A333h): a living target of spell 31 goes to the immunity's way out
+  (7A1F0h).
+
 ### New wizard spells
 
 ([In the README](README.md#new-wizard-spells).)

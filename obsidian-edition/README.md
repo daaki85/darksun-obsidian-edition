@@ -883,8 +883,23 @@ A round is 60 game seconds. Some effects last a number of uses instead
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
+- Armor: its charges are the damage it takes before it fails. The game also
+  used one each time any spell or blow landed on the wearer, so each hit cost
+  two and a friend's Bless one. The Loader makes it one for each damaging hit.
 
 Charm, Feeblemind, Web and a few others last until removed.
+
+**Spells the Loader mends** (always, like Mirror Image and Armor above):
+- **Share Strength** (any maintained power on someone else), ended, left the
+  strength on the one who got it, and could end another of the psionicist's
+  own effects instead: the game looked for the power's effects under the
+  psionicist's number rather than each receiver's. Each one now goes when the
+  power ends.
+- **Dispel Magic** (the preserver's) also laid the game's "No spell use" on
+  everyone it caught, your own party included, and nothing ended it but its
+  time running out. It now only dispels, as the cleric's always did.
+- **Hold Undead** held living creatures too. It now works on the undead only;
+  anyone else is immune to it.
 
 **What effects do**, from the game's code:
 
