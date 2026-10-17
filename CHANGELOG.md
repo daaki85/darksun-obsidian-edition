@@ -37,6 +37,8 @@ have the detail.
   never began; walking said NO PATH FROM HERE), and the gear went nowhere. The
   Loader now waits until the game's item lists are settled. A game this
   happened to can't be mended: start a new one.
+- **The Options tab's Picking pockets box said each thief gets a set of
+  Thieves' Tools**; no one does (Mirlon and Kel have them), and it now says so.
 - **A Brute started with no weapon**: its long sword and club, which the game
   puts in the backpack, were left behind. The long sword now becomes its
   weapon spec's weapon (a great axe without weapon specialization), in hand,

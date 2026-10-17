@@ -990,8 +990,8 @@ class DiceLog:
 
     def _arena_ring(self, now: float) -> List[str]:
         """The helms' and boots' names for the rules; once the game's name table has DSCLOG's
-        names, the ring and tools from earlier versions named in them, and in the arena, the
-        ring itself, and a set of tools for each thief who hasn't had one."""
+        names, the ring and tools from earlier versions named in them; then new characters' gear,
+        the game's own party, and the watches of the Loader's people and items."""
         if now < self._ring_check:
             return []
         self._ring_check = now + RING_INTERVAL

@@ -614,8 +614,8 @@ as handy with a blade as any soldier. All that time spent fighting leaves
 little for the quieter arts.
 
 *Shinobi.* Spies trained in secret by the Veiled Alliance, who carry a few
-spells beside their knives. Their masters teach them only what they need: they
-can't read magical script, and they travel light.
+spells beside their knives. Their masters teach them only what they need, so
+a scroll is theirs only if they can make out its script, and they travel light.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
@@ -1379,6 +1379,8 @@ can cast. INT sets two limits:
 | 20-23 | 96-99% | all |
 | 24-25 | 100% | all |
 
+- **A Shinobi** learns only its own spells from scrolls, and first has to read
+  the scroll: a roll against its read languages, then INT's chance.
 - **Defilers sometimes carry scrolls:** each defiler in a fight has a 1 in 20
   chance of carrying a scroll of a random preserver spell, found on its body
   when it dies.
@@ -1400,6 +1402,11 @@ can cast. INT sets two limits:
   damage and duration alike. An elemental spell works only for a priest of
   that element.
 - **Area spells catch the caster** and the party.
+- **Mirror Image**'s images take each hit, and each foe's spell aimed at one
+  creature, three times in four (Reflected Image's half the time), the image
+  vanishing and the blow or spell lost; your own side's spells always get
+  through. *Without the mod:* the images stopped no weapon blow, and took the
+  caster's own Armor.
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
 - Cause Serious and Critical Wounds roll 2d9 and 3d9; Cure Light, Serious and
   Critical Wounds heal 1d8, 2d8+1 and 3d8+3.

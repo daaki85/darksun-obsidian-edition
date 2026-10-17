@@ -489,7 +489,7 @@ PATCHES = (
     # caster level routine (the spell levels it may cast; Dispel Magic) and of the routine giving
     # the level a spell is cast at (durations, damage); at a level up, CHOOSE A SPELL opened for it
     # (no preserver level), the highest spell level it may pick there and the list it picks from
-    # (its own spells); and no learning from scrolls
+    # (its own spells); a scroll of its own spells learnt once read (DSCLOG's SHINOBI_READ)
     Patch("cast_level", 0x81C06, bytes.fromhex("8b46fe"), _interrupt(VEC_CAST_LEVEL, 3)),
     Patch("spell_level", 0x5E3D1, bytes.fromhex("8bc7"), _interrupt(VEC_SPELL_LEVEL, 2)),
     # The level a spell's duration and damage take, where the game takes each class's (5E25Ch): a

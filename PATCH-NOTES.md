@@ -107,7 +107,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **Arcanist:** one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
-- **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, but is unable to read magical script.
+- **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, and learns its own from a scroll only if it can read it (its read languages).
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
@@ -125,7 +125,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
-- **[New]** **Picking pockets** with Thieves' Tools (Mirlon in the slave pens carries a set, Kel sells two); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
+- **[New]** **Picking pockets** with Thieves' Tools (Mirlon in the slave pens carries a set, and gives it to a thief leading the party who agrees to fetch his gem; Kel sells two); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.
 
@@ -208,7 +208,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was: it followed each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
-- **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message in it; if it freezes, a freeze report saves what it was doing.
+- **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message in it; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
 
@@ -228,4 +228,5 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
