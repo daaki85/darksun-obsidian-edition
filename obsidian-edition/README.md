@@ -93,6 +93,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Scrolling the map](#scrolling-the-map)
   - [The view in fights](#the-view-in-fights)
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
+- [The game's bugs, fixed](#the-games-bugs-fixed)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
     - [Saves under their names](#saves-under-their-names)
@@ -144,6 +145,10 @@ class.
   ([More saves and characters](#more-saves-and-characters)), a game speed
   setting ([Game speed](#game-speed)), crash reports, and no dragon asking for
   a word from the manual ([No manual check](#no-manual-check)).
+- **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
+  twice as fast, Share Strength never ending, Dispel Magic silencing the party,
+  Hold Undead holding the living, and more
+  ([The game's bugs, fixed](#the-games-bugs-fixed)).
 
 **What it changes on your computer.** The game's own files are never
 modified: the Loader runs a patched copy of the game, with copies of its data
@@ -874,32 +879,18 @@ A round is 60 game seconds. Some effects last a number of uses instead
 - Stoneskin: 1 a level + 1d4. Any damage uses a charge, even fire that gets
   through, but only blows are stopped.
 - Ironskin: 1d6 blows stopped.
-- Mirror Image: 1 a level + 1d4 images. The game's images take a spell for one
-  creature three times in four, whoever casts it (Armor cast on oneself too),
-  and never a weapon blow. The Loader makes them AD&D's: each hit, and each
+- Mirror Image: 1 a level + 1d4 images. With the Loader each hit, and each
   foe's spell for one creature (not an area's, a cone's or a wall's), has a 75%
   chance to strike an image instead, the image vanishing and the blow or spell
-  lost. The dice log shows each d100.
+  lost; the dice log shows each d100 (the game's own images worked otherwise:
+  see [The game's bugs, fixed](#the-games-bugs-fixed)).
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
-- Armor: its charges are the damage it takes before it fails. The game also
-  used one each time any spell or blow landed on the wearer, so each hit cost
-  two and a friend's Bless one. The Loader makes it one for each damaging hit.
+- Armor: a number of damaging hits, one charge each (with the Loader: see
+  [The game's bugs, fixed](#the-games-bugs-fixed)).
 
 Charm, Feeblemind, Web and a few others last until removed.
-
-**Spells the Loader mends** (always, like Mirror Image and Armor above):
-- **Share Strength** (any maintained power on someone else), ended, left the
-  strength on the one who got it, and could end another of the psionicist's
-  own effects instead: the game looked for the power's effects under the
-  psionicist's number rather than each receiver's. Each one now goes when the
-  power ends.
-- **Dispel Magic** (the preserver's) also laid the game's "No spell use" on
-  everyone it caught, your own party included, and nothing ended it but its
-  time running out. It now only dispels, as the cleric's always did.
-- **Hold Undead** held living creatures too. It now works on the undead only;
-  anyone else is immune to it.
 
 **What effects do**, from the game's code:
 
@@ -3405,6 +3396,25 @@ an effect's icon ends it in the game, so a stray click loses a spell. With the
 Loader a click leaves a spell on; a psionic power's effect still ends, as that
 is how a power is stopped. It is a change to the game itself (**A click on a
 spell's icon on the Effects screen leaves it on**, from the next start).
+
+## The game's bugs, fixed
+
+The patched game mends these whatever the Options tab says:
+
+| | The game | With the Loader |
+|---|---|---|
+| **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](#spells-and-effects)) |
+| **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
+| **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
+| **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
+| **Hold Undead** | Held living creatures too | The undead only; anyone else is immune |
+| **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
+| A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
+| The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
+
+Cilla's figure (the game gives the elf the half-elf woman's) has a switch:
+see [Elves and half-elves](#elves-and-half-elves). How the fixes work:
+[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
 
 ## More saves and characters
 

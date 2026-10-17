@@ -1530,7 +1530,7 @@ back (`busy_once`).
 
 ### Mirror Image
 
-([In the README](README.md#spells-and-effects).)
+([In the README](README.md#the-games-bugs-fixed).)
 
 The game's only use of the images is a d100 in the routine that lands a spell
 on its target (7A539h, from 78C19h; 7A5BFh, `cmp ax,4Bh` at 7A5CDh), for a
@@ -1563,8 +1563,9 @@ four, an image with it, and weapon blows come to that routine with no spell
 
 ### The game's spells
 
-([In the README](README.md#spells-and-effects).) Four bugs mended whatever the
-rules (`gamepatch.py`, after `ns_blow`):
+([In the README](README.md#the-games-bugs-fixed).) Four more bugs mended whatever
+the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
+`ns_list_` patches):
 
 - **Armor** (effect 2): the spell-landing routine (7A539h) used a charge when
   any spell or blow landed on a target with Armor (7A557h, `je` past it

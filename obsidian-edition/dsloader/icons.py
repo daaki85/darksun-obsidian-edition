@@ -367,11 +367,11 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Obsidian Great Axe", 0xFC06, 2576, 2577, lambda r: recolour(r, {1: 58, 2: 59, **TEAL_TO_OBSIDIAN})),
     # the bone Dagger (weaponchoice.py): the obsidian Dagger's, its blade in the bone weapons' whites
     ("Bone Dagger", 0xFB60, 2578, 2579, lambda r: recolour(r, DAGGER_BONE)),
-    # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
-    # hasn't: blank in a shop or a pack. The Sling's, every other pixel of its strap in the fire colours
     # the robes (robes.py), drawn (on the map: the Cloak's)
     ("Ashen Robe", 0xFBE3, 2580, 2581, ashen_robe_icon),
     ("Veiled Robe", 0xFBE3, 2582, 2583, veiled_robe_icon),
+    # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
+    # hasn't: blank in a shop or a pack. The Sling's, every other pixel of its strap in the fire colours
     ("Sling +1", 0xFC09, 2644, 2645, lambda r: glow(r, lambda p, x, y: 137 <= p <= 140 and (x + y) % 2 == 0, FIRE)),
     # the magic shields (worldgear.py): the game's wooden Shield, every other pixel of its rim in
     # the fire colours; its leather one in the metal long sword's greys, its whole rim burning

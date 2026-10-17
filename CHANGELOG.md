@@ -37,8 +37,8 @@ have the detail.
   it under the psionicist rather than the one who got it, who kept it (and
   could end another of the psionicist's own effects instead).
 - **The preserver's Dispel Magic no longer silences**: it laid "No spell use"
-  on everyone it caught, the party too, which no dispelling ended. Now it only
-  dispels, as the cleric's does.
+  on everyone it caught, the party too, which Dispel Magic can't remove. Now
+  it only dispels, as the cleric's does.
 - **Hold Undead holds only the undead**: it held living creatures too.
 - **A new game's arena could be left without its announcer, and new characters
   without their gear** (seen in 2.4.0): the Loader's starting gear, fitted
@@ -72,6 +72,12 @@ have the detail.
   data makes defilers (Balkazar, Wyrmias, Tara, the Troop Leader, the arena's
   Defiler, the Dark Spiders and the Spider Mother, the Hermit and three
   thri-kreen) carry one.
+
+**Documentation**
+- **[The game's bugs, fixed](obsidian-edition/README.md#the-games-bugs-fixed)**:
+  a README section with every bug of the game's own the Loader mends, the
+  spells' among them, and a line for them under What it does on both front
+  pages.
 
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 
