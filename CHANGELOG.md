@@ -87,7 +87,7 @@ have the detail.
 - **Rules the game got wrong** (the README's bug fixes, and a paragraph
   under the patch notes' Bug Fixes): the spell save, the doubled d20, two
   weapons, warriors' attacks, class restrictions, multiclass hit points,
-  rangers' spells, acid, helms, the class tables and thief skills, each with
+  rangers' spells, acid, the class tables and thief skills, each with
   what the game did and the rule that puts it right; the thief skills'
   equipment penalty among the bugs always fixed.
 - **Your saved games** (the patch notes, and the README's bug fixes): no new
