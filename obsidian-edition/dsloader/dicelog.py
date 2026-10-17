@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, mirlon, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, gamepatch, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, mirlon, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -114,6 +114,13 @@ RESISTANCE_ROLL_RETURN = bytes.fromhex("83c404508a460a50ff76")
 # Dispel Magic, for each effect on the target (the effect id in [BP-2], the dispeller's level
 # the handler's argument at +14h): d100 at or under 50 + 5 x (that level - the effect's level)
 DISPEL_ROLL_RETURN = bytes.fromhex("83c4045a3bd07c108a46")
+# Mirror Images taking a spell for one creature (7A5BFh): its d100 (1d100), compared with 75 by
+# DSCLOG's NS_IMAGE (50 for Reflected Image's; 0 from the target's own side), the spell's routine's
+# arguments (target, caster); and taking an attack's hit (DSCLOG's NS_BLOW): the game's rand() from
+# DSCLOG, its code after the call marked IMAGE, in a frame of (target, attacker, chance)
+IMAGE_SPELL_RETURN = bytes.fromhex("83c404cd98") + bytes((gamepatch.NS_IMAGE,))
+IMAGE_BLOW_SITE = b"\xeb\x05IMAGE"
+IMAGE_VANISH = 0xBF  # (the game's own sight of an image vanishing: a "spell" a creature casts on itself)
 # Abjure: d20, which must reach 11 - the caster's level + the target's level; a creature of
 # kind 14 (a summoned one) is then sent away (1000 damage)
 ABJURE_ROLL_RETURN = bytes.fromhex("83c4045a3bd07e03e968")
@@ -128,7 +135,7 @@ OVERLAY_TRAP = b"\xcd\x3f"
 # and the percentile check. The same list is built into DSCLOG.
 SCALED_ROLL = b"\x66\x0f\xbf\xc0"  # movsx eax, ax
 FILTERS = tuple(SCALED_ROLL + bytes.fromhex(h) for h in (
-    "666bc0", "6669c0", "66c1e0", "660fbf56")) + (PERCENT_SITE[:8],)
+    "666bc0", "6669c0", "66c1e0", "660fbf56")) + (PERCENT_SITE[:8], b"\xeb\x05IMAGE")  # (DSCLOG's NS_BLOW: IMAGE_BLOW_SITE)
 
 # The rolls at the start of each round (the code after each rand() call): initiative
 # 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties
@@ -1676,6 +1683,11 @@ class DiceLog:
             return self.flush(now, force=True) + self._attack(e)
         if code.startswith(DICE_SITE):
             return self._dice_roll(e, show_all, now)
+        if code.startswith(IMAGE_BLOW_SITE):
+            target, chance = e.arg(6), e.arg(0x0A)
+            if target is None or chance is None:
+                return []
+            return [self._image_line(target, scaled(e.raw, 100) + 1, chance, spell=False)]
         if code.startswith(CHECK_SITE):
             return self.flush(now, force=True) + self._check(e, show_all)
         if code.startswith(BREAK_ROLL_1) or code.startswith(BREAK_ROLL_2):
@@ -1689,6 +1701,16 @@ class DiceLog:
                 return [f"{generic[0]} = {generic[1]}  (at {where})"]
             return [f"rand() = {e.raw}  (at {where})"]
         return []
+
+    def _image_line(self, target: int, roll: int, chance: int, spell: bool) -> str:
+        """Mirror Images' d100 against a hit or a spell on TARGET: an image takes it on CHANCE or
+        less (0: a spell from the target's own side, which no image takes)."""
+        what = "spell" if spell else "blow"
+        head = f"    {EFFECT_NAMES[game.MIRROR_EFFECT]} on {self._name(target)}: d100 = {roll}"
+        if not chance:
+            return f"{head}, a spell from its own side -> no image takes it"
+        took = (f"an image is struck instead, the {what} lost" if roll <= chance else f"the {what} gets through")
+        return f"{head}, {chance} or less strikes an image -> {took}"
 
     def _thief_skill(self, e: Entry) -> List[str]:
         """A thief skill check (the game's routine at 803B8h): d100 under the skill's chance plus
@@ -1896,6 +1918,13 @@ class DiceLog:
                     f"+{faces[0]} while it lasts (at most {STR_MOST})"]
             if count == 1 and sides == 100 and e.parent_code.startswith(RESISTANCE_ROLL_RETURN):
                 return self._magic_resistance(e.parent_arg(6), e.parent_arg(8), faces[0])
+            if count == 1 and sides == 100 and (e.parent_code.startswith(IMAGE_SPELL_RETURN) or self._overlay_image(e)):
+                target, caster = e.parent_arg(6), e.parent_arg(8)
+                if target is None or caster is None or e.parent_arg(0x12) == IMAGE_VANISH:
+                    return []
+                ours = (target < game.PARTY_SIZE) == (caster < game.PARTY_SIZE)
+                return self.flush(now, force=True) + [
+                    self._image_line(target, faces[0], 0 if ours else self.game.image_chance(target), spell=True)]
             if count == 1 and sides == 100 and e.parent_code.startswith(DISPEL_ROLL_RETURN):
                 return self._dispel(e, faces[0])
             if count == 1 and sides == 20 and e.parent_code.startswith(ABJURE_ROLL_RETURN):
@@ -1908,6 +1937,8 @@ class DiceLog:
                     return self.flush(now, force=True) + [
                         f"    {EFFECT_NAMES[ACID]} on {who}: {count}d{sides} = {faces_text} = {sum(faces)} acid damage"]
                 # the 2d4 means nothing here: a Stoneskin, Ironskin, Mirror Image... used a charge
+                if eid == game.MIRROR_EFFECT:
+                    return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes"]
                 name = EFFECT_NAMES.get(eid, f"effect {eid}")
                 return [f"    {name} on {who}: one charge used"]
             handler = next((bonus for code, bonus in SPELL_HANDLER_RETURNS if e.parent_code.startswith(code)), None)
@@ -1982,6 +2013,18 @@ class DiceLog:
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         return ["  " + line]
+
+    def _overlay_image(self, e: Entry) -> bool:
+        """Mirror Images' d100 on a spell (IMAGE_SPELL_RETURN) when the overlay manager has
+        swapped its return address for an INT 3Fh stub (the dice routine's overlay loaded over
+        the spell's): known by the routine's arguments, (target, caster, ..., spell at +12h), a
+        spell cast on a target with Mirror Images on it."""
+        if not e.parent_code.startswith(OVERLAY_TRAP):
+            return False
+        target, caster, spell = e.parent_arg(6), e.parent_arg(8), e.parent_arg(0x12)
+        if target is None or caster is None or spell is None or not 0 <= spell < 0x100:
+            return False
+        return any(eff.owner == target and eff.id == game.MIRROR_EFFECT for eff in self.game.effects())
 
     def _overlay_duration(self, e: Entry, count: int, sides: int) -> bool:
         """The duration routine's roll when the overlay manager has swapped its return address

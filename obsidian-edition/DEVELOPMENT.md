@@ -1597,12 +1597,29 @@ copy of RESOURCE.GFF.
   (7A5BFh, `cmp ax,4Bh` at 7A5CDh, `NS_IMAGE`), the helper looks up the
   target's effect 25 and makes the chance 50 when the effect's spell is 199.
   That roll is the game's only use of the images: in the routine that lands
-  a spell on its target (7A539h, from 78C19h), for a spell of touch range
-  (618:20h, 8 or less); weapon blows come with no spell (-1) and skip it.
-  The game made no exception for the caster's own spells, so Armor cast on
-  oneself under Mirror Image was lost three times in four, an image with it;
-  the helper makes the chance 0 when the caster (DI) is the target (SI), or
-  both are party members (below 4).
+  a spell on its target (7A539h, from 78C19h), for a spell for one creature
+  (618:20h's 8 or less: the spell record's target kinds 3, 4, 5, 7 and 8, not
+  an area's, a cone's or a wall's); an image taking it uses a charge
+  (598:57h, 76803h) and shows it vanishing (7AD8Ah: "spell" 0BFh, cast by the
+  creature on itself). The game made no exception for the caster's own
+  spells, so Armor cast on oneself under Mirror Image was lost three times in
+  four, an image with it; the helper makes the chance 0 unless caster (DI) and
+  target (SI) are on opposite sides (party members below 4). The dice log
+  knows the roll by the code after the dice call (`IMAGE_SPELL_RETURN`), or,
+  with the overlay manager's INT 3Fh stub there, by the routine's arguments
+  (target, caster, spell at +12h) and Mirror Images on the target.
+- Weapon blows come to that routine with no spell (-1) and skip it, so the
+  game's images stopped none. `NS_BLOW` replaces the attack routine's
+  `cmp word [bp+1Ah],0` (58A00h, 5883Ah's, just after a hit is decided): with
+  Mirror Images on the target (`[494Ah]`), the helper rolls the d100 with the
+  game's own rand() (load segment:0822h), from a frame of (target, attacker,
+  chance) and with `jmp short +5 / "IMAGE"` after the call, which the Loader's
+  filters and `IMAGE_BLOW_SITE` know. On the chance or less it has the game
+  use a charge (598:57h, as for a spell) and sends the attack on as a miss
+  (58A46h, the miss sound): the way back, the miss's address already, goes in
+  a frame with BP that the overlay manager can fix up (598:57h is overlay
+  code and may load others over the attack's; adding to the way back after
+  the call would add to the manager's INT 3Fh stub).
   Where the game finds an effect's entry in the effects' table (its number
   times 6: the Effects screen's icons and names, 7ED37h, 7EEC9h, 7EF34h; the
   Look box's, 5FD1Ch; the status under a portrait, 71DF5h; `NS_ENTRY`), the

@@ -2519,7 +2519,7 @@ class NewSpellTests(RuleTests):
         from dsloader import gamepatch
         effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
         self.mu.mem_write(effects, struct.pack("<hhhBB", 2, 0, 19, 25, 0) + bytes(2)
-                          + struct.pack("<hhhBB", 5, 0, 199, 25, 0) + bytes(2))
+                          + struct.pack("<hhhBB", 1, 0, 199, 25, 0) + bytes(2))
         self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
         def greater(thing, roll, caster=40):
             flags = self.site(gamepatch.NS_IMAGE, esi=thing, edi=caster, eax=roll)
@@ -2528,12 +2528,71 @@ class NewSpellTests(RuleTests):
         self.rules(32)
         self.moved(1)
         self.assertEqual([greater(2, n) for n in (50, 51, 75, 76)], [False, False, False, True])
-        self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, True, True, True])
+        self.assertEqual([greater(1, n) for n in (50, 51, 75, 76)], [False, True, True, True])
         self.assertEqual([greater(2, n, caster) for n in (1, 75) for caster in (2, 0, 3)], [True] * 6)
         self.assertEqual([greater(40, n, 40) for n in (1, 100)], [True, True])
         self.assertEqual([greater(40, 75, 2), greater(2, 75, 41)], [False, False])
         self.rules(0)
-        self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, False, False, True])
+        self.assertEqual([greater(1, n) for n in (50, 51, 75, 76)], [False, False, False, True])
+
+    def test_image_spell_sides(self):
+        """NS_IMAGE: only a foe's spell (caster DI and target SI on opposite sides: party members
+        below 4) meets the images; one from the target's own side never does."""
+        from dsloader import gamepatch
+        def greater(thing, caster, roll=1):
+            flags = self.site(gamepatch.NS_IMAGE, esi=thing, edi=caster, eax=roll)
+            return not flags & 0x40 and bool(flags & 0x80) == bool(flags & 0x800)
+        self.rules(0)
+        self.assertEqual([greater(3, 3), greater(3, 0), greater(40, 40), greater(40, 41)], [True] * 4)
+        self.assertEqual([greater(3, 40), greater(40, 2)], [False, False])
+        self.assertEqual([greater(3, 40, 75), greater(3, 40, 76)], [False, True])
+
+    def test_image_blow(self):
+        """NS_BLOW (an attack's hit, "cmp word [bp+1Ah],0"): with Mirror Images on the target
+        ([494Ah]), the game's rand() (its d100: rand x 100 / 32768 + 1) at or under 75 (50 for
+        Reflected Image's) has the game use an image up (598:57h: target, 25) and the attack go
+        on as a miss (58A46h); over it, or with no images, on as before, the compare's flags kept."""
+        from dsloader import gamepatch
+        mu = self.mu
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        mu.mem_write(effects, struct.pack("<hhhBB", 40, 3, 19, 25, 0) + bytes((4, 0))
+                     + struct.pack("<hhhBB", 41, 3, 199, 25, 0) + bytes((1, 0)))
+        mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
+        load = (GAME_DS - 0x4356) & 0xFFFF
+        charge = ((load + 0x428F) & 0xFFFF) * 16 + 0x57  # (records its arguments at DS:600h)
+        mu.mem_write(charge, bytes.fromhex("558bec8b4606a300068b4608a302065dcb"))
+        mu.mem_write(load * 16 + 0x822, bytes.fromhex("a10007cb"))
+        def blow(target, raw, flag=0):
+            mu.mem_write(GAME_DS * 16 + 0x700, struct.pack("<H", raw))  # (rand(): mov ax,[700h] / retf)
+            mu.mem_write(GAME_DS * 16 + 0x494A, struct.pack("<H", target))
+            mu.mem_write(GAME_DS * 16 + 0x600, bytes(4))
+            mu.mem_write(SS * 16 + BP + 0x1A, struct.pack("<H", flag))
+            mu.mem_write(SS * 16 + BP + 0x18, struct.pack("<H", 2))
+            self.at += 0x80
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_BLOW, 0x90)))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)  # (to a HLT at either way out)
+            ip = mu.reg_read(r.UC_X86_REG_IP) - self.at
+            used = struct.unpack("<HH", bytes(mu.mem_read(GAME_DS * 16 + 0x600, 4)))
+            return ip, used, mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40
+        for at in range(self.at + 0x80, self.at + 0x80 * 12, 0x80):  # (a HLT past the site's NOP, and at the miss)
+            mu.mem_write(CALLER * 16 + at + 4, b"\xf4")
+            mu.mem_write(CALLER * 16 + at + 3 + 0x58A46 - 0x58A03, b"\xf4")
+        miss = 3 + 0x58A46 - 0x58A03 + 1
+        d100 = lambda n: (n - 1) * 0x8000 // 100 + 1  # (a rand() giving that d100)
+        self.rules(0)
+        self.assertEqual(blow(40, d100(75)), (miss, (40, 25), 0x40))
+        self.assertEqual(blow(40, d100(76)), (5, (0, 0), 0x40))
+        self.assertEqual(blow(40, d100(76), flag=1), (5, (0, 0), 0))
+        self.assertEqual(blow(42, d100(1)), (5, (0, 0), 0x40))  # (no images)
+        self.assertEqual(blow(41, d100(60))[0], miss)  # (the rule off: 75 for Reflected Image's too)
+        self.rules(32)
+        self.moved(1)
+        self.assertEqual(blow(41, d100(50))[:2], (miss, (41, 25)))
+        self.assertEqual(blow(41, d100(51))[0], 5)
+        self.assertEqual(blow(40, d100(75))[0], miss)
 
     def rules_hi(self, value):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))

@@ -184,6 +184,7 @@ NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 
 NEW_SPELLS_END = 202  # (past the last)
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
+IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
 FRIENDS_MOST, SPOOK_MOST = 25, 6
 FLAMING_SPHERE = 14  # (once Cat's Grace's place)
 
@@ -387,8 +388,8 @@ EFFECT_RULES = {
     # one, Improved Invisibility (timed) has none
     23: "attacking or casting at an enemy ends it, unless it is Improved Invisibility",
     24: "ends when it attacks or casts at an enemy",
-    25: ("a touch spell from a foe has a 75% chance (50% for Reflected Image's) to strike an image instead, "
-         "using one up and lost; weapon blows aren't stopped (the game's rule)"),
+    25: ("each hit, and each foe's spell for one creature, has a 75% chance (50% for Reflected Image's) "
+         "to strike an image instead, which vanishes"),
     29: "can't be Paralyzed or Slowed",
     33: "can't attack or cast harmful spells",
     34: "loses its turns, can't move, fails every saving throw",
@@ -942,6 +943,18 @@ class GameData:
             return []
         data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
         return [Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]) for i in range(count)]
+
+    def image_chance(self, combatant: int) -> int:
+        """The chance (percent) of an image of COMBATANT's Mirror Images taking a blow or a foe's
+        spell: 75, or 50 for one of Reflected Image (DSCLOG's IMAGE_CHANCE)."""
+        count = self._word(EFFECT_COUNT)
+        if 0 < count <= 400:
+            data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
+            for i in range(count):
+                owner, _, spell = struct.unpack_from("<hhh", data, i * 10)
+                if owner == combatant and data[i * 10 + 6] == MIRROR_EFFECT:
+                    return REFLECT_CHANCE if spell == REFLECT_SPELL else IMAGE_CHANCE
+        return IMAGE_CHANCE
 
     def _power_dice(self, spell: int) -> str:
         """" (1d10 crushing)": a monster's power's damage dice and kinds, from its record, to tell

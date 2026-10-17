@@ -199,6 +199,7 @@ filt:                           ; +34  up to 8 filters: a length (1-8), then tha
         db 7, 0x66,0x0F,0xBF,0xC0,0x66,0xC1,0xE0, 0     ; shl eax,n
         db 8, 0x66,0x0F,0xBF,0xC0,0x66,0x0F,0xBF,0x56   ; N = word [bp+x] (the dice routines)
         db 8, 0xBB,0x64,0x00,0x99,0xF7,0xFB,0x3B,0x56   ; percentile check
+        db 7, 0xEB,0x05,'IMAGE', 0                      ; NS_BLOW's d100 (an image taking a hit)
 NFILT   equ ($ - filt) / 9
         times (8 - NFILT) * 9 db 0
 skipped  dw 0                   ; +106 calls not recorded because no filter matched
@@ -12986,12 +12987,13 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         dw NS_CL, 0xC4
 NS_CMP_COUNT equ ($ - ns_cmp_sites) / 5
 NS_FIST   equ NS_CMP + NS_CMP_COUNT ; 58226h, a melee hit's magic (after NS_CMP's)
-NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a weapon's blow
+NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a spell
 NS_ENTRY_EF equ NS_IMAGE + 1    ; 7ED37h, 7EEC9h, 7EF34h: an effect's entry, the Effects screen's
 NS_ENTRY_LOOK equ NS_IMAGE + 2  ; 5FD1Ch: the Look box's
 NS_ENTRY_STATUS equ NS_IMAGE + 3 ; 71DF5h: the status under a portrait
 SELL_KEEP equ NS_IMAGE + 4      ; 83D9Eh: a shop freeing an item sold
 SELL_PRICE equ NS_IMAGE + 5     ; 83CCAh: what a shop pays for an item
+NS_BLOW   equ NS_IMAGE + 6       ; 58A00h: a weapon's hit, which an image may take
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13007,6 +13009,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_fist
         cmp byte [cs:rl_site], NS_IMAGE
         je ns_image
+        cmp byte [cs:rl_site], NS_BLOW
+        je ns_blow
         cmp byte [cs:rl_site], SELL_KEEP
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
@@ -13205,36 +13209,30 @@ ns_claw:
         popad
         iret
 
-; NS_IMAGE: "cmp ax,4Bh" (7A5CDh; 3 bytes) where a spell of touch range cast by thing DI on thing
-; SI with Mirror Images (25) on it strikes an image instead (the spell lost, an image gone) on a
-; d100 (AX) of 75 or less: 50 or less for one of Reflected Image (the effect's spell,
-; NS_EFFECT_SPELL), its flags into the INT's frame. Never one cast on oneself (the game's took
-; Armor cast on oneself), nor one a party member casts on another: 0, as if the d100 were over.
+; NS_IMAGE: "cmp ax,4Bh" (7A5CDh; 3 bytes) where a spell of thing DI lands on thing SI with Mirror
+; Images (25) on it: a spell for one creature (not an area's, a cone's or a wall's: 618:20h's 8 or
+; less), which strikes an image instead (the spell lost, an image gone) on a d100 (AX) of 75 or
+; less: 50 or less for one of Reflected Image (the effect's spell, NS_EFFECT_SPELL), its flags into
+; the INT's frame. Only a foe's: the game's took the caster's own too (Armor cast on oneself), a
+; friend's and an enemy's on its own side; with caster and target on one side (party members,
+; below 4, or not) the chance is 0, as if the d100 were over.
 IMAGE_CHANCE equ 75
 REFLECT_CHANCE equ 50
+IMAGE_PARTY equ 4
 ns_image:
         pushad
         push es
         mov di, sp
-        xor dx, dx
         mov ax, [ss:di + NS_SI]
         mov bx, [ss:di + NS_DI]
-        cmp ax, bx
-        je .cmp
-        cmp ax, 4
-        jae .theirs
-        cmp bx, 4
-        jb .cmp                 ; (party member to party member)
-.theirs:
-        mov dx, IMAGE_CHANCE
-        test byte [cs:rules], RULE_NEW_SPELLS
-        jz .cmp
-        mov ax, [ss:di + NS_SI]
-        mov cl, MIRROR_EFFECT
-        call ns_effect_spell
-        cmp ax, REFLECT_SPELL
+        call image_chance
+        cmp bx, IMAGE_PARTY
+        setb bl
+        cmp ax, IMAGE_PARTY
+        setb bh
+        cmp bl, bh
         jne .cmp
-        mov dx, REFLECT_CHANCE
+        xor dx, dx
 .cmp:   mov ax, [ss:di + NS_AX]
         cmp ax, dx
         pushf
@@ -13243,6 +13241,102 @@ ns_image:
         pop es
         popad
         iret
+
+; IMAGE_CHANCE: DX the chance (percent) of an image of thing AX taking a blow or a spell: 75, 50
+; for Reflected Image's (with RULE_NEW_SPELLS). DS the game's; the others kept.
+image_chance:
+        mov dx, IMAGE_CHANCE
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .out
+        push ax
+        push cx
+        mov cl, MIRROR_EFFECT
+        call ns_effect_spell
+        cmp ax, REFLECT_SPELL
+        pop cx
+        pop ax
+        jne .out
+        mov dx, REFLECT_CHANCE
+.out:   ret
+
+; NS_BLOW: "cmp word [bp+1Ah],0" (58A00h; 4 bytes) where an attack (the routine at 5883Ah, its
+; d20 rolled) hits combatant [494Ah], which the game's Mirror Images never stopped. With them on
+; it (25), a d100 with the game's rand (in a frame the Loader reads: [BP+6] the target, +8 the
+; attacker, its [BP+18h], +0Ah the chance; the code after the call is BLOW_ROLLED's) of
+; IMAGE_CHANCE or less (REFLECT_CHANCE for Reflected Image's) strikes an image instead: an image
+; used up as the game's spells use one (598:57h, 76803h: the effect ended with the last), and the
+; attack goes on as a miss (58A46h, its sound). That call is overlay code, which may load others
+; over the attack's: the way back (the miss's address already) is put in a frame the overlay
+; manager can fix up, as for PROBE_UNLOOK, and taken back from it as the manager left it. Else on as before, the compare's flags into the INT's frame.
+BLOW_TARGET equ 0x494A          ; DS: the attack's target (a combatant)
+BLOW_MISS equ 0x58A46 - 0x58A03 ; the miss, less the way back (the site's NOP)
+RAND_OFF equ 0x0822             ; the game's rand(), at the load segment
+CHARGE_STUB equ 0x428F          ; (DSUN.EXE) the stub segment of 598h: 57h uses a charge (who, effect)
+CHARGE_OFF equ 0x0057
+ns_blow:
+        sti
+        pushad
+        push es
+        mov di, sp
+        cmp word [bp + 0x1A], 0
+        pushf
+        pop ax
+        call ns_flags
+        mov ax, [BLOW_TARGET]
+        mov cl, MIRROR_EFFECT
+        call ns_has
+        jnz .out
+        call image_chance
+        mov [cs:blow_chance], dx
+        push dx
+        push word [bp + 0x18]
+        push ax
+        push dword 0
+        push bp
+        mov bp, sp
+        mov ax, ds
+        sub ax, DGROUP_SEG
+        mov [cs:blow_rand + 2], ax
+        call far [cs:blow_rand]
+..@blow_rolled:                  ; (the Loader knows the roll by the code from here)
+        jmp short .rolled
+        db 'IMAGE'
+.rolled:
+        pop bp
+        add sp, 10
+        mov cx, 100
+        mul cx
+        shl ax, 1
+        rcl dx, 1               ; (rand() x 100 / 32768: 0 to 99)
+        inc dx
+        cmp dx, [cs:blow_chance]
+        ja .out
+        mov bx, sp
+        add word [ss:bx + 34], BLOW_MISS ; (before the call: the overlay manager may leave its
+        push word [ss:bx + 36]  ;   trap in place of the way back, as a far call's frame with BP)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        sub ax, DGROUP_SEG - CHARGE_STUB
+        mov [cs:blow_charge + 2], ax
+        push word MIRROR_EFFECT
+        push word [BLOW_TARGET]
+        call far [cs:blow_charge]
+        add sp, 4
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.out:   pop es
+        popad
+        iret
+
+blow_chance dw 0
+blow_rand dw RAND_OFF, 0
+blow_charge dw CHARGE_OFF, 0
 
 ; NS_ENTRY: "imul ax,ax,6" or "imul bx,bx,6" (3 bytes) where the Effects screen (its icons and
 ; names: AX the effect, on the character on show), the Look box (BX, on thing [BP+0Ah]) and the

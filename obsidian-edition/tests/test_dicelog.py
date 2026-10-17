@@ -557,6 +557,40 @@ class SaveTests(unittest.TestCase):
                    parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
         self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Ironskin on Mountain Stalker: one charge used"])
 
+    def test_mirror_images(self):
+        """Mirror Images' d100: on a foe's spell (7A5BFh's 1d100, NS_IMAGE: the spell routine's
+        target and caster), none from the target's own side; on an attack's hit (DSCLOG's NS_BLOW:
+        the game's rand() from its code marked IMAGE, in a frame of target, attacker, chance); and
+        the image used up."""
+        log = make_game()
+        spell = lambda roll, caster: entry(raw_for(roll, 100), dicelog.DICE_SITE, words(0, 0, 1, 100),
+                                           words(0, 0, 0x29, caster), parent_code=dicelog.IMAGE_SPELL_RETURN)
+        head = "    Mirror Images on Mountain Stalker: d100 = "
+        self.assertEqual(log.describe(spell(30, 0)), [head + "30, 75 or less strikes an image -> an image is "
+                                                      "struck instead, the spell lost"])
+        self.assertEqual(log.describe(spell(76, 1)), [head + "76, 75 or less strikes an image -> the spell gets through"])
+        self.assertEqual(log.describe(spell(5, 0x2A)), [head + "5, a spell from its own side -> no image takes it"])
+        # the same with its return address taken by the overlay manager: the routine's arguments
+        # (target, caster, ..., spell at +12h) and Mirror Images on the target tell it
+        trapped = entry(raw_for(40, 100), dicelog.DICE_SITE, words(0, 0, 1, 100),
+                        words(0, 0, 0x29, 0, 0, 0, 0, 0, 8), parent_code=dicelog.OVERLAY_TRAP + bytes(8))
+        self.assertEqual(log.describe(trapped), [])
+        set_effects(log, [(0x29, 0, game.MIRROR_EFFECT)])
+        self.assertEqual(log.describe(trapped), [head + "40, 75 or less strikes an image -> an image is "
+                                                 "struck instead, the spell lost"])
+        # (and none for the game's sight of an image vanishing, cast by the creature on itself)
+        vanish = entry(raw_for(40, 100), dicelog.DICE_SITE, words(0, 0, 1, 100),
+                       words(0, 0, 0x29, 0x29, 0, 0, 0, 0, 0xBF), parent_code=dicelog.IMAGE_SPELL_RETURN)
+        self.assertEqual(log.describe(vanish), [])
+        blow = lambda roll, chance: entry(raw_for(roll, 100), dicelog.IMAGE_BLOW_SITE + bytes(8),
+                                          words(0, 0, 0x29, 0, chance))
+        self.assertEqual(log.describe(blow(50, 50)), [head + "50, 50 or less strikes an image -> an image is "
+                                                      "struck instead, the blow lost"])
+        self.assertEqual(log.describe(blow(76, 75)), [head + "76, 75 or less strikes an image -> the blow gets through"])
+        e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 25),
+                   parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
+        self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Mirror Images on Mountain Stalker: an image vanishes"])
+
     def test_strength_roll(self):
         log = make_game()
         e = entry(raw_for(6, 6), dicelog.DICE_SITE, words(0, 0, 1, 6), words(0, 0, 1, 0, 0, 0, HOLD_PERSON),

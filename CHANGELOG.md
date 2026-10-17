@@ -24,12 +24,14 @@ have the detail.
   thief agrees to fetch his gem ("It's a deal!"), he hands his set over.
 
 **Fixed**
-- **Mirror Image no longer takes a spell its caster casts on themself**
-  (seen in 2.4.0): Armor cast on oneself under Mirror Image was lost three
-  times in four, using up an image each time, so no Armor and fewer images.
-  A party member's spell on another is let through too. In the game, the
-  images take only touch spells, never weapon blows; the Loader's lines and
-  the docs, which said weapon blows, now say so.
+- **Mirror Image works as it says** (seen in 2.4.0). The game's images
+  stopped no weapon blow at all, and took any spell for one creature, the
+  caster's own too: Armor cast on oneself under Mirror Image was lost three
+  times in four, an image with it. Now each hit has a 75% chance (50% for
+  Reflected Image) to strike an image instead, the image vanishing and the
+  blow lost, and of spells only a foe's for one creature can (not an area's);
+  one's own, a friend's, and an enemy's on its own side always get through.
+  The dice log shows each d100.
 - **A new game's arena could be left without its announcer, and new characters
   without their gear** (seen in 2.4.0): the Loader fits new characters'
   starting gear on the creation screen, and

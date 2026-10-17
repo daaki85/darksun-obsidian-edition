@@ -122,12 +122,13 @@ NS_CMP_SITES = (
 # the lists of spells a member knows, may learn, may cast (500:25h, 2Ah, 2Fh): "cmp si,8Ah", the
 # end of their loops, made the new spells' end (their rows are empty while the rule is off)
 NS_FIST = NS_CMP + len(NS_CMP_SITES)  # (a melee hit's magic: after NS_CMP's)
-NS_IMAGE = NS_FIST + 1  # (an image taking a touch spell: Reflected Image's chance, none from oneself or a friend)
+NS_IMAGE = NS_FIST + 1  # (an image taking a spell: Reflected Image's chance, only a foe's)
 # an effect's entry in the effects' table (its number times 6): Reflected Image's own name and icon
 # where Mirror Images is its (DSCLOG's NS_ENTRY): the Effects screen's, the Look box's, a portrait's
 NS_ENTRY_EF, NS_ENTRY_LOOK, NS_ENTRY_STATUS = NS_IMAGE + 1, NS_IMAGE + 2, NS_IMAGE + 3
 SELL_KEEP = NS_IMAGE + 4  # (a shop freeing an item sold: DSCLOG keeps a magical one, buyback.py)
 SELL_PRICE = NS_IMAGE + 5  # (what a shop pays: half with the CHA prices rule, prices.sell_price)
+NS_BLOW = NS_IMAGE + 6  # (an attack's hit, which an image may take instead)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -252,9 +253,12 @@ PATCHES = (
     # ... a melee hit's magic, as the hit's damage kinds get it: cmp word [bp-0Ch],0 (Erdlu Claw's
     # +1 to hit and +1 weapon for a natural attack) ...
     Patch("ns_fist", 0x58226, bytes.fromhex("837ef400"), _site(NS_FIST, 4)),
-    # ... the d100 an image takes a touch spell on: cmp ax,4Bh (75; Reflected Image's one 50; never
-    # one cast on oneself or by a party member on another) ...
+    # ... the d100 an image takes a spell on: cmp ax,4Bh (75; Reflected Image's one 50; only a
+    # foe's, caster and target on opposite sides) ...
     Patch("ns_image", 0x7A5CD, bytes.fromhex("3d4b00"), _site(NS_IMAGE, 3)),
+    # ... an attack's hit, before its damage: cmp word [bp+1Ah],0 (an image may take it instead,
+    # the game's Mirror Images having stopped none) ...
+    Patch("ns_blow", 0x58A00, bytes.fromhex("837e1a00"), _site(NS_BLOW, 4)),
     # ... an effect's entry, by its number times 6: Reflected Image's for its Mirror Images ...
     Patch("ns_entry_name", 0x7ED37, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),
     Patch("ns_entry_icon", 0x7EEC9, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),

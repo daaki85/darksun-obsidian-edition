@@ -1414,8 +1414,8 @@ can cast. INT sets two limits:
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
     in a clear line, for 2d4 rounds unless it saves: −3 to its attacks, +2 to
     attacks on it.
-  - **Reflected Image** (1st level, on the caster): one image, which a foe's
-    touch spell strikes half the time instead of the caster, and which then
+  - **Reflected Image** (1st level, on the caster): one image, which a hit or a
+    foe's spell strikes half the time instead of the caster, and which then
     vanishes.
     It and Mirror Image replace each other; Dispel Magic ends it.
   - **Spook** (1st level): one creature flees in fear for 3 rounds unless it
@@ -1475,7 +1475,7 @@ An Elementalist has its second sphere's column too.
 | Blind | AC 4 worse, −2 initiative; can't cast spells that need sight |
 | Acid | 2d4 a round |
 | Poisoned | fatal if time passes out of a fight (resting, for one) before it wears off or is cured |
-| Stoneskin, Mirror Image | each blow stopped, or image struck, uses a charge (images take only a foe's touch spells, not weapon blows) |
+| Stoneskin, Mirror Image | each blow stopped, or image struck, uses a charge (an image takes a hit, or a foe's spell for one creature, three times in four) |
 | Invisible | ends with an attack or a harmful spell (Improved Invisibility doesn't) |
 
 ## Psionics
