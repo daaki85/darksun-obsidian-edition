@@ -1590,7 +1590,7 @@ magic weapons are also marked \* in each class's list.
 | Metal pick, metal polearm | the game's, in metal |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
-| Thieves' Tools | [picking pockets](#thieves-skills-and-picking-pockets); Mirlon in the slave pens carries a set (a thief who takes his deal gets it), Kel sells two |
+| Thieves' Tools | [picking pockets](#thieves-skills-and-picking-pockets); Mirlon in the slave pens carries a set (a thief leading the party who takes his deal gets it), Kel sells two |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.

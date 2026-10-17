@@ -25,35 +25,24 @@ have the detail.
 
 **Fixed**
 - **Mirror Image works as it says** (seen in 2.4.0). The game's images
-  stopped no weapon blow at all, and took any spell for one creature, the
-  caster's own too: Armor cast on oneself under Mirror Image was lost three
-  times in four, an image with it. Now each hit has a 75% chance (50% for
-  Reflected Image) to strike an image instead, the image vanishing and the
-  blow lost, and of spells only a foe's for one creature can (not an area's);
-  one's own, a friend's, and an enemy's on its own side always get through.
-  The dice log shows each d100.
+  stopped no weapon blow, and took the caster's own spells: Armor cast on
+  oneself under Mirror Image was lost three times in four, an image with it.
+  Now each hit has a 75% chance (50% for Reflected Image) to strike an image
+  instead, and so does a foe's spell for one creature; spells from the
+  target's own side always get through. The dice log shows each d100.
 - **A new game's arena could be left without its announcer, and new characters
-  without their gear** (seen in 2.4.0): the Loader fits new characters'
-  starting gear on the creation screen, and
-  a change made just as START GAME rebuilt the game's item records wrote over
-  the head of its free list of them. With no free item record left, the arena
-  couldn't put its things on the map (the announcer among them: the opening
-  fight never began, and walking said NO PATH FROM HERE), and the Loader's
-  gear went nowhere (a Spellarcher with nothing, a Brute with no weapon). The
-  Loader now changes item lists only while the game's free lists of items and
-  things stay the same over 60 ms (not while it builds them afresh), and gives
-  up a change if the game's free list moved under it. A game this happened to
-  can't be mended: start a new one.
-- **A Brute's starting long sword and club left behind**, the Brute with no
-  weapon: the game puts them in the backpack (the kit forbids them in hand),
-  and the Loader looked for the long sword only in the hand, and with class
-  restrictions on left both behind as "their classes can't use it". The long
-  sword is now made the weapon spec's weapon (or, without weapon
-  specialization, a great axe) and put in the right hand, the club left
-  behind as the kit's ("a Brute fights with two-handed weapons only"). What
-  only a kit forbids is left to the kit's gear, and armour only a kit forbids
-  is left behind naming the kit ("a Shadowblade can't wear it").
-
+  without their gear** (seen in 2.4.0): the Loader's starting gear, fitted
+  just as START GAME rebuilt the game's item records, could use up the game's
+  free records. The arena then couldn't place its announcer (the opening fight
+  never began; walking said NO PATH FROM HERE), and the gear went nowhere. The
+  Loader now waits until the game's item lists are settled. A game this
+  happened to can't be mended: start a new one.
+- **A Brute started with no weapon**: its long sword and club, which the game
+  puts in the backpack, were left behind. The long sword now becomes its
+  weapon spec's weapon (a great axe without weapon specialization), in hand,
+  and the club is left behind as the kit's ("a Brute fights with two-handed
+  weapons only"). Armour only a kit forbids is left behind naming the kit ("a
+  Shadowblade can't wear it").
 - **No crash report when DOSBox closed while the game still ran** (a freeze,
   DOSBox stopping with an error of its own, or its window closed): a report
   was saved only for an error code or the game's own error. GAMEEND.COM now

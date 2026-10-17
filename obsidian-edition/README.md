@@ -874,11 +874,12 @@ A round is 60 game seconds. Some effects last a number of uses instead
 - Stoneskin: 1 a level + 1d4. Any damage uses a charge, even fire that gets
   through, but only blows are stopped.
 - Ironskin: 1d6 blows stopped.
-- Mirror Image: 1 a level + 1d4 images. Each hit, and each foe's spell for one
-  creature (not an area's, a cone's or a wall's), has a 75% chance to strike an
-  image instead: the image vanishes and the blow or spell is lost. The dice log
-  shows each d100. (The game's own images stopped no blow, and took the
-  caster's own spells: Armor cast on oneself.)
+- Mirror Image: 1 a level + 1d4 images. The game's images take a spell for one
+  creature three times in four, whoever casts it (Armor cast on oneself too),
+  and never a weapon blow. The Loader makes them AD&D's: each hit, and each
+  foe's spell for one creature (not an area's, a cone's or a wall's), has a 75%
+  chance to strike an image instead, the image vanishing and the blow or spell
+  lost. The dice log shows each d100.
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
@@ -1187,12 +1188,12 @@ doors, walls...), which ask in two ways. Every script in GPLDATA.GFF decodes
 A party check always goes to the member with the best chance. (The game also
 has a script command that lets each member try in turn, but no script uses it.)
 
-**Move silently, hide in shadows and read languages are never rolled** anywhere
-in the game, so they make no difference; nor does the equipment penalty on
-them. (The Loader rolls move silently when a pocket isn't picked, see
-[Picking pockets](#picking-pockets), and hide in shadows and move silently in
-fights, to [backstab](#hiding-in-shadows-to-backstab), and read languages
-when a [Shinobi](#thief-kits) reads a scroll.) The scripts also make
+**The game never rolls move silently, hide in shadows or read languages**, so
+on their own they make no difference, nor does the equipment penalty on them.
+The Loader rolls them: move silently when a pocket isn't picked
+([Picking pockets](#picking-pockets)), hide in shadows and move silently in
+fights ([backstabs](#hiding-in-shadows-to-backstab)), and read languages when
+a [Shinobi](#thief-kits) reads a scroll. The scripts also make
 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
 `python -m dsloader checks` lists them all with the script's text around
@@ -1922,7 +1923,7 @@ armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
+| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear; with fuller starting gear, a cloak | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
 | **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric or druid |
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
 
@@ -1932,9 +1933,9 @@ A thief starts with a bone long sword, sling, leather chest armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear | |
+| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear; with fuller starting gear, a cloak | |
 | **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
-| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and [Fogbolt, Reflected Image, Spook and Friends](#new-wizard-spells) with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th; one of its own learnt from a scroll too, if it first reads it (a d100 against its **read languages**) and then, with the rule for INT on, learns it (INT's chance): a failed roll uses the scroll up | no spell but its own from a scroll; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (after changing class too); no shield | a bone short sword in place of the long sword | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
+| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and [Fogbolt, Reflected Image, Spook and Friends](#new-wizard-spells) with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th; one of its own learnt from a scroll too, if it first reads it (a d100 against its **read languages**) and then, with the rule for INT on, learns it (INT's chance): a failed roll uses the scroll up | no spell but its own from a scroll; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (after changing class too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
 
 #### Preserver kits
 
@@ -2718,7 +2719,7 @@ them:
 | ![](docs/items/metal-polearm.png) | **Metal Polearm** | carried by one of the six **Castle Guards** of the Upper Castle; an earth cleric's starting polearm | the game's polearm, in metal |
 | ![](docs/items/bone-scale-arm-armor.png) ![](docs/items/bone-scale-leg-armor.png) ![](docs/items/bone-helm.png) | **Bone Scale Arm Armor**, **Leg Armor** and **Bone Helm** | in the slave pens' chest with the Bone Scale Chest Armor and Arrows +3 (the game has the set but places only the chest piece) | the set; the helm AC 1 with [Helms give AC 1](#helms), worn by those who can wear the armour (not thieves) |
 | ![](docs/items/leather-helm.png) | **Helm** | in **Kurzak**'s pack, in the slave pens | the game's leather helm |
-| ![](docs/items/thieves-tools.png) | **Thieves' Tools** | on **Mirlon** in the slave pens (he gives them to a thief who takes his deal); sold by **Kel** in his caravan (two sets, 30 each) | [picking pockets](#picking-pockets) |
+| ![](docs/items/thieves-tools.png) | **Thieves' Tools** | on **Mirlon** in the slave pens (he gives them to a thief leading the party who takes his deal); sold by **Kel** in his caravan (two sets, 30 each) | [picking pockets](#picking-pockets) |
 
 The bone and obsidian weapons are also new characters' starting weapons with
 [weapon specialization](#weapon-specialization), each in a material the

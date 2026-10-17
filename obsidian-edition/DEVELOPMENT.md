@@ -847,6 +847,18 @@ spells of a full level, and `PROBE_PICK_ANY` (`PICK_INT_ANY`) doesn't open
 CHOOSE A SPELL when no unknown wizard spell is left at a level on offer that
 isn't full.
 
+A Shinobi (kits): the same check whether the character on show may learn its
+spell (8B6D3h, `or ax,ax` before the jump to CANNOT LEARN FROM THIS ITEM) goes
+to `SHINOBI_READ` (from `PROBE_SCROLL_LEARN`): not one of its spells, no (`A
+SHINOBI CAN NOT LEARN THAT SPELL`, the scroll kept); else a d100 against its
+read languages, which the Loader keeps for each party member in the header
+(`+362`, with STATS: `game.thief_skills_now`'s skill 7, armour and effects
+counted), and above it the game teaches the spell and uses the scroll up, and
+`PROBE_LEARN_SAID` takes it back (`YOU CAN NOT READ THE SCROLL`); read,
+`INT_LEARN`'s d100 against INT's chance with the rule for INT (no most a
+level). The try goes to the Loader as a preserver's (`+272`), with the read
+roll and chance at `+366` (`intlearn.line`).
+
 ### AD&D's class tables
 
 ([In the README](README.md#adds-class-tables); `tables.py`.)
@@ -1193,7 +1205,7 @@ emulated tests hold the helper to it:
 | a power's PSP | Mind Bender, Kineticist, Titan Mind (psychometabolism 2 less, telepathy 2 more) (by discipline: powers 0-5 psychokinesis, 6-19 psychometabolism, 20-33 telepathy, the defence modes among them; never below 1) | the powers' table (8 bytes a power, at the load segment + 3FB9h: `+1` the cost to use, `+2` to keep up, 63h for none; `+5` FEh for a defence mode). `PROBE_PSP_USE` (`INT B4h`, new: where the routine using a power has its cost in DI, its table's or worked out for Enhanced Strength and Domination, DSUN.EXE 5CBE7h), `PROBE_PSP_TABLE` (`INT B3h`, new: the table's cost read in the check whether a power can be used, 5CAA3h, and for the half a failed power costs, 5CCA2h), `PROBE_PSP_DEFENCE` (`INT B2h`, new: a defence mode's cost taken off, 5D820h); `kits.psp_cost`. Monsters' powers (5A773h) are left alone |
 | a cure's healing | Healer (+1 a die of Cure Light, Serious, Critical Wounds: spells 71, 112, 127), Lifebinder (a die more: a d8, Blood Flow's, 108, a d6, rolled from the game's rand() seed by `GAME_DIE`), Rescuer (as the Healer, its caster's `KIT_OUTDOORS` bit set) | `PROBE_CURE` (`INT B1h`, new: "nop / push cs" at DSUN.EXE 79619h in the handler for spells with rules of their own, where the healing, pushed with the target, goes to the routine that heals; the caster its `[BP+8]`, the spell `[BP+0Eh]`; the probe pushes CS itself). The Cell Adjustment's jump into 79618h is clear of it |
 | casting level | Seeker (the ranger level less 5), Justifier (less 9), Shinobi (for its wizard spells, the thief level less 5) | the game works it out in two places, both with the combatant and the spell as arguments. The caster level routine, 81B16h, counts a ranger's level 7 less: `PROBE_RANGER_CAST` (`INT AFh`, new: that "sub dx,7", 81B6Ah) makes it the kits' 5 and 9, and `PROBE_CAST_LEVEL` (`INT ACh`, new: its end, `mov ax,[bp-2]`, 81C06h) gives a Shinobi its level for a wizard spell. That routine sets the spell levels a caster may cast, half the caster level rounded up (81664h, which asks for spell 0: the USE screen's lists and slots), and weighs a spell against Dispel Magic. The level a spell's duration and damage take is another routine's, 5E25Ch (the best level of the caster's classes that cast it, a ranger's whole; the cast passes it down to the duration, 76CB3h, and the damage dice, 76DA2h): `PROBE_SPELL_LEVEL` (`INT A8h`, new: its end, `mov ax,di`, 5E3D1h) gives the Shinobi its own; `PROBE_RANGER_LEVEL` (`INT A6h`, new: `mov al,es:[bx+24h]`, 5E3B8h, where it takes each class's level) takes the Seeker's 5 and the Justifier's 9 off its ranger level (and a plain ranger's 7, with the [rangers' casting level](#rangers-casting-level) rule). `kits.ranger_cast_drop`, `kits.cast_level`, `kits.spell_class_level`, and `GameData.effect_caster_level` |
-| wizard spells for a thief | Shinobi | slots: `PROBE_SLOTS` gives a Shinobi's wizard slots the Seeker's table by its thief level (`kits.slots`). Its spells known are the party's table of them (at the load segment + 3800h, from 168h: 8Ah bytes a member, a byte a spell, not 0 if known), and the USE screen lists and casts them as any preserver's. Learning: a level up as a thief from 6th goes on as a preserver's would (`PROBE_LV_PICK`'s `LV_SHINOBI`) to the routine that offers a preserver its spell (620:5Ch, 85560h), which takes the preserver level and goes on only for one, and then only if the game's list (500:2Ah) has a spell to learn: `PROBE_PICK_ANY` (`INT A7h`, new: `mov [bp-2],ax / or ax,ax`, 85580h) opens CHOOSE A SPELL (85771h) for a Shinobi with one of its spells unknown up to the level it casts. There `PROBE_PICK_LEVEL` (`INT ABh`, new: `inc al`, 85861h, the preserver level the highest spell level on offer is half of) gives it its casting level, and `PROBE_PICK_LIST` (`INT AAh`, new: `mov di,ax`, 8563Fh, after the game fills the list, at the segment of the `mov ax,348h` before it, `+7`, a word a spell; the character at its `+25Bh`; the highest spell level `DS:[4AECh]`) puts its own unknown spells in the list (`kits.pick_list`). A scroll: the game's check whether the character on show may learn its spell (8B6D3h, `or ax,ax` before the jump to CANNOT LEARN FROM THIS ITEM) goes to `SHINOBI_READ` for a Shinobi (`PROBE_SCROLL_LEARN`, `INT A9h`, new): not one of its spells, no (`A SHINOBI CAN NOT LEARN THAT SPELL`, the scroll kept); else a d100 against its read languages, which the Loader keeps for each party member in the header (`+362`, with STATS: `game.thief_skills_now`'s skill 7, armour and effects counted), and above it the game teaches the spell and uses the scroll up, and `PROBE_LEARN_SAID` takes it back (`YOU CAN NOT READ THE SCROLL`); read, `INT_LEARN`'s d100 against INT's chance with the rule for INT (no most a level). The try goes to the Loader as a preserver's (`+272`), with the read roll and chance at `+366` (`intlearn.line`). Armour: the game has no armour rule for a single class's spells (the multiclass preserver's is the class restrictions'), so it casts in the light armour it may wear |
+| wizard spells for a thief | Shinobi | slots: `PROBE_SLOTS` gives a Shinobi's wizard slots the Seeker's table by its thief level (`kits.slots`). Its spells known are the party's table of them (at the load segment + 3800h, from 168h: 8Ah bytes a member, a byte a spell, not 0 if known), and the USE screen lists and casts them as any preserver's. Learning: a level up as a thief from 6th goes on as a preserver's would (`PROBE_LV_PICK`'s `LV_SHINOBI`) to the routine that offers a preserver its spell (620:5Ch, 85560h), which takes the preserver level and goes on only for one, and then only if the game's list (500:2Ah) has a spell to learn: `PROBE_PICK_ANY` (`INT A7h`, new: `mov [bp-2],ax / or ax,ax`, 85580h) opens CHOOSE A SPELL (85771h) for a Shinobi with one of its spells unknown up to the level it casts. There `PROBE_PICK_LEVEL` (`INT ABh`, new: `inc al`, 85861h, the preserver level the highest spell level on offer is half of) gives it its casting level, and `PROBE_PICK_LIST` (`INT AAh`, new: `mov di,ax`, 8563Fh, after the game fills the list, at the segment of the `mov ax,348h` before it, `+7`, a word a spell; the character at its `+25Bh`; the highest spell level `DS:[4AECh]`) puts its own unknown spells in the list (`kits.pick_list`). A scroll: see [Preservers' INT](#preservers-int). Armour: the game has no armour rule for a single class's spells (the multiclass preserver's is the class restrictions'), so it casts in the light armour it may wear |
 | spells learnt at a level up | Scholar (one more) | `PROBE_LV_PICK`'s `LV_SCHOLAR`: at a preserver's level up, the routine offering its spell (620:5Ch, its far call read from the code after the probe) called once before the game's own |
 | a power's PSP to keep it up | Mind Bender, Kineticist (as the cost to use it; 63h, none, left alone) | `PROBE_PSP_KEEP` (`INT B0h`, new: the table's `+2` read where the round's cost is taken, 5CE49h, the combatant in SI) and `PROBE_PSP_KEEP_DX` (`INT AEh`, new: the check whether a power can be kept up, 5CB02h, the combatant in DX). The monsters' cost lookups (5D4DAh, 5D4EFh) are left alone |
 | the off hand | Healer (no weapon), Battle Mage (nothing) | `PROBE_CAN_USE`'s `KIT_FORBIDS` with `KF_OFF_HAND`: the can-use routine's only caller is the equip routine (6EF52h), whose `[BP+8]` is the slot (the item's slot + 4: 7 the right hand, 14 the left, the off hand; 18 on the backpack), read through the can-use routine's saved BP |
@@ -1516,6 +1528,39 @@ asks for flag 55 to be 2, which it never is (`no_key_chase`), and the busy line
 jumps to code after the script's end that clears flag 51, says it and jumps
 back (`busy_once`).
 
+### Mirror Image
+
+([In the README](README.md#spells-and-effects).)
+
+The game's only use of the images is a d100 in the routine that lands a spell
+on its target (7A539h, from 78C19h; 7A5BFh, `cmp ax,4Bh` at 7A5CDh), for a
+spell for one creature (618:20h's 8 or less: the spell record's target kinds 3,
+4, 5, 7 and 8, not an area's, a cone's or a wall's). An image taking it uses a
+charge (598:57h, 76803h) and shows it vanishing (7AD8Ah: "spell" 0BFh, cast by
+the creature on itself). The game made no exception for the caster's own
+spells, so Armor cast on oneself under Mirror Image was lost three times in
+four, an image with it, and weapon blows come to that routine with no spell
+(-1) and skip the roll, so the images stopped none.
+
+- **Spells** (`NS_IMAGE`, at 7A5CDh): the chance is 0 unless caster (DI) and
+  target (SI) are on opposite sides (party members below 4); else 75, or 50
+  for Reflected Image's (`IMAGE_CHANCE`). The dice log knows the roll by the
+  code after the dice call (`IMAGE_SPELL_RETURN`), or, with the overlay
+  manager's INT 3Fh stub there, by the routine's arguments (target, caster,
+  spell at +12h) and Mirror Images on the target; the vanishing's roll
+  (spell 0BFh) goes unmentioned.
+- **Blows** (`NS_BLOW`, replacing the attack routine's `cmp word [bp+1Ah],0`
+  at 58A00h, 5883Ah's, just after a hit is decided): with Mirror Images on the
+  target (`[494Ah]`), the helper rolls the d100 with the game's own rand()
+  (load segment:0822h), from a frame of (target, attacker, chance) and with
+  `jmp short +5 / "IMAGE"` after the call, which the Loader's filters and
+  `IMAGE_BLOW_SITE` know. On the chance or less it has the game use a charge
+  (598:57h, as for a spell) and sends the attack on as a miss (58A46h, the
+  miss sound). The way back, the miss's address already, goes in a frame with
+  BP that the overlay manager can fix up: 598:57h is overlay code and may load
+  others over the attack's, and adding to the way back after the call would
+  add to the manager's INT 3Fh stub.
+
 ### New wizard spells
 
 ([In the README](README.md#new-wizard-spells).)
@@ -1593,33 +1638,9 @@ copy of RESOURCE.GFF.
 - Reflected Image is Mirror Image's record (19) with one image (`+4` 11h,
   1d1), so it is Mirror Image's effect 25 and replaces it, and either recast
   replaces the last, as the game does for Mirror Image; Dispel Magic ends it
-  as it ends Mirror Image. Where a spell rolls d100 against the images
-  (7A5BFh, `cmp ax,4Bh` at 7A5CDh, `NS_IMAGE`), the helper looks up the
-  target's effect 25 and makes the chance 50 when the effect's spell is 199.
-  That roll is the game's only use of the images: in the routine that lands
-  a spell on its target (7A539h, from 78C19h), for a spell for one creature
-  (618:20h's 8 or less: the spell record's target kinds 3, 4, 5, 7 and 8, not
-  an area's, a cone's or a wall's); an image taking it uses a charge
-  (598:57h, 76803h) and shows it vanishing (7AD8Ah: "spell" 0BFh, cast by the
-  creature on itself). The game made no exception for the caster's own
-  spells, so Armor cast on oneself under Mirror Image was lost three times in
-  four, an image with it; the helper makes the chance 0 unless caster (DI) and
-  target (SI) are on opposite sides (party members below 4). The dice log
-  knows the roll by the code after the dice call (`IMAGE_SPELL_RETURN`), or,
-  with the overlay manager's INT 3Fh stub there, by the routine's arguments
-  (target, caster, spell at +12h) and Mirror Images on the target.
-- Weapon blows come to that routine with no spell (-1) and skip it, so the
-  game's images stopped none. `NS_BLOW` replaces the attack routine's
-  `cmp word [bp+1Ah],0` (58A00h, 5883Ah's, just after a hit is decided): with
-  Mirror Images on the target (`[494Ah]`), the helper rolls the d100 with the
-  game's own rand() (load segment:0822h), from a frame of (target, attacker,
-  chance) and with `jmp short +5 / "IMAGE"` after the call, which the Loader's
-  filters and `IMAGE_BLOW_SITE` know. On the chance or less it has the game
-  use a charge (598:57h, as for a spell) and sends the attack on as a miss
-  (58A46h, the miss sound): the way back, the miss's address already, goes in
-  a frame with BP that the overlay manager can fix up (598:57h is overlay
-  code and may load others over the attack's; adding to the way back after
-  the call would add to the manager's INT 3Fh stub).
+  as it ends Mirror Image. Where the images roll (see
+  [Mirror Image](#mirror-image)), the chance is 50 when the target's effect 25
+  comes from spell 199.
   Where the game finds an effect's entry in the effects' table (its number
   times 6: the Effects screen's icons and names, 7ED37h, 7EEC9h, 7EF34h; the
   Look box's, 5FD1Ch; the status under a portrait, 71DF5h; `NS_ENTRY`), the
