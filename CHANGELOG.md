@@ -91,6 +91,10 @@ have the detail.
   rangers' spells, acid, the class tables and thief skills, each with
   what the game did and the rule that puts it right; the thief skills'
   equipment penalty among the bugs always fixed.
+- **The player's guide as a web page**, `obsidian-edition/player-guide.html`,
+  in the patch notes' look with its sections as an index, made from
+  PLAYER-GUIDE.md by `python -m dsloader.guidepage` (a test fails when it
+  falls behind the guide).
 - **Your saved games** (the patch notes, and the README's bug fixes): no new
   game needed for the fixes, which work from loading; what the old bugs
   already did to a save stays (Share Strength's kept strength, a Dispel Magic

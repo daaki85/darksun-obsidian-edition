@@ -17,7 +17,7 @@ name.)
 - [What's new](#whats-new)
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
 - [Changelog](CHANGELOG.md)
-- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules and tables, without spoilers
+- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules and tables, without spoilers (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html), to open in a browser or share)
 - [The full documentation](obsidian-edition/README.md): everything in detail
 
 ## What it does

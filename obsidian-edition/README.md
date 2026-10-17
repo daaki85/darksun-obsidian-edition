@@ -109,7 +109,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 
 New to the game, or to the mod? [The player's guide](PLAYER-GUIDE.md) has its
 rules and tables in one place, without spoilers, with a section for each
-class.
+class (also as a web page, [`player-guide.html`](player-guide.html)).
 
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
