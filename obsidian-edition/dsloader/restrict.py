@@ -34,7 +34,7 @@ first) is held only by that class; another race's classes (multiclass) all hold 
 no kind (spell-made weapons, gloves, the broken weapon) are as the game has them.
 """
 
-from typing import Iterable, List, Set
+from typing import Iterable, List, Optional, Set
 
 from . import game, specialize
 
@@ -166,6 +166,24 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
         if kits.forbids(kid, typ, kind, half_giant, spec, off_hand, sphere):
             return True
     return False
+
+
+def forbidding_kit(sheet: bytes, item_type: int, typ: bytes) -> Optional[int]:
+    """The first of the character's kits that keeps it from an item type (kit_forbids, not
+    choosing a spec nor for the off hand), or None."""
+    from . import kitpages, kits
+    if not game.RULES_IN_FORCE & game.RULE_KITS:
+        return None
+    for kid, _, _ in kitpages.kits_of(sheet):
+        if kits.light_only(kid, typ):
+            return kid
+    kind = specialize.kind_of(item_type) if is_weapon(typ) else None
+    half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT)
+    for kid in kitpages.kit_ids(sheet):
+        sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4
+        if kits.forbids(kid, typ, kind, half_giant, False, False, sphere):
+            return kid
+    return None
 
 
 def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:

@@ -65,6 +65,12 @@ have the detail.
   other parts of the game's code over the routine that closed the Look box,
   and DSCLOG went back into it without a way back the game's overlay manager
   could mend. It now gives it one, as it does for a picked pocket's window.
+- **The Loader's item-list changes made safer** (found in review): taking an
+  item out of a list while the game's own free list moved could leave the
+  item in no list at all; it now goes back where it was. Mirlon's tools are
+  handed over only while the game leaves its item lists be, like the rest of
+  the Loader's gear changes. Armour a kit forbids is left behind naming that
+  kit (a character with two kits could be told the other's name).
 - **Defilers' scrolls on creatures that aren't defilers** (one of Scar's
   henchmen dropped one): the Loader knew a defiler by the class on its
   character sheet, which the game hands on from one creature to the next. It
@@ -78,6 +84,11 @@ have the detail.
   a README section with every bug of the game's own the Loader mends, the
   spells' among them, and a line for them under What it does on both front
   pages.
+- **Your saved games** (the patch notes, and the README's bug fixes): no new
+  game needed for the fixes, which work from loading; what the old bugs
+  already did to a save stays (Share Strength's kept strength, a Dispel Magic
+  silence until it wears off, a 2.4.0 arena without its announcer); a new game
+  still the way to see kits, fuller starting gear and the early new content.
 
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 

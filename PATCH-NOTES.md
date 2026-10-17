@@ -21,6 +21,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - [Quality of Life](#quality-of-life)
 - [The Loader](#the-loader)
 - [Bug Fixes](#bug-fixes)
+- [Your Saved Games](#your-saved-games)
 
 ## In the Game's Screens
 
@@ -234,3 +235,13 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** The preserver's **Dispel Magic** also stopped everyone it caught from casting spells, your own party included. Now it only dispels.
 - **[Fixed]** **Hold Undead** held living creatures too. Now only the undead.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
+
+## Your Saved Games
+
+**You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load: images, Armor's charges, Share Strength, Dispel Magic and Hold Undead follow the new rules from the next spell cast, even on effects already running. The fixes stop the old bugs from happening, but don't undo what they already did to a save:
+
+- A character who kept the strength from Share Strength after the power ended still has it (it shows on their Effects screen). Load a save from before the power was used to be rid of it.
+- A character silenced by the preserver's Dispel Magic ("No spell use" on their Effects screen) casts again once it wears off.
+- A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
+
+**A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, Mirlon's tools, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

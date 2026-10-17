@@ -294,8 +294,8 @@ def class_gear(gd) -> List[str]:
             if not ring.unlink(gd, ring.Items(gd), item_index, "class gear", empty=True):
                 continue
             name = gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
-            why = f"a {kitpages.name_of(kitpages.kit_at(sheet, 0))} can't wear it" if classes_let \
-                else "their classes can't use it"
+            kid = restrict.forbidding_kit(sheet, type_, typ) if classes_let else None
+            why = f"a {kitpages.name_of(kid)} can't wear it" if kid is not None else "their classes can't use it"
             out.append(f"{gd.creature_name(member)}'s {name} is left behind: {why}")
     return out
 

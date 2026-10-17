@@ -1000,7 +1000,8 @@ class DiceLog:
             ring.name_items(self.game, self.rules)
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
-            if self._items_still():  # (the item lists changed only while the game leaves them be)
+            still = self._items_still()
+            if still:  # (the item lists changed only while the game leaves them be)
                 if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
                     out += weaponchoice.class_gear(self.game)
                 if self.rules & game.RULE_SPECIALIZE:  # (new characters' weapon kinds and starting weapon)
@@ -1021,7 +1022,8 @@ class DiceLog:
             semyon.watch(self.game)  # (killed: never put in the pens)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
-            out += mirlon.watch(self.game)  # (a thief leader takes his deal: his tools, mirlon.py)
+            if still:
+                out += mirlon.watch(self.game)  # (a thief leader takes his deal: his tools, mirlon.py)
             if kalzith.watch(self.game):  # (killed: Dinos and the Trustee speak of him so)
                 left = kalzith.loot(self.game)  # (one of his scrolls, his Cloak and Quarterstaff)
                 if left:

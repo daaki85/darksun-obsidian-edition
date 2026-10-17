@@ -3416,6 +3416,16 @@ Cilla's figure (the game gives the elf the half-elf woman's) has a switch:
 see [Elves and half-elves](#elves-and-half-elves). How the fixes work:
 [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
 
+**Saved games.** There's no need to start a new game for these: they're in
+the patched game, not in a save, so they work from the moment a game is
+loaded, on effects already running too. What a bug already did stays in the
+save: a character who kept Share Strength's strength still has it (load a save
+from before the power was used to be rid of it), and one silenced by the
+preserver's Dispel Magic casts again once that wears off. A new game is still
+the way to see all of the mod: kits, STORE and RECALL and fuller starting gear
+come with characters made with it, and much of the
+[new content](#new-content) is in the game's first areas.
+
 ## More saves and characters
 
 ### More saves

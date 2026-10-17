@@ -206,3 +206,30 @@ class RestrictTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ForbiddingKitTests(unittest.TestCase):
+    def setUp(self):
+        self.rules = game.RULES_IN_FORCE
+        game.RULES_IN_FORCE = game.RULE_KITS
+
+    def tearDown(self):
+        game.RULES_IN_FORCE = self.rules
+
+    def test_the_kit_named_is_one_that_forbids(self):
+        """forbidding_kit names a kit exactly where kit_forbids keeps armour or a shield from the
+        character (the kit class_gear names when it leaves armour behind), and one of its own."""
+        from dsloader import kitpages
+        armour = [t for t in TYPES if restrict.is_armour(record(t)) or restrict.is_shield(record(t))]
+        for classes in ((17,), (9,), (1,), (5,), (11,), (13,), (17, 9), (1, 17)):
+            for kit in range(0, 4):
+                s = bytearray(sheet(*classes))
+                s[0x43] = kit
+                for t in armour:
+                    with self.subTest(classes=classes, kit=kit, type=t):
+                        kid = restrict.forbidding_kit(bytes(s), t, record(t))
+                        self.assertEqual(kid is not None, restrict.kit_forbids(bytes(s), t, record(t)))
+                        if kid is not None:
+                            self.assertIn(kid, [k for k, _, _ in kitpages.kits_of(bytes(s))])
+        game.RULES_IN_FORCE = 0
+        self.assertIsNone(restrict.forbidding_kit(bytes(s), 57, record(57)))
