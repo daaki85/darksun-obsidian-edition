@@ -40,6 +40,8 @@ have the detail.
   on everyone it caught, the party too, which Dispel Magic can't remove. Now
   it only dispels, as the cleric's does.
 - **Hold Undead holds only the undead**: it held living creatures too.
+- **Cause Serious and Critical Wounds do 2d8+1 and 3d8+3**, as AD&D has them
+  and the Cure spells heal; their records had 2d9 and 3d9.
 - **A new game's arena could be left without its announcer, and new characters
   without their gear** (seen in 2.4.0): the Loader's starting gear, fitted
   just as START GAME rebuilt the game's item records, could use up the game's

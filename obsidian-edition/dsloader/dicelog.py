@@ -2097,7 +2097,7 @@ class DiceLog:
         per = (f"{rule.step_dice}d{sides}" if rule.step_dice else "") + \
             (f"{signed(rule.step_bonus)}" if rule.step_dice and rule.step_bonus else
              f"{rule.step_bonus}" if rule.step_bonus else "")
-        if not per:
+        if not per or rule.flat():
             return text
         unit = "caster level" if rule.per_levels == 1 else f"{rule.per_levels} caster levels"
         counted = min(level, game.SPELL_LEVEL_CAP) + rule.adjust

@@ -1563,7 +1563,7 @@ four, an image with it, and weapon blows come to that routine with no spell
 
 ### The game's spells
 
-([In the README](README.md#the-games-bugs-fixed).) Four more bugs mended whatever
+([In the README](README.md#the-games-bugs-fixed).) Five more bugs mended whatever
 the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
 `ns_list_` patches):
 
@@ -1587,6 +1587,16 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   `hold_undead` puts DSCLOG's `NS_HOLD` site over its `or al,al / je +22h`
   (7A333h): a living target of spell 31 goes to the immunity's way out
   (7A1F0h).
+- **Cause Serious and Critical Wounds** (spells 113 and 128): their records'
+  damage dice were 2d9 and 3d9, where the Cure spells (rolled by their own
+  code) heal 2d8+1 and 3d8+3. The damage routine (76DA2h) rolls the base dice
+  (+1Dh >> 3) plus the steps' dice (+1Ch >> 5) of the sides (+1Eh & 0Fh), and
+  adds the steps' flat bonus (+1Ch & 1Fh), the steps being (the caster level,
+  at most 10, + the adjustment, +1Eh >> 4) / the levels a step (+1Dh & 7), at
+  least 1. `cause_serious` and `cause_critical` make them 2d8 and 3d8 with a
+  step of +1 and +3 a 7 levels: one step at any level. `SpellDamage.flat` lets
+  the dice log and the Spells tab show it as 2d8+1, not "+1 for each 7 caster
+  levels".
 
 ### New wizard spells
 

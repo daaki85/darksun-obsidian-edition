@@ -148,8 +148,8 @@ class.
   a word from the manual ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Hold Undead holding the living, and more; and the rules it got wrong, from
-  spell saves to warriors' attacks, put right
+  Hold Undead holding the living, Cause Wounds' odd dice, and more; and the
+  rules it got wrong, from spell saves to warriors' attacks, put right
   ([The game's bugs, fixed](#the-games-bugs-fixed)).
 
 **What it changes on your computer.** The game's own files are never
@@ -914,8 +914,9 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Cloak of Fear | Whoever hits the wearer has Cause Fear cast on them, once |
 
 Other things the game does its own way:
-- Cause Serious Wounds rolls 2d9, and Cause Critical Wounds 3d9 (AD&D: 2d8+1
-  and 3d8+3). The Cure spells are 1d8, 2d8+1 and 3d8+3 as in AD&D.
+- The Cure and Cause Wounds spells are 1d8, 2d8+1 and 3d8+3 as in AD&D (the
+  game's Cause Serious and Critical Wounds were 2d9 and 3d9: see
+  [The game's bugs, fixed](#the-games-bugs-fixed)).
 - Strength adds 1d6 to STR while it lasts, up to 24. The same goes for the
   psionic Adrenalin Control, and Weakened or lending strength takes it away
   (never below 3).
@@ -3411,6 +3412,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
 | **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
 | **Hold Undead** | Held living creatures too | The undead only; anyone else is immune |
+| **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |

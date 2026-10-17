@@ -459,6 +459,16 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["Hold Person damage: 1d3 = [2] +20 = 22 (1d3 + 2 for each caster level: "
                                            "10 at caster level 20, which counts as 10)"])
 
+    def test_flat_bonus_damage(self):
+        """A flat bonus that comes once whatever the level (the patched Cause Serious Wounds:
+        2d8+1): added, without a per-level explanation."""
+        log = make_game()
+        self.damage_formula(log, FIREBALL, 0x01, 0x17, 0x08)
+        dice = [entry(raw_for(f, 8), dicelog.DICE_SITE, words(0, 0, 2, 8), words(0, 0, FIREBALL, 9),
+                      parent_code=dicelog.SPELL_DAMAGE_RETURN) for f in (3, 5)]
+        lines = sum((log.describe(d) for d in dice), [])
+        self.assertEqual(lines, ["Fireball damage: 2d8 = [3 + 5] +1 = 9"])
+
     def test_missile_damage(self):
         """Flame Arrow, Minute Meteors, Magic Missile: rolled behind the overlay manager, with
         the spell in the dice routine's own arguments; the steps come from the dice."""

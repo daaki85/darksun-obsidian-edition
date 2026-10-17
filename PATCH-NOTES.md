@@ -234,6 +234,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Share Strength** left its strength on the one who got it after the power ended. Now it ends on them too.
 - **[Fixed]** The preserver's **Dispel Magic** also stopped everyone it caught from casting spells, your own party included. Now it only dispels.
 - **[Fixed]** **Hold Undead** held living creatures too. Now only the undead.
+- **[Fixed]** **Cause Serious and Critical Wounds** did 2d9 and 3d9 damage. Now 2d8+1 and 3d8+3, as AD&D has them and as the Cure spells heal.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
 Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons and warriors' attacks (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); thief skills (Improved Thieving); and acid on armour (Combat).

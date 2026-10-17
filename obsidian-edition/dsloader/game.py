@@ -622,6 +622,11 @@ class SpellDamage(NamedTuple):
     def steps(self, level: int) -> int:
         return max(1, (min(level, SPELL_LEVEL_CAP) + self.adjust) // self.per_levels)
 
+    def flat(self) -> bool:
+        """Its step only a flat bonus, the same at every caster level (one step whatever the
+        level: the patched Cause Serious and Critical Wounds' +1 and +3)."""
+        return not self.step_dice and all(self.steps(level) == 1 for level in range(1, SPELL_LEVEL_CAP + 1))
+
 
 SPELL_LEVEL_CAP = 10  # damage stops growing at caster level 10
 PERMANENT = -9999  # a spell record's time unit for effects that last until removed

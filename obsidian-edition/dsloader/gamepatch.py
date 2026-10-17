@@ -298,6 +298,13 @@ PATCHES = (
     # ... the preserver's Dispel Magic (spell 26) put "No spell use" (effect 50, which Dispel
     # Magic itself never ends) on all it caught, the cleric's none: its record's effect 0 ...
     Patch("dispel_effect", 0x422C9, bytes((50,)), bytes((0,))),
+    # ... Cause Serious and Critical Wounds' damage was 2d9 and 3d9 (the Cure spells' 2d8+1 and
+    # 3d8+3 as AD&D has them): their records' dice (+1Ch: steps' dice << 5 | the flat bonus a
+    # step; +1Dh: base dice << 3 | caster levels a step; +1Eh: level adjustment << 4 | sides)
+    # made 2d8 and 3d8, one step of +1 and +3 (a step for each 7 caster levels, the level
+    # counted up to 10: always one) ...
+    Patch("cause_serious", 0x42DAC, bytes.fromhex("001109"), bytes.fromhex("011708")),
+    Patch("cause_critical", 0x42F8C, bytes.fromhex("001909"), bytes.fromhex("031f08")),
     # ... and Hold Undead held anything: where the game has just asked whether the target is
     # undead (7BE20h, AL), "or al,al / je +22h" (DSCLOG's NS_HOLD: Hold Undead on a living
     # target goes to the immunity's return, 7A1F0h)
