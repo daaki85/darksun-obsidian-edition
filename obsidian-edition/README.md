@@ -94,6 +94,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [The view in fights](#the-view-in-fights)
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [The game's bugs, fixed](#the-games-bugs-fixed)
+  - [Rules the game got wrong](#rules-the-game-got-wrong)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
     - [Saves under their names](#saves-under-their-names)
@@ -147,7 +148,8 @@ class.
   a word from the manual ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Hold Undead holding the living, and more
+  Hold Undead holding the living, and more; and the rules it got wrong, from
+  spell saves to warriors' attacks, put right
   ([The game's bugs, fixed](#the-games-bugs-fixed)).
 
 **What it changes on your computer.** The game's own files are never
@@ -3399,7 +3401,8 @@ spell's icon on the Effects screen leaves it on**, from the next start).
 
 ## The game's bugs, fixed
 
-The patched game mends these whatever the Options tab says:
+The patched game mends these whatever the Options tab says (the rules the game
+got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 
 | | The game | With the Loader |
 |---|---|---|
@@ -3411,6 +3414,7 @@ The patched game mends these whatever the Options tab says:
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
+| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](#how-the-game-works-out-thief-skills)) |
 
 Cilla's figure (the game gives the elf the half-elf woman's) has a switch:
 see [Elves and half-elves](#elves-and-half-elves). How the fixes work:
@@ -3425,6 +3429,26 @@ preserver's Dispel Magic casts again once that wears off. A new game is still
 the way to see all of the mod: kits, STORE and RECALL and fuller starting gear
 come with characters made with it, and much of the
 [new content](#new-content) is in the game's first areas.
+
+### Rules the game got wrong
+
+Where the game's own rules contradict its manual or AD&D, or each other, a
+[rule change](#rule-changes) puts them right. Each has a switch on the
+Options tab, on by default:
+
+| | The game | With the rule |
+|---|---|---|
+| **Saving throws against spells** | Almost every spell saved against with petrification/polymorph | The spell save ([spell save](#spells-saved-against-with-the-spell-save)) |
+| **Fire, cold and electricity** | The save's d20 rolled twice and added up, so most creatures shrugged off a Fireball (70% to save where 35% was due) | One d20, with DEX's defensive adjustment for dodging ([DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)) |
+| **Two weapons** | No penalty (a small bonus at DEX 5 or less), and each hand attacking at the whole rate | −2 main hand, −4 off hand, DEX helping; the off hand attacks once a round ([two weapons](#two-weapons)) |
+| **Warriors' attacks** | Every fighter, gladiator and ranger attacking at a specialist's 3/2 a round with any weapon | AD&D's plain rate, the specialist's only with a chosen weapon spec ([weapon specialization](#weapon-specialization)) |
+| **Multiclass characters' gear** | Any one class allowing an item was enough | Each class's limits hold ([class restrictions](#class-restrictions)) |
+| **Multiclass hit points** | CON's bonus once a level of the highest class | On every hit die, shared between the classes ([multiclass hit points](#multiclass-hit-points)) |
+| **Rangers' spells** | Cast at the ranger level less 7 for the spell levels allowed, but lasting and hurting as the whole level | The level less 7 for both ([rangers' casting level](#rangers-casting-level)) |
+| **Acid on armour** | Any armour without a magical power destroyed outright, its plus ignored | A save by material, a plus helping ([items saving against acid](#items-saving-against-acid)) |
+| **Helms** | Armour that gives AC 0 | AC 1 ([helms](#helms)) |
+| **Class tables** | Priests' THAC0 improving a level early (19 at 3rd), fewer priest and preserver spell slots (3 2 1 at 5th), and gladiators, rangers and thieves needing AD&D's XP less a little | AD&D's tables ([AD&D's class tables](#adds-class-tables)) |
+| **Thief skills** | A table of the game's own, high from the start (a 3rd-level elf: move silently 66, hide in shadows 61) | AD&D's table by level, with Dark Sun's race and DEX adjustments ([thief skills from AD&D's table](#thief-skills-from-adds-table)) |
 
 ## More saves and characters
 

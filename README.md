@@ -55,7 +55,8 @@ name.)
   ([No manual check](obsidian-edition/README.md#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Hold Undead holding the living, and more
+  Hold Undead holding the living, and more; and the rules it got wrong, from
+  spell saves to warriors' attacks, put right
   ([The game's bugs, fixed](obsidian-edition/README.md#the-games-bugs-fixed)).
 
 The game's own files are never modified: the Loader runs a patched copy of the

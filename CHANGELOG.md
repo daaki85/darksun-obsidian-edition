@@ -84,6 +84,12 @@ have the detail.
   a README section with every bug of the game's own the Loader mends, the
   spells' among them, and a line for them under What it does on both front
   pages.
+- **Rules the game got wrong** (the README's bug fixes, and a paragraph
+  under the patch notes' Bug Fixes): the spell save, the doubled d20, two
+  weapons, warriors' attacks, class restrictions, multiclass hit points,
+  rangers' spells, acid, helms, the class tables and thief skills, each with
+  what the game did and the rule that puts it right; the thief skills'
+  equipment penalty among the bugs always fixed.
 - **Your saved games** (the patch notes, and the README's bug fixes): no new
   game needed for the fixes, which work from loading; what the old bugs
   already did to a save stays (Share Strength's kept strength, a Dispel Magic

@@ -236,6 +236,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Hold Undead** held living creatures too. Now only the undead.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
+Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons and warriors' attacks (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); thief skills (Improved Thieving); and acid on armour and helms (Combat).
+
 ## Your Saved Games
 
 **You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load: images, Armor's charges, Share Strength, Dispel Magic and Hold Undead follow the new rules from the next spell cast, even on effects already running. The fixes stop the old bugs from happening, but don't undo what they already did to a save:
