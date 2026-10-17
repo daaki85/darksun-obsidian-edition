@@ -2088,7 +2088,18 @@ probe_unlook:
         jne .out
         mov byte [cs:look_pending], 0
         mov word [cs:show_text], look_full
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]  ; the way back in a frame the overlay manager can fix up (pushed
+        push word [ss:bx + 34]  ;   as a far call's, with BP): the dialogue window may load other
+        push bp                 ;   overlays over this routine's while it waits for Continue
+        mov bp, sp
         call show_window
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
 .out:   pop es
         popad
         iret

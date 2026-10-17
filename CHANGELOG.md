@@ -42,6 +42,11 @@ have the detail.
   was saved only for an error code or the game's own error. GAMEEND.COM now
   notes a game that ends as usual (`GAMEOK.TXT`), and without that or an error
   the Loader saves a report saying the game didn't end on its own.
+- **A crash after Continue on a monster's whole description** (the window
+  that follows a Look box with more to say): the dialogue window can load
+  other parts of the game's code over the routine that closed the Look box,
+  and DSCLOG went back into it without a way back the game's overlay manager
+  could mend. It now gives it one, as it does for a picked pocket's window.
 
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 
