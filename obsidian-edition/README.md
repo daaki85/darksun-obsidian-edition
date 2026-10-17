@@ -914,9 +914,6 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Cloak of Fear | Whoever hits the wearer has Cause Fear cast on them, once |
 
 Other things the game does its own way:
-- The Cure and Cause Wounds spells are 1d8, 2d8+1 and 3d8+3 as in AD&D (the
-  game's Cause Serious and Critical Wounds were 2d9 and 3d9: see
-  [The game's bugs, fixed](#the-games-bugs-fixed)).
 - Strength adds 1d6 to STR while it lasts, up to 24. The same goes for the
   psionic Adrenalin Control, and Weakened or lending strength takes it away
   (never below 3).

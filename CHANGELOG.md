@@ -55,8 +55,8 @@ have the detail.
   puts in the backpack, were left behind. The long sword now becomes its
   weapon spec's weapon (a great axe without weapon specialization), in hand,
   and the club is left behind as the kit's ("a Brute fights with two-handed
-  weapons only"). Armour only a kit forbids is left behind naming the kit ("a
-  Shadowblade can't wear it").
+  weapons only"). Armour only a kit forbids is left behind naming the kit that
+  forbids it ("a Shadowblade can't wear it").
 - **No crash report when DOSBox closed while the game still ran** (a freeze,
   DOSBox stopping with an error of its own, or its window closed): a report
   was saved only for an error code or the game's own error. GAMEEND.COM now
@@ -71,8 +71,7 @@ have the detail.
   item out of a list while the game's own free list moved could leave the
   item in no list at all; it now goes back where it was. Mirlon's tools are
   handed over only while the game leaves its item lists be, like the rest of
-  the Loader's gear changes. Armour a kit forbids is left behind naming that
-  kit (a character with two kits could be told the other's name).
+  the Loader's gear changes.
 - **Defilers' scrolls on creatures that aren't defilers** (one of Scar's
   henchmen dropped one): the Loader knew a defiler by the class on its
   character sheet, which the game hands on from one creature to the next. It

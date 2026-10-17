@@ -72,6 +72,11 @@ The [README](README.md) has every rule in full detail.
    none, are given weapon specs to suit them, and with kits on, a kit or
    features of their own (see [Multiclass kits](#multiclass-kits)).
 
+Already playing? Saves made before load and play with the mod's fixes and
+rules, but kits, fuller starting gear and much of the new content come with a
+new game (see the README's [saved games](README.md#the-games-bugs-fixed)
+note).
+
 ## Playing
 
 The pointer has three modes, changed with a right-click: **Walk**, **Attack**
@@ -1414,10 +1419,9 @@ can cast. INT sets two limits:
 - **Dispel Magic** only dispels. *Without the mod:* the preserver's also stopped
   everyone it caught casting spells, your own party too.
 - **Hold Undead** holds the undead only. *Without the mod:* it held anyone.
+- **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as the Cure spells
+  heal (Light: 1d8 both ways). *Without the mod:* 2d9 and 3d9.
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
-- **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as Cure Serious
-  and Critical Wounds heal. *Without the mod:* 2d9 and 3d9. Cure Light Wounds
-  heals 1d8, and Cause Light Wounds does 1d8.
 - Six **new wizard spells**, learnt like any other:
   - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for
     an hour of game time a caster level, which betters AC, initiative, thief
