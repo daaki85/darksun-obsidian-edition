@@ -16,23 +16,26 @@ have the detail.
 
 **Fixed**
 - **A new game's arena could be left without its announcer, and new characters
-  without their gear** (seen in 2.4.0): the
-  Loader fitted new characters' starting gear on the creation screen too, and
+  without their gear** (seen in 2.4.0): the Loader fits new characters'
+  starting gear on the creation screen, and
   a change made just as START GAME rebuilt the game's item records wrote over
   the head of its free list of them. With no free item record left, the arena
   couldn't put its things on the map (the announcer among them: the opening
   fight never began, and walking said NO PATH FROM HERE), and the Loader's
   gear went nowhere (a Spellarcher with nothing, a Brute with no weapon). The
-  Loader now changes item lists only while the map's main loop runs (no menu,
-  talk or creation screen open, the game not starting or loading an area),
-  and gives up a change if the game's free list moved under it. A game this
-  happened to can't be mended: start a new one.
-- **A Brute's starting long sword and club left behind** with class
-  restrictions on, as "their classes can't use it", before the kit's own gear
-  could make the long sword a two-handed weapon: what only a kit forbids in
-  the hands is now left to the kit's gear (a Brute's great axe, a Shadowblade's
-  shield taken away with the kit named), and armour only a kit forbids is left
-  behind saying so ("a Shadowblade can't wear it").
+  Loader now changes item lists only while the game's free lists of items and
+  things stay the same over 60 ms (not while it builds them afresh), and gives
+  up a change if the game's free list moved under it. A game this happened to
+  can't be mended: start a new one.
+- **A Brute's starting long sword and club left behind**, the Brute with no
+  weapon: the game puts them in the backpack (the kit forbids them in hand),
+  and the Loader looked for the long sword only in the hand, and with class
+  restrictions on left both behind as "their classes can't use it". The long
+  sword is now made the weapon spec's weapon (or, without weapon
+  specialization, a great axe) and put in the right hand, the club left
+  behind as the kit's ("a Brute fights with two-handed weapons only"). What
+  only a kit forbids is left to the kit's gear, and armour only a kit forbids
+  is left behind naming the kit ("a Shadowblade can't wear it").
 
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 
