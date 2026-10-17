@@ -336,6 +336,10 @@ def closed_line(code: int) -> str:
 # error; the Loader's crash reports go in CRASH_DIR
 GAME_END_COM = "GAMEEND.COM"
 GAME_END = os.path.join(DOS_DIR, "GAMEEND.TXT")
+# and in GAMEOK.TXT that it ended as usual: without either, DOSBox closed while the game still ran
+GAME_OK = os.path.join(DOS_DIR, "GAMEOK.TXT")
+CUT_OFF = ("The game didn't end on its own: DOSBox closed while it was still running (closed with its "
+           "window's button, or after the game froze, or DOSBox stopped with an error of its own).")
 CRASH_DIR = os.path.join(HERE, "crash-logs")
 DOSBOX_OUTPUT = ("stdout.txt", "stderr.txt")  # DOSBox's own messages with -noconsole (its folder)
 
@@ -376,7 +380,8 @@ def game_message(data: bytes) -> Optional[str]:
 
 def game_end_note() -> Optional[str]:
     """What GAMEEND.COM saved of the game stopping with an error (its return code, video mode,
-    and the screen's text), and DSCLOG's GAMEMSG.BIN (game_message), or None if it ended as usual."""
+    and the screen's text), and DSCLOG's GAMEMSG.BIN (game_message); CUT_OFF if neither and
+    GAMEEND.COM didn't note it ending as usual either (GAME_OK); None if it ended as usual."""
     notes = []
     try:
         with open(GAME_END, encoding="cp437", errors="replace") as f:
@@ -390,6 +395,8 @@ def game_end_note() -> Optional[str]:
             notes.append(message)
     except OSError:
         pass
+    if not notes and not os.path.exists(GAME_OK):
+        notes.append(CUT_OFF)
     return "\n\n".join(notes) or None
 
 
@@ -431,7 +438,9 @@ def crash_report(code: int, note: Optional[str], settings: dict, dice: str, dial
     lines = [f"Obsidian Edition crash report, {stamp}", "", closed_line(code)]
     if started:
         lines.append(f"The game ran for {round((now - started) / 60)} minutes.")
-    if note:
+    if note == CUT_OFF:
+        lines += ["", note]
+    elif note:
         lines += ["", "The game stopped with an error. On the screen:", note]
     lines += ["", "Switches (as set on the Options tab, else the default):"]
     lines += [f"  {key}: {value!r}" for key, value in sorted(effective_switches(settings).items())]
@@ -471,7 +480,7 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
     if not dosbox_dir or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Shattered Lands")
     problem = prepare_patched_game(game_dir)
-    for old in (GAME_END, GAME_MESSAGE):  # (the last game's)
+    for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
             os.remove(old)
         except OSError:

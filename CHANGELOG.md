@@ -37,6 +37,12 @@ have the detail.
   only a kit forbids is left to the kit's gear, and armour only a kit forbids
   is left behind naming the kit ("a Shadowblade can't wear it").
 
+- **No crash report when DOSBox closed while the game still ran** (a freeze,
+  DOSBox stopping with an error of its own, or its window closed): a report
+  was saved only for an error code or the game's own error. GAMEEND.COM now
+  notes a game that ends as usual (`GAMEOK.TXT`), and without that or an error
+  the Loader saves a report saying the game didn't end on its own.
+
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 
 **Release**

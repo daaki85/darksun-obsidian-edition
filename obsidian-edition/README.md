@@ -288,7 +288,10 @@ helper keeps what the game last wrote, so the crash report has them anyway.
 With the game started from the Loader (or either `.bat` file), the dice log
 also says how DOSBox closed:
 `DOSBox closed: it crashed (an access violation, code C0000005h)` means DOSBox
-itself failed, not the game.
+itself failed, not the game. If DOSBox closes while the game is still running
+(after a freeze, or DOSBox stopping with an error of its own, or closed with
+its window's button), with no error from the game, the report says so: the
+game didn't end on its own.
 
 Either way, the Loader saves a crash report in the `crash-logs` folder (beside
 `Start Obsidian Edition.bat`), named for the time, such as

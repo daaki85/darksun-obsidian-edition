@@ -284,6 +284,11 @@ them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
 stack. `launch.game_message` turns that into the crash report's lines: the
 text, then the stack's likely far returns as places in DSUN.EXE.
 
+A game that ends as usual has GAMEEND.COM write an empty `D:\GAMEOK.TXT`. The
+Loader removes it (with `GAMEEND.TXT` and `GAMEMSG.BIN`) as it starts DOSBox:
+DOSBox closing with no error noted and no `GAMEOK.TXT` means the game was cut
+off while it ran (`launch.CUT_OFF`), and that is a crash report too.
+
 ### From a command prompt
 
 What the `.bat` files do, from a command prompt (`dsloader` is the program's

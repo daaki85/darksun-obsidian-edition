@@ -3,7 +3,7 @@
 ; mode), the screen's text and the code are saved to GAMEEND.TXT next to this file (for the
 ; Loader's crash report) and the message stays on screen until a key is pressed (in text mode, if
 ; the game left the screen in graphics, where it couldn't be read); otherwise
-; nothing (DOSBox closes as before).
+; an empty GAMEOK.TXT beside it, and DOSBox closes as before.
 ; Build: nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
 
 COLS    equ 80
@@ -37,7 +37,15 @@ ROWS    equ 25
         pop ds
         cmp byte [code], 0
         jne .error
-        mov ax, 4C00h                   ; ended as usual
+        mov ah, 3Ch                     ; ended as usual: GAMEOK.TXT says so (the Loader tells a
+        xor cx, cx                      ;   game cut off by DOSBox closing, or DOSBox failing,
+        mov dx, okname                  ;   from one quit from its menu)
+        int 21h
+        jc .quit
+        mov bx, ax
+        mov ah, 3Eh
+        int 21h
+.quit:  mov ax, 4C00h
         int 21h
 .found:
         pop ds
@@ -171,6 +179,7 @@ hex2:
 said    db 13, 10, "The game stopped with an error. The Loader saves what is on the screen", 13, 10
         db "in its crash report. Press a key to close DOSBox.$"
 fname   db "D:\GAMEEND.TXT", 0
+okname  db "D:\GAMEOK.TXT", 0
 head    db "Return code "
 head_code db "00h, video mode "
 head_mode db "00h", 13, 10

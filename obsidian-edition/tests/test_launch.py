@@ -150,6 +150,22 @@ class LaunchTests(unittest.TestCase):
             self.assertNotEqual(again, path)
             self.assertTrue(again.endswith("-2.txt"))
 
+    def test_game_cut_off(self):
+        """GAMEEND.COM notes the game ending as usual in GAMEOK.TXT: without it, and with no error
+        noted, DOSBox closed while the game ran, and that is the note (a crash report is saved)."""
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            paths = {name: os.path.join(d, name) for name in ("GAMEEND.TXT", "GAMEMSG.BIN", "GAMEOK.TXT")}
+            with mock.patch.object(launch, "GAME_END", paths["GAMEEND.TXT"]), \
+                    mock.patch.object(launch, "GAME_MESSAGE", paths["GAMEMSG.BIN"]), \
+                    mock.patch.object(launch, "GAME_OK", paths["GAMEOK.TXT"]):
+                self.assertEqual(launch.game_end_note(), launch.CUT_OFF)
+                open(paths["GAMEOK.TXT"], "w").close()
+                self.assertIsNone(launch.game_end_note())
+        text = launch.crash_report(0, launch.CUT_OFF, {}, "", "", [], {}, 0, 0)
+        self.assertIn(launch.CUT_OFF, text)
+        self.assertNotIn("On the screen", text)
+
     def test_dosbox_output(self):
         """DOSBox's stdout.txt and stderr.txt from this run only."""
         with tempfile.TemporaryDirectory() as d:
