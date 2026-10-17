@@ -14,6 +14,13 @@ have the detail.
 
 ## Pull request #51 (in progress)
 
+**Changed**
+- **A Shinobi learns its own spells from scrolls too** (with kits on): it
+  first reads the scroll, a d100 against its read languages, and then, with
+  the rule for INT on, learns the spell at INT's chance. A failed roll uses
+  the scroll up; a scroll of a spell not among its 18 is kept, unlearnt. The
+  dice log shows both rolls.
+
 **Fixed**
 - **A new game's arena could be left without its announcer, and new characters
   without their gear** (seen in 2.4.0): the Loader fits new characters'

@@ -52,6 +52,8 @@ SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and op
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
 TSR_POISONED = 360  # bit N: party member N, a Poisoner, has used its poison this fight (DSCLOG's PROBE_POISON)
+TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
+TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
 TSR_KIT_OUTDOORS = 350  # bit N: party member N under the open sky (the Loader's: _kit_tick)
 TSR_RULES_HI = 270  # the rules' bits past 16 (game.RULE_KITS), shifted down
 TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT, chance, d100, result (intlearn.py)
@@ -763,6 +765,15 @@ class DiceLog:
             out += bytes(7)
         return out.ljust(STATS_SIZE, b"\0")
 
+    def read_languages(self, member: int) -> int:
+        """A party member's chance to read languages as it stands (0 without thief levels): a
+        Shinobi reads a scroll with it (DSCLOG's SHINOBI_READ)."""
+        try:
+            skills = self.game.thief_skills_now(member, (game.READ_LANGUAGES,))
+        except (struct.error, IndexError, ValueError):
+            return 0
+        return max(0, min(100, skills[0][1])) if skills else 0
+
     def _answer_stats(self) -> None:
         """A game screen is about to show THAC0 and the saves: bring them up to date first (the
         game waits for this, so an item just put on counts)."""
@@ -790,6 +801,7 @@ class DiceLog:
         if data != self._stats_written:
             self.guest.write(table, data)
             self._stats_written = data
+        self.guest.write(self.tsr_hdr + TSR_READ_LANG, bytes(self.read_languages(member) for member in range(game.PARTY_SIZE)))
         self.guest.write(self.tsr_hdr + TSR_STATS_STAMP, self.guest.read(BIOS_TIMER, 2))
 
     def _not_ours(self, entries: List[DialogueEntry]) -> List[DialogueEntry]:
@@ -1128,8 +1140,9 @@ class DiceLog:
                 return []
             self._learn_seq = seq
             from . import intlearn
+            read, read_rate = self.guest.read(self.tsr_hdr + TSR_LEARN_READ, 2)
             return [intlearn.line(self.game.creature_name(who), self.game.spell_name(spell), intelligence, rate,
-                                  roll, result, self.game.spell_level(spell))]
+                                  roll, result, self.game.spell_level(spell), read, read_rate)]
         except (struct.error, IndexError, ValueError):
             return []
 

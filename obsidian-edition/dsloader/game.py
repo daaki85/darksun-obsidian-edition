@@ -647,6 +647,7 @@ HUMAN = 1
 # climbing, Detect Traps lets anyone find traps, Feeblemind stops reading languages.
 THIEF_SKILLS = ("pick pockets", "open locks", "find/remove traps", "move silently", "hide in shadows",
                 "hear noise", "climb walls", "read languages")
+READ_LANGUAGES = 7  # (a Shinobi reads a scroll with it: intlearn.py)
 # the ones shown: those the game ever rolls (no script asks for the other three), and move
 # silently, which the Loader rolls when a pocket isn't picked (pickpocket.py)
 ROLLED_SKILLS = (0, 1, 2, 3, 5, 6)

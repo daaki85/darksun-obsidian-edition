@@ -5083,7 +5083,8 @@ class KitTests(unittest.TestCase):
         self.assertEqual([kits.shinobi_pick_level(n) for n in (5, 6, 7, 8, 9, 10)], [0, 1, 1, 2, 2, 3])
 
     def test_scroll_learn(self):
-        """PROBE_SCROLL_LEARN: AX and ZF as "or ax,ax", but a Shinobi learns no scroll (AX 0, ZF)."""
+        """PROBE_SCROLL_LEARN: AX and ZF as "or ax,ax", but a Shinobi learns no spell not its own
+        from a scroll (AX 0, ZF: SHINOBI_READ)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_SCROLL_LEARN
         seg, who = 0x8700, 5
@@ -5097,6 +5098,7 @@ class KitTests(unittest.TestCase):
                 self.creature(cls, kit, index=who, level=8)
                 for ax in (0, 1):
                     with self.subTest(rules=rules, cls=cls, kit=kit, ax=ax):
+                        self.mu.mem_write(SS * 16 + BP - 3, bytes((8,)))  # (Magic Missile: not a Shinobi's)
                         self.run_vector(VEC_SCROLL_LEARN, 2, eax=ax, ebx=0x2222, esi=0x4444, es=0x6666)
                         want = 0 if kid == kits.SHINOBI else ax
                         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), want)
@@ -5198,6 +5200,67 @@ class KitTests(unittest.TestCase):
         self.assertEqual(learn(8, ax=0), (0, None))
         self.assertEqual([intlearn.chance(i) for i in (3, 9, 12, 18, 19, 24, 25, 30)], [35, 35, 50, 85, 95, 100, 100, 100])
         self.assertEqual([intlearn.most(i) for i in (9, 13, 17, 18, 19)], [6, 9, 14, 18, None])
+
+    def test_shinobi_read(self):
+        """SHINOBI_READ: a Shinobi learns only its own spells from a scroll (another refused, AX 0,
+        A SHINOBI CAN NOT...; the scroll kept); first a d100 against its chance to read languages
+        (+362, the Loader's): above it, the game teaches it and uses the scroll up, and
+        PROBE_LEARN_SAID takes it back with YOU CAN NOT READ...; read, the rule for INT's d100 as a
+        preserver's (no most a level), or learnt without the rule. Told at +272 and +366."""
+        from dsloader import intlearn, kits
+        from dsloader.gamepatch import VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED
+        seg, who = 0x8700, 2
+        site = 0x400 + (VEC_SCROLL_LEARN & 0x1F) * 0x10
+        self.mu.mem_write(CALLER * 16 + site + 2 + (0x8B6C2 - 0x8B6D5), struct.pack("<H", seg))
+        self.mu.mem_write(seg * 16 + 0x25B, struct.pack("<H", who))
+        hdr = self.hdr
+        known_at = self.int_setup(who, 9, [])
+        def learn(spell, read, rules):
+            self.rules(rules)
+            self.creature(17, 3, index=who, level=8)  # (a thief, its kit the Shinobi)
+            self.mu.mem_write(self.CREATURES * 16 + who * 0x3A + 0x25, bytes((9,)))
+            self.mu.mem_write(hdr + 362 + who, bytes((read,)))
+            self.mu.mem_write(SS * 16 + BP - 3, bytes((spell,)))
+            before = struct.unpack("<H", self.mu.mem_read(hdr + 272, 2))[0]
+            self.run_vector(VEC_SCROLL_LEARN, 2, eax=1, ebx=0x2222, esi=0x4444, es=0x6666, edx=0x5555)
+            self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_SI, r.UC_X86_REG_ES,
+                                                            r.UC_X86_REG_DX)], [0x2222, 0x4444, 0x6666, 0x5555])
+            ax = self.mu.reg_read(r.UC_X86_REG_AX)
+            self.assertEqual(bool(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40), not ax)
+            seq, *told = struct.unpack("<H6B", self.mu.mem_read(hdr + 272, 8))
+            self.assertEqual(seq, (before + 1) & 0xFFFF)
+            return ax, told, list(self.mu.mem_read(hdr + 366, 2))
+        both = game.RULE_KITS | game.RULE_INT_LEARN
+        self.assertEqual(self.kit_of(17, 3, both), kits.SHINOBI)
+        # not its spell: refused, whatever it reads
+        ax, told, read = learn(8, 100, both)
+        self.assertEqual((ax, told[:2], told[5], read), (0, [who, 8], intlearn.NOT_ITS, [0, 0]))
+        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x680)[2], b"A SHINOBI CAN NOT LEARN THAT SPELL")
+        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x690)[:2], (self.DS, 0x3405))  # (once only)
+        # Shield (9), its own, unread at 0%: taught by the game, then taken back
+        ax, told, read = learn(9, 0, both)
+        self.assertEqual((ax, told[5], read[1]), (1, intlearn.UNREAD, 0))
+        self.assertTrue(1 <= read[0] <= 100)
+        self.mu.mem_write(known_at + 9, b"\1")
+        self.assertEqual(self.said(VEC_LEARN_SAID, 0x6A0)[2], b"YOU CAN NOT READ THE SCROLL")
+        self.assertEqual(self.mu.mem_read(known_at + 9, 1)[0] & 0x0F, 0)
+        # read at 100%: INT 9's 35% with the rule, learnt without it (no roll)
+        results = set()
+        for n in range(30):
+            ax, told, read = learn(9, 100, both)
+            self.assertEqual((ax, told[2:4], read[1]), (1, [9, 35], 100))
+            self.assertEqual(told[5], intlearn.LEARNT if told[4] <= 35 else intlearn.FAILED)
+            results.add(told[5])
+        self.assertEqual(results, {intlearn.LEARNT, intlearn.FAILED})
+        ax, told, read = learn(9, 100, game.RULE_KITS)
+        self.assertEqual((ax, told[3:], read[1]), (1, [0, 0, intlearn.LEARNT], 100))
+        # read languages 50%: both ways
+        outcomes = set()
+        for n in range(30):
+            ax, told, read = learn(17, 50, game.RULE_KITS)
+            self.assertEqual(told[5], intlearn.LEARNT if read[0] <= 50 else intlearn.UNREAD)
+            outcomes.add(told[5])
+        self.assertEqual(outcomes, {intlearn.LEARNT, intlearn.UNREAD})
 
     def test_int_pick(self):
         """CHOOSE A SPELL with the rule for INT: PROBE_PICK_LIST leaves out the spells of a level the

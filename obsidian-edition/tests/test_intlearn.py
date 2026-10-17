@@ -22,5 +22,24 @@ class IntLearnTests(unittest.TestCase):
                          "INT 9 (the scroll is kept)")
 
 
+    def test_shinobi_lines(self):
+        """A Shinobi's: read languages first, then INT's d100 (none with the rule for INT off)."""
+        line = lambda rate, roll, result, read, read_rate: intlearn.line("Kage", "Blur", 12, rate, roll, result, 2,
+                                                                          read, read_rate)
+        self.assertEqual(line(50, 0, intlearn.UNREAD, 61, 30),
+                         "Kage reads the scroll of Blur: read languages d100 = 61, needs 30 or less -> "
+                         "can't read it (the scroll is used up)")
+        self.assertEqual(line(50, 20, intlearn.LEARNT, 12, 30),
+                         "Kage reads the scroll of Blur: read languages d100 = 12, needs 30 or less -> read; "
+                         "d100 = 20, needs 50 or less (INT 12) -> learnt")
+        self.assertEqual(line(50, 77, intlearn.FAILED, 12, 30),
+                         "Kage reads the scroll of Blur: read languages d100 = 12, needs 30 or less -> read; "
+                         "d100 = 77, needs 50 or less (INT 12) -> not learnt (the scroll is used up)")
+        self.assertEqual(line(0, 0, intlearn.LEARNT, 12, 30),
+                         "Kage reads the scroll of Blur: read languages d100 = 12, needs 30 or less -> read, learnt")
+        self.assertEqual(intlearn.line("Kage", "Fireball", 12, 50, 0, intlearn.NOT_ITS, 3),
+                         "Kage can't learn Fireball from the scroll: not one of a Shinobi's spells (the scroll is kept)")
+
+
 if __name__ == "__main__":
     unittest.main()

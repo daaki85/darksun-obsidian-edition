@@ -364,6 +364,10 @@ kit_poisoned db 0               ; +360 bit N set once party member N, a Poisoner
                                 ;      foe this fight (PROBE_POISON); the Loader clears it as a fight
                                 ;      starts
            db 0                 ; +361
+read_lang  times 4 db 0         ; +362 the Loader's: each party member's chance to read languages (%),
+                                ;      as it stands (kept with STATS): a Shinobi reads a scroll with it
+learn_read db 0                 ; +366 a Shinobi's try at a scroll (LEARN_SEQ): the d100 to read it ...
+learn_read_chance db 0          ; +367 ... and its chance (SHINOBI_READ)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -8040,9 +8044,9 @@ pick_int_any:
 ; PROBE_SCROLL_LEARN: INT VEC_SCROLL_LEARN replaces "or ax,ax" (2 bytes; DSUN.EXE 8B6D3h, then the
 ; game's "jz", to "YOU ALREADY KNOW THIS SPELL") after the game's check whether the character on
 ; show (the segment of "mov ax,348h" before, its 25Bh) may learn a scroll's spell ([BP-3] of the
-; game's frame; the game's only check is that it doesn't know it yet): none for a Shinobi, who
-; learns only at a level up; with RULE_HI_INT, a preserver's try at a wizard spell as INT_LEARN has
-; it. ZF as "or ax,ax" leaves it.
+; game's frame; the game's only check is that it doesn't know it yet): a Shinobi's as SHINOBI_READ
+; has it; with RULE_HI_INT, a preserver's try at a wizard spell as INT_LEARN has it. ZF as "or
+; ax,ax" leaves it.
 SCROLL_WHO_SEG equ 0x8B6C2 - 0x8B6D5
 probe_scroll_learn:
         or ax, ax
@@ -8063,7 +8067,11 @@ probe_scroll_learn:
         call kit_is_b
         db KIT_SHINOBI
         jne .int
-        xor ax, ax
+        push dx
+        mov bp, [ss:bp]         ; (the game's frame: [BP-3] the spell)
+        mov dl, [bp - 3]
+        call shinobi_read
+        pop dx
         jmp .keep
 .int:   push dx
         mov bp, [ss:bp]         ; (the game's frame: [BP-3] the spell)
@@ -8098,6 +8106,8 @@ int_most     db 6, 7, 7, 7, 9, 9, 11, 11, 14, 18, INT_ALL, INT_ALL, INT_ALL, INT
 LEARN_LEARNT equ 0
 LEARN_FAILED equ 1
 LEARN_FULL   equ 2
+LEARN_UNREAD equ 3                      ; (a Shinobi: the scroll not read, SHINOBI_READ)
+LEARN_NOT_ITS equ 4                     ; (a Shinobi: not one of its spells)
 SPELL_LEVELS_SEG equ 0x3FB9 - 0x4356    ; the spells' table (7 bytes a spell): its segment less DS's ...
 SPELL_LEVELS equ 0x19C                  ; ... and each spell's level there
 learn_msg    db 0                       ; (LEARN_FAILED or LEARN_FULL: the game's message to change)
@@ -8146,6 +8156,84 @@ int_learn:
         mov byte [cs:learn_result], LEARN_FAILED
         mov byte [cs:learn_msg], LEARN_FAILED
 .out:   pop cx
+        pop bx
+        pop ax
+.told:  inc word [cs:learn_seq]
+.ret:   ret
+
+; SHINOBI_READ: party member SI, a Shinobi (its sheet ES:BX), tries to learn spell DL from a scroll,
+; AX not 0 (the game would teach it). Only one of its spells (SHINOBI_SPELLS; a new one while
+; RULE_NEW_SPELLS is on): another it can't (AX 0, PROBE_LEARN_REFUSED's LEARN_NOT_ITS_TEXT, the
+; scroll kept). First a d100 against its chance to read languages (READ_LANG, the Loader's): above
+; it, the scroll isn't read (AX kept: the game teaches it and uses the scroll up, PROBE_LEARN_SAID
+; takes the spell back and says LEARN_UNREAD_TEXT). Read, with RULE_HI_INT a d100 against INT's
+; chance (INT_CHANCE; no most a level: its spells are few) as INT_LEARN's; without it, learnt. The
+; try is told to the Loader (LEARN_SEQ..., LEARN_READ). DS the game's; others kept.
+shinobi_read:
+        or ax, ax
+        jz .ret
+        push ax
+        push bx
+        push cx
+        push si
+        mov ax, si
+        mov [cs:learn_who], al
+        mov [cs:learn_spell], dl
+        mov byte [cs:learn_roll], 0
+        mov byte [cs:learn_read], 0
+        mov byte [cs:learn_read_chance], 0
+        call int_row                    ; (BX the INT's row, AL the INT)
+        mov [cs:learn_int], al
+        mov al, [cs:int_chance + bx]
+        test word [cs:rules_hi], RULE_HI_INT
+        jnz .rate
+        xor al, al                      ; (no INT roll)
+.rate:  mov [cs:learn_chance], al
+        mov si, SHINOBI_SPELLS          ; one of its spells?
+.its:   cmp [cs:si], dl
+        je .new
+        add si, 2
+        cmp si, SHINOBI_SPELLS_END
+        jb .its
+.not:   mov byte [cs:learn_result], LEARN_NOT_ITS
+        mov byte [cs:learn_msg], LEARN_NOT_ITS
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        xor ax, ax
+        jmp .told
+.new:   movzx ax, dl
+        cmp ax, NS_FIRST
+        jb .read
+        call ns_new                     ; (a new spell: only with RULE_NEW_SPELLS, room for its record)
+        jnc .not
+.read:  pop si
+        push si
+        xor al, al
+        cmp si, 3
+        ja .chance
+        mov al, [cs:read_lang + si]
+.chance:
+        mov [cs:learn_read_chance], al
+        call d100
+        mov [cs:learn_read], al
+        cmp al, [cs:learn_read_chance]
+        jbe .int
+        mov byte [cs:learn_result], LEARN_UNREAD
+        mov byte [cs:learn_msg], LEARN_UNREAD
+        jmp .out
+.int:   mov byte [cs:learn_result], LEARN_LEARNT
+        cmp byte [cs:learn_chance], 0
+        je .out
+        call d100
+        mov [cs:learn_roll], al
+        cmp al, [cs:learn_chance]
+        jbe .out
+        mov byte [cs:learn_result], LEARN_FAILED
+        mov byte [cs:learn_msg], LEARN_FAILED
+.out:   pop si
+        pop cx
         pop bx
         pop ax
 .told:  inc word [cs:learn_seq]
@@ -8273,17 +8361,23 @@ d100_hundred dw 100
 ; PROBE_LEARN_SAID: INT VEC_LEARN_SAID replaces "push ds / push 33F1h" (4 bytes: INT + 2 NOPs;
 ; DSUN.EXE 8B712h), the scroll's spell taught and the scroll used up, its message ("YOU LEARN THE
 ; SPELL"): after INT_LEARN's failed d100, the spell taken back (the known spells' table, DS less
-; KNOWN_FROM_DS) and LEARN_FAILED_TEXT pushed in its place. PROBE_LEARN_REFUSED: INT
-; VEC_LEARN_REFUSED replaces "push ds / push 3405h" (8B719h, "YOU ALREADY KNOW THIS SPELL"): after
-; INT_LEARN found the spell's level full, LEARN_FULL_TEXT.
+; KNOWN_FROM_DS) and LEARN_FAILED_TEXT pushed in its place (a Shinobi's scroll not read,
+; SHINOBI_READ's: LEARN_UNREAD_TEXT). PROBE_LEARN_REFUSED: INT VEC_LEARN_REFUSED replaces "push ds /
+; push 3405h" (8B719h, "YOU ALREADY KNOW THIS SPELL"): after INT_LEARN found the spell's level full,
+; LEARN_FULL_TEXT (not one of a Shinobi's spells: LEARN_NOT_ITS_TEXT).
 learn_failed_text db 'YOU FAIL TO LEARN THE SPELL', 0
 learn_full_text   db 'TOO MANY SPELLS OF THAT LEVEL', 0
+learn_unread_text db 'YOU CAN NOT READ THE SCROLL', 0
+learn_not_its_text db 'A SHINOBI CAN NOT LEARN THAT SPELL', 0
 lm_ip dw 0
 lm_cs dw 0
 lm_fl dw 0
 probe_learn_said:
         cmp byte [cs:learn_msg], LEARN_FAILED
+        je .taken_back
+        cmp byte [cs:learn_msg], LEARN_UNREAD
         jne .game
+.taken_back:
         push ax
         push bx
         push ds
@@ -8310,12 +8404,16 @@ probe_learn_said:
 .taken: pop ds
         pop bx
         pop ax
-        mov byte [cs:learn_msg], 0
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
         push cs
         push learn_failed_text
+        cmp byte [cs:learn_msg], LEARN_UNREAD
+        jne .said
+        add sp, 2
+        push learn_unread_text
+.said:  mov byte [cs:learn_msg], 0
         jmp learn_back
 .game:  pop word [cs:lm_ip]
         pop word [cs:lm_cs]
@@ -8332,11 +8430,17 @@ probe_learn_refused:
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
-        cmp byte [cs:learn_msg], LEARN_FULL
-        jne .game
-        mov byte [cs:learn_msg], 0
         push cs
         push learn_full_text
+        cmp byte [cs:learn_msg], LEARN_FULL
+        je .said
+        add sp, 2
+        push learn_not_its_text
+        cmp byte [cs:learn_msg], LEARN_NOT_ITS
+        je .said
+        add sp, 4
+        jmp .game
+.said:  mov byte [cs:learn_msg], 0
         jmp learn_back
 .game:  push ds
         push 0x3405
