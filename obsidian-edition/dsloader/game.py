@@ -387,7 +387,8 @@ EFFECT_RULES = {
     # one, Improved Invisibility (timed) has none
     23: "attacking or casting at an enemy ends it, unless it is Improved Invisibility",
     24: "ends when it attacks or casts at an enemy",
-    25: "each weapon attack has a 75% chance (50% for Reflected Image's) to hit an image instead, using one up",
+    25: ("a touch spell from a foe has a 75% chance (50% for Reflected Image's) to strike an image instead, "
+         "using one up and lost; weapon blows aren't stopped (the game's rule)"),
     29: "can't be Paralyzed or Slowed",
     33: "can't attack or cast harmful spells",
     34: "loses its turns, can't move, fails every saving throw",

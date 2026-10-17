@@ -1593,9 +1593,16 @@ copy of RESOURCE.GFF.
 - Reflected Image is Mirror Image's record (19) with one image (`+4` 11h,
   1d1), so it is Mirror Image's effect 25 and replaces it, and either recast
   replaces the last, as the game does for Mirror Image; Dispel Magic ends it
-  as it ends Mirror Image. Where an attack rolls d100 against the images
+  as it ends Mirror Image. Where a spell rolls d100 against the images
   (7A5BFh, `cmp ax,4Bh` at 7A5CDh, `NS_IMAGE`), the helper looks up the
   target's effect 25 and makes the chance 50 when the effect's spell is 199.
+  That roll is the game's only use of the images: in the routine that lands
+  a spell on its target (7A539h, from 78C19h), for a spell of touch range
+  (618:20h, 8 or less); weapon blows come with no spell (-1) and skip it.
+  The game made no exception for the caster's own spells, so Armor cast on
+  oneself under Mirror Image was lost three times in four, an image with it;
+  the helper makes the chance 0 when the caster (DI) is the target (SI), or
+  both are party members (below 4).
   Where the game finds an effect's entry in the effects' table (its number
   times 6: the Effects screen's icons and names, 7ED37h, 7EEC9h, 7EF34h; the
   Look box's, 5FD1Ch; the status under a portrait, 71DF5h; `NS_ENTRY`), the

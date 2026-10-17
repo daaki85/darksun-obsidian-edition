@@ -24,6 +24,12 @@ have the detail.
   thief agrees to fetch his gem ("It's a deal!"), he hands his set over.
 
 **Fixed**
+- **Mirror Image no longer takes a spell its caster casts on themself**
+  (seen in 2.4.0): Armor cast on oneself under Mirror Image was lost three
+  times in four, using up an image each time, so no Armor and fewer images.
+  A party member's spell on another is let through too. In the game, the
+  images take only touch spells, never weapon blows; the Loader's lines and
+  the docs, which said weapon blows, now say so.
 - **A new game's arena could be left without its announcer, and new characters
   without their gear** (seen in 2.4.0): the Loader fits new characters'
   starting gear on the creation screen, and

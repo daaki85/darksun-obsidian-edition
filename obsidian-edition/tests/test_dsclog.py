@@ -2512,22 +2512,26 @@ class NewSpellTests(RuleTests):
         self.mu.mem_write(TSR * 16 + SEG_MOVED, bytes([value]))
 
     def test_image_chance(self):
-        """A blow at a thing with Mirror Images (25) on it (NS_IMAGE, thing SI, the d100 AX): an
-        image takes it on 75 or less, on 50 or less if Reflected Image (199) put the effect there;
-        the flags of that compare."""
+        """A touch spell from thing DI at a thing with Mirror Images (25) on it (NS_IMAGE, thing SI,
+        the d100 AX): an image takes it on 75 or less, on 50 or less if Reflected Image (199) put
+        the effect there; the flags of that compare. Never one cast on oneself or by a party
+        member on another."""
         from dsloader import gamepatch
         effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
         self.mu.mem_write(effects, struct.pack("<hhhBB", 2, 0, 19, 25, 0) + bytes(2)
                           + struct.pack("<hhhBB", 5, 0, 199, 25, 0) + bytes(2))
         self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
-        def greater(thing, roll):
-            flags = self.site(gamepatch.NS_IMAGE, esi=thing, eax=roll)
+        def greater(thing, roll, caster=40):
+            flags = self.site(gamepatch.NS_IMAGE, esi=thing, edi=caster, eax=roll)
             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), roll)
             return not flags & 0x40 and bool(flags & 0x80) == bool(flags & 0x800)
         self.rules(32)
         self.moved(1)
         self.assertEqual([greater(2, n) for n in (50, 51, 75, 76)], [False, False, False, True])
         self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, True, True, True])
+        self.assertEqual([greater(2, n, caster) for n in (1, 75) for caster in (2, 0, 3)], [True] * 6)
+        self.assertEqual([greater(40, n, 40) for n in (1, 100)], [True, True])
+        self.assertEqual([greater(40, 75, 2), greater(2, 75, 41)], [False, False])
         self.rules(0)
         self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, False, False, True])
 

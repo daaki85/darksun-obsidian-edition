@@ -874,8 +874,9 @@ A round is 60 game seconds. Some effects last a number of uses instead
 - Stoneskin: 1 a level + 1d4. Any damage uses a charge, even fire that gets
   through, but only blows are stopped.
 - Ironskin: 1d6 blows stopped.
-- Mirror Image: 1 a level + 1d4 images. Each weapon attack has a 75% chance to
-  hit an image.
+- Mirror Image: 1 a level + 1d4 images. A touch spell cast by a foe has a 75%
+  chance to strike an image instead, and is lost. In the game's own rule,
+  weapon blows aren't stopped by the images.
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
@@ -2617,7 +2618,7 @@ sheet, so it saves with the game and the character.
 | **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
 | **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, and counts as a +1 magical weapon |
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | −3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
-| **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: an attack on the caster has a 50% chance of striking the image instead, which vanishes |
+| **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: a foe's touch spell has a 50% chance of striking the image instead, which vanishes (as Mirror Image's, weapon blows aren't stopped) |
 | **Spook** | 1 | one creature in sight | 3 rounds (a save negates) | the creature panics and flees (Afraid); its save is 1 worse for every 2 caster levels (at most −6); undead aren't affected, and magic resistance applies |
 | **Friends** | 1 | the caster | 1d4 rounds and 1 a caster level | CHA + 2d4 (at most 25): lower shop prices |
 
@@ -2639,8 +2640,9 @@ sheet, so it saves with the game and the character.
   own blue); like any bolt it needs a clear line to the target. Its THAC0
   breakdowns show `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on
   attacks against it. Its icon is a grey cloud.
-- **Reflected Image** is a smaller Mirror Image: one image, struck instead of
-  the caster half the time (Mirror Image's are three quarters of the time).
+- **Reflected Image** is a smaller Mirror Image: one image, struck by a foe's
+  touch spell instead of the caster half the time (Mirror Image's are three
+  quarters of the time).
   The two don't add up: casting either one replaces the other, and casting
   Reflected Image again only gives the one image back. Dispel Magic ends it.
   Its icon is a hand mirror with one figure in it, on the Effects screen too,

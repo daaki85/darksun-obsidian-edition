@@ -13205,15 +13205,27 @@ ns_claw:
         popad
         iret
 
-; NS_IMAGE: "cmp ax,4Bh" (7A5CDh; 3 bytes) where a weapon's blow at thing SI with Mirror Images
-; (25) on it strikes an image instead on a d100 (AX) of 75 or less: 50 or less for one of Reflected
-; Image (the effect's spell, NS_EFFECT_SPELL), its flags into the INT's frame.
+; NS_IMAGE: "cmp ax,4Bh" (7A5CDh; 3 bytes) where a spell of touch range cast by thing DI on thing
+; SI with Mirror Images (25) on it strikes an image instead (the spell lost, an image gone) on a
+; d100 (AX) of 75 or less: 50 or less for one of Reflected Image (the effect's spell,
+; NS_EFFECT_SPELL), its flags into the INT's frame. Never one cast on oneself (the game's took
+; Armor cast on oneself), nor one a party member casts on another: 0, as if the d100 were over.
 IMAGE_CHANCE equ 75
 REFLECT_CHANCE equ 50
 ns_image:
         pushad
         push es
         mov di, sp
+        xor dx, dx
+        mov ax, [ss:di + NS_SI]
+        mov bx, [ss:di + NS_DI]
+        cmp ax, bx
+        je .cmp
+        cmp ax, 4
+        jae .theirs
+        cmp bx, 4
+        jb .cmp                 ; (party member to party member)
+.theirs:
         mov dx, IMAGE_CHANCE
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .cmp
