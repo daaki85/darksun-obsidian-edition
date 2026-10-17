@@ -3016,10 +3016,11 @@ of a random preserver spell, any of the game's 69 (1st to 5th level) or, with
 the new spells on, the Loader's new ones. When it dies the scroll is on its
 body, with the rest of what it carried.
 
-The defilers are those the game makes defilers: Balkazar, Wyrmias, the Troop
-Leader, the arena's Defiler (who dies in the opening fight), the Dark Spiders,
-the thri-kreen Click-tunk!, Churr-te-tunk! and Cheee-smak-tunk!, and a few
-more, on either side of the fight. Kalzith keeps his own scrolls.
+The defilers are those the game makes defilers: Balkazar, Wyrmias, Tara, the
+Troop Leader, the arena's Defiler (who dies in the opening fight), the Dark
+Spiders and the Spider Mother, the Hermit, and the thri-kreen Click-tunk!,
+Churr-te-tunk! and Cheee-smak-tunk!, on either side of the fight. No one else
+carries one. Kalzith keeps his own scrolls.
 
 The scroll is the game's own kind: a preserver learns from it as from any
 scroll (right-click it, then click its spell's icon), and it sells for 3,000

@@ -47,6 +47,13 @@ have the detail.
   other parts of the game's code over the routine that closed the Look box,
   and DSCLOG went back into it without a way back the game's overlay manager
   could mend. It now gives it one, as it does for a picked pocket's window.
+- **Defilers' scrolls on creatures that aren't defilers** (one of Scar's
+  henchmen dropped one): the Loader knew a defiler by the class on its
+  character sheet, which the game hands on from one creature to the next. It
+  now knows one by the game's object for it: only the creatures the game's
+  data makes defilers (Balkazar, Wyrmias, Tara, the Troop Leader, the arena's
+  Defiler, the Dark Spiders and the Spider Mother, the Hermit and three
+  thri-kreen) carry one.
 
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 

@@ -3,8 +3,8 @@
 The game puts all a creature carries in a pile where it falls, in the same step as its hit points
 reach 0 (seen in the arena's opening fight: the Defiler's lists emptied and its things on the
 ground before the Loader's next look), so a scroll can't be added at the death itself. Instead,
-each defiler (a creature whose sheet has the defiler's class, 18: Balkazar, Wyrmias, the Troop
-Leader, the arena's Defiler, the Dark Spiders...) is rolled for once in each fight it is seen in,
+each defiler (a creature of one of the game's objects whose record has the defiler's class, 18:
+DEFILER_OBJECTS) is rolled for once in each fight it is seen in,
 alive: d100, CHANCE or less and it carries a scroll of a random preserver spell, which the game
 drops with the rest of its things when it dies. Kalzith keeps his own loot (kalzith.loot).
 
@@ -26,6 +26,14 @@ from . import game, kalzith, npcitems
 
 CHANCE = 5  # percent
 DEFILER_CLASS = 18  # (a sheet's classes, SHEET_CLASSES: the defilers', which no party member has)
+# The game's objects whose records (SEGOBJEX.GFF's RDFF) have that class: Balkazar (14, 72), the
+# Troop Leader (18), Tara (24), Wyrmias (32), the thri-kreen Click-tu, Cheee-sm and Churr-te (38,
+# 40, 52), the Dark Spiders (53, 54, 147, 255), the Hermit (81), the Spider Mother (161) and the
+# arena's Defilers (258, 296). Known by a creature's object (CREATURE_OBJECT), not the class on its
+# character sheet: the game hands sheets on from one creature to the next, so a sheet can still be
+# a defiler's under another (one of Scar's henchmen was given a scroll so).
+DEFILER_OBJECTS = frozenset((14, 18, 24, 32, 38, 40, 52, 53, 54, 72, 81, 147, 161, 255, 258, 296))
+CREATURE_OBJECT = 0x06  # (a creature record's object, negated: the record's copy of RDFF's +10h)
 SCROLL_OBJECT = kalzith.SCROLL_FROM  # (the game's first scroll object, whose picture all scrolls share)
 PRICE_PER_LEVEL = 3000
 WIZARD_SPELLS = range(0, 69)  # (the game's wizard spells: 0-68, of levels 1 to 5)
@@ -67,9 +75,9 @@ class DefilerScrolls:
 
     def _is_defiler(self, gd, index: int, key) -> bool:
         if key not in self.defilers:
-            sheet = gd.sheet(index)
-            classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] if len(sheet) >= game.SHEET_CLASSES + 3 else b""
-            self.defilers[key] = DEFILER_CLASS in classes
+            rec = gd.creature(index)
+            obj = -struct.unpack_from("<h", rec, CREATURE_OBJECT)[0] if len(rec) >= CREATURE_OBJECT + 2 else 0
+            self.defilers[key] = obj in DEFILER_OBJECTS
         return self.defilers[key]
 
     def _carries_one(self, gd, index: int) -> bool:

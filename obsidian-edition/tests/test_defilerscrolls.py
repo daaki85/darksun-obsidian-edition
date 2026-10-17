@@ -12,9 +12,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dsloader import defilerscrolls as ds, game, kalzith
 
 
-def creature(name: bytes, hp: int = 20, status: int = 1) -> bytes:
+def creature(name: bytes, hp: int = 20, status: int = 1, obj: int = 0) -> bytes:
     rec = bytearray(game.CREATURE_SIZE)
     struct.pack_into("<h", rec, 0, hp)
+    struct.pack_into("<h", rec, ds.CREATURE_OBJECT, -obj)
     rec[game.CREATURE_STATUS] = status
     rec[game.CREATURE_NAME:game.CREATURE_NAME + len(name) + 1] = name + b"\0"
     return bytes(rec)
@@ -22,16 +23,18 @@ def creature(name: bytes, hp: int = 20, status: int = 1) -> bytes:
 
 class FakeGame:
     """Creatures after the party: 4 a Defiler, 5 a Slig, 6 Kalzith, 7 a dead Dark Spider, 8 a Dark
-    Spider; their sheets' classes (18 the defilers')."""
+    Spider, 9 one of Scar's henchmen; their sheets' classes (18 the defilers': the henchman's
+    sheet a defiler's left to it)."""
 
     def __init__(self):
         self.fighting = True
         self.area = 0x2F
         recs = [creature(b"Party")] * game.PARTY_SIZE + [
-            creature(b"Defiler"), creature(b"Slig"), creature(b"Kalzith"),
-            creature(b"Dark Spider", hp=0, status=5), creature(b"Dark Spider")]
+            creature(b"Defiler", obj=296), creature(b"Slig", obj=269), creature(b"Kalzith", obj=kalzith.OBJECT),
+            creature(b"Dark Spider", hp=0, status=5, obj=53), creature(b"Dark Spider", obj=53),
+            creature(b"Henchman", obj=229)]
         self.table = b"".join(recs)
-        self.classes = {4: 18, 5: 0, 6: 18, 7: 18, 8: 18}
+        self.classes = {4: 18, 5: 0, 6: 18, 7: 18, 8: 18, 9: 18}
 
     def in_combat(self):
         return self.fighting
@@ -90,7 +93,8 @@ class DefilerScrollTests(unittest.TestCase):
 
     def test_roll_once_a_fight(self):
         """In a fight: the Defiler and the living Dark Spider rolled for, once; not the Slig, nor
-        Kalzith, nor the dead one; a roll of 5 or less gives a scroll."""
+        Kalzith, nor the dead one, nor the henchman with a defiler's sheet; a roll of 5 or less
+        gives a scroll."""
         rolls = iter([5, 6])
         w = Watch()
         lines = w.watch(self.gd, False, roll=lambda: next(rolls), choose=lambda pool: 36)
@@ -100,6 +104,12 @@ class DefilerScrollTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<H", self.given[0][1], kalzith.ITEM_SPELL)[0], 37)
         w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)  # (rolled: not again)
         self.assertEqual(w.given, [("Defiler", "Hold Person")])
+
+    def test_defilers_by_object(self):
+        """Only the game's defiler objects: every roll a scroll, the henchman still none."""
+        w = Watch()
+        w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)
+        self.assertEqual([index for index, _ in self.given], [4, 8])
 
     def test_not_out_of_a_fight(self):
         self.gd.fighting = False

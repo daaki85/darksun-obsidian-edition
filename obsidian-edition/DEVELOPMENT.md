@@ -1906,12 +1906,17 @@ were empty, and its things in the container (object 306's item), before the
 Loader looked again, a quarter of a second later. A scroll can't be put on
 the body at the death itself, so `defilerscrolls.py` gives it earlier: while
 the game's fight flag (`IN_COMBAT`) is set, each living creature after the
-party whose sheet's classes (`+21h`) include 18, the defilers' (no party
-member has it), is rolled for once (d100, 5 or less; Kalzith left out), and a
+party of one of the game's defiler objects (`DEFILER_OBJECTS`: those whose
+SEGOBJEX record has class 18, the defilers', at `+6Fh`; a creature record's
+`+06h` is its object, negated) is rolled for once (d100, 5 or less; Kalzith left out), and a
 scroll put in its pack (`npcitems.add_to`, a list of its own if it has none),
 which the game then drops with the rest. Checked in the game: the arena
 Defiler given a scroll of Haste as it came on, the scroll in its container
 after the Rampager killed it, its lists back on the game's free list.
+
+The object, not the class on the creature's character sheet (`+21h`): the
+game shares and reuses its few monster sheets (the arena's three Sligs had one), and one of Scar's
+henchmen, under a defiler's sheet, was given a scroll in 2.4.0.
 
 The rolls are kept for the session by area, creature and name, and forgotten
 when the game's clock goes back or the party changes (a game loaded); a
