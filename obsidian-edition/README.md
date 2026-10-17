@@ -1188,7 +1188,8 @@ has a script command that lets each member try in turn, but no script uses it.)
 in the game, so they make no difference; nor does the equipment penalty on
 them. (The Loader rolls move silently when a pocket isn't picked, see
 [Picking pockets](#picking-pockets), and hide in shadows and move silently in
-fights, to [backstab](#hiding-in-shadows-to-backstab).) The scripts also make
+fights, to [backstab](#hiding-in-shadows-to-backstab), and read languages
+when a [Shinobi](#thief-kits) reads a scroll.) The scripts also make
 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
 `python -m dsloader checks` lists them all with the script's text around
@@ -2540,7 +2541,10 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
 The game has one pocket to pick, in the Trustee's conversation (his key). With
 **Picking pockets** ticked, a thief can try anyone's with **Thieves' Tools**
 (a satchel). No one starts with them: **Mirlon** in the slave pens carries a
-set, for a party that kills him, and Kel sells two sets in his caravan.
+set, and Kel sells two sets in his caravan. Mirlon's are the party's if they
+kill him, or, without a fight, if their leader is a thief when they agree to
+fetch his gem ("It's a deal!"): he sees what trade they're in and hands them
+over.
 
 On the inventory screen, pick the tools up, go back to the game with them on
 the pointer, and click someone in sight. The tools stay on the pointer for the
@@ -2710,7 +2714,7 @@ them:
 | ![](docs/items/metal-polearm.png) | **Metal Polearm** | carried by one of the six **Castle Guards** of the Upper Castle; an earth cleric's starting polearm | the game's polearm, in metal |
 | ![](docs/items/bone-scale-arm-armor.png) ![](docs/items/bone-scale-leg-armor.png) ![](docs/items/bone-helm.png) | **Bone Scale Arm Armor**, **Leg Armor** and **Bone Helm** | in the slave pens' chest with the Bone Scale Chest Armor and Arrows +3 (the game has the set but places only the chest piece) | the set; the helm AC 1 with [Helms give AC 1](#helms), worn by those who can wear the armour (not thieves) |
 | ![](docs/items/leather-helm.png) | **Helm** | in **Kurzak**'s pack, in the slave pens | the game's leather helm |
-| ![](docs/items/thieves-tools.png) | **Thieves' Tools** | on **Mirlon** in the slave pens; sold by **Kel** in his caravan (two sets, 30 each) | [picking pockets](#picking-pockets) |
+| ![](docs/items/thieves-tools.png) | **Thieves' Tools** | on **Mirlon** in the slave pens (he gives them to a thief who takes his deal); sold by **Kel** in his caravan (two sets, 30 each) | [picking pockets](#picking-pockets) |
 
 The bone and obsidian weapons are also new characters' starting weapons with
 [weapon specialization](#weapon-specialization), each in a material the

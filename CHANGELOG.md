@@ -20,6 +20,8 @@ have the detail.
   the rule for INT on, learns the spell at INT's chance. A failed roll uses
   the scroll up; a scroll of a spell not among its 18 is kept, unlearnt. The
   dice log shows both rolls.
+- **Mirlon's Thieves' Tools without a fight**: when a party whose leader is a
+  thief agrees to fetch his gem ("It's a deal!"), he hands his set over.
 
 **Fixed**
 - **A new game's arena could be left without its announcer, and new characters

@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, mirlon, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -1014,6 +1014,7 @@ class DiceLog:
             semyon.watch(self.game)  # (killed: never put in the pens)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
+            out += mirlon.watch(self.game)  # (a thief leader takes his deal: his tools, mirlon.py)
             if kalzith.watch(self.game):  # (killed: Dinos and the Trustee speak of him so)
                 left = kalzith.loot(self.game)  # (one of his scrolls, his Cloak and Quarterstaff)
                 if left:

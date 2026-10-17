@@ -1492,6 +1492,19 @@ something on the map tells the helper what was used on what (`INT FDh`). For
 the thieving tools on someone, the Loader rolls and moves the item, and the
 helper shows the result instead of the game's "nothing happens".
 
+Mirlon's set (`mirlon.py`): the game's scripts can't ask a character's class,
+so in the pens the Loader keeps its flag 800 (`OFFER`) set while the leader
+(`whose_turn`) has a thief class and Mirlon carries the tools. In the Loader's
+copy of his script (143), the menu reply "It's a deal! I'll be back soon."
+(shown once he has said where the gem is) jumps to code after the script's end
+instead of to "Good luck!" (5336; the reply's target rewritten in place, the
+same length): if flag 800, his words, a click and flag 801 (`GIVEN`), then on
+to "Good luck!". On 801, while he talks, the Loader unlinks his set (the item
+itself) from his list and puts it in a free backpack cell of the leader's,
+once (flag 802, `MOVED`). Checked in the game: Gerakis made a thief, the deal
+taken, his words shown, the tools (item 202) moved from Mirlon to Gerakis's
+backpack and none left on Mirlon.
+
 The Trustee's key (his own pick, in his talk): a thief with no room for it has
 it dropped at his feet (script 146), and his rounds (script 8, from 3767; its
 step in word variable 135,20) test after each step whether the key is stolen

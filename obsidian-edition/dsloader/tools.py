@@ -1,6 +1,7 @@
 """Thieving tools: an item of the Loader's own that picks pockets.
 
-A set is Mirlon's, in the slave pens, for a party that kills him, and Kel sells two in his
+A set is Mirlon's, in the slave pens, for a party that kills him or a thief leader who takes his
+deal for the gem (mirlon.py), and Kel sells two in his
 caravan (worldgear.py). Picked up on the inventory screen and taken back to the game, the pointer carries them; clicked on someone,
 the patched game's routine for using an item on something (DSCLOG's PROBE_USE_ITEM) has the
 Loader try that person's pockets with the leader's hand (pickpocket.py), and shows what came

@@ -1300,8 +1300,9 @@ and the same race and DEX adjustments.
 
   When nothing worth taking is left, the thief takes a few coins from the
   purse, and that is the last try on them. No one starts with the tools:
-  Mirlon in the slave pens carries a set, and Kel sells two.
-- **Read languages** is never rolled.
+  Mirlon in the slave pens carries a set (and gives it to a thief leading the
+  party who agrees to fetch his gem), and Kel sells two.
+- **Read languages** is rolled only when a Shinobi reads a scroll.
 
 *Without the mod:* the game's own chances, which run much higher (a base of its
 own plus 4 a level), and a penalty when a thief holds anything in either hand,
@@ -1588,7 +1589,7 @@ magic weapons are also marked \* in each class's list.
 | Metal pick, metal polearm | the game's, in metal |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
-| Thieves' Tools | [picking pockets](#thieves-skills-and-picking-pockets); Mirlon in the slave pens carries a set, Kel sells two |
+| Thieves' Tools | [picking pockets](#thieves-skills-and-picking-pockets); Mirlon in the slave pens carries a set (a thief who takes his deal gets it), Kel sells two |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.
