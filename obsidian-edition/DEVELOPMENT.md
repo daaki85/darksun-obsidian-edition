@@ -1526,7 +1526,21 @@ to talk more...") until the rounds' first step clears it, so a stall left him
 busy for good. In the Loader's copy of `GPLDATA.GFF` (`pensasks.py`), the test
 asks for flag 55 to be 2, which it never is (`no_key_chase`), and the busy line
 jumps to code after the script's end that clears flag 51, says it and jumps
-back (`busy_once`).
+back (`busy_once`); it also starts his rounds again (a call to 8 at 3767, as
+the game's door script 147 does), so rounds that stopped walk on.
+
+His rounds pick a corner by their step (word variable 20, 0 to 5, a case each:
+27h), but steps 1 and 5 have none: a pause at the corner he has, its x and y
+left in word variables 2 and 3. Those are every script's, and a run of another
+in between (the door's 147, Kurzak's 141, the escape's 137) leaves other
+numbers there: one save had him making for x −4943. He never arrives, and the
+rounds go on only when he does, so he stood still, busy for good. The game's
+steps never reach 6 and 7 (past 5 is 0), so in the Loader's copy their cases
+are 1's and 5's (`rounds_pauses`): each case's value changed in place, its first
+command a jump to code after the script's end that sets the corner before it
+(0's for 1, 4's for 5) and goes on to the next case. Checked in the game with
+the save: talked to, he said his busy line and walked his rounds again (steps
+2, 3, 4, 0, 2 within a minute).
 
 ### Mirror Image
 

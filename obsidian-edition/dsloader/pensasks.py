@@ -22,7 +22,7 @@ from typing import Callable, NamedTuple, Optional, Sequence
 from . import gamepatch, gpl, kalzith, semyon, vulture
 from .kalzith import _Script
 
-GOTO, MENU, SET, TEST, SKIP_UNLESS = 0x64, 0x48, 0x16, 0x18, 0x63
+GOTO, MENU, SET, TEST, SKIP_UNLESS, CALL = 0x64, 0x48, 0x16, 0x18, 0x63, 0x14
 WHERE = 0x80  # (the person talking, an object): 999 when the object isn't on the map (only for
 # the game's objects, below 520: Kalzith's, 1000, is never found, so his question waits on the
 # flag the Loader sets once it has found him in the pens and given him his scrolls)
@@ -218,7 +218,8 @@ def with_asks(script: bytes, field_types: bytes, first: str, asks: Sequence[Ask]
 # work") from a talk until his rounds of the pens (script 8, his walk from corner to corner) come
 # back to their first corner, which clears it. Rounds that stop (he can't reach his next corner)
 # leave him busy for good, his talk and his key with it. With the Loader he says it once and is
-# free to talk the next time: the line jumps to a piece clearing BUSY, then saying it.
+# free to talk the next time: the line jumps to a piece clearing BUSY, starting his rounds again
+# (as the game's script 147 does when he opens a door: stopped rounds walk on), then saying it.
 BUSY = 51
 
 
@@ -238,6 +239,7 @@ def busy_once(script: bytes, field_types: bytes, original: Optional[bytes] = Non
     s = _Script()
     s.label("busy")
     s.flag(BUSY, 0)
+    s.op(CALL, ("n", ROUNDS_AT), ("n", ROUNDS_SCRIPT))  # (his rounds going again: rounds_pauses)
     s.op(GOTO, ("n", after.at))
     added = bytearray(s.bytes(base=len(script), end=False))
     at = len(script) + len(added) - len(gpl.encode_op((GOTO, [("n", after.at)])))
@@ -257,6 +259,7 @@ def busy_once(script: bytes, field_types: bytes, original: Optional[bytes] = Non
 # Loader's copy has him leave it there (the party can pick it up): the test asks for a value the
 # flag never has.
 ROUNDS_SCRIPT, KEY_STOLEN, KEY, NEVER = 8, 55, -30032, 2
+ROUNDS_AT = 3767  # (where his rounds start: the pens' master script, 41, has him walk on from it)
 
 
 def no_key_chase(script: bytes, field_types: bytes) -> bytes:
@@ -274,10 +277,70 @@ def no_key_chase(script: bytes, field_types: bytes) -> bytes:
     return script
 
 
+# His rounds pick their corner by their step (word variable 20, 0 to 5): steps 0, 2, 3 and 4 name a
+# corner, but 1 and 5 none (a pause: he stays at the corner he has, its x and y still in the
+# script's word variables 2 and 3). Those are every script's: one run between (the door's, 147;
+# Kurzak's, 141; the escape's, 137) leaves other numbers there, and he walks for a square that
+# isn't there (one save: x -4943). He never gets there, so his rounds, which go on only when he
+# arrives, stop: he stands, busy for good. The game's steps never reach 6 and 7 (past 5 is 0), so
+# in the Loader's copy their cases are 1's and 5's: the corner before each (0's, and 4's).
+STEP, CASE, CORNER = ("var", 0x87, 20), 0x27, (("var", 2, 2), ("var", 2, 3))
+PAUSES = ((1, 6, 0), (5, 7, 4))  # (step, the case it takes over, the step whose corner it keeps)
+FILLER = 0x67  # (what is left of the case's first command, never reached)
+
+
+def rounds_pauses(script: bytes, field_types: bytes, original: Optional[bytes] = None) -> bytes:
+    """SCRIPT (the Trustee's rounds) with steps 1 and 5 going to a corner of their own; unchanged
+    if they aren't as the game has them (or done already). ORIGINAL: the game's script."""
+    original = original or script
+    ops = gpl.decode(original, field_types)
+    at = {o.at: i for i, o in enumerate(ops)}
+    switch = next((i for i, o in enumerate(ops) if o.code == 0x17 and o.args == [STEP]), None)
+    if switch is None:
+        return script
+    cases, i = {}, switch + 1
+    while i < len(ops) and ops[i].code == CASE and ops[i].args[1][1] in at:
+        cases[ops[i].args[0][1]] = i
+        i = at[ops[i].args[1][1]]
+
+    def corner(step):
+        body = ops[cases[step] + 1:at[ops[cases[step]].args[1][1]]]
+        sets = {o.args[1]: o.args[0] for o in body if o.code == 0x16 and len(o.args) == 2}
+        return [sets.get(v) for v in CORNER]
+    if any(n not in cases for _, n, k in PAUSES for n in (n, k)) or any(s in cases for s, _, _ in PAUSES) \
+            or any(None in corner(k) for _, _, k in PAUSES):
+        return script
+    out, s, jumps = bytearray(script), _Script(), []
+    for step, old, keep in PAUSES:
+        case, first = ops[cases[old]], ops[cases[old] + 1]
+        end = ops[cases[old] + 2].at
+        if script[case.at:end] != original[case.at:end]:
+            return script  # (done already)
+        new = gpl.encode_op((CASE, [("n", step), case.args[1]]))
+        jump = gpl.encode_op((GOTO, [("n", 0)]))
+        if len(new) != first.at - case.at or end - first.at < len(jump):
+            return script
+        out[case.at:first.at] = new
+        jumps.append((first.at, end, f"pause {step}"))
+        s.label(f"pause {step}")
+        for value, var in zip(corner(keep), CORNER):
+            s.op(0x16, value, var)
+        s.op(GOTO, case.args[1])  # (on to the next case, as a case's body does)
+    added = s.bytes(base=len(script), end=False)
+    out += added
+    if len(out) > LONGEST:
+        return script
+    for where, end, label in jumps:
+        jump = gpl.encode_op((GOTO, [("n", s.at[label])]))
+        out[where:end] = jump + bytes([FILLER]) * (end - where - len(jump))
+    return bytes(out)
+
+
 def script_chunks(chunks, field_types: bytes, vulture: bool = True) -> dict:
     """For the Loader's copy of GPLDATA: Dinos's and the Trustee's talks with the questions (the
-    vulture's only with the vulture quest on), the Trustee's busy line said once, and his rounds
-    without his walk to a dropped key."""
+    vulture's only with the vulture quest on), the Trustee's busy line said once (his rounds going
+    again), and his rounds without his walk to a dropped key, their pauses at a corner of their
+    own."""
     out = {}
     for number, first, asks, before in MENUS:
         if VULTURE in asks and not vulture:
@@ -296,7 +359,7 @@ def script_chunks(chunks, field_types: bytes, vulture: bool = True) -> dict:
             out[key] = changed
     key = ("GPL ", ROUNDS_SCRIPT)
     if key in chunks:
-        changed = no_key_chase(chunks[key], field_types)
+        changed = rounds_pauses(no_key_chase(chunks[key], field_types), field_types, chunks[key])
         if changed != chunks[key]:
             out[key] = changed
     return out

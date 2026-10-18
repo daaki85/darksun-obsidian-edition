@@ -24,6 +24,12 @@ have the detail.
   thief agrees to fetch his gem ("It's a deal!"), he hands his set over.
 
 **Fixed**
+- **The Trustee stuck in the pens** (again): his rounds' two pauses took their
+  corner from numbers any script in the pens could change, and once another
+  had, he set off for a spot that doesn't exist and stood still for good, busy.
+  The pauses now have corners of their own, and his busy line starts his
+  rounds again, so a Trustee already stuck in a saved game walks on once
+  talked to.
 - **Figures hold the Loader's own weapons**: the bone and obsidian short swords
   and axes a new warrior starts with, the metal daggers, maces, great axes,
   picks and polearms, and the other new weapons were drawn as nothing, so a
