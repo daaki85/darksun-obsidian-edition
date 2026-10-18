@@ -1041,7 +1041,9 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   set of properties, in a table the game fills when it starts.
 - Every hit has damage kinds: fire, cold, electricity, acid, poison, draining,
   psionic, death, and for weapons crushing, edged or pointed, from the item's
-  type. A weapon's hit also carries its magic: one bit for +1 or better, one
+  type; a natural (unarmed) attack's is crushing, fists and monsters' claws
+  alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
+  Claw's talons are edged: see [Erdlu Claw](#new-wizard-spells)). A weapon's hit also carries its magic: one bit for +1 or better, one
   for +2 or better and one for +3 or better (the weapon's plus, or its
   ammunition's if that's higher). A monster's own attacks count as magical by
   its level: (level - 2) / 2, so a 6th-level monster hits like a +2 weapon.
@@ -2625,7 +2627,7 @@ sheet, so it saves with the game and the character.
 | Spell | Level | Cast on | Lasts | Does |
 |---|---|---|---|---|
 | **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
-| **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, and counts as a +1 magical weapon |
+| **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, counts as a +1 magical weapon, and cuts (edged, not crushing) |
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | −3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
 | **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: a hit, or a foe's spell for one creature, has a 50% chance of striking the image instead, which vanishes |
 | **Spook** | 1 | one creature in sight | 3 rounds (a save negates) | the creature panics and flees (Afraid); its save is 1 worse for every 2 caster levels (at most −6); undead aren't affected, and magic resistance applies |
@@ -2641,7 +2643,10 @@ sheet, so it saves with the game and the character.
   thri-kreen's four claws and bite become 1d6+1 each (a natural attack already
   better on average, as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in
   the log's THAC0 breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons
-  hurt creatures that only magical weapons can. With **Body Weaponry** or
+  hurt creatures that only magical weapons can. They cut: edged, where the
+  game makes every unarmed attack crushing, so a creature crushing weapons
+  can't hurt (a mastyrial) is hurt by them. A thri-kreen in the party fights
+  with edged claws the same way, with or without the spell. With **Body Weaponry** or
   **Animal Affinity** up, the power's dice for the first attack get the claw's
   +1: 2d4+1 or 1d10+1.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as

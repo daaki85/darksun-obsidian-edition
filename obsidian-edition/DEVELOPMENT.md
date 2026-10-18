@@ -1678,7 +1678,12 @@ copy of RESOURCE.GFF.
   routine (58019h, `NS_FIST` at 58226h), where a hit gets its weapon's magic
   (`[BP-0Ch]`, which becomes damage kinds 1000h/2000h/8000h, PLUS1-PLUS3 in
   `monsters.py`), an unarmed attack (`[BP-2]` −1) is +1 to hit (`[BP-8]`,
-  taken off the THAC0) and at least a +1 weapon. The natural-attack routine
+  taken off the THAC0) and at least a +1 weapon. The same hook makes the hit's
+  damage kinds (`[BP-14h]`, set at 581DFh to crushing, 8, for any natural
+  attack) slashing (10h) for Erdlu Claw's talons, and for a thri-kreen of the
+  party's (combatant below 4, its sheet's race 8) whatever the spell: the game
+  has no other notion of claws, and the mastyrials' class takes nothing from
+  crushing. Monsters keep the game's. The natural-attack routine
   applies Body Weaponry (2d4) and Animal Affinity (at least 1d10) to the first
   attack after `NS_CLAW`, changing the dice but not the bonus: with the claw,
   2d4+1 and 1d10+1, as the description says.

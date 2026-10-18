@@ -13589,24 +13589,40 @@ ns_hit:
 ; NS_FIST: "cmp word [bp-0Ch],0" (58226h; 4 bytes: the site's number and a NOP after the INT) in the
 ; melee attack routine (58019h: SI the attacker; [BP-2] the weapon's item, -1 for none: a natural
 ; attack; [BP-8] its to-hit plus, taken off the THAC0; [BP-0Ch] its magic, which the hit's damage
-; kinds then get as PLUS1..PLUS3). With Erdlu Claw's effect on the attacker, a natural attack is
-; +1 to hit and at least a +1 weapon; then that compare.
+; kinds then get as PLUS1..PLUS3; [BP-14h] those kinds, the game's crushing (8) for any natural
+; attack). With Erdlu Claw's effect on the attacker, a natural attack is +1 to hit and at least a
+; +1 weapon. Its talons, and a thri-kreen of the party's claws, cut: a natural attack of either is
+; slashing, not crushing (monsters' own as the game has them). Then that compare.
+DMG_CRUSHING equ 0x08
+DMG_SLASHING equ 0x10
+PARTY_COUNT  equ 4             ; (game.PARTY_SIZE)
 ns_fist:
         pushad
         push es
         mov di, sp
-        test byte [cs:rules], RULE_NEW_SPELLS
-        jz .test
         cmp word [bp - 2], -1
         jne .test
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .kreen
         mov ax, si
         mov cl, CLAW_EFFECT
         call ns_has
-        jne .test
+        jne .kreen
         inc word [bp - 8]
         cmp word [bp - 0x0C], 1
-        jge .test
+        jge .claws
         mov word [bp - 0x0C], 1
+        jmp .claws
+.kreen: cmp si, PARTY_COUNT     ; (the party's combatants are their creatures)
+        jae .test
+        mov ax, si
+        call creature_sheet
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
+        jne .test
+.claws: test word [bp - 0x14], DMG_CRUSHING
+        jz .test
+        and word [bp - 0x14], ~DMG_CRUSHING
+        or word [bp - 0x14], DMG_SLASHING
 .test:  cmp word [bp - 0x0C], 0
         pushf
         pop ax

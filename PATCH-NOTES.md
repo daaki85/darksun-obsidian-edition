@@ -119,7 +119,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Magic and Psionics
 
-- **[New]** Six new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds), and at 1st level too **Reflected Image** (one image of the caster, struck instead of it half the time), **Spook** (a creature flees for 3 rounds unless it saves) and **Friends** (CHA +2d4 for a short while, for better prices).
+- **[New]** Six new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical edged weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds), and at 1st level too **Reflected Image** (one image of the caster, struck instead of it half the time), **Spook** (a creature flees for 3 rounds unless it saves) and **Friends** (CHA +2d4 for a short while, for better prices).
 - **[Changed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 
 ## Improved Thieving

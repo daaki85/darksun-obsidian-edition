@@ -2796,6 +2796,34 @@ class NewSpellTests(RuleTests):
         self.rules(0)
         self.assertEqual(run(5, -1, 0, 0), (0, 0, True))
 
+    def test_fist_claws_cut(self):
+        """NS_FIST's damage kinds ([BP-14h], the game's crushing for a natural attack): Erdlu
+        Claw's talons and a thri-kreen of the party's claws are slashing; a monster's own natural
+        attack, the party's other races' and a weapon's are as they were."""
+        from dsloader import gamepatch
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        self.mu.mem_write(effects, struct.pack("<hhhBB", 5, 0, 197, 6, 0) + bytes(2))
+        self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 1))
+        creatures, sheets = 0x6000, 0x6200
+        self.mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, creatures))
+        self.mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, sheets))
+        for creature, race in ((1, 8), (2, 4), (6, 8)):  # (a thri-kreen, a human; a thri-kreen monster)
+            self.mu.mem_write(creatures * 16 + creature * 0x3A + 4, struct.pack("<H", creature))
+            self.mu.mem_write(sheets * 16 + creature * 0x47 + 0x18, bytes((race,)))
+        def kinds(thing, item, before, rules=32):
+            self.rules(rules)
+            self.mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<H", before))
+            self.mu.mem_write(SS * 16 + BP - 0x0C, struct.pack("<hhhhhh", 0, 0, 0, 0, 0, item))
+            self.site(gamepatch.NS_FIST, esi=thing)
+            return struct.unpack("<H", self.mu.mem_read(SS * 16 + BP - 0x14, 2))[0]
+        self.assertEqual(kinds(5, -1, 0x08), 0x10)  # (Erdlu Claw's talons)
+        self.assertEqual(kinds(1, -1, 0x08), 0x10)  # (a thri-kreen of the party's claws)
+        self.assertEqual(kinds(1, -1, 0x08, rules=0), 0x10)  # (whatever the rules)
+        self.assertEqual(kinds(2, -1, 0x08), 0x08)  # (a human's fists)
+        self.assertEqual(kinds(6, -1, 0x08), 0x08)  # (a monster's own)
+        self.assertEqual(kinds(1, 40, 0x20), 0x20)  # (a weapon's)
+        self.rules(0)
+
     def test_fog_flight(self):
         """NS_SETUP (on a site's way): Fogbolt's record is Charm Person's, flying flight 15 when the
         game has the objects' copy open (OBJECTS_ON), which is then object 8118 at Magic Missile's

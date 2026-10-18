@@ -15,6 +15,10 @@ have the detail.
 ## Pull request #51 (in progress)
 
 **Changed**
+- **Claws cut**: the game makes every unarmed attack crushing, so a creature
+  crushing weapons can't hurt (the mastyrials) took nothing from a
+  thri-kreen's claws. A thri-kreen in the party now fights with edged claws,
+  and Erdlu Claw's talons are edged too. Monsters' own attacks are as before.
 - **A Shinobi learns its own spells from scrolls too** (with kits on): it
   first reads the scroll, a d100 against its read languages, and then, with
   the rule for INT on, learns the spell at INT's chance. A failed roll uses

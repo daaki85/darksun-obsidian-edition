@@ -370,7 +370,7 @@ EFFECT_RULES = {
     57: "AC at most 6 - level/4, +1 on saves", 58: "AC -2", 59: "AC at most 10 - level",
     60: "AC 5, 1 better per 3 caster levels above 5", 63: "higher STR", 64: "STR + the amount borrowed, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
-    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical weapon (talons)",
+    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
