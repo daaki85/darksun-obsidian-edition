@@ -132,6 +132,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   thri-kreen) carry one.
 
 **Documentation**
+- **Items, a page of its own** (`obsidian-edition/ITEMS.md`): the README's
+  item tables (every magic item, the magic weapons by weapon spec, every
+  mundane weapon) moved out, as How the game works was; the README keeps a
+  short section linking to it, and the front page, the guide and the
+  docicons test name it.
+- **Draft release notes for 2.5.0** (`release-notes/v2.5.0.md`), this pull
+  request's changes for players, and a "Coming in 2.5.0" line on the front
+  page. The version stays 2.4.0 until the release is cut.
 - **The Warden's Legs' chest is the Wagon Train's**, not the Gemfields' (its
   chest, object 1065, is in region 8, with the magera and their prisoners; the
   Gemfields are region 6). The item table, the Loader's names for it and
@@ -1369,8 +1377,8 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 **Documentation**
 - **Item icons** in every item table of the guide.
-- **[Every magic item](obsidian-edition/README.md#every-magic-item)** and
-  **[Every mundane weapon](obsidian-edition/README.md#every-mundane-weapon):**
+- **[Every magic item](obsidian-edition/ITEMS.md#every-magic-item)** and
+  **[Every mundane weapon](obsidian-edition/ITEMS.md#every-mundane-weapon):**
   each item, the game's and the Ledger's, with its bonus or power and who
   sells or carries it; the magic weapons of each weapon type for weapon
   specialization.

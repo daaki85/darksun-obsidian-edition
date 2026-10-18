@@ -1,4 +1,4 @@
-"""The items' icons for the guide's tables (README.md), drawn from the game's data as the game
+"""The items' icons for the item tables (ITEMS.md), drawn from the game's data as the game
 shows them: `python -m dsloader.docicons GAME_FOLDER` writes docs/items/*.png from the
 Loader's copy of SEGOBJEX.GFF (dos/, with its icons: start the game from the Loader once) and
 the game's palette (its GPLDATA.GFF), each picture twice its size, the rest transparent.

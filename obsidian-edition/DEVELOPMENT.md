@@ -1873,7 +1873,7 @@ Alagorn's new menu lines are in the Loader's copy of his scripts
   on (set afresh as the part starts, as the locals are). The new stories'
   "none left" test is one subroutine they all call.
 
-The icons in the guide's item tables (`docs/items/*.png`) are drawn from the
+The icons in the item tables of `ITEMS.md` (`docs/items/*.png`) are drawn from the
 game's data by `python -m dsloader.docicons GAME_FOLDER`, from the Loader's
 copy of `SEGOBJEX.GFF` in `dos/` (start the game from the Loader once first)
 and the game's palette: each picture twice its size, the rest transparent.

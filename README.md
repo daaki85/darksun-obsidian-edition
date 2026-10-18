@@ -15,6 +15,7 @@ name.)
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without spoilers, a section for each class (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html))
 - [The full documentation](obsidian-edition/README.md): everything in detail, from installing to every item
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
+- [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with its icon and where it is (spoilers)
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original game's own rules, from its code
 - [Changelog](CHANGELOG.md) and [development notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
 
@@ -94,6 +95,11 @@ freeze reports that say why. 2.3.0 before it
 ([release notes](release-notes/v2.3.0.md)) brought the combat log in the
 game, three more wizard spells, two magic shields, defilers' scrolls, buying
 back magical items, saves kept under their names and fuller starting gear.
+
+**Coming in 2.5.0** (in progress, [draft release notes](release-notes/v2.5.0.md)):
+a Pick Pockets button for thieves, four more magic weapons, thri-kreen claws
+that cut, six of the game's own spell bugs fixed, and an arena that always
+starts.
 
 Every release has notes of its own: [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
 have every change from the original game in one page, whatever the version.

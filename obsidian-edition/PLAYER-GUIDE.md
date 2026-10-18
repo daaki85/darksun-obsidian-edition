@@ -1507,7 +1507,7 @@ skills.
 ### New items
 
 The mod adds items the game never had, or never placed: here is what each
-is, not where it is (the README lists that, for those who want it). The mod's
+is, not where it is ([Items](ITEMS.md) lists that, with spoilers, for those who want it). The mod's
 magic weapons are also marked \* in each class's list.
 
 **Mundane:**
