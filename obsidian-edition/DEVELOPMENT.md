@@ -1163,10 +1163,15 @@ map, or a square not of a building's floor: `stealth.daylight`), once a second;
 at `+351` to `+354` (`KIT_DANCE`) each member's Battle Dancer's dance, +1, −1 or
 0, which `dance.py` rolls as a fight's first round begins (a d20 against DEX
 − 4, a natural 20 failing: `kits.DANCE_CHECK`)
-and counts down. It ends with the fight as the rounds count it: the game's clock
-`FIGHT_GAP` past the last round. The game's fight flag isn't enough, because
-it is still clear as round 1's initiative is rolled and between the arena's
-waves. At `+355` (`KIT_WILD`) each Wild Fury's (and Gerakis's) Wild Fighting,
+and counts down. It ends with the fight, whatever came of it, and the next
+fight's first round rolls it again (`dicelog._kit_tick`): once the game's fight
+flag, seen up since the roll, has been down `FIGHT_OVER` (2 seconds; the game
+clears it as a fight ends and between the arena's waves, and it is still clear
+as round 1's initiative is rolled, before it was ever up, which doesn't count),
+or the game's clock is `FIGHT_GAP` past the last round, or has gone back (a
+game loaded). The next round then rolls again (`_kits_due`), whatever number
+the log gives it: a fight soon after another is still counted on from the last
+one's rounds. At `+355` (`KIT_WILD`) each Wild Fury's (and Gerakis's) Wild Fighting,
 which `wild.py` rolls as a fight's first round begins (a d20 against CON − 4, a
 natural 20 failing: `kits.WILD_CHECK`) and clears as the
 dances end: bit N, member N's check failed; bit N + 4, it passed.

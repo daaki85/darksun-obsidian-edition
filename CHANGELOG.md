@@ -53,6 +53,15 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
 
 **Fixed**
+- **A Battle Dancer's dance and Wild Fighting not rolled at a fight's start**:
+  the Loader rolled them only for a fight's round 1, and it took a fight to be
+  new only when the game's clock had run two minutes past the last one's last
+  round. A fight soon after another (the arena's next wave), or one after
+  loading a save (the clock gone back), was counted as the last one going on,
+  and kept its result. Now both end as soon as the fight does, whatever came of
+  them (the game's fight flag down two seconds, once seen up in the fight; the
+  clock past or gone back), and the next fight's first round rolls them again.
+  A loaded game's rounds count from 1 again too.
 - **Turn Undead's right click showed a new spell's description** (Fogbolt's,
   for an earth cleric; seen in 2.3.0 on): the game describes Turn Undead by
   numbers the new spells took. It shows its own again.

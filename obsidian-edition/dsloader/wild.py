@@ -4,11 +4,12 @@ checked for each one as a fight's first round begins, kept for the fight, and gi
 
 The check is the Wild Fighting proficiency's (The Complete Barbarian's Handbook): a d20 against
 CON - 4 (the check at -4; a natural 20 always fails). Passed, 1 more attack a round in melee and
-3 more damage; failed, 3 worse to hit and AC 3 worse (no worse than 10); either for the whole fight.
+3 more damage; failed, 3 worse to hit and AC 3 worse (no worse than 10); either for the whole fight,
+and over with it, so the next fight's first round checks again.
 """
 
 import random
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 from . import game, kits
 
@@ -33,9 +34,9 @@ class WildFights:
         self._write(gd, tsr_hdr)
 
     def round(self, gd, tsr_hdr, number: int,
-              roll: Callable[[int, int], int] = random.randint) -> List[str]:
-        """A round begins (NUMBER 1: a new fight's first): lines for the log."""
-        if number != 1:
+              roll: Callable[[int, int], int] = random.randint, start: Optional[bool] = None) -> List[str]:
+        """A round begins (START, by default NUMBER 1: a new fight's first): lines for the log."""
+        if not (number == 1 if start is None else start):
             return []
         self.stop(gd, tsr_hdr)  # (a fight whose end went unseen)
         out: List[str] = []

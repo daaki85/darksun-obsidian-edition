@@ -215,6 +215,10 @@ PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
+# seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
+# counts as over: the game clears it as a fight ends and between the arena's waves (and it is
+# still clear as round 1's initiative is rolled, before it was ever up: that doesn't count)
+FIGHT_OVER = 2.0
 
 
 class DiceLogError(Exception):
@@ -420,6 +424,9 @@ class DiceLog:
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
+        self._out_of_fight: Optional[float] = None  # (since when the game's fight flag is down)
+        self._fight_seen = False  # (the flag seen up since the dances and Wild Fighting were rolled)
+        self._kits_due = False  # (a fight is over: the next round rolls the dances and Wild Fighting)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
         self._effects: Optional[Counter] = None
@@ -879,14 +886,24 @@ class DiceLog:
                 return
             bits = sum(1 << m for m in range(game.PARTY_SIZE) if self.game.outdoors(m))
             self.guest.write(self.tsr_hdr + TSR_KIT_OUTDOORS, bytes((bits,)))
-            if (self._dances.left or self.game.dance or self._wild.fighting) and not self.game.in_combat():
-                # (ended with the fight as the rounds count it, FIGHT_GAP of the game's clock past
-                # the last round: the game drops its fight flag as the first round's initiative
-                # is rolled, and between the arena's waves)
+            if self.game.in_combat():
+                self._out_of_fight, self._fight_seen = None, True
+            else:
+                # the dances and Wild Fighting end with the fight, whatever came of them, and the
+                # next fight's first round rolls them again: once the game's fight flag, seen up
+                # in the fight, has been down FIGHT_OVER, or the game's clock has run FIGHT_GAP
+                # past the last round, or gone back (a game loaded)
+                if self._out_of_fight is None:
+                    self._out_of_fight = now
+                over = self._fight_seen and now - self._out_of_fight >= FIGHT_OVER
                 now_game = self.game.game_time()
-                if now_game is not None and self._round_time is not None and now_game - self._round_time > FIGHT_GAP:
+                if now_game is not None and self._round_time is not None \
+                        and (now_game - self._round_time > FIGHT_GAP or now_game < self._round_time):
+                    over = True
+                if over and not self._kits_due:
                     self._dances.stop(self.game, self.tsr_hdr)
                     self._wild.stop(self.game, self.tsr_hdr)
+                    self._kits_due, self._fight_seen = True, False
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -1595,7 +1612,7 @@ class DiceLog:
         now = self.game.game_time()
         if now is None:
             return 0
-        if self._round_time is None or now - self._round_time > FIGHT_GAP:
+        if self._round_time is None or now - self._round_time > FIGHT_GAP or now < self._round_time:  # (or a game loaded)
             self._round = 0
             # a new fight: the game hands its creature records to new monsters, so an AC worked
             # out for one in an earlier fight isn't this one's (the party's stay theirs)
@@ -1652,8 +1669,11 @@ class DiceLog:
         scores = Counter(r[0] for r in rows)
         number = self._round_number()
         self.round_number = number
-        danced = self._dances.round(g, self.tsr_hdr, number)
-        danced += self._wild.round(g, self.tsr_hdr, number)
+        start, self._kits_due = number == 1 or self._kits_due, False  # (a new fight, or one after a fight's end)
+        if start:
+            self._fight_seen, self._out_of_fight = False, None
+        danced = self._dances.round(g, self.tsr_hdr, number, start=start)
+        danced += self._wild.round(g, self.tsr_hdr, number, start=start)
         if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
             self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
