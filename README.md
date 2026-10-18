@@ -19,6 +19,8 @@ name.)
 - [Changelog](CHANGELOG.md)
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules and tables, without spoilers (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html), to open in a browser or share)
 - [The full documentation](obsidian-edition/README.md): everything in detail
+- [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original game's own rules, from its code
+- [License](LICENSE): GPL-3.0
 
 ## What it does
 
@@ -69,6 +71,10 @@ owners of Dark Sun or Dungeons & Dragons, whose names and trademarks are
 theirs. It includes none of the game's files: you need your own copy of the
 GOG release. Screenshots and item pictures in these pages are taken from the
 game to show what the mod does.
+
+**License.** Obsidian Edition's own code and documentation are free software
+under the [GNU General Public License v3.0](LICENSE). That doesn't extend to
+the game's own art shown in these pages, which isn't the project's to license.
 
 ## Getting started
 

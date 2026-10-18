@@ -62,7 +62,7 @@ pockets, the [rule changes](README.md#rule-changes)), the Loader's other
 additions (the new items and the Ring +1, the cooked vulture, Kalzith, Semyon,
 what the party wears, shadows, dust, rings, Tab and Enter, scrolling) and the
 fixes always in the patched copy: no equipment penalty on thief skills (see
-[Thief skills](README.md#how-the-game-works-out-thief-skills)), the roster's
+[Thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), the roster's
 DELETE and New characters counting as Okay (see
 [More characters](README.md#more-characters)), and no manual check (see
 [No manual check](README.md#no-manual-check)).
@@ -354,7 +354,7 @@ reads the reply's text from the game's own list.
 
 ### Searching junk, hay and wardrobes
 
-([In the README](README.md#searching-junk-hay-and-wardrobes).)
+([In the README](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes).)
 
 How: the scripts' random command has a routine of its own in the game; the
 patched game has DSCLOG look in there (`INT D3h`), which records the roll, its
@@ -1030,25 +1030,9 @@ What each kit gives and costs is in [the README's table](README.md#kits).
 Two kits have tables of their own.
 
 The Seeker's and the Justifier's tables are AD&D's (*The Complete Ranger's
-Handbook*), up to 10th level; their spells are cast at the table's casting
-level, not the ranger's (the game's own rangers' spell levels count the
-ranger level 7 less, but their spells' durations and damage take the whole
-of it):
-
-| Ranger level | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|
-| Seeker: casting level | 1 | 2 | 3 | 4 | 5 |
-| Seeker: 1st, 2nd, 3rd level slots | 1 | 2 | 2, 1 | 2, 2 | 2, 2, 1 |
-| Justifier: casting level, slots | | | | | 1; one 1st-level |
-
-The Shinobi's spells, the game's and four new ones (thief level 6 on, the
-Seeker's slots):
-
-| Spell level | Spells |
-|---|---|
-| 1st | Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image, Spook, Friends |
-| 2nd | Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud |
-| 3rd | Blink, Haste, Protection from Normal Missiles, Hold Person |
+Handbook*), up to 10th level, and the Shinobi has spells of its own (the game's
+and four new ones): both in [the README's Kits' spell slots](README.md#kits-spell-slots).
+Their spells are cast at the table's casting level, not the ranger's or thief's.
 
 Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-wizard-spells),
 are known by its bit in the sheet (`NS_KNOWS`) rather than the game's byte:

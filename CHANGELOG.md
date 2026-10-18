@@ -113,6 +113,16 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   thri-kreen) carry one.
 
 **Documentation**
+- **GPL-3.0**: the project's code and documentation are licensed under the GNU
+  General Public License v3.0 (`LICENSE`, in the release zip too), with a note
+  that the game's own art in the pages isn't covered.
+- **How the game works** moved out of the README into
+  `obsidian-edition/HOW-THE-GAME-WORKS.md` (the original game's own rules,
+  about 490 lines), the README keeping a list of its sections.
+- **One source for the kits' numbers**: the README's kit tables. The player's
+  guide keeps who takes each kit on Athas and links to them; the kits' spell
+  slots table moved from the guide to the README; DEVELOPMENT links there for
+  the Seeker's, Justifier's and Shinobi's tables.
 - **[The game's bugs, fixed](obsidian-edition/README.md#the-games-bugs-fixed)**:
   a README section with every bug of the game's own the Loader mends, the
   spells' among them, and a line for them under What it does on both front

@@ -31,18 +31,6 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [The Dialogue tab](#the-dialogue-tab)
 - [The dice log](#the-dice-log)
 - [How the game works](#how-the-game-works)
-  - [Initiative](#initiative)
-  - [Spells and effects](#spells-and-effects)
-  - [Psionics](#psionics)
-  - [Character creation](#character-creation)
-  - [Monsters' defences](#monsters-defences)
-  - [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
-  - [No critical hits](#no-critical-hits)
-  - [The game's two weapons](#the-games-two-weapons)
-  - [How the game works out thief skills](#how-the-game-works-out-thief-skills)
-  - [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)
-  - [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
-  - [The game's saving throws](#the-games-saving-throws)
 - [Rule changes](#rule-changes)
   - [Class restrictions](#class-restrictions)
   - [Multiclass hit points](#multiclass-hit-points)
@@ -111,8 +99,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 ## What it does
 
 New to the game, or to the mod? [The player's guide](PLAYER-GUIDE.md) has its
-rules and tables in one place, without spoilers, with a section for each
-class (also as a web page, [`player-guide.html`](player-guide.html)).
+rules without spoilers, with a section for each class and its kits (also as a web page, [`player-guide.html`](player-guide.html)).
 
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
@@ -536,7 +523,7 @@ change.
   save. A 1 always fails and a 20 always saves, so they show between 2 and 20.
 - **Thief skills**: as they stand (with no equipment penalty in games started
   with the dice log: see
-  [How the game works out thief skills](#how-the-game-works-out-thief-skills)),
+  [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)),
   0 for a skill an effect rules out or when the thief isn't Okay (New counts
   as Okay), and 100 for one an effect makes certain (Detect Traps). Only the
   situation's bonus or penalty (a hard lock) is left out: the dice log shows
@@ -822,12 +809,12 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 
 | Line | Meaning |
 |---|---|
-| `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round of a fight, numbered from the fight's start, and the order everyone acts in (highest first). The order also stays in view above the log for the whole round, however far the log has scrolled: `Round 2. Now: Cilla (30). Still to act: Gerakis 26, Slig 26. Done: K'ratchek 32, Cermak 31. Down: ...`, and the [combat log in the game](#the-combat-log-in-the-game) begins with who acts and who is next. The lines under it (shown with **Show details**) give each score's make-up: `    Gerakis 26 = 20 + 6 (0-9 roll), tie broken by 38 (0-199 roll)` (see [Initiative](#initiative)). If the log was started in the middle of a round, the list has only the rolls it saw. |
+| `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round of a fight, numbered from the fight's start, and the order everyone acts in (highest first). The order also stays in view above the log for the whole round, however far the log has scrolled: `Round 2. Now: Cilla (30). Still to act: Gerakis 26, Slig 26. Done: K'ratchek 32, Cermak 31. Down: ...`, and the [combat log in the game](#the-combat-log-in-the-game) begins with who acts and who is next. The lines under it (shown with **Show details**) give each score's make-up: `    Gerakis 26 = 20 + 6 (0-9 roll), tie broken by 38 (0-199 roll)` (see [Initiative](HOW-THE-GAME-WORKS.md#initiative)). If the log was started in the middle of a round, the list has only the rolls it saw. |
 | `Gerakis's turn` | Whose turn it is now, each time the turn passes in a fight. |
-| `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice. `needs 12+ (45%)` is the d20 this attacker needed against this target (THAC0 − target AC) and the chance of rolling it; `hits on anything but a 1` or `only a 20 hits` when it's out of the ordinary range. `X attacks Y from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and backstabs (see [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)). "Hits AC" is the lowest AC this roll hits (THAC0 − d20); the target AC is the one the game used, with armour, DEX and spells. A natural 20 always hits and a natural 1 always misses, but a 20 does no extra damage: the game has no critical hits (see [No critical hits](#no-critical-hits)). |
+| `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice. `needs 12+ (45%)` is the d20 this attacker needed against this target (THAC0 − target AC) and the chance of rolling it; `hits on anything but a 1` or `only a 20 hits` when it's out of the ordinary range. `X attacks Y from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and backstabs (see [Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). "Hits AC" is the lowest AC this roll hits (THAC0 − d20); the target AC is the one the game used, with armour, DEX and spells. A natural 20 always hits and a natural 1 always misses, but a 20 does no extra damage: the game has no critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)). |
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](#two-weapons)), and the difficulty setting for monsters. |
 | `  X hits Y for 14: 1d8 = [6] +8 STR 20` | The damage of that hit: the dice, the weapon's bonus, and the STR bonus the game adds for melee. Damage is at least 1. |
-| `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](#attacks-from-behind-and-backstabs)) multiplies the whole damage, STR bonus included. |
+| `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the whole damage, STR bonus included. |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](#choosing-an-enemy-tab-enter-and-the-rings)). |
 
@@ -845,20 +832,20 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `    Dispel Magic on Slig's Blessed: d100 = 60, needs 85 or less (50 + 5 x 7 - 5 x 0 (its caster's level)) -> dispelled` | Dispel Magic tries each effect on its target separately: 50 + 5 for each of the dispeller's levels, less 5 for each of the level the effect was cast at. It can't touch some (Biofeedback, Diseased, Feeblemind, Poisoned, Graft Weapon, No spell use, Stuck, Mind Bar and a few more). |
 | `    Abjure on Y: d20 = 14, needs 12 or more (11 - caster level 5 + its level 6) -> sent away` | Abjure sends a summoned creature away (1000 damage) on a d20 at or over 11 - the caster's level + the creature's. |
 | `    Summoning: 1d3 = 2 picks which of its 3 creatures comes` | Which creature a summoning spell brings. |
-| `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (see [The game's saving throws](#the-games-saving-throws); anything the log can't account for shows as `other`), and the number it had to reach. With the [rule changes](#rule-changes) off, the game uses petrification/polymorph for almost every spell and doubles the d20 against fire, cold and electricity spells, as here (see [The game's saving throws](#the-games-saving-throws)); with them on (the default), the line names the spell save and DEX's adjustment instead (`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 always saves. The chance of saving is worked out for you (`needs 14 (70% to save)`); with the game's doubled d20, Fireball's victims usually save. For a damaging spell the result says what the save left, from that target's damage roll just before it: `saved: half damage, 19 of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as Chill Touch. The HP line after it shows what the creature really lost, once resistances and protections have had their say. A failed save also lets the spell's effect take hold. Spells left on the ground (Grease, clouds) make creatures save again as they stay in them; those lines have no "from". |
-| `X gives Blessed to Y, Z: +1 to hit, +1 on saves` / `Blessed ends on Y` | A spell or psionic effect starting or ending, with what it does in the game's code where that is known: to-hit, AC and saving throws, movement and attacks, whether the creature can attack or cast, who controls it (see [Spells and effects](#spells-and-effects)). `Stuck on Y` (no "gives") is an effect a creature has from a spell on the ground or cast on itself. |
+| `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (see [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws); anything the log can't account for shows as `other`), and the number it had to reach. With the [rule changes](#rule-changes) off, the game uses petrification/polymorph for almost every spell and doubles the d20 against fire, cold and electricity spells, as here (see [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)); with them on (the default), the line names the spell save and DEX's adjustment instead (`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 always saves. The chance of saving is worked out for you (`needs 14 (70% to save)`); with the game's doubled d20, Fireball's victims usually save. For a damaging spell the result says what the save left, from that target's damage roll just before it: `saved: half damage, 19 of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as Chill Touch. The HP line after it shows what the creature really lost, once resistances and protections have had their say. A failed save also lets the spell's effect take hold. Spells left on the ground (Grease, clouds) make creatures save again as they stay in them; those lines have no "from". |
+| `X gives Blessed to Y, Z: +1 to hit, +1 on saves` / `Blessed ends on Y` | A spell or psionic effect starting or ending, with what it does in the game's code where that is known: to-hit, AC and saving throws, movement and attacks, whether the creature can attack or cast, who controls it (see [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)). `Stuck on Y` (no "gives") is an effect a creature has from a spell on the ground or cast on itself. |
 
 **Checks, thief skills and searches**
 
 | Line | Meaning |
 |---|---|
 | `X DEX check: d20 = 9, needs 16 or less (DEX 16) -> success` | An ability check. A natural 20 always fails. |
-| `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](#how-the-game-works-out-thief-skills)), and what its chance is made of. |
+| `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), and what its chance is made of. |
 | `Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Tezral moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](#hiding-in-shadows-to-backstab) on). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
 | `    X's Bone Long Sword nearly broke: 0 on 0-7, then 12 on 0-19 (needed 0)` / `... BREAKS` | The weapon check the game makes after an attack sequence whose last attack hit. Only non-magical wood, bone, stone and obsidian weapons can break (and not every kind: clubs and quarterstaffs can't): they break when a 0-7 roll and then a 0-19 roll both come up 0, 1 chance in 160. The line only appears when the first roll comes up 0. |
 | `  Rampager's acid on Gerakis's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe` | An item the Rampager's acid or the Babau's corroding touch could destroy: the d20, the number it needed and whose number that was (see [Items saving against acid](#items-saving-against-acid)). |
-| `Haystack searched: 0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)` / `  The rat's bite: 0-4 = 3 damage` | Searching a junk pile, a haystack or a wardrobe: the game's roll, what it found, and how far its count has got (see [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)); a rat's bite or a falling pot rolls its damage the same way. |
+| `Haystack searched: 0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)` / `  The rat's bite: 0-4 = 3 damage` | Searching a junk pile, a haystack or a wardrobe: the game's roll, what it found, and how far its count has got (see [Searching junk, hay and wardrobes](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes)); a rat's bite or a falling pot rolls its damage the same way. |
 
 **Hit points, kills and levels**
 
@@ -877,9 +864,9 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 
 | Line | Meaning |
 |---|---|
-| `Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, raised to 17 (the Fighter's prime requisite)` | An ability score rolled on the character creation screen (see [Character creation](#character-creation)). The die rolls a whole character several times while it tumbles, faster than the log can read every roll, so the helper keeps each ability's last four 4d4 itself; the log gives only the character the die stops on, once it stops, each ability checked against the one the screen shows. A hit point roll that came too fast to record leaves a note: `some of its rolls came too fast to record`. |
+| `Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, raised to 17 (the Fighter's prime requisite)` | An ability score rolled on the character creation screen (see [Character creation](HOW-THE-GAME-WORKS.md#character-creation)). The die rolls a whole character several times while it tumbles, faster than the log can read every roll, so the helper keeps each ability's last four 4d4 itself; the log gives only the character the die stops on, once it stops, each ability checked against the one the screen shows. A hit point roll that came too fast to record leaves a note: `some of its rolls came too fast to record`. |
 | `Character creation: the six scores add up to 101` | After the scores, what they add up to: the most they may add up to with [Scores and hit points as rolled](#scores-and-hit-points-as-rolled). |
-| `Character creation, hit points 15: Fighter d10 per level: 7 + 9; Thief d6 per level: 5 + 1 = 22, / 2 classes = 11, +4 CON 16 = 15` | The new character's hit points: a die for every level of every class, divided by the number of classes, plus CON's bonus (see [Character creation](#character-creation)). With [the better of two](#hit-dice-the-better-of-two) each die shows both rolls (`10 (the better of 2 and 10)`); with [multiclass hit points](#multiclass-hit-points) CON's bonus goes on each die before the total is shared (`+2 CON 16 on each of 4 dice = 30, / 2 classes = 15`). |
+| `Character creation, hit points 15: Fighter d10 per level: 7 + 9; Thief d6 per level: 5 + 1 = 22, / 2 classes = 11, +4 CON 16 = 15` | The new character's hit points: a die for every level of every class, divided by the number of classes, plus CON's bonus (see [Character creation](HOW-THE-GAME-WORKS.md#character-creation)). With [the better of two](#hit-dice-the-better-of-two) each die shows both rolls (`10 (the better of 2 and 10)`); with [multiclass hit points](#multiclass-hit-points) CON's bonus goes on each die before the total is shared (`+2 CON 16 on each of 4 dice = 30, / 2 classes = 15`). |
 | `Character creation: a name picked at random, 1d33 = 6` | The game picks a new name from its lists when the sex or race changes. |
 
 **Everything else**
@@ -903,494 +890,20 @@ more rolls worth labelling.
 ## How the game works
 
 What the game does that its manual doesn't say, from its code and checked in
-play. The dice log shows each as it happens, and the
-[rule changes](#rule-changes) change some of it.
+play, has a page of its own, [How the game works](HOW-THE-GAME-WORKS.md):
 
-### Initiative
-
-From the game's code: at the start of every round each combatant's initiative
-is 20 + a roll of 0-9 + a DEX adjustment + Hasted +2, Slowed −2 and Blind −2.
-The DEX adjustment has its own table: −6 at DEX 1, −4 at 2, −3 at 3, −2 at 4,
-−1 at 5, none for 6-15, +1 at 16, +2 at 17-18, +3 at 19-20, +4 at 21-23 and
-+5 at 24-25. The weapon makes no difference (there are no weapon speeds). The
-highest score acts first; a second roll, 0-199, decides between equal scores
-(the log shows it only for those). Choosing Wait lowers the character's score
-to 10 (or by one, if it's 10 or less already) so they act later in the round.
-
-### Spells and effects
-
-What the log says about spells comes from the game's own spell records and
-code, checked by casting each spell in a fight. Where the game differs from the
-AD&D rules, the log follows the game.
-
-**Damage.** Each spell's record gives its dice: base dice plus dice (and a flat
-bonus) for each step of caster level, counted up to level 10. So Fireball and
-Lightning Bolt do at most 10d6, and Burning Hands 1d3 + 2 a level. A save halves
-the damage, or stops it all for spells such as Chill Touch. A creature that is
-Out Cold gets no save and takes the most the dice can do.
-
-**Saves.** Almost every spell is saved against with petrification/polymorph,
-and against fire, cold and electricity the save's d20 counts double: see
-[The game's saving throws](#the-games-saving-throws).
-
-**How long.** A duration is (caster level × so much + dice) × a unit of time.
-A round is 60 game seconds. Some effects last a number of uses instead
-(charges):
-- Stoneskin: 1 a level + 1d4. Any damage uses a charge, even fire that gets
-  through, but only blows are stopped.
-- Ironskin: 1d6 blows stopped.
-- Mirror Image: 1 a level + 1d4 images. With the Loader each hit, and each
-  foe's spell for one creature (not an area's, a cone's or a wall's), has a 75%
-  chance to strike an image instead, the image vanishing and the blow or spell
-  lost; the dice log shows each d100 (the game's own images worked otherwise:
-  see [The game's bugs, fixed](#the-games-bugs-fixed)).
-- Invisibility: one attack or hostile spell ends it. Improved Invisibility is
-  timed instead, so attacking doesn't end it.
-- Minor Spell Turning: one spell turned back.
-- Armor: a number of damaging hits, one charge each (with the Loader: see
-  [The game's bugs, fixed](#the-games-bugs-fixed)).
-
-Charm, Feeblemind, Web and a few others last until removed.
-
-**What effects do**, from the game's code:
-
-| Effect | In the game |
-|---|---|
-| Blessed / Cursed | +1 / −1 to hit (Bless also +1 on saves); each one cancels the other instead of being added |
-| Hasted / Slowed | Hasted: double movement and attacks, +2 initiative. Slowed: half movement and attacks, loses every other turn, −4 to hit, AC 4 worse, −2 initiative. Each cancels the other; Free Action and Protection from Paralysis stop Slow |
-| Paralyzed | Loses its turns, can't move, fails every saving throw. Free Action and Protection from Paralysis stop it |
-| Stuck (Grease, Web, Entangle, Solid Fog, Quicksand) | Can't move; Free Action stops it; some creatures are immune |
-| Afraid | The computer runs it; it can't attack or cast. Undead are immune, and Cloak of Bravery stops the next fear (and ends) |
-| Charmed | Joins the caster's side, run by the computer |
-| Confused | Each turn a d10: 1 runs off, 2–6 does nothing, 7–9 fights for a side picked with a d2, 10 acts normally (the log shows the rolls) |
-| Berserk | Fights for a side picked at random each turn; can't cast |
-| Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
-| No spell use, Feeblemind | Can't cast spells |
-| Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |
-| Acid (Acid Arrow) | 2d4 acid damage each round |
-| Poisoned | Fatal (1000 damage) if time passes out of combat, for instance resting, before it wears off or is cured |
-| Cloak of Fear | Whoever hits the wearer has Cause Fear cast on them, once |
-
-Other things the game does its own way:
-- Strength adds 1d6 to STR while it lasts, up to 24. The same goes for the
-  psionic Adrenalin Control, and Weakened or lending strength takes it away
-  (never below 3).
-- Shillelagh, Flame Blade and Spiritual Hammer need an empty hand: with a
-  weapon ready the game says "Failed, weapon in hand" and nothing happens.
-- Death spells (Slay Living, Dismissal) do the target's HP + 10 on a failed save.
-- In the arena, summonings fail ("Your summoning goes unanswered").
-- A spell's caster level is the caster's highest level in a class that shares
-  a sphere with the spell. Priests have one element each (cleric, druid and
-  ranger classes come in air, earth, fire and water): Flame Blade, Focus Heat
-  and Flame Strike are fire spells, Blood Flow and Dehydrate water, Deflection
-  air, while spells such as Bless, Barkskin or Spiritual Hammer belong to
-  every sphere. Cast by a priest of another element, an elemental spell counts
-  caster level 0. The game shows each priest only their element's spells, so
-  this only happens if a character somehow has the others.
-
-The spell's area catches its caster too. Cilla's Scare made her Afraid, and her
-Fireball, cast at a Slig next to her, killed her.
-
-### Psionics
-
-Psionic powers are numbered after the spells (Detonate 138 to Thought Shield
-171) and go through the same code: the same records for damage, saves and
-effects, so the log treats them like spells and names them. Some things are
-their own:
-
-- **Level.** A power works at the character's psionicist level; anyone else
-  with psionic powers counts as level 1.
-- **PSP.** A power costs its PSP to use. Kept-up powers (Inertial Barrier,
-  Biofeedback, Graft Weapon...) cost more PSP at the start of each round, and
-  the game puts them on again for another round; when the PSP runs short, the
-  power drops. The log shows every change in a party member's PSP
-  (` K'ratchek spends 18 PSP (52 -> 34)`).
-- **Psionic defence.** Attacked by a psionic attack mode (Psychic Crush, Ego
-  Whip, Id Insinuation, Psionic Blast), a character automatically raises the
-  best defence mode they know and can pay for, and pays its PSP.
-- **Mind Bar** adds 75% magic resistance against mind-affecting spells:
-  charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
-  magic resistance line counts it, and Lower Resistance halving the result.
-- **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least 1d10.
-- Monsters use them too: the Screamer Beetle's special attack is Psychic
-  Crush (1d8, save vs paralysis/poison/death for half).
-
-What each costs, from the game's own table (it differs from the books in
-places: Enhanced Strength and Domination cost nothing to start):
-
-| Power | Discipline | PSP to use | PSP each round kept up |
-|---|---|---|---|
-| Detonate | psychokinesis | 18 | — |
-| Disintegrate | psychokinesis | 40 | — |
-| Project Force | psychokinesis | 10 | — |
-| Ballistic Attack | psychokinesis | 5 | — |
-| Control Body | psychokinesis | 8 | — |
-| Inertial Barrier | psychokinesis | 7 | 5 |
-| Animal Affinity | psychometabolism | 15 | 4 |
-| Energy Containment | psychometabolism | 10 | — |
-| Life Draining | psychometabolism | 11 | — |
-| Absorb Disease | psychometabolism | 12 | — |
-| Adrenalin Control | psychometabolism | 8 | 4 |
-| Biofeedback | psychometabolism | 6 | 3 |
-| Body Weaponry | psychometabolism | 9 | 4 |
-| Cell Adjustment | psychometabolism | 5 | — |
-| Displacement | psychometabolism | 6 | 3 |
-| Enhanced Strength | psychometabolism | 0 | 8 |
-| Flesh Armor | psychometabolism | 8 | 4 |
-| Graft Weapon | psychometabolism | 10 | 1 |
-| Lend Health | psychometabolism | 4 | — |
-| Share Strength | psychometabolism | 6 | 2 |
-| Domination | telepathy | 0 | — |
-| Mass Domination | telepathy | 0 | — |
-| Psychic Crush (attack mode) | telepathy | 7 | — |
-| Superior Invisibility | telepathy | 5 | 5 |
-| Tower of Iron Will (defence mode) | telepathy | 6 | 0 |
-| Ego Whip (attack mode) | telepathy | 4 | — |
-| Id Insinuation (attack mode) | telepathy | 5 | — |
-| Intellect Fortress (defence mode) | telepathy | 4 | 0 |
-| Mental Barrier (defence mode) | telepathy | 3 | 0 |
-| Mind Bar | telepathy | 6 | 4 |
-| Mind Blank (defence mode) | telepathy | 0 | 0 |
-| Psionic Blast (attack mode) | telepathy | 10 | — |
-| Synaptic Static | telepathy | 15 | 10 |
-| Thought Shield (defence mode) | telepathy | 1 | 0 |
-
-### Character creation
-
-Every click of the die on the creation screen (and every change of race or sex)
-rolls a new character. From the game's code, and checked against the screen:
-
-* **Abilities.** Each score is rolled four times as 4d4 + 4 + the race's
-  adjustment, and the best of the four counts. That's 8 to 20 before the race's
-  adjustment. The score is then raised, if need be, to the least that the
-  classes allow: 17 in the class's prime requisite (STR for fighters and
-  gladiators, WIS for clerics, druids, psionicists and rangers, INT for
-  preservers, DEX for thieves), and otherwise 9 (clerics, fighters, preservers,
-  thieves), 12 (druids, psionicists), 13 (gladiators) or 14 (rangers). A
-  multiclass character takes the highest of their classes' minimums.
-* **Race adjustments** (STR, DEX, CON, INT, WIS, CHA): dwarf +1 −1 +2 0 0 −2;
-  elf 0 +2 −2 +1 −1 0; half-elf 0 +1 −1 0 0 0; half-giant +4 −5 +2 −5 −3 −3;
-  halfling −2 +2 −1 0 +2 −1; mul +2 0 +1 −1 0 −2; thri-kreen 0 +2 0 −1 +1 −2.
-  Humans have none.
-* **Hit points.** One die for every level of every class (d8 clerics and
-  druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists
-  and thieves), doubled for half-giants. The total is divided by the number of
-  classes (rounded down), and then CON's bonus is added for every level: a
-  warrior's full bonus (+1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at
-  19-20, +6 at 21-23, +7 at 24-25; −1 at 4-6, −2 at 2-3, −3 at 0-1), and at
-  most +2 for levels in the other classes. There is no automatic maximum at
-  first level: the first level rolls like the rest.
-* **Choices without dice.** Raising a score to a new class's minimum (adding
-  Thief raises DEX to 17) and PSP aren't rolled, so they don't appear in the
-  log. The creation screen's other random numbers only choose pictures.
-* **The total.** After the six scores comes what they add up to, the most they
-  may add up to with
-  [Scores and hit points as rolled](#scores-and-hit-points-as-rolled).
-
-Changing sex or race can make the game roll hit points twice, once with the
-old scores and once with the new: the last hit point line is the one that
-counts.
-
-### Monsters' defences
-
-From the game's damage code (DSUN.EXE); none of this is in the manual:
-
-- Every creature has a monster kind, and each kind a resistance class and a
-  set of properties, in a table the game fills when it starts.
-- Every hit has damage kinds: fire, cold, electricity, acid, poison, draining,
-  psionic, death, and for weapons crushing, edged or pointed, from the item's
-  type; a natural (unarmed) attack's is crushing, fists and monsters' claws
-  alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
-  Claw's talons are edged: see [Erdlu Claw](#new-wizard-spells)). A weapon's hit also carries its magic: one bit for +1 or better, one
-  for +2 or better and one for +3 or better (the weapon's plus, or its
-  ammunition's if that's higher). A monster's own attacks count as magical by
-  its level: (level - 2) / 2, so a 6th-level monster hits like a +2 weapon.
-- A resistance class is up to four rules: "these kinds of damage: this
-  percent of it". The largest percent that applies counts. So "crushing, edged
-  and pointed: 0%; +1 or better: 100%" is a monster only magical weapons hurt.
-  The game's 14 classes come to: only +1 (or +2) weapons hurt it, sometimes
-  with immunity to poison and draining, or to fire; half damage from
-  non-magical weapons and psionic attacks (the Rampager); immune to crushing
-  weapons (the mastyrials); immune to crushing and pointed weapons, fire and
-  acid, so that only edged weapons hurt it (the slimes); immune to fire and
-  cold (and half from electricity); half from fire; immune to poison; immune
-  to psionic attacks.
-- Properties: can't be charmed or held; unaffected by spells left on the
-  ground (fogs, clouds, walls, Web, Grease); not held by Grease, Web,
-  Entangle, Solid Fog or Quicksand; and hits that also cast one of the
-  monsters' powers on the target: 2d6 cold, 2d6 or 20 acid, paralysis,
-  poison of 10 or 30 damage, a deadly Poison, disease on 1 hit in 10. The 20
-  acid (the Rampager's) and a corroding touch (the Babau's) can also destroy a
-  worn item (see [Items saving against acid](#items-saving-against-acid)).
-- Undead (race 9 on the character sheet) take nothing from poison and
-  draining, and mind-affecting spells, charms and holds don't work on them.
-
-The dice log notes a weapon hit that takes less than its roll, or nothing at
-all, with what the monster's defences say about it
-(`Mastyrial takes none of the 6 damage: crushing weapons can't hurt it`: the
-game's mastyrials take nothing from clubs and maces, only from edged and
-pointed weapons).
-
-### Searching junk, hay and wardrobes
-
-Junk piles, haystacks and wardrobes are searched by one of the game's scripts,
-each with a roll of its own: 0 to N, each number as likely. A low roll finds
-nothing, and junk and hay stop giving anything once the party has found 6
-things in them (each kind counts its own finds); wardrobes count every search,
-and after 6 every wardrobe is empty.
-
-| Search | Roll | Finds nothing on | What the rolls find |
-|---|---|---|---|
-| Junk pile | 0-14 | 0-1, or after 6 finds in junk | 2 a scorpion bite, dodged; 3 a scrap of paper ("Watch out for the..."); 4 a dead rat; 5 stale bread; 6 a piece of a grainpot; 7 a rat's bite (0-4 damage); 8 magic fruit; 9 wood for a club; 10 a drawing of a four-armed statue; 11 trinkets with a gem; 12 dung; 13 arrows; 14 magic fruit |
-| Haystack | 0-10 | 0-2, or after 6 finds in hay | 3 a bone needle; 4 a piece of a pot; 5 a rat's bite (0-4 damage); 6 a table leg for a club; 7 a soiled loincloth; 8 15 ceramic coins; 9 a bug; 10 a small gem |
-| Wardrobe | 0-10 | 0-2 (after 6 searches, empty) | 3 a rat's bite (0-4 damage); 4 a piece of a pot; 5 "Gareth the scribe was here."; 6 magic fruit; 7 a falling pot (0-5 damage); 8 a small gem; 9 a falling pot that misses; 10 "Don't trust Pehtucl." |
-
-The script also has outcomes for the rolls that find nothing (a scorpion's bite
-in junk, a skull in hay, coins in a wardrobe...), but its "nothing" check comes
-first, so they never happen.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#searching-junk-hay-and-wardrobes).
-
-### No critical hits
-
-A natural 20 on an attack always hits, and a natural 1 always misses, but
-that is all the d20 does: the game has no critical hits or fumbles. Its attack
-routine uses the d20 only for those two checks and the comparison with THAC0,
-and never passes it to the damage routine, so a hit on a 20 rolls the same
-damage as any other. A backstab is the only thing that multiplies damage.
-
-### The game's two weapons
-
-The manual says a character with two weapons ready uses the second "at a
-disadvantage", unless a ranger or dextrous. The game's code does something
-else: with two weapons ready (in melee), every attack, first hand and second
-alike, is adjusted by the DEX table used for initiative with its sign flipped
-and never below 0, and rangers are left out. That comes to a **bonus** of +6 at
-DEX 1, +4 at 2, +3 at 3, +2 at 4 and +1 at 5, and nothing at DEX 6 and up, so
-in practice there is no off-hand penalty at all: both weapons hit as well as a
-single one would. The log names it, e.g. `+2 two weapons at DEX 4`. It looks
-like a sign slip: AD&D uses the same DEX adjustment to make two-weapon
-fighting *harder* at low DEX.
-
-### How the game works out thief skills
-
-The game never shows thief skills, but it rolls them: for traps, and for the
-locks, walls and so on its scripts ask for (see
-[Where the game rolls thief skills](#where-the-game-rolls-thief-skills)). The
-game gives the skills no names; its eight are AD&D's in AD&D's order (pick
-pockets, open locks, find/remove traps, move silently, hide in shadows, hear
-noise, climb walls, read languages), which the checks below fit. The roll is a
-d100 that must come in under the skill's chance. The game's code works the
-chance out as:
-- a base for each skill, in that order (28, 18, 13, 28, 18, 23, 78, −4),
-- plus 4 for each thief level,
-- plus a racial adjustment. These are AD&D's, for example a dwarf gets +10 to
-  open locks, +15 to find traps, −10 to climb walls and −5 to read languages.
-- plus DEX: −5 for each point below 12, 11, 12, 13 or 11 (the first five skills);
-  +5 for each point above 16, 15, 17, 16 or 16; and −3 for each point above
-  21, 20, 21, 19 or 19, so very high DEX gains less,
-- minus an equipment penalty (5, 0, 0, 10, 5, 0, 10, 0) when the thief has
-  anything at all in the leg armour slot, the quiver or either hand. That is
-  the game's own check: it doesn't look at what the item is (leather or metal)
-  and ignores chest and arm armour and helmets, so a thief holding any weapon
-  pays it. (The manual's "anything other than leather-type armor" is AD&D's
-  rule, not what the code does.) In games started with the dice log there is
-  no equipment penalty at all: the slots are a list in the game's data (legs,
-  quiver, left hand, right hand), and the dice log's copy of the game empties
-  it. The Loader reads the list from the running game, so its numbers match
-  whichever game it is.
-- plus the situation's bonus or penalty (a hard lock, say).
-
-With **Thief skills from AD&D's table** ticked (see
-[Thief skills from AD&D's table](#thief-skills-from-adds-table)), the first
-two and the DEX part are AD&D's instead.
-
-Only characters with thief levels have the skills; everyone else's chance is
-0. The character's condition must be Okay (the status the character screen
-   shows under HP): a thief who is Stunned, Out Cold, Dying and so on can't
-   use the skills. A character not yet played (New, before the game starts)
-   counts as Okay, so a party's thief skills show while it is made (see
-   [More characters](#more-characters)).
-
-Some effects rule out a skill:
-- Blind, Afraid, Confused, Berserk and Paralyzed stop them all, except that a
-  blind thief can still hear noise.
-- Slowed stops all but picking pockets.
-- Fire Shield stops picking pockets and hiding; Mirror Image stops hiding.
-- Graft Weapon stops picking pockets, opening locks and climbing.
-- Feeblemind stops reading languages.
-- Enlarge scales the situation's bonus or penalty, not the skill: for hiding it's
-  divided by (100 + 10 × Enlarge's level)%, for climbing multiplied by it. With
-  no bonus or penalty it changes nothing; with a penalty, climbing gets harder.
-
-Two effects make a skill certain instead: Detect Traps (anyone, thief or not,
-finds traps) and Invisible (hiding in shadows).
-
-These effects work on the situation's bonus: ruling a skill out takes 1000 off
-it, so the roll can't succeed, and making it certain adds 1000. (One more rule
-in the code would make move silently certain, and hearing noise impossible, for
-someone wearing one particular item on their legs, but the game passes that
-check its two lists the wrong way round, so it never applies.)
-
-### Where the game rolls thief skills
-
-There is no hide or sneak command, and nothing in the game's code rolls a thief
-skill on its own: every roll comes from the game's scripts (conversations,
-doors, walls...), which ask in two ways. Every script in GPLDATA.GFF decodes
-(see `dsloader/gpl.py`), so these are all of them:
-- **13 skill checks**: find/remove traps 4 times (a hidden passage, a secret
-  door, a loose rug, a cord on a lava-dome egg; bonuses −10 to +3), open locks
-  4 times (a safe, a grate and cell doors; −4 to +8), climb walls 3 times, and
-  pick pockets and hear noise once each (a key in a trustee's pocket; two men
-  arguing by a wagon, a check for the whole party). Most are made by the
-  character who acted.
-- **50 trap triggers, in 16 scripts.** A script sets off an object at a spot on
-  the map (a trap, or a blast: the bound prisoners in the arena, a Drajian
-  messenger's thrown sphere, a summoning circle, a breaking mirror...). First
-  the party's best at find/remove traps rolls, with no bonus; success, or
-  Detect Traps on the character who set it off, avoids it. This is the roll the
-  arena prisoner makes.
-
-A party check always goes to the member with the best chance. (The game also
-has a script command that lets each member try in turn, but no script uses it.)
-
-**The game never rolls move silently, hide in shadows or read languages**, so
-on their own they make no difference, nor does the equipment penalty on them.
-The Loader rolls them: move silently when a pocket isn't picked
-([Picking pockets](#picking-pockets)), hide in shadows and move silently in
-fights ([backstabs](#hiding-in-shadows-to-backstab)), and read languages when
-a [Shinobi](#thief-kits) reads a scroll. The scripts also make
-3 ability checks (a d20 under the ability): CHA twice and STR once.
-
-`python -m dsloader checks` lists them all with the script's text around
-each (spoilers).
-
-The **Characters** tab shows each thief's chances as they stand, with the
-equipment penalty (none in games started with the dice log) and effects (but
-not the situation's bonus or penalty), for the five skills the game rolls
-(pick pockets, open locks, find/remove traps, hear noise, climb walls) and
-the two the Loader rolls: move silently (when a pocket isn't picked, see
-[Picking pockets](#picking-pockets)) and hide in shadows (to
-[backstab](#hiding-in-shadows-to-backstab)).
-**All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
-
-![Cilla's card on the Characters tab: her thief skills now, move silently and hide in shadows among them](docs/thief-card.png)
-
-### Attacks from behind and backstabs
-
-From the game's code:
-
-- An attack is **from behind** when the attacker stands in the square directly
-  behind the way the target is facing. A creature faces nowhere in particular
-  at the start of each round; the first attack on it in the round turns it
-  to face that attacker (one of eight directions), and it keeps facing that
-  way for the rest of the round. So a second attacker on the far side, later
-  in the same round, attacks from behind. (Its own attacks don't turn it.)
-  It gets +2 to hit, and the target loses its DEX bonus and its shield.
-- A **backstab** is an attack from behind by a thief, in melee, with a weapon
-  that isn't too heavy (the game's weight value at most 40, a metal long
-  sword's). It gets another +2 to hit (+4 in all), and on the thief's first
-  attack of the round the damage, STR bonus included, is multiplied: x2 at
-  thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
-
-Which weapons can backstab, the game's and the [Loader's](#new-items) (magic
-ones included). Weight belongs to the weapon's type and material, in the
-game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
-mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
-(slings, bows, a thrown chatkcha) never backstab: it has to be melee.
-
-| Weapon | Material (weight) | Damage | Backstab |
-|---|---|---|---|
-| Dagger | bone, stone, obsidian, metal (10) | 1d4 | yes |
-| Short sword | bone (15); obsidian, metal (30) | 1d6 | yes |
-| Long sword | bone, obsidian, metal (10 to 40, metal at the limit) | 1d8 | yes |
-| Club | wood (30) | 1d6 | yes |
-| Quarterstaff | wood (40) | 1d6 | yes |
-| Axe | bone, obsidian (30) | 1d8 | yes |
-| Pick | stone, metal (40) | 1d4+1 | yes |
-| Shillelagh, Flame Blade, Spiritual Hammer (spells) | (10, 40, 40) | 2d4, 1d4+4, 1d4+1 | yes |
-| Axe | metal (70) | 1d8 | no |
-| Great axe | bone (50); obsidian, metal (70) | 1d10 | no |
-| Mace | bone, obsidian, metal (100) | 1d6+1 | no |
-| Cahulaks, gythka | bone (120) | 1d6, 2d4 | no |
-| Polearm | bone, metal (150) | 1d10 | no |
-
-About a dozen more weapon types are in the game's tables with no item of
-theirs in its data (monsters' own, made by scripts, or unused).
-
-### The game's saving throws
-
-From the game's saving throw routine. The spell names which of the character
-sheet's five saves to use; a natural 1 always fails and a natural 20 always
-saves; otherwise the d20 and the modifiers below must reach the save's number.
-
-**Petrification/polymorph for almost every spell.** The game's code maps the
-spell's save kind 5 to the sheet's third save; kind 1 is
-paralysis/poison/death, used by the clouds, Poison, Slay Living and the
-psionic attacks. The spell save, the one AD&D uses for spells, is never used:
-a 3rd-level warrior needs 13 against Psychic Crush (paralysis) and 14 against
-Fireball (petrification), where the spell save would be 16.
-
-**Fire, cold and electricity: the d20 counts double.** Each spell's record has
-a word of flags saying what kind of damage it does, and the saving throw code
-doubles the d20 whenever the kind is fire, cold or electricity. Nothing else
-is doubled: not acid (Acid Arrow), crushing (Ice Storm, Magical Stone), poison
-(Cloudkill), draining (Vampiric Touch, the Cause Wounds spells) or the psionic
-attacks. The doubled spells are:
-- fire: Burning Hands, Flaming Sphere, Fireball, Flame Arrow, Minute Meteors,
-  Fire Shield, Wall of Fire (both), Focus Heat, Produce Fire, Flame Strike;
-- cold: Chill Touch, Cone of Cold;
-- electricity: Shocking Grasp, Lightning Bolt.
-
-In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
-a normal d20 saves 35% of the time and a doubled one 70%, which is why
-Fireball's victims usually get away with half damage. It isn't AD&D, and the
-game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. The two
-[rule changes](#spells-saved-against-with-the-spell-save) below put the spell
-save back and take the doubled d20 away.
-
-The target's spells and effects:
-- Blessed +1, Barkskin +1, Spirit Armor +3 (but not on
-  paralysis/poison/death saves), and the Save penalty effect −1.
-- Prayer: +1 if its caster is on your side, −1 if not.
-- Protection from Evil +2 against an evil caster (lawful, neutral or chaotic
-  evil); Protection from Fire and from Cold +3 against fire and cold spells;
-  Protection from Lightning +4 against electricity.
-- +4 against a spell aimed at one target (not an area) when the caster can't
-  see you: the caster is Blind, or you're Invisible (or Invisible to Undead,
-  against an undead caster) and the caster can't detect invisibility.
-
-Class, race and abilities:
-- WIS, against mind-affecting spells, charms and holds, fear and illusions: −6
-  at WIS 1, −4 at 2, −3 at 3, −2 at 4, −1 at 5-7, +1 at 15, +2 at 16, +3 at 17
-  and +4 at 18 and up.
-- CON, on paralysis/poison/death saves: −2 at CON 1, −1 at 2, +1 at 19-20, +2
-  at 21-22, +3 at 23-24 and +4 at 25. Dwarves and halflings also add CON x 2 /
-  7 (+1 for every 3.5 points).
-- Druids +2 against fire and electricity; psionicists +2 against
-  mind-affecting spells and charms.
-- Some spells carry a modifier of their own (a monster's poison at −4).
-
-Spells with rules of their own: creatures of 6th level or lower can't save
-against Cloudkill; against Chaos only warriors (fighters, gladiators and
-rangers) can; against Dismissal the target adds its level and takes away the
-caster's; and against Scare, 6th level and up always save and everyone below
-can't. The Scare code looks meant to let some elf or half-elf priests save
-(AD&D gives elves, half-elves and priests a bonus), but it asks for a
-creature that is both an elf and a half-elf, so no one qualifies.
-
-Rules in the code that never come into play: Cloak of Bravery's +4 against
-fear applies only to a kind of spell that no spell in the game is marked as,
-and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
-at DEX 1 to −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
-[rule change](#rule-changes) puts it on the fire, cold and electricity spells.
-And nothing in the game gives saves from items: there are no rings or cloaks
-of protection, which is why the Loader adds [a ring](#new-items) and
-[a cloak](#new-items). Their +1 is in the log's saving throws as
-`+1 Ring of Protection` and `+1 Cloak of Protection` (with
-[AD&D's rules for them](#rings-and-cloaks-of-protection) off, all of it as
-`Ring of Protection`).
+- [Initiative](HOW-THE-GAME-WORKS.md#initiative)
+- [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)
+- [Psionics](HOW-THE-GAME-WORKS.md#psionics)
+- [Character creation](HOW-THE-GAME-WORKS.md#character-creation)
+- [Monsters' defences](HOW-THE-GAME-WORKS.md#monsters-defences)
+- [Searching junk, hay and wardrobes](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes)
+- [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)
+- [The game's two weapons](HOW-THE-GAME-WORKS.md#the-games-two-weapons)
+- [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)
+- [Where the game rolls thief skills](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)
+- [Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)
+- [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)
 
 ## Rule changes
 
@@ -1399,7 +912,7 @@ own box in the Options tab's **Rule changes** section. All are on by default,
 and they take effect in games started with the dice log: with the Loader
 running, or with **Play Dark Sun (in-game rolls)**, which uses the Options as
 last set. Untick one and the game's own rule is back at once.
-[How the game works](#how-the-game-works) has what the game does without them.
+[How the game works](HOW-THE-GAME-WORKS.md) has what the game does without them.
 
 | Rule | What it changes |
 |---|---|
@@ -1652,7 +1165,7 @@ How it works:
 
 With **Two weapons** ticked, a character with a melee weapon in each hand
 attacks at −2 with the main (right) hand and −4 with the off (left) hand, plus
-the DEX reaction adjustment (the table under [Initiative](#initiative)). That
+the DEX reaction adjustment (the table under [Initiative](HOW-THE-GAME-WORKS.md#initiative)). That
 can bring the penalty to 0 but never make it a bonus, and low DEX makes it
 worse: DEX 17 gives 0 and −2, DEX 21 0 and 0, DEX 3 −5 and −7. One weapon, a
 two-handed weapon, a weapon and a shield, or a weapon and a bow or sling (the
@@ -2153,6 +1666,43 @@ changed
 - **Casting when hit.** A character hit in a fight can't cast until the next
   round: the game won't let it choose a spell, and drops one chosen before
   the hit. The Battle Mage isn't stopped.
+
+#### Kits' spell slots
+
+The kits that change spell slots, by the level of the kit's class (spells of
+1st to 5th level), with [AD&D's class tables](#adds-class-tables) on:
+
+| Level | Preserver | Arcanist | Battle Mage | Cleric | Crusader | Elementalist | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 1 | 2 | — | 1 | — | — | | | |
+| 2 | 2 | 3 | 1 | 2 | 1 | 1 | | | |
+| 3 | 2 1 | 3 2 | 1 | 2 1 | 1 | 2 | | | |
+| 4 | 3 2 | 4 3 | 2 1 | 3 2 | 2 1 | 2 1 | | | |
+| 5 | 4 2 1 | 5 3 2 | 3 1 | 3 3 1 | 2 2 | 3 2 | | | |
+| 6 | 4 2 2 | 5 3 3 | 3 1 1 | 3 3 2 | 2 2 1 | 3 3 1 | 1 | | 1 |
+| 7 | 4 3 2 1 | 5 4 3 2 | 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 | 2 | | 2 |
+| 8 | 4 3 3 2 | 5 4 4 3 | 3 2 2 1 | 3 3 3 2 | 2 2 2 1 | 3 3 2 1 | 2 1 | | 2 1 |
+| 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 2 1 | 3 3 3 2 | 2 2 | | 2 2 |
+| 10 | 4 4 3 2 2 | 5 5 4 3 3 | 3 3 2 1 1 | 4 4 3 3 2 | 3 3 2 2 1 | 4 4 3 2 1 | 2 2 1 | 1 | 2 2 1 |
+
+- A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
+  does; the Crusader still has one fewer at each spell level with them.
+- A **Wilderness Avenger** has a druid's slots by its druid level, WIS's
+  bonus slots included, less one at each spell level (none below 0).
+- A **Seeker** casts priest spells of its sphere at its ranger level less 5
+  (1st-level spells from 6th, 2nd from 8th, 3rd at 10th); a **Justifier** at
+  its level less 9. Neither gets bonus slots for WIS, and both have these in
+  place of a ranger's own slots.
+- A **Shinobi** casts preserver spells at its thief level less 5, from its own
+  list, learning one at each level up from 6th: **1st level** Gaze Reflection,
+  Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image,
+  Spook, Friends (the last four with the new spells on); **2nd** Invisibility,
+  Mirror Image, Blur, Detect Invisibility, Fog Cloud; **3rd** Blink, Haste,
+  Protection from Normal Missiles, Hold Person.
+- An **Arcanist** casts two preserver spells each turn in a fight instead of
+  one: its first spell doesn't end its turn, so it can cast again (being hit
+  before the second still stops it); a **Scholar** chooses two spells at each
+  level up.
 
 #### Changing class
 
@@ -2788,7 +2338,7 @@ them:
 |---|---|---|---|
 | ![](docs/items/bone-short-sword.png) | **Bone Short Sword** | sold by the **Weapon Merchant** in Teaquetzl and **Jark** in Kel's caravan; carried by every **Renegade** | 1d6 |
 | ![](docs/items/obsidian-short-sword.png) | **Obsidian Short Sword** | sold by the Weapon Merchant and Jark; carried by **Chaero** | 1d6 |
-| ![](docs/items/bone-axe.png) | **Bone Axe** | sold by the Weapon Merchant and Jark; carried by every **Wild Mul** | 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](#attacks-from-behind-and-backstabs) |
+| ![](docs/items/bone-axe.png) | **Bone Axe** | sold by the Weapon Merchant and Jark; carried by every **Wild Mul** | 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs) |
 | ![](docs/items/obsidian-axe.png) | **Obsidian Axe** | sold by the Weapon Merchant; carried by **Merzol**, the slave pens' gladiator | 1d8; 30, as the bone axe |
 | ![](docs/items/obsidian-mace.png) | **Obsidian Mace** | sold by the Weapon Merchant and Jark; carried by every **Tari** in the warrens | the game's Mace (1d6+1), in obsidian (its only obsidian mace is Blackmace) |
 | ![](docs/items/short-sword.png) | **Metal Short Sword** | sold by the Weapon Merchant | 1d6: Shadowseeker without the plus |
@@ -3480,7 +3030,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 
 | | The game | With the Loader |
 |---|---|---|
-| **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](#spells-and-effects)) |
+| **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](HOW-THE-GAME-WORKS.md#spells-and-effects)) |
 | **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
 | **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
 | **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
@@ -3490,7 +3040,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
-| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](#how-the-game-works-out-thief-skills)) |
+| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
 
 Cilla's figure (the game gives the elf the half-elf woman's) has a switch:
 see [Elves and half-elves](#elves-and-half-elves). How the fixes work:
