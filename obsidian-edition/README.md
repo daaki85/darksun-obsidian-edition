@@ -1932,7 +1932,7 @@ with her claws and the game's own chatkcha, and gets nothing more either.
 Cermak and Cilla keep the game's own starting spells: only a character made
 on the creation screen [picks its own](#preservers-first-spells).
 
-![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2](docs/default-party-armor.png)
+![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2, and her Pick Pockets purse under the spell counts](docs/default-party-armor.png)
 
 ![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
 
