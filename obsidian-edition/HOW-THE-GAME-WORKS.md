@@ -375,8 +375,6 @@ the two the Loader rolls: move silently (when a pocket isn't picked, see
 [backstab](README.md#hiding-in-shadows-to-backstab)).
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
-![Cilla's card on the Characters tab: her thief skills now, move silently and hide in shadows among them](docs/thief-card.png)
-
 ## Attacks from behind and backstabs
 
 From the game's code:
