@@ -26,7 +26,8 @@ have the detail.
   dice log shows both rolls.
 - **A Pick Pockets button for thieves** in place of Thieves' Tools: on the
   USE screen, where a priest's Turn Undead is, a character with thief levels
-  has a purse (outside fights; a cleric/thief keeps Turn Undead in them).
+  has a purse (outside fights; a cleric/thief has both, the purse beside Turn
+  Undead, and Turn Undead alone in a fight).
   Pressed, the pointer is the one for talking, and the next person clicked has
   their pocket tried by that thief. Mirlon and Kel no longer carry the tools,
   and Mirlon's script is the game's own again.

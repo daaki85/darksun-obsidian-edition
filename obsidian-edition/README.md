@@ -2553,8 +2553,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
 The game has one pocket to pick, in the Trustee's conversation (his key). With
 **Picking pockets** ticked, a thief can try anyone's. On the **USE** screen, a
 character with thief levels has a **Pick Pockets** button (a purse) where a
-priest's Turn Undead is, under the spell counts. A cleric/thief has Turn
-Undead there in fights and Pick Pockets outside them.
+priest's Turn Undead is, under the spell counts. A cleric/thief has both
+outside fights, Turn Undead and the purse beside it; in a fight, Turn Undead
+alone.
 
 Press it: the screen closes and the pointer is the one for talking. Click
 someone in sight, and the thief who pressed it tries their pocket instead of

@@ -134,6 +134,7 @@ NS_HOLD = NS_IMAGE + 7  # (Hold Undead on a target that isn't undead: immune)
 # button shown, let go of, its spell readied (none: the pick), and the talk it makes a pick
 PP_SHOW, PP_CLICK, PP_ARM, PP_HAND, PP_LIT = NS_IMAGE + 8, NS_IMAGE + 9, NS_IMAGE + 10, NS_IMAGE + 11, NS_IMAGE + 12
 PP_TEXT, PP_INFO = NS_IMAGE + 13, NS_IMAGE + 14  # (its name under the screen; its spell's description)
+PP_CLOSE = NS_IMAGE + 15  # (the USE screen closing: a cleric/thief's second button's icon let go of)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -327,6 +328,9 @@ PATCHES = (
     Patch("pp_text_hover", 0x89541, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
     Patch("pp_text_info", 0x8967A, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
     Patch("pp_info", 0x8968E, bytes.fromhex("a1de9c"), _site(PP_INFO, 3)),
+    # ... a cleric/thief's purse beside Turn Undead, its icon let go of where the screen, closing,
+    # lets go of Turn Undead's ("cmp dword [30F4h],0")
+    Patch("pp_close", 0x88504, bytes.fromhex("66833ef43000"), _site(PP_CLOSE, 6)),
     Patch("pp_arm", 0x89610, bytes.fromhex("6668ffffbe00"), _site(PP_ARM, 6)),
     Patch("pp_hand", 0x5ECD8, bytes.fromhex("8b7606"), _site(PP_HAND, 3)),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:

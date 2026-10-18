@@ -2,8 +2,8 @@
 
 The game has one pickpocket of its own, the Trustee's key in the slave pens, in his script.
 With the dice log's patched game, a character with thief levels has a Pick Pockets button on
-the USE screen, where a priest's Turn Undead is (a cleric/thief has it outside fights, Turn
-Undead in them). Pressed, the screen closes and the pointer is the one for talking; the next
+the USE screen, where a priest's Turn Undead is, outside fights (a cleric/thief has it beside
+Turn Undead). Pressed, the screen closes and the pointer is the one for talking; the next
 person it is clicked on (DSCLOG's PP_HAND, instead of the conversation) has the Loader roll that
 thief's pick pockets chance as it stands now (thief_skills_now). On a success the
 thief lifts one small thing (weight 10 or less, and nothing worn on the body) from the

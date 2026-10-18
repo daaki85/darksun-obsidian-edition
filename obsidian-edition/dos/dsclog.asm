@@ -13007,6 +13007,7 @@ PP_ARM    equ NS_IMAGE + 10      ; 89610h: ... its spell readied
 PP_LIT    equ NS_IMAGE + 12      ; 895F2h: ... the screen closed, the menu button to show its icon
 PP_TEXT   equ NS_IMAGE + 13      ; 89541h, 8967Ah: ... its name under the screen
 PP_INFO   equ NS_IMAGE + 14      ; 8968Eh: ... its spell's description
+PP_CLOSE  equ NS_IMAGE + 15      ; 88504h: the USE screen closing, its icons let go of
 PP_HAND   equ NS_IMAGE + 11      ; 5ECD8h: a click on the map, the pointer for talking, on something
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
@@ -13041,6 +13042,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je pp_text
         cmp byte [cs:rl_site], PP_INFO
         je pp_info
+        cmp byte [cs:rl_site], PP_CLOSE
+        je pp_close
         cmp byte [cs:rl_site], SELL_KEEP
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
@@ -13435,6 +13438,7 @@ pp_show:
         pushad
         push es
         mov byte [cs:pp_shown], 0
+        mov byte [cs:pp_second], 0
         test byte [cs:pick_on], PICK_BUTTON
         jz .icon
         call pp_fighting
@@ -13447,7 +13451,11 @@ pp_show:
         cmp si, 0x24
         jb .cls
         jmp .icon
-.thief: mov byte [cs:pp_shown], 1
+.thief: cmp word [TU_ELEMENT], 0
+        je .own
+        mov byte [cs:pp_second], 1 ; (a priest too: Turn Undead here, the purse beside it)
+        jmp .icon
+.own:   mov byte [cs:pp_shown], 1
         mov word [TU_ELEMENT], PP_ELEMENT
         mov word [TU_ICON], PP_ICON
 .icon:  mov ax, [TU_ICON]       ; the icon to be shown: the element's, or as it is
@@ -13485,19 +13493,52 @@ pp_show:
         and ax, FLAGS_MASK
         and word [bp + 6], ~FLAGS_MASK
         or [bp + 6], ax
-        pop es
+        mov al, [cs:pp_second]
+        or al, [cs:pp_second_on]
+        jz .out                 ; (no second button, shown or to show)
+        ; the second button shown, or taken off: the game's routines, which may load overlays,
+        ; called in a frame the overlay manager can fix up (the way back, and the game's BP)
+        mov bx, sp
+        push word [bp + 4]
+        push word [bp + 2]
+        push word [bp]
+        mov bp, sp
+        cmp byte [cs:pp_second], 0
+        je .off
+        call pp_second_draw
+        jmp .back
+.off:   call pp_second_hide
+.back:  pop ax                  ; (the game's BP)
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bp, sp
+        add bp, 34              ; (past ES and PUSHAD: this routine's BP)
+        mov [bp + 2], ax
+        mov [bp + 4], dx
+.out:   pop es
         popad
         pop bp
         iret
 
+; PP_MINE: AL 1 if the button whose handler's frame is BX (its +8 the button) is the thief's: Turn
+; Undead's shown as the purse (PP_SHOWN), or the second one (SECOND_ID); 0 if not
+pp_mine:
+        mov al, [cs:pp_shown]
+        cmp word [ss:bx + 8], SECOND_ID
+        jne .ret
+        mov al, 1
+.ret:   ret
+
 pp_click:
-        push bp
-        mov bp, sp
+        push bx
         push ax
-        cmp byte [cs:pp_shown], 0
-        mov byte [cs:pp_arming], 0
-        je .game
-        mov byte [cs:pp_arming], 1
+        mov bx, bp
+        call pp_mine
+        push bp
+        mov bp, sp              ; [BP+8] the INT's flags
+        mov [cs:pp_arming], al
+        or al, al
+        jz .game
         call pp_keep            ; (what closing the screen sets for a spell readied)
         or bp, bp               ; (ZF clear: on as pressed)
         jmp .flags
@@ -13505,9 +13546,134 @@ pp_click:
 .flags: pushf
         pop ax
         and ax, FLAGS_MASK
+        and word [bp + 10], ~FLAGS_MASK
+        or [bp + 10], ax
+        pop bp
+        pop ax
+        pop bx
+        iret
+
+; PP_SECOND_DRAW: the purse beside Turn Undead (a cleric/thief's), as the game shows its button
+; (899B2h): its icon loaded (once a screen, PP_ICON2), the slot SECOND_ID given the button's
+; handler, its frame and its icon drawn. PP_SECOND_HIDE: the slot's handler taken off. DS the
+; game's.
+SECOND_ID    equ 0x2BE7         ; (the empty slot right of Turn Undead's: 2BCDh + 1Ah)
+SECOND_INDEX equ SECOND_ID - 0x2BCD
+STUB_630     equ 0x4319         ; (DSUN.EXE, less the load segment) the USE screen's overlay's stubs:
+DRAW_OFF     equ 0x004D         ;   896BCh, a button drawn; 894E2h, Turn Undead's handler
+HANDLER_OFF  equ 0x0048
+STUB_530     equ 0x4211         ; 530h:43h, a button's handler and events set
+REG_OFF      equ 0x0043
+LOAD_SEG     equ 0x2460         ; 100h:4A4h, a chunk loaded (its tag, its number, where to)
+LOAD_OFF     equ 0x04A4
+WIN_LIST_SEG equ 0x40BC         ; the USE screen's window, far at this segment:0
+FRAME_SEG    equ 0x3931         ; the buttons' frame picture, far at this segment:2Fh
+pp_second_draw:
+        cmp dword [cs:pp_icon2], 0
+        jne .reg
+        push cs
+        push word pp_icon2
+        push dword PP_ICON
+        push dword 0x4E4F4349   ; ("ICON")
+        mov ax, LOAD_SEG
+        mov dx, LOAD_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+.reg:   push word 0x66          ; (its events, as the game's)
+        mov ax, ds
+        sub ax, DGROUP_SEG - STUB_630
+        push ax
+        push word HANDLER_OFF
+        call pp_list_push       ; (SECOND_ID and the window)
+        mov ax, STUB_530
+        mov dx, REG_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        mov byte [cs:pp_second_on], 1
+        push dword 2            ; its frame, as the game draws Turn Undead's
+        push word SECOND_INDEX
+        mov ax, ds
+        sub ax, DGROUP_SEG - FRAME_SEG
+        mov es, ax
+        push dword [es:0x2F]
+        push word 0
+        mov ax, STUB_630
+        mov dx, DRAW_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        cmp dword [cs:pp_icon2], 0
+        je .ret
+        push dword 0            ; and its icon
+        push word SECOND_INDEX
+        push dword [cs:pp_icon2]
+        push word 1
+        mov ax, STUB_630
+        mov dx, DRAW_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+.ret:   ret
+
+pp_second_hide:
+        push word 0
+        push dword 0
+        call pp_list_push
+        mov ax, STUB_530
+        mov dx, REG_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        mov byte [cs:pp_second_on], 0
+        ret
+
+pp_list_push:                   ; pushes SECOND_ID, then the window (far), under the return address
+        pop word [cs:pp_ret]
+        push word SECOND_ID
+        mov ax, ds
+        sub ax, DGROUP_SEG - WIN_LIST_SEG
+        mov es, ax
+        push dword [es:0]
+        jmp word [cs:pp_ret]
+
+pp_aim:                         ; PP_CALL aimed at the game's segment AX (less the load segment):DX
+        mov [cs:pp_call], dx
+        push bx
+        mov bx, ds
+        sub bx, DGROUP_SEG
+        add ax, bx
+        pop bx
+        mov [cs:pp_call + 2], ax
+        ret
+
+; PP_CLOSE: "cmp dword [30F4h],0" (88504h; 6 bytes) where the USE screen, closing (884B3h), lets go
+; of Turn Undead's icon: the second button's let go of too, its flags given back.
+pp_close:
+        push bp
+        mov bp, sp
+        pushad
+        push es
+        cmp dword [cs:pp_icon2], 0
+        je .flags
+        mov ax, ds
+        sub ax, DGROUP_SEG - FREE_SEG
+        mov [cs:free_call + 2], ax
+        push dword [cs:pp_icon2]
+        call far [cs:free_call]
+        add sp, 4
+        mov [cs:pp_icon2], ax
+        mov [cs:pp_icon2 + 2], dx
+.flags: mov byte [cs:pp_second_on], 0
+        cmp dword [TU_CACHE], 0
+        pushf
+        pop ax
+        and ax, FLAGS_MASK
         and word [bp + 6], ~FLAGS_MASK
         or [bp + 6], ax
-        pop ax
+        pop es
+        popad
         pop bp
         iret
 
@@ -13526,7 +13692,11 @@ pp_text:
         mov [bp + 6], ax
         mov word [bp + 8], TU_NAME
         mov [bp + 10], ds
-        cmp byte [cs:pp_shown], 0
+        push bx
+        mov bx, [bp]            ; (the handler's frame)
+        call pp_mine
+        pop bx
+        or al, al
         je .out
         mov word [bp + 8], pp_name
         mov [bp + 10], cs
@@ -13535,8 +13705,12 @@ pp_text:
         iret
 
 pp_info:
+        push bx
+        mov bx, bp
+        call pp_mine
+        pop bx
+        cmp al, 0
         mov ax, [TU_ICON]       ; (the replaced instruction)
-        cmp byte [cs:pp_shown], 0
         je .ret
         push bp
         mov bp, sp
@@ -13691,6 +13865,11 @@ pp_arming db 0                  ; 1 from its letting go to PP_ARM
 pp_armed  db 0                  ; 1 while the next talk is a pick
 pp_who    db 0                  ; (the thief)
 pp_loaded dw 0                  ; the icon the game has loaded (TU_CACHE)
+pp_second    db 0               ; 1: the purse wanted beside Turn Undead (PP_SECOND_DRAW)
+pp_second_on db 0               ; 1 while it is shown
+pp_icon2     dd 0               ; its icon, loaded (let go of as the screen closes)
+pp_call      dd 0
+pp_ret       dw 0
 pp_kept_who  db 0               ; (PP_KEEP's)
 pp_kept_kind dw 0
 pp_kept_icon dw 0

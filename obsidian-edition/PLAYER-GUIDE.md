@@ -1305,8 +1305,8 @@ and the same race and DEX adjustments.
     pockets from then on.
 
   When nothing worth taking is left, the thief takes a few coins from the
-  purse, and that is the last try on them. A cleric/thief has Turn Undead on
-  that button in fights, and Pick Pockets outside them.
+  purse, and that is the last try on them. A cleric/thief has both buttons
+  outside fights, the purse beside Turn Undead.
 - **Read languages** is rolled only when a Shinobi reads a scroll.
 
 *Without the mod:* the game's own chances, which run much higher (a base of its

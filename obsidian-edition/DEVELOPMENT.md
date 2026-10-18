@@ -1519,10 +1519,22 @@ routine that opens the box to talk, trade or look) asks the Loader as
 FF00h and the thief, `USE_WHO` the thing. The Loader rolls and moves the item,
 and the helper shows the result instead of the box. The pointer turned to
 another mode puts the try away (`PROBE_POINTER`). Checked in the game: Daaki
-(fighter/preserver/thief) lifted a scroll from Kalzith; Jellybelly
-(ranger/cleric/thief) has the purse outside fights; Caron (fighter/cleric)
+(fighter/preserver/thief) lifted a scroll from Kalzith; Caron (fighter/cleric)
 keeps Turn Undead; a pick put away by a right click leaves the next talk a
 talk.
+
+A cleric/thief (a priest's element and thief levels) keeps Turn Undead on its
+button and has the purse beside it (`PP_SECOND_DRAW`), outside fights: the
+panel's empty slot APFM 2BE7h (index 1Ah of the spells' 2BCDh), given Turn
+Undead's handler (530h:43h, through the stub segments), its frame and the
+purse drawn as the game draws Turn Undead's (630h:4Dh, 896BCh) with an icon
+of its own loaded (100h:4A4h) and let go of as the screen closes (`PP_CLOSE`,
+88504h). These calls may load overlays, so they are made in a frame the overlay
+manager can fix up. The handler tells the two by its button ([BP+8]); another
+character on show takes the slot's handler off, and the game's redraw clears
+it. Checked: Jellybelly (ranger/cleric/thief) has both outside a fight, picked
+Kalzith's pocket with the purse beside Turn Undead, and Turn Undead keeps its
+name; the screen opened and closed four times over; in a fight, no purse.
 
 Earlier versions picked pockets with Thieves' Tools used on someone, Mirlon's
 (given to a thief leader on his gem deal) or Kel's: neither has them now, and
