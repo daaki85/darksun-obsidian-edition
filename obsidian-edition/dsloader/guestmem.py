@@ -20,6 +20,10 @@ from .process import ProcessError, ProcessMemory
 
 BIOS_DATE_ADDR = 0xFFFF5
 BIOS_DATE = b"01/01/92"
+# Dark Sun Recompiled (the game translated to a native program) keeps the same
+# memory and leaves its name at F000:FFC0; DSCLOG's ring sits over the date there.
+RECOMPILED_ADDR = 0xFFFC0
+RECOMPILED_MARK = b"DARKSUN-RECOMPILED"
 MIN_GUEST_SIZE = 0x100000  # 1 MB: the date string alone lives just below this
 _CHUNK = 4 * 1024 * 1024
 
@@ -108,16 +112,17 @@ def locate(proc: ProcessMemory, base: Optional[int] = None) -> GuestMemory:
                 chunk = proc.read(start, min(_CHUNK + len(BIOS_DATE), region.end - start))
             except ProcessError:
                 continue
-            for m in re.finditer(re.escape(BIOS_DATE), chunk):
-                candidate = start + m.start() - BIOS_DATE_ADDR
-                if candidate < region.start:
-                    continue
-                try:
-                    ivt = proc.read(candidate, 128)
-                except ProcessError:
-                    continue
-                if _looks_like_ivt(ivt):
-                    return GuestMemory(proc, candidate, region.end - candidate)
+            for mark, at in ((BIOS_DATE, BIOS_DATE_ADDR), (RECOMPILED_MARK, RECOMPILED_ADDR)):
+                for m in re.finditer(re.escape(mark), chunk):
+                    candidate = start + m.start() - at
+                    if candidate < region.start:
+                        continue
+                    try:
+                        ivt = proc.read(candidate, 128)
+                    except ProcessError:
+                        continue
+                    if _looks_like_ivt(ivt):
+                        return GuestMemory(proc, candidate, region.end - candidate)
     raise GuestMemoryError(
         "Could not find DOSBox guest RAM (no BIOS signature found). "
         "Is this DOSBox, and has it finished starting?")
