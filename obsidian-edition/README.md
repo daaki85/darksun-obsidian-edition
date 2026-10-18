@@ -143,19 +143,10 @@ rules without spoilers, with a section for each class and its kits (also as a we
   ([The game's bugs, fixed](#the-games-bugs-fixed)).
 
 **What it changes on your computer.** The game's own files are never
-modified: the Loader runs a patched copy of the game, with copies of its data
-files, from its own folder (see
-[DEVELOPMENT.md](DEVELOPMENT.md#how-the-dice-log-works)). Play writes to the
-game folder only what you'd expect:
-
-- your saves: page 1 as always, pages 2 to 4 as files of their own beside
-  them ([more saves](#more-saves));
-- your characters, 20 to 29 among the game's own in `CHARSAVE.GFF`
-  ([more characters](#more-characters));
-- in a saved game, the new items, if **New items** is ticked. Some are item
-  types the original game doesn't have (the Short Sword, the Cloak of
-  Protection, the bracers, the robes, plate mail, the Cloak and Boots of
-  Elvenkind, a metal shield), so load such a save with the Loader.
+modified: the Loader runs a patched copy of the game from its own folder, and
+writes to the game folder only your saves and characters. A save with the new
+items in it needs the Loader to load. Every file it writes, and how to update
+or back up: [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files).
 
 The Loader's window is dressed in the game's own colours, sampled from it; no
 game artwork is copied.

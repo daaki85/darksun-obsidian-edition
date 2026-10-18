@@ -10,17 +10,13 @@ name.)
 
 ![The arena in round 10 of a fight: Cermak's turn, with the combat log over the map's lower right showing a Slig's hits on Gerakis and the new round](obsidian-edition/docs/combat-log.png)
 
-## Contents
+## Documentation
 
-- [What it does](#what-it-does)
-- [Getting started](#getting-started)
-- [What's new](#whats-new)
+- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without spoilers, a section for each class (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html))
+- [The full documentation](obsidian-edition/README.md): everything in detail, from installing to every item
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
-- [Changelog](CHANGELOG.md)
-- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules and tables, without spoilers (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html), to open in a browser or share)
-- [The full documentation](obsidian-edition/README.md): everything in detail
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original game's own rules, from its code
-- [License](LICENSE): GPL-3.0
+- [Changelog](CHANGELOG.md) and [development notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
 
 ## What it does
 
@@ -66,16 +62,6 @@ game from its own folder. It writes to the game folder only your saves (pages
 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and your characters (20 to 29 in the
 game's own `CHARSAVE.GFF`).
 
-**A fan project.** Obsidian Edition isn't affiliated with or endorsed by the
-owners of Dark Sun or Dungeons & Dragons, whose names and trademarks are
-theirs. It includes none of the game's files: you need your own copy of the
-GOG release. Screenshots and item pictures in these pages are taken from the
-game to show what the mod does.
-
-**License.** Obsidian Edition's own code and documentation are free software
-under the [GNU General Public License v3.0](LICENSE). That doesn't extend to
-the game's own art shown in these pages, which isn't the project's to license.
-
 ## Getting started
 
 1. Download the latest release from the
@@ -109,9 +95,19 @@ freeze reports that say why. 2.3.0 before it
 game, three more wizard spells, two magic shields, defilers' scrolls, buying
 back magical items, saves kept under their names and fuller starting gear.
 
-Three records of what changed, each for its own reader:
-- **Release notes**, one for each version: [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md).
-- **[Patch notes](PATCH-NOTES.md)**: every change from the original game, in one
-  page, whatever the version (also as a web page, [`patch-notes.html`](patch-notes.html)).
-- **[Changelog](CHANGELOG.md)**: pull request by pull request, for developers
-  and testers.
+Every release has notes of its own: [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
+have every change from the original game in one page, whatever the version.
+
+## About
+
+Obsidian Edition is a fan project, not affiliated with or endorsed by the
+owners of Dark Sun or Dungeons & Dragons, whose names and trademarks are
+theirs. It includes none of the game's files: you need your own copy of the
+GOG release. Screenshots and item pictures in these pages are taken from the
+game to show what the mod does.
+
+Obsidian Edition's own code and documentation are free software
+under the [GNU General Public License v3.0](LICENSE). That doesn't extend to
+the game's own art shown in these pages, which isn't the project's to license.
+
+Problems and ideas: [the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues).

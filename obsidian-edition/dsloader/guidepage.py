@@ -1,5 +1,5 @@
 """The player's guide as a web page: PLAYER-GUIDE.md made player-guide.html, in the patch notes'
-look (its style read from ../patch-notes.html), with the guide's sections as the index.
+look (pagestyle.css, which the patch notes' page shares), with the guide's sections as the index.
 
 `python -m dsloader.guidepage` writes it; tests/test_guidepage.py checks it is up to date. Only
 the Markdown the guide uses: headings, paragraphs, lists (nested, numbered, with images and
@@ -13,7 +13,7 @@ from typing import List, Tuple
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GUIDE = os.path.join(HERE, "PLAYER-GUIDE.md")
 PAGE = os.path.join(HERE, "player-guide.html")
-PATCH_NOTES = os.path.join(os.path.dirname(HERE), "patch-notes.html")
+STYLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pagestyle.css")
 
 EXTRA_STYLE = """
 main { max-width: 80ch; }
@@ -194,11 +194,9 @@ def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], str, str]:
 
 
 def style() -> str:
-    """The patch notes' style, and what the guide adds."""
-    with open(PATCH_NOTES, encoding="utf-8") as f:
-        page = f.read()
-    m = re.search(r"<style>(.*?)</style>", page, re.S)
-    return (m.group(1) if m else "") + EXTRA_STYLE
+    """The patch notes' style (pagestyle.css), and what the guide adds."""
+    with open(STYLE, encoding="utf-8") as f:
+        return f.read() + EXTRA_STYLE
 
 
 def build() -> str:

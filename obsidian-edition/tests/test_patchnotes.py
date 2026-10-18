@@ -1,13 +1,14 @@
-"""The patch notes' web page (patch-notes.html) says what PATCH-NOTES.md says: each tagged line of
-the notes is on the page, in the same order, and the page has as many."""
+"""The patch notes' web page (patchnotes.py): up to date with PATCH-NOTES.md, every tagged line of
+the notes on it, every link within the page has its target, and the Markdown comes out as HTML."""
 
-import html
 import os
 import re
+import sys
 import unittest
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MD, PAGE = os.path.join(ROOT, "PATCH-NOTES.md"), os.path.join(ROOT, "patch-notes.html")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from dsloader import patchnotes  # noqa: E402
 
 
 def read(path: str) -> str:
@@ -15,33 +16,30 @@ def read(path: str) -> str:
         return f.read()
 
 
-def plain(text: str) -> str:
-    """Text without markup or tags, its spaces made one."""
-    text = re.sub(r"<[^>]+>", "", text)
-    text = re.sub(r"\*\*|\*|`", "", html.unescape(text))
-    return " ".join(text.split())
-
-
-@unittest.skipUnless(os.path.exists(MD) and os.path.exists(PAGE), "the patch notes (the repository's root)")
+@unittest.skipUnless(os.path.exists(patchnotes.NOTES), "the patch notes (the repository's root)")
 class PatchNotesTests(unittest.TestCase):
-    def notes(self):
-        tagged = re.findall(r"^- \*\*\[(New|Changed|Fixed)\]\*\* (.+)$", read(MD), re.M)
-        return [(tag, plain(text)) for tag, text in tagged]
+    def test_up_to_date(self):
+        self.assertEqual(read(patchnotes.PAGE), patchnotes.build(),
+                         "patch-notes.html is behind PATCH-NOTES.md: run python -m dsloader.patchnotes")
 
-    def page(self):
-        items = re.findall(r'<li><span class="tag (new|chg|fix)">\w+</span>(.+?)</li>',
-                           read(PAGE), re.S)
-        names = {"new": "New", "chg": "Changed", "fix": "Fixed"}
-        return [(names[tag], plain(text)) for tag, text in items]
+    def test_every_tagged_line(self):
+        tagged = re.findall(r"^- \*\*\[(New|Changed|Fixed)\]\*\* ", read(patchnotes.NOTES), re.M)
+        shown = re.findall(r'<li><span class="tag (new|chg|fix)">', patchnotes.build())
+        self.assertGreater(len(tagged), 50)
+        self.assertEqual([patchnotes.TAGS[t] for t in tagged], shown)
 
-    def test_same_lines(self):
-        self.assertGreater(len(self.notes()), 50)
-        self.assertEqual(self.notes(), self.page())
-
-    def test_page_is_whole(self):
-        page = read(PAGE)
+    def test_page(self):
+        page = patchnotes.build()
+        shown = re.sub(r'<script type="text/markdown".*?</script>', "", page, flags=re.S)
         self.assertTrue(page.startswith("<!doctype html>"))
         self.assertIn('<meta charset="utf-8">', page)
+        ids = set(re.findall(r' id="([^"]+)"', page))
+        self.assertEqual(set(re.findall(r'href="#([^"]+)"', page)) - ids, set())
+        self.assertNotIn("**", shown)
+        self.assertNotIn("](", shown)
+        self.assertIn('<span class="was">(was 10)</span>', page)
+        self.assertIn('<div class="dev"><b>Developers\' Notes</b>', page)
+        self.assertIn(read(patchnotes.NOTES), page)  # (the Markdown the copy button gives)
 
 
 if __name__ == "__main__":

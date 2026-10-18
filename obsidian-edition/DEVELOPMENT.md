@@ -5,6 +5,102 @@ the game with it, work inside: the patched game and its helper, what's known
 of the game's data, the tools for mapping it, and how each part of the
 [README](README.md) is done.
 
+## Development
+
+```
+python -m unittest discover -s tests
+```
+
+Two web pages are made from Markdown, and a test fails when either falls behind:
+`player-guide.html` from `PLAYER-GUIDE.md` (`python -m dsloader.guidepage`) and
+`../patch-notes.html` from `../PATCH-NOTES.md` (`python -m dsloader.patchnotes`).
+Edit the Markdown, then run the module. Both use `dsloader/pagestyle.css`.
+
+`tests/test_dsclog.py` runs the helper's interrupt handlers in a CPU emulator
+when `unicorn` is installed (`pip install unicorn`), and is skipped otherwise.
+After changing `dos/dsclog.asm`, rebuild the helper with
+[NASM](https://www.nasm.us/):
+
+```
+nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
+```
+
+The header's signature (`DSCLOGvZ` now) goes up whenever the helper and the
+Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`), so a
+Loader never talks to an older helper.
+
+The post-game check that keeps an error on screen for the crash report is
+built the same way:
+
+```
+nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
+```
+
+GAMEEND.COM only reads what is left on the screen, and the game's own fatal
+errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
+engine's "Mel Fatal Error #: N Trap #: N") are printed while the screen is in
+graphics, then cleared as the game puts it back in text mode on its way out.
+So DSCLOG keeps the last 256 bytes the game writes to handles 1 and 2 (INT 21h
+AH=40h: `DOS_WRITE`). At the first non-zero exit (AH=4Ch: `DOS_QUIT`), it writes
+them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
+stack. `launch.game_message` turns that into the crash report's lines: the
+text, then the stack's likely far returns as places in DSUN.EXE.
+
+A game that ends as usual has GAMEEND.COM write an empty `D:\GAMEOK.TXT`. The
+Loader removes it (with `GAMEEND.TXT` and `GAMEMSG.BIN`) as it starts DOSBox:
+DOSBox closing with no error noted and no `GAMEOK.TXT` means the game was cut
+off while it ran (`launch.CUT_OFF`), and that is a crash report too.
+
+### From a command prompt
+
+What the `.bat` files do, from a command prompt (`dsloader` is the program's
+internal name):
+
+```
+python -m dsloader launch                        # start the game with the dice log, and the Loader's window
+python -m dsloader view                          # the Loader's window only, game not started
+python -m dsloader play                          # the game with the in-game additions, no window
+python -m dsloader dicelog                       # the dice log in the command prompt
+python -m dsloader checks                        # the scripts' thief skill and ability checks (spoilers)
+python -m dsloader save C:\path\to\SAVE01.SAV   # the party stored in a save
+python -m dsloader processes                     # is DOSBox found?
+```
+
+If more than one DOSBox is running, add `--pid <number>` (from `processes`).
+
+### Mapping memory
+
+For Shattered Lands the party is found automatically. The steps below are for
+mapping new fields, or for other layouts:
+
+1. Type a party member's name under **Locate by name** and press **Search**.
+2. Select the hit that is the character's record and press **Assign**. In the
+   hit list, the record shows its name followed by dots, since binary data
+   follows the name. A copy in a text buffer is followed by more text. Slots
+   2–4 follow automatically if the party's records sit next to each other in
+   memory, as they do in save files. Otherwise assign each slot by name.
+3. The **character sheet** (XP, classes, levels, saves) is found automatically:
+   it carries the same ability scores and entity ID as the creature record.
+4. **Save layout** (beside **Search**) stores the addresses. They may change
+   when you load a save or restart the game. If a slot starts showing garbage,
+   locate it again.
+
+The **Record bytes** panel shows the raw record. Bytes that change light up
+orange, and clicking a byte decodes it as u8/s8/u16/s16/u32. Use it to map
+fields that aren't known yet. Watch a byte change as you take damage, spend
+PSP, or equip armour, then add it to `layouts/shattered_lands.json` and press
+**Reload layout**.
+
+### Command-line mapping tools
+
+```
+python -m dsloader find-text Daaki               # hex dump around each hit
+python -m dsloader dump 0x1a2c 128               # hex dump an address
+python -m dsloader search u8 23 --near 0x1a2c    # Cheat-Engine-style value search
+python -m dsloader next 17                       # ...narrow after the value changes
+python -m dsloader next decreased                # also: changed, unchanged, increased
+```
+
 ## How the dice log works
 
 Every roll in the game goes through one function, Borland C++'s `rand()`.
@@ -247,97 +343,6 @@ program, so a `segment:offset` address is simply `segment × 16 + offset` in
 guest memory. If detection fails on an unusual DOSBox build, you can pass the
 block's host address with `--host-base`.
 
-
-## Development
-
-```
-python -m unittest discover -s tests
-```
-
-`tests/test_dsclog.py` runs the helper's interrupt handlers in a CPU emulator
-when `unicorn` is installed (`pip install unicorn`), and is skipped otherwise.
-After changing `dos/dsclog.asm`, rebuild the helper with
-[NASM](https://www.nasm.us/):
-
-```
-nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
-```
-
-The header's signature (`DSCLOGvZ` now) goes up whenever the helper and the
-Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`), so a
-Loader never talks to an older helper.
-
-The post-game check that keeps an error on screen for the crash report is
-built the same way:
-
-```
-nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
-```
-
-GAMEEND.COM only reads what is left on the screen, and the game's own fatal
-errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
-engine's "Mel Fatal Error #: N Trap #: N") are printed while the screen is in
-graphics, then cleared as the game puts it back in text mode on its way out.
-So DSCLOG keeps the last 256 bytes the game writes to handles 1 and 2 (INT 21h
-AH=40h: `DOS_WRITE`). At the first non-zero exit (AH=4Ch: `DOS_QUIT`), it writes
-them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
-stack. `launch.game_message` turns that into the crash report's lines: the
-text, then the stack's likely far returns as places in DSUN.EXE.
-
-A game that ends as usual has GAMEEND.COM write an empty `D:\GAMEOK.TXT`. The
-Loader removes it (with `GAMEEND.TXT` and `GAMEMSG.BIN`) as it starts DOSBox:
-DOSBox closing with no error noted and no `GAMEOK.TXT` means the game was cut
-off while it ran (`launch.CUT_OFF`), and that is a crash report too.
-
-### From a command prompt
-
-What the `.bat` files do, from a command prompt (`dsloader` is the program's
-internal name):
-
-```
-python -m dsloader launch                        # start the game with the dice log, and the Loader's window
-python -m dsloader view                          # the Loader's window only, game not started
-python -m dsloader play                          # the game with the in-game additions, no window
-python -m dsloader dicelog                       # the dice log in the command prompt
-python -m dsloader checks                        # the scripts' thief skill and ability checks (spoilers)
-python -m dsloader save C:\path\to\SAVE01.SAV   # the party stored in a save
-python -m dsloader processes                     # is DOSBox found?
-```
-
-If more than one DOSBox is running, add `--pid <number>` (from `processes`).
-
-### Mapping memory
-
-For Shattered Lands the party is found automatically. The steps below are for
-mapping new fields, or for other layouts:
-
-1. Type a party member's name under **Locate by name** and press **Search**.
-2. Select the hit that is the character's record and press **Assign**. In the
-   hit list, the record shows its name followed by dots, since binary data
-   follows the name. A copy in a text buffer is followed by more text. Slots
-   2–4 follow automatically if the party's records sit next to each other in
-   memory, as they do in save files. Otherwise assign each slot by name.
-3. The **character sheet** (XP, classes, levels, saves) is found automatically:
-   it carries the same ability scores and entity ID as the creature record.
-4. **Save layout** (beside **Search**) stores the addresses. They may change
-   when you load a save or restart the game. If a slot starts showing garbage,
-   locate it again.
-
-The **Record bytes** panel shows the raw record. Bytes that change light up
-orange, and clicking a byte decodes it as u8/s8/u16/s16/u32. Use it to map
-fields that aren't known yet. Watch a byte change as you take damage, spend
-PSP, or equip armour, then add it to `layouts/shattered_lands.json` and press
-**Reload layout**.
-
-### Command-line mapping tools
-
-```
-python -m dsloader find-text Daaki               # hex dump around each hit
-python -m dsloader dump 0x1a2c 128               # hex dump an address
-python -m dsloader search u8 23 --near 0x1a2c    # Cheat-Engine-style value search
-python -m dsloader next 17                       # ...narrow after the value changes
-python -m dsloader next decreased                # also: changed, unchanged, increased
-```
 
 ## How each part works
 

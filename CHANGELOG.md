@@ -113,6 +113,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   thri-kreen) carry one.
 
 **Documentation**
+- **`patch-notes.html` made from `PATCH-NOTES.md`** by `python -m
+  dsloader.patchnotes`, as the guide's page is (a test fails when it falls
+  behind); its Copy as Markdown button gives the Markdown itself. Both pages
+  share `dsloader/pagestyle.css`.
+- **The front page tidied**: a list of the documents in place of the contents,
+  the fan-project and license notes at the end, and the release notes listed
+  once. A test checks the version is the same in `dsloader`, the patch notes,
+  the front page and the release notes.
+- **DEVELOPMENT.md opens with how to test, build and run** from a command
+  prompt, then how it works; it says how the two web pages are made.
+- **The README's "What it changes on your computer"** points to the files
+  table instead of listing them twice; the patch notes' first line split in two.
 - **GPL-3.0**: the project's code and documentation are licensed under the GNU
   General Public License v3.0 (`LICENSE`, in the release zip too), with a note
   that the game's own art in the pages isn't covered.
