@@ -178,6 +178,17 @@ class CopyTests(unittest.TestCase):
         self.assertEqual(reflect[3][4:7], [216, 216, 216])
         self.assertNotEqual(reflect, mirror)
 
+    def test_pick_icon(self):
+        """The Pick Pockets button's icon (ICON 3048, after Turn Undead's 3044-3047) from the
+        earth tile: its frame kept, its glyph taken off, the purse in its dark line, a gold coin."""
+        earth = [[(129 if x in (5, 6) and 2 < y < 13 else (136, 137)[(x + y) % 2]) for x in range(16)] for y in range(16)]
+        out = icons.pick_icon(earth)
+        self.assertEqual((icons.PICK_ICON, len(out), len(out[0])), (3048, 16, 16))
+        self.assertEqual([out[0], out[15]], [earth[0], earth[15]])
+        self.assertEqual(out[4][5:11], [129] * 6)  # (the drawstring)
+        self.assertIn(64, {p for row in out for p in row})
+        self.assertEqual(icons.decode(icons.encode(out)), out)
+
     def test_numbers_apart_from_the_rest(self):
         """No object or icon of these numbered as Kalzith's moved scroll icons or the party's
         sprites (the arms' first numbers were his: their boxes showed his pictures)."""

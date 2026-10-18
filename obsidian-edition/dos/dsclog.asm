@@ -239,15 +239,16 @@ rules      dw 0                 ; +170 rule changes the Loader turns on (RULE_HE
            dw 0, 0              ; +172 (unused: once P in a conversation)
 pick_off   dw pick_text         ; +176 offset of PICK_TEXT: what came of it, NUL-terminated (empty:
                                 ;      nothing to show)
-pick_on    dw 0                 ; +178 the Loader sets bit 0 for the thieving tools on someone to pick
-                                ;      their pocket
+pick_on    dw 0                 ; +178 the Loader sets bit 0 to be asked about items used on the map
+                                ;      (USE_ASK), bit 1 for a thief's Pick Pockets button (PICK_BUTTON)
 use_seq    dw 0                 ; +180 an item used on something on the map (PROBE_USE_ITEM counts) ...
 use_reply  dw 0                 ; +182 ... and set to it by the Loader once it has had its say
 use_who    dw 0                 ; +184 the object it was used on
-use_taken  dw 0                 ; +186 the Loader sets 1 when it was one of its own (the thieving
-                                ;      tools): the game then does nothing more, and PICK_TEXT is shown;
-                                ;      2 when it is used up as well (the cooked vulture, eaten)
-use_item   dw 0                 ; +188 the item used (FFFFh: none)
+use_taken  dw 0                 ; +186 the Loader sets 1 when it was its to answer (a pocket picked, the
+                                ;      cooked vulture): the game then does nothing more, and PICK_TEXT is
+                                ;      shown; 2 when it is used up as well (the cooked vulture, eaten)
+use_item   dw 0                 ; +188 the item used (FFFFh: none; PICKED_BY and a party member: the
+                                ;      Pick Pockets button's pick, PP_HAND)
 swap_on    dw 0                 ; +190 the Loader sets 1 to have the next dialogue text that
                                 ;      starts with SWAP_MATCH shown as SWAP_TEXT instead (once)
 swap_seq   dw 0                 ; +192 counted up when it has been
@@ -1252,6 +1253,7 @@ give_xp:
         mov word [cs:xp_who], 0xFFFF
 .ret:   ret
 
+use_done dw 0                   ; (the way on when the Loader answered: the routine's end, less the INT's)
 xp_call dw XP_OFF, 0
 drop_call dw DROP_OFF, 0
 sound_call dw SOUND_OFF, 0
@@ -1275,11 +1277,15 @@ DROP_SEG  equ 0x1A0A            ; and the resident routine (21134h in DSUN.EXE) 
 DROP_OFF  equ 0x1C94            ;   object's item list, putting the items back on the free list
 SOUND_OFF equ 0x0663            ; the resident routine there that plays a sound (GPL's 5Dh)
 QUEST_SOUND equ 53              ; the sound of a quest done (the game's scripts, with their XP)
+USE_ASK   equ 1                 ; PICK_ON's bits: items used asked about; the Pick Pockets button
+PICK_BUTTON equ 2
+PICKED_BY equ 0xFF00            ; USE_ITEM for the Pick Pockets button's pick (PP_HAND): the thief
 probe_use_item:
         sti
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        mov word [cs:use_done], USE_DONE
         mov dx, USE_NONE
         cmp si, -1
         je .go
@@ -1340,7 +1346,7 @@ probe_use_item:
         add sp, 2
         pop bx
 .kept:
-        mov dx, USE_DONE
+        mov dx, [cs:use_done]
         add [ss:bx + 34], dx
         cmp byte [cs:pick_text], 0
         je .out
@@ -12995,6 +13001,13 @@ SELL_KEEP equ NS_IMAGE + 4      ; 83D9Eh: a shop freeing an item sold
 SELL_PRICE equ NS_IMAGE + 5     ; 83CCAh: what a shop pays for an item
 NS_BLOW   equ NS_IMAGE + 6       ; 58A00h: a weapon's hit, which an image may take
 NS_HOLD   equ NS_IMAGE + 7       ; 7A333h: Hold Undead only on the undead
+PP_SHOW   equ NS_IMAGE + 8       ; 89979h: the USE screen's Turn Undead button, shown or not
+PP_CLICK  equ NS_IMAGE + 9       ; 8959Bh: ... let go of
+PP_ARM    equ NS_IMAGE + 10      ; 89610h: ... its spell readied
+PP_LIT    equ NS_IMAGE + 12      ; 895F2h: ... the screen closed, the menu button to show its icon
+PP_TEXT   equ NS_IMAGE + 13      ; 89541h, 8967Ah: ... its name under the screen
+PP_INFO   equ NS_IMAGE + 14      ; 8968Eh: ... its spell's description
+PP_HAND   equ NS_IMAGE + 11      ; 5ECD8h: a click on the map, the pointer for talking, on something
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13014,6 +13027,20 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_blow
         cmp byte [cs:rl_site], NS_HOLD
         je ns_hold
+        cmp byte [cs:rl_site], PP_SHOW
+        je pp_show
+        cmp byte [cs:rl_site], PP_CLICK
+        je pp_click
+        cmp byte [cs:rl_site], PP_ARM
+        je pp_arm
+        cmp byte [cs:rl_site], PP_HAND
+        je pp_hand
+        cmp byte [cs:rl_site], PP_LIT
+        je pp_lit
+        cmp byte [cs:rl_site], PP_TEXT
+        je pp_text
+        cmp byte [cs:rl_site], PP_INFO
+        je pp_info
         cmp byte [cs:rl_site], SELL_KEEP
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
@@ -13360,6 +13387,313 @@ ns_hold:
         iret
 blow_rand dw RAND_OFF, 0
 blow_charge dw CHARGE_OFF, 0
+
+; PICK POCKETS (PICK_BUTTON): a character with thief levels, outside a fight, has a button of
+; their own on the USE screen where a priest's Turn Undead is: a purse (PP_ICON). Let go of, the
+; screen closes as for Turn Undead, no spell is readied, and the pointer is the one for talking;
+; the next someone it is clicked on has their pocket tried by that thief instead of a talk (the
+; Loader answers as for an item used on them, PROBE_USE_ITEM, its USE_ITEM PICKED_BY and the
+; thief). The pointer turned to another mode puts the pick away (PROBE_POINTER).
+; PP_SHOW: "cmp word [9B82h],0" (89979h; 5 bytes) in the routine showing the button (89959h): the
+; priest's element of the character on show (the sheet at [119Ch], its +12h), none (0) for no
+; button. For a thief, outside a fight, past the elements' cases (PP_ELEMENT), the icon PP_ICON.
+; The game loads the icon once a screen (TU_CACHE, let go of as it closes): one of another
+; number is let go of now (the game's routine, 1A8h:8Ch), so the button's own is loaded.
+; PP_CLICK: "cmp word [9CDCh],0" (8959Bh; 5 bytes) in the button's handler, as it is let go of:
+; set when it was pressed (the game's press doesn't reach it outside a fight); the thief's always.
+; PP_LIT: "mov ax,[9CDEh]" (895F2h; 3 bytes) in the handler, the screen just closed (884B3h), the
+; icon the menu button is to show lit, as a spell readied: the thief's button keeps it as it was.
+; PP_TEXT: "push ds / push 3262h" (89541h, 8967Ah; 4 bytes), the name shown under the screen as the
+; pointer is on the button ("TURN UNDEAD", DS:3262h): the thief's, PP_NAME. PP_INFO: "mov ax,
+; [9CDEh]" (8968Eh; 3 bytes), a right click on it, the description of its spell (by the element's
+; icon) to be shown: none for the thief's.
+; PP_ARM: "push dword 0BEFFFFh" (89610h; 6 bytes), the handler readying Turn Undead (spell 190,
+; 0FFh): the thief's readies nothing (on to the handler's end) but the pick, and the character's
+; readied kind put back (PP_KEEP); the priest's pushes its spell.
+; PP_HAND: "mov si,[bp+6]" (5ECD8h; 3 bytes) at the start of the routine of a click on the map
+; with the pointer for talking (5ECD0h; its [BP+6] the thing under it), which opens the box to
+; talk to someone (or trade, look) or picks up a thing.
+PP_ICON     equ 3048            ; ICON 3048 (RESOURCE.GFF, icons.py): the thief's purse
+PP_ELEMENT  equ 9               ; (past the switch's 1-8: the icon kept)
+TU_ELEMENT  equ 0x9B82          ; DS: the Turn Undead button's element (0: none)
+TU_ICON     equ 0x9CDE          ; DS: its icon
+TU_PRESSED  equ 0x9CDC          ; DS: a button pressed
+TU_CACHE    equ 0x30F4          ; DS: the icon loaded (far)
+TU_SHEET    equ 0x119C          ; DS: the sheet of the character on show (far)
+POINTER_MODE equ 0x11B8         ; DS: the pointer's mode: 1 walk, 2 talk, 4 attack
+TALK_MODE   equ 2
+FIGHT_FROM_DS equ 0x4356 - 0x377E ; (the fight's state's segment, its +19h not 0 in a fight)
+FREE_SEG    equ 0x2FAB          ; (DSUN.EXE, less the load segment) 1A8h:8Ch, which lets go of
+FREE_OFF    equ 0x008C          ;   memory (far), returning the pointer to keep
+ARM_OUT     equ 0x896A4 - 0x89613 ; (the handler's end, less the way back: the site's NOPs)
+HAND_SOME   equ 0                 ; (on as the game: the way back)
+HAND_DONE   equ 0x5F25C - 0x5ECDB ; (the routine's end, less the way back)
+FLAGS_MASK  equ 0x08D5          ; (OF, SF, ZF, AF, PF, CF)
+pp_show:
+        push bp
+        mov bp, sp              ; [BP+6] the INT's flags
+        pushad
+        push es
+        mov byte [cs:pp_shown], 0
+        test byte [cs:pick_on], PICK_BUTTON
+        jz .icon
+        call pp_fighting
+        jne .icon
+        les bx, [TU_SHEET]
+        mov si, 0x21
+.cls:   cmp byte [es:bx + si], THIEF_CLASS
+        je .thief
+        inc si
+        cmp si, 0x24
+        jb .cls
+        jmp .icon
+.thief: mov byte [cs:pp_shown], 1
+        mov word [TU_ELEMENT], PP_ELEMENT
+        mov word [TU_ICON], PP_ICON
+.icon:  mov ax, [TU_ICON]       ; the icon to be shown: the element's, or as it is
+        mov bx, [TU_ELEMENT]
+        cmp bx, PP_ELEMENT
+        je .want
+        mov si, pp_icons
+.elem:  cmp bx, [cs:si]
+        je .found
+        add si, 4
+        cmp si, pp_icons_end
+        jb .elem
+        jmp .want
+.found: mov ax, [cs:si + 2]
+.want:  or bx, bx
+        jz .flags               ; (no button)
+        cmp dword [TU_CACHE], 0
+        je .keep                ; (none loaded: the game loads it)
+        cmp ax, [cs:pp_loaded]
+        je .keep
+        push ax                 ; another's loaded: let go of it
+        mov ax, ds
+        sub ax, DGROUP_SEG - FREE_SEG
+        mov [cs:free_call + 2], ax
+        push dword [TU_CACHE]
+        call far [cs:free_call]
+        add sp, 4
+        mov [TU_CACHE], ax
+        mov [TU_CACHE + 2], dx
+        pop ax
+.keep:  mov [cs:pp_loaded], ax
+.flags: cmp word [TU_ELEMENT], 0
+        pushf
+        pop ax
+        and ax, FLAGS_MASK
+        and word [bp + 6], ~FLAGS_MASK
+        or [bp + 6], ax
+        pop es
+        popad
+        pop bp
+        iret
+
+pp_click:
+        push bp
+        mov bp, sp
+        push ax
+        cmp byte [cs:pp_shown], 0
+        mov byte [cs:pp_arming], 0
+        je .game
+        mov byte [cs:pp_arming], 1
+        call pp_keep            ; (what closing the screen sets for a spell readied)
+        or bp, bp               ; (ZF clear: on as pressed)
+        jmp .flags
+.game:  cmp word [TU_PRESSED], 0
+.flags: pushf
+        pop ax
+        and ax, FLAGS_MASK
+        and word [bp + 6], ~FLAGS_MASK
+        or [bp + 6], ax
+        pop ax
+        pop bp
+        iret
+
+INFO_PAST   equ 0x8969E - 0x89691 ; (past the description's call, less the way back)
+TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"
+pp_text:
+        sub sp, 4               ; the game's two pushes: the INT's frame moved down over them
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax
+        mov ax, [bp + 8]
+        mov [bp + 4], ax
+        mov ax, [bp + 10]
+        mov [bp + 6], ax
+        mov word [bp + 8], TU_NAME
+        mov [bp + 10], ds
+        cmp byte [cs:pp_shown], 0
+        je .out
+        mov word [bp + 8], pp_name
+        mov [bp + 10], cs
+.out:   pop ax
+        pop bp
+        iret
+
+pp_info:
+        mov ax, [TU_ICON]       ; (the replaced instruction)
+        cmp byte [cs:pp_shown], 0
+        je .ret
+        push bp
+        mov bp, sp
+        add word [bp + 2], INFO_PAST
+        pop bp
+.ret:   iret
+
+pp_lit:
+        mov ax, [TU_ICON]       ; (the replaced instruction)
+        cmp byte [cs:pp_arming], 0
+        je .ret
+        mov ax, [READY_ICON]    ; (the thief's: as it was)
+.ret:   iret
+
+pp_arm:
+        cmp byte [cs:pp_arming], 0
+        jne .pick
+        sub sp, 4               ; the game's push: the INT's frame moved down over it
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax
+        mov ax, [bp + 8]
+        mov [bp + 4], ax
+        mov ax, [bp + 10]
+        mov [bp + 6], ax
+        mov word [bp + 8], 0xFFFF
+        mov word [bp + 10], 0x00BE
+        pop ax
+        pop bp
+        iret
+.pick:  mov byte [cs:pp_arming], 0
+        push bp
+        mov bp, sp
+        add word [bp + 2], ARM_OUT
+        call pp_restore         ; (no spell readied: as before the screen was closed)
+        push ax
+        push es
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov al, [es:0x25B]      ; the thief: the character on show
+        mov [cs:pp_who], al
+        mov byte [cs:pp_armed], 1
+        mov word [POINTER_MODE], TALK_MODE
+        pop es
+        pop ax
+        pop bp
+        iret
+
+pp_hand:
+        sti
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        mov si, [bp + 6]        ; the replaced "mov si,[bp+6]" (BP the game's), into the frame
+        mov [ss:bx + NS_SI], si
+        mov dx, HAND_SOME
+        cmp byte [cs:pp_armed], 0
+        je .go
+        test byte [cs:pick_on], PICK_BUTTON
+        jz .go
+        cmp word [POINTER_MODE], TALK_MODE
+        jne .go
+        call pp_fighting
+        jne .go
+        mov byte [cs:pp_armed], 0
+        mov [cs:use_who], si
+        mov word [cs:use_taken], 0
+        movzx ax, byte [cs:pp_who]
+        or ax, PICKED_BY
+        mov [cs:use_item], ax
+        mov word [cs:use_done], HAND_DONE
+        jmp probe_use_item.asked ; (as for an item used on them; DX the talk if not answered)
+.go:    add [ss:bx + 34], dx
+        pop es
+        popad
+        iret
+
+; PP_KEEP: what the screen's closing (884B3h) sets for a spell readied (the character readying,
+; [4970h]; its readied kind, [4971h] + 2 each, 3 for a spell; the icon shown, [4AF9h]: the
+; menu button lit), kept for PP_RESTORE to put back. DS the game's; registers kept.
+READY_WHO   equ 0x4970
+READY_KIND  equ 0x4971
+READY_ICON  equ 0x4AF9
+pp_keep:
+        push ax
+        push bx
+        push es
+        mov al, [READY_WHO]
+        mov [cs:pp_kept_who], al
+        mov ax, [READY_ICON]
+        mov [cs:pp_kept_icon], ax
+        call pp_shown_member
+        mov ax, [bx + READY_KIND]
+        mov [cs:pp_kept_kind], ax
+        pop es
+        pop bx
+        pop ax
+        ret
+pp_restore:
+        push ax
+        push bx
+        push es
+        mov al, [cs:pp_kept_who]
+        mov [READY_WHO], al
+        mov ax, [cs:pp_kept_icon]
+        mov [READY_ICON], ax
+        call pp_shown_member
+        mov ax, [cs:pp_kept_kind]
+        mov [bx + READY_KIND], ax
+        pop es
+        pop bx
+        pop ax
+        ret
+pp_shown_member:                ; BX: the character on show, times 2 (ES lost)
+        mov bx, ds
+        add bx, USE_WHO_SEG
+        mov es, bx
+        movzx bx, byte [es:0x25B]
+        shl bx, 1
+        ret
+
+; PP_FIGHTING: ZF clear in a fight. DS the game's; registers kept.
+pp_fighting:
+        push es
+        push ax
+        mov ax, ds
+        sub ax, FIGHT_FROM_DS
+        mov es, ax
+        cmp word [es:0x19], 0
+        pop ax
+        pop es
+        ret
+
+; PP_DISARM: the pick put away once the pointer is in another mode than talking
+pp_disarm:
+        cmp byte [cs:pp_armed], 0
+        je .ret
+        cmp word [POINTER_MODE], TALK_MODE
+        je .ret
+        mov byte [cs:pp_armed], 0
+.ret:   ret
+
+pp_name  db "PICK POCKETS", 0
+pp_icons dw 1, 0x0BE4, 2, 0x0BE5, 4, 0x0BE6, 8, 0x0BE7 ; (the elements' Turn Undead icons)
+pp_icons_end:
+free_call dw FREE_OFF, 0
+pp_shown  db 0                  ; 1 while the button on show is a thief's
+pp_arming db 0                  ; 1 from its letting go to PP_ARM
+pp_armed  db 0                  ; 1 while the next talk is a pick
+pp_who    db 0                  ; (the thief)
+pp_loaded dw 0                  ; the icon the game has loaded (TU_CACHE)
+pp_kept_who  db 0               ; (PP_KEEP's)
+pp_kept_kind dw 0
+pp_kept_icon dw 0
 
 ; NS_ENTRY: "imul ax,ax,6" or "imul bx,bx,6" (3 bytes) where the Effects screen (its icons and
 ; names: AX the effect, on the character on show), the Look box (BX, on thing [BP+0Ah]) and the
@@ -15905,6 +16239,7 @@ panel_draw_around:
 probe_pointer:
         sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
         mov [cs:strip_ds], ds
+        call pp_disarm
         call strip_mind
         call pointer_panel
         push ax

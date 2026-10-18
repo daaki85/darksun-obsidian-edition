@@ -1,8 +1,11 @@
-"""Picking pockets: a thief uses the thieving tools on someone (tools.py).
+"""Picking pockets: a thief's Pick Pockets button, then someone clicked on.
 
 The game has one pickpocket of its own, the Trustee's key in the slave pens, in his script.
-With the dice log's patched game, the tools used on someone (DSCLOG's PROBE_USE_ITEM) have the
-Loader roll the thief's pick pockets chance as it stands now (thief_skills_now). On a success the
+With the dice log's patched game, a character with thief levels has a Pick Pockets button on
+the USE screen, where a priest's Turn Undead is (a cleric/thief has it outside fights, Turn
+Undead in them). Pressed, the screen closes and the pointer is the one for talking; the next
+person it is clicked on (DSCLOG's PP_HAND, instead of the conversation) has the Loader roll that
+thief's pick pockets chance as it stands now (thief_skills_now). On a success the
 thief lifts one small thing (weight 10 or less, and nothing worn on the body) from the
 person into the backpack. On a failure, a move silently roll decides whether they got away
 unnoticed. With nothing else on them, the thief takes a few coins (party money), and that is
@@ -44,6 +47,7 @@ OWN_POCKETS = ("Trustee",)  # people whose script has its own pickpocket
 SWORD_XP = 200  # for lifting Kurzak's Short Sword, Churrr's club or Maris's Mindshard
 SWORD_SEEN = "a metal short sword"  # what the conversation says was lifted
 MAX_ITEMS = 200
+NOT_IN_A_FIGHT = "No time to pick pockets in the middle of a fight."
 
 
 @dataclass
@@ -203,10 +207,10 @@ COINS = (2, 5)  # ceramic pieces in a purse with nothing else worth taking
 
 def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.randint(1, 100),
             coin_roll: Callable[[], int] = lambda: random.randint(*COINS),
-            who: Optional[int] = None) -> Optional[Attempt]:
-    """The leader tries the pocket of creature WHO (the thieving tools used on them), or of
-    whoever is talked to (WHO not given). None when there's no one to rob (a
-    narration, someone in the party, a dead body)."""
+            who: Optional[int] = None, thief: Optional[int] = None) -> Optional[Attempt]:
+    """Party member THIEF (the one whose Pick Pockets button was pressed; not given, the leader)
+    tries the pocket of creature WHO (clicked on), or of whoever is talked to (WHO not given). None
+    when there's no one to rob (a narration, someone in the party, a dead body)."""
     if who is None:
         who = gd.talk_target_creature()
     elif not gd.living_npc(who):
@@ -214,7 +218,7 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
     if who is None:
         return None
     npc = gd.creature_name(who)
-    leader = gd.whose_turn()
+    leader = gd.whose_turn() if thief is None else thief
     if leader is None or not 0 <= leader < game.PARTY_SIZE:  # (no one's turn: between areas)
         return None
     thief = gd.creature_name(leader)

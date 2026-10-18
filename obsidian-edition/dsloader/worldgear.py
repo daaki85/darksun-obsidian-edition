@@ -55,7 +55,7 @@ pointing to it, in the Loader's copy of that region's file).
 import struct
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import dataitems, game, npcitems, specialize, tools, weaponchoice
+from . import dataitems, game, npcitems, specialize, weaponchoice
 
 # the bone long sword the game's merchants sell (SEGOBJEX's), which the weapons are made from
 TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")
@@ -232,7 +232,6 @@ class Gift(NamedTuple):
     instead: Optional[Tuple[int, int]] = None  # (item type, plus)
 
 
-TOOLS = tools.ITEM[:weaponchoice.ITEM_VALUE] + struct.pack("<H", 30) + tools.ITEM[weaponchoice.ITEM_VALUE + 2:]  # (AD&D's 30)
 PLAIN = (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_AXE, OBSIDIAN_MACE)
 # (the objects: the people of each name in the region, as SEGOBJEX and the region's ETAB have them)
 GIFTS: Tuple[Gift, ...] = (
@@ -243,11 +242,6 @@ GIFTS: Tuple[Gift, ...] = (
                                                               METAL_GREAT_AXE, METAL_PICK, BONE_DAGGER)), (285,), 0x0B),
     Gift("Jark", tuple(weapon(w) for w in (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_MACE,
                                            BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE, BONE_DAGGER)), (106,), 0x1A),
-    # Thieves' Tools, a pair, from Kel (the caravan's merchant of everything else), and a set on
-    # Mirlon in the slave pens, for a party that kills him (or a thief who takes his deal:
-    # mirlon.py): no thief starts with them
-    Gift("Kel", 2 * (TOOLS,), (107,), 0x1A),
-    Gift("Mirlon", (TOOLS,), (88,), 0x29),
     Gift("Merzol", (weapon(OBSIDIAN_AXE),), (180,), 0x29),  # the slave pens' gladiator
     Gift("Chaero", (weapon(OBSIDIAN_SHORT_SWORD),), (41,), 0x1D),
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one

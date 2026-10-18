@@ -1499,23 +1499,34 @@ of weight 40 or less).
 
 ([In the README](README.md#picking-pockets).)
 
-How: the patched game's routine that uses the item on the pointer on
-something on the map tells the helper what was used on what (`INT FDh`). For
-the thieving tools on someone, the Loader rolls and moves the item, and the
-helper shows the result instead of the game's "nothing happens".
+How (DSCLOG's PICK POCKETS, sites sharing `INT 98h`): the USE screen's Turn
+Undead button (APFM 2BEFh, its handler 630h:48h) shows for a character whose
+sheet's +12h holds a priest's element, its icon 3044 to 3047 by element. At
+89979h (`PP_SHOW`), for a character with thief levels outside a fight, the
+helper gives it an element past the game's cases (9) and its own icon, ICON
+3048 (`icons.pick_icon`: Turn Undead's earth tile, a purse), letting go of
+the icon the game loaded for the screen if it was another's. The button's
+press reaches its handler only after the pointer has rested on it; let go of,
+the handler (`PP_CLICK`, 8959Bh) closes the screen (884B3h) and readies Turn
+Undead: for the thief's, the menu button keeps its icon (`PP_LIT`, 895F2h), no
+spell is readied (`PP_ARM`, 89610h, to the handler's end; the readied kind
+the closing set put back), and the pointer is made the one for talking
+(DS:11B8h = 2; 1 walk, 4 attack). Its name under the screen is "PICK POCKETS"
+(`PP_TEXT`) and a right click shows no spell's description (`PP_INFO`). The
+next click on someone with that pointer (`PP_HAND`, 5ECD8h, the start of the
+routine that opens the box to talk, trade or look) asks the Loader as
+`PROBE_USE_ITEM` (`INT FDh`) does for an item used on the map: `USE_ITEM`
+FF00h and the thief, `USE_WHO` the thing. The Loader rolls and moves the item,
+and the helper shows the result instead of the box. The pointer turned to
+another mode puts the try away (`PROBE_POINTER`). Checked in the game: Daaki
+(fighter/preserver/thief) lifted a scroll from Kalzith; Jellybelly
+(ranger/cleric/thief) has the purse outside fights; Caron (fighter/cleric)
+keeps Turn Undead; a pick put away by a right click leaves the next talk a
+talk.
 
-Mirlon's set (`mirlon.py`): the game's scripts can't ask a character's class,
-so in the pens the Loader keeps its flag 800 (`OFFER`) set while the leader
-(`whose_turn`) has a thief class and Mirlon carries the tools. In the Loader's
-copy of his script (143), the menu reply "It's a deal! I'll be back soon."
-(shown once he has said where the gem is) jumps to code after the script's end
-instead of to "Good luck!" (5336; the reply's target rewritten in place, the
-same length): if flag 800, his words, a click and flag 801 (`GIVEN`), then on
-to "Good luck!". On 801, while he talks, the Loader unlinks his set (the item
-itself) from his list and puts it in a free backpack cell of the leader's,
-once (flag 802, `MOVED`). Checked in the game: Gerakis made a thief, the deal
-taken, his words shown, the tools (item 202) moved from Mirlon to Gerakis's
-backpack and none left on Mirlon.
+Earlier versions picked pockets with Thieves' Tools used on someone, Mirlon's
+(given to a thief leader on his gem deal) or Kel's: neither has them now, and
+Mirlon's script is the game's own.
 
 The Trustee's key (his own pick, in his talk): a thief with no room for it has
 it dropped at his feet (script 146), and his rounds (script 8, from 3767; its

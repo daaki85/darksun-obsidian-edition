@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, mirlon, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, gamepatch, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -61,7 +61,8 @@ TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT
 # RL_TRY: the die tumbles faster than the ring is read)
 TSR_TRIES_SEQ, TSR_TRIES = 280, 282
 TSR_PICK_OFF, TSR_PICK_ON, PICK_SIZE = 176, 178, 240
-PICK_TOOLS = 1  # (TSR_PICK_ON: the thieving tools on someone)
+USE_ASK, PICK_BUTTON = 1, 2  # (TSR_PICK_ON: items used on the map asked about; a thief's Pick Pockets button)
+PICKED_BY = 0xFF00  # (TSR_USE_ITEM: the Pick Pockets button's pick, the thief its low byte)
 TSR_USE_SEQ, TSR_USE_REPLY, TSR_USE_WHO, TSR_USE_TAKEN, TSR_USE_ITEM = 180, 182, 184, 186, 188
 TSR_SWAP_ON, TSR_SWAP_SEQ, TSR_SWAP_OFF, SWAP_SIZE, SWAP_TEXT_SIZE = 190, 192, 194, 64, 240
 RULE_HELMS = game.RULE_HELMS
@@ -365,7 +366,7 @@ class DiceLog:
         self._talk: Optional[dict] = None  # the conversation on screen: its portraits and who it's with
         self.monster_info = True  # monsters' defences in the game's Look box (set_monster_info)
         self.arena_ring = True  # put the Ring +1 on the Tied-up Prisoner's body in the arena (ring.py)
-        self.pickpockets = True  # the thieving tools pick a pocket (pickpocket.py, tools.py)
+        self.pickpockets = True  # a thief's Pick Pockets button (pickpocket.py)
         self.show_gear = True  # the party's map sprites dressed in what they wear (sprites.py)
         self.starting_gear = True  # new characters' starting gear filled out (startgear.py)
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
@@ -498,10 +499,11 @@ class DiceLog:
             self.guest.write(self.tsr_hdr + 32, struct.pack("<H", len(filters)) + packed)
 
     def set_pickpockets(self, on: bool) -> None:
-        """Picking pockets (ON): the thieving tools used on someone."""
+        """Picking pockets (ON): a thief's Pick Pockets button on the USE screen. Items used on the
+        map are asked about either way (the cooked vulture)."""
         self.pickpockets = on
         if self.tsr_hdr is not None:
-            flags = PICK_TOOLS if on else 0
+            flags = USE_ASK | (PICK_BUTTON if on else 0)
             self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", flags))
 
     def load_picked(self, entries) -> None:
@@ -570,9 +572,9 @@ class DiceLog:
         self.guest.write(self.tsr_hdr + TSR_XP_WHO, struct.pack("<H", who))
 
     def _answer_use(self) -> List[str]:
-        """An item was used on something on the map: if it was the thieving tools on someone,
-        try their pockets; if the cooked vulture, see what comes of it (vulture.py); and have
-        DSCLOG show what came of it instead of the game's doing."""
+        """An item was used on something on the map, or a thief's Pick Pockets button chose someone
+        (PICKED_BY): try their pockets with that thief's hand; for the cooked vulture, see what
+        comes of it (vulture.py); and have DSCLOG show what came of it instead of the game's doing."""
         if self.tsr_hdr is None:
             return []
         seq = self.guest.read(self.tsr_hdr + TSR_USE_SEQ, 2)
@@ -589,13 +591,12 @@ class DiceLog:
             if meal is not None:
                 taken = 2 if meal.used_up else True
                 result = pickpocket.Attempt(meal.text, meal.log)
-            elif item < game.NO_ITEM and tools.is_tools(rec):
-                kind, index = ring.Items(self.game).thing(thing)
+            elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
-                if self._fighting():  # (the tools stay on the pointer)
-                    result = pickpocket.Attempt(tools.NOT_IN_A_FIGHT, [])
-                else:
-                    result = pickpocket.attempt(self.game, self.picked, who=index) if kind == 2 else None
+                if self._fighting():
+                    result = pickpocket.Attempt(pickpocket.NOT_IN_A_FIGHT, [])
+                elif kind == 2:
+                    result = pickpocket.attempt(self.game, self.picked, who=index, thief=item & 0xFF)
                 if result is None:
                     result = pickpocket.Attempt("There are no pockets to pick there.", [])
         except (struct.error, IndexError, ValueError):
@@ -1022,8 +1023,6 @@ class DiceLog:
             semyon.watch(self.game)  # (killed: never put in the pens)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
-            if still:
-                out += mirlon.watch(self.game)  # (a thief leader takes his deal: his tools, mirlon.py)
             if kalzith.watch(self.game):  # (killed: Dinos and the Trustee speak of him so)
                 left = kalzith.loot(self.game)  # (one of his scrolls, his Cloak and Quarterstaff)
                 if left:
@@ -1032,8 +1031,7 @@ class DiceLog:
             if region != self._mended_in:  # (his scrolls of before the fix, once in each area)
                 kalzith.mend(self.game)
                 self._mended_in = region
-            if self.pickpockets:
-                tools.repaint(self.game)  # (the tools themselves are Mirlon's, and Kel's to sell: worldgear.py)
+            tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
         except (struct.error, IndexError, ValueError):

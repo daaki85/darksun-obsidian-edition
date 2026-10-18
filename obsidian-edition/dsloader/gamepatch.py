@@ -130,6 +130,10 @@ SELL_KEEP = NS_IMAGE + 4  # (a shop freeing an item sold: DSCLOG keeps a magical
 SELL_PRICE = NS_IMAGE + 5  # (what a shop pays: half with the CHA prices rule, prices.sell_price)
 NS_BLOW = NS_IMAGE + 6  # (an attack's hit, which an image may take instead)
 NS_HOLD = NS_IMAGE + 7  # (Hold Undead on a target that isn't undead: immune)
+# A thief's Pick Pockets button where a priest's Turn Undead is (DSCLOG's PICK POCKETS): the
+# button shown, let go of, its spell readied (none: the pick), and the talk it makes a pick
+PP_SHOW, PP_CLICK, PP_ARM, PP_HAND, PP_LIT = NS_IMAGE + 8, NS_IMAGE + 9, NS_IMAGE + 10, NS_IMAGE + 11, NS_IMAGE + 12
+PP_TEXT, PP_INFO = NS_IMAGE + 13, NS_IMAGE + 14  # (its name under the screen; its spell's description)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -309,6 +313,22 @@ PATCHES = (
     # undead (7BE20h, AL), "or al,al / je +22h" (DSCLOG's NS_HOLD: Hold Undead on a living
     # target goes to the immunity's return, 7A1F0h)
     Patch("hold_undead", 0x7A333, bytes.fromhex("0ac07422"), _site(NS_HOLD, 4)),
+    # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
+    # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
+    # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"
+    # once the screen is closed (the menu button lit with its icon) and "push dword 0BEFFFFh"
+    # (Turn Undead readied); at the start of the routine of a click on the map with
+    # the pointer for talking, "mov si,[bp+6]" (the thing clicked on)
+    Patch("pp_show", 0x89979, bytes.fromhex("833e829b00"), _site(PP_SHOW, 5)),
+    Patch("pp_click", 0x8959B, bytes.fromhex("833edc9c00"), _site(PP_CLICK, 5)),
+    Patch("pp_lit", 0x895F2, bytes.fromhex("a1de9c"), _site(PP_LIT, 3)),
+    # ... and its name under the screen ("push ds / push 3262h", "TURN UNDEAD"), as the pointer is
+    # on it and on a right click, and the description of its spell on the right click
+    Patch("pp_text_hover", 0x89541, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
+    Patch("pp_text_info", 0x8967A, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
+    Patch("pp_info", 0x8968E, bytes.fromhex("a1de9c"), _site(PP_INFO, 3)),
+    Patch("pp_arm", 0x89610, bytes.fromhex("6668ffffbe00"), _site(PP_ARM, 6)),
+    Patch("pp_hand", 0x5ECD8, bytes.fromhex("8b7606"), _site(PP_HAND, 3)),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:
     # the memory reserved for it, "push dword 1" before the size (DSCLOG adds room for more
     # names) ...

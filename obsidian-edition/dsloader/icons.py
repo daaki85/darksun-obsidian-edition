@@ -681,6 +681,36 @@ def friends_icon(hold: Rows) -> Rows:
     return glyph_icon(untiled(hold, HOLD_GLYPH, HOLD_FILL), set(), 0, HEART_GLYPH, 3, HEART_DARK, HEART_LIGHT)
 
 
+# A thief's Pick Pockets button (DSCLOG's PICK POCKETS: ICON 3048, where a priest's Turn Undead
+# is, ICON 3044-3047 by element): Turn Undead's earth tile, its glyph taken off, a drawstring purse
+# in its dark line with a gold coin in it.
+TURN_EARTH_ICON, PICK_ICON = 3045, 3048
+TURN_GLYPH, TURN_FILL = {129, 141}, (136, 137)  # (the earth tile's glyph lines, and its browns)
+PURSE_GLYPH = (  # (a purse: its tie and drawstring over the bag)
+    "......D..D......",
+    ".......DD.......",
+    ".....DDDDDD.....",
+    "......D..D......",
+    ".....D....D.....",
+    "....D......D....",
+    "...D........D...",
+    "..D..........D..",
+    "..D..........D..",
+    "..D..........D..",
+    "...D........D...",
+    "....DDDDDDDD....",
+)
+PURSE_COIN = {(7, 9): 45, (8, 9): 45, (7, 10): 64, (8, 10): 65, (6, 10): 65, (9, 10): 64, (7, 11): 65, (8, 11): 64}
+
+
+def pick_icon(earth: Rows) -> Rows:
+    """The Pick Pockets button's icon from Turn Undead's earth one."""
+    out = glyph_icon(untiled(earth, TURN_GLYPH, TURN_FILL), set(), 0, PURSE_GLYPH, 2, 129, 141)
+    for (x, y), colour in PURSE_COIN.items():
+        out[y][x] = colour
+    return out
+
+
 # Fogbolt's bolt (SEGOBJEX.GFF): a spell's record names its flight by a number (+10h, FFh none),
 # a place in the game's table of 16 flights before the records (3 bytes each: the object flying,
 # a byte); Magic Missile's, 4, is object 8109, BMP 2227 its picture (36 frames, one a direction)
@@ -737,7 +767,8 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
 
 
 def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
-    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the save/load
+    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
+    button's, the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py) and, with ROLL_STORE, the creation screen's
     STORE and RECALL (rollstore.py), to DEST."""
     with open(source, "rb") as f:
@@ -748,7 +779,8 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
              ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", ARMOR_ICON)]))),
              ("ICON", REFLECT_ICON): encode(reflect_icon(decode(chunks[("ICON", MIRROR_ICON)]))),
              ("ICON", SPOOK_ICON): encode(spook_icon(decode(chunks[("ICON", SCARE_ICON)]))),
-             ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)])))}
+             ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)]))),
+             ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)])))}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))

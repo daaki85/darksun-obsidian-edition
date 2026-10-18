@@ -126,7 +126,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
-- **[New]** **Picking pockets** with Thieves' Tools (Mirlon in the slave pens carries a set, and gives it to a thief leading the party who agrees to fetch his gem; Kel sells two); use them on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
+- **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.
 
@@ -183,7 +183,6 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Daggers** in metal, and in bone: the only dagger a water cleric can use.
 - **[New]** **Maces** in obsidian and metal.
 - **[New]** A **metal pick** and a **metal polearm**.
-- **[New]** **Thieves' Tools**: on Mirlon in the slave pens, and two sets sold by Kel, for picking pockets.
 - **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
 
 ## World
@@ -247,4 +246,4 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - A character silenced by the preserver's Dispel Magic ("No spell use" on their Effects screen) casts again once it wears off.
 - A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 
-**A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, Mirlon's tools, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.
+**A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

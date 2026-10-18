@@ -6,6 +6,7 @@ the probes do the game instructions they replace.
 """
 
 import os
+import re
 import struct
 import sys
 import unittest
@@ -289,8 +290,8 @@ class StubTests(unittest.TestCase):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class UseItemTests(unittest.TestCase):
     """PROBE_USE_ITEM, where the game uses the item on the pointer on what's under it: on as the
-    compare and JNE it replaces would go, or, for the Loader's thieving tools, to the routine's
-    end (DSUN.EXE: 7361Ah, 7361Dh and 7371Dh, less the address after the INT)."""
+    compare and JNE it replaces would go, or, for an item the Loader answers (the cooked vulture),
+    to the routine's end (DSUN.EXE: 7361Ah, 7361Dh and 7371Dh, less the address after the INT)."""
     NONE, SOME, DONE = 0x605, 0x608, 0x602 + 0x106
 
     def setUp(self):
@@ -299,7 +300,9 @@ class UseItemTests(unittest.TestCase):
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
         self.hdr = TSR * 16 + image.find(HDR_SIG)
-        handler = image.find(bytes.fromhex("fb66600689e3ba0300"))  # sti, pushad, push es, mov bx,sp, mov dx,3
+        # sti, pushad, push es, mov bx,sp, mov word cs:[use_done],106h, mov dx,3
+        found = re.search(re.escape(bytes.fromhex("fb66600689e32ec706")) + b"..\x06\x01\xba\x03\x00", image, re.S)
+        handler = found.start() if found else -1
         self.assertGreater(handler, 0)
         mu.mem_write(VEC_USE_ITEM * 4, struct.pack("<HH", handler, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -333,11 +336,11 @@ class UseItemTests(unittest.TestCase):
         mu.mem_write(CALLER * 16 + 0x602 + 0x3FE, struct.pack("<H", 0x9000))
         mu.mem_write(0x9000 * 16 + 1 * 10 + 0x44, struct.pack("<H", 231))
         self.run_use(300, self.SOME, on=0)
-        self.run_use(300, self.SOME)  # the Loader says it's not its tools
+        self.run_use(300, self.SOME)  # the Loader says it's not its to answer
         self.assertEqual(struct.unpack("<HH", mu.mem_read(self.hdr + 184, 2) + mu.mem_read(self.hdr + 188, 2)),
                          (300, 231))
 
-    def test_the_tools(self):
+    def test_answered(self):
         self.taken = 1
         self.run_use(300, self.DONE)
 

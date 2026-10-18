@@ -1,11 +1,7 @@
-"""Thieving tools: an item of the Loader's own that picks pockets.
-
-A set is Mirlon's, in the slave pens, for a party that kills him or a thief leader who takes his
-deal for the gem (mirlon.py), and Kel sells two in his
-caravan (worldgear.py). Picked up on the inventory screen and taken back to the game, the pointer carries them; clicked on someone,
-the patched game's routine for using an item on something (DSCLOG's PROBE_USE_ITEM) has the
-Loader try that person's pockets with the leader's hand (pickpocket.py), and shows what came
-of it. The item is a small one of the game's "misc" type. Its name, "Thieves' Tools", is the
+"""Thieving tools: an item earlier versions of the Loader gave (Mirlon's set, Kel's pair), which
+picked pockets when used on someone. A thief's Pick Pockets button does that now (pickpocket.py),
+and no one is given the tools; a set already in a game keeps its name and picture, and does
+nothing. The item is a small one of the game's "misc" type. Its name, "Thieves' Tools", is the
 second of the entries DSCLOG adds after the game's own (names.py); the tools are told apart by
 that name, their picture and their type together.
 """
@@ -16,7 +12,6 @@ from . import game, ring
 from .game import GameData
 
 NAME_ENTRY = 0x143
-NOT_IN_A_FIGHT = "No time to pick pockets in the middle of a fight."
 NAME = b"Thieves' Tools"
 OLD_NAME_ENTRIES = (0xAD, 0x60)  # what earlier versions named them (the pickaxe's "pick", then the
 # rest button's "Rest icon"): renamed

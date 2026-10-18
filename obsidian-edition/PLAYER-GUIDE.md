@@ -594,7 +594,7 @@ so keep it off the front line.
 - [Hiding in shadows](#hiding-in-shadows) in a fight to backstab, halved in
   daylight. *Without the mod:* backstabs only when the target faces someone
   else. A backstab does ×2 damage at levels 1-4, ×3 at 5-8, ×4 at 9-10.
-- **Picking pockets** with Thieves' Tools, from anyone in sight.
+- **Picking pockets** with a thief's Pick Pockets button, from anyone in sight.
 - A worn cloak, boots and belt help hiding, moving silently, picking pockets
   and opening locks.
 - AD&D's experience table (1,250 for 2nd level; *without the mod:* 1,200).
@@ -1294,9 +1294,10 @@ and the same race and DEX adjustments.
   and walls.
 - **Hide in shadows and move silently:** at the start of a thief's or ranger's
   turn in a fight ([hiding in shadows](#hiding-in-shadows)).
-- **Picking pockets** (the mod's): pick a thief's **Thieves' Tools** up on the
-  inventory screen, go back to the map with them on the pointer, and click
-  someone in sight (not in a fight). The thief rolls **pick pockets**:
+- **Picking pockets** (the mod's): on the **USE** screen, press the thief's
+  **Pick Pockets** button (a purse, where a priest's Turn Undead is), then
+  click someone in sight with the talking pointer (not in a fight). The thief
+  rolls **pick pockets**:
   - **success:** one small thing from them goes into the thief's backpack:
     something light that isn't worn on the body;
   - **failure:** the thief rolls **move silently** to slip away. Made, they can
@@ -1304,9 +1305,8 @@ and the same race and DEX adjustments.
     pockets from then on.
 
   When nothing worth taking is left, the thief takes a few coins from the
-  purse, and that is the last try on them. No one starts with the tools:
-  Mirlon in the slave pens carries a set (and gives it to a thief leading the
-  party who agrees to fetch his gem), and Kel sells two.
+  purse, and that is the last try on them. A cleric/thief has Turn Undead on
+  that button in fights, and Pick Pockets outside them.
 - **Read languages** is rolled only when a Shinobi reads a scroll.
 
 *Without the mod:* the game's own chances, which run much higher (a base of its
@@ -1610,7 +1610,6 @@ magic weapons are also marked \* in each class's list.
 | Metal pick, metal polearm | the game's, in metal |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
-| Thieves' Tools | [picking pockets](#thieves-skills-and-picking-pockets); Mirlon in the slave pens carries a set (a thief leading the party who takes his deal gets it), Kel sells two |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.

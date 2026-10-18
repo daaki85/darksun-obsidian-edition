@@ -20,7 +20,7 @@ ICONS: Dict[str, int] = {
     # the Loader's (icons.py)
     **{name.lower().replace("'", "").replace(" ", "-").replace("+", "plus"): number
        for name, number in LEDGER.items()},
-    "bone-scale-arm-armor": 1034, "bone-scale-leg-armor": 1035, "thieves-tools": 1068,
+    "bone-scale-arm-armor": 1034, "bone-scale-leg-armor": 1035,
     "tome-of-understanding": 1446, "kalzith-scroll": 1440, "gythka-plus2": 2534,
     # the game's magic items
     "swiftbite": 2641, "draketooth": 30002, "hornblade": 2270, "gythka-plus3": 2271, "mace-plus2": 2642,

@@ -454,8 +454,8 @@ class Viewer:
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.pickpockets = tk.BooleanVar(value=bool(settings.get("pickpockets", True)))
-        ttk.Checkbutton(thieves, text="Picking pockets: a thief uses Thieves' Tools on someone in sight, until "
-                        "caught (Mirlon and Kel have sets)", variable=self.pickpockets,
+        ttk.Checkbutton(thieves, text="Picking pockets: a thief's Pick Pockets button on the USE screen, then "
+                        "talk to someone, until caught", variable=self.pickpockets,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         thieves.pack(anchor="w", fill="x", pady=(8, 0))
 

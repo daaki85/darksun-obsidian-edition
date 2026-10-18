@@ -24,8 +24,12 @@ have the detail.
   the rule for INT on, learns the spell at INT's chance. A failed roll uses
   the scroll up; a scroll of a spell not among its 18 is kept, unlearnt. The
   dice log shows both rolls.
-- **Mirlon's Thieves' Tools without a fight**: when a party whose leader is a
-  thief agrees to fetch his gem ("It's a deal!"), he hands his set over.
+- **A Pick Pockets button for thieves** in place of Thieves' Tools: on the
+  USE screen, where a priest's Turn Undead is, a character with thief levels
+  has a purse (outside fights; a cleric/thief keeps Turn Undead in them).
+  Pressed, the pointer is the one for talking, and the next person clicked has
+  their pocket tried by that thief. Mirlon and Kel no longer carry the tools,
+  and Mirlon's script is the game's own again.
 
 **Fixed**
 - **The Trustee stuck in the pens** (again): his rounds' two pauses took their

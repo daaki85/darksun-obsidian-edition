@@ -1213,10 +1213,10 @@ not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
 the two the Loader rolls: move silently (when a pocket isn't picked, see
 [Picking pockets](#picking-pockets)) and hide in shadows (to
-[backstab](#hiding-in-shadows-to-backstab)), with any Thieves' Tools carried.
+[backstab](#hiding-in-shadows-to-backstab)).
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
-![Cilla's card on the Characters tab: Thieves' Tools carried, and her thief skills now, move silently and hide in shadows among them](docs/thief-card.png)
+![Cilla's card on the Characters tab: her thief skills now, move silently and hide in shadows among them](docs/thief-card.png)
 
 ### Attacks from behind and backstabs
 
@@ -2351,7 +2351,7 @@ as it was.
 | [Buying back magical items](#buying-back-magical-items) | a magical item sold stays in the merchant's stock, to buy back |
 | [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
 | [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
-| [Picking pockets](#picking-pockets) | a thief uses Thieves' Tools on anyone in sight, until caught |
+| [Picking pockets](#picking-pockets) | a thief's Pick Pockets button, then anyone in sight, until caught |
 
 ### The leader's CHA at shops
 
@@ -2551,17 +2551,19 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
 #### Picking pockets
 
 The game has one pocket to pick, in the Trustee's conversation (his key). With
-**Picking pockets** ticked, a thief can try anyone's with **Thieves' Tools**
-(a satchel). No one starts with them: **Mirlon** in the slave pens carries a
-set, and Kel sells two sets in his caravan. Mirlon's are the party's if they
-kill him, or, without a fight, if their leader is a thief when they agree to
-fetch his gem ("It's a deal!"): he sees what trade they're in and hands them
-over.
+**Picking pockets** ticked, a thief can try anyone's. On the **USE** screen, a
+character with thief levels has a **Pick Pockets** button (a purse) where a
+priest's Turn Undead is, under the spell counts. A cleric/thief has Turn
+Undead there in fights and Pick Pockets outside them.
 
-On the inventory screen, pick the tools up, go back to the game with them on
-the pointer, and click someone in sight. The tools stay on the pointer for the
-next try (clicking open ground drops them, as with anything carried). Not in a
-fight: there's no time for it then.
+Press it: the screen closes and the pointer is the one for talking. Click
+someone in sight, and the thief who pressed it tries their pocket instead of
+talking to them. A right click that changes the pointer puts the try away.
+Not in a fight: there's no time for it then, and the button isn't there.
+
+(Earlier versions had a thief use **Thieves' Tools** for this, from Mirlon or
+Kel. No one has them now; a set already in a game keeps its name and does
+nothing.)
 
 The Loader rolls the thief's pick pockets chance as it stands now (effects and
 a worn belt's 5 counted, as in the thief rows):
@@ -2704,7 +2706,7 @@ all. The log doesn't say where they are: they're there to be found.
 own.
 
 **New items, magical and mundane** on the Options tab places them all, the
-arena's ring too; a thief's tools come with picking pockets. A thief can
+arena's ring too. A thief can
 [lift](#picking-pockets) Pehtucl's ring, Shadowseeker, Gutterknot and
 Mindshard (200 XP for each weapon).
 
@@ -2730,7 +2732,6 @@ them:
 | ![](docs/items/metal-polearm.png) | **Metal Polearm** | carried by one of the six **Castle Guards** of the Upper Castle; an earth cleric's starting polearm | the game's polearm, in metal |
 | ![](docs/items/bone-scale-arm-armor.png) ![](docs/items/bone-scale-leg-armor.png) ![](docs/items/bone-helm.png) | **Bone Scale Arm Armor**, **Leg Armor** and **Bone Helm** | in the slave pens' chest with the Bone Scale Chest Armor and Arrows +3 (the game has the set but places only the chest piece) | the set; the helm AC 1 with [Helms give AC 1](#helms), worn by those who can wear the armour (not thieves) |
 | ![](docs/items/leather-helm.png) | **Helm** | in **Kurzak**'s pack, in the slave pens | the game's leather helm |
-| ![](docs/items/thieves-tools.png) | **Thieves' Tools** | on **Mirlon** in the slave pens (he gives them to a thief leading the party who takes his deal); sold by **Kel** in his caravan (two sets, 30 each) | [picking pockets](#picking-pockets) |
 
 The bone and obsidian weapons are also new characters' starting weapons with
 [weapon specialization](#weapon-specialization), each in a material the
