@@ -113,6 +113,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   thri-kreen) carry one.
 
 **Documentation**
+- **One item catalogue**: the README's New items tables merged into the item
+  tables, which list the game's items and the Loader's together. The Loader's
+  magic items (in bold) carry where each is and what it does; its plain
+  weapons a **new** note. New items keeps its prose, prices and the two new
+  pieces of armour.
 - **`patch-notes.html` made from `PATCH-NOTES.md`** by `python -m
   dsloader.patchnotes`, as the guide's page is (a test fails when it falls
   behind); its Copy as Markdown button gives the Markdown itself. Both pages
