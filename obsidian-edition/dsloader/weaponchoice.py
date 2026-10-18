@@ -350,7 +350,8 @@ def kit_gear(gd) -> List[str]:
             slot, type_ = item[game.ITEM_SLOT], struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
             typ = read(type_)
             packed = _packed_start(item, owned)  # (the game's long sword in the backpack: the kit forbids it)
-            if slot not in (right, left) and not packed \
+            shield = bool(typ[0] & kits.SHIELD)  # (in a hand or the backpack: left behind if forbidden)
+            if slot not in (right, left) and not packed and not shield \
                     or not restrict.kit_forbids(sheet, type_, typ, off_hand=slot == left):
                 continue
             at = items + item_index * game.ITEM_SIZE
@@ -358,7 +359,7 @@ def kit_gear(gd) -> List[str]:
             if new is None and packed:
                 continue
             if new is None:
-                if typ[0] & kits.SHIELD and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
+                if shield and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                     out.append(f"{who}'s {name(item)} is left behind: a {kit} fights without a shield")
                     continue  # (a shield the kit forbids: no use in the backpack)
                 cell = pickpocket.free_cell(gd, ring.Items(gd), member)

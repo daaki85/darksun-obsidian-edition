@@ -2311,14 +2311,11 @@ class RuleTests(RingTests):
         """INT VEC_SPELL_TEXT after the game read SPIN chunk SPIN (LENGTH bytes) into the buffer
         at the game's [BP-8]: (the buffer's text, AX), with SP back past the read's arguments."""
         image = load_image()
-        # its rule test and "cmp di,0Fh", after three pops, "add sp,0Ch" and three pushes (33 bytes)
+        # three pops, "add sp,0Ch", three pushes, then "cmp di,1000" (Turn Undead's SPIN: TU_SPIN)
         import re
-        found = re.search(re.escape(bytes.fromhex("2ef606") + struct.pack("<H", self.RULES) + b"\x20\x74")
-                          + b"." + re.escape(bytes.fromhex("81ffc500")), image, re.S)
+        found = re.search(rb"(?:\x2e\x8f\x06..){3}\x83\xc4\x0c(?:\x2e\xff\x36..){3}\x81\xff\xe8\x03", image, re.S)
         self.assertIsNotNone(found)
-        anchor = found.start()
-        probe = anchor - 33
-        self.assertEqual(image[probe:probe + 3], bytes.fromhex("2e8f06"))
+        probe = found.start()
         self.mu.mem_write(VEC_SPELL_TEXT * 4, struct.pack("<HH", probe, TSR))
         buf = self.TYPES * 16 + 0x500
         self.mu.mem_write(buf, b"FLAMING SPHERE:  Creates a burning globe.\r\n\0".ljust(200, b"\0"))
@@ -2342,6 +2339,7 @@ class RuleTests(RingTests):
         self.assertTrue(self.spell_text(198, 0xFFFF)[0].startswith(b"ERDLU CLAW:  "))
         self.assertTrue(self.spell_text(199, 0xFFFF)[0].startswith(b"FOGBOLT:  "))
         self.assertEqual(self.spell_text(15)[0][:15], b"FLAMING SPHERE:")
+        self.assertEqual(self.spell_text(1000)[0][:15], b"FLAMING SPHERE:")  # (Turn Undead's, unasked: as read)
         self.rules(0)
         self.assertEqual(self.spell_text(197, 0xFFFF)[1], 0xFFFF)
 

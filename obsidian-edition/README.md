@@ -2559,10 +2559,12 @@ alone.
 
 Press it: the screen closes and the pointer is the one for talking. Click
 someone in sight, and the thief who pressed it (party leader or not) tries
-their pocket instead of talking to them. A right click that changes the
-pointer puts the try away. A thief whose backpack is full can't try ("Daaki's
-backpack is full."): nothing is rolled, and it doesn't count as a try.
-Not in a fight: there's no time for it then, and the button isn't there.
+their pocket instead of talking to them. On the map, a right click that
+changes the pointer puts the try away. (Right-clicked on the USE screen, the
+purse says what it does, as a spell does.) A thief whose backpack is full
+can't try ("Daaki's backpack is full."): nothing is rolled, and it doesn't
+count as a try. Not in a fight: there's no time for it then, and the button
+isn't there.
 
 (Earlier versions had a thief use **Thieves' Tools** for this, from Mirlon or
 Kel. No one has them now; a set already in a game keeps its name and does

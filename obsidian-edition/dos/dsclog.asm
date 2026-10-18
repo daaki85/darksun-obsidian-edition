@@ -11902,6 +11902,20 @@ probe_spell_text:
         push word [cs:n_fl]
         push word [cs:n_cs]
         push word [cs:n_ip]
+        cmp di, TU_SPIN
+        jne .spells
+        cmp byte [cs:tu_info], TU_INFO_PICK
+        mov byte [cs:tu_info], 0
+        jne .out
+        push cx
+        push si
+        push di
+        push ds
+        push es
+        mov si, pp_text_info
+        jmp .found
+.spells:
+        mov byte [cs:tu_info], 0
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .out
         cmp di, NS_FIRST + 1
@@ -11940,6 +11954,10 @@ probe_spell_text:
         pop si
         pop cx
 .out:   iret
+TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box reads it too)
+pp_text_info:
+        db "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
+        db "If it fails, the thief tries to slip away unseen. Not in a fight.", 13, 10, 0
 ns_texts:
         db "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.", 13, 10, 0
         db "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
@@ -12985,6 +13003,7 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         dw NS_DX, 0x8A          ; 720D3h, 8C457h an item's spell's icon (a scroll's in its box)
         db NS_K_R16
         dw NS_DX, 0x8A
+ns_cmp_info:
         db NS_K_R16
         dw NS_SI, 0x8A          ; 8C64Eh the spell info box's icon
         db NS_K_R8
@@ -12992,6 +13011,7 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         db NS_K_R8
         dw NS_CL, 0xC4
 NS_CMP_COUNT equ ($ - ns_cmp_sites) / 5
+NS_CMP_INFO equ NS_CMP + (ns_cmp_info - ns_cmp_sites) / 5 ; (the info box's: TU_INFO's)
 NS_FIST   equ NS_CMP + NS_CMP_COUNT ; 58226h, a melee hit's magic (after NS_CMP's)
 NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a spell
 NS_ENTRY_EF equ NS_IMAGE + 1    ; 7ED37h, 7EEC9h, 7EF34h: an effect's entry, the Effects screen's
@@ -13099,7 +13119,11 @@ ns_cmp:
         jmp .got
 .esbx:  add bx, [ss:di + 18]    ; (the game's BX)
         mov ax, [es:bx]
-.got:   push ax
+.got:   cmp byte [cs:rl_site], NS_CMP_INFO
+        jne .new
+        cmp byte [cs:tu_info], 0 ; (Turn Undead's box, or the purse's: as the game has it)
+        jne .cmp
+.new:   push ax
         call ns_new
         pop ax
         jnc .cmp
@@ -13412,7 +13436,7 @@ blow_charge dw CHARGE_OFF, 0
 ; PP_TEXT: "push ds / push 3262h" (89541h, 8967Ah; 4 bytes), the name shown under the screen as the
 ; pointer is on the button ("TURN UNDEAD", DS:3262h): the thief's, PP_NAME. PP_INFO: "mov ax,
 ; [9CDEh]" (8968Eh; 3 bytes), a right click on it, the description of its spell (by the element's
-; icon) to be shown: none for the thief's.
+; icon) to be shown: the thief's with the purse's icon and its own text (TU_INFO).
 ; PP_ARM: "push dword 0BEFFFFh" (89610h; 6 bytes), the handler readying Turn Undead (spell 190,
 ; 0FFh): the thief's readies nothing (on to the handler's end) but the pick, and the character's
 ; readied kind put back (PP_KEEP); the priest's pushes its spell.
@@ -13694,7 +13718,12 @@ cr_labels:
         mov word [TEXT_INK], CR_INK
 .out:   iret
 
-INFO_PAST   equ 0x8969E - 0x89691 ; (past the description's call, less the way back)
+; TU_INFO: the description box (8C5F6h) asked for by PP_INFO: the game gives Turn Undead's
+; numbers 196 on (its element's icon less 0BE4h, + 0C4h; the purse's 200) its icon and SPIN 1000,
+; where the new spells (196-201) are spells: NS_CMP leaves the info box's compare as the game has
+; it (NS_CMP_INFO), and PROBE_SPELL_TEXT gives the purse its own text (PP_TEXT_INFO).
+TU_INFO_TURN equ 1
+TU_INFO_PICK equ 2
 TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"
 pp_text:
         sub sp, 4               ; the game's two pushes: the INT's frame moved down over them
@@ -13726,13 +13755,12 @@ pp_info:
         mov bx, bp
         call pp_mine
         pop bx
+        mov byte [cs:tu_info], TU_INFO_TURN
         cmp al, 0
         mov ax, [TU_ICON]       ; (the replaced instruction)
         je .ret
-        push bp
-        mov bp, sp
-        add word [bp + 2], INFO_PAST
-        pop bp
+        mov byte [cs:tu_info], TU_INFO_PICK
+        mov ax, PP_ICON
 .ret:   iret
 
 pp_lit:
@@ -13884,6 +13912,7 @@ pp_who    db 0                  ; (the thief)
 pp_loaded dw 0                  ; the icon the game has loaded (TU_CACHE)
 pp_second    db 0               ; 1: the purse wanted beside Turn Undead (PP_SECOND_DRAW)
 pp_second_on db 0               ; 1 while it is shown
+tu_info    db 0                 ; TU_INFO_TURN or TU_INFO_PICK: the description box asked for (PP_INFO)
 pp_icon2     dd 0               ; its icon, loaded (let go of as the screen closes)
 pp_call      dd 0
 pp_ret       dw 0

@@ -1512,7 +1512,14 @@ Undead: for the thief's, the menu button keeps its icon (`PP_LIT`, 895F2h), no
 spell is readied (`PP_ARM`, 89610h, to the handler's end; the readied kind
 the closing set put back), and the pointer is made the one for talking
 (DS:11B8h = 2; 1 walk, 4 attack). Its name under the screen is "PICK POCKETS"
-(`PP_TEXT`) and a right click shows no spell's description (`PP_INFO`). The
+(`PP_TEXT`). A right click (`PP_INFO`) asks the game's description box
+(8C5F6h) for Turn Undead's kind of entry with the purse's icon (its number
+200, Turn Undead's 196 to 199: the element's icon less 0BE4h, plus 0C4h), and
+the helper gives it its own text in place of Turn Undead's (SPIN 1000). The
+new spells (196 to 201) share those numbers, so for these two boxes the
+helper leaves the box's spell test (8C64Eh, `NS_CMP_INFO`) as the game has
+it; before, Turn Undead's showed a new spell's (Fogbolt's for an earth
+cleric). The
 next click on someone with that pointer (`PP_HAND`, 5ECD8h, the start of the
 routine that opens the box to talk, trade or look) asks the Loader as
 `PROBE_USE_ITEM` (`INT FDh`) does for an item used on the map: `USE_ITEM`

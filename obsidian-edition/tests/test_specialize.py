@@ -526,6 +526,28 @@ class KitGearTests(FinishNewTests):
         self.assertIn("in place of the", out[0])
         self.assertIn("second", out[1])
 
+    def test_shadowblade_packed_shield(self):
+        """A Shadowblade (a half-elf fighter/thief) fights without a shield: the game's starting
+        one is left behind, in the backpack as in the left hand; once."""
+        from dsloader import weaponchoice
+        right, left = self.character(9, 1)
+        s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
+        s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 4, 17
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        self.give(4, 0x05, 0x20)  # (a backpack cell)
+        taken = []
+
+        def unlink(gd, it, item, what, empty=False):
+            taken.append(item)
+            at = self.ITEMS + item * game.ITEM_SIZE
+            self.mem[at:at + game.ITEM_SIZE] = bytes(game.ITEM_SIZE)
+            return True
+        with mock.patch("dsloader.ring.unlink", unlink):
+            out = weaponchoice.kit_gear(self.gd)
+            self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+        self.assertEqual(taken, [0])
+        self.assertIn("a Shadowblade fights without a shield", out[0])
+
     def test_ghetto_dagger(self):
         """A Ghetto Fighter (a dwarf fighter/thief): its long sword made a dagger, whatever its spec;
         once."""

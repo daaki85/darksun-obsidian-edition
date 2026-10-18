@@ -37,6 +37,14 @@ have the detail.
   each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
 
 **Fixed**
+- **Turn Undead's right click showed a new spell's description** (Fogbolt's,
+  for an earth cleric; seen in 2.3.0 on): the game describes Turn Undead by
+  numbers the new spells took. It shows its own again.
+- **Pick Pockets' right click showed nothing**: it now shows the purse and
+  what it does.
+- **A Shadowblade or Ghetto Fighter could start with a shield in the
+  backpack**: the kit's gear left a shield behind only from a hand, so one
+  already moved to the backpack stayed. It is left behind from there too.
 - **White ability labels on the inventory screen** (STR: to CHR:, among the
   yellow): the fix that drew the creation screen's labels in its white drew
   the inventory's in it too, as both screens draw them with one routine. The
