@@ -37,6 +37,10 @@ have the detail.
   each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
 
 **Fixed**
+- **White ability labels on the inventory screen** (STR: to CHR:, among the
+  yellow): the fix that drew the creation screen's labels in its white drew
+  the inventory's in it too, as both screens draw them with one routine. The
+  white is now set only for labels at the creation screen's place.
 - **The Trustee stuck in the pens** (again): his rounds' two pauses took their
   corner from numbers any script in the pens could change, and once another
   had, he set off for a spot that doesn't exist and stood still for good, busy.

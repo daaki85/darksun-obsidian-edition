@@ -13009,6 +13009,7 @@ PP_TEXT   equ NS_IMAGE + 13      ; 89541h, 8967Ah: ... its name under the screen
 PP_INFO   equ NS_IMAGE + 14      ; 8968Eh: ... its spell's description
 PP_CLOSE  equ NS_IMAGE + 15      ; 88504h: the USE screen closing, its icons let go of
 PP_HAND   equ NS_IMAGE + 11      ; 5ECD8h: a click on the map, the pointer for talking, on something
+CR_LABELS equ NS_IMAGE + 16      ; 65125h: the ability labels (STR: to CHR:), drawn
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13044,6 +13045,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je pp_info
         cmp byte [cs:rl_site], PP_CLOSE
         je pp_close
+        cmp byte [cs:rl_site], CR_LABELS
+        je cr_labels
         cmp byte [cs:rl_site], SELL_KEEP
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
@@ -13676,6 +13679,20 @@ pp_close:
         popad
         pop bp
         iret
+
+; CR_LABELS: "mov bx,si / shl bx,2" (65125h; 5 bytes) in the routine drawing the ability labels
+; (STR: to CHR:, 6511Fh) in the text colour the last screen left (DS:326Eh, TEXT_INK). The
+; inventory screen sets its yellow first; the creation screen never sets its own, so its labels
+; came out in the last screen's yellow. Drawn at the creation screen's place (x, [BP+0Ah], left
+; of the middle), they are in its white (CR_INK); at the inventory's, in the colour it set.
+CR_LABELS_X equ 160             ; (the creation screen's at x 10, the inventory's at 235)
+cr_labels:
+        mov bx, si
+        shl bx, 2
+        cmp word [bp + 0xA], CR_LABELS_X
+        jae .out
+        mov word [TEXT_INK], CR_INK
+.out:   iret
 
 INFO_PAST   equ 0x8969E - 0x89691 ; (past the description's call, less the way back)
 TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"

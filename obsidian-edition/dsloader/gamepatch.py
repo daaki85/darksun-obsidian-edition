@@ -135,6 +135,7 @@ NS_HOLD = NS_IMAGE + 7  # (Hold Undead on a target that isn't undead: immune)
 PP_SHOW, PP_CLICK, PP_ARM, PP_HAND, PP_LIT = NS_IMAGE + 8, NS_IMAGE + 9, NS_IMAGE + 10, NS_IMAGE + 11, NS_IMAGE + 12
 PP_TEXT, PP_INFO = NS_IMAGE + 13, NS_IMAGE + 14  # (its name under the screen; its spell's description)
 PP_CLOSE = NS_IMAGE + 15  # (the USE screen closing: a cleric/thief's second button's icon let go of)
+CR_LABELS = NS_IMAGE + 16  # (the ability labels: the creation screen's in its white)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -646,8 +647,10 @@ PATCHES = (
     Patch("rl_roll_7", 0x659AE, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
     # the creation screen's ability labels (STR: to CHR:, 6511Fh) in its own white (34h): the
     # routine prints them in the colour the last screen left (DS:326Eh: a character screen's
-    # yellow, 2Fh), and the creation screen never sets it before they're drawn
-    Patch("cr_labels", 0x65135, bytes.fromhex("ff366e32"), bytes.fromhex("6a349090")),
+    # yellow, 2Fh), and the creation screen never sets it before they're drawn. The inventory
+    # screen draws its labels with the same routine, in the yellow it sets: DSCLOG sets the white
+    # only for labels at the creation screen's place (CR_LABELS)
+    Patch("cr_labels", 0x65125, bytes.fromhex("8bdec1e302"), _site(CR_LABELS, 5)),
     Patch("rl_sum", 0x65185, bytes.fromhex("83c404"), bytes((0xCD, VEC_CR_SPELLS, RL_SUM))),
     # a click on CON moving the hit points with the most they may be, and each ability's 4d4 kept
     # for the dice log (whatever the rule)
