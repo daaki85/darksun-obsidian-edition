@@ -78,9 +78,10 @@ class PickTests(unittest.TestCase):
         self.assertIn("d100 = 11, needs 11 or less -> success", result.log[0])
         self.assertIsNone(result.key)
         money = self.log.game.money()
-        again = self.attempt(1)
-        self.assertEqual(again.text, "Dag lifts 3 ceramic pieces from Guard's purse, all there was to take.")
-        self.assertEqual(self.log.game.money(), money + 3)
+        again = self.attempt(1)  # (Dag a 4th level thief: 3 for each level, as rolled here)
+        self.assertEqual(again.text, "Dag lifts 12 ceramic pieces from Guard's purse, all there was to take.")
+        self.assertIn("  coins: 4d4+4 (2 to 5 for each of 4 thief levels) = 12", again.log)
+        self.assertEqual(self.log.game.money(), money + 12)
         self.assertIsNotNone(again.key)
 
     def test_kurzaks_sword(self):

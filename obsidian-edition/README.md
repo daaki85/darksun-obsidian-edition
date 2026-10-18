@@ -2584,7 +2584,8 @@ a worn belt's 5 counted, as in the thief rows):
   missed, they're caught.
 
 With nothing like that left on them, the thief takes what's in their purse
-instead: a few ceramic pieces (2 to 5), added to the party's money. That is
+instead: ceramic pieces, 2 to 5 for each of the thief's levels (a 4th-level thief
+takes 8 to 20), added to the party's money. That is
 the last try on that person.
 
 A thief can go on trying the same person until **caught** (both rolls failed)

@@ -31,6 +31,8 @@ have the detail.
   Pressed, the pointer is the one for talking, and the next person clicked has
   their pocket tried by that thief. Mirlon and Kel no longer carry the tools,
   and Mirlon's script is the game's own again.
+- **Coins from a picked purse grow with the thief**: 2 to 5 ceramic pieces for
+  each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
 
 **Fixed**
 - **The Trustee stuck in the pens** (again): his rounds' two pauses took their

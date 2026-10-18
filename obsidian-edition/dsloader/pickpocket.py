@@ -8,7 +8,7 @@ person it is clicked on (DSCLOG's PP_HAND, instead of the conversation) has the 
 thief's pick pockets chance as it stands now (thief_skills_now). On a success the
 thief lifts one small thing (weight 10 or less, and nothing worn on the body) from the
 person into the backpack. On a failure, a move silently roll decides whether they got away
-unnoticed. With nothing else on them, the thief takes a few coins (party money), and that is
+unnoticed. With nothing else on them, the thief takes coins (party money: 2 to 5 for each thief level), and that is
 the last try on them. A thief can go on trying the same person until caught (both rolls
 failed) or until they take the coins; after that, their pockets are out of reach.
 
@@ -65,6 +65,15 @@ def _seen(data: bytes) -> Optional[str]:
     if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] in LIFTABLE_TYPES:
         return SWORD_SEEN
     return LIFTABLE_NAMES.get(struct.unpack_from("<H", data, game.ITEM_NAME)[0])
+
+
+def thief_level(gd: GameData, member: int) -> int:
+    """MEMBER's level in the thief class (at least 1)."""
+    sheet = gd.sheet(member)
+    for i in range(3):
+        if len(sheet) > game.SHEET_LEVELS + i and sheet[game.SHEET_CLASSES + i] == game.THIEF:
+            return max(1, sheet[game.SHEET_LEVELS + i])
+    return 1
 
 
 def _skill(gd: GameData, member: int, name: str) -> Optional[int]:
@@ -202,7 +211,7 @@ def give(gd: GameData, it: ring.Items, member: int, item: int, cell: int) -> boo
     return _link(gd, it, member, item, cell)
 
 
-COINS = (2, 5)  # ceramic pieces in a purse with nothing else worth taking
+COINS = (2, 5)  # ceramic pieces in a purse with nothing else worth taking, for each of the thief's levels
 
 
 def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.randint(1, 100),
@@ -239,10 +248,13 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
              + ("success" if d100 <= chance else "failed")]
     if d100 <= chance:
         loot = _carried(gd, it, who)
-        if not loot:  # nothing else: a few coins, and that was the last try on them
-            coins = coin_roll()
+        if not loot:  # nothing else: coins, 2 to 5 for each thief level, and that was the last try on them
+            level = thief_level(gd, leader)
+            rolls = [coin_roll() for _ in range(level)]
+            coins = sum(rolls)
             gd.add_money(coins)
             text = f"{thief} lifts {coins} ceramic pieces from {npc}'s purse, all there was to take."
+            lines.append(f"  coins: {level}d4+{level} (2 to 5 for each of {level} thief levels) = {coins}")
             lines.append("  " + text)
             return Attempt(text, lines, key)
         else:

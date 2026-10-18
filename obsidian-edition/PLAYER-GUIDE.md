@@ -1304,9 +1304,9 @@ and the same race and DEX adjustments.
     try again; missed, they are caught, and that person keeps a hand on their
     pockets from then on.
 
-  When nothing worth taking is left, the thief takes a few coins from the
-  purse, and that is the last try on them. A cleric/thief has both buttons
-  outside fights, the purse beside Turn Undead.
+  When nothing worth taking is left, the thief takes 2 to 5 ceramic pieces
+  from the purse for each thief level, and that is the last try on them. A
+  cleric/thief has both buttons outside fights, the purse beside Turn Undead.
 - **Read languages** is rolled only when a Shinobi reads a scroll.
 
 *Without the mod:* the game's own chances, which run much higher (a base of its
