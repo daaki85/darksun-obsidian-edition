@@ -2558,8 +2558,10 @@ outside fights, Turn Undead and the purse beside it; in a fight, Turn Undead
 alone.
 
 Press it: the screen closes and the pointer is the one for talking. Click
-someone in sight, and the thief who pressed it tries their pocket instead of
-talking to them. A right click that changes the pointer puts the try away.
+someone in sight, and the thief who pressed it (party leader or not) tries
+their pocket instead of talking to them. A right click that changes the
+pointer puts the try away. A thief whose backpack is full can't try ("Daaki's
+backpack is full."): nothing is rolled, and it doesn't count as a try.
 Not in a fight: there's no time for it then, and the button isn't there.
 
 (Earlier versions had a thief use **Thieves' Tools** for this, from Mirlon or
@@ -2584,9 +2586,9 @@ a worn belt's 5 counted, as in the thief rows):
   missed, they're caught.
 
 With nothing like that left on them, the thief takes what's in their purse
-instead: ceramic pieces, 2 to 5 for each of the thief's levels (a 4th-level thief
-takes 8 to 20), added to the party's money. That is
-the last try on that person.
+instead: ceramic pieces, 2 to 5 for each of the thief's levels (a 4th-level
+thief takes 8 to 20), added to the party's money. That is the last try on that
+person.
 
 A thief can go on trying the same person until **caught** (both rolls failed)
 or until they take the coins; after that, that person keeps a hand on their
@@ -2607,7 +2609,9 @@ the game drops it at his feet, and after each step of his rounds he went back
 for it ("There it is!") without picking it up: his rounds stalled, and he
 stayed busy ("I'd love to talk more... get back to work") for good. The
 Loader's copy of his scripts leaves the key where it lies, for the party to
-pick up, and has him say the busy line once.
+pick up, and has him say the busy line once and walk on (see
+[The game's bugs, fixed](#the-games-bugs-fixed) for the other way his rounds
+stalled).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
 
@@ -3420,6 +3424,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
+| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](#how-the-game-works-out-thief-skills)) |
 

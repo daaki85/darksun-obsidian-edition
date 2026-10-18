@@ -29,8 +29,10 @@ have the detail.
   has a purse (outside fights; a cleric/thief has both, the purse beside Turn
   Undead, and Turn Undead alone in a fight).
   Pressed, the pointer is the one for talking, and the next person clicked has
-  their pocket tried by that thief. Mirlon and Kel no longer carry the tools,
-  and Mirlon's script is the game's own again.
+  their pocket tried by that thief, leader or not, into that thief's own
+  backpack. The Options tab says so. Mirlon and Kel no longer carry the tools,
+  Mirlon's script is the game's own again, and tools already in a saved game
+  do nothing.
 - **Coins from a picked purse grow with the thief**: 2 to 5 ceramic pieces for
   each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
 
@@ -74,8 +76,6 @@ have the detail.
   never began; walking said NO PATH FROM HERE), and the gear went nowhere. The
   Loader now waits until the game's item lists are settled. A game this
   happened to can't be mended: start a new one.
-- **The Options tab's Picking pockets box said each thief gets a set of
-  Thieves' Tools**; no one does (Mirlon and Kel have them), and it now says so.
 - **A Brute started with no weapon**: its long sword and club, which the game
   puts in the backpack, were left behind. The long sword now becomes its
   weapon spec's weapon (a great axe without weapon specialization), in hand,
@@ -94,9 +94,7 @@ have the detail.
   could mend. It now gives it one, as it does for a picked pocket's window.
 - **The Loader's item-list changes made safer** (found in review): taking an
   item out of a list while the game's own free list moved could leave the
-  item in no list at all; it now goes back where it was. Mirlon's tools are
-  handed over only while the game leaves its item lists be, like the rest of
-  the Loader's gear changes.
+  item in no list at all; it now goes back where it was.
 - **Defilers' scrolls on creatures that aren't defilers** (one of Scar's
   henchmen dropped one): the Loader knew a defiler by the class on its
   character sheet, which the game hands on from one creature to the next. It

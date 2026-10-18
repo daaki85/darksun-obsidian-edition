@@ -1296,7 +1296,8 @@ and the same race and DEX adjustments.
   turn in a fight ([hiding in shadows](#hiding-in-shadows)).
 - **Picking pockets** (the mod's): on the **USE** screen, press the thief's
   **Pick Pockets** button (a purse, where a priest's Turn Undead is), then
-  click someone in sight with the talking pointer (not in a fight). The thief
+  click someone in sight with the talking pointer (not in a fight). Any thief
+  can, party leader or not, so long as their backpack has room. The thief
   rolls **pick pockets**:
   - **success:** one small thing from them goes into the thief's backpack:
     something light that isn't worn on the body;

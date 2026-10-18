@@ -59,6 +59,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Rings and cloaks of protection follow AD&D: two rings don't stack, a ring gives no AC with magical armour, and a cloak does nothing with magical or metal armour or a shield.
 - **[Changed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
+- **[Changed]** A thri-kreen in the party fights with edged claws, so creatures that crushing weapons can't hurt are no longer safe from it *(was crushing, as every unarmed attack)*.
 
 ## Classes and Kits
 
@@ -126,7 +127,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
-- **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight. Fail and you roll move silently to get away. A few named weapons can be lifted for 200 XP.
+- **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.
 
@@ -234,6 +235,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** The preserver's **Dispel Magic** also stopped everyone it caught from casting spells, your own party included. Now it only dispels.
 - **[Fixed]** **Hold Undead** held living creatures too. Now only the undead.
 - **[Fixed]** **Cause Serious and Critical Wounds** did 2d9 and 3d9 damage. Now 2d8+1 and 3d8+3, as AD&D has them and as the Cure spells heal.
+- **[Fixed]** The **Trustee** in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
 Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons and warriors' attacks (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); thief skills (Improved Thieving); and acid on armour (Combat).
@@ -245,5 +247,6 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - A character who kept the strength from Share Strength after the power ended still has it (it shows on their Effects screen). Load a save from before the power was used to be rid of it.
 - A character silenced by the preserver's Dispel Magic ("No spell use" on their Effects screen) casts again once it wears off.
 - A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
+- Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.
