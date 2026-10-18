@@ -14,6 +14,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
   - [If the game or DOSBox crashes](#if-the-game-or-dosbox-crashes)
+  - [If an item disappears](#if-an-item-disappears)
   - [If the game freezes](#if-the-game-freezes)
   - [Reporting a problem](#reporting-a-problem)
   - [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files)
@@ -295,6 +296,36 @@ Send the file along with what you were doing just before. A game closed the
 usual way (Exit to DOS, or closing DOSBox's window) writes no report. With the
 game started from GOG's own shortcut, the Loader can't see how it closed, so
 there is no report.
+
+### If an item disappears
+
+The Loader watches the party's items (every member's, worn or carried). When
+one is gone from the whole party for two seconds with nothing ordinary to
+explain it, it saves an item report in `crash-logs`, as it does for a crash
+(`crash-logs\item-2026-10-18-213012.txt`), and says so in the dice log:
+
+```
+Inix Hide Chest Armor is gone from Garyn's chest: its record is empty: the game freed it (destroyed, used up or discarded). An item report is saved in ...
+```
+
+Send the file, with what you were doing, and it can be looked into. It holds:
+- the item, who had it and where (worn in which slot, or carried), and what
+  its record in the game's item table says now: freed (destroyed) or reused
+  for another item;
+- the game's time, the region, and whether a fight was on and whose turn;
+- the item's record and its type's as last seen and as it is now, the
+  owner's items before and after, and the whole party's;
+- the Loader's switches, the last 300 lines of the dice log and the last 80
+  of the dialogue.
+
+The ordinary ways for an item to go get a line in the dice log and no report:
+an item that still exists outside the party (dropped, put in a chest, given
+or stolen: `... left Garyn's pack: it is outside the party`), one used up or
+taken for a quest (fruit, quest items, arrows, scrolls), one a spell made
+(Shillelagh, Flame Blade, Spiritual Hammer), one sold (the party's money went
+up as it went), and a weapon that broke (a Broken Weapon in its place). An
+item handed to another member, or moved and back within the two seconds, is
+not news at all, and nor is anything after a game is loaded.
 
 ### If the game freezes
 

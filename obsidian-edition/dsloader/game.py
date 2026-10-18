@@ -524,6 +524,18 @@ WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
 
 
+class ItemSeen(NamedTuple):
+    """An item of the party's, as party_items saw it."""
+    index: int          # the item's number (its record in the game's item table)
+    member: int         # the party slot that has it
+    owner: str          # ... and that member's name
+    slot: Optional[str]  # where it is worn ("chest"), None if only carried
+    label: str          # "Inix Hide Chest Armor"
+    type: int           # its item type
+    record: bytes       # the item's record (ITEM_SIZE bytes)
+    kind: bytes         # its type's record (ITEM_TYPE_SIZE bytes)
+
+
 class WeaponHit(NamedTuple):
     item: int  # its item number
     slot: int
@@ -1492,6 +1504,26 @@ class GameData:
         if plus and not name.endswith(f"{plus:+d}"):  # (a name such as "Sling +2" has it)
             name += f" {plus:+d}"
         return (f"{MATERIALS[material]} " if material < len(MATERIALS) else "") + name
+
+    def party_items(self) -> List["ItemSeen"]:
+        """Every item a party member has, worn or carried (itemwatch.py watches them)."""
+        out = []
+        for member in range(PARTY_SIZE):
+            rec = self.creature(member)
+            if len(rec) < CREATURE_SIZE or not rec[CREATURE_NAME]:
+                continue
+            for index, item, typ in self._worn(member):
+                slot = item[ITEM_SLOT]
+                out.append(ItemSeen(index, member, self.creature_name(member),
+                                    EQUIP_SLOTS[slot] if slot < len(EQUIP_SLOTS) else None,
+                                    self.item_label(item, typ), struct.unpack_from("<H", item, ITEM_TYPE)[0],
+                                    bytes(item), bytes(typ)))
+        return out
+
+    def item_record(self, index: int) -> bytes:
+        """An item's record by number, whoever has it now."""
+        items = far_pointer(self.guest, self.ds, ITEMS_PTR)
+        return self.guest.read(items + index * ITEM_SIZE, ITEM_SIZE)
 
     def equipment(self, creature: int) -> List[Tuple[Optional[str], str]]:
         """A creature's items: [(slot it's worn in or None if only carried, "Leather Chest Armor"), ...],

@@ -12,6 +12,16 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #51 (in progress)
 
 **Added**
+- **Item reports**: the Loader watches the party's items and, when one is gone
+  from the whole party for two seconds, saves `crash-logs\item-<time>.txt`
+  (the item, who had it and where, what its record says now, the game's time
+  and region, the fight, the party's items before and after, the switches,
+  and the dice log's and dialogue's last lines) and says so in the dice log,
+  so a vanished item can be looked into as a crash is. The ordinary losses
+  (an item still outside the party, used up, a spell's weapon, sold, broken)
+  get a dice-log line only, and a loaded game is not news
+  (`dsloader/itemwatch.py`, `GameData.party_items`; README, "If an item
+  disappears").
 - **Four more magic weapons** for the kits that had too few (the dagger
   fighters, the archers, the thri-kreen), each with its icon, its name in
   DSCLOG's table (now 39 names) and a story from Alagorn:

@@ -28,6 +28,7 @@ from . import buyback, gamepatch, combatlog, dance, wheel, wild, defaultparty, d
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
+from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
@@ -358,6 +359,8 @@ class DiceLog:
         self._pending: List[PendingDice] = []
         self._out_cold: Dict[int, bool] = {}  # creature index -> Out Cold when last looked at
         self._psp: Dict[int, int] = {}  # party member -> PSP when last looked at
+        self.itemwatch = ItemWatch()  # the party's items, and a report when one is gone (itemwatch.py)
+        self._settings: Optional[dict] = None  # as last given to use_settings, for the reports
         self._last_damage: Optional[Tuple[int, int]] = None  # (spell, damage) last rolled
         self._turn: Optional[int] = None  # whose turn it was when last looked at
         self.round_order: List[Tuple[Optional[int], str, int]] = []  # this round: (combatant, name, score)
@@ -626,6 +629,7 @@ class DiceLog:
 
     def use_settings(self, settings: dict) -> None:
         """The Options tab's switches for the game, as saved (for the logs without a window)."""
+        self._settings = settings
         self.monster_info = bool(settings.get("monster_info", True))
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
         self.pickpockets = bool(settings.get("pickpockets", True))
@@ -981,6 +985,7 @@ class DiceLog:
                 self._kalzith_sold_out()
                 out += self._learn_lines()
                 self._dress_now(now)
+                out += self.itemwatch.check(self.game, now, self._settings)
         self._scroll()
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
             out += self.initiative_lines()
@@ -1004,6 +1009,7 @@ class DiceLog:
             self._panel_lines(out, now)
         if self.combat_log:
             self._panel_input(now)
+        self.itemwatch.remember(out)  # (the context an item report carries)
         return out
 
     def _arena_ring(self, now: float) -> List[str]:
@@ -1435,6 +1441,7 @@ class DiceLog:
     def take_dialogue(self) -> List[DialogueEntry]:
         """Dialogue that has come in since the last call (lines() collects it)."""
         out, self._dialogue = self._dialogue, []
+        self.itemwatch.remember_talk(out)
         return out
 
     def _party_check(self, now: float) -> bool:
@@ -1446,6 +1453,7 @@ class DiceLog:
             if self.tracker:
                 self.tracker.reset()
             self.defilers.reset()
+            self.itemwatch.reset()
             return True
         return False
 

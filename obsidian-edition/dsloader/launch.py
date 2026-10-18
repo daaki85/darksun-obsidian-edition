@@ -459,11 +459,11 @@ def _last_lines(text: str, count: int) -> str:
     return "\n".join(text.rstrip().splitlines()[-count:]) or "(empty)"
 
 
-def write_crash_report(text: str, now: float, folder: str = CRASH_DIR) -> str:
-    """Save a crash report as crash-logs/crash-YYYY-MM-DD-HHMMSS.txt (a number after it if there
-    is one already); returns its path."""
+def write_crash_report(text: str, now: float, folder: str = CRASH_DIR, kind: str = "crash") -> str:
+    """Save a report as crash-logs/crash-YYYY-MM-DD-HHMMSS.txt (a number after it if there is one
+    already; KIND names it: "item" for a lost item's, itemwatch.py); returns its path."""
     os.makedirs(folder, exist_ok=True)
-    stem = os.path.join(folder, time.strftime("crash-%Y-%m-%d-%H%M%S", time.localtime(now)))
+    stem = os.path.join(folder, time.strftime(f"{kind}-%Y-%m-%d-%H%M%S", time.localtime(now)))
     path, n = stem + ".txt", 1
     while os.path.exists(path):  # (two in the same second)
         n += 1
