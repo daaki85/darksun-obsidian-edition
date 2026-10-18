@@ -111,3 +111,23 @@ under the [GNU General Public License v3.0](LICENSE). That doesn't extend to
 the game's own art shown in these pages, which isn't the project's to license.
 
 Problems and ideas: [the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues).
+
+## Credits
+
+- **Code and documentation:** written by Claude, Anthropic's AI model, working
+  in Claude Code: the patched game and its helper, the Loader, the tests and
+  every page here. The project's commits name it as co-author.
+- **Direction and testing:** daaki85, who asked for the features, chose
+  between the options and played the game to find what was wrong.
+- **The game:** Dark Sun: Shattered Lands (1993), by Strategic Simulations,
+  Inc., under licence from TSR, Inc.; Dark Sun and Dungeons & Dragons are now
+  Wizards of the Coast's. The Dark Sun setting was created by Troy Denning and
+  Timothy B. Brown. GOG keeps the game on sale, and in DOSBox.
+- **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities* and
+  *The Complete Ranger's Handbook*, where the mod's rule changes and the
+  Seeker's and Justifier's tables come from; Baldur's Gate, for keeping a
+  creation roll (STORE and RECALL) and Charisma's shop prices.
+- **Tools:** [DOSBox](https://www.dosbox.com/), [NASM](https://www.nasm.us/),
+  [Python](https://www.python.org/) and [Unicorn](https://www.unicorn-engine.org/)
+  (the CPU emulator the helper's tests run in); the web pages' fonts, Marcellus
+  SC, Alegreya Sans and IBM Plex Mono, from Google Fonts.

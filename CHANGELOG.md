@@ -113,6 +113,10 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   thri-kreen) carry one.
 
 **Documentation**
+- **Credits** on the front page: the code and documentation written by
+  Claude, the direction and testing, the game and its makers, the rule books,
+  and the tools.
+- **The Loader's items in bold italics** in the item tables.
 - **One item catalogue**: the README's New items tables merged into the item
   tables, which list the game's items and the Loader's together. The Loader's
   magic items (in bold) carry where each is and what it does; its plain
