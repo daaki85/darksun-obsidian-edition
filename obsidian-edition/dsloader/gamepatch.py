@@ -136,6 +136,7 @@ PP_SHOW, PP_CLICK, PP_ARM, PP_HAND, PP_LIT = NS_IMAGE + 8, NS_IMAGE + 9, NS_IMAG
 PP_TEXT, PP_INFO = NS_IMAGE + 13, NS_IMAGE + 14  # (its name under the screen; its spell's description)
 PP_CLOSE = NS_IMAGE + 15  # (the USE screen closing: a cleric/thief's second button's icon let go of)
 CR_LABELS = NS_IMAGE + 16  # (the ability labels: the creation screen's in its white)
+CR_WEAPONS = NS_IMAGE + 17  # (the creation screen's DONE: a warrior picks its weapon specs)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -636,6 +637,9 @@ PATCHES = (
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),
+    # ... and a new warrior its weapon specs on the weapon window (DSCLOG's CR_WEAPONS), once DONE
+    # has closed the screen's windows (their memory free for it): pop cx / push si / nop
+    Patch("cr_weapons", 0x666DF, bytes.fromhex("595690"), _site(CR_WEAPONS, 3)),
     # Creation's scores and hit points as rolled (game.RULE_ROLLED): a score click kept to the
     # die's total, a hit point click doing nothing, the die's total kept as its three loops set
     # CHR, and the totals drawn under CHR. No vectors are left: these share VEC_CR_SPELLS, the

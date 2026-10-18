@@ -78,9 +78,9 @@ DRAWN = {
           "..."),
 }
 
-# the rules' bits (game.RULE_SPECIALIZE, game.RULE_KITS), here to keep this module standalone
-SPECIALIZE, KITS_ON = 4096, 65536
-WARRIORS, SPHERES = {3, 4, 7}, {1, 2, 7}  # (creation classes: fighter, gladiator, ranger; cleric, druid)
+# the rules' bit (game.RULE_KITS), here to keep this module standalone
+KITS_ON = 65536
+SPHERES = {1, 2, 7}  # (creation classes: cleric, druid, ranger)
 
 
 def row_text(name: str) -> str:
@@ -207,14 +207,11 @@ def kit_class(classes: Sequence[int], rules: int, race: int = 0) -> int:
     return classes[0] if 1 <= classes[0] <= 8 else 0
 
 
-def panel_windows(classes: Sequence[int], rules: int, kit: int = 0, race: int = 0) -> Tuple[int, int]:
+def panel_windows(classes: Sequence[int], rules: int, race: int = 0) -> Tuple[int, int]:
     """The windows the panel shows for the sheet being made: the disciplines' and the spheres'
-    (DSCLOG's WP_IDS); KIT its kit byte (a Battle Mage, a preserver's second, counts as a warrior
-    with weapon specialization, for its weapon spec)."""
-    warrior = any(c in WARRIORS for c in classes) or bool(rules & KITS_ON) and kit_class(classes, rules) == 5 and kit == 2
+    (DSCLOG's WP_IDS), with KITS for their button where there are kits to choose. (A warrior's
+    weapon specs are picked after DONE, on the weapon window: DSCLOG's CR_WEAPONS.)"""
     sphere = any(c in SPHERES for c in classes)
-    if rules & SPECIALIZE and warrior:
-        return (wp.DISCIPLINES if sphere else wp.WARRIOR_DISCIPLINES), wp.WARRIOR_SPHERES
     if kit_class(classes, rules, race):
         return (wp.DISCIPLINES if sphere else KIT_DISCIPLINES), KIT_SPHERES
     return wp.DISCIPLINES, wp.SPHERES

@@ -91,16 +91,23 @@ def pick_word(sheet: bytes, kind: int) -> str:
 
 
 def kinds_for(sheet: bytes, allowed: Optional[List[int]] = None) -> List[int]:
-    """The kinds (+1 each, as in the sheet) a new character ends up with; ALLOWED: the kinds its
-    classes let it choose (restrict.allowed_kinds; None: all), the first of them the default
-    where the long sword (and the club) isn't."""
+    """The kinds (+1 each, as in the sheet) a new character ends up with: those picked on the
+    weapon window after DONE (DSCLOG's CR_WEAPONS), and defaults for the picks it was left with
+    unmade. ALLOWED: the kinds its classes let it choose (restrict.allowed_kinds; None: all). The
+    default is its kit's weapon (kits.default_kind: a Ghetto Fighter's dagger), a thri-kreen's the
+    chatkcha, else the long sword (a gladiator's second the club), else the first allowed."""
+    from . import kitpages, kits
     allowed = list(range(len(PLAIN))) if allowed is None else allowed
     ok = [k + 1 for k in allowed]
     classes = set(sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3])
     chosen = [k if k in ok else 0 for k in sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]]
     if not ok:
         return [0, 0, 0, 0]
-    defaults = [k for k in (1, 2) if k in ok] + [k for k in ok if k not in (1, 2)]
+    own = [kits.default_kind(kid) for kid in kitpages.kit_ids(sheet)] if game.RULES_IN_FORCE & game.RULE_KITS else []
+    if sheet[game.SHEET_RACE] == kits.THRI_KREEN:
+        own.append(kits.CHATKCHA)
+    first = [k + 1 for k in own if k is not None and k + 1 in ok]
+    defaults = first + [k for k in (1, 2) if k in ok and k not in first] + [k for k in ok if k not in (1, 2) + tuple(first)]
     if GLADIATOR in classes:
         first = chosen[0] or defaults[0]
         seconds = [k for k in (2, 1) if k in ok] + defaults  # (the club, as the panel puts in)

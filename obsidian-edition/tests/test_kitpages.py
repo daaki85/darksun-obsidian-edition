@@ -60,17 +60,14 @@ class KitPageTests(unittest.TestCase):
 
     def test_panel_windows(self):
         both = game.RULE_SPECIALIZE | game.RULE_KITS
-        self.assertEqual(kitpages.SPECIALIZE, game.RULE_SPECIALIZE)
         self.assertEqual(kitpages.KITS_ON, game.RULE_KITS)
         self.assertEqual(kitpages.panel_windows((8, 0, 0), both), (3022, 3023))
-        self.assertEqual(kitpages.panel_windows((3, 0, 0), both), (3018, 3019))  # (KITS on the last page)
-        self.assertEqual(kitpages.panel_windows((3, 0, 0), game.RULE_KITS), (3022, 3023))
+        # a warrior picks its weapon specs after DONE: no weapon pages, its kits as anyone's
+        self.assertEqual(kitpages.panel_windows((3, 0, 0), both), (3022, 3023))
+        self.assertEqual(kitpages.panel_windows((3, 0, 0), game.RULE_SPECIALIZE), (3012, 3013))
         self.assertEqual(kitpages.panel_windows((1, 0, 0), both), (3012, 3023))
-        self.assertEqual(kitpages.panel_windows((7, 0, 0), both), (3012, 3019))
-        # a Battle Mage (a preserver's second kit): a warrior's windows, for its weapon spec
-        self.assertEqual(kitpages.panel_windows((5, 0, 0), both, kit=2), (3018, 3019))
-        self.assertEqual(kitpages.panel_windows((5, 0, 0), both, kit=1), (3022, 3023))
-        self.assertEqual(kitpages.panel_windows((5, 0, 0), game.RULE_KITS, kit=2), (3022, 3023))
+        self.assertEqual(kitpages.panel_windows((7, 0, 0), both), (3012, 3023))
+        self.assertEqual(kitpages.panel_windows((5, 0, 0), both), (3022, 3023))
         self.assertEqual(kitpages.panel_windows((8, 6, 0), both), (3012, 3013))
 
     def test_no_kit_first(self):

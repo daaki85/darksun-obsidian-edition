@@ -53,6 +53,7 @@ SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and op
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
 TSR_POISONED = 360  # bit N: party member N, a Poisoner, has used its poison this fight (DSCLOG's PROBE_POISON)
+TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
 TSR_KIT_OUTDOORS = 350  # bit N: party member N under the open sky (the Loader's: _kit_tick)
@@ -916,7 +917,7 @@ class DiceLog:
         """(the kits' names, to hit, damage) the attacker's kits add to a weapon attack, as DSCLOG's
         KIT_TO_HIT, KIT_ATTACK_DAMAGE and KIT_EXTRA: a Ravager's, a Brute's, a Ghetto Fighter's (in
         melee), an Arena Champion's; a Battle Dancer's dance, a Wilderness Avenger's against undead
-        (TARGET the target's combatant)."""
+        (TARGET the target's combatant); and Wild Fighting, a Wild Fury's or Gerakis's (WILD_*)."""
         g = self.game
         names, to_hit, damage = [], 0, 0
         melee = mode is not None and mode <= 1
@@ -934,16 +935,16 @@ class DiceLog:
                 hit += kits.POISONER_TO_HIT
             if mode is not None:  # (DSCLOG's KIT_TO_HIT: anything but a dagger, unarmed too)
                 hit += kits.ghetto_to_hit(kid, kind)
-            if kid == kits.WILD_FURY and attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*)
-                if g.wild[attacker]:
-                    dam += kits.WILD_DAMAGE
-                else:
-                    hit += kits.WILD_TO_HIT
             if weapon or hit or dam or more:
                 names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
-                             + (" under the open sky" if kid == kits.SCOUT else "")
-                             + (" fighting wild" if kid == kits.WILD_FURY and attacker in g.wild else ""))
+                             + (" under the open sky" if kid == kits.SCOUT else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
+        if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
+            names.append("Wild Fighting")
+            if g.wild[attacker]:
+                damage += kits.WILD_DAMAGE
+            else:
+                to_hit += kits.WILD_TO_HIT
         return " and ".join(names), to_hit, damage
 
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
@@ -1012,6 +1013,16 @@ class DiceLog:
         self.itemwatch.remember(out)  # (the context an item report carries)
         return out
 
+    def _weapons_asked(self) -> bool:
+        """Whether DSCLOG's weapon window is up after the creation screen's DONE (TSR_CREATING): the
+        new character's weapon specs are still being picked, its defaults and weapon wait."""
+        if self.tsr_hdr is None:
+            return False
+        try:
+            return bool(self.guest.read(self.tsr_hdr + TSR_CREATING, 1)[0])
+        except (OSError, IndexError):
+            return False
+
     def _arena_ring(self, now: float) -> List[str]:
         """The helms' and boots' names for the rules; once the game's name table has DSCLOG's
         names, the ring and tools from earlier versions named in them; then new characters' gear,
@@ -1028,7 +1039,7 @@ class DiceLog:
             if still:  # (the item lists changed only while the game leaves them be)
                 if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
                     out += weaponchoice.class_gear(self.game)
-                if self.rules & game.RULE_SPECIALIZE:  # (new characters' weapon kinds and starting weapon)
+                if self.rules & game.RULE_SPECIALIZE and not self._weapons_asked():  # (new characters' weapon kinds and starting weapon)
                     out += weaponchoice.finish_new(self.game)
                 if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
                     out += weaponchoice.kit_gear(self.game)

@@ -137,10 +137,11 @@ easier.
 On the main menu choose **CREATE CHARACTERS**, right-click an empty slot and
 choose **NEW**. Click the portrait for race and sex, mark one to three classes,
 choose a cleric's or ranger's sphere and an alignment, click the die to roll,
-and press **DONE**. The panel under the classes has the mod's pages: **WEAPON
-SPEC** for warriors ([weapon specialization](#weapon-specialization-and-attacks))
-and **KITS** ([kits](#kits)). A party has one to four characters, all good or
-neutral.
+and press **DONE**. The panel under the classes has the mod's **KITS** page
+([kits](#kits)). After DONE a warrior picks its weapon specs in a window of
+weapon pictures ([weapon specialization](#weapon-specialization-and-attacks)),
+as a preserver picks its spells. A party has one to four characters, all good
+or neutral.
 
 ### Ability scores
 
@@ -339,8 +340,8 @@ gets a bone short sword), a sling if it has no bow or sling, leather armour
 where it may wear it, and a cloak for a Stalker, an Assassin or a Shinobi
 (some kits get weapons of their own: see [Kits](#kits)). A thri-kreen gets
 nothing more than the game's own starting gear: its claws serve it better than
-another weapon, and it wears none of the rest; its weapon spec starts as the
-chatkcha. A multiclass preserver starts with no armour, so it can cast.
+another weapon, and it wears none of the rest; its weapon spec is the chatkcha
+if none is picked. A multiclass preserver starts with no armour, so it can cast.
 Nothing is given that the character can't use or already has. The game's own
 party gets the same. *Without the mod:* the class's gear only, armour it can't use
 in the backpack.
@@ -914,9 +915,9 @@ their own ([Multiclass kits](#multiclass-kits)). Each gives something and
 costs something; [the README's kit tables](README.md#kits) have each kit's
 numbers and starting gear, the class sections above who takes it on Athas.
 
-- The **Myrmidon** and **Battle Mage** choose their extra weapon spec on the
-  weapon pages after taking the kit, and the **Elementalist** its second sphere
-  on the CLERICAL SPHERE list.
+- The **Myrmidon** and **Battle Mage** choose their extra weapon spec in the
+  weapon window after DONE, and the **Elementalist** its second sphere on the
+  CLERICAL SPHERE list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old.
 - Some kits rule out classes a human could change to, and some can't go
@@ -990,9 +991,11 @@ slots](README.md#kits-spell-slots) in the README.
 
 ## Weapon specialization and attacks
 
-Warriors train in weapon types. Choose them on the creation panel's **WEAPON
-SPEC** pages; picks due later come in a window at the level up, a picture of
-each weapon type (point at one for its name; those you can't pick are greyed).
+Warriors train in weapon types. Pick them in a window of weapon pictures that
+comes up after **DONE** on the creation screen, and again at a level up that
+brings another (point at one for its name; those you can't pick are greyed).
+EXIT leaves the rest to the mod: the long sword (a gladiator's second the club),
+or the kit's own weapon (a Ghetto Fighter's dagger).
 
 ![The level-up window: a picture of each weapon type, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the types this fighter/cleric can't use greyed](docs/weapon-picker.png)
 

@@ -41,6 +41,20 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   daggers too; the list showed only Galefang).
 
 **Changed**
+- **Weapon specs picked after DONE** (with weapon specialization on): the
+  creation screen's WEAPON SPEC pages are gone. Pressing DONE brings up the
+  weapon window a level gained uses (a picture of each weapon spec), as a
+  preserver's CHOOSE A SPELL comes up: a fighter, ranger or Battle Mage picks
+  one, a gladiator or Myrmidon two, a fighter/preserver after its spells. KITS
+  is on the panel for every class now. EXIT leaves the Loader to pick: the
+  kit's weapon (Ghetto Fighter, Poisoner: dagger; Battle Dancer: long sword),
+  a thri-kreen's chatkcha, else the long sword (a gladiator's second the club).
+  DSCLOG's `CR_WEAPONS` (a site of `INT 98h` at DSUN.EXE 666DFh, once DONE has
+  closed the screen's windows: before, the bigger window failed to open, the
+  game's "Failed to open window", exit code 1), with the header's +361 up while
+  it asks so the Loader waits (`DiceLog._weapons_asked`);
+  `weaponchoice.kinds_for`'s defaults; `kitpages.panel_windows`. README,
+  "Choosing at creation"; the guide.
 - **Claws cut**: the game makes every unarmed attack crushing, so a creature
   crushing weapons can't hurt (the mastyrials) took nothing from a
   thri-kreen's claws. A thri-kreen in the party now fights with edged claws,
@@ -63,6 +77,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
 
 **Fixed**
+- **Gerakis's Wild Fighting damage logged as the weapon's**: the game added
+  his +3 (DSCLOG gives it to whoever's check passed), but the dice log
+  credited Wild Fighting only to a Wild Fury's kit, so a passed check showed
+  as "+2 weapon" (a bone sword's −1 and the +3), and a failed one's −3 to hit
+  went unexplained. It now names Wild Fighting for anyone fighting wild
+  (`DiceLog._kit_attack`).
 - **A Battle Dancer's dance and Wild Fighting not rolled at a fight's start**:
   the Loader rolled them only for a fight's round 1, and it took a fight to be
   new only when the game's clock had run two minutes past the last one's last

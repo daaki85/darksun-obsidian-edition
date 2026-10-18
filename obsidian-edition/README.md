@@ -1386,23 +1386,21 @@ The sixteen weapon specs take in the game's weapons of every material and its
 named ones (Bloodwrath, Swiftbite and the like are long swords); spell-made
 weapons and gloves are none.
 
-| Weapon specs (four to a page) |
+| Weapon specs (the weapon window's rows, from the top) |
 |---|
 | long sword, club, dagger, short sword |
 | mace, axe, great axe, pick |
 | quarterstaff, polearm, gythka, cahulaks |
 | chatkcha, bow, sling, staff sling |
 
-**Choosing at creation.** On the character creation screen, the panel under
-the classes (the psionic disciplines, or a cleric's or ranger's spheres) has
-**WEAPON SPEC** for a warrior: four pages of weapon specs, **MORE SPECS** to
-the next, and on the last **VIEW PSIONICS** back to the panel. It works as the
-game's disciplines do: the long sword is marked to start with (a thri-kreen's
-the chatkcha, if its classes allow it; a gladiator's two: the long sword and
-the club), the others greyed; click a marked one to
-take it back, then another. A multiclass warrior can choose only the weapon
-specs its other class lets it use: those of which the game (or the Loader) has
-a weapon the character may use, in any material. The rest stay greyed:
+**Choosing at creation.** Press **DONE** on the character creation screen and
+a warrior (and a [Battle Mage](#kits)) picks its weapon specs on the weapon
+window, the one a level gained brings up (below), as a preserver picks its
+spells on CHOOSE A SPELL: a fighter or ranger one, a gladiator two, a
+[Myrmidon](#kits) two. A preserver warrior picks its spells first. A
+multiclass warrior can choose only the weapon specs its other class lets it
+use: those of which the game (or the Loader) has a weapon the character may
+use, in any material. The rest are greyed:
 
 | A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
 |---|---|---|
@@ -1413,11 +1411,17 @@ a weapon the character may use, in any material. The rest stay greyed:
 | …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
 | …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
 
-(The starting weapon is for the weapon spec marked first; the next table has the
+(The starting weapon is for the weapon spec picked first; the next table has the
 rest. A ranger never has the bow to choose: its expertise with the bow comes
 anyway.)
 
-![The creation screen: a gladiator's weapons page, the long sword and the club marked, the others greyed, and under CHR the total of the six scores and of the die's roll](docs/creation-weapons.png)
+**EXIT** leaves picks unmade, and the Loader picks them: the kit's weapon (a
+Ghetto Fighter's or Poisoner's dagger, a Battle Dancer's long sword), a
+thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
+only if it may be chosen, else the first that may. EXIT can't go back to the
+creation screen: DONE has made the character by then.
+
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec
 in place of the bone long sword the game gives warriors, in a material it may
@@ -1500,7 +1504,7 @@ armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination) | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon pages after the kit is taken, and lost if another kit is taken |
+| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination) | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
 | **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
 | **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
@@ -1544,7 +1548,7 @@ A preserver starts with a quarterstaff and sling, and picks two 1st-level spells
 |---|---|---|---|---|
 | **Arcanist** | a spell slot more at each spell level it has slots at, from 1st level (2 at 1st where a preserver has 1); in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
 | **Scholar** | a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
-| **Battle Mage** | a warrior's THAC0 (21 less its level); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon pages (VIEW PSIONICS on the KIT page, then WEAPON SPEC), the long sword marked to start with; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
+| **Battle Mage** | a warrior's THAC0 (21 less its level); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon window after DONE (the long sword for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 
 #### Cleric kits
 
@@ -1588,16 +1592,16 @@ Loader works that out about once a second.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec starts as the long sword; the dice log shows the dance's roll and its end |
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets; **no shield**; light armour only | its classes' gear, without the shield | |
 | **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; hiding in shadows not halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands; with the stealth rule its hiding gives an attack from behind, not a backstab |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | **1 fewer druid spell slot at each spell level** (none below 0) | its classes' gear | its hiding counts for backstabs as a ranger's does |
 | **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | attacking from behind gives **+1 to hit, not +2** | its classes' gear | the dice log says ", under the open sky", and "from behind (Rescuer)" |
-| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield, with a dagger in its hand (whatever its weapon spec) | its weapon spec starts as the dagger; DEX's adjustment still applies to the two-weapons penalty |
+| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield, with a dagger in its hand (whatever its weapon spec) | its weapon spec is the dagger if none is picked; DEX's adjustment still applies to the two-weapons penalty |
 | **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative and +1 Move in a fight | −10 pick pockets; **while it's down** (stunned, out cold, dying, dead, animated or petrified) and no other Wayfinder is up, every party member has **−1 initiative and −1 Move** in a fight | its classes' gear | the dice log's initiative lines say "Wayfinder's Path-finder" or "Wayfinder down" |
-| **Spellarcher** | half-elf fighter/preserver | arrows it shoots from a bow are **1 better and at least +1**: a plain arrow +1, an Arrows +1 +2, and so on, so they hurt what only magic weapons hurt, and do 1 more damage | its weapon spec is the bow, and only the bow (choosing the kit makes it so; the weapon pages offer nothing else); light armour only | a bow and arrows | sling stones and other missiles as they are |
+| **Spellarcher** | half-elf fighter/preserver | arrows it shoots from a bow are **1 better and at least +1**: a plain arrow +1, an Arrows +1 +2, and so on, so they hurt what only magic weapons hurt, and do 1 more damage | its weapon spec is the bow, and only the bow (the weapon window offers nothing else); light armour only | a bow and arrows | sling stones and other missiles as they are |
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | its classes' gear | as the Mind Bender's: to use a power and to keep it up, never below 1 |
-| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile; light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind) | its weapon spec starts as the dagger; the dice log shows the save as "vs Poison (10 damage)" |
+| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile; light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind) | its weapon spec is the dagger if none is picked; the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | the spells it may cast and its slots are its own level's |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | as the Spirit Caller's |
 | **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON − 4 (the proficiency's check at −4; a natural 20 always fails); at CON − 4 or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight, checked anew in each fight (each of the arena's waves too) | over it, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
@@ -1618,14 +1622,13 @@ rows not chosen are greyed: click the marked row to take it back, then click
 the kit you want. A few names are shortened to fit the panel (CHAMPION,
 SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR, B-DANCER,
 SHADOWBLD, M-SCOUT, W-AVENGER, G-FIGHTER, SPELLARCH, S-CALLER, WASTE SEER). A
-multiclass character with kits finds KITS where its classes put it: on the
-last weapon page with weapon specialization (each of these pairs has a warrior
-class), otherwise under the clerical spheres if one class has them, else under
-the psionic disciplines. Choosing another class puts the kit back to none; a
-new roll of the die keeps it. Choosing a kit sets the weapon spec for a few:
-the Spellarcher's to the bow, always; the Ghetto Fighter's and Poisoner's to
-the dagger and the Battle Dancer's to the long sword, unless a weapon spec was
-picked on the weapon pages. The Effects screen names the kit
+multiclass character with kits finds KITS where its classes put it: under the
+clerical spheres if one class has them, else under the psionic disciplines.
+Choosing another class puts the kit back to none; a new roll of the die keeps
+it. A kit can change the weapon specs on offer after DONE (the weapon window
+offers a Spellarcher only the bow) and the one picked for an EXIT (a Ghetto
+Fighter's and Poisoner's the dagger, a Battle Dancer's the long sword: see
+[Choosing at creation](#weapon-specialization)). The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Loader's Characters tab.
 
 The Elementalist chooses its second sphere on the creation panel's
@@ -1638,10 +1641,9 @@ start, as its own sphere's are (a priest knows every spell of its spheres from
 the start: the game marks them when the character is made, and again when a
 human changes class, not at a level up).
 
-The Battle Mage chooses its weapon spec on the weapon pages: once the kit is
-taken, **VIEW PSIONICS** on the KIT page goes back to the panel, which then
-has **WEAPON SPEC** in place of KITS. The long sword is marked to start with;
-the pages grey the weapon specs it can't choose. With its chosen weapon spec it
+The Battle Mage chooses its weapon spec on the weapon window after DONE, as a
+warrior does, the weapon specs it can't choose greyed (the long sword for an
+EXIT). With its chosen weapon spec it
 attacks at expertise's rate by its preserver level; with any other weapon, as
 a preserver does. Its light armour holds whatever the class restrictions say
 of a preserver. Without weapon specialization it has no weapon spec, only a

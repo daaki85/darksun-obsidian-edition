@@ -2488,6 +2488,19 @@ class NewSpellTests(RuleTests):
         self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
         return mu.reg_read(r.UC_X86_REG_EFLAGS)
 
+    def test_creation_weapons_site(self):
+        """CR_WEAPONS (DONE's "pop cx / push si / nop", 666DFh): the word under the INT's frame into
+        CX and SI in its place, as the three bytes did; no weapon window with the rule off, or for
+        a member past the party's four (gamepatch's site number and DSCLOG's agree)."""
+        from dsloader import game, gamepatch
+        self.assertEqual(next(p for p in gamepatch.PATCHES if p.name == "cr_weapons").offset, 0x666DF)
+        for rules, si in ((0, 2), (game.RULE_SPECIALIZE, 5)):
+            self.rules(rules)
+            self.mu.mem_write(SS * 16 + 0x800, struct.pack("<H", 0x1234))
+            self.site(gamepatch.CR_WEAPONS, esi=si, ecx=0)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1234)
+            self.assertEqual(struct.unpack("<H", self.mu.mem_read(SS * 16 + 0x800, 2))[0], si)
+
     def test_compares(self):
         """772BBh's "cmp dx,0C4h" (NS_CMP site 11): a new spell is below it as a wizard's while the
         rule is on; others, and with it off, as compared."""

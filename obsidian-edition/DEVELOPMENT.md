@@ -972,11 +972,29 @@ How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the
 saved-characters roster keep them. The helper adds the bonuses and attacks
 where the game makes a weapon attack (`INT D1h`, `INT D0h`), on the DAM lines
-(`INT CFh`, `INT CEh`), runs the creation pages (`INT C8h` to `INT C3h`,
-windows 3014 to 3019 in the Loader's copy of `RESOURCE.GFF`), calls the game's
-psionic pop-up in weapon mode at a level gained (`INT C2h`, then `INT C1h` to
-`INT BCh` in the pop-up, window 3021), and prints the Effects screen's lines
-(`INT BBh`).
+(`INT CFh`, `INT CEh`), calls the game's psionic pop-up in weapon mode after
+the creation screen's DONE (`CR_WEAPONS`, below) and at a level gained
+(`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up, window 3021), and prints
+the Effects screen's lines (`INT BBh`). (The creation panel's weapon pages,
+windows 3014 to 3019 and 3025, are no longer opened: `WP_IDS` gives a warrior
+the game's windows or the kit windows. Their code and windows are still in the
+helper and the Loader's `RESOURCE.GFF`.)
+
+At creation, `CR_WEAPONS` (a site of `INT 98h`, new: `pop cx / push si / nop`,
+3 bytes at 666DFh in DONE, 65480h) asks the new member SI for the weapon specs
+it is due (`LV_CHECK`, the pop-up's far address from the stub DUAL's kit menu
+uses, `DK_PSI`), after clearing whatever the kit page put in. It runs after
+DONE has closed the screen's windows (6659Eh to 66611h) and let go of their
+pictures: before that, the weapon window, bigger than the psionicists', fails to
+open ("Failed to open window", the game's fatal error, exit code 1), while the
+psionicists' own still fits. `LV_DUE` gives a Myrmidon being made two
+(`LV_CREATING`). The way back is a frame the overlay manager can patch, as for
+`PROBE_CR_SPELLS`, whose CHOOSE A SPELL comes first. While the window is up,
+`LV_CREATING` (the header's +361) is 1, and the Loader leaves the New
+character alone (`DiceLog._weapons_asked`): otherwise it would put in the
+defaults before the picks. Picks left unmade (EXIT) are then the Loader's
+(`weaponchoice.kinds_for`: the kit's weapon, `kits.default_kind`; a
+thri-kreen's chatkcha; the long sword, a gladiator's club).
 
 The pop-up in weapon mode is the psionicists' window (17501) made bigger:
 window 3021 is 214 by 156 (its marble, BMP 3022, the psionicists' 17001
@@ -1062,23 +1080,21 @@ class's kits.
 
 The creation panel's lower window shows the psionic disciplines or the
 clerical spheres, each with a button that swaps them (VIEW SPHERES is there,
-out of use, for a class with no sphere), and for a warrior with weapon
-specialization the WEAPON SPEC pages. The **KIT** page is at the end of that
-chain, opened with a **KITS** button where the last page's button was:
+out of use, for a class with no sphere). The **KIT** page is at the end of that
+chain, opened with a **KITS** button where the last window's button was:
 
 | The class (one only) | Where KITS is |
 |---|---|
-| preserver, psionicist, thief; a fighter or gladiator without weapon specialization | the disciplines' window (3022, a copy of 3012) |
-| cleric, druid; a ranger without weapon specialization | the spheres' window (3023, a copy of 3013) |
-| fighter, gladiator, ranger with weapon specialization | the fourth weapon page (3025, a copy of 3017) |
+| fighter, gladiator, preserver, psionicist, thief | the disciplines' window (3022, a copy of 3012) |
+| cleric, druid, ranger | the spheres' window (3023, a copy of 3013) |
 
 `WP_IDS` (`kitpages.panel_windows`) picks the windows for the classes being
 made, for the probes that open them (`PROBE_WP_DISC_WIN`,
 `PROBE_WP_SPHERE_WIN`, and `PROBE_WP_CLASS` when the classes change). The kit
 page itself is a window for each class (3026 to 3033, by the creation screen's
 class numbers), its rows NO KIT and the class's three kits (buttons `888h`,
-and `870h` + 3 × (class − 1) + kit − 1), its button VIEW PSIONICS (the weapon
-pages' `851h`) back to the disciplines. Like the weapon pages, it is kept at
+and `870h` + 3 × (class − 1) + kit − 1), its button VIEW PSIONICS (`851h`, the
+weapon pages' as they were) back to the disciplines. As the weapon pages were, it is kept at
 `DS:EA6h` with the spheres' own routine answering its buttons, so
 `PROBE_WP_SPHERE_CLICK` gets its clicks and `PROBE_WP_SHOWN` lets the game
 close it when another class is clicked. `KIT_ROW` puts the kit in the creation
@@ -1132,10 +1148,9 @@ as for `PROBE_LV_PICK`. Calling 7E620h alone draws the contents without the
 background: the pages' text lands on top of each other.
 
 The panel follows the classes as they change. A class click runs PROBE_WP_CLASS:
-the disciplines' window opened again if it isn't the one for the class now, and
-the last weapon page opened again with VIEW PSIONICS or KITS as the character
-can or can't take a kit; KITS pressed for a character with no kit class goes
-back as VIEW PSIONICS does. A new race or sex empties the classes, has the
+the disciplines' window opened again if it isn't the one for the class now;
+KITS pressed for a character with no kit class goes back as VIEW PSIONICS
+does. A new race or sex empties the classes, has the
 panel opened for no class, then puts the default class in without a click:
 PROBE_RACE_PANEL (INT 89h at 63403h, after that call) opens the disciplines'
 window again for the class put in.
@@ -1209,7 +1224,7 @@ emulated tests hold the helper to it:
 | initiative | Sentinel; Military Scout (its `KIT_OUTDOORS` bit) | `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh) |
 | to hit with a missile | Military Scout (a bow, sling or staff sling, its `KIT_OUTDOORS` bit); Poisoner (−1, melee too) | `KIT_TO_HIT` in `PROBE_ATTACKS` (`kits.missile_to_hit`, `kits.POISONER_TO_HIT`) |
 | a hit's poison | Poisoner (its first hit in a fight: `KIT_POISONED`, the header's +360, a bit a member, which the Loader clears as round 1 begins) | `PROBE_POISON` (`INT 86h`, new: the `jmp 7A7C5h` at DSUN.EXE 7A6DDh, in the routine giving a hit's special effects, 7A5xxh, where a person who isn't a thri-kreen has none; DI the attacker, SI the target, `[BP-6]` the attacker's creature): it queues power 176, the monsters' "poison (10 damage)", through the routine a monster's poisoned hit uses (790D2h: target, attacker, power, level; the level from 508:2Ah, whose far call is at 7A7ACh), then jumps on. The game rolls the save (paralysis/poison/death) and deals the damage |
-| an arrow's plus | Spellarcher (1 better, at least +1, from a bow) | `PROBE_ARROW` (`INT 85h`, new: `mov es:[0006h],al`, DSUN.EXE 58D27h, in the routine finding a missile weapon's ammunition, 58C8Fh, `[BP+0Ch]` the weapon's type): `ES:[6]` is the plus the shot's damage adds (58992h) and its +1/+2/+3 damage kinds take where better than the bow's (581C4h). The shooter is `WHOSE_TURN`'s combatant; `kits.arrow_plus`. The weapon spec: `KINDS_ALLOWED` gives a Spellarcher the bow only, and `KIT_ROW` makes the spec the bow when the kit is chosen (`WP_ALLOWED`'s answer only the bow) |
+| an arrow's plus | Spellarcher (1 better, at least +1, from a bow) | `PROBE_ARROW` (`INT 85h`, new: `mov es:[0006h],al`, DSUN.EXE 58D27h, in the routine finding a missile weapon's ammunition, 58C8Fh, `[BP+0Ch]` the weapon's type): `ES:[6]` is the plus the shot's damage adds (58992h) and its +1/+2/+3 damage kinds take where better than the bow's (581C4h). The shooter is `WHOSE_TURN`'s combatant; `kits.arrow_plus`. The weapon spec: `KINDS_ALLOWED` gives a Spellarcher the bow only, the one weapon spec the window after DONE offers it |
 | a priest spell's level | Spirit Caller, Wasteland Seer (2 more under the open sky, 1 less under a roof, no less than 1) | `PROBE_SPELL_LEVEL`'s `SKY_LEVEL` (`kits.sky_level`): the level a spell's duration and damage take, not the levels it may cast |
 | saves | Myrmidon (charms), Sentinel (spells, 0-137), Wanderer (fire and cold: the spell record's `+1Ah`, 2 or 4, as the game's Resist Fire and Resist Cold read it) | `PROBE_RING_SAVE` (the modifier routine's start: `KIT_SAVE`) |
 | thief skills | Assassin (pick pockets, open locks), Swashbuckler (all), Shadowblade, Ghetto Fighter, Wayfinder (`KIT_SKILLS`, a signed byte a skill), Military Scout (+10 or −5 by its `KIT_OUTDOORS` bit) | `PROBE_BELT` (the thief skill routine's end: `KIT_SKILL`, no lower than 0) |
@@ -1218,9 +1233,9 @@ emulated tests hold the helper to it:
 | shields | Shadowblade, Ghetto Fighter | `KIT_FORBIDS` (`kits.forbids`) |
 | hiding, moving silently | Stalker, Assassin and Military Scout (not halved in daylight: `kits.not_halved_by_sun`), Wilderness Avenger (a ranger's, 5 a level of its best class), Shadowblade (hides with an enemy beside it) | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
 | the two-weapon penalty | Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier (in any armour); Ghetto Fighter (2 less in each hand) | `PROBE_TWO`; `RG_TWO` |
-| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (`kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. `KIT_ROW` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword when the kit is chosen, if the player hasn't clicked a kind (`WP_TOUCHED`) and the kit allows it (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
+| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (`kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
 | skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
-| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one); the creation panel counts a Battle Mage as a warrior (`WP_CLASSES`, so `WP_IDS` gives the disciplines' window with WEAPON SPEC; `kitpages.panel_windows`) |
+| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior |
 | attacks a round | Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons-adds-penalties)) |
 | gear the kit allows | Battle Mage (its chosen weapon type's weapons, with weapon specialization; light armour); Battle Dancer (long swords and bows, `kit_dancer`, whatever its cleric's sphere) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
 | hit die | Battle Mage (d6), Mind Warrior (d8), Arcanist (d3) | a level's die: `PROBE_HIT_DIE` (`INT A5h`, new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]` the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die` |

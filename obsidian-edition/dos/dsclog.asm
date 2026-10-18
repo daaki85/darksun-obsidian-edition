@@ -365,7 +365,8 @@ tick_seq   dw 0                 ; +358 records taken, counted: the newest in slo
 kit_poisoned db 0               ; +360 bit N set once party member N, a Poisoner, has poisoned a
                                 ;      foe this fight (PROBE_POISON); the Loader clears it as a fight
                                 ;      starts
-           db 0                 ; +361
+lv_creating db 0                ; +361 1 while CR_WEAPONS has the weapon window up for a character
+                                ;      being made: the Loader leaves its weapon specs till it is down
 read_lang  times 4 db 0         ; +362 the Loader's: each party member's chance to read languages (%),
                                 ;      as it stands (kept with STATS): a Shinobi reads a scroll with it
 learn_read db 0                 ; +366 a Shinobi's try at a scroll (LEARN_SEQ): the d100 to read it ...
@@ -4466,29 +4467,19 @@ probe_wp_sphere_win:
         iret
 
 ; WP_IDS: the windows the panel shows for the sheet being made (kitpages.panel_windows): AX the
-; disciplines' (3012, its button VIEW SPHERES; 3018, WEAPON SPEC, for a warrior with no sphere
-; and weapon specialization; 3022, KITS, for one of no sphere with kits to choose), DX the
-; spheres' (3013, VIEW PSIONICS; 3019, WEAPON SPEC, for a warrior and weapon specialization;
-; 3023, KITS, for one with kits to choose). Others kept.
+; disciplines' (3012, its button VIEW SPHERES; 3022, KITS, for one of no sphere with kits to
+; choose), DX the spheres' (3013, VIEW PSIONICS; 3023, KITS, for one with kits to choose). (A
+; warrior's weapon specs are picked after DONE: CR_WEAPONS.) Others kept.
 wp_ids:
         push bx
         push cx
         call wp_classes
-        mov cx, ax              ; CL a warrior, CH a sphere
+        mov cx, ax              ; CH a sphere
         call kit_class
         mov bl, al
         mov ax, WP_DISC_ID
         mov dx, WP_SPHERE_ID
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .kits
-        or cl, cl
-        jz .kits
-        mov dx, WP_WSPHERE_ID
-        or ch, ch
-        jnz .out
-        mov ax, WP_WDISC_ID
-        jmp .out
-.kits:  or bl, bl
+        or bl, bl
         jz .out
         mov dx, KIT_SPHERE_ID
         or ch, ch
@@ -4913,7 +4904,7 @@ lv_scholar:
         ret
 
 ; LV_DUE: CX the weapon kinds the character whose sheet is ES:BX is due: a gladiator 2, 3 from 6th
-; level, 4 from 9th; a fighter or ranger 1; 0 for others. A human's earlier classes (dual-classed)
+; level, 4 from 9th; a fighter or ranger 1 (a Myrmidon being made 2: LV_CREATING); 0 for others. A human's earlier classes (dual-classed)
 ; count only once its first class's level has passed theirs. Others kept.
 lv_due:
         push ax
@@ -4953,11 +4944,20 @@ lv_due:
         cmp si, 3
         jb .class
         or cl, cl               ; (a Battle Mage: one)
-        jnz .out
+        jnz .myrmidon
         call kit_is_b
         db KIT_BATTLE_MAGE
         jne .out
         mov cl, 1
+.myrmidon:
+        cmp byte [cs:lv_creating], 0    ; (a new Myrmidon: two, the second its own choice)
+        je .out
+        cmp cl, 2
+        jae .out
+        call kit_is_b
+        db KIT_MYRMIDON
+        jne .out
+        mov cl, 2
 .out:   pop si
         pop ax
         ret
@@ -4975,6 +4975,7 @@ lv_ask:
         push si
         call far [cs:lv_psi]
         add sp, 2
+
         mov byte [cs:lv_mode], 0
         mov byte [cs:showing], 0
         pop es
@@ -13031,6 +13032,7 @@ PP_INFO   equ NS_IMAGE + 14      ; 8968Eh: ... its spell's description
 PP_CLOSE  equ NS_IMAGE + 15      ; 88504h: the USE screen closing, its icons let go of
 PP_HAND   equ NS_IMAGE + 11      ; 5ECD8h: a click on the map, the pointer for talking, on something
 CR_LABELS equ NS_IMAGE + 16      ; 65125h: the ability labels (STR: to CHR:), drawn
+CR_WEAPONS equ NS_IMAGE + 17     ; 666DFh: the creation screen's DONE, a warrior's weapon specs
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13068,6 +13070,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je pp_close
         cmp byte [cs:rl_site], CR_LABELS
         je cr_labels
+        cmp byte [cs:rl_site], CR_WEAPONS
+        je cr_weapons
         cmp byte [cs:rl_site], SELL_KEEP
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
@@ -13704,6 +13708,54 @@ pp_close:
         popad
         pop bp
         iret
+
+; CR_WEAPONS: "pop cx / push si / nop" (666DFh; 3 bytes: the INT and the site's number) in the
+; creation screen's DONE (65480h), for the new member SI, once DONE has closed the screen's windows
+; and let go of their pictures (the weapon window, bigger than the psionicists', fails to open
+; while they hold the memory: "Failed to open window"). With weapon specialization, a warrior (or a
+; Battle Mage) picks its weapon specs on the level-up window, as at a level up or DUAL (LV_CHECK,
+; through the psionicists' pop-up, 620:57h: DK_PSI), as many as it is due (LV_DUE; a Myrmidon two),
+; from those its classes and kit allow; the creation screen has no weapon pages. Picks the window
+; was left with unmade are the Loader's defaults (weaponchoice.kinds_for). The way back is put in
+; a frame the overlay manager can fix up, as for PROBE_CR_SPELLS.
+cr_weapons:
+        push bp                 ; (pop cx / push si: the word under the INT's frame)
+        mov bp, sp
+        mov cx, [bp + 8]
+        mov [bp + 8], si
+        pop bp
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .iret
+        cmp si, LV_PARTY
+        jae .iret
+        sti
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
+        imul ax, si, 0x47
+        add bx, ax
+        mov dword [es:bx + SPEC_SLOTS], 0
+        mov ax, ds
+        add ax, PICK_STUB
+        mov word [cs:lv_psi], DK_PSI
+        mov [cs:lv_psi + 2], ax
+        mov byte [cs:lv_creating], 1
+        call lv_check
+        mov byte [cs:lv_creating], 0
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+.iret:  iret
 
 ; CR_LABELS: "mov bx,si / shl bx,2" (65125h; 5 bytes) in the routine drawing the ability labels
 ; (STR: to CHR:, 6511Fh) in the text colour the last screen left (DS:326Eh, TEXT_INK). The

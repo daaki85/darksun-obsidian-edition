@@ -99,6 +99,20 @@ class WildTests(unittest.TestCase):
         w.round(gd, HDR, 1, lambda a, b: 12)
         self.assertEqual(gd.wild, {2: True})
 
+    def test_logged_without_a_kit(self):
+        """The dice log credits Wild Fighting to whoever fights wild, Gerakis too (no kit): +3 damage
+        with the check passed, -3 to hit with it failed, as DSCLOG adds them (WILD_*); the game's
+        damage bonus was put down to the weapon."""
+        from types import SimpleNamespace
+        from dsloader import dicelog
+        g = SimpleNamespace(wild={0: True, 1: False}, dance={}, kit_ids=lambda m: [])
+        log = SimpleNamespace(game=g)
+        attack = lambda who, mode=1: dicelog.DiceLog._kit_attack(log, who, 81, mode)
+        self.assertEqual(attack(0), ("Wild Fighting", 0, kits.WILD_DAMAGE))
+        self.assertEqual(attack(1), ("Wild Fighting", kits.WILD_TO_HIT, 0))
+        self.assertEqual(attack(2), ("", 0, 0))
+        self.assertEqual(attack(0, None), ("", 0, 0))
+
     def test_kits(self):
         self.assertEqual([kits.wild_check(15, d) for d in (1, 11, 12, 15, 20)], [True, True, False, False, False])
         self.assertEqual([kits.wild_check(25, d) for d in (19, 20)], [True, False])  # (a natural 20 always fails)

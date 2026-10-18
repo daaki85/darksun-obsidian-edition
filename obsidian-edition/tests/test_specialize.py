@@ -241,6 +241,26 @@ class NewCharacterTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    def test_own_defaults(self):
+        """Picks left unmade on the weapon window: a Ghetto Fighter's dagger (kits on), a
+        thri-kreen's chatkcha; kept to what's allowed."""
+        from dsloader import kits, weaponchoice
+        s = bytearray(sheet((), classes=(9, 17, 0)))
+        s[0x18], s[0x43] = 2, 1  # (a dwarf fighter/thief, its first kit: the Ghetto Fighter)
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = game.RULE_KITS
+            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [kits.DAGGER + 1, 0, 0, 0])
+            self.assertEqual(weaponchoice.kinds_for(bytes(s), [0, 4]), [1, 0, 0, 0])
+            game.RULES_IN_FORCE = 0
+            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 0, 0, 0])
+        finally:
+            game.RULES_IN_FORCE = old
+        s = bytearray(sheet((), classes=(10, 0, 0)))
+        s[0x18] = kits.THRI_KREEN
+        self.assertEqual(weaponchoice.kinds_for(bytes(s)), [kits.CHATKCHA + 1, 2, 0, 0])
+        self.assertEqual(weaponchoice.kinds_for(bytes(s), [0, 1]), [1, 2, 0, 0])
+
     def test_extra_kinds_cleared(self):
         self.assertEqual(self.kinds((2, 5), (9, 0, 0)), [3, 0, 0, 0])
         self.assertEqual(self.kinds((2,), (11, 0, 0)), [0, 0, 0, 0])
