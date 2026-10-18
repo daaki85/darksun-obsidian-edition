@@ -134,7 +134,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Magic weapons**
 
-Fifteen new magic weapons, each with its own icon and a story from the game's own item sage.
+Nineteen new magic weapons, each with its own icon and a story from the game's own item sage.
 
 - **[New]** **Flame Blade**: an obsidian long sword +1 whose blade burns what it hits (2d6 fire damage, a save for half). A fire or earth cleric can wield it.
 - **[New]** **Shadowseeker**: a short sword +1 whose wielder sees the invisible.
@@ -151,6 +151,10 @@ Fifteen new magic weapons, each with its own icon and a story from the game's ow
 - **[New]** **Stillwater**: a bone short sword +1 a psionicist can wield.
 - **[New]** **Linebreaker**: a metal polearm +2.
 - **[New]** **Thornwall**: a bone polearm +1.
+- **[New]** **Hayneedle**: a bone dagger +1 a water cleric can wield, early on.
+- **[New]** **Nightsliver**: an obsidian dagger +2 a fire or earth cleric can wield.
+- **[New]** **Dunesong**: a bow +1 the Bowyer sells.
+- **[New]** **Skycutter**: a chatkcha +2.
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
 
 **Magic armour and worn items**

@@ -363,7 +363,7 @@ class DataTests(unittest.TestCase):
             self.assertGreater(n, 2551)
             self.assertNotIn(n, pictures)
         self.assertEqual(len(set(clones)), len(clones))
-        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x08, 0x1C, 0x1E, 0x28, 0x29])
+        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x06, 0x08, 0x1C, 0x1E, 0x28, 0x29])
 
     def test_regions_opened(self):
         """Every region file the Loader copies for a clone is one DSCLOG opens in the game's place

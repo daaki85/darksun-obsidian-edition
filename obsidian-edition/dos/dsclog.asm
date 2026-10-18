@@ -12331,6 +12331,7 @@ copies:
         COPY 'RGN1E.GFF', 'D:\RGN1E.GFF', others_on   ; (an Undermountain miner of its own)
         COPY 'RGN08.GFF', 'D:\RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
         COPY 'RGN28.GFF', 'D:\RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
+        COPY 'RGN06.GFF', 'D:\RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
         db 0
 
 ; NEW SPELLS (RULE_NEW_SPELLS): three wizard spells past the game's 196 (0-68 wizard, 69-137 priest,
@@ -14198,7 +14199,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAMES_EXTRA  equ 35
+NAMES_EXTRA  equ 39
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -14512,7 +14513,15 @@ extra_names:
         times NAME_SIZE - 10 db 0       ; shield +1,
         db "Ironbulwark"                ; a metal shield +3)
         times NAME_SIZE - 11 db 0
-        times (NAMES_EXTRA - 35) * NAME_SIZE db 0
+        db "Hayneedle"                  ; (the weapons for the kits with too few, dsloader/
+        times NAME_SIZE - 9 db 0        ; worldgear.py: a bone dagger +1,
+        db "Nightsliver"                ; an obsidian dagger +2,
+        times NAME_SIZE - 11 db 0
+        db "Dunesong"                   ; a bow +1,
+        times NAME_SIZE - 8 db 0
+        db "Skycutter"                  ; a chatkcha +2)
+        times NAME_SIZE - 9 db 0
+        times (NAMES_EXTRA - 39) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,

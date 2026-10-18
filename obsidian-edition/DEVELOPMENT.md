@@ -1797,7 +1797,9 @@ Undermountain miner and one Magera (Drakejaw's) have an object of their own
 entity in the Loader's copies of `RGN1C.GFF`, `RGN1E.GFF` and `RGN08.GFF`
 pointing to it; so does one skeleton of the warrens (Gutterward's: 2585,
 entity 85 in the copy of `RGN28.GFF`; its kind's object, 2266, is the
-skeletons' of five regions). So does the slave pens' weapon rack (2563: the
+skeletons' of five regions), and one thri-kreen of the Gemfields (Skycutter's:
+2598, entity 22 in the copy of `RGN06.GFF`; its kind's object, 215, is the
+whole pack's). So does the slave pens' weapon rack (2563: the
 Lower Castle's rack is the same object 1647; a thing's record has its number
 first, a person's at +6), with Thornwall in place of its first bone polearm,
 in Kalzith's copy of `RGN29.GFF` (one copy of the pens: with Kalzith off, the
@@ -1810,7 +1812,11 @@ of Elvenkind in it.) The Elven Leader's script (46, in the scripts' copy:
 its own) after the Gythka, as the game's scripts give items (command 39h, a
 new item of the object; 25h on the ground when it can't be carried); Father
 Garyn's (174: `garyn.py`) gives the Tome of Understanding the same way, the
-first time the pith is delivered (flag 625). The tome (`dsloader/tome.py`) is
+first time the pith is delivered (flag 625), and Merzol's haystack (script 137:
+`haystash.py`) leaves Hayneedle (object 2590, an item object of its own) beside
+his sack of ceramic pieces (25h at the searcher's place, as the sack's), the
+first search only (flag 502). The Lava Rift's Hermit (object 81) has
+Nightsliver in place of his stone dagger. The tome (`dsloader/tome.py`) is
 a scroll of the game's kind: object 1446, among the game's scrolls' numbers
 (1400-1499: its object record the first scroll's, as only a scroll's kind of
 object has its box's icon clicked; the picture that number had, the icon of

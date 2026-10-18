@@ -136,7 +136,8 @@ class AlagornTests(unittest.TestCase):
                                   "  Stillwater", alagorn.NOTHING],
                                  ["  Balkazar's Staff", "  Kreenfang", "  Gutterknot", "  Deepbiter", "  Windlash",
                                   "  Drakejaw", "  Glasshewer", "  Headsman", "  Galefang", "  Linebreaker",
-                                  "  Thornwall", alagorn.NOTHING]])
+                                  "  Thornwall", "  Hayneedle", "  Nightsliver", "  Dunesong", "  Skycutter",
+                                  alagorn.NOTHING]])
         sets = [alagorn._sets(op) for op in added if op.code == SET and op.args[0][0] == "op"]
         self.assertEqual(sets, [(2, alagorn._picture("Shadowseeker")), (3, alagorn._picture("Greenbright")),
                                 (4, alagorn._picture("Flame Blade")), (5, alagorn._picture("Mindshard")),
@@ -145,19 +146,22 @@ class AlagornTests(unittest.TestCase):
                                 (4, alagorn._picture("Deepbiter")), (5, alagorn._picture("Windlash")),
                                 (6, alagorn._picture("Drakejaw")), (7, alagorn._picture("Glasshewer")),
                                 (8, alagorn._picture("Headsman")), (9, alagorn._picture("Galefang")),
-                                (10, alagorn._picture("Linebreaker")), (11, alagorn._picture("Thornwall"))])
+                                (10, alagorn._picture("Linebreaker")), (11, alagorn._picture("Thornwall")),
+                                (12, alagorn._picture("Hayneedle")), (13, alagorn._picture("Nightsliver")),
+                                (14, alagorn._picture("Dunesong")), None])  # (Skycutter's in a flag: past the locals)
         lines = " ".join(gpl.strings(added))
         for name in ("Greenbright!", "A Flame Blade!", "Mindshard!", "Stillwater!", "Gutterknot!", "Deepbiter!",
-                     "Windlash!", "Drakejaw!", "Glasshewer!", "Headsman!", "Galefang!", "Linebreaker!", "Thornwall!"):
+                     "Windlash!", "Drakejaw!", "Glasshewer!", "Headsman!", "Galefang!", "Linebreaker!", "Thornwall!",
+                     "Hayneedle!", "Nightsliver!", "Dunesong!", "Skycutter!"):
             self.assertIn(name, lines)
-        self.assertIn([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], [alagorn._locals(op.args[0]) for op in added if op.code == TEST])
+        self.assertIn(alagorn._zero(list(range(15)) + [-alagorn.FLAGS]), [op.args[0] for op in added if op.code == TEST])
 
     def test_switches(self):
         """Only the switches' items; none, no change."""
         self.assertEqual([[i for i, _ in k.items] for k in alagorn.kinds(arms=False, magic=True)],
                          [["Greenbright", "Flame Blade", "Mindshard", "Stillwater"],
                           ["Gutterknot", "Deepbiter", "Windlash", "Drakejaw", "Glasshewer", "Headsman", "Galefang",
-                           "Linebreaker", "Thornwall"]])
+                           "Linebreaker", "Thornwall", "Hayneedle", "Nightsliver", "Dunesong", "Skycutter"]])
         self.assertEqual(alagorn.kinds(arms=False, magic=False), ())
         self.assertEqual(alagorn.script_chunks({("GPL ", alagorn.SCRIPT): self.script}, FIELDS, False, False), {})
 
@@ -262,7 +266,8 @@ class AlagornTests(unittest.TestCase):
                                 "Boots of Elvenkind", "Tome of Understanding", "Ring of Protection +1",
                                 "Pehtucl's Ring of Protection +1", "Cloak of Protection +1", "Inixhide",
                                 "Drakejaw", "Glasshewer", "Headsman", "Galefang", "Mindshard", "Stillwater",
-                                "Linebreaker", "Thornwall", "Ashen Robe", "Veiled Robe", "Gutterward", "Ironbulwark"})
+                                "Linebreaker", "Thornwall", "Ashen Robe", "Veiled Robe", "Gutterward", "Ironbulwark",
+                                "Hayneedle", "Nightsliver", "Dunesong", "Skycutter"})
         for name in told - {"Tome of Understanding"}:
             self.assertIn(name, icons.PICTURES)
 

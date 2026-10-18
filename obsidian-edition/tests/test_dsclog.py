@@ -2881,7 +2881,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc6b03" "8356fe00"))  # 35 names of 25 bytes: 36Bh
+        size = image.find(bytes.fromhex("8146fccf03" "8356fe00"))  # 39 names of 25 bytes: 3CFh
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -2900,7 +2900,7 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 8925), (0xFF00, 0xFF00 + 875)):
+        for size, want in ((8050, 9025), (0xFF00, 0xFF00 + 975)):
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +

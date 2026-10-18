@@ -287,8 +287,9 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         source, dest, with_kalzith, on["semyon"], on["vulture"], on["arena_ring"],
         on["magic_arms"] and objects_ok, on["world_magic"] and objects_ok,
         worldgear.ELVEN_CLOAK_OBJECT in new_objects, tome.TOME_OBJECT in new_objects,
-        on["pens_gear"] and objects_ok))]  # (Alagorn knows the weapons by their own
-    # pictures; the Elven Leader gives the cloak, and Father Garyn the tome, of its own object)
+        on["pens_gear"] and objects_ok, worldgear.HAYNEEDLE_OBJECT in new_objects))]  # (Alagorn knows
+    # the weapons by their own pictures; the Elven Leader gives the cloak, Father Garyn the tome and
+    # Merzol's hay stash Hayneedle, of its own object)
     if with_kalzith:
         files.append((kalzith.REGION_FILE, lambda source, dest: kalzith.write_region(source, dest, pens_clones)))
     try:

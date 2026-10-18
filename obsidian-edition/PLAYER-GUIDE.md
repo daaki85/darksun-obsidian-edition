@@ -442,13 +442,15 @@ starting gear, also a sling.
 **Magic weapons.** Every one: Dragonsbane +4, Swiftbite +2, El's Drinker +2,
 Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, Flame Blade\* +1;
 Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Stillwater\* +1; Dag's
-Dagger +3, Terror Blade +2, Galefang\* +2; Glasshewer\* +2, Drakejaw\* +1,
+Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1;
+Glasshewer\* +2, Drakejaw\* +1,
 Soulcrusher +1, Axe +1; Great Axe +3, Headsman\* +2; Gythka +3, Gythka +2\*,
 Kreenfang\* +1; Linebreaker\* +2, Polearm +1, Thornwall\* +1; Mace +2,
 Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting Staff +1;
-Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1; Sling +2,
-Sling +1; Windlash\* +1; Chatkcha +1. A **Ravager** none of the bows, slings,
-Windlash, Chatkcha +1 or Dag's Dagger (thrown).
+Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1,
+Dunesong\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
+**Ravager** none of the bows, slings, Windlash, chatkchas or Dag's Dagger
+(thrown).
 
 ### Gladiator
 
@@ -563,7 +565,7 @@ Stalker a cloak too).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
 only its sphere's, and every bow: air, the daggers, bows, slings, Windlash\*,
-Chatkcha +1; earth, the metal, obsidian, stone and wooden ones (no bone, no
+the chatkchas; earth, the metal, obsidian, stone and wooden ones (no bone, no
 slings); fire, the obsidian ones and the bows; water, the bone and wooden ones.
 
 ### Thief
@@ -636,8 +638,8 @@ too).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Shinobi**
 only Greenbright\*, Shadowseeker\*, Mindshard\*, Stillwater\*, Dag's Dagger,
-Terror Blade, Galefang\*, the quarterstaffs, bows, slings, Windlash\* and
-Chatkcha +1.
+Terror Blade, Galefang\*, Nightsliver\*, Hayneedle\*, the quarterstaffs, bows,
+slings, Windlash\* and the chatkchas.
 
 ### Preserver
 
@@ -701,8 +703,9 @@ Each kit's gains, costs and starting gear: [Preserver kits](README.md#preserver-
   preserver chooses its first two spells.
 
 **Magic weapons.** Hornblade +1 (a bone long sword the game lets preservers
-use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Quarterstaff +2, Balk's
-Staff +1, Parting Staff +1, Sling +2, Sling +1, Windlash\* +1. A **Battle
+use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2,
+Hayneedle\* +1, Quarterstaff +2, Balk's Staff +1, Parting Staff +1, Sling +2,
+Sling +1, Windlash\* +1. A **Battle
 Mage** also those of its chosen weapon type.
 
 ### Cleric
@@ -769,19 +772,21 @@ and fire a chatkcha; water none).
 
 **Magic weapons**, by sphere:
 
-- **Air:** Galefang\* +2, Bow +2, Phrain's Bow +1, Sling +2, Sling +1,
-  Windlash\* +1, Chatkcha +1.
+- **Air:** every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2,
+  Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1,
+  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1.
 - **Earth:** Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1,
   Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's
-  Dagger +3, Terror Blade +2, Galefang\* +2, Glasshewer\* +2, Soulcrusher +1,
-  Axe +1, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the three
-  quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Bow +2, Phrain's Bow +1,
-  Chatkcha +1.
+  Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2,
+  Soulcrusher +1, Axe +1, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the
+  three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Bow +2, Phrain's Bow +1,
+  Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
 - **Fire:** Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1,
-  Glasshewer\* +2, Blackmace +1, Chatkcha +1.
-- **Water:** Stillwater\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*,
-  Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
-  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1.
+  Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Skycutter\* +2, Chatkcha +1.
+- **Water:** Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3,
+  Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
+  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1,
+  Dunesong\* +1.
 
 An Elementalist adds its second sphere's.
 
@@ -895,7 +900,8 @@ starting gear, also leather arm and leg armour.
   fighter, gladiator, preserver, ranger or thief.
 
 **Magic weapons.** Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror
-Blade +2, Galefang\* +2, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Chatkcha +1.
+Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow
++2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
 With a cleric class, only those its sphere allows too (Mindshard with fire or
 earth, Stillwater with water).
 
@@ -1530,6 +1536,8 @@ chosen type, often one of these.
 | Mindshard | obsidian short sword +1 | warriors, thieves, druids, psionicists, earth and fire clerics |
 | Stillwater | bone short sword +1 | warriors, thieves, druids, psionicists, water clerics |
 | Galefang | metal dagger +2 | warriors, thieves, druids, preservers, psionicists, air and earth clerics |
+| Nightsliver | obsidian dagger +2 | warriors, thieves, druids, preservers, psionicists, air, earth and fire clerics |
+| Hayneedle | bone dagger +1 | warriors, thieves, druids, preservers, psionicists, air and water clerics |
 | Glasshewer | obsidian axe +2 | warriors, thieves, druids, earth and fire clerics |
 | Drakejaw | bone axe +1 | warriors, thieves, druids, water clerics |
 | Headsman | metal great axe +2 | warriors, thieves, earth clerics |
@@ -1539,6 +1547,8 @@ chosen type, often one of these.
 | Gutterknot | club +1 (the game has no magic club) | warriors, thieves, druids, psionicists, earth and water clerics |
 | Deepbiter | stone pick +1 | warriors, thieves, druids, earth clerics |
 | Windlash | staff sling +1 | warriors, thieves, druids, preservers, air clerics |
+| Dunesong | bow +1 | warriors, thieves, druids, psionicists, air, earth and water clerics |
+| Skycutter | chatkcha +2 | warriors, thieves, druids, psionicists, air, earth and fire clerics |
 
 **Other magic items:**
 

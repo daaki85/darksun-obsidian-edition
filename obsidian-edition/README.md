@@ -1228,12 +1228,12 @@ less the item's plus, and 1 less again for a magical power:
 | The Loader's plain bone weapons (Dagger, Short Sword, Axe, Great Axe) | 65% | 65% (the game's: needs 8) |
 | The Loader's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
 | The Loader's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
-| Kreenfang, Drakejaw, Stillwater, Thornwall (bone, +1) | 70% | 70% (the game's: needs 7) |
+| Kreenfang, Drakejaw, Stillwater, Thornwall, Hayneedle (bone, +1) | 70% | 70% (the game's: needs 7) |
 | Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
 | Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
-| Glasshewer (obsidian, +2) | 75% | 90% (needs 3) |
+| Glasshewer, Nightsliver, Skycutter (obsidian, +2) | 75% | 90% (needs 3) |
 | Deepbiter (stone, +1) | 70% | 85% (needs 4) |
-| Gutterknot (wood, +1) | 70% | 70% (the game's: needs 7) |
+| Gutterknot, Dunesong (wood, +1) | 70% | 70% (the game's: needs 7) |
 | Greenbright, Galefang, Headsman, Linebreaker (metal, +2) | 75% | 75% (the game's: needs 6) |
 
 The dice log shows every check, whichever rule is on:
@@ -2339,8 +2339,8 @@ dearest, the Wand of Missiles, is 65,000):
 
 | Items | Price |
 |---|---|
-| Magic melee weapons | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000) |
-| Windlash | 2,800 (as the game's Sling +1) |
+| Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
+| Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
 | Plain metal weapons | 50 to 300 |
 | Bracers of defense | 5,000 a point of AC |
 | Rings and Cloak of Protection | 15,000 |
@@ -2635,6 +2635,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | — |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men |
 | ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | the 2 handed Bone Gythka on the dead body by the arena's stone arch |
+| ![](docs/items/hayneedle.png) | Bone | dagger | ***Hayneedle*** | a bone dagger +1: a water cleric can wield it | hidden in **Merzol**'s haystack in the slave pens, with his sack of ceramic pieces |
 | ![](docs/items/drakejaw.png) | Bone | axe | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
 | ![](docs/items/mace-plus2.png) | Bone | mace | Mace +2 | +2 | a chest |
 | ![](docs/items/polearm-plus1.png) | Bone | polearm | Polearm +1 | +1 | — |
@@ -2655,6 +2656,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/flame-blade.png) | Obsidian | long sword | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | in the pack of the **Templar** of the Hot Springs (the one with the Drake Shield) |
 | ![](docs/items/mindshard.png) | Obsidian | short sword | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP) |
 | ![](docs/items/terror-blade.png) | Obsidian | dagger | Terror Blade | +2, poison | — |
+| ![](docs/items/nightsliver.png) | Obsidian | dagger | ***Nightsliver*** | an obsidian dagger +2: a fire or earth cleric can wield it | carried by the **Hermit** of the Lava Rift, in place of his stone dagger |
 | ![](docs/items/blackmace.png) | Obsidian | mace | Blackmace | +1, Shocking Grasp | the Shadow King |
 | ![](docs/items/glasshewer.png) | Obsidian | axe | ***Glasshewer*** | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) |
 | ![](docs/items/quarterstaff-plus2.png) | Wooden | quarterstaff | Quarterstaff +2 | +2 | Maris |
@@ -2670,9 +2672,11 @@ out (a reward, a gift or a find).
 |---|---|---|---|---|---|
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a chest |
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | — |
+| ![](docs/items/dunesong.png) | Wooden | bow | ***Dunesong*** | a bow +1 | sold by the **Bowyer** |
 | ![](docs/items/sling-plus2.png) | Leather | sling | Sling +2 | +2 | Chaya and her apology chest; a chest |
 | ![](docs/items/sling-plus1.png) | Leather | sling | Sling +1 | +1 | a chest |
 | ![](docs/items/windlash.png) | Leather | staff sling | ***Windlash*** | a staff sling +1 (the game has no magic staff sling) | sold by the **Bowyer** |
+| ![](docs/items/skycutter.png) | Obsidian | chatkcha | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | chatkcha | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | | chests; Kel and the Elven Leader (+1) |
 
@@ -2682,7 +2686,7 @@ out (a reward, a gift or a find).
 |---|---|
 | Long sword | Dragonsbane +4, Swiftbite +2, El's Drinker +2, Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, ***Flame Blade*** +1 |
 | Short sword | ***Greenbright*** +2, ***Shadowseeker*** +1, ***Mindshard*** +1, ***Stillwater*** +1 |
-| Dagger | Dag's Dagger +3, Terror Blade +2, ***Galefang*** +2 |
+| Dagger | Dag's Dagger +3, Terror Blade +2, ***Galefang*** +2, ***Nightsliver*** +2, ***Hayneedle*** +1 |
 | Axe | ***Glasshewer*** +2, ***Drakejaw*** +1, Soulcrusher +1, Axe +1 |
 | Great axe | Great Axe +3, ***Headsman*** +2 |
 | Gythka | Gythka +3, ***Gythka +2***, ***Kreenfang*** +1 |
@@ -2691,7 +2695,8 @@ out (a reward, a gift or a find).
 | Quarterstaff | Quarterstaff +2, Balk's Staff +1, Parting Staff +1 |
 | Sling | Sling +2, Sling +1 |
 | Club, pick, cahulaks | ***Gutterknot*** +1, ***Deepbiter*** +1, Cahulaks +1 |
-| Bow, staff sling, chatkcha | Bow +2, Phrain's Bow +1, ***Windlash*** +1, Chatkcha +1 |
+| Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
+| Staff sling, chatkcha | ***Windlash*** +1, ***Skycutter*** +2, Chatkcha +1 |
 
 **Body armour:**
 

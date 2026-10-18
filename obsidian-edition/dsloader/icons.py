@@ -377,6 +377,13 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     # the fire colours; its leather one in the metal long sword's greys, its whole rim burning
     ("Gutterward", 0xFB5B, 2586, 2587, lambda r: rim(r, 2, FIRE)),
     ("Ironbulwark", 0xFC04, 2588, 2589, lambda r: rim(recolour(r, SHIELD_METAL), 1, FIRE)),
+    # the weapons for the kits with too few (worldgear.py): the bone and obsidian Daggers, every
+    # other pixel of their blades in the fire colours; the Bow, its string; the Chatkcha, its blades
+    ("Hayneedle", 0xFB60, 2590, 2591,
+     lambda r: glow(recolour(r, DAGGER_BONE), lambda p, x, y: p in DAGGER_BONE.values() and (x + y) % 2 == 0, FIRE)),
+    ("Nightsliver", 0xFB60, 2592, 2593, lambda r: glow(r, lambda p, x, y: 208 <= p <= 215 and (x + y) % 2 == 0, FIRE)),
+    ("Dunesong", 0xFC07, 2594, 2595, lambda r: glow(r, lambda p, x, y: 210 <= p <= 214 and (x + y) % 2 == 0, FIRE)),
+    ("Skycutter", 0xFC0E, 2596, 2597, lambda r: glow(r, lambda p, x, y: 158 <= p <= 162 and (x + y) % 2 == 0, FIRE)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -927,8 +934,14 @@ def which(rec: bytes) -> Optional[str]:
         return "Glasshewer" if plus == 2 else "Obsidian Axe"
     if kind == GREAT_AXE_TYPE and plus == 0:
         return "Great Axe"
-    if kind == game.BONE_DAGGER_TYPE and plus == 0:
-        return "Bone Dagger"
+    if kind == game.BONE_DAGGER_TYPE:
+        return "Hayneedle" if plus == 1 else "Bone Dagger" if plus == 0 else None
+    if kind == 17 and plus == 2:
+        return "Nightsliver"
+    if kind == 1 and plus == 1:
+        return "Dunesong"
+    if kind == 48 and plus == 2:
+        return "Skycutter"
     if kind == game.BONE_GREAT_AXE_TYPE and plus == 0:
         return "Bone Great Axe"
     if kind == game.OBSIDIAN_GREAT_AXE_TYPE and plus == 0:

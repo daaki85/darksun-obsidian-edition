@@ -11,6 +11,25 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 ## Pull request #51 (in progress)
 
+**Added**
+- **Four more magic weapons** for the kits that had too few (the dagger
+  fighters, the archers, the thri-kreen), each with its icon, its name in
+  DSCLOG's table (now 39 names) and a story from Alagorn:
+  - **Hayneedle,** a bone dagger +1 (a water cleric's too), early: hidden in
+    Merzol's haystack in the slave pens with his sack of ceramic pieces. The
+    hay's script (137) says so and leaves it beside the sack, the first
+    search only (haystash.py; its own object, 2590).
+  - **Nightsliver,** an obsidian dagger +2 (a fire or earth cleric's too),
+    mid-game: the Lava Rift's Hermit carries it in place of his stone dagger.
+  - **Dunesong,** a bow +1, sold by the Bowyer in Teaquetzl with Windlash,
+    priced as a melee weapon (20,800; the game's Bow +2 is 50,800).
+  - **Skycutter,** a chatkcha +2 (3,500, as the game's Sling +2), on one of
+    the thri-kreen hunting the Gemfields (its own object, 2598; the region's
+    copy, RGN06.GFF, points to it).
+  The guide's lists of each class's magic weapons count them, and an air
+  cleric's list now has every dagger (DSCLOG gives air clerics the game's
+  daggers too; the list showed only Galefang).
+
 **Changed**
 - **Claws cut**: the game makes every unarmed attack crushing, so a creature
   crushing weapons can't hurt (the mastyrials) took nothing from a

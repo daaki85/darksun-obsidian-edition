@@ -105,6 +105,23 @@ BONE_SHORT_SWORD_1 = ((game.BONE_SHORT_SWORD_TYPE, STILLWATER, 0x10000 - 2568, P
 POLEARM_2 = ((game.METAL_POLEARM_TYPE, LINEBREAKER, 0x10000 - 2570, 2 * PLUS_VALUE), 2)
 BONE_POLEARM = 19  # (the game's Polearm, of bone)
 BONE_POLEARM_1 = ((BONE_POLEARM, THORNWALL, 0x10000 - 2572, PLUS_VALUE), 1)
+# the weapons for the kits with too few (the dagger fighters, the archers, the thri-kreen): a bone
+# dagger +1 in Merzol's hay stash (his script's: haystash.py), an obsidian dagger +2 on the Lava
+# Rift's Hermit (in place of his stone one), a bow +1 the Bowyer sells (priced as a melee weapon:
+# the game's Bow +2 is 50,800), a chatkcha +2 on a thri-kreen of the Gemfields' packs
+HAYNEEDLE, NIGHTSLIVER, DUNESONG, SKYCUTTER = 0x165, 0x166, 0x167, 0x168
+NAMES.update({HAYNEEDLE: b"Hayneedle", NIGHTSLIVER: b"Nightsliver", DUNESONG: b"Dunesong", SKYCUTTER: b"Skycutter"})
+HAYNEEDLE_OBJECT = 2590  # (its picture's object: the item the hay stash's script drops)
+BONE_DAGGER_1 = ((game.BONE_DAGGER_TYPE, HAYNEEDLE, 0x10000 - HAYNEEDLE_OBJECT, PLUS_VALUE), 1)
+OBSIDIAN_DAGGER = 17  # (the game's Dagger, of obsidian; its other, 33, is stone)
+OBSIDIAN_DAGGER_2 = ((OBSIDIAN_DAGGER, NIGHTSLIVER, 0x10000 - 2592, 2 * PLUS_VALUE), 2)
+BOW = 1  # (the game's Bow)
+BOW_1 = ((BOW, DUNESONG, 0x10000 - 2594, PLUS_VALUE), 1)
+CHATKCHA = 48
+CHATKCHA_2 = ((CHATKCHA, SKYCUTTER, 0x10000 - 2596, 3500), 2)  # (as the game's Sling +2)
+HERMIT, LAVA_RIFT = 81, 0x1B
+STONE_DAGGER = 33
+GEMFIELDS, GEMFIELDS_KREEN, THRIKREEN = 0x06, 22, 215  # (one of a pack: object 215 is shared)
 # the Elven Leader's Gythka +1 (in his pack, object 124; and the item his script gives, a new one of
 # object 2534) a Gythka +2
 ELVEN_LEADER, ELVEN_GYTHKA = 124, 2534
@@ -260,7 +277,7 @@ CHAYAS_CHEST = 2249  # (her script's)
 WEAPON_RACK, PENS, PENS_RACK = 1647, 0x29, 131  # (the slave pens' rack: its region, its entity)
 DAGOLAR, BALKAZAR = 26, 14  # (Dagolar: the one with Dag's Dagger, object 26; his double is 27)
 MAGIC: Tuple[Gift, ...] = (
-    Gift("Bowyer", (weapon(*STAFF_SLING_1),), (283,), 0x0B),
+    Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1)), (283,), 0x0B),
     Gift("Undermt Folk", (weapon(*PICK_1),), (51,), 0x1E, clone=(169, 2561)),  # (one of the four miners)
     Gift("Churrr", (weapon(*CLUB_1),), (9,), 0x28),  # (the warrens' fighter, with his club)
     Gift("Arant", (weapon(*SHORT_SWORD_2),), (22,), 0x04),  # (the gladiators' captor, Silt Sea Summoning)
@@ -307,7 +324,12 @@ MAGIC: Tuple[Gift, ...] = (
     # the Guardian of Balkazar's fortress
     Gift("Skeleton", (WOODEN_SHIELD_1,), (SKELETON,), WARRENS, clone=(WARRENS_SKELETON, 2585)),
     Gift("Guardian", (METAL_SHIELD_3,), (GUARDIAN,), BALKAZARS),
+    # Nightsliver on the Lava Rift's Hermit, in place of his stone dagger; Skycutter on a thri-kreen
+    # hunting the Gemfields (its own object); Dunesong with Windlash at the Bowyer's (above)
+    Gift("Hermit", (weapon(*OBSIDIAN_DAGGER_2),), (HERMIT,), LAVA_RIFT, instead=(STONE_DAGGER, 0)),
+    Gift("Thrikreen", (weapon(*CHATKCHA_2),), (THRIKREEN,), GEMFIELDS, clone=(GEMFIELDS_KREEN, 2598)),
 )
+HAYNEEDLE_ITEM = weapon(*BONE_DAGGER_1)  # (Merzol's hay stash's: haystash.py)
 
 
 def gythka_2(rec: bytes) -> bytes:
@@ -379,7 +401,8 @@ def object_chunks(chunks, gifts: Sequence[Gift], extra: Sequence[Tuple[int, Sequ
                 base = out.get(("RDFF", new), dataitems.renumbered(chunks[("RDFF", obj)], new))
                 out[("RDFF", new)] = given(base, gift)
             elif gift.instead:
-                out[("RDFF", obj)] = given(out.get(("RDFF", obj), chunks[("RDFF", obj)]), gift)
+                if ("RDFF", obj) in chunks:
+                    out[("RDFF", obj)] = given(out.get(("RDFF", obj), chunks[("RDFF", obj)]), gift)
             else:
                 wanted.setdefault(obj, []).extend(gift.items)
     for obj, items in extra:
@@ -414,6 +437,8 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
         return {}
     if on.get("world_magic", True) is not False:
         out[("RDFF", ELVEN_CLOAK_OBJECT)] = dataitems.item_object(ELVEN_CLOAK, header_numbers(chunks).get(65, 0))
+        out[("RDFF", HAYNEEDLE_OBJECT)] = dataitems.item_object(
+            HAYNEEDLE_ITEM, header_numbers(chunks).get(game.BONE_DAGGER_TYPE, 0))
         out.update(gythka_chunks(chunks, out))
         from . import tome  # (the Tome of Understanding, Father Garyn's gift: garyn.py)
         try:
