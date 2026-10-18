@@ -415,8 +415,8 @@ class Viewer:
                 ("thief_table", "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
                                 "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
-                            "(no enemy beside them; thieves half the chance in daylight, but for a few kits, "
-                            "rangers indoors)"),
+                            "(with no enemy beside them; a thief's chance halved in daylight, a ranger's "
+                            "indoors; a few kits differ)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
                                "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends")):
             self.rule_vars[key] = tk.BooleanVar(
@@ -454,8 +454,8 @@ class Viewer:
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.pickpockets = tk.BooleanVar(value=bool(settings.get("pickpockets", True)))
-        ttk.Checkbutton(thieves, text="Picking pockets: a thief's Pick Pockets button on the USE screen, then "
-                        "talk to someone, until caught", variable=self.pickpockets,
+        ttk.Checkbutton(thieves, text="Picking pockets: a thief's Pick Pockets button on the USE screen, then a "
+                        "click on anyone in sight (not in a fight), until caught", variable=self.pickpockets,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         thieves.pack(anchor="w", fill="x", pady=(8, 0))
 
@@ -496,14 +496,14 @@ class Viewer:
         self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
         ttk.Checkbutton(controls, text="Scroll the map by pressing the mouse wheel and moving", variable=self.scroll_map,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
-        ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
-                        "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scroll_right = tk.BooleanVar(value=bool(settings.get("scroll_right", False)))
         ttk.Checkbutton(controls, text="... or by holding the right mouse button and moving (a right "
                         "click still changes the pointer)", variable=self.scroll_right,
                         command=self._options_changed).pack(anchor="w", padx=(20, 0))
+        self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
+        ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
+                        "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
                         "ends it; psionic powers can still be stopped); from the next start",

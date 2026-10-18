@@ -200,9 +200,9 @@ MAGIC = {
               "Serpent Boots can find. True iron, and no stronger arms on Athas."),
              ("Warden's Legs",
               "The Warden's Legs! Haldren's leg pieces went to his squire, who fled east with "
-              "them and died in the Gemfields; his chest is there still, and the magera have "
-              "walked past it for years. Plate fit to march a thousand miles in, as Haldren "
-              "marched it."),
+              "them and died on the plateaus where the wagon trains cross; his chest is there "
+              "still, and the magera have walked past it for years. Plate fit to march a thousand "
+              "miles in, as Haldren marched it."),
              ("Warden's Chest",
               "The Warden's Chest! Haldren's breastplate was quenched in the heart of a fire "
               "elemental, and fire still flinches from whoever wears it. Balkazar kept it in his "

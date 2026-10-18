@@ -2716,7 +2716,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/wardens-arms.png) | Arms | Metal | ***Warden's Arms*** | plate arm armour +1 (AC 2, +1) | the Lower Castle's treasure chest, with Dark Flame (behind the wall the Serpent Boots show, where the vrock perch) |
 | ![](docs/items/greys-scale-arms.png) | Arms | Metal | Grey's Scale | no plus (AC 3 with the Loader) | Arant |
 | ![](docs/items/tanelyvs-leg-armor.png) | Legs | Metal | Tanelyv's Armor | chain +2 | — |
-| ![](docs/items/wardens-legs.png) | Legs | Metal | ***Warden's Legs*** | plate leg armour +1 (AC 2, +1) | the Gemfields' chest |
+| ![](docs/items/wardens-legs.png) | Legs | Metal | ***Warden's Legs*** | plate leg armour +1 (AC 2, +1) | the Wagon Train's chest, in magera country |
 | ![](docs/items/greys-scale-legs.png) | Legs | Metal | Grey's Scale | no plus (AC 3 with the Loader) | Arant |
 
 Tanelyv's Armor also has a chest piece, with no plus.

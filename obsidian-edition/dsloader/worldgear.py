@@ -15,7 +15,7 @@
 - The Warden's Plate, plate mail +1 (DSCLOG's plate types: AC 3 chest, 2 arms, 2 legs, as AD&D's
   piecemeal plate; the helm the game's metal one), its four pieces scattered: the helm on
   Dagolar's body; the arms in the Lower Castle's treasure chest with Dark Flame (behind the
-  wall the Serpent Boots show, the vrock's cliff); the legs in the Gemfields' chest; the chest
+  wall the Serpent Boots show, the vrock's cliff); the legs in the Wagon Train's chest; the chest
   on Balkazar's body. The chest puts Resist Fire on its wearer while worn, the helm Cloak of
   Bravery; the arms and legs are plain.
 - The Cloak and Boots of Elvenkind (DSCLOG's types, the game's Cloak's and Boots', for thieves and
@@ -200,7 +200,7 @@ WARDENS_PLATE = (
 )
 
 
-DARK_FLAME_CHEST, GEMFIELDS_CHEST = 1360, 1065  # (SEGOBJEX objects: their item records' picture, negated)
+DARK_FLAME_CHEST, WAGON_TRAIN_CHEST = 1360, 1065  # (SEGOBJEX objects: their item records' picture, negated)
 CARAVAN_CHEST = 2293  # the elven caravan's buried chest (with the Cahulaks +1)
 CLOAK_OF_ELVENKIND, BOOTS_OF_ELVENKIND = 0x154, 0x155
 NAMES.update({CLOAK_OF_ELVENKIND: b"Cloak/Elvenkind", BOOTS_OF_ELVENKIND: b"Boots/Elvenkind"})
@@ -292,11 +292,11 @@ MAGIC: Tuple[Gift, ...] = (
     Gift("Keldar", (CROWN_ITEM,), (28,), 0x27),
     # the Warden's Plate, scattered: the helm on Dagolar (a boss's body, early on), the arms in the
     # Lower Castle's treasure chest (object 1360, with Dark Flame: behind the barrier the Serpent
-    # Boots show, the vrock near), the legs in the Gemfields' chest (object 1065), the chest on
+    # Boots show, the vrock near), the legs in the Wagon Train's chest (object 1065), the chest on
     # Balkazar (the hardest kill, after his mirror)
     Gift("Dagolar", (WARDENS_PLATE[3],), (DAGOLAR,)),
     Gift("Treasure chest", (WARDENS_PLATE[1],), (DARK_FLAME_CHEST,), 0x1D),
-    Gift("Gemfields chest", (WARDENS_PLATE[2],), (GEMFIELDS_CHEST,), 0x08),
+    Gift("Wagon Train chest", (WARDENS_PLATE[2],), (WAGON_TRAIN_CHEST,), 0x08),
     Gift("Balkazar", (WARDENS_PLATE[0],), (BALKAZAR,), 0x0D),
     # the Boots of Elvenkind in the caravan's buried chest (made by the dig's script); the cloak
     # is the Elven Leader's gift (his script: elvenleader.py)

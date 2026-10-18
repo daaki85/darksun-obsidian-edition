@@ -132,6 +132,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   thri-kreen) carry one.
 
 **Documentation**
+- **The Warden's Legs' chest is the Wagon Train's**, not the Gemfields' (its
+  chest, object 1065, is in region 8, with the magera and their prisoners; the
+  Gemfields are region 6). The item table, the Loader's names for it and
+  Alagorn's story say so.
+- **Patch notes:** the six new spells and the nineteen magic weapons as
+  tables; the air cleric's dagger line says what the game had (none); acid on
+  armour with the other Combat rules; the Loader's accessibility (larger text,
+  the keyboard, contrast, logs as text).
+- **The Loader's Options tab:** Picking pockets says a click on anyone in sight
+  (it said "talk to someone"); the hiding switch reads more plainly; "... or by
+  holding the right mouse button" sits under the map scrolling it belongs to,
+  not under the view in fights. The screenshot of the tab is retaken.
 - **Credits** on the front page: the code and documentation written by
   Claude, the direction and testing, the game and its makers, the rule books,
   and the tools.

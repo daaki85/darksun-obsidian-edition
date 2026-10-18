@@ -69,7 +69,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Every class can reach **10th level** *(was 9th)*.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
-- **[Changed]** An air cleric can use daggers, as its sphere allows *(was only Galefang: none of the game's daggers listed the air cleric)*.
+- **[Changed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
 - **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, a Stalker, Assassin or Shinobi a cloak, and some kits weapons of their own (a Battle Dancer two long swords, a Poisoner two daggers). A multiclass preserver starts with no armour, so it can cast.
 - **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
 - **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.
@@ -121,7 +121,16 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## Magic and Psionics
 
-- **[New]** Six new wizard spells, each with its own icon and description: **Cat's Grace** (2nd level: DEX +1d6 for an hour of game time a caster level), **Erdlu Claw** (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical edged weapon; Body Weaponry's and Animal Affinity's dice gain +1) and **Fogbolt** (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds), and at 1st level too **Reflected Image** (one image of the caster, struck instead of it half the time), **Spook** (a creature flees for 3 rounds unless it saves) and **Friends** (CHA +2d4 for a short while, for better prices).
+- **[New]** Six new wizard spells, each with its own icon and description:
+
+| Spell | Level | What it does |
+|---|---|---|
+| **Cat's Grace** | 2nd | DEX +1d6, for an hour of game time a caster level |
+| **Erdlu Claw** | 1st | unarmed attacks become talons: +1 to hit, 1d6+1, as a +1 magical edged weapon (Body Weaponry's and Animal Affinity's dice gain +1) |
+| **Fogbolt** | 1st | a dark grey bolt: the creature has −3 to its attacks and is hit at +2, for 2d4 rounds |
+| **Reflected Image** | 1st | one image of the caster, struck instead of it half the time |
+| **Spook** | 1st | a creature flees for 3 rounds unless it saves |
+| **Friends** | 1st | CHA +2d4 for a short while, for better prices |
 
 ## Improved Thieving
 
@@ -134,27 +143,30 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Magic weapons**
 
-Nineteen new magic weapons, each with its own icon and a story from the game's own item sage.
+- **[New]** Nineteen new magic weapons, each with its own icon and a story from the game's own item sage:
 
-- **[New]** **Flame Blade**: an obsidian long sword +1 whose blade burns what it hits (2d6 fire damage, a save for half). A fire or earth cleric can wield it.
-- **[New]** **Shadowseeker**: a short sword +1 whose wielder sees the invisible.
-- **[New]** **Kreenfang**: a bone gythka +1.
-- **[New]** **Gutterknot**: a club +1, the game's first magic club.
-- **[New]** **Deepbiter**: a stone pick +1, the game's first magic pick.
-- **[New]** **Windlash**: a staff sling +1, the game's first magic staff sling.
-- **[New]** **Greenbright**: a metal short sword +2.
-- **[New]** **Drakejaw**: a bone axe +1 a water cleric can wield.
-- **[New]** **Glasshewer**: an obsidian axe +2 a fire or earth cleric can wield.
-- **[New]** **Headsman**: a metal great axe +2.
-- **[New]** **Galefang**: a metal dagger +2 an air cleric can wield.
-- **[New]** **Mindshard**: an obsidian short sword +1 a psionicist can wield.
-- **[New]** **Stillwater**: a bone short sword +1 a psionicist can wield.
-- **[New]** **Linebreaker**: a metal polearm +2.
-- **[New]** **Thornwall**: a bone polearm +1.
-- **[New]** **Hayneedle**: a bone dagger +1 a water cleric can wield, early on.
-- **[New]** **Nightsliver**: an obsidian dagger +2 a fire or earth cleric can wield.
-- **[New]** **Dunesong**: a bow +1 the Bowyer sells.
-- **[New]** **Skycutter**: a chatkcha +2.
+| Weapon | What it is |
+|---|---|
+| **Flame Blade** | an obsidian long sword +1 whose blade burns what it hits (2d6 fire damage, a save for half); a fire or earth cleric can wield it |
+| **Greenbright** | a metal short sword +2 |
+| **Shadowseeker** | a short sword +1 whose wielder sees the invisible |
+| **Mindshard** | an obsidian short sword +1 a psionicist can wield |
+| **Stillwater** | a bone short sword +1 a psionicist can wield |
+| **Galefang** | a metal dagger +2 an air cleric can wield |
+| **Nightsliver** | an obsidian dagger +2 a fire or earth cleric can wield |
+| **Hayneedle** | a bone dagger +1 a water cleric can wield |
+| **Glasshewer** | an obsidian axe +2 a fire or earth cleric can wield |
+| **Drakejaw** | a bone axe +1 a water cleric can wield |
+| **Headsman** | a metal great axe +2 |
+| **Kreenfang** | a bone gythka +1 |
+| **Linebreaker** | a metal polearm +2 |
+| **Thornwall** | a bone polearm +1 |
+| **Gutterknot** | a club +1, the game's first magic club |
+| **Deepbiter** | a stone pick +1, the game's first magic pick |
+| **Dunesong** | a bow +1, sold in a shop |
+| **Windlash** | a staff sling +1, the game's first magic staff sling, sold in a shop |
+| **Skycutter** | a chatkcha +2 |
+
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
 
 **Magic armour and worn items**
@@ -224,6 +236,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
 - **[New]** **Options:** every rule change and addition in these notes has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
+- **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 
@@ -243,7 +256,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** The **Trustee** in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons and warriors' attacks (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); thief skills (Improved Thieving); and acid on armour (Combat).
+Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); and thief skills (Improved Thieving).
 
 ## Your Saved Games
 
