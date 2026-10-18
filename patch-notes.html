@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Obsidian Edition Patch Notes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -104,6 +109,8 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
 #md { position: absolute; left: -9999px; }
 @media (prefers-reduced-motion: no-preference) { .btn { transition: filter .15s; } .btn:hover { filter: brightness(1.1); } }
 </style>
+</head>
+<body>
 
 <header class="banner">
   <div class="eyebrow">Dark Sun: Shattered Lands · Mod</div>
@@ -235,7 +242,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><strong>Battle Dancer:</strong> dances as each fight starts, a roll against DEX at &minus;4: +1 to hit, damage and AC for a few rounds, or &minus;1 if it stumbles. Long swords and bows only.</li>
         <li><strong>Military Scout:</strong> better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.</li>
         <li><strong>Wild Fury:</strong> Wild Fighting as each fight starts, a roll against CON at &minus;4: one more attack a round in melee and +3 damage, or &minus;3 to hit and AC 3 worse if it fails.</li>
-        <li><span class="tag new">New</span>The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, and Cilla, an Elven Wanderer, hides as well in the sun as out of it.</li>
+        <li><span class="tag new">New</span>The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.</li>
       </ul>
       <div class="dev"><b>Developers' Notes</b>Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.</div>
     </section>
@@ -244,7 +251,6 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <h2>Magic and Psionics</h2>
       <ul>
         <li><span class="tag new">New</span>Six new wizard spells, each with its own icon and description: <strong>Cat's Grace</strong> (2nd level: DEX +1d6 for an hour of game time a caster level), <strong>Erdlu Claw</strong> (1st level: unarmed attacks become talons that hit at +1 for 1d6+1, as a +1 magical edged weapon; Body Weaponry's and Animal Affinity's dice gain +1) and <strong>Fogbolt</strong> (1st level: a dark grey bolt that gives a creature −3 to its attacks and +2 to attacks on it, for 2d4 rounds), and at 1st level too <strong>Reflected Image</strong> (one image of the caster, struck instead of it half the time), <strong>Spook</strong> (a creature flees for 3 rounds unless it saves) and <strong>Friends</strong> (CHA +2d4 for a short while, for better prices).</li>
-        <li><span class="tag chg">Changed</span>A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.</li>
       </ul>
     </section>
 
@@ -255,7 +261,6 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag new">New</span>Thieves <strong>hide in shadows and move silently</strong> in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky <span class="was">(was a backstab only on a target turned to face someone else)</span>.</li>
         <li><span class="tag new">New</span><strong>Picking pockets</strong> with a thief's <strong>Pick Pockets</strong> button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP.</li>
         <li><span class="tag new">New</span>A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.</li>
-        <li><span class="tag fix">Fixed</span>Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.</li>
       </ul>
     </section>
 
@@ -340,7 +345,7 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
       <h2>Quality of Life</h2>
       <ul>
         <li><span class="tag new">New</span><strong>Tab</strong> chooses the nearest enemy and <strong>Enter</strong> attacks it, with no aiming of the mouse.</li>
-        <li><span class="tag new">New</span>Press the mouse wheel and drag to scroll the map.</li>
+        <li><span class="tag new">New</span>Press the mouse wheel and drag to scroll the map (or, as an option, hold the right button).</li>
         <li><span class="tag chg">Changed</span>In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen <span class="was">(was: it followed each one near the edge)</span>.</li>
         <li><span class="tag chg">Changed</span><span class="num">40</span> save slots on four pages <span class="was">(was 10)</span>, each also kept under its name in a folder of the Loader's, and <span class="num">29</span> stored characters <span class="was">(was 19)</span>.</li>
         <li><span class="tag new">New</span>A game speed setting, so the whole party walks as smoothly as one.</li>
@@ -375,6 +380,8 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
         <li><span class="tag fix">Fixed</span>The preserver's <strong>Dispel Magic</strong> also stopped everyone it caught from casting spells, your own party included. Now it only dispels.</li>
         <li><span class="tag fix">Fixed</span><strong>Hold Undead</strong> held living creatures too. Now only the undead.</li>
         <li><span class="tag fix">Fixed</span><strong>Cause Serious and Critical Wounds</strong> did <span class="num">2d9</span> and <span class="num">3d9</span> damage. Now <span class="num">2d8+1</span> and <span class="num">3d8+3</span>, as AD&amp;D has them and as the Cure spells heal.</li>
+        <li><span class="tag fix">Fixed</span>Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.</li>
+        <li><span class="tag fix">Fixed</span>A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.</li>
         <li><span class="tag fix">Fixed</span>The <strong>Trustee</strong> in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to.</li>
         <li><span class="tag fix">Fixed</span>Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).</li>
       </ul>
@@ -461,3 +468,5 @@ footer { max-width: 1080px; margin: 0 auto; padding-block: 28px 56px; border-top
   });
 })();
 </script>
+</body>
+</html>

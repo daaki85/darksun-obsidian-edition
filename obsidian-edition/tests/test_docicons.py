@@ -33,6 +33,15 @@ class DocIconsTests(unittest.TestCase):
             self.assertIn(name, docicons.ICONS)
             self.assertTrue(os.path.exists(os.path.join(ROOT, "docs", "items", name + ".png")), name)
 
+    def test_no_unused_icons(self):
+        """Every picture in docs/items is shown by the README or the player's guide."""
+        shown = set()
+        for doc in ("README.md", "PLAYER-GUIDE.md"):
+            with open(os.path.join(ROOT, doc), encoding="utf-8") as f:
+                shown |= set(re.findall(r"docs/items/([a-z0-9-]+)\.png", f.read()))
+        for png in os.listdir(os.path.join(ROOT, "docs", "items")):
+            self.assertIn(png[:-4], shown, png)
+
 
 if __name__ == "__main__":
     unittest.main()

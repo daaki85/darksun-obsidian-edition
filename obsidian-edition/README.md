@@ -15,6 +15,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Other ways to start](#other-ways-to-start)
   - [If the game or DOSBox crashes](#if-the-game-or-dosbox-crashes)
   - [If the game freezes](#if-the-game-freezes)
+  - [Reporting a problem](#reporting-a-problem)
+  - [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files)
+  - [Troubleshooting](#troubleshooting)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
@@ -333,6 +336,61 @@ a second, then saves a zip in `crash-logs`, such as
 
 Send it along with what you were doing when the game froze. The report needs
 the game started from the Loader.
+
+### Reporting a problem
+
+Open an issue on
+[the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues),
+saying what you were doing, the version (the Loader's title bar), and
+attaching the crash or freeze report if there is one. A save from just before
+it happened helps most of all.
+
+### Updating, backups and the Loader's files
+
+**Updating.** Unzip the new release into a folder of its own and copy
+`settings.json` from the old folder into it to keep your options (the
+**Named saves** folder too, if you want its copies). Your saves and characters
+are in the game folder, so nothing else needs moving. Then delete the old
+folder.
+
+**Back up your saves first.** Before the first game with the mod, copy the
+game folder's save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once
+you have them) and `CHARSAVE.GFF` somewhere safe. The Loader never
+changes the game's own files, but your saves are written by the patched game:
+one with the new items ticked can hold item types the original game doesn't
+have, so load such a save with the Loader. To go back to the original game,
+start it the GOG way and load a save from before the mod.
+
+**What the Loader writes**, all in its own folder (beside
+`Start Obsidian Edition.bat`) but the saves:
+
+| File or folder | What it holds |
+|---|---|
+| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names) |
+| `crash-logs` | crash and freeze reports |
+| `Named saves` | a copy of each save under the name you gave it |
+| `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
+| `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
+| the game folder | your saves (pages 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and characters 20 to 29 in `CHARSAVE.GFF` |
+
+**The game version.** Only the GOG release is supported (its `DSUN.EXE` is
+611,408 bytes). With another one, the Loader starts the game without the dice
+log and says why.
+
+### Troubleshooting
+
+- **Windows warns about the `.bat` file** ("Open File - Security Warning"):
+  press **Run** once; the Loader unblocks its own files.
+- **An antivirus program blocks or quarantines the Loader.** The Loader reads
+  and writes DOSBox's memory while you play, as debuggers and game trainers do,
+  which some antivirus programs distrust. Allow the Loader's folder, or start
+  just the game with **`Play Dark Sun (in-game rolls).bat`** to see whether
+  the trouble is the Loader's window.
+- **The game runs slowly, or the sound stutters:** choose a lower
+  [game speed](#game-speed).
+- **The Loader shows no party or rolls:** it needs 64-bit Python to read 64-bit
+  DOSBox (see [Requirements](#requirements)), and the game started from the
+  Loader or one of its `.bat` files.
 
 ## In the game
 
@@ -2205,7 +2263,8 @@ at the XP AD&D gives for 10th level:
 |---|---|
 | Cleric | 450,000 |
 | Druid | 125,000 |
-| Fighter, gladiator | 500,000 |
+| Fighter | 500,000 |
+| Gladiator | 600,000 (500,000 with AD&D's class tables off) |
 | Preserver | 250,000 |
 | Psionicist | 400,000 |
 | Ranger | 600,000 |
@@ -2618,6 +2677,9 @@ stalled).
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
 
 ## New content
+
+*Spoilers: this section says where the new items and people are, and what
+they say. [The player's guide](PLAYER-GUIDE.md) has the rules without them.*
 
 Spells, people, a quest and items the Loader adds to the game, each with a box
 in the Options tab's **New content** section: the people, the quest and the

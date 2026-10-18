@@ -64,6 +64,12 @@ game from its own folder. It writes to the game folder only your saves (pages
 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and your characters (20 to 29 in the
 game's own `CHARSAVE.GFF`).
 
+**A fan project.** Obsidian Edition isn't affiliated with or endorsed by the
+owners of Dark Sun or Dungeons & Dragons, whose names and trademarks are
+theirs. It includes none of the game's files: you need your own copy of the
+GOG release. Screenshots and item pictures in these pages are taken from the
+game to show what the mod does.
+
 ## Getting started
 
 1. Download the latest release from the
@@ -97,13 +103,9 @@ freeze reports that say why. 2.3.0 before it
 game, three more wizard spells, two magic shields, defilers' scrolls, buying
 back magical items, saves kept under their names and fuller starting gear.
 
-Earlier changes, pull request by pull request, are in
-[`CHANGELOG.md`](CHANGELOG.md). Releases have notes of their own:
-[2.4.0](release-notes/v2.4.0.md) (pull requests #48 and #49),
-[2.3.0](release-notes/v2.3.0.md) (#44 to #46),
-[2.2.1](release-notes/v2.2.1.md) (#43), [2.2.0](release-notes/v2.2.0.md) (#39
-to #42), [2.1.1](release-notes/v2.1.1.md) (#37),
-[2.1.0](release-notes/v2.1.0.md) (#35), [2.0.0](release-notes/v2.0.0.md) (#31
-and #32), [1.2.0](release-notes/v1.2.0.md) (#19 to #29),
-[1.1.0](release-notes/v1.1.0.md) (#14 to #18) and
-[1.0.0](release-notes/v1.0.0.md) (#1 to #13).
+Three records of what changed, each for its own reader:
+- **Release notes**, one for each version: [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md).
+- **[Patch notes](PATCH-NOTES.md)**: every change from the original game, in one
+  page, whatever the version (also as a web page, [`patch-notes.html`](patch-notes.html)).
+- **[Changelog](CHANGELOG.md)**: pull request by pull request, for developers
+  and testers.

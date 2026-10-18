@@ -42,7 +42,7 @@ ICONS: Dict[str, int] = {
     "bone-long-sword": 1012, "obsidian-long-sword": 1013, "metal-long-sword": 1014, "club": 1185,
     "obsidian-dagger": 1184, "stone-dagger": 1190, "bone-mace": 1187, "metal-axe": 1183, "quarterstaff": 1019,
     "bone-polearm": 1186, "gythka": 1011, "cahulaks": 1188, "chatkcha": 1010, "bow": 1017, "sling": 1015,
-    "staff-sling": 1016, "stone-pick": 1381,
+    "staff-sling": 1016,
 }
 
 

@@ -1,16 +1,13 @@
 # Changelog
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
-request by pull request, newest first. Released pull requests are summarised
-in a line or two each; the release notes ([2.4.0](release-notes/v2.4.0.md):
-#48 and #49; [2.3.0](release-notes/v2.3.0.md): #44 to #46; [2.2.1](release-notes/v2.2.1.md): #43;
-[2.2.0](release-notes/v2.2.0.md): #39 to #42;
-[2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35;
-[2.0.0](release-notes/v2.0.0.md): #31 and #32;
-[1.2.0](release-notes/v1.2.0.md):
-#19 to #29; [1.1.0](release-notes/v1.1.0.md): #14 to #18;
-[1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
-have the detail.
+request by pull request, newest first: the record for developers and testers.
+For what a release brings, read its notes ([2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
+[2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
+[2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
+[2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
+[1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
+change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 ## Pull request #51 (in progress)
 
