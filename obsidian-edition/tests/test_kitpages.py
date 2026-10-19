@@ -9,18 +9,16 @@ from dsloader import game, kitpages, weaponpages  # noqa: E402
 
 class KitPageTests(unittest.TestCase):
     def test_ids_clear(self):
-        """The kit pages' buttons come after the weapon pages' and the level-up window's rows (to
-        86Fh), and their windows are none of the game's (3000-3013, 3020, 3024) nor the weapon
-        pages' (3014-3019, 3021)."""
+        """The kit pages' buttons come after the weapon window's slots (to 86Fh), and their windows
+        are none of the game's (3000-3013, 3020, 3024) nor the weapon window's (3021)."""
         buttons = [kitpages.row_id(g, k + 1) for g, names in kitpages.KITS.items() for k in range(len(names))] \
             + [kitpages.KIT_NONE, kitpages.KIT_VIEW]
         self.assertEqual(len(set(buttons)), 39)
         self.assertTrue(all(0x870 <= b < 0x8B0 for b in buttons))  # (STORE and RECALL after them: rollstore.py)
-        windows = [kitpages.KIT_DISCIPLINES, kitpages.KIT_SPHERES, kitpages.KIT_LAST_PAGE] \
+        windows = [kitpages.KIT_DISCIPLINES, kitpages.KIT_SPHERES] \
             + [kitpages.KIT_WINDOW + c for c in range(len(kitpages.KITS))]
-        taken = set(range(3000, 3014)) | {3020, 3024, weaponpages.PICKER, weaponpages.WARRIOR_DISCIPLINES,
-                                          weaponpages.WARRIOR_SPHERES} | set(weaponpages.PAGES)
-        self.assertEqual(len(set(windows)), 22)
+        taken = set(range(3000, 3014)) | {3020, 3024, weaponpages.PICKER}
+        self.assertEqual(len(set(windows)), 21)
         self.assertFalse(taken & set(windows))
 
     def test_rows(self):
@@ -75,7 +73,7 @@ class KitPageTests(unittest.TestCase):
         class's three in KITS's order."""
         ids = [c for c, _, _ in weaponpages._items(self.kit_window(3))]
         self.assertEqual(ids, [kitpages.KIT_NONE, kitpages.KIT_ROW + 6, kitpages.KIT_ROW + 7, kitpages.KIT_ROW + 8,
-                               weaponpages.BACK])
+                               kitpages.KIT_BACK])
 
     def test_row_as_wide_as_its_label(self):
         """A row's button is as wide as its label, not AIR's 33 pixels (a click on the rest of a

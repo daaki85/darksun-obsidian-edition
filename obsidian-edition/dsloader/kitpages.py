@@ -15,7 +15,7 @@ shortened as the game shortens its own (P-KINESIS).
 
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import gff, specialize
+from . import gff
 from . import weaponpages as wp
 
 KIT_BYTE = 0x43
@@ -57,7 +57,8 @@ ROW_WIDTH = 88
 CREATION_CLASS = {**{c: 1 for c in range(1, 5)}, **{c: 2 for c in range(5, 9)}, 9: 3, 10: 4, 11: 5, 12: 6,
                   **{c: 7 for c in range(13, 17)}, 17: 8}
 
-KIT_DISCIPLINES, KIT_SPHERES, KIT_LAST_PAGE = 3022, 3023, 3025  # (3020 and 3024 are the game's)
+KIT_DISCIPLINES, KIT_SPHERES = 3022, 3023  # (3020 and 3024 are the game's)
+KIT_BACK = 0x851  # a kit page's VIEW PSIONICS (DSCLOG's WP_BACK)
 KIT_WINDOW = 3026  # + creation class (or multiclass group) - 1
 KIT_ROW, KIT_NONE, KIT_VIEW = 0x870, 0x888, 0x889  # rows: KIT_ROW + 3 * (class - 1) + kit - 1
 MULTI_ROW = 0x88A  # a multiclass group's rows: MULTI_ROW + 3 * (group - 9) + kit - 1
@@ -232,15 +233,16 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     for cid, text in rows + [(KIT_NONE, "NO KIT")]:
         added[("ICON", cid)] = wp.picture(font, text, wp.ROW_PAD, row_colours)
         added[("BUTN", cid)] = wp.row_button(row_button, cid, font, text)
-    added[("ICON", KIT_VIEW)] = wp.picture(font, "KITS", 0, toggle_colours)
-    added[("BUTN", KIT_VIEW)] = wp._button(toggle_button, wp.TOGGLE_TEMPLATE, KIT_VIEW)
+    for cid, text in ((KIT_VIEW, "KITS"), (KIT_BACK, "VIEW PSIONICS")):
+        added[("ICON", cid)] = wp.picture(font, text, 0, toggle_colours)
+        added[("BUTN", cid)] = wp._button(toggle_button, wp.TOGGLE_TEMPLATE, cid)
     spheres = resource[("WIND", wp.SPHERES)]
     sphere_items = wp._items(spheres)  # (four rows, then the button)
     rows_at = [(x, y) for _, x, y in sphere_items[:4]]
     toggle_at = sphere_items[4][1:]
     for cls in KITS:
         ids = [KIT_NONE] + [row_id(cls, k + 1) for k in range(len(KITS[cls]))]
-        items = [(cid, x, y) for cid, (x, y) in zip(ids, rows_at)] + [(wp.BACK, *toggle_at)]
+        items = [(cid, x, y) for cid, (x, y) in zip(ids, rows_at)] + [(KIT_BACK, *toggle_at)]
         added[("WIND", KIT_WINDOW + cls - 1)] = wp._window(spheres, KIT_WINDOW + cls - 1, items)
     added[("WIND", KIT_SPHERES)] = wp._window(
         spheres, KIT_SPHERES, [(KIT_VIEW if c == wp.SPHERE_TOGGLE else c, x, y) for c, x, y in sphere_items])
@@ -248,9 +250,6 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     added[("WIND", KIT_DISCIPLINES)] = wp._window(
         disciplines, KIT_DISCIPLINES,
         [(KIT_VIEW if c == wp.DISCIPLINE_TOGGLE else c, x, y) for c, x, y in wp._items(disciplines)])
-    last = len(wp.PAGES) - 1
-    page_rows = [(wp.ROW_FIRST + last * specialize.PAGE_SIZE + r, x, y) for r, (x, y) in enumerate(rows_at)]
-    added[("WIND", KIT_LAST_PAGE)] = wp._window(spheres, KIT_LAST_PAGE, page_rows + [(KIT_VIEW, *toggle_at)])
     return added
 
 

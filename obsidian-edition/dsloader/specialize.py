@@ -20,7 +20,6 @@ KINDS = ("long sword", "club", "dagger", "short sword",
          "mace", "axe", "great axe", "pick",
          "quarterstaff", "polearm", "gythka", "cahulaks",
          "chatkcha", "bow", "sling", "staff sling")
-PAGE_SIZE = 4
 DEFAULT = 0  # long sword
 
 # The game's item types (DSUN's IT1R, numbered from 0) by kind, and the Loader's own short sword
@@ -50,11 +49,6 @@ KIND_OF_TYPE: Dict[int, int] = {t: KINDS.index(kind) for kind, types in _TYPES.i
 def kind_of(item_type: int) -> Optional[int]:
     """The weapon kind (its number in KINDS) of an item type, or None for one that is none."""
     return KIND_OF_TYPE.get(item_type)
-
-
-def page_of(kind: int) -> int:
-    """The creation panel's weapon page a kind is on (0-3), and its row there is kind % PAGE_SIZE."""
-    return kind // PAGE_SIZE
 
 
 # A character's skill with a weapon, as DSCLOG's SPEC_OF works it out (game.SPEC_SLOTS holds the

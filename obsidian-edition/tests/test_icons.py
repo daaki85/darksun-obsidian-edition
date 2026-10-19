@@ -47,6 +47,21 @@ class PictureTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<I", chunk, 0)[0], len(chunk))
         self.assertEqual(chunk[-1], 0xFF)
 
+    def test_repeats_packed(self):
+        """Three alike or more are a repeat (a byte n odd, then the pixel), up to 128 a piece; the
+        rest literal; read back the same."""
+        import random
+        rng = random.Random(5)
+        rows = [[7] * 200, [1, 1, 2, 2, 2, 3] * 30, [rng.randrange(4) for _ in range(214)],
+                [None] * 5 + [9] * 130 + [None] + [4, 5]]
+        rows = [r + [None] * (214 - len(r)) for r in rows]
+        chunk = icons.encode(rows)
+        self.assertEqual(icons.decode(chunk), rows)
+        self.assertEqual(icons._pack([7] * 3), bytes([5, 7]))
+        self.assertEqual(icons._pack([7] * 131), bytes([255, 7, 5, 7]))
+        self.assertEqual(icons._pack([1, 1, 2]), bytes([4, 1, 1, 2]))
+        self.assertLess(len(icons.encode([[7] * 200])), 30)  # (head 10, size 4, y, run head 4, two repeats 4, FFh)
+
     def test_long_runs(self):
         rows = [list(range(200))]
         self.assertEqual(icons.decode(icons.encode(rows)), rows)

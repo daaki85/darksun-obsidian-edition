@@ -1613,10 +1613,9 @@ multiclass character can't change class, so these kits rule nothing else out.
 #### Choosing a kit
 
 The kit is chosen on the creation panel's **KIT** page, opened with **KITS**,
-the button at the end of the panel's pages: under the psionic disciplines for
-a fighter, gladiator (without weapon specialization), preserver, psionicist or
-thief; under the clerical spheres for a cleric, druid or ranger; on the last
-weapon page for a fighter, gladiator or ranger choosing weapon specs. NO KIT,
+the button at the end of the panel: under the psionic disciplines for a
+fighter, gladiator, preserver, psionicist or thief; under the clerical spheres
+for a cleric, druid or ranger. NO KIT,
 the first row, is what a new character has. As with the clerical spheres, the
 rows not chosen are greyed: click the marked row to take it back, then click
 the kit you want. A few names are shortened to fit the panel (CHAMPION,

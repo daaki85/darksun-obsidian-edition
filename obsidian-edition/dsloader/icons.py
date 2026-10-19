@@ -45,10 +45,35 @@ def decode(chunk: bytes) -> Rows:
     return [list(r) for r in decode_frame(chunk)[2]]
 
 
+def _pack(pixels) -> bytes:
+    """A run's pixels as the game packs them: a byte n (pixels n >> 1 plus one), then for n odd one
+    pixel repeated, for n even that many pixels as they are; up to 128 a piece. A repeat for three
+    alike or more (the game's own pictures are packed so: a window's marble and flat faces half
+    their size or less, the game's memory for them the less)."""
+    out, i, literal = bytearray(), 0, []
+
+    def flush():
+        for k in range(0, len(literal), 128):
+            piece = literal[k:k + 128]
+            out.extend(bytes([(len(piece) - 1) << 1]) + bytes(piece))
+        literal.clear()
+    while i < len(pixels):
+        j = i
+        while j < len(pixels) and pixels[j] == pixels[i] and j - i < 128:
+            j += 1
+        if j - i >= 3:
+            flush()
+            out.extend(bytes([((j - i - 1) << 1) | 1, pixels[i]]))
+        else:
+            literal.extend(pixels[i:j])
+        i = j
+    flush()
+    return bytes(out)
+
+
 def encode(rows: Rows) -> bytes:
     """A one-frame picture chunk, as the game's own: for each row with pixels its y, then its runs
-    (x, a last-run flag, the count, the data's length, the data in literal pieces of up to 128),
-    then FFh."""
+    (x, a last-run flag, the count, the data's length, the data packed: _pack), then FFh."""
     height, width = len(rows), max((len(r) for r in rows), default=0)
     body = bytearray(struct.pack("<HH", width, height))
     for y, row in enumerate(rows):
@@ -64,10 +89,7 @@ def encode(rows: Rows) -> bytes:
         if runs:
             body.append(y)
         for k, (start, pixels) in enumerate(runs):
-            data = bytearray()
-            for i in range(0, len(pixels), 128):
-                piece = pixels[i:i + 128]
-                data += bytes([(len(piece) - 1) << 1]) + bytes(piece)
+            data = _pack(pixels)
             body += bytes([start, 0x80 if k == len(runs) - 1 else 0, len(pixels), len(data)]) + data
     body += b"\xff"
     head_size = 4 + 2 + 4

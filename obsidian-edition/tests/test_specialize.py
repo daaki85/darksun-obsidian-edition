@@ -20,10 +20,9 @@ NO_KIND = (28, 29, 30, 31, 32, 37, 93, 107, 113)
 
 
 class KindTests(unittest.TestCase):
-    def test_sixteen_kinds_four_pages(self):
+    def test_sixteen_kinds(self):
         self.assertEqual(len(specialize.KINDS), 16)
         self.assertEqual(specialize.KINDS[specialize.DEFAULT], "long sword")
-        self.assertEqual([specialize.page_of(k) for k in range(16)], [0] * 4 + [1] * 4 + [2] * 4 + [3] * 4)
 
     def test_every_weapon_sorted(self):
         """Every weapon type is a kind, or one of the few that are none; every kind has a type."""
@@ -123,31 +122,16 @@ class SpecializationsTests(unittest.TestCase):
         self.assertEqual(self.gd(sheet((), classes=(9, 0, 0))).specializations(0), [])
 
 
-class PageLabelTests(unittest.TestCase):
-    def test_short_forms(self):
-        from dsloader import weaponpages
-        labels = [weaponpages.page_text(k) for k in range(16)]
-        self.assertEqual(labels[:4], ["LNG SWORD", "CLUB", "DAGGER", "SHRT SWORD"])
-        self.assertEqual(labels[8], "QTR STAFF")
-        self.assertEqual(labels[15], "STF SLING")
-        self.assertTrue(all(len(t) <= 10 for t in labels))
-
-    def test_ids_clear_of_the_game(self):
-        """The game's own buttons and pictures run to 833h (the dialogue window's replies are
-        81Ch-821h): the pages' come after."""
-        from dsloader import weaponpages
-        ids = [weaponpages.ROW_FIRST + k for k in range(16)] + [weaponpages.MORE, weaponpages.BACK, weaponpages.VIEW]
-        self.assertTrue(all(0x834 <= i < 0xBB8 for i in ids))
-
+class PickerTests(unittest.TestCase):
     def test_picker_clear_of_the_game(self):
-        """The level-up window's rows come after the pages', and its id is none of the game's
-        windows (3000-3013, 3020, 3024...) nor the panel's."""
-        from dsloader import weaponpages
+        """The weapon window's slots come after the game's own buttons and pictures (to 833h; the
+        dialogue window's replies are 81Ch-821h), and its id is none of the game's windows
+        (3000-3013, 3020, 3024...) nor the kit panel's."""
+        from dsloader import kitpages, weaponpages
         rows = [weaponpages.PICK_FIRST + k for k in range(16)]
-        pages = [weaponpages.ROW_FIRST + k for k in range(16)] + [weaponpages.MORE, weaponpages.BACK, weaponpages.VIEW]
-        self.assertTrue(all(0x834 <= i < 0xBB8 and i not in pages for i in rows))
-        self.assertNotIn(weaponpages.PICKER, set(range(3000, 3014)) | {3020, 3024} | set(weaponpages.PAGES)
-                         | {weaponpages.WARRIOR_DISCIPLINES, weaponpages.WARRIOR_SPHERES})
+        self.assertTrue(all(0x834 <= i < 0xBB8 and i != kitpages.KIT_BACK for i in rows))
+        self.assertNotIn(weaponpages.PICKER, set(range(3000, 3014)) | {3020, 3024, kitpages.KIT_DISCIPLINES,
+                                                                       kitpages.KIT_SPHERES})
         # (six slots across, three rows, inside the 214 by 156 window and above its title)
         w = weaponpages
         left = (w.PICK_WIDTH - w.PICK_COLUMNS * w.PICK_PITCH + (w.PICK_PITCH - w.PICK_SLOT)) // 2

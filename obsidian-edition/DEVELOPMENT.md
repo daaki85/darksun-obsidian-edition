@@ -689,7 +689,8 @@ hand's rules and when a weapon spec is being chosen (`KF_SPEC`).
 
 A New character's starting weapons, armour and shields its classes can't use
 (`restrict.usable`) are taken out of its lists (`weaponchoice.class_gear`, with
-the rule on; `ring.unlink` with `empty`, as a list of a character's may be left
+the rule on, after `finish_new` has made the starting long sword its weapon
+spec's weapon, so a fighter/psionicist's becomes its club rather than going; `ring.unlink` with `empty`, as a list of a character's may be left
 empty): the game gives a character of several classes one class's gear (the
 first of fighter or ranger, cleric, thief, psionicist, preserver and druid:
 seen in play, every two-class combination as a half-elf) and puts what it
@@ -975,10 +976,8 @@ where the game makes a weapon attack (`INT D1h`, `INT D0h`), on the DAM lines
 (`INT CFh`, `INT CEh`), calls the game's psionic pop-up in weapon mode after
 the creation screen's DONE (`CR_WEAPONS`, below) and at a level gained
 (`INT C2h`, then `INT C1h` to `INT BCh` in the pop-up, window 3021), and prints
-the Effects screen's lines (`INT BBh`). (The creation panel's weapon pages,
-windows 3014 to 3019 and 3025, are no longer opened: `WP_IDS` gives a warrior
-the game's windows or the kit windows. Their code and windows are still in the
-helper and the Loader's `RESOURCE.GFF`.)
+the Effects screen's lines (`INT BBh`). (The creation panel had weapon pages
+up to 2.4.0; the weapon window after DONE took their place.)
 
 At creation, `CR_WEAPONS` (a site of `INT 98h`, new: `pop cx / push si / nop`,
 3 bytes at 666DFh in DONE, 65480h) asks the new member SI for the weapon specs
@@ -986,8 +985,12 @@ it is due (`LV_CHECK`, the pop-up's far address from the stub DUAL's kit menu
 uses, `DK_PSI`), after clearing whatever the kit page put in. It runs after
 DONE has closed the screen's windows (6659Eh to 66611h) and let go of their
 pictures: before that, the weapon window, bigger than the psionicists', fails to
-open ("Failed to open window", the game's fatal error, exit code 1), while the
-psionicists' own still fits. `LV_DUE` gives a Myrmidon being made two
+open ("Failed to open window", the game's fatal error, exit code 1, from its
+window opening at 62182h), while the psionicists' own still fits. The game's
+memory for it is the window's pictures: packed with repeats (`icons._pack`,
+as the game packs its own: a byte n, odd for one pixel n >> 1 + 1 times), its
+marble and sixteen slots come to 41 KB rather than 93 KB, and it opens for a
+fourth character made after CHOOSE A SPELL too. `LV_DUE` gives a Myrmidon being made two
 (`LV_CREATING`). The way back is a frame the overlay manager can patch, as for
 `PROBE_CR_SPELLS`, whose CHOOSE A SPELL comes first. While the window is up,
 `LV_CREATING` (the header's +361) is 1, and the Loader leaves the New
@@ -1093,8 +1096,7 @@ made, for the probes that open them (`PROBE_WP_DISC_WIN`,
 `PROBE_WP_SPHERE_WIN`, and `PROBE_WP_CLASS` when the classes change). The kit
 page itself is a window for each class (3026 to 3033, by the creation screen's
 class numbers), its rows NO KIT and the class's three kits (buttons `888h`,
-and `870h` + 3 × (class − 1) + kit − 1), its button VIEW PSIONICS (`851h`, the
-weapon pages' as they were) back to the disciplines. As the weapon pages were, it is kept at
+and `870h` + 3 × (class − 1) + kit − 1), its button VIEW PSIONICS (`851h`, `kitpages.KIT_BACK`) back to the disciplines. It is kept at
 `DS:EA6h` with the spheres' own routine answering its buttons, so
 `PROBE_WP_SPHERE_CLICK` gets its clicks and `PROBE_WP_SHOWN` lets the game
 close it when another class is clicked. `KIT_ROW` puts the kit in the creation
@@ -1119,7 +1121,7 @@ is held to 88 (`ROW_WIDTH`, its mark's room in), clear of it: ARENA CHAMPION,
 SWASHBUCKLER, ELEMENTALIST, GROVE WARDEN, BATTLE MAGE, MIND BENDER and MIND
 WARRIOR are shortened (CHAMPION, SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE,
 M-BENDER, M-WARRIOR), the last two as the game's P-KINESIS. Each row's button
-(the weapon pages' too) is a copy of the game's AIR row's, which is 33 pixels
+is a copy of the game's AIR row's, which is 33 pixels
 wide, made as wide as its label (`weaponpages.row_button`): at 33, a click on
 the right of a longer name did nothing.
 
@@ -1340,7 +1342,7 @@ the AC and damage. The overlay's segment is the INT's return.
 ([In the README](README.md#fuller-starting-gear).)
 
 `dsloader/startgear.py`'s `fill`, from the dice log after
-`weaponchoice.class_gear`, `finish_new` and `kit_gear` (the `starting_gear`
+`weaponchoice.finish_new`, `class_gear` and `kit_gear` (the `starting_gear`
 switch, a Python-only one as `pickpockets` is: `launch.SWITCH_DEFAULTS`,
 `DiceLog.starting_gear`), for each party member whose status is New and who
 has items (the game gives a character its gear when DONE is clicked; before

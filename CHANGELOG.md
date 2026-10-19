@@ -56,7 +56,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   game's "Failed to open window", exit code 1), with the header's +361 up while
   it asks so the Loader waits (`DiceLog._weapons_asked`);
   `weaponchoice.kinds_for`'s defaults; `kitpages.panel_windows`. README,
-  "Choosing at creation"; the guide.
+  "Choosing at creation"; the guide. The weapon pages' code is gone from
+  DSCLOG (about 1 KB) and the Loader (windows 3014-3019 and 3025; the kit
+  pages keep VIEW PSIONICS, `kitpages.KIT_BACK`). The Loader's pictures are
+  packed with repeats as the game's own are (`icons._pack`): the weapon
+  window's 93 KB came to 41 KB, and it opens for a fourth character after
+  CHOOSE A SPELL, where it failed with "Failed to open window". A new
+  character's weapon is made before the class check leaves gear behind, so
+  a fighter/psionicist's long sword becomes its club, not left behind.
 - **Claws cut**: the game makes every unarmed attack crushing, so a creature
   crushing weapons can't hurt (the mastyrials) took nothing from a
   thri-kreen's claws. A thri-kreen in the party now fights with edged claws,

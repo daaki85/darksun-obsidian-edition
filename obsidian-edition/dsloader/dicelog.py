@@ -1037,10 +1037,10 @@ class DiceLog:
                 return out  # no names for them yet: none given
             still = self._items_still()
             if still:  # (the item lists changed only while the game leaves them be)
+                if self.rules & game.RULE_SPECIALIZE and not self._weapons_asked():  # (new characters' weapon kinds and starting weapon:
+                    out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
                 if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
                     out += weaponchoice.class_gear(self.game)
-                if self.rules & game.RULE_SPECIALIZE and not self._weapons_asked():  # (new characters' weapon kinds and starting weapon)
-                    out += weaponchoice.finish_new(self.game)
                 if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
                     out += weaponchoice.kit_gear(self.game)
                 if self.starting_gear:  # (new characters' starting gear filled out)

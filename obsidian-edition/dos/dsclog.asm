@@ -4284,52 +4284,38 @@ armour_worn:
         clc
         ret
 
-; Weapon pages in the character creation panel (RULE_SPECIALIZE; dsloader/weaponpages.py, which
-; puts the windows and their pictures in the Loader's RESOURCE.GFF). The panel shows the psionic
-; disciplines' window (3012, DS:EA2h its window) or the clerical spheres' (3013, DS:EA6h), which
-; the game swaps through its routines at DSUN.EXE 640E4h (to the spheres) and 641B9h (back). For a
-; fighter, gladiator or ranger it gets windows with WEAPON SPEC for its button (3018 for the
-; disciplines if it has no sphere, 3019 for the spheres), and that opens the four weapon pages
-; (3014-3017; kept at DS:EA6h, as the spheres' window is, so that the game closes it as one),
-; each four kinds (specialize.KINDS), MORE SPECS to the next, the last's VIEW PSIONICS back.
-; The kind marked is the creation sheet's (DS:119Ch) first SPEC_SLOTS byte, which goes with the
-; sheet when DONE is pressed (the Loader puts in the long sword for a warrior who marks none).
+; The character creation panel (kits.py, kitpages.py, which puts the kit windows and their
+; pictures in the Loader's RESOURCE.GFF). The panel shows the psionic disciplines' window (3012,
+; DS:EA2h its window) or the clerical spheres' (3013, DS:EA6h), which the game swaps through its
+; routines at DSUN.EXE 640E4h (to the spheres) and 641B9h (back). (A warrior's weapon specs are
+; picked after DONE, on the weapon window: CR_WEAPONS.)
 ; PROBE_WP_DISC_WIN: INT replaces "push 0BC4h" (3 bytes: INT + NOP; 67BFBh), the disciplines'
-; window being opened: pushes 3018's id instead for a warrior with no sphere.
+; window being opened: pushes 3022's id instead (KITS for its button) for a class with kits.
 ; PROBE_WP_SPHERE_WIN: INT replaces "push 0BC5h" (6413Bh), the spheres' window being opened:
-; 3019's id instead for a warrior.
+; 3023's id instead for a class with kits.
 ; PROBE_WP_SHOWN: INT replaces "cmp ax,8" (3 bytes: INT + NOP; 6337Ah) where a new class has been
 ; picked and the game asks whether the spheres' window is up (AX 8 if it is, from the routine it
-; has just called, 118:C36h, with the window's id) to close it: 8 too if a warrior's spheres or a
-; weapon page is up. RETF 2 keeps the compare's flags.
+; has just called, 118:C36h, with the window's id) to close it: 8 too if the kits' spheres or a
+; kit page is up. RETF 2 keeps the compare's flags.
 ; PROBE_WP_DISC_CLICK, PROBE_WP_SPHERE_CLICK: INT replaces "mov bx,[bp+8]" (3 bytes: INT + NOP;
-; 64311h, 642B0h) in those windows' click routines, [BP+8] the button: WEAPON SPEC opens the
-; first page, and the routine goes on at its end (6433Fh, 642E2h: the redraw). Both read
-; the far addresses of the game's window routines from the calls in their own overlay, as the
-; loader has fixed them (WP_CALLS), for WP_HANDLER to call.
-WP_DISC_ID   equ 0xBC4              ; (windows' ids: 3012, 3013, 3014-3017, 3018, 3019)
+; 64311h, 642B0h) in those windows' click routines, [BP+8] the button: KITS opens the kit page,
+; and the routine goes on at its end (6433Fh, 642E2h: the redraw). Both read the far addresses
+; of the game's window routines from the calls in their own overlay, as the loader has fixed them
+; (WP_CALLS), for WP_HANDLER to call.
+WP_DISC_ID   equ 0xBC4              ; (windows' ids: 3012, 3013)
 WP_SPHERE_ID equ 0xBC5
-WP_PAGE_ID   equ 0xBC6
-WP_WDISC_ID  equ 0xBCA
-WP_WSPHERE_ID equ 0xBCB
-WP_ROW       equ 0x840              ; (buttons: the kinds' rows, MORE SPECS, VIEW PSIONICS, WEAPON SPEC)
-WP_MORE      equ 0x850
-WP_BACK      equ 0x851
-WP_VIEW      equ 0x852
-WP_PAGES     equ 4
+WP_BACK      equ 0x851              ; (a kit page's VIEW PSIONICS)
 SPHERE_TOGGLE equ 0x7FF             ; (the spheres' VIEW PSIONICS)
 ; Kits (RULE_HI_KITS; kitpages.py): one class's three, or none, chosen on a page of their own
-; (3026-3033, by class, kept at DS:EA6h as the weapon pages are), its rows NO KIT and the
-; class's kits (KIT_ROW + 3 * (class - 1) + kit - 1), its button VIEW PSIONICS back. KITS opens it:
-; the button of the disciplines' window (3022) for a class with no sphere, of the spheres' (3023)
-; for a cleric's, druid's or ranger's, of the fourth weapon page (3025) for a warrior choosing
-; weapons. The kit marked is the creation sheet's KIT_BYTE (0 none, 1-3), which goes with the
+; (3026-3033, by class, kept at DS:EA6h as the spheres' window is, so that the game closes it as
+; one), its rows NO KIT and the class's kits (KIT_ROW + 3 * (class - 1) + kit - 1), its button
+; VIEW PSIONICS back. KITS opens it: the button of the disciplines' window (3022) for a class with
+; no sphere, of the spheres' (3023) for a cleric's, druid's or ranger's. The kit marked is the creation sheet's KIT_BYTE (0 none, 1-3), which goes with the
 ; sheet when DONE is pressed. The game keeps that sheet from one character to
 ; the next: the disciplines' window opened other than on the way back to it (KIT_KEEP), for a
 ; new character or another class, puts the kit back to none.
 KIT_DISC_ID  equ 3022
 KIT_SPHERE_ID equ 3023
-KIT_PAGE4_ID equ 3025
 KIT_WIN_ID   equ 3026
 KIT_ROW      equ 0x870
 KIT_NONE     equ 0x888
@@ -4394,6 +4380,7 @@ CR_DRUID     equ 2
 CR_FIGHTER   equ 3
 CR_GLADIATOR equ 4
 CR_RANGER    equ 7
+THRI_KREEN_RACE equ 8
 ; WP_CALLS: the routines' far calls (9Ah) in the overlay, back from the click probes' return
 ; (the overlay's 642B3h and 64314h; the calls at 64127h close, 6413Eh open, 6416Fh print,
 ; 6417Dh set the text colour, 641AFh the panel's help line, 6422Fh set a button, 642E2h redraw)
@@ -4433,13 +4420,12 @@ probe_wp_disc_win:
         call wp_ids
         mov [bp + 8], ax
         pop dx
-        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit, and
-        jne .keep                   ;   no weapon spec until one is chosen: WP_MARKS's default)
+        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit)
+        jne .keep
         push es
         push bx
         les bx, [WP_CREATION]
         mov byte [es:bx + KIT_BYTE], 0
-        mov dword [es:bx + SPEC_SLOTS], 0
         pop bx
         pop es
 .keep:  mov byte [cs:kit_keep], 0
@@ -4593,84 +4579,14 @@ multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1
 km_rows     db 4                ; (KIT_MARKS: the page's rows)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
-; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's own windows wanted).
+; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's kit windows, the DAM
+; line's and the Effects screen's own lines wanted).
 ; All registers kept.
 wp_rules:
         test word [cs:rules], RULE_SPECIALIZE
         jnz .ret
         test word [cs:rules_hi], RULE_HI_KITS
 .ret:   ret
-
-; WP_ALLOWED: AX the kinds (bit 0 the long sword) the sheet being made can choose: those whose
-; plain weapon (WP_PLAIN) the game's class lists and CLASS_FORBIDS let it use, its classes as the
-; sheet numbers them (a cleric's or ranger's by the sphere marked). restrict.allowed_kinds.
-wp_allowed:
-        push bx
-        push cx
-        push dx
-        push si
-        push di
-        push es
-        les bx, [WP_CREATION]
-        push ds
-        push cs
-        pop ds
-        mov di, wp_sheet
-        mov cx, 0x47 / 2 + 1
-        xor ax, ax
-.zero:  mov [di], ax
-        add di, 2
-        loop .zero
-        pop ds
-        mov al, [es:bx + 0x18]
-        mov [cs:wp_sheet + 0x18], al
-        xor si, si
-        xor dx, dx              ; DX the class flags
-.class: mov al, [es:bx + si + 0x24]
-        mov [cs:wp_sheet + si + 0x24], al
-        movzx di, byte [es:bx + si + 0x21]
-        cmp di, 8
-        ja .next
-        shl di, 2
-        mov al, [cs:di + wp_class_map]
-        mov cx, [cs:di + wp_class_map + 2]
-        cmp byte [cs:di + wp_class_map + 1], 0  ; (a sphere to add: 0-3 by the mark)
-        je .put
-        mov ah, 0x80
-.sphere:
-        test [WP_SPHERE_MASK], ah
-        jnz .put
-        inc al
-        shl cx, 1
-        shr ah, 1
-        cmp ah, 0x08
-        ja .sphere
-        sub al, 4               ; (none marked: the first)
-        shr cx, 4
-.put:   mov [cs:wp_sheet + si + 0x21], al
-        cmp byte [cs:di + wp_class_map + 1], 2  ; (a ranger's sphere doesn't change its flag)
-        jne .flag
-        mov cx, 0x200
-.flag:  or dx, cx
-.next:  inc si
-        cmp si, 3
-        jb .class
-        mov [cs:wp_sheet + 0x12], dx
-        mov al, [es:bx + KIT_BYTE]          ; (its kit: what it keeps the sheet from)
-        mov [cs:wp_sheet + KIT_BYTE], al
-        mov al, [es:bx + SPHERE2]           ; (an Elementalist's second sphere)
-        mov [cs:wp_sheet + SPHERE2], al
-        push cs
-        pop es
-        mov bx, wp_sheet
-        call kinds_allowed
-        pop es
-        pop di
-        pop si
-        pop dx
-        pop cx
-        pop bx
-        ret
 
 ; KINDS_ALLOWED: AX the kinds (bit 0 the long sword) the character whose sheet is at ES:BX can
 ; choose: those with an item type (KIND_OF_TYPE) the game's class lists and CLASS_FORBIDS let it
@@ -8786,63 +8702,7 @@ ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k
 .k14    db '  SLING', 0
 .k15    db '  STAFF SLING', 0
 
-; By class as the creation screen numbers it (0-8): the sheet's number (the first of four, by
-; sphere), 1 if a sphere is added (2 for a ranger, whose flag is one), the class's flag
-wp_class_map db 0, 0
-             dw 0
-             db 1, 1
-             dw 0x01            ; cleric (air, earth, fire, water: flags 1, 2, 4, 8)
-             db 5, 0
-             dw 0x10            ; druid
-             db 9, 0
-             dw 0x20            ; fighter
-             db 10, 0
-             dw 0x40            ; gladiator
-             db 11, 0
-             dw 0x80            ; preserver
-             db 12, 0
-             dw 0x100           ; psionicist
-             db 13, 2
-             dw 0x200           ; ranger
-             db 17, 0
-             dw 0x400           ; thief
 wp_plain   dw 81, 18, 17, 115, 20, 22, 2, 112, 3, 19, 44, 21, 48, 1, 64, 0   ; (weaponchoice.PLAIN's types, by kind)
-wp_ok      dw 0
-wp_sheet   times 0x48 db 0
-
-; WP_GLADIATOR: ZF clear if the sheet being made (ES:BX) is a gladiator's (two kinds to choose).
-; All registers kept.
-wp_gladiator:
-        cmp byte [es:bx + 0x21], CR_GLADIATOR
-        je .yes
-        cmp byte [es:bx + 0x22], CR_GLADIATOR
-        je .yes
-        cmp byte [es:bx + 0x23], CR_GLADIATOR
-        je .yes
-        cmp al, al              ; (ZF set)
-        ret
-.yes:   push ax
-        or al, 1                ; (ZF clear)
-        pop ax
-        ret
-
-; WP_TWO: ZF clear if the sheet being made (ES:BX) chooses two kinds: a gladiator, or a Myrmidon
-; (a fighter of one class, its kit the first; kits.py). All registers kept.
-wp_two:
-        call wp_gladiator
-        jnz .ret
-        push ax
-        call kit_class
-        cmp al, CR_FIGHTER
-        jne .no
-        cmp byte [es:bx + KIT_BYTE], 1
-        jne .no
-        or al, 1                ; (ZF clear)
-        pop ax
-        ret
-.no:    cmp al, al              ; (ZF set)
-        pop ax
-.ret:   ret
 
 ; WP_CLASSES: AL 1 if the sheet being made has a fighter, gladiator or ranger class, AH 1 if a
 ; cleric, druid or ranger one (a sphere). Others kept.
@@ -8928,15 +8788,15 @@ probe_wp_shown:
 
 ; PROBE_WP_CLASS: INT replaces "mov cx,1" (3 bytes: INT + NOP; 66406h) at the start of the routine
 ; that runs after each click on a class (it puts DONE in or out of use): the disciplines' window
-; up is opened again if it is the other one for the class now (WEAPON SPEC or VIEW SPHERES); a
-; weapon page up is marked again for the class now (a gladiator's two), or, for one with no
-; weapon to choose, goes back to the disciplines.
+; up is opened again if it is the other one for the class now (KITS or VIEW SPHERES); a kit page
+; up is marked again for the class now, the class's own opened for another, or, for one with no
+; kits, goes back to the disciplines.
 probe_wp_class:
         mov cx, 1
         call wp_rules
         jz .ret
-        push eax                ; (the classes changed: their defaults, until a kind is clicked;
-        push es                 ;   the routine runs after every click on the screen)
+        push eax                ; (the classes changed: no kit; the routine runs after every click
+        push es                 ;   on the screen)
         push bx
         les bx, [WP_CREATION]
         mov eax, [es:bx + 0x21]
@@ -8944,10 +8804,8 @@ probe_wp_class:
         cmp eax, [cs:wp_classes_seen]
         je .same
         mov [cs:wp_classes_seen], eax
-        mov byte [cs:wp_touched], 0
         mov byte [es:bx + KIT_BYTE], 0
-        mov dword [es:bx + SPEC_SLOTS], 0  ; (the weapon specs too: the game keeps the sheet from one
-.same:  pop bx                          ;   character to the next, so the last one's were kept)
+.same:  pop bx
         pop es
         pop eax
         push ax
@@ -8980,7 +8838,7 @@ probe_wp_class:
         mov word [cs:wp_far], WP_TO_DISC
         call far [cs:wp_far]
         jmp .done
-.page:  mov ax, [WP_SPHERE]     ; a weapon page up: the window's id (+8)
+.page:  mov ax, [WP_SPHERE]     ; the spheres or a kit page up: the window's id (+8)
         or ax, [WP_SPHERE + 2]
         jz .out
         les bx, [WP_SPHERE]
@@ -8991,41 +8849,8 @@ probe_wp_class:
         je .spheres
         sub ax, KIT_WIN_ID
         cmp ax, KIT_GROUPS
-        jb .kit
-        add ax, KIT_WIN_ID - WP_PAGE_ID
-        cmp ax, KIT_PAGE4_ID - WP_PAGE_ID
-        jne .weapons
-        mov al, WP_PAGES - 1    ; (the last page, its button KITS)
-.weapons:
-        cmp ax, WP_PAGES
         jae .out
-        mov [cs:wp_page], al
-        sti
-        pushad
-        push es
-        call wp_classes
-        or al, al
-        jz .back
-        cmp byte [cs:wp_page], WP_PAGES - 1     ; the last page: its button KITS only while the
-        jne .marks                              ;   character can take a kit (opened again if not)
-        call kit_class
-        les bx, [WP_SPHERE]
-        mov dx, [es:bx + 8]
-        or al, al
-        jz .no_kit
-        cmp dx, KIT_PAGE4_ID
-        je .marks
-        jmp .reopen
-.no_kit:
-        cmp dx, KIT_PAGE4_ID
-        jne .marks
-.reopen:
-        mov byte [cs:wp_from], 2
-        mov al, WP_PAGES - 1
-        call wp_open
-        jmp .done
-.marks: call wp_marks
-        jmp .done
+        jmp .kit
 .back:  mov ax, WP_BACK
         call wp_page_button
         jmp .done
@@ -9062,7 +8887,7 @@ probe_wp_class:
 ; character its default class. The routine empties the classes first, and the panel is opened
 ; again for a character of no class (the game's disciplines, VIEW SPHERES), then the class put
 ; in with no click to have the panel follow it: the disciplines' window is opened again here if
-; it isn't the one for the class now (WEAPON SPEC, KITS), as after a click on a class.
+; it isn't the one for the class now (KITS), as after a click on a class.
 probe_race_panel:
         pop word [cs:rp_ip]
         pop word [cs:rp_cs]
@@ -9133,13 +8958,11 @@ wp_click:
         jz .game
         call wp_harvest
         mov ax, [cs:wp_button]
-        cmp ax, WP_VIEW
-        je .view
         cmp ax, KIT_VIEW
         je .kits
-        cmp byte [cs:wp_from], 1    ; (a weapon or kit page's button, in the spheres' routine)
+        cmp byte [cs:wp_from], 1    ; (a kit page's button, in the spheres' routine)
         jne .game
-        cmp ax, WP_ROW
+        cmp ax, WP_BACK
         jb .sphere
         cmp ax, MULTI_ROW + 3 * (KIT_GROUPS - MULTI_FIRST + 1)
         jae .game               ; (the multiclass groups' rows come after KITS: theirs too)
@@ -9150,19 +8973,11 @@ wp_click:
         pop es
         popad
         jmp .end
-.view:  sti
-        pushad
-        push es
-        xor al, al
-        call wp_open
-        pop es
-        popad
-        jmp .end
-.kits:  sti                     ; KITS: from the disciplines, the spheres or the last weapon page
+.kits:  sti                     ; KITS: from the disciplines or the spheres
         pushad
         push es
         call kit_class          ; (no kit for the character now, as after another class is added:
-        or al, al               ;   back from the spheres or a weapon page, as VIEW PSIONICS goes)
+        or al, al               ;   back from the spheres, as VIEW PSIONICS goes)
         jnz .kit_class
         cmp byte [cs:wp_from], 0
         je .kit_none
@@ -9176,13 +8991,6 @@ wp_click:
         popad
         jmp .sphere
 .kit_class:
-        cmp byte [cs:wp_from], 0
-        je .kit_open
-        les bx, [WP_SPHERE]
-        cmp word [es:bx + 8], KIT_SPHERE_ID
-        je .kit_open
-        mov byte [cs:wp_from], 2
-.kit_open:
         call kit_open
         pop es
         popad
@@ -9257,26 +9065,7 @@ wp_harvest:
         pop ax
         ret
 
-; WP_OPEN: page AL of the weapons in the panel, after closing what it shows (WP_FROM: 0 the
-; disciplines, 1 the spheres, 2 a weapon or kit page), as 640E4h opens the spheres. DS = the
-; game's.
-wp_open:
-        mov [cs:wp_page], al
-        call wp_close_panel
-        movzx si, byte [cs:wp_page]
-        lea ax, [si + WP_PAGE_ID]
-        imul si, si, WP_TITLE_SIZE
-        add si, wp_titles
-        cmp ax, WP_PAGE_ID + WP_PAGES - 1
-        jne .show
-        push ax
-        call kit_class
-        or al, al
-        pop ax
-        jz .show
-        mov ax, KIT_PAGE4_ID    ; (the last, its button KITS)
-.show:  call wp_show
-        call wp_marks
+; WP_HELP_LINE: the panel's help line, as the game puts it under the spheres
 wp_help_line:
         push dword 0x11771
         call far [cs:wp_help]
@@ -9284,7 +9073,8 @@ wp_help_line:
         ret
 
 ; KIT_OPEN: the kit page of the class being made in the panel, after closing what it shows
-; (WP_FROM as for WP_OPEN). DS = the game's.
+; (WP_FROM: 0 the disciplines, 1 the spheres, 2 a kit page), as 640E4h opens the spheres. DS =
+; the game's.
 kit_open:
         call wp_close_panel
         call kit_class
@@ -9380,104 +9170,6 @@ wp_marked:
         pop bp
         ret
 
-CHATKCHA_KIND equ 12             ; (specialize.KINDS' number, less 1 than SPEC_SLOTS')
-THRI_KREEN_RACE equ 8
-; WP_MARKS: the page's rows, the kinds marked (the creation sheet's: a gladiator's two, anyone
-; else's one; none yet: the long sword (a thri-kreen's the chatkcha, if allowed), and a gladiator's club, put in) chosen and the rest not,
-; as 63FEEh marks the spheres.
-wp_marks:
-        push es
-        push bx
-        call wp_allowed
-        mov [cs:wp_ok], ax
-        les bx, [WP_CREATION]
-        movzx cx, byte [es:bx + SPEC_SLOTS]     ; none yet, or one its classes don't allow: the
-        jcxz .none                              ; long sword, or else the first allowed (unless
-        dec cx                                  ; the player has taken it back: WP_TOUCHED)
-        bt ax, cx
-        jc .first
-        mov word [es:bx + SPEC_SLOTS], 0
-.none:  cmp byte [cs:wp_touched], 0
-        jne .first
-        mov cx, CHATKCHA_KIND           ; (a thri-kreen: the chatkcha, if its classes allow it)
-        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
-        jne .sword
-        bt ax, cx
-        jc .put
-.sword: xor cx, cx
-        bt ax, 0
-        jc .put
-        bsf cx, ax
-        jnz .put
-        mov cx, -1                              ; (none at all)
-.put:   inc cx
-        mov [es:bx + SPEC_SLOTS], cl
-.first: mov word [es:bx + SPEC_SLOTS + 2], 0
-        call wp_two
-        jz .one
-        call wp_gladiator                       ; (a Myrmidon's second: none put in)
-        jz .marked
-        cmp byte [es:bx + SPEC_SLOTS + 1], 0
-        jne .marked
-        cmp byte [cs:wp_touched], 0
-        jne .marked
-        mov al, 2                               ; (the club; or the long sword, if the club is first)
-        cmp byte [es:bx + SPEC_SLOTS], al
-        jne .second
-        dec al
-.second:
-        mov [es:bx + SPEC_SLOTS + 1], al
-        jmp .marked
-.one:   mov byte [es:bx + SPEC_SLOTS + 1], 0
-.marked:
-        mov ax, [es:bx + SPEC_SLOTS]
-        mov [cs:wp_kind], ax
-        mov byte [cs:wp_full], 0                ; all its picks made (a gladiator's two, another's
-        or al, al                               ;   one): the other kinds out of use until one is
-        jz .count                               ;   taken back, as the game's classes and disciplines
-        call wp_two
-        jz .full
-        or ah, ah
-        jz .count
-.full:  mov byte [cs:wp_full], 1
-.count:
-        movzx bx, byte [cs:wp_page]
-        shl bx, 2               ; (four to a page)
-        mov cx, 4
-.row:   inc bx                  ; (the kind + 1)
-        lea ax, [bx + WP_ROW - 1]
-        lea dx, [bx - 1]
-        bt [cs:wp_ok], dx
-        jc .open
-        push 3                  ; a kind its other class doesn't allow: out of use
-        call wp_button_op
-        push 1
-        call wp_button_op
-        push 0
-        jmp .next
-.open:  cmp bl, [cs:wp_kind]
-        je .chosen
-        cmp bl, [cs:wp_kind + 1]
-        je .chosen
-        push 3                  ; one not chosen: in use, or greyed once all are picked
-        call wp_button_op
-        movzx dx, byte [cs:wp_full]
-        push dx
-        call wp_button_op
-        push 0
-        jmp .next
-.chosen:
-        push 0
-        call wp_button_op
-        push 2
-        call wp_button_op
-        push 1
-.next:  call wp_mark
-        loop .row
-        pop bx
-        pop es
-        ret
-
 ; WP_BUTTON_OP: the game's 140:71Ah on button AX of the page (DS:EA6h), with the operation pushed
 ; (0 in use, 1 out of use, 2 marked, 3 not marked); takes it off the stack. AX, BX, CX kept.
 wp_button_op:
@@ -9519,51 +9211,13 @@ wp_mark:
         pop bp
         ret 2
 
-; WP_PAGE_BUTTON: button AX of a weapon page, clicked: a kind's row marked (on the creation sheet),
-; MORE SPECS the next page, VIEW PSIONICS back to the disciplines (641B9h). DS = the game's.
+; WP_PAGE_BUTTON: button AX of a kit page, clicked: a kit's row (KIT_ROW), VIEW PSIONICS back to
+; the disciplines (641B9h). DS = the game's.
 wp_page_button:
         cmp ax, KIT_ROW
         jae kit_row
-        cmp ax, WP_MORE
-        je .more
         cmp ax, WP_BACK
-        je .back
-        sub ax, WP_ROW
-        cmp ax, 16
-        jae .ret
-        bt [cs:wp_ok], ax       ; (one its classes don't allow: nothing)
-        jnc .ret
-        inc ax
-        mov byte [cs:wp_touched], 1
-        les bx, [WP_CREATION]
-        cmp al, [es:bx + SPEC_SLOTS]            ; a kind chosen: taken back (a gladiator's second
-        je .first_off                           ;   moving up), as the game's classes are
-        cmp al, [es:bx + SPEC_SLOTS + 1]
-        je .second_off
-        cmp byte [es:bx + SPEC_SLOTS], 0        ; another: chosen, where a pick is free
-        je .put_first
-        call wp_two
-        jz .ret
-        cmp byte [es:bx + SPEC_SLOTS + 1], 0
         jne .ret
-        mov [es:bx + SPEC_SLOTS + 1], al
-        jmp wp_marks
-.put_first:
-        mov [es:bx + SPEC_SLOTS], al
-        jmp wp_marks
-.first_off:
-        mov al, [es:bx + SPEC_SLOTS + 1]
-        mov [es:bx + SPEC_SLOTS], al
-.second_off:
-        mov byte [es:bx + SPEC_SLOTS + 1], 0
-        jmp wp_marks
-.more:  mov byte [cs:wp_from], 2
-        mov al, [cs:wp_page]
-        inc al
-        cmp al, WP_PAGES
-        jb .open
-        xor al, al
-.open:  jmp wp_open
 .back:  push dword [WP_SPHERE]
         call far [cs:wp_close]
         add sp, 4
@@ -9609,36 +9263,8 @@ kit_row:
         mov [es:bx + KIT_BYTE], dl
         call kit_made
         call kit_rolls
-        call wp_allowed         ; (a Spellarcher, the bow its only kind: its weapon spec the bow,
-        cmp ax, 1 << (BOW_KIND - 1) ;   whatever was chosen)
-        jne .dagger
-        mov byte [es:bx + SPEC_SLOTS], BOW_KIND
-.dagger:                        ; (a Ghetto Fighter's or Poisoner's the dagger, a Battle Dancer's
-        cmp byte [cs:wp_touched], 0 ;   the long sword, if the player left the weapon page's
-        jne .two                ;   default: kits.default_kind)
-        push cx
-        mov cx, ax              ; (the kinds its classes and kit allow)
-        call kit_made
-        mov ah, DAGGER_KIND
-        cmp al, KIT_GHETTO
-        je .kind
-        cmp al, KIT_POISONER
-        je .kind
-        mov ah, 0               ; (the long sword)
-        cmp al, KIT_BATTLE_DANCER
-        jne .kept
-.kind:  movzx ax, ah
-        bt cx, ax
-        jnc .kept
-        inc al
-        mov [es:bx + SPEC_SLOTS], al
-.kept:  mov ax, cx
-        pop cx
-.two:   call wp_two             ; (no Myrmidon now: its second kind gone)
-        jnz kit_marks
-        mov byte [es:bx + SPEC_SLOTS + 1], 0
 ; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits, or a multiclass group's one
-; or two) marked as the creation sheet's kit, the rest not, as WP_MARKS marks a weapon page's
+; or two) marked as the creation sheet's kit, the rest not, as 63FEEh marks the spheres
 kit_marks:
         push es
         push bx
@@ -10129,23 +9755,13 @@ el_caster:
         ret
 kit_title  db 'KITS', 0
 kit_keep   db 0                 ; 1 while the panel goes back to the disciplines (the kit kept)
-WP_TITLE_SIZE equ 16
-wp_titles  db 'WEAPONS 1 OF 4', 0, 0
-           db 'WEAPONS 2 OF 4', 0, 0
-           db 'WEAPONS 3 OF 4', 0, 0
-           db 'WEAPONS 4 OF 4', 0, 0
-wp_page    db 0
 wp_from    db 0
-wp_kind    db 0, 0
-wp_full    db 0
-wp_touched db 0                 ; 1 once the player has clicked a kind (no defaults put back after)
-wp_classes_seen dd 0xFFFFFFFF   ; the classes being made, when WP_TOUCHED was last cleared
+wp_classes_seen dd 0xFFFFFFFF   ; the classes being made, as PROBE_WP_CLASS last saw them
 wp_button  dw 0
 wp_ret_file dw 0
 wp_end_file dw 0
 wp_far     dd 0
-wp_mine    dw WP_WSPHERE_ID, WP_PAGE_ID, WP_PAGE_ID + 1, WP_PAGE_ID + 2, WP_PAGE_ID + 3
-           dw KIT_SPHERE_ID, KIT_PAGE4_ID, KIT_WIN_ID, KIT_WIN_ID + 1, KIT_WIN_ID + 2
+wp_mine    dw KIT_SPHERE_ID, KIT_WIN_ID, KIT_WIN_ID + 1, KIT_WIN_ID + 2
            dw KIT_WIN_ID + 3, KIT_WIN_ID + 4, KIT_WIN_ID + 5, KIT_WIN_ID + 6, KIT_WIN_ID + 7
            dw KIT_WIN_ID + 8, KIT_WIN_ID + 9, KIT_WIN_ID + 10, KIT_WIN_ID + 11, KIT_WIN_ID + 12
 wp_mine_end:
