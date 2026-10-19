@@ -1041,7 +1041,7 @@ creature the routine has.
 
 ### Kits
 
-([In the README](README.md#kits).)
+([On the Kits page](KITS.md).)
 
 A kit is chosen for a class: by a character of one class when it is made, and
 by a human for each class it changes to (up to three). There are three for
@@ -1052,12 +1052,12 @@ header's +270) switches them all off.
 
 #### The kits
 
-What each kit gives and costs is in [the README's table](README.md#kits).
+What each kit gives and costs is in [the Kits page](KITS.md).
 Two kits have tables of their own.
 
 The Seeker's and the Justifier's tables are AD&D's (*The Complete Ranger's
 Handbook*), up to 10th level, and the Shinobi has spells of its own (the game's
-and four new ones): both in [the README's Kits' spell slots](README.md#kits-spell-slots).
+and four new ones): both in [the Kits page's spell slots](KITS.md#kits-spell-slots).
 Their spells are cast at the table's casting level, not the ranger's or thief's.
 
 Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-wizard-spells),

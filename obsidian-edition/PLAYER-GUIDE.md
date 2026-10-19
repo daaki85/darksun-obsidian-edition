@@ -12,8 +12,8 @@ Everything here is the mod with its **default options**, which is how the
 Loader starts. Every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance)); where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
-The [README](README.md) has every rule in full detail, and is where each kit's
-numbers are kept: the guide links to its kit tables.
+The [README](README.md) has every rule in full detail, and the [Kits](KITS.md)
+page each kit's numbers: the guide links to its tables.
 
 ## Contents
 
@@ -418,7 +418,7 @@ obsidian over sorcery, and spells bite them harder for it.
 scarred hide hardening with every season. They charge in close and stay there:
 bows, slings and shields are for those who mean to live long.
 
-Each kit's gains, costs and starting gear: [Fighter kits](README.md#fighter-kits) in the README.
+Each kit's gains, costs and starting gear: [Fighter kits](KITS.md#fighter-kits) on the Kits page.
 
 **Starting gear.** A plain weapon of its weapon spec (in a material its
 classes allow), a shield, leather chest, arm and leg armour; with fuller
@@ -487,7 +487,7 @@ needs both hands.
 and mauls that end a bout in one blow. Anything smaller looks like a toy in
 their hands, and they treat it like one.
 
-Each kit's gains, costs and starting gear: [Gladiator kits](README.md#gladiator-kits) in the README.
+Each kit's gains, costs and starting gear: [Gladiator kits](KITS.md#gladiator-kits) on the Kits page.
 
 **Starting gear.** A plain weapon of its first weapon spec, a club in the off
 hand, leather arm armour; with fuller starting gear, also leather chest and
@@ -547,7 +547,7 @@ else: a tribe's chieftain, a defiler's lair, a beast that has emptied a
 village. They train their weapons to a killer's edge and leave prayer to
 others.
 
-Each kit's gains, costs and starting gear: [Ranger kits](README.md#ranger-kits) in the README.
+Each kit's gains, costs and starting gear: [Ranger kits](KITS.md#ranger-kits) on the Kits page.
 
 **Starting gear.** A plain weapon of its weapon spec, bow and arrows, leather
 chest and arm armour; with fuller starting gear, also leather leg armour (a
@@ -615,9 +615,9 @@ little for the quieter arts.
 spells beside their knives. Their masters teach them only what they need, so
 a scroll is theirs only if they can make out its script, and they travel light.
 
-Each kit's gains, costs and starting gear: [Thief kits](README.md#thief-kits) in the README.
+Each kit's gains, costs and starting gear: [Thief kits](KITS.md#thief-kits) on the Kits page.
 
-The Shinobi's slots by level are in [Kits' spell slots](README.md#kits-spell-slots) in the README.
+The Shinobi's slots by level are in [Kits' spell slots](KITS.md#kits-spell-slots) on the Kits page.
 
 **Starting gear.** Bone long sword, sling, leather chest armour; with fuller
 starting gear, also leather arm and leg armour (an Assassin or Shinobi a cloak
@@ -686,7 +686,7 @@ is no use if you are dead before you finish it. They fight in leather with a
 chosen weapon and keep casting while others bleed, at the cost of a little of
 their magic.
 
-Each kit's gains, costs and starting gear: [Preserver kits](README.md#preserver-kits) in the README.
+Each kit's gains, costs and starting gear: [Preserver kits](KITS.md#preserver-kits) on the Kits page.
 
 **Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice.
 
@@ -750,7 +750,7 @@ deadly with a weapon as any soldier. Their prayers are fewer for it.
 once and wield both powers. Divided worship comes slowly, and their spells lag
 a level behind.
 
-Each kit's gains, costs and starting gear: [Cleric kits](README.md#cleric-kits) in the README.
+Each kit's gains, costs and starting gear: [Cleric kits](KITS.md#cleric-kits) on the Kits page.
 
 **Starting gear.** Shield, leather chest and arm armour, a club in the
 backpack; with fuller starting gear, also a weapon of its sphere in hand (the
@@ -824,7 +824,7 @@ but they rarely stop long enough to armour themselves properly.
 mending wounds as they would mend a dying field. They fight only with blunt
 weapons, which wound without spilling blood.
 
-Each kit's gains, costs and starting gear: [Druid kits](README.md#druid-kits) in the README.
+Each kit's gains, costs and starting gear: [Druid kits](KITS.md#druid-kits) on the Kits page.
 
 **Starting gear.** Club, sling.
 
@@ -877,7 +877,7 @@ bending wills. Moving the world with thought alone comes harder to them.
 *Kineticist.* Psionicists who move the world with their minds, throwing stone
 and flame with a thought. Reaching into another mind costs them more.
 
-Each kit's gains, costs and starting gear: [Psionicist kits](README.md#psionicist-kits) in the README.
+Each kit's gains, costs and starting gear: [Psionicist kits](KITS.md#psionicist-kits) on the Kits page.
 
 The powers and their costs are in [Psionics](#psionics).
 
@@ -913,7 +913,7 @@ A character of one class takes one of three kits for its class when it is
 made, or none, on the creation panel's **KIT** page; a human who changes class
 can take one for its new class. A few races' pairs of classes have kits of
 their own ([Multiclass kits](#multiclass-kits)). Each gives something and
-costs something; [the README's kit tables](README.md#kits) have each kit's
+costs something; [the Kits page](KITS.md) have each kit's
 numbers and starting gear, the class sections above who takes it on Athas.
 
 - The **Myrmidon** chooses its second weapon spec, and the **Battle Mage** its
@@ -923,7 +923,7 @@ numbers and starting gear, the class sections above who takes it on Athas.
   the new class's level passes the old.
 - Some kits rule out classes a human could change to, and some can't go
   together in a human who changes class (one kit for each class); the DUAL
-  window and the kit menu leave them out ([which, and why](README.md#kits-that-rule-out-classes-and-each-other)).
+  window and the kit menu leave them out ([which, and why](KITS.md#kits-that-rule-out-classes-and-each-other)).
 - The dice log names each change a kit makes to a new character's gear.
 
 ### Multiclass kits
@@ -976,7 +976,7 @@ the wastes, and found the land's own fury waiting there. When the blood starts
 to flow they call on it: some days it answers; some days it only makes them
 reckless.
 
-Each kit's gains, costs and starting gear: [Multiclass kits](README.md#multiclass-kits) in the README.
+Each kit's gains, costs and starting gear: [Multiclass kits](KITS.md#multiclass-kits) on the Kits page.
 
 **The game's own party** (START GAME with no party made), with kits on: Cermak
 is an Arcanist, and the other three have something no character you make can
@@ -987,7 +987,7 @@ round); Cilla is an Elven Wanderer, whose hiding is never halved in daylight.
 ### Kits' spell slots
 
 Which kits change spell slots, and by how much at each level: [Kits' spell
-slots](README.md#kits-spell-slots) in the README.
+slots](KITS.md#kits-spell-slots) on the Kits page.
 
 ## Weapon specialization and attacks
 

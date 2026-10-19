@@ -360,7 +360,7 @@ on their own they make no difference, nor does the equipment penalty on them.
 The Loader rolls them: move silently when a pocket isn't picked
 ([Picking pockets](README.md#picking-pockets)), hide in shadows and move silently in
 fights ([backstabs](README.md#hiding-in-shadows-to-backstab)), and read languages when
-a [Shinobi](README.md#thief-kits) reads a scroll. The scripts also make
+a [Shinobi](KITS.md#thief-kits) reads a scroll. The scripts also make
 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
 `python -m dsloader checks` lists them all with the script's text around
