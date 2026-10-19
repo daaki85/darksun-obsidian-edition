@@ -485,7 +485,7 @@ and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
 at DEX 1 to −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
 [rule change](README.md#rule-changes) puts it on the fire, cold and electricity spells.
 And nothing in the game gives saves from items: there are no rings or cloaks
-of protection, which is why the Loader adds [a ring](README.md#new-items) and
+of protection, which is why the mod adds [a ring](README.md#new-items) and
 [a cloak](README.md#new-items). Their +1 is in the log's saving throws as
 `+1 Ring of Protection` and `+1 Cloak of Protection` (with
 [AD&D's rules for them](README.md#rings-and-cloaks-of-protection) off, all of it as

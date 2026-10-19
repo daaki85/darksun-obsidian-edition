@@ -4,14 +4,14 @@
 weapon, with where each is. **Spoilers:** for where things are without them, the
 [player's guide](PLAYER-GUIDE.md#new-items) lists what the mod adds and who can use it.*
 
-Every magic item and every mundane weapon in a game with the Loader's
-[new items](README.md#new-items), the game's and the Loader's, with their icons.
+Every magic item and every mundane weapon in a game with the mod's
+[new items](README.md#new-items), the game's and the mod's, with their icons.
 
 ## Every magic item
 
-All the magic items in a game with the Loader's new content on: the game's own,
+All the magic items in a game with the mod's new content on: the game's own,
 read from its data (each item type's slot and material, each item's plus and
-power, and who carries it), and the Loader's, in ***bold italics***. In **Where**, "—"
+power, and who carries it), and the mod's, in ***bold italics***. In **Where**, "—"
 means the item isn't placed with anyone in the data: the game's scripts hand it
 out (a reward, a gift or a find).
 
@@ -174,14 +174,14 @@ Tanelyv's Armor also has a chest piece, with no plus.
 
 ## Every mundane weapon
 
-Every plain weapon in a game with the new items, the game's and the Loader's,
+Every plain weapon in a game with the new items, the game's and the mod's,
 by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in Kel's
 caravan. The game's plain stone pick is only ever a
 [starting weapon](README.md#weapon-specialization); Deepbiter is its magic one.
 
-| Icon | Type | Material | Sold by | Carried by, or found in | The Loader's |
+| Icon | Type | Material | Sold by | Carried by, or found in | The mod's |
 |---|---|---|---|---|---|
 | ![](docs/items/bone-long-sword.png) | long sword | bone | Jark, Weapon Merchant | Ranger, Templar, Chaero, Castle Guard, Arant's Guard, Warrior, Dagolar Guard, Caravan Guard, Guard, Lt. Kwerin, Slaver Guard, Messenger, Visitor, Renegade, Silt Runner |  |
 | ![](docs/items/metal-long-sword.png) | long sword | metal | Weapon Merchant | Uskuye, Elven Leader, Elite Guard, Village Hero, a chest in the warrens |  |
@@ -213,3 +213,30 @@ caravan. The game's plain stone pick is only ever a
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels |  |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens |  |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — |  |
+
+## Items against acid
+
+What each item's chance is against the Rampager's acid and the Babau's corroding touch, in the game and with
+[Items save against acid as in AD&D](README.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material):
+
+| Item | Saved in the game | Saved with the rule |
+|---|---|---|
+| Leather Chest Armor | 0% | 55% (needs 10) |
+| Leather Chest Armor +1 | 0% | 60% (needs 9) |
+| Bone scale chest | 0% | 50% (needs 11) |
+| Chain chest | 0% | 40% (needs 13) |
+| Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
+| Drake Armor +1 (a power) | 100% | 100% (the game's) |
+| Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
+| Shadowseeker (metal, +1) | 70% | 70% (the game's: needs 7) |
+| Obsidian Dagger | 65% | 80% (needs 5) |
+| The mod's plain bone weapons (Dagger, Short Sword, Axe, Great Axe) | 65% | 65% (the game's: needs 8) |
+| The mod's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
+| The mod's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
+| Kreenfang, Drakejaw, Stillwater, Thornwall, Hayneedle (bone, +1) | 70% | 70% (the game's: needs 7) |
+| Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
+| Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
+| Glasshewer, Nightsliver, Skycutter (obsidian, +2) | 75% | 90% (needs 3) |
+| Deepbiter (stone, +1) | 70% | 85% (needs 4) |
+| Gutterknot, Dunesong (wood, +1) | 70% | 70% (the game's: needs 7) |
+| Greenbright, Galefang, Headsman, Linebreaker (metal, +2) | 75% | 75% (the game's: needs 6) |

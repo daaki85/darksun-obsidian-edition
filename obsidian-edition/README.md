@@ -83,8 +83,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
   - [The view in fights](#the-view-in-fights)
-  - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [The game's bugs, fixed](#the-games-bugs-fixed)
+  - [Spells on the Effects screen](#spells-on-the-effects-screen)
   - [Rules the game got wrong](#rules-the-game-got-wrong)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
@@ -833,12 +833,21 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 |---|---|
 | `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round of a fight, numbered from the fight's start, and the order everyone acts in (highest first). The order also stays in view above the log for the whole round, however far the log has scrolled: `Round 2. Now: Cilla (30). Still to act: Gerakis 26, Slig 26. Done: K'ratchek 32, Cermak 31. Down: ...`, and the [combat log in the game](#the-combat-log-in-the-game) begins with who acts and who is next. The lines under it (shown with **Show details**) give each score's make-up: `    Gerakis 26 = 20 + 6 (0-9 roll), tie broken by 38 (0-199 roll)` (see [Initiative](HOW-THE-GAME-WORKS.md#initiative)). If the log was started in the middle of a round, the list has only the rolls it saw. |
 | `Gerakis's turn` | Whose turn it is now, each time the turn passes in a fight. |
-| `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice. `needs 12+ (45%)` is the d20 this attacker needed against this target (THAC0 − target AC) and the chance of rolling it; `hits on anything but a 1` or `only a 20 hits` when it's out of the ordinary range. `X attacks Y from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and backstabs (see [Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). "Hits AC" is the lowest AC this roll hits (THAC0 − d20); the target AC is the one the game used, with armour, DEX and spells. A natural 20 always hits and a natural 1 always misses, but a 20 does no extra damage: the game has no critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)). |
+| `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice: the d20, the roll this attacker needed against this target (THAC0 − target AC) and the chance of it, the lowest AC the roll hits, and the target's AC as the game used it. More below the table. |
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](#two-weapons)), and the difficulty setting for monsters. |
 | `  X hits Y for 14: 1d8 = [6] +8 STR 20` | The damage of that hit: the dice, the weapon's bonus, and the STR bonus the game adds for melee. Damage is at least 1. |
 | `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the whole damage, STR bonus included. |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](KITS.md#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](#choosing-an-enemy-tab-enter-and-the-rings)). |
+
+**Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20
+hits` replace `needs 12+` when the roll is out of the ordinary range.
+`X attacks Y from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from
+behind and backstabs (see
+[Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)).
+The target's AC includes armour, DEX and spells. A natural 20 always hits and a
+natural 1 always misses, but a 20 does no extra damage: the game has no
+critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 
 **Spells, saves and effects**
 
@@ -854,8 +863,22 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `    Dispel Magic on Slig's Blessed: d100 = 60, needs 85 or less (50 + 5 x 7 - 5 x 0 (its caster's level)) -> dispelled` | Dispel Magic tries each effect on its target separately: 50 + 5 for each of the dispeller's levels, less 5 for each of the level the effect was cast at. It can't touch some (Biofeedback, Diseased, Feeblemind, Poisoned, Graft Weapon, No spell use, Stuck, Mind Bar and a few more). |
 | `    Abjure on Y: d20 = 14, needs 12 or more (11 - caster level 5 + its level 6) -> sent away` | Abjure sends a summoned creature away (1000 damage) on a d20 at or over 11 - the caster's level + the creature's. |
 | `    Summoning: 1d3 = 2 picks which of its 3 creatures comes` | Which creature a summoning spell brings. |
-| `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (see [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws); anything the log can't account for shows as `other`), and the number it had to reach. With the [rule changes](#rule-changes) off, the game uses petrification/polymorph for almost every spell and doubles the d20 against fire, cold and electricity spells, as here (see [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)); with them on (the default), the line names the spell save and DEX's adjustment instead (`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 always saves. The chance of saving is worked out for you (`needs 14 (70% to save)`); with the game's doubled d20, Fireball's victims usually save. For a damaging spell the result says what the save left, from that target's damage roll just before it: `saved: half damage, 19 of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as Chill Touch. The HP line after it shows what the creature really lost, once resistances and protections have had their say. A failed save also lets the spell's effect take hold. Spells left on the ground (Grease, clouds) make creatures save again as they stay in them; those lines have no "from". |
+| `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (anything the log can't account for shows as `other`), the number it had to reach and the chance of that; for a damaging spell, what the save left of that target's damage roll. More below the table. |
 | `X gives Blessed to Y, Z: +1 to hit, +1 on saves` / `Blessed ends on Y` | A spell or psionic effect starting or ending, with what it does in the game's code where that is known: to-hit, AC and saving throws, movement and attacks, whether the creature can attack or cast, who controls it (see [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)). `Stuck on Y` (no "gives") is an effect a creature has from a spell on the ground or cast on itself. |
+
+**Saving throws, in more detail.** The modifiers are those of
+[the game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws). With
+the [rule changes](#rule-changes) off, the game uses petrification/polymorph for
+almost every spell and doubles the d20 against fire, cold and electricity
+spells, as in the example above, so Fireball's victims usually save; with them
+on (the default), the line names the spell save and DEX's adjustment instead
+(`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 always saves.
+For a damaging spell the result says what the save left: `saved: half damage,
+19 of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as
+Chill Touch; the HP line after it shows what the creature really lost, once
+resistances and protections have had their say. A failed save also lets the
+spell's effect take hold. Spells left on the ground (Grease, clouds) make
+creatures save again as they stay in them; those lines have no "from".
 
 **Checks, thief skills and searches**
 
@@ -970,7 +993,7 @@ own "Cannot use this item":
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
 
 A thief of any kind holds only leather shields, the rule or not: the game's own
-lists leave thieves out of the wooden shield, and the Loader's metal one.
+lists leave thieves out of the wooden shield, and the mod's metal one.
 
 A **multiclass preserver** may wear what its other classes allow, but casts no
 spells (wizard or priest) while wearing armour (a helm counts, a shield
@@ -1248,24 +1271,13 @@ less the item's plus, and 1 less again for a magical power:
 | Item | Saved in the game | Saved with the rule |
 |---|---|---|
 | Leather Chest Armor | 0% | 55% (needs 10) |
-| Leather Chest Armor +1 | 0% | 60% (needs 9) |
-| Bone scale chest | 0% | 50% (needs 11) |
 | Chain chest | 0% | 40% (needs 13) |
 | Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
 | Drake Armor +1 (a power) | 100% | 100% (the game's) |
 | Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
-| Shadowseeker (metal, +1) | 70% | 70% (the game's: needs 7) |
 | Obsidian Dagger | 65% | 80% (needs 5) |
-| The Loader's plain bone weapons (Dagger, Short Sword, Axe, Great Axe) | 65% | 65% (the game's: needs 8) |
-| The Loader's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
-| The Loader's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
-| Kreenfang, Drakejaw, Stillwater, Thornwall, Hayneedle (bone, +1) | 70% | 70% (the game's: needs 7) |
-| Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
-| Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
-| Glasshewer, Nightsliver, Skycutter (obsidian, +2) | 75% | 90% (needs 3) |
-| Deepbiter (stone, +1) | 70% | 85% (needs 4) |
-| Gutterknot, Dunesong (wood, +1) | 70% | 70% (the game's: needs 7) |
-| Greenbright, Galefang, Headsman, Linebreaker (metal, +2) | 75% | 75% (the game's: needs 6) |
+
+Every other armour piece and weapon, the mod's among them: [Items against acid](ITEMS.md#items-against-acid).
 
 The dice log shows every check, whichever rule is on:
 
@@ -1282,7 +1294,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
 
 ### Rings and cloaks of protection
 
-The game has no rings or cloaks of protection; the Loader adds three (the
+The game has no rings or cloaks of protection; the mod adds three (the
 arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
 [New items](#new-items)), each +1 to AC and +1 on every saving throw. With
 **Rings and cloaks of protection as in AD&D** ticked, they follow the AD&D
@@ -1409,7 +1421,7 @@ use, in any material. The rest are greyed:
 | …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
 | …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
 | …with air cleric (missile and thrown weapons, daggers) | dagger, chatkcha, bow, sling, staff sling | an obsidian dagger |
-| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the Loader's metal) | an obsidian long sword |
+| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the mod's metal) | an obsidian long sword |
 | …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
 | …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
 
@@ -1435,11 +1447,11 @@ use, and the log says so
 |---|---|---|
 | long sword | the game's bone long sword | obsidian (fire, earth) |
 | club, quarterstaff, bow | wooden (a bow with 20 arrows) | |
-| dagger, chatkcha | obsidian | a dagger: bone, the Loader's (water) |
-| short sword | bone, the Loader's | obsidian (fire, earth) |
-| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the Loader's; a polearm: metal, the Loader's (earth) |
-| axe | bone, the Loader's | obsidian (fire, earth) |
-| great axe | bone, the Loader's | obsidian (fire, earth) |
+| dagger, chatkcha | obsidian | a dagger: bone, the mod's (water) |
+| short sword | bone, the mod's | obsidian (fire, earth) |
+| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the mod's; a polearm: metal, the mod's (earth) |
+| axe | bone, the mod's | obsidian (fire, earth) |
+| great axe | bone, the mod's | obsidian (fire, earth) |
 | pick | stone | |
 | sling, staff sling | leather | |
 
@@ -1583,7 +1595,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
 
 ### Fuller starting gear
 
-With **Fuller starting gear** ticked, the Loader adds plain gear to a new
+With **Fuller starting gear** ticked, the mod adds plain gear to a new
 character's own while it is still New, after the class restrictions, weapon
 specs and kits have changed theirs, and the dice log lists it
 (`Swat starts with more gear: Short Sword (in hand), Arm Armor, Leg Armor`):
@@ -1958,7 +1970,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
 *Spoilers: this section says where the new items and people are, and what
 they say. [The player's guide](PLAYER-GUIDE.md) has the rules without them.*
 
-Spells, people, a quest and items the Loader adds to the game, each with a box
+Spells, people, a quest and items the mod adds to the game, each with a box
 in the Options tab's **New content** section: the people, the quest and the
 items from the next time the game is started, the spells and the defilers'
 scrolls at once in games started with the dice log.
@@ -2055,7 +2067,7 @@ arena's ring too. A thief can
 [lift](#picking-pockets) Pehtucl's ring, Shadowseeker, Gutterknot and
 Mindshard (200 XP for each weapon).
 
-**Where they are.** The Loader's items are in the [item tables](ITEMS.md) with the
+**Where they are.** The mod's items are in the [item tables](ITEMS.md) with the
 game's own: in ***bold italics*** in [Every magic item](ITEMS.md#every-magic-item), each with where it is and
 what it does, and marked **new** in [Every mundane weapon](ITEMS.md#every-mundane-weapon). The game
 has no short sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
@@ -2128,12 +2140,12 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
 #### Bracers of defense
 
 A preserver can't cast in armour (with [class restrictions](#class-restrictions)),
-so the Loader adds AD&D's bracers of defense ([where](#new-items)). They are
+so the mod adds AD&D's bracers of defense ([where](#new-items)). They are
 worn on the arms, in the arm armour's place, and give the AC their name says:
 AC 6 is 4 better than no armour, AC 2 is 8 better. As in AD&D they give nothing
 while armour is worn: on the arms, legs or chest, or a helm (bone, leather or
 metal, magical or not). A shield, rings and cloaks of protection, and the
-Loader's circlet and crown (worn on the head, but not armour) go with them.
+mod's circlet and crown (worn on the head, but not armour) go with them.
 They aren't armour to anything else: a preserver casts in them, a thief wears
 them, and a ring or cloak of protection still counts. In the game they are
 **BRACERS/DEFENSE** with their plus (Bracers/Defense +4 is AC 6), priced 5,000
@@ -2328,7 +2340,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-cooked-vulture).
 A defiler may carry a spell scroll it was studying: with **Defilers' scrolls**
 ticked, each defiler in a fight has a 5% chance (1 in 20) of carrying a scroll
 of a random preserver spell, any of the game's 69 (1st to 5th level) or, with
-the new spells on, the Loader's new ones. When it dies the scroll is on its
+the new spells on, the mod's new ones. When it dies the scroll is on its
 body, with the rest of what it carried.
 
 The defilers are those the game makes defilers: Balkazar, Wyrmias, Tara, the
@@ -2349,16 +2361,17 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#defilers-scrolls).
 
 ## Item tables
 
-Every magic item and every mundane weapon, the game's and the Loader's, with
+Every magic item and every mundane weapon, the game's and the mod's, with
 their icons and where each is, has a page of its own, [Items](ITEMS.md)
 (spoilers):
 
 - [Every magic item](ITEMS.md#every-magic-item): weapons and missile weapons (and the magic weapons by weapon spec), armour, helms, shields, rings and the rest
 - [Every mundane weapon](ITEMS.md#every-mundane-weapon): who sells and who carries each plain weapon
+- [Items against acid](ITEMS.md#items-against-acid): each armour piece's and weapon's chance to come through acid
 
 ## Graphics
 
-What the Loader draws on the game's map. The elves' and half-elves' looks,
+What the mod draws on the game's map. The elves' and half-elves' looks,
 the party's gear, shadows and dust each have a switch in the Options tab's
 **Graphics** section.
 
@@ -2491,14 +2504,6 @@ as the game has it.
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its part
 on the view in a fight).
 
-### Spells on the Effects screen
-
-On the Effects screen (a character's spells and powers in effect), a click on
-an effect's icon ends it in the game, so a stray click loses a spell. With the
-Loader a click leaves a spell on; a psionic power's effect still ends, as that
-is how a power is stopped. It is a change to the game itself (**A click on a
-spell's icon on the Effects screen leaves it on**, from the next start).
-
 ## The game's bugs, fixed
 
 The patched game mends these whatever the Options tab says (the rules the game
@@ -2534,6 +2539,14 @@ preserver's Dispel Magic casts again once that wears off. A new game is still
 the way to see all of the mod: kits, STORE and RECALL and fuller starting gear
 come with characters made with it, and much of the
 [new content](#new-content) is in the game's first areas.
+
+### Spells on the Effects screen
+
+On the Effects screen (a character's spells and powers in effect), a click on
+an effect's icon ends it in the game, so a stray click loses a spell. With the
+Loader a click leaves a spell on; a psionic power's effect still ends, as that
+is how a power is stopped. It has a switch in the Options tab's **Controls** section (**A click on a
+spell's icon on the Effects screen leaves it on**, from the next start).
 
 ### Rules the game got wrong
 
@@ -2642,13 +2655,13 @@ the game's time; higher is smoother):
 
 | | All four in view | The leader alone |
 |---|---|---|
-| 20,000 cycles, the Loader's shadows, dust, rings and gear off | 248 | 254 |
+| 20,000 cycles, the mod's shadows, dust, rings and gear off | 248 | 254 |
 | 20,000, everything on | 139 | 263 |
 | 30,000, everything on | 214 | 264 |
 | 35,000, everything on | 258 | 254 |
 | 40,000, everything on | 267 | 269 |
 
-So at 20,000 the Loader's own drawing is what slows the whole party: without
+So at 20,000 the mod's own drawing is what slows the whole party: without
 it the four walk as fast as one. Of it, the dust costs the most (each puff is
 worked out pixel by pixel, and four walkers raise four times as many), then
 the shadows. What each setting asks of the computer:

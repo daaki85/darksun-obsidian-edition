@@ -100,9 +100,9 @@ easier.
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
 | **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
-| **DELETE in the roster** | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
-| **New characters' thief skills** | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
-| **Spells on the Effects screen** | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
+| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
+| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
+| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
 | **No copy protection** | The question from the manual never comes. |
 | **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
@@ -373,7 +373,7 @@ the strictest winning:
   skills.
 - A ranger may always use a bow.
 - A human who changed class is held by its new class (but for the warrior's
-  or cleric's armour above), and may use the weapon types it specialized in once its old
+  or cleric's armour above), and may use the weapon specs it specialized in once its old
   class wakes.
 
 *Without the mod:* an item was allowed if **any** of the character's classes
@@ -388,7 +388,7 @@ sword" and the like.
 *d10 · STR · any race · XP for 2nd level 2,000, for 10th 500,000*
 
 **How it plays.** The steadiest front-liner: any armour, any shield, any
-weapon, the best THAC0, and it masters one weapon type. Choose that type
+weapon, the best THAC0, and it masters one weapon spec. Choose it
 with care: it is the fighter's weapon for the whole game.
 
 **What the mod changes.**
@@ -438,7 +438,7 @@ starting gear, also a sling.
   elf, half-elf, halfling, mul).
 - *Dual class:* with STR 15, a human fighter can become a cleric, druid,
   preserver, psionicist or thief, never a gladiator or ranger. Its weapon
-  specs sleep with the class; once awake, its specialized weapon types stay
+  specs sleep with the class; once awake, its specialized weapon specs stay
   usable whatever the new class allows.
 
 **Magic weapons.** Every one: Dragonsbane +4, Swiftbite +2, El's Drinker +2,
@@ -510,14 +510,14 @@ melee, and any missile weapon.
 *d10 · WIS · elf, half-elf, half-giant, halfling, human, thri-kreen · good
 alignment · XP for 2nd level 2,250, for 10th 600,000*
 
-**How it plays.** A warrior of the wastes: the bow and one more weapon type,
+**How it plays.** A warrior of the wastes: the bow and one more weapon spec,
 two weapons at no penalty, hiding and moving silently under the open sky to
 strike from behind, and a little priest magic late on.
 
 **What the mod changes.**
 
 - [Expertise](#weapon-specialization-and-attacks) with the bow and one more
-  weapon type: a specialist's attacks a round. *Without the mod:* 3/2 in melee
+  weapon spec: a specialist's attacks a round. *Without the mod:* 3/2 in melee
   with any weapon.
 - [Hiding in shadows](#hiding-in-shadows) in a fight with a thief's numbers for
   its level, halved indoors; a successful hide and move silently makes its next
@@ -708,7 +708,7 @@ Each kit's gains, costs and starting gear: [Preserver kits](KITS.md#preserver-ki
 use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2,
 Hayneedle\* +1, Quarterstaff +2, Balk's Staff +1, Parting Staff +1, Sling +2,
 Sling +1, Windlash\* +1. A **Battle
-Mage** also those of its chosen weapon type.
+Mage** also those of its chosen weapon spec.
 
 ### Cleric
 
@@ -991,24 +991,25 @@ slots](KITS.md#kits-spell-slots) on the Kits page.
 
 ## Weapon specialization and attacks
 
-Warriors train in weapon types. Pick them in a window of weapon pictures that
+Warriors train in **weapon specs**: kinds of weapon, whatever their material
+(a bone, obsidian or metal long sword is the long sword spec alike). Pick them in a window of weapon pictures that
 comes up after **DONE** on the creation screen, and again at a level up that
 brings another (point at one for its name; those you can't pick are greyed).
 EXIT leaves the rest to the mod: the kit's own weapon (a Ghetto Fighter's
 dagger), a thri-kreen's chatkcha, else the long sword (a gladiator's second the
 club).
 
-![The level-up window: a picture of each weapon type, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the types this fighter/cleric can't use greyed](docs/weapon-picker.png)
+![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fighter/cleric can't use greyed](docs/weapon-picker.png)
 
-| Who | Chooses | With a chosen weapon type |
+| Who | Chooses | With a chosen weapon spec |
 |---|---|---|
-| Fighter | 1 weapon type | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
-| Gladiator | 2 weapon types, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
-| Ranger | the bow, and 1 weapon type | expertise: a specialist's attacks, no other bonus |
+| Fighter | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
+| Gladiator | 2 weapon specs, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
+| Ranger | the bow, and 1 weapon spec | expertise: a specialist's attacks, no other bonus |
 
-The sixteen weapon types: long sword, club, dagger, short sword, mace, axe,
+The sixteen weapon specs: long sword, club, dagger, short sword, mace, axe,
 great axe, pick, quarterstaff, polearm, gythka, cahulaks, chatkcha, bow, sling
-and staff sling. A warrior with another class chooses only weapon types that
+and staff sling. A warrior with another class chooses only weapon specs that
 class lets it use.
 
 **Attacks a round**, by the warrior's level (its best fighter, gladiator or
@@ -1017,15 +1018,15 @@ ranger level). 3/2 means one attack one round and two the next.
 | With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha, 1-6 | 7-10 |
 |---|---|---|---|---|---|---|
 | anyone who isn't a warrior | 1 | 1 | 2 | 2 | 1 | 1 |
-| a warrior, a weapon type it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| a chosen weapon type (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
+| a chosen weapon spec (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
 | a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), any weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
-| a **Battle Mage** (by its preserver level), its chosen weapon type | 3/2 | 2 | | | | |
+| a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
 For the three kits the level is their own class's. A Battle Mage's chosen
-weapon type is a melee weapon. With [two weapons](#two-weapons), the off hand
+weapon spec is a melee weapon. With [two weapons](#two-weapons), the off hand
 attacks once a round whatever the rate.
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
