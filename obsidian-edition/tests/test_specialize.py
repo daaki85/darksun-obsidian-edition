@@ -20,10 +20,9 @@ NO_KIND = (28, 29, 30, 31, 32, 37, 93, 107, 113)
 
 
 class KindTests(unittest.TestCase):
-    def test_sixteen_kinds_four_pages(self):
+    def test_sixteen_kinds(self):
         self.assertEqual(len(specialize.KINDS), 16)
         self.assertEqual(specialize.KINDS[specialize.DEFAULT], "long sword")
-        self.assertEqual([specialize.page_of(k) for k in range(16)], [0] * 4 + [1] * 4 + [2] * 4 + [3] * 4)
 
     def test_every_weapon_sorted(self):
         """Every weapon type is a kind, or one of the few that are none; every kind has a type."""
@@ -123,31 +122,16 @@ class SpecializationsTests(unittest.TestCase):
         self.assertEqual(self.gd(sheet((), classes=(9, 0, 0))).specializations(0), [])
 
 
-class PageLabelTests(unittest.TestCase):
-    def test_short_forms(self):
-        from dsloader import weaponpages
-        labels = [weaponpages.page_text(k) for k in range(16)]
-        self.assertEqual(labels[:4], ["LNG SWORD", "CLUB", "DAGGER", "SHRT SWORD"])
-        self.assertEqual(labels[8], "QTR STAFF")
-        self.assertEqual(labels[15], "STF SLING")
-        self.assertTrue(all(len(t) <= 10 for t in labels))
-
-    def test_ids_clear_of_the_game(self):
-        """The game's own buttons and pictures run to 833h (the dialogue window's replies are
-        81Ch-821h): the pages' come after."""
-        from dsloader import weaponpages
-        ids = [weaponpages.ROW_FIRST + k for k in range(16)] + [weaponpages.MORE, weaponpages.BACK, weaponpages.VIEW]
-        self.assertTrue(all(0x834 <= i < 0xBB8 for i in ids))
-
+class PickerTests(unittest.TestCase):
     def test_picker_clear_of_the_game(self):
-        """The level-up window's rows come after the pages', and its id is none of the game's
-        windows (3000-3013, 3020, 3024...) nor the panel's."""
-        from dsloader import weaponpages
+        """The weapon window's slots come after the game's own buttons and pictures (to 833h; the
+        dialogue window's replies are 81Ch-821h), and its id is none of the game's windows
+        (3000-3013, 3020, 3024...) nor the kit panel's."""
+        from dsloader import kitpages, weaponpages
         rows = [weaponpages.PICK_FIRST + k for k in range(16)]
-        pages = [weaponpages.ROW_FIRST + k for k in range(16)] + [weaponpages.MORE, weaponpages.BACK, weaponpages.VIEW]
-        self.assertTrue(all(0x834 <= i < 0xBB8 and i not in pages for i in rows))
-        self.assertNotIn(weaponpages.PICKER, set(range(3000, 3014)) | {3020, 3024} | set(weaponpages.PAGES)
-                         | {weaponpages.WARRIOR_DISCIPLINES, weaponpages.WARRIOR_SPHERES})
+        self.assertTrue(all(0x834 <= i < 0xBB8 and i != kitpages.KIT_BACK for i in rows))
+        self.assertNotIn(weaponpages.PICKER, set(range(3000, 3014)) | {3020, 3024, kitpages.KIT_DISCIPLINES,
+                                                                       kitpages.KIT_SPHERES})
         # (six slots across, three rows, inside the 214 by 156 window and above its title)
         w = weaponpages
         left = (w.PICK_WIDTH - w.PICK_COLUMNS * w.PICK_PITCH + (w.PICK_PITCH - w.PICK_SLOT)) // 2
@@ -240,6 +224,26 @@ class NewCharacterTests(unittest.TestCase):
             self.assertEqual(weaponchoice.kinds_for(bytes(s)), [0, 0, 0, 0])
         finally:
             game.RULES_IN_FORCE = old
+
+    def test_own_defaults(self):
+        """Picks left unmade on the weapon window: a Ghetto Fighter's dagger (kits on), a
+        thri-kreen's chatkcha; kept to what's allowed."""
+        from dsloader import kits, weaponchoice
+        s = bytearray(sheet((), classes=(9, 17, 0)))
+        s[0x18], s[0x43] = 2, 1  # (a dwarf fighter/thief, its first kit: the Ghetto Fighter)
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = game.RULE_KITS
+            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [kits.DAGGER + 1, 0, 0, 0])
+            self.assertEqual(weaponchoice.kinds_for(bytes(s), [0, 4]), [1, 0, 0, 0])
+            game.RULES_IN_FORCE = 0
+            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 0, 0, 0])
+        finally:
+            game.RULES_IN_FORCE = old
+        s = bytearray(sheet((), classes=(10, 0, 0)))
+        s[0x18] = kits.THRI_KREEN
+        self.assertEqual(weaponchoice.kinds_for(bytes(s)), [kits.CHATKCHA + 1, 2, 0, 0])
+        self.assertEqual(weaponchoice.kinds_for(bytes(s), [0, 1]), [1, 2, 0, 0])
 
     def test_extra_kinds_cleared(self):
         self.assertEqual(self.kinds((2, 5), (9, 0, 0)), [3, 0, 0, 0])
@@ -526,6 +530,28 @@ class KitGearTests(FinishNewTests):
         self.assertIn("in place of the", out[0])
         self.assertIn("second", out[1])
 
+    def test_shadowblade_packed_shield(self):
+        """A Shadowblade (a half-elf fighter/thief) fights without a shield: the game's starting
+        one is left behind, in the backpack as in the left hand; once."""
+        from dsloader import weaponchoice
+        right, left = self.character(9, 1)
+        s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
+        s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 4, 17
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        self.give(4, 0x05, 0x20)  # (a backpack cell)
+        taken = []
+
+        def unlink(gd, it, item, what, empty=False):
+            taken.append(item)
+            at = self.ITEMS + item * game.ITEM_SIZE
+            self.mem[at:at + game.ITEM_SIZE] = bytes(game.ITEM_SIZE)
+            return True
+        with mock.patch("dsloader.ring.unlink", unlink):
+            out = weaponchoice.kit_gear(self.gd)
+            self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+        self.assertEqual(taken, [0])
+        self.assertIn("a Shadowblade fights without a shield", out[0])
+
     def test_ghetto_dagger(self):
         """A Ghetto Fighter (a dwarf fighter/thief): its long sword made a dagger, whatever its spec;
         once."""
@@ -617,6 +643,42 @@ class KitGearTests(FinishNewTests):
             self.assertEqual(weaponchoice.kit_gear(self.gd), [])
         self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("great axe")][0], right))
         self.assertEqual(taken, [1])
+        self.assertIn("left behind", out[-1])
+
+    def test_brute_class_restrictions(self):
+        """With class restrictions too: the long sword and club, which only the kit forbids, are
+        kept for kit_gear (a great axe, the club left behind), not left behind as the classes'."""
+        from dsloader import weaponchoice
+        game.RULES_IN_FORCE |= game.RULE_RESTRICT
+        right, left = self.character(10, 3)
+        self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
+        self.give(18, 0x11, left)
+
+        def unlink(gd, it, item, what, empty=False):
+            at = self.ITEMS + item * game.ITEM_SIZE
+            self.mem[at:at + game.ITEM_SIZE] = bytes(game.ITEM_SIZE)
+            return True
+        with mock.patch("dsloader.ring.unlink", unlink):
+            self.assertEqual(weaponchoice.class_gear(self.gd), [])
+            weaponchoice.kit_gear(self.gd)
+        self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("great axe")][0], right))
+
+    def test_brute_packed_sword(self):
+        """The game puts a Brute's long sword and club in the backpack (the kit forbids them in
+        hand): the sword is made a great axe and put in the right hand, the club left behind."""
+        from dsloader import weaponchoice
+        right, left = self.character(10, 3)
+        self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, 15)
+        self.give(18, 0x11, 14)
+
+        def unlink(gd, it, item, what, empty=False):
+            at = self.ITEMS + item * game.ITEM_SIZE
+            self.mem[at:at + game.ITEM_SIZE] = bytes(game.ITEM_SIZE)
+            return True
+        with mock.patch("dsloader.ring.unlink", unlink):
+            out = weaponchoice.kit_gear(self.gd)
+            self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+        self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("great axe")][0], right))
         self.assertIn("left behind", out[-1])
 
     def test_arena_champion_shield(self):

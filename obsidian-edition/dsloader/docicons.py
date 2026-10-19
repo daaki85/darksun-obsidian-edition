@@ -1,4 +1,4 @@
-"""The items' icons for the guide's tables (README.md), drawn from the game's data as the game
+"""The items' icons for the item tables (ITEMS.md), drawn from the game's data as the game
 shows them: `python -m dsloader.docicons GAME_FOLDER` writes docs/items/*.png from the
 Loader's copy of SEGOBJEX.GFF (dos/, with its icons: start the game from the Loader once) and
 the game's palette (its GPLDATA.GFF), each picture twice its size, the rest transparent.
@@ -20,7 +20,7 @@ ICONS: Dict[str, int] = {
     # the Loader's (icons.py)
     **{name.lower().replace("'", "").replace(" ", "-").replace("+", "plus"): number
        for name, number in LEDGER.items()},
-    "bone-scale-arm-armor": 1034, "bone-scale-leg-armor": 1035, "thieves-tools": 1068,
+    "bone-scale-arm-armor": 1034, "bone-scale-leg-armor": 1035,
     "tome-of-understanding": 1446, "kalzith-scroll": 1440, "gythka-plus2": 2534,
     # the game's magic items
     "swiftbite": 2641, "draketooth": 30002, "hornblade": 2270, "gythka-plus3": 2271, "mace-plus2": 2642,
@@ -42,7 +42,7 @@ ICONS: Dict[str, int] = {
     "bone-long-sword": 1012, "obsidian-long-sword": 1013, "metal-long-sword": 1014, "club": 1185,
     "obsidian-dagger": 1184, "stone-dagger": 1190, "bone-mace": 1187, "metal-axe": 1183, "quarterstaff": 1019,
     "bone-polearm": 1186, "gythka": 1011, "cahulaks": 1188, "chatkcha": 1010, "bow": 1017, "sling": 1015,
-    "staff-sling": 1016, "stone-pick": 1381,
+    "staff-sling": 1016,
 }
 
 

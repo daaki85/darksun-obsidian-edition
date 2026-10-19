@@ -184,6 +184,7 @@ NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 
 NEW_SPELLS_END = 202  # (past the last)
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
+IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
 FRIENDS_MOST, SPOOK_MOST = 25, 6
 FLAMING_SPHERE = 14  # (once Cat's Grace's place)
 
@@ -369,7 +370,7 @@ EFFECT_RULES = {
     57: "AC at most 6 - level/4, +1 on saves", 58: "AC -2", 59: "AC at most 10 - level",
     60: "AC 5, 1 better per 3 caster levels above 5", 63: "higher STR", 64: "STR + the amount borrowed, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
-    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical weapon (talons)",
+    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
@@ -387,7 +388,8 @@ EFFECT_RULES = {
     # one, Improved Invisibility (timed) has none
     23: "attacking or casting at an enemy ends it, unless it is Improved Invisibility",
     24: "ends when it attacks or casts at an enemy",
-    25: "each weapon attack has a 75% chance (50% for Reflected Image's) to hit an image instead, using one up",
+    25: ("each hit, and each foe's spell for one creature, has a 75% chance (50% for Reflected Image's) "
+         "to strike an image instead, which vanishes"),
     29: "can't be Paralyzed or Slowed",
     33: "can't attack or cast harmful spells",
     34: "loses its turns, can't move, fails every saving throw",
@@ -522,6 +524,18 @@ WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
 
 
+class ItemSeen(NamedTuple):
+    """An item of the party's, as party_items saw it."""
+    index: int          # the item's number (its record in the game's item table)
+    member: int         # the party slot that has it
+    owner: str          # ... and that member's name
+    slot: Optional[str]  # where it is worn ("chest"), None if only carried
+    label: str          # "Inix Hide Chest Armor"
+    type: int           # its item type
+    record: bytes       # the item's record (ITEM_SIZE bytes)
+    kind: bytes         # its type's record (ITEM_TYPE_SIZE bytes)
+
+
 class WeaponHit(NamedTuple):
     item: int  # its item number
     slot: int
@@ -620,6 +634,11 @@ class SpellDamage(NamedTuple):
     def steps(self, level: int) -> int:
         return max(1, (min(level, SPELL_LEVEL_CAP) + self.adjust) // self.per_levels)
 
+    def flat(self) -> bool:
+        """Its step only a flat bonus, the same at every caster level (one step whatever the
+        level: the patched Cause Serious and Critical Wounds' +1 and +3)."""
+        return not self.step_dice and all(self.steps(level) == 1 for level in range(1, SPELL_LEVEL_CAP + 1))
+
 
 SPELL_LEVEL_CAP = 10  # damage stops growing at caster level 10
 PERMANENT = -9999  # a spell record's time unit for effects that last until removed
@@ -647,6 +666,7 @@ HUMAN = 1
 # climbing, Detect Traps lets anyone find traps, Feeblemind stops reading languages.
 THIEF_SKILLS = ("pick pockets", "open locks", "find/remove traps", "move silently", "hide in shadows",
                 "hear noise", "climb walls", "read languages")
+READ_LANGUAGES = 7  # (a Shinobi reads a scroll with it: intlearn.py)
 # the ones shown: those the game ever rolls (no script asks for the other three), and move
 # silently, which the Loader rolls when a pocket isn't picked (pickpocket.py)
 ROLLED_SKILLS = (0, 1, 2, 3, 5, 6)
@@ -940,6 +960,18 @@ class GameData:
             return []
         data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
         return [Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]) for i in range(count)]
+
+    def image_chance(self, combatant: int) -> int:
+        """The chance (percent) of an image of COMBATANT's Mirror Images taking a blow or a foe's
+        spell: 75, or 50 for one of Reflected Image (DSCLOG's IMAGE_CHANCE)."""
+        count = self._word(EFFECT_COUNT)
+        if 0 < count <= 400:
+            data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
+            for i in range(count):
+                owner, _, spell = struct.unpack_from("<hhh", data, i * 10)
+                if owner == combatant and data[i * 10 + 6] == MIRROR_EFFECT:
+                    return REFLECT_CHANCE if spell == REFLECT_SPELL else IMAGE_CHANCE
+        return IMAGE_CHANCE
 
     def _power_dice(self, spell: int) -> str:
         """" (1d10 crushing)": a monster's power's damage dice and kinds, from its record, to tell
@@ -1472,6 +1504,26 @@ class GameData:
         if plus and not name.endswith(f"{plus:+d}"):  # (a name such as "Sling +2" has it)
             name += f" {plus:+d}"
         return (f"{MATERIALS[material]} " if material < len(MATERIALS) else "") + name
+
+    def party_items(self) -> List["ItemSeen"]:
+        """Every item a party member has, worn or carried (itemwatch.py watches them)."""
+        out = []
+        for member in range(PARTY_SIZE):
+            rec = self.creature(member)
+            if len(rec) < CREATURE_SIZE or not rec[CREATURE_NAME]:
+                continue
+            for index, item, typ in self._worn(member):
+                slot = item[ITEM_SLOT]
+                out.append(ItemSeen(index, member, self.creature_name(member),
+                                    EQUIP_SLOTS[slot] if slot < len(EQUIP_SLOTS) else None,
+                                    self.item_label(item, typ), struct.unpack_from("<H", item, ITEM_TYPE)[0],
+                                    bytes(item), bytes(typ)))
+        return out
+
+    def item_record(self, index: int) -> bytes:
+        """An item's record by number, whoever has it now."""
+        items = far_pointer(self.guest, self.ds, ITEMS_PTR)
+        return self.guest.read(items + index * ITEM_SIZE, ITEM_SIZE)
 
     def equipment(self, creature: int) -> List[Tuple[Optional[str], str]]:
         """A creature's items: [(slot it's worn in or None if only carried, "Leather Chest Armor"), ...],

@@ -9,18 +9,16 @@ from dsloader import game, kitpages, weaponpages  # noqa: E402
 
 class KitPageTests(unittest.TestCase):
     def test_ids_clear(self):
-        """The kit pages' buttons come after the weapon pages' and the level-up window's rows (to
-        86Fh), and their windows are none of the game's (3000-3013, 3020, 3024) nor the weapon
-        pages' (3014-3019, 3021)."""
+        """The kit pages' buttons come after the weapon window's slots (to 86Fh), and their windows
+        are none of the game's (3000-3013, 3020, 3024) nor the weapon window's (3021)."""
         buttons = [kitpages.row_id(g, k + 1) for g, names in kitpages.KITS.items() for k in range(len(names))] \
             + [kitpages.KIT_NONE, kitpages.KIT_VIEW]
         self.assertEqual(len(set(buttons)), 39)
         self.assertTrue(all(0x870 <= b < 0x8B0 for b in buttons))  # (STORE and RECALL after them: rollstore.py)
-        windows = [kitpages.KIT_DISCIPLINES, kitpages.KIT_SPHERES, kitpages.KIT_LAST_PAGE] \
+        windows = [kitpages.KIT_DISCIPLINES, kitpages.KIT_SPHERES] \
             + [kitpages.KIT_WINDOW + c for c in range(len(kitpages.KITS))]
-        taken = set(range(3000, 3014)) | {3020, 3024, weaponpages.PICKER, weaponpages.WARRIOR_DISCIPLINES,
-                                          weaponpages.WARRIOR_SPHERES} | set(weaponpages.PAGES)
-        self.assertEqual(len(set(windows)), 22)
+        taken = set(range(3000, 3014)) | {3020, 3024, weaponpages.PICKER}
+        self.assertEqual(len(set(windows)), 21)
         self.assertFalse(taken & set(windows))
 
     def test_rows(self):
@@ -60,17 +58,14 @@ class KitPageTests(unittest.TestCase):
 
     def test_panel_windows(self):
         both = game.RULE_SPECIALIZE | game.RULE_KITS
-        self.assertEqual(kitpages.SPECIALIZE, game.RULE_SPECIALIZE)
         self.assertEqual(kitpages.KITS_ON, game.RULE_KITS)
         self.assertEqual(kitpages.panel_windows((8, 0, 0), both), (3022, 3023))
-        self.assertEqual(kitpages.panel_windows((3, 0, 0), both), (3018, 3019))  # (KITS on the last page)
-        self.assertEqual(kitpages.panel_windows((3, 0, 0), game.RULE_KITS), (3022, 3023))
+        # a warrior picks its weapon specs after DONE: no weapon pages, its kits as anyone's
+        self.assertEqual(kitpages.panel_windows((3, 0, 0), both), (3022, 3023))
+        self.assertEqual(kitpages.panel_windows((3, 0, 0), game.RULE_SPECIALIZE), (3012, 3013))
         self.assertEqual(kitpages.panel_windows((1, 0, 0), both), (3012, 3023))
-        self.assertEqual(kitpages.panel_windows((7, 0, 0), both), (3012, 3019))
-        # a Battle Mage (a preserver's second kit): a warrior's windows, for its weapon spec
-        self.assertEqual(kitpages.panel_windows((5, 0, 0), both, kit=2), (3018, 3019))
-        self.assertEqual(kitpages.panel_windows((5, 0, 0), both, kit=1), (3022, 3023))
-        self.assertEqual(kitpages.panel_windows((5, 0, 0), game.RULE_KITS, kit=2), (3022, 3023))
+        self.assertEqual(kitpages.panel_windows((7, 0, 0), both), (3012, 3023))
+        self.assertEqual(kitpages.panel_windows((5, 0, 0), both), (3022, 3023))
         self.assertEqual(kitpages.panel_windows((8, 6, 0), both), (3012, 3013))
 
     def test_no_kit_first(self):
@@ -78,7 +73,7 @@ class KitPageTests(unittest.TestCase):
         class's three in KITS's order."""
         ids = [c for c, _, _ in weaponpages._items(self.kit_window(3))]
         self.assertEqual(ids, [kitpages.KIT_NONE, kitpages.KIT_ROW + 6, kitpages.KIT_ROW + 7, kitpages.KIT_ROW + 8,
-                               weaponpages.BACK])
+                               kitpages.KIT_BACK])
 
     def test_row_as_wide_as_its_label(self):
         """A row's button is as wide as its label, not AIR's 33 pixels (a click on the rest of a

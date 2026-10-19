@@ -1,5 +1,9 @@
 # Handoff: a scrolling combat log inside the game (Obsidian Edition)
 
+*Archived: the design brief for the combat log as planned before 2.3.0, kept as a record. Where it
+differs from the README (the mouse wheel scrolls the panel, L shows it at any time), the README is
+right; "the Ledger" is the Loader's old name.*
+
 *From Claude Design, kept as received (design only). The three mock-up images it names
 (`1-in-game-concept.png`, `2-panel-states.png`, `3-line-types-and-behaviour.png`) were shared
 as screenshots in the conversation and are not in this folder yet.*

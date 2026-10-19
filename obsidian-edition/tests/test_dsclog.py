@@ -6,6 +6,7 @@ the probes do the game instructions they replace.
 """
 
 import os
+import re
 import struct
 import sys
 import unittest
@@ -289,8 +290,8 @@ class StubTests(unittest.TestCase):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class UseItemTests(unittest.TestCase):
     """PROBE_USE_ITEM, where the game uses the item on the pointer on what's under it: on as the
-    compare and JNE it replaces would go, or, for the Loader's thieving tools, to the routine's
-    end (DSUN.EXE: 7361Ah, 7361Dh and 7371Dh, less the address after the INT)."""
+    compare and JNE it replaces would go, or, for an item the Loader answers (the cooked vulture),
+    to the routine's end (DSUN.EXE: 7361Ah, 7361Dh and 7371Dh, less the address after the INT)."""
     NONE, SOME, DONE = 0x605, 0x608, 0x602 + 0x106
 
     def setUp(self):
@@ -299,7 +300,9 @@ class UseItemTests(unittest.TestCase):
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
         self.hdr = TSR * 16 + image.find(HDR_SIG)
-        handler = image.find(bytes.fromhex("fb66600689e3ba0300"))  # sti, pushad, push es, mov bx,sp, mov dx,3
+        # sti, pushad, push es, mov bx,sp, mov word cs:[use_done],106h, mov dx,3
+        found = re.search(re.escape(bytes.fromhex("fb66600689e32ec706")) + b"..\x06\x01\xba\x03\x00", image, re.S)
+        handler = found.start() if found else -1
         self.assertGreater(handler, 0)
         mu.mem_write(VEC_USE_ITEM * 4, struct.pack("<HH", handler, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -333,11 +336,11 @@ class UseItemTests(unittest.TestCase):
         mu.mem_write(CALLER * 16 + 0x602 + 0x3FE, struct.pack("<H", 0x9000))
         mu.mem_write(0x9000 * 16 + 1 * 10 + 0x44, struct.pack("<H", 231))
         self.run_use(300, self.SOME, on=0)
-        self.run_use(300, self.SOME)  # the Loader says it's not its tools
+        self.run_use(300, self.SOME)  # the Loader says it's not its to answer
         self.assertEqual(struct.unpack("<HH", mu.mem_read(self.hdr + 184, 2) + mu.mem_read(self.hdr + 188, 2)),
                          (300, 231))
 
-    def test_the_tools(self):
+    def test_answered(self):
         self.taken = 1
         self.run_use(300, self.DONE)
 
@@ -2308,14 +2311,11 @@ class RuleTests(RingTests):
         """INT VEC_SPELL_TEXT after the game read SPIN chunk SPIN (LENGTH bytes) into the buffer
         at the game's [BP-8]: (the buffer's text, AX), with SP back past the read's arguments."""
         image = load_image()
-        # its rule test and "cmp di,0Fh", after three pops, "add sp,0Ch" and three pushes (33 bytes)
+        # three pops, "add sp,0Ch", three pushes, then "cmp di,1000" (Turn Undead's SPIN: TU_SPIN)
         import re
-        found = re.search(re.escape(bytes.fromhex("2ef606") + struct.pack("<H", self.RULES) + b"\x20\x74")
-                          + b"." + re.escape(bytes.fromhex("81ffc500")), image, re.S)
+        found = re.search(rb"(?:\x2e\x8f\x06..){3}\x83\xc4\x0c(?:\x2e\xff\x36..){3}\x81\xff\xe8\x03", image, re.S)
         self.assertIsNotNone(found)
-        anchor = found.start()
-        probe = anchor - 33
-        self.assertEqual(image[probe:probe + 3], bytes.fromhex("2e8f06"))
+        probe = found.start()
         self.mu.mem_write(VEC_SPELL_TEXT * 4, struct.pack("<HH", probe, TSR))
         buf = self.TYPES * 16 + 0x500
         self.mu.mem_write(buf, b"FLAMING SPHERE:  Creates a burning globe.\r\n\0".ljust(200, b"\0"))
@@ -2339,6 +2339,7 @@ class RuleTests(RingTests):
         self.assertTrue(self.spell_text(198, 0xFFFF)[0].startswith(b"ERDLU CLAW:  "))
         self.assertTrue(self.spell_text(199, 0xFFFF)[0].startswith(b"FOGBOLT:  "))
         self.assertEqual(self.spell_text(15)[0][:15], b"FLAMING SPHERE:")
+        self.assertEqual(self.spell_text(1000)[0][:15], b"FLAMING SPHERE:")  # (Turn Undead's, unasked: as read)
         self.rules(0)
         self.assertEqual(self.spell_text(197, 0xFFFF)[1], 0xFFFF)
 
@@ -2487,6 +2488,19 @@ class NewSpellTests(RuleTests):
         self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
         return mu.reg_read(r.UC_X86_REG_EFLAGS)
 
+    def test_creation_weapons_site(self):
+        """CR_WEAPONS (DONE's "pop cx / push si / nop", 666DFh): the word under the INT's frame into
+        CX and SI in its place, as the three bytes did; no weapon window with the rule off, or for
+        a member past the party's four (gamepatch's site number and DSCLOG's agree)."""
+        from dsloader import game, gamepatch
+        self.assertEqual(next(p for p in gamepatch.PATCHES if p.name == "cr_weapons").offset, 0x666DF)
+        for rules, si in ((0, 2), (game.RULE_SPECIALIZE, 5)):
+            self.rules(rules)
+            self.mu.mem_write(SS * 16 + 0x800, struct.pack("<H", 0x1234))
+            self.site(gamepatch.CR_WEAPONS, esi=si, ecx=0)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1234)
+            self.assertEqual(struct.unpack("<H", self.mu.mem_read(SS * 16 + 0x800, 2))[0], si)
+
     def test_compares(self):
         """772BBh's "cmp dx,0C4h" (NS_CMP site 11): a new spell is below it as a wizard's while the
         rule is on; others, and with it off, as compared."""
@@ -2512,24 +2526,110 @@ class NewSpellTests(RuleTests):
         self.mu.mem_write(TSR * 16 + SEG_MOVED, bytes([value]))
 
     def test_image_chance(self):
-        """A blow at a thing with Mirror Images (25) on it (NS_IMAGE, thing SI, the d100 AX): an
-        image takes it on 75 or less, on 50 or less if Reflected Image (199) put the effect there;
-        the flags of that compare."""
+        """A touch spell from thing DI at a thing with Mirror Images (25) on it (NS_IMAGE, thing SI,
+        the d100 AX): an image takes it on 75 or less, on 50 or less if Reflected Image (199) put
+        the effect there; the flags of that compare. Never one cast on oneself or by a party
+        member on another."""
         from dsloader import gamepatch
         effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
         self.mu.mem_write(effects, struct.pack("<hhhBB", 2, 0, 19, 25, 0) + bytes(2)
-                          + struct.pack("<hhhBB", 5, 0, 199, 25, 0) + bytes(2))
+                          + struct.pack("<hhhBB", 1, 0, 199, 25, 0) + bytes(2))
         self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
-        def greater(thing, roll):
-            flags = self.site(gamepatch.NS_IMAGE, esi=thing, eax=roll)
+        def greater(thing, roll, caster=40):
+            flags = self.site(gamepatch.NS_IMAGE, esi=thing, edi=caster, eax=roll)
             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), roll)
             return not flags & 0x40 and bool(flags & 0x80) == bool(flags & 0x800)
         self.rules(32)
         self.moved(1)
         self.assertEqual([greater(2, n) for n in (50, 51, 75, 76)], [False, False, False, True])
-        self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, True, True, True])
+        self.assertEqual([greater(1, n) for n in (50, 51, 75, 76)], [False, True, True, True])
+        self.assertEqual([greater(2, n, caster) for n in (1, 75) for caster in (2, 0, 3)], [True] * 6)
+        self.assertEqual([greater(40, n, 40) for n in (1, 100)], [True, True])
+        self.assertEqual([greater(40, 75, 2), greater(2, 75, 41)], [False, False])
         self.rules(0)
-        self.assertEqual([greater(5, n) for n in (50, 51, 75, 76)], [False, False, False, True])
+        self.assertEqual([greater(1, n) for n in (50, 51, 75, 76)], [False, False, False, True])
+
+    def test_image_spell_sides(self):
+        """NS_IMAGE: only a foe's spell (caster DI and target SI on opposite sides: party members
+        below 4) meets the images; one from the target's own side never does."""
+        from dsloader import gamepatch
+        def greater(thing, caster, roll=1):
+            flags = self.site(gamepatch.NS_IMAGE, esi=thing, edi=caster, eax=roll)
+            return not flags & 0x40 and bool(flags & 0x80) == bool(flags & 0x800)
+        self.rules(0)
+        self.assertEqual([greater(3, 3), greater(3, 0), greater(40, 40), greater(40, 41)], [True] * 4)
+        self.assertEqual([greater(3, 40), greater(40, 2)], [False, False])
+        self.assertEqual([greater(3, 40, 75), greater(3, 40, 76)], [False, True])
+
+    def test_image_blow(self):
+        """NS_BLOW (an attack's hit, "cmp word [bp+1Ah],0"): with Mirror Images on the target
+        ([494Ah]), the game's rand() (its d100: rand x 100 / 32768 + 1) at or under 75 (50 for
+        Reflected Image's) has the game use an image up (598:57h: target, 25) and the attack go
+        on as a miss (58A46h); over it, or with no images, on as before, the compare's flags kept."""
+        from dsloader import gamepatch
+        mu = self.mu
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        mu.mem_write(effects, struct.pack("<hhhBB", 40, 3, 19, 25, 0) + bytes((4, 0))
+                     + struct.pack("<hhhBB", 41, 3, 199, 25, 0) + bytes((1, 0)))
+        mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 2))
+        load = (GAME_DS - 0x4356) & 0xFFFF
+        charge = ((load + 0x428F) & 0xFFFF) * 16 + 0x57  # (records its arguments at DS:600h)
+        mu.mem_write(charge, bytes.fromhex("558bec8b4606a300068b4608a302065dcb"))
+        mu.mem_write(load * 16 + 0x822, bytes.fromhex("a10007cb"))
+        def blow(target, raw, flag=0):
+            mu.mem_write(GAME_DS * 16 + 0x700, struct.pack("<H", raw))  # (rand(): mov ax,[700h] / retf)
+            mu.mem_write(GAME_DS * 16 + 0x494A, struct.pack("<H", target))
+            mu.mem_write(GAME_DS * 16 + 0x600, bytes(4))
+            mu.mem_write(SS * 16 + BP + 0x1A, struct.pack("<H", flag))
+            mu.mem_write(SS * 16 + BP + 0x18, struct.pack("<H", 2))
+            self.at += 0x80
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_BLOW, 0x90)))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)  # (to a HLT at either way out)
+            ip = mu.reg_read(r.UC_X86_REG_IP) - self.at
+            used = struct.unpack("<HH", bytes(mu.mem_read(GAME_DS * 16 + 0x600, 4)))
+            return ip, used, mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40
+        for at in range(self.at + 0x80, self.at + 0x80 * 12, 0x80):  # (a HLT past the site's NOP, and at the miss)
+            mu.mem_write(CALLER * 16 + at + 4, b"\xf4")
+            mu.mem_write(CALLER * 16 + at + 3 + 0x58A46 - 0x58A03, b"\xf4")
+        miss = 3 + 0x58A46 - 0x58A03 + 1
+        d100 = lambda n: (n - 1) * 0x8000 // 100 + 1  # (a rand() giving that d100)
+        self.rules(0)
+        self.assertEqual(blow(40, d100(75)), (miss, (40, 25), 0x40))
+        self.assertEqual(blow(40, d100(76)), (5, (0, 0), 0x40))
+        self.assertEqual(blow(40, d100(76), flag=1), (5, (0, 0), 0))
+        self.assertEqual(blow(42, d100(1)), (5, (0, 0), 0x40))  # (no images)
+        self.assertEqual(blow(41, d100(60))[0], miss)  # (the rule off: 75 for Reflected Image's too)
+        self.rules(32)
+        self.moved(1)
+        self.assertEqual(blow(41, d100(50))[:2], (miss, (41, 25)))
+        self.assertEqual(blow(41, d100(51))[0], 5)
+        self.assertEqual(blow(40, d100(75))[0], miss)
+
+    def test_hold_undead(self):
+        """NS_HOLD (7A333h, "or al,al / jz", AL nonzero for an undead target, SI the spell): an
+        undead target goes on as before (the site's NOP); a living one is immune (7A1F0h) to Hold
+        Undead (spell 31) and takes any other spell as before (7A359h)."""
+        from dsloader import gamepatch
+        mu = self.mu
+        def hold(al, si):
+            self.at += 0x80
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_HOLD, 0x90)))
+            for back in (3, 0x7A359 - 0x7A333, 0x7A1F0 - 0x7A333):  # (a HLT at each way out)
+                mu.mem_write(CALLER * 16 + ((self.at + back) & 0xFFFF), b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    eax=al, esi=si).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_SI)), (0x800, si))
+            return (mu.reg_read(r.UC_X86_REG_IP) - self.at - 1) & 0xFFFF
+        self.assertEqual(hold(1, 31), 3)
+        self.assertEqual(hold(1, 40), 3)
+        self.assertEqual(hold(0, 31), (0x7A1F0 - 0x7A333) & 0xFFFF)
+        self.assertEqual(hold(0, 40), 0x7A359 - 0x7A333)
 
     def rules_hi(self, value):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
@@ -2710,6 +2810,34 @@ class NewSpellTests(RuleTests):
         self.rules(0)
         self.assertEqual(run(5, -1, 0, 0), (0, 0, True))
 
+    def test_fist_claws_cut(self):
+        """NS_FIST's damage kinds ([BP-14h], the game's crushing for a natural attack): Erdlu
+        Claw's talons and a thri-kreen of the party's claws are slashing; a monster's own natural
+        attack, the party's other races' and a weapon's are as they were."""
+        from dsloader import gamepatch
+        effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
+        self.mu.mem_write(effects, struct.pack("<hhhBB", 5, 0, 197, 6, 0) + bytes(2))
+        self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 1))
+        creatures, sheets = 0x6000, 0x6200
+        self.mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, creatures))
+        self.mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, sheets))
+        for creature, race in ((1, 8), (2, 4), (6, 8)):  # (a thri-kreen, a human; a thri-kreen monster)
+            self.mu.mem_write(creatures * 16 + creature * 0x3A + 4, struct.pack("<H", creature))
+            self.mu.mem_write(sheets * 16 + creature * 0x47 + 0x18, bytes((race,)))
+        def kinds(thing, item, before, rules=32):
+            self.rules(rules)
+            self.mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<H", before))
+            self.mu.mem_write(SS * 16 + BP - 0x0C, struct.pack("<hhhhhh", 0, 0, 0, 0, 0, item))
+            self.site(gamepatch.NS_FIST, esi=thing)
+            return struct.unpack("<H", self.mu.mem_read(SS * 16 + BP - 0x14, 2))[0]
+        self.assertEqual(kinds(5, -1, 0x08), 0x10)  # (Erdlu Claw's talons)
+        self.assertEqual(kinds(1, -1, 0x08), 0x10)  # (a thri-kreen of the party's claws)
+        self.assertEqual(kinds(1, -1, 0x08, rules=0), 0x10)  # (whatever the rules)
+        self.assertEqual(kinds(2, -1, 0x08), 0x08)  # (a human's fists)
+        self.assertEqual(kinds(6, -1, 0x08), 0x08)  # (a monster's own)
+        self.assertEqual(kinds(1, 40, 0x20), 0x20)  # (a weapon's)
+        self.rules(0)
+
     def test_fog_flight(self):
         """NS_SETUP (on a site's way): Fogbolt's record is Charm Person's, flying flight 15 when the
         game has the objects' copy open (OBJECTS_ON), which is then object 8118 at Magic Missile's
@@ -2766,7 +2894,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc6b03" "8356fe00"))  # 35 names of 25 bytes: 36Bh
+        size = image.find(bytes.fromhex("8146fccf03" "8356fe00"))  # 39 names of 25 bytes: 3CFh
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -2785,7 +2913,7 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 8925), (0xFF00, 0xFF00 + 875)):
+        for size, want in ((8050, 9025), (0xFF00, 0xFF00 + 975)):
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
@@ -5083,7 +5211,8 @@ class KitTests(unittest.TestCase):
         self.assertEqual([kits.shinobi_pick_level(n) for n in (5, 6, 7, 8, 9, 10)], [0, 1, 1, 2, 2, 3])
 
     def test_scroll_learn(self):
-        """PROBE_SCROLL_LEARN: AX and ZF as "or ax,ax", but a Shinobi learns no scroll (AX 0, ZF)."""
+        """PROBE_SCROLL_LEARN: AX and ZF as "or ax,ax", but a Shinobi learns no spell not its own
+        from a scroll (AX 0, ZF: SHINOBI_READ)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_SCROLL_LEARN
         seg, who = 0x8700, 5
@@ -5097,6 +5226,7 @@ class KitTests(unittest.TestCase):
                 self.creature(cls, kit, index=who, level=8)
                 for ax in (0, 1):
                     with self.subTest(rules=rules, cls=cls, kit=kit, ax=ax):
+                        self.mu.mem_write(SS * 16 + BP - 3, bytes((8,)))  # (Magic Missile: not a Shinobi's)
                         self.run_vector(VEC_SCROLL_LEARN, 2, eax=ax, ebx=0x2222, esi=0x4444, es=0x6666)
                         want = 0 if kid == kits.SHINOBI else ax
                         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), want)
@@ -5198,6 +5328,67 @@ class KitTests(unittest.TestCase):
         self.assertEqual(learn(8, ax=0), (0, None))
         self.assertEqual([intlearn.chance(i) for i in (3, 9, 12, 18, 19, 24, 25, 30)], [35, 35, 50, 85, 95, 100, 100, 100])
         self.assertEqual([intlearn.most(i) for i in (9, 13, 17, 18, 19)], [6, 9, 14, 18, None])
+
+    def test_shinobi_read(self):
+        """SHINOBI_READ: a Shinobi learns only its own spells from a scroll (another refused, AX 0,
+        A SHINOBI CAN NOT...; the scroll kept); first a d100 against its chance to read languages
+        (+362, the Loader's): above it, the game teaches it and uses the scroll up, and
+        PROBE_LEARN_SAID takes it back with YOU CAN NOT READ...; read, the rule for INT's d100 as a
+        preserver's (no most a level), or learnt without the rule. Told at +272 and +366."""
+        from dsloader import intlearn, kits
+        from dsloader.gamepatch import VEC_SCROLL_LEARN, VEC_LEARN_SAID, VEC_LEARN_REFUSED
+        seg, who = 0x8700, 2
+        site = 0x400 + (VEC_SCROLL_LEARN & 0x1F) * 0x10
+        self.mu.mem_write(CALLER * 16 + site + 2 + (0x8B6C2 - 0x8B6D5), struct.pack("<H", seg))
+        self.mu.mem_write(seg * 16 + 0x25B, struct.pack("<H", who))
+        hdr = self.hdr
+        known_at = self.int_setup(who, 9, [])
+        def learn(spell, read, rules):
+            self.rules(rules)
+            self.creature(17, 3, index=who, level=8)  # (a thief, its kit the Shinobi)
+            self.mu.mem_write(self.CREATURES * 16 + who * 0x3A + 0x25, bytes((9,)))
+            self.mu.mem_write(hdr + 362 + who, bytes((read,)))
+            self.mu.mem_write(SS * 16 + BP - 3, bytes((spell,)))
+            before = struct.unpack("<H", self.mu.mem_read(hdr + 272, 2))[0]
+            self.run_vector(VEC_SCROLL_LEARN, 2, eax=1, ebx=0x2222, esi=0x4444, es=0x6666, edx=0x5555)
+            self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_SI, r.UC_X86_REG_ES,
+                                                            r.UC_X86_REG_DX)], [0x2222, 0x4444, 0x6666, 0x5555])
+            ax = self.mu.reg_read(r.UC_X86_REG_AX)
+            self.assertEqual(bool(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40), not ax)
+            seq, *told = struct.unpack("<H6B", self.mu.mem_read(hdr + 272, 8))
+            self.assertEqual(seq, (before + 1) & 0xFFFF)
+            return ax, told, list(self.mu.mem_read(hdr + 366, 2))
+        both = game.RULE_KITS | game.RULE_INT_LEARN
+        self.assertEqual(self.kit_of(17, 3, both), kits.SHINOBI)
+        # not its spell: refused, whatever it reads
+        ax, told, read = learn(8, 100, both)
+        self.assertEqual((ax, told[:2], told[5], read), (0, [who, 8], intlearn.NOT_ITS, [0, 0]))
+        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x680)[2], b"A SHINOBI CAN NOT LEARN THAT SPELL")
+        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x690)[:2], (self.DS, 0x3405))  # (once only)
+        # Shield (9), its own, unread at 0%: taught by the game, then taken back
+        ax, told, read = learn(9, 0, both)
+        self.assertEqual((ax, told[5], read[1]), (1, intlearn.UNREAD, 0))
+        self.assertTrue(1 <= read[0] <= 100)
+        self.mu.mem_write(known_at + 9, b"\1")
+        self.assertEqual(self.said(VEC_LEARN_SAID, 0x6A0)[2], b"YOU CAN NOT READ THE SCROLL")
+        self.assertEqual(self.mu.mem_read(known_at + 9, 1)[0] & 0x0F, 0)
+        # read at 100%: INT 9's 35% with the rule, learnt without it (no roll)
+        results = set()
+        for n in range(30):
+            ax, told, read = learn(9, 100, both)
+            self.assertEqual((ax, told[2:4], read[1]), (1, [9, 35], 100))
+            self.assertEqual(told[5], intlearn.LEARNT if told[4] <= 35 else intlearn.FAILED)
+            results.add(told[5])
+        self.assertEqual(results, {intlearn.LEARNT, intlearn.FAILED})
+        ax, told, read = learn(9, 100, game.RULE_KITS)
+        self.assertEqual((ax, told[3:], read[1]), (1, [0, 0, intlearn.LEARNT], 100))
+        # read languages 50%: both ways
+        outcomes = set()
+        for n in range(30):
+            ax, told, read = learn(17, 50, game.RULE_KITS)
+            self.assertEqual(told[5], intlearn.LEARNT if read[0] <= 50 else intlearn.UNREAD)
+            outcomes.add(told[5])
+        self.assertEqual(outcomes, {intlearn.LEARNT, intlearn.UNREAD})
 
     def test_int_pick(self):
         """CHOOSE A SPELL with the rule for INT: PROBE_PICK_LIST leaves out the spells of a level the

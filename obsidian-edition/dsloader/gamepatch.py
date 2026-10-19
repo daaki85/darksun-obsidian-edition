@@ -122,12 +122,21 @@ NS_CMP_SITES = (
 # the lists of spells a member knows, may learn, may cast (500:25h, 2Ah, 2Fh): "cmp si,8Ah", the
 # end of their loops, made the new spells' end (their rows are empty while the rule is off)
 NS_FIST = NS_CMP + len(NS_CMP_SITES)  # (a melee hit's magic: after NS_CMP's)
-NS_IMAGE = NS_FIST + 1  # (an image taking a blow: Reflected Image's chance)
+NS_IMAGE = NS_FIST + 1  # (an image taking a spell: Reflected Image's chance, only a foe's)
 # an effect's entry in the effects' table (its number times 6): Reflected Image's own name and icon
 # where Mirror Images is its (DSCLOG's NS_ENTRY): the Effects screen's, the Look box's, a portrait's
 NS_ENTRY_EF, NS_ENTRY_LOOK, NS_ENTRY_STATUS = NS_IMAGE + 1, NS_IMAGE + 2, NS_IMAGE + 3
 SELL_KEEP = NS_IMAGE + 4  # (a shop freeing an item sold: DSCLOG keeps a magical one, buyback.py)
 SELL_PRICE = NS_IMAGE + 5  # (what a shop pays: half with the CHA prices rule, prices.sell_price)
+NS_BLOW = NS_IMAGE + 6  # (an attack's hit, which an image may take instead)
+NS_HOLD = NS_IMAGE + 7  # (Hold Undead on a target that isn't undead: immune)
+# A thief's Pick Pockets button where a priest's Turn Undead is (DSCLOG's PICK POCKETS): the
+# button shown, let go of, its spell readied (none: the pick), and the talk it makes a pick
+PP_SHOW, PP_CLICK, PP_ARM, PP_HAND, PP_LIT = NS_IMAGE + 8, NS_IMAGE + 9, NS_IMAGE + 10, NS_IMAGE + 11, NS_IMAGE + 12
+PP_TEXT, PP_INFO = NS_IMAGE + 13, NS_IMAGE + 14  # (its name under the screen; its spell's description)
+PP_CLOSE = NS_IMAGE + 15  # (the USE screen closing: a cleric/thief's second button's icon let go of)
+CR_LABELS = NS_IMAGE + 16  # (the ability labels: the creation screen's in its white)
+CR_WEAPONS = NS_IMAGE + 17  # (the creation screen's DONE: a warrior picks its weapon specs)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -252,8 +261,12 @@ PATCHES = (
     # ... a melee hit's magic, as the hit's damage kinds get it: cmp word [bp-0Ch],0 (Erdlu Claw's
     # +1 to hit and +1 weapon for a natural attack) ...
     Patch("ns_fist", 0x58226, bytes.fromhex("837ef400"), _site(NS_FIST, 4)),
-    # ... the d100 an image takes a blow on: cmp ax,4Bh (75; Reflected Image's one 50) ...
+    # ... the d100 an image takes a spell on: cmp ax,4Bh (75; Reflected Image's one 50; only a
+    # foe's, caster and target on opposite sides) ...
     Patch("ns_image", 0x7A5CD, bytes.fromhex("3d4b00"), _site(NS_IMAGE, 3)),
+    # ... an attack's hit, before its damage: cmp word [bp+1Ah],0 (an image may take it instead,
+    # the game's Mirror Images having stopped none) ...
+    Patch("ns_blow", 0x58A00, bytes.fromhex("837e1a00"), _site(NS_BLOW, 4)),
     # ... an effect's entry, by its number times 6: Reflected Image's for its Mirror Images ...
     Patch("ns_entry_name", 0x7ED37, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),
     Patch("ns_entry_icon", 0x7EEC9, bytes.fromhex("6bc006"), _site(NS_ENTRY_EF, 3)),
@@ -270,6 +283,58 @@ PATCHES = (
     # ... and the lists' ends
     *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"), bytes((0x81, 0xFE, NS_END, 0x00)))
       for offset in NS_LIST_ENDS),
+    # Bugs of the game's spells, fixed whatever the rules (DEVELOPMENT.md's "The game's spells"):
+    # Armor used a charge where any spell or blow landed on its wearer (7A557h, "je" past it
+    # unless the target has Armor, 2), as well as where damage is taken (79A3Eh): the jump
+    # always taken, so a damaging hit uses one charge and a friend's spell none ...
+    Patch("armor_charge", 0x7A557, bytes.fromhex("740b"), bytes.fromhex("eb0b")),
+    # ... a psionicist ending a maintained power removed each of its effects by the psionicist
+    # and the effect's handle (5CEBDh), not by the creature it is on (Share Strength's on the
+    # one it was shared with: another effect of the psionicist's went): pushed as the record's
+    # owner and handle (ES:BX still the record), the slot looked at again after a removal (the
+    # records move down), and only slots below the live count (DS:1E24h) looked at, not 192
+    # (the body skipped past it, where the loop's top had already set ES:BX); the "mov ax,390h"
+    # and the far call left where they were (their segments are fixed up) ...
+    Patch("power_end_live", 0x5CF00, bytes.fromhex("8bde6bdb0a"), bytes.fromhex("3b36241e90")),
+    Patch("power_end_skip", 0x5CF08, bytes.fromhex("8ec0"), bytes.fromhex("7d20")),
+    Patch("power_end_handle", 0x5CF11, bytes.fromhex("8bde6bdb0a"), bytes.fromhex("26ffb70d01")),
+    Patch("power_end_owner", 0x5CF19, bytes.fromhex("8ec0268a870d015057"),
+          bytes.fromhex("26ffb70601") + b"\x90" * 4),
+    Patch("power_end_again", 0x5CF27, bytes.fromhex("83c404"), bytes.fromhex("59594e")),
+    Patch("power_end_count", 0x5CF2B, bytes.fromhex("81fec0007cbb"), bytes.fromhex("3b36241e7cbb")),
+    # ... the preserver's Dispel Magic (spell 26) put "No spell use" (effect 50, which Dispel
+    # Magic itself never ends) on all it caught, the cleric's none: its record's effect 0 ...
+    Patch("dispel_effect", 0x422C9, bytes((50,)), bytes((0,))),
+    # ... Cause Serious and Critical Wounds' damage was 2d9 and 3d9 (the Cure spells' 2d8+1 and
+    # 3d8+3 as AD&D has them): their records' dice (+1Ch: steps' dice << 5 | the flat bonus a
+    # step; +1Dh: base dice << 3 | caster levels a step; +1Eh: level adjustment << 4 | sides)
+    # made 2d8 and 3d8, one step of +1 and +3 (a step for each 7 caster levels, the level
+    # counted up to 10: always one) ...
+    Patch("cause_serious", 0x42DAC, bytes.fromhex("001109"), bytes.fromhex("011708")),
+    Patch("cause_critical", 0x42F8C, bytes.fromhex("001909"), bytes.fromhex("031f08")),
+    # ... and Hold Undead held anything: where the game has just asked whether the target is
+    # undead (7BE20h, AL), "or al,al / je +22h" (DSCLOG's NS_HOLD: Hold Undead on a living
+    # target goes to the immunity's return, 7A1F0h)
+    Patch("hold_undead", 0x7A333, bytes.fromhex("0ac07422"), _site(NS_HOLD, 4)),
+    # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
+    # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
+    # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"
+    # once the screen is closed (the menu button lit with its icon) and "push dword 0BEFFFFh"
+    # (Turn Undead readied); at the start of the routine of a click on the map with
+    # the pointer for talking, "mov si,[bp+6]" (the thing clicked on)
+    Patch("pp_show", 0x89979, bytes.fromhex("833e829b00"), _site(PP_SHOW, 5)),
+    Patch("pp_click", 0x8959B, bytes.fromhex("833edc9c00"), _site(PP_CLICK, 5)),
+    Patch("pp_lit", 0x895F2, bytes.fromhex("a1de9c"), _site(PP_LIT, 3)),
+    # ... and its name under the screen ("push ds / push 3262h", "TURN UNDEAD"), as the pointer is
+    # on it and on a right click, and the description of its spell on the right click
+    Patch("pp_text_hover", 0x89541, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
+    Patch("pp_text_info", 0x8967A, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
+    Patch("pp_info", 0x8968E, bytes.fromhex("a1de9c"), _site(PP_INFO, 3)),
+    # ... a cleric/thief's purse beside Turn Undead, its icon let go of where the screen, closing,
+    # lets go of Turn Undead's ("cmp dword [30F4h],0")
+    Patch("pp_close", 0x88504, bytes.fromhex("66833ef43000"), _site(PP_CLOSE, 6)),
+    Patch("pp_arm", 0x89610, bytes.fromhex("6668ffffbe00"), _site(PP_ARM, 6)),
+    Patch("pp_hand", 0x5ECD8, bytes.fromhex("8b7606"), _site(PP_HAND, 3)),
     # The name table (GPLDATA's NAME chunk), loaded as the game starts and as a game is loaded:
     # the memory reserved for it, "push dword 1" before the size (DSCLOG adds room for more
     # names) ...
@@ -434,7 +499,7 @@ PATCHES = (
     Patch("no_cast", 0x89B84, bytes.fromhex("83c404"), _interrupt(VEC_NO_CAST, 3)),
     Patch("mc_con", 0x87523, bytes.fromhex("03f8"), _interrupt(VEC_MC_CON, 2)),
     Patch("mc_uncon", 0x877DA, bytes.fromhex("2bd0"), _interrupt(VEC_MC_UNCON, 2)),
-    # the creation panel's weapon pages (weaponpages.py)
+    # the creation panel's KIT pages, shown in the panel's discipline and sphere windows (weaponpages.py)
     Patch("wp_disc_win", 0x67BFB, bytes.fromhex("68c40b"), _interrupt(VEC_WP_DISC_WIN, 3)),
     Patch("wp_sphere_win", 0x6413B, bytes.fromhex("68c50b"), _interrupt(VEC_WP_SPHERE_WIN, 3)),
     Patch("wp_disc_click", 0x64311, bytes.fromhex("8b5e08"), _interrupt(VEC_WP_DISC_CLICK, 3)),
@@ -484,7 +549,7 @@ PATCHES = (
     # caster level routine (the spell levels it may cast; Dispel Magic) and of the routine giving
     # the level a spell is cast at (durations, damage); at a level up, CHOOSE A SPELL opened for it
     # (no preserver level), the highest spell level it may pick there and the list it picks from
-    # (its own spells); and no learning from scrolls
+    # (its own spells); a scroll of its own spells learnt once read (DSCLOG's SHINOBI_READ)
     Patch("cast_level", 0x81C06, bytes.fromhex("8b46fe"), _interrupt(VEC_CAST_LEVEL, 3)),
     Patch("spell_level", 0x5E3D1, bytes.fromhex("8bc7"), _interrupt(VEC_SPELL_LEVEL, 2)),
     # The level a spell's duration and damage take, where the game takes each class's (5E25Ch): a
@@ -572,6 +637,9 @@ PATCHES = (
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),
+    # ... and a new warrior its weapon specs on the weapon window (DSCLOG's CR_WEAPONS), once DONE
+    # has closed the screen's windows (their memory free for it): pop cx / push si / nop
+    Patch("cr_weapons", 0x666DF, bytes.fromhex("595690"), _site(CR_WEAPONS, 3)),
     # Creation's scores and hit points as rolled (game.RULE_ROLLED): a score click kept to the
     # die's total, a hit point click doing nothing, the die's total kept as its three loops set
     # CHR, and the totals drawn under CHR. No vectors are left: these share VEC_CR_SPELLS, the
@@ -583,8 +651,10 @@ PATCHES = (
     Patch("rl_roll_7", 0x659AE, bytes.fromhex("26884722"), bytes((0xCD, VEC_CR_SPELLS, RL_ROLL, 0x90))),
     # the creation screen's ability labels (STR: to CHR:, 6511Fh) in its own white (34h): the
     # routine prints them in the colour the last screen left (DS:326Eh: a character screen's
-    # yellow, 2Fh), and the creation screen never sets it before they're drawn
-    Patch("cr_labels", 0x65135, bytes.fromhex("ff366e32"), bytes.fromhex("6a349090")),
+    # yellow, 2Fh), and the creation screen never sets it before they're drawn. The inventory
+    # screen draws its labels with the same routine, in the yellow it sets: DSCLOG sets the white
+    # only for labels at the creation screen's place (CR_LABELS)
+    Patch("cr_labels", 0x65125, bytes.fromhex("8bdec1e302"), _site(CR_LABELS, 5)),
     Patch("rl_sum", 0x65185, bytes.fromhex("83c404"), bytes((0xCD, VEC_CR_SPELLS, RL_SUM))),
     # a click on CON moving the hit points with the most they may be, and each ability's 4d4 kept
     # for the dice log (whatever the rule)

@@ -34,7 +34,7 @@ first) is held only by that class; another race's classes (multiclass) all hold 
 no kind (spell-made weapons, gloves, the broken weapon) are as the game has them.
 """
 
-from typing import Iterable, List, Set
+from typing import Iterable, List, Optional, Set
 
 from . import game, specialize
 
@@ -168,6 +168,24 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
     return False
 
 
+def forbidding_kit(sheet: bytes, item_type: int, typ: bytes) -> Optional[int]:
+    """The first of the character's kits that keeps it from an item type (kit_forbids, not
+    choosing a spec nor for the off hand), or None."""
+    from . import kitpages, kits
+    if not game.RULES_IN_FORCE & game.RULE_KITS:
+        return None
+    for kid, _, _ in kitpages.kits_of(sheet):
+        if kits.light_only(kid, typ):
+            return kid
+    kind = specialize.kind_of(item_type) if is_weapon(typ) else None
+    half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT)
+    for kid in kitpages.kit_ids(sheet):
+        sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4
+        if kits.forbids(kid, typ, kind, half_giant, False, False, sphere):
+            return kid
+    return None
+
+
 def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:
     """Whether the character's kit (kits.allows, the rule for kits in force) lets it use an item
     type whatever its classes' lists and restrictions: a Battle Mage its chosen weapon spec's
@@ -255,13 +273,14 @@ def thief_heavy(sheet: bytes, worn: Iterable[bytes]) -> bool:
         and any(is_armour(t) and not is_light(t) for t in worn)
 
 
-def usable(sheet: bytes, type_: int, typ: bytes) -> bool:
+def usable(sheet: bytes, type_: int, typ: bytes, kit: bool = True) -> bool:
     """Whether the game's class lists, these restrictions and the kit's let the character use an
-    item of this type (TYP its record)."""
+    item of this type (TYP its record); KIT false: the classes' alone (what the kit forbids not
+    counted)."""
     flags = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little")
     game_lets = bool(int.from_bytes(typ[TYPE_CLASSES:TYPE_CLASSES + 2], "little") & flags)
     return (game_lets or kit_allows(sheet, type_, typ)) and allowed(sheet, type_, typ) \
-        and not kit_forbids(sheet, type_, typ)
+        and not (kit and kit_forbids(sheet, type_, typ))
 
 
 def allowed_kinds(sheet: bytes, type_record) -> List[int]:

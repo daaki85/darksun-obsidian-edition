@@ -8,14 +8,14 @@ in KIT_BYTE the same way. It is
 chosen on the creation panel, on a page of its own (a window for each class, its rows the
 NO KIT and the class's kits, its button VIEW PSIONICS back to the disciplines), which KITS opens:
 the button of the disciplines' window for a class with no sphere, of the spheres' for a
-cleric, druid or ranger, of the last weapon page for a warrior choosing weapons. The rows'
-pictures are carved as the weapon pages' are (weaponpages.py), names too long for the panel
+cleric, druid or ranger. The rows'
+pictures are carved by weaponpages.py, names too long for the panel
 shortened as the game shortens its own (P-KINESIS).
 """
 
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import gff, specialize
+from . import gff
 from . import weaponpages as wp
 
 KIT_BYTE = 0x43
@@ -57,7 +57,8 @@ ROW_WIDTH = 88
 CREATION_CLASS = {**{c: 1 for c in range(1, 5)}, **{c: 2 for c in range(5, 9)}, 9: 3, 10: 4, 11: 5, 12: 6,
                   **{c: 7 for c in range(13, 17)}, 17: 8}
 
-KIT_DISCIPLINES, KIT_SPHERES, KIT_LAST_PAGE = 3022, 3023, 3025  # (3020 and 3024 are the game's)
+KIT_DISCIPLINES, KIT_SPHERES = 3022, 3023  # (3020 and 3024 are the game's)
+KIT_BACK = 0x851  # a kit page's VIEW PSIONICS (DSCLOG's WP_BACK)
 KIT_WINDOW = 3026  # + creation class (or multiclass group) - 1
 KIT_ROW, KIT_NONE, KIT_VIEW = 0x870, 0x888, 0x889  # rows: KIT_ROW + 3 * (class - 1) + kit - 1
 MULTI_ROW = 0x88A  # a multiclass group's rows: MULTI_ROW + 3 * (group - 9) + kit - 1
@@ -78,9 +79,9 @@ DRAWN = {
           "..."),
 }
 
-# the rules' bits (game.RULE_SPECIALIZE, game.RULE_KITS), here to keep this module standalone
-SPECIALIZE, KITS_ON = 4096, 65536
-WARRIORS, SPHERES = {3, 4, 7}, {1, 2, 7}  # (creation classes: fighter, gladiator, ranger; cleric, druid)
+# the rules' bit (game.RULE_KITS), here to keep this module standalone
+KITS_ON = 65536
+SPHERES = {1, 2, 7}  # (creation classes: cleric, druid, ranger)
 
 
 def row_text(name: str) -> str:
@@ -207,14 +208,11 @@ def kit_class(classes: Sequence[int], rules: int, race: int = 0) -> int:
     return classes[0] if 1 <= classes[0] <= 8 else 0
 
 
-def panel_windows(classes: Sequence[int], rules: int, kit: int = 0, race: int = 0) -> Tuple[int, int]:
+def panel_windows(classes: Sequence[int], rules: int, race: int = 0) -> Tuple[int, int]:
     """The windows the panel shows for the sheet being made: the disciplines' and the spheres'
-    (DSCLOG's WP_IDS); KIT its kit byte (a Battle Mage, a preserver's second, counts as a warrior
-    with weapon specialization, for its weapon spec)."""
-    warrior = any(c in WARRIORS for c in classes) or bool(rules & KITS_ON) and kit_class(classes, rules) == 5 and kit == 2
+    (DSCLOG's WP_IDS), with KITS for their button where there are kits to choose. (A warrior's
+    weapon specs are picked after DONE, on the weapon window: DSCLOG's CR_WEAPONS.)"""
     sphere = any(c in SPHERES for c in classes)
-    if rules & SPECIALIZE and warrior:
-        return (wp.DISCIPLINES if sphere else wp.WARRIOR_DISCIPLINES), wp.WARRIOR_SPHERES
     if kit_class(classes, rules, race):
         return (wp.DISCIPLINES if sphere else KIT_DISCIPLINES), KIT_SPHERES
     return wp.DISCIPLINES, wp.SPHERES
@@ -235,15 +233,16 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     for cid, text in rows + [(KIT_NONE, "NO KIT")]:
         added[("ICON", cid)] = wp.picture(font, text, wp.ROW_PAD, row_colours)
         added[("BUTN", cid)] = wp.row_button(row_button, cid, font, text)
-    added[("ICON", KIT_VIEW)] = wp.picture(font, "KITS", 0, toggle_colours)
-    added[("BUTN", KIT_VIEW)] = wp._button(toggle_button, wp.TOGGLE_TEMPLATE, KIT_VIEW)
+    for cid, text in ((KIT_VIEW, "KITS"), (KIT_BACK, "VIEW PSIONICS")):
+        added[("ICON", cid)] = wp.picture(font, text, 0, toggle_colours)
+        added[("BUTN", cid)] = wp._button(toggle_button, wp.TOGGLE_TEMPLATE, cid)
     spheres = resource[("WIND", wp.SPHERES)]
     sphere_items = wp._items(spheres)  # (four rows, then the button)
     rows_at = [(x, y) for _, x, y in sphere_items[:4]]
     toggle_at = sphere_items[4][1:]
     for cls in KITS:
         ids = [KIT_NONE] + [row_id(cls, k + 1) for k in range(len(KITS[cls]))]
-        items = [(cid, x, y) for cid, (x, y) in zip(ids, rows_at)] + [(wp.BACK, *toggle_at)]
+        items = [(cid, x, y) for cid, (x, y) in zip(ids, rows_at)] + [(KIT_BACK, *toggle_at)]
         added[("WIND", KIT_WINDOW + cls - 1)] = wp._window(spheres, KIT_WINDOW + cls - 1, items)
     added[("WIND", KIT_SPHERES)] = wp._window(
         spheres, KIT_SPHERES, [(KIT_VIEW if c == wp.SPHERE_TOGGLE else c, x, y) for c, x, y in sphere_items])
@@ -251,9 +250,6 @@ def chunks(resource: gff.Chunks) -> Dict[Tuple[str, int], bytes]:
     added[("WIND", KIT_DISCIPLINES)] = wp._window(
         disciplines, KIT_DISCIPLINES,
         [(KIT_VIEW if c == wp.DISCIPLINE_TOGGLE else c, x, y) for c, x, y in wp._items(disciplines)])
-    last = len(wp.PAGES) - 1
-    page_rows = [(wp.ROW_FIRST + last * specialize.PAGE_SIZE + r, x, y) for r, (x, y) in enumerate(rows_at)]
-    added[("WIND", KIT_LAST_PAGE)] = wp._window(spheres, KIT_LAST_PAGE, page_rows + [(KIT_VIEW, *toggle_at)])
     return added
 
 

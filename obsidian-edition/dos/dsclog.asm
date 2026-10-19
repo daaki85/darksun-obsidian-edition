@@ -199,6 +199,7 @@ filt:                           ; +34  up to 8 filters: a length (1-8), then tha
         db 7, 0x66,0x0F,0xBF,0xC0,0x66,0xC1,0xE0, 0     ; shl eax,n
         db 8, 0x66,0x0F,0xBF,0xC0,0x66,0x0F,0xBF,0x56   ; N = word [bp+x] (the dice routines)
         db 8, 0xBB,0x64,0x00,0x99,0xF7,0xFB,0x3B,0x56   ; percentile check
+        db 7, 0xEB,0x05,'IMAGE', 0                      ; NS_BLOW's d100 (an image taking a hit)
 NFILT   equ ($ - filt) / 9
         times (8 - NFILT) * 9 db 0
 skipped  dw 0                   ; +106 calls not recorded because no filter matched
@@ -238,15 +239,16 @@ rules      dw 0                 ; +170 rule changes the Loader turns on (RULE_HE
            dw 0, 0              ; +172 (unused: once P in a conversation)
 pick_off   dw pick_text         ; +176 offset of PICK_TEXT: what came of it, NUL-terminated (empty:
                                 ;      nothing to show)
-pick_on    dw 0                 ; +178 the Loader sets bit 0 for the thieving tools on someone to pick
-                                ;      their pocket
+pick_on    dw 0                 ; +178 the Loader sets bit 0 to be asked about items used on the map
+                                ;      (USE_ASK), bit 1 for a thief's Pick Pockets button (PICK_BUTTON)
 use_seq    dw 0                 ; +180 an item used on something on the map (PROBE_USE_ITEM counts) ...
 use_reply  dw 0                 ; +182 ... and set to it by the Loader once it has had its say
 use_who    dw 0                 ; +184 the object it was used on
-use_taken  dw 0                 ; +186 the Loader sets 1 when it was one of its own (the thieving
-                                ;      tools): the game then does nothing more, and PICK_TEXT is shown;
-                                ;      2 when it is used up as well (the cooked vulture, eaten)
-use_item   dw 0                 ; +188 the item used (FFFFh: none)
+use_taken  dw 0                 ; +186 the Loader sets 1 when it was its to answer (a pocket picked, the
+                                ;      cooked vulture): the game then does nothing more, and PICK_TEXT is
+                                ;      shown; 2 when it is used up as well (the cooked vulture, eaten)
+use_item   dw 0                 ; +188 the item used (FFFFh: none; PICKED_BY and a party member: the
+                                ;      Pick Pockets button's pick, PP_HAND)
 swap_on    dw 0                 ; +190 the Loader sets 1 to have the next dialogue text that
                                 ;      starts with SWAP_MATCH shown as SWAP_TEXT instead (once)
 swap_seq   dw 0                 ; +192 counted up when it has been
@@ -363,7 +365,12 @@ tick_seq   dw 0                 ; +358 records taken, counted: the newest in slo
 kit_poisoned db 0               ; +360 bit N set once party member N, a Poisoner, has poisoned a
                                 ;      foe this fight (PROBE_POISON); the Loader clears it as a fight
                                 ;      starts
-           db 0                 ; +361
+lv_creating db 0                ; +361 1 while CR_WEAPONS has the weapon window up for a character
+                                ;      being made: the Loader leaves its weapon specs till it is down
+read_lang  times 4 db 0         ; +362 the Loader's: each party member's chance to read languages (%),
+                                ;      as it stands (kept with STATS): a Shinobi reads a scroll with it
+learn_read db 0                 ; +366 a Shinobi's try at a scroll (LEARN_SEQ): the d100 to read it ...
+learn_read_chance db 0          ; +367 ... and its chance (SHINOBI_READ)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1247,6 +1254,7 @@ give_xp:
         mov word [cs:xp_who], 0xFFFF
 .ret:   ret
 
+use_done dw 0                   ; (the way on when the Loader answered: the routine's end, less the INT's)
 xp_call dw XP_OFF, 0
 drop_call dw DROP_OFF, 0
 sound_call dw SOUND_OFF, 0
@@ -1270,11 +1278,15 @@ DROP_SEG  equ 0x1A0A            ; and the resident routine (21134h in DSUN.EXE) 
 DROP_OFF  equ 0x1C94            ;   object's item list, putting the items back on the free list
 SOUND_OFF equ 0x0663            ; the resident routine there that plays a sound (GPL's 5Dh)
 QUEST_SOUND equ 53              ; the sound of a quest done (the game's scripts, with their XP)
+USE_ASK   equ 1                 ; PICK_ON's bits: items used asked about; the Pick Pockets button
+PICK_BUTTON equ 2
+PICKED_BY equ 0xFF00            ; USE_ITEM for the Pick Pockets button's pick (PP_HAND): the thief
 probe_use_item:
         sti
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        mov word [cs:use_done], USE_DONE
         mov dx, USE_NONE
         cmp si, -1
         je .go
@@ -1335,7 +1347,7 @@ probe_use_item:
         add sp, 2
         pop bx
 .kept:
-        mov dx, USE_DONE
+        mov dx, [cs:use_done]
         add [ss:bx + 34], dx
         cmp byte [cs:pick_text], 0
         je .out
@@ -2088,7 +2100,18 @@ probe_unlook:
         jne .out
         mov byte [cs:look_pending], 0
         mov word [cs:show_text], look_full
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]  ; the way back in a frame the overlay manager can fix up (pushed
+        push word [ss:bx + 34]  ;   as a far call's, with BP): the dialogue window may load other
+        push bp                 ;   overlays over this routine's while it waits for Continue
+        mov bp, sp
         call show_window
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
 .out:   pop es
         popad
         iret
@@ -4261,52 +4284,38 @@ armour_worn:
         clc
         ret
 
-; Weapon pages in the character creation panel (RULE_SPECIALIZE; dsloader/weaponpages.py, which
-; puts the windows and their pictures in the Loader's RESOURCE.GFF). The panel shows the psionic
-; disciplines' window (3012, DS:EA2h its window) or the clerical spheres' (3013, DS:EA6h), which
-; the game swaps through its routines at DSUN.EXE 640E4h (to the spheres) and 641B9h (back). For a
-; fighter, gladiator or ranger it gets windows with WEAPON SPEC for its button (3018 for the
-; disciplines if it has no sphere, 3019 for the spheres), and that opens the four weapon pages
-; (3014-3017; kept at DS:EA6h, as the spheres' window is, so that the game closes it as one),
-; each four kinds (specialize.KINDS), MORE SPECS to the next, the last's VIEW PSIONICS back.
-; The kind marked is the creation sheet's (DS:119Ch) first SPEC_SLOTS byte, which goes with the
-; sheet when DONE is pressed (the Loader puts in the long sword for a warrior who marks none).
+; The character creation panel (kits.py, kitpages.py, which puts the kit windows and their
+; pictures in the Loader's RESOURCE.GFF). The panel shows the psionic disciplines' window (3012,
+; DS:EA2h its window) or the clerical spheres' (3013, DS:EA6h), which the game swaps through its
+; routines at DSUN.EXE 640E4h (to the spheres) and 641B9h (back). (A warrior's weapon specs are
+; picked after DONE, on the weapon window: CR_WEAPONS.)
 ; PROBE_WP_DISC_WIN: INT replaces "push 0BC4h" (3 bytes: INT + NOP; 67BFBh), the disciplines'
-; window being opened: pushes 3018's id instead for a warrior with no sphere.
+; window being opened: pushes 3022's id instead (KITS for its button) for a class with kits.
 ; PROBE_WP_SPHERE_WIN: INT replaces "push 0BC5h" (6413Bh), the spheres' window being opened:
-; 3019's id instead for a warrior.
+; 3023's id instead for a class with kits.
 ; PROBE_WP_SHOWN: INT replaces "cmp ax,8" (3 bytes: INT + NOP; 6337Ah) where a new class has been
 ; picked and the game asks whether the spheres' window is up (AX 8 if it is, from the routine it
-; has just called, 118:C36h, with the window's id) to close it: 8 too if a warrior's spheres or a
-; weapon page is up. RETF 2 keeps the compare's flags.
+; has just called, 118:C36h, with the window's id) to close it: 8 too if the kits' spheres or a
+; kit page is up. RETF 2 keeps the compare's flags.
 ; PROBE_WP_DISC_CLICK, PROBE_WP_SPHERE_CLICK: INT replaces "mov bx,[bp+8]" (3 bytes: INT + NOP;
-; 64311h, 642B0h) in those windows' click routines, [BP+8] the button: WEAPON SPEC opens the
-; first page, and the routine goes on at its end (6433Fh, 642E2h: the redraw). Both read
-; the far addresses of the game's window routines from the calls in their own overlay, as the
-; loader has fixed them (WP_CALLS), for WP_HANDLER to call.
-WP_DISC_ID   equ 0xBC4              ; (windows' ids: 3012, 3013, 3014-3017, 3018, 3019)
+; 64311h, 642B0h) in those windows' click routines, [BP+8] the button: KITS opens the kit page,
+; and the routine goes on at its end (6433Fh, 642E2h: the redraw). Both read the far addresses
+; of the game's window routines from the calls in their own overlay, as the loader has fixed them
+; (WP_CALLS), for WP_HANDLER to call.
+WP_DISC_ID   equ 0xBC4              ; (windows' ids: 3012, 3013)
 WP_SPHERE_ID equ 0xBC5
-WP_PAGE_ID   equ 0xBC6
-WP_WDISC_ID  equ 0xBCA
-WP_WSPHERE_ID equ 0xBCB
-WP_ROW       equ 0x840              ; (buttons: the kinds' rows, MORE SPECS, VIEW PSIONICS, WEAPON SPEC)
-WP_MORE      equ 0x850
-WP_BACK      equ 0x851
-WP_VIEW      equ 0x852
-WP_PAGES     equ 4
+WP_BACK      equ 0x851              ; (a kit page's VIEW PSIONICS)
 SPHERE_TOGGLE equ 0x7FF             ; (the spheres' VIEW PSIONICS)
 ; Kits (RULE_HI_KITS; kitpages.py): one class's three, or none, chosen on a page of their own
-; (3026-3033, by class, kept at DS:EA6h as the weapon pages are), its rows NO KIT and the
-; class's kits (KIT_ROW + 3 * (class - 1) + kit - 1), its button VIEW PSIONICS back. KITS opens it:
-; the button of the disciplines' window (3022) for a class with no sphere, of the spheres' (3023)
-; for a cleric's, druid's or ranger's, of the fourth weapon page (3025) for a warrior choosing
-; weapons. The kit marked is the creation sheet's KIT_BYTE (0 none, 1-3), which goes with the
+; (3026-3033, by class, kept at DS:EA6h as the spheres' window is, so that the game closes it as
+; one), its rows NO KIT and the class's kits (KIT_ROW + 3 * (class - 1) + kit - 1), its button
+; VIEW PSIONICS back. KITS opens it: the button of the disciplines' window (3022) for a class with
+; no sphere, of the spheres' (3023) for a cleric's, druid's or ranger's. The kit marked is the creation sheet's KIT_BYTE (0 none, 1-3), which goes with the
 ; sheet when DONE is pressed. The game keeps that sheet from one character to
 ; the next: the disciplines' window opened other than on the way back to it (KIT_KEEP), for a
 ; new character or another class, puts the kit back to none.
 KIT_DISC_ID  equ 3022
 KIT_SPHERE_ID equ 3023
-KIT_PAGE4_ID equ 3025
 KIT_WIN_ID   equ 3026
 KIT_ROW      equ 0x870
 KIT_NONE     equ 0x888
@@ -4371,6 +4380,7 @@ CR_DRUID     equ 2
 CR_FIGHTER   equ 3
 CR_GLADIATOR equ 4
 CR_RANGER    equ 7
+THRI_KREEN_RACE equ 8
 ; WP_CALLS: the routines' far calls (9Ah) in the overlay, back from the click probes' return
 ; (the overlay's 642B3h and 64314h; the calls at 64127h close, 6413Eh open, 6416Fh print,
 ; 6417Dh set the text colour, 641AFh the panel's help line, 6422Fh set a button, 642E2h redraw)
@@ -4410,13 +4420,12 @@ probe_wp_disc_win:
         call wp_ids
         mov [bp + 8], ax
         pop dx
-        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit, and
-        jne .keep                   ;   no weapon spec until one is chosen: WP_MARKS's default)
+        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit)
+        jne .keep
         push es
         push bx
         les bx, [WP_CREATION]
         mov byte [es:bx + KIT_BYTE], 0
-        mov dword [es:bx + SPEC_SLOTS], 0
         pop bx
         pop es
 .keep:  mov byte [cs:kit_keep], 0
@@ -4444,29 +4453,19 @@ probe_wp_sphere_win:
         iret
 
 ; WP_IDS: the windows the panel shows for the sheet being made (kitpages.panel_windows): AX the
-; disciplines' (3012, its button VIEW SPHERES; 3018, WEAPON SPEC, for a warrior with no sphere
-; and weapon specialization; 3022, KITS, for one of no sphere with kits to choose), DX the
-; spheres' (3013, VIEW PSIONICS; 3019, WEAPON SPEC, for a warrior and weapon specialization;
-; 3023, KITS, for one with kits to choose). Others kept.
+; disciplines' (3012, its button VIEW SPHERES; 3022, KITS, for one of no sphere with kits to
+; choose), DX the spheres' (3013, VIEW PSIONICS; 3023, KITS, for one with kits to choose). (A
+; warrior's weapon specs are picked after DONE: CR_WEAPONS.) Others kept.
 wp_ids:
         push bx
         push cx
         call wp_classes
-        mov cx, ax              ; CL a warrior, CH a sphere
+        mov cx, ax              ; CH a sphere
         call kit_class
         mov bl, al
         mov ax, WP_DISC_ID
         mov dx, WP_SPHERE_ID
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .kits
-        or cl, cl
-        jz .kits
-        mov dx, WP_WSPHERE_ID
-        or ch, ch
-        jnz .out
-        mov ax, WP_WDISC_ID
-        jmp .out
-.kits:  or bl, bl
+        or bl, bl
         jz .out
         mov dx, KIT_SPHERE_ID
         or ch, ch
@@ -4580,84 +4579,14 @@ multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1
 km_rows     db 4                ; (KIT_MARKS: the page's rows)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
-; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's own windows wanted).
+; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's kit windows, the DAM
+; line's and the Effects screen's own lines wanted).
 ; All registers kept.
 wp_rules:
         test word [cs:rules], RULE_SPECIALIZE
         jnz .ret
         test word [cs:rules_hi], RULE_HI_KITS
 .ret:   ret
-
-; WP_ALLOWED: AX the kinds (bit 0 the long sword) the sheet being made can choose: those whose
-; plain weapon (WP_PLAIN) the game's class lists and CLASS_FORBIDS let it use, its classes as the
-; sheet numbers them (a cleric's or ranger's by the sphere marked). restrict.allowed_kinds.
-wp_allowed:
-        push bx
-        push cx
-        push dx
-        push si
-        push di
-        push es
-        les bx, [WP_CREATION]
-        push ds
-        push cs
-        pop ds
-        mov di, wp_sheet
-        mov cx, 0x47 / 2 + 1
-        xor ax, ax
-.zero:  mov [di], ax
-        add di, 2
-        loop .zero
-        pop ds
-        mov al, [es:bx + 0x18]
-        mov [cs:wp_sheet + 0x18], al
-        xor si, si
-        xor dx, dx              ; DX the class flags
-.class: mov al, [es:bx + si + 0x24]
-        mov [cs:wp_sheet + si + 0x24], al
-        movzx di, byte [es:bx + si + 0x21]
-        cmp di, 8
-        ja .next
-        shl di, 2
-        mov al, [cs:di + wp_class_map]
-        mov cx, [cs:di + wp_class_map + 2]
-        cmp byte [cs:di + wp_class_map + 1], 0  ; (a sphere to add: 0-3 by the mark)
-        je .put
-        mov ah, 0x80
-.sphere:
-        test [WP_SPHERE_MASK], ah
-        jnz .put
-        inc al
-        shl cx, 1
-        shr ah, 1
-        cmp ah, 0x08
-        ja .sphere
-        sub al, 4               ; (none marked: the first)
-        shr cx, 4
-.put:   mov [cs:wp_sheet + si + 0x21], al
-        cmp byte [cs:di + wp_class_map + 1], 2  ; (a ranger's sphere doesn't change its flag)
-        jne .flag
-        mov cx, 0x200
-.flag:  or dx, cx
-.next:  inc si
-        cmp si, 3
-        jb .class
-        mov [cs:wp_sheet + 0x12], dx
-        mov al, [es:bx + KIT_BYTE]          ; (its kit: what it keeps the sheet from)
-        mov [cs:wp_sheet + KIT_BYTE], al
-        mov al, [es:bx + SPHERE2]           ; (an Elementalist's second sphere)
-        mov [cs:wp_sheet + SPHERE2], al
-        push cs
-        pop es
-        mov bx, wp_sheet
-        call kinds_allowed
-        pop es
-        pop di
-        pop si
-        pop dx
-        pop cx
-        pop bx
-        ret
 
 ; KINDS_ALLOWED: AX the kinds (bit 0 the long sword) the character whose sheet is at ES:BX can
 ; choose: those with an item type (KIND_OF_TYPE) the game's class lists and CLASS_FORBIDS let it
@@ -4891,7 +4820,7 @@ lv_scholar:
         ret
 
 ; LV_DUE: CX the weapon kinds the character whose sheet is ES:BX is due: a gladiator 2, 3 from 6th
-; level, 4 from 9th; a fighter or ranger 1; 0 for others. A human's earlier classes (dual-classed)
+; level, 4 from 9th; a fighter or ranger 1 (a Myrmidon being made 2: LV_CREATING); 0 for others. A human's earlier classes (dual-classed)
 ; count only once its first class's level has passed theirs. Others kept.
 lv_due:
         push ax
@@ -4931,11 +4860,20 @@ lv_due:
         cmp si, 3
         jb .class
         or cl, cl               ; (a Battle Mage: one)
-        jnz .out
+        jnz .myrmidon
         call kit_is_b
         db KIT_BATTLE_MAGE
         jne .out
         mov cl, 1
+.myrmidon:
+        cmp byte [cs:lv_creating], 0    ; (a new Myrmidon: two, the second its own choice)
+        je .out
+        cmp cl, 2
+        jae .out
+        call kit_is_b
+        db KIT_MYRMIDON
+        jne .out
+        mov cl, 2
 .out:   pop si
         pop ax
         ret
@@ -4953,6 +4891,7 @@ lv_ask:
         push si
         call far [cs:lv_psi]
         add sp, 2
+
         mov byte [cs:lv_mode], 0
         mov byte [cs:showing], 0
         pop es
@@ -8029,9 +7968,9 @@ pick_int_any:
 ; PROBE_SCROLL_LEARN: INT VEC_SCROLL_LEARN replaces "or ax,ax" (2 bytes; DSUN.EXE 8B6D3h, then the
 ; game's "jz", to "YOU ALREADY KNOW THIS SPELL") after the game's check whether the character on
 ; show (the segment of "mov ax,348h" before, its 25Bh) may learn a scroll's spell ([BP-3] of the
-; game's frame; the game's only check is that it doesn't know it yet): none for a Shinobi, who
-; learns only at a level up; with RULE_HI_INT, a preserver's try at a wizard spell as INT_LEARN has
-; it. ZF as "or ax,ax" leaves it.
+; game's frame; the game's only check is that it doesn't know it yet): a Shinobi's as SHINOBI_READ
+; has it; with RULE_HI_INT, a preserver's try at a wizard spell as INT_LEARN has it. ZF as "or
+; ax,ax" leaves it.
 SCROLL_WHO_SEG equ 0x8B6C2 - 0x8B6D5
 probe_scroll_learn:
         or ax, ax
@@ -8052,7 +7991,11 @@ probe_scroll_learn:
         call kit_is_b
         db KIT_SHINOBI
         jne .int
-        xor ax, ax
+        push dx
+        mov bp, [ss:bp]         ; (the game's frame: [BP-3] the spell)
+        mov dl, [bp - 3]
+        call shinobi_read
+        pop dx
         jmp .keep
 .int:   push dx
         mov bp, [ss:bp]         ; (the game's frame: [BP-3] the spell)
@@ -8087,6 +8030,8 @@ int_most     db 6, 7, 7, 7, 9, 9, 11, 11, 14, 18, INT_ALL, INT_ALL, INT_ALL, INT
 LEARN_LEARNT equ 0
 LEARN_FAILED equ 1
 LEARN_FULL   equ 2
+LEARN_UNREAD equ 3                      ; (a Shinobi: the scroll not read, SHINOBI_READ)
+LEARN_NOT_ITS equ 4                     ; (a Shinobi: not one of its spells)
 SPELL_LEVELS_SEG equ 0x3FB9 - 0x4356    ; the spells' table (7 bytes a spell): its segment less DS's ...
 SPELL_LEVELS equ 0x19C                  ; ... and each spell's level there
 learn_msg    db 0                       ; (LEARN_FAILED or LEARN_FULL: the game's message to change)
@@ -8135,6 +8080,84 @@ int_learn:
         mov byte [cs:learn_result], LEARN_FAILED
         mov byte [cs:learn_msg], LEARN_FAILED
 .out:   pop cx
+        pop bx
+        pop ax
+.told:  inc word [cs:learn_seq]
+.ret:   ret
+
+; SHINOBI_READ: party member SI, a Shinobi (its sheet ES:BX), tries to learn spell DL from a scroll,
+; AX not 0 (the game would teach it). Only one of its spells (SHINOBI_SPELLS; a new one while
+; RULE_NEW_SPELLS is on): another it can't (AX 0, PROBE_LEARN_REFUSED's LEARN_NOT_ITS_TEXT, the
+; scroll kept). First a d100 against its chance to read languages (READ_LANG, the Loader's): above
+; it, the scroll isn't read (AX kept: the game teaches it and uses the scroll up, PROBE_LEARN_SAID
+; takes the spell back and says LEARN_UNREAD_TEXT). Read, with RULE_HI_INT a d100 against INT's
+; chance (INT_CHANCE; no most a level: its spells are few) as INT_LEARN's; without it, learnt. The
+; try is told to the Loader (LEARN_SEQ..., LEARN_READ). DS the game's; others kept.
+shinobi_read:
+        or ax, ax
+        jz .ret
+        push ax
+        push bx
+        push cx
+        push si
+        mov ax, si
+        mov [cs:learn_who], al
+        mov [cs:learn_spell], dl
+        mov byte [cs:learn_roll], 0
+        mov byte [cs:learn_read], 0
+        mov byte [cs:learn_read_chance], 0
+        call int_row                    ; (BX the INT's row, AL the INT)
+        mov [cs:learn_int], al
+        mov al, [cs:int_chance + bx]
+        test word [cs:rules_hi], RULE_HI_INT
+        jnz .rate
+        xor al, al                      ; (no INT roll)
+.rate:  mov [cs:learn_chance], al
+        mov si, SHINOBI_SPELLS          ; one of its spells?
+.its:   cmp [cs:si], dl
+        je .new
+        add si, 2
+        cmp si, SHINOBI_SPELLS_END
+        jb .its
+.not:   mov byte [cs:learn_result], LEARN_NOT_ITS
+        mov byte [cs:learn_msg], LEARN_NOT_ITS
+        pop si
+        pop cx
+        pop bx
+        pop ax
+        xor ax, ax
+        jmp .told
+.new:   movzx ax, dl
+        cmp ax, NS_FIRST
+        jb .read
+        call ns_new                     ; (a new spell: only with RULE_NEW_SPELLS, room for its record)
+        jnc .not
+.read:  pop si
+        push si
+        xor al, al
+        cmp si, 3
+        ja .chance
+        mov al, [cs:read_lang + si]
+.chance:
+        mov [cs:learn_read_chance], al
+        call d100
+        mov [cs:learn_read], al
+        cmp al, [cs:learn_read_chance]
+        jbe .int
+        mov byte [cs:learn_result], LEARN_UNREAD
+        mov byte [cs:learn_msg], LEARN_UNREAD
+        jmp .out
+.int:   mov byte [cs:learn_result], LEARN_LEARNT
+        cmp byte [cs:learn_chance], 0
+        je .out
+        call d100
+        mov [cs:learn_roll], al
+        cmp al, [cs:learn_chance]
+        jbe .out
+        mov byte [cs:learn_result], LEARN_FAILED
+        mov byte [cs:learn_msg], LEARN_FAILED
+.out:   pop si
+        pop cx
         pop bx
         pop ax
 .told:  inc word [cs:learn_seq]
@@ -8262,17 +8285,23 @@ d100_hundred dw 100
 ; PROBE_LEARN_SAID: INT VEC_LEARN_SAID replaces "push ds / push 33F1h" (4 bytes: INT + 2 NOPs;
 ; DSUN.EXE 8B712h), the scroll's spell taught and the scroll used up, its message ("YOU LEARN THE
 ; SPELL"): after INT_LEARN's failed d100, the spell taken back (the known spells' table, DS less
-; KNOWN_FROM_DS) and LEARN_FAILED_TEXT pushed in its place. PROBE_LEARN_REFUSED: INT
-; VEC_LEARN_REFUSED replaces "push ds / push 3405h" (8B719h, "YOU ALREADY KNOW THIS SPELL"): after
-; INT_LEARN found the spell's level full, LEARN_FULL_TEXT.
+; KNOWN_FROM_DS) and LEARN_FAILED_TEXT pushed in its place (a Shinobi's scroll not read,
+; SHINOBI_READ's: LEARN_UNREAD_TEXT). PROBE_LEARN_REFUSED: INT VEC_LEARN_REFUSED replaces "push ds /
+; push 3405h" (8B719h, "YOU ALREADY KNOW THIS SPELL"): after INT_LEARN found the spell's level full,
+; LEARN_FULL_TEXT (not one of a Shinobi's spells: LEARN_NOT_ITS_TEXT).
 learn_failed_text db 'YOU FAIL TO LEARN THE SPELL', 0
 learn_full_text   db 'TOO MANY SPELLS OF THAT LEVEL', 0
+learn_unread_text db 'YOU CAN NOT READ THE SCROLL', 0
+learn_not_its_text db 'A SHINOBI CAN NOT LEARN THAT SPELL', 0
 lm_ip dw 0
 lm_cs dw 0
 lm_fl dw 0
 probe_learn_said:
         cmp byte [cs:learn_msg], LEARN_FAILED
+        je .taken_back
+        cmp byte [cs:learn_msg], LEARN_UNREAD
         jne .game
+.taken_back:
         push ax
         push bx
         push ds
@@ -8299,12 +8328,16 @@ probe_learn_said:
 .taken: pop ds
         pop bx
         pop ax
-        mov byte [cs:learn_msg], 0
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
         push cs
         push learn_failed_text
+        cmp byte [cs:learn_msg], LEARN_UNREAD
+        jne .said
+        add sp, 2
+        push learn_unread_text
+.said:  mov byte [cs:learn_msg], 0
         jmp learn_back
 .game:  pop word [cs:lm_ip]
         pop word [cs:lm_cs]
@@ -8321,11 +8354,17 @@ probe_learn_refused:
         pop word [cs:lm_ip]
         pop word [cs:lm_cs]
         pop word [cs:lm_fl]
-        cmp byte [cs:learn_msg], LEARN_FULL
-        jne .game
-        mov byte [cs:learn_msg], 0
         push cs
         push learn_full_text
+        cmp byte [cs:learn_msg], LEARN_FULL
+        je .said
+        add sp, 2
+        push learn_not_its_text
+        cmp byte [cs:learn_msg], LEARN_NOT_ITS
+        je .said
+        add sp, 4
+        jmp .game
+.said:  mov byte [cs:learn_msg], 0
         jmp learn_back
 .game:  push ds
         push 0x3405
@@ -8663,63 +8702,7 @@ ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k
 .k14    db '  SLING', 0
 .k15    db '  STAFF SLING', 0
 
-; By class as the creation screen numbers it (0-8): the sheet's number (the first of four, by
-; sphere), 1 if a sphere is added (2 for a ranger, whose flag is one), the class's flag
-wp_class_map db 0, 0
-             dw 0
-             db 1, 1
-             dw 0x01            ; cleric (air, earth, fire, water: flags 1, 2, 4, 8)
-             db 5, 0
-             dw 0x10            ; druid
-             db 9, 0
-             dw 0x20            ; fighter
-             db 10, 0
-             dw 0x40            ; gladiator
-             db 11, 0
-             dw 0x80            ; preserver
-             db 12, 0
-             dw 0x100           ; psionicist
-             db 13, 2
-             dw 0x200           ; ranger
-             db 17, 0
-             dw 0x400           ; thief
 wp_plain   dw 81, 18, 17, 115, 20, 22, 2, 112, 3, 19, 44, 21, 48, 1, 64, 0   ; (weaponchoice.PLAIN's types, by kind)
-wp_ok      dw 0
-wp_sheet   times 0x48 db 0
-
-; WP_GLADIATOR: ZF clear if the sheet being made (ES:BX) is a gladiator's (two kinds to choose).
-; All registers kept.
-wp_gladiator:
-        cmp byte [es:bx + 0x21], CR_GLADIATOR
-        je .yes
-        cmp byte [es:bx + 0x22], CR_GLADIATOR
-        je .yes
-        cmp byte [es:bx + 0x23], CR_GLADIATOR
-        je .yes
-        cmp al, al              ; (ZF set)
-        ret
-.yes:   push ax
-        or al, 1                ; (ZF clear)
-        pop ax
-        ret
-
-; WP_TWO: ZF clear if the sheet being made (ES:BX) chooses two kinds: a gladiator, or a Myrmidon
-; (a fighter of one class, its kit the first; kits.py). All registers kept.
-wp_two:
-        call wp_gladiator
-        jnz .ret
-        push ax
-        call kit_class
-        cmp al, CR_FIGHTER
-        jne .no
-        cmp byte [es:bx + KIT_BYTE], 1
-        jne .no
-        or al, 1                ; (ZF clear)
-        pop ax
-        ret
-.no:    cmp al, al              ; (ZF set)
-        pop ax
-.ret:   ret
 
 ; WP_CLASSES: AL 1 if the sheet being made has a fighter, gladiator or ranger class, AH 1 if a
 ; cleric, druid or ranger one (a sphere). Others kept.
@@ -8805,15 +8788,15 @@ probe_wp_shown:
 
 ; PROBE_WP_CLASS: INT replaces "mov cx,1" (3 bytes: INT + NOP; 66406h) at the start of the routine
 ; that runs after each click on a class (it puts DONE in or out of use): the disciplines' window
-; up is opened again if it is the other one for the class now (WEAPON SPEC or VIEW SPHERES); a
-; weapon page up is marked again for the class now (a gladiator's two), or, for one with no
-; weapon to choose, goes back to the disciplines.
+; up is opened again if it is the other one for the class now (KITS or VIEW SPHERES); a kit page
+; up is marked again for the class now, the class's own opened for another, or, for one with no
+; kits, goes back to the disciplines.
 probe_wp_class:
         mov cx, 1
         call wp_rules
         jz .ret
-        push eax                ; (the classes changed: their defaults, until a kind is clicked;
-        push es                 ;   the routine runs after every click on the screen)
+        push eax                ; (the classes changed: no kit; the routine runs after every click
+        push es                 ;   on the screen)
         push bx
         les bx, [WP_CREATION]
         mov eax, [es:bx + 0x21]
@@ -8821,10 +8804,8 @@ probe_wp_class:
         cmp eax, [cs:wp_classes_seen]
         je .same
         mov [cs:wp_classes_seen], eax
-        mov byte [cs:wp_touched], 0
         mov byte [es:bx + KIT_BYTE], 0
-        mov dword [es:bx + SPEC_SLOTS], 0  ; (the weapon specs too: the game keeps the sheet from one
-.same:  pop bx                          ;   character to the next, so the last one's were kept)
+.same:  pop bx
         pop es
         pop eax
         push ax
@@ -8857,7 +8838,7 @@ probe_wp_class:
         mov word [cs:wp_far], WP_TO_DISC
         call far [cs:wp_far]
         jmp .done
-.page:  mov ax, [WP_SPHERE]     ; a weapon page up: the window's id (+8)
+.page:  mov ax, [WP_SPHERE]     ; the spheres or a kit page up: the window's id (+8)
         or ax, [WP_SPHERE + 2]
         jz .out
         les bx, [WP_SPHERE]
@@ -8868,41 +8849,8 @@ probe_wp_class:
         je .spheres
         sub ax, KIT_WIN_ID
         cmp ax, KIT_GROUPS
-        jb .kit
-        add ax, KIT_WIN_ID - WP_PAGE_ID
-        cmp ax, KIT_PAGE4_ID - WP_PAGE_ID
-        jne .weapons
-        mov al, WP_PAGES - 1    ; (the last page, its button KITS)
-.weapons:
-        cmp ax, WP_PAGES
         jae .out
-        mov [cs:wp_page], al
-        sti
-        pushad
-        push es
-        call wp_classes
-        or al, al
-        jz .back
-        cmp byte [cs:wp_page], WP_PAGES - 1     ; the last page: its button KITS only while the
-        jne .marks                              ;   character can take a kit (opened again if not)
-        call kit_class
-        les bx, [WP_SPHERE]
-        mov dx, [es:bx + 8]
-        or al, al
-        jz .no_kit
-        cmp dx, KIT_PAGE4_ID
-        je .marks
-        jmp .reopen
-.no_kit:
-        cmp dx, KIT_PAGE4_ID
-        jne .marks
-.reopen:
-        mov byte [cs:wp_from], 2
-        mov al, WP_PAGES - 1
-        call wp_open
-        jmp .done
-.marks: call wp_marks
-        jmp .done
+        jmp .kit
 .back:  mov ax, WP_BACK
         call wp_page_button
         jmp .done
@@ -8939,7 +8887,7 @@ probe_wp_class:
 ; character its default class. The routine empties the classes first, and the panel is opened
 ; again for a character of no class (the game's disciplines, VIEW SPHERES), then the class put
 ; in with no click to have the panel follow it: the disciplines' window is opened again here if
-; it isn't the one for the class now (WEAPON SPEC, KITS), as after a click on a class.
+; it isn't the one for the class now (KITS), as after a click on a class.
 probe_race_panel:
         pop word [cs:rp_ip]
         pop word [cs:rp_cs]
@@ -9010,13 +8958,11 @@ wp_click:
         jz .game
         call wp_harvest
         mov ax, [cs:wp_button]
-        cmp ax, WP_VIEW
-        je .view
         cmp ax, KIT_VIEW
         je .kits
-        cmp byte [cs:wp_from], 1    ; (a weapon or kit page's button, in the spheres' routine)
+        cmp byte [cs:wp_from], 1    ; (a kit page's button, in the spheres' routine)
         jne .game
-        cmp ax, WP_ROW
+        cmp ax, WP_BACK
         jb .sphere
         cmp ax, MULTI_ROW + 3 * (KIT_GROUPS - MULTI_FIRST + 1)
         jae .game               ; (the multiclass groups' rows come after KITS: theirs too)
@@ -9027,19 +8973,11 @@ wp_click:
         pop es
         popad
         jmp .end
-.view:  sti
-        pushad
-        push es
-        xor al, al
-        call wp_open
-        pop es
-        popad
-        jmp .end
-.kits:  sti                     ; KITS: from the disciplines, the spheres or the last weapon page
+.kits:  sti                     ; KITS: from the disciplines or the spheres
         pushad
         push es
         call kit_class          ; (no kit for the character now, as after another class is added:
-        or al, al               ;   back from the spheres or a weapon page, as VIEW PSIONICS goes)
+        or al, al               ;   back from the spheres, as VIEW PSIONICS goes)
         jnz .kit_class
         cmp byte [cs:wp_from], 0
         je .kit_none
@@ -9053,13 +8991,6 @@ wp_click:
         popad
         jmp .sphere
 .kit_class:
-        cmp byte [cs:wp_from], 0
-        je .kit_open
-        les bx, [WP_SPHERE]
-        cmp word [es:bx + 8], KIT_SPHERE_ID
-        je .kit_open
-        mov byte [cs:wp_from], 2
-.kit_open:
         call kit_open
         pop es
         popad
@@ -9134,26 +9065,7 @@ wp_harvest:
         pop ax
         ret
 
-; WP_OPEN: page AL of the weapons in the panel, after closing what it shows (WP_FROM: 0 the
-; disciplines, 1 the spheres, 2 a weapon or kit page), as 640E4h opens the spheres. DS = the
-; game's.
-wp_open:
-        mov [cs:wp_page], al
-        call wp_close_panel
-        movzx si, byte [cs:wp_page]
-        lea ax, [si + WP_PAGE_ID]
-        imul si, si, WP_TITLE_SIZE
-        add si, wp_titles
-        cmp ax, WP_PAGE_ID + WP_PAGES - 1
-        jne .show
-        push ax
-        call kit_class
-        or al, al
-        pop ax
-        jz .show
-        mov ax, KIT_PAGE4_ID    ; (the last, its button KITS)
-.show:  call wp_show
-        call wp_marks
+; WP_HELP_LINE: the panel's help line, as the game puts it under the spheres
 wp_help_line:
         push dword 0x11771
         call far [cs:wp_help]
@@ -9161,7 +9073,8 @@ wp_help_line:
         ret
 
 ; KIT_OPEN: the kit page of the class being made in the panel, after closing what it shows
-; (WP_FROM as for WP_OPEN). DS = the game's.
+; (WP_FROM: 0 the disciplines, 1 the spheres, 2 a kit page), as 640E4h opens the spheres. DS =
+; the game's.
 kit_open:
         call wp_close_panel
         call kit_class
@@ -9257,104 +9170,6 @@ wp_marked:
         pop bp
         ret
 
-CHATKCHA_KIND equ 12             ; (specialize.KINDS' number, less 1 than SPEC_SLOTS')
-THRI_KREEN_RACE equ 8
-; WP_MARKS: the page's rows, the kinds marked (the creation sheet's: a gladiator's two, anyone
-; else's one; none yet: the long sword (a thri-kreen's the chatkcha, if allowed), and a gladiator's club, put in) chosen and the rest not,
-; as 63FEEh marks the spheres.
-wp_marks:
-        push es
-        push bx
-        call wp_allowed
-        mov [cs:wp_ok], ax
-        les bx, [WP_CREATION]
-        movzx cx, byte [es:bx + SPEC_SLOTS]     ; none yet, or one its classes don't allow: the
-        jcxz .none                              ; long sword, or else the first allowed (unless
-        dec cx                                  ; the player has taken it back: WP_TOUCHED)
-        bt ax, cx
-        jc .first
-        mov word [es:bx + SPEC_SLOTS], 0
-.none:  cmp byte [cs:wp_touched], 0
-        jne .first
-        mov cx, CHATKCHA_KIND           ; (a thri-kreen: the chatkcha, if its classes allow it)
-        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
-        jne .sword
-        bt ax, cx
-        jc .put
-.sword: xor cx, cx
-        bt ax, 0
-        jc .put
-        bsf cx, ax
-        jnz .put
-        mov cx, -1                              ; (none at all)
-.put:   inc cx
-        mov [es:bx + SPEC_SLOTS], cl
-.first: mov word [es:bx + SPEC_SLOTS + 2], 0
-        call wp_two
-        jz .one
-        call wp_gladiator                       ; (a Myrmidon's second: none put in)
-        jz .marked
-        cmp byte [es:bx + SPEC_SLOTS + 1], 0
-        jne .marked
-        cmp byte [cs:wp_touched], 0
-        jne .marked
-        mov al, 2                               ; (the club; or the long sword, if the club is first)
-        cmp byte [es:bx + SPEC_SLOTS], al
-        jne .second
-        dec al
-.second:
-        mov [es:bx + SPEC_SLOTS + 1], al
-        jmp .marked
-.one:   mov byte [es:bx + SPEC_SLOTS + 1], 0
-.marked:
-        mov ax, [es:bx + SPEC_SLOTS]
-        mov [cs:wp_kind], ax
-        mov byte [cs:wp_full], 0                ; all its picks made (a gladiator's two, another's
-        or al, al                               ;   one): the other kinds out of use until one is
-        jz .count                               ;   taken back, as the game's classes and disciplines
-        call wp_two
-        jz .full
-        or ah, ah
-        jz .count
-.full:  mov byte [cs:wp_full], 1
-.count:
-        movzx bx, byte [cs:wp_page]
-        shl bx, 2               ; (four to a page)
-        mov cx, 4
-.row:   inc bx                  ; (the kind + 1)
-        lea ax, [bx + WP_ROW - 1]
-        lea dx, [bx - 1]
-        bt [cs:wp_ok], dx
-        jc .open
-        push 3                  ; a kind its other class doesn't allow: out of use
-        call wp_button_op
-        push 1
-        call wp_button_op
-        push 0
-        jmp .next
-.open:  cmp bl, [cs:wp_kind]
-        je .chosen
-        cmp bl, [cs:wp_kind + 1]
-        je .chosen
-        push 3                  ; one not chosen: in use, or greyed once all are picked
-        call wp_button_op
-        movzx dx, byte [cs:wp_full]
-        push dx
-        call wp_button_op
-        push 0
-        jmp .next
-.chosen:
-        push 0
-        call wp_button_op
-        push 2
-        call wp_button_op
-        push 1
-.next:  call wp_mark
-        loop .row
-        pop bx
-        pop es
-        ret
-
 ; WP_BUTTON_OP: the game's 140:71Ah on button AX of the page (DS:EA6h), with the operation pushed
 ; (0 in use, 1 out of use, 2 marked, 3 not marked); takes it off the stack. AX, BX, CX kept.
 wp_button_op:
@@ -9396,51 +9211,13 @@ wp_mark:
         pop bp
         ret 2
 
-; WP_PAGE_BUTTON: button AX of a weapon page, clicked: a kind's row marked (on the creation sheet),
-; MORE SPECS the next page, VIEW PSIONICS back to the disciplines (641B9h). DS = the game's.
+; WP_PAGE_BUTTON: button AX of a kit page, clicked: a kit's row (KIT_ROW), VIEW PSIONICS back to
+; the disciplines (641B9h). DS = the game's.
 wp_page_button:
         cmp ax, KIT_ROW
         jae kit_row
-        cmp ax, WP_MORE
-        je .more
         cmp ax, WP_BACK
-        je .back
-        sub ax, WP_ROW
-        cmp ax, 16
-        jae .ret
-        bt [cs:wp_ok], ax       ; (one its classes don't allow: nothing)
-        jnc .ret
-        inc ax
-        mov byte [cs:wp_touched], 1
-        les bx, [WP_CREATION]
-        cmp al, [es:bx + SPEC_SLOTS]            ; a kind chosen: taken back (a gladiator's second
-        je .first_off                           ;   moving up), as the game's classes are
-        cmp al, [es:bx + SPEC_SLOTS + 1]
-        je .second_off
-        cmp byte [es:bx + SPEC_SLOTS], 0        ; another: chosen, where a pick is free
-        je .put_first
-        call wp_two
-        jz .ret
-        cmp byte [es:bx + SPEC_SLOTS + 1], 0
         jne .ret
-        mov [es:bx + SPEC_SLOTS + 1], al
-        jmp wp_marks
-.put_first:
-        mov [es:bx + SPEC_SLOTS], al
-        jmp wp_marks
-.first_off:
-        mov al, [es:bx + SPEC_SLOTS + 1]
-        mov [es:bx + SPEC_SLOTS], al
-.second_off:
-        mov byte [es:bx + SPEC_SLOTS + 1], 0
-        jmp wp_marks
-.more:  mov byte [cs:wp_from], 2
-        mov al, [cs:wp_page]
-        inc al
-        cmp al, WP_PAGES
-        jb .open
-        xor al, al
-.open:  jmp wp_open
 .back:  push dword [WP_SPHERE]
         call far [cs:wp_close]
         add sp, 4
@@ -9486,36 +9263,8 @@ kit_row:
         mov [es:bx + KIT_BYTE], dl
         call kit_made
         call kit_rolls
-        call wp_allowed         ; (a Spellarcher, the bow its only kind: its weapon spec the bow,
-        cmp ax, 1 << (BOW_KIND - 1) ;   whatever was chosen)
-        jne .dagger
-        mov byte [es:bx + SPEC_SLOTS], BOW_KIND
-.dagger:                        ; (a Ghetto Fighter's or Poisoner's the dagger, a Battle Dancer's
-        cmp byte [cs:wp_touched], 0 ;   the long sword, if the player left the weapon page's
-        jne .two                ;   default: kits.default_kind)
-        push cx
-        mov cx, ax              ; (the kinds its classes and kit allow)
-        call kit_made
-        mov ah, DAGGER_KIND
-        cmp al, KIT_GHETTO
-        je .kind
-        cmp al, KIT_POISONER
-        je .kind
-        mov ah, 0               ; (the long sword)
-        cmp al, KIT_BATTLE_DANCER
-        jne .kept
-.kind:  movzx ax, ah
-        bt cx, ax
-        jnc .kept
-        inc al
-        mov [es:bx + SPEC_SLOTS], al
-.kept:  mov ax, cx
-        pop cx
-.two:   call wp_two             ; (no Myrmidon now: its second kind gone)
-        jnz kit_marks
-        mov byte [es:bx + SPEC_SLOTS + 1], 0
 ; KIT_MARKS: the kit page's rows (NO KIT, then the class's three kits, or a multiclass group's one
-; or two) marked as the creation sheet's kit, the rest not, as WP_MARKS marks a weapon page's
+; or two) marked as the creation sheet's kit, the rest not, as 63FEEh marks the spheres
 kit_marks:
         push es
         push bx
@@ -10006,23 +9755,13 @@ el_caster:
         ret
 kit_title  db 'KITS', 0
 kit_keep   db 0                 ; 1 while the panel goes back to the disciplines (the kit kept)
-WP_TITLE_SIZE equ 16
-wp_titles  db 'WEAPONS 1 OF 4', 0, 0
-           db 'WEAPONS 2 OF 4', 0, 0
-           db 'WEAPONS 3 OF 4', 0, 0
-           db 'WEAPONS 4 OF 4', 0, 0
-wp_page    db 0
 wp_from    db 0
-wp_kind    db 0, 0
-wp_full    db 0
-wp_touched db 0                 ; 1 once the player has clicked a kind (no defaults put back after)
-wp_classes_seen dd 0xFFFFFFFF   ; the classes being made, when WP_TOUCHED was last cleared
+wp_classes_seen dd 0xFFFFFFFF   ; the classes being made, as PROBE_WP_CLASS last saw them
 wp_button  dw 0
 wp_ret_file dw 0
 wp_end_file dw 0
 wp_far     dd 0
-wp_mine    dw WP_WSPHERE_ID, WP_PAGE_ID, WP_PAGE_ID + 1, WP_PAGE_ID + 2, WP_PAGE_ID + 3
-           dw KIT_SPHERE_ID, KIT_PAGE4_ID, KIT_WIN_ID, KIT_WIN_ID + 1, KIT_WIN_ID + 2
+wp_mine    dw KIT_SPHERE_ID, KIT_WIN_ID, KIT_WIN_ID + 1, KIT_WIN_ID + 2
            dw KIT_WIN_ID + 3, KIT_WIN_ID + 4, KIT_WIN_ID + 5, KIT_WIN_ID + 6, KIT_WIN_ID + 7
            dw KIT_WIN_ID + 8, KIT_WIN_ID + 9, KIT_WIN_ID + 10, KIT_WIN_ID + 11, KIT_WIN_ID + 12
 wp_mine_end:
@@ -11780,6 +11519,20 @@ probe_spell_text:
         push word [cs:n_fl]
         push word [cs:n_cs]
         push word [cs:n_ip]
+        cmp di, TU_SPIN
+        jne .spells
+        cmp byte [cs:tu_info], TU_INFO_PICK
+        mov byte [cs:tu_info], 0
+        jne .out
+        push cx
+        push si
+        push di
+        push ds
+        push es
+        mov si, pp_text_info
+        jmp .found
+.spells:
+        mov byte [cs:tu_info], 0
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .out
         cmp di, NS_FIRST + 1
@@ -11818,6 +11571,10 @@ probe_spell_text:
         pop si
         pop cx
 .out:   iret
+TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box reads it too)
+pp_text_info:
+        db "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
+        db "If it fails, the thief tries to slip away unseen. Not in a fight.", 13, 10, 0
 ns_texts:
         db "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.", 13, 10, 0
         db "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
@@ -12191,6 +11948,7 @@ copies:
         COPY 'RGN1E.GFF', 'D:\RGN1E.GFF', others_on   ; (an Undermountain miner of its own)
         COPY 'RGN08.GFF', 'D:\RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
         COPY 'RGN28.GFF', 'D:\RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
+        COPY 'RGN06.GFF', 'D:\RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
         db 0
 
 ; NEW SPELLS (RULE_NEW_SPELLS): three wizard spells past the game's 196 (0-68 wizard, 69-137 priest,
@@ -12863,6 +12621,7 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         dw NS_DX, 0x8A          ; 720D3h, 8C457h an item's spell's icon (a scroll's in its box)
         db NS_K_R16
         dw NS_DX, 0x8A
+ns_cmp_info:
         db NS_K_R16
         dw NS_SI, 0x8A          ; 8C64Eh the spell info box's icon
         db NS_K_R8
@@ -12870,13 +12629,26 @@ ns_cmp_sites:                   ; (kind, the operand, the number compared with)
         db NS_K_R8
         dw NS_CL, 0xC4
 NS_CMP_COUNT equ ($ - ns_cmp_sites) / 5
+NS_CMP_INFO equ NS_CMP + (ns_cmp_info - ns_cmp_sites) / 5 ; (the info box's: TU_INFO's)
 NS_FIST   equ NS_CMP + NS_CMP_COUNT ; 58226h, a melee hit's magic (after NS_CMP's)
-NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a weapon's blow
+NS_IMAGE  equ NS_FIST + 1       ; 7A5CDh, an image taking a spell
 NS_ENTRY_EF equ NS_IMAGE + 1    ; 7ED37h, 7EEC9h, 7EF34h: an effect's entry, the Effects screen's
 NS_ENTRY_LOOK equ NS_IMAGE + 2  ; 5FD1Ch: the Look box's
 NS_ENTRY_STATUS equ NS_IMAGE + 3 ; 71DF5h: the status under a portrait
 SELL_KEEP equ NS_IMAGE + 4      ; 83D9Eh: a shop freeing an item sold
 SELL_PRICE equ NS_IMAGE + 5     ; 83CCAh: what a shop pays for an item
+NS_BLOW   equ NS_IMAGE + 6       ; 58A00h: a weapon's hit, which an image may take
+NS_HOLD   equ NS_IMAGE + 7       ; 7A333h: Hold Undead only on the undead
+PP_SHOW   equ NS_IMAGE + 8       ; 89979h: the USE screen's Turn Undead button, shown or not
+PP_CLICK  equ NS_IMAGE + 9       ; 8959Bh: ... let go of
+PP_ARM    equ NS_IMAGE + 10      ; 89610h: ... its spell readied
+PP_LIT    equ NS_IMAGE + 12      ; 895F2h: ... the screen closed, the menu button to show its icon
+PP_TEXT   equ NS_IMAGE + 13      ; 89541h, 8967Ah: ... its name under the screen
+PP_INFO   equ NS_IMAGE + 14      ; 8968Eh: ... its spell's description
+PP_CLOSE  equ NS_IMAGE + 15      ; 88504h: the USE screen closing, its icons let go of
+PP_HAND   equ NS_IMAGE + 11      ; 5ECD8h: a click on the map, the pointer for talking, on something
+CR_LABELS equ NS_IMAGE + 16      ; 65125h: the ability labels (STR: to CHR:), drawn
+CR_WEAPONS equ NS_IMAGE + 17     ; 666DFh: the creation screen's DONE, a warrior's weapon specs
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -12892,6 +12664,30 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_fist
         cmp byte [cs:rl_site], NS_IMAGE
         je ns_image
+        cmp byte [cs:rl_site], NS_BLOW
+        je ns_blow
+        cmp byte [cs:rl_site], NS_HOLD
+        je ns_hold
+        cmp byte [cs:rl_site], PP_SHOW
+        je pp_show
+        cmp byte [cs:rl_site], PP_CLICK
+        je pp_click
+        cmp byte [cs:rl_site], PP_ARM
+        je pp_arm
+        cmp byte [cs:rl_site], PP_HAND
+        je pp_hand
+        cmp byte [cs:rl_site], PP_LIT
+        je pp_lit
+        cmp byte [cs:rl_site], PP_TEXT
+        je pp_text
+        cmp byte [cs:rl_site], PP_INFO
+        je pp_info
+        cmp byte [cs:rl_site], PP_CLOSE
+        je pp_close
+        cmp byte [cs:rl_site], CR_LABELS
+        je cr_labels
+        cmp byte [cs:rl_site], CR_WEAPONS
+        je cr_weapons
         cmp byte [cs:rl_site], SELL_KEEP
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
@@ -12944,7 +12740,11 @@ ns_cmp:
         jmp .got
 .esbx:  add bx, [ss:di + 18]    ; (the game's BX)
         mov ax, [es:bx]
-.got:   push ax
+.got:   cmp byte [cs:rl_site], NS_CMP_INFO
+        jne .new
+        cmp byte [cs:tu_info], 0 ; (Turn Undead's box, or the purse's: as the game has it)
+        jne .cmp
+.new:   push ax
         call ns_new
         pop ax
         jnc .cmp
@@ -13090,24 +12890,30 @@ ns_claw:
         popad
         iret
 
-; NS_IMAGE: "cmp ax,4Bh" (7A5CDh; 3 bytes) where a weapon's blow at thing SI with Mirror Images
-; (25) on it strikes an image instead on a d100 (AX) of 75 or less: 50 or less for one of Reflected
-; Image (the effect's spell, NS_EFFECT_SPELL), its flags into the INT's frame.
+; NS_IMAGE: "cmp ax,4Bh" (7A5CDh; 3 bytes) where a spell of thing DI lands on thing SI with Mirror
+; Images (25) on it: a spell for one creature (not an area's, a cone's or a wall's: 618:20h's 8 or
+; less), which strikes an image instead (the spell lost, an image gone) on a d100 (AX) of 75 or
+; less: 50 or less for one of Reflected Image (the effect's spell, NS_EFFECT_SPELL), its flags into
+; the INT's frame. Only a foe's: the game's took the caster's own too (Armor cast on oneself), a
+; friend's and an enemy's on its own side; with caster and target on one side (party members,
+; below 4, or not) the chance is 0, as if the d100 were over.
 IMAGE_CHANCE equ 75
 REFLECT_CHANCE equ 50
+IMAGE_PARTY equ 4
 ns_image:
         pushad
         push es
         mov di, sp
-        mov dx, IMAGE_CHANCE
-        test byte [cs:rules], RULE_NEW_SPELLS
-        jz .cmp
         mov ax, [ss:di + NS_SI]
-        mov cl, MIRROR_EFFECT
-        call ns_effect_spell
-        cmp ax, REFLECT_SPELL
+        mov bx, [ss:di + NS_DI]
+        call image_chance
+        cmp bx, IMAGE_PARTY
+        setb bl
+        cmp ax, IMAGE_PARTY
+        setb bh
+        cmp bl, bh
         jne .cmp
-        mov dx, REFLECT_CHANCE
+        xor dx, dx
 .cmp:   mov ax, [ss:di + NS_AX]
         cmp ax, dx
         pushf
@@ -13116,6 +12922,672 @@ ns_image:
         pop es
         popad
         iret
+
+; IMAGE_CHANCE: DX the chance (percent) of an image of thing AX taking a blow or a spell: 75, 50
+; for Reflected Image's (with RULE_NEW_SPELLS). DS the game's; the others kept.
+image_chance:
+        mov dx, IMAGE_CHANCE
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .out
+        push ax
+        push cx
+        mov cl, MIRROR_EFFECT
+        call ns_effect_spell
+        cmp ax, REFLECT_SPELL
+        pop cx
+        pop ax
+        jne .out
+        mov dx, REFLECT_CHANCE
+.out:   ret
+
+; NS_BLOW: "cmp word [bp+1Ah],0" (58A00h; 4 bytes) where an attack (the routine at 5883Ah, its
+; d20 rolled) hits combatant [494Ah], which the game's Mirror Images never stopped. With them on
+; it (25), a d100 with the game's rand (in a frame the Loader reads: [BP+6] the target, +8 the
+; attacker, its [BP+18h], +0Ah the chance; the code after the call is BLOW_ROLLED's) of
+; IMAGE_CHANCE or less (REFLECT_CHANCE for Reflected Image's) strikes an image instead: an image
+; used up as the game's spells use one (598:57h, 76803h: the effect ended with the last), and the
+; attack goes on as a miss (58A46h, its sound). That call is overlay code, which may load others
+; over the attack's: the way back (the miss's address already) is put in a frame the overlay
+; manager can fix up, as for PROBE_UNLOOK, and taken back from it as the manager left it. Else on as before, the compare's flags into the INT's frame.
+BLOW_TARGET equ 0x494A          ; DS: the attack's target (a combatant)
+BLOW_MISS equ 0x58A46 - 0x58A03 ; the miss, less the way back (the site's NOP)
+RAND_OFF equ 0x0822             ; the game's rand(), at the load segment
+CHARGE_STUB equ 0x428F          ; (DSUN.EXE) the stub segment of 598h: 57h uses a charge (who, effect)
+CHARGE_OFF equ 0x0057
+ns_blow:
+        sti
+        pushad
+        push es
+        mov di, sp
+        cmp word [bp + 0x1A], 0
+        pushf
+        pop ax
+        call ns_flags
+        mov ax, [BLOW_TARGET]
+        mov cl, MIRROR_EFFECT
+        call ns_has
+        jnz .out
+        call image_chance
+        mov [cs:blow_chance], dx
+        push dx
+        push word [bp + 0x18]
+        push ax
+        push dword 0
+        push bp
+        mov bp, sp
+        mov ax, ds
+        sub ax, DGROUP_SEG
+        mov [cs:blow_rand + 2], ax
+        call far [cs:blow_rand]
+..@blow_rolled:                  ; (the Loader knows the roll by the code from here)
+        jmp short .rolled
+        db 'IMAGE'
+.rolled:
+        pop bp
+        add sp, 10
+        mov cx, 100
+        mul cx
+        shl ax, 1
+        rcl dx, 1               ; (rand() x 100 / 32768: 0 to 99)
+        inc dx
+        cmp dx, [cs:blow_chance]
+        ja .out
+        mov bx, sp
+        add word [ss:bx + 34], BLOW_MISS ; (before the call: the overlay manager may leave its
+        push word [ss:bx + 36]  ;   trap in place of the way back, as a far call's frame with BP)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        sub ax, DGROUP_SEG - CHARGE_STUB
+        mov [cs:blow_charge + 2], ax
+        push word MIRROR_EFFECT
+        push word [BLOW_TARGET]
+        call far [cs:blow_charge]
+        add sp, 4
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.out:   pop es
+        popad
+        iret
+
+blow_chance dw 0
+
+; NS_HOLD: "or al,al / je +22h" (7A333h; 4 bytes) in the checks of what a spell (SI) can't do to
+; thing DI (7A1BFh), just after the game's test whether DI is undead (7BE20h: AL). Undead: on as
+; before, to the undead's immunities (7A337h). Not: on to the next check (7A359h), but for Hold
+; Undead (spell 31), which the game let hold anything: to the immunity's return (7A1F0h: the
+; spell does nothing).
+HOLD_UNDEAD equ 31
+HOLD_LIVING equ 0x7A359 - 0x7A336 ; (less the way back: the site's NOP)
+HOLD_IMMUNE equ 0x7A1F0 - 0x7A336
+ns_hold:
+        push bp
+        mov bp, sp
+        or al, al
+        jnz .out
+        add word [bp + 2], HOLD_LIVING
+        cmp si, HOLD_UNDEAD
+        jne .out
+        add word [bp + 2], HOLD_IMMUNE - HOLD_LIVING
+.out:   pop bp
+        iret
+blow_rand dw RAND_OFF, 0
+blow_charge dw CHARGE_OFF, 0
+
+; PICK POCKETS (PICK_BUTTON): a character with thief levels, outside a fight, has a button of
+; their own on the USE screen where a priest's Turn Undead is: a purse (PP_ICON). Let go of, the
+; screen closes as for Turn Undead, no spell is readied, and the pointer is the one for talking;
+; the next someone it is clicked on has their pocket tried by that thief instead of a talk (the
+; Loader answers as for an item used on them, PROBE_USE_ITEM, its USE_ITEM PICKED_BY and the
+; thief). The pointer turned to another mode puts the pick away (PROBE_POINTER).
+; PP_SHOW: "cmp word [9B82h],0" (89979h; 5 bytes) in the routine showing the button (89959h): the
+; priest's element of the character on show (the sheet at [119Ch], its +12h), none (0) for no
+; button. For a thief, outside a fight, past the elements' cases (PP_ELEMENT), the icon PP_ICON.
+; The game loads the icon once a screen (TU_CACHE, let go of as it closes): one of another
+; number is let go of now (the game's routine, 1A8h:8Ch), so the button's own is loaded.
+; PP_CLICK: "cmp word [9CDCh],0" (8959Bh; 5 bytes) in the button's handler, as it is let go of:
+; set when it was pressed (the game's press doesn't reach it outside a fight); the thief's always.
+; PP_LIT: "mov ax,[9CDEh]" (895F2h; 3 bytes) in the handler, the screen just closed (884B3h), the
+; icon the menu button is to show lit, as a spell readied: the thief's button keeps it as it was.
+; PP_TEXT: "push ds / push 3262h" (89541h, 8967Ah; 4 bytes), the name shown under the screen as the
+; pointer is on the button ("TURN UNDEAD", DS:3262h): the thief's, PP_NAME. PP_INFO: "mov ax,
+; [9CDEh]" (8968Eh; 3 bytes), a right click on it, the description of its spell (by the element's
+; icon) to be shown: the thief's with the purse's icon and its own text (TU_INFO).
+; PP_ARM: "push dword 0BEFFFFh" (89610h; 6 bytes), the handler readying Turn Undead (spell 190,
+; 0FFh): the thief's readies nothing (on to the handler's end) but the pick, and the character's
+; readied kind put back (PP_KEEP); the priest's pushes its spell.
+; PP_HAND: "mov si,[bp+6]" (5ECD8h; 3 bytes) at the start of the routine of a click on the map
+; with the pointer for talking (5ECD0h; its [BP+6] the thing under it), which opens the box to
+; talk to someone (or trade, look) or picks up a thing.
+PP_ICON     equ 3048            ; ICON 3048 (RESOURCE.GFF, icons.py): the thief's purse
+PP_ELEMENT  equ 9               ; (past the switch's 1-8: the icon kept)
+TU_ELEMENT  equ 0x9B82          ; DS: the Turn Undead button's element (0: none)
+TU_ICON     equ 0x9CDE          ; DS: its icon
+TU_PRESSED  equ 0x9CDC          ; DS: a button pressed
+TU_CACHE    equ 0x30F4          ; DS: the icon loaded (far)
+TU_SHEET    equ 0x119C          ; DS: the sheet of the character on show (far)
+POINTER_MODE equ 0x11B8         ; DS: the pointer's mode: 1 walk, 2 talk, 4 attack
+TALK_MODE   equ 2
+FIGHT_FROM_DS equ 0x4356 - 0x377E ; (the fight's state's segment, its +19h not 0 in a fight)
+FREE_SEG    equ 0x2FAB          ; (DSUN.EXE, less the load segment) 1A8h:8Ch, which lets go of
+FREE_OFF    equ 0x008C          ;   memory (far), returning the pointer to keep
+ARM_OUT     equ 0x896A4 - 0x89613 ; (the handler's end, less the way back: the site's NOPs)
+HAND_SOME   equ 0                 ; (on as the game: the way back)
+HAND_DONE   equ 0x5F25C - 0x5ECDB ; (the routine's end, less the way back)
+FLAGS_MASK  equ 0x08D5          ; (OF, SF, ZF, AF, PF, CF)
+pp_show:
+        push bp
+        mov bp, sp              ; [BP+6] the INT's flags
+        pushad
+        push es
+        mov byte [cs:pp_shown], 0
+        mov byte [cs:pp_second], 0
+        test byte [cs:pick_on], PICK_BUTTON
+        jz .icon
+        call pp_fighting
+        jne .icon
+        les bx, [TU_SHEET]
+        mov si, 0x21
+.cls:   cmp byte [es:bx + si], THIEF_CLASS
+        je .thief
+        inc si
+        cmp si, 0x24
+        jb .cls
+        jmp .icon
+.thief: cmp word [TU_ELEMENT], 0
+        je .own
+        mov byte [cs:pp_second], 1 ; (a priest too: Turn Undead here, the purse beside it)
+        jmp .icon
+.own:   mov byte [cs:pp_shown], 1
+        mov word [TU_ELEMENT], PP_ELEMENT
+        mov word [TU_ICON], PP_ICON
+.icon:  mov ax, [TU_ICON]       ; the icon to be shown: the element's, or as it is
+        mov bx, [TU_ELEMENT]
+        cmp bx, PP_ELEMENT
+        je .want
+        mov si, pp_icons
+.elem:  cmp bx, [cs:si]
+        je .found
+        add si, 4
+        cmp si, pp_icons_end
+        jb .elem
+        jmp .want
+.found: mov ax, [cs:si + 2]
+.want:  or bx, bx
+        jz .flags               ; (no button)
+        cmp dword [TU_CACHE], 0
+        je .keep                ; (none loaded: the game loads it)
+        cmp ax, [cs:pp_loaded]
+        je .keep
+        push ax                 ; another's loaded: let go of it
+        mov ax, ds
+        sub ax, DGROUP_SEG - FREE_SEG
+        mov [cs:free_call + 2], ax
+        push dword [TU_CACHE]
+        call far [cs:free_call]
+        add sp, 4
+        mov [TU_CACHE], ax
+        mov [TU_CACHE + 2], dx
+        pop ax
+.keep:  mov [cs:pp_loaded], ax
+.flags: cmp word [TU_ELEMENT], 0
+        pushf
+        pop ax
+        and ax, FLAGS_MASK
+        and word [bp + 6], ~FLAGS_MASK
+        or [bp + 6], ax
+        mov al, [cs:pp_second]
+        or al, [cs:pp_second_on]
+        jz .out                 ; (no second button, shown or to show)
+        ; the second button shown, or taken off: the game's routines, which may load overlays,
+        ; called in a frame the overlay manager can fix up (the way back, and the game's BP)
+        mov bx, sp
+        push word [bp + 4]
+        push word [bp + 2]
+        push word [bp]
+        mov bp, sp
+        cmp byte [cs:pp_second], 0
+        je .off
+        call pp_second_draw
+        jmp .back
+.off:   call pp_second_hide
+.back:  pop ax                  ; (the game's BP)
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bp, sp
+        add bp, 34              ; (past ES and PUSHAD: this routine's BP)
+        mov [bp + 2], ax
+        mov [bp + 4], dx
+.out:   pop es
+        popad
+        pop bp
+        iret
+
+; PP_MINE: AL 1 if the button whose handler's frame is BX (its +8 the button) is the thief's: Turn
+; Undead's shown as the purse (PP_SHOWN), or the second one (SECOND_ID); 0 if not
+pp_mine:
+        mov al, [cs:pp_shown]
+        cmp word [ss:bx + 8], SECOND_ID
+        jne .ret
+        mov al, 1
+.ret:   ret
+
+pp_click:
+        push bx
+        push ax
+        mov bx, bp
+        call pp_mine
+        push bp
+        mov bp, sp              ; [BP+8] the INT's flags
+        mov [cs:pp_arming], al
+        or al, al
+        jz .game
+        call pp_keep            ; (what closing the screen sets for a spell readied)
+        or bp, bp               ; (ZF clear: on as pressed)
+        jmp .flags
+.game:  cmp word [TU_PRESSED], 0
+.flags: pushf
+        pop ax
+        and ax, FLAGS_MASK
+        and word [bp + 10], ~FLAGS_MASK
+        or [bp + 10], ax
+        pop bp
+        pop ax
+        pop bx
+        iret
+
+; PP_SECOND_DRAW: the purse beside Turn Undead (a cleric/thief's), as the game shows its button
+; (899B2h): its icon loaded (once a screen, PP_ICON2), the slot SECOND_ID given the button's
+; handler, its frame and its icon drawn. PP_SECOND_HIDE: the slot's handler taken off. DS the
+; game's.
+SECOND_ID    equ 0x2BE7         ; (the empty slot right of Turn Undead's: 2BCDh + 1Ah)
+SECOND_INDEX equ SECOND_ID - 0x2BCD
+STUB_630     equ 0x4319         ; (DSUN.EXE, less the load segment) the USE screen's overlay's stubs:
+DRAW_OFF     equ 0x004D         ;   896BCh, a button drawn; 894E2h, Turn Undead's handler
+HANDLER_OFF  equ 0x0048
+STUB_530     equ 0x4211         ; 530h:43h, a button's handler and events set
+REG_OFF      equ 0x0043
+LOAD_SEG     equ 0x2460         ; 100h:4A4h, a chunk loaded (its tag, its number, where to)
+LOAD_OFF     equ 0x04A4
+WIN_LIST_SEG equ 0x40BC         ; the USE screen's window, far at this segment:0
+FRAME_SEG    equ 0x3931         ; the buttons' frame picture, far at this segment:2Fh
+pp_second_draw:
+        cmp dword [cs:pp_icon2], 0
+        jne .reg
+        push cs
+        push word pp_icon2
+        push dword PP_ICON
+        push dword 0x4E4F4349   ; ("ICON")
+        mov ax, LOAD_SEG
+        mov dx, LOAD_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+.reg:   push word 0x66          ; (its events, as the game's)
+        mov ax, ds
+        sub ax, DGROUP_SEG - STUB_630
+        push ax
+        push word HANDLER_OFF
+        call pp_list_push       ; (SECOND_ID and the window)
+        mov ax, STUB_530
+        mov dx, REG_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        mov byte [cs:pp_second_on], 1
+        push dword 2            ; its frame, as the game draws Turn Undead's
+        push word SECOND_INDEX
+        mov ax, ds
+        sub ax, DGROUP_SEG - FRAME_SEG
+        mov es, ax
+        push dword [es:0x2F]
+        push word 0
+        mov ax, STUB_630
+        mov dx, DRAW_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        cmp dword [cs:pp_icon2], 0
+        je .ret
+        push dword 0            ; and its icon
+        push word SECOND_INDEX
+        push dword [cs:pp_icon2]
+        push word 1
+        mov ax, STUB_630
+        mov dx, DRAW_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+.ret:   ret
+
+pp_second_hide:
+        push word 0
+        push dword 0
+        call pp_list_push
+        mov ax, STUB_530
+        mov dx, REG_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        mov byte [cs:pp_second_on], 0
+        ret
+
+pp_list_push:                   ; pushes SECOND_ID, then the window (far), under the return address
+        pop word [cs:pp_ret]
+        push word SECOND_ID
+        mov ax, ds
+        sub ax, DGROUP_SEG - WIN_LIST_SEG
+        mov es, ax
+        push dword [es:0]
+        jmp word [cs:pp_ret]
+
+pp_aim:                         ; PP_CALL aimed at the game's segment AX (less the load segment):DX
+        mov [cs:pp_call], dx
+        push bx
+        mov bx, ds
+        sub bx, DGROUP_SEG
+        add ax, bx
+        pop bx
+        mov [cs:pp_call + 2], ax
+        ret
+
+; PP_CLOSE: "cmp dword [30F4h],0" (88504h; 6 bytes) where the USE screen, closing (884B3h), lets go
+; of Turn Undead's icon: the second button's let go of too, its flags given back.
+pp_close:
+        push bp
+        mov bp, sp
+        pushad
+        push es
+        cmp dword [cs:pp_icon2], 0
+        je .flags
+        mov ax, ds
+        sub ax, DGROUP_SEG - FREE_SEG
+        mov [cs:free_call + 2], ax
+        push dword [cs:pp_icon2]
+        call far [cs:free_call]
+        add sp, 4
+        mov [cs:pp_icon2], ax
+        mov [cs:pp_icon2 + 2], dx
+.flags: mov byte [cs:pp_second_on], 0
+        cmp dword [TU_CACHE], 0
+        pushf
+        pop ax
+        and ax, FLAGS_MASK
+        and word [bp + 6], ~FLAGS_MASK
+        or [bp + 6], ax
+        pop es
+        popad
+        pop bp
+        iret
+
+; CR_WEAPONS: "pop cx / push si / nop" (666DFh; 3 bytes: the INT and the site's number) in the
+; creation screen's DONE (65480h), for the new member SI, once DONE has closed the screen's windows
+; and let go of their pictures (the weapon window, bigger than the psionicists', fails to open
+; while they hold the memory: "Failed to open window"). With weapon specialization, a warrior (or a
+; Battle Mage) picks its weapon specs on the level-up window, as at a level up or DUAL (LV_CHECK,
+; through the psionicists' pop-up, 620:57h: DK_PSI), as many as it is due (LV_DUE; a Myrmidon two),
+; from those its classes and kit allow; the creation screen has no weapon pages. Picks the window
+; was left with unmade are the Loader's defaults (weaponchoice.kinds_for). The way back is put in
+; a frame the overlay manager can fix up, as for PROBE_CR_SPELLS.
+cr_weapons:
+        push bp                 ; (pop cx / push si: the word under the INT's frame)
+        mov bp, sp
+        mov cx, [bp + 8]
+        mov [bp + 8], si
+        pop bp
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .iret
+        cmp si, LV_PARTY
+        jae .iret
+        sti
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
+        imul ax, si, 0x47
+        add bx, ax
+        mov dword [es:bx + SPEC_SLOTS], 0
+        mov ax, ds
+        add ax, PICK_STUB
+        mov word [cs:lv_psi], DK_PSI
+        mov [cs:lv_psi + 2], ax
+        mov byte [cs:lv_creating], 1
+        call lv_check
+        mov byte [cs:lv_creating], 0
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+.iret:  iret
+
+; CR_LABELS: "mov bx,si / shl bx,2" (65125h; 5 bytes) in the routine drawing the ability labels
+; (STR: to CHR:, 6511Fh) in the text colour the last screen left (DS:326Eh, TEXT_INK). The
+; inventory screen sets its yellow first; the creation screen never sets its own, so its labels
+; came out in the last screen's yellow. Drawn at the creation screen's place (x, [BP+0Ah], left
+; of the middle), they are in its white (CR_INK); at the inventory's, in the colour it set.
+CR_LABELS_X equ 160             ; (the creation screen's at x 10, the inventory's at 235)
+cr_labels:
+        mov bx, si
+        shl bx, 2
+        cmp word [bp + 0xA], CR_LABELS_X
+        jae .out
+        mov word [TEXT_INK], CR_INK
+.out:   iret
+
+; TU_INFO: the description box (8C5F6h) asked for by PP_INFO: the game gives Turn Undead's
+; numbers 196 on (its element's icon less 0BE4h, + 0C4h; the purse's 200) its icon and SPIN 1000,
+; where the new spells (196-201) are spells: NS_CMP leaves the info box's compare as the game has
+; it (NS_CMP_INFO), and PROBE_SPELL_TEXT gives the purse its own text (PP_TEXT_INFO).
+TU_INFO_TURN equ 1
+TU_INFO_PICK equ 2
+TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"
+pp_text:
+        sub sp, 4               ; the game's two pushes: the INT's frame moved down over them
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax
+        mov ax, [bp + 8]
+        mov [bp + 4], ax
+        mov ax, [bp + 10]
+        mov [bp + 6], ax
+        mov word [bp + 8], TU_NAME
+        mov [bp + 10], ds
+        push bx
+        mov bx, [bp]            ; (the handler's frame)
+        call pp_mine
+        pop bx
+        or al, al
+        je .out
+        mov word [bp + 8], pp_name
+        mov [bp + 10], cs
+.out:   pop ax
+        pop bp
+        iret
+
+pp_info:
+        push bx
+        mov bx, bp
+        call pp_mine
+        pop bx
+        mov byte [cs:tu_info], TU_INFO_TURN
+        cmp al, 0
+        mov ax, [TU_ICON]       ; (the replaced instruction)
+        je .ret
+        mov byte [cs:tu_info], TU_INFO_PICK
+        mov ax, PP_ICON
+.ret:   iret
+
+pp_lit:
+        mov ax, [TU_ICON]       ; (the replaced instruction)
+        cmp byte [cs:pp_arming], 0
+        je .ret
+        mov ax, [READY_ICON]    ; (the thief's: as it was)
+.ret:   iret
+
+pp_arm:
+        cmp byte [cs:pp_arming], 0
+        jne .pick
+        sub sp, 4               ; the game's push: the INT's frame moved down over it
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax
+        mov ax, [bp + 8]
+        mov [bp + 4], ax
+        mov ax, [bp + 10]
+        mov [bp + 6], ax
+        mov word [bp + 8], 0xFFFF
+        mov word [bp + 10], 0x00BE
+        pop ax
+        pop bp
+        iret
+.pick:  mov byte [cs:pp_arming], 0
+        push bp
+        mov bp, sp
+        add word [bp + 2], ARM_OUT
+        call pp_restore         ; (no spell readied: as before the screen was closed)
+        push ax
+        push es
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        mov al, [es:0x25B]      ; the thief: the character on show
+        mov [cs:pp_who], al
+        mov byte [cs:pp_armed], 1
+        mov word [POINTER_MODE], TALK_MODE
+        pop es
+        pop ax
+        pop bp
+        iret
+
+pp_hand:
+        sti
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        mov si, [bp + 6]        ; the replaced "mov si,[bp+6]" (BP the game's), into the frame
+        mov [ss:bx + NS_SI], si
+        mov dx, HAND_SOME
+        cmp byte [cs:pp_armed], 0
+        je .go
+        test byte [cs:pick_on], PICK_BUTTON
+        jz .go
+        cmp word [POINTER_MODE], TALK_MODE
+        jne .go
+        call pp_fighting
+        jne .go
+        mov byte [cs:pp_armed], 0
+        mov [cs:use_who], si
+        mov word [cs:use_taken], 0
+        movzx ax, byte [cs:pp_who]
+        or ax, PICKED_BY
+        mov [cs:use_item], ax
+        mov word [cs:use_done], HAND_DONE
+        jmp probe_use_item.asked ; (as for an item used on them; DX the talk if not answered)
+.go:    add [ss:bx + 34], dx
+        pop es
+        popad
+        iret
+
+; PP_KEEP: what the screen's closing (884B3h) sets for a spell readied (the character readying,
+; [4970h]; its readied kind, [4971h] + 2 each, 3 for a spell; the icon shown, [4AF9h]: the
+; menu button lit), kept for PP_RESTORE to put back. DS the game's; registers kept.
+READY_WHO   equ 0x4970
+READY_KIND  equ 0x4971
+READY_ICON  equ 0x4AF9
+pp_keep:
+        push ax
+        push bx
+        push es
+        mov al, [READY_WHO]
+        mov [cs:pp_kept_who], al
+        mov ax, [READY_ICON]
+        mov [cs:pp_kept_icon], ax
+        call pp_shown_member
+        mov ax, [bx + READY_KIND]
+        mov [cs:pp_kept_kind], ax
+        pop es
+        pop bx
+        pop ax
+        ret
+pp_restore:
+        push ax
+        push bx
+        push es
+        mov al, [cs:pp_kept_who]
+        mov [READY_WHO], al
+        mov ax, [cs:pp_kept_icon]
+        mov [READY_ICON], ax
+        call pp_shown_member
+        mov ax, [cs:pp_kept_kind]
+        mov [bx + READY_KIND], ax
+        pop es
+        pop bx
+        pop ax
+        ret
+pp_shown_member:                ; BX: the character on show, times 2 (ES lost)
+        mov bx, ds
+        add bx, USE_WHO_SEG
+        mov es, bx
+        movzx bx, byte [es:0x25B]
+        shl bx, 1
+        ret
+
+; PP_FIGHTING: ZF clear in a fight. DS the game's; registers kept.
+pp_fighting:
+        push es
+        push ax
+        mov ax, ds
+        sub ax, FIGHT_FROM_DS
+        mov es, ax
+        cmp word [es:0x19], 0
+        pop ax
+        pop es
+        ret
+
+; PP_DISARM: the pick put away once the pointer is in another mode than talking
+pp_disarm:
+        cmp byte [cs:pp_armed], 0
+        je .ret
+        cmp word [POINTER_MODE], TALK_MODE
+        je .ret
+        mov byte [cs:pp_armed], 0
+.ret:   ret
+
+pp_name  db "PICK POCKETS", 0
+pp_icons dw 1, 0x0BE4, 2, 0x0BE5, 4, 0x0BE6, 8, 0x0BE7 ; (the elements' Turn Undead icons)
+pp_icons_end:
+free_call dw FREE_OFF, 0
+pp_shown  db 0                  ; 1 while the button on show is a thief's
+pp_arming db 0                  ; 1 from its letting go to PP_ARM
+pp_armed  db 0                  ; 1 while the next talk is a pick
+pp_who    db 0                  ; (the thief)
+pp_loaded dw 0                  ; the icon the game has loaded (TU_CACHE)
+pp_second    db 0               ; 1: the purse wanted beside Turn Undead (PP_SECOND_DRAW)
+pp_second_on db 0               ; 1 while it is shown
+tu_info    db 0                 ; TU_INFO_TURN or TU_INFO_PICK: the description box asked for (PP_INFO)
+pp_icon2     dd 0               ; its icon, loaded (let go of as the screen closes)
+pp_call      dd 0
+pp_ret       dw 0
+pp_kept_who  db 0               ; (PP_KEEP's)
+pp_kept_kind dw 0
+pp_kept_icon dw 0
 
 ; NS_ENTRY: "imul ax,ax,6" or "imul bx,bx,6" (3 bytes) where the Effects screen (its icons and
 ; names: AX the effect, on the character on show), the Look box (BX, on thing [BP+0Ah]) and the
@@ -13345,24 +13817,40 @@ ns_hit:
 ; NS_FIST: "cmp word [bp-0Ch],0" (58226h; 4 bytes: the site's number and a NOP after the INT) in the
 ; melee attack routine (58019h: SI the attacker; [BP-2] the weapon's item, -1 for none: a natural
 ; attack; [BP-8] its to-hit plus, taken off the THAC0; [BP-0Ch] its magic, which the hit's damage
-; kinds then get as PLUS1..PLUS3). With Erdlu Claw's effect on the attacker, a natural attack is
-; +1 to hit and at least a +1 weapon; then that compare.
+; kinds then get as PLUS1..PLUS3; [BP-14h] those kinds, the game's crushing (8) for any natural
+; attack). With Erdlu Claw's effect on the attacker, a natural attack is +1 to hit and at least a
+; +1 weapon. Its talons, and a thri-kreen of the party's claws, cut: a natural attack of either is
+; slashing, not crushing (monsters' own as the game has them). Then that compare.
+DMG_CRUSHING equ 0x08
+DMG_SLASHING equ 0x10
+PARTY_COUNT  equ 4             ; (game.PARTY_SIZE)
 ns_fist:
         pushad
         push es
         mov di, sp
-        test byte [cs:rules], RULE_NEW_SPELLS
-        jz .test
         cmp word [bp - 2], -1
         jne .test
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .kreen
         mov ax, si
         mov cl, CLAW_EFFECT
         call ns_has
-        jne .test
+        jne .kreen
         inc word [bp - 8]
         cmp word [bp - 0x0C], 1
-        jge .test
+        jge .claws
         mov word [bp - 0x0C], 1
+        jmp .claws
+.kreen: cmp si, PARTY_COUNT     ; (the party's combatants are their creatures)
+        jae .test
+        mov ax, si
+        call creature_sheet
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
+        jne .test
+.claws: test word [bp - 0x14], DMG_CRUSHING
+        jz .test
+        and word [bp - 0x14], ~DMG_CRUSHING
+        or word [bp - 0x14], DMG_SLASHING
 .test:  cmp word [bp - 0x0C], 0
         pushf
         pop ax
@@ -13379,7 +13867,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAMES_EXTRA  equ 35
+NAMES_EXTRA  equ 39
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -13693,7 +14181,15 @@ extra_names:
         times NAME_SIZE - 10 db 0       ; shield +1,
         db "Ironbulwark"                ; a metal shield +3)
         times NAME_SIZE - 11 db 0
-        times (NAMES_EXTRA - 35) * NAME_SIZE db 0
+        db "Hayneedle"                  ; (the weapons for the kits with too few, dsloader/
+        times NAME_SIZE - 9 db 0        ; worldgear.py: a bone dagger +1,
+        db "Nightsliver"                ; an obsidian dagger +2,
+        times NAME_SIZE - 11 db 0
+        db "Dunesong"                   ; a bow +1,
+        times NAME_SIZE - 8 db 0
+        db "Skycutter"                  ; a chatkcha +2)
+        times NAME_SIZE - 9 db 0
+        times (NAMES_EXTRA - 39) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,
@@ -15645,6 +16141,7 @@ panel_draw_around:
 probe_pointer:
         sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
         mov [cs:strip_ds], ds
+        call pp_disarm
         call strip_mind
         call pointer_panel
         push ax

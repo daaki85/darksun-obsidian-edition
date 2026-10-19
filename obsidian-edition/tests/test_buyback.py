@@ -88,5 +88,27 @@ class BuybackTests(unittest.TestCase):
         self.assertEqual(bytes(self.m[THINGS + SOLD * 3:THINGS + SOLD * 3 + 3]), bytes(3))
 
 
+class UnlinkTests(unittest.TestCase):
+    setUp, chain = BuybackTests.setUp, BuybackTests.chain
+
+    def test_free_list_moving_leaves_the_item(self):
+        """ring.unlink: the game's free list of item records changing while an item is taken out
+        (the game's own doing): the item put back in its list as it was, and not freed."""
+        from unittest import mock
+        at = ITEMS + 41 * game.ITEM_SIZE + game.ITEM_NEXT
+        struct.pack_into("<h", self.m, at, 40)  # (the bag: 41, then 40)
+        struct.pack_into("<H", self.m, DS * 16 + ring.FREE_ITEMS, 90)
+        heads = iter((90, 91))
+        with mock.patch.object(ring.Items, "word", lambda it, offset: next(heads)):
+            self.assertFalse(ring.unlink(self.gd, ring.Items(self.gd), 40, "test"))
+        self.assertEqual(self.chain(BAG), [41, 40])
+        self.assertEqual(struct.unpack_from("<h", self.m, ITEMS + 40 * game.ITEM_SIZE + game.ITEM_NEXT)[0],
+                         game.NO_ITEM)
+        self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.FREE_ITEMS)[0], 90)
+        self.assertTrue(ring.unlink(self.gd, ring.Items(self.gd), 40, "test"))  # (still: freed)
+        self.assertEqual(self.chain(BAG), [41])
+        self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.FREE_ITEMS)[0], 40)
+
+
 if __name__ == "__main__":
     unittest.main()

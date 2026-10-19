@@ -78,9 +78,10 @@ class PickTests(unittest.TestCase):
         self.assertIn("d100 = 11, needs 11 or less -> success", result.log[0])
         self.assertIsNone(result.key)
         money = self.log.game.money()
-        again = self.attempt(1)
-        self.assertEqual(again.text, "Dag lifts 3 ceramic pieces from Guard's purse, all there was to take.")
-        self.assertEqual(self.log.game.money(), money + 3)
+        again = self.attempt(1)  # (Dag a 4th level thief: 3 for each level, as rolled here)
+        self.assertEqual(again.text, "Dag lifts 12 ceramic pieces from Guard's purse, all there was to take.")
+        self.assertIn("  coins: 4d4+4 (2 to 5 for each of 4 thief levels) = 12", again.log)
+        self.assertEqual(self.log.game.money(), money + 12)
         self.assertIsNotNone(again.key)
 
     def test_kurzaks_sword(self):
@@ -154,12 +155,20 @@ class PickTests(unittest.TestCase):
         self.assertIsNone(self.log.game.whose_turn())
         self.assertIsNone(self.attempt())
 
+    def test_the_buttons_thief(self):
+        """The Pick Pockets button's thief tries, whoever leads (no one, here)."""
+        struct.pack_into("<H", self.m, DS * 16 + game.WHOSE_TURN, 0xFFFF)
+        struct.pack_into("<h", self.m, (LOAD_SEG + game.TALK_SEG) * 16 + game.TALK_TARGET, -1)
+        result = pickpocket.attempt(self.log.game, set(), lambda: 11, lambda: 3, who=GUARD, thief=0)
+        self.assertEqual(result.text, "Dag lifts Bag from Guard unnoticed.")
+
 
 if __name__ == "__main__":
     unittest.main()
 
 
 class ToolsTests(unittest.TestCase):
+    """Thieves' Tools an earlier version gave: kept by their name and picture (they pick nothing now)."""
     def setUp(self):
         self.pick = PickTests()
         self.pick.setUp()
@@ -168,8 +177,8 @@ class ToolsTests(unittest.TestCase):
         struct.pack_into("<h", self.pick.m, ITEMS + 90 * game.ITEM_SIZE + game.ITEM_NEXT, 91)
 
     def give(self):
-        """A set of tools put in Dag's backpack (item 90, from the free list), as Kel's or Mirlon's
-        would be carried."""
+        """A set of tools put in Dag's backpack (item 90, from the free list), as an earlier
+        version's Kel or Mirlon gave."""
         gd = self.gd
         member = next(m for m in range(game.PARTY_SIZE) if gd.creature_name(m) == "Dag")
         it = ring.Items(gd)
@@ -197,18 +206,18 @@ class ToolsTests(unittest.TestCase):
 
 
 class SwitchTests(unittest.TestCase):
-    def test_tools(self):
-        """The helper's switch: the thieving tools (bit 0) with picking pockets on, nothing with
-        it off."""
+    def test_switch(self):
+        """The helper's switch: items used on the map asked about (bit 0) either way, the Pick
+        Pockets button (bit 1) with picking pockets on."""
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from test_dicelog import HDR, make_game
         from dsloader import dicelog
         log = make_game()
         flags = lambda: struct.unpack("<H", log.guest.read(HDR + dicelog.TSR_PICK_ON, 2))[0]
         log.set_pickpockets(True)
-        self.assertEqual(flags(), dicelog.PICK_TOOLS)
+        self.assertEqual(flags(), dicelog.USE_ASK | dicelog.PICK_BUTTON)
         log.set_pickpockets(False)
-        self.assertEqual(flags(), 0)
+        self.assertEqual(flags(), dicelog.USE_ASK)
 
 
 class ListTests(unittest.TestCase):

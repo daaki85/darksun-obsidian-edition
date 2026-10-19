@@ -50,7 +50,7 @@ SPHERE2, SPHERE2_MASK = 0x45, 0x07
 # thrown: long sword, club, dagger, short sword, mace, axe, pick
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
-# level up from thief level SHINOBI_FIRST, none from scrolls; it casts at its thief level less 5.
+# level up from thief level SHINOBI_FIRST, and its own from scrolls once read (read languages); it casts at its thief level less 5.
 # Fogbolt, Reflected Image, Spook and Friends, new spells, only with the new spells on (their known bits: NS_KNOWS)
 SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (FOG_SPELL, 1),  # Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt
                   (REFLECT_SPELL, 1), (SPOOK_SPELL, 1), (FRIENDS_SPELL, 1),  # Reflected Image, Spook, Friends

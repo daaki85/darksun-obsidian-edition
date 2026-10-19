@@ -53,6 +53,14 @@ WEAPON_SHAPES: Dict[int, str] = {
     3: STAFF, 80: STAFF,
     4: SHIELD, 16: SHIELD, 34: SHIELD, 83: SHIELD, game.METAL_SHIELD_TYPE: SHIELD,  # (the last worldgear.py's Ironbulwark)
     0: SLING, 64: SLING, 1: BOW, 69: BOW, 48: CHATKCHA,
+    47: SWORD,  # (Dragonsbane, El's Drinker)
+    # the Loader's own weapons (game.py): a new warrior's (weaponchoice.py) and the world's
+    game.BONE_SHORT_SWORD_TYPE: SWORD, game.OBSIDIAN_SHORT_SWORD_TYPE: SWORD, game.METAL_SHORT_SWORD_TYPE: SWORD,
+    game.BONE_AXE_TYPE: AXE, game.OBSIDIAN_AXE_TYPE: AXE,
+    game.METAL_DAGGER_TYPE: DAGGER, game.AIR_DAGGER_TYPE: DAGGER, game.BONE_DAGGER_TYPE: DAGGER,
+    game.METAL_MACE_TYPE: MACE,
+    game.METAL_GREAT_AXE_TYPE: GREAT_AXE, game.BONE_GREAT_AXE_TYPE: GREAT_AXE, game.OBSIDIAN_GREAT_AXE_TYPE: GREAT_AXE,
+    game.METAL_PICK_TYPE: POLEARM, game.METAL_POLEARM_TYPE: POLEARM,
 }
 FLAME_BLADE = 29
 # Which steps of a shape (_shape) are its blade

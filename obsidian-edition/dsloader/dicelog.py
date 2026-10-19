@@ -24,10 +24,11 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, gamepatch, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
+from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
@@ -52,6 +53,9 @@ SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and op
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
 TSR_POISONED = 360  # bit N: party member N, a Poisoner, has used its poison this fight (DSCLOG's PROBE_POISON)
+TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
+TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
+TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
 TSR_KIT_OUTDOORS = 350  # bit N: party member N under the open sky (the Loader's: _kit_tick)
 TSR_RULES_HI = 270  # the rules' bits past 16 (game.RULE_KITS), shifted down
 TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT, chance, d100, result (intlearn.py)
@@ -59,7 +63,8 @@ TSR_LEARN = 272  # a preserver's try at a scroll's spell: count, who, spell, INT
 # RL_TRY: the die tumbles faster than the ring is read)
 TSR_TRIES_SEQ, TSR_TRIES = 280, 282
 TSR_PICK_OFF, TSR_PICK_ON, PICK_SIZE = 176, 178, 240
-PICK_TOOLS = 1  # (TSR_PICK_ON: the thieving tools on someone)
+USE_ASK, PICK_BUTTON = 1, 2  # (TSR_PICK_ON: items used on the map asked about; a thief's Pick Pockets button)
+PICKED_BY = 0xFF00  # (TSR_USE_ITEM: the Pick Pockets button's pick, the thief its low byte)
 TSR_USE_SEQ, TSR_USE_REPLY, TSR_USE_WHO, TSR_USE_TAKEN, TSR_USE_ITEM = 180, 182, 184, 186, 188
 TSR_SWAP_ON, TSR_SWAP_SEQ, TSR_SWAP_OFF, SWAP_SIZE, SWAP_TEXT_SIZE = 190, 192, 194, 64, 240
 RULE_HELMS = game.RULE_HELMS
@@ -112,6 +117,13 @@ RESISTANCE_ROLL_RETURN = bytes.fromhex("83c404508a460a50ff76")
 # Dispel Magic, for each effect on the target (the effect id in [BP-2], the dispeller's level
 # the handler's argument at +14h): d100 at or under 50 + 5 x (that level - the effect's level)
 DISPEL_ROLL_RETURN = bytes.fromhex("83c4045a3bd07c108a46")
+# Mirror Images taking a spell for one creature (7A5BFh): its d100 (1d100), compared with 75 by
+# DSCLOG's NS_IMAGE (50 for Reflected Image's; 0 from the target's own side), the spell's routine's
+# arguments (target, caster); and taking an attack's hit (DSCLOG's NS_BLOW): the game's rand() from
+# DSCLOG, its code after the call marked IMAGE, in a frame of (target, attacker, chance)
+IMAGE_SPELL_RETURN = bytes.fromhex("83c404cd98") + bytes((gamepatch.NS_IMAGE,))
+IMAGE_BLOW_SITE = b"\xeb\x05IMAGE"
+IMAGE_VANISH = 0xBF  # (the game's own sight of an image vanishing: a "spell" a creature casts on itself)
 # Abjure: d20, which must reach 11 - the caster's level + the target's level; a creature of
 # kind 14 (a summoned one) is then sent away (1000 damage)
 ABJURE_ROLL_RETURN = bytes.fromhex("83c4045a3bd07e03e968")
@@ -126,7 +138,7 @@ OVERLAY_TRAP = b"\xcd\x3f"
 # and the percentile check. The same list is built into DSCLOG.
 SCALED_ROLL = b"\x66\x0f\xbf\xc0"  # movsx eax, ax
 FILTERS = tuple(SCALED_ROLL + bytes.fromhex(h) for h in (
-    "666bc0", "6669c0", "66c1e0", "660fbf56")) + (PERCENT_SITE[:8],)
+    "666bc0", "6669c0", "66c1e0", "660fbf56")) + (PERCENT_SITE[:8], b"\xeb\x05IMAGE")  # (DSCLOG's NS_BLOW: IMAGE_BLOW_SITE)
 
 # The rolls at the start of each round (the code after each rand() call): initiative
 # 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties
@@ -199,11 +211,16 @@ THIEF = 17  # class number
 
 EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
+ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
+# seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
+# counts as over: the game clears it as a fight ends and between the arena's waves (and it is
+# still clear as round 1's initiative is rolled, before it was ever up: that doesn't count)
+FIGHT_OVER = 2.0
 
 
 class DiceLogError(Exception):
@@ -343,6 +360,8 @@ class DiceLog:
         self._pending: List[PendingDice] = []
         self._out_cold: Dict[int, bool] = {}  # creature index -> Out Cold when last looked at
         self._psp: Dict[int, int] = {}  # party member -> PSP when last looked at
+        self.itemwatch = ItemWatch()  # the party's items, and a report when one is gone (itemwatch.py)
+        self._settings: Optional[dict] = None  # as last given to use_settings, for the reports
         self._last_damage: Optional[Tuple[int, int]] = None  # (spell, damage) last rolled
         self._turn: Optional[int] = None  # whose turn it was when last looked at
         self.round_order: List[Tuple[Optional[int], str, int]] = []  # this round: (combatant, name, score)
@@ -355,7 +374,7 @@ class DiceLog:
         self._talk: Optional[dict] = None  # the conversation on screen: its portraits and who it's with
         self.monster_info = True  # monsters' defences in the game's Look box (set_monster_info)
         self.arena_ring = True  # put the Ring +1 on the Tied-up Prisoner's body in the arena (ring.py)
-        self.pickpockets = True  # the thieving tools pick a pocket (pickpocket.py, tools.py)
+        self.pickpockets = True  # a thief's Pick Pockets button (pickpocket.py)
         self.show_gear = True  # the party's map sprites dressed in what they wear (sprites.py)
         self.starting_gear = True  # new characters' starting gear filled out (startgear.py)
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
@@ -409,6 +428,9 @@ class DiceLog:
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
+        self._out_of_fight: Optional[float] = None  # (since when the game's fight flag is down)
+        self._fight_seen = False  # (the flag seen up since the dances and Wild Fighting were rolled)
+        self._kits_due = False  # (a fight is over: the next round rolls the dances and Wild Fighting)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
         self._effects: Optional[Counter] = None
@@ -488,10 +510,11 @@ class DiceLog:
             self.guest.write(self.tsr_hdr + 32, struct.pack("<H", len(filters)) + packed)
 
     def set_pickpockets(self, on: bool) -> None:
-        """Picking pockets (ON): the thieving tools used on someone."""
+        """Picking pockets (ON): a thief's Pick Pockets button on the USE screen. Items used on the
+        map are asked about either way (the cooked vulture)."""
         self.pickpockets = on
         if self.tsr_hdr is not None:
-            flags = PICK_TOOLS if on else 0
+            flags = USE_ASK | (PICK_BUTTON if on else 0)
             self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", flags))
 
     def load_picked(self, entries) -> None:
@@ -560,9 +583,9 @@ class DiceLog:
         self.guest.write(self.tsr_hdr + TSR_XP_WHO, struct.pack("<H", who))
 
     def _answer_use(self) -> List[str]:
-        """An item was used on something on the map: if it was the thieving tools on someone,
-        try their pockets; if the cooked vulture, see what comes of it (vulture.py); and have
-        DSCLOG show what came of it instead of the game's doing."""
+        """An item was used on something on the map, or a thief's Pick Pockets button chose someone
+        (PICKED_BY): try their pockets with that thief's hand; for the cooked vulture, see what
+        comes of it (vulture.py); and have DSCLOG show what came of it instead of the game's doing."""
         if self.tsr_hdr is None:
             return []
         seq = self.guest.read(self.tsr_hdr + TSR_USE_SEQ, 2)
@@ -579,13 +602,12 @@ class DiceLog:
             if meal is not None:
                 taken = 2 if meal.used_up else True
                 result = pickpocket.Attempt(meal.text, meal.log)
-            elif item < game.NO_ITEM and tools.is_tools(rec):
-                kind, index = ring.Items(self.game).thing(thing)
+            elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
-                if self._fighting():  # (the tools stay on the pointer)
-                    result = pickpocket.Attempt(tools.NOT_IN_A_FIGHT, [])
-                else:
-                    result = pickpocket.attempt(self.game, self.picked, who=index) if kind == 2 else None
+                if self._fighting():
+                    result = pickpocket.Attempt(pickpocket.NOT_IN_A_FIGHT, [])
+                elif kind == 2:
+                    result = pickpocket.attempt(self.game, self.picked, who=index, thief=item & 0xFF)
                 if result is None:
                     result = pickpocket.Attempt("There are no pockets to pick there.", [])
         except (struct.error, IndexError, ValueError):
@@ -608,6 +630,7 @@ class DiceLog:
 
     def use_settings(self, settings: dict) -> None:
         """The Options tab's switches for the game, as saved (for the logs without a window)."""
+        self._settings = settings
         self.monster_info = bool(settings.get("monster_info", True))
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
         self.pickpockets = bool(settings.get("pickpockets", True))
@@ -762,6 +785,15 @@ class DiceLog:
             out += bytes(7)
         return out.ljust(STATS_SIZE, b"\0")
 
+    def read_languages(self, member: int) -> int:
+        """A party member's chance to read languages as it stands (0 without thief levels): a
+        Shinobi reads a scroll with it (DSCLOG's SHINOBI_READ)."""
+        try:
+            skills = self.game.thief_skills_now(member, (game.READ_LANGUAGES,))
+        except (struct.error, IndexError, ValueError):
+            return 0
+        return max(0, min(100, skills[0][1])) if skills else 0
+
     def _answer_stats(self) -> None:
         """A game screen is about to show THAC0 and the saves: bring them up to date first (the
         game waits for this, so an item just put on counts)."""
@@ -789,6 +821,7 @@ class DiceLog:
         if data != self._stats_written:
             self.guest.write(table, data)
             self._stats_written = data
+        self.guest.write(self.tsr_hdr + TSR_READ_LANG, bytes(self.read_languages(member) for member in range(game.PARTY_SIZE)))
         self.guest.write(self.tsr_hdr + TSR_STATS_STAMP, self.guest.read(BIOS_TIMER, 2))
 
     def _not_ours(self, entries: List[DialogueEntry]) -> List[DialogueEntry]:
@@ -858,14 +891,24 @@ class DiceLog:
                 return
             bits = sum(1 << m for m in range(game.PARTY_SIZE) if self.game.outdoors(m))
             self.guest.write(self.tsr_hdr + TSR_KIT_OUTDOORS, bytes((bits,)))
-            if (self._dances.left or self.game.dance or self._wild.fighting) and not self.game.in_combat():
-                # (ended with the fight as the rounds count it, FIGHT_GAP of the game's clock past
-                # the last round: the game drops its fight flag as the first round's initiative
-                # is rolled, and between the arena's waves)
+            if self.game.in_combat():
+                self._out_of_fight, self._fight_seen = None, True
+            else:
+                # the dances and Wild Fighting end with the fight, whatever came of them, and the
+                # next fight's first round rolls them again: once the game's fight flag, seen up
+                # in the fight, has been down FIGHT_OVER, or the game's clock has run FIGHT_GAP
+                # past the last round, or gone back (a game loaded)
+                if self._out_of_fight is None:
+                    self._out_of_fight = now
+                over = self._fight_seen and now - self._out_of_fight >= FIGHT_OVER
                 now_game = self.game.game_time()
-                if now_game is not None and self._round_time is not None and now_game - self._round_time > FIGHT_GAP:
+                if now_game is not None and self._round_time is not None \
+                        and (now_game - self._round_time > FIGHT_GAP or now_game < self._round_time):
+                    over = True
+                if over and not self._kits_due:
                     self._dances.stop(self.game, self.tsr_hdr)
                     self._wild.stop(self.game, self.tsr_hdr)
+                    self._kits_due, self._fight_seen = True, False
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -874,7 +917,7 @@ class DiceLog:
         """(the kits' names, to hit, damage) the attacker's kits add to a weapon attack, as DSCLOG's
         KIT_TO_HIT, KIT_ATTACK_DAMAGE and KIT_EXTRA: a Ravager's, a Brute's, a Ghetto Fighter's (in
         melee), an Arena Champion's; a Battle Dancer's dance, a Wilderness Avenger's against undead
-        (TARGET the target's combatant)."""
+        (TARGET the target's combatant); and Wild Fighting, a Wild Fury's or Gerakis's (WILD_*)."""
         g = self.game
         names, to_hit, damage = [], 0, 0
         melee = mode is not None and mode <= 1
@@ -892,16 +935,16 @@ class DiceLog:
                 hit += kits.POISONER_TO_HIT
             if mode is not None:  # (DSCLOG's KIT_TO_HIT: anything but a dagger, unarmed too)
                 hit += kits.ghetto_to_hit(kid, kind)
-            if kid == kits.WILD_FURY and attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*)
-                if g.wild[attacker]:
-                    dam += kits.WILD_DAMAGE
-                else:
-                    hit += kits.WILD_TO_HIT
             if weapon or hit or dam or more:
                 names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
-                             + (" under the open sky" if kid == kits.SCOUT else "")
-                             + (" fighting wild" if kid == kits.WILD_FURY and attacker in g.wild else ""))
+                             + (" under the open sky" if kid == kits.SCOUT else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
+        if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
+            names.append("Wild Fighting")
+            if g.wild[attacker]:
+                damage += kits.WILD_DAMAGE
+            else:
+                to_hit += kits.WILD_TO_HIT
         return " and ".join(names), to_hit, damage
 
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
@@ -943,6 +986,7 @@ class DiceLog:
                 self._kalzith_sold_out()
                 out += self._learn_lines()
                 self._dress_now(now)
+                out += self.itemwatch.check(self.game, now, self._settings)
         self._scroll()
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
             out += self.initiative_lines()
@@ -966,12 +1010,23 @@ class DiceLog:
             self._panel_lines(out, now)
         if self.combat_log:
             self._panel_input(now)
+        self.itemwatch.remember(out)  # (the context an item report carries)
         return out
+
+    def _weapons_asked(self) -> bool:
+        """Whether DSCLOG's weapon window is up after the creation screen's DONE (TSR_CREATING): the
+        new character's weapon specs are still being picked, its defaults and weapon wait."""
+        if self.tsr_hdr is None:
+            return False
+        try:
+            return bool(self.guest.read(self.tsr_hdr + TSR_CREATING, 1)[0])
+        except (OSError, IndexError):
+            return False
 
     def _arena_ring(self, now: float) -> List[str]:
         """The helms' and boots' names for the rules; once the game's name table has DSCLOG's
-        names, the ring and tools from earlier versions named in them, and in the arena, the
-        ring itself, and a set of tools for each thief who hasn't had one."""
+        names, the ring and tools from earlier versions named in them; then new characters' gear,
+        the game's own party, and the watches of the Loader's people and items."""
         if now < self._ring_check:
             return []
         self._ring_check = now + RING_INTERVAL
@@ -980,17 +1035,19 @@ class DiceLog:
             ring.name_items(self.game, self.rules)
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
-            if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
-                out += weaponchoice.class_gear(self.game)
-            if self.rules & game.RULE_SPECIALIZE:  # (new characters' weapon kinds and starting weapon)
-                out += weaponchoice.finish_new(self.game)
-            if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
-                out += weaponchoice.kit_gear(self.game)
-            if self.starting_gear:  # (new characters' starting gear filled out)
-                out += startgear.fill(self.game)
-            out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
-            if not self.game.in_combat():  # (items an earlier version put in the wrong list)
-                out += pickpocket.mend_lists(self.game)
+            still = self._items_still()
+            if still:  # (the item lists changed only while the game leaves them be)
+                if self.rules & game.RULE_SPECIALIZE and not self._weapons_asked():  # (new characters' weapon kinds and starting weapon:
+                    out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
+                if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
+                    out += weaponchoice.class_gear(self.game)
+                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
+                    out += weaponchoice.kit_gear(self.game)
+                if self.starting_gear:  # (new characters' starting gear filled out)
+                    out += startgear.fill(self.game)
+                out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
+                if not self.game.in_combat():  # (items an earlier version put in the wrong list)
+                    out += pickpocket.mend_lists(self.game)
             if self.cilla_elf:
                 out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
@@ -1008,8 +1065,7 @@ class DiceLog:
             if region != self._mended_in:  # (his scrolls of before the fix, once in each area)
                 kalzith.mend(self.game)
                 self._mended_in = region
-            if self.pickpockets:
-                tools.repaint(self.game)  # (the tools themselves are Mirlon's, and Kel's to sell: worldgear.py)
+            tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
         except (struct.error, IndexError, ValueError):
@@ -1126,10 +1182,27 @@ class DiceLog:
                 return []
             self._learn_seq = seq
             from . import intlearn
+            read, read_rate = self.guest.read(self.tsr_hdr + TSR_LEARN_READ, 2)
             return [intlearn.line(self.game.creature_name(who), self.game.spell_name(spell), intelligence, rate,
-                                  roll, result, self.game.spell_level(spell))]
+                                  roll, result, self.game.spell_level(spell), read, read_rate)]
         except (struct.error, IndexError, ValueError):
             return []
+
+    def _items_still(self) -> bool:
+        """The game's free lists of item records and of things the same over ITEMS_STILL_WAIT: it
+        isn't building its item lists afresh (as START GAME does, or loading an area). The
+        Loader's changes to them are made only then: one made across START GAME took the game's
+        free list of item records from it (its head written over with the end of a party member's
+        list), and the arena's things, the announcer among them, were never put on the map."""
+        def heads() -> bytes:
+            return b"".join(self.guest.read(self.game.ds * 16 + at, 2)
+                            for at in (ring.FREE_ITEMS, ring.FREE_THINGS, ring.THINGS_USED))
+        try:
+            before = heads()
+            time.sleep(ITEMS_STILL_WAIT)
+            return heads() == before
+        except (struct.error, IndexError, ValueError):
+            return False
 
     def _kalzith_sold_out(self) -> None:
         """All six of Kalzith's scrolls bought: no more shop, and he carries his two, put on him
@@ -1379,6 +1452,7 @@ class DiceLog:
     def take_dialogue(self) -> List[DialogueEntry]:
         """Dialogue that has come in since the last call (lines() collects it)."""
         out, self._dialogue = self._dialogue, []
+        self.itemwatch.remember_talk(out)
         return out
 
     def _party_check(self, now: float) -> bool:
@@ -1390,6 +1464,7 @@ class DiceLog:
             if self.tracker:
                 self.tracker.reset()
             self.defilers.reset()
+            self.itemwatch.reset()
             return True
         return False
 
@@ -1556,7 +1631,7 @@ class DiceLog:
         now = self.game.game_time()
         if now is None:
             return 0
-        if self._round_time is None or now - self._round_time > FIGHT_GAP:
+        if self._round_time is None or now - self._round_time > FIGHT_GAP or now < self._round_time:  # (or a game loaded)
             self._round = 0
             # a new fight: the game hands its creature records to new monsters, so an AC worked
             # out for one in an earlier fight isn't this one's (the party's stay theirs)
@@ -1613,8 +1688,11 @@ class DiceLog:
         scores = Counter(r[0] for r in rows)
         number = self._round_number()
         self.round_number = number
-        danced = self._dances.round(g, self.tsr_hdr, number)
-        danced += self._wild.round(g, self.tsr_hdr, number)
+        start, self._kits_due = number == 1 or self._kits_due, False  # (a new fight, or one after a fight's end)
+        if start:
+            self._fight_seen, self._out_of_fight = False, None
+        danced = self._dances.round(g, self.tsr_hdr, number, start=start)
+        danced += self._wild.round(g, self.tsr_hdr, number, start=start)
         if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
             self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
@@ -1644,6 +1722,11 @@ class DiceLog:
             return self.flush(now, force=True) + self._attack(e)
         if code.startswith(DICE_SITE):
             return self._dice_roll(e, show_all, now)
+        if code.startswith(IMAGE_BLOW_SITE):
+            target, chance = e.arg(6), e.arg(0x0A)
+            if target is None or chance is None:
+                return []
+            return [self._image_line(target, scaled(e.raw, 100) + 1, chance, spell=False)]
         if code.startswith(CHECK_SITE):
             return self.flush(now, force=True) + self._check(e, show_all)
         if code.startswith(BREAK_ROLL_1) or code.startswith(BREAK_ROLL_2):
@@ -1657,6 +1740,16 @@ class DiceLog:
                 return [f"{generic[0]} = {generic[1]}  (at {where})"]
             return [f"rand() = {e.raw}  (at {where})"]
         return []
+
+    def _image_line(self, target: int, roll: int, chance: int, spell: bool) -> str:
+        """Mirror Images' d100 against a hit or a spell on TARGET: an image takes it on CHANCE or
+        less (0: a spell from the target's own side, which no image takes)."""
+        what = "spell" if spell else "blow"
+        head = f"    {EFFECT_NAMES[game.MIRROR_EFFECT]} on {self._name(target)}: d100 = {roll}"
+        if not chance:
+            return f"{head}, a spell from its own side -> no image takes it"
+        took = (f"an image is struck instead, the {what} lost" if roll <= chance else f"the {what} gets through")
+        return f"{head}, {chance} or less strikes an image -> {took}"
 
     def _thief_skill(self, e: Entry) -> List[str]:
         """A thief skill check (the game's routine at 803B8h): d100 under the skill's chance plus
@@ -1864,6 +1957,13 @@ class DiceLog:
                     f"+{faces[0]} while it lasts (at most {STR_MOST})"]
             if count == 1 and sides == 100 and e.parent_code.startswith(RESISTANCE_ROLL_RETURN):
                 return self._magic_resistance(e.parent_arg(6), e.parent_arg(8), faces[0])
+            if count == 1 and sides == 100 and (e.parent_code.startswith(IMAGE_SPELL_RETURN) or self._overlay_image(e)):
+                target, caster = e.parent_arg(6), e.parent_arg(8)
+                if target is None or caster is None or e.parent_arg(0x12) == IMAGE_VANISH:
+                    return []
+                ours = (target < game.PARTY_SIZE) == (caster < game.PARTY_SIZE)
+                return self.flush(now, force=True) + [
+                    self._image_line(target, faces[0], 0 if ours else self.game.image_chance(target), spell=True)]
             if count == 1 and sides == 100 and e.parent_code.startswith(DISPEL_ROLL_RETURN):
                 return self._dispel(e, faces[0])
             if count == 1 and sides == 20 and e.parent_code.startswith(ABJURE_ROLL_RETURN):
@@ -1876,6 +1976,8 @@ class DiceLog:
                     return self.flush(now, force=True) + [
                         f"    {EFFECT_NAMES[ACID]} on {who}: {count}d{sides} = {faces_text} = {sum(faces)} acid damage"]
                 # the 2d4 means nothing here: a Stoneskin, Ironskin, Mirror Image... used a charge
+                if eid == game.MIRROR_EFFECT:
+                    return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes"]
                 name = EFFECT_NAMES.get(eid, f"effect {eid}")
                 return [f"    {name} on {who}: one charge used"]
             handler = next((bonus for code, bonus in SPELL_HANDLER_RETURNS if e.parent_code.startswith(code)), None)
@@ -1951,6 +2053,18 @@ class DiceLog:
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         return ["  " + line]
 
+    def _overlay_image(self, e: Entry) -> bool:
+        """Mirror Images' d100 on a spell (IMAGE_SPELL_RETURN) when the overlay manager has
+        swapped its return address for an INT 3Fh stub (the dice routine's overlay loaded over
+        the spell's): known by the routine's arguments, (target, caster, ..., spell at +12h), a
+        spell cast on a target with Mirror Images on it."""
+        if not e.parent_code.startswith(OVERLAY_TRAP):
+            return False
+        target, caster, spell = e.parent_arg(6), e.parent_arg(8), e.parent_arg(0x12)
+        if target is None or caster is None or spell is None or not 0 <= spell < 0x100:
+            return False
+        return any(eff.owner == target and eff.id == game.MIRROR_EFFECT for eff in self.game.effects())
+
     def _overlay_duration(self, e: Entry, count: int, sides: int) -> bool:
         """The duration routine's roll when the overlay manager has swapped its return address
         for an INT 3Fh stub (so its code can't be matched): its arguments are still (spell,
@@ -2020,7 +2134,7 @@ class DiceLog:
         per = (f"{rule.step_dice}d{sides}" if rule.step_dice else "") + \
             (f"{signed(rule.step_bonus)}" if rule.step_dice and rule.step_bonus else
              f"{rule.step_bonus}" if rule.step_bonus else "")
-        if not per:
+        if not per or rule.flat():
             return text
         unit = "caster level" if rule.per_levels == 1 else f"{rule.per_levels} caster levels"
         counted = min(level, game.SPELL_LEVEL_CAP) + rule.adjust

@@ -1,11 +1,14 @@
-"""Picking pockets: a thief uses the thieving tools on someone (tools.py).
+"""Picking pockets: a thief's Pick Pockets button, then someone clicked on.
 
 The game has one pickpocket of its own, the Trustee's key in the slave pens, in his script.
-With the dice log's patched game, the tools used on someone (DSCLOG's PROBE_USE_ITEM) have the
-Loader roll the thief's pick pockets chance as it stands now (thief_skills_now). On a success the
+With the dice log's patched game, a character with thief levels has a Pick Pockets button on
+the USE screen, where a priest's Turn Undead is, outside fights (a cleric/thief has it beside
+Turn Undead). Pressed, the screen closes and the pointer is the one for talking; the next
+person it is clicked on (DSCLOG's PP_HAND, instead of the conversation) has the Loader roll that
+thief's pick pockets chance as it stands now (thief_skills_now). On a success the
 thief lifts one small thing (weight 10 or less, and nothing worn on the body) from the
 person into the backpack. On a failure, a move silently roll decides whether they got away
-unnoticed. With nothing else on them, the thief takes a few coins (party money), and that is
+unnoticed. With nothing else on them, the thief takes coins (party money: 2 to 5 for each thief level), and that is
 the last try on them. A thief can go on trying the same person until caught (both rolls
 failed) or until they take the coins; after that, their pockets are out of reach.
 
@@ -44,6 +47,7 @@ OWN_POCKETS = ("Trustee",)  # people whose script has its own pickpocket
 SWORD_XP = 200  # for lifting Kurzak's Short Sword, Churrr's club or Maris's Mindshard
 SWORD_SEEN = "a metal short sword"  # what the conversation says was lifted
 MAX_ITEMS = 200
+NOT_IN_A_FIGHT = "No time to pick pockets in the middle of a fight."
 
 
 @dataclass
@@ -61,6 +65,15 @@ def _seen(data: bytes) -> Optional[str]:
     if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] in LIFTABLE_TYPES:
         return SWORD_SEEN
     return LIFTABLE_NAMES.get(struct.unpack_from("<H", data, game.ITEM_NAME)[0])
+
+
+def thief_level(gd: GameData, member: int) -> int:
+    """MEMBER's level in the thief class (at least 1)."""
+    sheet = gd.sheet(member)
+    for i in range(3):
+        if len(sheet) > game.SHEET_LEVELS + i and sheet[game.SHEET_CLASSES + i] == game.THIEF:
+            return max(1, sheet[game.SHEET_LEVELS + i])
+    return 1
 
 
 def _skill(gd: GameData, member: int, name: str) -> Optional[int]:
@@ -198,15 +211,15 @@ def give(gd: GameData, it: ring.Items, member: int, item: int, cell: int) -> boo
     return _link(gd, it, member, item, cell)
 
 
-COINS = (2, 5)  # ceramic pieces in a purse with nothing else worth taking
+COINS = (2, 5)  # ceramic pieces in a purse with nothing else worth taking, for each of the thief's levels
 
 
 def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.randint(1, 100),
             coin_roll: Callable[[], int] = lambda: random.randint(*COINS),
-            who: Optional[int] = None) -> Optional[Attempt]:
-    """The leader tries the pocket of creature WHO (the thieving tools used on them), or of
-    whoever is talked to (WHO not given). None when there's no one to rob (a
-    narration, someone in the party, a dead body)."""
+            who: Optional[int] = None, thief: Optional[int] = None) -> Optional[Attempt]:
+    """Party member THIEF (the one whose Pick Pockets button was pressed; not given, the leader)
+    tries the pocket of creature WHO (clicked on), or of whoever is talked to (WHO not given). None
+    when there's no one to rob (a narration, someone in the party, a dead body)."""
     if who is None:
         who = gd.talk_target_creature()
     elif not gd.living_npc(who):
@@ -214,7 +227,7 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
     if who is None:
         return None
     npc = gd.creature_name(who)
-    leader = gd.whose_turn()
+    leader = gd.whose_turn() if thief is None else thief
     if leader is None or not 0 <= leader < game.PARTY_SIZE:  # (no one's turn: between areas)
         return None
     thief = gd.creature_name(leader)
@@ -235,10 +248,13 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
              + ("success" if d100 <= chance else "failed")]
     if d100 <= chance:
         loot = _carried(gd, it, who)
-        if not loot:  # nothing else: a few coins, and that was the last try on them
-            coins = coin_roll()
+        if not loot:  # nothing else: coins, 2 to 5 for each thief level, and that was the last try on them
+            level = thief_level(gd, leader)
+            rolls = [coin_roll() for _ in range(level)]
+            coins = sum(rolls)
             gd.add_money(coins)
             text = f"{thief} lifts {coins} ceramic pieces from {npc}'s purse, all there was to take."
+            lines.append(f"  coins: {level}d4+{level} (2 to 5 for each of {level} thief levels) = {coins}")
             lines.append("  " + text)
             return Attempt(text, lines, key)
         else:

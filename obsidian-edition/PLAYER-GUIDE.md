@@ -12,7 +12,8 @@ Everything here is the mod with its **default options**, which is how the
 Loader starts. Every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance)); where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
-The [README](README.md) has every rule in full detail.
+The [README](README.md) has every rule in full detail, and the [Kits](KITS.md)
+page each kit's numbers: the guide links to its tables.
 
 ## Contents
 
@@ -54,6 +55,7 @@ The [README](README.md) has every rule in full detail.
   - [New items](#new-items)
 - [Experience and levels](#experience-and-levels)
 - [Worth knowing](#worth-knowing)
+- [Glossary](#glossary)
 - [The Options tab at a glance](#the-options-tab-at-a-glance)
 
 ## Getting started
@@ -71,6 +73,11 @@ The [README](README.md) has every rule in full detail.
    chosen when a character is made. The game's own four, used when you make
    none, are given weapon specs to suit them, and with kits on, a kit or
    features of their own (see [Multiclass kits](#multiclass-kits)).
+
+Already playing? Saves made before load and play with the mod's fixes and
+rules, but kits, fuller starting gear and much of the new content come with a
+new game (see the README's [saved games](README.md#the-games-bugs-fixed)
+note).
 
 ## Playing
 
@@ -94,9 +101,9 @@ easier.
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
 | **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
-| **DELETE in the roster** | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
-| **New characters' thief skills** | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
-| **Spells on the Effects screen** | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
+| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
+| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
+| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
 | **No copy protection** | The question from the manual never comes. |
 | **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
@@ -107,6 +114,7 @@ easier.
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
 | **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
 | **Crash and freeze reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send, with the game's own error message in it; if the game freezes, **Freeze report** on the Loader saves what it was doing. |
+| **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), the Loader saves a report to send, as for a crash. |
 
 **In the Loader's window:**
 
@@ -131,10 +139,11 @@ easier.
 On the main menu choose **CREATE CHARACTERS**, right-click an empty slot and
 choose **NEW**. Click the portrait for race and sex, mark one to three classes,
 choose a cleric's or ranger's sphere and an alignment, click the die to roll,
-and press **DONE**. The panel under the classes has the mod's pages: **WEAPON
-SPEC** for warriors ([weapon specialization](#weapon-specialization-and-attacks))
-and **KITS** ([kits](#kits)). A party has one to four characters, all good or
-neutral.
+and press **DONE**. The panel under the classes has the mod's **KITS** page
+([kits](#kits)). After DONE a warrior picks its weapon specs in a window of
+weapon pictures ([weapon specialization](#weapon-specialization-and-attacks)),
+as a preserver picks its spells. A party has one to four characters, all good
+or neutral.
 
 ### Ability scores
 
@@ -200,7 +209,7 @@ What the scores do:
 | Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand |
 | Halfling | −2 | +2 | −1 | | +2 | −1 | better CON saves |
 | Mul | +2 | | +1 | −1 | | −2 | |
-| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); no armour, cloaks, belts, boots or rings |
+| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); claws that cut (edged, not crushing); no armour, cloaks, belts, boots or rings |
 
 With each score rolled 8 to 20 before the adjustment, a race's scores run from
 8 to 20 plus its adjustment: a half-giant's STR 12 to 24, its DEX and INT 3 to
@@ -333,8 +342,8 @@ gets a bone short sword), a sling if it has no bow or sling, leather armour
 where it may wear it, and a cloak for a Stalker, an Assassin or a Shinobi
 (some kits get weapons of their own: see [Kits](#kits)). A thri-kreen gets
 nothing more than the game's own starting gear: its claws serve it better than
-another weapon, and it wears none of the rest; its weapon spec starts as the
-chatkcha. A multiclass preserver starts with no armour, so it can cast.
+another weapon, and it wears none of the rest; its weapon spec is the chatkcha
+if none is picked. A multiclass preserver starts with no armour, so it can cast.
 Nothing is given that the character can't use or already has. The game's own
 party gets the same. *Without the mod:* the class's gear only, armour it can't use
 in the backpack.
@@ -365,7 +374,7 @@ the strictest winning:
   skills.
 - A ranger may always use a bow.
 - A human who changed class is held by its new class (but for the warrior's
-  or cleric's armour above), and may use the weapon types it specialized in once its old
+  or cleric's armour above), and may use the weapon specs it specialized in once its old
   class wakes.
 
 *Without the mod:* an item was allowed if **any** of the character's classes
@@ -380,7 +389,7 @@ sword" and the like.
 *d10 · STR · any race · XP for 2nd level 2,000, for 10th 500,000*
 
 **How it plays.** The steadiest front-liner: any armour, any shield, any
-weapon, the best THAC0, and it masters one weapon type. Choose that type
+weapon, the best THAC0, and it masters one weapon spec. Choose it
 with care: it is the fighter's weapon for the whole game.
 
 **What the mod changes.**
@@ -410,11 +419,7 @@ obsidian over sorcery, and spells bite them harder for it.
 scarred hide hardening with every season. They charge in close and stay there:
 bows, slings and shields are for those who mean to live long.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination) | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon pages after the kit is taken, and lost if another kit is taken |
-| **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
-| **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
+Each kit's gains, costs and starting gear: [Fighter kits](KITS.md#fighter-kits) on the Kits page.
 
 **Starting gear.** A plain weapon of its weapon spec (in a material its
 classes allow), a shield, leather chest, arm and leg armour; with fuller
@@ -434,19 +439,21 @@ starting gear, also a sling.
   elf, half-elf, halfling, mul).
 - *Dual class:* with STR 15, a human fighter can become a cleric, druid,
   preserver, psionicist or thief, never a gladiator or ranger. Its weapon
-  specs sleep with the class; once awake, its specialized weapon types stay
+  specs sleep with the class; once awake, its specialized weapon specs stay
   usable whatever the new class allows.
 
 **Magic weapons.** Every one: Dragonsbane +4, Swiftbite +2, El's Drinker +2,
 Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, Flame Blade\* +1;
 Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Stillwater\* +1; Dag's
-Dagger +3, Terror Blade +2, Galefang\* +2; Glasshewer\* +2, Drakejaw\* +1,
+Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1;
+Glasshewer\* +2, Drakejaw\* +1,
 Soulcrusher +1, Axe +1; Great Axe +3, Headsman\* +2; Gythka +3, Gythka +2\*,
 Kreenfang\* +1; Linebreaker\* +2, Polearm +1, Thornwall\* +1; Mace +2,
 Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting Staff +1;
-Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1; Sling +2,
-Sling +1; Windlash\* +1; Chatkcha +1. A **Ravager** none of the bows, slings,
-Windlash, Chatkcha +1 or Dag's Dagger (thrown).
+Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1,
+Dunesong\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
+**Ravager** none of the bows, slings, Windlash, chatkchas or Dag's Dagger
+(thrown).
 
 ### Gladiator
 
@@ -481,11 +488,7 @@ needs both hands.
 and mauls that end a bout in one blow. Anything smaller looks like a toy in
 their hands, and they treat it like one.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Arena Champion** | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better, from 1st level | −1 to hit in melee with no shield | a shield in place of the off-hand club | can't dual to druid or preserver; can't go with the Shinobi |
-| **Twin-blade** | with the two-weapons rule, no penalty for two weapons in light armour, leather or none (others: −2 main hand, −4 off hand) | no shield; no two-handed weapon (a half-giant may hold one in one hand, with the half-giants' rule) | the gladiator's gear: its long sword and club are its two weapons | in heavier armour, the usual penalty; can't go with the Healer |
-| **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't dual to psionicist or air cleric; can't go with the Shinobi or Lifebinder |
+Each kit's gains, costs and starting gear: [Gladiator kits](KITS.md#gladiator-kits) on the Kits page.
 
 **Starting gear.** A plain weapon of its first weapon spec, a club in the off
 hand, leather arm armour; with fuller starting gear, also leather chest and
@@ -508,14 +511,14 @@ melee, and any missile weapon.
 *d10 · WIS · elf, half-elf, half-giant, halfling, human, thri-kreen · good
 alignment · XP for 2nd level 2,250, for 10th 600,000*
 
-**How it plays.** A warrior of the wastes: the bow and one more weapon type,
+**How it plays.** A warrior of the wastes: the bow and one more weapon spec,
 two weapons at no penalty, hiding and moving silently under the open sky to
 strike from behind, and a little priest magic late on.
 
 **What the mod changes.**
 
 - [Expertise](#weapon-specialization-and-attacks) with the bow and one more
-  weapon type: a specialist's attacks a round. *Without the mod:* 3/2 in melee
+  weapon spec: a specialist's attacks a round. *Without the mod:* 3/2 in melee
   with any weapon.
 - [Hiding in shadows](#hiding-in-shadows) in a fight with a thief's numbers for
   its level, halved indoors; a successful hide and move silently makes its next
@@ -545,11 +548,7 @@ else: a tribe's chieftain, a defiler's lair, a beast that has emptied a
 village. They train their weapons to a killer's edge and leave prayer to
 others.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear; with fuller starting gear, a cloak | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
-| **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric or druid |
-| **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
+Each kit's gains, costs and starting gear: [Ranger kits](KITS.md#ranger-kits) on the Kits page.
 
 **Starting gear.** A plain weapon of its weapon spec, bow and arrows, leather
 chest and arm armour; with fuller starting gear, also leather leg armour (a
@@ -569,7 +568,7 @@ Stalker a cloak too).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
 only its sphere's, and every bow: air, the daggers, bows, slings, Windlash\*,
-Chatkcha +1; earth, the metal, obsidian, stone and wooden ones (no bone, no
+the chatkchas; earth, the metal, obsidian, stone and wooden ones (no bone, no
 slings); fire, the obsidian ones and the bows; water, the bone and wooden ones.
 
 ### Thief
@@ -589,7 +588,7 @@ so keep it off the front line.
 - [Hiding in shadows](#hiding-in-shadows) in a fight to backstab, halved in
   daylight. *Without the mod:* backstabs only when the target faces someone
   else. A backstab does ×2 damage at levels 1-4, ×3 at 5-8, ×4 at 9-10.
-- **Picking pockets** with Thieves' Tools, from anyone in sight.
+- **Picking pockets** with a thief's Pick Pockets button, from anyone in sight.
 - A worn cloak, boots and belt help hiding, moving silently, picking pockets
   and opening locks.
 - AD&D's experience table (1,250 for 2nd level; *without the mod:* 1,200).
@@ -614,16 +613,12 @@ as handy with a blade as any soldier. All that time spent fighting leaves
 little for the quieter arts.
 
 *Shinobi.* Spies trained in secret by the Veiled Alliance, who carry a few
-spells beside their knives. Their masters teach them only what they need: they
-can't read magical script, and they travel light.
+spells beside their knives. Their masters teach them only what they need, so
+a scroll is theirs only if they can make out its script, and they travel light.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear; with fuller starting gear, a cloak | |
-| **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
-| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 (Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, and Fogbolt, Reflected Image, Spook and Friends with the new spells on; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud; Blink, Haste, Protection from Normal Missiles, Hold Person), 2nd-level ones from 8th, 3rd-level ones from 10th | none learnt from scrolls; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (with Class restrictions off too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
+Each kit's gains, costs and starting gear: [Thief kits](KITS.md#thief-kits) on the Kits page.
 
-The Shinobi's slots by level are in [Kits' spell slots](#kits-spell-slots).
+The Shinobi's slots by level are in [Kits' spell slots](KITS.md#kits-spell-slots) on the Kits page.
 
 **Starting gear.** Bone long sword, sling, leather chest armour; with fuller
 starting gear, also leather arm and leg armour (an Assassin or Shinobi a cloak
@@ -646,8 +641,8 @@ too).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Shinobi**
 only Greenbright\*, Shadowseeker\*, Mindshard\*, Stillwater\*, Dag's Dagger,
-Terror Blade, Galefang\*, the quarterstaffs, bows, slings, Windlash\* and
-Chatkcha +1.
+Terror Blade, Galefang\*, Nightsliver\*, Hayneedle\*, the quarterstaffs, bows,
+slings, Windlash\* and the chatkchas.
 
 ### Preserver
 
@@ -692,11 +687,7 @@ is no use if you are dead before you finish it. They fight in leather with a
 chosen weapon and keep casting while others bleed, at the cost of a little of
 their magic.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Arcanist** | a spell slot more at each spell level it has slots at, from 1st level (2 at 1st where a preserver has 1); in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
-| **Scholar** | a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
-| **Battle Mage** | a warrior's THAC0 (21 less its level); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon pages (VIEW PSIONICS on the KIT page, then WEAPON SPEC), the long sword marked to start with; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
+Each kit's gains, costs and starting gear: [Preserver kits](KITS.md#preserver-kits) on the Kits page.
 
 **Starting gear.** Quarterstaff, sling; two 1st-level spells of its choice.
 
@@ -715,9 +706,10 @@ their magic.
   preserver chooses its first two spells.
 
 **Magic weapons.** Hornblade +1 (a bone long sword the game lets preservers
-use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Quarterstaff +2, Balk's
-Staff +1, Parting Staff +1, Sling +2, Sling +1, Windlash\* +1. A **Battle
-Mage** also those of its chosen weapon type.
+use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2,
+Hayneedle\* +1, Quarterstaff +2, Balk's Staff +1, Parting Staff +1, Sling +2,
+Sling +1, Windlash\* +1. A **Battle
+Mage** also those of its chosen weapon spec.
 
 ### Cleric
 
@@ -759,11 +751,7 @@ deadly with a weapon as any soldier. Their prayers are fewer for it.
 once and wield both powers. Divided worship comes slowly, and their spells lag
 a level behind.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | can't go with the Twin-blade |
-| **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
-| **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
+Each kit's gains, costs and starting gear: [Cleric kits](KITS.md#cleric-kits) on the Kits page.
 
 **Starting gear.** Shield, leather chest and arm armour, a club in the
 backpack; with fuller starting gear, also a weapon of its sphere in hand (the
@@ -787,19 +775,21 @@ and fire a chatkcha; water none).
 
 **Magic weapons**, by sphere:
 
-- **Air:** Galefang\* +2, Bow +2, Phrain's Bow +1, Sling +2, Sling +1,
-  Windlash\* +1, Chatkcha +1.
+- **Air:** every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2,
+  Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1,
+  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1.
 - **Earth:** Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1,
   Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's
-  Dagger +3, Terror Blade +2, Galefang\* +2, Glasshewer\* +2, Soulcrusher +1,
-  Axe +1, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the three
-  quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Bow +2, Phrain's Bow +1,
-  Chatkcha +1.
+  Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2,
+  Soulcrusher +1, Axe +1, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the
+  three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Bow +2, Phrain's Bow +1,
+  Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
 - **Fire:** Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1,
-  Glasshewer\* +2, Blackmace +1, Chatkcha +1.
-- **Water:** Stillwater\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*,
-  Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
-  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1.
+  Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Skycutter\* +2, Chatkcha +1.
+- **Water:** Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3,
+  Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
+  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1,
+  Dunesong\* +1.
 
 An Elementalist adds its second sphere's.
 
@@ -835,11 +825,7 @@ but they rarely stop long enough to armour themselves properly.
 mending wounds as they would mend a dying field. They fight only with blunt
 weapons, which wound without spilling blood.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th** | no metal weapons | the druid's gear | can't dual to gladiator, and a gladiator who duals to druid can't take it (its AC would add to a gladiator's own); can't go with the Ravager |
-| **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
-| **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
+Each kit's gains, costs and starting gear: [Druid kits](KITS.md#druid-kits) on the Kits page.
 
 **Starting gear.** Club, sling.
 
@@ -892,11 +878,7 @@ bending wills. Moving the world with thought alone comes harder to them.
 *Kineticist.* Psionicists who move the world with their minds, throwing stone
 and flame with a thought. Reaching into another mind costs them more.
 
-| Kit | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|
-| **Mind Warrior** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; a d8 hit die | a tenth fewer PSP (rounded down) | the psionicist's gear | its PSP stay a tenth fewer even with the kit asleep after a change of class; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Battle Mage |
-| **Mind Bender** | telepathy powers (the defence modes too) cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear | the 2 counts both to use a power and to keep it up each round, never below 1 (a power with no upkeep still has none) |
-| **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | the psionicist's gear | as the Mind Bender's, the other way round |
+Each kit's gains, costs and starting gear: [Psionicist kits](KITS.md#psionicist-kits) on the Kits page.
 
 The powers and their costs are in [Psionics](#psionics).
 
@@ -921,7 +903,8 @@ starting gear, also leather arm and leg armour.
   fighter, gladiator, preserver, ranger or thief.
 
 **Magic weapons.** Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror
-Blade +2, Galefang\* +2, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Chatkcha +1.
+Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow
++2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
 With a cleric class, only those its sphere allows too (Mindshard with fire or
 earth, Stillwater with water).
 
@@ -931,36 +914,17 @@ A character of one class takes one of three kits for its class when it is
 made, or none, on the creation panel's **KIT** page; a human who changes class
 can take one for its new class. A few races' pairs of classes have kits of
 their own ([Multiclass kits](#multiclass-kits)). Each gives something and
-costs something; the class sections above have each kit's details and starting
-gear.
+costs something; [the Kits page](KITS.md) have each kit's
+numbers and starting gear, the class sections above who takes it on Athas.
 
-- The **Myrmidon** and **Battle Mage** choose their extra weapon spec on the
-  weapon pages after taking the kit, and the **Elementalist** its second sphere
-  on the CLERICAL SPHERE list.
+- The **Myrmidon** chooses its second weapon spec, and the **Battle Mage** its
+  one, in the weapon window after DONE, and the **Elementalist** its second sphere on the
+  CLERICAL SPHERE list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old.
 - Some kits rule out classes a human could change to, and some can't go
   together in a human who changes class (one kit for each class); the DUAL
-  window and the kit menu leave them out:
-
-  | Kit | Can't dual to |
-  |---|---|
-  | Seeker, Justifier | cleric, druid |
-  | Shinobi | preserver |
-  | Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger |
-  | Arena Champion, Sentinel | druid, preserver |
-  | Brute | psionicist, air cleric |
-  | Stalker | thief |
-  | Grove Warden | gladiator |
-
-  | Kit | Can't go with |
-  |---|---|
-  | Arena Champion, Sentinel | Shinobi |
-  | Twin-blade | Healer |
-  | Brute | Shinobi, Lifebinder |
-  | Ravager | Grove Warden |
-  | Swashbuckler, Crusader, Battle Mage, Mind Warrior | each other |
-
+  window and the kit menu leave them out ([which, and why](KITS.md#kits-that-rule-out-classes-and-each-other)).
 - The dice log names each change a kit makes to a new character's gear.
 
 ### Multiclass kits
@@ -1013,21 +977,7 @@ the wastes, and found the land's own fury waiting there. When the blood starts
 to flow they call on it: some days it answers; some days it only makes them
 reckless.
 
-| Kit | Race and classes | Gives | Costs | Starts with | Also |
-|---|---|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | as each fight starts, a d20 against DEX − 4 (a 20 always fails): at that or under, +1 to hit, damage and AC for that less the roll in rounds (at least 1); no penalty for two weapons in light armour | long swords and bows only (any, whatever its cleric's sphere allows); over it, −1 to hit, damage and AC for 1d8 rounds | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows | its weapon spec starts as the long sword |
-| **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; hides in shadows even with an enemy right beside it | −10 pick pockets; no shield; light armour only | its classes' gear, without the shield |  |
-| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find traps, move silently, hide in shadows and climb walls, +2 initiative and +1 to hit with bows and slings; its hiding isn't halved in daylight | under a roof, −5 to the same skills; never backstabs (from behind still +2 to hit) | its classes' gear | its hiding gives an attack from behind, not a backstab |
-| **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead; hides and moves silently as a ranger of its best class's level | 1 fewer druid spell slot at each spell level | its classes' gear | its hiding counts for backstabs as a ranger's |
-| **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die | attacking from behind, +1 to hit instead of +2 | its classes' gear |  |
-| **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; two weapons at no penalty in the main hand, −2 in the off hand; +5 pick pockets and hide in shadows | −5 find traps; −1 to hit with anything but a dagger; no shield | its classes' gear, without the shield, with a dagger in its hand | its weapon spec starts as the dagger |
-| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; while it's up, the whole party has +1 initiative and +1 movement in a fight | −10 pick pockets; while it's down, the whole party has −1 initiative and −1 movement in a fight | its classes' gear |  |
-| **Spellarcher** | half-elf fighter/preserver | arrows it shoots are 1 better and at least +1, so they hurt what only magic weapons hurt | its weapon spec is the bow, and only the bow; light armour only | a bow and arrows |  |
-| **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers cost 2 PSP more | its classes' gear | the 2 counts to use a power and to keep it up, never below 1 |
-| **Poisoner** | halfling fighter/thief | its first hit in each fight poisons: a save against poison, or 10 damage | −1 to hit with everything; light armour only | a dagger in each hand, no shield | its weapon spec starts as the dagger |
-| **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast 2 levels higher | under a roof, 1 level lower | its classes' gear |  |
-| **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast 2 levels higher | under a roof, 1 level lower | its classes' gear |  |
-| **Wild Fury** | mul druid/fighter | as each fight starts, a d20 against CON − 4 (a 20 always fails): at that or under, 1 more attack a round in melee and +3 damage for the fight | over it, −3 to hit and AC 3 worse for the fight | its classes' gear |  |
+Each kit's gains, costs and starting gear: [Multiclass kits](KITS.md#multiclass-kits) on the Kits page.
 
 **The game's own party** (START GAME with no party made), with kits on: Cermak
 is an Arcanist, and the other three have something no character you make can
@@ -1037,58 +987,30 @@ round); Cilla is an Elven Wanderer, whose hiding is never halved in daylight.
 
 ### Kits' spell slots
 
-The kits that change spell slots, by the level of the kit's class (spells of
-1st to 5th level), with [AD&D's class tables](#spell-slots) on:
-
-| Level | Preserver | Arcanist | Battle Mage | Cleric | Crusader | Elementalist | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | 1 | 2 | — | 1 | — | — | | | |
-| 2 | 2 | 3 | 1 | 2 | 1 | 1 | | | |
-| 3 | 2 1 | 3 2 | 1 | 2 1 | 1 | 2 | | | |
-| 4 | 3 2 | 4 3 | 2 1 | 3 2 | 2 1 | 2 1 | | | |
-| 5 | 4 2 1 | 5 3 2 | 3 1 | 3 3 1 | 2 2 | 3 2 | | | |
-| 6 | 4 2 2 | 5 3 3 | 3 1 1 | 3 3 2 | 2 2 1 | 3 3 1 | 1 | | 1 |
-| 7 | 4 3 2 1 | 5 4 3 2 | 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 | 2 | | 2 |
-| 8 | 4 3 3 2 | 5 4 4 3 | 3 2 2 1 | 3 3 3 2 | 2 2 2 1 | 3 3 2 1 | 2 1 | | 2 1 |
-| 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 2 1 | 3 3 3 2 | 2 2 | | 2 2 |
-| 10 | 4 4 3 2 2 | 5 5 4 3 3 | 3 3 2 1 1 | 4 4 3 3 2 | 3 3 2 2 1 | 4 4 3 2 1 | 2 2 1 | 1 | 2 2 1 |
-
-- A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
-  does; the Crusader still has one fewer at each spell level with them.
-- A **Wilderness Avenger** has a druid's slots by its druid level, WIS's
-  bonus slots included, less one at each spell level (none below 0).
-- A **Seeker** casts priest spells of its sphere at its ranger level less 5
-  (1st-level spells from 6th, 2nd from 8th, 3rd at 10th); a **Justifier** at
-  its level less 9. Neither gets bonus slots for WIS, and both have these in
-  place of a ranger's own slots.
-- A **Shinobi** casts preserver spells at its thief level less 5, from its own
-  list, learning one at each level up from 6th: **1st level** Gaze Reflection,
-  Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt, Reflected Image,
-  Spook, Friends (the last four with the new spells on); **2nd** Invisibility,
-  Mirror Image, Blur, Detect Invisibility, Fog Cloud; **3rd** Blink, Haste,
-  Protection from Normal Missiles, Hold Person.
-- An **Arcanist** casts two preserver spells each turn in a fight instead of
-  one: its first spell doesn't end its turn, so it can cast again (being hit
-  before the second still stops it); a **Scholar** chooses two spells at each
-  level up.
+Which kits change spell slots, and by how much at each level: [Kits' spell
+slots](KITS.md#kits-spell-slots) on the Kits page.
 
 ## Weapon specialization and attacks
 
-Warriors train in weapon types. Choose them on the creation panel's **WEAPON
-SPEC** pages; picks due later come in a window at the level up, a picture of
-each weapon type (point at one for its name; those you can't pick are greyed).
+Warriors train in **weapon specs**: kinds of weapon, whatever their material
+(a bone, obsidian or metal long sword is the long sword spec alike). Pick them in a window of weapon pictures that
+comes up after **DONE** on the creation screen, and again at a level up that
+brings another (point at one for its name; those you can't pick are greyed).
+EXIT leaves the rest to the mod: the kit's own weapon (a Ghetto Fighter's
+dagger), a thri-kreen's chatkcha, else the long sword (a gladiator's second the
+club).
 
-![The level-up window: a picture of each weapon type, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the types this fighter/cleric can't use greyed](docs/weapon-picker.png)
+![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fighter/cleric can't use greyed](docs/weapon-picker.png)
 
-| Who | Chooses | With a chosen weapon type |
+| Who | Chooses | With a chosen weapon spec |
 |---|---|---|
-| Fighter | 1 weapon type | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
-| Gladiator | 2 weapon types, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
-| Ranger | the bow, and 1 weapon type | expertise: a specialist's attacks, no other bonus |
+| Fighter | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
+| Gladiator | 2 weapon specs, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
+| Ranger | the bow, and 1 weapon spec | expertise: a specialist's attacks, no other bonus |
 
-The sixteen weapon types: long sword, club, dagger, short sword, mace, axe,
+The sixteen weapon specs: long sword, club, dagger, short sword, mace, axe,
 great axe, pick, quarterstaff, polearm, gythka, cahulaks, chatkcha, bow, sling
-and staff sling. A warrior with another class chooses only weapon types that
+and staff sling. A warrior with another class chooses only weapon specs that
 class lets it use.
 
 **Attacks a round**, by the warrior's level (its best fighter, gladiator or
@@ -1097,15 +1019,15 @@ ranger level). 3/2 means one attack one round and two the next.
 | With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha, 1-6 | 7-10 |
 |---|---|---|---|---|---|---|
 | anyone who isn't a warrior | 1 | 1 | 2 | 2 | 1 | 1 |
-| a warrior, a weapon type it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| a chosen weapon type (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
+| a chosen weapon spec (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
 | a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), any weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
-| a **Battle Mage** (by its preserver level), its chosen weapon type | 3/2 | 2 | | | | |
+| a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
 For the three kits the level is their own class's. A Battle Mage's chosen
-weapon type is a melee weapon. With [two weapons](#two-weapons), the off hand
+weapon spec is a melee weapon. With [two weapons](#two-weapons), the off hand
 attacks once a round whatever the rate.
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
@@ -1289,19 +1211,21 @@ and the same race and DEX adjustments.
   and walls.
 - **Hide in shadows and move silently:** at the start of a thief's or ranger's
   turn in a fight ([hiding in shadows](#hiding-in-shadows)).
-- **Picking pockets** (the mod's): pick a thief's **Thieves' Tools** up on the
-  inventory screen, go back to the map with them on the pointer, and click
-  someone in sight (not in a fight). The thief rolls **pick pockets**:
+- **Picking pockets** (the mod's): on the **USE** screen, press the thief's
+  **Pick Pockets** button (a purse, where a priest's Turn Undead is), then
+  click someone in sight with the talking pointer (not in a fight). Any thief
+  can, party leader or not, so long as their backpack has room. The thief
+  rolls **pick pockets**:
   - **success:** one small thing from them goes into the thief's backpack:
     something light that isn't worn on the body;
   - **failure:** the thief rolls **move silently** to slip away. Made, they can
     try again; missed, they are caught, and that person keeps a hand on their
     pockets from then on.
 
-  When nothing worth taking is left, the thief takes a few coins from the
-  purse, and that is the last try on them. No one starts with the tools:
-  Mirlon in the slave pens carries a set, and Kel sells two.
-- **Read languages** is never rolled.
+  When nothing worth taking is left, the thief takes 2 to 5 ceramic pieces
+  from the purse for each thief level, and that is the last try on them. A
+  cleric/thief has both buttons outside fights, the purse beside Turn Undead.
+- **Read languages** is rolled only when a Shinobi reads a scroll.
 
 *Without the mod:* the game's own chances, which run much higher (a base of its
 own plus 4 a level), and a penalty when a thief holds anything in either hand,
@@ -1378,6 +1302,8 @@ can cast. INT sets two limits:
 | 20-23 | 96-99% | all |
 | 24-25 | 100% | all |
 
+- **A Shinobi** learns only its own spells from scrolls, and first has to read
+  the scroll: a roll against its read languages, then INT's chance.
 - **Defilers sometimes carry scrolls:** each defiler in a fight has a 1 in 20
   chance of carrying a scroll of a random preserver spell, found on its body
   when it dies.
@@ -1399,22 +1325,36 @@ can cast. INT sets two limits:
   damage and duration alike. An elemental spell works only for a priest of
   that element.
 - **Area spells catch the caster** and the party.
+- **Mirror Image**'s images take each hit, and each foe's spell aimed at one
+  creature, three times in four (Reflected Image's half the time), the image
+  vanishing and the blow or spell lost; your own side's spells always get
+  through. *Without the mod:* the images stopped no weapon blow, and took the
+  caster's own Armor.
+- **Armor** uses a charge for each damaging hit. *Without the mod:* two for
+  each hit, and one for any spell landing on its wearer, a friend's Bless too.
+- **Share Strength** ends on its receiver when the power ends. *Without the
+  mod:* the receiver kept the strength.
+- **Dispel Magic** only dispels. *Without the mod:* the preserver's also stopped
+  everyone it caught casting spells, your own party too.
+- **Hold Undead** holds the undead only. *Without the mod:* it held anyone.
+- **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as the Cure spells
+  heal (Light: 1d8 both ways). *Without the mod:* 2d9 and 3d9.
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
-- Cause Serious and Critical Wounds roll 2d9 and 3d9; Cure Light, Serious and
-  Critical Wounds heal 1d8, 2d8+1 and 3d8+3.
 - Six **new wizard spells**, learnt like any other:
   - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for
     an hour of game time a caster level, which betters AC, initiative, thief
     skills and dodging.
   - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a
     caster level. Unarmed attacks, a thri-kreen's claws and bite too, do 1d6+1
-    where that's better, are +1 to hit and count as a +1 magical weapon. With Body Weaponry or
+    where that's better, are +1 to hit and count as a +1 magical edged weapon
+    (a thri-kreen's claws cut even without it). With Body Weaponry or
     Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
     in a clear line, for 2d4 rounds unless it saves: −3 to its attacks, +2 to
     attacks on it.
-  - **Reflected Image** (1st level, on the caster): one image, which an attack
-    strikes half the time instead of the caster, and which then vanishes.
+  - **Reflected Image** (1st level, on the caster): one image, which a hit or a
+    foe's spell strikes half the time instead of the caster, and which then
+    vanishes.
     It and Mirror Image replace each other; Dispel Magic ends it.
   - **Spook** (1st level): one creature flees in fear for 3 rounds unless it
     saves, at −1 for every 2 caster levels (at most −6). Undead aren't
@@ -1473,7 +1413,7 @@ An Elementalist has its second sphere's column too.
 | Blind | AC 4 worse, −2 initiative; can't cast spells that need sight |
 | Acid | 2d4 a round |
 | Poisoned | fatal if time passes out of a fight (resting, for one) before it wears off or is cured |
-| Stoneskin, Mirror Image | each blow stopped, or image struck, uses a charge |
+| Stoneskin, Mirror Image | each blow stopped, or image struck, uses a charge (an image takes a hit, or a foe's spell for one creature, three times in four) |
 | Invisible | ends with an attack or a harmful spell (Improved Invisibility doesn't) |
 
 ## Psionics
@@ -1573,7 +1513,7 @@ skills.
 ### New items
 
 The mod adds items the game never had, or never placed: here is what each
-is, not where it is (the README lists that, for those who want it). The mod's
+is, not where it is ([Items](ITEMS.md) lists that, with spoilers, for those who want it). The mod's
 magic weapons are also marked \* in each class's list.
 
 **Mundane:**
@@ -1588,7 +1528,6 @@ magic weapons are also marked \* in each class's list.
 | Metal pick, metal polearm | the game's, in metal |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
-| Thieves' Tools | [picking pockets](#thieves-skills-and-picking-pockets); Mirlon in the slave pens carries a set, Kel sells two |
 
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.
@@ -1603,6 +1542,8 @@ chosen type, often one of these.
 | Mindshard | obsidian short sword +1 | warriors, thieves, druids, psionicists, earth and fire clerics |
 | Stillwater | bone short sword +1 | warriors, thieves, druids, psionicists, water clerics |
 | Galefang | metal dagger +2 | warriors, thieves, druids, preservers, psionicists, air and earth clerics |
+| Nightsliver | obsidian dagger +2 | warriors, thieves, druids, preservers, psionicists, air, earth and fire clerics |
+| Hayneedle | bone dagger +1 | warriors, thieves, druids, preservers, psionicists, air and water clerics |
 | Glasshewer | obsidian axe +2 | warriors, thieves, druids, earth and fire clerics |
 | Drakejaw | bone axe +1 | warriors, thieves, druids, water clerics |
 | Headsman | metal great axe +2 | warriors, thieves, earth clerics |
@@ -1612,6 +1553,8 @@ chosen type, often one of these.
 | Gutterknot | club +1 (the game has no magic club) | warriors, thieves, druids, psionicists, earth and water clerics |
 | Deepbiter | stone pick +1 | warriors, thieves, druids, earth clerics |
 | Windlash | staff sling +1 | warriors, thieves, druids, preservers, air clerics |
+| Dunesong | bow +1 | warriors, thieves, druids, psionicists, air, earth and water clerics |
+| Skycutter | chatkcha +2 | warriors, thieves, druids, psionicists, air, earth and fire clerics |
 
 **Other magic items:**
 
@@ -1683,6 +1626,32 @@ AD&D's tables:
 - **Wait** puts a character later in the round.
 - **Ready a missile weapon and a melee weapon:** the game uses whichever fits
   the target's distance.
+
+## Glossary
+
+| Term | Meaning |
+|---|---|
+| **d20, 2d4, 1d6+1** | Dice: 2d4 is two four-sided dice added up; 1d6+1 a six-sided die plus 1. |
+| **AC** | Armour class: how hard a character is to hit. Lower is better (10 is no armour; it can go below 0). |
+| **THAC0** | "To hit AC 0": the d20 a character needs to hit AC 0. The roll needed against a target is THAC0 less its AC (THAC0 15 against AC 3 needs 12). Lower is better. |
+| **HP** | Hit points. At 0 a character is Out Cold, at −10 dead. |
+| **PSP** | Psionic strength points, spent on psionic powers. |
+| **XP** | Experience points, which bring new levels. |
+| **Saving throw** (save) | A d20 to escape or lessen a spell or attack, needing the number of one of five kinds: **PPD** paralysis, poison and death; **RSW** rod, staff and wand; **PP** petrification and polymorph; **BW** breath weapon; **SP** spell. |
+| **MR** | Magic resistance: a monster's percentage chance to shrug off a spell outright. |
+| **REAC**, **DEF** | DEX's reaction adjustment (initiative, two weapons) and defensive adjustment (AC, dodging fire, cold and electricity). |
+| **Prime requisite** | The score a class depends on (a fighter's STR); at creation it is raised to 17 if the die gave less. |
+| **Multiclass, dual class** | Two or three classes at once (any race but human); a human's change from one class to another. |
+| **Kit** | A class's speciality, chosen at creation: something gained, something given up ([Kits](#kits)). |
+| **Weapon spec** | A kind of weapon a warrior trains in, whatever its material: **specialized**, **mastery** and **grand mastery** for fighters, **expertise** for rangers ([weapon specialization](#weapon-specialization-and-attacks)). |
+| **Backstab**, **from behind** | A thief's attack on an unaware target, damage multiplied; an attack from behind is +2 to hit, the target's DEX and shield not counting ([from behind](#from-behind-and-backstabs)). |
+| **Caster level** | The level a spell is cast at, which sets its damage and duration. |
+| **Spell slot** | One spell of a level that can be cast before resting. |
+| **Sphere**, **discipline** | A cleric's element (air, earth, fire, water), which sets its spells and weapons; a psionicist's field of powers. |
+| **Preserver**, **defiler** | Wizards who draw magic from the land: preservers without harming it (the class you play), defilers by killing it. |
+| **Under the open sky** | An outdoor map, or open ground outside a city's buildings. |
+| **Ceramic pieces** | Athas's money. |
+| **The Loader** | The window that starts the game with the mod and shows the dice log and the party. |
 
 ## The Options tab at a glance
 

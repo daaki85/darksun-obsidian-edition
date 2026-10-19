@@ -54,6 +54,9 @@ def damage_text(gd: GameData, spell: int, rec: bytes) -> str:
         parts.append(f"{rule.base_dice}d{rule.sides}")
     step = (f"{rule.step_dice}d{rule.sides}" if rule.step_dice and rule.sides > 1 else "") \
         + (f"{'+' if rule.step_dice else ''}{rule.step_bonus}" if rule.step_bonus else "")
+    if step and rule.flat():  # (a flat bonus: 2d8+1)
+        parts[-1:] = [(parts[-1] if parts else "") + f"+{rule.step_bonus}"]
+        step = ""
     if step:
         unit = "caster level" if rule.per_levels == 1 else f"{rule.per_levels} caster levels"
         adjust = f" (level {rule.adjust:+d})" if rule.adjust else ""

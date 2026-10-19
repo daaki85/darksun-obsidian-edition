@@ -287,8 +287,9 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         source, dest, with_kalzith, on["semyon"], on["vulture"], on["arena_ring"],
         on["magic_arms"] and objects_ok, on["world_magic"] and objects_ok,
         worldgear.ELVEN_CLOAK_OBJECT in new_objects, tome.TOME_OBJECT in new_objects,
-        on["pens_gear"] and objects_ok))]  # (Alagorn knows the weapons by their own
-    # pictures; the Elven Leader gives the cloak, and Father Garyn the tome, of its own object)
+        on["pens_gear"] and objects_ok, worldgear.HAYNEEDLE_OBJECT in new_objects))]  # (Alagorn knows
+    # the weapons by their own pictures; the Elven Leader gives the cloak, Father Garyn the tome and
+    # Merzol's hay stash Hayneedle, of its own object)
     if with_kalzith:
         files.append((kalzith.REGION_FILE, lambda source, dest: kalzith.write_region(source, dest, pens_clones)))
     try:
@@ -336,6 +337,10 @@ def closed_line(code: int) -> str:
 # error; the Loader's crash reports go in CRASH_DIR
 GAME_END_COM = "GAMEEND.COM"
 GAME_END = os.path.join(DOS_DIR, "GAMEEND.TXT")
+# and in GAMEOK.TXT that it ended as usual: without either, DOSBox closed while the game still ran
+GAME_OK = os.path.join(DOS_DIR, "GAMEOK.TXT")
+CUT_OFF = ("The game didn't end on its own: DOSBox closed while it was still running (closed with its "
+           "window's button, or after the game froze, or DOSBox stopped with an error of its own).")
 CRASH_DIR = os.path.join(HERE, "crash-logs")
 DOSBOX_OUTPUT = ("stdout.txt", "stderr.txt")  # DOSBox's own messages with -noconsole (its folder)
 
@@ -376,7 +381,8 @@ def game_message(data: bytes) -> Optional[str]:
 
 def game_end_note() -> Optional[str]:
     """What GAMEEND.COM saved of the game stopping with an error (its return code, video mode,
-    and the screen's text), and DSCLOG's GAMEMSG.BIN (game_message), or None if it ended as usual."""
+    and the screen's text), and DSCLOG's GAMEMSG.BIN (game_message); CUT_OFF if neither and
+    GAMEEND.COM didn't note it ending as usual either (GAME_OK); None if it ended as usual."""
     notes = []
     try:
         with open(GAME_END, encoding="cp437", errors="replace") as f:
@@ -390,6 +396,8 @@ def game_end_note() -> Optional[str]:
             notes.append(message)
     except OSError:
         pass
+    if not notes and not os.path.exists(GAME_OK):
+        notes.append(CUT_OFF)
     return "\n\n".join(notes) or None
 
 
@@ -431,7 +439,9 @@ def crash_report(code: int, note: Optional[str], settings: dict, dice: str, dial
     lines = [f"Obsidian Edition crash report, {stamp}", "", closed_line(code)]
     if started:
         lines.append(f"The game ran for {round((now - started) / 60)} minutes.")
-    if note:
+    if note == CUT_OFF:
+        lines += ["", note]
+    elif note:
         lines += ["", "The game stopped with an error. On the screen:", note]
     lines += ["", "Switches (as set on the Options tab, else the default):"]
     lines += [f"  {key}: {value!r}" for key, value in sorted(effective_switches(settings).items())]
@@ -449,11 +459,11 @@ def _last_lines(text: str, count: int) -> str:
     return "\n".join(text.rstrip().splitlines()[-count:]) or "(empty)"
 
 
-def write_crash_report(text: str, now: float, folder: str = CRASH_DIR) -> str:
-    """Save a crash report as crash-logs/crash-YYYY-MM-DD-HHMMSS.txt (a number after it if there
-    is one already); returns its path."""
+def write_crash_report(text: str, now: float, folder: str = CRASH_DIR, kind: str = "crash") -> str:
+    """Save a report as crash-logs/crash-YYYY-MM-DD-HHMMSS.txt (a number after it if there is one
+    already; KIND names it: "item" for a lost item's, itemwatch.py); returns its path."""
     os.makedirs(folder, exist_ok=True)
-    stem = os.path.join(folder, time.strftime("crash-%Y-%m-%d-%H%M%S", time.localtime(now)))
+    stem = os.path.join(folder, time.strftime(f"{kind}-%Y-%m-%d-%H%M%S", time.localtime(now)))
     path, n = stem + ".txt", 1
     while os.path.exists(path):  # (two in the same second)
         n += 1
@@ -471,7 +481,7 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
     if not dosbox_dir or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Shattered Lands")
     problem = prepare_patched_game(game_dir)
-    for old in (GAME_END, GAME_MESSAGE):  # (the last game's)
+    for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
             os.remove(old)
         except OSError:

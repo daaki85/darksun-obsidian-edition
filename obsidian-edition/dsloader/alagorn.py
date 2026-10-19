@@ -1,6 +1,6 @@
 """Alagorn tells of the Loader's magic items: Kreenfang and Shadowseeker (arms.py), Gutterknot,
-Deepbiter, Windlash, Greenbright and the Flame Blade, the Warden's Plate, Gutterward and
-Ironbulwark, the Cloak and Boots of
+Deepbiter, Windlash, Greenbright and the Flame Blade, the axes, daggers, polearms, bow and
+chatkcha, the Warden's Plate, Gutterward and Ironbulwark, the Cloak and Boots of
 Elvenkind, the Bracers of Defense, Arrowbane and the Sunking Crown (worldgear.py), and the Tome of
 Understanding (tome.py), Inixhide (npcitems.py), and the Rings and Cloak of Protection (ring.py,
 npcitems.py): one story for each kind, whichever of it the party carries, as the game's own.
@@ -165,7 +165,27 @@ MAGIC = {
               ("Thornwall",
                "Thornwall! A thri-kreen's polearm, its blade a bone hook as long as a man's arm, bound "
                "in chitin. The kreen hold a line with them and drag riders from their kanks. It strikes "
-               "truer than any common polearm."),),
+               "truer than any common polearm."),
+              ("Hayneedle",
+               "Hayneedle! A slave of the Draj pens carved it from the shin of a mekillot, a little "
+               "each night, and a cleric of water in the next cell prayed over it as he worked. He "
+               "never got the chance to use it. It strikes truer than any common dagger, and it hides "
+               "where nothing else would."),
+              ("Nightsliver",
+               "Nightsliver! Knapped from the black glass that wells up where the lava rifts open, "
+               "and cooled in the dark of a moonless night so the fire stayed in it. The defiler who "
+               "carried it thought it a pretty knife. It strikes truer and deeper than any common "
+               "dagger."),
+              ("Dunesong",
+               "Dunesong! A desert elf made it from a horn of the wild kank and sinew of a crodlu, "
+               "and its string sings when it looses, like wind over the dunes. Its arrows fly true. "
+               "The Bowyer will tell you he bought it from a trader; the elves will tell you "
+               "otherwise."),
+              ("Skycutter",
+               "Skycutter! A thri-kreen's chatkcha, its blades of obsidian set in a crystal no kreen "
+               "will name, and blessed by the clerics of the air. It flies truer and cuts deeper "
+               "than any common chatkcha. The packs of the Gemfields pass it to their best hunter; "
+               "take it, and they will remember you."),),
     # the Warden's Plate, a piece of its story each
     ARMOUR: (("Warden's Helm",
               "The Warden's Helm! In the Green Age the Wardens kept the iron roads between the "
@@ -180,9 +200,9 @@ MAGIC = {
               "Serpent Boots can find. True iron, and no stronger arms on Athas."),
              ("Warden's Legs",
               "The Warden's Legs! Haldren's leg pieces went to his squire, who fled east with "
-              "them and died in the Gemfields; his chest is there still, and the magera have "
-              "walked past it for years. Plate fit to march a thousand miles in, as Haldren "
-              "marched it."),
+              "them and died on the plateaus where the wagon trains cross; his chest is there "
+              "still, and the magera have walked past it for years. Plate fit to march a thousand "
+              "miles in, as Haldren marched it."),
              ("Warden's Chest",
               "The Warden's Chest! Haldren's breastplate was quenched in the heart of a fire "
               "elemental, and fire still flinches from whoever wears it. Balkazar kept it in his "

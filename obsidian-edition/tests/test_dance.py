@@ -77,16 +77,61 @@ class DanceTests(unittest.TestCase):
         gd.outdoors = lambda member: False
         gd.game_time = lambda: gd.clock
         d.round(gd, 0x100, 1, lambda a, b: 12)
-        log = SimpleNamespace(game=gd, tsr_hdr=0x100, _kit_check=0.0, guest=gd.guest, _dances=d,
-                              _wild=wild.WildFights(),
-                              _round_time=1000)
+        log = self.log(gd, d)
         tick = lambda now: dicelog.DiceLog._kit_tick(log, now)
         gd.clock = 1000 + dicelog.FIGHT_GAP
         tick(1.0)
+        tick(9.0)  # (the flag down, but never seen up since the roll: round 1's initiative)
         self.assertEqual(gd.dance, {1: 1})
         gd.clock += 1
-        tick(2.0)
+        tick(10.0)
         self.assertEqual((gd.dance, d.left), ({}, {}))
+        self.assertTrue(log._kits_due)
+
+    @staticmethod
+    def log(gd, d, w=None):
+        return SimpleNamespace(game=gd, tsr_hdr=0x100, _kit_check=0.0, guest=gd.guest, _dances=d,
+                               _wild=w or wild.WildFights(), _round_time=1000, _round=1,
+                               _out_of_fight=None, _fight_seen=False, _kits_due=False)
+
+    def test_over_with_the_fight(self):
+        """The game's fight flag up in the fight, then down FIGHT_OVER: the dance and Wild Fighting
+        end at once, whatever came of them, and the next round rolls them again."""
+        gd, d, w = FakeGd(), dance.Dances(), wild.WildFights()
+        gd.rules, gd.clock, fighting = game.RULE_KITS, 1000, [True]
+        gd.in_combat = lambda: fighting[0]
+        gd.outdoors = lambda member: False
+        gd.game_time = lambda: gd.clock
+        d.round(gd, 0x100, 1, lambda a, b: 12)
+        w.fighting[1] = True
+        log = self.log(gd, d, w)
+        tick = lambda now: dicelog.DiceLog._kit_tick(log, now)
+        tick(1.0)
+        fighting[0] = False
+        tick(2.0)
+        tick(3.5)  # (down 1.5 seconds: not yet)
+        self.assertEqual((gd.dance, log._kits_due), ({1: 1}, False))
+        tick(4.5)
+        self.assertEqual((gd.dance, d.left, w.fighting, log._kits_due), ({}, {}, {}, True))
+        # (the next fight's first round seen as round 7, its clock within FIGHT_GAP: rolled anyway)
+        out = d.round(gd, 0x100, 7, lambda a, b: 3, start=log._kits_due)
+        self.assertTrue(out and "dances" in out[0], out)
+        self.assertEqual(w.round(gd, 0x100, 7, lambda a, b: 3), [])  # (round 7 of a fight: no check)
+
+    def test_a_game_loaded(self):
+        """The game's clock gone back (a save loaded): the dance is over, and the round count new."""
+        gd, d = FakeGd(), dance.Dances()
+        gd.rules, gd.clock = game.RULE_KITS, 1000
+        gd.in_combat = lambda: False
+        gd.outdoors = lambda member: False
+        gd.game_time = lambda: gd.clock
+        d.round(gd, 0x100, 1, lambda a, b: 12)
+        log = self.log(gd, d)
+        gd.clock = 400
+        dicelog.DiceLog._kit_tick(log, 1.0)
+        self.assertEqual((gd.dance, log._kits_due), ({}, True))
+        log.last_ac, log.ac_detail = {}, {}
+        self.assertEqual(dicelog.DiceLog._round_number(log), 1)
 
 
 if __name__ == "__main__":

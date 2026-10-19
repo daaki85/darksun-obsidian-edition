@@ -4,7 +4,9 @@ name: Obsidian Edition tests
 on:
   push:
     branches: [obsidian-edition]
-    paths: ["obsidian-edition/**", ".github/workflows/tests.yml"]
+    paths: ["obsidian-edition/**", "PATCH-NOTES.md", "patch-notes.html", "README.md", ".github/workflows/tests.yml"]
+  pull_request:
+    paths: ["obsidian-edition/**", "PATCH-NOTES.md", "patch-notes.html", "README.md", ".github/workflows/tests.yml"]
   workflow_dispatch:
 
 jobs:
@@ -19,5 +21,7 @@ jobs:
         with:
           python-version: "3.12"
           architecture: x64
+      - name: The emulator for DSCLOG's tests
+        run: python -m pip install unicorn==2.1.4
       - name: Tests
         run: python -m unittest discover -s tests

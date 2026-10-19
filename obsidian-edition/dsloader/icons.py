@@ -45,10 +45,35 @@ def decode(chunk: bytes) -> Rows:
     return [list(r) for r in decode_frame(chunk)[2]]
 
 
+def _pack(pixels) -> bytes:
+    """A run's pixels as the game packs them: a byte n (pixels n >> 1 plus one), then for n odd one
+    pixel repeated, for n even that many pixels as they are; up to 128 a piece. A repeat for three
+    alike or more (the game's own pictures are packed so: a window's marble and flat faces half
+    their size or less, the game's memory for them the less)."""
+    out, i, literal = bytearray(), 0, []
+
+    def flush():
+        for k in range(0, len(literal), 128):
+            piece = literal[k:k + 128]
+            out.extend(bytes([(len(piece) - 1) << 1]) + bytes(piece))
+        literal.clear()
+    while i < len(pixels):
+        j = i
+        while j < len(pixels) and pixels[j] == pixels[i] and j - i < 128:
+            j += 1
+        if j - i >= 3:
+            flush()
+            out.extend(bytes([((j - i - 1) << 1) | 1, pixels[i]]))
+        else:
+            literal.extend(pixels[i:j])
+        i = j
+    flush()
+    return bytes(out)
+
+
 def encode(rows: Rows) -> bytes:
     """A one-frame picture chunk, as the game's own: for each row with pixels its y, then its runs
-    (x, a last-run flag, the count, the data's length, the data in literal pieces of up to 128),
-    then FFh."""
+    (x, a last-run flag, the count, the data's length, the data packed: _pack), then FFh."""
     height, width = len(rows), max((len(r) for r in rows), default=0)
     body = bytearray(struct.pack("<HH", width, height))
     for y, row in enumerate(rows):
@@ -64,10 +89,7 @@ def encode(rows: Rows) -> bytes:
         if runs:
             body.append(y)
         for k, (start, pixels) in enumerate(runs):
-            data = bytearray()
-            for i in range(0, len(pixels), 128):
-                piece = pixels[i:i + 128]
-                data += bytes([(len(piece) - 1) << 1]) + bytes(piece)
+            data = _pack(pixels)
             body += bytes([start, 0x80 if k == len(runs) - 1 else 0, len(pixels), len(data)]) + data
     body += b"\xff"
     head_size = 4 + 2 + 4
@@ -367,16 +389,23 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Obsidian Great Axe", 0xFC06, 2576, 2577, lambda r: recolour(r, {1: 58, 2: 59, **TEAL_TO_OBSIDIAN})),
     # the bone Dagger (weaponchoice.py): the obsidian Dagger's, its blade in the bone weapons' whites
     ("Bone Dagger", 0xFB60, 2578, 2579, lambda r: recolour(r, DAGGER_BONE)),
-    # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
-    # hasn't: blank in a shop or a pack. The Sling's, every other pixel of its strap in the fire colours
     # the robes (robes.py), drawn (on the map: the Cloak's)
     ("Ashen Robe", 0xFBE3, 2580, 2581, ashen_robe_icon),
     ("Veiled Robe", 0xFBE3, 2582, 2583, veiled_robe_icon),
+    # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
+    # hasn't: blank in a shop or a pack. The Sling's, every other pixel of its strap in the fire colours
     ("Sling +1", 0xFC09, 2644, 2645, lambda r: glow(r, lambda p, x, y: 137 <= p <= 140 and (x + y) % 2 == 0, FIRE)),
     # the magic shields (worldgear.py): the game's wooden Shield, every other pixel of its rim in
     # the fire colours; its leather one in the metal long sword's greys, its whole rim burning
     ("Gutterward", 0xFB5B, 2586, 2587, lambda r: rim(r, 2, FIRE)),
     ("Ironbulwark", 0xFC04, 2588, 2589, lambda r: rim(recolour(r, SHIELD_METAL), 1, FIRE)),
+    # the weapons for the kits with too few (worldgear.py): the bone and obsidian Daggers, every
+    # other pixel of their blades in the fire colours; the Bow, its string; the Chatkcha, its blades
+    ("Hayneedle", 0xFB60, 2590, 2591,
+     lambda r: glow(recolour(r, DAGGER_BONE), lambda p, x, y: p in DAGGER_BONE.values() and (x + y) % 2 == 0, FIRE)),
+    ("Nightsliver", 0xFB60, 2592, 2593, lambda r: glow(r, lambda p, x, y: 208 <= p <= 215 and (x + y) % 2 == 0, FIRE)),
+    ("Dunesong", 0xFC07, 2594, 2595, lambda r: glow(r, lambda p, x, y: 210 <= p <= 214 and (x + y) % 2 == 0, FIRE)),
+    ("Skycutter", 0xFC0E, 2596, 2597, lambda r: glow(r, lambda p, x, y: 158 <= p <= 162 and (x + y) % 2 == 0, FIRE)),
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
@@ -681,6 +710,36 @@ def friends_icon(hold: Rows) -> Rows:
     return glyph_icon(untiled(hold, HOLD_GLYPH, HOLD_FILL), set(), 0, HEART_GLYPH, 3, HEART_DARK, HEART_LIGHT)
 
 
+# A thief's Pick Pockets button (DSCLOG's PICK POCKETS: ICON 3048, where a priest's Turn Undead
+# is, ICON 3044-3047 by element): Turn Undead's earth tile, its glyph taken off, a drawstring purse
+# in its dark line with a gold coin in it.
+TURN_EARTH_ICON, PICK_ICON = 3045, 3048
+TURN_GLYPH, TURN_FILL = {129, 141}, (136, 137)  # (the earth tile's glyph lines, and its browns)
+PURSE_GLYPH = (  # (a purse: its tie and drawstring over the bag)
+    "......D..D......",
+    ".......DD.......",
+    ".....DDDDDD.....",
+    "......D..D......",
+    ".....D....D.....",
+    "....D......D....",
+    "...D........D...",
+    "..D..........D..",
+    "..D..........D..",
+    "..D..........D..",
+    "...D........D...",
+    "....DDDDDDDD....",
+)
+PURSE_COIN = {(7, 9): 45, (8, 9): 45, (7, 10): 64, (8, 10): 65, (6, 10): 65, (9, 10): 64, (7, 11): 65, (8, 11): 64}
+
+
+def pick_icon(earth: Rows) -> Rows:
+    """The Pick Pockets button's icon from Turn Undead's earth one."""
+    out = glyph_icon(untiled(earth, TURN_GLYPH, TURN_FILL), set(), 0, PURSE_GLYPH, 2, 129, 141)
+    for (x, y), colour in PURSE_COIN.items():
+        out[y][x] = colour
+    return out
+
+
 # Fogbolt's bolt (SEGOBJEX.GFF): a spell's record names its flight by a number (+10h, FFh none),
 # a place in the game's table of 16 flights before the records (3 bytes each: the object flying,
 # a byte); Magic Missile's, 4, is object 8109, BMP 2227 its picture (36 frames, one a direction)
@@ -737,7 +796,8 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
 
 
 def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
-    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the save/load
+    """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
+    button's, the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py) and, with ROLL_STORE, the creation screen's
     STORE and RECALL (rollstore.py), to DEST."""
     with open(source, "rb") as f:
@@ -748,7 +808,8 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
              ("ICON", FOG_ICON): encode(fog_icon(decode(chunks[("ICON", ARMOR_ICON)]))),
              ("ICON", REFLECT_ICON): encode(reflect_icon(decode(chunks[("ICON", MIRROR_ICON)]))),
              ("ICON", SPOOK_ICON): encode(spook_icon(decode(chunks[("ICON", SCARE_ICON)]))),
-             ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)])))}
+             ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)]))),
+             ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)])))}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))
@@ -895,8 +956,14 @@ def which(rec: bytes) -> Optional[str]:
         return "Glasshewer" if plus == 2 else "Obsidian Axe"
     if kind == GREAT_AXE_TYPE and plus == 0:
         return "Great Axe"
-    if kind == game.BONE_DAGGER_TYPE and plus == 0:
-        return "Bone Dagger"
+    if kind == game.BONE_DAGGER_TYPE:
+        return "Hayneedle" if plus == 1 else "Bone Dagger" if plus == 0 else None
+    if kind == 17 and plus == 2:
+        return "Nightsliver"
+    if kind == 1 and plus == 1:
+        return "Dunesong"
+    if kind == 48 and plus == 2:
+        return "Skycutter"
     if kind == game.BONE_GREAT_AXE_TYPE and plus == 0:
         return "Bone Great Axe"
     if kind == game.OBSIDIAN_GREAT_AXE_TYPE and plus == 0:

@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dicelog, game, tools, vulture
+from dsloader import dicelog, game, pickpocket, tools, vulture
 from test_dicelog import CREATURES, DS, HDR, ITEMS, LOAD_SEG, SHEETS, STALKER, set_clock
 from test_slots import set_character, with_tables
 
@@ -127,9 +127,11 @@ class VultureTests(unittest.TestCase):
         self.assertIn(b"tough and bland", bytes(self.m[HDR + 0x600:HDR + 0x700]))
 
     def ask(self, item, rec):
-        """DSCLOG asks about ITEM (REC) used on object 0x30, Dinos: the lines, and the reply's text."""
+        """DSCLOG asks about ITEM (REC; None: not an item) used on object 0x30, Dinos: the lines,
+        and the reply's text."""
         log = self.log
-        self.m[ITEMS + item * game.ITEM_SIZE:ITEMS + (item + 1) * game.ITEM_SIZE] = rec
+        if rec is not None:
+            self.m[ITEMS + item * game.ITEM_SIZE:ITEMS + (item + 1) * game.ITEM_SIZE] = rec
         table = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
         struct.pack_into("<Bh", self.m, table + 0x30 * 3, 2, DINOS)
         struct.pack_into("<H", self.m, HDR + dicelog.TSR_USE_ITEM, item)
@@ -154,14 +156,27 @@ class VultureTests(unittest.TestCase):
         self.assertTrue(log._fighting())
 
     def test_no_pockets_picked_in_a_fight(self):
-        """The thieves' tools do nothing in a fight (they stay on the pointer); out of one, they try."""
+        """The Pick Pockets button's pick (PICKED_BY and the thief) does nothing in a fight; out of
+        one, that thief tries."""
         struct.pack_into("<H", self.m, DS * 16 + game.IN_COMBAT, 1)
-        lines, text = self.ask(71, tools.ITEM)
-        self.assertEqual((lines, text), ([tools.NOT_IN_A_FIGHT], tools.NOT_IN_A_FIGHT))
+        lines, text = self.ask(dicelog.PICKED_BY + 2, None)
+        self.assertEqual((lines, text), ([pickpocket.NOT_IN_A_FIGHT], pickpocket.NOT_IN_A_FIGHT))
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_USE_TAKEN)[0], 1)
         struct.pack_into("<H", self.m, DS * 16 + game.IN_COMBAT, 0)
+        tried = []
+        real = pickpocket.attempt
+        pickpocket.attempt = lambda gd, picked, **kw: tried.append(kw) or pickpocket.Attempt("tried", [])
+        try:
+            lines, text = self.ask(dicelog.PICKED_BY + 2, None)
+        finally:
+            pickpocket.attempt = real
+        self.assertEqual((text, tried), ("tried", [{"who": DINOS, "thief": 2}]))
+
+    def test_tools_do_nothing(self):
+        """Thieves' Tools an earlier version gave, used on someone: the game's own doing (no pick)."""
         lines, text = self.ask(71, tools.ITEM)
-        self.assertNotEqual(text, tools.NOT_IN_A_FIGHT)
+        self.assertEqual((lines, text), ([], ""))
+        self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_USE_TAKEN)[0], 0)
 
 
 if __name__ == "__main__":

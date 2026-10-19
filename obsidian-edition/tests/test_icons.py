@@ -47,6 +47,21 @@ class PictureTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<I", chunk, 0)[0], len(chunk))
         self.assertEqual(chunk[-1], 0xFF)
 
+    def test_repeats_packed(self):
+        """Three alike or more are a repeat (a byte n odd, then the pixel), up to 128 a piece; the
+        rest literal; read back the same."""
+        import random
+        rng = random.Random(5)
+        rows = [[7] * 200, [1, 1, 2, 2, 2, 3] * 30, [rng.randrange(4) for _ in range(214)],
+                [None] * 5 + [9] * 130 + [None] + [4, 5]]
+        rows = [r + [None] * (214 - len(r)) for r in rows]
+        chunk = icons.encode(rows)
+        self.assertEqual(icons.decode(chunk), rows)
+        self.assertEqual(icons._pack([7] * 3), bytes([5, 7]))
+        self.assertEqual(icons._pack([7] * 131), bytes([255, 7, 5, 7]))
+        self.assertEqual(icons._pack([1, 1, 2]), bytes([4, 1, 1, 2]))
+        self.assertLess(len(icons.encode([[7] * 200])), 30)  # (head 10, size 4, y, run head 4, two repeats 4, FFh)
+
     def test_long_runs(self):
         rows = [list(range(200))]
         self.assertEqual(icons.decode(icons.encode(rows)), rows)
@@ -177,6 +192,17 @@ class CopyTests(unittest.TestCase):
         self.assertEqual(reflect[3][7:9], [70, 70])  # (the figure's head in the glass)
         self.assertEqual(reflect[3][4:7], [216, 216, 216])
         self.assertNotEqual(reflect, mirror)
+
+    def test_pick_icon(self):
+        """The Pick Pockets button's icon (ICON 3048, after Turn Undead's 3044-3047) from the
+        earth tile: its frame kept, its glyph taken off, the purse in its dark line, a gold coin."""
+        earth = [[(129 if x in (5, 6) and 2 < y < 13 else (136, 137)[(x + y) % 2]) for x in range(16)] for y in range(16)]
+        out = icons.pick_icon(earth)
+        self.assertEqual((icons.PICK_ICON, len(out), len(out[0])), (3048, 16, 16))
+        self.assertEqual([out[0], out[15]], [earth[0], earth[15]])
+        self.assertEqual(out[4][5:11], [129] * 6)  # (the drawstring)
+        self.assertIn(64, {p for row in out for p in row})
+        self.assertEqual(icons.decode(icons.encode(out)), out)
 
     def test_numbers_apart_from_the_rest(self):
         """No object or icon of these numbered as Kalzith's moved scroll icons or the party's

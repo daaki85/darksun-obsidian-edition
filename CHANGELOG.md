@@ -1,16 +1,272 @@
 # Changelog
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
-request by pull request, newest first. Released pull requests are summarised
-in a line or two each; the release notes ([2.4.0](release-notes/v2.4.0.md):
-#48 and #49; [2.3.0](release-notes/v2.3.0.md): #44 to #46; [2.2.1](release-notes/v2.2.1.md): #43;
-[2.2.0](release-notes/v2.2.0.md): #39 to #42;
-[2.1.1](release-notes/v2.1.1.md): #37; [2.1.0](release-notes/v2.1.0.md): #35;
-[2.0.0](release-notes/v2.0.0.md): #31 and #32;
-[1.2.0](release-notes/v1.2.0.md):
-#19 to #29; [1.1.0](release-notes/v1.1.0.md): #14 to #18;
-[1.0.0](release-notes/v1.0.0.md): #1 to #13) and the pull requests themselves
-have the detail.
+request by pull request, newest first: the record for developers and testers.
+For what a release brings, read its notes ([2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
+[2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
+[2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
+[2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
+[1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
+change from the original game in one page, [the patch notes](PATCH-NOTES.md).
+
+## Pull request #51 (Obsidian Edition 2.5.0)
+
+**Added**
+- **Item reports**: the Loader watches the party's items and, when one is gone
+  from the whole party for two seconds, saves `crash-logs\item-<time>.txt`
+  (the item, who had it and where, what its record says now, the game's time
+  and region, the fight, the party's items before and after, the switches,
+  and the dice log's and dialogue's last lines) and says so in the dice log,
+  so a vanished item can be looked into as a crash is. The ordinary losses
+  (an item still outside the party, used up, a spell's weapon, sold, broken)
+  pass in silence (a line each made a stream of them in a shop), as does an
+  item handed to another member under a new record number (the same picture,
+  type, name and plus turning up within the wait), and a loaded game is not news
+  (`dsloader/itemwatch.py`, `GameData.party_items`; README, "If an item
+  disappears").
+- **Four more magic weapons** for the kits that had too few (the dagger
+  fighters, the archers, the thri-kreen), each with its icon, its name in
+  DSCLOG's table (now 39 names) and a story from Alagorn:
+  - **Hayneedle,** a bone dagger +1 (a water cleric's too), early: hidden in
+    Merzol's haystack in the slave pens with his sack of ceramic pieces. The
+    hay's script (137) says so and leaves it beside the sack, the first
+    search only (haystash.py; its own object, 2590).
+  - **Nightsliver,** an obsidian dagger +2 (a fire or earth cleric's too),
+    mid-game: the Lava Rift's Hermit carries it in place of his stone dagger.
+  - **Dunesong,** a bow +1, sold by the Bowyer in Teaquetzl with Windlash,
+    priced as a melee weapon (20,800; the game's Bow +2 is 50,800).
+  - **Skycutter,** a chatkcha +2 (3,500, as the game's Sling +2), on one of
+    the thri-kreen hunting the Gemfields (its own object, 2598; the region's
+    copy, RGN06.GFF, points to it).
+  The guide's lists of each class's magic weapons count them, and an air
+  cleric's list now has every dagger (DSCLOG gives air clerics the game's
+  daggers too; the list showed only Galefang).
+
+**Changed**
+- **Weapon specs picked after DONE** (with weapon specialization on): the
+  creation screen's WEAPON SPEC pages are gone. Pressing DONE brings up the
+  weapon window a level gained uses (a picture of each weapon spec), as a
+  preserver's CHOOSE A SPELL comes up: a fighter, ranger or Battle Mage picks
+  one, a gladiator or Myrmidon two, a fighter/preserver after its spells. KITS
+  is on the panel for every class now. EXIT leaves the Loader to pick: the
+  kit's weapon (Ghetto Fighter, Poisoner: dagger; Battle Dancer: long sword),
+  a thri-kreen's chatkcha, else the long sword (a gladiator's second the club).
+  DSCLOG's `CR_WEAPONS` (a site of `INT 98h` at DSUN.EXE 666DFh, once DONE has
+  closed the screen's windows: before, the bigger window failed to open, the
+  game's "Failed to open window", exit code 1), with the header's +361 up while
+  it asks so the Loader waits (`DiceLog._weapons_asked`);
+  `weaponchoice.kinds_for`'s defaults; `kitpages.panel_windows`. README,
+  "Choosing at creation"; the guide. The weapon pages' code is gone from
+  DSCLOG (about 1 KB) and the Loader (windows 3014-3019 and 3025; the kit
+  pages keep VIEW PSIONICS, `kitpages.KIT_BACK`). The Loader's pictures are
+  packed with repeats as the game's own are (`icons._pack`): the weapon
+  window's 93 KB came to 41 KB, and it opens for a fourth character after
+  CHOOSE A SPELL, where it failed with "Failed to open window". A new
+  character's weapon is made before the class check leaves gear behind, so
+  a fighter/psionicist's long sword becomes its club, not left behind.
+- **Claws cut**: the game makes every unarmed attack crushing, so a creature
+  crushing weapons can't hurt (the mastyrials) took nothing from a
+  thri-kreen's claws. A thri-kreen in the party now fights with edged claws,
+  and Erdlu Claw's talons are edged too. Monsters' own attacks are as before.
+- **A Shinobi learns its own spells from scrolls too** (with kits on): it
+  first reads the scroll, a d100 against its read languages, and then, with
+  the rule for INT on, learns the spell at INT's chance. A failed roll uses
+  the scroll up; a scroll of a spell not among its 18 is kept, unlearnt. The
+  dice log shows both rolls.
+- **A Pick Pockets button for thieves** in place of Thieves' Tools: on the
+  USE screen, where a priest's Turn Undead is, a character with thief levels
+  has a purse (outside fights; a cleric/thief has both, the purse beside Turn
+  Undead, and Turn Undead alone in a fight).
+  Pressed, the pointer is the one for talking, and the next person clicked has
+  their pocket tried by that thief, leader or not, into that thief's own
+  backpack. The Options tab says so. Mirlon and Kel no longer carry the tools,
+  Mirlon's script is the game's own again, and tools already in a saved game
+  do nothing.
+- **Coins from a picked purse grow with the thief**: 2 to 5 ceramic pieces for
+  each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
+
+**Fixed**
+- **Gerakis's Wild Fighting damage logged as the weapon's**: the game added
+  his +3 (DSCLOG gives it to whoever's check passed), but the dice log
+  credited Wild Fighting only to a Wild Fury's kit, so a passed check showed
+  as "+2 weapon" (a bone sword's −1 and the +3), and a failed one's −3 to hit
+  went unexplained. It now names Wild Fighting for anyone fighting wild
+  (`DiceLog._kit_attack`).
+- **A Battle Dancer's dance and Wild Fighting not rolled at a fight's start**:
+  the Loader rolled them only for a fight's round 1, and it took a fight to be
+  new only when the game's clock had run two minutes past the last one's last
+  round. A fight soon after another (the arena's next wave), or one after
+  loading a save (the clock gone back), was counted as the last one going on,
+  and kept its result. Now both end as soon as the fight does, whatever came of
+  them (the game's fight flag down two seconds, once seen up in the fight; the
+  clock past or gone back), and the next fight's first round rolls them again.
+  A loaded game's rounds count from 1 again too.
+- **Turn Undead's right click showed a new spell's description** (Fogbolt's,
+  for an earth cleric; seen in 2.3.0 on): the game describes Turn Undead by
+  numbers the new spells took. It shows its own again.
+- **Pick Pockets' right click showed nothing**: it now shows the purse and
+  what it does.
+- **A Shadowblade or Ghetto Fighter could start with a shield in the
+  backpack**: the kit's gear left a shield behind only from a hand, so one
+  already moved to the backpack stayed. It is left behind from there too.
+- **White ability labels on the inventory screen** (STR: to CHR:, among the
+  yellow): the fix that drew the creation screen's labels in its white drew
+  the inventory's in it too, as both screens draw them with one routine. The
+  white is now set only for labels at the creation screen's place.
+- **The Trustee stuck in the pens** (again): his rounds' two pauses took their
+  corner from numbers any script in the pens could change, and once another
+  had, he set off for a spot that doesn't exist and stood still for good, busy.
+  The pauses now have corners of their own, and his busy line starts his
+  rounds again, so a Trustee already stuck in a saved game walks on once
+  talked to.
+- **Figures hold the Loader's own weapons**: the bone and obsidian short swords
+  and axes a new warrior starts with, the metal daggers, maces, great axes,
+  picks and polearms, and the other new weapons were drawn as nothing, so a
+  figure carrying one swung empty-handed (the game's own weapons were drawn).
+- **Dinos's talk after the cooked vulture**: once he had given the meal's XP,
+  his menu came back with only "Goodbye.", and a stray "Goodbye." followed in
+  a window with no portrait. The XP is now given within his talk, as the
+  game's own quests do, and his questions come back after it.
+- **Mirror Image works as it says** (seen in 2.4.0). The game's images
+  stopped no weapon blow, and took the caster's own spells: Armor cast on
+  oneself under Mirror Image was lost three times in four, an image with it.
+  Now each hit has a 75% chance (50% for Reflected Image) to strike an image
+  instead, and so does a foe's spell for one creature; spells from the
+  target's own side always get through. The dice log shows each d100.
+- **Armor lasts as long as it should**: it used a charge each time any spell
+  or blow landed on its wearer, as well as for the damage, so each hit cost
+  two and a friend's Bless one. Now one for each damaging hit.
+- **Share Strength's strength goes when the power ends**: the game looked for
+  it under the psionicist rather than the one who got it, who kept it (and
+  could end another of the psionicist's own effects instead).
+- **The preserver's Dispel Magic no longer silences**: it laid "No spell use"
+  on everyone it caught, the party too, which Dispel Magic can't remove. Now
+  it only dispels, as the cleric's does.
+- **Hold Undead holds only the undead**: it held living creatures too.
+- **Cause Serious and Critical Wounds do 2d8+1 and 3d8+3**, as AD&D has them
+  and the Cure spells heal; their records had 2d9 and 3d9.
+- **A new game's arena could be left without its announcer, and new characters
+  without their gear** (seen in 2.4.0): the Loader's starting gear, fitted
+  just as START GAME rebuilt the game's item records, could use up the game's
+  free records. The arena then couldn't place its announcer (the opening fight
+  never began; walking said NO PATH FROM HERE), and the gear went nowhere. The
+  Loader now waits until the game's item lists are settled. A game this
+  happened to can't be mended: start a new one.
+- **A Brute started with no weapon**: its long sword and club, which the game
+  puts in the backpack, were left behind. The long sword now becomes its
+  weapon spec's weapon (a great axe without weapon specialization), in hand,
+  and the club is left behind as the kit's ("a Brute fights with two-handed
+  weapons only"). Armour only a kit forbids is left behind naming the kit that
+  forbids it ("a Shadowblade can't wear it").
+- **No crash report when DOSBox closed while the game still ran** (a freeze,
+  DOSBox stopping with an error of its own, or its window closed): a report
+  was saved only for an error code or the game's own error. GAMEEND.COM now
+  notes a game that ends as usual (`GAMEOK.TXT`), and without that or an error
+  the Loader saves a report saying the game didn't end on its own.
+- **A crash after Continue on a monster's whole description** (the window
+  that follows a Look box with more to say): the dialogue window can load
+  other parts of the game's code over the routine that closed the Look box,
+  and DSCLOG went back into it without a way back the game's overlay manager
+  could mend. It now gives it one, as it does for a picked pocket's window.
+- **The Loader's item-list changes made safer** (found in review): taking an
+  item out of a list while the game's own free list moved could leave the
+  item in no list at all; it now goes back where it was.
+- **Defilers' scrolls on creatures that aren't defilers** (one of Scar's
+  henchmen dropped one): the Loader knew a defiler by the class on its
+  character sheet, which the game hands on from one creature to the next. It
+  now knows one by the game's object for it: only the creatures the game's
+  data makes defilers (Balkazar, Wyrmias, Tara, the Troop Leader, the arena's
+  Defiler, the Dark Spiders and the Spider Mother, the Hermit and three
+  thri-kreen) carry one.
+
+**Documentation**
+- **Kits, a page of their own** (`obsidian-edition/KITS.md`): the README's
+  kit tables and rules moved out, as Items were, the README keeping a table of
+  the kits' names with links; each kit fact repeated across the section (the
+  Shinobi's spell list, the Seeker's and Justifier's casting levels, the
+  Battle Mage's weapon pick, the Arcanist's two spells, Wild Fighting) is now
+  said once. Preservers' first spells stays in the README.
+- **A documentation review**: the Options tab's Weapon specialization switch
+  no longer names the weapon pages; the mod's items are "the mod's", not "the
+  Loader's"; the guide says weapon spec, as the game's screens do; the
+  Effects-screen click among the bug fixes; item reports and thri-kreen claws
+  in the guide and the README's bug fixes; the acid table in ITEMS.md ("Items
+  against acid"); the dice log's attack and save rows shortened, their detail
+  under the tables; the front page's "What it does" a paragraph; install
+  advice said once.
+- **New:** "Where to start" and "Known issues" in the README, a glossary in
+  the guide (THAC0, AC, PSP, the saves' letters and more), and in
+  DEVELOPMENT.md the folders and how a release is made.
+- **Items, a page of its own** (`obsidian-edition/ITEMS.md`): the README's
+  item tables (every magic item, the magic weapons by weapon spec, every
+  mundane weapon) moved out, as How the game works was; the README keeps a
+  short section linking to it, and the front page, the guide and the
+  docicons test name it.
+- **Draft release notes for 2.5.0** (`release-notes/v2.5.0.md`), this pull
+  request's changes for players, and a "Coming in 2.5.0" line on the front
+  page. The version stays 2.4.0 until the release is cut.
+- **The Warden's Legs' chest is the Wagon Train's**, not the Gemfields' (its
+  chest, object 1065, is in region 8, with the magera and their prisoners; the
+  Gemfields are region 6). The item table, the Loader's names for it and
+  Alagorn's story say so.
+- **Patch notes:** the six new spells and the nineteen magic weapons as
+  tables; the air cleric's dagger line says what the game had (none); acid on
+  armour with the other Combat rules; the Loader's accessibility (larger text,
+  the keyboard, contrast, logs as text).
+- **The Loader's Options tab:** Picking pockets says a click on anyone in sight
+  (it said "talk to someone"); the hiding switch reads more plainly; "... or by
+  holding the right mouse button" sits under the map scrolling it belongs to,
+  not under the view in fights. The screenshot of the tab is retaken.
+- **Credits** on the front page: the code and documentation written by
+  Claude, the direction and testing, the game and its makers, the rule books,
+  and the tools.
+- **The Loader's items in bold italics** in the item tables.
+- **One item catalogue**: the README's New items tables merged into the item
+  tables, which list the game's items and the Loader's together. The Loader's
+  magic items (in bold) carry where each is and what it does; its plain
+  weapons a **new** note. New items keeps its prose, prices and the two new
+  pieces of armour.
+- **`patch-notes.html` made from `PATCH-NOTES.md`** by `python -m
+  dsloader.patchnotes`, as the guide's page is (a test fails when it falls
+  behind); its Copy as Markdown button gives the Markdown itself. Both pages
+  share `dsloader/pagestyle.css`.
+- **The front page tidied**: a list of the documents in place of the contents,
+  the fan-project and license notes at the end, and the release notes listed
+  once. A test checks the version is the same in `dsloader`, the patch notes,
+  the front page and the release notes.
+- **DEVELOPMENT.md opens with how to test, build and run** from a command
+  prompt, then how it works; it says how the two web pages are made.
+- **The README's "What it changes on your computer"** points to the files
+  table instead of listing them twice; the patch notes' first line split in two.
+- **GPL-3.0**: the project's code and documentation are licensed under the GNU
+  General Public License v3.0 (`LICENSE`, in the release zip too), with a note
+  that the game's own art in the pages isn't covered.
+- **How the game works** moved out of the README into
+  `obsidian-edition/HOW-THE-GAME-WORKS.md` (the original game's own rules,
+  about 490 lines), the README keeping a list of its sections.
+- **One source for the kits' numbers**: the README's kit tables. The player's
+  guide keeps who takes each kit on Athas and links to them; the kits' spell
+  slots table moved from the guide to the README; DEVELOPMENT links there for
+  the Seeker's, Justifier's and Shinobi's tables.
+- **[The game's bugs, fixed](obsidian-edition/README.md#the-games-bugs-fixed)**:
+  a README section with every bug of the game's own the Loader mends, the
+  spells' among them, and a line for them under What it does on both front
+  pages.
+- **Rules the game got wrong** (the README's bug fixes, and a paragraph
+  under the patch notes' Bug Fixes): the spell save, the doubled d20, two
+  weapons, warriors' attacks, class restrictions, multiclass hit points,
+  rangers' spells, acid, the class tables and thief skills, each with
+  what the game did and the rule that puts it right; the thief skills'
+  equipment penalty among the bugs always fixed.
+- **The player's guide as a web page**, `obsidian-edition/player-guide.html`,
+  in the patch notes' look with its sections as an index, made from
+  PLAYER-GUIDE.md by `python -m dsloader.guidepage` (a test fails when it
+  falls behind the guide).
+- **Your saved games** (the patch notes, and the README's bug fixes): no new
+  game needed for the fixes, which work from loading; what the old bugs
+  already did to a save stays (Share Strength's kept strength, a Dispel Magic
+  silence until it wears off, a 2.4.0 arena without its announcer); a new game
+  still the way to see kits, fuller starting gear and the early new content.
 
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 
@@ -1053,14 +1309,14 @@ have the detail.
 - **DEVELOPMENT.md:** the patched game's interrupts are summarised, with
   `gamepatch.py` as the list, in place of a list that had fallen behind.
 
-## Pull request #30 ([merged 2026-10-08](https://github.com/daaki85/darksun-companion-mod/pull/30))
+## Pull request #30 ([merged 2026-10-08](https://github.com/daaki85/darksun-obsidian-edition/pull/30))
 
 **Release**
 - **Templar's Ledger 1.2.0:** the version is 1.2.0, with its notes in
   `release-notes/v1.2.0.md` (pull requests #19 to #29), listed on the front
   page with the others.
 
-## Pull request #29 ([merged 2026-10-08](https://github.com/daaki85/darksun-companion-mod/pull/29))
+## Pull request #29 ([merged 2026-10-08](https://github.com/daaki85/darksun-obsidian-edition/pull/29))
 
 **Changed**
 - **A ranger's bow is its own** with class restrictions: a multiclass ranger
@@ -1077,7 +1333,7 @@ have the detail.
 - **Two weapons** is a section of its own, beside Thieves and Saving throws
   (the game's rule, then AD&D's penalties), rather than under The dice log.
 
-## Pull request #28 ([merged 2026-10-08](https://github.com/daaki85/darksun-companion-mod/pull/28))
+## Pull request #28 ([merged 2026-10-08](https://github.com/daaki85/darksun-obsidian-edition/pull/28))
 
 **Changed**
 - **Options tab:** a **Thieves** section of its own, after Rule changes, with
@@ -1124,7 +1380,7 @@ have the detail.
   program and a thief's card; the backstab table checked against the game's
   item data (named long swords weigh 10 to 40).
 
-## Pull request #27 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/27))
+## Pull request #27 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/27))
 
 **Changed**
 - **No bow to choose for a ranger** at creation (nor in the catch-up pick at a
@@ -1135,7 +1391,7 @@ have the detail.
 - Where a ranger's bow expertise and missile weapons' rates show, and the
   Options tab's weapon specialization box, mention them.
 
-## Pull request #26 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/26))
+## Pull request #26 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/26))
 
 **Changed**
 - **Missile specialists shoot faster:** with weapon specialization, a fighter
@@ -1154,7 +1410,7 @@ have the detail.
   type not chosen, expertise, specialized, mastery, grand mastery) and level,
   for melee, bows and the other missile weapons.
 
-## Pull request #25 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/25))
+## Pull request #25 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/25))
 
 **Added**
 - **Bone and obsidian great axes and a bone dagger,** each with an icon of its
@@ -1186,15 +1442,15 @@ have the detail.
 
 **Documentation**
 - **Item icons** in every item table of the guide.
-- **[Every magic item](obsidian-edition/README.md#every-magic-item)** and
-  **[Every mundane weapon](obsidian-edition/README.md#every-mundane-weapon):**
+- **[Every magic item](obsidian-edition/ITEMS.md#every-magic-item)** and
+  **[Every mundane weapon](obsidian-edition/ITEMS.md#every-mundane-weapon):**
   each item, the game's and the Ledger's, with its bonus or power and who
   sells or carries it; the magic weapons of each weapon type for weapon
   specialization.
 - **Mundane items** in a table of their own in New items, and the Ledger's
   weapons in the acid saving throw table.
 
-## Pull request #24 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/24))
+## Pull request #24 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/24))
 
 **Added**
 - **Magic weapons for the classes that had too few,** each with an icon of its
@@ -1215,7 +1471,7 @@ have the detail.
 - **Drakejaw** (pull request #23) was never on its Magera: the game read its
   own Gemfields region, not the Ledger's copy, which DSCLOG now opens instead.
 
-## Pull request #23 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/23))
+## Pull request #23 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/23))
 
 **Added**
 - **Three magic axes,** each with an icon of its own and a story from Alagorn:
@@ -1230,13 +1486,13 @@ have the detail.
 - **The Elven Leader's Gythka is +2** (was +1). It also no longer takes
   Kreenfang's icon, which any Gythka +1 did.
 
-## Pull request #22 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/22))
+## Pull request #22 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/22))
 
 **Changed**
 - **Cermak, of the game's own party, specializes in the long sword and the
   axe** (was the club), which count once his gladiator levels do again.
 
-## Pull request #21 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/21))
+## Pull request #21 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/21))
 
 **Added**
 - **The Tome of Understanding,** Father Garyn's gift when the party brings
@@ -1334,7 +1590,7 @@ have the detail.
   Options tab's boxes after the table; the ranger's row no longer names a
   fighter/ranger (the game has none).
 
-## Pull request #20 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/20))
+## Pull request #20 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/20))
 
 **Added**
 - **The new plain weapons in the world** (a new content switch, on by default):
@@ -1421,7 +1677,7 @@ have the detail.
   section with a table, Kalzith and Semyon one of new people told as a player
   meets them; and the helms' and boots' rules are one.
 
-## Pull request #19 ([merged 2026-10-06](https://github.com/daaki85/darksun-companion-mod/pull/19))
+## Pull request #19 ([merged 2026-10-06](https://github.com/daaki85/darksun-obsidian-edition/pull/19))
 
 **Added**
 - **Which class levels up next, on View Character:** for a character of more
@@ -1445,12 +1701,12 @@ have the detail.
   (Color Spray's is in the sewers). Magic Missile and Color Spray scrolls he
   stocked before become Shield and Burning Hands, wherever they are.
 
-## Pull request #18 ([merged 2026-10-06](https://github.com/daaki85/darksun-companion-mod/pull/18))
+## Pull request #18 ([merged 2026-10-06](https://github.com/daaki85/darksun-obsidian-edition/pull/18))
 
 - **Release 1.1.0:** the version, its notes, and pull request #17 marked
   merged in the READMEs.
 
-## Pull request #17 ([merged 2026-10-06](https://github.com/daaki85/darksun-companion-mod/pull/17))
+## Pull request #17 ([merged 2026-10-06](https://github.com/daaki85/darksun-obsidian-edition/pull/17))
 
 **Changed**
 - **Kalzith's scrolls at the game's prices:** 3,000 to 12,000 ceramic: the
@@ -1520,7 +1776,7 @@ have the detail.
 - The Ledger's new item pictures no longer wipe an item's spell: changing an
   icon cleared four bytes of the item where the game's picture cache is two.
 
-## Pull request #16 ([merged 2026-10-04](https://github.com/daaki85/darksun-companion-mod/pull/16))
+## Pull request #16 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/16))
 
 **Added**
 - **Semyon breaks out with Scar:** recruit Semyon before the fight with Scar,
@@ -1593,12 +1849,12 @@ have the detail.
 - **Speed:** the rings' and dust's colour tables are worked out once for a
   palette, not every 30 seconds.
 
-## Pull request #15 ([merged 2026-10-04](https://github.com/daaki85/darksun-companion-mod/pull/15))
+## Pull request #15 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/15))
 
 - **READMEs after pull request #14:** the changelog, the cooked vulture quest
   and its screenshot, and the new log lines.
 
-## Pull request #14 ([merged 2026-10-04](https://github.com/daaki85/darksun-companion-mod/pull/14))
+## Pull request #14 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/14))
 
 **Added**
 - **What the party wears, on the map:** each character's figure shows their
@@ -1696,18 +1952,18 @@ have the detail.
 - **"Killed" lines for everyone in an area the party left:** walking from the
   slave pens into the arena logged most of the pens as "is killed".
 
-## Pull request #13 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/13))
+## Pull request #13 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/13))
 
 **Added**
 - **The Release workflow can be run by hand**, making the version's tag.
 
-## Pull request #12 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/12))
+## Pull request #12 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/12))
 
 **Added**
 - **Release 1.0.0:** the version, its release notes, and a workflow that
   builds the release zip.
 
-## Pull request #11 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/11))
+## Pull request #11 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/11))
 
 **Added**
 - **Cat's Grace looks like itself:** its own icon and its own description in
@@ -1735,13 +1991,13 @@ have the detail.
 - **Getting started:** open the Ledger first, pick the options, then **Start
   the game** from it.
 
-## Pull request #10 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/10))
+## Pull request #10 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/10))
 
 **Fixed**
 - **Half-giants' two-handed weapons in one hand:** the rule didn't take
   effect.
 
-## Pull request #9 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/9))
+## Pull request #9 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/9))
 
 **Added**
 - **Rule change: thief skills from AD&D's table.** A skill is AD&D's average
@@ -1769,7 +2025,7 @@ have the detail.
 - **Options:** the Ring +1, picking pockets and the thieving tools button sit
   under Rule changes, with the other changes to play.
 
-## Pull request #8 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/8))
+## Pull request #8 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/8))
 
 **Added**
 - **Rule change: levels up to 10.** Every class can reach 10th level, at
@@ -1796,7 +2052,7 @@ have the detail.
 - **Pick pockets lifts a short sword** too, though it weighs more than other
   small things.
 
-## Pull request #7 ([merged 2026-10-01](https://github.com/daaki85/darksun-companion-mod/pull/7))
+## Pull request #7 ([merged 2026-10-01](https://github.com/daaki85/darksun-obsidian-edition/pull/7))
 
 **Added**
 - **Rule change: AD&D's two-weapon penalties.** A non-ranger with a melee
@@ -1828,7 +2084,7 @@ have the detail.
 - Item names numbered past 255 were read wrongly by the Ledger (for example,
   Serpent Boots).
 
-## Pull request #6 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/6))
+## Pull request #6 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/6))
 
 **Fixed**
 - **Boots gave no extra move.** The rule looked at the wrong equipment slot.
@@ -1836,7 +2092,7 @@ have the detail.
 **Changed**
 - README screenshots retaken (move silently, boots, Thieves' Tools, Options).
 
-## Pull request #5 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/5))
+## Pull request #5 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/5))
 
 **Added**
 - A **Give thieving tools now** button on the Options tab.
@@ -1848,7 +2104,7 @@ have the detail.
 - Only one set of tools per thief.
 - Long lines on the Options tab wrap to the window.
 
-## Pull request #4 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/4))
+## Pull request #4 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/4))
 
 **Added**
 - **Picking pockets:**
@@ -1868,7 +2124,7 @@ have the detail.
 - The arena's opening show.
 - The Announcer's name being replaced by one learned mid-fight.
 
-## Pull request #3 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/3))
+## Pull request #3 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/3))
 
 **Added**
 - **In the game:**
@@ -1889,7 +2145,7 @@ have the detail.
 **Changed**
 - No packaged .exe: the .bat files offer to install Python instead.
 
-## Pull request #2 ([merged 2026-09-29](https://github.com/daaki85/darksun-companion-mod/pull/2))
+## Pull request #2 ([merged 2026-09-29](https://github.com/daaki85/darksun-obsidian-edition/pull/2))
 
 **Added**
 - The game's own **portraits and font**, read from your install at run time.
@@ -1909,7 +2165,7 @@ have the detail.
 - **The log at a glance:** round headers, hit chances, HP left, and a details
   switch.
 
-## Pull request #1 ([merged 2026-09-28](https://github.com/daaki85/darksun-companion-mod/pull/1))
+## Pull request #1 ([merged 2026-09-28](https://github.com/daaki85/darksun-obsidian-edition/pull/1))
 
 **Added**
 - **The party viewer**, reading Shattered Lands' character records live.

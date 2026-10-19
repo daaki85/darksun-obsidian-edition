@@ -4,12 +4,13 @@ down round by round, and given to DSCLOG (its KIT_DANCE bytes) to add to hit, to
 The dance is the Dancing proficiency's check at -4: a d20 against DEX - 4 (a natural 20 always
 fails). Danced well (the roll that or less), +1 for as many rounds as it is above the roll (at
 least 1); stumbled, -1 for 1d8 rounds.
-The round it's rolled in is the first; it ends before the round after its last, and with the fight.
+The round it's rolled in is the first; it ends before the round after its last, and with the fight
+(whatever came of it: the next fight's first round rolls it again).
 """
 
 import random
 import struct
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 from . import game, kits
 
@@ -35,10 +36,10 @@ class Dances:
         self.left.clear()
 
     def round(self, gd, tsr_hdr, number: int,
-              roll: Callable[[int, int], int] = random.randint) -> List[str]:
-        """A round begins (NUMBER 1: a new fight's first): lines for the log."""
+              roll: Callable[[int, int], int] = random.randint, start: Optional[bool] = None) -> List[str]:
+        """A round begins (START, by default NUMBER 1: a new fight's first): lines for the log."""
         out: List[str] = []
-        if number == 1:
+        if number == 1 if start is None else start:
             self.stop(gd, tsr_hdr)
             for member in range(game.PARTY_SIZE):
                 rec = gd.creature(member)

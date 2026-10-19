@@ -73,6 +73,18 @@ class TextTests(unittest.TestCase):
         self.assertEqual(spellbook.effect_text(record(effect=-17)), "removes Afraid")
         self.assertEqual(spellbook.save_text(StubGame(), 1, record(save=(6 << 5) | 1), False), "none")
 
+    def test_flat_bonus(self):
+        """A step of a flat bonus that comes once whatever the level (the patched Cause Serious and
+        Critical Wounds, gamepatch's cause_*): shown as the dice plus the bonus."""
+        from dsloader import gamepatch
+        for name, want in (("cause_serious", "2d8+1"), ("cause_critical", "3d8+3")):
+            b0, b1, b2 = next(p for p in gamepatch.PATCHES if p.name == name).replacement
+            rule = SpellDamage(b1 >> 3, b0 >> 5, b0 & 0x1F, (b1 & 7) or 1, b2 >> 4, b2 & 0x0F)
+            self.assertTrue(rule.flat())
+            self.assertEqual([rule.steps(level) for level in (1, 6, 7, 10, 15)], [1] * 5)
+            self.assertEqual(spellbook.damage_text(StubGame(rule), 113, record()), want)
+        self.assertFalse(SpellDamage(1, 0, 1, 2, 0, 4).flat())  # (Magic Missile's +1 a step: grows)
+
     def test_own_dice_noted(self):
         gd = StubGame(SpellDamage(1, 1, 1, 2, 0, 4), name="Magic Missile")
         self.assertIn("its own code", spellbook.damage_text(gd, 3, record(kinds=0x200)))

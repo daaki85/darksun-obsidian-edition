@@ -177,8 +177,11 @@ class PensAsksTests(unittest.TestCase):
         self.assertIn((0x16, [("n", 1), ("var", 13, vulture.MEAL)]), codes)
         said = " ".join(gpl.strings(ops)).replace("  ", " ")
         self.assertIn("A vulture! Give it here.", said)
-        xp = codes.index((0x16, [("n", vulture.XP_REWARD), pensasks.PARTY_XP]))  # (the game's XP routine)
-        self.assertEqual(codes[xp + 1], (pensasks.CALL, list(pensasks.XP_ROUTINE)))
+        self.assertIn("Each party member receives 100 experience points!", said)
+        self.assertIn((pensasks.SOUND, [("n", pensasks.QUEST_SOUND)]), codes)
+        self.assertIn((pensasks.GIVE_XP, [("n", pensasks.PARTY), ("n", vulture.XP_REWARD)]), codes)
+        # (not through the game's routine in script 74: its narration window ended the talk's menu)
+        self.assertFalse([c for c in codes if c[0] == 0x14 and c[1][-1] == ("n", 74)])
         self.assertEqual([m[1] for m in pensasks.MENUS if pensasks.VULTURE in m[2]], ["<name>"])
 
     def test_buffer(self):
@@ -235,6 +238,7 @@ class BusyOnceTests(unittest.TestCase):
         self.assertEqual(out[line.at + len(jump):len(script)], script[line.at + len(jump):])
         added = [(o.code, o.args) for o in gpl.decode(out[len(script):], b"")]
         self.assertEqual(added, [(0x16, [("n", 0), ("var", 13, pensasks.BUSY)]),
+                                 (0x14, [("n", pensasks.ROUNDS_AT), ("n", pensasks.ROUNDS_SCRIPT)]),
                                  (line.code, line.args), (0x64, [("n", after.at)])])
 
     def test_once_and_elsewhere(self):
@@ -280,6 +284,76 @@ class KeyChaseTests(unittest.TestCase):
         self.assertEqual(pensasks.no_key_chase(_game_like(), b""), _game_like())
         chunks = {("GPL ", pensasks.ROUNDS_SCRIPT): _rounds_like()}
         self.assertIn(("GPL ", pensasks.ROUNDS_SCRIPT), pensasks.script_chunks(chunks, b""))
+
+
+def _steps_like() -> bytes:
+    """The Trustee's rounds' corners as the game has them: a case per step (27h: the step, then
+    where the next case is), steps 1 and 5 none, 6 and 7 never reached."""
+    s = _Script()
+    s.op(0x17, pensasks.STEP)
+    for step, corner in ((0, (111, 42)), (2, (91, 87)), (3, (91, 42)), (4, (91, 87)), (6, (111, 87)),
+                         (7, None), (8, None)):
+        s.op(pensasks.CASE, ("n", step), ("label", f"after {step}"))
+        if corner:
+            s.op(0x16, ("n", corner[0]), pensasks.CORNER[0])
+            s.op(0x16, ("n", corner[1]), pensasks.CORNER[1])
+        else:
+            s.op(0x62, ("n", -89))
+            s.op(0x16, ("n", 1), ("var", 14, 15))
+        s.label(f"after {step}")
+    s.op(0x31)
+    return s.bytes(end=False)
+
+
+class RoundsPausesTests(unittest.TestCase):
+
+    def corners(self, script: bytes) -> dict:
+        """{step: (x, y)} as the script runs it, the step's case followed through its jumps."""
+        ops = gpl.decode(script, b"")
+        at = {o.at: i for i, o in enumerate(ops)}
+        out = {}
+        for step in range(9):
+            i, x, y = at[ops[0].at] + 1, None, None
+            for _ in range(200):
+                o = ops[i]
+                if o.code == pensasks.CASE:
+                    i = i + 1 if o.args[0] == ("n", step) else at[o.args[1][1]]
+                    continue
+                if o.code == 0x16 and o.args[1] == pensasks.CORNER[0]:
+                    x = o.args[0][1]
+                elif o.code == 0x16 and o.args[1] == pensasks.CORNER[1]:
+                    y = o.args[0][1]
+                elif o.code == 0x64:
+                    i = at[o.args[0][1]]
+                    continue
+                elif o.code == 0x31:
+                    break
+                i += 1
+            if x is not None:
+                out[step] = (x, y)
+        return out
+
+    def test_pauses_have_corners(self):
+        """Steps 1 and 5 stay at the corner before them (0's, and 4's), of their own: nothing
+        another script leaves in the shared words sends him off; the others go where they did."""
+        script = _steps_like()
+        before = self.corners(script)
+        self.assertNotIn(1, before)
+        self.assertNotIn(5, before)
+        out = pensasks.rounds_pauses(script, b"")
+        self.assertNotEqual(out, script)
+        after = self.corners(out)
+        self.assertEqual(after[1], before[0])
+        self.assertEqual(after[5], before[4])
+        for step in (0, 2, 3, 4):
+            self.assertEqual(after[step], before[step])
+        self.assertEqual(pensasks.rounds_pauses(out, b"", script), out)  # (done once)
+        self.assertEqual(pensasks.rounds_pauses(_game_like(), b""), _game_like())
+
+    def test_script_chunks(self):
+        chunks = {("GPL ", pensasks.ROUNDS_SCRIPT): _steps_like()}
+        out = pensasks.script_chunks(chunks, b"")[("GPL ", pensasks.ROUNDS_SCRIPT)]
+        self.assertEqual(self.corners(out)[1], (111, 42))
 
 
 if __name__ == "__main__":

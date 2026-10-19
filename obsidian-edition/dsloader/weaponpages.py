@@ -1,18 +1,13 @@
-"""The weapon pages of the character creation panel (weapon specialization; DSCLOG's PROBE_WP_*).
+"""The weapon window (weapon specialization; DSCLOG's PROBE_PK_* and CR_WEAPONS), and the creation
+panel's lettering.
 
-The creation screen's panel shows the psionic disciplines (WIND 3012 in RESOURCE.GFF) or, for a
-cleric, druid or ranger, the clerical spheres (WIND 3013), each a column of rows to mark and a
-button under them that changes between the two. With weapon specialization, a fighter, gladiator
-or ranger also chooses a weapon kind there: four more windows like the spheres', four kinds each
-(specialize.KINDS, in order), their button MORE SPECS, the last's VIEW PSIONICS. The windows a
-warrior is shown (3018 for the disciplines, 3019 for the spheres) have WEAPON SPEC in place of
-VIEW SPHERES or VIEW PSIONICS.
+The window a warrior picks its weapon specs on, after the creation screen's DONE and at a level
+gained (PICKER: the game's psionicists' window, 17501, made bigger), a slot for each kind with a
+weapon's picture; it goes in the Loader's copy of RESOURCE.GFF (icons.write_resources).
 
-The rows' and buttons' pictures (ICON, three frames: as they are, out of use, marked) are made in
-the game's small carved letters, taken from its own rows (CLERIC, P-KINESIS and the rest); the
-game has no X or Q in them, so those two are drawn here in the same hand. They go in the
-Loader's copy of RESOURCE.GFF (icons.write_resources), with the buttons (BUTN, copies of the
-spheres') and the windows.
+The panel's rows and buttons (the kit pages': kitpages.py) are pictures in the game's small carved
+letters, taken from its own rows (CLERIC, P-KINESIS and the rest); the game has no X or Q in them,
+so those two are drawn here in the same hand.
 """
 
 import struct
@@ -22,8 +17,6 @@ from . import gff, specialize
 from .art import decode_frame
 
 DISCIPLINES, SPHERES = 3012, 3013  # the game's windows
-PAGES = (3014, 3015, 3016, 3017)  # the weapon pages
-WARRIOR_DISCIPLINES, WARRIOR_SPHERES = 3018, 3019
 PICKER = 3021  # the level-up window (like the psionicists', 17501)
 PSIONIC_PICKER = 17501
 PICK_FIRST = 0x860  # its slots, 0x860 + kind
@@ -46,8 +39,6 @@ POLEARM, POLEARM_SIZE = 9, 26  # (its picture, 36 pixels square, made smaller)
 # dark top and left, light bottom and right, its lit edge, and a weapon out of use
 SLOT_FACE, SLOT_DARK, SLOT_LIGHT, SLOT_LIT, SLOT_OUT = 19, 17, 24, 31, 22
 MARBLE_LIGHT, MARBLE_DARK = 212, 208  # (the marble's own bevel)
-ROW_FIRST = 0x840  # the 16 kinds' rows, 0x840 + kind (after the dialogue window's and others', 81Ch-833h)
-MORE, BACK, VIEW = 0x850, 0x851, 0x852  # MORE SPECS, VIEW PSIONICS, WEAPON SPEC
 ROW_TEMPLATE, TOGGLE_TEMPLATE = 0x7FA, 0x7FF  # (AIR's row and VIEW PSIONICS's button)
 SPHERE_TOGGLE, DISCIPLINE_TOGGLE = 0x7FF, 0x7FE
 WIND_COUNT, ITEM_AT, ITEM_SIZE = 243, 0x105, 30
@@ -192,46 +183,10 @@ def _items(window: bytes) -> List[Tuple[int, int, int]]:
     return [struct.unpack_from("<IHH", window, ITEM_AT + i * ITEM_SIZE + 8) for i in range(count)]
 
 
-SHORT = {"long sword": "LNG SWORD", "short sword": "SHRT SWORD", "quarterstaff": "QTR STAFF",
-         "staff sling": "STF SLING"}  # (rows the panel is too narrow for)
-
-
-def page_text(kind: int) -> str:
-    name = specialize.KINDS[kind]
-    return SHORT.get(name, name.upper())
-
-
 def chunks(resource: gff.Chunks, objects: Optional[gff.Chunks] = None) -> Dict[Tuple[str, int], bytes]:
-    """For the Loader's copy of RESOURCE.GFF: the weapon pages, the warriors' windows, and their
-    rows' and buttons' pictures and buttons; and the level-up window (its weapons' pictures from
-    OBJECTS, SEGOBJEX.GFF's chunks with the Loader's own items)."""
-    font = glyphs(resource)
-    row_colours = _colours(resource[("ICON", ROW_TEMPLATE)])
-    toggle_colours = _colours(resource[("ICON", TOGGLE_TEMPLATE)])
-    air_button, toggle_button = resource[("BUTN", ROW_TEMPLATE)], resource[("BUTN", TOGGLE_TEMPLATE)]
-    added: Dict[Tuple[str, int], bytes] = {}
-    for kind in range(len(specialize.KINDS)):
-        cid = ROW_FIRST + kind
-        added[("ICON", cid)] = picture(font, page_text(kind), ROW_PAD, row_colours)
-        added[("BUTN", cid)] = row_button(air_button, cid, font, page_text(kind))
-    for cid, text in ((MORE, "MORE SPECS"), (BACK, "VIEW PSIONICS"), (VIEW, "WEAPON SPEC")):
-        added[("ICON", cid)] = picture(font, text, 0, toggle_colours)
-        added[("BUTN", cid)] = _button(toggle_button, TOGGLE_TEMPLATE, cid)
-    spheres = resource[("WIND", SPHERES)]
-    sphere_items = _items(spheres)  # (four rows, then the button)
-    rows_at = [(x, y) for _, x, y in sphere_items[:4]]
-    toggle_at = sphere_items[4][1:]
-    for page, wid in enumerate(PAGES):
-        items = [(ROW_FIRST + page * specialize.PAGE_SIZE + r, x, y) for r, (x, y) in enumerate(rows_at)]
-        items.append((MORE if page < len(PAGES) - 1 else BACK, *toggle_at))
-        added[("WIND", wid)] = _window(spheres, wid, items)
-    added[("WIND", WARRIOR_SPHERES)] = _window(
-        spheres, WARRIOR_SPHERES, [(VIEW if c == SPHERE_TOGGLE else c, x, y) for c, x, y in sphere_items])
-    disciplines = resource[("WIND", DISCIPLINES)]
-    added[("WIND", WARRIOR_DISCIPLINES)] = _window(
-        disciplines, WARRIOR_DISCIPLINES, [(VIEW if c == DISCIPLINE_TOGGLE else c, x, y) for c, x, y in _items(disciplines)])
-    added.update(picker(resource, objects or {}, air_button))
-    return added
+    """For the Loader's copy of RESOURCE.GFF: the weapon window (its weapons' pictures from OBJECTS,
+    SEGOBJEX.GFF's chunks with the Loader's own items)."""
+    return picker(resource, objects or {}, resource[("BUTN", ROW_TEMPLATE)])
 
 
 def _trim(rows: Rows) -> Rows:

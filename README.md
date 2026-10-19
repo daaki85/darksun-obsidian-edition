@@ -10,49 +10,24 @@ name.)
 
 ![The arena in round 10 of a fight: Cermak's turn, with the combat log over the map's lower right showing a Slig's hits on Gerakis and the new round](obsidian-edition/docs/combat-log.png)
 
-## Contents
+## Documentation
 
-- [What it does](#what-it-does)
-- [Getting started](#getting-started)
-- [What's new](#whats-new)
+- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without spoilers, a section for each class (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html))
+- [The full documentation](obsidian-edition/README.md): everything in detail, from installing to every item
+- [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
-- [Changelog](CHANGELOG.md)
-- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules and tables, without spoilers
-- [The full documentation](obsidian-edition/README.md): everything in detail
+- [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with its icon and where it is (spoilers)
+- [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original game's own rules, from its code
+- [Changelog](CHANGELOG.md) and [development notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
 
 ## What it does
 
-- **Shows what the game keeps hidden.** Every roll is logged as it happens,
-  with what it needed and where each bonus came from
-  ([the dice log](obsidian-edition/README.md#the-dice-log)). The game's own
-  screens gain THAC0, saves, thief skills and spell slots, a combat log shows
-  with **L**, and the Look box tells you what can hurt a monster
-  ([In the game](obsidian-edition/README.md#in-the-game)).
-- **Brings the rules closer to AD&D:** class restrictions, AD&D's class
-  tables, INT's limits on learning spells, saving throws and multiclass hit
-  points as the books have them
-  ([Rule changes](obsidian-edition/README.md#rule-changes)).
-- **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and thirteen for races' pairs of classes), levels up to
-  10, STORE and RECALL for a creation roll, and fuller starting gear
-  ([More character customization](obsidian-edition/README.md#more-character-customization)).
-- **Expanded play:** thieves hide in shadows to backstab and pick pockets, the
-  leader's CHA lowers shop prices, and merchants sell back the magical items
-  sold to them
-  ([Expanded features](obsidian-edition/README.md#expanded-features)).
-- **More of Athas:** new weapons, shields and magic items, six wizard spells,
-  Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
-  Semyon's story and a use for the cooked vulture
-  ([New content](obsidian-edition/README.md#new-content)); on the map, the
-  party wears its gear, figures cast shadows and raise dust, and elves and
-  half-elves look their own ([Graphics](obsidian-edition/README.md#graphics)).
-- **Quality of life:** Tab and Enter to choose and attack an enemy, a view
-  that stays put in fights, dragging the map with the mouse wheel held down
-  ([Controls](obsidian-edition/README.md#controls)), 40 saves kept under their
-  names too, 29 saved characters
-  ([More saves and characters](obsidian-edition/README.md#more-saves-and-characters)),
-  a game speed setting, crash reports, and no manual check
-  ([No manual check](obsidian-edition/README.md#no-manual-check)).
+It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd
+Edition, adds kits, weapon specialization, spells, items and people to Athas,
+dresses the party in what they wear, and fixes the game's bugs. Every rule
+change and addition has a switch. The full list is in
+[What it does](obsidian-edition/README.md#what-it-does), and every change from
+the original game in the [patch notes](PATCH-NOTES.md).
 
 The game's own files are never modified: the Loader runs a patched copy of the
 game from its own folder. It writes to the game folder only your saves (pages
@@ -83,22 +58,48 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.4.0** is out ([release notes](release-notes/v2.4.0.md)):
-thirteen multiclass kits, features of their own for the game's own party,
-thieves in light armour, the combat log shown with **L** and fixed (2.3.0's
-could make fights quit or freeze), a steady view in fights, and crash and
-freeze reports that say why. 2.3.0 before it
-([release notes](release-notes/v2.3.0.md)) brought the combat log in the
-game, three more wizard spells, two magic shields, defilers' scrolls, buying
-back magical items, saves kept under their names and fuller starting gear.
+**Obsidian Edition 2.5.0** is out ([release notes](release-notes/v2.5.0.md)):
+a Pick Pockets button for thieves, four more magic weapons, thri-kreen claws
+that cut, weapon specs picked after DONE, item reports, six of the game's own
+spell bugs fixed, and an arena that always starts. 2.4.0 before it
+([release notes](release-notes/v2.4.0.md)) brought thirteen multiclass kits,
+features of their own for the game's own party, thieves in light armour, the
+combat log shown with **L**, a steady view in fights, and crash and freeze
+reports.
 
-Earlier changes, pull request by pull request, are in
-[`CHANGELOG.md`](CHANGELOG.md). Releases have notes of their own:
-[2.4.0](release-notes/v2.4.0.md) (pull requests #48 and #49),
-[2.3.0](release-notes/v2.3.0.md) (#44 to #46),
-[2.2.1](release-notes/v2.2.1.md) (#43), [2.2.0](release-notes/v2.2.0.md) (#39
-to #42), [2.1.1](release-notes/v2.1.1.md) (#37),
-[2.1.0](release-notes/v2.1.0.md) (#35), [2.0.0](release-notes/v2.0.0.md) (#31
-and #32), [1.2.0](release-notes/v1.2.0.md) (#19 to #29),
-[1.1.0](release-notes/v1.1.0.md) (#14 to #18) and
-[1.0.0](release-notes/v1.0.0.md) (#1 to #13).
+Every release has notes of its own: [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
+have every change from the original game in one page, whatever the version.
+
+## About
+
+Obsidian Edition is a fan project, not affiliated with or endorsed by the
+owners of Dark Sun or Dungeons & Dragons, whose names and trademarks are
+theirs. It includes none of the game's files: you need your own copy of the
+GOG release. Screenshots and item pictures in these pages are taken from the
+game to show what the mod does.
+
+Obsidian Edition's own code and documentation are free software
+under the [GNU General Public License v3.0](LICENSE). That doesn't extend to
+the game's own art shown in these pages, which isn't the project's to license.
+
+Problems and ideas: [the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues).
+
+## Credits
+
+- **Code and documentation:** written by Claude, Anthropic's AI model, working
+  in Claude Code: the patched game and its helper, the Loader, the tests and
+  every page here. The project's commits name it as co-author.
+- **Direction and testing:** daaki85, who asked for the features, chose
+  between the options and played the game to find what was wrong.
+- **The game:** Dark Sun: Shattered Lands (1993), by Strategic Simulations,
+  Inc., under licence from TSR, Inc.; Dark Sun and Dungeons & Dragons are now
+  Wizards of the Coast's. The Dark Sun setting was created by Troy Denning and
+  Timothy B. Brown. GOG keeps the game on sale, and in DOSBox.
+- **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities* and
+  *The Complete Ranger's Handbook*, where the mod's rule changes and the
+  Seeker's and Justifier's tables come from; Baldur's Gate, for keeping a
+  creation roll (STORE and RECALL) and Charisma's shop prices.
+- **Tools:** [DOSBox](https://www.dosbox.com/), [NASM](https://www.nasm.us/),
+  [Python](https://www.python.org/) and [Unicorn](https://www.unicorn-engine.org/)
+  (the CPU emulator the helper's tests run in); the web pages' fonts, Marcellus
+  SC, Alegreya Sans and IBM Plex Mono, from Google Fonts.

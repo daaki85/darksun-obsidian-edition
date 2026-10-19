@@ -24,6 +24,17 @@ def drawn(before, after):
 
 
 class WeaponTests(unittest.TestCase):
+    def test_every_weapon_has_a_shape(self):
+        """Every weapon type (the game's and the Loader's, as specialization sorts them) is drawn
+        in the hand: a new warrior's bone short sword was drawn as nothing."""
+        from dsloader import specialize
+        missing = sorted(t for t in specialize.KIND_OF_TYPE if t not in sg.WEAPON_SHAPES)
+        self.assertEqual(missing, [])
+        before = rows()
+        from dsloader import game
+        new = drawn(before, sg.armed(before, 2095, 0, True, {"right": (game.BONE_SHORT_SWORD_TYPE, METAL)}, PAD))
+        self.assertTrue(new)
+
     def test_sword_in_the_right_hand(self):
         """In a fight, facing the viewer: from the hand, in metal."""
         before = rows()

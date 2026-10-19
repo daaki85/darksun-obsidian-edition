@@ -138,3 +138,59 @@ class GamePatchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+try:
+    from unicorn import Uc, UC_ARCH_X86, UC_HOOK_CODE, UC_MODE_16
+    from unicorn import x86_const as r
+except ImportError:
+    Uc = None
+
+
+@unittest.skipIf(Uc is None, "unicorn is not installed")
+class PowerEndTests(unittest.TestCase):
+    # The game's loop ending a caster's maintained power (5CEECh-5CF34h) as patched: the
+    # power_end_* replacements at their places, the game's own bytes between them.
+    LOOP = 0x5CEEC
+    CODE = bytes.fromhex("8bde6bdb0ab890038ec0268b870a013b46fe752a3b36241e90b890037d202639bf0801"
+                         "751926ffb70d01b8900326ffb70601909090909a4800980559594e463b36241e7cbb5f5ec9cb")
+
+    def test_patches_in_the_loop(self):
+        for p in gamepatch.PATCHES:
+            if p.name.startswith("power_end_"):
+                at = p.offset - self.LOOP
+                self.assertEqual(self.CODE[at:at + len(p.replacement)], p.replacement, p.name)
+
+    def test_each_record_removed_by_its_owner(self):
+        """Every record of the power (spell, +4) cast by DI (+2) removed by its own owner (+0) and
+        handle (+7), records after a removed one moving down and none skipped."""
+        import struct
+        es, ds, cs, ss = 0x390, 0x2000, 0x1000, 0x3000
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        records = [(1, 5, 30, 12, 7), (2, 5, 30, 12, 8), (3, 6, 30, 12, 9), (4, 5, 31, 12, 10),
+                   (0, 5, 30, 12, 11)]  # (owner, caster, spell, id, handle)
+        def store():
+            for i, rec in enumerate(records):
+                mu.mem_write(es * 16 + 0x106 + i * 10, struct.pack("<hhhBBBB", *rec, 0, 0))
+            mu.mem_write(ds * 16 + 0x1E24, struct.pack("<H", len(records)))
+        store()
+        removed = []
+        def remove(uc, address, size, data):  # (598:48h: owner, handle on the stack)
+            if address != 0x598 * 16 + 0x48:
+                return
+            sp = uc.reg_read(r.UC_X86_REG_SP)
+            owner, handle = struct.unpack("<HH", bytes(uc.mem_read(ss * 16 + sp + 4, 4)))
+            hit = next(rec for rec in records if rec[0] == owner and rec[4] == handle & 0xFF)
+            removed.append(hit)
+            records.remove(hit)
+            store()
+        mu.hook_add(UC_HOOK_CODE, remove)
+        mu.mem_write(0x598 * 16 + 0x48, b"\xcb")
+        mu.mem_write(cs * 16 + 0x100, self.CODE[:-4] + b"\xf4")  # (a HLT for the "pop di")
+        mu.mem_write(ss * 16 + 0x7FE, struct.pack("<H", 30))  # [BP-2]: the spell
+        for name, value in dict(cs=cs, ds=ds, ss=ss, sp=0x7F0, bp=0x800, si=0, di=5).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(cs * 16 + 0x100, 0, count=2000)
+        self.assertEqual(removed, [(1, 5, 30, 12, 7), (2, 5, 30, 12, 8), (0, 5, 30, 12, 11)])
+        self.assertEqual(records, [(3, 6, 30, 12, 9), (4, 5, 31, 12, 10)])

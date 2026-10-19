@@ -38,8 +38,8 @@ class WorldGearTests(unittest.TestCase):
     def test_merchants(self):
         """The Weapon Merchant stocks every new plain weapon (the great axes in every material, a
         warrior's starting one being bone; every Wild Mul carries a bone one too), Jark all but the obsidian axe and the metal ones;
-        Kel a pair of Thieves' Tools, Mirlon a set; the kinds of people carry theirs each; no one the party
-        wouldn't fight has one (Krikor, Uskuye, Lt. Kwerin)."""
+        the kinds of people carry theirs each; no one the party wouldn't fight has one (Krikor, Uskuye,
+        Lt. Kwerin), and no one Thieves' Tools (a thief's Pick Pockets button instead: pickpocket.py)."""
         from dsloader import tools
         sold = [icons.which(r) for r in gift("Weapon Merchant").items]
         self.assertEqual(sold, ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Axe", "Obsidian Mace",
@@ -51,11 +51,8 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual([icons.which(r) for r in gift("Jark").items],
                          ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Mace", "Bone Great Axe",
                           "Obsidian Great Axe", "Bone Dagger"])
-        kel = [g for g in worldgear.GIFTS if g.name == "Kel"][0]
-        self.assertEqual(len(kel.items), 2)
-        self.assertTrue(all(tools.is_tools(r) and struct.unpack_from("<H", r, 6)[0] == 30 for r in kel.items))
-        mirlon = gift("Mirlon")  # (a set on him in the slave pens, his object of his own: no thief starts with one)
-        self.assertEqual((mirlon.objects, mirlon.region, [tools.is_tools(r) for r in mirlon.items]), ((88,), 0x29, [True]))
+        self.assertFalse([g.name for g in worldgear.GIFTS + worldgear.MAGIC if any(tools.is_tools(r) for r in g.items)])
+        self.assertNotIn("Mirlon", {g.name for g in worldgear.GIFTS})
         self.assertFalse({"Krikor", "Uskuye", "Kwerin"} & {g.name for g in worldgear.GIFTS + worldgear.MAGIC})
         self.assertEqual([gift(n).objects for n in ("Tari", "Renegade", "Wild Mul")], [(60, 243), (289,), (290,)])
 
@@ -113,7 +110,7 @@ class WorldGearTests(unittest.TestCase):
         """The Warden's Plate: plate +1 of AC 3, 2, 2 (metal armour to the class rules) and the
         game's metal helm +1; the chest Resist Fire, the helm Cloak of Bravery, the arms and legs
         none; the helm on Dagolar, the arms in the Lower Castle's chest with Dark Flame, the legs
-        in the Gemfields' chest, the chest on Balkazar."""
+        in the Wagon Train's chest, the chest on Balkazar."""
         chest, arms, legs, helm = worldgear.WARDENS_PLATE
         for item, type_, slot, ac, spell, name in (
                 (chest, game.PLATE_CHEST_TYPE, 1, 3, 87, "Warden's Chest"),
@@ -132,7 +129,7 @@ class WorldGearTests(unittest.TestCase):
                 self.assertTrue(restrict.is_armour(typ))
         where = {g.items[0]: (g.name, g.objects) for g in worldgear.MAGIC if set(g.items) & set(worldgear.WARDENS_PLATE)}
         self.assertEqual(where, {helm: ("Dagolar", (26,)), arms: ("Treasure chest", (1360,)),
-                                 legs: ("Gemfields chest", (1065,)), chest: ("Balkazar", (14,))})
+                                 legs: ("Wagon Train chest", (1065,)), chest: ("Balkazar", (14,))})
 
     def test_elvenkind(self):
         """The Cloak and Boots of Elvenkind: their own types (the Cloak's, the Boots'), names and
@@ -309,7 +306,7 @@ class DataTests(unittest.TestCase):
         """Into a chest with an item of its own, and to a person with none: after theirs, each
         with its type and name, in no slot and no list."""
         from dsloader import dataitems as d
-        gifts = [worldgear.Gift("Gemfields chest", (worldgear.WARDENS_PLATE[2],), (1065,)),
+        gifts = [worldgear.Gift("Wagon Train chest", (worldgear.WARDENS_PLATE[2],), (1065,)),
                  worldgear.Gift("Dagolar", (worldgear.bracers(2), worldgear.WARDENS_PLATE[3]), (26,))]
         out = worldgear.object_chunks(self.chunks, gifts)
         chest = d.items_of(out[("RDFF", 1065)])
@@ -366,7 +363,7 @@ class DataTests(unittest.TestCase):
             self.assertGreater(n, 2551)
             self.assertNotIn(n, pictures)
         self.assertEqual(len(set(clones)), len(clones))
-        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x08, 0x1C, 0x1E, 0x28, 0x29])
+        self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x06, 0x08, 0x1C, 0x1E, 0x28, 0x29])
 
     def test_regions_opened(self):
         """Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
