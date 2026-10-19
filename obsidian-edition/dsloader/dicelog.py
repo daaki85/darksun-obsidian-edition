@@ -344,6 +344,16 @@ class AcDetail(NamedTuple):
     total: int
 
 
+def _new_fight(log) -> None:
+    """A new fight for dice log LOG, by the clock (_round_number) or the fight flag (_kits_due): the
+    rounds counted from 0 again, and the game hands its creature records to new monsters, so an AC
+    worked out for one in an earlier fight isn't this one's (the party's stay theirs)."""
+    log._round = 0
+    for remembered in (log.last_ac, log.ac_detail):
+        for index in [i for i in remembered if i >= game.PARTY_SIZE]:
+            del remembered[index]
+
+
 class DiceLog:
     def __init__(self, guest: GuestMemory, record_everything: bool = False):
         self.guest = guest
@@ -1037,15 +1047,19 @@ class DiceLog:
                 return out  # no names for them yet: none given
             still = self._items_still()
             if still:  # (the item lists changed only while the game leaves them be)
-                if self.rules & game.RULE_SPECIALIZE and not self._weapons_asked():  # (new characters' weapon kinds and starting weapon:
+                # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
+                # specs decide its weapon, and the steps after build on that weapon, in this order.
+                new_ok = not self._weapons_asked()
+                if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
                     out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
-                if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
+                if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
                     out += weaponchoice.class_gear(self.game)
                 if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
-                    out += weaponchoice.kit_gear(self.game)  #   Healer's cosmos spells, one made by an earlier version)
+                    if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
+                        out += weaponchoice.kit_gear(self.game)
                     for member in range(game.PARTY_SIZE):
                         out += kits.cosmos_spells(self.game, member)
-                if self.starting_gear:  # (new characters' starting gear filled out)
+                if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                     out += startgear.fill(self.game)
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
                 if not self.game.in_combat():  # (items an earlier version put in the wrong list)
@@ -1634,15 +1648,11 @@ class DiceLog:
         if now is None:
             return 0
         if self._round_time is None or now - self._round_time > FIGHT_GAP or now < self._round_time:  # (or a game loaded)
-            self._round = 0
-            # a new fight: the game hands its creature records to new monsters, so an AC worked
-            # out for one in an earlier fight isn't this one's (the party's stay theirs)
-            for remembered in (self.last_ac, self.ac_detail):
-                for index in [i for i in remembered if i >= game.PARTY_SIZE]:
-                    del remembered[index]
+            _new_fight(self)
         self._round_time = now
         self._round += 1
         return self._round
+
 
     def initiative_lines(self) -> List[str]:
         """The round's order, from the rolls collected since the round began."""
@@ -1689,13 +1699,16 @@ class DiceLog:
         rows.sort(key=lambda r: (-r[0], -r[1]))
         scores = Counter(r[0] for r in rows)
         number = self._round_number()
+        if self._kits_due and number != 1:  # (a new fight by the fight flag, the clock not yet past FIGHT_GAP:
+            _new_fight(self)                #   the arena's next wave) everything a new fight resets
+            self._round = number = 1
         self.round_number = number
-        start, self._kits_due = number == 1 or self._kits_due, False  # (a new fight, or one after a fight's end)
+        start, self._kits_due = number == 1, False  # (a new fight, or one after a fight's end)
         if start:
             self._fight_seen, self._out_of_fight = False, None
         danced = self._dances.round(g, self.tsr_hdr, number, start=start)
         danced += self._wild.round(g, self.tsr_hdr, number, start=start)
-        if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
+        if start and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
             self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()

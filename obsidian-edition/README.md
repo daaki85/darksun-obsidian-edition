@@ -335,10 +335,11 @@ The ordinary ways for an item to go pass in silence, with no report and no
 line in the dice log: an item that still exists outside the party (dropped,
 put in a chest, given, sold or stolen), one used up or taken for a quest
 (fruit, quest items, arrows, scrolls), one a spell made (Shillelagh, Flame
-Blade, Spiritual Hammer), one sold (the party's money went up as it went),
+Blade, Spiritual Hammer), one sold (the party's money went up by what a shop pays for it as it went),
 and a weapon that broke (a Broken Weapon in its place). Nor is an item handed
 to another member news, even where the game gives it a new record, or one
-moved and back within the two seconds, or anything after a game is loaded.
+moved and back within the two seconds, or anything after a game is loaded (even a later save of the
+same party: the clock moved on, or most of the items changed at once).
 
 ### If the game freezes
 

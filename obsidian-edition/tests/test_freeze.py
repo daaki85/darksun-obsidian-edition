@@ -38,6 +38,13 @@ class FreezeTests(unittest.TestCase):
         self.assertEqual([(t.cs, t.ip) for t in found], notes[-freeze.TICK_SLOTS:])
         self.assertEqual(found[-1].sp, 0x0F00 + freeze.TICK_SLOTS - 1)
 
+    def test_ticks_after_the_count_wraps(self):
+        """The count past 65535 starts again at 0: every slot written, all 32 kept, the newest last."""
+        notes = [(0x2000, 0x100 + k) for k in range(freeze.TICK_SLOTS)]
+        mem, hdr = memory(notes, seq=3)  # (65536 + 3 taken)
+        found = freeze.ticks(lambda a, n: bytes(mem[a:a + n]), hdr)
+        self.assertEqual([(t.cs, t.ip) for t in found], notes)
+
     def test_places(self):
         load = DS - game.DGROUP
         self.assertEqual(freeze.place(TSR_SEG, 0x1234, TSR_SEG, load), "DSCLOG +1234")

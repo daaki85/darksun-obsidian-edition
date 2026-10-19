@@ -32,6 +32,28 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   the guide and the patch notes say so; tests for the water cleric's DUAL menu
   and for `cosmos_spells`.
 
+**Fixed** (a code review of the whole Loader)
+- **A new character's gear fitted while the weapon window was still up**: the class restrictions,
+  the kit's gear and the fuller starting gear now wait for it, as the starting weapon did
+  (`_weapons_asked`); a slow pick could leave a Titan Mind without its weapon, or a Ravager's two
+  hands holding different weapons.
+- **The arena's next wave** (a new fight by the fight flag, the clock not yet past `FIGHT_GAP`):
+  the Poisoner's poison ready again, the rounds counted from 1, and the last wave's monsters' ACs
+  forgotten, as the dances and Wild Fighting already were (`_new_fight`).
+- **Pick Pockets could lose an item** taken from someone when the thief's backpack list couldn't
+  be made: the list is made first now.
+- **Item reports**: a later save of the same party loaded no longer reports the items it doesn't
+  have (the clock moving on more than `CLOCK_JUMP`, or most items gone at once, count as a load);
+  money is taken for a sale only when it rose by what a shop pays for the item (its price, or
+  60%), so a purse picked or a reward no longer hides a vanish; and an item handed over is
+  remembered for 10 seconds (`ARRIVED_KEEP`), so a busy Loader doesn't report it.
+- **The freeze report after 2.3 hours of play** listed only a few places once DSCLOG's count of
+  them wrapped past 65535; all 32 now.
+- **The combat log between fights** kept a roll's detail lines arriving in a later batch than
+  the line they belong to when that line was left out.
+- **`Play Dark Sun (in-game rolls).bat`** said only "Something went wrong" when a crash report
+  couldn't be written; it says why now, with how DOSBox closed.
+
 **Documentation**
 - **Draft release notes for 2.6.0** (`release-notes/v2.6.0.md`) and a
   "Coming in 2.6.0" line on the front page; How the game works notes that

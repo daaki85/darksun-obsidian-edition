@@ -15,12 +15,13 @@ from dsloader import game, itemwatch
 from dsloader.game import ItemSeen
 
 
-def item(index, member, label, slot="chest", typ=7, plus=0):
+def item(index, member, label, slot="chest", typ=7, plus=0, value=0):
     rec = bytearray(game.ITEM_SIZE)
     struct.pack_into("<H", rec, game.ITEM_TYPE, typ)
     struct.pack_into("<H", rec, game.ITEM_NAME, 100 + typ)
     rec[game.ITEM_SLOT] = game.EQUIP_SLOTS.index(slot) if slot else 255
     struct.pack_into("b", rec, game.ITEM_PLUS, plus)
+    struct.pack_into("<H", rec, itemwatch.ITEM_VALUE, value)
     return ItemSeen(index, member, ("Garyn", "Nira", "Dinos", "Kalzith")[member], slot, label, typ,
                     bytes(rec), bytes(game.ITEM_TYPE_SIZE))
 
@@ -64,7 +65,7 @@ class ItemWatchTest(unittest.TestCase):
         self.folder = tempfile.mkdtemp()
         self.watch = itemwatch.ItemWatch(folder=self.folder)
         self.armour = item(12, 0, "Inix Hide Chest Armor")
-        self.sword = item(13, 0, "Bone Long Sword", slot="right hand", typ=9)
+        self.sword = item(13, 0, "Bone Long Sword", slot="right hand", typ=9, value=100)
         self.data = FakeGame([self.armour, self.sword])
 
     def run_for(self, seconds, step=1.0, start=0.0):
@@ -124,7 +125,7 @@ class ItemWatchTest(unittest.TestCase):
         self.assertIsNone(itemwatch.ordinary_loss(spear, empty, False, False))
         self.data.items = [self.armour, broken]
         self.data.records[13] = bytes(game.ITEM_SIZE)
-        self.money = 160                           # (sold: the money went up as it went)
+        self.money = 160                           # (sold: the money went up as it went, 60% of its 100)
         out, _ = self.run_for(5, start=t)
         self.assertEqual(out, [])
         self.assertIn("sold", itemwatch.ordinary_loss(self.sword, empty, True, False))
@@ -180,3 +181,49 @@ class ItemWatchTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LoadTest(ItemWatchTest):
+    """A game loaded with the same party: no reports for what the save doesn't have."""
+
+    def test_clock_on_too_far(self):
+        self.run_for(2)
+        self.data.game_time = lambda: 600 + itemwatch.CLOCK_JUMP + 1   # (a later save)
+        self.data.items = [self.sword]
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+        self.assertEqual(self.watch.reports, [])
+
+    def test_most_items_gone_at_once(self):
+        extra = [item(20 + n, 1, f"Thing {n}", slot=None, typ=40 + n) for n in range(3)]
+        self.data.items = [self.armour, self.sword] + extra
+        self.run_for(2)
+        self.data.items = [self.sword]             # (four of five gone at one look)
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+        self.assertEqual(self.watch.reports, [])
+
+    def test_one_gone_still_reported(self):
+        extra = [item(20 + n, 1, f"Thing {n}", slot=None, typ=40 + n) for n in range(3)]
+        self.data.items = [self.armour, self.sword] + extra
+        self.run_for(2)
+        self.data.items = [self.sword] + extra
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Inix Hide" in line for line in out))
+
+
+class MoneyTest(ItemWatchTest):
+    def test_other_money_hides_nothing(self):
+        """Money that isn't the item's sale (a purse picked, a quest's reward) is no sale."""
+        self.data.money = lambda: self.money
+        self.money = 100
+        self.run_for(2)
+        self.data.items = [self.armour]
+        self.data.records[13] = bytes(game.ITEM_SIZE)
+        self.money = 107                           # (7 ceramic pieces from a purse)
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Bone Long Sword" in line for line in out))
+
+    def test_full_price_sale(self):
+        """Without the CHA rule a shop pays the whole price."""
+        self.assertEqual(itemwatch.sale_prices(self.sword.record), {100, 60})

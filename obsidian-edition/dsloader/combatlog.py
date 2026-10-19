@@ -161,11 +161,12 @@ class Log:
     def __init__(self):
         self.lines: Deque[Tuple[str, str]] = deque(maxlen=HISTORY)  # (kind, the log's line)
         self.version = 0  # counts changes
+        self._keep = True  # (out of a fight: whether the last line not indented was kept, its lines under it with it)
 
     def add(self, lines: Sequence[str], rolls_only: bool = False) -> None:
         """LINES into the log; ROLLS_ONLY (out of a fight), only those with a roll in them (a
         thief's skill, a save, a scroll learned) and the lines under them."""
-        keep = True
+        keep = self._keep  # (lines under a line in an earlier batch go with it)
         for line in lines:
             if not line.strip() or line.startswith(NOT_THE_FIGHT):
                 continue
@@ -176,6 +177,7 @@ class Log:
                     continue
             self.lines.append((line_kind(line), line))
             self.version += 1
+        self._keep = keep if rolls_only else True
 
     def at(self, level: str, names: Dict[str, str]) -> List[Line]:
         """The lines at a level, `names` the colours' keys of the names to know (whose line it is)."""

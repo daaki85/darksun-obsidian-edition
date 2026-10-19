@@ -261,6 +261,8 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
             list_no, item, before = random.choice(loot)
             data = it.item(item)
             name = gd.item_label(data, gd.item_type_record(data))
+            if party_list(gd, it, leader, cell) is None:  # (the thief's backpack list first: the item is
+                return Attempt(f"{thief} can't take anything now.", lines)  #   never left in no list)
             _take(gd, it, who, list_no, item, before)
             if not give(gd, ring.Items(gd), leader, item, cell):
                 return Attempt(f"{thief} can't take anything now.", lines)

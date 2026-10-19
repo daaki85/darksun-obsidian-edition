@@ -33,6 +33,12 @@ from .game import ItemSeen
 
 CHECK_INTERVAL = 1.0   # seconds between snapshots
 GONE_WAIT = 2.0        # seconds an item must be missing before it counts as gone
+# A game loaded with the same party, from later on: the clock moved on past what play does in a
+# second (game seconds; a rest jumps hours, but takes no items), or most of the items gone at once
+CLOCK_JUMP = 600
+ARRIVED_KEEP = 10.0    # seconds an item new to the party is kept in mind, to match a hand-over (the
+                       # Loader busy, the vanish may be confirmed well after the item reappeared)
+MOST_GONE = 3          # (at least this many, and over half the party's items)
 DICE_LINES, TALK_LINES = 300, 80   # context kept for the report, as the crash report keeps it
 # item types whose going is ordinary: fruit and quest items (60), arrows (62), scrolls (96),
 # psionic scrolls (99) and grain (110), used up or taken by scripts; and the items spells make,
@@ -50,7 +56,7 @@ class ItemWatch:
         self._next = 0.0
         self._clock: Optional[int] = None  # (the game's clock at the last look)
         self._money: Optional[int] = None  # (the party's money at the last look)
-        self._sold_at: Optional[float] = None  # (when the money last went up)
+        self._gains: List[Tuple[float, int]] = []  # (each rise in the party's money: when, by how much)
         self._broke_at: Dict[int, float] = {}  # (member: when a Broken Weapon last came to them)
         self._arrived: Dict[Tuple[int, ...], float] = {}  # (an item new to the party: when)
         self.dice: Deque[str] = collections.deque(maxlen=DICE_LINES)
@@ -61,7 +67,8 @@ class ItemWatch:
         """Forget everything (a game was loaded: the party's items are a new set)."""
         self._seen.clear()
         self._missing.clear()
-        self._clock = self._money = self._sold_at = None
+        self._clock = self._money = None
+        self._gains.clear()
         self._broke_at.clear()
         self._arrived.clear()
 
@@ -85,10 +92,13 @@ class ItemWatch:
             return []
         current = {i.index: i for i in items}
         clock, money = _read(data.game_time), _read(getattr(data, "money", None))
-        if clock is not None and self._clock is not None and clock < self._clock:
-            self.reset()                  # (the clock gone back: a game loaded)
+        if clock is not None and self._clock is not None and not 0 <= clock - self._clock <= CLOCK_JUMP:
+            self.reset()                  # (the clock gone back, or on further than play takes it: a game loaded)
+        gone = [index for index in self._seen if index not in current]
+        if len(gone) >= MOST_GONE and 2 * len(gone) > len(self._seen):
+            self.reset()                  # (most of the items gone at once: a game loaded)
         if money is not None and self._money is not None and money > self._money:
-            self._sold_at = now
+            self._gains.append((now, money - self._money))
         self._clock, self._money = clock, money
         if not self._seen:                # the first look, or after a reset
             self._seen = current
@@ -100,9 +110,10 @@ class ItemWatch:
                     self._broke_at[i.member] = now
         # (what happened as an item went: within the wait it took to count as gone)
         recent = lambda at: at is not None and now - at <= GONE_WAIT + CHECK_INTERVAL
-        sold = recent(self._sold_at)
+        self._gains = [(at, gain) for at, gain in self._gains if recent(at)]
+        gains = {gain for _, gain in self._gains}
         broke = {m for m, at in self._broke_at.items() if recent(at)}
-        self._arrived = {k: at for k, at in self._arrived.items() if recent(at)}
+        self._arrived = {k: at for k, at in self._arrived.items() if now - at <= ARRIVED_KEEP}
         out: List[str] = []
         for index, was in list(self._seen.items()):
             if index in current:
@@ -114,7 +125,7 @@ class ItemWatch:
             del self._missing[index]
             if _same(was.record) in self._arrived:
                 continue              # (handed over: the same item with another member, a new number)
-            out += self._gone(data, was, current, now, settings, sold, was.member in broke)
+            out += self._gone(data, was, current, now, settings, bool(gains & sale_prices(was.record)), was.member in broke)
         # what is there now is what the next look compares with (the gone ones are reported,
         # the ones still inside GONE_WAIT stay remembered through _missing)
         kept = {i: was for i, (was, _) in self._missing.items()}
@@ -139,6 +150,19 @@ class ItemWatch:
             path = f"(could not be saved: {e})"
         self.reports.append(path)
         return [f"{was.label} is gone from {where}: {fate}. An item report is saved in {path}."]
+
+
+ITEM_VALUE = 0x06  # an item's price, in its record (npcitems.ITEM_VALUE)
+
+
+def sale_prices(record: bytes) -> set:
+    """What the party's money goes up by when a shop buys the item: its price (the game's), or
+    60% of it (the CHA rule's: prices.sell_price)."""
+    from . import prices
+    if len(record) < ITEM_VALUE + 2:
+        return set()
+    value = struct.unpack_from("<H", record, ITEM_VALUE)[0]
+    return {value, prices.sell_price(value)} - {0}
 
 
 def _same(record: bytes) -> Tuple[int, ...]:
