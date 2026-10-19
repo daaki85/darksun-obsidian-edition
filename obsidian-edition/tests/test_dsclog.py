@@ -4825,7 +4825,8 @@ class KitTests(unittest.TestCase):
         at = re.search(rb"\x66\x60\x3c" + bytes((kits.HEALER,)) + rb"\x75", self.image).start()
         cases = [((11, 9), (1, 4), 0b01), ((11, 9), (1, 4), 0b10), ((10, 9), (1, 4), 0b11), ((1, 10), (1, 4), 0b10),
                  ((17, 10), (1, 4), 0b10), ((17, 12, 11), (1, 3, 4), 0b0100), ((12, 17), (1, 4), 0b11),
-                 ((5, 10), (1, 4), 0b11), ((13, 1), (1, 4), 0), ((9, 17, 2), (1, 2, 3), 0b0011)]
+                 ((5, 10), (1, 4), 0b11), ((13, 1), (1, 4), 0), ((9, 17, 2), (1, 2, 3), 0b0011),
+                 ((4, 10), (1, 4), 0b10), ((4, 9), (1, 4), 0)]  # (a water cleric's new kit: the Healer's allowed)
         for classes, levels, kit in cases:
             sheet = self.dual_sheet(classes, levels, kit, member=0)
             others = [c for c in classes[1:]]
@@ -4842,18 +4843,19 @@ class KitTests(unittest.TestCase):
                     self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1),
                                      kits.dual_kit_banned(kid, others, kids, classes[0]))
                     self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), kid)
-        self.assertTrue(kits.dual_kit_banned(kits.SHINOBI, [11], []))
-        self.assertTrue(kits.dual_kit_banned(kits.STALKER, [17], []))  # (a thief turned ranger: no Stalker)
-        self.assertFalse(kits.dual_kit_banned(kits.SEEKER, [17], []))
-        self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.TWIN_BLADE]))
-        self.assertFalse(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION]))
-        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [9], [kits.RAVAGER]))  # (either way round)
-        self.assertTrue(kits.dual_kit_banned(kits.RAVAGER, [5], [kits.GROVE_WARDEN]))
-        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [10], []))  # (a gladiator turned druid)
+        self.assertTrue(kits.dual_kit_banned(kits.SHINOBI, [11], [], 17))
+        self.assertTrue(kits.dual_kit_banned(kits.STALKER, [17], [], 13))  # (a thief turned ranger: no Stalker)
+        self.assertFalse(kits.dual_kit_banned(kits.SEEKER, [17], [], 13))
+        self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.TWIN_BLADE], 4))
+        self.assertFalse(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION], 4))
+        self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION], 3))  # (a fire cleric: no Healer)
+        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [9], [kits.RAVAGER], 5))  # (either way round)
+        self.assertTrue(kits.dual_kit_banned(kits.RAVAGER, [5], [kits.GROVE_WARDEN], 9))
+        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [10], [], 5))  # (a gladiator turned druid)
         self.assertTrue(kits.dual_banned(kits.GROVE_WARDEN, 10))
-        self.assertTrue(kits.dual_kit_banned(kits.MIND_WARRIOR, [1], [kits.CRUSADER]))
-        self.assertTrue(kits.dual_kit_banned(kits.SWASHBUCKLER, [11], [kits.BATTLE_MAGE]))
-        self.assertFalse(kits.dual_kit_banned(kits.ASSASSIN, [11], [kits.BATTLE_MAGE]))
+        self.assertTrue(kits.dual_kit_banned(kits.MIND_WARRIOR, [1], [kits.CRUSADER], 12))
+        self.assertTrue(kits.dual_kit_banned(kits.SWASHBUCKLER, [11], [kits.BATTLE_MAGE], 17))
+        self.assertFalse(kits.dual_kit_banned(kits.ASSASSIN, [11], [kits.BATTLE_MAGE], 17))
 
     def test_dual_kit(self):
         """PROBE_DUAL_KIT: the new class's kit on the game's three-choice menu (4D0:25h, through its

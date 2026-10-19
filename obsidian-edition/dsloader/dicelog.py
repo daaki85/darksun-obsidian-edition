@@ -1041,8 +1041,10 @@ class DiceLog:
                     out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
                 if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
                     out += weaponchoice.class_gear(self.game)
-                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
-                    out += weaponchoice.kit_gear(self.game)
+                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
+                    out += weaponchoice.kit_gear(self.game)  #   Healer's cosmos spells, one made by an earlier version)
+                    for member in range(game.PARTY_SIZE):
+                        out += kits.cosmos_spells(self.game, member)
                 if self.starting_gear:  # (new characters' starting gear filled out)
                     out += startgear.fill(self.game)
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)

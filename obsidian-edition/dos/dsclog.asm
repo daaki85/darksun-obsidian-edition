@@ -9497,14 +9497,14 @@ el_second:
 
 ; EL_CLICK: sphere row AX clicked on the creation panel (DS the game's): carry set if it was an
 ; Elementalist's second (taken, or taken back) and the game is to do nothing; its own taken back
-; (the game's), the second cleared too. A Healer's sphere stays (carry set): the kit is taken back
-; first.
+; (the game's), the second cleared too. A Healer's kit is taken back (the sheet's KIT_OPEN), the
+; click the game's: the Healer is a water cleric's.
 el_click:
         mov si, ax
         sub si, EL_ROW
         call kit_made
-        cmp al, KIT_HEALER      ; (a Healer keeps its water sphere: the kit taken back first)
-        je .keep
+        cmp al, KIT_HEALER      ; (a Healer is a water cleric's: another sphere takes it back,
+        je .healer              ;   as another class does)
         cmp al, KIT_ELEMENTALIST
         jne .game
         les bx, [WP_CREATION]
@@ -9531,7 +9531,10 @@ el_click:
 .own:   and byte [es:bx + SPHERE2], ~SPHERE2_MASK
 .game:  clc
         ret
-.keep:  stc
+.healer:
+        les bx, [WP_CREATION]
+        mov byte [es:bx + KIT_BYTE], KIT_OPEN
+        clc
         ret
 
 ; EL_REMARK: for an Elementalist with its own sphere chosen, the spheres' rows as EL_MARKS has

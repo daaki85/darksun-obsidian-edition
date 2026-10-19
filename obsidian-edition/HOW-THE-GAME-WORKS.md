@@ -88,6 +88,10 @@ Other things the game does its own way:
   every sphere. Cast by a priest of another element, an elemental spell counts
   caster level 0. The game shows each priest only their element's spells, so
   this only happens if a character somehow has the others.
+- Clerics never have the common 4th and 5th-level priest spells: Cure Serious
+  and Critical Wounds, Raise Dead, Neutralize Poison, Free Action and the rest
+  are marked for druids alone (a cleric's 4th and 5th levels are its element's
+  spells only). The mod's Healer kit gives them to a water cleric.
 
 The spell's area catches its caster too. Cilla's Scare made her Afraid, and her
 Fireball, cast at a Slig next to her, killed her.

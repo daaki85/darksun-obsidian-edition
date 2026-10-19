@@ -22,10 +22,20 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `PROBE_EL_CAST` and `PROBE_EL_LEVEL`: its element's druid's bit counts as
   its cleric's; `kits.spell_spheres`). On the KIT page its row is greyed unless
   WATER is the sphere marked, and the sphere stays while the kit is taken
-  (`HEALER_BARRED`, `EL_CLICK`); after DUAL, the kit menu offers it to a water
-  cleric only (`DK_BANNED`, `kits.dual_kit_banned`). A Healer of another
-  element from an earlier version keeps its sphere, and has its element's
-  cosmos spells too. KITS.md, the guide and the patch notes say so.
+  (`HEALER_BARRED`); taking WATER back takes the Healer back too (`EL_CLICK`),
+  as choosing another class does. After DUAL, the kit menu offers it to a
+  water cleric only (`DK_BANNED`, `kits.dual_kit_banned`, its new class now an
+  argument it must have). A Healer from an earlier version keeps its sphere,
+  and the Loader marks its element's cosmos spells known when the game is
+  loaded (`kits.cosmos_spells`: the game marks a priest's spells only when the
+  character is made or changes class), with a line in the dice log. KITS.md,
+  the guide and the patch notes say so; tests for the water cleric's DUAL menu
+  and for `cosmos_spells`.
+
+**Documentation**
+- **Draft release notes for 2.6.0** (`release-notes/v2.6.0.md`) and a
+  "Coming in 2.6.0" line on the front page; How the game works notes that
+  clerics never have the common 4th and 5th-level priest spells.
 
 ## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
 

@@ -67,6 +67,10 @@ features of their own for the game's own party, thieves in light armour, the
 combat log shown with **L**, a steady view in fights, and crash and freeze
 reports.
 
+**Coming in 2.6.0** (in progress, [draft release notes](release-notes/v2.6.0.md)):
+the Healer kit becomes the water cleric's healer, with Cure Serious and
+Critical Wounds, Raise Dead and the other cures only druids had.
+
 Every release has notes of its own: [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
 have every change from the original game in one page, whatever the version.
 

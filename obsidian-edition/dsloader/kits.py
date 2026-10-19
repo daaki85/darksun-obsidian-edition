@@ -4,7 +4,8 @@ A kit is a sheet's KIT_BYTE (kitpages.py, which also numbers them: kitpages.kit_
 that number, 0 for none (the rule off, more than one class, none chosen).
 """
 
-from typing import Optional, Tuple
+import struct
+from typing import List, Optional, Tuple
 
 from .game import FOG_SPELL, FRIENDS_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL
 from .kitpages import KIT_IDS, KITS
@@ -529,13 +530,13 @@ KIT_PAIRS = frozenset(frozenset(p) for p in (
     *((a, b) for a in WARRIOR_THAC0 for b in WARRIOR_THAC0 if a < b)))
 
 
-def dual_kit_banned(kid: int, classes, kids, new: Optional[int] = None) -> bool:
+def dual_kit_banned(kid: int, classes, kids, new: int) -> bool:
     """Whether a human changing class may not take kit KID for its new class NEW (1-17), CLASSES the
     classes it had and KIDS their kits (asleep too), as DSCLOG's DK_BANNED blanks it on the KIT
     menu: a Healer for a cleric not of water (HEALER_SPHERE), the kit's DUAL_BANS hold one of the
     classes, or it and one of the kits are a KIT_PAIRS pair. (The kits' own DUAL_BANS on the new
     class are the DUAL window's: dual_banned.)"""
-    if kid == HEALER and new is not None and new != HEALER_SPHERE_CLASS:
+    if kid == HEALER and new != HEALER_SPHERE_CLASS:
         return True
     return any(c in DUAL_BANS.get(kid, ()) for c in classes) or any(frozenset((kid, k)) in KIT_PAIRS for k in kids)
 
@@ -552,6 +553,41 @@ def spell_spheres(kid: int, cls: int, second: Optional[int], spheres: int) -> in
     if kid == HEALER and 1 <= cls <= 4 and spheres & (2 << (cls + 4)):
         spheres |= 2 << cls
     return spheres
+
+
+KNOWN_SPELLS_PTR = 0x132A  # DS: far pointer to the party's known spells, a byte for each (0 to 137)
+PRIEST_SPELLS = range(0x45, 0x8A)  # the priest spells (Bless to Wall of Fire)
+
+
+def cosmos_spells(gd, member: int) -> List[str]:
+    """A Healer in the party (its cleric class 1-4) knows the sphere of the cosmos's spells, as
+    DSCLOG's PROBE_EL_KNOW marks them when it is made: those a Healer casts (spell_spheres) and its
+    cleric doesn't, marked known as the game marks a priest's (the low four bits 1). For a Healer
+    made before the cosmos was its (2.5.0 or earlier), whose spells were marked then. Lines for the
+    log, the spells newly known."""
+    from . import game, kitpages
+    rec = gd.creature(member)
+    if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or HEALER not in gd.kit_ids(member):
+        return []
+    sheet = gd.sheet(member)
+    cls = kitpages.kit_class_of(sheet, HEALER)
+    if not 1 <= cls <= 4:
+        return []
+    base = (gd.load_seg + game.SPELL_SPHERES_SEG) * 16 + game.SPELL_SPHERES_OFF
+    masks = gd.guest.read(base, (PRIEST_SPELLS.stop) * game.SPELL_SPHERES_SIZE)
+    known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
+    known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
+    learnt = []
+    for spell in PRIEST_SPELLS:
+        mask = struct.unpack_from("<I", masks, spell * game.SPELL_SPHERES_SIZE)[0]
+        own = 2 << cls
+        if mask & own or not spell_spheres(HEALER, cls, None, mask) & own or known[spell] & 0x0F:
+            continue
+        gd.guest.write(known_at + spell, bytes(((known[spell] & 0xF0) | 1,)))
+        learnt.append(gd.spell_name(spell))
+    if not learnt:
+        return []
+    return [f"{gd.creature_name(member)}, a Healer, knows the sphere of the cosmos's spells: {', '.join(learnt)}"]
 
 
 def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], specialize: bool) -> bool:

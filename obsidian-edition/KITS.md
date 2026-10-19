@@ -167,8 +167,11 @@ it. The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Loader's Characters tab.
 
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
-marked (take back the game's AIR and mark WATER, then open KITS). Once it is
-taken, the sphere stays as it is: take the kit back to change it.
+marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
+back afterwards takes the Healer back with it, as choosing another class does.
+A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
+earlier) is given its spells by the Loader when the game is loaded, whatever
+its sphere, and the dice log says so.
 
 The Elementalist chooses its second sphere on the creation panel's
 **CLERICAL SPHERE** list: once the kit is taken (KITS, then ELEMENTAL), its
