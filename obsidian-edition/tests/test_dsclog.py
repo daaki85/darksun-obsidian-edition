@@ -4615,13 +4615,15 @@ class KitTests(unittest.TestCase):
         spells = 0x6600
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
-            for cls, kit, second in ((1, 1, 2), (2, 1, 0), (4, 1, 3), (1, 1, None), (1, 2, 2), (13, 3, 2)):
+            for cls, kit, second in ((1, 1, 2), (2, 1, 0), (4, 1, 3), (1, 1, None), (1, 2, 2), (13, 3, 2), (4, 2, None),
+                                     (3, 2, None)):
                 self.creature(cls, kit)  # (combatant 7, creature 5, sheet 5)
                 self.mu.mem_write(self.SHEET * 16 + 5 * 0x47 + kits.SPHERE2, bytes((0 if second is None else second + 1,)))
                 elementalist = rules and cls <= 4 and kit == 1 and second is not None
-                kid = kits.ELEMENTALIST if elementalist else 0
+                healer = rules and cls <= 4 and kit == 2  # (the Healer: the cosmos's spells, HEALER_COSMOS)
+                kid = kits.ELEMENTALIST if elementalist else kits.HEALER if healer else 0
                 self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 7))
-                for mask in (0x110112, 0x104046, 0x10808A, 0x120222, 0x13C3FE, 0x81001, 0):
+                for mask in (0x110112, 0x104046, 0x10808A, 0x120222, 0x13C3FE, 0x1003C2, 0x81001, 0):
                     with self.subTest(rules=rules, cls=cls, kit=kit, second=second, mask=hex(mask)):
                         want = kits.spell_spheres(kid, cls, second, mask)
                         self.mu.mem_write(spells * 16 + 0x10 + 0x19D, struct.pack("<I", mask))
@@ -4637,7 +4639,7 @@ class KitTests(unittest.TestCase):
                     self.mu.mem_write(SS * 16 + BP - 6, struct.pack("<I", 2 << cls))
                     self.run_vector(VEC_EL_GRANT, 2, eax=0x1111, ebx=0x2222, ecx=0x3333, esi=0x5555, es=0x6666)
                     got, = struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 6, 4))
-                    self.assertEqual(got, (2 << cls) | (4 << second if elementalist else 0))
+                    self.assertEqual(got, (2 << cls) | (4 << second if elementalist else 0) | (2 << (cls + 4) if healer else 0))
                     self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_SI, r.UC_X86_REG_AX, r.UC_X86_REG_BX,
                                                                     r.UC_X86_REG_CX, r.UC_X86_REG_ES)],
                                      [0, 0x1111, 0x2222, 0x3333, 0x6666])
@@ -4645,11 +4647,12 @@ class KitTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_EL_KNOW
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
-            for cls, kit, second in ((2, 1, 3), (1, 1, 2), (2, 1, None), (2, 2, 3)):
+            for cls, kit, second in ((2, 1, 3), (1, 1, 2), (2, 1, None), (2, 2, 3), (4, 2, None), (13, 2, None)):
                 self.creature(cls, kit)
                 self.mu.mem_write(self.SHEET * 16 + 5 * 0x47 + kits.SPHERE2, bytes((0 if second is None else second + 1,)))
-                kid = kits.ELEMENTALIST if rules and kit == 1 and second is not None else 0
-                for mask in (0x120222, 0x10808A, 0x104046, 0x13C3FE):
+                kid = (kits.ELEMENTALIST if rules and kit == 1 and second is not None and cls <= 4
+                       else kits.HEALER if rules and kit == 2 and cls <= 4 else 0)
+                for mask in (0x120222, 0x10808A, 0x104046, 0x13C3FE, 0x1003C2):
                     with self.subTest(rules=rules, cls=cls, kit=kit, second=second, mask=hex(mask), probe="know"):
                         self.mu.mem_write(spells * 16 + 0x20 + 0x19D, struct.pack("<I", mask))
                         bit = 2 << cls
@@ -4661,6 +4664,9 @@ class KitTests(unittest.TestCase):
                                          [bit, 0x20, 0x12345678, 5, spells])
         self.assertEqual(kits.spell_spheres(kits.ELEMENTALIST, 1, 2, 0x110112), 0x110116)  # (fire's: the air cleric's too)
         self.assertEqual(kits.spell_spheres(kits.ELEMENTALIST, 1, 2, 0x10808A), 0x10808A)
+        self.assertEqual(kits.spell_spheres(kits.HEALER, 4, None, 0x1003C2), 0x1003E2)  # (Cure Serious Wounds: a water Healer's)
+        self.assertEqual(kits.spell_spheres(kits.HEALER, 4, None, 0x110112), 0x110112)  # (Flame Blade: not)
+        self.assertEqual(kits.spell_spheres(kits.HEALER, 4, None, 0x120222), 0x120222)  # (its own sphere's already)
 
 
     def test_dual_ban(self):
@@ -4816,7 +4822,7 @@ class KitTests(unittest.TestCase):
         from dsloader import kitpages, kits
         self.rules(game.RULE_KITS)
         import re
-        at = re.search(rb"\x66\x60\x88\xc1\xe8", self.image).start()
+        at = re.search(rb"\x66\x60\x3c" + bytes((kits.HEALER,)) + rb"\x75", self.image).start()
         cases = [((11, 9), (1, 4), 0b01), ((11, 9), (1, 4), 0b10), ((10, 9), (1, 4), 0b11), ((1, 10), (1, 4), 0b10),
                  ((17, 10), (1, 4), 0b10), ((17, 12, 11), (1, 3, 4), 0b0100), ((12, 17), (1, 4), 0b11),
                  ((5, 10), (1, 4), 0b11), ((13, 1), (1, 4), 0), ((9, 17, 2), (1, 2, 3), 0b0011)]
@@ -4833,7 +4839,8 @@ class KitTests(unittest.TestCase):
                                             eflags=2).items():
                         mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                     mu.emu_start(TSR * 16 + at, TSR * 16 + 0xFFF0)
-                    self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1), kits.dual_kit_banned(kid, others, kids))
+                    self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1),
+                                     kits.dual_kit_banned(kid, others, kids, classes[0]))
                     self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), kid)
         self.assertTrue(kits.dual_kit_banned(kits.SHINOBI, [11], []))
         self.assertTrue(kits.dual_kit_banned(kits.STALKER, [17], []))  # (a thief turned ranger: no Stalker)

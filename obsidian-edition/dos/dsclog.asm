@@ -4577,6 +4577,7 @@ multi_table db 3
             db 0
 multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1
 km_rows     db 4                ; (KIT_MARKS: the page's rows)
+km_class    db 0                ; (KIT_MARKS: its class, KIT_CLASS's)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
 ; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's kit windows, the DAM
@@ -7202,11 +7203,15 @@ dk_menu:
         ret
 
 ; DK_BANNED: CF set if kit AL may not go with the other classes of sheet ES:BX (its places from 1)
-; or their kits (asleep too): its DUAL_BANS hold one of the classes (KIT_BANS), or a kit's and its
+; or their kits (asleep too), or is a Healer for a cleric not of water (its new class, place 0): its DUAL_BANS hold one of the classes (KIT_BANS), or a kit's and its
 ; are a pair KIT_PAIRS bars (kits.dual_kit_banned). All registers kept.
 dk_banned:
         pushad
-        mov cl, al
+        cmp al, KIT_HEALER      ; (the Healer: a water cleric's only)
+        jne .bans
+        cmp byte [es:bx + 0x21], HEALER_SPHERE_CLASS
+        jne .no
+.bans:  mov cl, al
         call kit_bans           ; (EDX the classes it bars)
         call kit_place
         jc .ok
@@ -9253,8 +9258,15 @@ kit_row:
         mov [cs:wp_classes_seen], eax ; rolls the hit points again)
         pop eax
         mov dh, [es:bx + KIT_BYTE]
-        cmp dh, KIT_OPEN        ; none chosen: this one
-        je .put
+        cmp dh, KIT_OPEN        ; none chosen: this one (a Healer only with the water sphere)
+        jne .chosen
+        push ax
+        call kit_class
+        call healer_barred
+        pop ax
+        jc kit_marks
+        jmp .put
+.chosen:
         cmp dl, dh              ; another, while one is chosen: out of use (nothing)
         jne kit_marks
         mov dl, KIT_OPEN        ; the one chosen: taken back, the rest in use again
@@ -9273,6 +9285,7 @@ kit_marks:
         jz .out
         les bx, [WP_CREATION]
         mov dl, [es:bx + KIT_BYTE]
+        mov [cs:km_class], al
         movzx bx, al
         mov byte [cs:km_rows], 4
         cmp al, MULTI_FIRST
@@ -9296,7 +9309,15 @@ kit_marks:
         push 3                  ; not chosen: greyed while another is, as the game's spheres
         call wp_button_op
         cmp dl, KIT_OPEN
-        je .open
+        jne .grey
+        push ax                 ; (a Healer's row greyed without the water sphere)
+        mov al, [cs:km_class]
+        xchg dl, dh
+        call healer_barred
+        xchg dl, dh
+        pop ax
+        jnc .open
+.grey:
         push 1
         jmp .op
 .open:  push 0
@@ -9317,6 +9338,25 @@ kit_marks:
         loop .row
 .out:   pop bx
         pop es
+        ret
+
+; HEALER_BARRED: CF set if row DL (1-3) of creation class AL's kit page (KIT_CLASS's number) is the
+; Healer's and the sphere marked (WP_SPHERE_MASK) isn't water's: the Healer is a water cleric's
+; (kits.HEALER_SPHERE). Registers kept.
+HEALER_SPHERE_CLASS equ 4               ; (the water cleric)
+HEALER_SPHERE_MASK  equ 0x10            ; (the spheres' marks: 80h air to 10h water)
+healer_barred:
+        push ax
+        shl al, 2
+        add al, dl
+        cmp al, KIT_HEALER
+        pop ax
+        jne .ok
+        cmp word [WP_SPHERE_MASK], HEALER_SPHERE_MASK
+        je .ok
+        stc
+        ret
+.ok:    clc
         ret
 
 ; KIT_ROLLS: kit AL one with its own hit die or PSP (a Battle Mage, a Mind Warrior, an Arcanist):
@@ -9457,11 +9497,14 @@ el_second:
 
 ; EL_CLICK: sphere row AX clicked on the creation panel (DS the game's): carry set if it was an
 ; Elementalist's second (taken, or taken back) and the game is to do nothing; its own taken back
-; (the game's), the second cleared too.
+; (the game's), the second cleared too. A Healer's sphere stays (carry set): the kit is taken back
+; first.
 el_click:
         mov si, ax
         sub si, EL_ROW
         call kit_made
+        cmp al, KIT_HEALER      ; (a Healer keeps its water sphere: the kit taken back first)
+        je .keep
         cmp al, KIT_ELEMENTALIST
         jne .game
         les bx, [WP_CREATION]
@@ -9487,6 +9530,8 @@ el_click:
         ret
 .own:   and byte [es:bx + SPHERE2], ~SPHERE2_MASK
 .game:  clc
+        ret
+.keep:  stc
         ret
 
 ; EL_REMARK: for an Elementalist with its own sphere chosen, the spheres' rows as EL_MARKS has
@@ -9558,7 +9603,24 @@ probe_el_grant:
         shl bx, cl
         xchg cl, al
         or [bp - 6], bx
-.out:   pop es
+.out:   call cb_is              ; a Healer's cleric: its element's druid's bit too (the cosmos)
+        db KIT_HEALER
+        jne .done
+        mov ax, bx
+        call creature_sheet
+        call kit_class_of_sheet
+        cmp al, 1
+        jb .done
+        cmp al, 4
+        ja .done
+        mov cl, al
+        mov bx, 2
+        shl bx, cl
+        test [bp - 6], bx
+        jz .done
+        shl bx, 4
+        or [bp - 6], bx
+.done:  pop es
         pop cx
         pop bx
         pop ax
@@ -9603,9 +9665,24 @@ probe_el_know:
         imul ax, ax, 0x47
         add bx, ax
         call el_second
-        jz .test
+        jz .healer
         movzx eax, al           ; (the second sphere's cleric bit: 4 the air cleric's)
         add al, 2
+        bts ecx, eax
+.healer:
+        call kit_is_b           ; a Healer, for its cleric's bit: the cosmos's spells too, as its
+        db KIT_HEALER           ;   element's druid has them (HEALER_COSMOS)
+        jne .test
+        call kit_class_of_sheet
+        cmp al, 1
+        jb .test
+        cmp al, 4
+        ja .test
+        movzx eax, al
+        inc al
+        bt ecx, eax
+        jnc .test
+        add al, 4
         bts ecx, eax
 .test:  pop es
         pop bx
@@ -9706,7 +9783,7 @@ dual_bans   db KIT_SEEKER
             db 0
 
 ; EL_SPHERES: EAX a spell's mask, for caster [BP+6]: an Elementalist's second sphere's spells its
-; own sphere's too. Others kept.
+; own sphere's too; a Healer's cosmos spells (HEALER_COSMOS) its cleric's. Others kept.
 el_spheres:
         push bx
         push cx
@@ -9714,17 +9791,25 @@ el_spheres:
         push es
         mov edx, eax
         call el_caster          ; AL the second sphere, CL the cleric class (1-4)
-        jz .out
+        jz .healer
         push cx
         mov cl, al
         mov eax, 4
         shl eax, cl
         pop cx
         test edx, eax
-        jz .out
+        jz .healer
         mov eax, 2
         shl eax, cl
         or edx, eax
+.healer:
+        call cb_is
+        db KIT_HEALER
+        jne .out
+        mov ax, bx
+        call creature_sheet
+        call kit_class_of_sheet
+        call healer_cosmos
 .out:   mov eax, edx
         pop es
         pop edx
@@ -9753,6 +9838,24 @@ el_caster:
         jmp el_second
 .no:    cmp al, al
         ret
+; HEALER_COSMOS: EDX a spell's mask, AL a Healer's cleric class (1-4, 2 << AL its bit): a spell of
+; the sphere of the cosmos, the spells every druid casts and no cleric (the druid of the Healer's
+; element's bit, 2 << (AL + 4): a water druid's spells are a water cleric's and the cosmos's), its
+; cleric's too (kits.spell_spheres). Others kept.
+healer_cosmos:
+        cmp al, 1
+        jb .ret
+        cmp al, 4
+        ja .ret
+        push eax
+        movzx eax, al
+        add al, 5
+        bt edx, eax
+        jnc .out
+        sub al, 4
+        bts edx, eax
+.out:   pop eax
+.ret:   ret
 kit_title  db 'KITS', 0
 kit_keep   db 0                 ; 1 while the panel goes back to the disciplines (the kit kept)
 wp_from    db 0

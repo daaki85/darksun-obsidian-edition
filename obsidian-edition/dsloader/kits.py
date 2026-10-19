@@ -25,6 +25,7 @@ MIND_BENDER, KINETICIST = KIT_IDS["Mind Bender"], KIT_IDS["Kineticist"]
 # psychometabolism, telepathy from TP_FIRST (the defences among them)
 PK_LAST, TP_FIRST = 5, 20
 HEALER = KIT_IDS["Healer"]
+HEALER_SPHERE_CLASS = 4  # the Healer is a water cleric's (the cleric of water, class 4; DSCLOG's HEALER_SPHERE_CLASS)
 # the healing spells' dice (DSCLOG's CURE_SPELLS): Cure Light, Serious and Critical Wounds, Blood Flow
 CURE_LIGHT, CURE_SERIOUS, CURE_CRITICAL, BLOOD_FLOW = 71, 112, 127, 108
 CURE_DICE = {CURE_LIGHT: (1, 8), CURE_SERIOUS: (2, 8), CURE_CRITICAL: (3, 8), BLOOD_FLOW: (2, 6)}
@@ -528,19 +529,27 @@ KIT_PAIRS = frozenset(frozenset(p) for p in (
     *((a, b) for a in WARRIOR_THAC0 for b in WARRIOR_THAC0 if a < b)))
 
 
-def dual_kit_banned(kid: int, classes, kids) -> bool:
-    """Whether a human changing class may not take kit KID for its new class, CLASSES (1-17) the
+def dual_kit_banned(kid: int, classes, kids, new: Optional[int] = None) -> bool:
+    """Whether a human changing class may not take kit KID for its new class NEW (1-17), CLASSES the
     classes it had and KIDS their kits (asleep too), as DSCLOG's DK_BANNED blanks it on the KIT
-    menu: the kit's DUAL_BANS hold one of the classes, or it and one of the kits are a KIT_PAIRS
-    pair. (The kits' own DUAL_BANS on the new class are the DUAL window's: dual_banned.)"""
+    menu: a Healer for a cleric not of water (HEALER_SPHERE), the kit's DUAL_BANS hold one of the
+    classes, or it and one of the kits are a KIT_PAIRS pair. (The kits' own DUAL_BANS on the new
+    class are the DUAL window's: dual_banned.)"""
+    if kid == HEALER and new is not None and new != HEALER_SPHERE_CLASS:
+        return True
     return any(c in DUAL_BANS.get(kid, ()) for c in classes) or any(frozenset((kid, k)) in KIT_PAIRS for k in kids)
 
 
 def spell_spheres(kid: int, cls: int, second: Optional[int], spheres: int) -> int:
     """A spell's mask of the classes that cast it (SPHERES), for a caster of class CLS with kit KID:
     an Elementalist's second sphere's spells its own class's too (DSCLOG's EL_SPHERES: the second
-    sphere's cleric bit, 4 the air cleric's to 20h the water cleric's, brings its class's, 2 << CLS)."""
+    sphere's cleric bit, 4 the air cleric's to 20h the water cleric's, brings its class's, 2 << CLS);
+    a Healer's, the sphere of the cosmos's: the spells every druid casts and no cleric (Cure
+    Serious and Critical Wounds, Raise Dead...), by its element's druid's bit, 2 << (CLS + 4), as a
+    water druid's spells are a water cleric's and the cosmos's (DSCLOG's HEALER_COSMOS)."""
     if kid == ELEMENTALIST and second is not None and spheres & (4 << second):
+        spheres |= 2 << cls
+    if kid == HEALER and 1 <= cls <= 4 and spheres & (2 << (cls + 4)):
         spheres |= 2 << cls
     return spheres
 

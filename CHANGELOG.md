@@ -9,6 +9,24 @@ For what a release brings, read its notes ([2.5.0](release-notes/v2.5.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
+## Pull request #52 (in progress)
+
+**Changed**
+- **The Healer has the sphere of the cosmos, and is a water cleric's only**
+  (with kits on). The cosmos's spells are those every druid casts and no
+  cleric (the game gives Cure Serious and Critical Wounds, Raise Dead,
+  Neutralize Poison and the other common 4th and 5th-level priest spells to
+  druids alone, so a Healer's extra healing on the two cures never came into
+  play): a Healer knows them from the start and casts them at its cleric level
+  (DSCLOG's `HEALER_COSMOS`, in `PROBE_EL_KNOW`, `PROBE_EL_GRANT`,
+  `PROBE_EL_CAST` and `PROBE_EL_LEVEL`: its element's druid's bit counts as
+  its cleric's; `kits.spell_spheres`). On the KIT page its row is greyed unless
+  WATER is the sphere marked, and the sphere stays while the kit is taken
+  (`HEALER_BARRED`, `EL_CLICK`); after DUAL, the kit menu offers it to a water
+  cleric only (`DK_BANNED`, `kits.dual_kit_banned`). A Healer of another
+  element from an earlier version keeps its sphere, and has its element's
+  cosmos spells too. KITS.md, the guide and the patch notes say so.
+
 ## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
 
 **Release**

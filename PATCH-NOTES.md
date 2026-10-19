@@ -111,6 +111,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 A few of them:
 
 - **Arcanist:** one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.
+- **Healer:** a water cleric only, given the sphere of the cosmos: the spells only druids had, Cure Serious and Critical Wounds, Raise Dead and Neutralize Poison among them, each cure healing 1 more a die.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, and learns its own from a scroll only if it can read it (its read languages).
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.

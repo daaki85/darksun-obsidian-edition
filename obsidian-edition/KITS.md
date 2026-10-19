@@ -96,7 +96,7 @@ backpack.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | can't go with the Twin-blade |
+| **Healer** | the **sphere of the cosmos**: the spells every druid casts and no cleric, known from the start and cast at its cleric level (4th level: Abjure, Cloak of Bravery, Cloak of Fear, Cure and Cause Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius; 5th: Cure and Cause Critical Wounds, Dispel Evil, Raise Dead, Slay Living); Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | **the water sphere only**; no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit)); after DUAL, offered to a water cleric only; can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
@@ -165,6 +165,10 @@ clerical spheres if one class has them, else under the psionic disciplines.
 Choosing another class puts the kit back to none; a new roll of the die keeps
 it. The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Loader's Characters tab.
+
+The Healer is a water cleric's: its row is greyed unless WATER is the sphere
+marked (take back the game's AIR and mark WATER, then open KITS). Once it is
+taken, the sphere stays as it is: take the kit back to change it.
 
 The Elementalist chooses its second sphere on the creation panel's
 **CLERICAL SPHERE** list: once the kit is taken (KITS, then ELEMENTAL), its

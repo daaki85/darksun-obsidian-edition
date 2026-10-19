@@ -740,9 +740,11 @@ has the most, air and fire the fewest.
 
 **Kits.**
 
-*Healer.* Elemental priests who answer to the needs of the dying more than to
-the temples, using water and earth to close wounds. They keep a free hand for
-the work and won't fill it with a weapon.
+*Healer.* Water priests who answer to the needs of the dying more than to the
+temples. They pray to the cosmos as well as to water, so they have the cures
+and other spells only druids are given, Cure Serious and Critical Wounds and
+Raise Dead among them, but no other element answers them. They keep a free
+hand for the work and won't fill it with a weapon.
 
 *Crusader.* Warrior priests who carry their element's anger into battle, as
 deadly with a weapon as any soldier. Their prayers are fewer for it.
@@ -1376,7 +1378,7 @@ can cast. INT sets two limits:
 | 5 | Chaos, Cloudkill, Cone of Cold, Conjure Elemental, Dismissal, Domination, Feeblemind, Hold Monster, Lower Resistance to Magic, Monster Summoning III, Summon Shadow, Wall of Force, Wall of Stone |
 
 **Priests' spells.** Every cleric, druid and ranger has the common ones of the
-levels it can cast; druids alone have the common 4th and 5th-level ones; and
+levels it can cast; druids alone (and a cleric with the Healer kit) have the common 4th and 5th-level ones; and
 each has its own element's.
 
 | Level | Every priest | Druids only |
