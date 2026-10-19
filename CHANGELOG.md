@@ -9,7 +9,11 @@ For what a release brings, read its notes ([2.5.0](release-notes/v2.5.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #51 (Obsidian Edition 2.5.0)
+## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
+
+**Release**
+- **Obsidian Edition 2.5.0**: the version is 2.5.0, with its notes in
+  `release-notes/v2.5.0.md`, listed on the front page with the others.
 
 **Added**
 - **Item reports**: the Loader watches the party's items and, when one is gone
