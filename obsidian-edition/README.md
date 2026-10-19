@@ -133,7 +133,7 @@ rules without spoilers, with a section for each class and its kits (also as a we
   down ([Controls](#controls)), 40 saves, each also kept under its name, and
   29 saved characters
   ([More saves and characters](#more-saves-and-characters)), a game speed
-  setting ([Game speed](#game-speed)), crash reports, and no dragon asking for
+  setting ([Game speed](#game-speed)), crash, freeze and item reports, and no dragon asking for
   a word from the manual ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
@@ -1416,7 +1416,8 @@ use, in any material. The rest are greyed:
 rest. A ranger never has the bow to choose: its expertise with the bow comes
 anyway.)
 
-**EXIT** leaves picks unmade, and the Loader picks them: the kit's weapon (a
+**EXIT** leaves picks unmade, and the Loader picks them (a Myrmidon's second
+excepted: it stays unpicked): the kit's weapon (a
 Ghetto Fighter's or Poisoner's dagger, a Battle Dancer's long sword), a
 thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
@@ -2811,10 +2812,13 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
+| A **thri-kreen's claws** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
 
-Cilla's figure (the game gives the elf the half-elf woman's) has a switch:
-see [Elves and half-elves](#elves-and-half-elves). How the fixes work:
+Two more have a switch: Cilla's figure (the game gives the elf the half-elf
+woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
+spell's icon on the Effects screen ending it
+([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes work:
 [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
 
 **Saved games.** There's no need to start a new game for these: they're in
@@ -2920,12 +2924,12 @@ twice as late, and walking goes at half speed. Everything drawn adds up: four
 figures rather than the leader alone (the game's manual says collapsing the
 party "speeds up the game"), the gear on them, the shadows, the dust.
 
-The launcher gives DOSBox more of the computer's time: 20,000 cycles a
+The Loader gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
-**Game speed** is GOG's own, that, or 35,000: there, with everything on, the
+**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there, with everything on, the
 whole party in view walks as fast as the leader alone, but it needs a faster
-computer. It applies the next time the game is started. Both of the Loader's
-run on DOSBox's dynamic core (GOG's settings run this game on the slower
+computer. It applies the next time the game is started. The Loader's two
+speeds run on DOSBox's dynamic core (GOG's settings run this game on the slower
 normal core): the same cycles do more, and cost the computer about a third
 less.
 

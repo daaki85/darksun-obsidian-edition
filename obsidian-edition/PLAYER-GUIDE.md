@@ -113,6 +113,7 @@ easier.
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
 | **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
 | **Crash and freeze reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send, with the game's own error message in it; if the game freezes, **Freeze report** on the Loader saves what it was doing. |
+| **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), the Loader saves a report to send, as for a crash. |
 
 **In the Loader's window:**
 
@@ -207,7 +208,7 @@ What the scores do:
 | Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand |
 | Halfling | −2 | +2 | −1 | | +2 | −1 | better CON saves |
 | Mul | +2 | | +1 | −1 | | −2 | |
-| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); no armour, cloaks, belts, boots or rings |
+| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); claws that cut (edged, not crushing); no armour, cloaks, belts, boots or rings |
 
 With each score rolled 8 to 20 before the adjustment, a race's scores run from
 8 to 20 plus its adjustment: a half-giant's STR 12 to 24, its DEX and INT 3 to
@@ -915,15 +916,14 @@ their own ([Multiclass kits](#multiclass-kits)). Each gives something and
 costs something; [the README's kit tables](README.md#kits) have each kit's
 numbers and starting gear, the class sections above who takes it on Athas.
 
-- The **Myrmidon** and **Battle Mage** choose their extra weapon spec in the
-  weapon window after DONE, and the **Elementalist** its second sphere on the
+- The **Myrmidon** chooses its second weapon spec, and the **Battle Mage** its
+  one, in the weapon window after DONE, and the **Elementalist** its second sphere on the
   CLERICAL SPHERE list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old.
 - Some kits rule out classes a human could change to, and some can't go
   together in a human who changes class (one kit for each class); the DUAL
   window and the kit menu leave them out ([which, and why](README.md#kits-that-rule-out-classes-and-each-other)).
-
 - The dice log names each change a kit makes to a new character's gear.
 
 ### Multiclass kits
@@ -994,8 +994,9 @@ slots](README.md#kits-spell-slots) in the README.
 Warriors train in weapon types. Pick them in a window of weapon pictures that
 comes up after **DONE** on the creation screen, and again at a level up that
 brings another (point at one for its name; those you can't pick are greyed).
-EXIT leaves the rest to the mod: the long sword (a gladiator's second the club),
-or the kit's own weapon (a Ghetto Fighter's dagger).
+EXIT leaves the rest to the mod: the kit's own weapon (a Ghetto Fighter's
+dagger), a thri-kreen's chatkcha, else the long sword (a gladiator's second the
+club).
 
 ![The level-up window: a picture of each weapon type, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the types this fighter/cleric can't use greyed](docs/weapon-picker.png)
 

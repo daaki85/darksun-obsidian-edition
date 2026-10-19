@@ -98,8 +98,8 @@ back magical items, saves kept under their names and fuller starting gear.
 
 **Coming in 2.5.0** (in progress, [draft release notes](release-notes/v2.5.0.md)):
 a Pick Pockets button for thieves, four more magic weapons, thri-kreen claws
-that cut, six of the game's own spell bugs fixed, and an arena that always
-starts.
+that cut, weapon specs picked after DONE, item reports, six of the game's own
+spell bugs fixed, and an arena that always starts.
 
 Every release has notes of its own: [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
 have every change from the original game in one page, whatever the version.

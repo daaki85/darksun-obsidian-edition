@@ -8,8 +8,8 @@ in KIT_BYTE the same way. It is
 chosen on the creation panel, on a page of its own (a window for each class, its rows the
 NO KIT and the class's kits, its button VIEW PSIONICS back to the disciplines), which KITS opens:
 the button of the disciplines' window for a class with no sphere, of the spheres' for a
-cleric, druid or ranger, of the last weapon page for a warrior choosing weapons. The rows'
-pictures are carved as the weapon pages' are (weaponpages.py), names too long for the panel
+cleric, druid or ranger. The rows'
+pictures are carved by weaponpages.py, names too long for the panel
 shortened as the game shortens its own (P-KINESIS).
 """
 

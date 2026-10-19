@@ -499,7 +499,7 @@ PATCHES = (
     Patch("no_cast", 0x89B84, bytes.fromhex("83c404"), _interrupt(VEC_NO_CAST, 3)),
     Patch("mc_con", 0x87523, bytes.fromhex("03f8"), _interrupt(VEC_MC_CON, 2)),
     Patch("mc_uncon", 0x877DA, bytes.fromhex("2bd0"), _interrupt(VEC_MC_UNCON, 2)),
-    # the creation panel's weapon pages (weaponpages.py)
+    # the creation panel's KIT pages, shown in the panel's discipline and sphere windows (weaponpages.py)
     Patch("wp_disc_win", 0x67BFB, bytes.fromhex("68c40b"), _interrupt(VEC_WP_DISC_WIN, 3)),
     Patch("wp_sphere_win", 0x6413B, bytes.fromhex("68c50b"), _interrupt(VEC_WP_SPHERE_WIN, 3)),
     Patch("wp_disc_click", 0x64311, bytes.fromhex("8b5e08"), _interrupt(VEC_WP_DISC_CLICK, 3)),

@@ -7,9 +7,8 @@ own (Bloodwrath, Swiftbite). KIND_OF_TYPE sorts every weapon type into one of th
 by its dice, weight and name; the spell-made weapons (Flame Blade, Shillelagh, Spiritual
 Hammer), the gloves and the broken weapon are none.
 
-The kinds come in the order of the character creation panel's four weapon pages, four to a
-page, long sword first: the default, as the game marks the first psionic discipline and
-clerical sphere; a gladiator's two at creation are the long sword and the club, the first two.
+The kinds come in the order of the weapon window's slots, long sword first: the default for a
+pick left unmade; a gladiator's second is the club, the next.
 """
 
 from typing import Dict, List, Optional, Tuple

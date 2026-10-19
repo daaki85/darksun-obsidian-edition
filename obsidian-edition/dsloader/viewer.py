@@ -402,7 +402,7 @@ class Viewer:
                                           "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                           "rangers have expertise, every ranger with the bow; specialists and "
                                           "rangers shoot missiles faster; other weapons at a warrior's plain rate "
-                                          "(chosen on the creation panel's WEAPON SPEC pages)"),
+                                          "(chosen in the weapon window after DONE, and at a level up)"),
                 ("kits", "Kits: a character of one class may take one of its class's three kits, and some "
                          "races' pairs of classes have kits of their own, each giving something and "
                          "costing something (chosen on the creation panel's KIT page); the game's own "

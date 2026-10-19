@@ -108,6 +108,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Thri-kreen druid/fighter | Wasteland Seer |
 | Mul druid/fighter | Wild Fury |
 
+A few of them:
+
 - **Arcanist:** one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, and learns its own from a scroll only if it can read it (its read languages).
