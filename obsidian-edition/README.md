@@ -4,6 +4,18 @@ Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
 in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 (called Templar's Ledger up to 2.2.1), which loads the mod with your options.
 
+**Where to start**
+
+- **To play:** [Running it](#running-it-windows): unzip, double-click
+  `Start Obsidian Edition.bat`, press **Start the game**.
+- **To learn the rules:** [the player's guide](PLAYER-GUIDE.md), without
+  spoilers, with a [glossary](PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and
+  the rest.
+- **If something goes wrong:** [Troubleshooting](#troubleshooting),
+  [Known issues](#known-issues) and [Reporting a problem](#reporting-a-problem).
+- **Everything in detail:** the contents below, the [kits](KITS.md), the
+  [items](ITEMS.md) (spoilers) and the [patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md).
+
 ## Contents
 
 - [What it does](#what-it-does)
@@ -19,6 +31,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Reporting a problem](#reporting-a-problem)
   - [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files)
   - [Troubleshooting](#troubleshooting)
+  - [Known issues](#known-issues)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
@@ -155,10 +168,9 @@ game artwork is copied.
 
 - **Windows** and the **GOG release** of Dark Sun: Shattered Lands. The
   Loader runs it in the DOSBox that comes with it.
-- **64-bit Python 3.8+** from python.org. If it isn't installed, the `.bat`
-  files offer to install it for you (see below). Python includes tkinter and
-  needs no extra packages. It has to be 64-bit because 64-bit DOSBox can't be
-  read from 32-bit Python.
+- **64-bit Python 3.8+** (64-bit, as 64-bit DOSBox can't be read from 32-bit
+  Python). The `.bat` files offer to install it
+  ([One-time setup](#one-time-setup)); it needs no extra packages.
 - Linux works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
 
@@ -389,7 +401,7 @@ log and says why.
 ### Troubleshooting
 
 - **Windows warns about the `.bat` file** ("Open File - Security Warning"):
-  press **Run** once; the Loader unblocks its own files.
+  see [One-time setup](#one-time-setup).
 - **An antivirus program blocks or quarantines the Loader.** The Loader reads
   and writes DOSBox's memory while you play, as debuggers and game trainers do,
   which some antivirus programs distrust. Allow the Loader's folder, or start
@@ -397,9 +409,20 @@ log and says why.
   the trouble is the Loader's window.
 - **The game runs slowly, or the sound stutters:** choose a lower
   [game speed](#game-speed).
-- **The Loader shows no party or rolls:** it needs 64-bit Python to read 64-bit
-  DOSBox (see [Requirements](#requirements)), and the game started from the
+- **The Loader shows no party or rolls:** check that Python is the 64-bit one
+  ([Requirements](#requirements)) and that the game was started from the
   Loader or one of its `.bat` files.
+
+### Known issues
+
+Being looked into; a crash report, a save from just before and what you were
+doing help (see [Reporting a problem](#reporting-a-problem)):
+
+- **The game can stop with an error after a fight in the arena.** The Loader
+  writes a crash report; load the last save to go on.
+- **The damage numbers the game shows over a creature that's hit can fail to
+  appear in a fight.** The dice log and the combat log in the game (**L**)
+  have every hit's damage.
 
 ## In the game
 

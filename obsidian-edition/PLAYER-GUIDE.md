@@ -55,6 +55,7 @@ page each kit's numbers: the guide links to its tables.
   - [New items](#new-items)
 - [Experience and levels](#experience-and-levels)
 - [Worth knowing](#worth-knowing)
+- [Glossary](#glossary)
 - [The Options tab at a glance](#the-options-tab-at-a-glance)
 
 ## Getting started
@@ -1625,6 +1626,32 @@ AD&D's tables:
 - **Wait** puts a character later in the round.
 - **Ready a missile weapon and a melee weapon:** the game uses whichever fits
   the target's distance.
+
+## Glossary
+
+| Term | Meaning |
+|---|---|
+| **d20, 2d4, 1d6+1** | Dice: 2d4 is two four-sided dice added up; 1d6+1 a six-sided die plus 1. |
+| **AC** | Armour class: how hard a character is to hit. Lower is better (10 is no armour; it can go below 0). |
+| **THAC0** | "To hit AC 0": the d20 a character needs to hit AC 0. The roll needed against a target is THAC0 less its AC (THAC0 15 against AC 3 needs 12). Lower is better. |
+| **HP** | Hit points. At 0 a character is Out Cold, at −10 dead. |
+| **PSP** | Psionic strength points, spent on psionic powers. |
+| **XP** | Experience points, which bring new levels. |
+| **Saving throw** (save) | A d20 to escape or lessen a spell or attack, needing the number of one of five kinds: **PPD** paralysis, poison and death; **RSW** rod, staff and wand; **PP** petrification and polymorph; **BW** breath weapon; **SP** spell. |
+| **MR** | Magic resistance: a monster's percentage chance to shrug off a spell outright. |
+| **REAC**, **DEF** | DEX's reaction adjustment (initiative, two weapons) and defensive adjustment (AC, dodging fire, cold and electricity). |
+| **Prime requisite** | The score a class depends on (a fighter's STR); at creation it is raised to 17 if the die gave less. |
+| **Multiclass, dual class** | Two or three classes at once (any race but human); a human's change from one class to another. |
+| **Kit** | A class's speciality, chosen at creation: something gained, something given up ([Kits](#kits)). |
+| **Weapon spec** | A kind of weapon a warrior trains in, whatever its material: **specialized**, **mastery** and **grand mastery** for fighters, **expertise** for rangers ([weapon specialization](#weapon-specialization-and-attacks)). |
+| **Backstab**, **from behind** | A thief's attack on an unaware target, damage multiplied; an attack from behind is +2 to hit, the target's DEX and shield not counting ([from behind](#from-behind-and-backstabs)). |
+| **Caster level** | The level a spell is cast at, which sets its damage and duration. |
+| **Spell slot** | One spell of a level that can be cast before resting. |
+| **Sphere**, **discipline** | A cleric's element (air, earth, fire, water), which sets its spells and weapons; a psionicist's field of powers. |
+| **Preserver**, **defiler** | Wizards who draw magic from the land: preservers without harming it (the class you play), defilers by killing it. |
+| **Under the open sky** | An outdoor map, or open ground outside a city's buildings. |
+| **Ceramic pieces** | Athas's money. |
+| **The Loader** | The window that starts the game with the mod and shows the dice log and the party. |
 
 ## The Options tab at a glance
 

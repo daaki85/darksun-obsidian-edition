@@ -180,6 +180,23 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   thri-kreen) carry one.
 
 **Documentation**
+- **Kits, a page of their own** (`obsidian-edition/KITS.md`): the README's
+  kit tables and rules moved out, as Items were, the README keeping a table of
+  the kits' names with links; each kit fact repeated across the section (the
+  Shinobi's spell list, the Seeker's and Justifier's casting levels, the
+  Battle Mage's weapon pick, the Arcanist's two spells, Wild Fighting) is now
+  said once. Preservers' first spells stays in the README.
+- **A documentation review**: the Options tab's Weapon specialization switch
+  no longer names the weapon pages; the mod's items are "the mod's", not "the
+  Loader's"; the guide says weapon spec, as the game's screens do; the
+  Effects-screen click among the bug fixes; item reports and thri-kreen claws
+  in the guide and the README's bug fixes; the acid table in ITEMS.md ("Items
+  against acid"); the dice log's attack and save rows shortened, their detail
+  under the tables; the front page's "What it does" a paragraph; install
+  advice said once.
+- **New:** "Where to start" and "Known issues" in the README, a glossary in
+  the guide (THAC0, AC, PSP, the saves' letters and more), and in
+  DEVELOPMENT.md the folders and how a release is made.
 - **Items, a page of its own** (`obsidian-edition/ITEMS.md`): the README's
   item tables (every magic item, the magic weapons by weapon spec, every
   mundane weapon) moved out, as How the game works was; the README keeps a

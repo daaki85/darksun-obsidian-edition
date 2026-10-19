@@ -14,6 +14,7 @@ name.)
 
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without spoilers, a section for each class (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html))
 - [The full documentation](obsidian-edition/README.md): everything in detail, from installing to every item
+- [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
 - [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with its icon and where it is (spoilers)
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original game's own rules, from its code
@@ -21,42 +22,12 @@ name.)
 
 ## What it does
 
-- **Shows what the game keeps hidden.** Every roll is logged as it happens,
-  with what it needed and where each bonus came from
-  ([the dice log](obsidian-edition/README.md#the-dice-log)). The game's own
-  screens gain THAC0, saves, thief skills and spell slots, a combat log shows
-  with **L**, and the Look box tells you what can hurt a monster
-  ([In the game](obsidian-edition/README.md#in-the-game)).
-- **Brings the rules closer to AD&D:** class restrictions, AD&D's class
-  tables, INT's limits on learning spells, saving throws and multiclass hit
-  points as the books have them
-  ([Rule changes](obsidian-edition/README.md#rule-changes)).
-- **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and thirteen for races' pairs of classes), levels up to
-  10, STORE and RECALL for a creation roll, and fuller starting gear
-  ([More character customization](obsidian-edition/README.md#more-character-customization)).
-- **Expanded play:** thieves hide in shadows to backstab and pick pockets, the
-  leader's CHA lowers shop prices, and merchants sell back the magical items
-  sold to them
-  ([Expanded features](obsidian-edition/README.md#expanded-features)).
-- **More of Athas:** new weapons, shields and magic items, six wizard spells,
-  Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
-  Semyon's story and a use for the cooked vulture
-  ([New content](obsidian-edition/README.md#new-content)); on the map, the
-  party wears its gear, figures cast shadows and raise dust, and elves and
-  half-elves look their own ([Graphics](obsidian-edition/README.md#graphics)).
-- **Quality of life:** Tab and Enter to choose and attack an enemy, a view
-  that stays put in fights, dragging the map with the mouse wheel held down
-  ([Controls](obsidian-edition/README.md#controls)), 40 saves kept under their
-  names too, 29 saved characters
-  ([More saves and characters](obsidian-edition/README.md#more-saves-and-characters)),
-  a game speed setting, crash reports, and no manual check
-  ([No manual check](obsidian-edition/README.md#no-manual-check)).
-- **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
-  twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Hold Undead holding the living, Cause Wounds' odd dice, and more; and the
-  rules it got wrong, from spell saves to warriors' attacks, put right
-  ([The game's bugs, fixed](obsidian-edition/README.md#the-games-bugs-fixed)).
+It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd
+Edition, adds kits, weapon specialization, spells, items and people to Athas,
+dresses the party in what they wear, and fixes the game's bugs. Every rule
+change and addition has a switch. The full list is in
+[What it does](obsidian-edition/README.md#what-it-does), and every change from
+the original game in the [patch notes](PATCH-NOTES.md).
 
 The game's own files are never modified: the Loader runs a patched copy of the
 game from its own folder. It writes to the game folder only your saves (pages

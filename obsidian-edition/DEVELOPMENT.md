@@ -5,7 +5,21 @@ the game with it, work inside: the patched game and its helper, what's known
 of the game's data, the tools for mapping it, and how each part of the
 [README](README.md) is done.
 
-## Development
+## Building and testing
+
+### The folders
+
+| Folder or file | What it holds |
+|---|---|
+| `dsloader/` | the Loader: its window (`viewer.py`), starting the game (`launch.py`), the dice log (`dicelog.py`), the patched game (`gamepatch.py`) and the data written into the game's files (one module for each feature) |
+| `dos/` | the helper DOSBox loads, `dsclog.asm` (built to `DSCLOG.EXE`), and `gameend.asm` (`GAMEEND.COM`) |
+| `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
+| `tests/` | the unit tests, and `make_fake_party.py` for practising without the game |
+| `docs/` | the screenshots and the item icons the documentation shows |
+| `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
+| `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
+
+### Tests
 
 ```
 python -m unittest discover -s tests
@@ -35,6 +49,26 @@ built the same way:
 ```
 nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
 ```
+
+### Making a release
+
+The **Release** workflow (`.github/workflows/release.yml`) runs the tests on
+Windows, zips the `obsidian-edition` folder as
+`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip` (with `git archive`,
+so only what is committed goes in) and publishes it with
+`release-notes/v<version>.md` as its notes. Before it:
+
+1. Set the version in `dsloader/__init__.py` (`__version__`), the patch notes'
+   "Current version" and the front page's "**Obsidian Edition ...** is out";
+   `tests/test_version.py` checks they agree and that the release notes exist.
+2. Finish `release-notes/v<version>.md` and the CHANGELOG's entry, and
+   rebuild `DSCLOG.EXE` and the web pages if their sources changed.
+3. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand
+   (Actions → Release → Run workflow), which makes the tag.
+
+The zip holds the `obsidian-edition` folder only: the root's patch notes,
+CHANGELOG and release notes stay on GitHub, so the folder's own pages link to
+them by their GitHub address.
 
 GAMEEND.COM only reads what is left on the screen, and the game's own fatal
 errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
@@ -317,7 +351,7 @@ that room.
 ## The freeze report
 
 (For a crash, the game's own error message: `DOS_WRITE` and `DOS_QUIT`, under
-[Development](#development).)
+[Building and testing](#building-and-testing).)
 
 The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
 start; its timers run from it) begins with `INT VEC_TICK` (`PROBE_TICK`). Every

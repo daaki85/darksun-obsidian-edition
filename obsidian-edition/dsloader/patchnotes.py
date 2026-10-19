@@ -169,7 +169,7 @@ def build() -> str:
   </main>
 </div>
 <footer>
-  <p>Obsidian Edition runs on Windows with the GOG release of Dark Sun: Shattered Lands, in DOSBox, and needs 64-bit Python 3.8 or later (the launcher offers to install it). It never changes the game's own files. <a href="{REPO}/releases/latest">Download the latest release</a> · <a href="{REPO}/blob/main/obsidian-edition/README.md">Full documentation</a> · <a href="{REPO}/blob/main/CHANGELOG.md">Changelog</a></p>
+  <p>Obsidian Edition runs on Windows with the GOG release of Dark Sun: Shattered Lands, in DOSBox, and needs 64-bit Python 3.8 or later (its .bat files offer to install it). It never changes the game's own files. <a href="{REPO}/releases/latest">Download the latest release</a> · <a href="{REPO}/blob/main/obsidian-edition/README.md">Full documentation</a> · <a href="{REPO}/blob/main/CHANGELOG.md">Changelog</a></p>
 </footer>
 <textarea id="md" aria-hidden="true" tabindex="-1"></textarea>
 <script type="text/markdown" id="source">{source}</script>
