@@ -98,12 +98,12 @@ class ItemWatchTest(unittest.TestCase):
         self.data.items = [self.sword]            # dropped: the record is as it was
         self.data.records[12] = self.armour.record
         out, _ = self.run_for(5, start=3)
-        self.assertEqual(len(out), 1)
-        self.assertIn("left Garyn's chest: it is outside the party", out[0])
-        self.assertEqual(self.watch.reports, [])  # (nothing wrong: no report)
+        self.assertEqual(out, [])                 # (nothing wrong: not a word, no report)
+        self.assertEqual(self.watch.reports, [])
+        self.assertIn("outside the party", itemwatch.ordinary_loss(self.armour, self.armour.record, False, False))
 
     def test_ordinary_losses_get_no_report(self):
-        """Used up (fruit, arrows, scrolls), a spell's weapon, sold (money up), broken: a line only."""
+        """Used up (fruit, arrows, scrolls), a spell's weapon, sold (money up), broken: nothing said."""
         apple = item(20, 1, "Apple", slot=None, typ=60)
         hammer = item(21, 2, "Spiritual Hammer", slot="right hand", typ=30)
         spear = item(22, 3, "Polearm", slot="right hand", typ=19)
@@ -116,14 +116,18 @@ class ItemWatchTest(unittest.TestCase):
         for i in (20, 21, 22):
             self.data.records[i] = bytes(game.ITEM_SIZE)
         out, t = self.run_for(5, start=3)
-        self.assertEqual(sorted(out), ["Apple left Nira's pack: used up, or taken for a quest.",
-                                       "Polearm left Kalzith's right hand: it broke (a Broken Weapon in its place).",
-                                       "Spiritual Hammer left Dinos's right hand: a spell made it, and the spell is over."])
+        self.assertEqual(out, [])
+        empty = bytes(game.ITEM_SIZE)
+        self.assertIn("used up", itemwatch.ordinary_loss(apple, empty, False, False))
+        self.assertIn("spell", itemwatch.ordinary_loss(hammer, empty, False, False))
+        self.assertIn("broke", itemwatch.ordinary_loss(spear, empty, False, True))
+        self.assertIsNone(itemwatch.ordinary_loss(spear, empty, False, False))
         self.data.items = [self.armour, broken]
         self.data.records[13] = bytes(game.ITEM_SIZE)
         self.money = 160                           # (sold: the money went up as it went)
         out, _ = self.run_for(5, start=t)
-        self.assertEqual(out, ["Bone Long Sword left Garyn's right hand: sold (the party's money went up)."])
+        self.assertEqual(out, [])
+        self.assertIn("sold", itemwatch.ordinary_loss(self.sword, empty, True, False))
         self.assertEqual(self.watch.reports, [])
 
     def test_a_game_loaded(self):
@@ -146,6 +150,15 @@ class ItemWatchTest(unittest.TestCase):
         self.data.items = [self.sword, self.armour._replace(member=1, owner="Nira", slot=None)]
         out, _ = self.run_for(5, start=t)        # Nira carries it now
         self.assertEqual(out, [])
+
+    def test_handed_over_under_a_new_number(self):
+        """The game may move an item to another member as a new record, the old one freed: the
+        same item turning up within the wait is a hand-over, not news."""
+        self.run_for(2)
+        self.data.items = [self.sword, self.armour._replace(index=40, member=1, owner="Nira", slot=None)]
+        self.data.records[12] = bytes(game.ITEM_SIZE)
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual((out, self.watch.reports), ([], []))
 
     def test_context_is_kept(self):
         self.watch.remember(["Garyn attacks: 17 vs AC 5, hit"])

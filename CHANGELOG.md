@@ -19,7 +19,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   and the dice log's and dialogue's last lines) and says so in the dice log,
   so a vanished item can be looked into as a crash is. The ordinary losses
   (an item still outside the party, used up, a spell's weapon, sold, broken)
-  get a dice-log line only, and a loaded game is not news
+  pass in silence (a line each made a stream of them in a shop), as does an
+  item handed to another member under a new record number (the same picture,
+  type, name and plus turning up within the wait), and a loaded game is not news
   (`dsloader/itemwatch.py`, `GameData.party_items`; README, "If an item
   disappears").
 - **Four more magic weapons** for the kits that had too few (the dagger

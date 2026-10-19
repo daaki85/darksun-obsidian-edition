@@ -318,14 +318,14 @@ Send the file, with what you were doing, and it can be looked into. It holds:
 - the Loader's switches, the last 300 lines of the dice log and the last 80
   of the dialogue.
 
-The ordinary ways for an item to go get a line in the dice log and no report:
-an item that still exists outside the party (dropped, put in a chest, given
-or stolen: `... left Garyn's pack: it is outside the party`), one used up or
-taken for a quest (fruit, quest items, arrows, scrolls), one a spell made
-(Shillelagh, Flame Blade, Spiritual Hammer), one sold (the party's money went
-up as it went), and a weapon that broke (a Broken Weapon in its place). An
-item handed to another member, or moved and back within the two seconds, is
-not news at all, and nor is anything after a game is loaded.
+The ordinary ways for an item to go pass in silence, with no report and no
+line in the dice log: an item that still exists outside the party (dropped,
+put in a chest, given, sold or stolen), one used up or taken for a quest
+(fruit, quest items, arrows, scrolls), one a spell made (Shillelagh, Flame
+Blade, Spiritual Hammer), one sold (the party's money went up as it went),
+and a weapon that broke (a Broken Weapon in its place). Nor is an item handed
+to another member news, even where the game gives it a new record, or one
+moved and back within the two seconds, or anything after a game is loaded.
 
 ### If the game freezes
 

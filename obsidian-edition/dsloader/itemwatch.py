@@ -11,14 +11,16 @@ destroyed, used up or discarded by the game), the owner's items before and after
 party's, the game's time, region and fight state, the switches, and the dice log's and the
 dialogue's last lines. It is saved as crash-logs/item-YYYY-MM-DD-HHMMSS.txt and the dice log
 says so. An item that comes back within GONE_WAIT (moved between screens) is not news; nor is
-one that turns up with another member (handed over).
+one that turns up with another member (handed over), under its own number or, as the game may
+move it, under another (the same item, a new number, within the wait: ARRIVED).
 
-Only a loss with nothing ordinary to show for it is written as a report; the rest get a line in
-the dice log: an item that still exists outside the party (dropped, put in a chest, given or
-stolen), one that is used up or taken by a script (fruit and quest items, arrows, scrolls), one a
-spell made (Shillelagh, the spell's Flame Blade, Spiritual Hammer), one sold (the party's money
-went up), and a weapon that broke (a Broken Weapon came in its place). A game loaded (the game's
-clock gone back) starts the watch afresh.
+Only a loss with nothing ordinary to show for it is written as a report; the rest pass in
+silence (each was a dice log line, which a shop or a hand-over made a stream of): an item that
+still exists outside the party (dropped, put in a chest, given, sold or stolen), one that is used
+up or taken by a script (fruit and quest items, arrows, scrolls), one a spell made (Shillelagh,
+the spell's Flame Blade, Spiritual Hammer), one sold (the party's money went up), and a weapon
+that broke (a Broken Weapon came in its place). A game loaded (the game's clock gone back)
+starts the watch afresh.
 """
 
 import collections
@@ -50,6 +52,7 @@ class ItemWatch:
         self._money: Optional[int] = None  # (the party's money at the last look)
         self._sold_at: Optional[float] = None  # (when the money last went up)
         self._broke_at: Dict[int, float] = {}  # (member: when a Broken Weapon last came to them)
+        self._arrived: Dict[Tuple[int, ...], float] = {}  # (an item new to the party: when)
         self.dice: Deque[str] = collections.deque(maxlen=DICE_LINES)
         self.talk: Deque[str] = collections.deque(maxlen=TALK_LINES)
         self.reports: List[str] = []      # the paths written (tests read them)
@@ -60,6 +63,7 @@ class ItemWatch:
         self._missing.clear()
         self._clock = self._money = self._sold_at = None
         self._broke_at.clear()
+        self._arrived.clear()
 
     def remember(self, lines: List[str]) -> None:
         self.dice.extend(lines)
@@ -90,12 +94,15 @@ class ItemWatch:
             self._seen = current
             return []
         for i in current.values():
-            if i.type in BROKEN and i.index not in self._seen:
-                self._broke_at[i.member] = now
+            if i.index not in self._seen:
+                self._arrived[_same(i.record)] = now
+                if i.type in BROKEN:
+                    self._broke_at[i.member] = now
         # (what happened as an item went: within the wait it took to count as gone)
         recent = lambda at: at is not None and now - at <= GONE_WAIT + CHECK_INTERVAL
         sold = recent(self._sold_at)
         broke = {m for m, at in self._broke_at.items() if recent(at)}
+        self._arrived = {k: at for k, at in self._arrived.items() if recent(at)}
         out: List[str] = []
         for index, was in list(self._seen.items()):
             if index in current:
@@ -105,6 +112,8 @@ class ItemWatch:
             if now - since < GONE_WAIT:
                 continue
             del self._missing[index]
+            if _same(was.record) in self._arrived:
+                continue              # (handed over: the same item with another member, a new number)
             out += self._gone(data, was, current, now, settings, sold, was.member in broke)
         # what is there now is what the next look compares with (the gone ones are reported,
         # the ones still inside GONE_WAIT stay remembered through _missing)
@@ -120,9 +129,8 @@ class ItemWatch:
             record = b""
         fate = describe_fate(was, record)
         where = f"{was.owner}'s {was.slot}" if was.slot else f"{was.owner}'s pack"
-        ordinary = ordinary_loss(was, record, sold, broke)
-        if ordinary:
-            return [f"{was.label} left {where}: {ordinary}."]
+        if ordinary_loss(was, record, sold, broke):
+            return []
         text = item_report(was, record, fate, current, data, now, settings, list(self.dice), list(self.talk))
         try:
             from . import launch
@@ -131,6 +139,15 @@ class ItemWatch:
             path = f"(could not be saved: {e})"
         self.reports.append(path)
         return [f"{was.label} is gone from {where}: {fate}. An item report is saved in {path}."]
+
+
+def _same(record: bytes) -> Tuple[int, ...]:
+    """What tells an item from another whatever its number, owner and place: its picture, type,
+    name and plus (the rest of its record the game may change as the item moves)."""
+    if len(record) < game_mod.ITEM_SIZE:
+        return ()
+    return (struct.unpack_from("<H", record, 0)[0], struct.unpack_from("<H", record, game_mod.ITEM_TYPE)[0],
+            struct.unpack_from("<H", record, game_mod.ITEM_NAME)[0], record[game_mod.ITEM_PLUS])
 
 
 def _read(get) -> Optional[int]:
