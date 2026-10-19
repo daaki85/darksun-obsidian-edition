@@ -349,7 +349,8 @@ the game started from the Loader.
 Open an issue on
 [the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues),
 saying what you were doing, the version (the Loader's title bar), and
-attaching the crash or freeze report if there is one. A save from just before
+attaching the crash, freeze or item report if there is one (all three are in
+`crash-logs`). A save from just before
 it happened helps most of all.
 
 ### Updating, backups and the Loader's files

@@ -1292,14 +1292,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **DEVELOPMENT.md:** the patched game's interrupts are summarised, with
   `gamepatch.py` as the list, in place of a list that had fallen behind.
 
-## Pull request #30 ([merged 2026-10-08](https://github.com/daaki85/darksun-companion-mod/pull/30))
+## Pull request #30 ([merged 2026-10-08](https://github.com/daaki85/darksun-obsidian-edition/pull/30))
 
 **Release**
 - **Templar's Ledger 1.2.0:** the version is 1.2.0, with its notes in
   `release-notes/v1.2.0.md` (pull requests #19 to #29), listed on the front
   page with the others.
 
-## Pull request #29 ([merged 2026-10-08](https://github.com/daaki85/darksun-companion-mod/pull/29))
+## Pull request #29 ([merged 2026-10-08](https://github.com/daaki85/darksun-obsidian-edition/pull/29))
 
 **Changed**
 - **A ranger's bow is its own** with class restrictions: a multiclass ranger
@@ -1316,7 +1316,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Two weapons** is a section of its own, beside Thieves and Saving throws
   (the game's rule, then AD&D's penalties), rather than under The dice log.
 
-## Pull request #28 ([merged 2026-10-08](https://github.com/daaki85/darksun-companion-mod/pull/28))
+## Pull request #28 ([merged 2026-10-08](https://github.com/daaki85/darksun-obsidian-edition/pull/28))
 
 **Changed**
 - **Options tab:** a **Thieves** section of its own, after Rule changes, with
@@ -1363,7 +1363,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   program and a thief's card; the backstab table checked against the game's
   item data (named long swords weigh 10 to 40).
 
-## Pull request #27 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/27))
+## Pull request #27 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/27))
 
 **Changed**
 - **No bow to choose for a ranger** at creation (nor in the catch-up pick at a
@@ -1374,7 +1374,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - Where a ranger's bow expertise and missile weapons' rates show, and the
   Options tab's weapon specialization box, mention them.
 
-## Pull request #26 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/26))
+## Pull request #26 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/26))
 
 **Changed**
 - **Missile specialists shoot faster:** with weapon specialization, a fighter
@@ -1393,7 +1393,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   type not chosen, expertise, specialized, mastery, grand mastery) and level,
   for melee, bows and the other missile weapons.
 
-## Pull request #25 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/25))
+## Pull request #25 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/25))
 
 **Added**
 - **Bone and obsidian great axes and a bone dagger,** each with an icon of its
@@ -1433,7 +1433,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Mundane items** in a table of their own in New items, and the Ledger's
   weapons in the acid saving throw table.
 
-## Pull request #24 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/24))
+## Pull request #24 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/24))
 
 **Added**
 - **Magic weapons for the classes that had too few,** each with an icon of its
@@ -1454,7 +1454,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Drakejaw** (pull request #23) was never on its Magera: the game read its
   own Gemfields region, not the Ledger's copy, which DSCLOG now opens instead.
 
-## Pull request #23 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/23))
+## Pull request #23 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/23))
 
 **Added**
 - **Three magic axes,** each with an icon of its own and a story from Alagorn:
@@ -1469,13 +1469,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **The Elven Leader's Gythka is +2** (was +1). It also no longer takes
   Kreenfang's icon, which any Gythka +1 did.
 
-## Pull request #22 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/22))
+## Pull request #22 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/22))
 
 **Changed**
 - **Cermak, of the game's own party, specializes in the long sword and the
   axe** (was the club), which count once his gladiator levels do again.
 
-## Pull request #21 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/21))
+## Pull request #21 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/21))
 
 **Added**
 - **The Tome of Understanding,** Father Garyn's gift when the party brings
@@ -1573,7 +1573,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Options tab's boxes after the table; the ranger's row no longer names a
   fighter/ranger (the game has none).
 
-## Pull request #20 ([merged 2026-10-07](https://github.com/daaki85/darksun-companion-mod/pull/20))
+## Pull request #20 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/20))
 
 **Added**
 - **The new plain weapons in the world** (a new content switch, on by default):
@@ -1660,7 +1660,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   section with a table, Kalzith and Semyon one of new people told as a player
   meets them; and the helms' and boots' rules are one.
 
-## Pull request #19 ([merged 2026-10-06](https://github.com/daaki85/darksun-companion-mod/pull/19))
+## Pull request #19 ([merged 2026-10-06](https://github.com/daaki85/darksun-obsidian-edition/pull/19))
 
 **Added**
 - **Which class levels up next, on View Character:** for a character of more
@@ -1684,12 +1684,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (Color Spray's is in the sewers). Magic Missile and Color Spray scrolls he
   stocked before become Shield and Burning Hands, wherever they are.
 
-## Pull request #18 ([merged 2026-10-06](https://github.com/daaki85/darksun-companion-mod/pull/18))
+## Pull request #18 ([merged 2026-10-06](https://github.com/daaki85/darksun-obsidian-edition/pull/18))
 
 - **Release 1.1.0:** the version, its notes, and pull request #17 marked
   merged in the READMEs.
 
-## Pull request #17 ([merged 2026-10-06](https://github.com/daaki85/darksun-companion-mod/pull/17))
+## Pull request #17 ([merged 2026-10-06](https://github.com/daaki85/darksun-obsidian-edition/pull/17))
 
 **Changed**
 - **Kalzith's scrolls at the game's prices:** 3,000 to 12,000 ceramic: the
@@ -1759,7 +1759,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - The Ledger's new item pictures no longer wipe an item's spell: changing an
   icon cleared four bytes of the item where the game's picture cache is two.
 
-## Pull request #16 ([merged 2026-10-04](https://github.com/daaki85/darksun-companion-mod/pull/16))
+## Pull request #16 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/16))
 
 **Added**
 - **Semyon breaks out with Scar:** recruit Semyon before the fight with Scar,
@@ -1832,12 +1832,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Speed:** the rings' and dust's colour tables are worked out once for a
   palette, not every 30 seconds.
 
-## Pull request #15 ([merged 2026-10-04](https://github.com/daaki85/darksun-companion-mod/pull/15))
+## Pull request #15 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/15))
 
 - **READMEs after pull request #14:** the changelog, the cooked vulture quest
   and its screenshot, and the new log lines.
 
-## Pull request #14 ([merged 2026-10-04](https://github.com/daaki85/darksun-companion-mod/pull/14))
+## Pull request #14 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/14))
 
 **Added**
 - **What the party wears, on the map:** each character's figure shows their
@@ -1935,18 +1935,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **"Killed" lines for everyone in an area the party left:** walking from the
   slave pens into the arena logged most of the pens as "is killed".
 
-## Pull request #13 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/13))
+## Pull request #13 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/13))
 
 **Added**
 - **The Release workflow can be run by hand**, making the version's tag.
 
-## Pull request #12 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/12))
+## Pull request #12 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/12))
 
 **Added**
 - **Release 1.0.0:** the version, its release notes, and a workflow that
   builds the release zip.
 
-## Pull request #11 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/11))
+## Pull request #11 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/11))
 
 **Added**
 - **Cat's Grace looks like itself:** its own icon and its own description in
@@ -1974,13 +1974,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Getting started:** open the Ledger first, pick the options, then **Start
   the game** from it.
 
-## Pull request #10 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/10))
+## Pull request #10 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/10))
 
 **Fixed**
 - **Half-giants' two-handed weapons in one hand:** the rule didn't take
   effect.
 
-## Pull request #9 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/9))
+## Pull request #9 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/9))
 
 **Added**
 - **Rule change: thief skills from AD&D's table.** A skill is AD&D's average
@@ -2008,7 +2008,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Options:** the Ring +1, picking pockets and the thieving tools button sit
   under Rule changes, with the other changes to play.
 
-## Pull request #8 ([merged 2026-10-02](https://github.com/daaki85/darksun-companion-mod/pull/8))
+## Pull request #8 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/8))
 
 **Added**
 - **Rule change: levels up to 10.** Every class can reach 10th level, at
@@ -2035,7 +2035,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Pick pockets lifts a short sword** too, though it weighs more than other
   small things.
 
-## Pull request #7 ([merged 2026-10-01](https://github.com/daaki85/darksun-companion-mod/pull/7))
+## Pull request #7 ([merged 2026-10-01](https://github.com/daaki85/darksun-obsidian-edition/pull/7))
 
 **Added**
 - **Rule change: AD&D's two-weapon penalties.** A non-ranger with a melee
@@ -2067,7 +2067,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - Item names numbered past 255 were read wrongly by the Ledger (for example,
   Serpent Boots).
 
-## Pull request #6 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/6))
+## Pull request #6 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/6))
 
 **Fixed**
 - **Boots gave no extra move.** The rule looked at the wrong equipment slot.
@@ -2075,7 +2075,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 **Changed**
 - README screenshots retaken (move silently, boots, Thieves' Tools, Options).
 
-## Pull request #5 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/5))
+## Pull request #5 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/5))
 
 **Added**
 - A **Give thieving tools now** button on the Options tab.
@@ -2087,7 +2087,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - Only one set of tools per thief.
 - Long lines on the Options tab wrap to the window.
 
-## Pull request #4 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/4))
+## Pull request #4 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/4))
 
 **Added**
 - **Picking pockets:**
@@ -2107,7 +2107,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - The arena's opening show.
 - The Announcer's name being replaced by one learned mid-fight.
 
-## Pull request #3 ([merged 2026-09-30](https://github.com/daaki85/darksun-companion-mod/pull/3))
+## Pull request #3 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/3))
 
 **Added**
 - **In the game:**
@@ -2128,7 +2128,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 **Changed**
 - No packaged .exe: the .bat files offer to install Python instead.
 
-## Pull request #2 ([merged 2026-09-29](https://github.com/daaki85/darksun-companion-mod/pull/2))
+## Pull request #2 ([merged 2026-09-29](https://github.com/daaki85/darksun-obsidian-edition/pull/2))
 
 **Added**
 - The game's own **portraits and font**, read from your install at run time.
@@ -2148,7 +2148,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **The log at a glance:** round headers, hit chances, HP left, and a details
   switch.
 
-## Pull request #1 ([merged 2026-09-28](https://github.com/daaki85/darksun-companion-mod/pull/1))
+## Pull request #1 ([merged 2026-09-28](https://github.com/daaki85/darksun-obsidian-edition/pull/1))
 
 **Added**
 - **The party viewer**, reading Shattered Lands' character records live.

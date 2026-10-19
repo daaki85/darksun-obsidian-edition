@@ -4,7 +4,9 @@ name: Obsidian Edition tests
 on:
   push:
     branches: [obsidian-edition]
-    paths: ["obsidian-edition/**", ".github/workflows/tests.yml"]
+    paths: ["obsidian-edition/**", "PATCH-NOTES.md", "patch-notes.html", "README.md", ".github/workflows/tests.yml"]
+  pull_request:
+    paths: ["obsidian-edition/**", "PATCH-NOTES.md", "patch-notes.html", "README.md", ".github/workflows/tests.yml"]
   workflow_dispatch:
 
 jobs:

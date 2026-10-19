@@ -225,6 +225,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message in it; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
+- **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
 - **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
 
