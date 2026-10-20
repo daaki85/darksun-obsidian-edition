@@ -101,6 +101,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   slowdown was fixed; the README says the expanded panel covers those under
   it. `tests/test_doclinks.py` checks the docs' links and the README's "How it
   works" links.
+- **Features and rules, a page of their own** (`obsidian-edition/FEATURES.md`):
+  the README's rule changes, character customization, expanded features, new
+  content, graphics, controls, bug fixes, saves and game speed (about 1,800
+  lines) moved there, the README (about 1,000 lines) keeping installing,
+  running, the Loader's window and the dice log, with a line pointing to the
+  new page; every link to the moved sections points there now.
 
 ## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
 
@@ -345,7 +351,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   guide keeps who takes each kit on Athas and links to them; the kits' spell
   slots table moved from the guide to the README; DEVELOPMENT links there for
   the Seeker's, Justifier's and Shinobi's tables.
-- **[The game's bugs, fixed](obsidian-edition/README.md#the-games-bugs-fixed)**:
+- **[The game's bugs, fixed](obsidian-edition/FEATURES.md#the-games-bugs-fixed)**:
   a README section with every bug of the game's own the Loader mends, the
   spells' among them, and a line for them under What it does on both front
   pages.

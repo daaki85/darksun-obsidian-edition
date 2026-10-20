@@ -5,7 +5,7 @@ the curious. [The README](README.md) is about the mod.*
 
 What the game does that its manual doesn't say, from its code and checked in
 play. The dice log shows each as it happens, and the
-[rule changes](README.md#rule-changes) change some of it.
+[rule changes](FEATURES.md#rule-changes) change some of it.
 
 ## Initiative
 
@@ -44,12 +44,12 @@ A round is 60 game seconds. Some effects last a number of uses instead
   foe's spell for one creature (not an area's, a cone's or a wall's), has a 75%
   chance to strike an image instead, the image vanishing and the blow or spell
   lost; the dice log shows each d100 (the game's own images worked otherwise:
-  see [The game's bugs, fixed](README.md#the-games-bugs-fixed)).
+  see [The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
 - Armor: a number of damaging hits, one charge each (with the Loader: see
-  [The game's bugs, fixed](README.md#the-games-bugs-fixed)).
+  [The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 
 Charm, Feeblemind, Web and a few others last until removed.
 
@@ -190,7 +190,7 @@ rolls a new character. From the game's code, and checked against the screen:
   log. The creation screen's other random numbers only choose pictures.
 * **The total.** After the six scores comes what they add up to, the most they
   may add up to with
-  [Scores and hit points as rolled](README.md#scores-and-hit-points-as-rolled).
+  [Scores and hit points as rolled](FEATURES.md#scores-and-hit-points-as-rolled).
 
 Changing sex or race can make the game roll hit points twice, once with the
 old scores and once with the new: the last hit point line is the one that
@@ -206,7 +206,7 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   psionic, death, and for weapons crushing, edged or pointed, from the item's
   type; a natural (unarmed) attack's is crushing, fists and monsters' claws
   alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
-  Claw's talons are edged: see [Erdlu Claw](README.md#new-wizard-spells)). A weapon's hit also carries its magic: one bit for +1 or better, one
+  Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)). A weapon's hit also carries its magic: one bit for +1 or better, one
   for +2 or better and one for +3 or better (the weapon's plus, or its
   ammunition's if that's higher). A monster's own attacks count as magical by
   its level: (level - 2) / 2, so a 6th-level monster hits like a +2 weapon.
@@ -226,7 +226,7 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   monsters' powers on the target: 2d6 cold, 2d6 or 20 acid, paralysis,
   poison of 10 or 30 damage, a deadly Poison, disease on 1 hit in 10. The 20
   acid (the Rampager's) and a corroding touch (the Babau's) can also destroy a
-  worn item (see [Items saving against acid](README.md#items-saving-against-acid)).
+  worn item (see [Items saving against acid](FEATURES.md#items-saving-against-acid)).
 - Undead (race 9 on the character sheet) take nothing from poison and
   draining, and mind-affecting spells, charms and holds don't work on them.
 
@@ -307,7 +307,7 @@ chance out as:
 - plus the situation's bonus or penalty (a hard lock, say).
 
 With **Thief skills from AD&D's table** ticked (see
-[Thief skills from AD&D's table](README.md#thief-skills-from-adds-table)), the first
+[Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)), the first
 two and the DEX part are AD&D's instead.
 
 Only characters with thief levels have the skills; everyone else's chance is
@@ -315,7 +315,7 @@ Only characters with thief levels have the skills; everyone else's chance is
 shows under HP): a thief who is Stunned, Out Cold, Dying and so on can't use
 the skills. A character not yet played (New, before the game starts) counts as
 Okay with the mod, so a party's thief skills show while it is made (see
-[More characters](README.md#more-characters)).
+[More characters](FEATURES.md#more-characters)).
 
 Some effects rule out a skill:
 - Blind, Afraid, Confused, Berserk and Paralyzed stop them all, except that a
@@ -362,8 +362,8 @@ has a script command that lets each member try in turn, but no script uses it.)
 **The game never rolls move silently, hide in shadows or read languages**, so
 on their own they make no difference, nor does the equipment penalty on them.
 The Loader rolls them: move silently when a pocket isn't picked
-([Picking pockets](README.md#picking-pockets)), hide in shadows and move silently in
-fights ([backstabs](README.md#hiding-in-shadows-to-backstab)), and read languages when
+([Picking pockets](FEATURES.md#picking-pockets)), hide in shadows and move silently in
+fights ([backstabs](FEATURES.md#hiding-in-shadows-to-backstab)), and read languages when
 a [Shinobi](KITS.md#thief-kits) reads a scroll. The scripts also make
 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
@@ -375,8 +375,8 @@ equipment penalty (none in games started with the dice log) and effects (but
 not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
 the two the Loader rolls: move silently (when a pocket isn't picked, see
-[Picking pockets](README.md#picking-pockets)) and hide in shadows (to
-[backstab](README.md#hiding-in-shadows-to-backstab)).
+[Picking pockets](FEATURES.md#picking-pockets)) and hide in shadows (to
+[backstab](FEATURES.md#hiding-in-shadows-to-backstab)).
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
 ## Attacks from behind and backstabs
@@ -396,7 +396,7 @@ From the game's code:
   attack of the round the damage, STR bonus included, is multiplied: x2 at
   thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
 
-Which weapons can backstab, the game's and the [Loader's](README.md#new-items) (magic
+Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items) (magic
 ones included). Weight belongs to the weapon's type and material, in the
 game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
 mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
@@ -450,7 +450,7 @@ a normal d20 saves 35% of the time and a doubled one 70%, which is why
 Fireball's victims usually get away with half damage. It isn't AD&D, and the
 game never explains it; it may have been meant as a dodge. The log says it on
 each save: `d20 = 7, doubled against fire = 14`. Two of the
-mod's [rule changes](README.md#spells-saved-against-with-the-spell-save) put the
+mod's [rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
 spell save back and take the doubled d20 away.
 
 The target's spells and effects:
@@ -487,11 +487,11 @@ Rules in the code that never come into play: Cloak of Bravery's +4 against
 fear applies only to a kind of spell that no spell in the game is marked as,
 and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
 at DEX 1 to −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
-[rule change](README.md#rule-changes) puts it on the fire, cold and electricity spells.
+[rule change](FEATURES.md#rule-changes) puts it on the fire, cold and electricity spells.
 And nothing in the game gives saves from items: there are no rings or cloaks
-of protection, which is why the mod adds [two rings and a cloak](README.md#new-items). Their +1 is in the log's saving throws as
+of protection, which is why the mod adds [two rings and a cloak](FEATURES.md#new-items). Their +1 is in the log's saving throws as
 `+1 Ring of Protection` and `+1 Cloak of Protection` (with
-[AD&D's rules for them](README.md#rings-and-cloaks-of-protection) off, all of it as
+[AD&D's rules for them](FEATURES.md#rings-and-cloaks-of-protection) off, all of it as
 `Ring of Protection`).
 
 ## The arena's count of fights

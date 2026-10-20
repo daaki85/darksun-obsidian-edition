@@ -1,5 +1,5 @@
-"""The documentation's links: every relative link and anchor goes somewhere, and every README
-section that DEVELOPMENT.md explains links to its explanation."""
+"""The documentation's links: every relative link and anchor goes somewhere, and every README or
+features page section that DEVELOPMENT.md explains links to its explanation."""
 
 import collections
 import glob
@@ -67,14 +67,15 @@ class DocLinkTests(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_readme_links_how_it_works(self):
-        """DEVELOPMENT's "How each part works" names README sections by their headings; each such
-        README section links to its explanation."""
+        """DEVELOPMENT's "How each part works" names README and features page sections by their
+        headings; each such section links to its explanation."""
         dev = os.path.join(HERE, "DEVELOPMENT.md")
         with open(dev, encoding="utf-8") as f:
             text = f.read()
         part = text[text.index("## How each part works"):]
         explained = {h: slug(h) for h in re.findall(r"^### (.+)$", part, re.M)}
-        missing = [heading for heading, body in sections(os.path.join(HERE, "README.md"))
+        missing = [heading for page in ("README.md", "FEATURES.md")
+                   for heading, body in sections(os.path.join(HERE, page))
                    if heading in explained and f"DEVELOPMENT.md#{explained[heading]}" not in body]
         self.assertEqual(missing, [])
 

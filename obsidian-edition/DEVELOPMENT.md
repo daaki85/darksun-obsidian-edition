@@ -3,7 +3,7 @@
 How Obsidian Edition and the Dark Sun Obsidian Edition Loader, which starts
 the game with it, work inside: the patched game and its helper, what's known
 of the game's data, the tools for mapping it, and how each part of the
-[README](README.md) is done.
+[README](README.md) and the [features page](FEATURES.md) is done.
 
 ## Building and testing
 
@@ -141,19 +141,19 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    address used to restart a fight, or stop the game with "Stack overflow!").
    A few patches change the game outright: 29 saved characters rather than 19,
    DELETE deleting the one chosen and a New character counting as Okay (see
-   [more characters](README.md#more-characters)), Enter loading only a save
-   that is there (see [more saves](README.md#more-saves)), a script buffer of
+   [more characters](FEATURES.md#more-characters)), Enter loading only a save
+   that is there (see [more saves](FEATURES.md#more-saves)), a script buffer of
    11,776 bytes rather than 10,000 (for
-   [Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)),
+   [Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them)),
    and data files looked for in the current folder rather than next to the
    program. The helper also hooks DOS's `INT 21h`, to open the launcher's
    copies of `SEGOBJEX.GFF`, `RESOURCE.GFF`, `GPLDATA.GFF` and some regions'
-   files (for the [new items](README.md#new-items),
-   [Kalzith](README.md#kalzith), [Semyon](README.md#semyon) and
+   files (for the [new items](FEATURES.md#new-items),
+   [Kalzith](FEATURES.md#kalzith), [Semyon](FEATURES.md#semyon) and
    [no manual check](README.md#no-manual-check)), and to keep what the game
    last wrote to the screen for a crash report (see
    [the crash report](#the-crash-report)), the mouse driver's `INT 33h` (for
-   [scrolling the map](README.md#scrolling-the-map)) and the keyboard's
+   [scrolling the map](FEATURES.md#scrolling-the-map)) and the keyboard's
    `INT 16h` (for Tab and Enter). DOSBox runs it from the game folder, so it
    uses your saves as usual.
 2. `dos\DSCLOG.EXE` (source in `dos\dsclog.asm`) is a tiny DOS program loaded
@@ -173,13 +173,13 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
 
 Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking
-pockets, the [rule changes](README.md#rule-changes)), the Loader's other
+pockets, the [rule changes](FEATURES.md#rule-changes)), the Loader's other
 additions (the new items and the Ring +1, the cooked vulture, Kalzith, Semyon,
 what the party wears, shadows, dust, rings, Tab and Enter, scrolling) and the
 fixes always in the patched copy: no equipment penalty on thief skills (see
 [Thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), the roster's
 DELETE and New characters counting as Okay (see
-[More characters](README.md#more-characters)), and no manual check (see
+[More characters](FEATURES.md#more-characters)), and no manual check (see
 [No manual check](README.md#no-manual-check)).
 
 Limitations:
@@ -283,7 +283,7 @@ alone.) Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
 | type | `+0x12` | its AC (on top of the item's plus) |
 
 Free item records and free objects are kept in lists (`DS:0x4D76`,
-`DS:0x4D72`), which is how the Loader adds [the Ring +1](README.md#new-items) and
+`DS:0x4D72`), which is how the Loader adds [the Ring +1](FEATURES.md#new-items) and
 Kalzith's scrolls as the game would.
 
 Also seen: per-region `RGnn` chunks hold a combined creature record, sheet and
@@ -428,9 +428,9 @@ afresh.
 
 ## How each part works
 
-For each part of the README, how it's done: where the patched game calls the
-helper (DSCLOG), and what the Loader reads and writes. The heading names the
-README's section.
+For each part of the README and the features page, how it's done: where the
+patched game calls the helper (DSCLOG), and what the Loader reads and writes.
+The heading names the page's section.
 
 ### The Dialogue tab
 
@@ -750,7 +750,7 @@ line).
 
 ### Class restrictions
 
-([In the README](README.md#class-restrictions).)
+([In the features page](FEATURES.md#class-restrictions).)
 
 How: the helper adds the classes' limits where the game checks an item against
 the classes allowed to use it (`INT CDh`; `DUAL_WARRIOR` lets a human thief
@@ -785,7 +785,7 @@ can't wear in the backpack.
 
 ### Multiclass hit points
 
-([In the README](README.md#multiclass-hit-points).)
+([In the features page](FEATURES.md#multiclass-hit-points).)
 
 The game's most hit points (874B0h): the sheet's total of rolled dice (`+0Ah`,
 each new level's die added at 8735Eh), scaled by the levels now over the
@@ -807,7 +807,7 @@ book's, so that probe is gone.)
 
 ### Hit dice: the better of two
 
-([In the README](README.md#hit-dice-the-better-of-two).)
+([In the features page](FEATURES.md#hit-dice-the-better-of-two).)
 
 How: where the game has rolled a level's die (`INT BAh`, in place of the
 `mov cx,ax` after the roll, DSUN.EXE 87319h), the helper keeps the first roll
@@ -818,7 +818,7 @@ level.
 
 ### Scores and hit points as rolled
 
-([In the README](README.md#scores-and-hit-points-as-rolled).)
+([In the features page](FEATURES.md#scores-and-hit-points-as-rolled).)
 
 The creation screen (overlay at 65480h; `DS:11A0h` the creature being made,
 its scores from `+22h`; `DS:119Ch` the sheet, the hit points its `+8`):
@@ -886,7 +886,7 @@ SPELL (`PROBE_CR_SPELLS`).
 
 ### Rangers' casting level
 
-([In the README](README.md#rangers-casting-level).)
+([In the features page](FEATURES.md#rangers-casting-level).)
 
 The game works out a caster's level in two places, both with the combatant
 and the spell as arguments. The caster level routine (81B16h) takes the best
@@ -910,7 +910,7 @@ rounds (caster level 2; 27 without the rule).
 
 ### Preservers' INT
 
-([In the README](README.md#preservers-int).)
+([In the features page](FEATURES.md#preservers-int).)
 
 When a scroll's icon is clicked in its box, the game's routine (DSUN.EXE
 8B690h) asks whether the character on show may learn the scroll's spell
@@ -954,7 +954,7 @@ roll and chance at `+366` (`intlearn.line`).
 
 ### AD&D's class tables
 
-([In the README](README.md#adds-class-tables); `tables.py`.)
+([In the features page](FEATURES.md#adds-class-tables); `tables.py`.)
 
 The game's XP table is 8 rows of 20 words (classes 1-8: cleric, druid,
 fighter, gladiator, preserver, psionicist, ranger, thief; the gladiator's row
@@ -980,7 +980,7 @@ routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
 
 ### Spells saved against with the spell save
 
-([In the README](README.md#spells-saved-against-with-the-spell-save).)
+([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
 
 How: the Loader writes the game's own table that turns a spell's kind of save
 into one of the five (a table of words at DS:1E75h, read afresh for every
@@ -988,7 +988,7 @@ save), and puts it back when the rule is unticked.
 
 ### Fire, cold and electricity: DEX instead of a doubled d20
 
-([In the README](README.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
+([In the features page](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
 
 How: the helper does the save's doubling (`INT F0h`) only while this rule is
 off, and the Loader marks the fire, cold and electricity spells with the game's
@@ -998,7 +998,7 @@ table.
 
 ### Two weapons
 
-([In the README](README.md#two-weapons).)
+([In the features page](FEATURES.md#two-weapons).)
 
 How: the game reads the attacker's DEX adjustment when it works out the
 two-weapon adjustment; the helper takes over from there (`INT FEh`) and gives
@@ -1026,7 +1026,7 @@ the log and the party view.
 
 ### Items saving against acid
 
-([In the README](README.md#items-saving-against-acid).)
+([In the features page](FEATURES.md#items-saving-against-acid).)
 
 How: where the game works out the number a weapon's d20 must reach
 (`INT D6h`), where it skips the roll for armour with no magical power
@@ -1035,7 +1035,7 @@ gives the easier of the two and records the check for the dice log.
 
 ### Rings and cloaks of protection
 
-([In the README](README.md#rings-and-cloaks-of-protection).)
+([In the features page](FEATURES.md#rings-and-cloaks-of-protection).)
 
 How: the game's AC routine counts a worn item's plus only if its type's +0Fh
 has bit 80h, which the Ring type lacks; the helper (`INT F8h`, at 58EBDh)
@@ -1049,7 +1049,7 @@ saves and AC rows weigh it the same way (`GameData.protection`).
 
 ### Half-giants' two-handed weapons
 
-([In the README](README.md#half-giants-two-handed-weapons).)
+([In the features page](FEATURES.md#half-giants-two-handed-weapons).)
 
 How: the inventory screen checks a weapon type's two-handed bit (+0Fh, 40h)
 twice when something goes into a hand: the other hand's ("Two handed weapon in
@@ -1058,7 +1058,7 @@ answers both for the character on show, "not two-handed" for a half-giant.
 
 ### Helms
 
-([In the README](README.md#helms).)
+([In the features page](FEATURES.md#helms).)
 
 How: the helper sets the helm types' AC as the game's AC routine reads it
 (`INT F8h`, the Ring +1's place), and as the item box reads it for its "AC
@@ -1068,7 +1068,7 @@ changed go back to the game's.)
 
 ### Weapon specialization
 
-([In the README](README.md#weapon-specialization).)
+([In the features page](FEATURES.md#weapon-specialization).)
 
 How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the
@@ -1395,7 +1395,7 @@ with its bans, and the Effects screen's pages.
 
 ### Levels up to 10
 
-([In the README](README.md#levels-up-to-10).)
+([In the features page](FEATURES.md#levels-up-to-10).)
 
 How: the game holds a class level against 9 in two places, where a character
 goes up a level and where View Character shows the XP for the next one; the
@@ -1403,7 +1403,7 @@ helper (`INT E7h`) holds it against 10 instead while the rule is on.
 
 ### STORE and RECALL on the creation screen
 
-([In the README](README.md#store-and-recall-on-the-creation-screen).)
+([In the features page](FEATURES.md#store-and-recall-on-the-creation-screen).)
 
 With the `roll_store` switch off, the launcher leaves both out: the buttons from
 its copy of `RESOURCE.GFF` (`icons.write_resources`) and the click's patch from
@@ -1440,7 +1440,7 @@ the AC and damage. The overlay's segment is the INT's return.
 
 ### Fuller starting gear
 
-([In the README](README.md#fuller-starting-gear).)
+([In the features page](FEATURES.md#fuller-starting-gear).)
 
 `dsloader/startgear.py`'s `fill`, from the dice log after
 `weaponchoice.finish_new`, `class_gear` and `kit_gear` (the `starting_gear`
@@ -1483,7 +1483,7 @@ gets it through `defaultparty.ready`'s last step, `gear`.
 
 ### The game's own party
 
-([In the README](README.md#the-games-own-party).)
+([In the features page](FEATURES.md#the-games-own-party).)
 
 How: the four are objects in `SEGOBJEX.GFF` (32000 to 32003, and 300, 307, 308
 and 313 for their figures), a creature record and a sheet each, already Okay
@@ -1522,7 +1522,7 @@ Effects screens, K'ratchek's inventory line `Chatkcha 2.5x1D6+4` (1.5x before).
 
 ### The leader's CHA at shops
 
-([In the README](README.md#the-leaders-cha-at-shops); `prices.py`.)
+([In the features page](FEATURES.md#the-leaders-cha-at-shops); `prices.py`.)
 
 The shop (overlay at 83000h) reads an item's price, the word at its `+6`,
 straight from the item: `mov cx,es:[bx+6]` to charge it (8384Bh: times the
@@ -1555,7 +1555,7 @@ for more than it cost, and at CHA 25 the two are equal.
 
 ### Buying back magical items
 
-([In the README](README.md#buying-back-magical-items).)
+([In the features page](FEATURES.md#buying-back-magical-items).)
 
 The shop, once it has paid for the item sold, empties the item list of the
 thing holding it (`push word [179Eh]` / `call 0A0h:1C94h` at 83D9Eh; the routine
@@ -1582,7 +1582,7 @@ to Kalzith for 1,800 went first in his stock at 3000, and a Cloak (24) sold for
 
 ### Thief skills from AD&D's table
 
-([In the README](README.md#thief-skills-from-adds-table).)
+([In the features page](FEATURES.md#thief-skills-from-adds-table).)
 
 How: where the game's thief skill routine adds 4 a level, the helper
 (`INT E4h`) puts AD&D's number for the level in place of the game's base and
@@ -1592,7 +1592,7 @@ work the chances out the same way.
 
 ### Hiding in shadows to backstab
 
-([In the README](README.md#hiding-in-shadows-to-backstab).)
+([In the features page](FEATURES.md#hiding-in-shadows-to-backstab).)
 
 How (the cloak, boots and belt): the patched game's item box (`INT DAh`, where
 it has drawn the name) asks the helper, which draws the line with the game's
@@ -1609,7 +1609,7 @@ of weight 40 or less).
 
 ### Picking pockets
 
-([In the README](README.md#picking-pockets).)
+([In the features page](FEATURES.md#picking-pockets).)
 
 How (DSCLOG's PICK POCKETS, sites sharing `INT 98h`): the USE screen's Turn
 Undead button (APFM 2BEFh, its handler 630h:48h) shows for a character whose
@@ -1686,7 +1686,7 @@ the save: talked to, he said his busy line and walked his rounds again (steps
 
 ### Mirror Image
 
-([In the README](README.md#the-games-bugs-fixed).)
+([In the features page](FEATURES.md#the-games-bugs-fixed).)
 
 The game's only use of the images is a d100 in the routine that lands a spell
 on its target (7A539h, from 78C19h; 7A5BFh, `cmp ax,4Bh` at 7A5CDh), for a
@@ -1719,7 +1719,7 @@ four, an image with it, and weapon blows come to that routine with no spell
 
 ### The game's spells
 
-([In the README](README.md#the-games-bugs-fixed).) Five more bugs mended whatever
+([In the features page](FEATURES.md#the-games-bugs-fixed).) Five more bugs mended whatever
 the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
 `ns_list_` patches):
 
@@ -1756,7 +1756,7 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
 
 ### New wizard spells
 
-([In the README](README.md#new-wizard-spells).)
+([In the features page](FEATURES.md#new-wizard-spells).)
 
 **Numbers.** The game's spells are 0-68 wizard, 69-137 priest, 138-171 psionic
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the
@@ -1896,7 +1896,7 @@ version took the site number in AL before saving them, which handed the name
 routine spell 0 and showed ARMOR as every spell's name on the USE screen.
 
 A click on an effect's icon on the Effects screen
-([In the README](README.md#spells-on-the-effects-screen)) ends it in the game;
+([In the features page](FEATURES.md#spells-on-the-effects-screen)) ends it in the game;
 with the switch on, a spell's effect is left on: two jumps in the screen's
 click handler (DSUN.EXE 7F226h and 7F236h, `effects_click_low` and
 `effects_click_high` in `dsloader/gamepatch.py`) go to its way out instead of
@@ -1905,7 +1905,7 @@ ends, as stopping it there is how a power is dropped.
 
 ### New items
 
-([In the README](README.md#new-items).)
+([In the features page](FEATURES.md#new-items).)
 
 How: the new items (the slave pens' and the world's, the bone scale set,
 Kreenfang) are in the game's data (`dsloader/dataitems.py`, `worldgear.py`,
@@ -2005,7 +2005,7 @@ and `tests/test_docicons.py` checks that every icon the guide shows is there.
 
 ### Bracers of defense
 
-([In the README](README.md#bracers-of-defense).)
+([In the features page](FEATURES.md#bracers-of-defense).)
 
 How: where the game's AC routine asks the helper about each worn item
 (`INT F8h`) and where it starts a saving throw's modifiers (`INT F9h`), the
@@ -2013,7 +2013,7 @@ helper looks at what else the character wears.
 
 ### Robes
 
-([In the README](README.md#robes); `robes.py`.)
+([In the features page](FEATURES.md#robes); `robes.py`.)
 
 The robes are one new item type (`ROBE`, the 26th of the helper's types,
 `game.ROBE_TYPE`): the cloak of protection's record worn on the chest (+9: 1),
@@ -2033,7 +2033,7 @@ on him with his cloak and scrolls (`kalzith.stock`).
 
 ### Kalzith
 
-([In the README](README.md#kalzith).)
+([In the features page](FEATURES.md#kalzith).)
 
 How: he is the game's own kind of person, in the Loader's copies of three of
 its files, which the dice log's helper has the game open instead of the
@@ -2058,9 +2058,9 @@ His state is in the game's own flags (760 to 763: met, friendly, cold, his
 scrolls given; the game uses flags up to 755), so a save keeps it. The first
 time the party is in the pens, the Loader puts his six scrolls among his
 things (from the game's free list, as for
-[the arena's ring](README.md#new-items)), once a game. If he is killed, the
+[the arena's ring](FEATURES.md#new-items)), once a game. If he is killed, the
 Loader marks it (flag 772) and the others speak of him as dead (see
-[Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them));
+[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them));
 after the party's escape he is gone from the pens with everyone else.
 
 With his scrolls the Loader gives him his gear, worn (`kalzith.gear`, flag
@@ -2087,7 +2087,7 @@ he turns on the party as they do, and only the guards near him join the fight.
 
 ### Semyon
 
-([In the README](README.md#semyon).)
+([In the features page](FEATURES.md#semyon).)
 
 How: in the Loader's copy of `GPLDATA.GFF`, the command that takes him off the
 map when he walks out after the fight (script 5 at 2400, run only from there)
@@ -2121,7 +2121,7 @@ game's, which keeps its place.
 
 ### What Dinos and the Trustee say about them
 
-([In the README](README.md#what-dinos-and-the-trustee-say-about-them).)
+([In the features page](FEATURES.md#what-dinos-and-the-trustee-say-about-them).)
 
 How: in the Loader's copy of `GPLDATA.GFF`, their scripts (139 and 146) keep
 every byte where it was, since the game's jumps go to fixed places. Two
@@ -2141,12 +2141,12 @@ more of the game's memory.
 
 ### The cooked vulture
 
-([In the README](README.md#the-cooked-vulture).)
+([In the features page](FEATURES.md#the-cooked-vulture).)
 
 How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
 question in its first menu (a copy of the game's with the question added, as
 for the questions about Kalzith and Semyon, see
-[Dinos and the Trustee](README.md#what-dinos-and-the-trustee-say-about-them)),
+[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them)),
 shown while the game's own test says someone in the party carries the cooked
 vulture (33h, as the campfire's script asks about the plucked one; the game's
 object A4Ch), the test being the question's own condition in the menu. Chosen,
@@ -2161,7 +2161,7 @@ talking with him (never from a game being loaded).
 
 ### Defilers' scrolls
 
-([In the README](README.md#defilers-scrolls).)
+([In the features page](FEATURES.md#defilers-scrolls).)
 
 When a creature's hit points reach 0 the game empties its item lists and puts
 what it carried in a container on the ground (an item whose `+08h` names a
@@ -2195,11 +2195,11 @@ no line: it would tell the player what the body holds before the fight is won.
 
 ### What the party wears
 
-([In the README](README.md#what-the-party-wears).)
+([In the features page](FEATURES.md#what-the-party-wears).)
 
 How: the party's figures are objects 300 to 313 in `SEGOBJEX.GFF` (300 and the
 figure picked at character creation). The launcher's copy of the file (see
-[Item icons](README.md#new-items)) gives each its own walking and fighting
+[Item icons](FEATURES.md#new-items)) gives each its own walking and fighting
 pictures, the game's with room round them for gear (walking, 6 pixels at the
 sides and 2 above, as much as anything worn reaches; in a fight, 10), and free
 space after each in the file. The game draws a figure's whole picture at every
@@ -2213,7 +2213,7 @@ out of the game's table of loaded pictures (the game frees them itself, as any
 it no longer uses), and empties the figure's slot on the map: the game loads
 the new pictures and draws them at once, in a few thousandths of a second
 (`dsloader/sprites.py`). It then has the helper draw the view again (see
-[Shadows](README.md#shadows)), so the shadows show the new outfit too. A
+[Shadows](FEATURES.md#shadows)), so the shadows show the new outfit too. A
 picture the game loads later (in a fight, in another area) comes dressed, from
 the file. The copy also has a spare pair of pictures for each party place.
 Each thing on the map names the picture it is drawn with and the slot in the
@@ -2223,7 +2223,7 @@ the picture and fills it.
 
 ### Elves and half-elves
 
-([In the README](README.md#elves-and-half-elves).)
+([In the features page](FEATURES.md#elves-and-half-elves).)
 
 How: elves (objects 304 and 305) get pointed ears (`dsloader/figures.py`): 2
 pixels wide and 3 rows tall, a salmon inside, a rose rim and tip. Their place
@@ -2281,7 +2281,7 @@ the game draws her as an elf from its next area or load
 
 ### Shadows
 
-([In the README](README.md#shadows).)
+([In the features page](FEATURES.md#shadows).)
 
 How: the launcher's copy of `DSUN.EXE` (see
 [How the dice log works](#how-the-dice-log-works)) calls DSCLOG when the game
@@ -2307,7 +2307,7 @@ as a creature died (not reproduced).
 
 ### Dust
 
-([In the README](README.md#dust).)
+([In the features page](FEATURES.md#dust).)
 
 How: DSCLOG notes, each time round the game's main loop, how far each figure
 that casts a shadow has walked, and raises a puff a little behind and to one
@@ -2323,7 +2323,7 @@ the view drawn again a few times a second until the last puff is gone.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
-([In the README](README.md#choosing-an-enemy-tab-enter-and-the-rings).)
+([In the features page](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings).)
 
 How: DSCLOG hooks the keyboard (`INT 16h`) and takes Tab, Shift+Tab and, with an
 enemy chosen, Enter from what the game reads, counting them for the Loader
@@ -2337,7 +2337,7 @@ second, whatever stands in front of it.
 
 ### Scrolling the map
 
-([In the README](README.md#scrolling-the-map).)
+([In the features page](FEATURES.md#scrolling-the-map).)
 
 How: the game hears of the mouse's buttons from the mouse driver, through a
 handler it gives it (`INT 33h`, function 0Ch). DSCLOG hooks `INT 33h` and puts
@@ -2379,7 +2379,7 @@ as is the map's own walking.
 
 ### More saves
 
-([In the README](README.md#more-saves).)
+([In the features page](FEATURES.md#more-saves).)
 
 How: the save names the game searches the folder for and writes a save to
 (`SAVE??.SAV`, `SAVE%.2d.SAV`) are two strings in its memory; DSCLOG changes
@@ -2405,7 +2405,7 @@ a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot.
 
 ### More characters
 
-([In the README](README.md#more-characters).)
+([In the features page](FEATURES.md#more-characters).)
 
 How: the game's file routines take any number; only its loops over the
 characters stop at 20, its roster list has room for 20 and its "Maximum
@@ -2417,7 +2417,7 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 
 ### Game speed
 
-([In the README](README.md#game-speed).)
+([In the features page](FEATURES.md#game-speed).)
 
 The Loader's drawing is as cheap as it can be without looking any different:
 a shadow is darkened a plane of the video memory at a time (the graphics

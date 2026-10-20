@@ -1,7 +1,7 @@
 # Kits
 
 *Part of Obsidian Edition's documentation, from the [README](README.md)'s
-[More character customization](README.md#more-character-customization). The
+[More character customization](FEATURES.md#more-character-customization). The
 [player's guide](PLAYER-GUIDE.md#kits) tells who takes each kit on Athas.*
 
 With **Kits** ticked, a character of one class may take one of three kits for
@@ -9,7 +9,7 @@ its class when it is made, or none (the class as it is). A few pairs of
 classes taken at once by one race have kits of their own
 ([Multiclass kits](#multiclass-kits)). Each gives something and costs
 something. The game's own party gets features of its own
-([The game's own party](README.md#the-games-own-party)). A human who changes class may take a kit for the new class too
+([The game's own party](FEATURES.md#the-games-own-party)). A human who changes class may take a kit for the new class too
 ([Changing class](#changing-class)). Each class's three kits have a table of
 their own below: what the kit gives (with the level each part comes at), what
 it costs, what a new character with it starts with
@@ -202,7 +202,7 @@ weapon or shield the kit forbids is swapped or taken away, and a kit with a
 weapon spec of its own gets a plain weapon of it. The dice log says what it
 changed
 (`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in place of the Quarterstaff`).
-[Fuller starting gear](README.md#fuller-starting-gear) adds more on top.
+[Fuller starting gear](FEATURES.md#fuller-starting-gear) adds more on top.
 
 ## The kits in play
 
@@ -223,7 +223,7 @@ changed
 - **Casting level.** A kit's casting level is the one a spell's duration and
   damage take, and half of it (rounded up) is the highest spell level it may
   cast (the Seeker's, Justifier's and Shinobi's are in their tables above; a
-  plain ranger's: [Rangers' casting level](README.md#rangers-casting-level)).
+  plain ranger's: [Rangers' casting level](FEATURES.md#rangers-casting-level)).
 - **Casting when hit.** A character hit in a fight can't cast until the next
   round: the game won't let it choose a spell, and drops one chosen before
   the hit. The Battle Mage isn't stopped.
@@ -231,7 +231,7 @@ changed
 ## Kits' spell slots
 
 The kits that change spell slots, by the level of the kit's class (spells of
-1st to 5th level), with [AD&D's class tables](README.md#adds-class-tables) on:
+1st to 5th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on:
 
 | Level | Preserver | Arcanist | Battle Mage | Cleric | Crusader | Elementalist | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
 |---|---|---|---|---|---|---|---|---|---|

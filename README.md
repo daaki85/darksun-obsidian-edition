@@ -13,7 +13,8 @@ name.)
 ## Documentation
 
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without spoilers, a section for each class (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html))
-- [The full documentation](obsidian-edition/README.md): everything in detail, from installing to every item
+- [The full documentation](obsidian-edition/README.md): installing, running, the Loader's window and the dice log
+- [Features and rules](obsidian-edition/FEATURES.md): every rule change and addition in detail, with its switch
 - [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
 - [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with its icon and where it is (spoilers)

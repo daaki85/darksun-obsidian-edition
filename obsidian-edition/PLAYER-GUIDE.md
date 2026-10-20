@@ -76,7 +76,7 @@ page each kit's numbers: the guide links to its tables.
 
 Already playing? Saves made before load and play with the mod's fixes and
 rules, but kits, fuller starting gear and much of the new content come with a
-new game (see the README's [saved games](README.md#the-games-bugs-fixed)
+new game (see the features page's [saved games](FEATURES.md#the-games-bugs-fixed)
 note).
 
 ## Playing
