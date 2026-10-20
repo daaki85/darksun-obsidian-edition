@@ -77,6 +77,8 @@ class Ask(NamedTuple):
 # came back after it with only "Goodbye." and a stray "Goodbye." with no portrait.
 PARTY, TAKE, GIVE_XP, SOUND, QUEST_SOUND = 32766, 0x5C, 0x21, 0x5D, 53
 NARRATES = 98  # (the window's narration lines, as the game's XP words)
+PORTRAIT, DINOS_PORTRAIT = 0x54, 117  # (the talk's portrait: Dinos's, as script 139 sets it)
+AFTER_MEAL = "Now that's a meal. Anything else on your mind?"
 CARRIED = ("op", (0x33, [("n", PARTY), 77, 80, [(72, 4, ("n", -vulture.COOKED))]]))
 
 
@@ -88,6 +90,10 @@ def _meal(s: _Script) -> None:
     s.op(SOUND, ("n", QUEST_SOUND))
     s.page()
     s.op(GIVE_XP, ("n", PARTY), ("n", vulture.XP_REWARD))
+    # (the XP's narration takes the talk's upper box, his portrait and words, away, and his menu
+    # came back without it: his portrait again, as his script sets it as a talk starts, and a word)
+    s.op(PORTRAIT, ("n", DINOS_PORTRAIT))
+    s.say(AFTER_MEAL)
 
 
 # As the game's people do for the dead: the Trustee asks "What was X like?" instead, Dinos keeps

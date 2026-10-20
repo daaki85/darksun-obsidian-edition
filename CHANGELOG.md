@@ -20,6 +20,10 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   saved.
 
 **Fixed**
+- **Dinos's talk lost its upper box after the vulture meal**: the XP's words go to the narration
+  window, which takes the portrait and his words away, and his menu came back under an empty
+  screen. After the XP his script now sets his portrait again (54h, 117, as it does when a talk
+  starts) and he says a line (`pensasks.AFTER_MEAL`) before the menu. In `test_pensasks.py`.
 - **The Characters tab showed noise for items before the game had its item tables** (at the main
   menu or creating characters: "Wooden GF╨╢...", "Attacks: 120 a round with item 2"). Items now
   count only when every name reads as plain text (`GameData.items_readable`, `game.plain_name`);
