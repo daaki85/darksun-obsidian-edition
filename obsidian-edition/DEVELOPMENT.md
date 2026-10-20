@@ -70,21 +70,6 @@ The zip holds the `obsidian-edition` folder only: the root's patch notes,
 CHANGELOG and release notes stay on GitHub, so the folder's own pages link to
 them by their GitHub address.
 
-GAMEEND.COM only reads what is left on the screen, and the game's own fatal
-errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
-engine's "Mel Fatal Error #: N Trap #: N") are printed while the screen is in
-graphics, then cleared as the game puts it back in text mode on its way out.
-So DSCLOG keeps the last 256 bytes the game writes to handles 1 and 2 (INT 21h
-AH=40h: `DOS_WRITE`). At the first non-zero exit (AH=4Ch: `DOS_QUIT`), it writes
-them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
-stack. `launch.game_message` turns that into the crash report's lines: the
-text, then the stack's likely far returns as places in DSUN.EXE.
-
-A game that ends as usual has GAMEEND.COM write an empty `D:\GAMEOK.TXT`. The
-Loader removes it (with `GAMEEND.TXT` and `GAMEMSG.BIN`) as it starts DOSBox:
-DOSBox closing with no error noted and no `GAMEOK.TXT` means the game was cut
-off while it ran (`launch.CUT_OFF`), and that is a crash report too.
-
 ### From a command prompt
 
 What the `.bat` files do, from a command prompt (`dsloader` is the program's
@@ -140,7 +125,7 @@ python -m dsloader next decreased                # also: changed, unchanged, inc
 Every roll in the game goes through one function, Borland C++'s `rand()`.
 
 1. When you start the game with the dice log, the launcher writes
-   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with 253 small changes,
+   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with some 275 small changes,
    listed in `PATCHES` in `dsloader/gamepatch.py`. Most replace a few bytes of
    the game's code with an `INT` (60h to 65h, and 8Ch to FEh; all of them are
    taken, so later sites share one, a site number after the `INT`, as in
@@ -167,7 +152,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    [Kalzith](README.md#kalzith), [Semyon](README.md#semyon) and
    [no manual check](README.md#no-manual-check)), and to keep what the game
    last wrote to the screen for a crash report (see
-   [the crash report](#the-freeze-report)), the mouse driver's `INT 33h` (for
+   [the crash report](#the-crash-report)), the mouse driver's `INT 33h` (for
    [scrolling the map](README.md#scrolling-the-map)) and the keyboard's
    `INT 16h` (for Tab and Enter). DOSBox runs it from the game folder, so it
    uses your saves as usual.
@@ -348,10 +333,24 @@ RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
 fitted in the block and loaded low), and the text buffer 4 KB, not 8, to make
 that room.
 
-## The freeze report
+## The crash report
 
-(For a crash, the game's own error message: `DOS_WRITE` and `DOS_QUIT`, under
-[Building and testing](#building-and-testing).)
+GAMEEND.COM only reads what is left on the screen, and the game's own fatal
+errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
+engine's "Mel Fatal Error #: N Trap #: N") are printed while the screen is in
+graphics, then cleared as the game puts it back in text mode on its way out.
+So DSCLOG keeps the last 256 bytes the game writes to handles 1 and 2 (INT 21h
+AH=40h: `DOS_WRITE`). At the first non-zero exit (AH=4Ch: `DOS_QUIT`), it writes
+them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
+stack. `launch.game_message` turns that into the crash report's lines: the
+text, then the stack's likely far returns as places in DSUN.EXE.
+
+A game that ends as usual has GAMEEND.COM write an empty `D:\GAMEOK.TXT`. The
+Loader removes it (with `GAMEEND.TXT` and `GAMEMSG.BIN`) as it starts DOSBox:
+DOSBox closing with no error noted and no `GAMEOK.TXT` means the game was cut
+off while it ran (`launch.CUT_OFF`), and that is a crash report too.
+
+## The freeze report
 
 The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
 start; its timers run from it) begins with `INT VEC_TICK` (`PROBE_TICK`). Every
@@ -442,7 +441,7 @@ reads the reply's text from the game's own list.
 
 ### Searching junk, hay and wardrobes
 
-([In the README](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes).)
+([In How the game works](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes).)
 
 How: the scripts' random command has a routine of its own in the game; the
 patched game has DSCLOG look in there (`INT D3h`), which records the roll, its
@@ -1148,7 +1147,7 @@ creature the routine has.
 A kit is chosen for a class: by a character of one class when it is made, and
 by a human for each class it changes to (up to three). There are three for
 each class, or none (the class as it is). Each gives something and costs
-something, as AD&D's kits do. The **Kits** rule change on the Options tab
+something, as AD&D's kits do. The **Kits** switch on the Options tab
 (`game.RULE_KITS`, bit 0 of the helper's second rules word, `RULES_HI` at the
 header's +270) switches them all off.
 
@@ -1288,9 +1287,9 @@ flag, seen up since the roll, has been down `FIGHT_OVER` (2 seconds; the game
 clears it as a fight ends and between the arena's waves, and it is still clear
 as round 1's initiative is rolled, before it was ever up, which doesn't count),
 or the game's clock is `FIGHT_GAP` past the last round, or has gone back (a
-game loaded). The next round then rolls again (`_kits_due`), whatever number
-the log gives it: a fight soon after another is still counted on from the last
-one's rounds. At `+355` (`KIT_WILD`) each Wild Fury's (and Gerakis's) Wild Fighting,
+game loaded). The next round then rolls again (`_kits_due`), and the log counts
+the rounds from 1 again and forgets the last fight's monsters' ACs
+(`_new_fight`), for a fight soon after another (the arena's next wave) too. At `+355` (`KIT_WILD`) each Wild Fury's (and Gerakis's) Wild Fighting,
 which `wild.py` rolls as a fight's first round begins (a d20 against CON − 4, a
 natural 20 failing: `kits.WILD_CHECK`) and clears as the
 dances end: bit N, member N's check failed; bit N + 4, it passed.
@@ -1944,39 +1943,39 @@ Nightsliver in place of his stone dagger. The tome (`dsloader/tome.py`) is
 a scroll of the game's kind: object 1446, among the game's scrolls' numbers
 (1400-1499: its object record the first scroll's, as only a scroll's kind of
 object has its box's icon clicked; the picture that number had, the icon of
-two objects, moved to 2552), its spell byte one past
-176. Clicked, the icon has the game's routine (DSUN.EXE 8B690h) teach a scroll
-     of those numbers its spell, or a psionic power from 138 to 171; from 172
-     to 195 it would show "CANNOT LEARN FROM THIS ITEM" and keep the scroll
-     (from 196 on, the icon can't be clicked). There the helper (`INT B9h`)
-     raises the reader's WIS, in the sheet and the creature record, writes its
-     message in the game's buffer, and goes on as for a power taught: the game
-     uses the tome up and shows it. The short sword, the cloak whose plus
-     counts, the bone helm and the rest (27: Galefang's, a metal dagger whose
-     class list has the air cleric's bit, which none of the game's daggers had
-     when it was made (now every dagger type has it: below); then the bone and
-     obsidian great axes, the metal one's of those materials, a bone dagger,
-     the only dagger a water cleric may use, the robes', and a metal shield,
-     Ironbulwark's: the game's leather shield's type in metal, for the classes
-     of its wooden one) are item types the helper adds after the game's 115
-     each time the game reads its table in (`TYPES_EXTRA`; its weapon types by
-     item type, `kind_of_type`, cover them too). As it copies them in
-     (`PROBE_TYPES_FILL`) it also sets the air cleric's class bit (+10h, 1) on
-     the game's dagger types (17, 33, 84, 94), as its own daggers have it, so
-     an air cleric of one class may use any dagger, as its sphere allows; the
-     Loader's item names (`dsloader/names.py`) are entries it adds after the
-     game's 322 (the game puts the item type's material before the name when
-     it shows one); and the icons are objects in the Loader's copy of
-     `SEGOBJEX.GFF` (`dsloader/icons.py`), which the helper has the game open
-     instead of its own (its `INT 21h` hook). The copy also has the game's
-     Polearm picture made 22 pixels tall (`icons.fit_box`): at its own 36, the
-     item box's lines, which start below the picture, ran out of the box.
-     Where the game adds up AC and saving throws, the helper counts the rings
-     and the cloak (`INT F8h` and the save probes). Shadowseeker's sight is
-     the game's own way with a magic item's spell: readied, it puts Detect
-     Invisibility on its wielder. In the original game the rings are plain
-     rings without a name, and the sword, cloak and helm types it doesn't
-     have: don't load a save that has them without the dice log.
+two objects, moved to 2552), its spell byte one past 176.
+Clicked, the icon has the game's routine (DSUN.EXE 8B690h) teach a scroll
+of those numbers its spell, or a psionic power from 138 to 171; from 172
+to 195 it would show "CANNOT LEARN FROM THIS ITEM" and keep the scroll
+(from 196 on, the icon can't be clicked). There the helper (`INT B9h`)
+raises the reader's WIS, in the sheet and the creature record, writes its
+message in the game's buffer, and goes on as for a power taught: the game
+uses the tome up and shows it. The short sword, the cloak whose plus
+counts, the bone helm and the rest (27: Galefang's, a metal dagger whose
+class list has the air cleric's bit, which none of the game's daggers had
+when it was made (now every dagger type has it: below); then the bone and
+obsidian great axes, the metal one's of those materials, a bone dagger,
+the only dagger a water cleric may use, the robes', and a metal shield,
+Ironbulwark's: the game's leather shield's type in metal, for the classes
+of its wooden one) are item types the helper adds after the game's 115
+each time the game reads its table in (`TYPES_EXTRA`; its weapon types by
+item type, `kind_of_type`, cover them too). As it copies them in
+(`PROBE_TYPES_FILL`) it also sets the air cleric's class bit (+10h, 1) on
+the game's dagger types (17, 33, 84, 94), as its own daggers have it, so
+an air cleric of one class may use any dagger, as its sphere allows; the
+Loader's item names (`dsloader/names.py`) are entries it adds after the
+game's 322 (the game puts the item type's material before the name when
+it shows one); and the icons are objects in the Loader's copy of
+`SEGOBJEX.GFF` (`dsloader/icons.py`), which the helper has the game open
+instead of its own (its `INT 21h` hook). The copy also has the game's
+Polearm picture made 22 pixels tall (`icons.fit_box`): at its own 36, the
+item box's lines, which start below the picture, ran out of the box.
+Where the game adds up AC and saving throws, the helper counts the rings
+and the cloak (`INT F8h` and the save probes). Shadowseeker's sight is
+the game's own way with a magic item's spell: readied, it puts Detect
+Invisibility on its wielder. In the original game the rings are plain
+rings without a name, and the sword, cloak and helm types it doesn't
+have: don't load a save that has them without the dice log.
 
 Alagorn's new menu lines are in the Loader's copy of his scripts
 (`dsloader/alagorn.py`); he knows an item by its picture.

@@ -23,7 +23,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/draketooth.png) | Bone | long sword | Draketooth | +1, strength | — |
 | ![](docs/items/hornblade.png) | Bone | long sword | Hornblade | +1 | Kalinin's reward |
 | ![](docs/items/stillwater.png) | Bone | short sword | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
-| ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | — |
+| ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men |
 | ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | the 2 handed Bone Gythka on the dead body by the arena's stone arch |
 | ![](docs/items/hayneedle.png) | Bone | dagger | ***Hayneedle*** | a bone dagger +1: a water cleric can wield it | hidden in **Merzol**'s haystack in the slave pens, with his sack of ceramic pieces |
@@ -33,7 +33,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1 | on the slave pens' **weapon rack**, in place of one of its two plain bone polearms |
 | ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | Cahulaks +1 | +1, Cause Light Wounds | the caravan's buried chest |
 | ![](docs/items/dragonsbane.png) | Metal | long sword | Dragonsbane | +4 | — |
-| ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | — |
+| ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/greenbright.png) | Metal | short sword | ***Greenbright*** | a metal short sword +2 | carried by **Arant**, who holds the captured gladiators |
 | ![](docs/items/shadowseeker.png) | Metal | short sword | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | in the pack of **Kurzak**, the pens' guard leader |
 | ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, extra damage | Dagolar |

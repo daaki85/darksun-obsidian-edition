@@ -1021,7 +1021,7 @@ own "Cannot use this item":
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
-| **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings |
+| **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (the game's own lists still leave out its maces, slings and metal short sword) |
 | **Thief** | light only; a multiclass thief, or a human thief once a warrior or cleric, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields | as its classes allow |
 | **Preserver**, one class | none (a human preserver once a warrior: as the warrior could, but no spells in armour) | none | as the game has it |
 | **Druid** | none | none | any |

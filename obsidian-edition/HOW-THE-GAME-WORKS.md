@@ -312,10 +312,10 @@ two and the DEX part are AD&D's instead.
 
 Only characters with thief levels have the skills; everyone else's chance is
 0. The character's condition must be Okay (the status the character screen
-   shows under HP): a thief who is Stunned, Out Cold, Dying and so on can't
-   use the skills. A character not yet played (New, before the game starts)
-   counts as Okay, so a party's thief skills show while it is made (see
-   [More characters](README.md#more-characters)).
+shows under HP): a thief who is Stunned, Out Cold, Dying and so on can't use
+the skills. A character not yet played (New, before the game starts) counts as
+Okay with the mod, so a party's thief skills show while it is made (see
+[More characters](README.md#more-characters)).
 
 Some effects rule out a skill:
 - Blind, Afraid, Confused, Berserk and Paralyzed stop them all, except that a
@@ -449,9 +449,9 @@ In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
 a normal d20 saves 35% of the time and a doubled one 70%, which is why
 Fireball's victims usually get away with half damage. It isn't AD&D, and the
 game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. The two
-[rule changes](README.md#spells-saved-against-with-the-spell-save) below put the spell
-save back and take the doubled d20 away.
+each save: `d20 = 7, doubled against fire = 14`. Two of the
+mod's [rule changes](README.md#spells-saved-against-with-the-spell-save) put the
+spell save back and take the doubled d20 away.
 
 The target's spells and effects:
 - Blessed +1, Barkskin +1, Spirit Armor +3 (but not on
@@ -489,8 +489,7 @@ and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
 at DEX 1 to −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
 [rule change](README.md#rule-changes) puts it on the fire, cold and electricity spells.
 And nothing in the game gives saves from items: there are no rings or cloaks
-of protection, which is why the mod adds [a ring](README.md#new-items) and
-[a cloak](README.md#new-items). Their +1 is in the log's saving throws as
+of protection, which is why the mod adds [two rings and a cloak](README.md#new-items). Their +1 is in the log's saving throws as
 `+1 Ring of Protection` and `+1 Cloak of Protection` (with
 [AD&D's rules for them](README.md#rings-and-cloaks-of-protection) off, all of it as
 `Ring of Protection`).

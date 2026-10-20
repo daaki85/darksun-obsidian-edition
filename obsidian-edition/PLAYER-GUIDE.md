@@ -512,7 +512,7 @@ melee, and any missile weapon.
 alignment · XP for 2nd level 2,250, for 10th 600,000*
 
 **How it plays.** A warrior of the wastes: the bow and one more weapon spec,
-two weapons at no penalty, hiding and moving silently under the open sky to
+two weapons at no penalty in light armour, hiding and moving silently under the open sky to
 strike from behind, and a little priest magic late on.
 
 **What the mod changes.**
@@ -654,8 +654,8 @@ character hit in a round can't cast), and choose its spells well.
 
 **What the mod changes.**
 
-- **INT limits learning:** a chance to learn each scroll's spell, and a most
-  spells of each level ([learning spells](#learning-preserver-spells)).
+- **INT limits learning:** a chance to learn each scroll's spell, and a limit
+  on the spells it knows of each level ([learning spells](#learning-preserver-spells)).
   *Without the mod:* every scroll learnt, no limit.
 - It **chooses** its starting spells and one at each level up. EXIT while
   choosing its starting spells gives it the game's usual ones for the rest.
@@ -802,7 +802,8 @@ for 2nd level 2,000, for 10th 125,000*
 
 **How it plays.** A priest of the land and its element: no armour, but any
 weapon, the cheapest levels in the game, and the only priest with the common
-4th and 5th-level spells (the great cures among them). +2 on saves against fire
+4th and 5th-level spells (the great cures among them), but for a Healer
+cleric. +2 on saves against fire
 and electricity.
 
 **What the mod changes.**
@@ -916,7 +917,7 @@ A character of one class takes one of three kits for its class when it is
 made, or none, on the creation panel's **KIT** page; a human who changes class
 can take one for its new class. A few races' pairs of classes have kits of
 their own ([Multiclass kits](#multiclass-kits)). Each gives something and
-costs something; [the Kits page](KITS.md) have each kit's
+costs something; [the Kits page](KITS.md) has each kit's
 numbers and starting gear, the class sections above who takes it on Athas.
 
 - The **Myrmidon** chooses its second weapon spec, and the **Battle Mage** its
@@ -1165,7 +1166,9 @@ nothing from poison or draining, and mind-affecting spells don't work on them.
 
 A thief's skills come from the table by thief level, plus the race's and
 DEX's adjustments. A thief who isn't Okay, or is Blind, Afraid, Confused,
-Berserk or Paralyzed, can't use them; nothing worn stands in the way.
+Berserk or Paralyzed, can't use them. Nothing worn stands in the way,
+but for a thief with another class in armour heavier than leather, hide or
+silk (all 0).
 
 | Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -1462,8 +1465,8 @@ raises the best defence mode it knows and can pay for, by itself.
 | Thought Shield (defence) | telepathy | 1 | |
 
 Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
-makes unarmed blows 2d4. The Mind Bender and Kineticist [kits](#kits) change
-some costs.
+makes unarmed blows 2d4. The Mind Bender, Kineticist and Titan Mind
+[kits](#kits) change some costs.
 
 ## Equipment
 

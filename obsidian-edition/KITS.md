@@ -107,7 +107,7 @@ A druid starts with a club and sling.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th** | no metal weapons | the druid's gear | can't dual to gladiator, and a gladiator who duals to druid can't take it (its AC would add to a gladiator's own); can't go with the Ravager |
-| **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
+| **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the saves only: the damage isn't halved |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
 ## Psionicist kits
