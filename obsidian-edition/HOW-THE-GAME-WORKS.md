@@ -64,7 +64,7 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Afraid | The computer runs it; it can't attack or cast. Undead are immune, and Cloak of Bravery stops the next fear (and ends) |
 | Charmed | Joins the caster's side, run by the computer |
 | Confused | Each turn a d10: 1 runs off, 2–6 does nothing, 7–9 fights for a side picked with a d2, 10 acts normally (the log shows the rolls) |
-| Berserk | Fights for a side picked at random each turn; can't cast |
+| Berserk | Fights for a side picked at random each turn; can't cast. In the game a party member could be left on the monsters' side when this or Confused ended; the patched game puts it back ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
 | Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
 | No spell use, Feeblemind | Can't cast spells |
 | Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |

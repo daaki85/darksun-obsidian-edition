@@ -99,6 +99,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   couldn't be written; it says why now, with how DOSBox closed.
 
 **Documentation**
+- **Crash, freeze and item reports** are one section of the README, with a table of
+  when each is written and what it holds (what all three share said once); closing
+  DOSBox's window while the game runs is a crash report, as the code has it.
 - **Draft release notes for 2.6.0** (`release-notes/v2.6.0.md`) and a
   "Coming in 2.6.0" line on the front page; How the game works notes that
   clerics never have the common 4th and 5th-level priest spells.

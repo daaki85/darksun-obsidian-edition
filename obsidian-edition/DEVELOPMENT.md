@@ -415,7 +415,7 @@ item's place in the buyback queue moves on only once it is kept, and the game's
 own party's steps are marked done only once made.
 
 The item watch (`itemwatch.py`, the README's
-[If an item disappears](README.md#if-an-item-disappears)) reads the same lists
+[Crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) reads the same lists
 once a second and has to see past the renumbering too. Over half the party's
 items gone at once (and at least `MOST_GONE`) is a bulk change: it waits until
 the new numbers hold still at two looks, then matches old items with new by
