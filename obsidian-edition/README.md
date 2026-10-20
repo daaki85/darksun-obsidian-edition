@@ -315,7 +315,8 @@ there is no report.
 The Loader watches the party's items (every member's, worn or carried). When
 one is gone from the whole party for two seconds with nothing ordinary to
 explain it, it saves an item report in `crash-logs`, as it does for a crash
-(`crash-logs\item-2026-10-18-213012.txt`), and says so in the dice log:
+(`crash-logs\item-2026-10-18-213012.txt`), and says so in the dice log. It
+watches through rests too; only loading a game starts it afresh:
 
 ```
 Inix Hide Chest Armor is gone from Garyn's chest: its record is empty: the game freed it (destroyed, used up or discarded). An item report is saved in ...

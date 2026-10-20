@@ -43,7 +43,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Pick Pockets could lose an item** taken from someone when the thief's backpack list couldn't
   be made: the list is made first now.
 - **Item reports**: a later save of the same party loaded no longer reports the items it doesn't
-  have (the clock moving on more than `CLOCK_JUMP`, or most items gone at once, count as a load);
+  have (the clock moving on more than `CLOCK_JUMP` with the party somewhere else, or most items
+  gone at once, count as a load; a rest, the clock on hours with the party where it was, doesn't,
+  so an item gone as the party rests is still reported: `GameData.party_position`);
   money is taken for a sale only when it rose by what a shop pays for the item (its price, or
   60%), so a purse picked or a reward no longer hides a vanish; and an item handed over is
   remembered for 10 seconds (`ARRIVED_KEEP`), so a busy Loader doesn't report it.

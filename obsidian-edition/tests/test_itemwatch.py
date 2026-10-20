@@ -50,6 +50,9 @@ class FakeGame:
     def region(self):
         return 0x29
 
+    def party_position(self):
+        return (1896, 856)
+
     def in_combat(self):
         return False
 
@@ -186,13 +189,36 @@ if __name__ == "__main__":
 class LoadTest(ItemWatchTest):
     """A game loaded with the same party: no reports for what the save doesn't have."""
 
-    def test_clock_on_too_far(self):
+    def test_clock_on_too_far_elsewhere(self):
+        """A later save with the party somewhere else in the same region: a game loaded."""
         self.run_for(2)
-        self.data.game_time = lambda: 600 + itemwatch.CLOCK_JUMP + 1   # (a later save)
+        self.data.game_time = lambda: 600 + itemwatch.CLOCK_JUMP + 1
+        self.data.party_position = lambda: (100, 200)
         self.data.items = [self.sword]
         out, _ = self.run_for(5, start=3)
         self.assertEqual(out, [])
         self.assertEqual(self.watch.reports, [])
+
+    def test_rest_goes_on_watching(self):
+        """A rest: the clock on hours, the party where it was. An item gone as it rests is news."""
+        self.run_for(2)
+        self.data.game_time = lambda: 600 + 8 * 3600
+        self.data.items = [self.sword]
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Inix Hide" in line for line in out))
+        self.assertEqual(len(self.watch.reports), 1)
+
+    def test_rest_then_a_load(self):
+        """After a rest the watch still starts afresh on a load (the clock gone back)."""
+        clock = [600]
+        self.data.game_time = lambda: clock[0]
+        self.run_for(2)
+        clock[0] = 600 + 8 * 3600         # (a rest: nothing gone)
+        self.run_for(2, start=3)
+        clock[0] = 300                    # (an earlier save)
+        self.data.items = []
+        out, _ = self.run_for(5, start=6)
+        self.assertEqual(out, [])
 
     def test_most_items_gone_at_once(self):
         extra = [item(20 + n, 1, f"Thing {n}", slot=None, typ=40 + n) for n in range(3)]

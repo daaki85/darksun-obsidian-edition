@@ -270,6 +270,7 @@ WHOSE_TURN = 0x4979  # DS word: the combatant whose turn it is (outside a fight:
 # 1DD8Bh, unless it is already 1); the one that ends it clears it (1DFE8h)
 IN_COMBAT = 0x1168
 REGION = 0x117C  # DS word: the region the party is in
+POSITIONS = 0x669D  # DS: each map object's x, y (in 16ths of a square), 32 bytes apart; the party's leader is object 0
 # The party's money, in ceramic pieces (the inventory screen's bottom bar): a dword the game's
 # script command for giving money (0Ch) adds to
 MONEY_SEG, MONEY = 0x3781, 0x357
@@ -878,6 +879,10 @@ class GameData:
     def region(self) -> int:
         """The region the party is in (its RGNxx.GFF)."""
         return self._word(REGION)
+
+    def party_position(self) -> Tuple[int, int]:
+        """Where the party's leader (object 0) stands on the map: x, y in 16ths of a square."""
+        return struct.unpack("<HH", self.guest.read(self.ds * 16 + POSITIONS, 4))
 
     def item_type_record(self, item: bytes) -> bytes:
         types = far_pointer(self.guest, self.ds, ITEM_TYPES_PTR)

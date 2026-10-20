@@ -19,8 +19,9 @@ silence (each was a dice log line, which a shop or a hand-over made a stream of)
 still exists outside the party (dropped, put in a chest, given, sold or stolen), one that is used
 up or taken by a script (fruit and quest items, arrows, scrolls), one a spell made (Shillelagh,
 the spell's Flame Blade, Spiritual Hammer), one sold (the party's money went up), and a weapon
-that broke (a Broken Weapon came in its place). A game loaded (the game's clock gone back)
-starts the watch afresh.
+that broke (a Broken Weapon came in its place). A game loaded (the game's clock gone back, or
+on further than play takes it with the party somewhere else) starts the watch afresh; a rest,
+the clock on hours with the party where it was, doesn't: what goes as the party rests is news.
 """
 
 import collections
@@ -34,7 +35,8 @@ from .game import ItemSeen
 CHECK_INTERVAL = 1.0   # seconds between snapshots
 GONE_WAIT = 2.0        # seconds an item must be missing before it counts as gone
 # A game loaded with the same party, from later on: the clock moved on past what play does in a
-# second (game seconds; a rest jumps hours, but takes no items), or most of the items gone at once
+# second (game seconds) with the party not where it was (a rest jumps hours too, but leaves the
+# party in its place: the watch goes on through it), or most of the items gone at once
 CLOCK_JUMP = 600
 ARRIVED_KEEP = 10.0    # seconds an item new to the party is kept in mind, to match a hand-over (the
                        # Loader busy, the vanish may be confirmed well after the item reappeared)
@@ -55,6 +57,7 @@ class ItemWatch:
         self._missing: Dict[int, Tuple[ItemSeen, float]] = {}
         self._next = 0.0
         self._clock: Optional[int] = None  # (the game's clock at the last look)
+        self._place: Optional[tuple] = None  # (the region and the party's leader's spot at the last look)
         self._money: Optional[int] = None  # (the party's money at the last look)
         self._gains: List[Tuple[float, int]] = []  # (each rise in the party's money: when, by how much)
         self._broke_at: Dict[int, float] = {}  # (member: when a Broken Weapon last came to them)
@@ -67,7 +70,7 @@ class ItemWatch:
         """Forget everything (a game was loaded: the party's items are a new set)."""
         self._seen.clear()
         self._missing.clear()
-        self._clock = self._money = None
+        self._clock = self._money = self._place = None
         self._gains.clear()
         self._broke_at.clear()
         self._arrived.clear()
@@ -92,14 +95,17 @@ class ItemWatch:
             return []
         current = {i.index: i for i in items}
         clock, money = _read(data.game_time), _read(getattr(data, "money", None))
-        if clock is not None and self._clock is not None and not 0 <= clock - self._clock <= CLOCK_JUMP:
-            self.reset()                  # (the clock gone back, or on further than play takes it: a game loaded)
+        place = (_read(data.region), _read(getattr(data, "party_position", None)))
+        if clock is not None and self._clock is not None:
+            rested = clock > self._clock and place == self._place and None not in place
+            if clock < self._clock or (clock - self._clock > CLOCK_JUMP and not rested):
+                self.reset()              # (the clock gone back, or on further than play takes it: a game loaded)
         gone = [index for index in self._seen if index not in current]
         if len(gone) >= MOST_GONE and 2 * len(gone) > len(self._seen):
             self.reset()                  # (most of the items gone at once: a game loaded)
         if money is not None and self._money is not None and money > self._money:
             self._gains.append((now, money - self._money))
-        self._clock, self._money = clock, money
+        self._clock, self._money, self._place = clock, money, place
         if not self._seen:                # the first look, or after a reset
             self._seen = current
             return []
