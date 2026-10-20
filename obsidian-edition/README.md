@@ -339,8 +339,11 @@ put in a chest, given, sold or stolen), one used up or taken for a quest
 Blade, Spiritual Hammer), one sold (the party's money went up by what a shop pays for it as it went),
 and a weapon that broke (a Broken Weapon in its place). Nor is an item handed
 to another member news, even where the game gives it a new record, or one
-moved and back within the two seconds, or anything after a game is loaded (even a later save of the
-same party: the clock moved on, or most of the items changed at once).
+moved and back within the two seconds. A change of area gives every item a
+new record at once: the Loader matches each to its new one (same owner, place
+and item) and reports only an item with no match. A game loaded (even a later
+save of the same party: the clock moved on, or too few items match) starts
+the watch afresh.
 
 ### If the game freezes
 
@@ -467,9 +470,11 @@ the map (a character's menu, a question) hides it until it closes.
   click it (or scroll to the end) to follow again. Clicks on the panel are
   its own: the party doesn't walk there.
 - **Its buttons**, on the right of its top line: **A**, which puts the party's
-  count of arena fights in the top line (lit while on; a click again brings
-  the round back), the game's own count, one a trip into the arena however
-  many waves come; **L**, which hides it as the
+  count of arena fights in the top line in place of the round (lit while on; a
+  click again brings the round back): the game's own count, one a trip into
+  the arena however many waves come (see
+  [the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights));
+  **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
   bigger panel. Collapsed, it is one line, the newest; expanded, it is
@@ -978,6 +983,7 @@ play, has a page of its own, [How the game works](HOW-THE-GAME-WORKS.md):
 - [Where the game rolls thief skills](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)
 - [Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)
 - [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)
+- [The arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)
 
 ## Rule changes
 
@@ -1344,6 +1350,8 @@ Armour here is what is worn on the arms, legs, head or chest; something only
 carried in a backpack doesn't count. Untick it and every ring and cloak worn
 counts in full, whatever else is worn.
 
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rings-and-cloaks-of-protection).
+
 ### Half-giants' two-handed weapons
 
 Half-giants stand up to twelve feet tall. With **Half-giants wield
@@ -1678,6 +1686,9 @@ picking, at creation and on changing class: the spells still to pick are the
 game's own, in its order (Grease, Magic Missile, Shield, Wall of Fog; then Fog
 Cloud, Mirror Image), less any already picked. The character is already saved
 when the window opens, so EXIT can't take you back to the creation screen.
+
+Always on (it isn't a switch of its own). How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#kits) (its rows for a new preserver's spells).
 
 ### The game's own party
 

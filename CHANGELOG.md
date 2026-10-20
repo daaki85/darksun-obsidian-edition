@@ -22,23 +22,6 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   first five fights, the 1000th and the 5000th). `combatlog.arena_rect`,
   `arena_line`.
 
-**Fixed**
-- **The Loader's changes to the game's item lists could land mid-load.**
-  The game gives every item a new number as an area loads; a change made
-  across that, from numbers read before it, could cut an item out of its
-  list (a likely way for an item to vanish without a trace). Every write to
-  the item lists now goes through one gate (`itemgate.py`, in
-  `GuestMemory.write`): the first in a dice log pass waits until the game's
-  free lists, area and item table have stayed as they were for 60 ms, pauses
-  DOSBox (`ProcessMemory.suspend`/`resume`), looks again, and writes with the
-  game held still; anything changed and the pass's item writes wait for the
-  next. Kalzith's stock and loot, the arena ring, buyback and defilers' scrolls
-  had no such check before, and the others' (`_items_still`) left a gap
-  between the look and the writes. Rolls and queues taken before a refused
-  write are kept for the next try (`itemgate.hold`; buyback, defilers'
-  scrolls, Pick Pockets, the arena ring, the game's own party). Tests in
-  `test_itemgate.py`.
-
 **Changed**
 - **The Healer has the sphere of the cosmos, and is a water cleric's only**
   (with kits on). The cosmos's spells are those every druid casts and no
@@ -60,7 +43,28 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   the guide and the patch notes say so; tests for the water cleric's DUAL menu
   and for `cosmos_spells`.
 
-**Fixed** (a code review of the whole Loader)
+**Fixed**
+- **The Loader's changes to the game's item lists could land mid-load.**
+  The game gives every item a new number as an area loads; a change made
+  across that, from numbers read before it, could cut an item out of its
+  list (a likely way for an item to vanish without a trace). Every write to
+  the item lists now goes through one gate (`itemgate.py`, in
+  `GuestMemory.write`): the first in a dice log pass waits until the game's
+  free lists, area and item table have stayed as they were for 60 ms, pauses
+  DOSBox (`ProcessMemory.suspend`/`resume`), looks again, and writes with the
+  game held still; anything changed and the pass's item writes wait for the
+  next. Kalzith's stock and loot, the arena ring, buyback and defilers' scrolls
+  had no such check before, and the others' (`_items_still`) left a gap
+  between the look and the writes. Rolls and queues taken before a refused
+  write are kept for the next try (`itemgate.hold`; buyback, defilers'
+  scrolls, Pick Pockets, the arena ring, the game's own party). Tests in
+  `test_itemgate.py`.
+- **Item reports through a change of area**: the game renumbers every item then, and this pull
+  request's first way of telling a load (most items gone at once) took it for one and started
+  afresh, so an item lost in the change passed unseen. Now a bulk change waits until the new numbers hold still, matches
+  old items with new by owner, slot and item (`itemwatch._settle`, `renumbered`), and reports
+  one with no match; under half matched (`BULK_MATCH`), or nothing settled in `BULK_WAIT`, is a
+  load. A number another item took over is no longer read as the old item still there.
 - **A new character's gear fitted while the weapon window was still up**: the class restrictions,
   the kit's gear and the fuller starting gear now wait for it, as the starting weapon did
   (`_weapons_asked`); a slow pick could leave a Titan Mind without its weapon, or a Ravager's two
@@ -71,9 +75,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Pick Pockets could lose an item** taken from someone when the thief's backpack list couldn't
   be made: the list is made first now.
 - **Item reports**: a later save of the same party loaded no longer reports the items it doesn't
-  have (the clock moving on more than `CLOCK_JUMP` with the party somewhere else, or most items
-  gone at once, count as a load; a rest, the clock on hours with the party where it was, doesn't,
-  so an item gone as the party rests is still reported: `GameData.party_position`);
+  have (the clock moving on more than `CLOCK_JUMP` with the party somewhere else counts as a load;
+  a rest, the clock on hours with the party where it was, doesn't, so an item gone as the party
+  rests is still reported: `GameData.party_position`);
   money is taken for a sale only when it rose by what a shop pays for the item (its price, or
   60%), so a purse picked or a reward no longer hides a vanish; and an item handed over is
   remembered for 10 seconds (`ARRIVED_KEEP`), so a busy Loader doesn't report it.
@@ -88,6 +92,10 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **Draft release notes for 2.6.0** (`release-notes/v2.6.0.md`) and a
   "Coming in 2.6.0" line on the front page; How the game works notes that
   clerics never have the common 4th and 5th-level priest spells.
+- How the game works has **the arena's count of fights**: what the announcer
+  says at each count, the 1000th trip's gifts and the 5000th's war won. DEVELOPMENT.md has the item gate, the item watch's area changes and
+  the rings and cloaks of protection; the README's item reports say what an
+  area change does.
 
 ## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
 

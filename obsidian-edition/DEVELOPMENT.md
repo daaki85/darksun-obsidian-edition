@@ -415,6 +415,17 @@ before its roll (the defiler isn't marked rolled for), Kalzith's loot before
 item's place in the buyback queue moves on only once it is kept, and the game's
 own party's steps are marked done only once made.
 
+The item watch (`itemwatch.py`, the README's
+[If an item disappears](README.md#if-an-item-disappears)) reads the same lists
+once a second and has to see past the renumbering too. Over half the party's
+items gone at once (and at least `MOST_GONE`) is a bulk change: it waits until
+the new numbers hold still at two looks, then matches old items with new by
+owner, slot and what the item is (`_same`: its picture, type, name and plus),
+falling back to owner and item. At least `BULK_MATCH` (half) matched
+is a change of area, and an item with no match is reported; fewer, or no
+settling within `BULK_WAIT` (30 s), is a game loaded, and the watch starts
+afresh.
+
 
 ## How each part works
 
@@ -1022,6 +1033,20 @@ How: where the game works out the number a weapon's d20 must reach
 (`INT D6h`), where it skips the roll for armour with no magical power
 (`INT D5h`) and where it works out armour's number (`INT D4h`), the helper
 gives the easier of the two and records the check for the dice log.
+
+### Rings and cloaks of protection
+
+([In the README](README.md#rings-and-cloaks-of-protection).)
+
+How: the game's AC routine counts a worn item's plus only if its type's +0Fh
+has bit 80h, which the Ring type lacks; the helper (`INT F8h`, at 58EBDh)
+sets it for rings, and the saving throw routine's sum of modifiers starts at
+the worn rings' plus (`INT F9h`, its `xor si,si` at 79D47h) rather than 0.
+With the rule, both look first at what the creature wears (`PROT_SCAN`: a
+worn armour piece with a plus, one of metal, a shield in a hand, and each
+hand's ring): the AC routine drops a ring with magical armour and the worse
+of two rings, and both drop the cloak with any of the three. The Loader's
+saves and AC rows weigh it the same way (`GameData.protection`).
 
 ### Half-giants' two-handed weapons
 
