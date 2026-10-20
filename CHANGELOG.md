@@ -11,6 +11,17 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 ## Pull request #52 (in progress)
 
+**Added**
+- **The arena's count of fights, on the combat log panel's A.** A button left
+  of the header's L puts "Arena fights: N" in the header instead of the
+  round (lit while on, saved as `combat_log_arena`; not in the strip, which
+  has no buttons). N is the game's own count, its global number 12
+  (`GameData.number`, `game.NUMBERS_PTR` = DS:1356h, `ARENA_FIGHTS`), which
+  script 3 adds one to each time the party leaves the arena after a call,
+  however many waves came; the announcer's speech changes with it (for the
+  first five fights, the 1000th and the 5000th). `combatlog.arena_rect`,
+  `arena_line`.
+
 **Changed**
 - **The Healer has the sphere of the cosmos, and is a water cleric's only**
   (with kits on). The cosmos's spells are those every druid casts and no

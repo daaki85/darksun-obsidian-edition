@@ -175,6 +175,16 @@ class XpTests(unittest.TestCase):
 
 
 class FlagsTests(unittest.TestCase):
+    def test_numbers(self):
+        """A global number: a word at the numbers' far pointer; None while the pointer is null."""
+        log = arena()
+        m = log.guest.mem
+        struct.pack_into("<HH", m, DS * 16 + game.NUMBERS_PTR, 4, 0x6000)
+        struct.pack_into("<h", m, 0x60004 + game.ARENA_FIGHTS * 2, 7)
+        self.assertEqual(log.game.number(game.ARENA_FIGHTS), 7)
+        struct.pack_into("<I", m, DS * 16 + game.NUMBERS_PTR, 0)
+        self.assertIsNone(log.game.number(game.ARENA_FIGHTS))
+
     def test_no_flags_in_memory(self):
         """With the flags' pointer null (the arena outside a script's run): no flag, and nothing
         written (low memory left alone)."""

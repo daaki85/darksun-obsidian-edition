@@ -466,13 +466,17 @@ the map (a character's menu, a question) hides it until it closes.
   is as new lines come, and a **Latest** chip at its foot says how many have;
   click it (or scroll to the end) to follow again. Clicks on the panel are
   its own: the party doesn't walk there.
-- **Its buttons**, on the right of its top line: **L**, which hides it as the
+- **Its buttons**, on the right of its top line: **A**, which puts the party's
+  count of arena fights in the top line (lit while on; a click again brings
+  the round back), the game's own count, one a trip into the arena however
+  many waves come; **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
   bigger panel. Collapsed, it is one line, the newest; expanded, it is
   taller (11 lines) and has filters along its top: **All**, **Party** (the
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
-  throws and magic resistance). Its size is remembered.
+  throws and magic resistance). Its size, and the A, are remembered. (The
+  strip below the map has no buttons, so no A.)
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
 

@@ -277,6 +277,9 @@ MONEY_SEG, MONEY = 0x3781, 0x357
 # The game's global flags (its scripts' 13h/8Dh variables): bits, flag n bit n % 8 of byte n // 8,
 # at the far pointer here (a save keeps them: SAVE chunk 29)
 FLAGS_PTR = 0x1352
+# The game's global numbers (its scripts' 07h/87h variables): words, at the far pointer here
+NUMBERS_PTR = 0x1356
+ARENA_FIGHTS = 12  # the number counting the party's trips to the arena (scripts 2 and 3)
 # Speakers the game names in its own text (the dialogue window shows only a portrait):
 # 119 is asked about as "Yell something back at the Announcer?"
 SPEAKERS = {119: "The Announcer"}
@@ -875,6 +878,13 @@ class GameData:
         at = flags + n // 8
         byte = self.guest.read(at, 1)[0]
         self.guest.write(at, bytes([byte | 1 << (n % 8) if on else byte & ~(1 << (n % 8))]))
+
+    def number(self, n: int) -> Optional[int]:
+        """Global number N (None while the numbers have no place in memory, as flag)."""
+        numbers = far_pointer(self.guest, self.ds, NUMBERS_PTR)
+        if not numbers:
+            return None
+        return struct.unpack("<h", self.guest.read(numbers + n * 2, 2))[0]
 
     def region(self) -> int:
         """The region the party is in (its RGNxx.GFF)."""

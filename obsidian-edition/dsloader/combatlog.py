@@ -577,6 +577,18 @@ def key_rect(font, g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
     return x1 - BUTTON_W, HEADER_Y0, x1, HEADER_Y1
 
 
+def arena_rect(font, g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
+    """The header's A (the arena's count of fights in the header instead, and back), before the L."""
+    x1 = key_rect(font, g)[0] - 2
+    return x1 - BUTTON_W, HEADER_Y0, x1, HEADER_Y1
+
+
+def arena_line(count: Optional[int]) -> str:
+    """The header with the A on: the party's arena fights, as the game counts them (one a trip into
+    the arena, however many waves; game.ARENA_FIGHTS)."""
+    return "Arena fights: ?" if count is None else f"Arena fights: {count}"
+
+
 def filter_rects(font, g: Geometry) -> List[Tuple[str, Tuple[int, int, int, int]]]:
     """The filters' chips along the top of the well (expanded): (the filter, its x0, y0, x1, y1)."""
     if not g.filters or font is None:
@@ -620,11 +632,11 @@ def _button(picture: bytearray, font, rect, label: str, ink: Dict[str, int], on:
 
 def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Line], names: Dict[str, str],
          first_row: Optional[int] = None, new: int = 0, g: Geometry = SIZES[DOCKED], level: Optional[str] = None,
-         filt: str = "all") -> bytes:
+         filt: str = "all", arena: bool = False) -> bytes:
     """The panel with its lines: the header TOP, and the well's rows from FIRST_ROW (None: the
     last ones; else with a chip to go back to them, saying how many rows came since, NEW). With
     LEVEL, the header's level chip and size buttons; G its size (collapsed: TOP is the newest
-    line); FILT the filter chosen, when it has the filters' row."""
+    line); FILT the filter chosen, when it has the filters' row; ARENA, the A lit (TOP the count)."""
     global _picture_w
     _picture_w = w = g.width
     picture = bytearray(background)
@@ -637,7 +649,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
     if font is None:
         return bytes(picture)
     level = None if g.strip else level  # (the strip: no buttons, out of the pointer's reach)
-    room = (key_rect(font, g)[0] if level else w - 4) - 2
+    room = (arena_rect(font, g)[0] if level else w - 4) - 2
     chip = f"Latest: {new} new" if new else "Latest"
     if g.strip and first_row is not None:  # (the strip's chip: in its header, at the right)
         chip_w = _width(font, chip) + 6
@@ -651,6 +663,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
         _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names),
               ink, room)
     if level:
+        _button(picture, font, arena_rect(font, g), "A", ink, on=arena)
         _button(picture, font, key_rect(font, g), "L", ink)
         _button(picture, font, level_rect(font, g), LEVEL_NAMES.get(level, level), ink)
         if g != SIZES[COLLAPSED]:
@@ -698,6 +711,7 @@ class Panel:
         self.pointer = (-1, -1)  # where the game's pointer is (DSCLOG's), on the screen
         self.strip = False  # in the strip below the map (the Options tab's combat_log_strip)
         self.open = False  # the panel over the map shown (L shows and hides it, in fights and out)
+        self.arena = False  # the header saying the arena's count of fights (the A)
 
     @property
     def g(self) -> Geometry:
@@ -752,7 +766,8 @@ class Panel:
         """The left button on the panel (DSCLOG's TSR_MOUSE): on the scrollbar's handle, dragging
         it; on the bar above or below it, a page back or on; on the "Latest" chip, the newest; on
         the header's level chip, the next level; on + or -, a size bigger or smaller; on a filter,
-        that filter. L (TSR_KEYS), or a click on the header's L, hides the panel."""
+        that filter; on the header's A, the arena's count of fights in the header, or back. L
+        (TSR_KEYS), or a click on the header's L, hides the panel."""
         mx, my, held, hits, hx, hy = struct.unpack("<hhHHhh", gd.guest.read(tsr_hdr + TSR_MOUSE, 12))
         self.pointer = (mx, my)
         if self.keys(gd, tsr_hdr):
@@ -768,6 +783,10 @@ class Panel:
             if HEADER_Y0 <= py <= HEADER_Y1 and px >= g.minus_x0:  # - and +
                 order = SIZE_ORDER.index(self.size)
                 self.resize(SIZE_ORDER[max(0, order - 1)] if px < g.plus_x0 else SIZE_ORDER[min(2, order + 1)])
+                return
+            ax0, ay0, ax1, ay1 = arena_rect(self.font, g)
+            if ay0 <= py <= ay1 and ax0 <= px <= ax1:
+                self.arena = not self.arena
                 return
             kx0, ky0, kx1, ky1 = key_rect(self.font, g)
             if ky0 <= py <= ky1 and kx0 <= px <= kx1:
@@ -808,9 +827,10 @@ class Panel:
                 self._scroll(round(max(0, min(room, pos)) * (self._rows - visible(0, g)) / room))
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, top: str = "",
-               names: Optional[Dict[str, str]] = None) -> None:
+               names: Optional[Dict[str, str]] = None, arena_count: Optional[int] = None) -> None:
         """ON: the panel shown (once it is drawn in a palette DSCLOG has read: PALETTES counts the
-        reads), with the header TOP and the log's lines, NAMES their colours' keys."""
+        reads), with the header TOP and the log's lines, NAMES their colours' keys; with the A on,
+        the header the arena's count of fights, ARENA_COUNT, instead (not in the strip: no A)."""
         guest = gd.guest
         self.strip = strip_patched(gd)
         seg, = struct.unpack("<H", guest.read(tsr_hdr + TSR_PANEL_SEG, 2))
@@ -828,8 +848,11 @@ class Panel:
         if not on:
             self.first, self._grab = None, None  # (the next fight: its newest lines)
         if on and self._ink is not None:
+            arena = self.arena and not self.strip
+            if arena:
+                top = arena_line(arena_count)
             now = (self._palettes, top, self.log.version, self.level, tuple(sorted(names.items())), self.first,
-                   "strip" if self.strip else self.size, self.filter)
+                   "strip" if self.strip else self.size, self.filter, arena)
             if now != self._shown:
                 g, size = self.g, now[6]
                 if size not in self._backgrounds:
@@ -838,10 +861,10 @@ class Panel:
                 if g.rows:
                     self._rows = len(rows_of(self.font, lines, names, g)) if self.font is not None else 0
                     self.first = scroll_to(self.first, self._rows, g)
-                else:  # collapsed: the newest line in the header
+                elif not arena:  # collapsed: the newest line in the header
                     top = lines[-1].text if lines else top
                 picture = draw(self._backgrounds[size], self.font, self._ink, top, lines, names, self.first,
-                               max(0, self._rows - self._back_rows), g, self.level, self.filter)
+                               max(0, self._rows - self._back_rows), g, self.level, self.filter, arena)
                 guest.write(seg * 16, planar(picture, g.width))
                 guest.write(tsr_hdr + TSR_PANEL_TOP, struct.pack("<HH", g.top, g.height))
                 guest.write(tsr_hdr + TSR_PANEL_NEW, struct.pack("<H", 1))

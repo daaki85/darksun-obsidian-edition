@@ -400,6 +400,34 @@ class StatesTests(unittest.TestCase):
         self.press((x0 + x1) // 2, (y0 + y1) // 2)
         self.assertFalse(self.panel.open)
 
+    def test_a_label(self):
+        """The header's A, left of the L: a click turns the arena's count on in the header, and off."""
+        self.panel.mouse(self.game, HDR)
+        x0, y0, x1, y1 = c.arena_rect(self.panel.font, self.panel.g)
+        self.assertLess(x1, c.key_rect(self.panel.font, self.panel.g)[0])
+        self.press((x0 + x1) // 2, (y0 + y1) // 2)
+        self.assertTrue(self.panel.arena)
+        self.press((x0 + x1) // 2, (y0 + y1) // 2)
+        self.assertFalse(self.panel.arena)
+
+    def test_arena_count_in_the_header(self):
+        """With the A on, the header says the arena's count instead of the round, collapsed too."""
+        g = self.game.guest
+        g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
+        g.mem[HDR + c.TSR_HDR_OFF:HDR + c.TSR_HDR_OFF + 2] = c.struct.pack("<H", 0)
+        g.mem[HDR + c.TSR_DAC:HDR + c.TSR_DAC + 2] = c.struct.pack("<H", 0x2000)
+        self.panel.log.add(FIGHT)
+        self.panel.arena = True
+        for size in (c.DOCKED, c.COLLAPSED):
+            self.panel.resize(size)
+            self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES, 2)
+            self.assertEqual(self.panel._shown[1], "Arena fights: 2")
+        self.panel.arena = False
+        self.panel.resize(c.DOCKED)
+        self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES, 2)
+        self.assertEqual(self.panel._shown[1], "Round 1")
+        self.assertEqual(c.arena_line(None), "Arena fights: ?")
+
     def test_update_writes_the_size(self):
         g = self.game.guest
         g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
