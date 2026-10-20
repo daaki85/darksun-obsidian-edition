@@ -507,6 +507,8 @@ DOSBox's window is a little taller than 4:3.
 
 ![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
+
 ### THAC0, saves and thief skills
 
 Started with the dice log, the game's own inventory screen (the one with the
@@ -672,6 +674,8 @@ necklaces) shows how many it has left in its item box (right-click it on the
 inventory screen), under its name, counting down as it's used:
 
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#charges-in-item-boxes).
 
 ### No manual check
 
@@ -842,6 +846,8 @@ does. Portraits and the title's lettering are read from your installed game at
 run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the Loader
 remembers); nothing from the game is copied into the Loader. Without the game
 installed the window uses its own lettering and no portraits.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ## The dice log
 
@@ -1266,7 +1272,7 @@ in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
 The off hand's DAM lines (the inventory screen and View Character) show its
 one attack.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons-adds-penalties).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons).
 
 ### Items saving against acid
 
@@ -1557,6 +1563,8 @@ page of their own, [Kits](KITS.md):
 The game's own party gets features of its own
 ([The game's own party](#the-games-own-party)).
 
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#kits).
+
 ### Levels up to 10
 
 The game stops every class at level 9 (its manual's tables end there too).
@@ -1628,7 +1636,7 @@ does nothing until STORE keeps another. STORE again keeps the new roll in
 place of the old. Unticked, the screen is as the game has it, from the next
 time the game is started.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall-on-the-creation-screen).
 
 ### Fuller starting gear
 
