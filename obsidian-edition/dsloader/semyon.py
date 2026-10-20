@@ -25,7 +25,6 @@ member on their word; he hid a gem in one of the pens' grain pots. No narration,
 game's talks.
 """
 
-from typing import Dict, Tuple
 
 from . import gpl, kalzith
 from .kalzith import START, _Script, ALWAYS, _is, leaves

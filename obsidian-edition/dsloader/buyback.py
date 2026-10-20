@@ -85,8 +85,8 @@ class Buyback:
         while self.seen != seq:
             slot = self.seen % SOLD_SLOTS
             thing, merchant = struct.unpack("<HH", gd.guest.read(hdr + SOLD_Q + slot * 4, 4))
+            out += self.keep(gd, thing, merchant)  # (ItemsBusy: kept in a later pass)
             self.seen = (self.seen + 1) % 0x10000
-            out += self.keep(gd, thing, merchant)
         return out
 
     def keep(self, gd, thing: int, merchant: int) -> List[str]:

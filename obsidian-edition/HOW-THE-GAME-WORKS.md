@@ -5,7 +5,7 @@ the curious. [The README](README.md) is about the mod.*
 
 What the game does that its manual doesn't say, from its code and checked in
 play. The dice log shows each as it happens, and the
-[rule changes](README.md#rule-changes) change some of it.
+[rule changes](FEATURES.md#rule-changes) change some of it.
 
 ## Initiative
 
@@ -44,12 +44,12 @@ A round is 60 game seconds. Some effects last a number of uses instead
   foe's spell for one creature (not an area's, a cone's or a wall's), has a 75%
   chance to strike an image instead, the image vanishing and the blow or spell
   lost; the dice log shows each d100 (the game's own images worked otherwise:
-  see [The game's bugs, fixed](README.md#the-games-bugs-fixed)).
+  see [The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
 - Armor: a number of damaging hits, one charge each (with the Loader: see
-  [The game's bugs, fixed](README.md#the-games-bugs-fixed)).
+  [The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 
 Charm, Feeblemind, Web and a few others last until removed.
 
@@ -64,7 +64,7 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Afraid | The computer runs it; it can't attack or cast. Undead are immune, and Cloak of Bravery stops the next fear (and ends) |
 | Charmed | Joins the caster's side, run by the computer |
 | Confused | Each turn a d10: 1 runs off, 2–6 does nothing, 7–9 fights for a side picked with a d2, 10 acts normally (the log shows the rolls) |
-| Berserk | Fights for a side picked at random each turn; can't cast |
+| Berserk | Fights for a side picked at random each turn; can't cast. In the game a party member could be left on the monsters' side when this or Confused ended; the patched game puts it back ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
 | Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
 | No spell use, Feeblemind | Can't cast spells |
 | Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |
@@ -88,6 +88,10 @@ Other things the game does its own way:
   every sphere. Cast by a priest of another element, an elemental spell counts
   caster level 0. The game shows each priest only their element's spells, so
   this only happens if a character somehow has the others.
+- Clerics never have the common 4th and 5th-level priest spells: Cure Serious
+  and Critical Wounds, Raise Dead, Neutralize Poison, Free Action and the rest
+  are marked for druids alone (a cleric's 4th and 5th levels are its element's
+  spells only). The mod's Healer kit gives them to a water cleric.
 
 The spell's area catches its caster too. Cilla's Scare made her Afraid, and her
 Fireball, cast at a Slig next to her, killed her.
@@ -107,8 +111,12 @@ their own:
   power drops. The log shows every change in a party member's PSP
   (` K'ratchek spends 18 PSP (52 -> 34)`).
 - **Psionic defence.** Attacked by a psionic attack mode (Psychic Crush, Ego
-  Whip, Id Insinuation, Psionic Blast), a character automatically raises the
-  best defence mode they know and can pay for, and pays its PSP.
+  Whip, Id Insinuation, Psionic Blast), a character defends with WIS − 7, or
+  with a defence mode already raised (used beforehand, it stays up at no cost
+  each round) if that does better: the mode's rank plus half its cost, which
+  the character pays again, if they can. A monster defends with its level where
+  that's better. Two rolls of 1 to that number, both over the attacker's own
+  roll for the power, resist it.
 - **Mind Bar** adds 75% magic resistance against mind-affecting spells:
   charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
   magic resistance line counts it, and Lower Resistance halving the result.
@@ -116,8 +124,10 @@ their own:
 - Monsters use them too: the Screamer Beetle's special attack is Psychic
   Crush (1d8, save vs paralysis/poison/death for half).
 
-What each costs, from the game's own table (it differs from the books in
-places: Enhanced Strength and Domination cost nothing to start):
+What each costs, from the game's own table, and for three of them worked out as
+they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination and
+Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11, below
+16, and up):
 
 | Power | Discipline | PSP to use | PSP each round kept up |
 |---|---|---|---|
@@ -136,13 +146,13 @@ places: Enhanced Strength and Domination cost nothing to start):
 | Body Weaponry | psychometabolism | 9 | 4 |
 | Cell Adjustment | psychometabolism | 5 | — |
 | Displacement | psychometabolism | 6 | 3 |
-| Enhanced Strength | psychometabolism | 0 | 8 |
+| Enhanced Strength | psychometabolism | (24 − STR) × 2 | 8 |
 | Flesh Armor | psychometabolism | 8 | 4 |
 | Graft Weapon | psychometabolism | 10 | 1 |
 | Lend Health | psychometabolism | 4 | — |
 | Share Strength | psychometabolism | 6 | 2 |
-| Domination | telepathy | 0 | — |
-| Mass Domination | telepathy | 0 | — |
+| Domination | telepathy | 3-18 by level | — |
+| Mass Domination | telepathy | 3-18 by level | — |
 | Psychic Crush (attack mode) | telepathy | 7 | — |
 | Superior Invisibility | telepathy | 5 | 5 |
 | Tower of Iron Will (defence mode) | telepathy | 6 | 0 |
@@ -186,7 +196,7 @@ rolls a new character. From the game's code, and checked against the screen:
   log. The creation screen's other random numbers only choose pictures.
 * **The total.** After the six scores comes what they add up to, the most they
   may add up to with
-  [Scores and hit points as rolled](README.md#scores-and-hit-points-as-rolled).
+  [Scores and hit points as rolled](FEATURES.md#scores-and-hit-points-as-rolled).
 
 Changing sex or race can make the game roll hit points twice, once with the
 old scores and once with the new: the last hit point line is the one that
@@ -202,7 +212,7 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   psionic, death, and for weapons crushing, edged or pointed, from the item's
   type; a natural (unarmed) attack's is crushing, fists and monsters' claws
   alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
-  Claw's talons are edged: see [Erdlu Claw](README.md#new-wizard-spells)). A weapon's hit also carries its magic: one bit for +1 or better, one
+  Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)). A weapon's hit also carries its magic: one bit for +1 or better, one
   for +2 or better and one for +3 or better (the weapon's plus, or its
   ammunition's if that's higher). A monster's own attacks count as magical by
   its level: (level - 2) / 2, so a 6th-level monster hits like a +2 weapon.
@@ -222,7 +232,7 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   monsters' powers on the target: 2d6 cold, 2d6 or 20 acid, paralysis,
   poison of 10 or 30 damage, a deadly Poison, disease on 1 hit in 10. The 20
   acid (the Rampager's) and a corroding touch (the Babau's) can also destroy a
-  worn item (see [Items saving against acid](README.md#items-saving-against-acid)).
+  worn item (see [Items saving against acid](FEATURES.md#items-saving-against-acid)).
 - Undead (race 9 on the character sheet) take nothing from poison and
   draining, and mind-affecting spells, charms and holds don't work on them.
 
@@ -303,15 +313,15 @@ chance out as:
 - plus the situation's bonus or penalty (a hard lock, say).
 
 With **Thief skills from AD&D's table** ticked (see
-[Thief skills from AD&D's table](README.md#thief-skills-from-adds-table)), the first
+[Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)), the first
 two and the DEX part are AD&D's instead.
 
 Only characters with thief levels have the skills; everyone else's chance is
 0. The character's condition must be Okay (the status the character screen
-   shows under HP): a thief who is Stunned, Out Cold, Dying and so on can't
-   use the skills. A character not yet played (New, before the game starts)
-   counts as Okay, so a party's thief skills show while it is made (see
-   [More characters](README.md#more-characters)).
+shows under HP): a thief who is Stunned, Out Cold, Dying and so on can't use
+the skills. A character not yet played (New, before the game starts) counts as
+Okay with the mod, so a party's thief skills show while it is made (see
+[More characters](FEATURES.md#more-characters)).
 
 Some effects rule out a skill:
 - Blind, Afraid, Confused, Berserk and Paralyzed stop them all, except that a
@@ -358,8 +368,8 @@ has a script command that lets each member try in turn, but no script uses it.)
 **The game never rolls move silently, hide in shadows or read languages**, so
 on their own they make no difference, nor does the equipment penalty on them.
 The Loader rolls them: move silently when a pocket isn't picked
-([Picking pockets](README.md#picking-pockets)), hide in shadows and move silently in
-fights ([backstabs](README.md#hiding-in-shadows-to-backstab)), and read languages when
+([Picking pockets](FEATURES.md#picking-pockets)), hide in shadows and move silently in
+fights ([backstabs](FEATURES.md#hiding-in-shadows-to-backstab)), and read languages when
 a [Shinobi](KITS.md#thief-kits) reads a scroll. The scripts also make
 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
@@ -371,8 +381,8 @@ equipment penalty (none in games started with the dice log) and effects (but
 not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
 the two the Loader rolls: move silently (when a pocket isn't picked, see
-[Picking pockets](README.md#picking-pockets)) and hide in shadows (to
-[backstab](README.md#hiding-in-shadows-to-backstab)).
+[Picking pockets](FEATURES.md#picking-pockets)) and hide in shadows (to
+[backstab](FEATURES.md#hiding-in-shadows-to-backstab)).
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
 ## Attacks from behind and backstabs
@@ -392,7 +402,7 @@ From the game's code:
   attack of the round the damage, STR bonus included, is multiplied: x2 at
   thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
 
-Which weapons can backstab, the game's and the [Loader's](README.md#new-items) (magic
+Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items) (magic
 ones included). Weight belongs to the weapon's type and material, in the
 game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
 mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
@@ -445,9 +455,9 @@ In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
 a normal d20 saves 35% of the time and a doubled one 70%, which is why
 Fireball's victims usually get away with half damage. It isn't AD&D, and the
 game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. The two
-[rule changes](README.md#spells-saved-against-with-the-spell-save) below put the spell
-save back and take the doubled d20 away.
+each save: `d20 = 7, doubled against fire = 14`. Two of the
+mod's [rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
+spell save back and take the doubled d20 away.
 
 The target's spells and effects:
 - Blessed +1, Barkskin +1, Spirit Armor +3 (but not on
@@ -480,13 +490,39 @@ can't. The Scare code looks meant to let some elf or half-elf priests save
 creature that is both an elf and a half-elf, so no one qualifies.
 
 Rules in the code that never come into play: Cloak of Bravery's +4 against
-fear applies only to a kind of spell that no spell in the game is marked as,
-and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
+fear applies only to a kind of spell that no spell in the game is marked as
+(the patched game marks the fear spells: see
+[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)), and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
 at DEX 1 to −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
-[rule change](README.md#rule-changes) puts it on the fire, cold and electricity spells.
+[rule change](FEATURES.md#rule-changes) puts it on the fire, cold and electricity spells.
 And nothing in the game gives saves from items: there are no rings or cloaks
-of protection, which is why the mod adds [a ring](README.md#new-items) and
-[a cloak](README.md#new-items). Their +1 is in the log's saving throws as
+of protection, which is why the mod adds [two rings and a cloak](FEATURES.md#new-items). Their +1 is in the log's saving throws as
 `+1 Ring of Protection` and `+1 Cloak of Protection` (with
-[AD&D's rules for them](README.md#rings-and-cloaks-of-protection) off, all of it as
+[AD&D's rules for them](FEATURES.md#rings-and-cloaks-of-protection) off, all of it as
 `Ring of Protection`).
+
+## The arena's count of fights
+
+The game counts the party's trips into Draj's arena (its global number 12; the
+combat log panel's **A** button shows it). It goes up by one each time the
+party walks out of the arena's gate after being called, however many waves
+came that day; extra waves don't count. Being called needs the game's clock to
+run: Kurzak's call comes once a little over 8 hours of game time (8 h 05 min)
+have passed since the last trip, and the clock stands still while the Look
+pointer is chosen, so a party resting by the fire with it chosen is never
+called.
+
+The announcer greets each trip by the count:
+
+| Count | What happens |
+|---|---|
+| 0-3 | A speech of its own for each of the first four trips ("Before you is a handful of gladiators...", "Behold these gladiators as they fight in melee...", "These slaves have proven their worth...", "...Let the games begin!"), then the fight. |
+| 4 | Scar's challenge: "The 'King of the Pens', Scar, has become so disgusted with the survival of these scum that he has offered to kill them himself", when a check the script makes on Scar passes; otherwise the everyday speech. |
+| 1000 | "This day is very special. Let's have a round of applause for the one thousandth fight of our gladiators. King Tectuktitlay himself has sent gifts for these brave souls." Two weapons appear at the party's feet, with a sound: **El's Drinker +2** (a metal sword that carries a spell) and a **Bone Gythka +3**, each worth 65,000. The script then goes on as on any other day. |
+| 5000 | "You win! Through fighting in the arena, you have completely depopulated Athas of all monsters." No monsters come: the announcer sends the party back to the pens to heal, the crowd throws money, and the script marks the war against Draj won (flag 10, and the final battle's state, global number 49, set to 3). Reaching the final battlefield afterwards plays the game's victory: 20,000 XP, the allies' farewells, Dragonsbane, the genie's prophecy, and "Congratulations! You have defeated the Drajian army and completed Shattered Lands. Feel free to continue playing the game." |
+| Any other | "Once again, expectant spectators, you see trained warriors pitted against the hordes of creatures which dwell beyond our walls." |
+
+Checked in play: the count going up once a trip, Scar's challenge on the fifth,
+and, with the count set to 5000, the 5000th trip's speech, the party sent back
+with no fight, and the final battle marked won. The 1000th trip is as its
+script reads; it wasn't played.

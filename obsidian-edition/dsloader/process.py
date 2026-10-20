@@ -5,8 +5,13 @@ supported too, mostly so the tool can be developed and tested there.
 """
 
 import os
+import signal
 import sys
+import time
 from typing import Iterator, List, NamedTuple, Tuple
+
+
+STOP_TRIES, STOP_STEP = 50, 0.001  # (Linux: how long a stop is waited for, in steps of seconds)
 
 
 class ProcessError(Exception):
@@ -37,6 +42,7 @@ if sys.platform == "win32":
     _PROCESS_VM_READ = 0x0010
     _PROCESS_VM_WRITE = 0x0020
     _PROCESS_VM_OPERATION = 0x0008
+    _PROCESS_SUSPEND_RESUME = 0x0800
     _MEM_COMMIT = 0x1000
     _PAGE_GUARD = 0x100
     _WRITABLE = 0x04 | 0x08 | 0x40 | 0x80  # READWRITE, WRITECOPY, EXECUTE_READWRITE, EXECUTE_WRITECOPY
@@ -109,8 +115,8 @@ if sys.platform == "win32":
         def __init__(self, pid: int):
             self.pid = pid
             self._handle = _k32.OpenProcess(
-                _PROCESS_QUERY_INFORMATION | _PROCESS_VM_READ | _PROCESS_VM_WRITE | _PROCESS_VM_OPERATION,
-                False, pid)
+                _PROCESS_QUERY_INFORMATION | _PROCESS_VM_READ | _PROCESS_VM_WRITE | _PROCESS_VM_OPERATION
+                | _PROCESS_SUSPEND_RESUME, False, pid)
             if not self._handle:
                 raise ProcessError(
                     f"Cannot open process {pid} (error {ctypes.get_last_error()}). "
@@ -143,6 +149,19 @@ if sys.platform == "win32":
                     or done.value != len(data):
                 raise ProcessError(
                     f"WriteProcessMemory at {addr:#x} failed ({ctypes.get_last_error()})")
+
+        def suspend(self) -> bool:
+            """The process held still (itemgate.py), True if it is."""
+            try:
+                return ctypes.WinDLL("ntdll").NtSuspendProcess(self._handle) == 0
+            except (OSError, AttributeError):
+                return False
+
+        def resume(self) -> None:
+            try:
+                ctypes.WinDLL("ntdll").NtResumeProcess(self._handle)
+            except (OSError, AttributeError):
+                pass
 
         def is_alive(self) -> bool:
             code = wintypes.DWORD()
@@ -198,6 +217,29 @@ else:
                 self._mem.write(data)
             except (OSError, ValueError) as e:
                 raise ProcessError(f"Write at {addr:#x} failed: {e}") from e
+
+        def suspend(self) -> bool:
+            """The process held still (itemgate.py), True once all its threads have stopped."""
+            os.kill(self.pid, signal.SIGSTOP)
+            for _ in range(STOP_TRIES):
+                if self._stopped():
+                    return True
+                time.sleep(STOP_STEP)
+            self.resume()
+            return False
+
+        def resume(self) -> None:
+            os.kill(self.pid, signal.SIGCONT)
+
+        def _stopped(self) -> bool:
+            try:
+                for task in os.listdir(f"/proc/{self.pid}/task"):
+                    with open(f"/proc/{self.pid}/task/{task}/stat") as f:
+                        if f.read().rsplit(")", 1)[1].split()[0] not in ("T", "t"):
+                            return False
+                return True
+            except OSError:
+                return False
 
         def is_alive(self) -> bool:
             return os.path.exists(f"/proc/{self.pid}")

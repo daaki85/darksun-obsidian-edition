@@ -182,6 +182,9 @@ NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "
 NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
                     FRIENDS_SPELL: 1}
 NEW_SPELLS_END = 202  # (past the last)
+# Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
+# record copied to the records' room past the new spells, a save against death allowed
+NPP_SAVE_RECORD = 202
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
@@ -270,12 +273,16 @@ WHOSE_TURN = 0x4979  # DS word: the combatant whose turn it is (outside a fight:
 # 1DD8Bh, unless it is already 1); the one that ends it clears it (1DFE8h)
 IN_COMBAT = 0x1168
 REGION = 0x117C  # DS word: the region the party is in
+POSITIONS = 0x669D  # DS: each map object's x, y (in 16ths of a square), 32 bytes apart; the party's leader is object 0
 # The party's money, in ceramic pieces (the inventory screen's bottom bar): a dword the game's
 # script command for giving money (0Ch) adds to
 MONEY_SEG, MONEY = 0x3781, 0x357
 # The game's global flags (its scripts' 13h/8Dh variables): bits, flag n bit n % 8 of byte n // 8,
 # at the far pointer here (a save keeps them: SAVE chunk 29)
 FLAGS_PTR = 0x1352
+# The game's global numbers (its scripts' 07h/87h variables): words, at the far pointer here
+NUMBERS_PTR = 0x1356
+ARENA_FIGHTS = 12  # the number counting the party's trips to the arena (scripts 2 and 3)
 # Speakers the game names in its own text (the dialogue window shows only a portrait):
 # 119 is asked about as "Yell something back at the Announcer?"
 SPEAKERS = {119: "The Announcer"}
@@ -377,7 +384,7 @@ EFFECT_RULES = {
     # what the game's turn, movement, casting and damage code does with the rest
     1: "2d4 acid damage each round",
     3: "fights for a side picked at random each turn; can't cast spells",
-    9: "ends fear, and the next fear fails (which ends it)",
+    9: "ends fear, and the next fear fails (which ends it); +4 on saves against fear spells",
     10: "joins the caster's side, the computer controlling it",
     11: "each turn a d10: 1 runs off, 2-6 does nothing, 7-9 fights for a random side, 10 acts normally",
     17: "the computer controls it; can't attack or cast spells (undead are immune; Bravery stops it)",
@@ -441,7 +448,7 @@ def effect_text(effect: "Effect", charges: Optional[int], seconds: Optional[int]
 
 
 def ordinal(n: int) -> str:
-    return f"{n}{'st' if n == 1 else 'nd' if n == 2 else 'rd' if n == 3 else 'th'}"
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
 def slots_text(levels) -> str:
@@ -513,6 +520,8 @@ DWARF, HALFLING, UNDEAD = 2, 6, 9
 EFFECT_BLESSED, EFFECT_BLIND, EFFECT_DETECT_INVIS, EFFECT_INVISIBLE, EFFECT_INVIS_UNDEAD = 7, 8, 15, 23, 24
 EFFECT_PROT_EVIL, EFFECT_PROT_COLD, EFFECT_PROT_FIRE, EFFECT_PROT_LIGHTNING = 38, 36, 40, 41
 EFFECT_SAVE_PENALTY, EFFECT_SPIRIT_ARMOR, EFFECT_BARKSKIN, EFFECT_PRAYER = 45, 56, 57, 73
+EFFECT_BRAVE = 9  # (Cloak of Bravery: +4 against a spell flagged FEAR_CATEGORY, a charge used)
+FEAR_CATEGORY = 0x100  # (a record's +11h word: the patched game's fear spells, gamepatch brave_fear_*)
 SHEET_SAVES = 0x37  # the five saves, in SAVE_NAMES order
 SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen labels them
 # To hit, as the game's attack setup adds it: STR (melee) or DEX (missiles) from these tables,
@@ -577,10 +586,6 @@ CLASS_NAMES = {1: "Cleric (air)", 2: "Cleric (earth)", 3: "Cleric (fire)", 4: "C
                5: "Druid (air)", 6: "Druid (earth)", 7: "Druid (fire)", 8: "Druid (water)", 9: "Fighter",
                10: "Gladiator", 11: "Preserver", 12: "Psionicist", 13: "Ranger (air)", 14: "Ranger (earth)",
                15: "Ranger (fire)", 16: "Ranger (water)", 17: "Thief"}
-
-
-def ordinal(n: int) -> str:
-    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
 def class_share(sheet: bytes) -> int:
@@ -761,6 +766,9 @@ class GameData:
         self.load_seg = ds - DGROUP
         if hasattr(guest, "guarded"):  # (the C runtime's check, at exit: "Null pointer assignment")
             guest.guarded["the game's data segment's start"] = (ds * 16, ds * 16 + NULL_AREA)
+        if hasattr(guest, "item_gate"):  # (the Loader's changes to the item lists: never mid-load)
+            from .itemgate import ItemGate
+            guest.item_gate = ItemGate(self)
         self.rules = RULES_IN_FORCE if rules is None else rules
         self.belt = BELT_IN_FORCE
         self.dance: Dict[int, int] = {}  # each party member's Battle Dancer's dance now (+1, -1: dance.py)
@@ -875,9 +883,20 @@ class GameData:
         byte = self.guest.read(at, 1)[0]
         self.guest.write(at, bytes([byte | 1 << (n % 8) if on else byte & ~(1 << (n % 8))]))
 
+    def number(self, n: int) -> Optional[int]:
+        """Global number N (None while the numbers have no place in memory, as flag)."""
+        numbers = far_pointer(self.guest, self.ds, NUMBERS_PTR)
+        if not numbers:
+            return None
+        return struct.unpack("<h", self.guest.read(numbers + n * 2, 2))[0]
+
     def region(self) -> int:
         """The region the party is in (its RGNxx.GFF)."""
         return self._word(REGION)
+
+    def party_position(self) -> Tuple[int, int]:
+        """Where the party's leader (object 0) stands on the map: x, y in 16ths of a square."""
+        return struct.unpack("<HH", self.guest.read(self.ds * 16 + POSITIONS, 4))
 
     def item_type_record(self, item: bytes) -> bytes:
         types = far_pointer(self.guest, self.ds, ITEM_TYPES_PTR)
@@ -997,6 +1016,8 @@ class GameData:
             return title(text) if text else f"psionic power {spell}"
         if spell in NEW_SPELLS:
             return NEW_SPELLS[spell]
+        if spell == NPP_SAVE_RECORD:
+            return "Negative Plane Protection"
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)
             return ITEM_ATTACKS[spell].capitalize()
         if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
@@ -1163,6 +1184,8 @@ class GameData:
             out.append((1, EFFECT_NAMES[EFFECT_BARKSKIN]))
         if EFFECT_BLESSED in mine:
             out.append((1, EFFECT_NAMES[EFFECT_BLESSED]))
+        if category & FEAR_CATEGORY and EFFECT_BRAVE in mine:
+            out.append((4, "Cloak of Bravery"))
         if EFFECT_PROT_EVIL in mine and len(caster_sheet) >= SHEET_SIZE and caster_sheet[0x1A] in EVIL_ALIGNMENTS:
             out.append((2, "Prot Evil against an evil caster"))
         for bit, eff, amount in ((0x80, EFFECT_PROT_LIGHTNING, 4), (0x04, EFFECT_PROT_COLD, 3),

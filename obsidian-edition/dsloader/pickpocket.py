@@ -23,7 +23,7 @@ import struct
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
 
-from . import game, ring
+from . import game, itemgate, ring
 from .game import GameData
 
 PICK_POCKETS, MOVE_SILENTLY = 0, 3  # thief skill numbers
@@ -243,6 +243,7 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
     cell = free_cell(gd, it, leader)
     if cell is None:
         return Attempt(f"{thief}'s backpack is full.", [])
+    itemgate.hold(gd)  # (before the roll: the game busy with its lists, the try waits for the next look)
     d100 = roll()
     lines = [f"{thief} picks {npc}'s pocket: d100 = {d100}, needs {chance} or less -> "
              + ("success" if d100 <= chance else "failed")]
@@ -261,6 +262,8 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
             list_no, item, before = random.choice(loot)
             data = it.item(item)
             name = gd.item_label(data, gd.item_type_record(data))
+            if party_list(gd, it, leader, cell) is None:  # (the thief's backpack list first: the item is
+                return Attempt(f"{thief} can't take anything now.", lines)  #   never left in no list)
             _take(gd, it, who, list_no, item, before)
             if not give(gd, ring.Items(gd), leader, item, cell):
                 return Attempt(f"{thief} can't take anything now.", lines)

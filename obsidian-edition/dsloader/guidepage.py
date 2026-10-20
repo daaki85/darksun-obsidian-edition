@@ -231,7 +231,7 @@ def build() -> str:
   </main>
 </div>
 <footer>
-  <p>Obsidian Edition runs on Windows with the GOG release of Dark Sun: Shattered Lands, in DOSBox. The <a href="README.md">README</a> has every rule in full detail, and the <a href="https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md">patch notes</a> every change from the original game.</p>
+  <p>Obsidian Edition runs on Windows with the GOG release of Dark Sun: Shattered Lands, in DOSBox. The <a href="README.md">README</a> and its <a href="FEATURES.md">features page</a> have every rule in full detail, and the <a href="https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md">patch notes</a> every change from the original game.</p>
 </footer>
 </body>
 </html>

@@ -20,11 +20,11 @@ import random
 import re
 import struct
 import time
-from collections import Counter, deque
+from collections import Counter
 from dataclasses import dataclass
-from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -344,6 +344,16 @@ class AcDetail(NamedTuple):
     total: int
 
 
+def _new_fight(log) -> None:
+    """A new fight for dice log LOG, by the clock (_round_number) or the fight flag (_kits_due): the
+    rounds counted from 0 again, and the game hands its creature records to new monsters, so an AC
+    worked out for one in an earlier fight isn't this one's (the party's stay theirs)."""
+    log._round = 0
+    for remembered in (log.last_ac, log.ac_detail):
+        for index in [i for i in remembered if i >= game.PARTY_SIZE]:
+            del remembered[index]
+
+
 class DiceLog:
     def __init__(self, guest: GuestMemory, record_everything: bool = False):
         self.guest = guest
@@ -610,6 +620,8 @@ class DiceLog:
                     result = pickpocket.attempt(self.game, self.picked, who=index, thief=item & 0xFF)
                 if result is None:
                     result = pickpocket.Attempt("There are no pockets to pick there.", [])
+        except itemgate.ItemsBusy:
+            return []  # (the game changing its item lists: answered in a later pass)
         except (struct.error, IndexError, ValueError):
             result, taken = None, False
         self._write_pick_text(result.text if result else "")
@@ -642,6 +654,7 @@ class DiceLog:
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
         self._panel.open = settings.get("combat_log_open") is True  # (hidden till L)
+        self._panel.arena = settings.get("combat_log_arena") is True  # (the A: the arena's count)
         self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
@@ -948,7 +961,19 @@ class DiceLog:
         return " and ".join(names), to_hit, damage
 
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
-        """Everything new since the last call, as log lines. Call it every few tens of ms."""
+        """Everything new since the last call, as log lines. Call it every few tens of ms. Its
+        changes to the game's item lists are made only if the game left them be all the while
+        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on)."""
+        gate = getattr(self.guest, "item_gate", None)
+        if gate is not None:
+            gate.begin()
+        try:
+            return self._lines(show_all, now)
+        finally:
+            if gate is not None:
+                gate.end()
+
+    def _lines(self, show_all: bool, now: Optional[float]) -> List[str]:
         now = time.monotonic() if now is None else now
         out: List[str] = []
         for e in self.poll():
@@ -977,10 +1002,14 @@ class DiceLog:
             self._write_stats()
             if not self._party_check(now):
                 out += self.tracker.check(now)
-                if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
-                    out += self.buyback.watch(self.game, self.tsr_hdr)
-                if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
-                    out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
+                try:  # (each waits for a later pass while the game changes its item lists)
+                    if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
+                        out += self.buyback.watch(self.game, self.tsr_hdr)
+                    if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
+                        out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
+                except itemgate.ItemsBusy:
+                    pass
+                itemgate.release(self.game)
                 out += self._arena_ring(now)
                 out += self._drawn(now)
                 self._kalzith_sold_out()
@@ -1036,18 +1065,25 @@ class DiceLog:
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
             still = self._items_still()
-            if still:  # (the item lists changed only while the game leaves them be)
-                if self.rules & game.RULE_SPECIALIZE and not self._weapons_asked():  # (new characters' weapon kinds and starting weapon:
+            if still:  # (the item lists changed only while the game leaves them be: itemgate.py)
+                # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
+                # specs decide its weapon, and the steps after build on that weapon, in this order.
+                new_ok = not self._weapons_asked()
+                if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
                     out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
-                if self.rules & game.RULE_RESTRICT:  # (new characters' gear their classes can't use: left behind)
+                if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
                     out += weaponchoice.class_gear(self.game)
-                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits)
-                    out += weaponchoice.kit_gear(self.game)
-                if self.starting_gear:  # (new characters' starting gear filled out)
+                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
+                    if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
+                        out += weaponchoice.kit_gear(self.game)
+                    for member in range(game.PARTY_SIZE):
+                        out += kits.cosmos_spells(self.game, member)
+                if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                     out += startgear.fill(self.game)
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
                 if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                     out += pickpocket.mend_lists(self.game)
+                itemgate.release(self.game)
             if self.cilla_elf:
                 out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
@@ -1068,8 +1104,10 @@ class DiceLog:
             tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
-        except (struct.error, IndexError, ValueError):
+        except (struct.error, IndexError, ValueError):  # (itemgate.ItemsBusy too: tried in a later pass)
             return out
+        finally:
+            itemgate.release(self.game)
         return out
 
     def _drawn(self, now: float) -> List[str]:
@@ -1125,16 +1163,17 @@ class DiceLog:
             except (struct.error, IndexError, ValueError):
                 pass
             return
-        before = (panel.first, panel.size, panel.level, panel.filter, panel.open)
+        before = (panel.first, panel.size, panel.level, panel.filter, panel.open, panel.arena)
         try:
             panel.mouse(self.game, self.tsr_hdr)
             if notches and panel.over():
                 panel.wheel(notches)
-            if panel.level != self.combat_log_level or panel.size != before[1] or panel.open != before[4]:
+            if (panel.level != self.combat_log_level or panel.size != before[1] or panel.open != before[4]
+                    or panel.arena != before[5]):
                 self.combat_log_level = panel.level  # (the panel's level chip: the Options tab's too)
                 _remember({"combat_log_level": panel.level, "combat_log_size": panel.size,
-                           "combat_log_open": panel.open})
-            if (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
+                           "combat_log_open": panel.open, "combat_log_arena": panel.arena})
+            if (panel.first, panel.size, panel.level, panel.filter, panel.open, panel.arena) != before:
                 self._update_panel(now)
         except (struct.error, IndexError, ValueError):
             pass
@@ -1167,7 +1206,13 @@ class DiceLog:
                     self._fight_monsters.add(name)
             top = combatlog.header(self.round_status())
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
-        self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names)
+        arena = None
+        if on and self._panel.arena:
+            try:
+                arena = self.game.number(game.ARENA_FIGHTS)
+            except (struct.error, IndexError, ValueError):
+                pass
+        self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names, arena)
 
     def _learn_lines(self) -> List[str]:
         """A preserver's tries at a scroll's spell since the last look (the rule for INT's chance:
@@ -1261,10 +1306,14 @@ class DiceLog:
             return []
         needed = self.arena_ring and ring.ring_needed(self.game)
         seq, = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SWAP_SEQ, 2))
-        fired, self._swap_seq = seq != self._swap_seq, seq
+        fired = seq != self._swap_seq
         out = []
         if needed and fired:
+            itemgate.hold(self.game)  # (ItemsBusy: the search is answered in a later pass)
+        self._swap_seq = seq
+        if needed and fired:
             given = ring.give_ring(self.game)
+            itemgate.release(self.game)
             out.append(given or "No one in the party has room for the ring: make room and look at the body again.")
             needed = given is None
         on = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SWAP_ON, 2))[0]
@@ -1632,15 +1681,11 @@ class DiceLog:
         if now is None:
             return 0
         if self._round_time is None or now - self._round_time > FIGHT_GAP or now < self._round_time:  # (or a game loaded)
-            self._round = 0
-            # a new fight: the game hands its creature records to new monsters, so an AC worked
-            # out for one in an earlier fight isn't this one's (the party's stay theirs)
-            for remembered in (self.last_ac, self.ac_detail):
-                for index in [i for i in remembered if i >= game.PARTY_SIZE]:
-                    del remembered[index]
+            _new_fight(self)
         self._round_time = now
         self._round += 1
         return self._round
+
 
     def initiative_lines(self) -> List[str]:
         """The round's order, from the rolls collected since the round began."""
@@ -1687,13 +1732,16 @@ class DiceLog:
         rows.sort(key=lambda r: (-r[0], -r[1]))
         scores = Counter(r[0] for r in rows)
         number = self._round_number()
+        if self._kits_due and number != 1:  # (a new fight by the fight flag, the clock not yet past FIGHT_GAP:
+            _new_fight(self)                #   the arena's next wave) everything a new fight resets
+            self._round = number = 1
         self.round_number = number
-        start, self._kits_due = number == 1 or self._kits_due, False  # (a new fight, or one after a fight's end)
+        start, self._kits_due = number == 1, False  # (a new fight, or one after a fight's end)
         if start:
             self._fight_seen, self._out_of_fight = False, None
         danced = self._dances.round(g, self.tsr_hdr, number, start=start)
         danced += self._wild.round(g, self.tsr_hdr, number, start=start)
-        if number == 1 and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
+        if start and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
             self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
@@ -1790,7 +1838,7 @@ class DiceLog:
         g = self.game
         d20 = scaled(e.raw, 20) + 1
         thac0, ac = e.arg(0x0A), e.arg(0x0C)
-        attacker, sheet_item, item, item_type, mode = e.arg(0x0E), e.arg(0x10), e.arg(0x12), e.arg(0x14), e.arg(0x16)
+        attacker, item, item_type, mode = e.arg(0x0E), e.arg(0x12), e.arg(0x14), e.arg(0x16)
         attacker_combatant, target_combatant = e.arg(0x18), e.glob[0]
         need = thac0 - ac
         hit = d20 == 20 or (d20 != 1 and d20 >= need)

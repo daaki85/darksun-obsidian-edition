@@ -41,6 +41,8 @@ class GuestMemory:
         # come from a pointer read while the game has it empty (0:offset): refused and noted
         self.guarded = {"low memory": (0, LOW_MEMORY)}
         self.refused: List[str] = []
+        # the gate a write to the game's item lists goes through (itemgate.py; GameData sets it)
+        self.item_gate = None
 
     def read(self, addr: int, size: int) -> bytes:
         """Read guest memory, clipped to the guest RAM bounds."""
@@ -57,6 +59,8 @@ class GuestMemory:
             if addr < end and addr + len(data) > start:
                 self.refused.append(f"{len(data)} bytes at {addr:#x} ({name}), from {_caller()}")
                 return
+        if self.item_gate is not None and self.item_gate.covers(addr, len(data)):
+            self.item_gate.open()  # (ItemsBusy: the game is changing them; nothing written)
         self.proc.write(self.base + addr, data)
 
     def snapshot(self) -> bytes:

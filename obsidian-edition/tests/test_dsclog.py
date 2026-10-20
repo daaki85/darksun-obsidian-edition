@@ -2631,6 +2631,90 @@ class NewSpellTests(RuleTests):
         self.assertEqual(hold(0, 31), (0x7A1F0 - 0x7A333) & 0xFFFF)
         self.assertEqual(hold(0, 40), 0x7A359 - 0x7A333)
 
+    def test_npp_save(self):
+        """NS_NPP (7A7E9h, "add sp,4 / push 6 / push 27h", the charge's two arguments still on the
+        stack): they become the save's, 6 and the record: Vampiric Touch's (27h) until the records
+        have room, then NPP_SAVE (0CAh), Vampiric Touch's record copied with a save allowed (21h)."""
+        from dsloader import gamepatch
+        mu = self.mu
+        records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
+        touch = bytes(range(0x1F)) + bytes((0xA0,))
+        mu.mem_write(records + 0x27 * 0x20, touch)
+        mu.mem_write(records + 0xCA * 0x20, bytes(0x20))
+        def save():
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_NPP)) + b"\x90" * 4)
+            mu.mem_write(SS * 16 + 0x7FC, struct.pack("<HH", 0x1234, 0x2A))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + 3)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FC)
+            return struct.unpack("<HH", bytes(mu.mem_read(SS * 16 + 0x7FC, 4)))
+        self.moved(0)
+        self.assertEqual(save(), (0x27, 6))
+        self.assertEqual(bytes(mu.mem_read(records + 0xCA * 0x20, 0x20)), bytes(0x20))
+        self.moved(1)
+        self.assertEqual(save(), (0xCA, 6))
+        self.assertEqual(bytes(mu.mem_read(records + 0xCA * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
+        self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
+
+    def test_side_back(self):
+        """NS_SIDE (78785h, "jmp 788BBh", the effect ended at the game's [BP+8]): Berserk (3) and
+        Confused (11) on to the charm's case (787E9h), which puts the side back; any other to 788BBh."""
+        from dsloader import gamepatch
+        mu = self.mu
+        def end(effect):
+            self.at += 0x200
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_SIDE)))
+            for back in (0x788BB - 0x78785, 0x787E9 - 0x78785):
+                mu.mem_write(CALLER * 16 + self.at + back, b"\xf4")
+            mu.mem_write(SS * 16 + BP + 8, struct.pack("<H", effect))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    ebx=0x4321).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=2000)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_BX),
+                              mu.reg_read(r.UC_X86_REG_BP)), (0x800, 0x4321, BP))
+            return mu.reg_read(r.UC_X86_REG_IP) - 1 - self.at
+        self.assertEqual(end(3), 0x787E9 - 0x78785)
+        self.assertEqual(end(11), 0x787E9 - 0x78785)
+        self.assertEqual(end(10), 0x788BB - 0x78785)
+        self.assertEqual(end(17), 0x788BB - 0x78785)
+
+    def test_ai_wall(self):
+        """NS_WALL (5A38Ch, the computer's cast pushing its two points, the cell [BP-2], [BP-4]):
+        a wall (the record's +0Ch 2) across the line from the caster (DS:669Dh + SI x 20h, in
+        sixteenths) WALL_HALF either way (23 each way on the slant); anything else both points at
+        the cell's middle, as the game had them. Point 1 on top: x, y, then point 2."""
+        from dsloader import gamepatch
+        mu = self.mu
+        records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
+        mu.mem_write(records + 54 * 0x20 + 0x0C, bytes((2,)))
+        mu.mem_write(records + 27 * 0x20 + 0x0C, bytes((1,)))
+        def cast(spell, caster_x, caster_y, cell=(10, 20)):
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_WALL)) + b"\x90" * 0x25)
+            mu.mem_write(GAME_DS * 16 + 0x669D + 5 * 0x20, struct.pack("<HH", caster_x, caster_y))
+            mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", cell[1], cell[0]))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    esi=5, edi=spell, eax=0x1111, ebx=0x2222, ecx=0x3333).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + 3)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_SI, r.UC_X86_REG_DI,
+                                                       r.UC_X86_REG_BP, r.UC_X86_REG_AX, r.UC_X86_REG_BX,
+                                                       r.UC_X86_REG_CX, r.UC_X86_REG_DS)],
+                             [0x7F8, 5, spell, BP, 0x1111, 0x2222, 0x3333, GAME_DS])
+            return struct.unpack("<4h", bytes(mu.mem_read(SS * 16 + 0x7F8, 8)))
+        mid = (10 * 16 + 8, 20 * 16 + 8)
+        self.assertEqual(cast(27, 0, 0), mid + mid)
+        self.assertEqual(cast(54, mid[0] - 100, mid[1] + 10), (mid[0], mid[1] + 32, mid[0], mid[1] - 32))
+        self.assertEqual(cast(54, mid[0] + 5, mid[1] - 90), (mid[0] + 32, mid[1], mid[0] - 32, mid[1]))
+        self.assertEqual(cast(54, mid[0] - 50, mid[1] - 50), (mid[0] - 23, mid[1] + 23, mid[0] + 23, mid[1] - 23))
+        self.assertEqual(cast(54, mid[0] - 50, mid[1] + 50), (mid[0] + 23, mid[1] + 23, mid[0] - 23, mid[1] - 23))
+
     def rules_hi(self, value):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
 
@@ -2729,7 +2813,7 @@ class NewSpellTests(RuleTests):
     def test_new_records(self):
         """NS_SETUP once the records have room (SEG_MOVED): Reflected Image is Mirror Image's record
         with one image (1d1, none a level), Spook Charm Person's with Afraid (17) for 3 rounds and
-        Charm Person's flight byte (FFh, none, in the game), Friends Strength's for 1d4 rounds and 1 a level on
+        Charm Person's flight byte (FFh, none, in the game) and fear's flag, Friends Strength's for 1d4 rounds and 1 a level on
         the caster; their rows 1st level; Friends' effect (74) named. Without the room their records' place is left alone."""
         from dsloader import gamepatch
         recs = (GAME_DS - (0x4356 - 0x3CB4)) * 16 + 0x30
@@ -2747,6 +2831,7 @@ class NewSpellTests(RuleTests):
         reflect, spook, friends = (bytes(self.mu.mem_read(recs + n * 0x20, 0x20)) for n in (199, 200, 201))
         self.assertEqual((reflect[4], reflect[5:7], reflect[0x19]), (0x11, b"\0\0", 0x19))
         self.assertEqual((spook[4], struct.unpack_from("<H", spook, 7)[0], spook[0x10], spook[0x19]), (0x13, 60, 0x02, 17))
+        self.assertEqual(struct.unpack_from("<H", spook, 0x11)[0], 0x4304)  # (Charm Person's 4204h and fear's 100h)
         self.assertEqual((friends[4], struct.unpack_from("<HH", friends, 5), friends[0x0C], friends[1:3]),
                          (0x41, (1, 60), 7, b"\xff\xff"))
         self.assertEqual([self.mu.mem_read(rows + n * 7, 1)[0] for n in (199, 200, 201)], [1, 1, 1])
@@ -4615,13 +4700,15 @@ class KitTests(unittest.TestCase):
         spells = 0x6600
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
-            for cls, kit, second in ((1, 1, 2), (2, 1, 0), (4, 1, 3), (1, 1, None), (1, 2, 2), (13, 3, 2)):
+            for cls, kit, second in ((1, 1, 2), (2, 1, 0), (4, 1, 3), (1, 1, None), (1, 2, 2), (13, 3, 2), (4, 2, None),
+                                     (3, 2, None)):
                 self.creature(cls, kit)  # (combatant 7, creature 5, sheet 5)
                 self.mu.mem_write(self.SHEET * 16 + 5 * 0x47 + kits.SPHERE2, bytes((0 if second is None else second + 1,)))
                 elementalist = rules and cls <= 4 and kit == 1 and second is not None
-                kid = kits.ELEMENTALIST if elementalist else 0
+                healer = rules and cls <= 4 and kit == 2  # (the Healer: the cosmos's spells, HEALER_COSMOS)
+                kid = kits.ELEMENTALIST if elementalist else kits.HEALER if healer else 0
                 self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 7))
-                for mask in (0x110112, 0x104046, 0x10808A, 0x120222, 0x13C3FE, 0x81001, 0):
+                for mask in (0x110112, 0x104046, 0x10808A, 0x120222, 0x13C3FE, 0x1003C2, 0x81001, 0):
                     with self.subTest(rules=rules, cls=cls, kit=kit, second=second, mask=hex(mask)):
                         want = kits.spell_spheres(kid, cls, second, mask)
                         self.mu.mem_write(spells * 16 + 0x10 + 0x19D, struct.pack("<I", mask))
@@ -4637,7 +4724,7 @@ class KitTests(unittest.TestCase):
                     self.mu.mem_write(SS * 16 + BP - 6, struct.pack("<I", 2 << cls))
                     self.run_vector(VEC_EL_GRANT, 2, eax=0x1111, ebx=0x2222, ecx=0x3333, esi=0x5555, es=0x6666)
                     got, = struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 6, 4))
-                    self.assertEqual(got, (2 << cls) | (4 << second if elementalist else 0))
+                    self.assertEqual(got, (2 << cls) | (4 << second if elementalist else 0) | (2 << (cls + 4) if healer else 0))
                     self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_SI, r.UC_X86_REG_AX, r.UC_X86_REG_BX,
                                                                     r.UC_X86_REG_CX, r.UC_X86_REG_ES)],
                                      [0, 0x1111, 0x2222, 0x3333, 0x6666])
@@ -4645,11 +4732,12 @@ class KitTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_EL_KNOW
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
-            for cls, kit, second in ((2, 1, 3), (1, 1, 2), (2, 1, None), (2, 2, 3)):
+            for cls, kit, second in ((2, 1, 3), (1, 1, 2), (2, 1, None), (2, 2, 3), (4, 2, None), (13, 2, None)):
                 self.creature(cls, kit)
                 self.mu.mem_write(self.SHEET * 16 + 5 * 0x47 + kits.SPHERE2, bytes((0 if second is None else second + 1,)))
-                kid = kits.ELEMENTALIST if rules and kit == 1 and second is not None else 0
-                for mask in (0x120222, 0x10808A, 0x104046, 0x13C3FE):
+                kid = (kits.ELEMENTALIST if rules and kit == 1 and second is not None and cls <= 4
+                       else kits.HEALER if rules and kit == 2 and cls <= 4 else 0)
+                for mask in (0x120222, 0x10808A, 0x104046, 0x13C3FE, 0x1003C2):
                     with self.subTest(rules=rules, cls=cls, kit=kit, second=second, mask=hex(mask), probe="know"):
                         self.mu.mem_write(spells * 16 + 0x20 + 0x19D, struct.pack("<I", mask))
                         bit = 2 << cls
@@ -4661,6 +4749,9 @@ class KitTests(unittest.TestCase):
                                          [bit, 0x20, 0x12345678, 5, spells])
         self.assertEqual(kits.spell_spheres(kits.ELEMENTALIST, 1, 2, 0x110112), 0x110116)  # (fire's: the air cleric's too)
         self.assertEqual(kits.spell_spheres(kits.ELEMENTALIST, 1, 2, 0x10808A), 0x10808A)
+        self.assertEqual(kits.spell_spheres(kits.HEALER, 4, None, 0x1003C2), 0x1003E2)  # (Cure Serious Wounds: a water Healer's)
+        self.assertEqual(kits.spell_spheres(kits.HEALER, 4, None, 0x110112), 0x110112)  # (Flame Blade: not)
+        self.assertEqual(kits.spell_spheres(kits.HEALER, 4, None, 0x120222), 0x120222)  # (its own sphere's already)
 
 
     def test_dual_ban(self):
@@ -4816,10 +4907,11 @@ class KitTests(unittest.TestCase):
         from dsloader import kitpages, kits
         self.rules(game.RULE_KITS)
         import re
-        at = re.search(rb"\x66\x60\x88\xc1\xe8", self.image).start()
+        at = re.search(rb"\x66\x60\x3c" + bytes((kits.HEALER,)) + rb"\x75", self.image).start()
         cases = [((11, 9), (1, 4), 0b01), ((11, 9), (1, 4), 0b10), ((10, 9), (1, 4), 0b11), ((1, 10), (1, 4), 0b10),
                  ((17, 10), (1, 4), 0b10), ((17, 12, 11), (1, 3, 4), 0b0100), ((12, 17), (1, 4), 0b11),
-                 ((5, 10), (1, 4), 0b11), ((13, 1), (1, 4), 0), ((9, 17, 2), (1, 2, 3), 0b0011)]
+                 ((5, 10), (1, 4), 0b11), ((13, 1), (1, 4), 0), ((9, 17, 2), (1, 2, 3), 0b0011),
+                 ((4, 10), (1, 4), 0b10), ((4, 9), (1, 4), 0)]  # (a water cleric's new kit: the Healer's allowed)
         for classes, levels, kit in cases:
             sheet = self.dual_sheet(classes, levels, kit, member=0)
             others = [c for c in classes[1:]]
@@ -4833,20 +4925,22 @@ class KitTests(unittest.TestCase):
                                             eflags=2).items():
                         mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                     mu.emu_start(TSR * 16 + at, TSR * 16 + 0xFFF0)
-                    self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1), kits.dual_kit_banned(kid, others, kids))
+                    self.assertEqual(bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1),
+                                     kits.dual_kit_banned(kid, others, kids, classes[0]))
                     self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), kid)
-        self.assertTrue(kits.dual_kit_banned(kits.SHINOBI, [11], []))
-        self.assertTrue(kits.dual_kit_banned(kits.STALKER, [17], []))  # (a thief turned ranger: no Stalker)
-        self.assertFalse(kits.dual_kit_banned(kits.SEEKER, [17], []))
-        self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.TWIN_BLADE]))
-        self.assertFalse(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION]))
-        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [9], [kits.RAVAGER]))  # (either way round)
-        self.assertTrue(kits.dual_kit_banned(kits.RAVAGER, [5], [kits.GROVE_WARDEN]))
-        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [10], []))  # (a gladiator turned druid)
+        self.assertTrue(kits.dual_kit_banned(kits.SHINOBI, [11], [], 17))
+        self.assertTrue(kits.dual_kit_banned(kits.STALKER, [17], [], 13))  # (a thief turned ranger: no Stalker)
+        self.assertFalse(kits.dual_kit_banned(kits.SEEKER, [17], [], 13))
+        self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.TWIN_BLADE], 4))
+        self.assertFalse(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION], 4))
+        self.assertTrue(kits.dual_kit_banned(kits.HEALER, [10], [kits.CHAMPION], 3))  # (a fire cleric: no Healer)
+        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [9], [kits.RAVAGER], 5))  # (either way round)
+        self.assertTrue(kits.dual_kit_banned(kits.RAVAGER, [5], [kits.GROVE_WARDEN], 9))
+        self.assertTrue(kits.dual_kit_banned(kits.GROVE_WARDEN, [10], [], 5))  # (a gladiator turned druid)
         self.assertTrue(kits.dual_banned(kits.GROVE_WARDEN, 10))
-        self.assertTrue(kits.dual_kit_banned(kits.MIND_WARRIOR, [1], [kits.CRUSADER]))
-        self.assertTrue(kits.dual_kit_banned(kits.SWASHBUCKLER, [11], [kits.BATTLE_MAGE]))
-        self.assertFalse(kits.dual_kit_banned(kits.ASSASSIN, [11], [kits.BATTLE_MAGE]))
+        self.assertTrue(kits.dual_kit_banned(kits.MIND_WARRIOR, [1], [kits.CRUSADER], 12))
+        self.assertTrue(kits.dual_kit_banned(kits.SWASHBUCKLER, [11], [kits.BATTLE_MAGE], 17))
+        self.assertFalse(kits.dual_kit_banned(kits.ASSASSIN, [11], [kits.BATTLE_MAGE], 17))
 
     def test_dual_kit(self):
         """PROBE_DUAL_KIT: the new class's kit on the game's three-choice menu (4D0:25h, through its

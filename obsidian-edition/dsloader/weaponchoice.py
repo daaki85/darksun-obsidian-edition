@@ -1,11 +1,12 @@
 """New characters' weapon kinds and starting weapon (weapon specialization).
 
-A character is chosen its kinds on the creation panel (weaponpages.py); before it is first
-played (its status New) the Loader makes them whole:
+A new character picks its kinds on the weapon window after the creation screen's DONE (DSCLOG's
+CR_WEAPONS; weaponpages.py draws it); once the window is closed, and before it is first played
+(its status New), the Loader makes them whole (kinds_for), the picks left unmade given defaults:
 
-- a fighter or ranger has one kind, the long sword if none was marked (a Myrmidon, kits.py, a
-  second if marked; a Battle Mage, kits.py, one of its own); a gladiator two, the long sword and the club if none were; any other class
-  none (marked as a warrior, then made something else);
+- a fighter or ranger has one kind, its kit's weapon, a thri-kreen's chatkcha, else the long
+  sword (a Myrmidon, kits.py, a second only if picked; a Battle Mage, kits.py, one of its own); a
+  gladiator two, the long sword and the club if none were picked; any other class none;
 - the game's starting weapon, the bone long sword in the right hand, becomes a plain weapon of
   the first kind, of bone or obsidian where the game has one, in a material the character can use
   (a fire cleric's long sword obsidian), with its picture and name; the short sword and the axe

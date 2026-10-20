@@ -9,7 +9,133 @@ For what a release brings, read its notes ([2.5.0](release-notes/v2.5.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #51 (Obsidian Edition 2.5.0)
+## Pull request #52 (in progress)
+
+**Added**
+- **The arena's count of fights, on the combat log panel's A.** A button left
+  of the header's L puts "Arena fights: N" in the header instead of the
+  round (lit while on, saved as `combat_log_arena`; not in the strip, which
+  has no buttons). N is the game's own count, its global number 12
+  (`GameData.number`, `game.NUMBERS_PTR` = DS:1356h, `ARENA_FIGHTS`), which
+  script 3 adds one to each time the party leaves the arena after a call,
+  however many waves came; the announcer's speech changes with it (for the
+  first five fights, the 1000th and the 5000th). `combatlog.arena_rect`,
+  `arena_line`.
+
+**Changed**
+- **The Healer has the sphere of the cosmos, and is a water cleric's only**
+  (with kits on). The cosmos's spells are those every druid casts and no
+  cleric (the game gives Cure Serious and Critical Wounds, Raise Dead,
+  Neutralize Poison and the other common 4th and 5th-level priest spells to
+  druids alone, so a Healer's extra healing on the two cures never came into
+  play): a Healer knows them from the start and casts them at its cleric level
+  (DSCLOG's `HEALER_COSMOS`, in `PROBE_EL_KNOW`, `PROBE_EL_GRANT`,
+  `PROBE_EL_CAST` and `PROBE_EL_LEVEL`: its element's druid's bit counts as
+  its cleric's; `kits.spell_spheres`). On the KIT page its row is greyed unless
+  WATER is the sphere marked, and the sphere stays while the kit is taken
+  (`HEALER_BARRED`); taking WATER back takes the Healer back too (`EL_CLICK`),
+  as choosing another class does. After DUAL, the kit menu offers it to a
+  water cleric only (`DK_BANNED`, `kits.dual_kit_banned`, its new class now an
+  argument it must have). A Healer from an earlier version keeps its sphere,
+  and the Loader marks its element's cosmos spells known when the game is
+  loaded (`kits.cosmos_spells`: the game marks a priest's spells only when the
+  character is made or changes class), with a line in the dice log. KITS.md,
+  the guide and the patch notes say so; tests for the water cleric's DUAL menu
+  and for `cosmos_spells`.
+
+**Fixed**
+- **More of the game's own bugs**, whatever the Options (from yuan-ti's notes,
+  each checked in the code): Negative Plane Protection saved as against
+  Vampiric Touch, which allows no save, so it never worked (DSCLOG's `NS_NPP`);
+  Cloak of Bravery's +4 against fear asked for a mark no spell had (now on the
+  fear spells, Spook's record too); Absorb Disease gave 1d6 STR too; Bless and Aid's check for an
+  enemy beside an ally measured from (x, x); a berserk or confused member could
+  end it on the monsters' side (`NS_SIDE`); the fire elementals' resistances
+  were swapped; the computer cast its walls as a single point (`NS_WALL`).
+  The dice log's saves show Cloak of Bravery's +4 and name Negative Plane
+  Protection's.
+- **The Loader's changes to the game's item lists could land mid-load.**
+  The game gives every item a new number as an area loads; a change made
+  across that, from numbers read before it, could cut an item out of its
+  list (a likely way for an item to vanish without a trace). Every write to
+  the item lists now goes through one gate (`itemgate.py`, in
+  `GuestMemory.write`): the first in a dice log pass waits until the game's
+  free lists, area and item table have stayed as they were for 60 ms, pauses
+  DOSBox (`ProcessMemory.suspend`/`resume`), looks again, and writes with the
+  game held still; anything changed and the pass's item writes wait for the
+  next. Kalzith's stock and loot, the arena ring, buyback and defilers' scrolls
+  had no such check before, and the others' (`_items_still`) left a gap
+  between the look and the writes. Rolls and queues taken before a refused
+  write are kept for the next try (`itemgate.hold`; buyback, defilers'
+  scrolls, Pick Pockets, the arena ring, the game's own party). Tests in
+  `test_itemgate.py`.
+- **Item reports through a change of area**: the game renumbers every item then, and this pull
+  request's first way of telling a load (most items gone at once) took it for one and started
+  afresh, so an item lost in the change passed unseen. Now a bulk change waits until the new numbers hold still, matches
+  old items with new by owner, slot and item (`itemwatch._settle`, `renumbered`), and reports
+  one with no match; under half matched (`BULK_MATCH`), or nothing settled in `BULK_WAIT`, is a
+  load. A number another item took over is no longer read as the old item still there.
+- **A new character's gear fitted while the weapon window was still up**: the class restrictions,
+  the kit's gear and the fuller starting gear now wait for it, as the starting weapon did
+  (`_weapons_asked`); a slow pick could leave a Titan Mind without its weapon, or a Ravager's two
+  hands holding different weapons.
+- **The arena's next wave** (a new fight by the fight flag, the clock not yet past `FIGHT_GAP`):
+  the Poisoner's poison ready again, the rounds counted from 1, and the last wave's monsters' ACs
+  forgotten, as the dances and Wild Fighting already were (`_new_fight`).
+- **Pick Pockets could lose an item** taken from someone when the thief's backpack list couldn't
+  be made: the list is made first now.
+- **Item reports**: a later save of the same party loaded no longer reports the items it doesn't
+  have (the clock moving on more than `CLOCK_JUMP` with the party somewhere else counts as a load;
+  a rest, the clock on hours with the party where it was, doesn't, so an item gone as the party
+  rests is still reported: `GameData.party_position`);
+  money is taken for a sale only when it rose by what a shop pays for the item (its price, or
+  60%), so a purse picked or a reward no longer hides a vanish; and an item handed over is
+  remembered for 10 seconds (`ARRIVED_KEEP`), so a busy Loader doesn't report it.
+- **The freeze report after 2.3 hours of play** listed only a few places once DSCLOG's count of
+  them wrapped past 65535; all 32 now.
+- **The combat log between fights** kept a roll's detail lines arriving in a later batch than
+  the line they belong to when that line was left out.
+- **`Play Dark Sun (in-game rolls).bat`** said only "Something went wrong" when a crash report
+  couldn't be written; it says why now, with how DOSBox closed.
+
+**Documentation**
+- **Crash, freeze and item reports** are one section of the README, with a table of
+  when each is written and what it holds (what all three share said once); closing
+  DOSBox's window while the game runs is a crash report, as the code has it.
+- **Draft release notes for 2.6.0** (`release-notes/v2.6.0.md`) and a
+  "Coming in 2.6.0" line on the front page; How the game works notes that
+  clerics never have the common 4th and 5th-level priest spells.
+- How the game works has **the arena's count of fights**: what the announcer
+  says at each count, the 1000th trip's gifts and the 5000th's war won. DEVELOPMENT.md has the item gate, the item watch's area changes and
+  the rings and cloaks of protection; the README's item reports say what an
+  area change does.
+- The damage numbers over creatures are off the README's known issues: seen in
+  fights with the panel collapsed, docked and hidden since the panel's
+  slowdown was fixed; the README says the expanded panel covers those under
+  it. `tests/test_doclinks.py` checks the docs' links and the README's "How it
+  works" links.
+- **The original game's code, checked against yuan-ti's findings** (a new
+  engine for the game, github.com/CalvinRodo/yuan-ti): How the game works now
+  has the psionic defence as the code has it (only defence modes already
+  raised count, their cost paid again) and Enhanced Strength's and the
+  Dominations' costs (worked out as used, not 0); armour with a magical power
+  rolls against acid (always coming through). Hold Undead never held the
+  living: every spell's targets are sifted before it lands, and the guard the
+  mod added there stays; the claim is gone from the docs. A target turning to
+  face its first attacker each round and the backstab multiplying only the
+  first attack were confirmed in the code.
+- **Features and rules, a page of their own** (`obsidian-edition/FEATURES.md`):
+  the README's rule changes, character customization, expanded features, new
+  content, graphics, controls, bug fixes, saves and game speed (about 1,800
+  lines) moved there, the README (about 1,000 lines) keeping installing,
+  running, the Loader's window and the dice log, with a line pointing to the
+  new page; every link to the moved sections points there now.
+
+## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
+
+**Release**
+- **Obsidian Edition 2.5.0**: the version is 2.5.0, with its notes in
+  `release-notes/v2.5.0.md`, listed on the front page with the others.
 
 **Added**
 - **Item reports**: the Loader watches the party's items and, when one is gone
@@ -248,7 +374,7 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   guide keeps who takes each kit on Athas and links to them; the kits' spell
   slots table moved from the guide to the README; DEVELOPMENT links there for
   the Seeker's, Justifier's and Shinobi's tables.
-- **[The game's bugs, fixed](obsidian-edition/README.md#the-games-bugs-fixed)**:
+- **[The game's bugs, fixed](obsidian-edition/FEATURES.md#the-games-bugs-fixed)**:
   a README section with every bug of the game's own the Loader mends, the
   spells' among them, and a line for them under What it does on both front
   pages.

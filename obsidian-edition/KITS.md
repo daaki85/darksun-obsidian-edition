@@ -1,7 +1,7 @@
 # Kits
 
 *Part of Obsidian Edition's documentation, from the [README](README.md)'s
-[More character customization](README.md#more-character-customization). The
+[More character customization](FEATURES.md#more-character-customization). The
 [player's guide](PLAYER-GUIDE.md#kits) tells who takes each kit on Athas.*
 
 With **Kits** ticked, a character of one class may take one of three kits for
@@ -9,7 +9,7 @@ its class when it is made, or none (the class as it is). A few pairs of
 classes taken at once by one race have kits of their own
 ([Multiclass kits](#multiclass-kits)). Each gives something and costs
 something. The game's own party gets features of its own
-([The game's own party](README.md#the-games-own-party)). A human who changes class may take a kit for the new class too
+([The game's own party](FEATURES.md#the-games-own-party)). A human who changes class may take a kit for the new class too
 ([Changing class](#changing-class)). Each class's three kits have a table of
 their own below: what the kit gives (with the level each part comes at), what
 it costs, what a new character with it starts with
@@ -96,7 +96,7 @@ backpack.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Healer** | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | can't go with the Twin-blade |
+| **Healer** | the **sphere of the cosmos**: the spells every druid casts and no cleric, known from the start and cast at its cleric level (4th level: Abjure, Cloak of Bravery, Cloak of Fear, Cure and Cause Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius; 5th: Cure and Cause Critical Wounds, Dispel Evil, Raise Dead, Slay Living); Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | **the water sphere only**; no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit)); after DUAL, offered to a water cleric only; can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
@@ -107,7 +107,7 @@ A druid starts with a club and sling.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th** | no metal weapons | the druid's gear | can't dual to gladiator, and a gladiator who duals to druid can't take it (its AC would add to a gladiator's own); can't go with the Ravager |
-| **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the damage isn't halved, as with the spells |
+| **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells | AC 1 worse | the druid's gear | the saves only: the damage isn't halved |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
 ## Psionicist kits
@@ -166,6 +166,13 @@ Choosing another class puts the kit back to none; a new roll of the die keeps
 it. The Effects screen names the kit
 (`KIT: RAVAGER`), as does the Loader's Characters tab.
 
+The Healer is a water cleric's: its row is greyed unless WATER is the sphere
+marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
+back afterwards takes the Healer back with it, as choosing another class does.
+A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
+earlier) is given its spells by the Loader when the game is loaded, whatever
+its sphere, and the dice log says so.
+
 The Elementalist chooses its second sphere on the creation panel's
 **CLERICAL SPHERE** list: once the kit is taken (KITS, then ELEMENTAL), its
 own sphere marked, the other spheres stay in use, and a click on one marks it
@@ -195,7 +202,7 @@ weapon or shield the kit forbids is swapped or taken away, and a kit with a
 weapon spec of its own gets a plain weapon of it. The dice log says what it
 changed
 (`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in place of the Quarterstaff`).
-[Fuller starting gear](README.md#fuller-starting-gear) adds more on top.
+[Fuller starting gear](FEATURES.md#fuller-starting-gear) adds more on top.
 
 ## The kits in play
 
@@ -216,7 +223,7 @@ changed
 - **Casting level.** A kit's casting level is the one a spell's duration and
   damage take, and half of it (rounded up) is the highest spell level it may
   cast (the Seeker's, Justifier's and Shinobi's are in their tables above; a
-  plain ranger's: [Rangers' casting level](README.md#rangers-casting-level)).
+  plain ranger's: [Rangers' casting level](FEATURES.md#rangers-casting-level)).
 - **Casting when hit.** A character hit in a fight can't cast until the next
   round: the game won't let it choose a spell, and drops one chosen before
   the hit. The Battle Mage isn't stopped.
@@ -224,7 +231,7 @@ changed
 ## Kits' spell slots
 
 The kits that change spell slots, by the level of the kit's class (spells of
-1st to 5th level), with [AD&D's class tables](README.md#adds-class-tables) on:
+1st to 5th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on:
 
 | Level | Preserver | Arcanist | Battle Mage | Cleric | Crusader | Elementalist | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
 |---|---|---|---|---|---|---|---|---|---|

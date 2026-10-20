@@ -137,6 +137,9 @@ PP_TEXT, PP_INFO = NS_IMAGE + 13, NS_IMAGE + 14  # (its name under the screen; i
 PP_CLOSE = NS_IMAGE + 15  # (the USE screen closing: a cleric/thief's second button's icon let go of)
 CR_LABELS = NS_IMAGE + 16  # (the ability labels: the creation screen's in its white)
 CR_WEAPONS = NS_IMAGE + 17  # (the creation screen's DONE: a warrior picks its weapon specs)
+NS_NPP = NS_IMAGE + 18  # (Negative Plane Protection's save: one allowed)
+NS_SIDE = NS_IMAGE + 19  # (an effect ended: Berserk and Confused give the side back)
+NS_WALL = NS_IMAGE + 20  # (the computer's cast: a wall across the line of fire)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -316,6 +319,36 @@ PATCHES = (
     # undead (7BE20h, AL), "or al,al / je +22h" (DSCLOG's NS_HOLD: Hold Undead on a living
     # target goes to the immunity's return, 7A1F0h)
     Patch("hold_undead", 0x7A333, bytes.fromhex("0ac07422"), _site(NS_HOLD, 4)),
+    # ... and more of the game's own slips (DEVELOPMENT.md's "The game's spells"): Absorb Disease
+    # (power 147) went on into Strength's handler (79470h), so the psionicist took the disease and
+    # 1d6 STR too, and with no disease to take, the STR alone: both ways now jump to the end of
+    # Strength's handler, its "or byte [si],2 / or byte [bp-15h],1 / jmp" (794ACh), past the effect
+    Patch("absorb_no_strength", 0x79446, bytes.fromhex("7428"), bytes.fromhex("7464")),
+    Patch("absorb_end", 0x7946D, bytes.fromhex("800c02"), bytes.fromhex("eb3d90")),
+    # ... Bless and Aid leave out those of the caster's side with an enemy within 28 sixteenths, but
+    # the routine (7B03Dh) measured from (x, x) of where each stands: its first push the y (+669Fh)
+    Patch("bless_from_cell", 0x7B086, bytes((0x9D,)), bytes((0x9F,))),
+    # ... the fire elementals' resistance classes (the monster kinds' table, 3E45h:00A8h + the
+    # kind) were the wrong way round: the fire elemental (kind 32) hurt by +1 weapons (class 14) and
+    # the lesser one (33) only by +2 and by fire (13). The fire elemental now class 15, which the
+    # game has and no kind used (+2 weapons, nothing from fire), and the lesser one 14 (+1, nothing
+    # from fire), as the clue book has them ...
+    Patch("fire_elemental", 0x43918, bytes((14, 13)), bytes((15, 14))),
+    # ... and Cloak of Bravery's +4 against fear (the save routine's 80F5:25A0h, Brave on the
+    # target) asks for a flag no spell had (100h of a record's +11h word): set on the spells that
+    # make one Afraid (effect 17): Scare, Fear, Cause Fear, Insect Plague
+    *(Patch(f"brave_fear_{spell}", 0x42222 + (spell - 21) * 0x20, bytes((0x40,)), bytes((0x41,)))
+      for spell in (21, 43, 78, 132)),
+    # ... Negative Plane Protection saved as against Vampiric Touch, which allows none, so it never
+    # stopped anything: "add sp,4 / push 6 / push 27h" (DSCLOG's NS_NPP: a save allowed) ...
+    Patch("npp_save", 0x7A7E9, bytes.fromhex("83c4046a066a27"), _site(NS_NPP, 7)),
+    # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
+    # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
+    Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),
+    # ... and the computer's casting gave a spell's two points both the chosen cell's middle, so its
+    # walls were a single point: the four pushes (DSCLOG's NS_WALL: a wall across the line of fire)
+    Patch("ai_wall", 0x5A38C, bytes.fromhex("8b46fcc1e004050800508b46fec1e004050800508b46fcc1e00405080050"
+                                            "8b46fec1e00405080050"), _site(NS_WALL, 0x28)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

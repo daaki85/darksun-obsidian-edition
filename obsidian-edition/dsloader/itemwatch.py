@@ -19,8 +19,11 @@ silence (each was a dice log line, which a shop or a hand-over made a stream of)
 still exists outside the party (dropped, put in a chest, given, sold or stolen), one that is used
 up or taken by a script (fruit and quest items, arrows, scrolls), one a spell made (Shillelagh,
 the spell's Flame Blade, Spiritual Hammer), one sold (the party's money went up), and a weapon
-that broke (a Broken Weapon came in its place). A game loaded (the game's clock gone back)
-starts the watch afresh.
+that broke (a Broken Weapon came in its place). A change of area renumbers every item at once:
+the old items are matched with the new (BULK_MATCH), and one with no match is news. A game
+loaded (the game's clock gone back, or on further than play takes it with the party somewhere
+else, or too few items matched) starts the watch afresh; a rest, the clock on hours with the
+party where it was, doesn't: what goes as the party rests is news.
 """
 
 import collections
@@ -33,6 +36,19 @@ from .game import ItemSeen
 
 CHECK_INTERVAL = 1.0   # seconds between snapshots
 GONE_WAIT = 2.0        # seconds an item must be missing before it counts as gone
+# A game loaded with the same party, from later on: the clock moved on past what play does in a
+# second (game seconds) with the party not where it was (a rest jumps hours too, but leaves the
+# party in its place: the watch goes on through it)
+CLOCK_JUMP = 600
+ARRIVED_KEEP = 10.0    # seconds an item new to the party is kept in mind, to match a hand-over (the
+                       # Loader busy, the vanish may be confirmed well after the item reappeared)
+MOST_GONE = 3          # (at least this many, and over half the party's items)
+# Most items under new numbers at once is an area change (the game gives the party's items new
+# records in the next area's table: every one renumbered) or a game loaded. Once the new set
+# holds still (the same numbers at two looks), the old items are matched with the new by who
+# has them, where and what they are: at least this share matched, an area change, and an item
+# with no match is news; fewer, a game loaded. Not settled in BULK_WAIT seconds: a load too.
+BULK_MATCH, BULK_WAIT = 0.5, 30.0
 DICE_LINES, TALK_LINES = 300, 80   # context kept for the report, as the crash report keeps it
 # item types whose going is ordinary: fruit and quest items (60), arrows (62), scrolls (96),
 # psionic scrolls (99) and grain (110), used up or taken by scripts; and the items spells make,
@@ -46,13 +62,17 @@ class ItemWatch:
     def __init__(self, folder: Optional[str] = None):
         self.folder = folder              # where reports go (None: the crash-logs folder)
         self._seen: Dict[int, ItemSeen] = {}
-        self._missing: Dict[int, Tuple[ItemSeen, float]] = {}
+        self._missing: Dict[Tuple, Tuple[ItemSeen, float]] = {}
         self._next = 0.0
         self._clock: Optional[int] = None  # (the game's clock at the last look)
+        self._place: Optional[tuple] = None  # (the region and the party's leader's spot at the last look)
         self._money: Optional[int] = None  # (the party's money at the last look)
-        self._sold_at: Optional[float] = None  # (when the money last went up)
+        self._gains: List[Tuple[float, int]] = []  # (each rise in the party's money: when, by how much)
         self._broke_at: Dict[int, float] = {}  # (member: when a Broken Weapon last came to them)
         self._arrived: Dict[Tuple[int, ...], float] = {}  # (an item new to the party: when)
+        self._bulk: Optional[Tuple[Dict[int, ItemSeen], float]] = None  # (the items before most were renumbered, and when)
+        self._bulk_last: Optional[frozenset] = None  # (the numbers at the last look meanwhile)
+        self._started = False             # (a first look made since the last reset)
         self.dice: Deque[str] = collections.deque(maxlen=DICE_LINES)
         self.talk: Deque[str] = collections.deque(maxlen=TALK_LINES)
         self.reports: List[str] = []      # the paths written (tests read them)
@@ -61,9 +81,12 @@ class ItemWatch:
         """Forget everything (a game was loaded: the party's items are a new set)."""
         self._seen.clear()
         self._missing.clear()
-        self._clock = self._money = self._sold_at = None
+        self._clock = self._money = self._place = None
+        self._gains.clear()
         self._broke_at.clear()
         self._arrived.clear()
+        self._bulk = self._bulk_last = None
+        self._started = False
 
     def remember(self, lines: List[str]) -> None:
         self.dice.extend(lines)
@@ -85,13 +108,23 @@ class ItemWatch:
             return []
         current = {i.index: i for i in items}
         clock, money = _read(data.game_time), _read(getattr(data, "money", None))
-        if clock is not None and self._clock is not None and clock < self._clock:
-            self.reset()                  # (the clock gone back: a game loaded)
+        place = (_read(data.region), _read(getattr(data, "party_position", None)))
+        if clock is not None and self._clock is not None:
+            rested = clock > self._clock and place == self._place and None not in place
+            if clock < self._clock or (clock - self._clock > CLOCK_JUMP and not rested):
+                self.reset()              # (the clock gone back, or on further than play takes it: a game loaded)
+        gone = [index for index, was in self._seen.items() if not _still(was, current)]
+        if self._bulk is None and len(gone) >= MOST_GONE and 2 * len(gone) > len(self._seen):
+            self._bulk = (dict(self._seen), now)  # (most renumbered at once: an area change, or a load)
+            self._seen, self._bulk_last = {}, None
+            self._missing.clear()
         if money is not None and self._money is not None and money > self._money:
-            self._sold_at = now
-        self._clock, self._money = clock, money
-        if not self._seen:                # the first look, or after a reset
-            self._seen = current
+            self._gains.append((now, money - self._money))
+        self._clock, self._money, self._place = clock, money, place
+        if self._bulk is not None:
+            return self._settle(data, current, now, settings)
+        if not self._started:             # the first look, or after a reset
+            self._seen, self._started = current, True
             return []
         for i in current.values():
             if i.index not in self._seen:
@@ -100,37 +133,57 @@ class ItemWatch:
                     self._broke_at[i.member] = now
         # (what happened as an item went: within the wait it took to count as gone)
         recent = lambda at: at is not None and now - at <= GONE_WAIT + CHECK_INTERVAL
-        sold = recent(self._sold_at)
+        self._gains = [(at, gain) for at, gain in self._gains if recent(at)]
+        gains = {gain for _, gain in self._gains}
         broke = {m for m, at in self._broke_at.items() if recent(at)}
-        self._arrived = {k: at for k, at in self._arrived.items() if recent(at)}
+        self._arrived = {k: at for k, at in self._arrived.items() if now - at <= ARRIVED_KEEP}
         out: List[str] = []
-        for index, was in list(self._seen.items()):
-            if index in current:
-                self._missing.pop(index, None)
+        # (the items as last seen, and those still inside GONE_WAIT: by number, owner and kind,
+        # so that a number another item has taken since doesn't hide the one that had it)
+        watched = {_ident(was): was for was in self._seen.values()}
+        for key, (was, _) in self._missing.items():
+            watched.setdefault(key, was)
+        for key, was in watched.items():
+            if _still(was, current):
+                self._missing.pop(key, None)
                 continue
-            since = self._missing.setdefault(index, (was, now))[1]
+            since = self._missing.setdefault(key, (was, now))[1]
             if now - since < GONE_WAIT:
                 continue
-            del self._missing[index]
+            del self._missing[key]
             if _same(was.record) in self._arrived:
                 continue              # (handed over: the same item with another member, a new number)
-            out += self._gone(data, was, current, now, settings, sold, was.member in broke)
-        # what is there now is what the next look compares with (the gone ones are reported,
-        # the ones still inside GONE_WAIT stay remembered through _missing)
-        kept = {i: was for i, (was, _) in self._missing.items()}
-        self._seen = {**kept, **current}
+            out += self._gone(data, was, current, now, settings, bool(gains & sale_prices(was.record)), was.member in broke)
+        self._seen = current              # (what the next look compares with; the rest wait in _missing)
         return out
 
-    def _gone(self, data, was: ItemSeen, current: Dict[int, ItemSeen], now: float,
-              settings: Optional[dict], sold: bool = False, broke: bool = False) -> List[str]:
-        try:
-            record = data.item_record(was.index)
-        except Exception:
-            record = b""
-        fate = describe_fate(was, record)
-        where = f"{was.owner}'s {was.slot}" if was.slot else f"{was.owner}'s pack"
-        if ordinary_loss(was, record, sold, broke):
+    def _settle(self, data, current: Dict[int, ItemSeen], now: float, settings: Optional[dict]) -> List[str]:
+        """While most of the items are under new numbers: once the new set holds still, the old
+        matched with it (BULK_MATCH: an area change, the unmatched reported; else a load)."""
+        before, since = self._bulk
+        numbers = frozenset(current)
+        settled = bool(current) and numbers == self._bulk_last
+        self._bulk_last = numbers
+        if not settled:
+            if now - since > BULK_WAIT:
+                self.reset()              # (no settling: a load, or a game left)
             return []
+        self._bulk = self._bulk_last = None
+        self._seen, self._started = current, True
+        unmatched = renumbered(before, current)
+        if len(before) - len(unmatched) < BULK_MATCH * len(before):
+            return []                     # (another set of items: a game loaded)
+        out: List[str] = []
+        for was in unmatched:
+            if ordinary_loss(was, b"", False, False):
+                continue
+            fate = "no item like it came through the change of area (every item has a new number after one)"
+            out += self._report(data, was, None, fate, current, now, settings)
+        return out
+
+    def _report(self, data, was: ItemSeen, record: Optional[bytes], fate: str, current: Dict[int, ItemSeen], now: float,
+                settings: Optional[dict]) -> List[str]:
+        where = f"{was.owner}'s {was.slot}" if was.slot else f"{was.owner}'s pack"
         text = item_report(was, record, fate, current, data, now, settings, list(self.dice), list(self.talk))
         try:
             from . import launch
@@ -140,6 +193,29 @@ class ItemWatch:
         self.reports.append(path)
         return [f"{was.label} is gone from {where}: {fate}. An item report is saved in {path}."]
 
+    def _gone(self, data, was: ItemSeen, current: Dict[int, ItemSeen], now: float,
+              settings: Optional[dict], sold: bool = False, broke: bool = False) -> List[str]:
+        try:
+            record = data.item_record(was.index)
+        except Exception:
+            record = b""
+        if ordinary_loss(was, record, sold, broke):
+            return []
+        return self._report(data, was, record, describe_fate(was, record), current, now, settings)
+
+
+ITEM_VALUE = 0x06  # an item's price, in its record (npcitems.ITEM_VALUE)
+
+
+def sale_prices(record: bytes) -> set:
+    """What the party's money goes up by when a shop buys the item: its price (the game's), or
+    60% of it (the CHA rule's: prices.sell_price)."""
+    from . import prices
+    if len(record) < ITEM_VALUE + 2:
+        return set()
+    value = struct.unpack_from("<H", record, ITEM_VALUE)[0]
+    return {value, prices.sell_price(value)} - {0}
+
 
 def _same(record: bytes) -> Tuple[int, ...]:
     """What tells an item from another whatever its number, owner and place: its picture, type,
@@ -148,6 +224,43 @@ def _same(record: bytes) -> Tuple[int, ...]:
         return ()
     return (struct.unpack_from("<H", record, 0)[0], struct.unpack_from("<H", record, game_mod.ITEM_TYPE)[0],
             struct.unpack_from("<H", record, game_mod.ITEM_NAME)[0], record[game_mod.ITEM_PLUS])
+
+
+def _key(i: ItemSeen) -> Tuple:
+    """An item as an area change leaves it: who has it, where, and what it is."""
+    return (i.member, i.record[game_mod.ITEM_SLOT] if len(i.record) > game_mod.ITEM_SLOT else None, _same(i.record))
+
+
+def _ident(i: ItemSeen) -> Tuple:
+    return (i.index, i.member, _same(i.record))
+
+
+def _still(was: ItemSeen, current: Dict[int, ItemSeen]) -> bool:
+    """The item still there under its number (not another item that number now names)."""
+    now = current.get(was.index)
+    return now is not None and now.member == was.member and _same(now.record) == _same(was.record)
+
+
+def renumbered(before: Dict[int, ItemSeen], after: Dict[int, ItemSeen]) -> List[ItemSeen]:
+    """The items of BEFORE with no match in AFTER, item for item, by who has them, where and what
+    they are (then by who and what, for one moved within its owner's places)."""
+    left = collections.Counter(_key(i) for i in after.values())
+    loose = collections.Counter((i.member, _same(i.record)) for i in after.values())
+    unmatched = []
+    for was in sorted(before.values(), key=lambda i: i.index):
+        if left[_key(was)] > 0:
+            left[_key(was)] -= 1
+            loose[(was.member, _same(was.record))] -= 1
+        else:
+            unmatched.append(was)
+    out = []
+    for was in unmatched:
+        k = (was.member, _same(was.record))
+        if loose[k] > 0:
+            loose[k] -= 1
+        else:
+            out.append(was)
+    return out
 
 
 def _read(get) -> Optional[int]:
@@ -191,16 +304,19 @@ def describe_fate(was: ItemSeen, record: bytes) -> str:
     return "its record now holds another item: the game freed it and reused the number"
 
 
-def item_report(was: ItemSeen, record: bytes, fate: str, current: Dict[int, ItemSeen], data,
+def item_report(was: ItemSeen, record: Optional[bytes], fate: str, current: Dict[int, ItemSeen], data,
                 now: float, settings: Optional[dict], dice: List[str], talk: List[str]) -> str:
     stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     where = f"{was.owner}'s {was.slot} slot" if was.slot else f"{was.owner}'s pack (not worn)"
+    number = f"item {was.index}" if record is not None else f"item {was.index} before the change of area"
     lines = [f"Obsidian Edition item report, {stamp}", "",
-             f"{was.label} (item {was.index}, type {was.type}) is gone from {where}.",
+             f"{was.label} ({number}, type {was.type}) is gone from {where}.",
              f"What its record says now: {fate}.", ""]
     lines += _state_lines(data)
     lines += ["", "The item's record when last seen:", "  " + was.record.hex(" "),
-              "The record at that number now:    ", "  " + (record.hex(" ") if record else "(unreadable)"),
+              "The record at that number now:    ",
+              "  " + ("(not looked at: the change of area gave every item a new number)" if record is None
+                      else record.hex(" ") if record else "(unreadable)"),
               "Its type's record:", "  " + was.kind.hex(" ")]
     mine = [i for i in current.values() if i.member == was.member]
     lines += ["", f"{was.owner}'s items now:"] + (_item_lines(mine) or ["  (none)"])

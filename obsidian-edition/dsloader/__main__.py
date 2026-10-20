@@ -310,10 +310,14 @@ def cmd_play(args) -> None:
         crash = launch.game_end_note()
         if dosbox.returncode != 0 or crash:
             refused = list(guest.refused) if hasattr(guest, "refused") else []
-            path = launch.write_crash_report(launch.crash_report(
-                dosbox.returncode, crash, settings, "\n".join(said), "\n".join(talk), refused,
-                launch.dosbox_output(game_dir, started), started, time.time()), time.time())
-            tell(f"{launch.closed_line(dosbox.returncode)}\n\nA crash report is saved in {path}.")
+            try:
+                path = launch.write_crash_report(launch.crash_report(
+                    dosbox.returncode, crash, settings, "\n".join(said), "\n".join(talk), refused,
+                    launch.dosbox_output(game_dir, started), started, time.time()), time.time())
+                saved = f"A crash report is saved in {path}."
+            except OSError as e:  # (crash-logs not writable: the reason still told)
+                saved = f"The crash report could not be saved: {e}"
+            tell(f"{launch.closed_line(dosbox.returncode)}\n\n{saved}")
     except (CliError, launch.LaunchError) as e:
         tell(str(e))
     except Exception:

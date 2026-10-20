@@ -4577,6 +4577,7 @@ multi_table db 3
             db 0
 multi_count db 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1
 km_rows     db 4                ; (KIT_MARKS: the page's rows)
+km_class    db 0                ; (KIT_MARKS: its class, KIT_CLASS's)
 multi_same  db 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0   ; (the sheet being made's classes)
 
 ; WP_RULES: ZF clear if weapon specialization or kits are on (the panel's kit windows, the DAM
@@ -7202,11 +7203,15 @@ dk_menu:
         ret
 
 ; DK_BANNED: CF set if kit AL may not go with the other classes of sheet ES:BX (its places from 1)
-; or their kits (asleep too): its DUAL_BANS hold one of the classes (KIT_BANS), or a kit's and its
+; or their kits (asleep too), or is a Healer for a cleric not of water (its new class, place 0): its DUAL_BANS hold one of the classes (KIT_BANS), or a kit's and its
 ; are a pair KIT_PAIRS bars (kits.dual_kit_banned). All registers kept.
 dk_banned:
         pushad
-        mov cl, al
+        cmp al, KIT_HEALER      ; (the Healer: a water cleric's only)
+        jne .bans
+        cmp byte [es:bx + 0x21], HEALER_SPHERE_CLASS
+        jne .no
+.bans:  mov cl, al
         call kit_bans           ; (EDX the classes it bars)
         call kit_place
         jc .ok
@@ -9253,8 +9258,15 @@ kit_row:
         mov [cs:wp_classes_seen], eax ; rolls the hit points again)
         pop eax
         mov dh, [es:bx + KIT_BYTE]
-        cmp dh, KIT_OPEN        ; none chosen: this one
-        je .put
+        cmp dh, KIT_OPEN        ; none chosen: this one (a Healer only with the water sphere)
+        jne .chosen
+        push ax
+        call kit_class
+        call healer_barred
+        pop ax
+        jc kit_marks
+        jmp .put
+.chosen:
         cmp dl, dh              ; another, while one is chosen: out of use (nothing)
         jne kit_marks
         mov dl, KIT_OPEN        ; the one chosen: taken back, the rest in use again
@@ -9273,6 +9285,7 @@ kit_marks:
         jz .out
         les bx, [WP_CREATION]
         mov dl, [es:bx + KIT_BYTE]
+        mov [cs:km_class], al
         movzx bx, al
         mov byte [cs:km_rows], 4
         cmp al, MULTI_FIRST
@@ -9296,7 +9309,15 @@ kit_marks:
         push 3                  ; not chosen: greyed while another is, as the game's spheres
         call wp_button_op
         cmp dl, KIT_OPEN
-        je .open
+        jne .grey
+        push ax                 ; (a Healer's row greyed without the water sphere)
+        mov al, [cs:km_class]
+        xchg dl, dh
+        call healer_barred
+        xchg dl, dh
+        pop ax
+        jnc .open
+.grey:
         push 1
         jmp .op
 .open:  push 0
@@ -9317,6 +9338,25 @@ kit_marks:
         loop .row
 .out:   pop bx
         pop es
+        ret
+
+; HEALER_BARRED: CF set if row DL (1-3) of creation class AL's kit page (KIT_CLASS's number) is the
+; Healer's and the sphere marked (WP_SPHERE_MASK) isn't water's: the Healer is a water cleric's
+; (kits.HEALER_SPHERE). Registers kept.
+HEALER_SPHERE_CLASS equ 4               ; (the water cleric)
+HEALER_SPHERE_MASK  equ 0x10            ; (the spheres' marks: 80h air to 10h water)
+healer_barred:
+        push ax
+        shl al, 2
+        add al, dl
+        cmp al, KIT_HEALER
+        pop ax
+        jne .ok
+        cmp word [WP_SPHERE_MASK], HEALER_SPHERE_MASK
+        je .ok
+        stc
+        ret
+.ok:    clc
         ret
 
 ; KIT_ROLLS: kit AL one with its own hit die or PSP (a Battle Mage, a Mind Warrior, an Arcanist):
@@ -9457,11 +9497,14 @@ el_second:
 
 ; EL_CLICK: sphere row AX clicked on the creation panel (DS the game's): carry set if it was an
 ; Elementalist's second (taken, or taken back) and the game is to do nothing; its own taken back
-; (the game's), the second cleared too.
+; (the game's), the second cleared too. A Healer's kit is taken back (the sheet's KIT_OPEN), the
+; click the game's: the Healer is a water cleric's.
 el_click:
         mov si, ax
         sub si, EL_ROW
         call kit_made
+        cmp al, KIT_HEALER      ; (a Healer is a water cleric's: another sphere takes it back,
+        je .healer              ;   as another class does)
         cmp al, KIT_ELEMENTALIST
         jne .game
         les bx, [WP_CREATION]
@@ -9487,6 +9530,11 @@ el_click:
         ret
 .own:   and byte [es:bx + SPHERE2], ~SPHERE2_MASK
 .game:  clc
+        ret
+.healer:
+        les bx, [WP_CREATION]
+        mov byte [es:bx + KIT_BYTE], KIT_OPEN
+        clc
         ret
 
 ; EL_REMARK: for an Elementalist with its own sphere chosen, the spheres' rows as EL_MARKS has
@@ -9558,7 +9606,24 @@ probe_el_grant:
         shl bx, cl
         xchg cl, al
         or [bp - 6], bx
-.out:   pop es
+.out:   call cb_is              ; a Healer's cleric: its element's druid's bit too (the cosmos)
+        db KIT_HEALER
+        jne .done
+        mov ax, bx
+        call creature_sheet
+        call kit_class_of_sheet
+        cmp al, 1
+        jb .done
+        cmp al, 4
+        ja .done
+        mov cl, al
+        mov bx, 2
+        shl bx, cl
+        test [bp - 6], bx
+        jz .done
+        shl bx, 4
+        or [bp - 6], bx
+.done:  pop es
         pop cx
         pop bx
         pop ax
@@ -9603,9 +9668,24 @@ probe_el_know:
         imul ax, ax, 0x47
         add bx, ax
         call el_second
-        jz .test
+        jz .healer
         movzx eax, al           ; (the second sphere's cleric bit: 4 the air cleric's)
         add al, 2
+        bts ecx, eax
+.healer:
+        call kit_is_b           ; a Healer, for its cleric's bit: the cosmos's spells too, as its
+        db KIT_HEALER           ;   element's druid has them (HEALER_COSMOS)
+        jne .test
+        call kit_class_of_sheet
+        cmp al, 1
+        jb .test
+        cmp al, 4
+        ja .test
+        movzx eax, al
+        inc al
+        bt ecx, eax
+        jnc .test
+        add al, 4
         bts ecx, eax
 .test:  pop es
         pop bx
@@ -9706,7 +9786,7 @@ dual_bans   db KIT_SEEKER
             db 0
 
 ; EL_SPHERES: EAX a spell's mask, for caster [BP+6]: an Elementalist's second sphere's spells its
-; own sphere's too. Others kept.
+; own sphere's too; a Healer's cosmos spells (HEALER_COSMOS) its cleric's. Others kept.
 el_spheres:
         push bx
         push cx
@@ -9714,17 +9794,25 @@ el_spheres:
         push es
         mov edx, eax
         call el_caster          ; AL the second sphere, CL the cleric class (1-4)
-        jz .out
+        jz .healer
         push cx
         mov cl, al
         mov eax, 4
         shl eax, cl
         pop cx
         test edx, eax
-        jz .out
+        jz .healer
         mov eax, 2
         shl eax, cl
         or edx, eax
+.healer:
+        call cb_is
+        db KIT_HEALER
+        jne .out
+        mov ax, bx
+        call creature_sheet
+        call kit_class_of_sheet
+        call healer_cosmos
 .out:   mov eax, edx
         pop es
         pop edx
@@ -9753,6 +9841,24 @@ el_caster:
         jmp el_second
 .no:    cmp al, al
         ret
+; HEALER_COSMOS: EDX a spell's mask, AL a Healer's cleric class (1-4, 2 << AL its bit): a spell of
+; the sphere of the cosmos, the spells every druid casts and no cleric (the druid of the Healer's
+; element's bit, 2 << (AL + 4): a water druid's spells are a water cleric's and the cosmos's), its
+; cleric's too (kits.spell_spheres). Others kept.
+healer_cosmos:
+        cmp al, 1
+        jb .ret
+        cmp al, 4
+        ja .ret
+        push eax
+        movzx eax, al
+        add al, 5
+        bt edx, eax
+        jnc .out
+        sub al, 4
+        bts edx, eax
+.out:   pop eax
+.ret:   ret
 kit_title  db 'KITS', 0
 kit_keep   db 0                 ; 1 while the panel goes back to the disciplines (the kit kept)
 wp_from    db 0
@@ -12142,6 +12248,7 @@ ns_patches:
         NS_PATCH SPOOK_SPELL, 4, 1, 0x13        ; Spook: 3 rounds, not Charm Person's for ever ...
         NS_PATCH SPOOK_SPELL, 5, 2, 0
         NS_PATCH SPOOK_SPELL, 7, 2, 60          ;   (nothing flies to it, as Charm Person)
+        NS_PATCH SPOOK_SPELL, 0x11, 2, 0x4304   ;   ... and fear's 100h, Cloak of Bravery's +4 (gamepatch brave_fear_*)
         NS_PATCH FRIENDS_SPELL, 4, 1, 0x41      ; Friends: 1d4 rounds and 1 a level, not Strength's hour
         NS_PATCH FRIENDS_SPELL, 5, 2, 1         ;   a level (+1Dh's low bits: the levels a "level"
         NS_PATCH FRIENDS_SPELL, 7, 2, 60        ;   counts, 1) ...
@@ -12649,6 +12756,9 @@ PP_CLOSE  equ NS_IMAGE + 15      ; 88504h: the USE screen closing, its icons let
 PP_HAND   equ NS_IMAGE + 11      ; 5ECD8h: a click on the map, the pointer for talking, on something
 CR_LABELS equ NS_IMAGE + 16      ; 65125h: the ability labels (STR: to CHR:), drawn
 CR_WEAPONS equ NS_IMAGE + 17     ; 666DFh: the creation screen's DONE, a warrior's weapon specs
+NS_NPP    equ NS_IMAGE + 18      ; 7A7E9h: Negative Plane Protection's save, against an undead
+NS_SIDE   equ NS_IMAGE + 19      ; 78785h: an effect ended, past the game's own cases
+NS_WALL   equ NS_IMAGE + 20      ; 5A38Ch: the computer's cast, its two points
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -12692,6 +12802,12 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
         je sell_price
+        cmp byte [cs:rl_site], NS_NPP
+        je ns_npp
+        cmp byte [cs:rl_site], NS_SIDE
+        je ns_side
+        cmp byte [cs:rl_site], NS_WALL
+        je ns_wall
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -13036,6 +13152,170 @@ ns_hold:
         add word [bp + 2], HOLD_IMMUNE - HOLD_LIVING
 .out:   pop bp
         iret
+; NS_NPP: "add sp,4 / push 6 / push 27h" (7A7E9h; 7 bytes) where an undead's negative-energy
+; attack meets Negative Plane Protection on its target (7A7C5h): the charge's two arguments still
+; pushed are made the save's (6 and the record), the save then made by the game (79A71h; the
+; protection stops the attack and hurts the undead if saved). The game saved as against Vampiric
+; Touch (27h), whose record allows no save, so the protection never worked: once the records have
+; room (SEG_MOVED), as against NPP_SAVE, Vampiric Touch's record copied with a save against
+; paralysis, poison and death allowed (21h at +1Fh), AD&D's save against death magic.
+NPP_TOUCH equ 0x27
+NPP_SAVE  equ 0xCA              ; (NS_END: past the new spells, in the records' room, no list's)
+NPP_SAVE_BYTE equ 0x21
+ns_npp:
+        push bp
+        mov bp, sp
+        mov word [bp + 10], 6
+        mov word [bp + 8], NPP_TOUCH
+        cmp byte [cs:seg_moved], 0
+        je .out
+        push ds
+        push es
+        pusha
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov ds, ax
+        mov es, ax
+        mov si, SPELL_RECS + NPP_TOUCH * 0x20
+        mov di, SPELL_RECS + NPP_SAVE * 0x20
+        mov cx, 0x10
+        cld
+        rep movsw
+        mov byte [es:SPELL_RECS + NPP_SAVE * 0x20 + 0x1F], NPP_SAVE_BYTE
+        popa
+        pop es
+        pop ds
+        mov word [bp + 8], NPP_SAVE
+.out:   pop bp
+        iret
+
+; NS_SIDE: "jmp 788BBh" (78785h; 3 bytes) in the routine ending an effect on a thing (7872Fh), where
+; the effect isn't one of the six it has a case for (8053:08A3h). Berserk (3) and Confused (11)
+; re-roll the thing's side (its creature's +1Dh) on the computer's turns (8053:000Eh), and only a
+; charm's end (10, 787E9h) put it back, from the character sheet's +3Ch: so a party member
+; berserk or confused could stay on the monsters' side. They go to the charm's case too; any
+; other effect on to 788BBh as before.
+SIDE_BERSERK  equ 3
+SIDE_CONFUSED equ 11
+SIDE_END   equ 0x788BB - 0x78788    ; (less the way back: past the INT and the site's number)
+SIDE_CHARM equ 0x787E9 - 0x78788
+ns_side:
+        push bp
+        mov bp, sp
+        push bx
+        mov bx, [bp]            ; (the game's BP: the effect at its +8)
+        cmp word [ss:bx + 8], SIDE_BERSERK
+        je .charm
+        cmp word [ss:bx + 8], SIDE_CONFUSED
+        je .charm
+        add word [bp + 2], SIDE_END
+        jmp short .out
+.charm: add word [bp + 2], SIDE_CHARM
+.out:   pop bx
+        pop bp
+        iret
+; NS_WALL: the four pushes of the two points the computer's cast is aimed at (5A38Ch; 28h bytes:
+; "mov ax,[bp-4] / shl ax,4 / add ax,8 / push ax", then [bp-2]'s, twice; [BP-2], [BP-4] the cell
+; chosen), in the AI's casting (6466:0000h, the caster SI, the spell DI). The game gave both points
+; the cell's middle, so a wall (a record whose target, +0Ch, is 2), as long as its points are
+; apart, was a single point. A wall now runs across the line from the caster (its place, sixteenths
+; of a cell at DS:669Dh + SI x 20h) to the cell: WALL_HALF either way, along an axis, or the
+; diagonal, whichever is nearest square to the line; anything else at the middle, as before. The
+; four words go under the INT's frame, where the pushes left them (point 1 on top: x, y).
+WALL_TARGET equ 2
+WALL_HALF  equ 32               ; (two cells: a wall four long)
+WALL_DIAG  equ 23               ; (WALL_HALF / sqrt(2))
+WALL_POS   equ 0x669D
+ns_wall:
+        sub sp, 8
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 10]       ; (the frame, 8 lower)
+        mov [bp + 2], ax
+        mov ax, [bp + 12]
+        mov [bp + 4], ax
+        mov ax, [bp + 14]
+        mov [bp + 6], ax
+        pusha
+        push es
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov es, ax
+        mov bx, di              ; (the spell)
+        shl bx, 5
+        mov al, [es:bx + SPELL_RECS + 0x0C]
+        mov bx, si              ; (the caster)
+        shl bx, 5
+        push ax
+        mov si, [bp]            ; (the game's BP)
+        mov cx, [ss:si - 2]
+        shl cx, 4
+        add cx, 8               ; (CX, DX the middle)
+        mov dx, [ss:si - 4]
+        shl dx, 4
+        add dx, 8
+        xor si, si              ; (SI, DI the half-wall, none)
+        xor di, di
+        pop ax
+        cmp al, WALL_TARGET
+        jne .put
+        mov ax, cx
+        sub ax, [bx + WALL_POS] ; (AX, BX the line: the middle less the caster's place)
+        mov bx, [bx + WALL_POS + 2]
+        neg bx
+        add bx, dx
+        push ax
+        push bx
+        or ax, ax
+        jns .xa
+        neg ax
+.xa:    or bx, bx
+        jns .ya
+        neg bx
+.ya:    mov di, bx              ; (|dy|)
+        shl di, 1
+        cmp ax, di
+        jbe .notx
+        pop bx                  ; mostly across: the wall up and down
+        pop ax
+        xor si, si
+        mov di, WALL_HALF
+        jmp short .put
+.notx:  shl ax, 1
+        shr di, 1
+        cmp di, ax
+        jbe .diag
+        pop bx                  ; mostly up or down: the wall across
+        pop ax
+        mov si, WALL_HALF
+        xor di, di
+        jmp short .put
+.diag:  pop bx                  ; slanting: the other diagonal
+        pop ax
+        mov si, WALL_DIAG
+        mov di, WALL_DIAG
+        xor ax, bx              ; (the same signs: down to the left and up to the right)
+        js .put
+        neg si
+.put:   mov ax, cx
+        add ax, si
+        mov [bp + 8], ax        ; point 1: the middle plus the half
+        mov ax, dx
+        add ax, di
+        mov [bp + 10], ax
+        mov ax, cx
+        sub ax, si
+        mov [bp + 12], ax       ; point 2: less it
+        mov ax, dx
+        sub ax, di
+        mov [bp + 14], ax
+        pop es
+        popa
+        pop ax
+        pop bp
+        iret
+
 blow_rand dw RAND_OFF, 0
 blow_charge dw CHARGE_OFF, 0
 

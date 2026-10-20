@@ -76,7 +76,7 @@ page each kit's numbers: the guide links to its tables.
 
 Already playing? Saves made before load and play with the mod's fixes and
 rules, but kits, fuller starting gear and much of the new content come with a
-new game (see the README's [saved games](README.md#the-games-bugs-fixed)
+new game (see the features page's [saved games](FEATURES.md#the-games-bugs-fixed)
 note).
 
 ## Playing
@@ -95,7 +95,7 @@ easier.
 
 | Change | What it does |
 |---|---|
-| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Or, on the Options tab, a strip always shown below the map (the mouse wheel reads back, on Windows). |
+| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Its **A** shows the party's count of arena fights. Or, on the Options tab, a strip always shown below the map (the mouse wheel reads back, on Windows). |
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
@@ -512,7 +512,7 @@ melee, and any missile weapon.
 alignment · XP for 2nd level 2,250, for 10th 600,000*
 
 **How it plays.** A warrior of the wastes: the bow and one more weapon spec,
-two weapons at no penalty, hiding and moving silently under the open sky to
+two weapons at no penalty in light armour, hiding and moving silently under the open sky to
 strike from behind, and a little priest magic late on.
 
 **What the mod changes.**
@@ -654,8 +654,8 @@ character hit in a round can't cast), and choose its spells well.
 
 **What the mod changes.**
 
-- **INT limits learning:** a chance to learn each scroll's spell, and a most
-  spells of each level ([learning spells](#learning-preserver-spells)).
+- **INT limits learning:** a chance to learn each scroll's spell, and a limit
+  on the spells it knows of each level ([learning spells](#learning-preserver-spells)).
   *Without the mod:* every scroll learnt, no limit.
 - It **chooses** its starting spells and one at each level up. EXIT while
   choosing its starting spells gives it the game's usual ones for the rest.
@@ -740,9 +740,11 @@ has the most, air and fire the fewest.
 
 **Kits.**
 
-*Healer.* Elemental priests who answer to the needs of the dying more than to
-the temples, using water and earth to close wounds. They keep a free hand for
-the work and won't fill it with a weapon.
+*Healer.* Water priests who answer to the needs of the dying more than to the
+temples. They pray to the cosmos as well as to water, so they have the cures
+and other spells only druids are given, Cure Serious and Critical Wounds and
+Raise Dead among them, but no other element answers them. They keep a free
+hand for the work and won't fill it with a weapon.
 
 *Crusader.* Warrior priests who carry their element's anger into battle, as
 deadly with a weapon as any soldier. Their prayers are fewer for it.
@@ -800,7 +802,8 @@ for 2nd level 2,000, for 10th 125,000*
 
 **How it plays.** A priest of the land and its element: no armour, but any
 weapon, the cheapest levels in the game, and the only priest with the common
-4th and 5th-level spells (the great cures among them). +2 on saves against fire
+4th and 5th-level spells (the great cures among them), but for a Healer
+cleric. +2 on saves against fire
 and electricity.
 
 **What the mod changes.**
@@ -914,7 +917,7 @@ A character of one class takes one of three kits for its class when it is
 made, or none, on the creation panel's **KIT** page; a human who changes class
 can take one for its new class. A few races' pairs of classes have kits of
 their own ([Multiclass kits](#multiclass-kits)). Each gives something and
-costs something; [the Kits page](KITS.md) have each kit's
+costs something; [the Kits page](KITS.md) has each kit's
 numbers and starting gear, the class sections above who takes it on Athas.
 
 - The **Myrmidon** chooses its second weapon spec, and the **Battle Mage** its
@@ -1163,7 +1166,9 @@ nothing from poison or draining, and mind-affecting spells don't work on them.
 
 A thief's skills come from the table by thief level, plus the race's and
 DEX's adjustments. A thief who isn't Okay, or is Blind, Afraid, Confused,
-Berserk or Paralyzed, can't use them; nothing worn stands in the way.
+Berserk or Paralyzed, can't use them. Nothing worn stands in the way,
+but for a thief with another class in armour heavier than leather, hide or
+silk (all 0).
 
 | Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -1336,7 +1341,13 @@ can cast. INT sets two limits:
   mod:* the receiver kept the strength.
 - **Dispel Magic** only dispels. *Without the mod:* the preserver's also stopped
   everyone it caught casting spells, your own party too.
-- **Hold Undead** holds the undead only. *Without the mod:* it held anyone.
+- **Negative Plane Protection** gives a save against an undead's draining
+  touch; saved, the touch is stopped and the undead takes 2d6. *Without the
+  mod:* it never stopped anything.
+- **Cloak of Bravery** gives +4 on saves against fear spells. *Without the
+  mod:* the bonus never applied.
+- **Absorb Disease** takes the disease only. *Without the mod:* it gave the
+  psionicist STR too.
 - **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as the Cure spells
   heal (Light: 1d8 both ways). *Without the mod:* 2d9 and 3d9.
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
@@ -1376,7 +1387,7 @@ can cast. INT sets two limits:
 | 5 | Chaos, Cloudkill, Cone of Cold, Conjure Elemental, Dismissal, Domination, Feeblemind, Hold Monster, Lower Resistance to Magic, Monster Summoning III, Summon Shadow, Wall of Force, Wall of Stone |
 
 **Priests' spells.** Every cleric, druid and ranger has the common ones of the
-levels it can cast; druids alone have the common 4th and 5th-level ones; and
+levels it can cast; druids alone (and a cleric with the Healer kit) have the common 4th and 5th-level ones; and
 each has its own element's.
 
 | Level | Every priest | Druids only |
@@ -1460,8 +1471,8 @@ raises the best defence mode it knows and can pay for, by itself.
 | Thought Shield (defence) | telepathy | 1 | |
 
 Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
-makes unarmed blows 2d4. The Mind Bender and Kineticist [kits](#kits) change
-some costs.
+makes unarmed blows 2d4. The Mind Bender, Kineticist and Titan Mind
+[kits](#kits) change some costs.
 
 ## Equipment
 
@@ -1658,6 +1669,7 @@ AD&D's tables:
 | Section | Switch | Default |
 |---|---|---|
 | In the game | a combat log in the game (L shows and hides it) | on |
+| | how much it says: at the least, in short or in detail | in short |
 | | ... always shown, below the map instead of over it | off |
 | | describe monsters when you Look at them in a fight | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
@@ -1669,6 +1681,7 @@ AD&D's tables:
 | | rings in a fight: none, under the enemy chosen with Tab, or under all the enemies | under the enemy chosen |
 | | scrolling by holding the right button | off |
 | Game speed | GOG's own, faster or fastest | faster |
+| Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
 Rule changes, customization, expanded features and the new spells count at
 once in a game started from the Loader; the new people, quest and items, and

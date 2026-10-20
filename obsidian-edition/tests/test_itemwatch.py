@@ -15,12 +15,13 @@ from dsloader import game, itemwatch
 from dsloader.game import ItemSeen
 
 
-def item(index, member, label, slot="chest", typ=7, plus=0):
+def item(index, member, label, slot="chest", typ=7, plus=0, value=0):
     rec = bytearray(game.ITEM_SIZE)
     struct.pack_into("<H", rec, game.ITEM_TYPE, typ)
     struct.pack_into("<H", rec, game.ITEM_NAME, 100 + typ)
     rec[game.ITEM_SLOT] = game.EQUIP_SLOTS.index(slot) if slot else 255
     struct.pack_into("b", rec, game.ITEM_PLUS, plus)
+    struct.pack_into("<H", rec, itemwatch.ITEM_VALUE, value)
     return ItemSeen(index, member, ("Garyn", "Nira", "Dinos", "Kalzith")[member], slot, label, typ,
                     bytes(rec), bytes(game.ITEM_TYPE_SIZE))
 
@@ -49,6 +50,9 @@ class FakeGame:
     def region(self):
         return 0x29
 
+    def party_position(self):
+        return (1896, 856)
+
     def in_combat(self):
         return False
 
@@ -64,7 +68,7 @@ class ItemWatchTest(unittest.TestCase):
         self.folder = tempfile.mkdtemp()
         self.watch = itemwatch.ItemWatch(folder=self.folder)
         self.armour = item(12, 0, "Inix Hide Chest Armor")
-        self.sword = item(13, 0, "Bone Long Sword", slot="right hand", typ=9)
+        self.sword = item(13, 0, "Bone Long Sword", slot="right hand", typ=9, value=100)
         self.data = FakeGame([self.armour, self.sword])
 
     def run_for(self, seconds, step=1.0, start=0.0):
@@ -124,7 +128,7 @@ class ItemWatchTest(unittest.TestCase):
         self.assertIsNone(itemwatch.ordinary_loss(spear, empty, False, False))
         self.data.items = [self.armour, broken]
         self.data.records[13] = bytes(game.ITEM_SIZE)
-        self.money = 160                           # (sold: the money went up as it went)
+        self.money = 160                           # (sold: the money went up as it went, 60% of its 100)
         out, _ = self.run_for(5, start=t)
         self.assertEqual(out, [])
         self.assertIn("sold", itemwatch.ordinary_loss(self.sword, empty, True, False))
@@ -180,3 +184,131 @@ class ItemWatchTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LoadTest(ItemWatchTest):
+    """A game loaded with the same party: no reports for what the save doesn't have."""
+
+    def test_clock_on_too_far_elsewhere(self):
+        """A later save with the party somewhere else in the same region: a game loaded."""
+        self.run_for(2)
+        self.data.game_time = lambda: 600 + itemwatch.CLOCK_JUMP + 1
+        self.data.party_position = lambda: (100, 200)
+        self.data.items = [self.sword]
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+        self.assertEqual(self.watch.reports, [])
+
+    def test_rest_goes_on_watching(self):
+        """A rest: the clock on hours, the party where it was. An item gone as it rests is news."""
+        self.run_for(2)
+        self.data.game_time = lambda: 600 + 8 * 3600
+        self.data.items = [self.sword]
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Inix Hide" in line for line in out))
+        self.assertEqual(len(self.watch.reports), 1)
+
+    def test_rest_then_a_load(self):
+        """After a rest the watch still starts afresh on a load (the clock gone back)."""
+        clock = [600]
+        self.data.game_time = lambda: clock[0]
+        self.run_for(2)
+        clock[0] = 600 + 8 * 3600         # (a rest: nothing gone)
+        self.run_for(2, start=3)
+        clock[0] = 300                    # (an earlier save)
+        self.data.items = []
+        out, _ = self.run_for(5, start=6)
+        self.assertEqual(out, [])
+
+    def test_most_items_gone_at_once(self):
+        extra = [item(20 + n, 1, f"Thing {n}", slot=None, typ=40 + n) for n in range(3)]
+        self.data.items = [self.armour, self.sword] + extra
+        self.run_for(2)
+        self.data.items = [self.sword]             # (four of five gone at one look)
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+        self.assertEqual(self.watch.reports, [])
+
+    def test_one_gone_still_reported(self):
+        extra = [item(20 + n, 1, f"Thing {n}", slot=None, typ=40 + n) for n in range(3)]
+        self.data.items = [self.armour, self.sword] + extra
+        self.run_for(2)
+        self.data.items = [self.sword] + extra
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Inix Hide" in line for line in out))
+
+
+class MoneyTest(ItemWatchTest):
+    def test_other_money_hides_nothing(self):
+        """Money that isn't the item's sale (a purse picked, a quest's reward) is no sale."""
+        self.data.money = lambda: self.money
+        self.money = 100
+        self.run_for(2)
+        self.data.items = [self.armour]
+        self.data.records[13] = bytes(game.ITEM_SIZE)
+        self.money = 107                           # (7 ceramic pieces from a purse)
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Bone Long Sword" in line for line in out))
+
+    def test_full_price_sale(self):
+        """Without the CHA rule a shop pays the whole price."""
+        self.assertEqual(itemwatch.sale_prices(self.sword.record), {100, 60})
+
+
+class AreaChangeTest(ItemWatchTest):
+    """An area change gives every item a new number: the items are matched through it, and one
+    with no match is news; a game loaded (another set of items) is not."""
+
+    def party(self, base, drop=()):
+        names = [("Inix Hide Chest Armor", "chest", 7), ("Bone Long Sword", "right hand", 9),
+                 ("Ring", "finger", 12), ("Boots", "foot", 13), ("Cloak", "cloak", 14)]
+        return [item(base + n, n % 2, label, slot=slot, typ=typ)
+                for n, (label, slot, typ) in enumerate(names) if label not in drop]
+
+    def test_renumbered_nothing_lost(self):
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = self.party(200)
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+        self.assertEqual(self.watch.reports, [])
+
+    def test_renumbered_one_lost(self):
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = []                         # (the party's lists empty while the area loads)
+        self.run_for(1, start=3)
+        self.data.items = self.party(200, drop=("Ring",))
+        out, _ = self.run_for(5, start=5)
+        self.assertEqual(len(out), 1)
+        self.assertIn("Ring", out[0])
+        self.assertIn("change of area", out[0])
+        self.assertEqual(len(self.watch.reports), 1)
+        with open(self.watch.reports[0], encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("before the change of area", text)
+        self.assertNotIn("(unreadable)", text)
+
+    def test_watching_goes_on_after(self):
+        """After an area change the new numbers are watched as before."""
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = self.party(200)
+        self.run_for(4, start=3)
+        self.data.items = self.party(200, drop=("Boots",))
+        out, _ = self.run_for(5, start=8)
+        self.assertTrue(any("Boots" in line for line in out))
+
+    def test_another_game_loaded(self):
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = [item(300 + n, 2, f"Thing {n}", slot=None, typ=40 + n) for n in range(5)]
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+
+    def test_number_reused_by_another_item(self):
+        """The item's number now names another item of the party's: the item is gone all the same."""
+        self.run_for(2)
+        self.data.items = [self.sword, item(12, 1, "Bone Dagger", slot=None, typ=30)]
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Inix Hide" in line for line in out))

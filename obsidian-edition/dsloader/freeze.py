@@ -21,7 +21,7 @@ TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_MAIN_TICKS = 260  # the map's main loop run (counted)
 TSR_TICK_OFF, TSR_TICK_SEQ = 356, 358  # TICKS's offset; records taken (counted)
 TICK_SLOTS, TICK_SIZE = 32, 16
-HEADER_BYTES = 362  # DSCLOG's header, as it was, in the report (to KIT_POISONED and its spare byte)
+HEADER_BYTES = 362  # DSCLOG's header, as it was, in the report (to KIT_POISONED, +360, and CREATING, +361)
 EXE_HEADER = 0x5400  # DSUN.EXE's header: a load-segment address + this is its place in the file
 CODE_BYTES = 24  # what is at each place now
 WATCH_SECONDS = 1.0  # how long the report watches the counters for moving
@@ -45,6 +45,8 @@ def ticks(read: Callable[[int, int], bytes], hdr: int) -> List[Tick]:
     off, seq = struct.unpack("<HH", read(hdr + TSR_TICK_OFF, 4))
     raw = read(base + off, TICK_SLOTS * TICK_SIZE)
     taken = min(seq, TICK_SLOTS)
+    if taken < TICK_SLOTS and any(raw[taken * TICK_SIZE:]):  # (the count wrapped past 65535: every slot's
+        taken = TICK_SLOTS                                    #   been written, the newest at seq - 1)
     return [Tick(*struct.unpack_from("<8H", raw, ((seq - taken + k) % TICK_SLOTS) * TICK_SIZE))
             for k in range(taken)]
 

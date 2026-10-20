@@ -5,7 +5,7 @@ weapon, with where each is. **Spoilers:** for where things are without them, the
 [player's guide](PLAYER-GUIDE.md#new-items) lists what the mod adds and who can use it.*
 
 Every magic item and every mundane weapon in a game with the mod's
-[new items](README.md#new-items), the game's and the mod's, with their icons.
+[new items](FEATURES.md#new-items), the game's and the mod's, with their icons.
 
 ## Every magic item
 
@@ -23,7 +23,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/draketooth.png) | Bone | long sword | Draketooth | +1, strength | — |
 | ![](docs/items/hornblade.png) | Bone | long sword | Hornblade | +1 | Kalinin's reward |
 | ![](docs/items/stillwater.png) | Bone | short sword | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
-| ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | — |
+| ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men |
 | ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | the 2 handed Bone Gythka on the dead body by the arena's stone arch |
 | ![](docs/items/hayneedle.png) | Bone | dagger | ***Hayneedle*** | a bone dagger +1: a water cleric can wield it | hidden in **Merzol**'s haystack in the slave pens, with his sack of ceramic pieces |
@@ -33,7 +33,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1 | on the slave pens' **weapon rack**, in place of one of its two plain bone polearms |
 | ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | Cahulaks +1 | +1, Cause Light Wounds | the caravan's buried chest |
 | ![](docs/items/dragonsbane.png) | Metal | long sword | Dragonsbane | +4 | — |
-| ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | — |
+| ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/greenbright.png) | Metal | short sword | ***Greenbright*** | a metal short sword +2 | carried by **Arant**, who holds the captured gladiators |
 | ![](docs/items/shadowseeker.png) | Metal | short sword | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | in the pack of **Kurzak**, the pens' guard leader |
 | ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, extra damage | Dagolar |
@@ -71,7 +71,7 @@ out (a reward, a gift or a find).
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | chatkcha | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | | chests; Kel and the Elven Leader (+1) |
 
-**By weapon spec**, for [weapon specialization](README.md#weapon-specialization):
+**By weapon spec**, for [weapon specialization](FEATURES.md#weapon-specialization):
 
 | Weapon spec | Magic weapons |
 |---|---|
@@ -138,15 +138,15 @@ Tanelyv's Armor also has a chest piece, with no plus.
 
 | Icon | Slot | Item | Power | Where |
 |---|---|---|---|---|
-| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [bracers of defense](README.md#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
-| ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | Kalzith ([Robes](README.md#robes)) |
-| ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by Kel ([Robes](README.md#robes)) |
+| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [bracers of defense](FEATURES.md#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
+| ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | Kalzith ([Robes](FEATURES.md#robes)) |
+| ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by Kel ([Robes](FEATURES.md#robes)) |
 | ![](docs/items/belt-of-might.png) | Waist | Belt of Might | strength | — |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a chest |
-| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](README.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +1 |
+| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +1 |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
 | ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | worn by Pehtucl |
-| ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](README.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
+| ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](FEATURES.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
 | ![](docs/items/silver-necklace.png) | Neck | Silver Necklace | Biofeedback | — |
 | ![](docs/items/obsidian-necklace.png) | Neck | Obsidian Necklace | Disintegrate | the Troop Leader |
 | ![](docs/items/iron-necklace.png) | Neck | Iron Necklace | Fireball | the Hermit |
@@ -170,7 +170,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/wildwynd-wand.png) | Wildwynd Wand | Confusion | — |
 | ![](docs/items/llods-rod.png) | Llod's Rod | travel between the obelisks | the Visionary |
 | ![](docs/items/tome-of-understanding.png) | ***Tome of Understanding*** | read as a scroll is (right-click it in the inventory, click its icon): the one whose pack it is in gains a point of WIS for good (at most 25), and the tome is gone. Not in a fight, as no scroll can be read in one | **Father Garyn**'s gift, in Teaquetzl, when the party brings him the ranike pith from Notaku |
-| ![](docs/items/apple.png) ![](docs/items/scroll.png) ![](docs/items/kalzith-scroll.png) | Magic fruit (14 kinds), spell scrolls (18), psionic scrolls (11), ***Kalzith's six scrolls*** | used once | many places; Kalzith's in [his shop](README.md#kalzith), spells the game has no scroll of |
+| ![](docs/items/apple.png) ![](docs/items/scroll.png) ![](docs/items/kalzith-scroll.png) | Magic fruit (14 kinds), spell scrolls (18), psionic scrolls (11), ***Kalzith's six scrolls*** | used once | many places; Kalzith's in [his shop](FEATURES.md#kalzith), spells the game has no scroll of |
 
 ## Every mundane weapon
 
@@ -179,7 +179,7 @@ by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in Kel's
 caravan. The game's plain stone pick is only ever a
-[starting weapon](README.md#weapon-specialization); Deepbiter is its magic one.
+[starting weapon](FEATURES.md#weapon-specialization); Deepbiter is its magic one.
 
 | Icon | Type | Material | Sold by | Carried by, or found in | The mod's |
 |---|---|---|---|---|---|
@@ -217,7 +217,7 @@ caravan. The game's plain stone pick is only ever a
 ## Items against acid
 
 What each item's chance is against the Rampager's acid and the Babau's corroding touch, in the game and with
-[Items save against acid as in AD&D](README.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material):
+[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material):
 
 | Item | Saved in the game | Saved with the rule |
 |---|---|---|
