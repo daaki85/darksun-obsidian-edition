@@ -284,6 +284,10 @@ class AreaChangeTest(ItemWatchTest):
         self.assertIn("Ring", out[0])
         self.assertIn("change of area", out[0])
         self.assertEqual(len(self.watch.reports), 1)
+        with open(self.watch.reports[0], encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("before the change of area", text)
+        self.assertNotIn("(unreadable)", text)
 
     def test_watching_goes_on_after(self):
         """After an area change the new numbers are watched as before."""

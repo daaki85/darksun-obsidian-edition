@@ -178,10 +178,10 @@ class ItemWatch:
             if ordinary_loss(was, b"", False, False):
                 continue
             fate = "no item like it came through the change of area (every item has a new number after one)"
-            out += self._report(data, was, b"", fate, current, now, settings)
+            out += self._report(data, was, None, fate, current, now, settings)
         return out
 
-    def _report(self, data, was: ItemSeen, record: bytes, fate: str, current: Dict[int, ItemSeen], now: float,
+    def _report(self, data, was: ItemSeen, record: Optional[bytes], fate: str, current: Dict[int, ItemSeen], now: float,
                 settings: Optional[dict]) -> List[str]:
         where = f"{was.owner}'s {was.slot}" if was.slot else f"{was.owner}'s pack"
         text = item_report(was, record, fate, current, data, now, settings, list(self.dice), list(self.talk))
@@ -304,16 +304,19 @@ def describe_fate(was: ItemSeen, record: bytes) -> str:
     return "its record now holds another item: the game freed it and reused the number"
 
 
-def item_report(was: ItemSeen, record: bytes, fate: str, current: Dict[int, ItemSeen], data,
+def item_report(was: ItemSeen, record: Optional[bytes], fate: str, current: Dict[int, ItemSeen], data,
                 now: float, settings: Optional[dict], dice: List[str], talk: List[str]) -> str:
     stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     where = f"{was.owner}'s {was.slot} slot" if was.slot else f"{was.owner}'s pack (not worn)"
+    number = f"item {was.index}" if record is not None else f"item {was.index} before the change of area"
     lines = [f"Obsidian Edition item report, {stamp}", "",
-             f"{was.label} (item {was.index}, type {was.type}) is gone from {where}.",
+             f"{was.label} ({number}, type {was.type}) is gone from {where}.",
              f"What its record says now: {fate}.", ""]
     lines += _state_lines(data)
     lines += ["", "The item's record when last seen:", "  " + was.record.hex(" "),
-              "The record at that number now:    ", "  " + (record.hex(" ") if record else "(unreadable)"),
+              "The record at that number now:    ",
+              "  " + ("(not looked at: the change of area gave every item a new number)" if record is None
+                      else record.hex(" ") if record else "(unreadable)"),
               "Its type's record:", "  " + was.kind.hex(" ")]
     mine = [i for i in current.values() if i.member == was.member]
     lines += ["", f"{was.owner}'s items now:"] + (_item_lines(mine) or ["  (none)"])
