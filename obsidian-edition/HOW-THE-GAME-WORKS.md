@@ -494,3 +494,29 @@ of protection, which is why the mod adds [a ring](README.md#new-items) and
 `+1 Ring of Protection` and `+1 Cloak of Protection` (with
 [AD&D's rules for them](README.md#rings-and-cloaks-of-protection) off, all of it as
 `Ring of Protection`).
+
+## The arena's count of fights
+
+The game counts the party's trips into Draj's arena (its global number 12; the
+combat log panel's **A** button shows it). It goes up by one each time the
+party walks out of the arena's gate after being called, however many waves
+came that day; extra waves don't count. Being called needs the game's clock to
+run: Kurzak's call comes once a little over 8 hours of game time (8 h 05 min)
+have passed since the last trip, and the clock stands still while the Look
+pointer is chosen, so a party resting by the fire with it chosen is never
+called.
+
+The announcer greets each trip by the count:
+
+| Count | What happens |
+|---|---|
+| 0-3 | A speech of its own for each of the first four trips ("Before you is a handful of gladiators...", "Behold these gladiators as they fight in melee...", "These slaves have proven their worth...", "...Let the games begin!"), then the fight. |
+| 4 | Scar's challenge: "The 'King of the Pens', Scar, has become so disgusted with the survival of these scum that he has offered to kill them himself", when a check the script makes on Scar passes; otherwise the everyday speech. |
+| 1000 | "This day is very special. Let's have a round of applause for the one thousandth fight of our gladiators. King Tectuktitlay himself has sent gifts for these brave souls." Two weapons appear at the party's feet, with a sound: **El's Drinker +2** (a metal sword that carries a spell) and a **Bone Gythka +3**, each worth 65,000. The script then goes on as on any other day. |
+| 5000 | "You win! Through fighting in the arena, you have completely depopulated Athas of all monsters." No monsters come: the announcer sends the party back to the pens to heal, the crowd throws money, and the script marks the war against Draj won (flag 10, and the final battle's state, global number 49, set to 3). Reaching the final battlefield afterwards plays the game's victory: 20,000 XP, the allies' farewells, Dragonsbane, the genie's prophecy, and "Congratulations! You have defeated the Drajian army and completed Shattered Lands. Feel free to continue playing the game." |
+| Any other | "Once again, expectant spectators, you see trained warriors pitted against the hordes of creatures which dwell beyond our walls." |
+
+Checked in play: the count going up once a trip, Scar's challenge on the fifth,
+and, with the count set to 5000, the 5000th trip's speech, the party sent back
+with no fight, and the final battle marked won. The 1000th trip is as its
+script reads; it wasn't played.
