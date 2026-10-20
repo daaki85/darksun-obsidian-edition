@@ -504,7 +504,8 @@ of protection, which is why the mod adds [two rings and a cloak](FEATURES.md#new
 ## The arena's count of fights
 
 The game counts the party's trips into Draj's arena (its global number 12; the
-combat log panel's **A** button shows it). It goes up by one each time the
+combat log panel's top line shows it between fights in the slave pens and the
+arena). It goes up by one each time the
 party walks out of the arena's gate after being called, however many waves
 came that day; extra waves don't count. Being called needs the game's clock to
 run: Kurzak's call comes once a little over 8 hours of game time (8 h 05 min)

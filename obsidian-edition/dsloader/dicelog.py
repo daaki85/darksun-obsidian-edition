@@ -654,7 +654,6 @@ class DiceLog:
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
         self._panel.open = settings.get("combat_log_open") is True  # (hidden till L)
-        self._panel.arena = settings.get("combat_log_arena") is True  # (the A: the arena's count)
         self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
@@ -1163,17 +1162,16 @@ class DiceLog:
             except (struct.error, IndexError, ValueError):
                 pass
             return
-        before = (panel.first, panel.size, panel.level, panel.filter, panel.open, panel.arena)
+        before = (panel.first, panel.size, panel.level, panel.filter, panel.open)
         try:
             panel.mouse(self.game, self.tsr_hdr)
             if notches and panel.over():
                 panel.wheel(notches)
-            if (panel.level != self.combat_log_level or panel.size != before[1] or panel.open != before[4]
-                    or panel.arena != before[5]):
+            if panel.level != self.combat_log_level or panel.size != before[1] or panel.open != before[4]:
                 self.combat_log_level = panel.level  # (the panel's level chip: the Options tab's too)
                 _remember({"combat_log_level": panel.level, "combat_log_size": panel.size,
-                           "combat_log_open": panel.open, "combat_log_arena": panel.arena})
-            if (panel.first, panel.size, panel.level, panel.filter, panel.open, panel.arena) != before:
+                           "combat_log_open": panel.open})
+            if (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
                 self._update_panel(now)
         except (struct.error, IndexError, ValueError):
             pass
@@ -1206,10 +1204,11 @@ class DiceLog:
                     self._fight_monsters.add(name)
             top = combatlog.header(self.round_status())
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
-        arena = None
-        if on and self._panel.arena:
+        arena = None  # (between fights in the slave pens and the arena: their count in the header)
+        if on and not fighting:
             try:
-                arena = self.game.number(game.ARENA_FIGHTS)
+                if self.game.region() in combatlog.ARENA_REGIONS:
+                    arena = self.game.number(game.ARENA_FIGHTS)
             except (struct.error, IndexError, ValueError):
                 pass
         self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names, arena)

@@ -1297,7 +1297,7 @@ class Viewer:
             index = (addr - table) // game.CREATURE_SIZE if addr is not None else None
             try:
                 known = index is not None and 0 <= index < game.PARTY_SIZE
-                hits.append(", ".join(f"{h.thac0} {h.name}" for h in gd.weapon_hits(index)) if known else "")
+                hits.append(", ".join(f"{h.thac0} {h.name}" for h in gd.weapon_hits(index)) if known and gd.items_readable(index) else "")
                 saves.append(" ".join(str(x.needs) for x in gd.saves_now(index)) if known else "")
             except (struct.error, IndexError, ValueError):
                 hits.append("")
@@ -1338,7 +1338,8 @@ class Viewer:
             worn = []
             for s in slots:
                 addr = s[1].get("creature")
-                items = gd.equipment((addr - table) // game.CREATURE_SIZE) if addr is not None else []
+                who = (addr - table) // game.CREATURE_SIZE if addr is not None else None
+                items = gd.equipment(who) if who is not None and gd.items_readable(who) else []
                 worn.append(", ".join(f"{slot}: {item}" if slot else item for slot, item in items))
             rows.append(("Equipment", worn))
         return rows
@@ -1401,9 +1402,12 @@ class Viewer:
                 label = "Thief skills now (none in armour that isn't light)"
             if known and not thief and self.rule_vars["stealth"].get():  # a ranger's, for the stealth rule
                 thief, label = gd.ranger_skills_now(index), "Ranger skills now"
-            equipment = gd.equipment(index) if known else []
+            # (before the game loads its item tables, at the menu or creating characters, items read
+            # as noise: no equipment then, and attacks from the sheet alone)
+            items_ok = bool(known and gd.items_readable(index))
+            equipment = gd.equipment(index) if items_ok else []
             try:
-                hits = gd.weapon_hits(index) if known and index < game.PARTY_SIZE else []
+                hits = gd.weapon_hits(index) if items_ok and index < game.PARTY_SIZE else []
                 saves = gd.saves_now(index) if known and index < game.PARTY_SIZE else []
             except (struct.error, IndexError, ValueError):
                 hits, saves = [], []

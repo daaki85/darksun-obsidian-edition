@@ -96,3 +96,20 @@ class HelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NoiseTests(unittest.TestCase):
+    """Before the game has loaded its item tables (the main menu, character creation), the names
+    read as noise: the Loader shows no equipment then, and never the noise."""
+
+    def setUp(self):
+        self.log = arena()
+        self.m = self.log.guest.mem
+        self.gd = self.log.game
+
+    def test_noise_name(self):
+        entry(self.m, 6, b"GF\xd0\xa2\xd0\xa6\xd0")
+        self.assertEqual(self.gd.item_name(6), "item 6")
+        self.assertFalse(game.plain_name(b"\xd0\xa2"))
+        self.assertFalse(game.plain_name(b"12"))
+        self.assertTrue(game.plain_name(b"Leather - Shimmer Armor +3"))

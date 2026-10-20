@@ -9,7 +9,24 @@ For what a release brings, read its notes ([2.5.0](release-notes/v2.5.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #52 (in progress)
+## Pull request #53 (in progress)
+
+**Changed**
+- **The arena's count of fights shows by itself**, with no button: between fights in the slave
+  pens and the arena (`combatlog.ARENA_REGIONS`, regions 29h and 2Ah), the combat log panel's
+  header says `Arena fights: N` (docked or expanded); in a fight it says the round, and anywhere
+  else (the party escaped) it's gone. The header's **A** is dropped: the game's own A key turns
+  animations on and off, so a button A read as a key it wasn't. `combat_log_arena` is no longer
+  saved.
+
+**Fixed**
+- **The Characters tab showed noise for items before the game had its item tables** (at the main
+  menu or creating characters: "Wooden GF╨╢...", "Attacks: 120 a round with item 2"). Items now
+  count only when every name reads as plain text (`GameData.items_readable`, `game.plain_name`);
+  until then a card shows no equipment and the sheet's attacks, and `item_name` never returns
+  noise. Tests in `test_equipment.py` and `test_names.py`.
+
+## Pull request #52 ([merged 2026-10-20](https://github.com/daaki85/darksun-obsidian-edition/pull/52))
 
 **Added**
 - **The arena's count of fights, on the combat log panel's A.** A button left

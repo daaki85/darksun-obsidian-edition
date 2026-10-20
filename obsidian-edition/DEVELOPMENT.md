@@ -607,9 +607,10 @@ dice log running:
   (`combatlog.key_rect`) with it shown hides it, in a fight or out of one. Out
   of fights the log takes the lines with a roll in them
   (`Log.add(rolls_only=True)`). The level and size are saved in the settings
-  (`combat_log_level`, `combat_log_size`). The header's **A**
-  (`combatlog.arena_rect`, left of the L; `Panel.arena`, saved as
-  `combat_log_arena`) puts the arena's count of fights in the header instead:
+  (`combat_log_level`, `combat_log_size`). Between fights in the slave pens and
+  the arena (regions 29h and 2Ah, `combatlog.ARENA_REGIONS`) the header says the
+  arena's count of fights (`arena_line`, docked or expanded; it once had a
+  button, A, dropped as the game's A key turns animations on and off):
   the game's global number 12 (`GameData.number(ARENA_FIGHTS)`, a word at the
   far pointer `NUMBERS_PTR`, DS:1356h; scripts' 07h/87h variables), which
   script 3 adds one to when the party walks out of the arena after a call.

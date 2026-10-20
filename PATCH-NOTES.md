@@ -27,7 +27,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[New]** A combat log in the game: **L** on the map shows every roll, in the game's own lettering and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points).
 - **[New]** The combat log is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves); or, as an option, a strip always shown below the map (the game's screen 22 rows taller).
-- **[New]** The combat log panel's **A** button shows how many arena fights the party has had (the game's own count, one a trip into the arena), and a click again hides it.
+- **[New]** In the slave pens and the arena, between fights, the combat log panel's top line shows how many arena fights the party has had (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
