@@ -96,6 +96,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   says at each count, the 1000th trip's gifts and the 5000th's war won. DEVELOPMENT.md has the item gate, the item watch's area changes and
   the rings and cloaks of protection; the README's item reports say what an
   area change does.
+- The damage numbers over creatures are off the README's known issues: seen in
+  fights with the panel collapsed, docked and hidden since the panel's
+  slowdown was fixed; the README says the expanded panel covers those under
+  it. `tests/test_doclinks.py` checks the docs' links and the README's "How it
+  works" links.
 
 ## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
 

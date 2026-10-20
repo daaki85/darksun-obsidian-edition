@@ -425,9 +425,6 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
 
 - **The game can stop with an error after a fight in the arena.** The Loader
   writes a crash report; load the last save to go on.
-- **The damage numbers the game shows over a creature that's hit can fail to
-  appear in a fight.** The dice log and the combat log in the game (**L**)
-  have every hit's damage.
 
 ## In the game
 
@@ -461,7 +458,9 @@ EMS to make room for it).
 ![The combat log in the arena, in short](docs/combat-log.png)
 
 **The panel** sits over the map's lower right. A window the game opens over
-the map (a character's menu, a question) hides it until it closes.
+the map (a character's menu, a question) hides it until it closes. Expanded, it
+covers that part of the map, and the game's damage numbers over a creature
+there; **-** makes it smaller, or the strip below the map covers nothing.
 
 - **Scrolling:** it keeps the last 200 lines. Drag the scrollbar's handle,
   click the bar above or below it for a page, or turn the mouse wheel with
