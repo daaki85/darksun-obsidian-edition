@@ -12755,6 +12755,9 @@ PP_CLOSE  equ NS_IMAGE + 15      ; 88504h: the USE screen closing, its icons let
 PP_HAND   equ NS_IMAGE + 11      ; 5ECD8h: a click on the map, the pointer for talking, on something
 CR_LABELS equ NS_IMAGE + 16      ; 65125h: the ability labels (STR: to CHR:), drawn
 CR_WEAPONS equ NS_IMAGE + 17     ; 666DFh: the creation screen's DONE, a warrior's weapon specs
+NS_NPP    equ NS_IMAGE + 18      ; 7A7E9h: Negative Plane Protection's save, against an undead
+NS_SIDE   equ NS_IMAGE + 19      ; 78785h: an effect ended, past the game's own cases
+NS_WALL   equ NS_IMAGE + 20      ; 5A38Ch: the computer's cast, its two points
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -12798,6 +12801,12 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je sell_keep
         cmp byte [cs:rl_site], SELL_PRICE
         je sell_price
+        cmp byte [cs:rl_site], NS_NPP
+        je ns_npp
+        cmp byte [cs:rl_site], NS_SIDE
+        je ns_side
+        cmp byte [cs:rl_site], NS_WALL
+        je ns_wall
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -13142,6 +13151,170 @@ ns_hold:
         add word [bp + 2], HOLD_IMMUNE - HOLD_LIVING
 .out:   pop bp
         iret
+; NS_NPP: "add sp,4 / push 6 / push 27h" (7A7E9h; 7 bytes) where an undead's negative-energy
+; attack meets Negative Plane Protection on its target (7A7C5h): the charge's two arguments still
+; pushed are made the save's (6 and the record), the save then made by the game (79A71h; the
+; protection stops the attack and hurts the undead if saved). The game saved as against Vampiric
+; Touch (27h), whose record allows no save, so the protection never worked: once the records have
+; room (SEG_MOVED), as against NPP_SAVE, Vampiric Touch's record copied with a save against
+; paralysis, poison and death allowed (21h at +1Fh), AD&D's save against death magic.
+NPP_TOUCH equ 0x27
+NPP_SAVE  equ 0xCA              ; (NS_END: past the new spells, in the records' room, no list's)
+NPP_SAVE_BYTE equ 0x21
+ns_npp:
+        push bp
+        mov bp, sp
+        mov word [bp + 10], 6
+        mov word [bp + 8], NPP_TOUCH
+        cmp byte [cs:seg_moved], 0
+        je .out
+        push ds
+        push es
+        pusha
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov ds, ax
+        mov es, ax
+        mov si, SPELL_RECS + NPP_TOUCH * 0x20
+        mov di, SPELL_RECS + NPP_SAVE * 0x20
+        mov cx, 0x10
+        cld
+        rep movsw
+        mov byte [es:SPELL_RECS + NPP_SAVE * 0x20 + 0x1F], NPP_SAVE_BYTE
+        popa
+        pop es
+        pop ds
+        mov word [bp + 8], NPP_SAVE
+.out:   pop bp
+        iret
+
+; NS_SIDE: "jmp 788BBh" (78785h; 3 bytes) in the routine ending an effect on a thing (7872Fh), where
+; the effect isn't one of the six it has a case for (8053:08A3h). Berserk (3) and Confused (11)
+; re-roll the thing's side (its creature's +1Dh) on the computer's turns (8053:000Eh), and only a
+; charm's end (10, 787E9h) put it back, from the character sheet's +3Ch: so a party member
+; berserk or confused could stay on the monsters' side. They go to the charm's case too; any
+; other effect on to 788BBh as before.
+SIDE_BERSERK  equ 3
+SIDE_CONFUSED equ 11
+SIDE_END   equ 0x788BB - 0x78788    ; (less the way back: past the INT and the site's number)
+SIDE_CHARM equ 0x787E9 - 0x78788
+ns_side:
+        push bp
+        mov bp, sp
+        push bx
+        mov bx, [bp]            ; (the game's BP: the effect at its +8)
+        cmp word [ss:bx + 8], SIDE_BERSERK
+        je .charm
+        cmp word [ss:bx + 8], SIDE_CONFUSED
+        je .charm
+        add word [bp + 2], SIDE_END
+        jmp short .out
+.charm: add word [bp + 2], SIDE_CHARM
+.out:   pop bx
+        pop bp
+        iret
+; NS_WALL: the four pushes of the two points the computer's cast is aimed at (5A38Ch; 28h bytes:
+; "mov ax,[bp-4] / shl ax,4 / add ax,8 / push ax", then [bp-2]'s, twice; [BP-2], [BP-4] the cell
+; chosen), in the AI's casting (6466:0000h, the caster SI, the spell DI). The game gave both points
+; the cell's middle, so a wall (a record whose target, +0Ch, is 2), as long as its points are
+; apart, was a single point. A wall now runs across the line from the caster (its place, sixteenths
+; of a cell at DS:669Dh + SI x 20h) to the cell: WALL_HALF either way, along an axis, or the
+; diagonal, whichever is nearest square to the line; anything else at the middle, as before. The
+; four words go under the INT's frame, where the pushes left them (point 1 on top: x, y).
+WALL_TARGET equ 2
+WALL_HALF  equ 32               ; (two cells: a wall four long)
+WALL_DIAG  equ 23               ; (WALL_HALF / sqrt(2))
+WALL_POS   equ 0x669D
+ns_wall:
+        sub sp, 8
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 10]       ; (the frame, 8 lower)
+        mov [bp + 2], ax
+        mov ax, [bp + 12]
+        mov [bp + 4], ax
+        mov ax, [bp + 14]
+        mov [bp + 6], ax
+        pusha
+        push es
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov es, ax
+        mov bx, di              ; (the spell)
+        shl bx, 5
+        mov al, [es:bx + SPELL_RECS + 0x0C]
+        mov bx, si              ; (the caster)
+        shl bx, 5
+        push ax
+        mov si, [bp]            ; (the game's BP)
+        mov cx, [ss:si - 2]
+        shl cx, 4
+        add cx, 8               ; (CX, DX the middle)
+        mov dx, [ss:si - 4]
+        shl dx, 4
+        add dx, 8
+        xor si, si              ; (SI, DI the half-wall, none)
+        xor di, di
+        pop ax
+        cmp al, WALL_TARGET
+        jne .put
+        mov ax, cx
+        sub ax, [bx + WALL_POS] ; (AX, BX the line: the middle less the caster's place)
+        mov bx, [bx + WALL_POS + 2]
+        neg bx
+        add bx, dx
+        push ax
+        push bx
+        or ax, ax
+        jns .xa
+        neg ax
+.xa:    or bx, bx
+        jns .ya
+        neg bx
+.ya:    mov di, bx              ; (|dy|)
+        shl di, 1
+        cmp ax, di
+        jbe .notx
+        pop bx                  ; mostly across: the wall up and down
+        pop ax
+        xor si, si
+        mov di, WALL_HALF
+        jmp short .put
+.notx:  shl ax, 1
+        shr di, 1
+        cmp di, ax
+        jbe .diag
+        pop bx                  ; mostly up or down: the wall across
+        pop ax
+        mov si, WALL_HALF
+        xor di, di
+        jmp short .put
+.diag:  pop bx                  ; slanting: the other diagonal
+        pop ax
+        mov si, WALL_DIAG
+        mov di, WALL_DIAG
+        xor ax, bx              ; (the same signs: down to the left and up to the right)
+        js .put
+        neg si
+.put:   mov ax, cx
+        add ax, si
+        mov [bp + 8], ax        ; point 1: the middle plus the half
+        mov ax, dx
+        add ax, di
+        mov [bp + 10], ax
+        mov ax, cx
+        sub ax, si
+        mov [bp + 12], ax       ; point 2: less it
+        mov ax, dx
+        sub ax, di
+        mov [bp + 14], ax
+        pop es
+        popa
+        pop ax
+        pop bp
+        iret
+
 blow_rand dw RAND_OFF, 0
 blow_charge dw CHARGE_OFF, 0
 

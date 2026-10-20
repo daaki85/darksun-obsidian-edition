@@ -111,8 +111,12 @@ their own:
   power drops. The log shows every change in a party member's PSP
   (` K'ratchek spends 18 PSP (52 -> 34)`).
 - **Psionic defence.** Attacked by a psionic attack mode (Psychic Crush, Ego
-  Whip, Id Insinuation, Psionic Blast), a character automatically raises the
-  best defence mode they know and can pay for, and pays its PSP.
+  Whip, Id Insinuation, Psionic Blast), a character defends with WIS − 7, or
+  with a defence mode already raised (used beforehand, it stays up at no cost
+  each round) if that does better: the mode's rank plus half its cost, which
+  the character pays again, if they can. A monster defends with its level where
+  that's better. Two rolls of 1 to that number, both over the attacker's own
+  roll for the power, resist it.
 - **Mind Bar** adds 75% magic resistance against mind-affecting spells:
   charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
   magic resistance line counts it, and Lower Resistance halving the result.
@@ -120,8 +124,10 @@ their own:
 - Monsters use them too: the Screamer Beetle's special attack is Psychic
   Crush (1d8, save vs paralysis/poison/death for half).
 
-What each costs, from the game's own table (it differs from the books in
-places: Enhanced Strength and Domination cost nothing to start):
+What each costs, from the game's own table, and for three of them worked out as
+they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination and
+Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11, below
+16, and up):
 
 | Power | Discipline | PSP to use | PSP each round kept up |
 |---|---|---|---|
@@ -140,13 +146,13 @@ places: Enhanced Strength and Domination cost nothing to start):
 | Body Weaponry | psychometabolism | 9 | 4 |
 | Cell Adjustment | psychometabolism | 5 | — |
 | Displacement | psychometabolism | 6 | 3 |
-| Enhanced Strength | psychometabolism | 0 | 8 |
+| Enhanced Strength | psychometabolism | (24 − STR) × 2 | 8 |
 | Flesh Armor | psychometabolism | 8 | 4 |
 | Graft Weapon | psychometabolism | 10 | 1 |
 | Lend Health | psychometabolism | 4 | — |
 | Share Strength | psychometabolism | 6 | 2 |
-| Domination | telepathy | 0 | — |
-| Mass Domination | telepathy | 0 | — |
+| Domination | telepathy | 3-18 by level | — |
+| Mass Domination | telepathy | 3-18 by level | — |
 | Psychic Crush (attack mode) | telepathy | 7 | — |
 | Superior Invisibility | telepathy | 5 | 5 |
 | Tower of Iron Will (defence mode) | telepathy | 6 | 0 |
@@ -484,8 +490,9 @@ can't. The Scare code looks meant to let some elf or half-elf priests save
 creature that is both an elf and a half-elf, so no one qualifies.
 
 Rules in the code that never come into play: Cloak of Bravery's +4 against
-fear applies only to a kind of spell that no spell in the game is marked as,
-and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
+fear applies only to a kind of spell that no spell in the game is marked as
+(the patched game marks the fear spells: see
+[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)), and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
 at DEX 1 to −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
 [rule change](FEATURES.md#rule-changes) puts it on the fire, cold and electricity spells.
 And nothing in the game gives saves from items: there are no rings or cloaks

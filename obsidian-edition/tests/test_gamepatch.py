@@ -39,6 +39,18 @@ class GamePatchTests(unittest.TestCase):
             self.assertEqual(got, p.original if p.name in gamepatch.EFFECTS_KEPT else p.replacement, p.name)
         self.assertTrue(set(gamepatch.ROLL_STORE) <= names)  # (STORE and RECALL, switched the same way)
 
+    def test_spell_slips_mended(self):
+        """Absorb Disease's two ways on (the diseased and not) both reach the end of Strength's
+        handler (794ACh) past its effect; Bless's filter pushes the y; the fire elementals' classes
+        15 and 14; the fear spells' records flagged for Cloak of Bravery (100h of +11h)."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        self.assertEqual(0x79446 + 2 + by["absorb_no_strength"].replacement[1], 0x794AC)
+        self.assertEqual(0x7946D + 2 + by["absorb_end"].replacement[1], 0x794AC)
+        self.assertEqual(by["bless_from_cell"].replacement, bytes((0x9F,)))
+        self.assertEqual(by["fire_elemental"].replacement, bytes((15, 14)))
+        self.assertEqual(sorted(p.offset for p in gamepatch.PATCHES if p.name.startswith("brave_fear")),
+                         [0x5400 + 0x3CB4 * 16 + 0x30 + n * 0x20 + 0x12 for n in (21, 43, 78, 132)])
+
     def test_relocated_words_kept(self):
         """A word DOS relocates (from the EXE's relocation table) must be left as it was: the
         camera patch keeps its "mov ax,377Eh" at 1CA15h; a patch changing such a word is refused."""

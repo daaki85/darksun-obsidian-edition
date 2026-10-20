@@ -94,7 +94,7 @@ rules without spoilers, with a section for each class and its kits (also as a we
   a word from the manual ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Hold Undead holding the living, Cause Wounds' odd dice, and more; and the
+  Negative Plane Protection never working, Cause Wounds' odd dice, and more; and the
   rules it got wrong, from spell saves to warriors' attacks, put right
   ([The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 

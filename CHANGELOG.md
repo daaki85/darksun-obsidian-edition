@@ -44,6 +44,16 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   and for `cosmos_spells`.
 
 **Fixed**
+- More of the game's own bugs, whatever the Options (from yuan-ti's notes,
+  each checked in the code): Negative Plane Protection saved as against
+  Vampiric Touch, which allows no save, so it never worked (DSCLOG's `NS_NPP`);
+  Cloak of Bravery's +4 against fear asked for a mark no spell had (now on the
+  fear spells); Absorb Disease gave 1d6 STR too; Bless and Aid's check for an
+  enemy beside an ally measured from (x, x); a berserk or confused member could
+  end it on the monsters' side (`NS_SIDE`); the fire elementals' resistances
+  were swapped; the computer cast its walls as a single point (`NS_WALL`).
+  The dice log's saves show Cloak of Bravery's +4 and name Negative Plane
+  Protection's.
 - **The Loader's changes to the game's item lists could land mid-load.**
   The game gives every item a new number as an area loads; a change made
   across that, from numbers read before it, could cut an item out of its
@@ -101,6 +111,16 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   slowdown was fixed; the README says the expanded panel covers those under
   it. `tests/test_doclinks.py` checks the docs' links and the README's "How it
   works" links.
+- **The original game's code, checked against yuan-ti's findings** (a new
+  engine for the game, github.com/CalvinRodo/yuan-ti): How the game works now
+  has the psionic defence as the code has it (only defence modes already
+  raised count, their cost paid again) and Enhanced Strength's and the
+  Dominations' costs (worked out as used, not 0); armour with a magical power
+  rolls against acid (always coming through). Hold Undead never held the
+  living: every spell's targets are sifted before it lands, and the guard the
+  mod added there stays; the claim is gone from the docs. A target turning to
+  face its first attacker each round and the backstab multiplying only the
+  first attack were confirmed in the code.
 - **Features and rules, a page of their own** (`obsidian-edition/FEATURES.md`):
   the README's rule changes, character customization, expanded features, new
   content, graphics, controls, bug fixes, saves and game speed (about 1,800

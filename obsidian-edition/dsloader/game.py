@@ -182,6 +182,9 @@ NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "
 NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
                     FRIENDS_SPELL: 1}
 NEW_SPELLS_END = 202  # (past the last)
+# Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
+# record copied to the records' room past the new spells, a save against death allowed
+NPP_SAVE_RECORD = 202
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
@@ -381,7 +384,7 @@ EFFECT_RULES = {
     # what the game's turn, movement, casting and damage code does with the rest
     1: "2d4 acid damage each round",
     3: "fights for a side picked at random each turn; can't cast spells",
-    9: "ends fear, and the next fear fails (which ends it)",
+    9: "ends fear, and the next fear fails (which ends it); +4 on saves against fear spells",
     10: "joins the caster's side, the computer controlling it",
     11: "each turn a d10: 1 runs off, 2-6 does nothing, 7-9 fights for a random side, 10 acts normally",
     17: "the computer controls it; can't attack or cast spells (undead are immune; Bravery stops it)",
@@ -517,6 +520,8 @@ DWARF, HALFLING, UNDEAD = 2, 6, 9
 EFFECT_BLESSED, EFFECT_BLIND, EFFECT_DETECT_INVIS, EFFECT_INVISIBLE, EFFECT_INVIS_UNDEAD = 7, 8, 15, 23, 24
 EFFECT_PROT_EVIL, EFFECT_PROT_COLD, EFFECT_PROT_FIRE, EFFECT_PROT_LIGHTNING = 38, 36, 40, 41
 EFFECT_SAVE_PENALTY, EFFECT_SPIRIT_ARMOR, EFFECT_BARKSKIN, EFFECT_PRAYER = 45, 56, 57, 73
+EFFECT_BRAVE = 9  # (Cloak of Bravery: +4 against a spell flagged FEAR_CATEGORY, a charge used)
+FEAR_CATEGORY = 0x100  # (a record's +11h word: the patched game's fear spells, gamepatch brave_fear_*)
 SHEET_SAVES = 0x37  # the five saves, in SAVE_NAMES order
 SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen labels them
 # To hit, as the game's attack setup adds it: STR (melee) or DEX (missiles) from these tables,
@@ -1011,6 +1016,8 @@ class GameData:
             return title(text) if text else f"psionic power {spell}"
         if spell in NEW_SPELLS:
             return NEW_SPELLS[spell]
+        if spell == NPP_SAVE_RECORD:
+            return "Negative Plane Protection"
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)
             return ITEM_ATTACKS[spell].capitalize()
         if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
@@ -1177,6 +1184,8 @@ class GameData:
             out.append((1, EFFECT_NAMES[EFFECT_BARKSKIN]))
         if EFFECT_BLESSED in mine:
             out.append((1, EFFECT_NAMES[EFFECT_BLESSED]))
+        if category & FEAR_CATEGORY and EFFECT_BRAVE in mine:
+            out.append((4, "Cloak of Bravery"))
         if EFFECT_PROT_EVIL in mine and len(caster_sheet) >= SHEET_SIZE and caster_sheet[0x1A] in EVIL_ALIGNMENTS:
             out.append((2, "Prot Evil against an evil caster"))
         for bit, eff, amount in ((0x80, EFFECT_PROT_LIGHTNING, 4), (0x04, EFFECT_PROT_COLD, 3),

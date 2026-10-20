@@ -1341,7 +1341,13 @@ can cast. INT sets two limits:
   mod:* the receiver kept the strength.
 - **Dispel Magic** only dispels. *Without the mod:* the preserver's also stopped
   everyone it caught casting spells, your own party too.
-- **Hold Undead** holds the undead only. *Without the mod:* it held anyone.
+- **Negative Plane Protection** gives a save against an undead's draining
+  touch; saved, the touch is stopped and the undead takes 2d6. *Without the
+  mod:* it never stopped anything.
+- **Cloak of Bravery** gives +4 on saves against fear spells. *Without the
+  mod:* the bonus never applied.
+- **Absorb Disease** takes the disease only. *Without the mod:* it gave the
+  psionicist STR too.
 - **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as the Cure spells
   heal (Light: 1d8 both ways). *Without the mod:* 2d9 and 3d9.
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.

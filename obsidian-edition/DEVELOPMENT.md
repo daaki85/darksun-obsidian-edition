@@ -1719,7 +1719,7 @@ four, an image with it, and weapon blows come to that routine with no spell
 
 ### The game's spells
 
-([In the features page](FEATURES.md#the-games-bugs-fixed).) Five more bugs mended whatever
+([In the features page](FEATURES.md#the-games-bugs-fixed).) More bugs mended whatever
 the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
 `ns_list_` patches):
 
@@ -1739,10 +1739,14 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   50, "No spell use", which Dispel Magic itself doesn't end; the cleric's
   record has none. `dispel_effect` makes it 0.
 - **Hold Undead** (spell 31): the landing routine asks whether the target is
-  undead (7BE20h, AL) and, if not, goes on to 7A359h for any spell.
-  `hold_undead` puts DSCLOG's `NS_HOLD` site over its `or al,al / je +22h`
-  (7A333h): a living target of spell 31 goes to the immunity's way out
-  (7A1F0h).
+  undead (7BE20h, AL) and, if not, goes on to 7A359h for any spell, which
+  looked like Hold Undead holding anything. It doesn't: every spell's targets,
+  one creature's too, are gathered by the area code (8BEB:0000h, 846D0h) and
+  sifted by 80F5:1CF7h (7A897h, its table at 80F5:1DCFh: spell 31's case asks
+  7BE20h too), which drops a living target first. `hold_undead` puts DSCLOG's
+  `NS_HOLD` site over the landing routine's `or al,al / je +22h` (7A333h) all
+  the same, a second guard: a living target of spell 31 goes to the
+  immunity's way out (7A1F0h).
 - **Cause Serious and Critical Wounds** (spells 113 and 128): their records'
   damage dice were 2d9 and 3d9, where the Cure spells (rolled by their own
   code) heal 2d8+1 and 3d8+3. The damage routine (76DA2h) rolls the base dice
@@ -1753,6 +1757,48 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   step of +1 and +3 a 7 levels: one step at any level. `SpellDamage.flat` lets
   the dice log and the Spells tab show it as 2d8+1, not "+1 for each 7 caster
   levels".
+- **Absorb Disease** (power 147): its case in the effect handlers (80F5:089Eh,
+  7943Eh) ran on into Strength's (79470h: 1d6 STR, effect 43h, the psionicist
+  its target), and jumped there too when the target had no disease.
+  `absorb_no_strength` and `absorb_end` send both ways to the end of
+  Strength's case (794ACh: the flags it sets, then the handlers' end).
+- **Bless and Aid's filter** (7B03Dh, 80F5:249Dh): whether one of the caster's
+  side has an enemy within 28 sixteenths, measured from a point given by the
+  creature's place (DS:669Dh + 20h a thing: x, then y at +669Fh), but the
+  routine pushed the x twice. `bless_from_cell` makes the first push the y.
+- **The fire elementals** (kinds 32 and 33): their resistance classes, in the
+  monster kinds' table (3E45h:00A8h + the kind, 43918h), were 14 (+1 weapons,
+  nothing from fire) and 13 (+2 weapons, fire hurting), the wrong way round
+  (the clue book: lesser elementals +1, the others +2). `fire_elemental` makes
+  them 15, a class the game has and no kind used (+2, nothing from fire), and
+  14. DSCLOG's SEG_MOVE copies the table, so the change goes with it.
+- **Cloak of Bravery** (Brave, effect 9): the saving throw's modifiers
+  (79EBDh) give it +4 and use a charge only against a spell whose record has
+  100h in its +11h word (80F5:25A0h), which none had. `brave_fear_*` set it on
+  the spells that make one Afraid (effect 17): Scare (21), Fear (43), Cause
+  Fear (78; a Cloak of Fear's too) and Insect Plague (132). The Loader's saves
+  show the +4 (`FEAR_CATEGORY`).
+- **Negative Plane Protection** (effect 42): an undead's negative-energy touch
+  (element 100h) on a creature under it (7A7C5h) uses a charge, then the
+  target saves (79A71h) as against Vampiric Touch (27h), whose record allows
+  no save (+1Fh bit 0), so it never stopped anything. DSCLOG's `NS_NPP`
+  (replacing "add sp,4 / push 6 / push 27h" at 7A7E9h) makes the charge's two
+  arguments, still on the stack, the save's: 6 and, once the records have room
+  (SEG_MOVED), record 202 (`NPP_SAVE`, past the new spells), Vampiric Touch's
+  copied with a save against paralysis, poison and death allowed (21h). Saved,
+  the game stops the touch and gives the undead 2d6.
+- **Berserk and Confused** (effects 3 and 11): on a computer-run turn the
+  game rolls the creature's side (its creature's +1Dh) anew (8053:000Eh), and
+  when the effect ends (7872Fh) only a charm (10) had its side put back, from
+  the sheet's +3Ch. DSCLOG's `NS_SIDE` (over the end routine's "jmp 788BBh",
+  78785h, where an effect has no case of its own) sends Berserk and Confused
+  to the charm's case (787E9h).
+- **The computer's walls**: the AI's cast (6466:0000h) gives a spell's two
+  points the chosen cell's middle (5A38Ch, four pushes), and a wall (a record
+  whose target, +0Ch, is 2) is as long as its points are apart: one point.
+  DSCLOG's `NS_WALL` puts the points 32 sixteenths either side of the cell,
+  across the line from the caster (along an axis, or the diagonal, whichever
+  the line is nearest), so a wall four cells long; other spells as before.
 
 ### New wizard spells
 

@@ -2631,6 +2631,90 @@ class NewSpellTests(RuleTests):
         self.assertEqual(hold(0, 31), (0x7A1F0 - 0x7A333) & 0xFFFF)
         self.assertEqual(hold(0, 40), 0x7A359 - 0x7A333)
 
+    def test_npp_save(self):
+        """NS_NPP (7A7E9h, "add sp,4 / push 6 / push 27h", the charge's two arguments still on the
+        stack): they become the save's, 6 and the record: Vampiric Touch's (27h) until the records
+        have room, then NPP_SAVE (0CAh), Vampiric Touch's record copied with a save allowed (21h)."""
+        from dsloader import gamepatch
+        mu = self.mu
+        records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
+        touch = bytes(range(0x1F)) + bytes((0xA0,))
+        mu.mem_write(records + 0x27 * 0x20, touch)
+        mu.mem_write(records + 0xCA * 0x20, bytes(0x20))
+        def save():
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_NPP)) + b"\x90" * 4)
+            mu.mem_write(SS * 16 + 0x7FC, struct.pack("<HH", 0x1234, 0x2A))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + 3)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FC)
+            return struct.unpack("<HH", bytes(mu.mem_read(SS * 16 + 0x7FC, 4)))
+        self.moved(0)
+        self.assertEqual(save(), (0x27, 6))
+        self.assertEqual(bytes(mu.mem_read(records + 0xCA * 0x20, 0x20)), bytes(0x20))
+        self.moved(1)
+        self.assertEqual(save(), (0xCA, 6))
+        self.assertEqual(bytes(mu.mem_read(records + 0xCA * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
+        self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
+
+    def test_side_back(self):
+        """NS_SIDE (78785h, "jmp 788BBh", the effect ended at the game's [BP+8]): Berserk (3) and
+        Confused (11) on to the charm's case (787E9h), which puts the side back; any other to 788BBh."""
+        from dsloader import gamepatch
+        mu = self.mu
+        def end(effect):
+            self.at += 0x200
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_SIDE)))
+            for back in (0x788BB - 0x78785, 0x787E9 - 0x78785):
+                mu.mem_write(CALLER * 16 + self.at + back, b"\xf4")
+            mu.mem_write(SS * 16 + BP + 8, struct.pack("<H", effect))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    ebx=0x4321).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=2000)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_BX),
+                              mu.reg_read(r.UC_X86_REG_BP)), (0x800, 0x4321, BP))
+            return mu.reg_read(r.UC_X86_REG_IP) - 1 - self.at
+        self.assertEqual(end(3), 0x787E9 - 0x78785)
+        self.assertEqual(end(11), 0x787E9 - 0x78785)
+        self.assertEqual(end(10), 0x788BB - 0x78785)
+        self.assertEqual(end(17), 0x788BB - 0x78785)
+
+    def test_ai_wall(self):
+        """NS_WALL (5A38Ch, the computer's cast pushing its two points, the cell [BP-2], [BP-4]):
+        a wall (the record's +0Ch 2) across the line from the caster (DS:669Dh + SI x 20h, in
+        sixteenths) WALL_HALF either way (23 each way on the slant); anything else both points at
+        the cell's middle, as the game had them. Point 1 on top: x, y, then point 2."""
+        from dsloader import gamepatch
+        mu = self.mu
+        records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
+        mu.mem_write(records + 54 * 0x20 + 0x0C, bytes((2,)))
+        mu.mem_write(records + 27 * 0x20 + 0x0C, bytes((1,)))
+        def cast(spell, caster_x, caster_y, cell=(10, 20)):
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_WALL)) + b"\x90" * 0x25)
+            mu.mem_write(GAME_DS * 16 + 0x669D + 5 * 0x20, struct.pack("<HH", caster_x, caster_y))
+            mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", cell[1], cell[0]))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    esi=5, edi=spell, eax=0x1111, ebx=0x2222, ecx=0x3333).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + 3)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_SI, r.UC_X86_REG_DI,
+                                                       r.UC_X86_REG_BP, r.UC_X86_REG_AX, r.UC_X86_REG_BX,
+                                                       r.UC_X86_REG_CX, r.UC_X86_REG_DS)],
+                             [0x7F8, 5, spell, BP, 0x1111, 0x2222, 0x3333, GAME_DS])
+            return struct.unpack("<4h", bytes(mu.mem_read(SS * 16 + 0x7F8, 8)))
+        mid = (10 * 16 + 8, 20 * 16 + 8)
+        self.assertEqual(cast(27, 0, 0), mid + mid)
+        self.assertEqual(cast(54, mid[0] - 100, mid[1] + 10), (mid[0], mid[1] + 32, mid[0], mid[1] - 32))
+        self.assertEqual(cast(54, mid[0] + 5, mid[1] - 90), (mid[0] + 32, mid[1], mid[0] - 32, mid[1]))
+        self.assertEqual(cast(54, mid[0] - 50, mid[1] - 50), (mid[0] - 23, mid[1] + 23, mid[0] + 23, mid[1] - 23))
+        self.assertEqual(cast(54, mid[0] - 50, mid[1] + 50), (mid[0] + 23, mid[1] + 23, mid[0] - 23, mid[1] - 23))
+
     def rules_hi(self, value):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
 
