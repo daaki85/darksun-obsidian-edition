@@ -1669,6 +1669,7 @@ AD&D's tables:
 | Section | Switch | Default |
 |---|---|---|
 | In the game | a combat log in the game (L shows and hides it) | on |
+| | how much it says: at the least, in short or in detail | in short |
 | | ... always shown, below the map instead of over it | off |
 | | describe monsters when you Look at them in a fight | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
@@ -1680,6 +1681,7 @@ AD&D's tables:
 | | rings in a fight: none, under the enemy chosen with Tab, or under all the enemies | under the enemy chosen |
 | | scrolling by holding the right button | off |
 | Game speed | GOG's own, faster or fastest | faster |
+| Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
 Rule changes, customization, expanded features and the new spells count at
 once in a game started from the Loader; the new people, quest and items, and

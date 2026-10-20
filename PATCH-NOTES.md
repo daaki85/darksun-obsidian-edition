@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.5.0 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.5.0 · Every change from the original game, 2.6.0's (in progress) included*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -210,7 +210,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
-- **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25, and pay 60% of an item's price *(was all of it)*.
+- **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.
+- **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
 - **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
 
 ## Graphics
@@ -219,11 +220,10 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
-- **[New]** A red ring can mark the enemy you've chosen, or all of them.
 
 ## Quality of Life
 
-- **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse.
+- **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen, or all of them.
 - **[New]** Press the mouse wheel and drag to scroll the map (or, as an option, hold the right button).
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was: it followed each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
@@ -247,24 +247,24 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Bug Fixes
 
-- **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
-- **[Fixed]** A character not yet played showed 0 in every thief skill.
-- **[Fixed]** The game's Sling +1 had no icon.
 - **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
 - **[Fixed]** **Armor** used up two charges for each hit, and one for any spell cast on its wearer, even a friend's Bless. Now one charge for each damaging hit.
 - **[Fixed]** **Share Strength** left its strength on the one who got it after the power ended. Now it ends on them too.
 - **[Fixed]** The preserver's **Dispel Magic** also stopped everyone it caught from casting spells, your own party included. Now it only dispels.
-- **[Fixed]** **Negative Plane Protection** never stopped anything: it saved as against Vampiric Touch, which allows no save. Now a save against death magic stops an undead's draining touch, and the undead takes 2d6.
-- **[Fixed]** **Cloak of Bravery**'s +4 on saves against fear never applied. Now it does against Scare, Fear, Cause Fear and Insect Plague.
+- **[Fixed]** **Cause Serious and Critical Wounds** did 2d9 and 3d9 damage. Now 2d8+1 and 3d8+3, as AD&D has them and as the Cure spells heal.
 - **[Fixed]** **Absorb Disease** gave the psionicist 1d6 STR as well (and the STR alone with no disease to take). Now it only takes the disease.
 - **[Fixed]** **Bless** and **Aid** left out the wrong allies: the check for an enemy beside each one measured from the wrong place.
+- **[Fixed]** **Negative Plane Protection** never stopped anything: it saved as against Vampiric Touch, which allows no save. Now a save against death magic stops an undead's draining touch, and the undead takes 2d6.
+- **[Fixed]** **Cloak of Bravery**'s +4 on saves against fear never applied. Now it does against Scare, Fear, Cause Fear and Insect Plague, and the new Spook.
+- **[Fixed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 - **[Fixed]** A **berserk** or **confused** party member could be left fighting for the monsters when it wore off. Now they're back on your side.
 - **[Fixed]** The **fire elementals**' resistances were the wrong way round. Now the fire elemental needs +2 weapons and the lesser one +1, and neither is hurt by fire.
 - **[Fixed]** Monsters' **walls** (Wall of Fire, Ice, Force and the rest) came out a single point. Now they run across the line of fire, four cells long.
-- **[Fixed]** **Cause Serious and Critical Wounds** did 2d9 and 3d9 damage. Now 2d8+1 and 3d8+3, as AD&D has them and as the Cure spells heal.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's armour penalty looked at the hands, quiver and legs, and never at the armour worn.
-- **[Fixed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
+- **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
+- **[Fixed]** A character not yet played showed 0 in every thief skill.
 - **[Fixed]** The **Trustee** in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to.
+- **[Fixed]** The game's Sling +1 had no icon.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
 Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); and thief skills (Improved Thieving).
@@ -277,5 +277,6 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - A character silenced by the preserver's Dispel Magic ("No spell use" on their Effects screen) casts again once it wears off.
 - A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 - Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
+- A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

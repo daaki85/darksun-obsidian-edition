@@ -1776,8 +1776,8 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   (79EBDh) give it +4 and use a charge only against a spell whose record has
   100h in its +11h word (80F5:25A0h), which none had. `brave_fear_*` set it on
   the spells that make one Afraid (effect 17): Scare (21), Fear (43), Cause
-  Fear (78; a Cloak of Fear's too) and Insect Plague (132). The Loader's saves
-  show the +4 (`FEAR_CATEGORY`).
+  Fear (78; a Cloak of Fear's too) and Insect Plague (132); Spook (200) has it
+  from DSCLOG's `NS_PATCHES`. The Loader's saves show the +4 (`FEAR_CATEGORY`).
 - **Negative Plane Protection** (effect 42): an undead's negative-energy touch
   (element 100h) on a creature under it (7A7C5h) uses a charge, then the
   target saves (79A71h) as against Vampiric Touch (27h), whose record allows
@@ -1892,7 +1892,7 @@ copy of RESOURCE.GFF.
   REFLECTED IMAGE and icon 21199, kept past the spell rows (segment 4010h at
   1F8h, after row 211's room), which the table's segment reaches.
 - Spook is Charm Person's record (flags 4204h: mind-affecting, undead
-  immune, magic resistance) with Afraid's effect 17 for 3 rounds (`+4` 13h,
+  immune, magic resistance; 4304h with fear's 100h for Cloak of Bravery) with Afraid's effect 17 for 3 rounds (`+4` 13h,
   3d1; `+5` 0; `+7` 60) and, as Charm Person, nothing flying. In the save
   routine (79A71h, `PROBE_SAVE` at 79BB7h) the helper takes 1 for every 2 of
   the caster's levels (preserver, or the Shinobi's casting level), at most 6,

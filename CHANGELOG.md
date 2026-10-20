@@ -44,11 +44,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   and for `cosmos_spells`.
 
 **Fixed**
-- More of the game's own bugs, whatever the Options (from yuan-ti's notes,
+- **More of the game's own bugs**, whatever the Options (from yuan-ti's notes,
   each checked in the code): Negative Plane Protection saved as against
   Vampiric Touch, which allows no save, so it never worked (DSCLOG's `NS_NPP`);
   Cloak of Bravery's +4 against fear asked for a mark no spell had (now on the
-  fear spells); Absorb Disease gave 1d6 STR too; Bless and Aid's check for an
+  fear spells, Spook's record too); Absorb Disease gave 1d6 STR too; Bless and Aid's check for an
   enemy beside an ally measured from (x, x); a berserk or confused member could
   end it on the monsters' side (`NS_SIDE`); the fire elementals' resistances
   were swapped; the computer cast its walls as a single point (`NS_WALL`).

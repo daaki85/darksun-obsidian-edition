@@ -613,7 +613,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-hurts-a-monster-the-look-box)
 
 An item that casts a spell with charges (the wands, the Storm Ring, the
 necklaces) shows how many it has left in its item box (right-click it on the
-inventory screen), under its name, counting down as it's used:
+inventory screen), under its name, counting down as it's used. A cloak's,
+boots' or belt's box shows what it adds to thief skills (with
+[improved thieving](FEATURES.md#improved-thieving) on):
 
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
 
@@ -717,7 +719,8 @@ tables are read from memory):
 
 With [AD&D's class tables](FEATURES.md#adds-class-tables) on (the default), clerics',
 druids' and preservers' come from AD&D's tables instead. Some [kits](FEATURES.md#kits)
-have more or fewer.
+have more or fewer, and the [Veiled Robe](ITEMS.md#every-magic-item) adds a wizard slot at
+spell levels 1 to 3.
 
 The game's WIS bonus doesn't depend on level, so it gives a 2nd-level druid
 with WIS 19 slots at the 2nd to 4th levels too, though a druid that level

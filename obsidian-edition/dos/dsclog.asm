@@ -12248,6 +12248,7 @@ ns_patches:
         NS_PATCH SPOOK_SPELL, 4, 1, 0x13        ; Spook: 3 rounds, not Charm Person's for ever ...
         NS_PATCH SPOOK_SPELL, 5, 2, 0
         NS_PATCH SPOOK_SPELL, 7, 2, 60          ;   (nothing flies to it, as Charm Person)
+        NS_PATCH SPOOK_SPELL, 0x11, 2, 0x4304   ;   ... and fear's 100h, Cloak of Bravery's +4 (gamepatch brave_fear_*)
         NS_PATCH FRIENDS_SPELL, 4, 1, 0x41      ; Friends: 1d4 rounds and 1 a level, not Strength's hour
         NS_PATCH FRIENDS_SPELL, 5, 2, 1         ;   a level (+1Dh's low bits: the levels a "level"
         NS_PATCH FRIENDS_SPELL, 7, 2, 60        ;   counts, 1) ...

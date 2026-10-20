@@ -2813,7 +2813,7 @@ class NewSpellTests(RuleTests):
     def test_new_records(self):
         """NS_SETUP once the records have room (SEG_MOVED): Reflected Image is Mirror Image's record
         with one image (1d1, none a level), Spook Charm Person's with Afraid (17) for 3 rounds and
-        Charm Person's flight byte (FFh, none, in the game), Friends Strength's for 1d4 rounds and 1 a level on
+        Charm Person's flight byte (FFh, none, in the game) and fear's flag, Friends Strength's for 1d4 rounds and 1 a level on
         the caster; their rows 1st level; Friends' effect (74) named. Without the room their records' place is left alone."""
         from dsloader import gamepatch
         recs = (GAME_DS - (0x4356 - 0x3CB4)) * 16 + 0x30
@@ -2831,6 +2831,7 @@ class NewSpellTests(RuleTests):
         reflect, spook, friends = (bytes(self.mu.mem_read(recs + n * 0x20, 0x20)) for n in (199, 200, 201))
         self.assertEqual((reflect[4], reflect[5:7], reflect[0x19]), (0x11, b"\0\0", 0x19))
         self.assertEqual((spook[4], struct.unpack_from("<H", spook, 7)[0], spook[0x10], spook[0x19]), (0x13, 60, 0x02, 17))
+        self.assertEqual(struct.unpack_from("<H", spook, 0x11)[0], 0x4304)  # (Charm Person's 4204h and fear's 100h)
         self.assertEqual((friends[4], struct.unpack_from("<HH", friends, 5), friends[0x0C], friends[1:3]),
                          (0x41, (1, 60), 7, b"\xff\xff"))
         self.assertEqual([self.mu.mem_read(rows + n * 7, 1)[0] for n in (199, 200, 201)], [1, 1, 1])
