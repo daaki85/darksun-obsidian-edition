@@ -99,7 +99,6 @@ class DefilerScrolls:
         area = gd.region()
         table = gd.creatures(SEEN)
         size = game.CREATURE_SIZE
-        out: List[str] = []
         for index in range(game.PARTY_SIZE, len(table) // size):
             rec = table[index * size:(index + 1) * size]
             name = rec[game.CREATURE_NAME:game.CREATURE_NAME + 16].split(b"\0", 1)[0]

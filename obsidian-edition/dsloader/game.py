@@ -445,7 +445,7 @@ def effect_text(effect: "Effect", charges: Optional[int], seconds: Optional[int]
 
 
 def ordinal(n: int) -> str:
-    return f"{n}{'st' if n == 1 else 'nd' if n == 2 else 'rd' if n == 3 else 'th'}"
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
 def slots_text(levels) -> str:
@@ -581,10 +581,6 @@ CLASS_NAMES = {1: "Cleric (air)", 2: "Cleric (earth)", 3: "Cleric (fire)", 4: "C
                5: "Druid (air)", 6: "Druid (earth)", 7: "Druid (fire)", 8: "Druid (water)", 9: "Fighter",
                10: "Gladiator", 11: "Preserver", 12: "Psionicist", 13: "Ranger (air)", 14: "Ranger (earth)",
                15: "Ranger (fire)", 16: "Ranger (water)", 17: "Thief"}
-
-
-def ordinal(n: int) -> str:
-    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
 def class_share(sheet: bytes) -> int:

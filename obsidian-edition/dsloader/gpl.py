@@ -17,7 +17,6 @@ The decoder was checked against every script: all of them read to the end, and e
 jump and call target in them lands on the start of a command.
 """
 
-import struct
 from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Tuple
 
 from .gff import read_gff

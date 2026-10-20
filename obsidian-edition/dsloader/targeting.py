@@ -78,7 +78,7 @@ class Targeting:
                 self.chosen = order[(order.index(self.chosen) + steps) % len(order)]
             else:
                 self.chosen = order[0] if steps > 0 else order[-1]
-            out_of_view = self._show(gd, tsr_hdr, self.chosen)
+            self._show(gd, tsr_hdr, self.chosen)
             index = gd.combatant_creature(self.chosen)
             if index is not None:
                 rec = gd.creature(index)

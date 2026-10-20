@@ -20,9 +20,9 @@ import random
 import re
 import struct
 import time
-from collections import Counter, deque
+from collections import Counter
 from dataclasses import dataclass
-from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
@@ -1838,7 +1838,7 @@ class DiceLog:
         g = self.game
         d20 = scaled(e.raw, 20) + 1
         thac0, ac = e.arg(0x0A), e.arg(0x0C)
-        attacker, sheet_item, item, item_type, mode = e.arg(0x0E), e.arg(0x10), e.arg(0x12), e.arg(0x14), e.arg(0x16)
+        attacker, item, item_type, mode = e.arg(0x0E), e.arg(0x12), e.arg(0x14), e.arg(0x16)
         attacker_combatant, target_combatant = e.arg(0x18), e.glob[0]
         need = thac0 - ac
         hit = d20 == 20 or (d20 != 1 and d20 >= need)

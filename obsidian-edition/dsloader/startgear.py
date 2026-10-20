@@ -101,7 +101,6 @@ def fill_member(gd, member: int) -> List[str]:
     from . import pickpocket, ring
     out: List[str] = []
     sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
-    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
     read: Callable[[int], bytes] = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
     name = lambda rec: gd.item_name(struct.unpack_from("<H", rec, game.ITEM_NAME)[0])

@@ -253,3 +253,58 @@ class MoneyTest(ItemWatchTest):
     def test_full_price_sale(self):
         """Without the CHA rule a shop pays the whole price."""
         self.assertEqual(itemwatch.sale_prices(self.sword.record), {100, 60})
+
+
+class AreaChangeTest(ItemWatchTest):
+    """An area change gives every item a new number: the items are matched through it, and one
+    with no match is news; a game loaded (another set of items) is not."""
+
+    def party(self, base, drop=()):
+        names = [("Inix Hide Chest Armor", "chest", 7), ("Bone Long Sword", "right hand", 9),
+                 ("Ring", "finger", 12), ("Boots", "foot", 13), ("Cloak", "cloak", 14)]
+        return [item(base + n, n % 2, label, slot=slot, typ=typ)
+                for n, (label, slot, typ) in enumerate(names) if label not in drop]
+
+    def test_renumbered_nothing_lost(self):
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = self.party(200)
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+        self.assertEqual(self.watch.reports, [])
+
+    def test_renumbered_one_lost(self):
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = []                         # (the party's lists empty while the area loads)
+        self.run_for(1, start=3)
+        self.data.items = self.party(200, drop=("Ring",))
+        out, _ = self.run_for(5, start=5)
+        self.assertEqual(len(out), 1)
+        self.assertIn("Ring", out[0])
+        self.assertIn("change of area", out[0])
+        self.assertEqual(len(self.watch.reports), 1)
+
+    def test_watching_goes_on_after(self):
+        """After an area change the new numbers are watched as before."""
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = self.party(200)
+        self.run_for(4, start=3)
+        self.data.items = self.party(200, drop=("Boots",))
+        out, _ = self.run_for(5, start=8)
+        self.assertTrue(any("Boots" in line for line in out))
+
+    def test_another_game_loaded(self):
+        self.data.items = self.party(10)
+        self.run_for(2)
+        self.data.items = [item(300 + n, 2, f"Thing {n}", slot=None, typ=40 + n) for n in range(5)]
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+
+    def test_number_reused_by_another_item(self):
+        """The item's number now names another item of the party's: the item is gone all the same."""
+        self.run_for(2)
+        self.data.items = [self.sword, item(12, 1, "Bone Dagger", slot=None, typ=30)]
+        out, _ = self.run_for(5, start=3)
+        self.assertTrue(any("Inix Hide" in line for line in out))
