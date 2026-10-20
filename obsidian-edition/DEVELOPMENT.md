@@ -377,6 +377,44 @@ program, so a `segment:offset` address is simply `segment × 16 + offset` in
 guest memory. If detection fails on an unusual DOSBox build, you can pass the
 block's host address with `--host-base`.
 
+### Changing the game's item lists
+
+The game rebuilds its item lists as an area loads (and at START GAME): it
+writes the area it leaves out, reads the next one in, and gives the party's
+items new records, every one a new number (seen: 70 items of 70 renumbered at
+each change between the pens and the arena). Its free lists of item records and
+of things (`DS:4D76h`, `DS:4D72h`, the count in use at `DS:4C48h`) move as it does.
+A change of the Loader's made across that, from numbers read before it, would
+land on records that aren't what they were: a free record the game hands out
+too, or a list linked through an item that is now another's. An item cut out
+of its list that way is gone without a trace.
+
+So every write of the Loader's to the item lists goes through one gate
+(`itemgate.py`). `GuestMemory.write` asks `ItemGate.covers` whether a write
+touches them: the free lists' heads, the item table (400 records of 21 bytes
+from the far pointer at `DS:165Dh`), the things table, or a creature's list
+heads (`CREATURE_ITEM_LISTS`). Each pass of the dice log (`DiceLog.lines`)
+begins the gate first, noting the heads, the region (`DS:117Ch`) and the item
+and creature tables' pointers. The pass's first such write waits until
+`itemgate.WAIT` (60 ms) has gone by since then, pauses DOSBox
+(`ProcessMemory.suspend`: SIGSTOP on Linux, waiting until each thread shows
+stopped, about 1.5 ms; `NtSuspendProcess` on Windows), and reads the same
+things again. All as they were: the writes go ahead with the game held still,
+until the block ends (`itemgate.release`) or the pass does. Anything changed:
+`ItemsBusy` (a `ValueError`), none of the pass's item writes are made, and the
+next pass tries again. A process that can't be paused gets the same look with
+the writes right after it. A write outside a pass (a tool's) has the lists
+looked at over the wait first, without pausing. The Loader lets the game go if
+it exits mid-pass (`atexit`).
+
+Whatever can't be done twice takes the gate before it starts
+(`itemgate.hold`), so a refusal leaves nothing half done: Pick Pockets before its
+d100 (the request stays unanswered until a later pass), a defiler's scroll
+before its roll (the defiler isn't marked rolled for), Kalzith's loot before
+`LOOTED`, and the arena ring before the search counts as answered. A sold
+item's place in the buyback queue moves on only once it is kept, and the game's
+own party's steps are marked done only once made.
+
 
 ## How each part works
 

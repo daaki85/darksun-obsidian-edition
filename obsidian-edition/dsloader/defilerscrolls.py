@@ -22,7 +22,7 @@ import random
 import struct
 from typing import Callable, Iterable, List, Optional, Set, Tuple
 
-from . import game, kalzith, npcitems
+from . import game, itemgate, kalzith, npcitems
 
 CHANCE = 5  # percent
 DEFILER_CLASS = 18  # (a sheet's classes, SHEET_CLASSES: the defilers', which no party member has)
@@ -110,10 +110,12 @@ class DefilerScrolls:
             key = (area, index, name)
             if key in self.rolled or not self._is_defiler(gd, index, key):
                 continue
-            self.rolled.add(key)
             who = name.decode("cp437", "replace")
             if self._carries_one(gd, index):
+                self.rolled.add(key)
                 continue  # (given one before this game was saved)
+            itemgate.hold(gd)  # (before the roll: the game busy with its lists, rolled for in a later pass)
+            self.rolled.add(key)
             if roll() > self.chance:
                 continue
             pool = spells(gd.spell_level, new_spells)

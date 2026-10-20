@@ -234,6 +234,6 @@ def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]], starting_gear: b
         for key, step in steps:
             if (name, key) in done:
                 continue
-            done.add((name, key))
             out += step(gd, member, name)
+            done.add((name, key))  # (after: a step the game's busy lists put off is tried again)
     return out

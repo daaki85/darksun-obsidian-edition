@@ -28,7 +28,7 @@ does the slave-pen items (npcitems); the game's shop screen (24h) sells what he 
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import game, gpl
+from . import game, gpl, itemgate
 from .gff import read_gff
 
 OBJECT = 1000  # (no object of the game's has it. Past the game's object table, 520 long: the
@@ -760,6 +760,7 @@ def loot(gd, choose: Callable = None) -> List[str]:
     from . import ring
     if not gd.flag(DIED) or gd.flag(LOOTED):
         return []
+    itemgate.hold(gd)  # (before LOOTED: the game busy with its lists, looted in a later pass)
     it = ring.Items(gd)
     held = _held_by_party(gd, it)
     mine = {-(SCROLL_OBJECT + k): name for k, (_, name, _) in enumerate(SCROLLS)}

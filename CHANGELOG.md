@@ -22,6 +22,23 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   first five fights, the 1000th and the 5000th). `combatlog.arena_rect`,
   `arena_line`.
 
+**Fixed**
+- **The Loader's changes to the game's item lists could land mid-load.**
+  The game gives every item a new number as an area loads; a change made
+  across that, from numbers read before it, could cut an item out of its
+  list (a likely way for an item to vanish without a trace). Every write to
+  the item lists now goes through one gate (`itemgate.py`, in
+  `GuestMemory.write`): the first in a dice log pass waits until the game's
+  free lists, area and item table have stayed as they were for 60 ms, pauses
+  DOSBox (`ProcessMemory.suspend`/`resume`), looks again, and writes with the
+  game held still; anything changed and the pass's item writes wait for the
+  next. Kalzith's stock and loot, the arena ring, buyback and defilers' scrolls
+  had no such check before, and the others' (`_items_still`) left a gap
+  between the look and the writes. Rolls and queues taken before a refused
+  write are kept for the next try (`itemgate.hold`; buyback, defilers'
+  scrolls, Pick Pockets, the arena ring, the game's own party). Tests in
+  `test_itemgate.py`.
+
 **Changed**
 - **The Healer has the sphere of the cosmos, and is a water cleric's only**
   (with kits on). The cosmos's spells are those every druid casts and no

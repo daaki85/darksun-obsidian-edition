@@ -765,6 +765,9 @@ class GameData:
         self.load_seg = ds - DGROUP
         if hasattr(guest, "guarded"):  # (the C runtime's check, at exit: "Null pointer assignment")
             guest.guarded["the game's data segment's start"] = (ds * 16, ds * 16 + NULL_AREA)
+        if hasattr(guest, "item_gate"):  # (the Loader's changes to the item lists: never mid-load)
+            from .itemgate import ItemGate
+            guest.item_gate = ItemGate(self)
         self.rules = RULES_IN_FORCE if rules is None else rules
         self.belt = BELT_IN_FORCE
         self.dance: Dict[int, int] = {}  # each party member's Battle Dancer's dance now (+1, -1: dance.py)

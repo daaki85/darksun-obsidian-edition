@@ -24,7 +24,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -620,6 +620,8 @@ class DiceLog:
                     result = pickpocket.attempt(self.game, self.picked, who=index, thief=item & 0xFF)
                 if result is None:
                     result = pickpocket.Attempt("There are no pockets to pick there.", [])
+        except itemgate.ItemsBusy:
+            return []  # (the game changing its item lists: answered in a later pass)
         except (struct.error, IndexError, ValueError):
             result, taken = None, False
         self._write_pick_text(result.text if result else "")
@@ -959,7 +961,19 @@ class DiceLog:
         return " and ".join(names), to_hit, damage
 
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
-        """Everything new since the last call, as log lines. Call it every few tens of ms."""
+        """Everything new since the last call, as log lines. Call it every few tens of ms. Its
+        changes to the game's item lists are made only if the game left them be all the while
+        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on)."""
+        gate = getattr(self.guest, "item_gate", None)
+        if gate is not None:
+            gate.begin()
+        try:
+            return self._lines(show_all, now)
+        finally:
+            if gate is not None:
+                gate.end()
+
+    def _lines(self, show_all: bool, now: Optional[float]) -> List[str]:
         now = time.monotonic() if now is None else now
         out: List[str] = []
         for e in self.poll():
@@ -988,10 +1002,14 @@ class DiceLog:
             self._write_stats()
             if not self._party_check(now):
                 out += self.tracker.check(now)
-                if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
-                    out += self.buyback.watch(self.game, self.tsr_hdr)
-                if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
-                    out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
+                try:  # (each waits for a later pass while the game changes its item lists)
+                    if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
+                        out += self.buyback.watch(self.game, self.tsr_hdr)
+                    if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
+                        out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
+                except itemgate.ItemsBusy:
+                    pass
+                itemgate.release(self.game)
                 out += self._arena_ring(now)
                 out += self._drawn(now)
                 self._kalzith_sold_out()
@@ -1047,7 +1065,7 @@ class DiceLog:
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
             still = self._items_still()
-            if still:  # (the item lists changed only while the game leaves them be)
+            if still:  # (the item lists changed only while the game leaves them be: itemgate.py)
                 # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
                 # specs decide its weapon, and the steps after build on that weapon, in this order.
                 new_ok = not self._weapons_asked()
@@ -1065,6 +1083,7 @@ class DiceLog:
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
                 if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                     out += pickpocket.mend_lists(self.game)
+                itemgate.release(self.game)
             if self.cilla_elf:
                 out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
             # (the slave pens' and the world's new items are in the game's data: worldgear.py)
@@ -1085,8 +1104,10 @@ class DiceLog:
             tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
-        except (struct.error, IndexError, ValueError):
+        except (struct.error, IndexError, ValueError):  # (itemgate.ItemsBusy too: tried in a later pass)
             return out
+        finally:
+            itemgate.release(self.game)
         return out
 
     def _drawn(self, now: float) -> List[str]:
@@ -1285,10 +1306,14 @@ class DiceLog:
             return []
         needed = self.arena_ring and ring.ring_needed(self.game)
         seq, = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SWAP_SEQ, 2))
-        fired, self._swap_seq = seq != self._swap_seq, seq
+        fired = seq != self._swap_seq
         out = []
         if needed and fired:
+            itemgate.hold(self.game)  # (ItemsBusy: the search is answered in a later pass)
+        self._swap_seq = seq
+        if needed and fired:
             given = ring.give_ring(self.game)
+            itemgate.release(self.game)
             out.append(given or "No one in the party has room for the ring: make room and look at the body again.")
             needed = given is None
         on = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_SWAP_ON, 2))[0]
