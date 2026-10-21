@@ -45,6 +45,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (SI, as a ring's) and leaves it out of the armour value; still only without armour on the arms,
   legs or head. Seen in a save: AC 0 with the robe off, -1 with it on, the spell and a shield on.
   `RobeTests` in `test_dsclog.py`.
+- **The Trustee stood still for good after a load** (the game's own way too). His rounds are
+  his "no orders" script (the pens' master script's 6Fh: GPL 8 at 3767), which runs only while
+  he has no order; a walk is an order (15) that ends when he gets there. A save made while he
+  walked keeps the order but not the way, so once loaded he stood with it forever, and after a
+  talk he was busy for good. The Loader now takes such an order back (`stuckwalk.py`: anyone
+  with a no-orders script, standing still with a walk order for 30 game seconds, out of
+  fights), and his script sends him on; the dice log says "Trustee walks on". In the save it
+  was found in, he walked his rounds again about 20 s after loading. `test_stuckwalk.py`.
 
 ## Pull request #52 ([merged 2026-10-20](https://github.com/daaki85/darksun-obsidian-edition/pull/52))
 
