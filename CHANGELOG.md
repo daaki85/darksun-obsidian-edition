@@ -19,6 +19,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   animations on and off, so a button A read as a key it wasn't. `combat_log_arena` is no longer
   saved.
 
+**Added**
+- **Enlarge shows in the damage line.** A melee hit by someone under Enlarge now reads e.g.
+  `(1d8 = [5] +12 STR 24) x140% Enlarge (level 4)`, as the game works it out (DSUN 7C211h): the
+  dice, weapon and STR bonus together, times 100% + 10% a level, rounded down, before a backstab's
+  multiplier. The level is the caster's level for the spell (as Dispel Magic weighs it), each
+  Enlarge on the attacker added up. Missiles don't get it. In `test_dicelog.py`.
+
 **Fixed**
 - **Dinos's talk lost its upper box after the vulture meal**: the XP's words go to the narration
   window, which takes the portrait and his words away, and his menu came back under an empty

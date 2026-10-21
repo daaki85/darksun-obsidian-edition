@@ -2086,6 +2086,13 @@ class DiceLog:
             if str_bonus:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
+            # Enlarge (DSUN 7C211h, with the STR bonus): +10% a level of the spell, the levels of
+            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down
+            level = self._enlarge_level(e.parent_arg(0x18))
+            if level:
+                percent = 100 + 10 * level
+                total = total * percent // 100
+                steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
         # that on the attacker's first attack of the round: x2, x3 from thief level 5, x4 from 9,
         # x5 from 13. The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
@@ -2102,6 +2109,19 @@ class DiceLog:
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         return ["  " + line]
+
+    def _enlarge_level(self, combatant: Optional[int]) -> int:
+        """The level Enlarge counts at on COMBATANT: each Enlarge on them at its caster's level
+        (as Dispel Magic weighs it), added up; 0 without one."""
+        if combatant is None:
+            return 0
+        g = self.game
+        level = 0
+        for effect, spell in g.effect_spells():
+            if effect.owner == combatant and effect.id == game.ENLARGE_EFFECT:
+                caster = g.combatant_creature(effect.caster)
+                level += (g.effect_caster_level(caster, spell) if caster is not None else None) or 0
+        return level
 
     def _overlay_image(self, e: Entry) -> bool:
         """Mirror Images' d100 on a spell (IMAGE_SPELL_RETURN) when the overlay manager has
