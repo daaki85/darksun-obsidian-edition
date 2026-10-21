@@ -380,19 +380,20 @@ there; **-** makes it smaller, or the strip below the map covers nothing.
   is as new lines come, and a **Latest** chip at its foot says how many have;
   click it (or scroll to the end) to follow again. Clicks on the panel are
   its own: the party doesn't walk there.
-- **Its buttons**, on the right of its top line: **A**, which puts the party's
-  count of arena fights in the top line in place of the round (lit while on; a
-  click again brings the round back): the game's own count, one a trip into
-  the arena however many waves come (see
-  [the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights));
-  **L**, which hides it as the
+- **The arena's count of fights.** Between fights in the slave pens and the
+  arena, the top line says how many arena fights the party has had
+  (`Arena fights: 4`): the game's own count, one a trip into the arena however
+  many waves come (see
+  [the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)).
+  In a fight it says the round, and once the party has escaped Draj it's gone.
+  (Docked or expanded; collapsed, the one line stays the newest.)
+- **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
   bigger panel. Collapsed, it is one line, the newest; expanded, it is
   taller (11 lines) and has filters along its top: **All**, **Party** (the
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
-  throws and magic resistance). Its size, and the A, are remembered. (The
-  strip below the map has no buttons, so no A.)
+  throws and magic resistance). Its size is remembered.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
 

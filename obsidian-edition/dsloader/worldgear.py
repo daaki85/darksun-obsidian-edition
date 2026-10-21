@@ -275,6 +275,14 @@ GIFTS: Tuple[Gift, ...] = (
 )
 CHAYAS_CHEST = 2249  # (her script's)
 WEAPON_RACK, PENS, PENS_RACK = 1647, 0x29, 131  # (the slave pens' rack: its region, its entity)
+# Object 2563 is never one of ours: with an object of that number in SEGOBJEX, the game won't let
+# an item be put down on another in a character's pack (the swap is refused, whatever the items
+# and whoever's pack; 2400 and 2599 tested as fine). The pens' rack was 2563 from 1.2.0 to 2.6.0;
+# in a save from then that has been to the pens the game, finding no object 2563, leaves it off
+# the map (renumbering it in the save doesn't bring it back: something else there keeps 2563).
+NOT_AN_OBJECT = 2563
+PENS_RACK_OBJECT = 2599
+RACK_TYPE = 0x6C  # (the weapon racks' item type)
 DAGOLAR, BALKAZAR = 26, 14  # (Dagolar: the one with Dag's Dagger, object 26; his double is 27)
 MAGIC: Tuple[Gift, ...] = (
     Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1)), (283,), 0x0B),
@@ -318,7 +326,7 @@ MAGIC: Tuple[Gift, ...] = (
     Gift("Maris", (weapon(*OBSIDIAN_SHORT_SWORD_1),), (228,), 0x22),
     Gift("Chaya's chest", (weapon(*BONE_SHORT_SWORD_1),), (CHAYAS_CHEST,)),
     Gift("Troop Leader", (weapon(*POLEARM_2),), (18,), 0x21),
-    Gift("Weapon Rack", (weapon(*BONE_POLEARM_1),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, 2563),
+    Gift("Weapon Rack", (weapon(*BONE_POLEARM_1),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT),
          instead=(BONE_POLEARM, 0)),
     # the magic shields: Gutterward on a skeleton in the warrens (its own object), Ironbulwark on
     # the Guardian of Balkazar's fortress

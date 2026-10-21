@@ -443,6 +443,10 @@ def crash_report(code: int, note: Optional[str], settings: dict, dice: str, dial
         lines += ["", note]
     elif note:
         lines += ["", "The game stopped with an error. On the screen:", note]
+    from . import heapcheck
+    memory = heapcheck.WATCH.lines()
+    if memory:
+        lines += [""] + memory
     lines += ["", "Switches (as set on the Options tab, else the default):"]
     lines += [f"  {key}: {value!r}" for key, value in sorted(effective_switches(settings).items())]
     if refused:

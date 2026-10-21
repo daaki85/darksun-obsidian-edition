@@ -89,6 +89,7 @@ VEC_BOX_AC = 0x88
 VEC_TICK = 0x87
 VEC_POISON = 0x86
 VEC_ARROW = 0x85
+VEC_OVR_BUF = 0x84
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -667,6 +668,11 @@ PATCHES = (
     # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
     # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
     Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
+    # the overlay manager's buffer (twice the largest overlay, 32,992 bytes, the game's for good):
+    # call far farmalloc becomes "int / test ax,imm16", the call's segment, which DOS relocates,
+    # the test's word (DSCLOG gives a block it has kept in upper memory, else calls farmalloc): the
+    # game's heap, in the 640 KB, that much bigger
+    Patch("overlay_umb", 0x3C68C, bytes.fromhex("9a31120000"), bytes.fromhex("cd%02xa90000" % VEC_OVR_BUF)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),

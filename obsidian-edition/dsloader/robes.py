@@ -1,8 +1,9 @@
 """Two magic robes for those who go without armour: preservers, psionicists and druids (the
-type's class bits). A robe is worn on the chest, in the chest armour's place, its plus counting
-for AC as bracers' does (and, like them, only with no armour on the arms, legs or head), and it
-isn't armour: a preserver casts in it, a cloak of protection still counts (DSCLOG's ROBE type,
-BRACERS_AX, ROBE_PLUS).
+type's class bits). A robe is worn on the chest, in the chest armour's place, its plus bettering
+AC on top of the rest, as a ring of protection's does (only with no armour on the arms, legs or
+head, as the bracers; not as the armour's value, which the Armor spell's AC 6 would take the
+place of), and it isn't armour: a preserver casts in it, a cloak of protection still counts
+(DSCLOG's ROBE type, BRACERS_AX, PROBE_RING_AC, ROBE_PLUS).
 
 - The Ashen Robe (+1): AC 1 better, and +1 on saves against wizards' and priests' spells. Worn by
   Kalzith, who sells it, and left with his body (kalzith.py).

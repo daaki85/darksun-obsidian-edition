@@ -377,6 +377,25 @@ class BackstabTests(unittest.TestCase):
                   parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
 
+    def test_enlarge_before_the_backstab(self):
+        log = make_game()
+        sheet = SHEETS + 0 * game.SHEET_SIZE
+        log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
+        # Dag (combatant 0, [BP+18h]) under two Enlarges, cast at levels 3 and 1 (one on someone else)
+        log.game.effect_spells = lambda: [(game.Effect(0, 5, game.ENLARGE_EFFECT), 30),
+                                          (game.Effect(0, 6, game.ENLARGE_EFFECT), 30),
+                                          (game.Effect(7, 5, game.ENLARGE_EFFECT), 30),
+                                          (game.Effect(0, 5, game.MIRROR_EFFECT), 31)]
+        creature_of = log.game.combatant_creature
+        log.game.combatant_creature = lambda combatant: combatant if combatant in (5, 6) else creature_of(combatant)
+        log.game.effect_caster_level = lambda creature, spell: {5: 3, 6: 1}[creature]
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
+        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
+        # (5 + 12) x 140% = 23.8, rounded down; then x3
+        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 69: ((1d8 = [5] +12 STR 24) x140% Enlarge "
+                                           "(level 4)) x3 backstab"])
+
 
 class SaveTests(unittest.TestCase):
     def save_roll(self, log, natural, target=0x29, caster=0, spell=HOLD_PERSON):

@@ -9,7 +9,80 @@ For what a release brings, read its notes ([2.5.0](release-notes/v2.5.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #52 (in progress)
+## Pull request #53 (in progress)
+
+**Changed**
+- **The arena's count of fights shows by itself**, with no button: between fights in the slave
+  pens and the arena (`combatlog.ARENA_REGIONS`, regions 29h and 2Ah), the combat log panel's
+  header says `Arena fights: N` (docked or expanded); in a fight it says the round, and anywhere
+  else (the party escaped) it's gone. The header's **A** is dropped: the game's own A key turns
+  animations on and off, so a button A read as a key it wasn't. `combat_log_arena` is no longer
+  saved.
+
+**Added**
+- **A warning when the game's memory runs low.** With the map open, below 24 KB spare the dice log
+  says so and to save and restart soon (a new start has it all back); once, then again only after
+  it has recovered. If upper memory had no room for the overlay buffer (another DOSBox, other
+  settings) the dice log says that too, and crash reports say where the buffer is. The helper's
+  build fails if what it puts in upper memory outgrows it (`UMB_NEED`, also checked by a test).
+  The helper's signature is now `DSCLOGva`.
+- **Enlarge shows in the damage line.** A melee hit by someone under Enlarge now reads e.g.
+  `(1d8 = [5] +12 STR 24) x140% Enlarge (level 4)`, as the game works it out (DSUN 7C211h): the
+  dice, weapon and STR bonus together, times 100% + 10% a level, rounded down, before a backstab's
+  multiplier. The level is the caster's level for the spell (as Dispel Magic weighs it), each
+  Enlarge on the attacker added up. Missiles don't get it. In `test_dicelog.py`.
+- **Crash reports tell the game's memory.** "Out of memory in OEOpenGraph" is the game failing
+  to open the map's view again: each time it opens it needs one block of 60,000 bytes from the
+  game's heap. On the map with a long game's save there are about 53 KB of DOS memory to spare
+  (the unmodded game: 57 KB). Making characters over and over doesn't use any of it up (35 made
+  in a row, the heap and video memory the same each time). What did use it up in a 97-minute
+  game isn't known yet, so the Loader now reads the heap every few seconds, and a crash report
+  gives the last reading and the session's lowest (`heapcheck.py`).
+
+**Fixed**
+- **The game ran out of memory in long sessions** ("Out of memory in OEOpenGraph"): each time
+  the map's view opens it needs 60,000 bytes in one piece from the game's heap, in the 640 KB, and
+  with the map open only about 53 KB were left over. The game's largest block for good, the
+  overlay manager's buffer (32,992 bytes, where the code it loads as needed runs), is now in upper
+  memory: DSCLOG keeps a block for it there (`PROBE_OVR_BUF`, the patch `overlay_umb` at DSUN
+  3C68Ch in place of its farmalloc call) and lays out its own blocks so the room is in one piece.
+  With the map open about 86 KB are now left over (the unmodded game: 57 KB). Without upper
+  memory the game takes it from its heap as before. In `test_dsclog.py`.
+- **Dinos's talk lost its upper box after the vulture meal**: the XP's words go to the narration
+  window, which takes the portrait and his words away, and his menu came back under an empty
+  screen. After the XP his script now sets his portrait again (54h, 117, as it does when a talk
+  starts) and he says a line (`pensasks.AFTER_MEAL`) before the menu. In `test_pensasks.py`.
+- **The Characters tab showed noise for items before the game had its item tables** (at the main
+  menu or creating characters: "Wooden GF╨╢...", "Attacks: 120 a round with item 2"). Items now
+  count only when every name reads as plain text (`GameData.items_readable`, `game.plain_name`);
+  until then a card shows no equipment and the sheet's attacks, and `item_name` never returns
+  noise. Tests in `test_equipment.py` and `test_names.py`.
+- **An item couldn't be put down on another in a character's pack** (the swap was refused, for
+  any items and anyone's pack; the original game swaps them). The cause was an object numbered
+  2563 in the Loader's copy of SEGOBJEX.GFF: the slave pens' weapon rack with Thornwall on it,
+  numbered so since 1.2.0. With any object of that number in the file (tested with a copy of
+  another), the game refuses the swap; at 2400 or 2599 it doesn't. The rack is now 2599
+  (`worldgear.PENS_RACK_OBJECT`) and 2563 is never used (`NOT_AN_OBJECT`, checked in
+  `test_worldgear.py`). In a save that has already been to the pens, the game leaves the old rack
+  off the map, since no object 2563 is left. Renumbering it in the save doesn't bring it back:
+  something else in the save still names 2563.
+- **The Ashen Robe (and the Veiled Robe) gave no AC under the Armor spell.** Worn on the chest, the
+  robe's plus went into the game's armour value (as the bracers' does), and the Armor spell
+  ("Improved AC": armour AC at most 6) puts its 6 in that value's place, so with the spell on
+  the robe added nothing. `PROBE_RING_AC` now takes a robe's plus off the AC function's bonus total
+  (SI, as a ring's) and leaves it out of the armour value; still only without armour on the arms,
+  legs or head. Seen in a save: AC 0 with the robe off, -1 with it on, the spell and a shield on.
+  `RobeTests` in `test_dsclog.py`.
+- **The Trustee stood still for good after a load** (the game's own way too). His rounds are
+  his "no orders" script (the pens' master script's 6Fh: GPL 8 at 3767), which runs only while
+  he has no order; a walk is an order (15) that ends when he gets there. A save made while he
+  walked keeps the order but not the way, so once loaded he stood with it forever, and after a
+  talk he was busy for good. The Loader now takes such an order back (`stuckwalk.py`: anyone
+  with a no-orders script, standing still with a walk order for 30 game seconds, out of
+  fights), and his script sends him on; the dice log says "Trustee walks on". In the save it
+  was found in, he walked his rounds again about 20 s after loading. `test_stuckwalk.py`.
+
+## Pull request #52 ([merged 2026-10-20](https://github.com/daaki85/darksun-obsidian-edition/pull/52))
 
 **Added**
 - **The arena's count of fights, on the combat log panel's A.** A button left

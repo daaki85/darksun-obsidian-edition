@@ -39,7 +39,7 @@ After changing `dos/dsclog.asm`, rebuild the helper with
 nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
-The header's signature (`DSCLOGvZ` now) goes up whenever the helper and the
+The header's signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the helper and the
 Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`), so a
 Loader never talks to an older helper.
 
@@ -333,6 +333,36 @@ RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
 fitted in the block and loaded low), and the text buffer 4 KB, not 8, to make
 that room.
 
+The second block also holds the game's overlay buffer (32,992 bytes: twice the
+largest overlay, the code the overlay manager loads as needed). The game asks
+farmalloc for it at startup (load+3653h:0D5Ch) and keeps it for good, so in
+the heap it was the largest block the 640 KB never got back. The patch
+`overlay_umb` makes that call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands
+over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
+own block down to what stays, then takes the buffer's block in the memory the
+install code had, while the ring and the panel's picture were taken at the
+top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
+57,648 bytes of the helper, the buffer, 2.5 KB free, the panel and the ring.
+The header's `ovr_given` (+368) is the buffer's segment once the game has it.
+Without the room the probe calls the game's farmalloc, as the call was. With
+the map open this left 86 KB free in conventional memory, against 53 KB (and
+the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
+each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
+(`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
+D00Ah to F000h): the build fails past it (a negative `times`), and so does
+`test_fits_upper_memory`; 2.5 KB are spare now. If the buffer still ends up in
+the heap (another DOSBox, less upper memory), the Loader says so in the dice
+log once, and crash reports say where it is (`heapcheck.py`). With EMS on,
+GOG's own setting, the helper itself no longer fits upper memory (it loads in
+the 640 KB and the game won't start); it didn't before the buffer moved either,
+and the launcher's config turns EMS off.
+
+While the game runs, the Loader reads its memory every few seconds
+(`heapcheck.Watch`): with the map's view open (DS:1F82h set), below 24 KB
+spare (DOS's after the game and the heap's free blocks) the dice log says to
+save and restart soon, once until it has been back above 32 KB. Nothing can
+be given back to the game from outside: every block is its own.
+
 ## The crash report
 
 GAMEEND.COM only reads what is left on the screen, and the game's own fatal
@@ -607,9 +637,10 @@ dice log running:
   (`combatlog.key_rect`) with it shown hides it, in a fight or out of one. Out
   of fights the log takes the lines with a roll in them
   (`Log.add(rolls_only=True)`). The level and size are saved in the settings
-  (`combat_log_level`, `combat_log_size`). The header's **A**
-  (`combatlog.arena_rect`, left of the L; `Panel.arena`, saved as
-  `combat_log_arena`) puts the arena's count of fights in the header instead:
+  (`combat_log_level`, `combat_log_size`). Between fights in the slave pens and
+  the arena (regions 29h and 2Ah, `combatlog.ARENA_REGIONS`) the header says the
+  arena's count of fights (`arena_line`, docked or expanded; it once had a
+  button, A, dropped as the game's A key turns animations on and off):
   the game's global number 12 (`GameData.number(ARENA_FIGHTS)`, a word at the
   far pointer `NUMBERS_PTR`, DS:1356h; scripts' 07h/87h variables), which
   script 3 adds one to when the party walks out of the arena after a call.

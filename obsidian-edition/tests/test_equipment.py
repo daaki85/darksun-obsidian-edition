@@ -29,6 +29,24 @@ class EquipmentTests(unittest.TestCase):
         g = game.GameData(log.guest, DS)
         self.assertEqual(g.equipment(0), [("right hand", "Metal Long Sword +1"), (None, "Wooden Long Sword")])
 
+    def test_noise_before_the_tables(self):
+        """Before the game loads its item tables (the main menu, character creation) a sheet's items
+        read as noise: not readable, so the Loader shows no equipment and no attacks by weapon."""
+        log = make_game()
+        m = log.guest.mem
+        things = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
+        struct.pack_into("<Bh", m, things + 40 * 3, game.THING_ITEM, 5)
+        struct.pack_into("<h", m, CREATURES + game.CREATURE_ITEM_LISTS[1], 40)
+        struct.pack_into("<h", m, CREATURES + game.CREATURE_ITEM_LISTS[0], 9999)
+        struct.pack_into("<h", m, ITEMS + 5 * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
+        g = game.GameData(log.guest, DS)
+        self.assertTrue(g.items_readable(0))
+        name = struct.unpack_from("<H", m, ITEMS + 5 * game.ITEM_SIZE + game.ITEM_NAME)[0]
+        names = game.far_pointer(log.guest, DS, game.ITEM_NAMES_PTR) + name * game.ITEM_NAME_SIZE
+        m[names:names + 8] = b"GF\xd0\xa2\xd0\xa6\x01\0"
+        self.assertFalse(g.items_readable(0))
+        self.assertEqual(g.item_name(name), f"item {name}")
+
     def test_nothing(self):
         log = make_game()
         struct.pack_into("<hhh", log.guest.mem, CREATURES + 8, 9999, 9999, 9999)

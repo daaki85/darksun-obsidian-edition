@@ -24,7 +24,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, weaponchoice
+from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -32,7 +32,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGvZ"
+HDR_SIG = b"DSCLOGva"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 96
@@ -468,6 +468,7 @@ class DiceLog:
         self._spell_name = ""
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
+        self.walkers = stuckwalk.StuckWalkers()  # (people a saved walk left standing)
         self.defiler_scrolls = True
         self.buyback = buyback.Buyback()  # (magical items sold, kept to buy back: the rule's DSCLOG part)
         self.text: Optional[TextBuffer] = None
@@ -481,7 +482,7 @@ class DiceLog:
         low = self.guest.read(0, CONVENTIONAL_AND_UPPER)
         hdr = next((m.start() for m in re.finditer(re.escape(HDR_SIG), low) if m.start() % 16 == 0), None)
         if hdr is None:
-            if re.search(rb"DSCLOGv[0-9A-Z]", low):
+            if re.search(rb"DSCLOGv[0-9A-Za-z]", low):
                 raise DiceLogError("An older DSCLOG is loaded. Restart the game with 'Start Game with Dice Log.bat'.")
             raise DiceLogError("DSCLOG is not loaded. Start the game with 'Start Game with Dice Log.bat'.")
         ds = game.find_data_segment(self.guest, low)
@@ -500,6 +501,8 @@ class DiceLog:
         self._targeting.forget()
         self.tracker = PartyTracker(self.game)
         self.defilers = defilerscrolls.DefilerScrolls()
+        self.walkers.forget()
+        heapcheck.WATCH = heapcheck.Watch()  # (a new game, a new session's lowest)
         self.text = TextBuffer(self.guest.read, hdr)
         self.set_record_everything(self.record_everything)
         self.set_monster_info(self.monster_info)
@@ -654,7 +657,6 @@ class DiceLog:
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
         self._panel.open = settings.get("combat_log_open") is True  # (hidden till L)
-        self._panel.arena = settings.get("combat_log_arena") is True  # (the A: the arena's count)
         self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
@@ -1102,6 +1104,8 @@ class DiceLog:
                 kalzith.mend(self.game)
                 self._mended_in = region
             tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
+            out += [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)]
+            out += heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr)  # (the game's memory: a crash report's, and a word when it runs low)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
         except (struct.error, IndexError, ValueError):  # (itemgate.ItemsBusy too: tried in a later pass)
@@ -1163,17 +1167,16 @@ class DiceLog:
             except (struct.error, IndexError, ValueError):
                 pass
             return
-        before = (panel.first, panel.size, panel.level, panel.filter, panel.open, panel.arena)
+        before = (panel.first, panel.size, panel.level, panel.filter, panel.open)
         try:
             panel.mouse(self.game, self.tsr_hdr)
             if notches and panel.over():
                 panel.wheel(notches)
-            if (panel.level != self.combat_log_level or panel.size != before[1] or panel.open != before[4]
-                    or panel.arena != before[5]):
+            if panel.level != self.combat_log_level or panel.size != before[1] or panel.open != before[4]:
                 self.combat_log_level = panel.level  # (the panel's level chip: the Options tab's too)
                 _remember({"combat_log_level": panel.level, "combat_log_size": panel.size,
-                           "combat_log_open": panel.open, "combat_log_arena": panel.arena})
-            if (panel.first, panel.size, panel.level, panel.filter, panel.open, panel.arena) != before:
+                           "combat_log_open": panel.open})
+            if (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
                 self._update_panel(now)
         except (struct.error, IndexError, ValueError):
             pass
@@ -1206,10 +1209,11 @@ class DiceLog:
                     self._fight_monsters.add(name)
             top = combatlog.header(self.round_status())
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
-        arena = None
-        if on and self._panel.arena:
+        arena = None  # (between fights in the slave pens and the arena: their count in the header)
+        if on and not fighting:
             try:
-                arena = self.game.number(game.ARENA_FIGHTS)
+                if self.game.region() in combatlog.ARENA_REGIONS:
+                    arena = self.game.number(game.ARENA_FIGHTS)
             except (struct.error, IndexError, ValueError):
                 pass
         self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names, arena)
@@ -2084,6 +2088,13 @@ class DiceLog:
             if str_bonus:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
+            # Enlarge (DSUN 7C211h, with the STR bonus): +10% a level of the spell, the levels of
+            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down
+            level = self._enlarge_level(e.parent_arg(0x18))
+            if level:
+                percent = 100 + 10 * level
+                total = total * percent // 100
+                steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
         # that on the attacker's first attack of the round: x2, x3 from thief level 5, x4 from 9,
         # x5 from 13. The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
@@ -2100,6 +2111,19 @@ class DiceLog:
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         return ["  " + line]
+
+    def _enlarge_level(self, combatant: Optional[int]) -> int:
+        """The level Enlarge counts at on COMBATANT: each Enlarge on them at its caster's level
+        (as Dispel Magic weighs it), added up; 0 without one."""
+        if combatant is None:
+            return 0
+        g = self.game
+        level = 0
+        for effect, spell in g.effect_spells():
+            if effect.owner == combatant and effect.id == game.ENLARGE_EFFECT:
+                caster = g.combatant_creature(effect.caster)
+                level += (g.effect_caster_level(caster, spell) if caster is not None else None) or 0
+        return level
 
     def _overlay_image(self, e: Entry) -> bool:
         """Mirror Images' d100 on a spell (IMAGE_SPELL_RETURN) when the overlay manager has

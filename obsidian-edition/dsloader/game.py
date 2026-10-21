@@ -187,6 +187,7 @@ NEW_SPELLS_END = 202  # (past the last)
 NPP_SAVE_RECORD = 202
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
+ENLARGE_EFFECT = 16
 IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
 FRIENDS_MOST, SPOOK_MOST = 25, 6
 FLAMING_SPHERE = 14  # (once Cat's Grace's place)
@@ -481,6 +482,11 @@ def find_data_segment(guest: GuestMemory, low: Optional[bytes] = None) -> Option
 
 
 NULL_AREA = 0x40  # the first bytes of the game's data segment, which its C runtime checks at exit
+
+
+def plain_name(raw: bytes) -> bool:
+    """An item's name as the game's tables hold it: printable ASCII with a letter in it."""
+    return bool(raw) and all(32 <= b < 127 for b in raw) and any(chr(b).isalpha() for b in raw)
 
 
 def far_pointer(guest: GuestMemory, ds: int, offset: int) -> int:
@@ -1237,13 +1243,30 @@ class GameData:
         return self.guest.read(far_pointer(self.guest, self.ds, SHEETS_PTR) + sheet * SHEET_SIZE
                                + SHEET_MAGIC_RESISTANCE, 1)[0]
 
+    def items_readable(self, creature: int) -> bool:
+        """Whether a creature's items read as items: each name plain text and its type in the table.
+        Before the game has loaded its item tables (the main menu, character creation) the pointers
+        lead to other data, and the names come out as noise (\"Wooden GF╨╢...\")."""
+        try:
+            for _, item, typ in self._worn(creature):
+                index = struct.unpack_from("<H", item, ITEM_NAME)[0]
+                if not 0 <= index < 0x400 or len(typ) != ITEM_TYPE_SIZE:
+                    return False
+                rec = self.guest.read(far_pointer(self.guest, self.ds, ITEM_NAMES_PTR) + index * ITEM_NAME_SIZE,
+                                      ITEM_NAME_SIZE)
+                if not plain_name(rec.split(b"\0", 1)[0]):
+                    return False
+        except (struct.error, IndexError, ValueError):
+            return False
+        return True
+
     def item_name(self, name_index: int) -> str:
         if 0 <= name_index < 0x400:
             rec = self.guest.read(far_pointer(self.guest, self.ds, ITEM_NAMES_PTR) + name_index * ITEM_NAME_SIZE,
                                   ITEM_NAME_SIZE)
-            name = rec.split(b"\0", 1)[0].decode("cp437", "replace")
-            if name:
-                return name
+            raw = rec.split(b"\0", 1)[0]
+            if plain_name(raw):  # (not noise read before the game has its tables: items_readable)
+                return raw.decode("ascii")
         return f"item {name_index}"
 
     def sheet(self, creature: int) -> bytes:

@@ -140,6 +140,7 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("DOSBox's stdout.txt:\nDOSBox version 0.74-3", text)
         self.assertIn("line 499", text)
         self.assertNotIn("line 199\n", text)  # (the last 300)
+        self.assertNotIn("The game's memory", text)  # (no sample taken)
         self.assertIn("A vulture! Give it here.", text)
         with tempfile.TemporaryDirectory() as d:
             path = launch.write_crash_report(text, 1000.0, os.path.join(d, "crash-logs"))
@@ -149,6 +150,19 @@ class LaunchTests(unittest.TestCase):
             again = launch.write_crash_report(text, 1000.0, os.path.join(d, "crash-logs"))
             self.assertNotEqual(again, path)
             self.assertTrue(again.endswith("-2.txt"))
+
+    def test_crash_report_memory(self):
+        from dsloader import heapcheck
+        saved = heapcheck.WATCH
+        try:
+            heapcheck.WATCH = heapcheck.Watch()
+            heapcheck.WATCH.last = heapcheck.WATCH.lowest = heapcheck.Memory(250000, 0, 0, 0, 54000, 53000)
+            text = launch.crash_report(1, None, {}, "", "", [], {}, 0, 1000.0)
+            self.assertIn("The game's memory (the map's view needs a block of 60,000 bytes each time it opens):\n"
+                          "  last read: heap 244 KB with 0 KB free in it (0 pieces, the largest 0 bytes); DOS memory "
+                          "free after the game 52 KB (the largest piece 53000 bytes)", text)
+        finally:
+            heapcheck.WATCH = saved
 
     def test_game_cut_off(self):
         """GAMEEND.COM notes the game ending as usual in GAMEOK.TXT: without it, and with no error

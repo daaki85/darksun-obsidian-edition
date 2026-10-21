@@ -175,7 +175,7 @@ class WorldGearTests(unittest.TestCase):
             g = next(g for g in worldgear.MAGIC if item in g.items)
             self.assertEqual((g.name, g.objects, g.region), (holder, objects, region))
         rack = next(g for g in worldgear.MAGIC if g.name == "Weapon Rack")
-        self.assertEqual((rack.clone, rack.instead), ((131, 2563), (19, 0)))
+        self.assertEqual((rack.clone, rack.instead), ((131, worldgear.PENS_RACK_OBJECT), (19, 0)))
         self.assertEqual(gift("Magera").clone, (122, 2562))
         # (the plain axes still the plain ones)
         self.assertEqual(icons.which(worldgear.weapon(worldgear.BONE_AXE)), "Bone Axe")
@@ -387,12 +387,12 @@ class DataTests(unittest.TestCase):
         rack = next(g for g in worldgear.MAGIC if g.name == "Weapon Rack")
         out = worldgear.object_chunks(self.chunks, [rack])
         self.assertNotIn(("RDFF", 1647), out)
-        self.assertEqual(out[("OJFF", 2563)], b"rack's look")
-        recs, _ = d.records(out[("RDFF", 2563)])
-        self.assertEqual(struct.unpack_from("<h", recs[0].data)[0], -2563)
+        self.assertEqual(out[("OJFF", worldgear.PENS_RACK_OBJECT)], b"rack's look")
+        recs, _ = d.records(out[("RDFF", worldgear.PENS_RACK_OBJECT)])
+        self.assertEqual(struct.unpack_from("<h", recs[0].data)[0], -worldgear.PENS_RACK_OBJECT)
         self.assertEqual(recs[0].data[2:], rack_head[2:])
-        self.assertEqual([icons.which(r) for r in d.items_of(out[("RDFF", 2563)])], ["Thornwall", None, None])
-        self.assertEqual(d.items_of(out[("RDFF", 2563)])[1:], [staff, polearm])
+        self.assertEqual([icons.which(r) for r in d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)])], ["Thornwall", None, None])
+        self.assertEqual(d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)])[1:], [staff, polearm])
         self.assertEqual([(r.kind, r.number) for r in recs[2:4]], [(5, 19), (3, worldgear.THORNWALL)])
         self.assertEqual(len(recs), len(d.records(self.chunks[("RDFF", 1647)])[0]))
         # (none to replace: unchanged)
@@ -409,10 +409,19 @@ class DataTests(unittest.TestCase):
         with mock.patch.object(kalzith, "read_gff", lambda data: {("ETAB", kalzith.ETAB_ID): etab}):
             new = kalzith.region_chunks(b"", [rack])[("ETAB", kalzith.ETAB_ID)]
             plain = kalzith.region_chunks(b"")[("ETAB", kalzith.ETAB_ID)]
-        self.assertEqual(entity.unpack_from(new, 131 * 8)[4], -2563)
+        self.assertEqual(entity.unpack_from(new, 131 * 8)[4], -worldgear.PENS_RACK_OBJECT)
         self.assertEqual(entity.unpack_from(new, 132 * 8)[4], -kalzith.OBJECT)
         self.assertEqual(entity.unpack_from(plain, 131 * 8)[4], -1647)
 
+    def test_never_object_2563(self):
+        """No object of the Loader's is numbered 2563 (with one, the game refuses to put an item down
+        on another in a pack): the clones, the items' own pictures' objects, Kalzith's, the
+        Elven Leader's cloak's and the hay stash's."""
+        from dsloader import kalzith
+        numbers = {g.clone[1] for g in worldgear.GIFTS + worldgear.MAGIC if g.clone}
+        numbers |= set(icons.PICTURES.values()) | {kalzith.OBJECT, worldgear.ELVEN_CLOAK_OBJECT,
+                                                    worldgear.HAYNEEDLE_OBJECT}
+        self.assertNotIn(worldgear.NOT_AN_OBJECT, numbers)
 
 if __name__ == "__main__":
     unittest.main()

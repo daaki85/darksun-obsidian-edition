@@ -104,6 +104,17 @@ class HeaderTests(unittest.TestCase):
         self.assertEqual(built_in, FILTERS)
         self.assertEqual(tuple(image[hdr + 112:hdr + 117]), (VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG))
 
+    def test_fits_upper_memory(self):
+        """What the helper puts in upper memory (UMB_NEED, the header's +372: itself, the overlay
+        buffer, the panel's picture and the ring, with their MCBs) fits the room DOSBox gives it from
+        its MCB at D00Ah to F000h, or the game's overlay buffer goes back into its heap."""
+        from dsloader import heapcheck
+        image = load_image()
+        hdr = struct.unpack_from("<H", image, 20)[0]
+        need, = struct.unpack_from("<H", image, hdr + heapcheck.TSR_UMB_NEED)
+        self.assertGreater(need, heapcheck.OVR_PARAS)
+        self.assertLessEqual(need, heapcheck.UMB_ROOM)
+
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class StubTests(unittest.TestCase):
@@ -721,8 +732,30 @@ class BracersTests(ProtectionRuleTests):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class RobeTests(BracersTests):
     """The robes (robes.py: the 26th of DSCLOG's types, worn on the chest): as the bracers, their
-    plus counts for AC without armour on the arms, legs or head, and they aren't armour."""
+    plus counts for AC without armour on the arms, legs or head, and they aren't armour. Unlike
+    the bracers' it is a bonus on top (taken off the AC function's SI, the 80h bit cleared), not
+    the armour's value: the Armor spell's AC 6, taking that's place, doesn't swallow it."""
     BRACERS = 140
+
+    def counts(self, item, typ):
+        """For the robe: whether its plus came off SI (and never as armour, bit 80h)."""
+        if typ != self.BRACERS:
+            return super().counts(item, typ)
+        self.mu.mem_write(CALLER * 16 + self.at + 0x20 + 2 + 0xA8, struct.pack("<H", self.THINGS_SEG))
+        self.run_at(bytes((0xCD, VEC_RING_AC)), es=self.TYPES, ebx=typ * 0x14, ecx=typ, edx=item, edi=3,
+                    eax=0x1234, esi=0x100)
+        mu = self.mu
+        self.assertFalse(mu.reg_read(r.UC_X86_REG_AX) & 0x80)
+        plus = struct.unpack("b", bytes(mu.mem_read(self.ITEMS * 16 + item * 21 + 0x14, 1)))[0]
+        taken = 0x100 - (mu.reg_read(r.UC_X86_REG_SI) & 0xFFFF)
+        self.assertIn(taken, (0, plus))
+        return taken == plus != 0
+
+    def test_not_before_the_types(self):
+        """Before DSCLOG's types are in, type 140 is nothing of its own: the game's way (armour)."""
+        self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + self.TYPES_FIRST, struct.pack("<H", 0))
+        self.wear(5, 6, 9)
+        self.assertTrue(BracersTests.counts(self, 7, self.BRACERS))
 
     def setUp(self):
         ProtectionRuleTests.setUp(self)
@@ -775,6 +808,55 @@ class ScriptRandTests(unittest.TestCase):
         self.assertEqual((e.kind, e.raw & 0xFF, e.raw >> 8 & 0xFF, e.extra), (5, 0x7000 * 11 >> 15, 10, 2116))
         self.assertEqual((e.arg(2), e.arg(4), e.arg(6)), (4, 3, 2))
         self.assertEqual((e.ip, e.cs), (0x602, CALLER))  # (the code after the INT)
+
+
+@unittest.skipIf(Uc is None, "needs unicorn")
+class OverlayBufferTests(unittest.TestCase):
+    """PROBE_OVR_BUF in place of the overlay manager's "call far farmalloc": the block KEEP kept in
+    upper memory (once, and only if the buffer fits it), else the game's farmalloc as the call was."""
+    OVR_GIVEN, OVR_SEG = 368, 370  # (the header's)
+
+    def setUp(self):
+        from dsloader.gamepatch import VEC_OVR_BUF
+        image = load_image()
+        self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, image)
+        self.hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        at = image.find(bytes.fromhex("5589e58b460c40"))
+        self.assertGreater(at, 0)
+        mu.mem_write(VEC_OVR_BUF * 4, struct.pack("<HH", at, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        # the game's farmalloc (load:1231h, the caller at load + 3653h): DX:AX = the size it was asked for
+        mu.mem_write((CALLER - 0x3653) * 16 + 0x1231, bytes.fromhex("5589e58b46068b5608" "5dcb"))
+        mu.mem_write(CALLER * 16 + 0xD5C, bytes((0xCD, VEC_OVR_BUF)) + bytes.fromhex("a90000"))
+
+    def call(self, paras, size):
+        mu = self.mu
+        mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", size & 0xFFFF, size >> 16, paras))
+        for name, value in dict(cs=CALLER, ss=SS, esp=0x7FA, ebp=BP, eflags=IF | 2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + 0xD5C, CALLER * 16 + 0xD61)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_BP)), (0x7FA, BP))
+        return mu.reg_read(r.UC_X86_REG_DX), mu.reg_read(r.UC_X86_REG_AX)
+
+    def words(self):
+        return struct.unpack("<HH", self.mu.mem_read(self.hdr + self.OVR_GIVEN, 4))
+
+    def test_kept_block_once(self):
+        self.mu.mem_write(self.hdr + self.OVR_SEG, struct.pack("<H", 0xD100))
+        self.assertEqual(self.call(0x80D, 0x80D0), (0xD100, 4))  # (the block's segment, offset 4)
+        self.assertEqual(self.words(), (0xD100, 0))
+        self.assertEqual(self.call(0x80D, 0x80D0), (0, 0x80D0))  # a second ask: the heap's
+
+    def test_heap_without_one(self):
+        self.assertEqual(self.call(0x80D, 0x80D0), (0, 0x80D0))
+        self.assertEqual(self.words(), (0, 0))
+
+    def test_heap_when_too_big(self):
+        self.mu.mem_write(self.hdr + self.OVR_SEG, struct.pack("<H", 0xD100))
+        self.assertEqual(self.call(0x80E, 0x80E0), (0, 0x80E0))
+        self.assertEqual(self.words(), (0, 0xD100))  # (kept for the buffer it fits)
 
 
 class KindTableTests(unittest.TestCase):
