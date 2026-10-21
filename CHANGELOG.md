@@ -2,14 +2,14 @@
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first: the record for developers and testers.
-For what a release brings, read its notes ([2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
+For what a release brings, read its notes ([2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
 [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
 [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
 [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #53 (in progress)
+## Pull request #53 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/53))
 
 **Changed**
 - **The arena's count of fights shows by itself**, with no button: between fights in the slave
