@@ -55,8 +55,29 @@ def _find_file(folder: str, name: str) -> Optional[str]:
 
 
 def is_game_dir(folder: str) -> bool:
+    """The GOG install: DSUN.EXE and its DOSBox (just DSUN.EXE and the data files, when the game
+    is to run as Dark Sun Recompiled instead of in DOSBox)."""
     dosbox = _find_file(folder, "DOSBOX")
-    return bool(_find_file(folder, "DSUN.EXE") and dosbox and _find_file(dosbox, "DOSBox.exe"))
+    if not _find_file(folder, "DSUN.EXE"):
+        return False
+    return bool(dosbox and _find_file(dosbox, "DOSBox.exe")) or recompiled_program() is not None
+
+
+# Dark Sun Recompiled (github.com/daaki85/darksun-recompiled): the game translated into a program
+# of its own, with the mod's patched game and its helper built in. With its path in SETTINGS
+# ("recompiled"; `dsloader launch --recompiled <path>` remembers it, `--dosbox` goes back), the
+# Loader starts that program instead of DOSBox: with the game's folder (its data files; the game
+# is recognised by its DSUN.EXE), and the mod's dos folder as drive D (DSUNLOG.EXE and the data
+# files the helper replaces). The program finds its memory image (build/ds1mod) beside itself.
+def recompiled_program(settings: Optional[dict] = None) -> Optional[str]:
+    """The path of the recompiled program to start instead of DOSBox, if set and there."""
+    path = (load_settings() if settings is None else settings).get("recompiled")
+    return path if isinstance(path, str) and path and os.path.isfile(path) else None
+
+
+def recompiled_command(program: str, game_dir: str) -> List[str]:
+    """The command line that starts the recompiled program with the mod."""
+    return [program, "--game", game_dir, "--cd", DOS_DIR]
 
 
 def candidate_dirs() -> List[str]:
@@ -384,7 +405,9 @@ CRASH_CODES = {0xC0000005: "an access violation", 0xC00000FD: "a stack overflow"
 
 
 def closed_line(code: int) -> str:
-    """The log's line for DOSBox closing with exit code CODE."""
+    """The log's line for DOSBox (or the recompiled program) closing with exit code CODE."""
+    if recompiled_program() is not None:
+        return "The game closed." if code == 0 else f"The game closed with exit code {code}."
     if code == 0:
         return "DOSBox closed."
     known = CRASH_CODES.get(code & 0xFFFFFFFF)
@@ -541,7 +564,21 @@ def write_crash_report(text: str, now: float, folder: str = CRASH_DIR, kind: str
 
 
 def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
-    """Start the game. Returns DOSBox's process and, if the dice log can't run, why."""
+    """Start the game. Returns DOSBox's process (or the recompiled program's) and, if the dice log
+    can't run, why."""
+    program = recompiled_program()
+    if program is not None:
+        if not _find_file(game_dir, "DSUN.EXE"):
+            raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the GOG install folder")
+        problem = prepare_patched_game(game_dir)
+        if problem:
+            raise LaunchError(f"The recompiled program runs the game with the helper, which needs the patched game ({problem}).")
+        for old in (GAME_END, GAME_MESSAGE):
+            try:
+                os.remove(old)
+            except OSError:
+                pass
+        return subprocess.Popen(recompiled_command(program, game_dir), cwd=os.path.dirname(os.path.abspath(program))), None
     dosbox_dir = _find_file(game_dir, "DOSBOX")
     settings_conf = _find_file(game_dir, "dosbox_darksun.conf") or _find_file(
         os.path.join(game_dir, "__support", "app"), "dosbox_darksun.conf")

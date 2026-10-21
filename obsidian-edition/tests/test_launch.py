@@ -19,6 +19,31 @@ def make_game(root: str, cloud_saves: bool) -> str:
 
 
 class LaunchTests(unittest.TestCase):
+    def test_the_recompiled_program_instead_of_dosbox(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, "recompiled"))
+            program = os.path.join(d, "recompiled", "dsun.exe")   # (not DSUN.EXE: the game's own)
+            open(program, "w").close()
+            game = os.path.join(d, "game")
+            os.mkdir(game)
+            open(os.path.join(game, "DSUN.EXE"), "w").close()      # the data files, no DOSBox
+            settings = {"recompiled": program}
+            self.assertEqual(launch.recompiled_program(settings), program)
+            self.assertIsNone(launch.recompiled_program({"recompiled": os.path.join(d, "gone.exe")}))
+            self.assertIsNone(launch.recompiled_program({}))
+            self.assertEqual(launch.recompiled_command(program, game),
+                             [program, "--game", game, "--cd", launch.DOS_DIR])
+            saved = launch.SETTINGS
+            try:
+                launch.SETTINGS = os.path.join(d, "settings.json")
+                launch.save_settings(dict(settings))
+                self.assertTrue(launch.is_game_dir(game))       # DSUN.EXE is enough with the program
+                self.assertFalse(launch.is_game_dir(d))
+                self.assertEqual(launch.closed_line(0), "The game closed.")
+                self.assertEqual(launch.closed_line(3), "The game closed with exit code 3.")
+            finally:
+                launch.SETTINGS = saved
+
     def test_recognises_the_game_folder(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)

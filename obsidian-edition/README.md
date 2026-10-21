@@ -227,6 +227,23 @@ If anything goes wrong it says so in a message box and writes the details to
 **Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
 **`Show Save.bat`** to see the party it holds.
 
+**With Dark Sun Recompiled instead of DOSBox:** the game translated into a
+program of its own ([daaki85/darksun-recompiled](https://github.com/daaki85/darksun-recompiled)),
+built with the mod's patched game and helper in it. Tell the Loader where
+that program is once, and it starts it instead of DOSBox from then on, the
+dice log and the Loader's window attached as usual:
+
+```
+dsloader launch --recompiled "C:\path\to\dsun.exe"
+dsloader launch --dosbox
+```
+
+The second line goes back to DOSBox. The program reads the game's data files
+from the GOG folder and the mod's `dos` folder as it would in DOSBox, and
+keeps its memory image (`build\ds1mod`) next to itself. DOSBox's own settings
+(the window's size, full screen, the CPU speed, `UMBPLUS.COM`) don't apply to
+it.
+
 ### Updating, backups and the Loader's files
 
 **Updating.** Unzip the new release into a folder of its own and copy

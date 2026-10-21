@@ -6,6 +6,18 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Branch `recompiled` (not yet a pull request)
+
+**Dark Sun Recompiled**
+- The Loader also reads the game when it runs as
+  [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled) (a
+  `dsun` process; its memory found by the BIOS date, or by the mark
+  `DARKSUN-RECOMPILED` at F000:FFC0 where a helper's ring covers the date).
+- The Loader can start that program instead of DOSBox: `dsloader launch
+  --recompiled <path to dsun.exe>` remembers it (`--dosbox` goes back), and
+  `launch`, `play` and the window's **Start the game** then run it with the
+  game's folder and the mod's `dos` folder (README, "Other ways to start").
+
 ## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 
 **Fixed** (from an outside audit of 2.12.0)
