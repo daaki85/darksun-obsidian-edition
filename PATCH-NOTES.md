@@ -270,6 +270,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** When the game rolls a thief skill for the **whole party** (a trap going off, listening in by a wagon), the first party member always rolled, however poor at it. Now the member with the best chance does.
 - **[Fixed]** **Random monsters** came in numbers worked out from the wrong monster, and in some areas could crash the game ("Divide error"). Now the count fits the monster that comes, and the crash can't happen.
 - **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
+- **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 

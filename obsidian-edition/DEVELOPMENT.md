@@ -1870,6 +1870,17 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   after the last in the records with nine or seven (regions 6, 13, 14, 27, 39,
   40, 44 and 255), a "Divide error" that ends the game. `monster_count` makes
   it [bx+0], the match's own.
+- **A shop's magic items shine.** The colour cycler (22F8h; its table at
+  CS:6, 16 x 8 bytes, set up by the region's load at 1CECFh: colours 1-5,
+  6-10, 11-15 and 240-248) turns only from the map's main loop (1A935h:
+  DS:1194h, set by the timer every 8 ticks, then a far call to 22F8h:047Ch,
+  then 1194h cleared). A shop, opened from a conversation, runs its own loop
+  (7DDE4h, while DS:11B2h is 1: a character's screen open) and, as the
+  pointer stands on some things, waits in the game's wait for an event
+  (2531:083Ch), so 1194h stayed 1 and the glow stood still. DSCLOG's
+  `SHOP_LOOP` (7DE11h, the loop's "cmp word [11B2h],1") and `SHOP_SHINE`
+  (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
+  is 1, then the replaced test.
 
 ### New wizard spells
 

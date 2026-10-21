@@ -12784,6 +12784,8 @@ CR_WEAPONS equ NS_IMAGE + 17     ; 666DFh: the creation screen's DONE, a warrior
 NS_NPP    equ NS_IMAGE + 18      ; 7A7E9h: Negative Plane Protection's save, against an undead
 NS_SIDE   equ NS_IMAGE + 19      ; 78785h: an effect ended, past the game's own cases
 NS_WALL   equ NS_IMAGE + 20      ; 5A38Ch: the computer's cast, its two points
+SHOP_SHINE equ NS_IMAGE + 21     ; 2AFA6h: the wait for an event, its test (a shop's shine)
+SHOP_LOOP equ NS_IMAGE + 22      ; 7DE11h: a shop's own event loop, its test (... too)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -12833,6 +12835,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ns_side
         cmp byte [cs:rl_site], NS_WALL
         je ns_wall
+        cmp byte [cs:rl_site], SHOP_SHINE
+        je shop_shine
+        cmp byte [cs:rl_site], SHOP_LOOP
+        je shop_loop
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -13239,6 +13245,64 @@ ns_side:
 .out:   pop bx
         pop bp
         iret
+; SHOP_SHINE, SHOP_LOOP: a shop's magic items shine. The map's main loop turns the palette's colour
+; cycles (a magic item's shine) when the timer has asked for it (1A935h: DS:1194h not 0, the
+; cycler's turn at 22F8h:047Ch, then 1194h cleared), so the inventory shines; a shop, opened from a
+; conversation, runs its own loop (7DDE4h, while DS:11B2h is 1: a character's screen open) and
+; waits in the game's wait for an event (2531:083Ch) as the pointer stands on some things: neither
+; turned them, and its magic items stood still. Both now do as the main loop (SHINE_TURN).
+; SHOP_SHINE: "or di,di / jz 084Fh" (2AFA6h; 4 bytes: the site's number and a NOP after the INT),
+; the test that ends the wait (DI not 0: an event came); the cycles turned only while 11B2h is 1.
+; SHOP_LOOP: "cmp word [11B2h],1" (7DE11h; 5 bytes: the number and 2 NOPs), the shop's loop's test.
+SHINE_DUE equ 0x1194
+SHINE_CALL equ 0x047C
+SHINE_SCREEN equ 0x11B2
+SHINE_WAIT equ 0x084F           ; (the wait's start, in the INT's segment)
+CYCLER_FROM_DS equ 0x4356 - 0x22F8
+shop_shine:
+        pushad
+        push es
+        mov di, sp
+        cmp word [ss:di + NS_DI], 0
+        jne .out
+        mov word [ss:di + 34], SHINE_WAIT
+        call shine_turn
+.out:   pop es
+        popad
+        iret
+
+shop_loop:
+        pushad
+        push es
+        mov di, sp
+        call shine_turn
+        cmp word [SHINE_SCREEN], 1
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+; SHINE_TURN: the colour cycles turned if the timer asked and a character's screen is open. DS the
+; game's; AX, BP and the flags not kept.
+shine_turn:
+        cmp word [SHINE_SCREEN], 1
+        jne .out
+        cmp word [SHINE_DUE], 0
+        je .out
+        mov ax, ds
+        sub ax, CYCLER_FROM_DS
+        push ax
+        push word SHINE_CALL
+        mov bp, sp
+        sti
+        call far [ss:bp]
+        cli
+        add sp, 4
+        mov word [SHINE_DUE], 0
+.out:   ret
+
 ; NS_WALL: the four pushes of the two points the computer's cast is aimed at (5A38Ch; 28h bytes:
 ; "mov ax,[bp-4] / shl ax,4 / add ax,8 / push ax", then [bp-2]'s, twice; [BP-2], [BP-4] the cell
 ; chosen), in the AI's casting (6466:0000h, the caster SI, the spell DI). The game gave both points

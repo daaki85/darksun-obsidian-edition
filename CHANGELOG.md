@@ -34,6 +34,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   the game load its picture into the cache when it wasn't there, in the middle of drawing the floor,
   which can push out or move a picture the game is drawing. Shadows now use only pictures already
   in the cache (a newly seen figure's shadow comes a frame later). Not proven to be the cause.
+- **Magic items shine in a shop.** The palette's colour cycles (the glow of a magic weapon's
+  icon) turn only in the map's main loop, when the timer asks (DS:1194h, then 22F8h:047Ch); a shop,
+  opened from a conversation, runs its own event loop (7DDE4h) and waits in the game's wait for an
+  event (2531:083Ch), and neither turned them, so its items stood still. DSCLOG's `SHOP_SHINE` and
+  `SHOP_LOOP` (sites at 2AFA6h and 7DE11h) do as the main loop while a character's screen is open
+  (DS:11B2h).
 - **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the
   dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature
   and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so

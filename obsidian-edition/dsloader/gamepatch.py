@@ -141,6 +141,8 @@ CR_WEAPONS = NS_IMAGE + 17  # (the creation screen's DONE: a warrior picks its w
 NS_NPP = NS_IMAGE + 18  # (Negative Plane Protection's save: one allowed)
 NS_SIDE = NS_IMAGE + 19  # (an effect ended: Berserk and Confused give the side back)
 NS_WALL = NS_IMAGE + 20  # (the computer's cast: a wall across the line of fire)
+SHOP_SHINE = NS_IMAGE + 21  # (the wait for an event: a shop's magic items' shine turned, as on the map)
+SHOP_LOOP = NS_IMAGE + 22  # (... and a shop's own event loop)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -361,6 +363,12 @@ PATCHES = (
     # walls were a single point: the four pushes (DSCLOG's NS_WALL: a wall across the line of fire)
     Patch("ai_wall", 0x5A38C, bytes.fromhex("8b46fcc1e004050800508b46fec1e004050800508b46fcc1e00405080050"
                                             "8b46fec1e00405080050"), _site(NS_WALL, 0x28)),
+    # ... and a shop's magic items didn't shine: the map's main loop turns the palette's colour
+    # cycles; a shop (opened from a conversation) runs a loop of its own and waits in the game's
+    # wait for an event. The wait's test, "or di,di / jz 084Fh", and the shop's loop's, "cmp word
+    # [11B2h],1" (DSCLOG's SHOP_SHINE, SHOP_LOOP: the cycles turned when due, a shop open)
+    Patch("shop_shine", 0x2AFA6, bytes.fromhex("0bff74b5"), _site(SHOP_SHINE, 4)),
+    Patch("shop_loop", 0x7DE11, bytes.fromhex("833eb21101"), _site(SHOP_LOOP, 5)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"
