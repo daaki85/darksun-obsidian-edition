@@ -25,6 +25,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   dice, weapon and STR bonus together, times 100% + 10% a level, rounded down, before a backstab's
   multiplier. The level is the caster's level for the spell (as Dispel Magic weighs it), each
   Enlarge on the attacker added up. Missiles don't get it. In `test_dicelog.py`.
+- **Crash reports tell the game's memory.** "Out of memory in OEOpenGraph" is the game failing
+  to open the map's view again: each time it opens it needs one block of 60,000 bytes from the
+  game's heap. On the map with a long game's save there are about 53 KB of DOS memory to spare
+  (the unmodded game: 57 KB). Making characters over and over doesn't use any of it up (35 made
+  in a row, the heap and video memory the same each time). What did use it up in a 97-minute
+  game isn't known yet, so the Loader now reads the heap every few seconds, and a crash report
+  gives the last reading and the session's lowest (`heapcheck.py`).
 
 **Fixed**
 - **Dinos's talk lost its upper box after the vulture meal**: the XP's words go to the narration
