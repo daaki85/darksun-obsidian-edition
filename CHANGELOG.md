@@ -29,6 +29,15 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   count only when every name reads as plain text (`GameData.items_readable`, `game.plain_name`);
   until then a card shows no equipment and the sheet's attacks, and `item_name` never returns
   noise. Tests in `test_equipment.py` and `test_names.py`.
+- **An item couldn't be put down on another in a character's pack** (the swap was refused, for
+  any items and anyone's pack; the original game swaps them). The cause was an object numbered
+  2563 in the Loader's copy of SEGOBJEX.GFF: the slave pens' weapon rack with Thornwall on it,
+  numbered so since 1.2.0. With any object of that number in the file (tested with a copy of
+  another), the game refuses the swap; at 2400 or 2599 it doesn't. The rack is now 2599
+  (`worldgear.PENS_RACK_OBJECT`) and 2563 is never used (`NOT_AN_OBJECT`, checked in
+  `test_worldgear.py`). In a save that has already been to the pens, the game leaves the old rack
+  off the map, since no object 2563 is left. Renumbering it in the save doesn't bring it back:
+  something else in the save still names 2563.
 
 ## Pull request #52 ([merged 2026-10-20](https://github.com/daaki85/darksun-obsidian-edition/pull/52))
 
