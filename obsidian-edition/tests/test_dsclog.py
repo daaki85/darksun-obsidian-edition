@@ -721,8 +721,30 @@ class BracersTests(ProtectionRuleTests):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class RobeTests(BracersTests):
     """The robes (robes.py: the 26th of DSCLOG's types, worn on the chest): as the bracers, their
-    plus counts for AC without armour on the arms, legs or head, and they aren't armour."""
+    plus counts for AC without armour on the arms, legs or head, and they aren't armour. Unlike
+    the bracers' it is a bonus on top (taken off the AC function's SI, the 80h bit cleared), not
+    the armour's value: the Armor spell's AC 6, taking that's place, doesn't swallow it."""
     BRACERS = 140
+
+    def counts(self, item, typ):
+        """For the robe: whether its plus came off SI (and never as armour, bit 80h)."""
+        if typ != self.BRACERS:
+            return super().counts(item, typ)
+        self.mu.mem_write(CALLER * 16 + self.at + 0x20 + 2 + 0xA8, struct.pack("<H", self.THINGS_SEG))
+        self.run_at(bytes((0xCD, VEC_RING_AC)), es=self.TYPES, ebx=typ * 0x14, ecx=typ, edx=item, edi=3,
+                    eax=0x1234, esi=0x100)
+        mu = self.mu
+        self.assertFalse(mu.reg_read(r.UC_X86_REG_AX) & 0x80)
+        plus = struct.unpack("b", bytes(mu.mem_read(self.ITEMS * 16 + item * 21 + 0x14, 1)))[0]
+        taken = 0x100 - (mu.reg_read(r.UC_X86_REG_SI) & 0xFFFF)
+        self.assertIn(taken, (0, plus))
+        return taken == plus != 0
+
+    def test_not_before_the_types(self):
+        """Before DSCLOG's types are in, type 140 is nothing of its own: the game's way (armour)."""
+        self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + self.TYPES_FIRST, struct.pack("<H", 0))
+        self.wear(5, 6, 9)
+        self.assertTrue(BracersTests.counts(self, 7, self.BRACERS))
 
     def setUp(self):
         ProtectionRuleTests.setUp(self)

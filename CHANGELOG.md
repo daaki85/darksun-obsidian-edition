@@ -38,6 +38,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `test_worldgear.py`). In a save that has already been to the pens, the game leaves the old rack
   off the map, since no object 2563 is left. Renumbering it in the save doesn't bring it back:
   something else in the save still names 2563.
+- **The Ashen Robe (and the Veiled Robe) gave no AC under the Armor spell.** Worn on the chest, the
+  robe's plus went into the game's armour value (as the bracers' does), and the Armor spell
+  ("Improved AC": armour AC at most 6) puts its 6 in that value's place, so with the spell on
+  the robe added nothing. `PROBE_RING_AC` now takes a robe's plus off the AC function's bonus total
+  (SI, as a ring's) and leaves it out of the armour value; still only without armour on the arms,
+  legs or head. Seen in a save: AC 0 with the robe off, -1 with it on, the spell and a shield on.
+  `RobeTests` in `test_dsclog.py`.
 
 ## Pull request #52 ([merged 2026-10-20](https://github.com/daaki85/darksun-obsidian-edition/pull/52))
 

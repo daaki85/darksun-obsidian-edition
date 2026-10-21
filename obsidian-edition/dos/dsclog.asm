@@ -2459,7 +2459,25 @@ probe_ring_ac:
         jc .done
         test byte [cs:p_flags], P_ARMOUR
         jnz .off
-        iret
+        push ax                 ; a robe: its plus betters AC on top of the rest, as a ring's
+        mov ax, [cs:types_first] ; does (worn on the chest, the game would count it in the
+        add ax, ROBE            ; armour's value, which the Armor spell's 6 then took the
+        cmp cx, ax              ; place of)
+        pop ax
+        jne .done
+        push ax
+        push bx
+        push es
+        les bx, [ITEMS]
+        imul bx, dx, 0x15
+        add bx, [ITEMS]
+        mov al, [es:bx+0x14]    ; its plus
+        cbw
+        sub si, ax              ; (SI: the AC function's bonus total)
+        pop es
+        pop bx
+        pop ax
+        jmp .off                ; (and not as armour)
 .helm:  cmp cx, HELM_LEATHER    ; a helm: AC 1 with RULE_HELMS (the game's are all 0), 0 without
         je .is
         cmp cx, HELM_METAL
