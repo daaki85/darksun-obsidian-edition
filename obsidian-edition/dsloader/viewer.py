@@ -146,6 +146,8 @@ class Viewer:
             side="right", padx=4)
         self.dice_status = tk.StringVar(value="Waiting for the game...")
         ttk.Label(row, textvariable=self.dice_status).pack(side="left", fill="x")
+        dice_find = ttk.Frame(dice)
+        dice_find.pack(fill="x", pady=(4, 0))
         # what the log shows (the game's switches are on the Options tab)
         row = ttk.Frame(dice)
         row.pack(fill="x", pady=(4, 0))
@@ -182,6 +184,8 @@ class Viewer:
             self.dice_text.tag_configure(f"member{n}", foreground=colour, font="LedgerFixedBold")
         self.dice_text.tag_configure("monster", foreground=theme.MONSTER_COLOUR, font="LedgerFixedBold")
         self._monster_names: Set[str] = set()  # every monster seen in a fight this session
+        self._finds: Dict[ttk.Frame, ttk.Entry] = {}  # each tab's find box, for Ctrl+F
+        self._find_bar(dice_find, self.dice_text, dice)
 
         talk = ttk.Frame(tabs, padding=6)
         tabs.add(talk, text="Dialogue", underline=1)
@@ -194,6 +198,8 @@ class Viewer:
         # for the latest speaker), and the name sticks for every line from that portrait
         ttk.Button(row, text="Name speaker...", command=lambda: self.name_speaker(self._last_portrait)).pack(
             side="right")
+        talk_find = ttk.Frame(talk)
+        talk_find.pack(fill="x", pady=(4, 0))
         box = ttk.Frame(talk)
         box.pack(fill="both", expand=True, pady=(6, 0))
         self.talk_text = tk.Text(box, wrap="word", height=20, font="TkTextFont")
@@ -209,6 +215,10 @@ class Viewer:
         self.talk_text.tag_configure("chosen", foreground=theme.GREEN)
         self._last_portrait: Optional[int] = None
         self.talk_text.tag_bind("speaker", "<Button-3>", self._speaker_clicked)
+        self._find_bar(talk_find, self.talk_text, talk)
+        # Ctrl+F: the find box of the log tab shown
+        self.root.bind_all("<Control-f>", lambda _e: self._focus_find(tabs))
+        self.root.bind_all("<Control-F>", lambda _e: self._focus_find(tabs))
 
         # what each spell and psionic power really does, from the game's records
         spells = ttk.Frame(tabs, padding=6)
@@ -1197,6 +1207,83 @@ class Viewer:
             self.talk_text.insert("end", "\n")
         if self._following.get(self.talk_text, True):
             self.talk_text.see("end")
+
+    def _find_bar(self, row: ttk.Frame, text: tk.Text, tab: ttk.Frame) -> None:
+        """A find box over a log: every match (any case) marked, Enter or Next to the next one,
+        Shift+Enter or Previous back (round the end), Escape to clear; the log stops following
+        its newest line while a match is shown, so new lines don't take it away. Hidden lines
+        (details turned off) aren't searched."""
+        wanted = tk.StringVar()
+        where = tk.StringVar()
+        ttk.Label(row, text="Find (Ctrl+F):").pack(side="left")
+        entry = ttk.Entry(row, textvariable=wanted, width=16)
+        entry.pack(side="left", padx=(4, 0))
+        self._finds[tab] = entry
+        text.tag_configure("found", background=theme.SAND, foreground=theme.SHADOW)
+        text.tag_configure("found_now", background=theme.AMBER, foreground=theme.SHADOW)
+        shown = {"at": None}
+
+        def matches() -> List[Tuple[str, str]]:
+            text.tag_remove("found", "1.0", "end")
+            text.tag_remove("found_now", "1.0", "end")
+            pattern = wanted.get()
+            if not pattern:
+                return []
+            out, start, length = [], "1.0", tk.IntVar()
+            while True:
+                at = text.search(pattern, start, stopindex="end", nocase=True, count=length)
+                if not at or length.get() == 0:
+                    return out
+                end = f"{at}+{length.get()}c"
+                out.append((at, end))
+                text.tag_add("found", at, end)
+                start = end
+
+        def go(step: int) -> None:
+            found = matches()
+            if not found:
+                shown["at"] = None
+                where.set("no match" if wanted.get() else "")
+                return
+            starts = [text.index(a) for a, _ in found]
+            last = shown["at"]
+            if last is None:  # (a new search: Next from the top, Previous from the bottom)
+                k = 0 if step > 0 else len(found) - 1
+            else:
+                after = [i for i, a in enumerate(starts) if text.compare(a, ">" if step > 0 else "<", last)]
+                k = (after[0] if step > 0 else after[-1]) if after else (0 if step > 0 else len(found) - 1)
+            at, end = found[k]
+            shown["at"] = starts[k]
+            text.tag_add("found_now", at, end)
+            text.tag_raise("found")
+            text.tag_raise("found_now")
+            self._following[text] = False
+            text.see(at)
+            where.set(f"{k + 1} of {len(found)}")
+
+        def clear(_event=None) -> str:
+            wanted.set("")
+            shown["at"] = None
+            matches()
+            where.set("")
+            return "break"
+
+        entry.bind("<Return>", lambda _e: go(1))
+        entry.bind("<KP_Enter>", lambda _e: go(1))
+        entry.bind("<Shift-Return>", lambda _e: go(-1))
+        entry.bind("<Escape>", clear)
+        wanted.trace_add("write", lambda *_a: shown.update(at=None))
+        ttk.Button(row, text="Previous", command=lambda: go(-1)).pack(side="left", padx=(4, 0))
+        ttk.Button(row, text="Next", command=lambda: go(1)).pack(side="left", padx=(4, 0))
+        ttk.Label(row, textvariable=where).pack(side="left", padx=(8, 0))
+
+    def _focus_find(self, tabs: ttk.Notebook) -> str:
+        """Ctrl+F: the find box of the log tab shown (none on the others)."""
+        entry = self._finds.get(self.root.nametowidget(tabs.select())) if tabs.select() else None
+        if entry is not None:
+            entry.focus_set()
+            entry.select_range(0, "end")
+        return "break"
 
     def _follow_end(self, text: tk.Text, scroll: ttk.Scrollbar) -> None:
         """A log keeps its newest line in view unless the reader has scrolled up to read back:

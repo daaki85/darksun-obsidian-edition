@@ -40,6 +40,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   where the game was still shows.
 
 **Added**
+- **Find in the dice log and the dialogue.** A box above each (Ctrl+F): every match (any case)
+  highlighted, the one shown in amber with `n of N`, Enter / **Next** and Shift+Enter /
+  **Previous** round the end, Escape to clear; details hidden aren't searched, and the log stops
+  following its newest line while a match is shown (`viewer.Viewer._find_bar`, `tests/test_find.py`;
+  the highlight colours are in `palette.TEXT_PAIRS`).
 - **The psionic power check in the dice log.** `Zulak uses Graft Weapon: power check d20 = 14,
   needs 11 or less -> it fails` with the score's parts (`16 CON - 5 Graft Weapon`), and the
   Synaptic Static contest when someone else keeps it up. The game rolls these with its

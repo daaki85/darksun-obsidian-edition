@@ -773,6 +773,14 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Magic Missile on the Rampager and the Rampager's acid killing the Defiler](docs/dicelog.png)
 
+**Finding something.** Type a word in **Find** above the log (Ctrl+F puts
+you there) and press Enter: every match lights up, the log jumps to the first,
+and the count beside it says which one of how many you're on. Enter or **Next**
+goes on to the next, Shift+Enter or **Previous** back, round the end either
+way; Escape clears it. Case doesn't matter, and hidden details aren't searched
+(tick **Show details** to include them). While you're looking at a match the
+log stays put as new lines come in. The Dialogue tab has the same box.
+
 **Reading it at a glance.** Lines at the left edge are the events: a round
 starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented
 two spaces are their results (damage, HP left); lines indented four spaces are

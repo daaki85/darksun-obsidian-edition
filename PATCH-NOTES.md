@@ -223,6 +223,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Quality of Life
 
+- **[New]** **Find** in the Loader's dice log and dialogue (Ctrl+F): every match highlighted, Enter for the next.
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen, or all of them.
 - **[New]** Press the mouse wheel and drag to scroll the map (or, as an option, hold the right button).
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was: it followed each one near the edge)*.
