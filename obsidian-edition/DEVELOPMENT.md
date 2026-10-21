@@ -333,6 +333,24 @@ RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
 fitted in the block and loaded low), and the text buffer 4 KB, not 8, to make
 that room.
 
+The second block also holds the game's overlay buffer (32,992 bytes: twice the
+largest overlay, the code the overlay manager loads as needed). The game asks
+farmalloc for it at startup (load+3653h:0D5Ch) and keeps it for good, so in
+the heap it was the largest block the 640 KB never got back. The patch
+`overlay_umb` makes that call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands
+over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
+own block down to what stays, then takes the buffer's block in the memory the
+install code had, while the ring and the panel's picture were taken at the
+top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
+57,648 bytes of the helper, the buffer, 2.5 KB free, the panel and the ring.
+The header's `ovr_given` (+368) is the buffer's segment once the game has it.
+Without the room the probe calls the game's farmalloc, as the call was. With
+the map open this left 86 KB free in conventional memory, against 53 KB (and
+the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
+each time it opens ("Out of memory in OEOpenGraph" when it can't). A change
+that makes the helper bigger by more than 2.5 KB moves the buffer back into
+the heap; `heapcheck.py` puts the game's memory in crash reports.
+
 ## The crash report
 
 GAMEEND.COM only reads what is left on the screen, and the game's own fatal

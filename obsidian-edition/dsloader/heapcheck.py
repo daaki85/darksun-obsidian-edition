@@ -7,7 +7,8 @@ three pages of video memory; another screen gives them back. The heap is Borland
 last and rover segments at the runtime's 0FE7h, 0FE9h and 0FEBh (the load segment's), a free
 block's size in paragraphs at +0 and the next free one at +6 (a ring); it grows into the DOS
 memory after the game's block. Measured on the map with the user's save: no free block in the
-heap, 53 KB of DOS memory after it (the unmodded game: 57 KB). Making characters over and over
+heap, 53 KB of DOS memory after it (the unmodded game: 57 KB); with the overlay buffer in upper
+memory (DSCLOG's PROBE_OVR_BUF) 86 KB. Making characters over and over
 doesn't change that (35 made, the heap and video memory the same each time), so what used it up
 in a long game is unknown: the crash report gives the last sample and the session's lowest."""
 

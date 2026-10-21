@@ -799,6 +799,55 @@ class ScriptRandTests(unittest.TestCase):
         self.assertEqual((e.ip, e.cs), (0x602, CALLER))  # (the code after the INT)
 
 
+@unittest.skipIf(Uc is None, "needs unicorn")
+class OverlayBufferTests(unittest.TestCase):
+    """PROBE_OVR_BUF in place of the overlay manager's "call far farmalloc": the block KEEP kept in
+    upper memory (once, and only if the buffer fits it), else the game's farmalloc as the call was."""
+    OVR_GIVEN, OVR_SEG = 368, 370  # (the header's)
+
+    def setUp(self):
+        from dsloader.gamepatch import VEC_OVR_BUF
+        image = load_image()
+        self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, image)
+        self.hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        at = image.find(bytes.fromhex("5589e58b460c40"))
+        self.assertGreater(at, 0)
+        mu.mem_write(VEC_OVR_BUF * 4, struct.pack("<HH", at, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        # the game's farmalloc (load:1231h, the caller at load + 3653h): DX:AX = the size it was asked for
+        mu.mem_write((CALLER - 0x3653) * 16 + 0x1231, bytes.fromhex("5589e58b46068b5608" "5dcb"))
+        mu.mem_write(CALLER * 16 + 0xD5C, bytes((0xCD, VEC_OVR_BUF)) + bytes.fromhex("a90000"))
+
+    def call(self, paras, size):
+        mu = self.mu
+        mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", size & 0xFFFF, size >> 16, paras))
+        for name, value in dict(cs=CALLER, ss=SS, esp=0x7FA, ebp=BP, eflags=IF | 2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + 0xD5C, CALLER * 16 + 0xD61)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_BP)), (0x7FA, BP))
+        return mu.reg_read(r.UC_X86_REG_DX), mu.reg_read(r.UC_X86_REG_AX)
+
+    def words(self):
+        return struct.unpack("<HH", self.mu.mem_read(self.hdr + self.OVR_GIVEN, 4))
+
+    def test_kept_block_once(self):
+        self.mu.mem_write(self.hdr + self.OVR_SEG, struct.pack("<H", 0xD100))
+        self.assertEqual(self.call(0x80D, 0x80D0), (0xD100, 4))  # (the block's segment, offset 4)
+        self.assertEqual(self.words(), (0xD100, 0))
+        self.assertEqual(self.call(0x80D, 0x80D0), (0, 0x80D0))  # a second ask: the heap's
+
+    def test_heap_without_one(self):
+        self.assertEqual(self.call(0x80D, 0x80D0), (0, 0x80D0))
+        self.assertEqual(self.words(), (0, 0))
+
+    def test_heap_when_too_big(self):
+        self.mu.mem_write(self.hdr + self.OVR_SEG, struct.pack("<H", 0xD100))
+        self.assertEqual(self.call(0x80E, 0x80E0), (0, 0x80E0))
+        self.assertEqual(self.words(), (0, 0xD100))  # (kept for the buffer it fits)
+
+
 class KindTableTests(unittest.TestCase):
     def test_kinds_match_the_companion(self):
         """DSCLOG's weapon kinds by item type are specialize.py's."""

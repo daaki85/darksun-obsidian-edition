@@ -150,6 +150,7 @@ VEC_BOX_AC equ 0x88        ; PROBE_BOX_AC
 VEC_TICK equ 0x87          ; PROBE_TICK
 VEC_POISON equ 0x86        ; PROBE_POISON
 VEC_ARROW equ 0x85         ; PROBE_ARROW
+VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
 NENT    equ 74          ; entries in the ring (74: the helper and it fit in upper memory)
@@ -371,6 +372,9 @@ read_lang  times 4 db 0         ; +362 the Loader's: each party member's chance 
                                 ;      as it stands (kept with STATS): a Shinobi reads a scroll with it
 learn_read db 0                 ; +366 a Shinobi's try at a scroll (LEARN_SEQ): the d100 to read it ...
 learn_read_chance db 0          ; +367 ... and its chance (SHINOBI_READ)
+ovr_given  dw 0                 ; +368 the overlay buffer's segment in upper memory once the game
+                                ;      has it (PROBE_OVR_BUF), 0 while it hasn't or it is the heap's
+ovr_seg    dw 0                 ; +370 the block KEEP reserved for it, 0 once given (or none)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -18071,6 +18075,87 @@ dac        times 768 db 0
 
 tbuf:   times TSIZE db 0
 
+; UMB_ALLOC: BX paragraphs in upper memory (the upper blocks linked in, high only, last fit: the
+; top of it, so the space left over stays in one piece for the overlay buffer, OVR_RESERVE), AX
+; the segment; CF set if none has room. UMB_BEST: the same, best fit. The DOS's own settings put
+; back. (Resident: KEEP calls it once the install code's memory is given back.)
+umb_alloc:
+        mov byte [cs:ua_fit], 42h
+        jmp short ua_go
+umb_best:
+        mov byte [cs:ua_fit], 41h
+ua_go:  push bx
+        mov ax, 5802h                   ; (the link and the strategy as they were)
+        int 21h
+        mov [cs:ua_link], al
+        mov ax, 5800h
+        int 21h
+        mov [cs:ua_strat], ax
+        mov ax, 5803h
+        mov bx, 1
+        int 21h
+        mov ax, 5801h
+        xor bh, bh
+        mov bl, [cs:ua_fit]             ; (upper memory only)
+        int 21h
+        pop bx
+        mov ah, 48h
+        int 21h
+        pushf
+        push ax
+        mov ax, 5801h
+        mov bx, [cs:ua_strat]
+        int 21h
+        mov ax, 5803h
+        xor bh, bh
+        mov bl, [cs:ua_link]
+        int 21h
+        pop ax
+        popf
+        ret
+ua_link  db 0
+ua_fit   db 0
+ua_strat dw 0
+
+; PROBE_OVR_BUF: INT VEC_OVR_BUF replaces the overlay manager's "call far farmalloc" for its buffer
+; (load+3653h:0D5Ch, DSUN 3C68Ch: "int / test ax,imm16", the call's segment DOS relocates being the
+; test's word). The buffer is the game's largest block for good (32,992 bytes: twice the largest
+; overlay); in upper memory (OVR_RESERVE, put by KEEP) it leaves the game that much more of the
+; 640 KB, where its heap ran out (the map's view, OEOpenGraph's 60,000 bytes). The call's
+; arguments are on the stack: the size (two words) and under them the paragraphs (the buffer is
+; from the block's paragraph + 2 to + 1 + paragraphs). DX:AX as farmalloc gives it: the block's
+; segment, offset 4. Without a reserved block that holds it (no upper memory, or a game wanting
+; more), the game's farmalloc (load:1231h) as the call was.
+OVR_MAN_SEG equ 0x3653                  ; (DSUN.EXE, less the load segment) the call's code
+OVR_FARMALLOC equ 0x1231                ; load:1231h
+OVR_RESERVE equ 0x80E                   ; paragraphs: this game's buffer and its block's first
+probe_ovr_buf:
+        push bp
+        mov bp, sp                      ; [bp+2] IP, +4 CS, +6 flags, +8 size, +12 paragraphs
+        mov ax, [bp+12]
+        inc ax
+        cmp word [cs:ovr_seg], 0
+        je .heap
+        cmp ax, OVR_RESERVE
+        ja .heap
+        mov dx, [cs:ovr_seg]
+        mov word [cs:ovr_seg], 0        ; (once: the game asks for it once)
+        mov word [cs:ovr_given], dx
+        mov ax, 4
+        pop bp
+        iret
+.heap:  mov ax, [bp+4]
+        sub ax, OVR_MAN_SEG
+        mov [cs:ovr_far + 2], ax
+        mov word [cs:ovr_far], OVR_FARMALLOC
+        push word [bp+10]
+        push word [bp+8]
+        call far [cs:ovr_far]
+        add sp, 4
+        pop bp
+        iret
+ovr_far   dd 0
+
 ; KEEP: the last of installing, from here, as the ring is where the install code was: clear the
 ; ring and stay resident, the ring with the image (DX the paragraphs). The stack goes to the PSP's
 ; command tail first, out of the ring's way.
@@ -18083,6 +18168,17 @@ keep:   mov ax, [cs:psp]
         mov cx, RING_BYTES / 2
         cld
         rep stosw
+        push dx                         ; our block cut down to what stays, the install code's
+        mov es, [cs:psp]                ;  memory given back: then the overlay buffer's block
+        mov bx, dx                      ;  (OVR_RESERVE) where it was, in upper memory, the rest
+        mov ah, 4Ah                     ;  of it in one piece above (the ring and panel at the top)
+        int 21h
+        mov bx, OVR_RESERVE
+        call umb_best
+        jc .no_ovr
+        mov [cs:ovr_seg], ax
+.no_ovr:
+        pop dx
         mov ax, 3100h
         int 21h
 
@@ -18177,6 +18273,9 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov ax, 2500h + VEC_ARROW
         mov dx, probe_arrow
+        int 21h
+        mov ax, 2500h + VEC_OVR_BUF
+        mov dx, probe_ovr_buf
         int 21h
         mov ax, 2500h + VEC_TWO
         mov dx, probe_two
@@ -18561,46 +18660,13 @@ install:                        ; DS = ES = PSP, CS = the image
         mov dx, 0x10 + (resident_end - hdr) / 16    ; PSP and image, in paragraphs
         jmp keep
 
-; UMB_ALLOC: BX paragraphs in upper memory (the upper blocks linked in, high only, best fit, for the
-; moment), AX the segment; CF set if none has room. The DOS's own settings put back.
-umb_alloc:
-        push bx
-        mov ax, 5802h                   ; (the link and the strategy as they were)
-        int 21h
-        mov [cs:ua_link], al
-        mov ax, 5800h
-        int 21h
-        mov [cs:ua_strat], ax
-        mov ax, 5803h
-        mov bx, 1
-        int 21h
-        mov ax, 5801h
-        mov bx, 41h                     ; (best fit, upper memory only)
-        int 21h
-        pop bx
-        mov ah, 48h
-        int 21h
-        pushf
-        push ax
-        mov ax, 5801h
-        mov bx, [cs:ua_strat]
-        int 21h
-        mov ax, 5803h
-        xor bh, bh
-        mov bl, [cs:ua_link]
-        int 21h
-        pop ax
-        popf
-        ret
-ua_link  db 0
-ua_strat dw 0
 
 msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
 psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF
 all_vectors_end:
 
         align 16, db 0

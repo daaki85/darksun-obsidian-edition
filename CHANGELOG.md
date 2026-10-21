@@ -34,6 +34,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   gives the last reading and the session's lowest (`heapcheck.py`).
 
 **Fixed**
+- **The game ran out of memory in long sessions** ("Out of memory in OEOpenGraph"): each time
+  the map's view opens it needs 60,000 bytes in one piece from the game's heap, in the 640 KB, and
+  with the map open only about 53 KB were left over. The game's largest block for good, the
+  overlay manager's buffer (32,992 bytes, where the code it loads as needed runs), is now in upper
+  memory: DSCLOG keeps a block for it there (`PROBE_OVR_BUF`, the patch `overlay_umb` at DSUN
+  3C68Ch in place of its farmalloc call) and lays out its own blocks so the room is in one piece.
+  With the map open about 86 KB are now left over (the unmodded game: 57 KB). Without upper
+  memory the game takes it from its heap as before. In `test_dsclog.py`.
 - **Dinos's talk lost its upper box after the vulture meal**: the XP's words go to the narration
   window, which takes the portrait and his words away, and his menu came back under an empty
   screen. After the XP his script now sets his portrait again (54h, 117, as it does when a talk
