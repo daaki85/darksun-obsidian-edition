@@ -277,7 +277,7 @@ CHAYAS_CHEST = 2249  # (her script's)
 WEAPON_RACK, PENS, PENS_RACK = 1647, 0x29, 131  # (the slave pens' rack: its region, its entity)
 # Object 2563 is never one of ours: with an object of that number in SEGOBJEX, the game won't let
 # an item be put down on another in a character's pack (the swap is refused, whatever the items
-# and whoever's pack; 2400 and 2599 tested as fine). The pens' rack was 2563 from 1.2.0 to 2.6.0;
+# and whoever's pack; 2400 and 2599 tested as fine). The pens' rack was 2563 from 1.2.0 to 2.5.0;
 # in a save from then that has been to the pens the game, finding no object 2563, leaves it off
 # the map (renumbering it in the save doesn't bring it back: something else there keeps 2563).
 NOT_AN_OBJECT = 2563

@@ -59,24 +59,18 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.5.0** is out ([release notes](release-notes/v2.5.0.md)):
-a Pick Pockets button for thieves, four more magic weapons, thri-kreen claws
-that cut, weapon specs picked after DONE, item reports, six of the game's own
-spell bugs fixed, and an arena that always starts. 2.4.0 before it
-([release notes](release-notes/v2.4.0.md)) brought thirteen multiclass kits,
-features of their own for the game's own party, thieves in light armour, the
-combat log shown with **L**, a steady view in fights, and crash and freeze
-reports.
-
-**Coming in 2.6.0** (in progress, [draft release notes](release-notes/v2.6.0.md)):
+**Obsidian Edition 2.6.0** is out ([release notes](release-notes/v2.6.0.md)):
 the Healer kit becomes the water cleric's healer, with Cure Serious and
-Critical Wounds, Raise Dead and the other cures only druids had; the combat
-log shows the party's count of arena fights; a way for items to vanish,
-the Loader changing them as an area loads, is closed; and seven more of the
-original game's bugs are fixed, Negative Plane Protection and Cloak of
-Bravery among them.
+Critical Wounds, Raise Dead and the other cures only druids had; much more
+memory for the game in long sessions, and a warning before it runs low; the
+combat log shows the party's count of arena fights; items can be swapped in a
+pack again; and seven more of the original game's bugs are fixed, Negative Plane
+Protection and Cloak of Bravery among them. 2.5.0 before it
+([release notes](release-notes/v2.5.0.md)) brought a Pick Pockets button for
+thieves, four more magic weapons, thri-kreen claws that cut, weapon specs
+picked after DONE and item reports.
 
-Every release has notes of its own: [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
+Every release has notes of its own: [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
 have every change from the original game in one page, whatever the version.
 
 ## About
