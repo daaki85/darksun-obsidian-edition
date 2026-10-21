@@ -39,7 +39,7 @@ After changing `dos/dsclog.asm`, rebuild the helper with
 nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
-The header's signature (`DSCLOGvZ` now) goes up whenever the helper and the
+The header's signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the helper and the
 Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`), so a
 Loader never talks to an older helper.
 
@@ -347,9 +347,21 @@ The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
 the map open this left 86 KB free in conventional memory, against 53 KB (and
 the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
-each time it opens ("Out of memory in OEOpenGraph" when it can't). A change
-that makes the helper bigger by more than 2.5 KB moves the buffer back into
-the heap; `heapcheck.py` puts the game's memory in crash reports.
+each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
+(`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
+D00Ah to F000h): the build fails past it (a negative `times`), and so does
+`test_fits_upper_memory`; 2.5 KB are spare now. If the buffer still ends up in
+the heap (another DOSBox, less upper memory), the Loader says so in the dice
+log once, and crash reports say where it is (`heapcheck.py`). With EMS on,
+GOG's own setting, the helper itself no longer fits upper memory (it loads in
+the 640 KB and the game won't start); it didn't before the buffer moved either,
+and the launcher's config turns EMS off.
+
+While the game runs, the Loader reads its memory every few seconds
+(`heapcheck.Watch`): with the map's view open (DS:1F82h set), below 24 KB
+spare (DOS's after the game and the heap's free blocks) the dice log says to
+save and restart soon, once until it has been back above 32 KB. Nothing can
+be given back to the game from outside: every block is its own.
 
 ## The crash report
 

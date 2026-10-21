@@ -20,6 +20,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   saved.
 
 **Added**
+- **A warning when the game's memory runs low.** With the map open, below 24 KB spare the dice log
+  says so and to save and restart soon (a new start has it all back); once, then again only after
+  it has recovered. If upper memory had no room for the overlay buffer (another DOSBox, other
+  settings) the dice log says that too, and crash reports say where the buffer is. The helper's
+  build fails if what it puts in upper memory outgrows it (`UMB_NEED`, also checked by a test).
+  The helper's signature is now `DSCLOGva`.
 - **Enlarge shows in the damage line.** A melee hit by someone under Enlarge now reads e.g.
   `(1d8 = [5] +12 STR 24) x140% Enlarge (level 4)`, as the game works it out (DSUN 7C211h): the
   dice, weapon and STR bonus together, times 100% + 10% a level, rounded down, before a backstab's

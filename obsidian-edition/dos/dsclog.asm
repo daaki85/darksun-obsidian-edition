@@ -179,7 +179,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGvZ'          ; +0
+sig      db 'DSCLOGva'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -375,6 +375,8 @@ learn_read_chance db 0          ; +367 ... and its chance (SHINOBI_READ)
 ovr_given  dw 0                 ; +368 the overlay buffer's segment in upper memory once the game
                                 ;      has it (PROBE_OVR_BUF), 0 while it hasn't or it is the heap's
 ovr_seg    dw 0                 ; +370 the block KEEP reserved for it, 0 once given (or none)
+umb_need   dw UMB_NEED          ; +372 paragraphs the helper puts in upper memory, its MCBs counted
+                                ;      (UMB_ROOM is what DOSBox gives it; the build fails past it)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -18186,6 +18188,15 @@ align 16
 seg_space times SEG_BYTES db 0   ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
 resident_end:                   ; (the ring follows, in a segment of its own)
 RING_BYTES equ NENT * ESIZE
+
+; UPPER MEMORY: DOSBox (umb=true, ems=false, as the launcher's config has it) gives one block,
+; D000h-EFFFh, its first 10 paragraphs a free scrap ahead of the helper's MCB: UMB_ROOM paragraphs
+; from the helper's MCB on. In it: the helper (PSP and resident image), the overlay buffer
+; (OVR_RESERVE), the panel's picture and the ring, each with its MCB. The build fails if they
+; outgrow it: the overlay buffer would go back into the game's heap (33 KB less for the game).
+UMB_ROOM equ 0xF000 - 0xD00A
+UMB_NEED equ (1 + 0x10 + (resident_end - hdr) / 16) + (1 + OVR_RESERVE) + (1 + (PANEL_BYTES + 15) / 16) + (1 + (RING_BYTES + 15) / 16)
+        times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
 
 install:                        ; DS = ES = PSP, CS = the image
         mov [cs:psp], es

@@ -32,7 +32,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGvZ"
+HDR_SIG = b"DSCLOGva"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 96
@@ -482,7 +482,7 @@ class DiceLog:
         low = self.guest.read(0, CONVENTIONAL_AND_UPPER)
         hdr = next((m.start() for m in re.finditer(re.escape(HDR_SIG), low) if m.start() % 16 == 0), None)
         if hdr is None:
-            if re.search(rb"DSCLOGv[0-9A-Z]", low):
+            if re.search(rb"DSCLOGv[0-9A-Za-z]", low):
                 raise DiceLogError("An older DSCLOG is loaded. Restart the game with 'Start Game with Dice Log.bat'.")
             raise DiceLogError("DSCLOG is not loaded. Start the game with 'Start Game with Dice Log.bat'.")
         ds = game.find_data_segment(self.guest, low)
@@ -1105,7 +1105,7 @@ class DiceLog:
                 self._mended_in = region
             tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
             out += [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)]
-            heapcheck.WATCH.take(self.guest.read, self.game.load_seg)  # (for a crash report: the game's memory)
+            out += heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr)  # (the game's memory: a crash report's, and a word when it runs low)
             out += self._ring_search()
             icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
         except (struct.error, IndexError, ValueError):  # (itemgate.ItemsBusy too: tried in a later pass)

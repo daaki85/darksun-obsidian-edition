@@ -50,5 +50,61 @@ class SampleTests(unittest.TestCase):
         self.assertIn("2 pieces", lines[1])
 
 
+class NoteTests(unittest.TestCase):
+    """The dice log's lines: the overlay buffer not in upper memory (once), and memory low with the
+    map open (once, again only after it has recovered)."""
+    DS, HDR = 0x3800, 0x3A000
+
+    def setUp(self):
+        self.m = memory()
+        self.read = reader(self.m)
+        self.map_open(True)
+
+    def map_open(self, on):
+        struct.pack_into("<H", self.m, self.DS * 16 + heapcheck.MAP_OPEN, 1 if on else 0)
+
+    def spare(self, kb):  # (DOS's free blocks after the game, 4 and 8 KB, cut to fit; the heap's 1.25 KB)
+        struct.pack_into("<H", self.m, 0x2400 * 16, 0x10)
+        struct.pack_into("<H", self.m, 0x2800 * 16, 0x10)
+        last = LOAD - 0x11 + 0x3010 + 1 + 0x101
+        struct.pack_into("<H", self.m, last * 16 + 3, max(kb * 64 - 0x100 - 0x20, 0))
+
+    def test_overlay_in_upper_memory(self):
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_OVR_GIVEN, 0xDE1F)
+        w = heapcheck.Watch()
+        self.spare(80)
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])
+        self.assertIn("in upper memory (DE1Fh)", w.lines()[3])
+
+    def test_overlay_not_there(self):
+        w = heapcheck.Watch()
+        self.spare(80)
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [heapcheck.OVERLAY_LOW_LINE])
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])  # (once)
+        self.assertIn("in the 640 KB", w.lines()[3])
+
+    def test_low_once_then_again_after_recovering(self):
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_OVR_GIVEN, 0xDE1F)
+        w = heapcheck.Watch()
+        self.spare(20)
+        lines = w.take(self.read, LOAD, self.DS, self.HDR)
+        self.assertEqual(len(lines), 1)
+        self.assertTrue(lines[0].startswith("Memory is running low: 20 KB spare with the map open."))
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])  # (said once)
+        self.spare(28)  # (not yet recovered)
+        w.take(self.read, LOAD, self.DS, self.HDR)
+        self.spare(20)
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])
+        self.spare(40)
+        w.take(self.read, LOAD, self.DS, self.HDR)
+        self.spare(20)
+        self.assertEqual(len(w.take(self.read, LOAD, self.DS, self.HDR)), 1)  # (said again)
+
+    def test_not_while_the_map_is_closed(self):
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_OVR_GIVEN, 0xDE1F)
+        self.map_open(False)
+        self.spare(10)
+        self.assertEqual(heapcheck.Watch().take(self.read, LOAD, self.DS, self.HDR), [])
+
 if __name__ == "__main__":
     unittest.main()

@@ -104,6 +104,17 @@ class HeaderTests(unittest.TestCase):
         self.assertEqual(built_in, FILTERS)
         self.assertEqual(tuple(image[hdr + 112:hdr + 117]), (VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG))
 
+    def test_fits_upper_memory(self):
+        """What the helper puts in upper memory (UMB_NEED, the header's +372: itself, the overlay
+        buffer, the panel's picture and the ring, with their MCBs) fits the room DOSBox gives it from
+        its MCB at D00Ah to F000h, or the game's overlay buffer goes back into its heap."""
+        from dsloader import heapcheck
+        image = load_image()
+        hdr = struct.unpack_from("<H", image, 20)[0]
+        need, = struct.unpack_from("<H", image, hdr + heapcheck.TSR_UMB_NEED)
+        self.assertGreater(need, heapcheck.OVR_PARAS)
+        self.assertLessEqual(need, heapcheck.UMB_ROOM)
+
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class StubTests(unittest.TestCase):
