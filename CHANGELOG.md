@@ -26,6 +26,19 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   game ("Divide error"). `monster_count` reads the picked slot's own. Both found from the notes of
   CalvinRodo/yuan-ti and checked in DSUN.EXE.
 
+- **A likely cause of figures vanishing and then a freeze.** A freeze report (2.6.0, 49 minutes
+  into an arena trip) had the game's picture row decoder (0980:709Ch) unpacking a figure's picture
+  from garbage: never meeting the row's end, it copied on from its 5,408-byte buffer (0980:11BCh)
+  over the code after it, itself included, and the game's data segment was then overwritten by its
+  own stack (all 64 KB the word 44F8h: the dialogue's `D°D°D°`). For a figure's shadow DSCLOG had
+  the game load its picture into the cache when it wasn't there, in the middle of drawing the floor,
+  which can push out or move a picture the game is drawing. Shadows now use only pictures already
+  in the cache (a newly seen figure's shadow comes a frame later). Not proven to be the cause.
+- **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the
+  dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature
+  and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so
+  where the game was still shows.
+
 **Added**
 - **The psionic power check in the dice log.** `Zulak uses Graft Weapon: power check d20 = 14,
   needs 11 or less -> it fails` with the score's parts (`16 CON - 5 Graft Weapon`), and the

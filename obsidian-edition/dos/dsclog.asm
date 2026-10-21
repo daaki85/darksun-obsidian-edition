@@ -14659,8 +14659,9 @@ SPELL_SEG equ 2 + 0x79BB7 - 0x79A85  ; return address - (DSUN.EXE offsets: patch
 ; whatever is there was shadowed already). Each pixel of a shadow is darkened once, by DARK (each
 ; colour's nearest darker one, at 3/4 strength, among the colours the game doesn't animate). A
 ; figure's outline is its picture's: the runs of each row of the frame it is drawn with (no colours
-; needed), its picture loaded into the cache first if it isn't in memory (as drawing it is about to;
-; in a fight most aren't till then).
+; needed), when its picture is in the game's cache (one that isn't gets its shadow once the game
+; has loaded it to draw the figure: loading it from here, in the middle of a drawing, could push out
+; or move a picture the game is about to draw).
 ;
 ; A figure that moves is drawn again within a rectangle round where it was and where it is; its
 ; shadow reaches beyond its picture, so the routines redrawing rectangles (PROBE_REDRAW: 2475Fh, a
@@ -14681,8 +14682,6 @@ MAP_THINGS   equ 0x6694         ; DS: each thing on the map, 32 bytes (sprites.p
 MAP_COUNT    equ 520            ; how many things the game has
 CACHE_LAST   equ 0x1F84         ; DS: the last slot of the picture cache
 FLOOR_ON     equ 0x2F44         ; DS: 0 when the floor routines draw nothing
-LOADER_SEG   equ 0x1DF3         ; (DSUN.EXE 25D6Ah) the routine that loads a picture into the cache
-LOADER_OFF   equ 0x2A3A         ;   (slot, 0), as drawing one does when it isn't in memory
 FIGURE_MOST  equ 128            ; (the widest and tallest a figure's picture may be, for the test of
                                 ;   whether its shadow can be where the floor was drawn)
 
@@ -15232,24 +15231,9 @@ shadow_of:
         cmp dword [es:si + 6], 0
         jl .no
         test byte [es:si + 0x0E], 2
-        jnz .loaded
-        shr si, 4                       ; (not in memory: loaded, as drawing it is about to)
-        push si
-        mov ax, [cs:load_seg]
-        add ax, LOADER_SEG
-        mov [cs:loader + 2], ax
-        push word 0
-        push si
-        call far [cs:loader]
-        add sp, 4
-        pop si
-        or ax, ax
-        jz .no
-        mov ax, [cs:load_seg]
-        add ax, CACHE_SEG
-        mov es, ax
-        shl si, 4
-.loaded:
+        jz .no                          ; (not in memory: no shadow till the game has loaded it, as
+                                        ;   loading it here, in the middle of a drawing, can push out
+                                        ;   or move a picture the game is about to draw)
         les si, [es:si + 0x0A]
         mov bx, [cs:frame]
         cmp bx, [es:si + 4]
@@ -17999,7 +17983,6 @@ cam0_y       dw 0
 pan_x_done   dw 0
 pan_y_done   dw 0
 
-loader     dw LOADER_OFF, 0
 resume     dd 0
 resume_fl  dw 0
 floor_ret  dd 0

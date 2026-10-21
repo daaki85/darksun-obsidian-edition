@@ -2409,7 +2409,15 @@ palette (a table it makes from the palette when the Loader asks: after each
 area change, once its fade-in is over, and now and then; the colours the game
 cycles, for water and fire, are never picked as darker ones). The rectangles
 the game draws again when a figure moves are widened by the length of a
-shadow, so none is left behind. The Loader keeps DSCLOG's list of who casts
+shadow, so none is left behind. Only pictures already in the game's cache cast
+one: until 2.6.0 DSCLOG had the game load a missing one from there (1DF3:2A3Ah),
+in the middle of drawing the floor, which can push out or move another picture
+while the game is drawing; a freeze report of 2026-10-21 has a figure's
+picture unpacked from garbage, the row decoder (0980:709Ch, into a 5,408-byte
+buffer at 0980:11BCh) never meeting its row's end and copying over the code
+after it, itself included, with the game's data segment then overwritten by its
+stack. A figure whose picture isn't loaded gets its shadow when the game has
+loaded it to draw the figure, a frame later. The Loader keeps DSCLOG's list of who casts
 one (`dsloader/shadows.py`) and has DSCLOG draw the view again when it changes
 (from the game's main loop, as centring the view does: marking the figures
 changed instead, as the game's own code does to draw one again, can set one in
