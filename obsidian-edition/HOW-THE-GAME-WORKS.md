@@ -362,8 +362,10 @@ doors, walls...), which ask in two ways. Every script in GPLDATA.GFF decodes
   Detect Traps on the character who set it off, avoids it. This is the roll the
   arena prisoner makes.
 
-A party check always goes to the member with the best chance. (The game also
-has a script command that lets each member try in turn, but no script uses it.)
+A party check goes to the member with the best chance. *Without the mod* it
+always went to the first party member: the game's pick meant to find the best
+but compared the wrong way round. (The game also has a script command that lets
+each member try in turn, but no script uses it.)
 
 **The game never rolls move silently, hide in shadows or read languages**, so
 on their own they make no difference, nor does the equipment penalty on them.

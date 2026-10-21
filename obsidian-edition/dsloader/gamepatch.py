@@ -343,6 +343,17 @@ PATCHES = (
     # ... Negative Plane Protection saved as against Vampiric Touch, which allows none, so it never
     # stopped anything: "add sp,4 / push 6 / push 27h" (DSCLOG's NS_NPP: a save allowed) ...
     Patch("npp_save", 0x7A7E9, bytes.fromhex("83c4046a066a27"), _site(NS_NPP, 7)),
+    # ... a thief skill for the whole party (801BDh: a trap's find/remove traps, GPL 28's hear
+    # noise) was to go to the member with the best chance, but kept the lower, unsigned, of a best
+    # that starts at 0: none was ever lower, so the first member rolled. "jna" made "jge": the
+    # highest chance above 0 (one who can't, or isn't standing, has 0: the first then, as before)
+    Patch("party_best", 0x80201, bytes.fromhex("7605"), bytes.fromhex("7d05")),
+    # ... and how many of a random monster come (REQUEST 8, 80BE4h; GPL 99 and 106): 2 x the
+    # party's strength / the monster's, but its search left SI one past the slot found, so the
+    # next slot's strength (the last slot's: the next record's first OJFF), and an empty one (the
+    # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
+    # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
+    Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
     # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
     # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
     Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),

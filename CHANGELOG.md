@@ -9,6 +9,23 @@ For what a release brings, read its notes ([2.6.0](release-notes/v2.6.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
+## Pull request #55 (in progress)
+
+**Fixed**
+- **A party's thief skill roll goes to its best member.** Where the game asks the whole party
+  (a trap's find/remove traps, all 50 trap triggers with the arena prisoner's among them, and
+  hear noise by the wagon), its pick (DSUN 801BDh) was to keep the highest chance but kept the
+  lower, unsigned, of a best starting at 0: no one was ever lower, so the first party member
+  always rolled. `party_best` makes its "jna" a "jge": the highest chance above 0 rolls (no one
+  able, the first member, as before). A character's own checks (pick pockets, the scripted
+  searches, the Loader's stealth rolls) were never picked this way and don't change.
+- **Random monsters come in the right numbers and can't crash the game.** REQUEST 8 (80BE4h,
+  scripts 99 and 106) sends 2 x the party's strength / the monster's, 1 to 6, but took the
+  strength of the slot after the one picked: from the next region's record after the tenth, and
+  0 after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255, a division by 0 that ends the
+  game ("Divide error"). `monster_count` reads the picked slot's own. Both found from the notes of
+  CalvinRodo/yuan-ti and checked in DSUN.EXE.
+
 ## Pull request #53 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/53))
 
 **Changed**

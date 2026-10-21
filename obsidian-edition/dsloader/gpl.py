@@ -28,7 +28,8 @@ OPERATORS = ("+", "-", "*", "/", "and", "or", "==", "!=", ">", "<", ">=", "<=", 
 FIELD_SPECIAL = {0x25, 0x26, 0x27, 0x28, 0x2B, 0x2C}  # object numbers the game fills in
 
 # Command 22h runs one of the game's actions: (action, who, value, value). Action 3 is a thief
-# skill check: (3, who, skill, bonus); for the party, the member with the best chance rolls.
+# skill check: (3, who, skill, bonus); for the party, the member with the best chance rolls (the
+# game alone: the first member, gamepatch's party_best).
 DO_ACTION = 0x22
 ACTION_SKILL = 3
 # Action 7 sets off a trap-like object at a map square: (7, object, x, y). The party's best at

@@ -51,6 +51,14 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(sorted(p.offset for p in gamepatch.PATCHES if p.name.startswith("brave_fear")),
                          [0x5400 + 0x3CB4 * 16 + 0x30 + n * 0x20 + 0x12 for n in (21, 43, 78, 132)])
 
+    def test_party_and_monster_slips_mended(self):
+        """The party's thief skill pick keeps the highest chance (a signed "jge" past it when the
+        best so far is as high), and the random monster's count divides by the slot found's
+        strength (+0 from SI, one past it, not +4: the next slot's, 0 after a ninth)."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        self.assertEqual(by["party_best"].replacement[0], 0x7D)
+        self.assertEqual(by["monster_count"].replacement[-1], 0)
+
     def test_relocated_words_kept(self):
         """A word DOS relocates (from the EXE's relocation table) must be left as it was: the
         camera patch keeps its "mov ax,377Eh" at 1CA15h; a patch changing such a word is refused."""

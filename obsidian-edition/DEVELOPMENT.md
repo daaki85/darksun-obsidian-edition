@@ -1830,6 +1830,22 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   DSCLOG's `NS_WALL` puts the points 32 sixteenths either side of the cell,
   across the line from the caster (along an axis, or the diagonal, whichever
   the line is nearest), so a wall four cells long; other spells as before.
+- **A thief skill for the whole party** (who 7FFEh; 801BDh, from REQUEST 3
+  and the trap's REQUEST 7 at 80A9Dh): each standing member's chance
+  (8023Bh, the same routine the roll uses, so with the Loader's skill rules)
+  is weighed against the best so far, which starts at 0 with the member 0, but
+  "cmp [bp-2],dx / jna" keeps the lower, unsigned: nothing is, so member 0
+  always rolled. `party_best` makes it "jge" (80201h): the highest chance above
+  0, else member 0 as before. A named character skips the pick altogether.
+  Found from CalvinRodo/yuan-ti's notes.
+- **Random monsters** (REQUEST 8, 80BE4h; scripts 99 and 106): `MONR` 1 of
+  `RESOURCE.GFF`, 42-byte records {region, 10 x {OJFF, strength}}. With a ≠ 0
+  the count is 2 x the party's strength / the monster's, 1 to 6, but the slot
+  search leaves SI one past the match and "idiv word es:[bx+4]" (80CD8h) reads
+  the next slot's strength: the next record's first OJFF after the tenth, and 0
+  after the last in the records with nine or seven (regions 6, 13, 14, 27, 39,
+  40, 44 and 255), a "Divide error" that ends the game. `monster_count` makes
+  it [bx+0], the match's own.
 
 ### New wizard spells
 
