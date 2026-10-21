@@ -308,6 +308,15 @@ PSIONIC_FIRST, PSIONIC_COUNT = 138, 34
 # bits 5-7: the kind of save)
 SPELLS_SEG, SPELLS_OFF, SPELL_SIZE = 0x3CB4, 0x40, 0x20
 SPELL_LEVELS_SEG, SPELL_LEVELS_OFF = 0x3FB9, 0x19C  # each spell's level, 7 bytes a spell (DSCLOG's SPELL_LEVELS)
+# The psionic powers' table, 8 bytes a power (0-33) from 3FB9h:0000h: +0 the ability its check uses
+# (bits 0-2: STR, DEX, CON, INT, WIS, CHA) and the power's adjustment (bits 3-7, signed); +1 its
+# PSP. And a byte a party member a power (selector 2F0h, +77h + member * 22h + power) whose bits 3-7
+# are the member's own number for it: 0 not known, 1 known, more adding to the check (the game has
+# code to raise and lower it, 1 to 30; nothing found to call it)
+POWERS_SEG, POWER_SIZE = 0x3FB9, 8
+POWER_OWN_SELECTOR, POWER_OWN_OFF, POWER_OWN_STRIDE = 0x2F0, 0x77, 0x22
+SEGMENT_TABLE = 0x4137  # the game's segment table: a selector's segment at +selector (8 bytes each)
+ABILITY_NAMES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 SHEET_MAGIC_RESISTANCE = 0x29
 SPHERE_NAMES = ("air", "earth", "fire", "water")  # the clerics' and druids' spheres, by class order
 SHEET_ATTACKS = 0x2A  # the game's attacks a round, in halves (2: 1, 3: 3/2)
@@ -1013,6 +1022,25 @@ class GameData:
         kinds = struct.unpack_from("<H", rec, 0x1A)[0]
         names = [name for bit, name in spellbook.DAMAGE_KINDS if kinds & bit]
         return f" ({rule.base_dice}d{rule.sides}{' ' + ', '.join(names) if names else ''})"
+
+    def power_score_parts(self, combatant: int, power: int) -> Optional[Tuple[str, int, int]]:
+        """A psionic power's check score parts for COMBATANT (as the game's 5D59Dh adds them): the
+        ability's name, the power's adjustment, and the user's own number for it less 1 (a party
+        member's; a monster's is 1, so 0)."""
+        if not 0 <= power < PSIONIC_COUNT:
+            return None
+        try:
+            first = self.guest.read((self.load_seg + POWERS_SEG) * 16 + power * POWER_SIZE, 1)[0]
+            own = 0
+            if 0 <= combatant < PARTY_SIZE:
+                seg, = struct.unpack("<H", self.guest.read((self.load_seg + SEGMENT_TABLE) * 16 + POWER_OWN_SELECTOR, 2))
+                byte = self.guest.read(seg * 16 + POWER_OWN_OFF + combatant * POWER_OWN_STRIDE + power, 1)[0]
+                own = max((byte >> 3) - 1, 0)
+        except (OSError, ValueError):
+            return None
+        index = first & 7
+        adjustment = (first >> 3) - 32 if first >> 3 > 15 else first >> 3
+        return (ABILITY_NAMES[index] if index < len(ABILITY_NAMES) else f"ability {index}"), adjustment, own
 
     def spell_name(self, spell: int) -> str:
         if PSIONIC_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT:

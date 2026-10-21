@@ -741,6 +741,30 @@ each class's next level in its tables and shows the lowest. Where it adds the
 closing bracket, the helper (`INT D2h`) finds which classes that number
 belongs to and adds their letters first.
 
+### The psionic power check
+
+([In How the game works](HOW-THE-GAME-WORKS.md#psionics).)
+
+The check is 5D59Dh (combatant, power 0-33, bonus), from the routine using a
+power (5CC2Dh): its return is the d20 when the power works, 0 when it fails
+("psionic power check fails", half the PSP), FFh when static disrupts it. Its
+d20s come from random(low, high) (`1A0A:2FA9h`, selector A0h), whose code after
+`rand()` no filter matched until `RANGE_SITE`; the dice log tells the three
+calls apart by the code after each (`POWER_CHECK_RETURN`, `STATIC_FIRST_RETURN`,
+`STATIC_SECOND_RETURN`) and skips its other callers (the psionic defence's two
+rolls, 5D87Ah, and points for some spells' pictures, 60041h). The score, the
+byte at `[BP-2]`, is the ability `+0` bits 0-2 of the power's 8 bytes name
+(`3FB9h:0000h`, `game.POWERS_SEG`; through 508:57h, the ability as it is now),
+plus `+0` bits 3-7 (signed), plus the bonus, plus the user's own number for the
+power, less 1: for a party member bits 3-7 of the byte at selector 2F0h,
+`+77h + member * 22h + power` (0 not known; 1 known, all a new character has),
+for anyone else 1 (5C9E7h). The game has routines to raise and lower that number
+(5CF35h, 5CFA9h, 1 to 30) that nothing found calls. With a Synaptic Static
+(effect 1Eh) kept up by someone else, the user's d20 over `[BP-8]` disrupts the
+power; that was to be the power's score, but the ability read for it is dropped
+and only the user's own number kept. Else the keeper's d20 at or under its own
+Static score (`[BP-6]`), and no lower than the user's, does.
+
 ### What hurts a monster (the Look box)
 
 ([In the README](README.md#what-hurts-a-monster-the-look-box).)

@@ -534,6 +534,54 @@ class SaveTests(unittest.TestCase):
         m[DS * 16 + game.SPELL_NAMES:DS * 16 + game.SPELL_NAMES + 30] = b"DETONATE\0DISINTEGRATE\0" + bytes(7)
         self.assertEqual(game.GameData(log.guest, DS).spell_name(139), "Disintegrate")
 
+    def power_check_game(self):
+        """Dag (combatant 0) knowing Graft Weapon (power 17: CON - 5) at 2, the Mountain
+        Stalker's Synaptic Static about."""
+        log = make_game()
+        m = log.guest.mem
+        m[(LOAD_SEG + game.POWERS_SEG) * 16 + 17 * game.POWER_SIZE] = (-5 & 0x1F) << 3 | 2
+        own_seg = 0x6A00
+        struct.pack_into("<H", m, (LOAD_SEG + game.SEGMENT_TABLE) * 16 + game.POWER_OWN_SELECTOR, own_seg)
+        m[own_seg * 16 + game.POWER_OWN_OFF + 17] = 2 << 3
+        log.game.spell_name = lambda spell: "Graft Weapon" if spell == game.PSIONIC_FIRST + 17 else "?"
+        return log
+
+    def test_power_check(self):
+        """The d20 at or under the power's score ([BP-2]): CON 16 - 5 Graft Weapon + 1 practised = 12."""
+        log = self.power_check_game()
+        score = locals_at(0x28, m2=12)  # (the score is the byte at [BP-2])
+        e = entry(raw_for(9, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                  parent_code=dicelog.POWER_CHECK_RETURN, parent_locals=score)
+        self.assertEqual(log.describe(e), ["Dag uses Graft Weapon: power check d20 = 9, needs 12 or less -> it works",
+                                           "    power score 12 = 16 CON - 5 Graft Weapon + 1 practised"])
+        e = entry(raw_for(20, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                  parent_code=dicelog.POWER_CHECK_RETURN, parent_locals=score)
+        self.assertEqual(log.describe(e)[0], "Dag uses Graft Weapon: power check d20 = 20, needs 12 or less "
+                                             "(a 20 always fails) -> it fails")
+
+    def test_other_ranges_left_out(self):
+        """random(low, high) also makes points of some spells' pictures: no line for those."""
+        log = self.power_check_game()
+        e = entry(raw_for(3, 40), dicelog.RANGE_SITE, words(0, 0, 0, 40), parent_code=bytes(12))
+        self.assertEqual(log.describe(e), [])
+        self.assertTrue(any(dicelog.RANGE_SITE.startswith(f) for f in dicelog.FILTERS))
+
+    def test_static_contest(self):
+        """With the Stalker's Synaptic Static about: Dag's d20 over [BP-8] disrupts the power; else the
+        Stalker's at or under its Static score [BP-6] and no lower than Dag's."""
+        log = self.power_check_game()
+        frame = locals_at(0x28, m4=0x29, m6=11, m8=2)
+        for first, second, verdict in ((5, 3, "disrupted by the static"), (2, 8, "disrupted by the static"),
+                                       (2, 15, "not disrupted: the power check follows")):
+            e = entry(raw_for(first, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                      parent_code=dicelog.STATIC_FIRST_RETURN, parent_locals=frame)
+            self.assertEqual(log.describe(e), [])
+            e = entry(raw_for(second, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                      parent_code=dicelog.STATIC_SECOND_RETURN, parent_locals=frame)
+            self.assertEqual(log.describe(e), [
+                f"Dag uses Graft Weapon within Mountain Stalker's Synaptic Static: d20 = {first} against 2, "
+                f"Mountain Stalker's d20 = {second} against 11 (and at least {first}) -> {verdict}"])
+
     def test_out_cold_takes_the_most(self):
         log = make_game()
         m = log.guest.mem

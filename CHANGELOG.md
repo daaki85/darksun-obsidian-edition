@@ -26,6 +26,15 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   game ("Divide error"). `monster_count` reads the picked slot's own. Both found from the notes of
   CalvinRodo/yuan-ti and checked in DSUN.EXE.
 
+**Added**
+- **The psionic power check in the dice log.** `Zulak uses Graft Weapon: power check d20 = 14,
+  needs 11 or less -> it fails` with the score's parts (`16 CON - 5 Graft Weapon`), and the
+  Synaptic Static contest when someone else keeps it up. The game rolls these with its
+  random(low, high) (1A0A:2FA9h), whose rolls the helper didn't record: a new roll filter
+  (`RANGE_SITE`; it also makes points of some spells' pictures, which the log passes over). The
+  check (5D59Dh) and the table it reads (`game.POWERS_SEG`, the per-character byte at selector
+  2F0h) are in DEVELOPMENT.md.
+
 ## Pull request #53 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/53))
 
 **Changed**

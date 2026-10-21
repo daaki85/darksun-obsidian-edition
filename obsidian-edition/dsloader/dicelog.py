@@ -91,6 +91,15 @@ WEAPON_DAMAGE_RETURN = bytes.fromhex("83c4068946fc0bc07f05")
 # ... and after the 1d10 for a creature's 1-in-10 special effect on a hit (the thri-kreen
 # bite, for one); the caller's arguments are (target, attacker)
 SPECIAL_EFFECT_RETURN = bytes.fromhex("83c4043d01007510")
+# The code after rand() in the game's random(low, high) (1A0A:2FA9h): low + rand() * (high - low + 1) / 8000h
+RANGE_SITE = bytes.fromhex("660fbfc08bd72bd642660fbfd2660fafc2")
+# ... and after its calls in a psionic power's check (5D59Dh; its arguments: combatant, power 0-33, bonus): the
+# d20 against [BP-2], the power's score (POWER_CHECK_RETURN); with someone else's Synaptic Static
+# about, first a d20 against [BP-8] (STATIC_FIRST_RETURN) and one against [BP-6], the Static's own
+# score, by the one keeping it up ([BP-4]; STATIC_SECOND_RETURN)
+POWER_CHECK_RETURN = bytes.fromhex("83c4048846ff807eff147413")
+STATIC_FIRST_RETURN = bytes.fromhex("83c4048846ff666801001400")
+STATIC_SECOND_RETURN = bytes.fromhex("83c4048ad08a46ff983b46f8")
 # ... and in the routine that adds up a spell's damage dice
 SPELL_DAMAGE_RETURN = bytes.fromhex("83c4045a03d0")
 # ... and in the routine that works out a spell's duration (its arguments: spell, caster level);
@@ -138,7 +147,9 @@ OVERLAY_TRAP = b"\xcd\x3f"
 # and the percentile check. The same list is built into DSCLOG.
 SCALED_ROLL = b"\x66\x0f\xbf\xc0"  # movsx eax, ax
 FILTERS = tuple(SCALED_ROLL + bytes.fromhex(h) for h in (
-    "666bc0", "6669c0", "66c1e0", "660fbf56")) + (PERCENT_SITE[:8], b"\xeb\x05IMAGE")  # (DSCLOG's NS_BLOW: IMAGE_BLOW_SITE)
+    "666bc0", "6669c0", "66c1e0", "660fbf56", "8bd72bd6")) + (PERCENT_SITE[:8], b"\xeb\x05IMAGE")  # (DSCLOG's NS_BLOW: IMAGE_BLOW_SITE)
+# (the fifth: random(low, high), RANGE_SITE: the psionic power check's d20s, and points of some
+# spells' pictures, which the log passes over)
 
 # The rolls at the start of each round (the code after each rand() call): initiative
 # 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties
@@ -443,6 +454,7 @@ class DiceLog:
         self._kits_due = False  # (a fight is over: the next round rolls the dances and Wild Fighting)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
+        self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
@@ -1785,6 +1797,10 @@ class DiceLog:
             return self._break_check(e, code.startswith(BREAK_ROLL_1), show_all)
         if code.startswith(PERCENT_SITE):
             return self._thief_skill(e)
+        if code.startswith(RANGE_SITE):
+            lines = self._range_roll(e)
+            if lines is not None:
+                return lines
         if show_all:
             generic = generic_roll(code, e)
             where = f"{e.cs:04x}:{e.ip:04x}"
@@ -2550,6 +2566,68 @@ class DiceLog:
             return False
         table = game.far_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
         return (seg & 0xFFFF) * 16 + (off & 0xFFFF) == table + index * game.CREATURE_SIZE
+
+    def _range_roll(self, e: Entry) -> Optional[List[str]]:
+        """A number from LOW to HIGH (the game's 1A0A:2FA9h, arguments low, high): the psionic
+        power check's d20s; None for one the log doesn't know."""
+        low, high = e.arg(6), e.arg(8)
+        if low is None or high is None or high < low:
+            return None
+        roll = low + scaled(e.raw, high - low + 1)
+        if (low, high) != (1, 20):
+            return None
+        if e.parent_code.startswith(POWER_CHECK_RETURN):
+            return self._power_check(e, roll)
+        if e.parent_code.startswith(STATIC_FIRST_RETURN):
+            self._static_rolls[(e.ss, e.parent_bp)] = roll
+            return []
+        if e.parent_code.startswith(STATIC_SECOND_RETURN):
+            return self._static_check(e, roll)
+        return None
+
+    def _power_check(self, e: Entry, roll: int) -> List[str]:
+        """A psionic power's check: a d20 at or under the power's score, a 1 always and a 20
+        never; the score is the ability the power uses (as the game reads it now) + the power's
+        adjustment + the user's own for it (the game keeps one a power, 1 and up, from 1) - 1 +
+        the call's bonus (none so far)."""
+        who, power, bonus = e.parent_arg(6), e.parent_arg(8), e.parent_arg(0x0A) or 0
+        if who is None or power is None:
+            return []
+        score = struct.unpack("<b", e.parent_locals[0x28 - 2:0x28 - 1])[0]
+        works = roll != 20 and (roll <= score or roll == 1)
+        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        head = f"{self._name(who)} uses {name}: power check d20 = {roll}, needs {score} or less"
+        if roll in (1, 20):
+            head += f" (a {roll} always {'works' if roll == 1 else 'fails'})"
+        out = [f"{head} -> {'it works' if works else 'it fails'}"]
+        parts = self.game.power_score_parts(who, power)
+        if parts is not None:
+            ability, adjustment, own = parts
+            level = score - adjustment - own - bonus
+            steps = [f"{level} {ability}", f"{signed(adjustment)} {name}"]
+            if own:
+                steps.append(f"{signed(own)} practised")
+            if bonus:
+                steps.append(f"{signed(bonus)} this use")
+            out.append(f"    power score {score} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - "))
+        return out
+
+    def _static_check(self, e: Entry, second: int) -> List[str]:
+        """Someone else's Synaptic Static against a power: the user's d20 (the first) over its
+        number ([BP-8]: the game means the power's score, but its ability is read and dropped, so
+        it is the user's own number for the power, 1 for a monster) disrupts it; else the Static's
+        keeper ([BP-4]) rolls at or under its own Static score ([BP-6]) and no lower than the first
+        to disrupt it. Otherwise the power check follows."""
+        first = self._static_rolls.pop((e.ss, e.parent_bp), None)
+        who, power = e.parent_arg(6), e.parent_arg(8)
+        keeper, against, holds = e.parent_local(-4), e.parent_local(-6), e.parent_local(-8)
+        if first is None or who is None or power is None or None in (keeper, against, holds):
+            return []
+        disrupted = first > holds or (second <= against and second >= first)
+        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        return [f"{self._name(who)} uses {name} within {self._name(keeper)}'s Synaptic Static: "
+                f"d20 = {first} against {holds}, {self._name(keeper)}'s d20 = {second} against {against} "
+                f"(and at least {first}) -> {'disrupted by the static' if disrupted else 'not disrupted: the power check follows'}"]
 
     def _save_roll(self, e: Entry, now: float = 0.0) -> List[str]:
         """The d20 of a saving throw. A natural 1 or 20 ends the save here; otherwise the

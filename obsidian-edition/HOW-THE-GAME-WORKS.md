@@ -110,6 +110,19 @@ their own:
   the game puts them on again for another round; when the PSP runs short, the
   power drops. The log shows every change in a party member's PSP
   (` K'ratchek spends 18 PSP (52 -> 34)`).
+- **The power check.** Each use rolls a d20 that must come up at or under the
+  power's score: the ability the power uses (CON for most psychometabolism and
+  psychokinesis, WIS for telepathy and Disintegrate, INT for Superior
+  Invisibility, Mind Bar and Synaptic Static) plus the power's adjustment, from
+  −1 (Lend Health) to −7 (Mind Blank). A 1 always works and a 20 always fails;
+  a failure says "psionic power check fails" and costs half the PSP. The game
+  also keeps a number for each power a character knows, and adds anything
+  above 1 to the score, but no code was found that raises it. Near someone
+  else's **Synaptic Static**, the user first rolls a d20 against that number
+  (the game reads the ability for it and drops it, so it's 1 for most
+  characters): over it, "psionics disrupted by static". Otherwise the Static's
+  keeper rolls a d20 at or under their own Synaptic Static score, and no lower
+  than the user's, to disrupt it. The log shows each of these rolls.
 - **Psionic defence.** Attacked by a psionic attack mode (Psychic Crush, Ego
   Whip, Id Insinuation, Psionic Blast), a character defends with WIS − 7, or
   with a defence mode already raised (used beforehand, it stays up at no cost
