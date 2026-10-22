@@ -5,7 +5,10 @@ The game has no notion of a weapon's kind: its item types are one per weapon and
 metal, a bone and an obsidian long sword are three), and its named weapons are types of their
 own (Bloodwrath, Swiftbite). KIND_OF_TYPE sorts every weapon type into one of the sixteen KINDS,
 by its dice, weight and name; the spell-made weapons (Flame Blade, Shillelagh, Spiritual
-Hammer), the gloves and the broken weapon are none.
+Hammer), the gloves and the broken weapon are none. For specialization alone the spell-made ones
+count as their AD&D weapon's kind (CONJURED_KINDS, spec_kind_of): the Flame Blade a long sword
+(AD&D's scimitar, which Athas hasn't), Shillelagh a club, Spiritual Hammer a mace (the war
+hammer's nearest); restrictions treat them as the game does.
 
 The kinds come in the order of the weapon window's slots, long sword first: the default for a
 pick left unmade; a gladiator's second is the club, the next.
@@ -48,6 +51,17 @@ KIND_OF_TYPE: Dict[int, int] = {t: KINDS.index(kind) for kind, types in _TYPES.i
 def kind_of(item_type: int) -> Optional[int]:
     """The weapon kind (its number in KINDS) of an item type, or None for one that is none."""
     return KIND_OF_TYPE.get(item_type)
+
+
+# the weapons spells make, by item type (the game's), and the kind each counts as for
+# specialization (DSCLOG's CONJURED_KINDS): Shillelagh, the Flame Blade, Spiritual Hammer
+CONJURED_KINDS: Dict[int, int] = {28: KINDS.index("club"), 29: KINDS.index("long sword"), 30: KINDS.index("mace")}
+
+
+def spec_kind_of(item_type: int) -> Optional[int]:
+    """The kind an item type counts as for weapon specialization: kind_of's, or a spell-made
+    weapon's (CONJURED_KINDS); DSCLOG's SPEC_KIND."""
+    return CONJURED_KINDS.get(item_type, KIND_OF_TYPE.get(item_type))
 
 
 # A character's skill with a weapon, as DSCLOG's SPEC_OF works it out (game.SPEC_SLOTS holds the
@@ -93,7 +107,7 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
     chosen = sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]
     if not any(chosen):
         return NONE
-    kind = kind_of(item_type) if item_type is not None else None
+    kind = spec_kind_of(item_type) if item_type is not None else None
     bm = kitpages.kit_place_of(sheet, kits.BATTLE_MAGE)
     if game.RULES_IN_FORCE & game.RULE_KITS and bm is not None and sheet[0x22]:
         # (a Battle Mage who has changed class: its weapon spec the kit's alone, nothing while asleep)

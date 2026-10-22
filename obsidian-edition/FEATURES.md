@@ -523,8 +523,12 @@ fighter, gladiator and ranger levels; characters stop at 10):
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
 
 The sixteen weapon specs take in the game's weapons of every material and its
-named ones (Bloodwrath, Swiftbite and the like are long swords); spell-made
-weapons and gloves are none.
+named ones (Bloodwrath, Swiftbite and the like are long swords); gloves are none.
+The weapons spells make count for specialization as their AD&D weapon: the
+Flame Blade a long sword (AD&D's scimitar, which Athas hasn't), Shillelagh a
+club, Spiritual Hammer a mace (the war hammer's nearest). Class and kit
+restrictions leave them as the game has them: anyone who can cast the spell can
+hold its weapon.
 
 | Weapon specs (the weapon window's rows, from the top) |
 |---|

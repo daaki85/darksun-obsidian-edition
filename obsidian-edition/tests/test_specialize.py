@@ -724,5 +724,15 @@ class KitGearTests(FinishNewTests):
         self.assertEqual(weaponchoice.kit_gear(self.gd), [])
         self.assertEqual(self.item(0), (weaponchoice.START_TYPE, right))
 
+class ConjuredTests(unittest.TestCase):
+    def test_conjured_count_for_specialization_only(self):
+        """Shillelagh a club, the Flame Blade a long sword, Spiritual Hammer a mace for weapon
+        specialization; no kind for restrictions (kind_of), as the game has them."""
+        for t, kind in ((28, "club"), (29, "long sword"), (30, "mace")):
+            self.assertEqual(specialize.spec_kind_of(t), specialize.KINDS.index(kind))
+            self.assertIsNone(specialize.kind_of(t))
+        self.assertEqual(specialize.spec_kind_of(45), specialize.kind_of(45))
+
+
 if __name__ == "__main__":
     unittest.main()

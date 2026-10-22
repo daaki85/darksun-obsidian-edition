@@ -10131,17 +10131,13 @@ spec_of_sheet:
         mov dl, SPEC_NONE
         jne .out
         mov dl, SPEC_PLAIN
-        cmp si, KIND_TYPES
-        jae .out
-        mov al, [cs:si + kind_of_type]
-        cmp al, [es:bx + SPEC_SLOTS]
+        call spec_kind
+        cmp cl, [es:bx + SPEC_SLOTS]
         jne .out
         mov dl, SPEC_EXPERT
         jmp .out
 .kinds: mov dl, SPEC_PLAIN
-        cmp si, KIND_TYPES
-        jae .ret
-        mov cl, [cs:si + kind_of_type]
+        call spec_kind
         or cl, cl
         jz .ret
         xor si, si
@@ -10242,6 +10238,24 @@ spec_of_sheet:
         pop cx
         pop ax
         ret
+
+; SPEC_KIND: CL the kind + 1 that item type SI counts as for weapon specialization (0 none):
+; kind_of_type's, but the weapons spells make count as their AD&D weapon's (CONJURED_KINDS, by
+; type from CONJURED_FIRST: Shillelagh a club, the Flame Blade a long sword, Spiritual Hammer a
+; mace; specialize.py's spec_kind_of). Restrictions keep kind_of_type's none for them.
+CONJURED_FIRST equ 28
+spec_kind:
+        xor cl, cl
+        cmp si, KIND_TYPES
+        jae .ret
+        mov cl, [cs:si + kind_of_type]
+        cmp si, CONJURED_FIRST
+        jb .ret
+        cmp si, CONJURED_FIRST + 2
+        ja .ret
+        mov cl, [cs:si + conjured_kinds - CONJURED_FIRST]
+.ret:   ret
+conjured_kinds db 2, 1, 5       ; (kind + 1: club, long sword, mace)
 
 ; By item type (the game's 115, then the Loader's own: 115 its short sword), the weapon kind
 ; + 1 (dsloader/specialize.py's KIND_OF_TYPE; 0 none)

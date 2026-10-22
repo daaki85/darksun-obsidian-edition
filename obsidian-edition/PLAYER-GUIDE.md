@@ -1363,7 +1363,9 @@ can cast. INT sets two limits:
   psionicist STR too.
 - **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as the Cure spells
   heal (Light: 1d8 both ways). *Without the mod:* 2d9 and 3d9.
-- Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
+- Shillelagh, Flame Blade and Spiritual Hammer need an empty hand. With weapon
+  specialization on, a spec counts with them as with a club, a long sword and a
+  mace.
 - Six **new wizard spells**, learnt like any other:
   - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for
     an hour of game time a caster level, which betters AC, initiative, thief

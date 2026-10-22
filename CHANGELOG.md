@@ -107,6 +107,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   skills to 13th (`tables.py`, `game.AD_D_THIEF`); CHOOSE A SPELL no higher than 5th (`WIZ_LEVEL_MOST`).
   Checked in the game with a single, a two- and a three-class character and a dual-class human.
 
+- **Weapons spells make count for weapon specialization.** The Flame Blade counts as a long
+  sword (AD&D's scimitar, which Athas hasn't), Shillelagh as a club, Spiritual Hammer as a mace
+  (the war hammer's nearest): DSCLOG's `SPEC_KIND` and `specialize.spec_kind_of`, for the
+  specialization's attacks, to-hit and damage alone. Class and kit restrictions still see no kind,
+  so whoever casts the spell holds its weapon.
+
 **Fixed**
 - **Spell arrows fade at the game's own rest.** They faded only at a script's rest request and the
   vulture meal; camping at a fire ring runs the game's rest routine (8066Dh, also its REST from a

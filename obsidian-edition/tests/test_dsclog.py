@@ -888,6 +888,7 @@ class SpecializeTests(unittest.TestCase):
     SHEETS = 0x8000
     RULES = 170
     LONG_SWORD, AXE = 45, 22  # (item types: obsidian long sword, axe)
+    FLAME_BLADE, SPIRITUAL_HAMMER = 29, 30  # (the spells' weapons: a long sword, a mace for specialization)
     TWO_HANDED, SHIELD, BOW = 60, 4, 13  # (item types as these tests make them)
     DAGGER = 17  # (the bone dagger's type: kind_of_type's dagger)
     CREATURES, ITEMS, ITEM_TYPES = 0x8A00, 0x8B00, 0x8C00
@@ -909,7 +910,8 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, self.ITEMS))
         mu.mem_write(self.DS * 16 + 0x1669, struct.pack("<HH", 0, self.ITEM_TYPES))
         for typ, flags, kinds in ((self.AXE, 1, 0), (self.LONG_SWORD, 1, 0), (self.TWO_HANDED, 1, 0x40),
-                                  (self.SHIELD, 4, 0x80), (self.BOW, 2, 0x40), (self.DAGGER, 1, 0)):
+                                  (self.SHIELD, 4, 0x80), (self.BOW, 2, 0x40), (self.DAGGER, 1, 0),
+                                  (self.FLAME_BLADE, 1, 0), (self.SPIRITUAL_HAMMER, 1, 0)):
             rec = bytearray(0x14)
             rec[0], rec[0x0F] = flags, kinds
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
@@ -1044,6 +1046,13 @@ class SpecializeTests(unittest.TestCase):
 
     def test_specialization(self):
         self.assertEqual(self.attack(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0)), (3, 14, 5, 8))
+
+    def test_conjured_weapons(self):
+        """The weapons spells make count as their AD&D kind for specialization (SPEC_KIND): the
+        Flame Blade a long sword, Spiritual Hammer a mace (not a long sword)."""
+        self.assertEqual(self.attack(3, self.FLAME_BLADE, chosen=(0,), levels=(4, 0, 0)), (3, 14, 5, 8))
+        self.assertEqual(self.attack(3, self.SPIRITUAL_HAMMER, chosen=(0,)), (2, 15, 3, 8))
+        self.assertEqual(self.attack(3, self.SPIRITUAL_HAMMER, chosen=(4,), levels=(4, 0, 0)), (3, 14, 5, 8))
 
     def test_other_kind_plain_rate(self):
         self.assertEqual(self.attack(3, self.AXE, chosen=(0,)), (2, 15, 3, 8))
