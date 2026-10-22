@@ -389,6 +389,9 @@ class DiceLog:
         self._pending: List[PendingDice] = []
         self._out_cold: Dict[int, bool] = {}  # creature index -> Out Cold when last looked at
         self._psp: Dict[int, int] = {}  # party member -> PSP when last looked at
+        # party member -> (name, scores) last reported, and a change seen once (reported when it holds)
+        self._abilities: Dict[int, Tuple[str, Tuple[int, ...]]] = {}
+        self._abilities_new: Dict[int, Tuple[str, Tuple[int, ...]]] = {}
         self.itemwatch = ItemWatch()  # the party's items, and a report when one is gone (itemwatch.py)
         self._settings: Optional[dict] = None  # as last given to use_settings, for the reports
         self._last_damage: Optional[Tuple[int, int]] = None  # (spell, damage) last rolled
@@ -487,6 +490,7 @@ class DiceLog:
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
         self._spell_name = ""
+        self._spell_id: Optional[int] = None
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
         self.walkers = stuckwalk.StuckWalkers()  # (people a saved walk left standing)
@@ -1006,7 +1010,7 @@ class DiceLog:
         self._answer_stats()
         out += self._answer_use()
         out += self._answer_look()
-        changes = self.hp_changes(now) + self.psp_changes()
+        changes = self.hp_changes(now) + self.psp_changes() + self.ability_changes()
         if not self._party_check(now):  # not while a game is loading: its records are half-filled
             out += changes
         for rec in self.text.poll():
@@ -1371,6 +1375,34 @@ class DiceLog:
                 out.append(f"    {who} regains {psp - before} PSP ({before} -> {psp})")
         return out
 
+    def ability_changes(self) -> List[str]:
+        """The party's ability scores going up or down, once a change holds at two looks: a
+        spell's or an effect's (Strength, Remove Curse giving back a lowered STR, Raise Dead's
+        point of CON), and the game's own as time passes."""
+        out = []
+        for index in range(game.PARTY_SIZE):
+            rec = self.game.creature(index)
+            if len(rec) < CREATURE_ABILITIES + len(ABILITIES) or not rec[game.CREATURE_NAME]:
+                self._abilities.pop(index, None)
+                continue
+            seen = (self.game.creature_name(index), tuple(rec[CREATURE_ABILITIES:CREATURE_ABILITIES + len(ABILITIES)]))
+            before = self._abilities.get(index)
+            if before is None or before[0] != seen[0] or not all(1 <= v <= 25 for v in before[1]):
+                self._abilities[index] = seen  # (a new member, or a record being loaded)
+                self._abilities_new.pop(index, None)
+                continue
+            if seen == before:
+                self._abilities_new.pop(index, None)
+                continue
+            if self._abilities_new.get(index) != seen:
+                self._abilities_new[index] = seen  # (seen once: it must hold)
+                continue
+            del self._abilities_new[index]
+            self._abilities[index] = seen
+            moved = [f"{name} {a} -> {b}" for name, a, b in zip(ABILITIES, before[1], seen[1]) if a != b]
+            out.append(f"    {seen[0]}'s {', '.join(moved)}")
+        return out
+
     def hp_changes(self, now: float) -> List[str]:
         """Every combatant's HP going down or up, with what's left (the game never shows a
         monster's HP). Put down to a spell while one is being cast (the damage after saves,
@@ -1398,7 +1430,9 @@ class DiceLog:
                 # the game's damage code gives a creature that was Out Cold the most the dice can do
                 out_cold = " (Out Cold: the most the dice can do)" if was_out_cold else ""
                 also = f" and {hit} from the hit" if hit else ""
-                out.append(f"  {who} takes {before - hp - hit} from {self._spell_name}{out_cold}{also}, {left}")
+                halved = g.damage_halved_by(combatant, self._spell_id) if self._spell_id is not None else None
+                halved = f" (halved: {halved})" if halved else ""
+                out.append(f"  {who} takes {before - hp - hit} from {self._spell_name}{halved}{out_cold}{also}, {left}")
             elif now <= self._spell_until and hp > before:
                 out.append(f"  {who} regains {hp - before} HP from {self._spell_name}, {left}")
             elif hp < before:
@@ -1476,6 +1510,7 @@ class DiceLog:
         """A spell is taking effect: HP changes for the next few seconds are its doing."""
         if spell is not None:
             self._spell_name = self.game.spell_name(spell)
+            self._spell_id = spell
             self._spell_until = now + SPELL_WINDOW
 
     def speaker(self, portrait: Optional[int]) -> str:

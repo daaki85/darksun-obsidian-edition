@@ -528,6 +528,21 @@ class SaveTests(unittest.TestCase):
         struct.pack_into("<h", log.guest.mem, dag, 34)
         self.assertEqual(log.psp_changes(), ["    Dag spends 18 PSP (52 -> 34)"])
 
+    def test_abilities(self):
+        """An ability score's change is told once it holds at two looks (Remove Curse's STR back)."""
+        log = make_game()
+        at = CREATURES + game.CREATURE_ABILITIES
+        log.guest.mem[at:at + 6] = bytes((12, 14, 15, 10, 16, 9))
+        self.assertEqual(log.ability_changes(), [])  # the first look
+        log.guest.mem[at] = 16
+        self.assertEqual(log.ability_changes(), [])  # once: it must hold
+        self.assertEqual(log.ability_changes(), ["    Dag's STR 12 -> 16"])
+        self.assertEqual(log.ability_changes(), [])
+        log.guest.mem[at + 2] = 14
+        log.ability_changes()
+        log.guest.mem[at + 2] = 15  # (back before it held: nothing)
+        self.assertEqual(log.ability_changes(), [])
+
     def test_psionic_names(self):
         log = make_game()
         m = log.guest.mem

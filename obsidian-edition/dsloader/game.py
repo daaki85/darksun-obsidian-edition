@@ -381,8 +381,10 @@ EFFECT_NAMES = {
 EFFECT_RULES = {
     2: "armour AC at most 6", 4: "AC -1", 7: "+1 to hit, +1 on saves", 8: "AC 4 worse",
     12: "-1 to hit", 16: "+10% melee damage per level of the spell",
-    36: "+3 on saves against cold spells", 38: "AC -2 and +2 on saves against evil",
-    40: "+3 on saves against fire spells", 41: "+4 on saves against lightning spells",
+    36: "+3 on saves against cold spells, half damage from them",
+    38: "AC -2 and +2 on saves against evil",
+    40: "+3 on saves against fire spells, half damage from them",
+    41: "+4 on saves against lightning spells, half damage from them",
     45: "-1 on saves", 46: "AC 4 except from behind", 47: "-4 to hit, AC 4 worse", 49: "+1 to hit",
     52: "AC -7 against evil", 55: "attackers -2 to hit", 56: "armour AC at most 4, +3 on saves",
     57: "AC at most 6 - level/4, +1 on saves", 58: "AC -2", 59: "AC at most 10 - level",
@@ -421,6 +423,13 @@ EFFECT_RULES = {
     50: "can't cast spells",
     51: "can't move (Free Action prevents it; some creatures are immune)",
     53: "no damage from weapons, using up one charge each time",
+    # (the time routine, 8066Dh: a STR below the score's own comes back as time passes, unless Diseased)
+    13: "a lowered STR doesn't come back until it is cured (the spell itself lowers nothing)",
+    14: "finds traps for certain, thief or not",
+    20: "half damage from spells that are all fire or cold",
+    # (the effect routine, 78223h: each round Protection from Evil, for a round, on its keeper's side near it)
+    39: "each round gives Prot Evil (AC -2, +2 on saves against evil) to its side close by",
+    42: "one undead's draining touch: a save against paralysis/poison/death stops it (and the undead takes 2d6)",
     # psionic powers' effects
     31: "magic resistance halved",
     32: "+75% magic resistance against mind-affecting spells (charms, holds, fear, confusion...)",
@@ -539,6 +548,13 @@ DRUID_CLASSES, PSIONICIST = range(5, 9), 12
 DWARF, HALFLING, UNDEAD = 2, 6, 9
 EFFECT_BLESSED, EFFECT_BLIND, EFFECT_DETECT_INVIS, EFFECT_INVISIBLE, EFFECT_INVIS_UNDEAD = 7, 8, 15, 23, 24
 EFFECT_PROT_EVIL, EFFECT_PROT_COLD, EFFECT_PROT_FIRE, EFFECT_PROT_LIGHTNING = 38, 36, 40, 41
+EFFECT_FIRE_SHIELD = 20
+# The game's damage routine (7B4C0h) halves a spell's damage when every kind it does (its record's
+# +1Ah; magic, 200h, aside) is one the target is protected from: Resist and Protection from Fire
+# fire (2), Resist Cold cold (4), Protection from Lightning electricity (80h), Fire Shield both
+# fire and cold
+HALVING_EFFECTS = ((EFFECT_PROT_FIRE, 0x02), (EFFECT_PROT_COLD, 0x04), (EFFECT_PROT_LIGHTNING, 0x80),
+                   (EFFECT_FIRE_SHIELD, 0x06))
 EFFECT_SAVE_PENALTY, EFFECT_SPIRIT_ARMOR, EFFECT_BARKSKIN, EFFECT_PRAYER = 45, 56, 57, 73
 EFFECT_BRAVE = 9  # (Cloak of Bravery: +4 against a spell flagged FEAR_CATEGORY, a charge used)
 FEAR_CATEGORY = 0x100  # (a record's +11h word: the patched game's fear spells, gamepatch brave_fear_*)
@@ -1159,6 +1175,24 @@ class GameData:
                        + (f" ({signed_text(adjust)})" if adjust else "") + f" = {levels}")
         how.append(f"{roll} from the dice")
         return total, " + ".join(how)
+
+    def damage_halved_by(self, target: int, spell: int) -> Optional[str]:
+        """The protection on combatant TARGET that halves SPELL's damage (as the game's damage
+        routine does), or None."""
+        rec = self.spell_record(spell)
+        if len(rec) < SPELL_SIZE:
+            return None
+        kinds = struct.unpack_from("<H", rec, 0x1A)[0]
+        mine = {x.id for x in self.effects() if x.owner == target}
+        guarded = 0
+        names = []
+        for eff, bits in HALVING_EFFECTS:
+            if eff in mine and kinds & bits:
+                guarded |= bits
+                names.append(EFFECT_NAMES[eff])
+        if not guarded or kinds & ~(guarded | 0x200):
+            return None
+        return " and ".join(names)
 
     def save_negates_damage(self, spell: int) -> bool:
         """A successful save stops all the damage (else it halves it): flag 8000h of the word at +11h."""

@@ -11,6 +11,22 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 ## Pull request #55 (in progress)
 
+**Added**
+- **Cleric spells against the manual.** HOW-THE-GAME-WORKS has a table of every cleric spell:
+  the manual's text, what the game's records and code do, and what the log shows. Among the
+  differences: Remove Curse only puts a lowered STR back (no curse ends), Bestow Curse is −1 to
+  hit with no save, Cause Disease lowers nothing, Raise Dead always works, Summon Insects and
+  Dust Devil summon a creature, Insect Plague is fear with no damage, Blood Flow paralyses an
+  enemy with no save.
+- **The log names a protection that halves a spell's damage.** The game's damage routine
+  (7B4C0h) halves a spell that is all fire under Resist Fire or Protection from Fire, all cold
+  under Resist Cold, all electricity under Protection from Lightning, fire or cold under Fire
+  Shield: `takes 9 from Fireball (halved: Prot Fire)`. Their effect lines say so too; Diseased,
+  Detect Traps, Fire Shield, Protection from Evil 10' and Negative Plane Protection got lines
+  of what they do.
+- **A party member's ability scores changing** get a line once the change holds:
+  `Cilla's STR 12 -> 16` (Strength, Remove Curse, Raise Dead's CON, the Tome).
+
 **Fixed**
 - **An item the game destroys gets its crash-log report.** The game frees a destroyed item
   (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record

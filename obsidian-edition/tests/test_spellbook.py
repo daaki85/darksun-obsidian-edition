@@ -111,5 +111,25 @@ class PowerNameTests(unittest.TestCase):
         self.assertEqual(gd.spell_name(190), "special attack 190")
 
 
+class DamageHalvedTests(unittest.TestCase):
+    """Resist Fire and the like halve a spell's damage when it is all of their kind (7B4C0h)."""
+
+    def gd(self, kinds, effects):
+        gd = object.__new__(game.GameData)
+        gd.spell_record = lambda spell: bytes(0x1A) + struct.pack("<H", kinds) + bytes(game.SPELL_SIZE - 0x1C)
+        gd.effects = lambda: [game.Effect(owner, 0, eff) for owner, eff in effects]
+        return gd
+
+    def test_halved(self):
+        fire = [(3, game.EFFECT_PROT_FIRE)]
+        self.assertEqual(self.gd(0x02, fire).damage_halved_by(3, 27), "Prot Fire")
+        self.assertEqual(self.gd(0x202, fire).damage_halved_by(3, 27), "Prot Fire")  # (magic aside)
+        self.assertIsNone(self.gd(0x02, fire).damage_halved_by(4, 27))  # someone else's
+        self.assertIsNone(self.gd(0x04, fire).damage_halved_by(3, 27))  # cold
+        self.assertIsNone(self.gd(0x0A, fire).damage_halved_by(3, 27))  # fire and crushing
+        both = [(3, game.EFFECT_FIRE_SHIELD)]
+        self.assertEqual(self.gd(0x06, both).damage_halved_by(3, 27), "Fire Shield")
+
+
 if __name__ == "__main__":
     unittest.main()
