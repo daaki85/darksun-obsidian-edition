@@ -50,15 +50,32 @@ class SpellArrowsTests(unittest.TestCase):
                 mock.patch.object(spellarrows, "knows", lambda gd, m, s: s in known), \
                 mock.patch.object(spellarrows.npcitems, "add_to", return_value=True) as add:
             done = arrows.make(gd, 0, 1)
-            self.assertIn("20 chill arrows", done.text)
+            self.assertEqual(done.text, "")  # (no window)
+            self.assertIn("20 chill arrows", done.log[0])
             rec = add.call_args[0][2]
             self.assertEqual(struct.unpack_from("<HH", rec, 0)[1], 20)
             self.assertEqual(gd.written[-1][1], bytes((1,)))  # (a 1st-level slot used: 2 to 1)
-            self.assertIn("20 burning arrows", arrows.make(gd, 0, 0).text)  # (again: a slot left)
+            self.assertIn("20 burning arrows", arrows.make(gd, 0, 0).log[0])  # (again: a slot left)
             self.assertIn("can't weave Shocking Grasp", arrows.make(gd, 0, 2).text)  # (not known)
             self.assertIn("no 3rd-level spell left", arrows.make(gd, 0, 3).text)
             self.assertIn("can't weave", arrows.make(gd, 1, 1).text)  # (not a Spellarcher)
             self.assertEqual(add.call_count, 2)
+            self.assertIsNone(done.drop)
+
+    def test_make_backpack_full(self):
+        """No room in the backpack: the slot still used, the arrows' record handed to DSCLOG to
+        leave on the ground, and no window."""
+        gd = FakeGame()
+        arrows = spellarrows.SpellArrows()
+        with mock.patch.object(spellarrows, "is_spellarcher", return_value=True), \
+                mock.patch.object(spellarrows, "knows", return_value=True), \
+                mock.patch.object(spellarrows.npcitems, "add_to", return_value=False):
+            done = arrows.make(gd, 0, 1)
+        self.assertEqual(done.text, "")
+        self.assertIn("left on the ground", done.log[0])
+        self.assertEqual(len(done.drop), 0x15)
+        self.assertEqual(struct.unpack_from("<HH", done.drop, 0)[1], 20)
+        self.assertEqual(gd.written[-1][1], bytes((1,)))
 
 
 if __name__ == "__main__":

@@ -1769,15 +1769,22 @@ in its lines), names BURNING ARROWS and so on (`PP_TEXT`), descriptions by `PP_I
 the description box's 195 bytes). Let go of, the screen closes as for the thief's, and `PP_ARM`
 goes to `ARROWS_ARM`: nothing readied, then `ARROWS_ASK` in a frame the overlay manager can fix
 up, which hands the click to the Loader as an item used on the map is (`USE_ITEM` `ARROWS_BY`
-FE00h and the member, `USE_WHO` the spell's place) and shows its answer (`PICK_TEXT`).
+FE00h and the member, `USE_WHO` the spell's place). Made, the Loader answers with no text and
+nothing is shown; refused (not known, no slot), its words (`PICK_TEXT`) are.
 
 **The Loader** (`SpellArrows.make`) takes a slot of the touch spell's level from the wizard slots
 left (`SLOTS_LEFT`; none left, it says so) and puts a stack of the game's Arrows (type 62) in the
-backpack (`npcitems.add_to`), named Burning, Chill, Shocking or Vampiric Arrows (names 16Ch-16Fh),
-their pictures objects 2614-2621 (the Arrows' icon, its heads in the spell's colours), value 0, 5
-a preserver level. Slots are the only limit. At a rest (a script's REQUEST 1 or 4, `REQ_SITE`, as
-at a fire ring, or the vulture meal) `vanish` gives every spell arrow back to the free list,
-wherever it is (a container's only item is left).
+backpack (`npcitems.add_to`), or, with no room, hands the stack's record to DSCLOG in `PICK_TEXT`
+(`USE_TAKEN` 3): `ARROWS_DROP` leaves it on the ground as the game's script DROP (2Fh, 6A894h)
+leaves an item, making a thing of the game's Arrows (object 1012, for its map picture) at the
+party's figure (B8h:55Ah: the object, -1, x, y, 0, the item's +10h, 0Fh; 2C0h:369h the figure),
+and writing the arrows' record over the item it comes with (its link kept). Picked up, they go
+on the pointer as any item on the ground does. The stack is named Burning, Chill, Shocking or
+Vampiric Arrows (names 16Ch-16Fh), their pictures objects 2614-2621 (the Arrows' icon, its heads
+in the spell's colours), value 0, 5 a preserver level. Slots are the only limit. At a rest (a
+script's REQUEST 1 or 4, `REQ_SITE`, as at a fire ring, or the vulture meal) `vanish` gives every
+spell arrow back to the free list, wherever it is; a list's only item is left (a container's, or
+a pile on the ground's: such arrows fade at the first rest after they are picked up).
 
 **The hit.** The weapon attack routine (5883Ah) casts only the weapon's own spell on a hit (its
 item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with the attacker as the caster, so at the
@@ -1790,7 +1797,8 @@ type at [BP+14h]) with spell arrows their spell instead, and `ARROW_SPELL` (`NS_
 test (+30h's low bits 2, not 1). Checked in the game: Burning and Chill Arrows buttons for a
 Spellarcher knowing both (one in Turn Undead's place, one beside it), their names and descriptions,
 a click on each making 20 arrows for a 4th-level Spellarcher with a 1st-level slot used, and Chill
-Touch cast on a hit with them. Arrows put in the ammunition slot by memory writes during
+Touch cast on a hit with them; with the backpack full, no window, the 20 arrows on the ground at
+the party's feet, and a click on them putting them on the pointer. Arrows put in the ammunition slot by memory writes during
 a fight are not shot (the game keeps its own list of what each combatant has readied); the player
 readies them from the backpack.
 

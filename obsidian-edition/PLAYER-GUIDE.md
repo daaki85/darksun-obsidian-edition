@@ -964,8 +964,9 @@ is all they train with. For each touch spell a Spellarcher knows (Burning
 Hands, Chill Touch, Shocking Grasp or Vampiric Touch) it has an arrow button
 on the USE screen, beside where a priest's Turn Undead goes: outside a fight,
 one click weaves the spell into a quiver of arrows, 5 for each preserver level,
-each casting the spell on what it hits. Each costs a spell slot of the touch
-spell's level; the arrows are worth nothing to a merchant, and fade at
+each casting the spell on what it hits (on the ground at its feet if its
+backpack is full). Its bow skill works on them too: they fly as +1 arrows. Each
+costs a spell slot of the touch spell's level; the arrows are worth nothing to a merchant, and fade at
 the next rest.
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way

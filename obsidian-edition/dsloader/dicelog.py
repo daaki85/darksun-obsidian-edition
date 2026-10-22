@@ -633,9 +633,12 @@ class DiceLog:
         self._clock = now
 
     def _write_pick_text(self, text: str) -> None:
+        self._write_pick_bytes(text.encode("cp437", "replace")[:PICK_SIZE - 1] + b"\0")
+
+    def _write_pick_bytes(self, data: bytes) -> None:
         offset = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_PICK_OFF, 2))[0]
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
-        self.guest.write(base + offset, text.encode("cp437", "replace")[:PICK_SIZE - 1] + b"\0")
+        self.guest.write(base + offset, data)
 
     def _write_xp(self, result: Optional["pickpocket.Attempt"]) -> None:
         """The XP that came with what was lifted (Kurzak's Short Sword), for DSCLOG to give with
@@ -683,7 +686,11 @@ class DiceLog:
             return []  # (the game changing its item lists: answered in a later pass)
         except (struct.error, IndexError, ValueError):
             result, taken = None, False
-        self._write_pick_text(result.text if result else "")
+        if result is not None and result.drop is not None:
+            self._write_pick_bytes(result.drop)  # (an item record, not a text: DSCLOG's ARROWS_DROP)
+            taken = spellarrows.ARROWS_DROP
+        else:
+            self._write_pick_text(result.text if result else "")
         self._write_xp(result)
         self.guest.write(self.tsr_hdr + TSR_USE_TAKEN, struct.pack("<H", int(taken)))
         self.guest.write(self.tsr_hdr + TSR_USE_REPLY, seq)

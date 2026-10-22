@@ -14454,11 +14454,72 @@ arrows_ask:
 .late:  pop es
         ret                     ; (no answer: the Loader isn't reading)
 .ready: pop es
+        cmp word [cs:use_taken], ARROWS_DROP
+        je arrows_drop          ; (no room in the backpack)
         cmp byte [cs:pick_text], 0
-        je .done
+        je .done                ; (made: nothing to say)
         mov word [cs:show_text], pick_text
         call show_window
 .done:  ret
+
+; ARROWS_DROP: the arrows left on the ground at the party's feet (no room in the backpack): PICK_TEXT
+; holds their item record. As the game's script DROP (2Fh, 6A894h) leaves an item: B8h:55Ah makes a
+; thing of an object at a place (the object, -1, x, y, 0, the item's +10h, 0Fh; the thing back, or
+; -1), here of the game's Arrows (object 1012, whose map picture the pile has) at the party's figure
+; (2C0h:369h; its x and y at [WALL_POS]); the item it comes with becomes the arrows' record (its
+; link to the next kept). DS the game's; registers changed.
+ARROWS_DROP  equ 3              ; (USE_TAKEN: dsloader/spellarrows.py)
+PILE_SEG     equ 0x1DF3         ; (DSUN.EXE, less the load segment) B8h:55Ah, a thing made
+PILE_OFF     equ 0x55A
+FIGURE_SEG   equ 0x3781 - 0x4356 ; the party's figure on the map: its thing at this segment:369h, from DS
+ARROWS_OBJECT equ 1012
+THING_MOST   equ 0x208          ; (the things table: objects 0-519)
+arrows_drop:
+        mov ax, ds
+        add ax, FIGURE_SEG
+        mov es, ax
+        mov bx, [es:0x369]
+        cmp bx, THING_MOST
+        jae .ret
+        shl bx, 5
+        push word 0x0F
+        movzx ax, byte [cs:pick_text + 0x10]
+        push ax
+        push word 0
+        push word [bx + WALL_POS + 2]
+        push word [bx + WALL_POS]
+        push word -1
+        push word ARROWS_OBJECT
+        mov ax, PILE_SEG
+        mov dx, PILE_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 14
+        cmp ax, THING_MOST
+        jae .ret                ; (none made: -1)
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        cmp byte [es:bx + COMBATANT_CREATURE - 1], 1
+        jne .ret                ; (not a list of items)
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        cmp ax, 9999
+        jae .ret
+        imul ax, ax, 0x15
+        les di, [ITEMS]
+        add di, ax
+        push word [es:di + 4]   ; (its link to the next)
+        push ds
+        push cs
+        pop ds
+        mov si, pick_text
+        mov cx, 0x15
+        cld
+        rep movsb
+        pop ds
+        pop word [es:di + 4 - 0x15]
+.ret:   ret
 
 ; ARROW_KNOWS: CF set if party member AX (0-3) is a Spellarcher who knows the touch spell of
 ; ARROW_SPELLS' CLth (the game's known table). DS the game's; all registers kept.

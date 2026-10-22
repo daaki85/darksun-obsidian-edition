@@ -43,6 +43,7 @@ PICTURES = {0x16C: 0x10000 - 2614, 0x16D: 0x10000 - 2616, 0x16E: 0x10000 - 2618,
 ARROWS_PER_LEVEL = 5
 ARROWS_TYPE = weaponchoice.ARROWS[1]  # (the game's Arrows)
 TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")  # (worldgear's)
+ARROWS_DROP = 3         # USE_TAKEN: PICK_TEXT holds an item record for DSCLOG's ARROWS_DROP
 ARROWS_BY = 0xFE00      # USE_ITEM for SPELL ARROWS' pick (DSCLOG's ARROWS_BY): the member its low byte
 KNOWN_FROM_DS, KNOWN_OFF, KNOWN_STRIDE = 0x4356 - 0x3800, 0x168, 0x8A  # (DSCLOG's KNOWN_*)
 REST_REQUESTS = (1, 4)  # a script's REQUEST that rests the party (dicelog.REQUEST_NAMES)
@@ -80,7 +81,9 @@ def slots_left(gd: GameData, member: int, level: int) -> int:
 
 class SpellArrows:
     def make(self, gd: GameData, member: int, row: int) -> "pickpocket.Attempt":
-        """Party member MEMBER's button for ARROWS[ROW]: a slot used, the arrows in its backpack."""
+        """Party member MEMBER's button for ARROWS[ROW]: a slot used, the arrows in its backpack, or on
+        the ground at the party's feet when there's no room (no text: the game shows none), or why
+        not."""
         if not 0 <= row < len(ARROWS) or not 0 <= member < game.PARTY_SIZE:
             return pickpocket.Attempt("No spell arrows can be made now.", [])
         arrow = ARROWS[row]
@@ -92,16 +95,17 @@ class SpellArrows:
                                       f"{arrow.spell_name}'s arrows.", [])
         level = gd.class_level(member, game.PRESERVER)
         count = ARROWS_PER_LEVEL * max(level, 1)
-        if not npcitems.add_to(gd, member, arrows_item(arrow, count)):
-            return pickpocket.Attempt(f"{who} has no room for the arrows.", [])
+        item = arrows_item(arrow, count)
+        carried = npcitems.add_to(gd, member, item)
         at = gd.ds * 16 + game.SLOTS_LEFT["Wizard"] + member * game.SLOTS_STRIDE + arrow.level
         gd.guest.write(at, bytes((slots_left(gd, member, arrow.level) - 1,)))
         name = NAMES[arrow.name].decode().lower()
-        text = (f"{who} weaves {arrow.spell_name} into {count} arrows: {count} {name}, in the backpack. "
-                f"They fade at the next rest.")
         log = f"{who} makes {count} {name} ({ARROWS_PER_LEVEL} a preserver level, {level}): a " \
-              f"{_nth(arrow.level)}-level slot used; each casts {arrow.spell_name} on what it hits"
-        return pickpocket.Attempt(text, [log])
+              f"{_nth(arrow.level)}-level slot used; each casts {arrow.spell_name} on what it hits; " \
+              f"they fade at the next rest"
+        if not carried:  # (DSCLOG leaves them on the ground, at the party's feet)
+            return pickpocket.Attempt("", [log + "; no room in the backpack: left on the ground"], drop=item)
+        return pickpocket.Attempt("", [log])  # (no window: only a refusal is shown)
 
     def rest(self, gd: GameData) -> List[str]:
         """The party rested: every spell arrow fades."""
