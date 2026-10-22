@@ -206,8 +206,10 @@ class ItemWatch:
 
 
 ITEM_VALUE = 0x06  # an item's price, in its record (npcitems.ITEM_VALUE)
-# The game frees an item (1A0A:0A3Ah: Detonate's blast, the acid, a script) by zeroing the word at
-# its +0 and linking it into the free list (+4); its type, name and the rest stay as they were
+# The game frees an item (A0:1CD6h, then 1A0A:0A3Ah) by zeroing the word at its +0 and linking it
+# into the free list (+4); its type, name and the rest stay as they were. It does so for Detonate's
+# blast and acid, the last arrow or charge, a spell's weapon ending, the scripts' TAKE (5Ch, to
+# no one) and DROP (2Fh: the item becomes a thing on the map), and new characters' gear
 ITEM_ID = 0x00
 
 
@@ -303,7 +305,8 @@ def describe_fate(was: ItemSeen, record: bytes) -> str:
     if len(record) < game_mod.ITEM_SIZE:
         return "its record could not be read"
     if freed(was, record):
-        return "the game freed its record (destroyed: Detonate's blast, acid or a script)"
+        return ("the game freed its record: destroyed (Detonate's blast, acid), or taken or dropped "
+                "on the ground by a script (the dice log and the dialogue below say which)")
     if record == was.record:
         return "the item still exists outside the party, as it was (dropped, sold, given or stolen)"
     typ, = struct.unpack_from("<H", record, game_mod.ITEM_TYPE)

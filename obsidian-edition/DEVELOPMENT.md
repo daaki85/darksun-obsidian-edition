@@ -458,6 +458,22 @@ party (dropped, in a container) and not reported, unless the record's first word
 went to 0 (`freed`): the game's free (1A0A:0A3Ah) zeroes only that word and the
 free-list link at +4, so a destroyed item keeps its type and name.
 
+Every place the game deletes an item goes through A0:1CD6h. Its ten callers:
+
+| Caller (DSUN.EXE) | When | The watch |
+|---|---|---|
+| 58D61h, the "use up one" routine, from 58C8Fh | an arrow shot (the last of a stack) | arrows are ordinary (62) |
+| 58D61h, from 7AAEBh | Detonate's blast on a worn piece | reported |
+| 7AA5Ah, 7ABC4h (from 79186h) | acid and corroding touch on a weapon or armour | reported |
+| 73F36h, from 72206h | a wand's last charge (+0Eh down to 0) | wands are ordinary (70-73) |
+| 73F36h, from 8B2B0h | an item used up from the USE screen | fruit, scrolls are ordinary |
+| 6B143h (by 6B0CDh, 6B121h) | script TAKE (5Ch) to no one; and the effects (7872Fh, 79186h) taking the items spells make | quest types and spell items ordinary; anything else reported |
+| 6A894h (by 6A720h) | script DROP (2Fh): the item becomes a thing on the map | reported, unless the whole party's drop (a bulk change) |
+| 671C8h | a new character's starting gear that won't fit | (before the watch has seen it) |
+| 67401h (40 bytes on) | a new character's worn items cleared | (before the watch has seen it) |
+| 67401h (675B4h), from creation and DUAL (86C80h) | a piece the new class can't use, pack full: the item held on the pointer is deleted unless the inventory is open (read from the code, not seen) | reported |
+| 7C7ACh, in the effects overlay | none found (no call reaches it) | — |
+
 
 ## How each part works
 
