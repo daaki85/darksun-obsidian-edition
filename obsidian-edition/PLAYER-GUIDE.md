@@ -409,7 +409,8 @@ theirs ([what each class may use](#what-each-class-may-use)).
 
 *Myrmidon.* Drilled in a sorcerer-king's legions, where a soldier who falls out
 of step is left for the kanks. They master two weapons where others master one,
-but years of obeying orders leave their minds open to anyone who barks them.
+but years of obeying orders leave their minds open to anyone who barks them,
+and they wait for the order to strike.
 
 *Sentinel.* Caravan guards and city-gate wardens who live behind their shields,
 first to see the raiders coming and last to give ground. They trust bone and

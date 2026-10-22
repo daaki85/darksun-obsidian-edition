@@ -12,6 +12,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #55 (in progress)
 
 **Added**
+- **The Wanderer halves fire and cold spells' damage**, as Resist Fire and Resist Cold do (it had
+  their saves only): DSCLOG's `WANDER_DMG` at the game's own test of what a creature is guarded
+  from (7B56Fh); the log says `(halved: Wanderer)`.
+- **The Myrmidon's initiative is 2 worse**, a second drawback beside its −4 against charms
+  (`PROBE_INIT`; the log's initiative line names it).
 - **Cleric spells against the manual.** HOW-THE-GAME-WORKS has a table of every cleric spell:
   the manual's text, what the game's records and code do, and what the log shows. Among the
   differences: Remove Curse only puts a lowered STR back (no curse ends), Bestow Curse is −1 to

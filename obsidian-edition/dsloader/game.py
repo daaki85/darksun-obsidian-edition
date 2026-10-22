@@ -1190,6 +1190,11 @@ class GameData:
             if eff in mine and kinds & bits:
                 guarded |= bits
                 names.append(EFFECT_NAMES[eff])
+        from . import kits
+        ti = self.combatant_creature(target)  # (the patched game's WANDER_DMG: as Resist Fire and Cold)
+        if ti is not None and kinds & kits.WANDERER_GUARDS and kits.WANDERER in self.kit_ids(ti):
+            guarded |= kits.WANDERER_GUARDS
+            names.append("Wanderer")
         if not guarded or kinds & ~(guarded | 0x200):
             return None
         return " and ".join(names)

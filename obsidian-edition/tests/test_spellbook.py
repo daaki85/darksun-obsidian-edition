@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, spellbook
+from dsloader import game, kits, spellbook
 from dsloader.game import SpellDamage, SpellRules
 
 
@@ -114,8 +114,10 @@ class PowerNameTests(unittest.TestCase):
 class DamageHalvedTests(unittest.TestCase):
     """Resist Fire and the like halve a spell's damage when it is all of their kind (7B4C0h)."""
 
-    def gd(self, kinds, effects):
+    def gd(self, kinds, effects, kit=None):
         gd = object.__new__(game.GameData)
+        gd.combatant_creature = lambda combatant: combatant
+        gd.kit_ids = lambda index: [kit] if kit is not None and index == 3 else []
         gd.spell_record = lambda spell: bytes(0x1A) + struct.pack("<H", kinds) + bytes(game.SPELL_SIZE - 0x1C)
         gd.effects = lambda: [game.Effect(owner, 0, eff) for owner, eff in effects]
         return gd
@@ -129,6 +131,9 @@ class DamageHalvedTests(unittest.TestCase):
         self.assertIsNone(self.gd(0x0A, fire).damage_halved_by(3, 27))  # fire and crushing
         both = [(3, game.EFFECT_FIRE_SHIELD)]
         self.assertEqual(self.gd(0x06, both).damage_halved_by(3, 27), "Fire Shield")
+        # a Wanderer, as by Resist Fire and Resist Cold (the patched game's WANDER_DMG)
+        self.assertEqual(self.gd(0x04, [], kits.WANDERER).damage_halved_by(3, 27), "Wanderer")
+        self.assertIsNone(self.gd(0x80, [], kits.WANDERER).damage_halved_by(3, 27))
 
 
 if __name__ == "__main__":

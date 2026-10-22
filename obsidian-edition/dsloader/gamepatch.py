@@ -144,6 +144,7 @@ NS_WALL = NS_IMAGE + 20  # (the computer's cast: a wall across the line of fire)
 SHOP_SHINE = NS_IMAGE + 21  # (the wait for an event: a shop's magic items' shine turned, as on the map)
 SHOP_LOOP = NS_IMAGE + 22  # (... and a shop's own event loop)
 DET_ITEM = NS_IMAGE + 23  # (Detonate's blast on an item: the check recorded for the dice log)
+WANDER_DMG = NS_IMAGE + 24  # (a spell's damage: a Wanderer guarded from fire and cold, halving it)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -373,6 +374,9 @@ PATCHES = (
     # Detonate's blast on an item (7AAEBh) left nothing in the dice log: "mov dx,0Fh / sub dx,ax",
     # the number its d20 must be under (DSCLOG's DET_ITEM: the check recorded, the game's rule kept)
     Patch("detonate_item", 0x7AB95, bytes.fromhex("ba0f002bd0"), _site(DET_ITEM, 5)),
+    # ... and the kinds of a spell's damage a creature is guarded from, which halves a spell all of
+    # those kinds (DSCLOG's WANDER_DMG: a Wanderer's fire and cold, as Resist Fire and Resist Cold)
+    Patch("wanderer_damage", 0x7B56F, bytes.fromhex("857e0c"), _site(WANDER_DMG, 3)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

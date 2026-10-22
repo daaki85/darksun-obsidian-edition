@@ -5976,15 +5976,20 @@ kit_champion:
 ; combatant's initiative for the round is made (DX the 0-9 roll and its adjustments, SI the
 ; creature): the game's 20 added, and a Sentinel's 2 more, a Military Scout's 2 under the open sky
 ; (its KIT_OUTDOORS bit), and 1 for each party member while a Wayfinder of the party is up
-; (PATH_UP; kits.initiative).
+; (PATH_UP; kits.initiative); a Myrmidon's 2 less.
 probe_init:
         add dx, 20
         push ax
         mov ax, si
         call cr_is
         db KIT_SENTINEL
-        jne .scout
+        jne .myrmidon
         add dx, 2
+.myrmidon:
+        call cr_is
+        db KIT_MYRMIDON
+        jne .scout
+        sub dx, 2
 .scout: cmp si, 3
         ja .out                 ; (not a party member)
         call cr_is
@@ -10758,6 +10763,29 @@ det_item:
         mov cx, ITEM_DETONATE
         jmp item_record
 
+; WANDER_DMG: "test [bp+0Ch],di" (7B56Fh; 3 bytes: the INT and the site's number) in the routine
+; giving the share of a spell's damage a creature takes (7B492h; [BP-4] the creature, [BP+0Ch] the
+; spell's kinds, DI the kinds its effects guard it from: Resist Fire 2, Resist Cold 4, Protection
+; from Lightning 80h; a spell all of those kinds does half): a Wanderer is guarded from fire and
+; cold, as by Resist Fire and Resist Cold (kits.halves). The test made, its flags returned.
+wander_dmg:
+        pushad
+        push es
+        mov di, sp
+        mov ax, [bp - 4]
+        call cr_is
+        db KIT_WANDERER
+        jne .test
+        or word [ss:di + NS_DI], 6
+.test:  mov ax, [ss:di + NS_DI]
+        test [bp + 0x0C], ax
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
 ; ADND_NEEDED: CX = AD&D's save against acid for item BX (DS the game's): its material's
 ; number, less its plus, less 1 for a magical power. Keeps every other register.
 adnd_needed:
@@ -12809,6 +12837,7 @@ NS_WALL   equ NS_IMAGE + 20      ; 5A38Ch: the computer's cast, its two points
 SHOP_SHINE equ NS_IMAGE + 21     ; 2AFA6h: the wait for an event, its test (a shop's shine)
 SHOP_LOOP equ NS_IMAGE + 22      ; 7DE11h: a shop's own event loop, its test (... too)
 DET_ITEM  equ NS_IMAGE + 23      ; 7AB95h: Detonate's blast on an item, the number its d20 must be under
+WANDER_DMG equ NS_IMAGE + 24     ; 7B56Fh: a spell's damage, the kinds a creature is protected from
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -12864,6 +12893,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je shop_loop
         cmp byte [cs:rl_site], DET_ITEM
         je det_item
+        cmp byte [cs:rl_site], WANDER_DMG
+        je wander_dmg
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS

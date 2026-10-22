@@ -4092,7 +4092,7 @@ class KitTests(unittest.TestCase):
                           kits.save(kits.MYRMIDON, 13)), (-1, 0, -4, 0))
 
     def test_initiative(self):
-        """PROBE_INIT: the game's 20 added, and kits.initiative (a Sentinel's 2)."""
+        """PROBE_INIT: the game's 20 added, and kits.initiative (a Sentinel's 2, a Myrmidon's 2 less)."""
         from dsloader import kits, kitpages
         from dsloader.gamepatch import VEC_INIT
         at = self.image.find(bytes.fromhex("83c214"))
@@ -4101,7 +4101,8 @@ class KitTests(unittest.TestCase):
         self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         self.mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_INIT, 0x90)))
         self.rules(game.RULE_KITS)
-        for cls, kit in ((9, 2), (9, 3), (17, 2), (9, 0)):
+        self.assertEqual(kits.initiative(kits.MYRMIDON), -2)
+        for cls, kit in ((9, 2), (9, 3), (17, 2), (9, 0), (9, 1)):
             with self.subTest(cls=cls, kit=kit):
                 self.creature(cls, kit)
                 sheet = bytearray(game.SHEET_SIZE)
