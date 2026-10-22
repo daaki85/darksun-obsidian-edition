@@ -755,7 +755,7 @@ which may have changed since.
   its ink with a dark edge a pixel round it (the colours nearest gold or
   light grey and near black in the palette DSCLOG last read), as two one-bit
   masks of 16 bytes a row (128 pixels; longer names shortened word by word,
-  then cut) and 11 rows. They go into one of two slots in the header (`+378`,
+  then cut) and 11 rows. They go into one of two slots in the header (`+374`,
   `LBL_SIZE` 360 bytes each: the label's number, width, height, how far above
   the feet, the two colours, the map thing, the masks), the number written
   0 first and last of all, so DSCLOG never takes a half-written one. A label
@@ -1757,26 +1757,28 @@ of weight 40 or less).
 
 ([The Spellarcher](KITS.md#multiclass-kits); `spellarrows.py`.)
 
-**The button.** `PP_SHOW` gives a Spellarcher (`KIT_SPELLARCHER` awake, no priest's element, outside
-a fight) the Turn Undead button as it gives a thief Pick Pockets, `PP_SHOWN` 2 (`PP_ARROWS`), its
-icon ICON 3049 (`icons.arrows_icon`: the earth tile with an arrow), its name SPELL ARROWS
-(`PP_TEXT`) and its description (`PP_INFO`, `TU_INFO_ARROWS`). Let go of, the screen closes as for
-the thief's, and `PP_ARM` goes to `ARROWS_ARM`: nothing readied, then `ARROWS_ASK` in a frame the
-overlay manager can fix up. It shows the game's three-row menu (`DK_MENU`, the DUAL kit menu's;
-title ARROWS: NONE) with the spells the Loader offers that member (`ARROW_OFFER`, header +374, a
-byte a party member, bit N the Nth of `ARROW_SPELLS`: known, a slot of its level left, none made
-since a rest); four make two rows and MORE... The pick goes to the Loader as an item used on the
-map does (`USE_ITEM` `ARROWS_BY` FE00h and the member, `USE_WHO` the spell's place), and its
-answer (`PICK_TEXT`) is shown. None offered: `ARROWS_NONE`.
+**The arrow spells.** Burning, Chill, Shocking and Vampiric Arrows are spells 202-205, past the
+new spells and run by the same machinery ([New wizard spells](#new-wizard-spells)): `NS_COUNT` 10,
+the first `NS_LEARNT` (6) the spells learnt and known by sheet bits, the rest the arrow spells
+(`ARROW_FIRST`). `NS_SETUP` gives each a row (a wizard's, of its touch spell's level: 1, 1, 1, 3)
+and Blur's record (12: on the caster alone, so one click on the USE screen casts it, as Blur and
+Reflected Image do), their names (`NS_NAME`), descriptions and icons (ICON 21202-21205,
+`icons.arrow_spell_icon`: the touch spell's tile, the hand taken off, an arrow in its lines).
+`NS_KNOWN` asks `ARROW_KNOWS`: a party member who is a Spellarcher (`KIT_SPELLARCHER`) and knows the
+touch spell (the game's known table, `ARROW_SPELLS`). They are never learnt nor offered: the game's
+list of spells not known ends before them (`gamepatch.NS_UNKNOWN_END` at 0CAh, the two lists of
+spells known and castable at 0CEh), and the level-up search, `SHINOBI_KNOWS`, the INT limit's
+count (`NS_COUNT_OF`), `NS_FORGET_ALL` and `NS_LEARN` leave them out. Cast, the game uses up the
+slot as for any spell; `CAST_SITE` records it (kind 8) and sends the routine on to its way out for
+a spell it doesn't cast (77330h, BX 0), so no effect, sound or animation comes of it.
 
-**The Loader** (`SpellArrows.make`) takes a slot from the wizard slots left (`SLOTS_LEFT`) and puts
-a stack of the game's Arrows (type 62) in the backpack (`npcitems.add_to`), named Burning, Chill,
-Shocking or Vampiric Arrows (names 16Ch-16Fh), their pictures objects 2614-2621 (the Arrows' icon,
-its heads in the spell's colours), value 0, 5 a preserver level. A Spellarcher who made arrows,
-or carries spell arrows (a save loaded after), is offered none until a rest: a script's REQUEST 1
-or 4 (`REQ_SITE`, as at a fire ring) or the vulture meal, after which `vanish` gives every spell
-arrow back to the free list, wherever it is (a container's only item is left), and a load to an
-earlier clock forgets who made them.
+**The Loader** (`SpellArrows.cast`, then `made` in the next pass) puts a stack of the game's Arrows
+(type 62) in the caster's backpack (`npcitems.add_to`), named Burning, Chill, Shocking or Vampiric
+Arrows (names 16Ch-16Fh), their pictures objects 2614-2621 (the Arrows' icon, its heads in the
+spell's colours), value 0, 5 a preserver level; the floating name over the caster is the spell's.
+Slots are the only limit. At a rest (a script's REQUEST 1 or 4, `REQ_SITE`, as at a fire ring, or
+the vulture meal) `vanish` gives every spell arrow back to the free list, wherever it is (a
+container's only item is left).
 
 **The hit.** The weapon attack routine (5883Ah) casts only the weapon's own spell on a hit (its
 item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with the attacker as the caster, so at the
@@ -1786,11 +1788,11 @@ where the ammunition routine keeps the arrows' plus) also keeps their name (`AMM
 type at [BP+14h]) with spell arrows their spell instead, and `ARROW_SPELL` (`NS_IMAGE+29`, over
 "mov cl,es:[bx+0Fh]") hands it on. The arrows hold no spell themselves, so nothing else in the game
 (the USE screen's items, breaking, acid) sees one. The four spells' records pass the routine's own
-test (+30h's low bits 2, not 1). Checked in the game: the button, the menu, 20 Chill Arrows made
-by a 4th-level Spellarcher with a slot used, and a shot with them; the cast on a hit is checked in
-the emulator (`test_spell_arrows`). Arrows put in the ammunition slot by the Loader during a fight
-are not shot (the game keeps its own list of what each combatant has readied); made by the button,
-they go in the backpack, and the player readies them.
+test (+30h's low bits 2, not 1). Checked in the game: the Chill Arrows icon with Chill Touch known,
+one click making 20 Chill Arrows for a 4th-level Spellarcher with the slot used, its description,
+and Chill Touch cast on a hit with them. Arrows put in the ammunition slot by memory writes during
+a fight are not shot (the game keeps its own list of what each combatant has readied); the player
+readies them from the backpack.
 
 ### Picking pockets
 

@@ -103,7 +103,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Half-elf druid/fighter | Wilderness Avenger |
 | Half-elf cleric/ranger | Rescuer |
 | Dwarf fighter/thief | Ghetto Fighter, Wayfinder |
-| Half-elf fighter/preserver | Spellarcher (and its spell arrows: a touch spell woven into 5 arrows a preserver level, once between rests) |
+| Half-elf fighter/preserver | Spellarcher (and its arrow spells: a touch spell it knows woven into 5 arrows a preserver level, a spell slot each) |
 | Half-giant fighter/psionicist | Titan Mind |
 | Halfling fighter/thief | Poisoner |
 | Halfling cleric/psionicist | Spirit Caller |

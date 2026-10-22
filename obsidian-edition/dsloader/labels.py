@@ -14,7 +14,7 @@ from typing import List, Optional, Tuple
 
 from . import combatlog
 
-TSR_LABELS = 378        # DSCLOG's header: LBL_SLOTS
+TSR_LABELS = 374        # DSCLOG's header: LBL_SLOTS
 SLOTS = 2               # (DSCLOG's LBL_SLOTS)
 ROW = 16                # (LBL_ROW) bytes a mask's row
 WIDTH_MOST = ROW * 8

@@ -181,6 +181,9 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
 GRACE_SPELL, CLAW_SPELL, FOG_SPELL, REFLECT_SPELL, SPOOK_SPELL, FRIENDS_SPELL = range(196, 202)
 NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "Fogbolt",
               REFLECT_SPELL: "Reflected Image", SPOOK_SPELL: "Spook", FRIENDS_SPELL: "Friends"}
+# The Spellarcher's arrow spells (spellarrows.py; DSCLOG's ARROW SPELLS): known by a Spellarcher who
+# knows the touch spell, never learnt; cast, they make spell arrows
+ARROW_SPELLS = {202: "Burning Arrows", 203: "Chill Arrows", 204: "Shocking Arrows", 205: "Vampiric Arrows"}
 NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
                     FRIENDS_SPELL: 1}
 NEW_SPELLS_END = 202  # (past the last)
@@ -1073,6 +1076,8 @@ class GameData:
             return title(text) if text else f"psionic power {spell}"
         if spell in NEW_SPELLS:
             return NEW_SPELLS[spell]
+        if spell in ARROW_SPELLS:
+            return ARROW_SPELLS[spell]
         if spell == NPP_SAVE_RECORD:
             return "Negative Plane Protection"
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)

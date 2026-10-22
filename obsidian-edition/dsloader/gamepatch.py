@@ -150,8 +150,12 @@ AIM_SITE = NS_IMAGE + 26  # (a spell cast with a click, refused: why, recorded f
 AMULET_SITE = NS_IMAGE + 27  # (a creature's magic resistance: the Amulet of Magic Resistance's 15% added)
 ARROW_HIT_SITE, ARROW_SPELL_SITE = NS_IMAGE + 28, NS_IMAGE + 29  # (a hit's spell: a spell arrow's, spellarrows.py)
 CAST_SITE = NS_IMAGE + 30  # (a spell cast: recorded, its name floated over the caster, labels.py)
-NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
-NS_END = 0xCA
+# The game's three lists of a member's spells of a level (500:xx): those it doesn't know (to learn:
+# CHOOSE A SPELL, scrolls), those it knows, those it may cast. The first ends before the
+# Spellarcher's arrow spells (202-205: never learnt), the others after them.
+NS_UNKNOWN_END, NS_KNOWN_ENDS = 0x5DDEF, (0x5DE72, 0x5DF06)
+NS_LIST_ENDS = (NS_UNKNOWN_END,) + NS_KNOWN_ENDS
+NS_END, NS_ARROWS_END = 0xCA, 0xCE
 
 
 def _site(number: int, length: int) -> bytes:
@@ -294,7 +298,8 @@ PATCHES = (
     *(Patch(f"ns_cmp_{offset:x}", offset, bytes.fromhex(code), _site(NS_CMP + k, len(code) // 2))
       for k, (offset, code) in enumerate(NS_CMP_SITES)),
     # ... and the lists' ends
-    *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"), bytes((0x81, 0xFE, NS_END, 0x00)))
+    *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"),
+            bytes((0x81, 0xFE, NS_END if offset == NS_UNKNOWN_END else NS_ARROWS_END, 0x00)))
       for offset in NS_LIST_ENDS),
     # Bugs of the game's spells, fixed whatever the rules (DEVELOPMENT.md's "The game's spells"):
     # Armor used a charge where any spell or blow landed on its wearer (7A557h, "je" past it

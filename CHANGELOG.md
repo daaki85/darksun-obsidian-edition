@@ -16,18 +16,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an
   attack that missed, in the game's font with a dark edge; at most two at once. An Options switch
   in the game section, on by default. DSCLOG's `CAST_SITE` (772AAh, the cast routine: a new
-  record kind, 8) and `LABEL_*`: two slots in the header (+378) the Loader fills
+  record kind, 8) and `LABEL_*`: two slots in the header (+374) the Loader fills
   (`labels.py`), put again from the game's timer every other strike so swings and damage
   bursts don't wipe them, placed and erased from the main loop. The dice ring is 66 entries
   (74) for the room.
-- **Spellarcher spell arrows.** Outside a fight, a Spellarcher's USE screen has a SPELL
-  ARROWS button where a priest's Turn Undead is; the game's three-row menu offers the touch
-  spells it knows with a slot left (Burning Hands, Chill Touch, Shocking Grasp, Vampiric Touch;
-  MORE... when there are four). The pick uses a slot of the spell's level and puts 5 arrows a
-  preserver level in the backpack, worth nothing, each casting its spell on what it hits at the
-  archer's caster level. Once between rests; every spell arrow fades at the next rest (a script's
-  rest request, or the vulture meal). DSCLOG's `ARROWS_ASK`, `ARROW_HIT`, `ARROW_SPELL` and
-  `PROBE_ARROW`'s kept name; `spellarrows.py`; icons for the button and the four arrows.
+- **Spellarcher spell arrows.** Four wizard spells of the Spellarcher's, Burning, Chill,
+  Shocking and Vampiric Arrows (202-205), each its touch spell's level, on the USE screen with
+  its other spells once it knows that touch spell (never learnt or offered to learn). One click
+  casts one, the game using up the slot, and puts 5 arrows a preserver level in the backpack,
+  worth nothing, each casting its spell on what it hits at the archer's caster level. Slots are the
+  only limit; every spell arrow fades at the next rest (a script's rest request, or the vulture
+  meal). DSCLOG's `ARROW_KNOWS`, the cast left out at `CAST_SITE`, `ARROW_HIT`, `ARROW_SPELL` and
+  `PROBE_ARROW`'s kept name; `spellarrows.py`; icons for the four spells and the four arrows.
 - **Three new magic items** (with New items on), each with its own icon:
   the **Girdle of Back Defense** (no enemy gets the bonus for attacking its wearer from behind,
   nor a backstab; the Troop Leader carries it), the **Golden Girdle of Urnst** (AC 3 better

@@ -751,7 +751,12 @@ def friends_icon(hold: Rows) -> Rows:
 # is, ICON 3044-3047 by element): Turn Undead's earth tile, its glyph taken off, a drawstring purse
 # in its dark line with a gold coin in it.
 TURN_EARTH_ICON, PICK_ICON = 3045, 3048
-ARROWS_ICON = 3049  # (the Spellarcher's SPELL ARROWS, in the same place: an arrow, its head gold)
+# The Spellarcher's arrow spells (spellarrows.py, game.ARROW_SPELLS), ICON 21000 + the spell as the
+# new spells': each its touch spell's tile (ICON 21000 + that spell), the hand taken off, an arrow
+# in the hand's dark line with its light line below and right: the touch spell, the hand's dark and
+# light lines, and the tile's two fills.
+ARROW_SPELL_ICONS = {202: (1, 202, 149, (164, 44)), 203: (3, 49, 217, (73, 162)),
+                     204: (10, 254, 160, (159, 158)), 205: (39, 254, 211, (209, 208))}
 ARROW_GLYPH = (
     "..........DDDD..",
     "...........DDD..",
@@ -765,7 +770,6 @@ ARROW_GLYPH = (
     "...D............",
     "..D.D...........",
 )
-ARROW_TIP = {(11, 2): 45, (12, 2): 64, (12, 3): 65, (11, 3): 64, (13, 2): 45}
 TURN_GLYPH, TURN_FILL = {129, 141}, (136, 137)  # (the earth tile's glyph lines, and its browns)
 PURSE_GLYPH = (  # (a purse: its tie and drawstring over the bag)
     "......D..D......",
@@ -792,12 +796,9 @@ def pick_icon(earth: Rows) -> Rows:
     return out
 
 
-def arrows_icon(earth: Rows) -> Rows:
-    """The SPELL ARROWS button's icon from Turn Undead's earth one."""
-    out = glyph_icon(untiled(earth, TURN_GLYPH, TURN_FILL), set(), 0, ARROW_GLYPH, 2, 129, 141)
-    for (x, y), colour in ARROW_TIP.items():
-        out[y][x] = colour
-    return out
+def arrow_spell_icon(touch: Rows, dark: int, light: int, fills: Tuple[int, int]) -> Rows:
+    """An arrow spell's icon from its touch spell's: the hand (DARK, LIGHT) off, the arrow on."""
+    return glyph_icon(untiled(touch, {dark, light}, fills), set(), 0, ARROW_GLYPH, 2, dark, light)
 
 
 # Fogbolt's bolt (SEGOBJEX.GFF): a spell's record names its flight by a number (+10h, FFh none),
@@ -870,7 +871,8 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
              ("ICON", SPOOK_ICON): encode(spook_icon(decode(chunks[("ICON", SCARE_ICON)]))),
              ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)]))),
              ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)]))),
-             ("ICON", ARROWS_ICON): encode(arrows_icon(decode(chunks[("ICON", TURN_EARTH_ICON)])))}
+             **{("ICON", 21000 + spell): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
+                for spell, (touch, *how) in ARROW_SPELL_ICONS.items()}}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))

@@ -960,11 +960,12 @@ guide moves and acts that little bit quicker.
 
 *Spellarcher* (half-elf fighter/preserver). Half-elf freedom fighters who
 weave a little magic into every arrow. The technique is a secret, and the bow
-is all they train with. Once between rests, outside a fight, a Spellarcher can
-weave a touch spell it knows into a quiver of arrows (SPELL ARROWS on the USE
-screen): Burning Hands, Chill Touch, Shocking Grasp or Vampiric Touch, 5 arrows
-for each preserver level, each casting the spell on what it hits. They cost a
-spell slot, are worth nothing to a merchant, and fade at the next rest.
+is all they train with. For each touch spell a Spellarcher knows (Burning
+Hands, Chill Touch, Shocking Grasp or Vampiric Touch) it has an arrow spell of
+the same level on the USE screen: one click weaves the spell into a quiver of
+arrows, 5 for each preserver level, each casting the spell on what it hits.
+Each costs a spell slot; the arrows are worth nothing to a merchant, and fade at
+the next rest.
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
