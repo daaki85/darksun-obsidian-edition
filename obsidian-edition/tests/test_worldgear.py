@@ -81,7 +81,7 @@ class WorldGearTests(unittest.TestCase):
         acs = {}
         for name in ("Mikquetzl", "Wyrmias", "Balkazar", "Dagolar"):
             g = gift(name)
-            rec, = g.items
+            rec = g.items[0]  # (Wyrmias has the Golden Girdle of Urnst too)
             self.assertEqual(icons.which(rec), "Bracers of Defense")
             self.assertEqual(struct.unpack_from("<H", rec, game.ITEM_TYPE)[0], game.BRACERS_TYPE)
             self.assertEqual(struct.unpack_from("<H", rec, game.ITEM_NAME)[0], worldgear.BRACERS_NAME)
@@ -103,8 +103,33 @@ class WorldGearTests(unittest.TestCase):
             self.assertEqual(typ[9], 6)  # (the head)
             self.assertFalse(restrict.is_armour(typ))
             self.assertEqual(names.NAMES[struct.unpack_from("<H", item, game.ITEM_NAME)[0]], name.encode())
-        self.assertEqual([g.items for g in worldgear.MAGIC if g.name == "Kel"], [(worldgear.ARROWBANE_ITEM, worldgear.VEILED_ROBE)])
+        self.assertEqual([g.items for g in worldgear.MAGIC if g.name == "Kel"], [(worldgear.ARROWBANE_ITEM, worldgear.VEILED_ROBE, worldgear.MR_AMULET_ITEM)])
         self.assertEqual(gift("Keldar").objects, (28,))
+
+    def test_girdles_bow_and_amulet(self):
+        """The girdles (worn at the waist), the Titanstring Bow (the game's Bow, +1, its own name) and
+        the Amulet of Magic Resistance (worn at the neck): their types, names of 15 letters at most,
+        icons, and places (the Troop Leader, Wyrmias, the Bowyer, Kel)."""
+        waist, neck = game.EQUIP_SLOTS.index("waist"), game.EQUIP_SLOTS.index("neck")
+        for item, type_, slot, name in ((worldgear.BACK_GIRDLE_ITEM, game.BACK_GIRDLE_TYPE, waist, "Girdle of Back Defense"),
+                                        (worldgear.URNST_GIRDLE_ITEM, game.URNST_GIRDLE_TYPE, waist, "Golden Girdle of Urnst"),
+                                        (worldgear.MR_AMULET_ITEM, game.MR_AMULET_TYPE, neck, "Amulet of Magic Resistance")):
+            self.assertEqual(struct.unpack_from("<H", item, game.ITEM_TYPE)[0], type_)
+            typ = npcitems.TYPES[type_ - game.GAME_TYPES]
+            self.assertEqual(typ[9], {waist: 2, neck: 7}[slot])  # (the game's Belt's and Necklace's)
+            self.assertFalse(restrict.is_armour(typ))
+            self.assertEqual(icons.which(item), name)
+            self.assertEqual(item[game.ITEM_PLUS], 0)
+        bow = worldgear.weapon(*worldgear.TITANSTRING_1)
+        self.assertEqual((struct.unpack_from("<H", bow, game.ITEM_TYPE)[0], bow[game.ITEM_PLUS]), (1, 1))
+        self.assertEqual(icons.which(bow), "Titanstring Bow")
+        self.assertEqual(icons.which(worldgear.weapon(*worldgear.BOW_1)), "Dunesong")
+        for entry in (worldgear.BACK_GIRDLE, worldgear.URNST_GIRDLE, worldgear.TITANSTRING, worldgear.MR_AMULET):
+            self.assertLessEqual(len(names.NAMES[entry]), 15)
+        self.assertIn(worldgear.BACK_GIRDLE_ITEM, gift("Troop Leader").items)
+        self.assertIn(worldgear.URNST_GIRDLE_ITEM, gift("Wyrmias").items)
+        self.assertIn(bow, gift("Bowyer").items)
+        self.assertIn(worldgear.MR_AMULET_ITEM, gift("Kel").items)
 
     def test_wardens_plate(self):
         """The Warden's Plate: plate +1 of AC 3, 2, 2 (metal armour to the class rules) and the

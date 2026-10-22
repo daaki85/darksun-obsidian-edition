@@ -12,6 +12,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #55 (in progress)
 
 **Added**
+- **Four new magic items** (with New items on), each with its own icon:
+  the **Girdle of Back Defense** (no enemy gets the bonus for attacking its wearer from behind,
+  nor a backstab; the Troop Leader carries it), the **Golden Girdle of Urnst** (AC 3 better
+  against long and short swords; Wyrmias), the **Titanstring Bow** (a bow +1 that adds its
+  archer's STR damage bonus; sold by the Bowyer) and the **Amulet of Magic Resistance** (15%
+  magic resistance; it never shatters; sold by Kel). DSCLOG's `ITEM_REAR`, `TITAN_DAMAGE` and
+  `AMULET_SITE`; the dice log names each.
 - **The Crusader and Mind Warrior have expertise in one melee weapon spec of their choice**
   (with weapon specialization), as the Battle Mage has: 3/2 attacks a round, 2 from 7th level,
   picked on the weapon window after DONE. DSCLOG's `war_kit_is` in the pick count,

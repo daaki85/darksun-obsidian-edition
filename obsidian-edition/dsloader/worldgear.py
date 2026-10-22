@@ -220,6 +220,25 @@ METAL_SHIELD_3 = armour(game.METAL_SHIELD_TYPE, IRONBULWARK, 0x10000 - 2588, 650
 WARRENS, WARRENS_SKELETON, SKELETON = 0x28, 85, 2266  # (the skeleton at 1913, 577; object 2266 is shared)
 GUARDIAN, BALKAZARS = 216, 0x0D  # (the Guardian of Balkazar's fortress, with the Chatkcha +1)
 NAMES[FLAME_BLADE_NAME] = b"Flame Blade"
+# the girdles, the bow and the amulet (15 letters at most, as the game's own names; the Loader's
+# screens give the whole: FULL_NAMES): the Girdle of Back Defense (no attack from behind or
+# backstab against its wearer: DSCLOG's ITEM_REAR), the Golden Girdle of Urnst (3 better AC against
+# swords), the Titanstring Bow (a bow +1 adding its archer's STR to damage: TITAN_DAMAGE), the
+# Amulet of Magic Resistance (15%: AMULET_MR)
+BACK_GIRDLE, URNST_GIRDLE, TITANSTRING, MR_AMULET = 0x169, 0x16A, 0x16B, 0x16C
+NAMES.update({BACK_GIRDLE: b"Girdle/Back Def", URNST_GIRDLE: b"Girdle of Urnst", TITANSTRING: b"Titanstring Bow",
+              MR_AMULET: b"Amulet/MagicRes"})
+FULL_NAMES = {BACK_GIRDLE: "Girdle of Back Defense", URNST_GIRDLE: "Golden Girdle of Urnst",
+              TITANSTRING: "Titanstring Bow", MR_AMULET: "Amulet of Magic Resistance"}
+URNST_AC, AMULET_PERCENT = 3, 15  # (DSCLOG's URNST_AC, AMULET_PERCENT)
+SWORD_KINDS = (KIND("long sword"), KIND("short sword"))
+# priced as the game's magic clothes and jewellery (the Serpent Boots 20,000, the Chameleon Gloves
+# 30,000; its necklaces 50,000); the bow as Dunesong, a bow +1
+BACK_GIRDLE_ITEM = armour(game.BACK_GIRDLE_TYPE, BACK_GIRDLE, 0x10000 - 2606, 25000, plus=0)
+URNST_GIRDLE_ITEM = armour(game.URNST_GIRDLE_TYPE, URNST_GIRDLE, 0x10000 - 2608, 20000, plus=0)
+TITANSTRING_1 = ((BOW, TITANSTRING, 0x10000 - 2610, PLUS_VALUE), 1)
+MR_AMULET_ITEM = armour(game.MR_AMULET_TYPE, MR_AMULET, 0x10000 - 2612, 35000, plus=0)
+TROOP_LEADER, WYRMIAS = 18, 32
 
 
 def magic_weapon(spec: Tuple[int, int, int, int], plus: int, spell: int) -> bytes:
@@ -285,18 +304,18 @@ PENS_RACK_OBJECT = 2599
 RACK_TYPE = 0x6C  # (the weapon racks' item type)
 DAGOLAR, BALKAZAR = 26, 14  # (Dagolar: the one with Dag's Dagger, object 26; his double is 27)
 MAGIC: Tuple[Gift, ...] = (
-    Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1)), (283,), 0x0B),
+    Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1), weapon(*TITANSTRING_1)), (283,), 0x0B),
     Gift("Undermt Folk", (weapon(*PICK_1),), (51,), 0x1E, clone=(169, 2561)),  # (one of the four miners)
     Gift("Churrr", (weapon(*CLUB_1),), (9,), 0x28),  # (the warrens' fighter, with his club)
     Gift("Arant", (weapon(*SHORT_SWORD_2),), (22,), 0x04),  # (the gladiators' captor, Silt Sea Summoning)
     # bracers of defense on the wizards
     Gift("Mikquetzl", (bracers(6),), (10,), 0x28),
-    Gift("Wyrmias", (bracers(5),), (32,), 0x03),
+    Gift("Wyrmias", (bracers(5), URNST_GIRDLE_ITEM), (WYRMIAS,), 0x03),
     Gift("Balkazar", (bracers(4),), (BALKAZAR,), 0x0D),
     Gift("Dagolar", (bracers(2),), (DAGOLAR,)),
     # the circlet sold by Kel (the game's magic items' merchant), the crown worn by Keldar
     # (with the Veiled Robe, robes.py: the Ashen Robe is Kalzith's, kalzith.py)
-    Gift("Kel", (ARROWBANE_ITEM, VEILED_ROBE), (107,), 0x1A),
+    Gift("Kel", (ARROWBANE_ITEM, VEILED_ROBE, MR_AMULET_ITEM), (107,), 0x1A),
     Gift("Keldar", (CROWN_ITEM,), (28,), 0x27),
     # the Warden's Plate, scattered: the helm on Dagolar (a boss's body, early on), the arms in the
     # Lower Castle's treasure chest (object 1360, with Dark Flame: behind the barrier the Serpent
@@ -325,7 +344,7 @@ MAGIC: Tuple[Gift, ...] = (
     Gift("Rogue Shaman", (weapon(*AIR_DAGGER_2),), (77,), 0x0F),
     Gift("Maris", (weapon(*OBSIDIAN_SHORT_SWORD_1),), (228,), 0x22),
     Gift("Chaya's chest", (weapon(*BONE_SHORT_SWORD_1),), (CHAYAS_CHEST,)),
-    Gift("Troop Leader", (weapon(*POLEARM_2),), (18,), 0x21),
+    Gift("Troop Leader", (weapon(*POLEARM_2), BACK_GIRDLE_ITEM), (TROOP_LEADER,), 0x21),
     Gift("Weapon Rack", (weapon(*BONE_POLEARM_1),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT),
          instead=(BONE_POLEARM, 0)),
     # the magic shields: Gutterward on a skeleton in the warrens (its own object), Ironbulwark on

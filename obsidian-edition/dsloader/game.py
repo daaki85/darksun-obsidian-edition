@@ -102,6 +102,8 @@ BONE_GREAT_AXE_TYPE, OBSIDIAN_GREAT_AXE_TYPE = GAME_TYPES + 22, GAME_TYPES + 23 
 BONE_DAGGER_TYPE = GAME_TYPES + 24  # (a water cleric's dagger: weaponchoice.py)
 ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armour
 METAL_SHIELD_TYPE = GAME_TYPES + 26  # a metal shield (worldgear.py's Ironbulwark): the game has none
+# the Girdle of Back Defense, the Golden Girdle of Urnst and the Amulet of Magic Resistance (worldgear.py)
+BACK_GIRDLE_TYPE, URNST_GIRDLE_TYPE, MR_AMULET_TYPE = GAME_TYPES + 27, GAME_TYPES + 28, GAME_TYPES + 29
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
@@ -1651,6 +1653,16 @@ class GameData:
         out = [(item[ITEM_SLOT], self.item_label(item, typ)) for _, item, typ in self._worn(creature)]
         out.sort(key=lambda x: x[0])
         return [(EQUIP_SLOTS[slot] if slot < len(EQUIP_SLOTS) else None, name) for slot, name in out]
+
+    def worn_in(self, creature: Optional[int], slot: int) -> List[bytes]:
+        """The item records a creature wears in SLOT (an index of EQUIP_SLOTS)."""
+        if creature is None:
+            return []
+        return [item for _, item, _ in self._worn(creature) if item[ITEM_SLOT] == slot]
+
+    def wears_type(self, creature: Optional[int], item_type: int, slot: int) -> bool:
+        """Whether a creature wears an item of ITEM_TYPE in SLOT."""
+        return any(struct.unpack_from("<H", item, ITEM_TYPE)[0] == item_type for item in self.worn_in(creature, slot))
 
     def _worn(self, creature: int):
         """(item number, item record, type record) for each of a creature's items."""

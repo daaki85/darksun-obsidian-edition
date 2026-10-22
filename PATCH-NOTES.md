@@ -168,6 +168,7 @@ A few of them:
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
 | **Dunesong** | a bow +1, sold in a shop |
+| **Titanstring Bow** | a bow +1 that adds its archer's strength to the damage, sold in a shop |
 | **Windlash** | a staff sling +1, the game's first magic staff sling, sold in a shop |
 | **Skycutter** | a chatkcha +2 |
 
@@ -185,6 +186,9 @@ A few of them:
 - **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
 - **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
 - **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
+- **[New]** **Girdle of Back Defense**: no enemy gets the bonus for attacking its wearer from behind, nor a backstab.
+- **[New]** **Golden Girdle of Urnst**: AC 3 better against long and short swords.
+- **[New]** **Amulet of Magic Resistance**: 15% magic resistance. Unlike AD&D's, it never shatters.
 - **[New]** **Gutterward**, a wooden shield +1, and **Ironbulwark**, a metal shield +3: the game had no metal shield.
 
 **Other magic items**

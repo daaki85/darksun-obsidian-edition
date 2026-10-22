@@ -2196,6 +2196,38 @@ for +2 where there are any. The Loader: `restrict.is_robe`, `robes.save`,
 Veiled Robe in the data (`worldgear.MAGIC`), and Kalzith's Ashen Robe is put
 on him with his cloak and scrolls (`kalzith.stock`).
 
+### Girdles, Titanstring and the amulet
+
+([In the item tables](ITEMS.md).) Three more helper types follow the robe:
+`GIRDLE_BACK` (27), `GIRDLE_URNST` (28), a belt's record each (+8: 40h, +9: 2,
+the waist), and `MR_AMULET` (29), a necklace's (+9: 7, the neck), every class
+(+10h: 1FFFh); `game.BACK_GIRDLE_TYPE`, `URNST_GIRDLE_TYPE`, `MR_AMULET_TYPE`.
+`EXTRA_WORN` asks `WORN_SCAN` whether a creature wears one in its slot
+(`WORN_SCAN` now keeps the item it found in `ws_item`).
+
+- **Girdle of Back Defense:** `ITEM_REAR`, called first from `PROBE_STEALTH`,
+  clears the from-behind and backstab flags ([BP-1Ah], [BP-24h]) when the
+  target wears it and takes their 2 each back off the lowered THAC0 ([BP-20h]).
+- **Golden Girdle of Urnst:** `ITEM_REAR` also adds `URNST_AC` (3) for a melee
+  attack ([BP+0Eh] 1) whose weapon type ([BP-4]) is a long or short sword in
+  the spec kinds table.
+- **Titanstring Bow:** a bow +1 (the game's Bow +1 type) told apart by its name
+  (`TITAN_NAME`, the 42nd new name). `TITAN_DAMAGE`, called first from
+  `PROBE_SPEC_DAMAGE`, adds the STR damage table's byte (DS:7A8h) to [BP-12h]
+  for a missile attack when the missile slot holds it. The inventory's DAM
+  line, which counts melee only, leaves it out.
+- **Amulet of Magic Resistance:** `AMULET_SITE` (`NS_IMAGE+27`) replaces the
+  `cmp word [bp-0Ch],0` after Mind Bar's +75 at 7A4FDh in the routine that
+  works out a target's magic resistance (7A4A1h): `AMULET_MR` adds
+  `AMULET_PERCENT` (15) when the neck holds it, then makes the game's compare.
+  The game's spells stop at 5th level, so it never shatters (AD&D's does on a
+  6th-level spell or higher, which is left out on purpose).
+
+The Loader's dice log names each (`_thac0_breakdown`'s Urnst part,
+`_magic_resistance`, `_titan_str`); `GameData.wears_type` reads the slot. The
+icons are drawn (`icons.ICONS`, objects 2606 to 2613); placement is
+`worldgear.GIFTS` (the Bowyer, Kel, Wyrmias, the Troop Leader).
+
 ### Kalzith
 
 ([In the features page](FEATURES.md#kalzith).)

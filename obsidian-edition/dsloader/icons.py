@@ -298,6 +298,18 @@ def circlet_icon(_rows: Rows = None) -> Rows:
     return out
 
 
+# the Belt's leather -> red silk (the palette's own reds, darkest to brightest), flecked with gold
+URNST_SILK = {128: 135, 129: 135, 134: 135, 135: 136, 136: 136, 137: 32, 138: 32}
+URNST_GOLD = (183, 184)
+
+
+def urnst_icon(rows: Rows) -> Rows:
+    """The Golden Girdle of Urnst: the Belt in red silk, a gold fleck every fourth pixel."""
+    rows = recolour(rows, URNST_SILK)
+    return [[URNST_GOLD[x % 2] if p is not None and (x + 2 * y) % 4 == 0 else p for x, p in enumerate(r)]
+            for y, r in enumerate(rows)]
+
+
 def crown_icon(_rows: Rows = None) -> Rows:
     """The Sunking Crown: a gold band with five points, a jewel in the fire colours at its front."""
     out: Rows = [[None] * 18 for _ in range(14)]
@@ -392,6 +404,15 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     # the robes (robes.py), drawn (on the map: the Cloak's)
     ("Ashen Robe", 0xFBE3, 2580, 2581, ashen_robe_icon),
     ("Veiled Robe", 0xFBE3, 2582, 2583, veiled_robe_icon),
+    # the girdles, the bow and the amulet (worldgear.py): the Belt's, its brightest leather glowing
+    # violet; the Belt in red silk with gold flecks; the Bow, its string in the fire colours; the
+    # Necklace, every other pixel of its cord violet
+    ("Girdle of Back Defense", 0xFBE6, 2606, 2607,
+     lambda r: glow(r, lambda p, x, y: p in (137, 138) and (x + y) % 2 == 0, VIOLET)),
+    ("Golden Girdle of Urnst", 0xFBE6, 2608, 2609, urnst_icon),
+    ("Titanstring Bow", 0xFC07, 2610, 2611, lambda r: glow(r, lambda p, x, y: 210 <= p <= 214, FIRE)),
+    ("Amulet of Magic Resistance", 0x86DD, 2612, 2613,
+     lambda r: glow(r, lambda p, x, y: 17 <= p <= 20 and (x + y) % 2 == 0, VIOLET)),
     # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
     # hasn't: blank in a shop or a pack. The Sling's, every other pixel of its strap in the fire colours
     ("Sling +1", 0xFC09, 2644, 2645, lambda r: glow(r, lambda p, x, y: 137 <= p <= 140 and (x + y) % 2 == 0, FIRE)),
@@ -425,7 +446,8 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
         old_icon, = struct.unpack_from("<H", record, OJFF_ICON)
         struct.pack_into("<H", record, OJFF_ICON, icon)
         out[("OJFF", number)] = bytes(record)
-        out[("BMP ", number)] = chunks[("BMP ", base)]  # its picture on the map: the plain item's
+        if ("BMP ", base) in chunks:  # its picture on the map: the plain item's (a necklace has
+            out[("BMP ", number)] = chunks[("BMP ", base)]  # none of its number: kept so in the copy)
         rows = smaller.get(old_icon) or decode(chunks[("BMP ", old_icon)])
         out[("BMP ", icon)] = encode(make(rows))
     return out
@@ -930,6 +952,7 @@ def _plate_types() -> Dict[int, str]:
 PLATE_TYPES = _plate_types()
 OBSIDIAN_LONG_SWORD, FLAME_BLADE_NAME = 45, 0x156  # (the Flame Blade: worldgear.py)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
+TITANSTRING = 0x16B  # (the Titanstring Bow's name: worldgear.py)
 WOODEN_SHIELD_TYPE, GUTTERWARD = 16, 0x163  # (the game's wooden Shield; Gutterward's name: worldgear.py)
 
 
@@ -961,7 +984,13 @@ def which(rec: bytes) -> Optional[str]:
     if kind == 17 and plus == 2:
         return "Nightsliver"
     if kind == 1 and plus == 1:
-        return "Dunesong"
+        return "Titanstring Bow" if struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == TITANSTRING else "Dunesong"
+    if kind == game.BACK_GIRDLE_TYPE:
+        return "Girdle of Back Defense"
+    if kind == game.URNST_GIRDLE_TYPE:
+        return "Golden Girdle of Urnst"
+    if kind == game.MR_AMULET_TYPE:
+        return "Amulet of Magic Resistance"
     if kind == 48 and plus == 2:
         return "Skycutter"
     if kind == game.BONE_GREAT_AXE_TYPE and plus == 0:

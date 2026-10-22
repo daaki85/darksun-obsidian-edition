@@ -147,6 +147,7 @@ DET_ITEM = NS_IMAGE + 23  # (Detonate's blast on an item: the check recorded for
 WANDER_DMG = NS_IMAGE + 24  # (a spell's damage: a Wanderer guarded from fire and cold, halving it)
 REQ_SITE = NS_IMAGE + 25  # (a script's REQUEST: recorded for the dice log)
 AIM_SITE = NS_IMAGE + 26  # (a spell cast with a click, refused: why, recorded for the dice log)
+AMULET_SITE = NS_IMAGE + 27  # (a creature's magic resistance: the Amulet of Magic Resistance's 15% added)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -383,6 +384,9 @@ PATCHES = (
     Patch("script_request", 0x7FF42, bytes.fromhex("8b5e064b"), _site(REQ_SITE, 4)),
     # a click taking a readied spell's target, the aim check's answer: a refusal recorded (DSCLOG's AIM_SITE)
     Patch("spell_aim", 0x8455B, bytes.fromhex("83faff"), _site(AIM_SITE, 3)),
+    # a creature's magic resistance against a spell, before the test for none: an Amulet of Magic
+    # Resistance worn at the neck adds its 15% (DSCLOG's AMULET_MR; worldgear.py)
+    Patch("amulet_resistance", 0x7A4FD, bytes.fromhex("837ef400"), _site(AMULET_SITE, 4)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

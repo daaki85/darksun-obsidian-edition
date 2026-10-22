@@ -905,10 +905,11 @@ class SpecializeTests(unittest.TestCase):
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
 
     def attack(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False, race=0,
-               kit=0, shield=False, me=5, target_race=None):
+               kit=0, shield=False, me=5, target_race=None, bow=None, strength=18):
         """(attacks in halves, THAC0, damage bonus, sides) after both probes, with THAC0 15, a
         damage bonus of 1 before the STR bonus of 2 is added, 1d8; the attacker (thing 7,
-        creature 5) with a shield in its left hand or none (SHIELD)."""
+        creature 5, STR STRENGTH) with a shield in its left hand or none (SHIELD), or a bow of
+        name entry BOW in its missile slot."""
         mu = self.mu
         hdr = TSR * 16 + load_image().find(HDR_SIG)
         mu.mem_write(hdr + self.RULES, struct.pack("<H", rules & 0xFFFF))
@@ -922,8 +923,10 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(self.SHEETS * 16 + 3 * 0x47, bytes(sheet))  # (sheet 3)
         rec = bytearray(0x3A)
         struct.pack_into("<HHHH", rec, 4, 3, 0, 0, 0)
-        struct.pack_into("<HHH", rec, 8, 8 if shield else 0x270F, 0x270F, 0x270F)
+        struct.pack_into("<HHH", rec, 8, 8 if shield or bow is not None else 0x270F, 0x270F, 0x270F)
+        rec[0x22] = strength
         mu.mem_write(self.CREATURES * 16 + me * 0x3A, bytes(rec))
+        mu.mem_write(self.DS * 16 + 0x7A8, bytes(game.STR_DAMAGE.get(n, 0) & 0xFF for n in range(26)))
         things = (self.DS + 0x3972 - 0x4356) * 16 + 0xC36
         mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, me))
         mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", me))  # (the attacker, its creature)
@@ -937,8 +940,9 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(things + 8 * 3, struct.pack("<Bh", 1, 3))
         item = bytearray(0x15)
         struct.pack_into("<H", item, 4, 0x270F)
-        struct.pack_into("<H", item, 0x0A, self.SHIELD)
-        item[0x11] = 10  # (the left hand)
+        struct.pack_into("<H", item, 0x0A, self.SHIELD if bow is None else 1)
+        struct.pack_into("<H", item, 0x12, bow or 0)
+        item[0x11] = 10 if bow is None else 2  # (the left hand; the missile slot)
         mu.mem_write(self.ITEMS * 16 + 3 * 0x15, bytes(item))
         mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<H", 15))
         mu.mem_write(SS * 16 + BP + 0x10, struct.pack("<H", 3))
@@ -1111,6 +1115,18 @@ class SpecializeTests(unittest.TestCase):
             self.assertEqual(specialize.skill(bytes(sheet), self.LONG_SWORD), specialize.PLAIN)
         finally:
             game.RULES_IN_FORCE = old
+
+    def test_titanstring(self):
+        """TITAN_DAMAGE: a missile attack by one with the Titanstring Bow (worldgear.TITANSTRING) in
+        its missile slot adds its STR's damage (the game's table, as in melee: STR 18 +4, 9 -0, 3
+        -1); another bow, or a melee attack, doesn't."""
+        from dsloader import worldgear
+        plain = self.attack(2, 1, missile=True, bow=0x10)[2]
+        self.assertEqual(self.attack(2, 1, missile=True, bow=worldgear.TITANSTRING)[2], plain + 4)
+        self.assertEqual(self.attack(2, 1, missile=True, bow=worldgear.TITANSTRING, strength=9)[2], plain)
+        self.assertEqual(self.attack(2, 1, missile=True, bow=worldgear.TITANSTRING, strength=3)[2], plain - 1)
+        self.assertEqual(self.attack(2, self.LONG_SWORD, bow=worldgear.TITANSTRING)[2],
+                         self.attack(2, self.LONG_SWORD, bow=0x10)[2])
 
     def test_war_kit_expertise(self):
         """A Crusader or Mind Warrior (kits and weapon specialization on): the expertise rate with
@@ -3152,7 +3168,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fccf03" "8356fe00"))  # 39 names of 25 bytes: 3CFh
+        size = image.find(bytes.fromhex("8146fc3304" "8356fe00"))  # 43 names of 25 bytes: 433h
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -3171,7 +3187,7 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 9025), (0xFF00, 0xFF00 + 975)):
+        for size, want in ((8050, 9125), (0xFF00, 0xFF00 + 1075)):
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
@@ -3271,7 +3287,7 @@ class StealthTests(unittest.TestCase):
         return struct.unpack("<h", self.mu.mem_read(at, 2))[0]
 
     def attack(self, attacker=2, hidden=0b0100, behind=0, stab=0, thac0=15, thief=True, melee=1,
-               weight=20, target_object=0):
+               weight=20, target_object=0, target=6):
         """INT VEC_STEALTH with SI the attacker; its sheet 5 ([BP-12h]) a thief or not, its
         weapon of type 7 ([BP-4]): ([BP-1Ah], [BP-24h], [BP-20h], what was pushed, STEALTH,
         STEALTH_USED)."""
@@ -3279,12 +3295,12 @@ class StealthTests(unittest.TestCase):
         mu.mem_write(self.hdr + 204, struct.pack("<HH", hidden, 0))
         mu.mem_write(self.SHEETS * 16 + 5 * 0x47 + 0x12, struct.pack("<H", 0x400 if thief else 0))
         mu.mem_write(self.TYPES * 16 + 7 * 0x14 + 4, struct.pack("<H", weight))
-        for offset, value in ((-0x12, 5), (-4, 7), (-0x1A, behind), (-0x24, stab), (-0x20, thac0),
+        for offset, value in ((-0x12, 5), (-4, getattr(self, "weapon_type", 7)), (-0x1A, behind), (-0x24, stab), (-0x20, thac0),
                               (-0x1C, target_object), (0x0E, melee)):
             self.word(offset, value)
         mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_STEALTH, 0x90)))
         for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, esi=attacker,
-                                eax=0x1111, ebx=0x2222, es=0x6666).items():
+                                edi=target, eax=0x1111, ebx=0x2222, es=0x6666).items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
         mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x602)
         self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FE)
@@ -3317,6 +3333,49 @@ class StealthTests(unittest.TestCase):
     def test_rule_off(self):
         self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))
         self.assertEqual(self.attack(), (0, 0, 15, 0, 0b0100, 0))
+
+    def girdle(self, item_type, weapon_type=7):
+        """Creature 6 (the target) wearing an item of ITEM_TYPE at the waist (none: 0), the
+        Loader's types from 115 (the header's TYPES_FIRST), the attacker's weapon of WEAPON_TYPE."""
+        mu, creatures, items = self.mu, 0xA000, 0xB000
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, creatures))
+        mu.mem_write(GAME_DS * 16 + 0x165D, struct.pack("<HH", 0, items))
+        mu.mem_write(self.hdr + 212, struct.pack("<H", 115))
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 12 * 3, struct.pack("<BH", 1, 4))
+        mu.mem_write(creatures * 16 + 6 * 0x3A + 8, struct.pack("<HHH", 12 if item_type else 0x270F, 0x270F, 0x270F))
+        rec = bytearray(21)
+        struct.pack_into("<H", rec, 4, 0x270F)
+        struct.pack_into("<H", rec, 0x0A, item_type)
+        rec[0x11] = 5  # (the waist)
+        mu.mem_write(items * 16 + 4 * 21, bytes(rec))
+        self.word(-4, weapon_type)
+        self.weapon_type = weapon_type
+
+    def test_girdle_of_back_defense(self):
+        """ITEM_REAR: a target wearing the Girdle of Back Defense is attacked neither from behind nor
+        by a backstab, the to hit they gave taken back; another belt changes nothing."""
+        from dsloader import game as g
+        self.girdle(g.BACK_GIRDLE_TYPE)
+        self.assertEqual(self.attack()[:4], (0, 0, 15, 0))
+        self.assertEqual(self.attack(behind=1, stab=1, thac0=11, hidden=0)[:4], (0, 0, 15, 0))
+        self.girdle(42)  # (the game's Belt)
+        self.assertEqual(self.attack(behind=1, stab=1, thac0=11, hidden=0)[:4], (1, 1, 11, 1))
+
+    def test_girdle_of_urnst(self):
+        """ITEM_REAR: the Golden Girdle of Urnst makes a sword's melee attack 3 worse to hit (the
+        long and short swords: KIND_OF_TYPE), not another weapon's or a missile's."""
+        from dsloader import game as g, specialize
+        long_sword = next(t for t, k in specialize.KIND_OF_TYPE.items() if k == specialize.KINDS.index("long sword"))
+        short_sword = next(t for t, k in specialize.KIND_OF_TYPE.items() if k == specialize.KINDS.index("short sword"))
+        club = next(t for t, k in specialize.KIND_OF_TYPE.items() if k == specialize.KINDS.index("club"))
+        for weapon, want in ((long_sword, 18), (short_sword, 18), (club, 15)):
+            self.girdle(g.URNST_GIRDLE_TYPE, weapon)
+            self.assertEqual(self.attack(hidden=0)[2], want, weapon)
+        self.girdle(g.URNST_GIRDLE_TYPE, long_sword)
+        self.assertEqual(self.attack(hidden=0, melee=2)[2], 15)
+        self.girdle(0, long_sword)
+        self.assertEqual(self.attack(hidden=0)[2], 15)
 
     def test_kits(self):
         """KIT_REAR (kits on): a Military Scout's backstab taken back, its +2 with it, from behind
@@ -3360,7 +3419,7 @@ class TypesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc1c02" "8356fe00"))  # 27 types of 20 bytes: 21Ch
+        size = image.find(bytes.fromhex("8146fc5802" "8356fe00"))  # 30 types of 20 bytes: 258h
         names_fill, fill = fill_probes(image)
         self.assertGreater(min(size, fill - names_fill), 0)
         mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -3378,12 +3437,12 @@ class TypesTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_SP)
 
     def test_room_and_filled(self):
-        """The game's 115 types (2300 bytes): 500 bytes more reserved, and after the read
+        """The game's 115 types (2300 bytes): 600 bytes more reserved, and after the read
         DSCLOG's types at 115 on, the number noted, and Grey's Scale's arm and leg armour AC 3."""
         from dsloader import npcitems
         self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
         self.assertEqual(self.interrupt(VEC_TYPES_SIZE), 0x7FC)
-        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2840)
+        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2900)
         self.mu.mem_write(SS * 16 + 0x7FC, bytes(4))
         self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
         at = self.TYPES_SEG * 16 + 115 * 20
@@ -4229,6 +4288,37 @@ class KitTests(unittest.TestCase):
         self.assertEqual(test(0, 0x02, 0x02), (0x02, True))  # Resist Fire's
         self.assertEqual(test(3, 0x04, 0), (0x06, True))  # a Wanderer: cold guarded
         self.assertEqual(test(3, 0x80, 0), (0x06, False))  # ... not lightning
+
+    def test_amulet_resistance(self):
+        """AMULET_MR (7A4FDh, "cmp word [bp-0Ch],0" in the magic resistance routine, [BP+6] the
+        target's combatant): an Amulet of Magic Resistance at the neck adds 15 to [BP-0Ch] before
+        the test, whose flags come back; another neck item, or one in the backpack, doesn't."""
+        from dsloader import gamepatch, worldgear
+        image = load_image()
+        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        self.mu.mem_write(self.hdr + 212, struct.pack("<H", game.GAME_TYPES))
+        def test(item_type, slot, resistance):
+            self.creature(9, 0, shield=True)  # (creature 5, thing 7; its item 3 the one to test)
+            item = bytearray(0x15)
+            struct.pack_into("<H", item, 4, 0x270F)
+            struct.pack_into("<H", item, 0x0A, item_type)
+            item[0x11] = slot
+            self.mu.mem_write(self.ITEMS * 16 + 3 * 0x15, bytes(item))
+            self.mu.mem_write(SS * 16 + 0x800 + 6, struct.pack("<H", 7))
+            self.mu.mem_write(SS * 16 + 0x800 - 0x0C, struct.pack("<h", resistance))
+            self.mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.AMULET_SITE, 0x90)))
+            for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F0, ebp=0x800, eflags=IF | 2).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
+            got, = struct.unpack("<h", self.mu.mem_read(SS * 16 + 0x800 - 0x0C, 2))
+            return got, bool(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40)
+        neck = game.EQUIP_SLOTS.index("neck")
+        self.assertEqual(test(game.MR_AMULET_TYPE, neck, 0), (worldgear.AMULET_PERCENT, False))
+        self.assertEqual(test(game.MR_AMULET_TYPE, neck, 30), (30 + worldgear.AMULET_PERCENT, False))
+        self.assertEqual(test(36, neck, 0), (0, True))  # (the game's Necklace)
+        self.assertEqual(test(game.MR_AMULET_TYPE, 20, 0), (0, True))  # (in the backpack)
 
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky

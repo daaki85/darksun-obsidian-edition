@@ -452,7 +452,7 @@ Soulcrusher +1, Axe +1; Great Axe +3, Headsman\* +2; Gythka +3, Gythka +2\*,
 Kreenfang\* +1; Linebreaker\* +2, Polearm +1, Thornwall\* +1; Mace +2,
 Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting Staff +1;
 Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1,
-Dunesong\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
+Dunesong\* +1, Titanstring\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
 **Ravager** none of the bows, slings, Windlash, chatkchas or Dag's Dagger
 (thrown).
 
@@ -779,20 +779,20 @@ and fire a chatkcha; water none).
 **Magic weapons**, by sphere:
 
 - **Air:** every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2,
-  Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1,
+  Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1, Titanstring\* +1,
   Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1.
 - **Earth:** Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1,
   Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's
   Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2,
   Soulcrusher +1, Axe +1, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the
   three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Bow +2, Phrain's Bow +1,
-  Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
+  Dunesong\* +1, Titanstring\* +1, Skycutter\* +2, Chatkcha +1.
 - **Fire:** Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1,
   Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Skycutter\* +2, Chatkcha +1.
 - **Water:** Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3,
   Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
   quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1,
-  Dunesong\* +1.
+  Dunesong\* +1, Titanstring\* +1.
 
 An Elementalist adds its second sphere's.
 
@@ -908,7 +908,7 @@ starting gear, also leather arm and leg armour.
 
 **Magic weapons.** Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror
 Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow
-+2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
++2, Phrain's Bow +1, Dunesong\* +1, Titanstring\* +1, Skycutter\* +2, Chatkcha +1.
 With a cleric class, only those its sphere allows too (Mindshard with fire or
 earth, Stillwater with water).
 
@@ -1567,6 +1567,7 @@ chosen type, often one of these.
 | Deepbiter | stone pick +1 | warriors, thieves, druids, earth clerics |
 | Windlash | staff sling +1 | warriors, thieves, druids, preservers, air clerics |
 | Dunesong | bow +1 | warriors, thieves, druids, psionicists, air, earth and water clerics |
+| Titanstring | bow +1 that adds its archer's strength to the damage, as a melee weapon does | warriors, thieves, druids, psionicists, air, earth and water clerics |
 | Skycutter | chatkcha +2 | warriors, thieves, druids, psionicists, air, earth and fire clerics |
 
 **Other magic items:**
@@ -1582,6 +1583,9 @@ chosen type, often one of these.
 | Ironbulwark | a metal shield +3, the game's only metal shield: AC 4 better in a hand |
 | Warden's Chest, Arms, Legs and Helm | plate armour +1 in four pieces: the chest 4 points of AC better, the arms and legs 3 each, the helm 2 (a helm's AC 1, +1): 12 better as a set, so AC 10 becomes −2 before DEX; the chest gives Resist Fire, the helm Cloak of Bravery, while worn |
 | Arrowbane | a circlet: Protection from Normal Missiles while worn; not armour |
+| Girdle of Back Defense | a belt: no enemy gets the bonuses for attacking its wearer from behind, and no backstab |
+| Golden Girdle of Urnst | a belt: AC 3 better against long and short swords |
+| Amulet of Magic Resistance | 15% magic resistance, added to any the wearer has |
 | Sunking Crown | a crown: Protection from Evil while worn; not armour |
 | Cloak of Elvenkind, Boots of Elvenkind | help a thief or ranger [hide and move silently](#hiding-in-shadows); thieves and rangers only |
 | Tome of Understanding | read from the inventory as a scroll: +1 WIS for good (at most 25) |

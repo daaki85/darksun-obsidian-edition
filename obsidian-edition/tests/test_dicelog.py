@@ -193,6 +193,19 @@ class AttackTests(unittest.TestCase):
         self.assertTrue(lines[0].startswith("Dag attacks Mountain Stalker BACKSTAB with Wooden Long Sword"))
         self.assertEqual(lines[1], "    THAC0 16, +2 from behind, +2 backstab, +4 STR, -3 wooden = 11")
 
+    def test_girdle_of_urnst(self):
+        """A sword's attack on a target wearing the Golden Girdle of Urnst: its 3 in the THAC0 line
+        (DSCLOG's ITEM_REAR), not a club's."""
+        from dsloader import specialize
+        log = make_game()
+        log.game.wears_type = lambda creature, item_type, slot: item_type == game.URNST_GIRDLE_TYPE
+        sword = next(t for t, k in specialize.KIND_OF_TYPE.items() if k == specialize.KINDS.index("long sword"))
+        club = next(t for t, k in specialize.KIND_OF_TYPE.items() if k == specialize.KINDS.index("club"))
+        lines = log.describe(self.attack(18, 12, 4, 5, sword, after_f1=13, hit_bonus=1))
+        self.assertEqual(lines[1], "    THAC0 16, -3 target's Girdle of Urnst, +6 STR, +1 weapon = 12")
+        lines = log.describe(self.attack(18, 9, 4, 5, club, after_f1=10, hit_bonus=1))
+        self.assertNotIn("Urnst", lines[1])
+
     def test_two_weapons(self):
         log = make_game()
         m = log.guest.mem
@@ -376,6 +389,22 @@ class BackstabTests(unittest.TestCase):
         e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
                   parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
+
+    def test_titanstring_bow(self):
+        """A missile attack with the Titanstring Bow in the missile slot: the STR bonus DSCLOG added
+        (TITAN_DAMAGE) told apart from the weapon's; with another bow, none."""
+        from dsloader import worldgear
+        log = make_game()
+        bow = bytearray(game.ITEM_SIZE)
+        struct.pack_into("<H", bow, game.ITEM_NAME, worldgear.TITANSTRING)
+        log.game.worn_in = lambda creature, slot: [bytes(bow)] if slot == game.EQUIP_SLOTS.index("missile") else []
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0)  # ([BP+16h] 2: a missile)
+        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 13), parent, (0x29, 0, 0, 0),
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
+        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24 "
+                                           "(Titanstring Bow)"])
+        struct.pack_into("<H", bow, game.ITEM_NAME, 0x167)  # (Dunesong)
+        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +13 weapon"])
 
     def test_enlarge_before_the_backstab(self):
         log = make_game()
@@ -869,6 +898,15 @@ class SaveTests(unittest.TestCase):
         log.describe(self.magic_resistance(40), now=1.0)  # resisted: no saving throw follows
         self.assertEqual(log.flush(2.5),
                          ["Mountain Stalker magic resistance 50% vs Fireball: d100 = 40 -> resisted"])
+
+    def test_amulet_of_magic_resistance(self):
+        """The Amulet of Magic Resistance at the target's neck: its 15% in the line (AMULET_MR)."""
+        log = make_game()
+        log.game.wears_type = lambda creature, item_type, slot: item_type == game.MR_AMULET_TYPE \
+            and slot == game.EQUIP_SLOTS.index("neck")
+        log.describe(self.magic_resistance(10), now=1.0)
+        self.assertEqual(log.flush(2.5), ["Mountain Stalker magic resistance 15% (+15 Amulet of Magic Resistance) "
+                                          "vs Fireball: d100 = 10 -> resisted"])
 
     def test_dice_without_a_spell_are_shown_after_a_while(self):
         log = make_game()

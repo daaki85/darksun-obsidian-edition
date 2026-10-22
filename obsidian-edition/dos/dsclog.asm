@@ -3068,6 +3068,7 @@ war_kit_halves:
 
 probe_spec_damage:
         add [bp - 0x12], ax
+        call titan_damage
         call kit_attack_damage
         push ax
         call kit_extra
@@ -10973,6 +10974,7 @@ worn_scan:
         pop es
         jne .on
 .match: inc word [cs:ws_count]
+        mov [cs:ws_item], dx
         mov al, [es:bx+0x14]    ; the plus
         cbw
         or ax, ax
@@ -10995,6 +10997,144 @@ ws_slot    dw 0
 ws_type    dw 0
 ws_count   dw 0
 ws_plus    dw 0
+ws_item    dw 0                 ; (the last item found)
+
+; EXTRA_WORN: ZF clear if creature AX (DS the game's) wears an item of the Loader's type BX (its
+; place among them: GIRDLE_BACK, ...) in slot CX, ZF set if not (or the Loader's types aren't in).
+; All registers kept.
+extra_worn:
+        pusha
+        push es
+        cmp word [cs:types_first], 0
+        je .none
+        add bx, [cs:types_first]
+        mov [cs:ws_type], bx
+        mov [cs:ws_slot], cx
+        mov dx, ds
+        add dx, THINGS_SEG
+        mov [cs:r_things], dx
+        call worn_scan
+        cmp word [cs:ws_count], 0
+        jmp .out
+.none:  cmp ax, ax
+.out:   pop es
+        popa
+        ret
+
+; ITEM_REAR: in PROBE_STEALTH (DI the target, a creature; DS the game's), before the kits' and
+; thieves' changes, the target's girdle (dsloader/worldgear.py): a Girdle of Back Defense takes
+; back an attack from behind and a backstab ([BP-1Ah], [BP-24h] cleared, the 2 to hit each gave
+; back on [BP-20h]: the target's DEX and shield count again); the Golden Girdle of Urnst makes a
+; sword's attack 3 worse to hit (in melee, [BP+0Eh] 1; the weapon's type [BP-4] of the long or
+; short sword kind, KIND_OF_TYPE). Not for an object ([BP-1Ch] set). All registers kept.
+URNST_AC   equ 3
+KIND_LONG_SWORD  equ 1          ; (KIND_OF_TYPE's: the kind + 1)
+KIND_SHORT_SWORD equ 4
+item_rear:
+        cmp word [bp - 0x1C], 0
+        jne .ret
+        push ax
+        push bx
+        push cx
+        mov ax, di
+        mov cx, WAIST
+        mov bx, GIRDLE_BACK
+        call extra_worn
+        jz .urnst
+        cmp word [bp - 0x1A], 0
+        je .stab
+        mov word [bp - 0x1A], 0
+        add word [bp - 0x20], 2
+.stab:  cmp word [bp - 0x24], 0
+        je .urnst
+        mov word [bp - 0x24], 0
+        add word [bp - 0x20], 2
+.urnst: cmp word [bp + 0x0E], 1
+        jne .out
+        mov bx, GIRDLE_URNST
+        call extra_worn
+        jz .out
+        mov bx, [bp - 4]
+        cmp bx, KIND_TYPES
+        jae .out
+        mov bl, [cs:kind_of_type + bx]
+        cmp bl, KIND_LONG_SWORD
+        je .sword
+        cmp bl, KIND_SHORT_SWORD
+        jne .out
+.sword: add word [bp - 0x20], URNST_AC
+.out:   pop cx
+        pop bx
+        pop ax
+.ret:   ret
+
+; TITAN_DAMAGE: in PROBE_SPEC_DAMAGE, a missile attack ([BP+16h] above 1) by a creature ([BP+0Eh])
+; with the Titanstring Bow (dsloader/worldgear.py: its name, TITAN_NAME) in its missile slot: its
+; STR's damage bonus added (the game's table, STR_DAMAGE: melee's). All registers kept.
+TITAN_NAME  equ NAMES_OWN + 41
+STR_DAMAGE  equ 0x7A8           ; DS: the damage STR adds in melee, a signed byte for each STR
+STR_MOST    equ 25
+titan_damage:
+        cmp word [bp + 0x16], 1
+        jle .ret
+        pusha
+        push es
+        mov ax, [bp + 0x0E]
+        mov word [cs:ws_type], 0xFFFF
+        mov word [cs:ws_slot], MISSILE_SLOT_W
+        mov dx, ds
+        add dx, THINGS_SEG
+        mov [cs:r_things], dx
+        call worn_scan
+        cmp word [cs:ws_count], 0
+        je .out
+        les bx, [ITEMS]
+        imul ax, [cs:ws_item], 0x15
+        add bx, ax
+        cmp word [es:bx + 0x12], TITAN_NAME
+        jne .out
+        les bx, [CREATURES]
+        imul ax, [bp + 0x0E], 0x3A
+        add bx, ax
+        mov bl, [es:bx + 0x22]          ; (its STR)
+        xor bh, bh
+        cmp bx, STR_MOST
+        ja .out
+        mov al, [STR_DAMAGE + bx]
+        cbw
+        add [bp - 0x12], ax
+.out:   pop es
+        popa
+.ret:   ret
+
+; AMULET_MR: "cmp word [bp-0Ch],0" (7A4FDh; 4 bytes: the INT, the site's number and a NOP) in the
+; routine giving a creature's magic resistance against a spell (7A4A1h: [BP+6] the target's
+; combatant, [BP-0Ch] its sheet's resistance, Mind Bar's 75 added; Lower Resistance halves it
+; after): an Amulet of Magic Resistance worn at the neck adds AMULET_PERCENT. The compare made, its
+; flags returned.
+AMULET_PERCENT equ 15
+NECK       equ 8                ; the item's slot byte while worn at the neck
+amulet_mr:
+        pushad
+        push es
+        mov di, sp
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [bp + 6], 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        mov bx, MR_AMULET
+        mov cx, NECK
+        call extra_worn
+        jz .test
+        add word [bp - 0x0C], AMULET_PERCENT
+.test:  cmp word [bp - 0x0C], 0
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
 
 ; RULES (set by the Loader, from its Options): a helm counts AC 1, ... (2, once boots'
 ; movement in a fight, is unused)
@@ -12915,6 +13055,7 @@ DET_ITEM  equ NS_IMAGE + 23      ; 7AB95h: Detonate's blast on an item, the numb
 WANDER_DMG equ NS_IMAGE + 24     ; 7B56Fh: a spell's damage, the kinds a creature is protected from
 REQ_SITE  equ NS_IMAGE + 25      ; 7FF42h: a script's REQUEST, its number read
 AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim check's answer
+AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against a spell
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -12976,6 +13117,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je req_site
         cmp byte [cs:rl_site], AIM_SITE
         je aim_site
+        cmp byte [cs:rl_site], AMULET_SITE
+        je amulet_mr
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -14373,7 +14516,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAMES_EXTRA  equ 39
+NAMES_EXTRA  equ 43
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -14434,10 +14577,13 @@ n_fl    dw 0
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 27
+TYPES_EXTRA equ 30
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
+GIRDLE_BACK equ 27              ; (the Girdle of Back Defense, the Golden Girdle of Urnst and the
+GIRDLE_URNST equ 28             ;   Amulet of Magic Resistance: dsloader/worldgear.py, ITEM_REAR,
+MR_AMULET   equ 29              ;   AMULET_MR)
 ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
 GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
@@ -14614,6 +14760,15 @@ extra_types:
         ; 126Fh, no thieves); the game has no metal shield
         db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
         db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
+        ; the girdles (dsloader/worldgear.py): the game's Belt's (42), worn at the waist (+9: 2),
+        ; no material shown (+8: 40h), for every class
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
 ; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
 ; NAMES in dsloader/names.py), the rest blank until it writes more
 extra_names:
@@ -14695,7 +14850,15 @@ extra_names:
         times NAME_SIZE - 8 db 0
         db "Skycutter"                  ; a chatkcha +2)
         times NAME_SIZE - 9 db 0
-        times (NAMES_EXTRA - 39) * NAME_SIZE db 0
+        db "Girdle/Back Def"            ; (the girdles, the bow and the amulet of
+        times NAME_SIZE - 15 db 0       ; dsloader/worldgear.py: 15 letters at most, as the
+        db "Girdle of Urnst"            ; game's own)
+        times NAME_SIZE - 15 db 0
+        db "Titanstring Bow"
+        times NAME_SIZE - 15 db 0
+        db "Amulet/MagicRes"
+        times NAME_SIZE - 15 db 0
+        times (NAMES_EXTRA - 43) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,
@@ -14752,7 +14915,8 @@ probe_stealth:
 .done:  pop es
         pop bx
         pop ax
-.push:  call thief_rear
+.push:  call item_rear
+        call thief_rear
         call kit_rear
         push word [bp-0x1A]
         push word [cs:s_fl]

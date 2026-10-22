@@ -79,6 +79,11 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     # a metal shield (worldgear.py's Ironbulwark): the game's leather Shield's (4), of metal, for the
     # classes of its wooden one (126Fh: no thieves)
     bytes.fromhex("040000003200fa0004050000000000806f120100"),
+    # the girdles (worldgear.py): the game's Belt's (42), worn at the waist, no material shown
+    bytes.fromhex("000000000100140040020000000000" "00ff1f0000"),
+    bytes.fromhex("000000000100140040020000000000" "00ff1f0000"),
+    # the Amulet of Magic Resistance (worldgear.py): the game's Necklace's (36), worn at the neck
+    bytes.fromhex("000000000100fa0040070000000000" "00ff1f0000"),
 )
 TSR_TYPES_OFF, TSR_TYPES_COUNT, TSR_TYPES_FIRST, TSR_TYPES_PTR = 208, 210, 212, 214
 

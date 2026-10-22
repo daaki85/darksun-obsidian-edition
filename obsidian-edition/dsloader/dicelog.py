@@ -24,7 +24,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice
+from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -126,6 +126,7 @@ CONFUSION_RESULTS = ((1, "runs off"), (6, "does nothing"), (9, "fights for a sid
 STRENGTH_ROLL_RETURN = bytes.fromhex("83c40450660fbf4618")
 STR_MOST = 24
 MIND_BAR, LOW_RESISTANCE, MIND_BAR_RESISTANCE = 32, 31, 75
+WAIST_SLOT, NECK_SLOT, MISSILE_SLOT = (game.EQUIP_SLOTS.index(s) for s in ("waist", "neck", "missile"))
 # The magic resistance roll made straight from the spell code (arguments: target, spell, level)
 RESISTANCE_ROLL_RETURN = bytes.fromhex("83c404508a460a50ff76")
 # Dispel Magic, for each effect on the target (the effect id in [BP-2], the dispeller's level
@@ -1945,7 +1946,7 @@ class DiceLog:
                 f"{needs} ({chance}%), hits AC {thac0 - d20}, target AC {ac} -> {'HIT' if hit else 'miss'}")
         skill = self.weapon_skill(attacker, item_type)
         kit_name, kit_hit, _ = self._kit_attack(attacker, item_type, mode, target_combatant)
-        breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode,
+        breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode, item_type,
                                           (specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)),
                                           [(kit_name, kit_hit)] if kit_hit else [])
         return [head, "    " + breakdown]
@@ -1958,7 +1959,8 @@ class DiceLog:
         return specialize.skill(sheet, item_type) if len(sheet) >= game.SHEET_SIZE else specialize.NONE
 
     def _thac0_breakdown(self, e: Entry, thac0: int, attacker: int, attacker_combatant: int,
-                         target_combatant: int, weapon, mode: int, skill: Tuple[str, int] = ("", 0),
+                         target_combatant: int, weapon, mode: int, item_type: Optional[int] = None,
+                         skill: Tuple[str, int] = ("", 0),
                          kit: Sequence[Tuple[str, int]] = ()) -> str:
         """'THAC0 16, +6 STR, +1 Blessed, ... = 9', from the attack setup's locals and the game's rules
         (and SKILL, weapon specialization's (name, to-hit), which DSCLOG takes off after them)."""
@@ -1986,6 +1988,10 @@ class DiceLog:
         if on(target_combatant, 55):
             parts.append(("target's Blur", -2))
             situational += 2
+        if mode is not None and mode <= 1 and specialize.kind_of(item_type) in worldgear.SWORD_KINDS \
+                and g.wears_type(g.combatant_creature(target_combatant), game.URNST_GIRDLE_TYPE, WAIST_SLOT):
+            parts.append(("target's Girdle of Urnst", -worldgear.URNST_AC))  # (DSCLOG's ITEM_REAR)
+            situational += worldgear.URNST_AC
         if on(attacker_combatant, game.FOG_EFFECT):  # (the new spells' Fogbolt: DSCLOG's NS_HIT)
             parts.append(("Fogbolt", -3))
             situational += 3
@@ -2158,9 +2164,12 @@ class DiceLog:
         skill = self.weapon_skill(attacker, e.parent_arg(0x14))
         extra = specialize.damage(skill)
         kit_name, _, kit = self._kit_attack(attacker, e.parent_arg(0x14), mode, e.glob[0])
-        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(bonus - extra - kit)} weapon" if bonus - extra - kit else "") \
+        titan = self._titan_str(attacker, mode)  # (the Titanstring Bow: DSCLOG's TITAN_DAMAGE)
+        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(bonus - extra - kit - titan[0])} weapon"
+                                                    if bonus - extra - kit - titan[0] else "") \
             + (f" {signed(extra)} {specialize.SKILL_NAMES[skill]}" if extra else "") \
-            + (f" {signed(kit)} {kit_name}" if kit else "")
+            + (f" {signed(kit)} {kit_name}" if kit else "") \
+            + (f" {signed(titan[0])} STR {titan[1]} (Titanstring Bow)" if titan[0] else "")
         if skill == specialize.GRAND:
             steps += f" (d{sides} for d{sides - 2}: grand mastery)"
         if sum(faces) + bonus < 1:
@@ -2194,6 +2203,18 @@ class DiceLog:
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         return ["  " + line]
+
+    def _titan_str(self, attacker: Optional[int], mode: Optional[int]) -> Tuple[int, int]:
+        """(what STR adds to the damage, the STR) for a missile attack by one who has the Titanstring
+        Bow in their missile slot; (0, 0) else."""
+        g = self.game
+        if attacker is None or mode is None or mode <= 1:
+            return 0, 0
+        if not any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == worldgear.TITANSTRING
+                   for item in g.worn_in(attacker, MISSILE_SLOT)):
+            return 0, 0
+        strength = g.creature(attacker)[CREATURE_ABILITIES]
+        return g.str_damage(strength), strength
 
     def _enlarge_level(self, combatant: Optional[int]) -> int:
         """The level Enlarge counts at on COMBATANT: each Enlarge on them at its caster's level
@@ -2811,6 +2832,9 @@ class DiceLog:
         g = self.game
         resistance = g.magic_resistance(target) or 0
         how = []
+        if g.wears_type(g.combatant_creature(target), game.MR_AMULET_TYPE, NECK_SLOT):  # (DSCLOG's AMULET_MR)
+            resistance += worldgear.AMULET_PERCENT
+            how.append(f"+{worldgear.AMULET_PERCENT} Amulet of Magic Resistance")
         # the game's rules (its routine at 7A4A1h): Mind Bar +75 against mind-affecting spells,
         # then Lower Resistance halves it
         on = {x.id for x in g.effects() if x.owner == target}

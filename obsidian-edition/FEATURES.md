@@ -1218,7 +1218,7 @@ dearest, the Wand of Missiles, is 65,000):
 
 | Items | Price |
 |---|---|
-| Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
+| Magic melee weapons, and Dunesong and Titanstring | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
 | Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
 | Plain metal weapons | 50 to 300 |
 | Bracers of defense | 5,000 a point of AC |
@@ -1228,6 +1228,7 @@ dearest, the Wand of Missiles, is 65,000):
 | Cloak and Boots of Elvenkind | 25,000 and 20,000 |
 | Warden's Arms and Legs; Chest; Helm | 27,000 each; 36,000; 30,000 |
 | Arrowbane; Sunking Crown | 30,000; 40,000 |
+| Girdle of Back Defense; Golden Girdle of Urnst; Amulet of Magic Resistance | 25,000; 20,000; 35,000 |
 | Gutterward; Ironbulwark | 25,000; 65,000 (the game's Drake Shield +1 is 25,400, El's Shield +2 50,200) |
 | Tome of Understanding | 43,500 (AD&D's) |
 
