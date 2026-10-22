@@ -453,7 +453,10 @@ owner, slot and what the item is (`_same`: its picture, type, name and plus),
 falling back to owner and item. At least `BULK_MATCH` (half) matched
 is a change of area, and an item with no match is reported; fewer, or no
 settling within `BULK_WAIT` (30 s), is a game loaded, and the watch starts
-afresh.
+afresh. An item gone whose record still holds its type and name is outside the
+party (dropped, in a container) and not reported, unless the record's first word
+went to 0 (`freed`): the game's free (1A0A:0A3Ah) zeroes only that word and the
+free-list link at +4, so a destroyed item keeps its type and name.
 
 
 ## How each part works

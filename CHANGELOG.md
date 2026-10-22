@@ -12,6 +12,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #55 (in progress)
 
 **Fixed**
+- **An item the game destroys gets its crash-log report.** The game frees a destroyed item
+  (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record
+  and linking it into the free list: its type and name stay. The item watch took that record for
+  an item still in the world (dropped, or put in a container) and wrote nothing, so a bone helm
+  lost to a daggoran's Detonate left no report. A record whose first word went to 0 is now
+  reported as freed by the game.
 - **A party's thief skill roll goes to its best member.** Where the game asks the whole party
   (a trap's find/remove traps, all 50 trap triggers with the arena prisoner's among them, and
   hear noise by the wagon), its pick (DSUN 801BDh) was to keep the highest chance but kept the

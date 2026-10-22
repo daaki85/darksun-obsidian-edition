@@ -106,6 +106,25 @@ class ItemWatchTest(unittest.TestCase):
         self.assertEqual(self.watch.reports, [])
         self.assertIn("outside the party", itemwatch.ordinary_loss(self.armour, self.armour.record, False, False))
 
+    def test_freed_but_unchanged_is_reported(self):
+        """The game frees a destroyed item by zeroing only its +0 word: the type and name left in
+        the record are not an item outside the party (a bone helm lost to Detonate was missed)."""
+        helm = bytearray(item(14, 0, "Bone Helm", slot="head", typ=5).record)
+        struct.pack_into("<H", helm, itemwatch.ITEM_ID, 0xFC03)
+        was = ItemSeen(14, 0, "Garyn", "head", "Bone Helm", 5, bytes(helm), bytes(game.ITEM_TYPE_SIZE))
+        self.data.items.append(was)
+        self.run_for(2)
+        self.data.items = [self.armour, self.sword]
+        after = bytearray(helm)
+        struct.pack_into("<H", after, itemwatch.ITEM_ID, 0)
+        self.data.records[14] = bytes(after)
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(len(out), 1, out)
+        self.assertIn("Bone Helm is gone from Garyn's head", out[0])
+        self.assertIn("freed its record", out[0])
+        self.assertIsNone(itemwatch.ordinary_loss(was, bytes(after), False, False))
+        self.assertIn("outside the party", itemwatch.ordinary_loss(was, bytes(helm), False, False))
+
     def test_ordinary_losses_get_no_report(self):
         """Used up (fruit, arrows, scrolls), a spell's weapon, sold (money up), broken: nothing said."""
         apple = item(20, 1, "Apple", slot=None, typ=60)
