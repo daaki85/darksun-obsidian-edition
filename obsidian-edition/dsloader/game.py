@@ -110,7 +110,8 @@ GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
-RULE_LEVEL_10 = 128  # class levels go up to 10 (the game stops at 9)
+RULE_LEVEL_10 = 128  # an XP cap (XP_CAP, shared out) in place of the game's level cap of 9
+XP_CAP = 749_999  # DSCLOG's XP_CAP
 RULE_THIEF_TABLE = 256  # thief skills from AD&D's table and Dark Sun's DEX adjustments
 RULE_HALF_GIANT = 512  # half-giants wield two-handed weapons in one hand
 # AD&D's rings and cloaks of protection: of two rings only the better counts, and a ring betters
@@ -735,14 +736,14 @@ THIEF_PENALTY_SLOTS = tuple(EQUIP_SLOTS.index(s) for s in ("legs", "ammo", "left
 # game's race adjustment (Dark Sun's own numbers already), plus Dark Sun's DEX adjustment (AD&D's
 # table to 19, the Dark Sun rules' past it, 9-22; none for the last three skills) in place of the
 # game's DEX formula
-AD_D_THIEF = ((30, 35, 40, 45, 50, 55, 60, 65, 70, 80),  # pick pockets
-              (25, 29, 33, 37, 42, 47, 52, 57, 62, 67),  # open locks
-              (20, 25, 30, 35, 40, 45, 50, 55, 60, 65),  # find/remove traps
-              (15, 21, 27, 33, 40, 47, 55, 62, 70, 78),  # move silently
-              (10, 15, 20, 25, 31, 37, 43, 49, 56, 63),  # hide in shadows
-              (10, 10, 15, 15, 20, 20, 25, 25, 30, 30),  # hear noise
-              (85, 86, 87, 88, 90, 92, 94, 96, 98, 99),  # climb walls
-              (0, 0, 0, 20, 25, 30, 35, 40, 45, 50))     # read languages
+AD_D_THIEF = ((30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99),  # pick pockets
+              (25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82),  # open locks
+              (20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80),  # find/remove traps
+              (15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99),  # move silently
+              (10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85),  # hide in shadows
+              (10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40),  # hear noise
+              (85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99),  # climb walls
+              (0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65))     # read languages
 DEX_FIRST = 9
 DEX_ADJUST = ((-15, -10, -10, -20, -10), (-10, -5, -10, -15, -5), (-5, 0, -5, -10, 0), (0, 0, 0, -5, 0),  # 9-12
               (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 5, 0, 0, 0),  # 13-16
@@ -757,7 +758,7 @@ def dex_adjustment(dex: int, skill: int) -> int:
     return DEX_ADJUST[min(max(dex, DEX_FIRST), DEX_FIRST + len(DEX_ADJUST) - 1) - DEX_FIRST][skill]
 
 
-# AD&D's ranger: hide in shadows and move silently by ranger level (1-10), the Loader's own
+# AD&D's ranger: hide in shadows and move silently by ranger level (1-13), the Loader's own
 # (the game gives rangers no thief skills); race and DEX adjust them as a thief's
 RANGER_HIDE = AD_D_THIEF[4]
 RANGER_MOVE = AD_D_THIEF[3]
@@ -1460,7 +1461,7 @@ class GameData:
         signed_byte = lambda offset: struct.unpack_from("b", table, offset)[0]
         race, dex = sheet[SHEET_RACE], rec[CREATURE_ABILITIES + 1]
         if self.rules & RULE_THIEF_TABLE:
-            parts = [(f"thief level {level}", AD_D_THIEF[skill][min(level, 10) - 1])]
+            parts = [(f"thief level {level}", AD_D_THIEF[skill][min(level, len(AD_D_THIEF[0])) - 1])]
         else:
             parts = [("base", signed_byte(THIEF_BASE + skill)),
                      (f"thief level {level}", level * THIEF_PER_LEVEL)]
@@ -1526,7 +1527,7 @@ class GameData:
         table = self.guest.read((self.load_seg + THIEF_TABLE_SEG) * 16, THIEF_ARMOUR + 8)
         signed_byte = lambda offset: struct.unpack_from("b", table, offset)[0]
         race, dex = sheet[SHEET_RACE], rec[CREATURE_ABILITIES + 1]
-        parts = [(f"ranger level {level}", (RANGER_HIDE if skill == 4 else RANGER_MOVE)[min(level, 10) - 1])]
+        parts = [(f"ranger level {level}", (RANGER_HIDE if skill == 4 else RANGER_MOVE)[min(level, len(RANGER_HIDE)) - 1])]
         if avenger:
             parts = [(f"ranger as a Wilderness Avenger, level {level}", kits.AVENGER_STEALTH * level)]
         if 1 <= race <= 8:

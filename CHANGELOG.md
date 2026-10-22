@@ -96,6 +96,17 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   check (5D59Dh) and the table it reads (`game.POWERS_SEG`, the per-character byte at selector
   2F0h) are in DEVELOPMENT.md.
 
+**Changed**
+- **Level cap by XP.** The levels-up-to-10 rule is now an XP cap: a class goes up while its next level
+  needs no more than 749,999 XP, the whole of it for a character of one class, an even share for each
+  class of a multiclass character (as the game shares out XP), and for a human who changed class the cap
+  less what its old classes' levels needed (the game starts the new class at 0). With AD&D's class tables
+  that is cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief
+  13th; 749,999 keeps a druid from 13th and a preserver from 12th (and 6th-level spells). DSCLOG's
+  `PROBE_LEVEL` and `PROBE_XP_NEXT` ask `LEVEL_ROOM`; AD&D's XP table to 14th level, slots to 12th, thief
+  skills to 13th (`tables.py`, `game.AD_D_THIEF`); CHOOSE A SPELL no higher than 5th (`WIZ_LEVEL_MOST`).
+  Checked in the game with a single, a two- and a three-class character and a dual-class human.
+
 **Fixed**
 - **A Fireball no longer floods the dice log.** The filter for `random(low, high)` (1A0A:2FA9h,
   kept for psionic ranges) also recorded the eleven picture-point calls a spell burst makes, so a

@@ -535,8 +535,8 @@ of their classes goes up a level, and the Loader adds which class that is:
 `EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each class
 is its first letter (C, D, F, G, R, T), except the preserver's Pr and the
 psionicist's Ps. When two classes go up at the same XP, both are named: `(20000 Pr/T)`. A class
-already at the highest level (9, or 10 with
-[levels up to 10](FEATURES.md#levels-up-to-10)) has no next level, so it is never named.
+already at the highest level (9, or its share of the XP cap with
+[Level cap by XP](FEATURES.md#level-cap-by-xp)) has no next level, so it is never named.
 A character of one class shows the line as the game always has, and so does a
 human, who can only dual-class: the game counts only one of their classes
 there.
@@ -662,7 +662,7 @@ Everything there applies in games started from the Loader; a switch that says
   to AD&D.
 - **More character customization**
   ([More character customization](FEATURES.md#more-character-customization)): weapon
-  specialization, kits, levels up to 10, STORE and RECALL on the creation
+  specialization, kits, the XP level cap, STORE and RECALL on the creation
   screen, and fuller starting gear.
 - **Expanded features** ([Expanded features](FEATURES.md#expanded-features)): the
   leader's CHA at shops, buying back magical items, and **Improved thieving**
@@ -886,7 +886,7 @@ creatures save again as they stay in them; those lines have no "from".
 | `XP: Gerakis +67, K'ratchek +22, ... (for Slig 270)` | Experience the party got, and for which kills, with each one's XP from its character sheet. The game gives it right after the kill: an equal share to each character, split again between a multiclass character's classes (the sheet counts XP per class, so a three-class thri-kreen shows a third of the share). |
 | `Cilla is now a 3rd level Ranger` / `    max HP 15 -> 21 (+6)` | A level gained, and the new maximum HP. |
 | `    max HP unchanged: the game divides the hit point total by the classes, ...` | A multiclass character gained a level and its most hit points stayed the same: every class level rolls its die, but the game divides the whole total by the number of classes, so a small roll can add only a fraction (it counts at a later level). A human who changed class gets none in the new class until its level passes the old class's. |
-| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](FEATURES.md#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [levels up to 10](FEATURES.md#levels-up-to-10)). With [the better of two](FEATURES.md#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](FEATURES.md#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
+| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](FEATURES.md#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [Level cap by XP](FEATURES.md#level-cap-by-xp)). With [the better of two](FEATURES.md#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](FEATURES.md#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
 
 **Character creation**
 

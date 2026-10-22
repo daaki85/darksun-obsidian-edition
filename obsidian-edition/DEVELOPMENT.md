@@ -48,7 +48,7 @@ of the game's data, the tools for mapping it, and how each part of the
   - [Helms](#helms)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits)
-  - [Levels up to 10](#levels-up-to-10)
+  - [Level cap by XP](#level-cap-by-xp)
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [The game's own party](#the-games-own-party)
@@ -1621,13 +1621,34 @@ each was played in the game: the creation screen's KIT page and hit dice, the
 level ups (Shinobi and Scholar spells, Seeker slots), the KIT menu after DUAL
 with its bans, and the Effects screen's pages.
 
-### Levels up to 10
+### Level cap by XP
 
-([In the features page](FEATURES.md#levels-up-to-10).)
+([In the features page](FEATURES.md#level-cap-by-xp).)
 
 How: the game holds a class level against 9 in two places, where a character
-goes up a level and where View Character shows the XP for the next one; the
-helper (`INT E7h`) holds it against 10 instead while the rule is on.
+goes up a level (87BE6h: the class's slot in DI, then `JL`) and where View
+Character shows the XP for the next one (67D08h: its copy of the sheet, the
+slot in DX, then `JZ`). While the rule is on the helper's `PROBE_LEVEL`
+(`INT E7h`) answers instead from `LEVEL_ROOM`: the next level's XP, from the
+game's table (`XP_NEED`, AD&D's with the class tables rule), against the
+class's share of `XP_CAP` (749,999), flags as "cmp 0,1" below it and "cmp 9,9"
+at it. It tells the two places apart by the byte 3 past its return (7Ch, the
+level up's `JL`), and finds the game's XP table, and at the level up its map
+from the sheet's classes (1-17) to the table's rows (1-8, at +0CAh), from the
+code's own `mov ax,seg` immediates (View Character's copy numbers its classes
+by row already). The share: the whole cap for one class; for a character of
+several (not human) the cap divided between them, as the game divides its XP;
+for a human, the cap less what its old classes' levels needed (the slots after
+the first: the game's change of class, 86C80h, moves the old classes down,
+puts the new one first at 1st level and sets the sheet's XP to 0).
+`PROBE_XP_NEXT` names a class in View Character's brackets by the same test.
+The XP table has AD&D's levels to 14th (`ADND_XP`), the slots to 12th
+(`ADND_SLOTS`), the thief skills to 13th (`THIEF_TABLE`); `PROBE_PICK_LEVEL`
+keeps CHOOSE A SPELL at 5th and below (`WIZ_LEVEL_MOST`). Checked in the
+game: a gladiator at 700,000 XP went to 10th and no further; a thri-kreen
+fighter/druid/psionicist at 300,000 to 8/11/9; a human preserver who had been
+a 3rd-level gladiator, at 760,000, to 11th; an elf preserver/druid/thief at
+300,000 to 9/11/11.
 
 ### STORE and RECALL on the creation screen
 

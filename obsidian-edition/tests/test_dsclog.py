@@ -2348,27 +2348,72 @@ class RuleTests(RingTests):
             self.run_at(bytes((0xCD, VEC_DOUBLE)), eax=7)
             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AL), want)
 
-    def level(self, level):
-        """INT VEC_LEVEL with ES:BX a sheet whose class level (+24h) is LEVEL: (below the cap,
-        at it), from the flags the game's JL and JZ read; AX and interrupts as they were."""
+    XP_SEG, ROWS_SEG = 0x40, 0x90  # (from TYPES: the game's XP table, its class rows)
+
+    def level(self, level, classes=(5,), levels=None, race=2, slot=0, view=False):
+        """INT VEC_LEVEL at the level up (87BE6h: the slot in DI, sheet classes 1-17, a row each at
+        the rows' segment's +0CAh) or on View Character (VIEW, 67D08h: the slot in DX, classes as rows),
+        ES:BX the sheet (CLASSES, LEVELS, RACE) past its start by SLOT, whose class there is at LEVEL:
+        (below the cap, at it), from the flags the game's JL and JZ read; AX and interrupts as they were."""
         image = load_image()
-        probe = image.find(bytes.fromhex("fb50b0092ef606") + struct.pack("<H", self.RULES) + bytes([128]))
+        probe = image.find(bytes.fromhex("fb2ef606") + struct.pack("<H", self.RULES) + bytes([128]))
         self.assertGreater(probe, 0)
-        self.mu.mem_write(VEC_LEVEL * 4, struct.pack("<HH", probe, TSR))
-        self.mu.mem_write(self.TYPES * 16 + 0x100 + 0x24, bytes([level]))
-        self.run_at(bytes((0xCD, VEC_LEVEL)), es=self.TYPES, ebx=0x100, eax=0x1234)
-        flags = self.mu.reg_read(r.UC_X86_REG_EFLAGS)
-        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_AX), bool(flags & IF)), (0x1234, True))
+        mu = self.mu
+        mu.mem_write(VEC_LEVEL * 4, struct.pack("<HH", probe, TSR))
+        levels = list(levels or [level] * len(classes))
+        levels[slot] = level
+        sheet = bytearray(0x47)
+        sheet[0x18] = race
+        sheet[0x21:0x21 + len(classes)] = bytes(classes)
+        sheet[0x24:0x24 + len(levels)] = bytes(levels)
+        mu.mem_write(self.TYPES * 16 + 0x100, bytes(sheet))
+        for cls, row in ((5, 2), (1, 1), (9, 3), (10, 4), (11, 5), (12, 6), (13, 7), (17, 8)):
+            mu.mem_write((self.TYPES + self.ROWS_SEG) * 16 + 0xCA + cls * 2, bytes([row]))
+        self.at += 0x80
+        ret = self.at + 2
+        code = bytearray(0x40)
+        code[0:5] = bytes((0xCD, VEC_LEVEL, 0x90, 0x90, 0x90))
+        code[5] = 0x74 if view else 0x7C
+        if view:
+            struct.pack_into("<H", code, 2 + 0x2C, self.TYPES + self.XP_SEG)
+        else:
+            mu.mem_write(CALLER * 16 + ret - 0x5F, struct.pack("<H", self.TYPES + self.ROWS_SEG))
+            mu.mem_write(CALLER * 16 + ret - 0x38, struct.pack("<H", self.TYPES + self.XP_SEG))
+        mu.mem_write(CALLER * 16 + self.at, bytes(code))
+        regs = dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, es=self.TYPES,
+                    ebx=0x100 + slot, eax=0x1234, edi=0 if view else slot, edx=slot if view else 0x5555)
+        for name, value in regs.items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + self.at, CALLER * 16 + ret)
+        flags = mu.reg_read(r.UC_X86_REG_EFLAGS)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_BX,
+                                                    r.UC_X86_REG_ES)], [0x800, 0x1234, 0x100 + slot, self.TYPES])
+        self.assertTrue(flags & IF)
         return bool(flags & 0x80) != bool(flags & 0x800), bool(flags & 0x40)
 
     def test_level_cap(self):
-        """The game's cap of 9, or 10 with rule 128."""
+        """The game's cap of 9; with rule 128 the XP cap (749,999, AD&D's XP with RULES_HI 8): a
+        class rises while its next level needs no more than its share."""
+        below, at = (True, False), (False, True)
         self.rules(0)
-        self.assertEqual([self.level(n) for n in (1, 8, 9, 10)],
-                         [(True, False), (True, False), (False, True), (False, False)])
+        self.assertEqual([self.level(n) for n in (1, 8, 9)], [below, below, at])
         self.rules(128)
-        self.assertEqual([self.level(n) for n in (8, 9, 10, 11)],
-                         [(True, False), (True, False), (False, True), (False, False)])
+        self.mu.mem_write(TSR * 16 + self.RULES + 100, struct.pack("<H", 8))  # (RULES_HI: AD&D's tables)
+        for view in (False, True):
+            druid, cleric = (2, 1) if view else (5, 1)
+            fighter, gladiator = (3, 4) if view else (9, 10)
+            with self.subTest(view=view):
+                self.assertEqual([self.level(n, (druid,), view=view) for n in (11, 12)], [below, at])
+                self.assertEqual([self.level(n, (cleric,), view=view) for n in (10, 11)], [below, at])
+                # two classes: 374,999 each (cleric 9th needs 450,000 for 10th); three: 249,999
+                self.assertEqual([self.level(n, (cleric, fighter), (8, 8), view=view) for n in (8, 9)], [below, at])
+                self.assertEqual(self.level(8, (cleric, fighter, druid), (8, 8, 8), slot=1, view=view), at)
+                self.assertEqual(self.level(10, (cleric, fighter, druid), (8, 8, 8), slot=2, view=view), below)
+                # a human: what its old classes' levels needed comes off (fighter 7th 64,000, gladiator 75,000)
+                self.assertEqual(self.level(10, (cleric, fighter), (10, 7), race=1, view=view), below)
+                self.assertEqual(self.level(10, (cleric, gladiator), (10, 7), race=1, view=view), at)
+                self.assertEqual(self.level(12, (druid,), race=1, view=view), at)
+        self.mu.mem_write(TSR * 16 + self.RULES + 100, struct.pack("<H", 0))
 
     def hit_dice(self, cls, levels=9):
         """INT VEC_HD_ROLL with ES:BX a hit point group whose dice go up to LEVELS and the
@@ -2421,7 +2466,8 @@ class RuleTests(RingTests):
         self.assertEqual(self.thief_skill(6, 3, 22, 78), (87, 1))  # climb walls
         self.assertEqual(self.thief_skill(4, 1, 9, 18), (10 - 10, 1))  # DEX 9
         self.assertEqual(self.thief_skill(3, 1, 7, 28), ((15 - 20) & 0xFFFF, 1))  # below 9: as 9 (the game clamps at 0 later)
-        self.assertEqual(self.thief_skill(0, 12, 24, 28), (80 + 27, 1))  # past 10th and DEX 22
+        self.assertEqual(self.thief_skill(0, 12, 24, 28), (95 + 27, 1))  # 12th and DEX 22
+        self.assertEqual(self.thief_skill(4, 15, 22, 18), (85 + 22, 1))  # past 13th as 13th
         self.assertEqual(self.thief_skill(7, 3, 22, (252 - 256) & 0xFFFF), (0, 1))  # read languages
         self.assertEqual(self.thief_skill(0, 0, 22, 28), (28, 0))  # no thief level: the game's
 
@@ -5176,19 +5222,20 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(self.CREATION * 16, bytes(sheet))  # (DS:[119Ch] points at it)
 
     def test_pick_level(self):
-        """PROBE_PICK_LEVEL: AL (the preserver level) + 1, a Shinobi's casting level + 1."""
+        """PROBE_PICK_LEVEL: AL (the preserver level) + 1, a Shinobi's casting level + 1, no more
+        than 11 (spell levels up to 5th: there are no 6th-level wizard spells)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_PICK_LEVEL
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
             for cls, kit in self.SHINOBI_CASES:
                 kid = self.kit_of(cls, kit, rules)
-                for level in (5, 6, 8, 10):
+                for level in (5, 6, 8, 10, 11, 12):
                     with self.subTest(rules=rules, cls=cls, kit=kit, level=level):
                         self.picker_sheet(cls, kit, level)
                         al = level if cls == 11 else 0
                         self.run_vector(VEC_PICK_LEVEL, 2, eax=0x1100 | al, ebx=0x2222, es=0x6666)
-                        want = (kits.shinobi_cast(level) if kid == kits.SHINOBI else al) + 1
+                        want = min(kits.shinobi_cast(level) if kid == kits.SHINOBI else al, 10) + 1
                         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AL), want)
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
                                          [0x2222, 0x6666])

@@ -7032,7 +7032,8 @@ shinobi_knows:
 ; PROBE_PICK_LEVEL: INT VEC_PICK_LEVEL replaces "inc al" (2 bytes; DSUN.EXE 85861h) in the CHOOSE A
 ; SPELL window, where AL is the character's preserver level and the spell levels on offer are up to
 ; (AL + 1) / 2 (DS:[119Ch] its sheet, far): a Shinobi's its casting level (SHINOBI_CAST); no more
-; than PICK_CAP's spell level while PICK_SPELLS sets one. Then AL + 1, as the code was.
+; than PICK_CAP's spell level while PICK_SPELLS sets one, nor 5th (WIZ_LEVEL_MOST). Then AL + 1, as
+; the code was.
 PICK_SHEET   equ 0x119C
 probe_pick_level:
         push bx
@@ -7057,10 +7058,14 @@ probe_pick_level:
         mov al, cl
 .capped:
         pop cx
-.inc:   inc al
+.inc:   cmp al, 2 * WIZ_LEVEL_MOST  ; (no wizard spells past 5th: an 11th-level preserver's
+        jbe .most               ;   6th-level page would be empty)
+        mov al, 2 * WIZ_LEVEL_MOST
+.most:  inc al
         pop es
         pop bx
         iret
+WIZ_LEVEL_MOST equ 5
 
 ; PICK_SPELLS: member SI picks its preserver spells on the game's CHOOSE A SPELL (620:5Ch, through
 ; its stub, PICK_STUB from DS; the routine a preserver's level up calls), CL of them with the
@@ -10257,7 +10262,7 @@ kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 
 ; XP_NEED: EAX the XP class row SI (1-8: cleric, druid, fighter, gladiator, preserver,
 ; psionicist, ranger, thief, as the game's XP table and View Character's copy number them) needs
 ; at level index CX (the entry the game reads: the level the character has), EAX coming in as the
-; game's table word: the game's x100, or with RULE_HI_TABLES AD&D's (levels 0-10). Others kept.
+; game's table word: the game's x100, or with RULE_HI_TABLES AD&D's (levels 0-13). Others kept.
 xp_need:
         test word [cs:rules_hi], RULE_HI_TABLES
         jz .game
@@ -10265,28 +10270,29 @@ xp_need:
         ja .game
         or si, si
         jz .game
-        cmp cx, 10
+        cmp cx, ADND_XP_LEVELS - 1
         ja .game
         push bx
-        imul bx, si, 11 * 4
+        imul bx, si, ADND_XP_LEVELS * 4
         add bx, cx
         add bx, cx
         add bx, cx
         add bx, cx
-        mov eax, [cs:bx + adnd_xp - 11 * 4]
+        mov eax, [cs:bx + adnd_xp - ADND_XP_LEVELS * 4]
         pop bx
         ret
 .game:  imul eax, eax, 100
         ret
-; by class row (1-8), the XP needed at each level 0-10 (the next level's: AD&D's, levels 1-11)
-adnd_xp dd 0, 1500, 3000, 6000, 13000, 27500, 55000, 110000, 225000, 450000, 675000       ; cleric
-        dd 0, 2000, 4000, 7500, 12500, 20000, 35000, 60000, 90000, 125000, 200000        ; druid
-        dd 0, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 750000      ; fighter
-        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000      ; gladiator
-        dd 0, 2500, 5000, 10000, 20000, 40000, 60000, 90000, 135000, 250000, 375000      ; preserver
-        dd 0, 2200, 4400, 8800, 16500, 30000, 55000, 100000, 200000, 400000, 600000      ; psionicist
-        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000      ; ranger
-        dd 0, 1250, 2500, 5000, 10000, 20000, 40000, 70000, 110000, 160000, 220000       ; thief
+; by class row (1-8), the XP needed at each level 0-13 (the next level's: AD&D's, levels 1-14)
+ADND_XP_LEVELS equ 14
+adnd_xp dd 0, 1500, 3000, 6000, 13000, 27500, 55000, 110000, 225000, 450000, 675000, 900000, 1125000, 1350000  ; cleric
+        dd 0, 2000, 4000, 7500, 12500, 20000, 35000, 60000, 90000, 125000, 200000, 300000, 750000, 1500000    ; druid
+        dd 0, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 750000, 1000000, 1250000, 1500000 ; fighter
+        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000 ; gladiator
+        dd 0, 2500, 5000, 10000, 20000, 40000, 60000, 90000, 135000, 250000, 375000, 750000, 1125000, 1500000 ; preserver
+        dd 0, 2200, 4400, 8800, 16500, 30000, 55000, 100000, 200000, 400000, 600000, 800000, 1000000, 1200000 ; psionicist
+        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000 ; ranger
+        dd 0, 1250, 2500, 5000, 10000, 20000, 40000, 70000, 110000, 160000, 220000, 440000, 660000, 880000     ; thief
 
 ; PROBE_XP: INT VEC_XP replaces "imul eax,eax,64h" (4 bytes: INT + 2 NOPs) where the game takes the
 ; XP for the next level from its table, at a level up (DSUN.EXE 87BBBh) and on View Character
@@ -10372,11 +10378,11 @@ probe_adnd_slots:
         mov [ss:si], cl
         push ax
         mov al, cl              ; and AD&D's for the level
-        cmp al, 10
+        cmp al, SLOT_LEVELS
         jbe .lv
-        mov al, 10
+        mov al, SLOT_LEVELS
 .lv:    mov ah, 0
-        imul bx, bx, 10 * 5
+        imul bx, bx, SLOT_LEVELS * 5
         dec ax
         js .none
         imul ax, ax, 5
@@ -10417,9 +10423,10 @@ probe_adnd_slots:
         pop cx
         pop bx
         ret
-; AD&D's spell slots by level 1-10, spell levels 1-5: priests (clerics and druids), then wizards
-adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2
-           db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2
+; AD&D's spell slots by level 1-12, spell levels 1-5: priests (clerics and druids), then wizards
+SLOT_LEVELS equ 12
+adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2, 5,4,4,3,2, 6,5,5,3,2
+           db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2, 4,4,4,3,3, 4,4,4,4,4
 
 ; The leader's CHA and shop prices (RULE_HI_CHA_PRICES; prices.py):
 ; buying costs 5% less at CHA 18 and 5% more for each point above, to 40% at 25. The leader
@@ -10523,11 +10530,10 @@ probe_xp_next:
         mov ax, [gs:si - XP_SEG_BACK]
         mov gs, ax
         mov di, xp_suffix + 1
-        mov cl, 9               ; the level cap (as PROBE_LEVEL)
-        test byte [cs:rules], RULE_LEVEL_10
-        jz .slots
-        inc cl
-.slots: xor dx, dx
+        push fs
+        xor ax, ax
+        mov fs, ax              ; (the screen's copy: its classes are rows, for LEVEL_ROOM)
+        xor dx, dx
 .slot:  push bx
         add bx, dx
         movzx si, byte [es:bx + 0x21]   ; the class
@@ -10537,9 +10543,15 @@ probe_xp_next:
         jz .next
         cmp si, 8
         ja .next
-        cmp al, cl
+        mov cl, 9               ; at the level cap (as PROBE_LEVEL): next
+        test byte [cs:rules], RULE_LEVEL_10
+        jz .nine
+        call level_room
+        jnc .next
+        jmp .below
+.nine:  cmp al, cl
         je .next
-        mov ch, al
+.below: mov ch, al
         imul ax, si, 40
         push si
         movzx si, ch
@@ -10571,6 +10583,7 @@ probe_xp_next:
         cmp dx, 3
         jb .slot
         mov word [cs:di], ')'   ; (and its NUL)
+        pop fs
 .out:   pop gs
         pop es
         pop di
@@ -11380,21 +11393,135 @@ probe_double:
 .done:  iret
 
 ; PROBE_LEVEL: INT VEC_LEVEL replaces "cmp byte es:[bx+24h],9" (5 bytes: INT + 3 NOPs) in the
-; two places the game holds a class level (ES:BX+24h, a sheet's) against its cap of 9: where a
-; character goes up a level (only while below it) and where View Character shows the XP for the
-; next level (not at it). With RULE_LEVEL_10 the cap is 10: the game's XP tables, hit points,
-; THAC0, saves, spell slots and thief skills all go on past 9 (the tables have 20 levels, the
-; rest are formulas). RETF 2 keeps the compare's flags.
+; two places the game holds a class level (ES:BX+24h, a sheet's, BX past its start by the class's
+; slot) against its cap of 9: where a character goes up a level (87BE6h, the slot DI; on while
+; below it: JL) and where View Character shows the XP for the next level (67D08h, the slot DX, its
+; copy of the sheet; none at it: JE). With RULE_LEVEL_10 the cap is XP_CAP's share (LEVEL_ROOM):
+; the game's XP tables, hit points, THAC0, saves, spell slots and thief skills all go on past 9
+; (the tables have 20 levels, the rest are formulas). The flags as the compare's: below the cap
+; as "cmp 0,1", at it as "cmp 9,9". RETF 2 keeps them.
+LV_UP_NEXT equ 0x7C             ; the byte 3 past the INT's return: the level up's JL (View
+                                ;   Character's is a JE)
+LV_UP_ROWS equ 0x87BE8 - 0x87B89 ; the level up's "mov ax,seg" immediates, back from the return:
+LV_UP_XP   equ 0x87BE8 - 0x87BB0 ;   the class rows' table (+0CAh), the XP table's (+27Ch)
+LV_VIEW_XP equ 0x67D36 - 0x67D0A ; View Character's XP table's, on from the return
 probe_level:
         sti
-        push ax
-        mov al, 9
         test byte [cs:rules], RULE_LEVEL_10
-        jz .cmp
-        inc al
-.cmp:   cmp [es:bx+0x24], al
-        pop ax
+        jnz .cap
+        cmp byte [es:bx+0x24], 9
         retf 2
+.cap:   pushad
+        push fs
+        push gs
+        mov bp, sp
+        lfs si, [ss:bp + 4 + 32]        ; (FS:SI the INT's return)
+        cmp byte [fs:si + 3], LV_UP_NEXT
+        jne .view
+        mov ax, [fs:si - LV_UP_XP]
+        mov gs, ax
+        mov ax, [fs:si - LV_UP_ROWS]
+        mov fs, ax
+        mov dx, [ss:bp + 4]             ; (the slot: the game's DI)
+        jmp .room
+.view:  mov ax, [fs:si + LV_VIEW_XP]
+        mov gs, ax
+        xor ax, ax
+        mov fs, ax                      ; (View Character's copy: its classes are rows)
+        mov dx, [ss:bp + 4 + 20]        ; (the slot: the game's DX)
+.room:  mov bx, [ss:bp + 4 + 16]        ; (the game's BX, back to the sheet's start)
+        sub bx, dx
+        call level_room
+        mov al, 0
+        jc .below
+        cmp al, al                      ; (at the cap: "cmp 9,9")
+        jmp .out
+.below: cmp al, 1                       ; (below it: "cmp 0,1")
+.out:   pop gs
+        pop fs
+        popad
+        retf 2
+
+; LEVEL_ROOM: CF set if the class in slot DX (0-2) of sheet ES:BX may go up a level under the XP
+; cap (RULE_LEVEL_10): its next level's XP (XP_NEED, from the game's table at GS:27Ch) no more than
+; its share of XP_CAP, the XP a character may gather. One class: all of it. Several (not a human):
+; an equal share each, as the game shares out XP. A human who changed class: what is left after
+; the XP its old classes' levels needed (the game starts the new class at 0, so the old classes'
+; count here). The sheet's classes are rows (1-8: View Character's copy) when FS is 0, else
+; the game's 1-17, a row each at FS:0CAh (a word a class). All registers kept.
+XP_CAP equ 749999
+level_room:
+        pushad
+        mov edi, XP_CAP
+        cmp byte [es:bx + 0x18], 1
+        je .human
+        xor cx, cx                      ; (how many classes)
+        xor si, si
+.count: cmp byte [es:bx + si + 0x21], 0
+        je .counted
+        inc cx
+.counted:
+        inc si
+        cmp si, 3
+        jb .count
+        mov eax, edi
+        xor edx, edx
+        movzx ecx, cx
+        jecxz .share
+        div ecx
+.share: mov edi, eax
+        jmp .mine
+.human: mov si, 1                       ; (the old classes: slots 1 and 2)
+.old:   movzx cx, byte [es:bx + si + 0x24]
+        jcxz .next_old
+        dec cx                          ; (the XP its level needed: the entry before it)
+        call .need
+        jc .next_old
+        sub edi, eax
+        jnc .next_old
+        xor edi, edi
+.next_old:
+        inc si
+        cmp si, 3
+        jb .old
+.mine:  mov si, sp
+        mov si, [ss:si + 20]            ; (the slot: DX as it came, from PUSHAD's)
+        movzx cx, byte [es:bx + si + 0x24]
+        call .need
+        jc .no
+        cmp eax, edi
+        ja .no
+        popad
+        stc
+        ret
+.no:    popad
+        clc
+        ret
+; .need: EAX the XP the class in slot SI needs at its level index CX (the entry the game reads);
+; CF set (no class) for none. ES:BX the sheet, FS and GS as above; others kept.
+.need:  push bx
+        push si
+        movzx si, byte [es:bx + si + 0x21]
+        or si, si
+        jz .none
+        mov ax, fs
+        or ax, ax
+        jz .row
+        shl si, 1
+        movzx si, byte [fs:si + 0xCA]
+.row:   imul bx, si, 40
+        add bx, cx
+        add bx, cx
+        movzx eax, word [gs:bx + 0x27C]
+        call xp_need
+        pop si
+        pop bx
+        clc
+        ret
+.none:  pop si
+        pop bx
+        stc
+        ret
 
 ; A thief's hit dice. The game keeps one "dice up to this level" for thieves and psionicists
 ; together (9: after it, +2 a level), but an AD&D thief rolls a d6 up to 10th (a psionicist
@@ -11926,7 +12053,7 @@ class_share:
 ; thief tables (the base at +skill), and the game's [BP+8] the skill, [BP-0Ch] DEX. Without
 ; RULE_THIEF_TABLE (or a thief level), the game's sum (SI = DX + 4 a level), CF clear: on to
 ; the game's DEX formula. With it, SI = AD&D's average for the level (THIEF_TABLE, levels past
-; 10 as 10) + the race's adjustment + Dark Sun's DEX adjustment (DEX_TABLE, DEX 9-22), CF set:
+; 13 as 13) + the race's adjustment + Dark Sun's DEX adjustment (DEX_TABLE, DEX 9-22), CF set:
 ; past the game's DEX formula, to its armour and effects (dsloader/game.py does the same sums).
 probe_thief_skill:
         sti
@@ -11942,11 +12069,11 @@ probe_thief_skill:
         cbw
         sub dx, ax
         mov ax, si
-        cmp ax, 10
+        cmp ax, THIEF_LEVELS
         jbe .level
-        mov ax, 10
+        mov ax, THIEF_LEVELS
 .level: dec ax
-        imul bx, bx, 10
+        imul bx, bx, THIEF_LEVELS
         add bx, ax
         mov al, [cs:thief_table+bx]
         mov ah, 0
@@ -12058,16 +12185,17 @@ probe_chunk_id:
         pop ax
         retf 2
 
-; AD&D's average thief skills, levels 1-10, a row per skill (game.AD_D_THIEF)
+; AD&D's average thief skills, levels 1-13, a row per skill (game.AD_D_THIEF)
+THIEF_LEVELS equ 13
 thief_table:
-        db 30, 35, 40, 45, 50, 55, 60, 65, 70, 80     ; pick pockets
-        db 25, 29, 33, 37, 42, 47, 52, 57, 62, 67     ; open locks
-        db 20, 25, 30, 35, 40, 45, 50, 55, 60, 65     ; find/remove traps
-        db 15, 21, 27, 33, 40, 47, 55, 62, 70, 78     ; move silently
-        db 10, 15, 20, 25, 31, 37, 43, 49, 56, 63     ; hide in shadows
-        db 10, 10, 15, 15, 20, 20, 25, 25, 30, 30     ; hear noise
-        db 85, 86, 87, 88, 90, 92, 94, 96, 98, 99     ; climb walls
-        db 0, 0, 0, 20, 25, 30, 35, 40, 45, 50        ; read languages
+        db 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99     ; pick pockets
+        db 25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82     ; open locks
+        db 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80     ; find/remove traps
+        db 15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99     ; move silently
+        db 10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85     ; hide in shadows
+        db 10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40     ; hear noise
+        db 85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99     ; climb walls
+        db 0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65        ; read languages
 ; Dark Sun's DEX adjustments, DEX 9-22, a row per DEX: pick, open, traps, move, hide (game.DEX_ADJUST)
 dex_table:
         db -15, -10, -10, -20, -10

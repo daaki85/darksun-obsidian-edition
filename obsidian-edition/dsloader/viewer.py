@@ -421,7 +421,9 @@ class Viewer:
                          "races' pairs of classes have kits of their own, each giving something and "
                          "costing something (chosen on the creation panel's KIT page); the game's own "
                          "party gets features of its own"),
-                ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
+                ("level_10", "An XP cap of 749,999 in place of the game's level cap of 9: a single class rises while "
+                             "its next level needs no more; a multiclass character's classes share it evenly; "
+                             "a human's new class gets what its old classes' levels didn't use"),
                 ("cha_prices", "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
                                "point after, to 40% at 25; shops pay 60% of an item's price"),
                 ("buyback", "Merchants keep the magical items the party sells them, to buy back at their price "

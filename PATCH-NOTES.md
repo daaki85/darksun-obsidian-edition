@@ -70,7 +70,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **All classes**
 
-- **[Changed]** Every class can reach **10th level** *(was 9th)*.
+- **[Changed]** Levels stop at a cap of **749,999 XP** instead of 9th level, shared out: one class goes as far as its next level needs no more (cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief 13th); two or three classes share it evenly (374,999 or 249,999 each); a human who changed class has what its old classes' levels didn't use *(was 9th level for every class)*.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
 - **[Changed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
