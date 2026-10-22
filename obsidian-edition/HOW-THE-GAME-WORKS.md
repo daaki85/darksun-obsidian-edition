@@ -143,6 +143,44 @@ their own:
 - Monsters use them too: the Screamer Beetle's special attack is Psychic
   Crush (1d8, save vs paralysis/poison/death for half).
 
+### Each power against the manual
+
+What the game's code does with each power, next to the manual's text. Every use
+also logs the power check and the PSP spent; a power with a save logs the save.
+
+| Power | The manual | The game | The log |
+|---|---|---|---|
+| Detonate | 1d10 to everyone within 10'; may turn an item to ash | 1d10 to the target only, no save; then destroys its worn item that breaks most easily on a d20 under 15 less its plus (above) | the blast's damage and the item check |
+| Disintegrate | save vs death or turned to ash | save vs paralysis/poison/death (the same save) or 10,000 damage | the save and the damage |
+| Project Force | 1d6 plus the target's AC | 1d6 plus the target's AC (less against a good AC), no save | the 1d6 and the HP lost (with the AC in it) |
+| Ballistic Attack | 1d6 on a successful hit | 1d6, no attack roll, no save | the damage |
+| Control Body | the target fights for you at −6 to hit | Charmed for 5 rounds on a failed save vs paralysis/poison/death: it joins your side under the computer's control, with no −6 | the save and the charm |
+| Inertial Barrier | halves damage from breath, missiles, gas, acid, ice storms | missile attacks miss its user outright; nothing else | "missile attacks miss it" |
+| Animal Affinity | claws, 1d10 | unarmed attacks at least 1d10 | the effect |
+| Energy Containment | no damage from electricity, cold, fire, heat, sound | no damage that is only fire, cold, electricity or magic | the effect |
+| Life Draining | drains up to 6 HP as extra HP for an hour | 1d6 damage, the same as extra HP for the user | the drain roll and the HP |
+| Absorb Disease | takes the target's disease to cure it | takes the disease (the mod's fix: the game also gave 1d6 STR) | the effect |
+| Adrenalin Control | STR + 1 to 6 | STR + 1d6, at most 24 | the 1d6 and the STR |
+| Biofeedback | damage −2 and AC −1 | AC −1 only; no damage is taken off | "AC −1" |
+| Body Weaponry | the arm as a wood or steel weapon | unarmed attacks 2d4 | the effect |
+| Cell Adjustment | heals wounds, cures diseases | heals 2 HP; cures nothing | the HP regained |
+| Displacement | attacks miss the image; AC −2 | AC −2 | the effect |
+| Enhanced Strength | STR up to 24, cost twice the points | STR 24 (a higher one kept), cost (24 − STR) × 2 | the effect and the PSP |
+| Flesh Armor | armour by level, no penalties | AC 10 − level at best | the effect |
+| Graft Weapon | +1 to hit, can't switch weapons | +1 to hit; stops picking pockets, locks and climbing | the effect |
+| Lend Health | gives HP, within both maximums | gives the target's missing HP, keeping the user at 5 or more | the HP both ways |
+| Share Strength | gives STR at 2 for 1 | target + a, user − 2a (a up to 24 − its STR and (the user's STR − 3) / 2) | the effects (not the amount) |
+| Domination | controls the target; combat only | Charmed for 5 rounds on a failed spell save; combat only | the save and the charm |
+| Mass Domination | up to 5 creatures | its record targets one creature, as Domination, for 10 rounds | the save and the charm |
+| Psychic Crush | up to 6 damage | 1d8, half on a save vs paralysis/poison/death; psionic defence first | the defence, save and damage |
+| Superior Invisibility | unseen; ends if it attacks | Invisible; attacking or casting at an enemy ends it | the effect |
+| Ego Whip | stunned 1d4 rounds | can't attack or cast harmful spells for 1d4 rounds; psionic defence, no save | the defence and the effect |
+| Id Insinuation | paralyzed 1d4 rounds; combat only | Paralyzed 1d4 rounds; psionic defence, no save; combat only | the defence and the effect |
+| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first | the defence, save and HP lost |
+| Mind Bar | 75% resistance to mind spells | the same | the resistance roll |
+| Synaptic Static | no one nearby can use psionics | its keeper can't; anyone else must beat the static (above) | the contest |
+| Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |
+
 What each costs, from the game's own table, and for three of them worked out as
 they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination and
 Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11, below

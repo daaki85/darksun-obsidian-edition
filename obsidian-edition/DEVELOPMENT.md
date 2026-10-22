@@ -765,8 +765,11 @@ power (5CC2Dh): its return is the d20 when the power works, 0 when it fails
 d20s come from random(low, high) (`1A0A:2FA9h`, selector A0h), whose code after
 `rand()` no filter matched until `RANGE_SITE`; the dice log tells the three
 calls apart by the code after each (`POWER_CHECK_RETURN`, `STATIC_FIRST_RETURN`,
-`STATIC_SECOND_RETURN`) and skips its other callers (the psionic defence's two
-rolls, 5D87Ah, and points for some spells' pictures, 60041h). The score, the
+`STATIC_SECOND_RETURN`), the psionic defence's two rolls (5D718h, the target
+and the attack's elements 400h; random(1, its defence) with the attacker's kept
+d20 pushed after the arguments, so the call's `[BP+0Ah]`: `DEFENCE_FIRST_RETURN`,
+`DEFENCE_SECOND_RETURN`), and skips its other callers (points for some spells'
+pictures, 60041h). The score, the
 byte at `[BP-2]`, is the ability `+0` bits 0-2 of the power's 8 bytes name
 (`3FB9h:0000h`, `game.POWERS_SEG`; through 508:57h, the ability as it is now),
 plus `+0` bits 3-7 (signed), plus the bonus, plus the user's own number for the

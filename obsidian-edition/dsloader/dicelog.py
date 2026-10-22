@@ -100,6 +100,11 @@ RANGE_SITE = bytes.fromhex("660fbfc08bd72bd642660fbfd2660fafc2")
 POWER_CHECK_RETURN = bytes.fromhex("83c4048846ff807eff147413")
 STATIC_FIRST_RETURN = bytes.fromhex("83c4048846ff666801001400")
 STATIC_SECOND_RETURN = bytes.fromhex("83c4048ad08a46ff983b46f8")
+# A psionic attack mode's target defends (5D718h, the target, the attack's elements 400h): two
+# random(1, its defence) rolls, each over the attacker's power check d20 (pushed after them, the
+# call's [BP+0Ah]); both over it resist the attack (the second rolled only after a first over it)
+DEFENCE_FIRST_RETURN = bytes.fromhex("83c4045a3bd07d20")
+DEFENCE_SECOND_RETURN = bytes.fromhex("83c4045a3bd07d05")
 # ... and in the routine that adds up a spell's damage dice
 SPELL_DAMAGE_RETURN = bytes.fromhex("83c4045a03d0")
 # ... and in the routine that works out a spell's duration (its arguments: spell, caster level);
@@ -458,6 +463,7 @@ class DiceLog:
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
         self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
+        self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
@@ -2593,6 +2599,8 @@ class DiceLog:
         if low is None or high is None or high < low:
             return None
         roll = low + scaled(e.raw, high - low + 1)
+        if e.parent_code.startswith(DEFENCE_FIRST_RETURN) or e.parent_code.startswith(DEFENCE_SECOND_RETURN):
+            return self._psionic_defence(e, roll, high, e.parent_code.startswith(DEFENCE_SECOND_RETURN))
         if (low, high) != (1, 20):
             return None
         if e.parent_code.startswith(POWER_CHECK_RETURN):
@@ -2630,6 +2638,26 @@ class DiceLog:
                 steps.append(f"{signed(bonus)} this use")
             out.append(f"    power score {score} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - "))
         return out
+
+    def _psionic_defence(self, e: Entry, roll: int, defence: int, second: bool) -> List[str]:
+        """A psionic attack mode's target resists with two rolls of 1 to its defence (the better of
+        WIS - 7, a raised defence mode's, a monster's level; at least 1), each over the attacker's
+        power check d20: the first, then the second only if the first is over it."""
+        attack, who = e.arg(0x0A), e.parent_arg(6)
+        if attack is None:
+            return []
+        name = self._name(who) if who is not None else "the target"
+        head = f"  {name}'s psionic defence: d{defence} = "
+        need = f"over {attack} (the attacker's power check d20)"
+        key = (e.ss, e.parent_bp)
+        if not second:
+            if roll > attack:
+                self._defence_rolls[key] = roll
+                return []
+            return [f"{head}{roll}, needs {need} -> not resisted"]
+        first = self._defence_rolls.pop(key, None)
+        rolls = f"{first} and {roll}" if first is not None else f"... and {roll}"
+        return [f"{head}{rolls}, both need {need} -> {'resisted' if roll > attack else 'not resisted'}"]
 
     def _static_check(self, e: Entry, second: int) -> List[str]:
         """Someone else's Synaptic Static against a power: the user's d20 (the first) over its

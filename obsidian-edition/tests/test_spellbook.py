@@ -101,7 +101,8 @@ class PowerNameTests(unittest.TestCase):
 
     def test_dice_and_kinds(self):
         gd = self.gd(SpellDamage(1, 0, 0, 1, 0, 10), 0x08)
-        self.assertEqual(gd.spell_name(195), "special attack 195 (1d10 crushing)")
+        self.assertEqual(gd.spell_name(195), "Detonate's blast (1d10 crushing)")
+        self.assertEqual(gd.spell_name(194), "special attack 194 (1d10 crushing)")
 
     def test_no_dice(self):
         gd = self.gd(None, 0)

@@ -346,6 +346,7 @@ CREATION_SEG, CREATION_RACE_OFF, CREATION_CLASS_OFF = 0x38D4, 0x14D, 0x180
 CREATION_PRIME_MINIMUM = 17
 ITEM_NAME_SIZE = 25
 BROKEN_ITEM_TYPE = 0x6B  # what a broken weapon becomes
+DETONATE_BLAST = 195  # the effect Detonate puts on its target besides the power: 1d10, no save
 
 MATERIALS = ("Wooden", "Bone", "Stone", "Obsidian", "Metal", "Leather")
 NO_MATERIAL = 0x40  # in the type's material byte, with material 0: things with none (rings, bodies)
@@ -385,13 +386,17 @@ EFFECT_RULES = {
     45: "-1 on saves", 46: "AC 4 except from behind", 47: "-4 to hit, AC 4 worse", 49: "+1 to hit",
     52: "AC -7 against evil", 55: "attackers -2 to hit", 56: "armour AC at most 4, +3 on saves",
     57: "AC at most 6 - level/4, +1 on saves", 58: "AC -2", 59: "AC at most 10 - level",
-    60: "AC 5, 1 better per 3 caster levels above 5", 63: "higher STR", 64: "STR + the amount borrowed, at most 24",
+    60: "AC 5, 1 better per 3 caster levels above 5", 63: "STR 24 (higher kept)",
+    64: "STR + the amount borrowed, at most 24", 65: "STR - twice the amount lent, at least 3",
+    66: "STR + 1d6, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
     CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
+    28: "missile attacks miss it", 37: "no damage from fire, cold, electricity or magic alone",
+    30: "its keeper can use no psionic powers; anyone else must beat the static to use one",
     1: "2d4 acid damage each round",
     3: "fights for a side picked at random each turn; can't cast spells",
     9: "ends fear, and the next fear fails (which ends it); +4 on saves against fear spells",
@@ -1056,6 +1061,8 @@ class GameData:
             return ITEM_ATTACKS[spell].capitalize()
         if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
             return POISON_POWERS[spell]
+        if spell == DETONATE_BLAST:
+            return f"Detonate's blast{self._power_dice(spell)}"
         if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch: the game names none
             return f"special attack {spell}{self._power_dice(spell)}"
         if SPELL_FIRST <= spell <= SPELL_COUNT:

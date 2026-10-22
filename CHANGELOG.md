@@ -46,6 +46,21 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   where the game was still shows.
 
 **Added**
+- **Psionic powers checked against the manual.** A table in How the game works, power by
+  power: the manual's text, what the game's code does (Detonate hits only its target, no save;
+  Cell Adjustment heals 2 and cures nothing; Biofeedback gives AC -1 and takes no damage off;
+  Inertial Barrier makes missile attacks miss and does nothing else; Psionic Blast takes real
+  HP down to a fifth; Control Body and the dominations are a charm; Mass Domination's record
+  targets one creature) and what the log shows.
+- **The psionic defence in the dice log.** An attack mode's target rolls 1 to its defence twice,
+  each over the attacker's power check d20, to resist (5D718h); the log skipped both rolls:
+  `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20)
+  -> resisted`.
+- **What more powers do, in the log's effect lines:** Inertial Barrier (missile attacks miss),
+  Energy Containment (no damage from fire, cold, electricity or magic alone), Synaptic
+  Static, Enhanced Strength (STR 24, read from the game's stats code), Adrenalin Control
+  (STR + 1d6) and Share Strength's lender (STR - twice the amount); Detonate's 1d10 named
+  "Detonate's blast".
 - **Detonate's blast on an item in the dice log.** The power (a daggoran's too) destroys the
   target's worn item with the lowest item +10h (under 6) on a 1d20 under 15 less its plus
   (DSUN 7AAEBh, from the effect switch's case 138 at 797F6h; the item taken away by 4E0:7Ah,

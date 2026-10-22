@@ -566,6 +566,22 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(e), [])
         self.assertTrue(any(dicelog.RANGE_SITE.startswith(f) for f in dicelog.FILTERS))
 
+    def test_psionic_defence(self):
+        """Two rolls of 1 to the defence (here 6), both over the attacker's d20 (4) to resist."""
+        log = self.power_check_game()
+        frame = locals_at(0x10)
+        first = entry(raw_for(5, 6), dicelog.RANGE_SITE, words(0, 0, 1, 6, 4), words(0, 0, 0),
+                      parent_code=dicelog.DEFENCE_FIRST_RETURN, parent_locals=frame)
+        self.assertEqual(log.describe(first), [])
+        second = entry(raw_for(6, 6), dicelog.RANGE_SITE, words(0, 0, 1, 6, 4), words(0, 0, 0),
+                       parent_code=dicelog.DEFENCE_SECOND_RETURN, parent_locals=frame)
+        self.assertEqual(log.describe(second), ["  Dag's psionic defence: d6 = 5 and 6, both need over 4 "
+                                                "(the attacker's power check d20) -> resisted"])
+        fail = entry(raw_for(2, 6), dicelog.RANGE_SITE, words(0, 0, 1, 6, 4), words(0, 0, 0),
+                     parent_code=dicelog.DEFENCE_FIRST_RETURN, parent_locals=frame)
+        self.assertEqual(log.describe(fail), ["  Dag's psionic defence: d6 = 2, needs over 4 "
+                                              "(the attacker's power check d20) -> not resisted"])
+
     def test_static_contest(self):
         """With the Stalker's Synaptic Static about: Dag's d20 over [BP-8] disrupts the power; else the
         Stalker's at or under its Static score [BP-6] and no lower than Dag's."""
