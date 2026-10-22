@@ -134,6 +134,15 @@ def fit_box(rows: Rows, size: int = BOX_PICTURE) -> Rows:
     return out
 
 
+CHILL = (46, 220, 161, 220)  # (Magic Missile's white, cyan and blue)
+SHOCK = (45, 64, 46, 65)  # (the purse's coin golds, and white)
+
+
+def arrow_head(p: int, x: int, y: int) -> bool:
+    """The Arrows icon's heads: its browns at the lower right."""
+    return (p == 129 or 134 <= p <= 141) and x + y >= 15
+
+
 def glow(rows: Rows, which: Callable[[int, int, int], bool], colours: Tuple[int, ...]) -> Rows:
     """Pixels chosen by WHICH(colour, x, y) in colours the game cycles, stepping along them."""
     return [[colours[(x + y) % len(colours)] if p is not None and which(p, x, y) else p
@@ -412,6 +421,13 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Golden Girdle of Urnst", 0xFBE6, 2608, 2609, urnst_icon),
     ("Amulet of Magic Resistance", 0x86DD, 2612, 2613,
      lambda r: glow(r, lambda p, x, y: 17 <= p <= 20 and (x + y) % 2 == 0, VIOLET)),
+    # the Spellarcher's spell arrows (spellarrows.py): the game's Arrows, their heads in the spell's
+    # colours: Burning Hands' fire, Chill Touch's icy white and blue, Shocking Grasp's gold and white,
+    # Vampiric Touch's violet
+    ("Burning Arrows", 0xFBD2, 2614, 2615, lambda r: glow(r, arrow_head, FIRE)),
+    ("Chill Arrows", 0xFBD2, 2616, 2617, lambda r: glow(r, arrow_head, CHILL)),
+    ("Shocking Arrows", 0xFBD2, 2618, 2619, lambda r: glow(r, arrow_head, SHOCK)),
+    ("Vampiric Arrows", 0xFBD2, 2620, 2621, lambda r: glow(r, arrow_head, VIOLET)),
     # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
     # hasn't: blank in a shop or a pack. The Sling's, every other pixel of its strap in the fire colours
     ("Sling +1", 0xFC09, 2644, 2645, lambda r: glow(r, lambda p, x, y: 137 <= p <= 140 and (x + y) % 2 == 0, FIRE)),
@@ -735,6 +751,21 @@ def friends_icon(hold: Rows) -> Rows:
 # is, ICON 3044-3047 by element): Turn Undead's earth tile, its glyph taken off, a drawstring purse
 # in its dark line with a gold coin in it.
 TURN_EARTH_ICON, PICK_ICON = 3045, 3048
+ARROWS_ICON = 3049  # (the Spellarcher's SPELL ARROWS, in the same place: an arrow, its head gold)
+ARROW_GLYPH = (
+    "..........DDDD..",
+    "...........DDD..",
+    "..........D.DD..",
+    ".........D...D..",
+    "........D.......",
+    ".......D........",
+    "......D.........",
+    ".....D..........",
+    "..D.D...........",
+    "...D............",
+    "..D.D...........",
+)
+ARROW_TIP = {(11, 2): 45, (12, 2): 64, (12, 3): 65, (11, 3): 64, (13, 2): 45}
 TURN_GLYPH, TURN_FILL = {129, 141}, (136, 137)  # (the earth tile's glyph lines, and its browns)
 PURSE_GLYPH = (  # (a purse: its tie and drawstring over the bag)
     "......D..D......",
@@ -757,6 +788,14 @@ def pick_icon(earth: Rows) -> Rows:
     """The Pick Pockets button's icon from Turn Undead's earth one."""
     out = glyph_icon(untiled(earth, TURN_GLYPH, TURN_FILL), set(), 0, PURSE_GLYPH, 2, 129, 141)
     for (x, y), colour in PURSE_COIN.items():
+        out[y][x] = colour
+    return out
+
+
+def arrows_icon(earth: Rows) -> Rows:
+    """The SPELL ARROWS button's icon from Turn Undead's earth one."""
+    out = glyph_icon(untiled(earth, TURN_GLYPH, TURN_FILL), set(), 0, ARROW_GLYPH, 2, 129, 141)
+    for (x, y), colour in ARROW_TIP.items():
         out[y][x] = colour
     return out
 
@@ -830,7 +869,8 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
              ("ICON", REFLECT_ICON): encode(reflect_icon(decode(chunks[("ICON", MIRROR_ICON)]))),
              ("ICON", SPOOK_ICON): encode(spook_icon(decode(chunks[("ICON", SCARE_ICON)]))),
              ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)]))),
-             ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)])))}
+             ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)]))),
+             ("ICON", ARROWS_ICON): encode(arrows_icon(decode(chunks[("ICON", TURN_EARTH_ICON)])))}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))
@@ -964,6 +1004,9 @@ def which(rec: bytes) -> Optional[str]:
     kind, = struct.unpack_from("<H", rec, game.ITEM_TYPE)
     if kind == game.BONE_HELM_TYPE:
         return "Bone Helm"
+    from . import spellarrows
+    if kind == spellarrows.ARROWS_TYPE and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] in spellarrows.NAMES:
+        return spellarrows.NAMES[struct.unpack_from("<H", rec, game.ITEM_NAME)[0]].decode()
     plus = struct.unpack("b", rec[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0]
     if kind == game.BONE_SHORT_SWORD_TYPE:
         return "Stillwater" if plus == 1 else "Bone Short Sword"

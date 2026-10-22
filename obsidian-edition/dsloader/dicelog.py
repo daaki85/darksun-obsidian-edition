@@ -24,7 +24,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -477,6 +477,8 @@ class DiceLog:
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
+        self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, rest by rest)
+        self._rest_due = False  # (a rest seen: the spell arrows fade in the next pass)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
         self._out_of_fight: Optional[float] = None  # (since when the game's fight flag is down)
         self._fight_seen = False  # (the flag seen up since the dances and Wild Fighting were rolled)
@@ -614,6 +616,8 @@ class DiceLog:
         if went_back:
             self.defilers.reset()  # (a save loaded: its fights rolled for again)
             self._mended_in = None  # (a save loaded: its scrolls looked at again)
+            self._arrows.made.clear()  # (a save loaded: spell arrows made since are undone; one
+            # made before it holds its arrows: spellarrows.carries_arrows)
         # A try later than the game's clock is not this game's: one undone by loading an earlier
         # save, or another game's (a new game started with the same party, the Loader started
         # after it: seen the first time the clock is read)
@@ -658,6 +662,13 @@ class DiceLog:
             if meal is not None:
                 taken = 2 if meal.used_up else True
                 result = pickpocket.Attempt(meal.text, meal.log)
+                self._rest_due = self._rest_due or meal.used_up  # (a full rest)
+            elif spellarrows.ARROWS_BY <= item < PICKED_BY:
+                taken = True
+                if self._fighting():
+                    result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
+                else:
+                    result = self._arrows.make(self.game, item & 0xFF, thing)
             elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
                 if self._fighting():
@@ -679,6 +690,23 @@ class DiceLog:
         if result.key:
             self._remember_pick(result.key)
         return result.log or [result.text]
+
+    def _arrows_pass(self) -> List[str]:
+        """The Spellarchers' spell arrows: after a rest, every one fades; and DSCLOG told which each
+        may make now (spellarrows.py)."""
+        if self.tsr_hdr is None:
+            return []
+        out: List[str] = []
+        try:
+            if self._rest_due:
+                out = self._arrows.rest(self.game)
+                self._rest_due = False
+            self._arrows.write_offers(self.game, self.tsr_hdr)
+        except itemgate.ItemsBusy:
+            pass  # (tried again in the next pass)
+        except (struct.error, IndexError, ValueError):
+            pass
+        return out
 
     def set_monster_info(self, on: bool) -> None:
         """Have the game's Look box (in a fight) say what hurts a monster, and then show all of it."""
@@ -1027,6 +1055,7 @@ class DiceLog:
         self._kit_tick(now)
         self._answer_stats()
         out += self._answer_use()
+        out += self._arrows_pass()
         out += self._answer_look()
         changes = self.hp_changes(now) + self.psp_changes() + self.ability_changes()
         if not self._party_check(now):  # not while a game is loading: its records are half-filled
@@ -2324,6 +2353,8 @@ class DiceLog:
         """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with "Show
         unlabelled rolls"."""
         number = e.raw & 0xFFFF
+        if number in spellarrows.REST_REQUESTS:
+            self._rest_due = True  # (the spell arrows fade)
         if number not in REQUESTS_SHOWN and not show_all:
             return []
         name = REQUEST_NAMES.get(number, "an unknown request")

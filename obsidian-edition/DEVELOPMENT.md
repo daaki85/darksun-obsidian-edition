@@ -1699,6 +1699,45 @@ is from behind and a backstab (`INT EAh`), makes the hidden thief's next one
 so, by the game's own conditions for a backstab (a thief, in melee, a weapon
 of weight 40 or less).
 
+### Spell arrows
+
+([The Spellarcher](KITS.md#multiclass-kits); `spellarrows.py`.)
+
+**The button.** `PP_SHOW` gives a Spellarcher (`KIT_SPELLARCHER` awake, no priest's element, outside
+a fight) the Turn Undead button as it gives a thief Pick Pockets, `PP_SHOWN` 2 (`PP_ARROWS`), its
+icon ICON 3049 (`icons.arrows_icon`: the earth tile with an arrow), its name SPELL ARROWS
+(`PP_TEXT`) and its description (`PP_INFO`, `TU_INFO_ARROWS`). Let go of, the screen closes as for
+the thief's, and `PP_ARM` goes to `ARROWS_ARM`: nothing readied, then `ARROWS_ASK` in a frame the
+overlay manager can fix up. It shows the game's three-row menu (`DK_MENU`, the DUAL kit menu's;
+title ARROWS: NONE) with the spells the Loader offers that member (`ARROW_OFFER`, header +374, a
+byte a party member, bit N the Nth of `ARROW_SPELLS`: known, a slot of its level left, none made
+since a rest); four make two rows and MORE... The pick goes to the Loader as an item used on the
+map does (`USE_ITEM` `ARROWS_BY` FE00h and the member, `USE_WHO` the spell's place), and its
+answer (`PICK_TEXT`) is shown. None offered: `ARROWS_NONE`.
+
+**The Loader** (`SpellArrows.make`) takes a slot from the wizard slots left (`SLOTS_LEFT`) and puts
+a stack of the game's Arrows (type 62) in the backpack (`npcitems.add_to`), named Burning, Chill,
+Shocking or Vampiric Arrows (names 16Ch-16Fh), their pictures objects 2614-2621 (the Arrows' icon,
+its heads in the spell's colours), value 0, 5 a preserver level. A Spellarcher who made arrows,
+or carries spell arrows (a save loaded after), is offered none until a rest: a script's REQUEST 1
+or 4 (`REQ_SITE`, as at a fire ring) or the vulture meal, after which `vanish` gives every spell
+arrow back to the free list, wherever it is (a container's only item is left), and a load to an
+earlier clock forgets who made them.
+
+**The hit.** The weapon attack routine (5883Ah) casts only the weapon's own spell on a hit (its
+item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with the attacker as the caster, so at the
+attacker's caster level for the spell: a Spellarcher's preserver level). `PROBE_ARROW` (58D27h,
+where the ammunition routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
+(`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h] above 1, a bow's
+type at [BP+14h]) with spell arrows their spell instead, and `ARROW_SPELL` (`NS_IMAGE+29`, over
+"mov cl,es:[bx+0Fh]") hands it on. The arrows hold no spell themselves, so nothing else in the game
+(the USE screen's items, breaking, acid) sees one. The four spells' records pass the routine's own
+test (+30h's low bits 2, not 1). Checked in the game: the button, the menu, 20 Chill Arrows made
+by a 4th-level Spellarcher with a slot used, and a shot with them; the cast on a hit is checked in
+the emulator (`test_spell_arrows`). Arrows put in the ammunition slot by the Loader during a fight
+are not shot (the game keeps its own list of what each combatant has readied); made by the button,
+they go in the backpack, and the player readies them.
+
 ### Picking pockets
 
 ([In the features page](FEATURES.md#picking-pockets).)

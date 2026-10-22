@@ -378,6 +378,8 @@ ovr_given  dw 0                 ; +368 the overlay buffer's segment in upper mem
 ovr_seg    dw 0                 ; +370 the block KEEP reserved for it, 0 once given (or none)
 umb_need   dw UMB_NEED          ; +372 paragraphs the helper puts in upper memory, its MCBs counted
                                 ;      (UMB_ROOM is what DOSBox gives it; the build fails past it)
+arrow_offer times 4 db 0        ; +374 the Loader's: each party member's spell arrows it may make
+                                ;      now, bit N for ARROW_SPELLS' Nth (spellarrows.py)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -2065,6 +2067,15 @@ pz_far  dd 0
 probe_arrow:
         push bx
         push si
+        push es
+        push ax
+        les bx, [ITEMS]         ; (DI the ammunition's item: its name kept for ARROW_HIT)
+        imul ax, di, 0x15
+        add bx, ax
+        mov ax, [es:bx + 0x12]
+        mov [cs:ammo_name], ax
+        pop ax
+        pop es
         mov si, [bp + 0x0C]
         cmp si, KIND_TYPES
         jae .store
@@ -2092,6 +2103,52 @@ probe_arrow:
         pop si
         pop bx
         iret
+
+ammo_name dw 0                  ; (PROBE_ARROW: the name of the ammunition last found)
+
+; ARROW_HIT: "cmp byte es:[bx+0Fh],0" (58B63h; 5 bytes: the INT, the site's number and 2 NOPs)
+; where the weapon attack routine (5883Ah) asks whether the weapon that hit (item SI, ES:BX) casts
+; a spell (its +0Fh, the spell + 1), and ARROW_SPELL: "mov cl,es:[bx+0Fh]" (58B78h; 4 bytes) where
+; it takes it. For a shot from a bow ([BP+16h] above 1, [BP+14h] a bow's type) with a Spellarcher's
+; spell arrows (PROBE_ARROW's AMMO_NAME, ARROW_NAME on: dsloader/spellarrows.py), the arrows' spell
+; (ARROW_SPELLS) in place of the bow's. The game casts it on the target hit (598:89h) as its own
+; caster: at that caster's level for the spell (a Spellarcher's preserver level).
+ARROW_NAME  equ NAMES_OWN + 42
+arrow_hit:
+        push ax
+        push si
+        mov al, [es:bx + 0x0F]
+        cmp word [bp + 0x16], 1
+        jle .set
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .set
+        cmp byte [cs:si + kind_of_type], BOW_KIND
+        jne .set
+        mov si, [cs:ammo_name]
+        sub si, ARROW_NAME
+        cmp si, 4
+        jae .set
+        mov al, [cs:si + arrow_spells]
+        inc al
+.set:   mov [cs:hit_spell], al
+        cmp byte [cs:hit_spell], 0
+        pushf
+        pop ax
+        push bp
+        mov bp, sp
+        and ax, FLAGS_MASK
+        and word [bp + 10], ~FLAGS_MASK
+        or [bp + 10], ax
+        pop bp
+        pop si
+        pop ax
+        iret
+arrow_spell:
+        mov cl, [cs:hit_spell]
+        iret
+hit_spell    db 0
+arrow_spells db 1, 3, 10, 39    ; Burning Hands, Chill Touch, Shocking Grasp, Vampiric Touch
 
 ; PROBE_UNLOOK: INT VEC_UNLOOK replaces "mov word [0844h],270Fh" (6 bytes: INT + 4 NOPs) at the
 ; end of the routine that closes the Look box (the game forgets whom it was looking at). Does
@@ -11878,15 +11935,21 @@ probe_spell_text:
         cmp di, TU_SPIN
         jne .spells
         cmp byte [cs:tu_info], TU_INFO_PICK
-        mov byte [cs:tu_info], 0
-        jne .out
+        jb .tu_out
         push cx
         push si
         push di
         push ds
         push es
         mov si, pp_text_info
+        cmp byte [cs:tu_info], TU_INFO_ARROWS
+        mov byte [cs:tu_info], 0
+        jne .found
+        mov si, arrows_text_info
         jmp .found
+.tu_out:
+        mov byte [cs:tu_info], 0
+        jmp .out
 .spells:
         mov byte [cs:tu_info], 0
         test byte [cs:rules], RULE_NEW_SPELLS
@@ -11931,6 +11994,10 @@ TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box re
 pp_text_info:
         db "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
         db "If it fails, the thief tries to slip away unseen. Not in a fight.", 13, 10, 0
+arrows_text_info:
+        db "SPELL ARROWS:  A spellarcher weaves a touch spell it knows into arrows, 5 for each "
+        db "preserver level, using up a slot of that spell's level: each casts the spell on what "
+        db "it hits. Once between rests; the arrows fade at the next rest. Not in a fight.", 13, 10, 0
 ns_texts:
         db "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.", 13, 10, 0
         db "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
@@ -13016,6 +13083,8 @@ WANDER_DMG equ NS_IMAGE + 24     ; 7B56Fh: a spell's damage, the kinds a creatur
 REQ_SITE  equ NS_IMAGE + 25      ; 7FF42h: a script's REQUEST, its number read
 AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim check's answer
 AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against a spell
+ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (ARROW_HIT)
+ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13079,6 +13148,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je aim_site
         cmp byte [cs:rl_site], AMULET_SITE
         je amulet_mr
+        cmp byte [cs:rl_site], ARROW_HIT_SITE
+        je arrow_hit
+        cmp byte [cs:rl_site], ARROW_SPELL_SITE
+        je arrow_spell
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -13674,6 +13747,8 @@ blow_charge dw CHARGE_OFF, 0
 ; with the pointer for talking (5ECD0h; its [BP+6] the thing under it), which opens the box to
 ; talk to someone (or trade, look) or picks up a thing.
 PP_ICON     equ 3048            ; ICON 3048 (RESOURCE.GFF, icons.py): the thief's purse
+ARROW_ICON  equ 3049            ; ICON 3049: the Spellarcher's SPELL ARROWS (icons.arrows_icon)
+PP_ARROWS   equ 2               ; (PP_SHOWN: the button on show is a Spellarcher's)
 PP_ELEMENT  equ 9               ; (past the switch's 1-8: the icon kept)
 TU_ELEMENT  equ 0x9B82          ; DS: the Turn Undead button's element (0: none)
 TU_ICON     equ 0x9CDE          ; DS: its icon
@@ -13707,6 +13782,14 @@ pp_show:
         inc si
         cmp si, 0x24
         jb .cls
+        cmp word [TU_ELEMENT], 0
+        jne .icon               ; (a priest's Turn Undead stays)
+        call kit_is_b           ; (a Spellarcher: SPELL ARROWS)
+        db KIT_SPELLARCHER
+        jne .icon
+        mov byte [cs:pp_shown], PP_ARROWS
+        mov word [TU_ELEMENT], PP_ELEMENT
+        mov word [TU_ICON], ARROW_ICON
         jmp .icon
 .thief: cmp word [TU_ELEMENT], 0
         je .own
@@ -13718,7 +13801,13 @@ pp_show:
 .icon:  mov ax, [TU_ICON]       ; the icon to be shown: the element's, or as it is
         mov bx, [TU_ELEMENT]
         cmp bx, PP_ELEMENT
-        je .want
+        jne .elems
+        mov ax, PP_ICON
+        cmp byte [cs:pp_shown], PP_ARROWS
+        jne .want
+        mov ax, ARROW_ICON
+        jmp .want
+.elems:
         mov si, pp_icons
 .elem:  cmp bx, [cs:si]
         je .found
@@ -14002,6 +14091,7 @@ cr_labels:
 ; it (NS_CMP_INFO), and PROBE_SPELL_TEXT gives the purse its own text (PP_TEXT_INFO).
 TU_INFO_TURN equ 1
 TU_INFO_PICK equ 2
+TU_INFO_ARROWS equ 3
 TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"
 pp_text:
         sub sp, 4               ; the game's two pushes: the INT's frame moved down over them
@@ -14023,7 +14113,10 @@ pp_text:
         or al, al
         je .out
         mov word [bp + 8], pp_name
-        mov [bp + 10], cs
+        cmp al, PP_ARROWS
+        jne .cs
+        mov word [bp + 8], arrows_name
+.cs:    mov [bp + 10], cs
 .out:   pop ax
         pop bp
         iret
@@ -14038,7 +14131,11 @@ pp_info:
         mov ax, [TU_ICON]       ; (the replaced instruction)
         je .ret
         mov byte [cs:tu_info], TU_INFO_PICK
+        cmp al, PP_ARROWS
         mov ax, PP_ICON
+        jne .ret
+        mov byte [cs:tu_info], TU_INFO_ARROWS
+        mov ax, ARROW_ICON
 .ret:   iret
 
 pp_lit:
@@ -14066,7 +14163,9 @@ pp_arm:
         pop ax
         pop bp
         iret
-.pick:  mov byte [cs:pp_arming], 0
+.pick:  cmp byte [cs:pp_arming], PP_ARROWS
+        je arrows_arm
+        mov byte [cs:pp_arming], 0
         push bp
         mov bp, sp
         add word [bp + 2], ARM_OUT
@@ -14178,6 +14277,154 @@ pp_disarm:
         je .ret
         mov byte [cs:pp_armed], 0
 .ret:   ret
+
+; ARROWS_ARM: PP_ARM for SPELL ARROWS (a Spellarcher's button let go of, the USE screen closed):
+; nothing readied, and ARROWS_ASK. The game's routines it calls may load overlays: the way back
+; is put in a frame the overlay manager can fix up (pushed as a far call's, with the game's BP).
+arrows_arm:
+        mov byte [cs:pp_arming], 0
+        push bp
+        mov bp, sp
+        add word [bp + 2], ARM_OUT
+        call pp_restore         ; (no spell readied: as before the screen was closed)
+        pushad
+        push es
+        push word [bp + 4]
+        push word [bp + 2]
+        push word [bp]
+        mov bp, sp
+        call arrows_ask
+        pop ax                  ; (the game's BP)
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 36], ax
+        mov [ss:bx + 38], dx
+        pop es
+        popad
+        pop bp
+        iret
+
+; ARROWS_ASK: the Spellarcher on show picks a spell's arrows on the game's three-row menu (DK_MENU):
+; those the Loader offers it (ARROW_OFFER: a touch spell known, a slot of its level left, none
+; made since the last rest), two and MORE on the first page when there are four. The pick goes
+; to the Loader as an item used on the map does (USE_ITEM ARROWS_BY and the member, USE_WHO the
+; spell's row: dsloader/spellarrows.py), which makes the arrows and says what came of it
+; (PICK_TEXT, shown). None offered: ARROWS_NONE shown. DS the game's; registers changed.
+ARROWS_BY  equ 0xFE00
+arrows_ask:
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        movzx di, byte [es:0x25B]
+        cmp di, 4
+        jae .ret
+        mov [cs:arrows_who], di
+        mov cl, [cs:di + arrow_offer]
+        or cl, cl
+        jnz .rows
+        mov word [cs:show_text], arrows_none
+        call show_window
+.ret:   ret
+.rows:  xor bx, bx              ; the spells offered, in ARROWS_ROWS
+        xor si, si
+        mov dl, 1
+.col:   test cl, dl
+        jz .next
+        mov ax, si
+        mov [cs:bx + arrows_rows], al
+        inc bx
+.next:  shl dl, 1
+        inc si
+        cmp si, 4
+        jb .col
+        mov [cs:arrows_count], bl
+        xor si, si              ; (the page's first)
+.page:  movzx cx, byte [cs:arrows_count]
+        sub cx, si              ; (CX those left)
+        mov di, dk_opts
+        xor bx, bx
+.opt:   mov dx, arrows_more
+        cmp bx, 2
+        jne .spell
+        cmp cx, 3
+        ja .put
+.spell: mov dx, dk_blank
+        cmp bx, cx
+        jae .put
+        push bx
+        add bx, si
+        movzx bx, byte [cs:bx + arrows_rows]
+        shl bx, 1
+        mov dx, [cs:bx + arrows_menu]
+        pop bx
+.put:   mov [cs:di], dx
+        mov [cs:di + 2], cs
+        add di, 4
+        inc bx
+        cmp bx, 3
+        jb .opt
+        mov dx, arrows_title
+        push cx
+        call dk_menu            ; (AX the row: 1-3; CX, SI kept)
+        pop cx
+        dec ax
+        cmp ax, 2
+        ja .ret
+        cmp cx, 3
+        jbe .pick
+        cmp ax, 2
+        jne .pick
+        add si, 2               ; MORE: the next page
+        jmp .page
+.pick:  cmp ax, cx
+        jae .done               ; (an empty row: none)
+        mov bx, si
+        add bx, ax
+        movzx ax, byte [cs:bx + arrows_rows]
+        mov [cs:use_who], ax
+        mov word [cs:use_taken], 0
+        mov ax, [cs:arrows_who]
+        or ax, ARROWS_BY
+        mov [cs:use_item], ax
+        mov byte [cs:pick_text], 0
+        inc word [cs:use_seq]
+        push es
+        xor ax, ax
+        mov es, ax
+        mov cx, [es:0x46C]      ; the BIOS timer
+        call rtc_begin
+.wait:  mov ax, [cs:use_reply]
+        cmp ax, [cs:use_seq]
+        je .ready
+        mov ax, [es:0x46C]
+        sub ax, cx
+        cmp ax, PICK_WAIT
+        jae .late
+        call rtc_waited
+        jnc .wait
+.late:  pop es
+        ret                     ; (no answer: the Loader isn't reading)
+.ready: pop es
+        cmp byte [cs:pick_text], 0
+        je .done
+        mov word [cs:show_text], pick_text
+        call show_window
+.done:  ret
+
+arrows_who   dw 0
+arrows_count db 0
+arrows_rows  times 4 db 0
+arrows_menu  dw arrows_m0, arrows_m1, arrows_m2, arrows_m3
+arrows_m0    db 'BURNING HANDS', 0
+arrows_m1    db 'CHILL TOUCH', 0
+arrows_m2    db 'SHOCKING GRASP', 0
+arrows_m3    db 'VAMPIRIC TOUCH', 0
+arrows_more  db 'MORE...', 0
+arrows_title db 'ARROWS: NONE', 0
+arrows_name  db "SPELL ARROWS", 0
+arrows_none  db "No spell arrows can be made now: the spellarcher knows no touch spell with a "
+             db "slot of its level left, or has made arrows since the last rest.", 0
 
 pp_name  db "PICK POCKETS", 0
 pp_icons dw 1, 0x0BE4, 2, 0x0BE5, 4, 0x0BE6, 8, 0x0BE7 ; (the elements' Turn Undead icons)
@@ -14476,7 +14723,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAMES_EXTRA  equ 42
+NAMES_EXTRA  equ 46
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -14816,7 +15063,15 @@ extra_names:
         times NAME_SIZE - 15 db 0
         db "Amulet/MagicRes"
         times NAME_SIZE - 15 db 0
-        times (NAMES_EXTRA - 42) * NAME_SIZE db 0
+        db "Burning Arrows"             ; (the Spellarcher's spell arrows, dsloader/
+        times NAME_SIZE - 14 db 0       ; spellarrows.py: ARROW_NAME on)
+        db "Chill Arrows"
+        times NAME_SIZE - 12 db 0
+        db "Shocking Arrows"
+        times NAME_SIZE - 15 db 0
+        db "Vampiric Arrows"
+        times NAME_SIZE - 15 db 0
+        times (NAMES_EXTRA - 46) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,

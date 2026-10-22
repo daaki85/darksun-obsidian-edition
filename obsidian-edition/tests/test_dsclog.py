@@ -3152,7 +3152,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc1a04" "8356fe00"))  # 42 names of 25 bytes: 41Ah
+        size = image.find(bytes.fromhex("8146fc7e04" "8356fe00"))  # 46 names of 25 bytes: 47Eh
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -3171,7 +3171,7 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 9100), (0xFF00, 0xFF00 + 1050)):
+        for size, want in ((8050, 9200), (0xFF00, 0xFF00 + 1150)):
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
@@ -4304,6 +4304,50 @@ class KitTests(unittest.TestCase):
         self.assertEqual(test(36, neck, 0), (0, True))  # (the game's Necklace)
         self.assertEqual(test(game.MR_AMULET_TYPE, 20, 0), (0, True))  # (in the backpack)
 
+    def test_spell_arrows(self):
+        """ARROW_HIT and ARROW_SPELL (58B63h, 58B78h: the weapon attack routine's test of the
+        weapon's spell, +0Fh, and its taking it): a shot from a bow with spell arrows (their name,
+        kept by PROBE_ARROW) casts the arrows' spell; plain arrows, a melee hit or a sling, the
+        weapon's own (spellarrows.py)."""
+        from dsloader import gamepatch, spellarrows
+        from dsloader.gamepatch import VEC_ARROW
+        image, mu = load_image(), self.mu
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        mu.mem_write(VEC_ARROW * 4, struct.pack("<HH", image.find(bytes.fromhex("53560650c41e5d16")), TSR))
+        mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, self.ITEMS))
+        ammo_seg = 0x7800
+
+        def run(code, at, **regs):  # (each piece of code at its own place: the emulator keeps what it has run)
+            mu.mem_write(CALLER * 16 + at, code)
+            for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F0, ebp=BP, eflags=IF | 2, **regs).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(CALLER * 16 + at, CALLER * 16 + at + len(code))
+
+        def hit(name, weapon_type=1, mode=2, own=0):
+            ammo = bytearray(0x15)
+            struct.pack_into("<H", ammo, 0x12, name)
+            mu.mem_write(self.ITEMS * 16 + 4 * 0x15, bytes(ammo))
+            mu.mem_write(SS * 16 + BP + 0x0C, struct.pack("<H", 64))  # (PROBE_ARROW: a sling's type)
+            run(bytes((0xCD, VEC_ARROW, 0x90, 0x90)), 0x600, es=ammo_seg, edi=4)
+            bow = bytearray(0x15)
+            bow[0x0F] = own
+            mu.mem_write(self.ITEMS * 16 + 5 * 0x15, bytes(bow))
+            mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<HH", weapon_type, mode))
+            run(bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.ARROW_HIT_SITE, 0x90, 0x90,
+                       0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.ARROW_SPELL_SITE, 0x90)), 0x640,
+                es=self.ITEMS, ebx=5 * 0x15, ecx=0)
+            return mu.reg_read(r.UC_X86_REG_CL), not mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40
+        for arrow in spellarrows.ARROWS:
+            with self.subTest(arrow=arrow.spell_name):
+                self.assertEqual(hit(arrow.name), (arrow.spell + 1, True))
+        chill = spellarrows.ARROWS[1].name
+        self.assertEqual(hit(0x36), (0, False))  # (plain arrows: the bow's, none)
+        self.assertEqual(hit(0x36, own=0x28), (0x28, True))  # (Phrain's Bow's own)
+        self.assertEqual(hit(chill, mode=1, own=2), (2, True))  # (a melee hit: the weapon's)
+        self.assertEqual(hit(chill, weapon_type=64), (0, False))  # (from a sling)
+
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky
         (its KIT_OUTDOORS bit), and the Wayfinder's Path-finder: 1 more initiative and 10 more Move
@@ -4433,7 +4477,7 @@ class KitTests(unittest.TestCase):
         from dsloader import kits
         from dsloader.gamepatch import VEC_ARROW
         mu = self.mu
-        at = self.image.find(bytes.fromhex("53568b760c"))
+        at = self.image.find(bytes.fromhex("53560650c41e5d16"))
         self.assertGreater(at, 0)
         mu.mem_write(VEC_ARROW * 4, struct.pack("<HH", at, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
