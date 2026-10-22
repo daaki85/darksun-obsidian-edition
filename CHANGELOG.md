@@ -62,49 +62,6 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   of what they do.
 - **A party member's ability scores changing** get a line once the change holds:
   `Cilla's STR 12 -> 16` (Strength, Remove Curse, Raise Dead's CON, the Tome).
-
-**Fixed**
-- **An item the game destroys gets its crash-log report.** The game frees a destroyed item
-  (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record
-  and linking it into the free list: its type and name stay. The item watch took that record for
-  an item still in the world (dropped, or put in a container) and wrote nothing, so a bone helm
-  lost to a daggoran's Detonate left no report. A record whose first word went to 0 is now
-  reported as freed by the game; quest items a script takes (types 61, 87, 104 as well as 60)
-  and a wand's last charge free a record the same way and stay silent.
-- **A party's thief skill roll goes to its best member.** Where the game asks the whole party
-  (a trap's find/remove traps, all 50 trap triggers with the arena prisoner's among them, and
-  hear noise by the wagon), its pick (DSUN 801BDh) was to keep the highest chance but kept the
-  lower, unsigned, of a best starting at 0: no one was ever lower, so the first party member
-  always rolled. `party_best` makes its "jna" a "jge": the highest chance above 0 rolls (no one
-  able, the first member, as before). A character's own checks (pick pockets, the scripted
-  searches, the Loader's stealth rolls) were never picked this way and don't change.
-- **Random monsters come in the right numbers and can't crash the game.** REQUEST 8 (80BE4h,
-  scripts 99 and 106) sends 2 x the party's strength / the monster's, 1 to 6, but took the
-  strength of the slot after the one picked: from the next region's record after the tenth, and
-  0 after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255, a division by 0 that ends the
-  game ("Divide error"). `monster_count` reads the picked slot's own. Both found from the notes of
-  CalvinRodo/yuan-ti and checked in DSUN.EXE.
-
-- **A likely cause of figures vanishing and then a freeze.** A freeze report (2.6.0, 49 minutes
-  into an arena trip) had the game's picture row decoder (0980:709Ch) unpacking a figure's picture
-  from garbage: never meeting the row's end, it copied on from its 5,408-byte buffer (0980:11BCh)
-  over the code after it, itself included, and the game's data segment was then overwritten by its
-  own stack (all 64 KB the word 44F8h: the dialogue's `D°D°D°`). For a figure's shadow DSCLOG had
-  the game load its picture into the cache when it wasn't there, in the middle of drawing the floor,
-  which can push out or move a picture the game is drawing. Shadows now use only pictures already
-  in the cache (a newly seen figure's shadow comes a frame later). Not proven to be the cause.
-- **Magic items shine in a shop.** The palette's colour cycles (the glow of a magic weapon's
-  icon) turn only in the map's main loop, when the timer asks (DS:1194h, then 22F8h:047Ch); a shop,
-  opened from a conversation, runs its own event loop (7DDE4h) and waits in the game's wait for an
-  event (2531:083Ch), and neither turned them, so its items stood still. DSCLOG's `SHOP_SHINE` and
-  `SHOP_LOOP` (sites at 2AFA6h and 7DE11h) do as the main loop while a character's screen is open
-  (DS:11B2h).
-- **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the
-  dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature
-  and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so
-  where the game was still shows.
-
-**Added**
 - **Psionic powers checked against the manual.** A table in How the game works, power by
   power: the manual's text, what the game's code does (Detonate hits only its target, no save;
   Cell Adjustment heals 2 and cures nothing; Biofeedback gives AC -1 and takes no damage off;
@@ -138,6 +95,66 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (`RANGE_SITE`; it also makes points of some spells' pictures, which the log passes over). The
   check (5D59Dh) and the table it reads (`game.POWERS_SEG`, the per-character byte at selector
   2F0h) are in DEVELOPMENT.md.
+
+**Fixed**
+- **An item the game destroys gets its crash-log report.** The game frees a destroyed item
+  (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record
+  and linking it into the free list: its type and name stay. The item watch took that record for
+  an item still in the world (dropped, or put in a container) and wrote nothing, so a bone helm
+  lost to a daggoran's Detonate left no report. A record whose first word went to 0 is now
+  reported as freed by the game; quest items a script takes (types 61, 87, 104 as well as 60)
+  and a wand's last charge free a record the same way and stay silent.
+- **A party's thief skill roll goes to its best member.** Where the game asks the whole party
+  (a trap's find/remove traps, all 50 trap triggers with the arena prisoner's among them, and
+  hear noise by the wagon), its pick (DSUN 801BDh) was to keep the highest chance but kept the
+  lower, unsigned, of a best starting at 0: no one was ever lower, so the first party member
+  always rolled. `party_best` makes its "jna" a "jge": the highest chance above 0 rolls (no one
+  able, the first member, as before). A character's own checks (pick pockets, the scripted
+  searches, the Loader's stealth rolls) were never picked this way and don't change.
+- **Random monsters come in the right numbers and can't crash the game.** REQUEST 8 (80BE4h,
+  scripts 99 and 106) sends 2 x the party's strength / the monster's, 1 to 6, but took the
+  strength of the slot after the one picked: from the next region's record after the tenth, and
+  0 after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255, a division by 0 that ends the
+  game ("Divide error"). `monster_count` reads the picked slot's own. Both found from the notes of
+  CalvinRodo/yuan-ti and checked in DSUN.EXE.
+- **A likely cause of figures vanishing and then a freeze.** A freeze report (2.6.0, 49 minutes
+  into an arena trip) had the game's picture row decoder (0980:709Ch) unpacking a figure's picture
+  from garbage: never meeting the row's end, it copied on from its 5,408-byte buffer (0980:11BCh)
+  over the code after it, itself included, and the game's data segment was then overwritten by its
+  own stack (all 64 KB the word 44F8h: the dialogue's `D°D°D°`). For a figure's shadow DSCLOG had
+  the game load its picture into the cache when it wasn't there, in the middle of drawing the floor,
+  which can push out or move a picture the game is drawing. Shadows now use only pictures already
+  in the cache (a newly seen figure's shadow comes a frame later). Not proven to be the cause.
+- **Magic items shine in a shop.** The palette's colour cycles (the glow of a magic weapon's
+  icon) turn only in the map's main loop, when the timer asks (DS:1194h, then 22F8h:047Ch); a shop,
+  opened from a conversation, runs its own event loop (7DDE4h) and waits in the game's wait for an
+  event (2531:083Ch), and neither turned them, so its items stood still. DSCLOG's `SHOP_SHINE` and
+  `SHOP_LOOP` (sites at 2AFA6h and 7DE11h) do as the main loop while a character's screen is open
+  (DS:11B2h).
+- **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the
+  dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature
+  and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so
+  where the game was still shows.
+
+**Documentation**
+- A review of every page. The patch notes gain the spell arrows (under Items, and the
+  Spellarcher among the kits described; its row in the kit table back to a name), and the
+  dice log's new lines move from Quality of Life to The Loader with those missing (refused
+  casts, scripts' requests, the protection that halved a spell, ability scores changing; the
+  cleric spell and psionic power tables). Item reports now say that an item the game destroys
+  is reported (patch notes, player's guide, README). The README's dice log tables have rows for
+  the psionic defence, Detonate's blast, the halving protection and the spell arrows; the
+  player's guide a row for names over figures. DEVELOPMENT.md and How the game works have a
+  table of contents; the front page and How the game works credit yuan-ti's notes; pull
+  request #54 (the 2.6.0 release) is in this changelog, and #55's two lists of additions are
+  one.
+
+## Pull request #54 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/54))
+
+**Release**
+- **Obsidian Edition 2.6.0** (pull requests #52 and #53): the version is
+  2.6.0, with its notes in `release-notes/v2.6.0.md`, listed on the front
+  page with the others.
 
 ## Pull request #53 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/53))
 

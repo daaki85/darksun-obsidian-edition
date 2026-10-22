@@ -96,6 +96,7 @@ easier.
 | Change | What it does |
 |---|---|
 | **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. In the slave pens and the arena, between fights, its top line counts the party's arena fights. Or, on the Options tab, a strip always shown below the map (the mouse wheel reads back, on Windows). |
+| **Names over figures** | A spell's name floats over its caster as it's cast, and "Miss" over anyone an attack misses. |
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
@@ -114,7 +115,7 @@ easier.
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
 | **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
 | **Crash and freeze reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send, with the game's own error message in it; if the game freezes, **Freeze report** on the Loader saves what it was doing. |
-| **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), the Loader saves a report to send, as for a crash. |
+| **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report to send, as for a crash. |
 
 **In the Loader's window:**
 

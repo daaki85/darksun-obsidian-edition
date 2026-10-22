@@ -103,7 +103,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Half-elf druid/fighter | Wilderness Avenger |
 | Half-elf cleric/ranger | Rescuer |
 | Dwarf fighter/thief | Ghetto Fighter, Wayfinder |
-| Half-elf fighter/preserver | Spellarcher (and its arrow buttons on the USE screen: a touch spell it knows woven into 5 arrows a preserver level, a spell slot each) |
+| Half-elf fighter/preserver | Spellarcher |
 | Half-giant fighter/psionicist | Titan Mind |
 | Halfling fighter/thief | Poisoner |
 | Halfling cleric/psionicist | Spirit Caller |
@@ -119,6 +119,7 @@ A few of them:
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
+- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level, each casting its spell on what it hits.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
 - **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
 
@@ -196,6 +197,7 @@ A few of them:
 - **[New]** **Tome of Understanding**: read it for +1 WIS for good.
 - **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.
 - **[New]** **Defilers' scrolls**: a defiler in a fight may carry a scroll of a preserver spell, one time in 20, found on its body.
+- **[New]** **Burning, Chill, Shocking and Vampiric Arrows**: a Spellarcher's own, woven from its touch spells; each casts its spell on what it hits, and they fade at the next rest.
 
 **Mundane items**
 
@@ -227,9 +229,6 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Quality of Life
 
-- **[New]** The dice log shows the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast, and says what more psionic powers do (Inertial Barrier, Energy Containment, Enhanced Strength, Adrenalin Control...). How the game works has a table of every power against the manual.
-- **[New]** The dice log shows when **Detonate** (a daggoran's power too) tries to destroy an item: which one, the d20 and whether it's gone. It picks the worn item that breaks most easily, a bone helm before bone armour, and destroys it 70% of the time (less for a magical one).
-- **[New]** **Find** in the Loader's dice log and dialogue (Ctrl+F): every match highlighted, Enter for the next.
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen, or all of them.
 - **[New]** Press the mouse wheel and drag to scroll the map (or, as an option, hold the right button).
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was: it followed each one near the edge)*.
@@ -237,7 +236,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message and how much memory it had left; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** A warning when memory runs low: the dice log tells you to save and restart before the game runs out (a fresh start has all of it back).
-- **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
+- **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
 - **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
 
@@ -248,6 +247,9 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
+- **[New]** **Find** in the dice log and the dialogue (Ctrl+F): every match highlighted, Enter for the next.
+- **[New]** More in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; **Detonate**'s blast on an item (which one, the d20, and whether it's gone: it picks the worn item that breaks most easily, a bone helm before bone armour); why the game **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); and a party member's **ability score** changing.
+- **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** **Options:** every rule change and addition in these notes has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 

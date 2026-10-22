@@ -5,7 +5,27 @@ the curious. [The README](README.md) is about the mod.*
 
 What the game does that its manual doesn't say, from its code and checked in
 play. The dice log shows each as it happens, and the
-[rule changes](FEATURES.md#rule-changes) change some of it.
+[rule changes](FEATURES.md#rule-changes) change some of it. Several findings
+were first pointed out by the notes of [yuan-ti](https://github.com/CalvinRodo/yuan-ti),
+CalvinRodo's new engine for the game, and checked here in the game's own code.
+
+## Contents
+
+- [Initiative](#initiative)
+- [Spells and effects](#spells-and-effects)
+  - [Each cleric spell against the manual](#each-cleric-spell-against-the-manual)
+- [Psionics](#psionics)
+  - [Each power against the manual](#each-power-against-the-manual)
+- [Character creation](#character-creation)
+- [Monsters' defences](#monsters-defences)
+- [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
+- [No critical hits](#no-critical-hits)
+- [The game's two weapons](#the-games-two-weapons)
+- [How the game works out thief skills](#how-the-game-works-out-thief-skills)
+- [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)
+- [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
+- [The game's saving throws](#the-games-saving-throws)
+- [The arena's count of fights](#the-arenas-count-of-fights)
 
 ## Initiative
 
