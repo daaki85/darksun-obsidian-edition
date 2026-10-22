@@ -965,7 +965,8 @@ Hands, Chill Touch, Shocking Grasp or Vampiric Touch) it has an arrow button
 on the USE screen, beside where a priest's Turn Undead goes: outside a fight,
 one click weaves the spell into a quiver of arrows, 5 for each preserver level,
 each casting the spell on what it hits (on the ground at its feet if its
-backpack is full). Its bow skill works on them too: they fly as +1 arrows. Each
+backpack is full). Its bow skill works on them too: they fly as +1 arrows. Only
+a Spellarcher can ready them; anyone else can only carry them. Each
 costs a spell slot of the touch spell's level; the arrows are worth nothing to a merchant, and fade at
 the next rest.
 

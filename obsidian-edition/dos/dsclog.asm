@@ -2086,6 +2086,7 @@ probe_arrow:
         add bx, ax
         mov ax, [es:bx + 0x12]
         mov [cs:ammo_name], ax
+        mov byte [cs:ammo_archer], 0
         pop ax
         pop es
         mov si, [bp + 0x0C]
@@ -2107,6 +2108,7 @@ probe_arrow:
         db KIT_SPELLARCHER
 .not:   pop ax
         jne .store
+        mov byte [cs:ammo_archer], 1
         cmp al, 0
         jge .plus
         xor al, al              ; (a cursed arrow: +1 all the same)
@@ -2117,6 +2119,7 @@ probe_arrow:
         iret
 
 ammo_name dw 0                  ; (PROBE_ARROW: the name of the ammunition last found)
+ammo_archer db 0                ; (and 1 if a Spellarcher shot it: only theirs cast their spell)
 
 ; ARROW_HIT: "cmp byte es:[bx+0Fh],0" (58B63h; 5 bytes: the INT, the site's number and 2 NOPs)
 ; where the weapon attack routine (5883Ah) asks whether the weapon that hit (item SI, ES:BX) casts
@@ -2141,6 +2144,8 @@ arrow_hit:
         sub si, ARROW_NAME
         cmp si, 4
         jae .set
+        cmp byte [cs:ammo_archer], 0
+        je .set                 ; (not shot by a Spellarcher: no spell)
         mov al, [cs:si + arrow_spells]
         inc al
 .set:   mov [cs:hit_spell], al
@@ -3387,7 +3392,9 @@ probe_can_use:
         call kit_allows         ; (the game's lists say no: the kit's own, all the same)
         jnc .done
         inc ax
-.game:  mov byte [cs:kf_spec], 0
+.game:  call arrows_forbid
+        jc .no
+        mov byte [cs:kf_spec], 0
         push si
         mov si, [bp]            ; (the equip routine's frame: its [BP+8] the slot, 14 the off hand)
         cmp word [ss:si + 8], EQUIP_OFF_HAND
@@ -3404,6 +3411,46 @@ probe_can_use:
         jnc .done
 .no:    xor ax, ax
 .done:  iret
+
+; ARROWS_FORBID: carry set if the item being equipped (the equip routine's [BP+6]) is a
+; Spellarcher's spell arrows (named ARROW_NAME to +3: dsloader/spellarrows.py) and the character
+; whose sheet is at ES:BX isn't a Spellarcher, unless they go in the backpack (slot 18): only a
+; Spellarcher readies them, whatever the rules. DS the game's; all registers kept.
+EQUIP_BACKPACK equ 18
+arrows_forbid:
+        push ax
+        push si
+        push es
+        push bx
+        mov si, [bp]            ; (the equip routine's frame)
+        cmp word [ss:si + 8], EQUIP_BACKPACK
+        je .ok
+        imul ax, [ss:si + 6], 0x15
+        les si, [ITEMS]
+        add si, ax
+        mov ax, [es:si + 0x12]
+        sub ax, ARROW_NAME
+        cmp ax, 4
+        jae .ok
+        pop bx
+        pop es
+        push es
+        push bx
+        call kit_is_b
+        db KIT_SPELLARCHER
+        je .ok
+        pop bx
+        pop es
+        pop si
+        pop ax
+        stc
+        ret
+.ok:    pop bx
+        pop es
+        pop si
+        pop ax
+        clc
+        ret
 
 ; KIT_FORBIDS: carry set if the kit of the character whose sheet is at ES:BX keeps it from item
 ; type DX (kits.forbids): a Ravager a shield, a missile or thrown weapon, and armour that isn't
@@ -14465,14 +14512,14 @@ arrows_ask:
 ; ARROWS_DROP: the arrows left on the ground at the party's feet (no room in the backpack): PICK_TEXT
 ; holds their item record. As the game's script DROP (2Fh, 6A894h) leaves an item: B8h:55Ah makes a
 ; thing of an object at a place (the object, -1, x, y, 0, the item's +10h, 0Fh; the thing back, or
-; -1), here of the game's Arrows (object 1012, whose map picture the pile has) at the party's figure
+; -1), here of the game's Arrows (object 1070, whose map picture the pile has) at the party's figure
 ; (2C0h:369h; its x and y at [WALL_POS]); the item it comes with becomes the arrows' record (its
 ; link to the next kept). DS the game's; registers changed.
 ARROWS_DROP  equ 3              ; (USE_TAKEN: dsloader/spellarrows.py)
 PILE_SEG     equ 0x1DF3         ; (DSUN.EXE, less the load segment) B8h:55Ah, a thing made
 PILE_OFF     equ 0x55A
 FIGURE_SEG   equ 0x3781 - 0x4356 ; the party's figure on the map: its thing at this segment:369h, from DS
-ARROWS_OBJECT equ 1012
+ARROWS_OBJECT equ 1070          ; (the game's Arrows: picture FBD2h)
 THING_MOST   equ 0x208          ; (the things table: objects 0-519)
 arrows_drop:
         mov ax, ds

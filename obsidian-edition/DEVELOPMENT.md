@@ -1776,7 +1776,8 @@ nothing is shown; refused (not known, no slot), its words (`PICK_TEXT`) are.
 left (`SLOTS_LEFT`; none left, it says so) and puts a stack of the game's Arrows (type 62) in the
 backpack (`npcitems.add_to`), or, with no room, hands the stack's record to DSCLOG in `PICK_TEXT`
 (`USE_TAKEN` 3): `ARROWS_DROP` leaves it on the ground as the game's script DROP (2Fh, 6A894h)
-leaves an item, making a thing of the game's Arrows (object 1012, for its map picture) at the
+leaves an item, making a thing of the game's Arrows (object 1070, picture FBD2h: a quiver on the
+map) at the
 party's figure (B8h:55Ah: the object, -1, x, y, 0, the item's +10h, 0Fh; 2C0h:369h the figure),
 and writing the arrows' record over the item it comes with (its link kept). Picked up, they go
 on the pointer as any item on the ground does. The stack is named Burning, Chill, Shocking or
@@ -1791,9 +1792,12 @@ item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with the attacker as the 
 attacker's caster level for the spell: a Spellarcher's preserver level). `PROBE_ARROW` (58D27h,
 where the ammunition routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
 (`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h] above 1, a bow's
-type at [BP+14h]) with spell arrows their spell instead, and `ARROW_SPELL` (`NS_IMAGE+29`, over
+type at [BP+14h]) with spell arrows their spell instead, when a Spellarcher shot them (`PROBE_ARROW`'s
+`AMMO_ARCHER`), and `ARROW_SPELL` (`NS_IMAGE+29`, over
 "mov cl,es:[bx+0Fh]") hands it on. The arrows hold no spell themselves, so nothing else in the game
-(the USE screen's items, breaking, acid) sees one. The four spells' records pass the routine's own
+(the USE screen's items, breaking, acid) sees one. Only a Spellarcher readies them: `ARROWS_FORBID`,
+in `PROBE_CAN_USE` (whatever the rules), refuses spell arrows (the equip routine's item, its
+`[BP+6]`) to anyone else, but for the backpack (slot 18), so they can be carried and handed on. The four spells' records pass the routine's own
 test (+30h's low bits 2, not 1). Checked in the game: Burning and Chill Arrows buttons for a
 Spellarcher knowing both (one in Turn Undead's place, one beside it), their names and descriptions,
 a click on each making 20 arrows for a 4th-level Spellarcher with a 1st-level slot used, and Chill

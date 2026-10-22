@@ -1386,7 +1386,10 @@ class CanUseTests(unittest.TestCase):
         """The equip routine putting item type T in SLOT (7 the right hand, 14 the off hand: its
         [BP+8], BP the can-use routine's [BP])."""
         mu = self.mu
-        mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + self.RULES, struct.pack("<H", rules))
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        mu.mem_write(hdr + self.RULES, struct.pack("<H", rules & 0xFFFF))
+        if rules >> 16:
+            mu.mem_write(hdr + 270, struct.pack("<H", rules >> 16))  # (RULE_HI: kits)
         mu.mem_write(SS * 16 + BP, struct.pack("<H", PARENT_BP))
         mu.mem_write(SS * 16 + PARENT_BP + 8, struct.pack("<H", slot))
         mu.mem_write(self.SHEET * 16 + 0x100, sheet)
@@ -1397,6 +1400,29 @@ class CanUseTests(unittest.TestCase):
         self.assertEqual([mu.reg_read(getattr(r, "UC_X86_REG_" + x)) for x in ("SP", "BX", "CX", "DX", "SI", "DI", "ES", "DS")],
                          [0x7FC, 0x100, 0x3333, t, 0x5555, 0x7777, self.SHEET, GAME_DS])
         return mu.reg_read(r.UC_X86_REG_AX)
+
+    def test_spell_arrows_spellarchers_only(self):
+        """ARROWS_FORBID: a Spellarcher's spell arrows (named 16Ch-16Fh) readied by a Spellarcher
+        only, whatever the rules; anyone may carry them in the backpack (slot 18); plain arrows as
+        the game has them."""
+        from dsloader import kitpages, spellarrows
+        items = 0x7000
+        self.mu.mem_write(GAME_DS * 16 + 0x165D, struct.pack("<HH", 0, items))
+        self.mu.mem_write(SS * 16 + PARENT_BP + 6, struct.pack("<H", 3))  # (the item: number 3)
+        archer = bytearray(test_restrict.sheet(9, 11, race=4))  # (a half-elf fighter/preserver)
+        archer[kitpages.KIT_BYTE] = 1
+        other = bytearray(archer)
+        other[kitpages.KIT_BYTE] = 0
+        rules = game.RULE_RESTRICT | game.RULE_KITS
+        for name, ok in ((spellarrows.ARROWS[0].name, False), (spellarrows.ARROWS[3].name, False), (0x36, True)):
+            rec = bytearray(0x15)
+            struct.pack_into("<H", rec, 0x12, name)
+            self.mu.mem_write(items * 16 + 3 * 0x15, bytes(rec))
+            with self.subTest(name=name):
+                self.assertTrue(self.can_use(bytes(archer), 62, rules))
+                self.assertEqual(bool(self.can_use(bytes(other), 62, rules)), ok)
+                self.assertEqual(bool(self.can_use(bytes(other), 62, game.RULE_KITS)), ok)  # (no restrictions)
+                self.assertTrue(self.can_use(bytes(other), 62, rules, slot=18))  # (carried)
 
     def test_dual_class(self):
         """A fighter turned psionicist (or cleric): its long sword back once the new level passes."""
@@ -4330,8 +4356,8 @@ class KitTests(unittest.TestCase):
     def test_spell_arrows(self):
         """ARROW_HIT and ARROW_SPELL (58B63h, 58B78h: the weapon attack routine's test of the
         weapon's spell, +0Fh, and its taking it): a shot from a bow with spell arrows (their name,
-        kept by PROBE_ARROW) casts the arrows' spell; plain arrows, a melee hit or a sling, the
-        weapon's own (spellarrows.py)."""
+        kept by PROBE_ARROW) casts the arrows' spell when a Spellarcher shot it; plain arrows, a
+        melee hit or a sling, the weapon's own; anyone else's shot, none (spellarrows.py)."""
         from dsloader import gamepatch, spellarrows
         from dsloader.gamepatch import VEC_ARROW
         image, mu = load_image(), self.mu
@@ -4348,11 +4374,15 @@ class KitTests(unittest.TestCase):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
             mu.emu_start(CALLER * 16 + at, CALLER * 16 + at + len(code))
 
-        def hit(name, weapon_type=1, mode=2, own=0):
+        self.rules(game.RULE_KITS)
+        mu.mem_write(self.DS * 16 + 0x4979, struct.pack("<H", 7))  # (thing 7's turn: creature 2)
+
+        def hit(name, weapon_type=1, mode=2, own=0, archer=True):
+            self.creature(9, 1, index=2, second=11 if archer else 17, race=4)  # (a Spellarcher, or a Shadowblade)
             ammo = bytearray(0x15)
             struct.pack_into("<H", ammo, 0x12, name)
             mu.mem_write(self.ITEMS * 16 + 4 * 0x15, bytes(ammo))
-            mu.mem_write(SS * 16 + BP + 0x0C, struct.pack("<H", 64))  # (PROBE_ARROW: a sling's type)
+            mu.mem_write(SS * 16 + BP + 0x0C, struct.pack("<H", 1))  # (PROBE_ARROW: a bow's type)
             run(bytes((0xCD, VEC_ARROW, 0x90, 0x90)), 0x600, es=ammo_seg, edi=4)
             bow = bytearray(0x15)
             bow[0x0F] = own
@@ -4370,6 +4400,7 @@ class KitTests(unittest.TestCase):
         self.assertEqual(hit(0x36, own=0x28), (0x28, True))  # (Phrain's Bow's own)
         self.assertEqual(hit(chill, mode=1, own=2), (2, True))  # (a melee hit: the weapon's)
         self.assertEqual(hit(chill, weapon_type=64), (0, False))  # (from a sling)
+        self.assertEqual(hit(chill, archer=False), (0, False))  # (not a Spellarcher's shot)
 
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky

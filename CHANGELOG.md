@@ -25,7 +25,8 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   abilities, the first where a priest's Turn Undead is, the rest beside it. One click uses a
   slot of the spell's level and puts 5 arrows a preserver level in the backpack (on the ground
   at the party's feet when it is full; no window either way), worth nothing,
-  each casting its spell on what it hits at the archer's caster level. Slots are the only limit;
+  each casting its spell on what it hits at the archer's caster level; only a Spellarcher can
+  ready them or cast their spell (`ARROWS_FORBID`). Slots are the only limit;
   every spell arrow fades at the next rest (a script's rest request, or the vulture meal).
   DSCLOG's `ARROW_KNOWS`, the ability row's spare places, `ARROWS_ASK`, `ARROWS_DROP`, `ARROW_HIT`,
   `ARROW_SPELL` and `PROBE_ARROW`'s kept name; `spellarrows.py`; icons for the four buttons and
