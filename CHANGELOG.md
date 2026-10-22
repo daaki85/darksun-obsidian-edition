@@ -120,6 +120,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   buttons beside it share, lit and unlit the frame at Turn Undead's place (DS:30F8h) as the
   pointer came and went, so the Vampiric Arrows button lit the Burning Arrows one; two 4-byte
   patches (89528h, 8956Fh) light the button's own place, as its press already did.
+- **Every magic item of the Loader's shines.** The game shines a magic item by cycling palette
+  colours (11-15, the water's, and 224-255, fire's among them); icons tinted in colours it doesn't
+  cycle stood still: the Chill, Shocking and Vampiric Arrows, Shadowseeker, the Cloak of Protection
+  +1, Pehtucl's ring, the Girdle of Back Defense, the Amulet of Magic Resistance, the Veiled Robe,
+  the Cloak and Boots of Elvenkind and the Golden Girdle of Urnst. Every other column of their
+  tint is now in the water's colours (`icons.shining`), so they keep their tint and shimmer.
 - **A Fireball no longer floods the dice log.** The filter for `random(low, high)` (1A0A:2FA9h,
   kept for psionic ranges) also recorded the eleven picture-point calls a spell burst makes, so a
   Fireball filled the ring ("148 rolls came too fast to record"). It now records only the calls

@@ -15,7 +15,10 @@ cycles: 240-248, fire): from the plain item's icon.
   blue-greys).
 
 Violet is 35-37 of the palette, which no region changes (232-239, violet in RESOURCE.GFF's
-palette, are each region's own: red in the slave pens).
+palette, are each region's own: red in the slave pens). The game cycles only 11-15 (water) and
+224-255 (fire among them), so an icon tinted in colours it doesn't cycle (violet, night steel,
+ice, gold) has every other column of its tint in the water's (`shining`) to shine as a magic
+item does.
 
 The game reads object pictures from SEGOBJEX.GFF. The game folder is never changed: the launcher
 writes a copy of that file next to the patched game (the dos folder, D: in DOSBox) with an
@@ -37,6 +40,9 @@ OJFF_ICON = 0x0C  # an object's word naming its icon (BMP chunk)
 FIRE = tuple(range(240, 249))  # the colours the game cycles: the Bloodwrath's glow
 VIOLET = (37, 36, 35, 36)  # a violet no region changes
 NIGHT_STEEL = (18, 20, 22, 24, 22, 20)  # dark blue-greys no region changes (17-31)
+# the water's blues and lavenders, which the game cycles (as it does the fire's) and no region
+# changes but for the step the cycle is at: the shine of a magic item whose tint isn't fire's
+WATER = tuple(range(11, 16))
 
 Rows = List[List[Optional[int]]]
 
@@ -148,6 +154,14 @@ def glow(rows: Rows, which: Callable[[int, int, int], bool], colours: Tuple[int,
     """Pixels chosen by WHICH(colour, x, y) in colours the game cycles, stepping along them."""
     return [[colours[(x + y) % len(colours)] if p is not None and which(p, x, y) else p
              for x, p in enumerate(r)] for y, r in enumerate(rows)]
+
+
+def shining(rows: Rows, which: Callable[[int, int, int], bool], colours: Tuple[int, ...]) -> Rows:
+    """As `glow`, every other column of its pixels in the WATER colours the game cycles: COLOURS
+    (which the game doesn't cycle: violet, night steel, ice, gold) tint it, the water's make it
+    shine as a magic item's does."""
+    return [[(WATER[(x + y) % len(WATER)] if x % 2 == 0 else colours[(x + y) % len(colours)])
+             if p is not None and which(p, x, y) else p for x, p in enumerate(r)] for y, r in enumerate(rows)]
 
 
 # the leather Helm's shades -> the bone scale armour's (its icons' mauves) of the same brightness
@@ -280,11 +294,11 @@ def ashen_robe_icon(_rows: Rows = None) -> Rows:
 
 def veiled_robe_icon(_rows: Rows = None) -> Rows:
     """The Veiled Robe (robes.py): night blue, its panel and trim gold, violet glints."""
-    return robe_icon((17, 20, 23), (64, 65, 45), VIOLET)
+    return robe_icon((17, 20, 23), (64, 65, 45), (37, 12, 36, 14))  # (violet and the water's shine)
 
 
 def elven_cloak_icon(rows: Rows) -> Rows:
-    return recolour(glow(rows, lambda p, x, y: p in (138, 139, 140) and (x + y) % 3 == 0, LEAF), LEATHER_TO_GREY)
+    return recolour(shining(rows, lambda p, x, y: p in (138, 139, 140) and (x + y) % 3 == 0, LEAF), LEATHER_TO_GREY)
 
 
 SILVER = (210, 212, 213, 214, 215, 216, 217)  # dark to light (the metal long sword's greys)
@@ -314,10 +328,11 @@ URNST_GOLD = (183, 184)
 
 
 def urnst_icon(rows: Rows) -> Rows:
-    """The Golden Girdle of Urnst: the Belt in red silk, a gold fleck every fourth pixel."""
+    """The Golden Girdle of Urnst: the Belt in red silk, a fleck every fourth pixel, gold or the
+    water's shine (`shining`) by turns."""
     rows = recolour(rows, URNST_SILK)
-    return [[URNST_GOLD[x % 2] if p is not None and (x + 2 * y) % 4 == 0 else p for x, p in enumerate(r)]
-            for y, r in enumerate(rows)]
+    return [[(URNST_GOLD[0] if x % 4 < 2 else WATER[(x + y) % len(WATER)]) if p is not None and (x + 2 * y) % 4 == 0
+             else p for x, p in enumerate(r)] for y, r in enumerate(rows)]
 
 
 def crown_icon(_rows: Rows = None) -> Rows:
@@ -345,12 +360,12 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Inixhide", 0xFC02, 2428, 2433,
      lambda r: glow(r, lambda p, x, y: p in (0x89, 0x8A), FIRE)),
     ("Cloak of Protection +1", 0xFBE3, 2429, 2434,
-     lambda r: glow(r, lambda p, x, y: p in (0x8A, 0x8B, 0x8C) and (x + y) % 2 == 0, VIOLET)),
-    ("Pehtucl's Ring of Protection +1", 0xFA1C, 2430, 2435, lambda r: glow(r, lambda p, x, y: p == 0x3A, VIOLET)),
+     lambda r: shining(r, lambda p, x, y: p in (0x8A, 0x8B, 0x8C) and (x + y) % 2 == 0, VIOLET)),
+    ("Pehtucl's Ring of Protection +1", 0xFA1C, 2430, 2435, lambda r: shining(r, lambda p, x, y: p == 0x3A, VIOLET)),
     ("Ring of Protection +1", 0xFA1C, 2431, 2436, lambda r: glow(r, lambda p, x, y: p == 0x3A, FIRE)),
     ("Bone Helm", 0xFC03, 2437, 2438, lambda r: recolour(r, BONE)),
     ("Kreenfang", 0xFC0D, 2446, 2447, lambda r: glow(r, lambda p, x, y: p in BLADE, FIRE)),
-    ("Shadowseeker", 0xFC0A, 2448, 2449, lambda r: glow(shorter_blade(r), lambda p, x, y: p in BLADE, NIGHT_STEEL)),
+    ("Shadowseeker", 0xFC0A, 2448, 2449, lambda r: shining(shorter_blade(r), lambda p, x, y: p in BLADE, NIGHT_STEEL)),
     ("Bone Short Sword", 0xFC0C, 2419, 2420, shorter_blade),
     ("Bone Axe", 0xFB61, 2421, 2422, lambda r: recolour(r, AXE_BONE)),
     ("Obsidian Short Sword", 0xFC0B, 2488, 2489, shorter_blade),
@@ -383,7 +398,8 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Warden's Helm", 0xFC03, 2544, 2545, plate_icon(LEATHER_TO_PLATE, (138, 139, 140))),
     # the Cloak and Boots of Elvenkind (worldgear.py): the Cloak's and the Boots'
     ("Cloak of Elvenkind", 0xFBE3, 2546, 2547, elven_cloak_icon),
-    ("Boots of Elvenkind", 0xFBE5, 2548, 2549, lambda r: recolour(r, BOOTS_TO_ELVEN)),
+    ("Boots of Elvenkind", 0xFBE5, 2548, 2549,
+     lambda r: shining(recolour(r, BOOTS_TO_ELVEN), lambda p, x, y: 53 <= p <= 56, LEAF)),
     # the Flame Blade (worldgear.py): the obsidian long sword's, its blade in the fire colours
     ("Flame Blade", 0xFC0B, 2550, 2551, lambda r: glow(r, lambda p, x, y: p in BLADE or p in (208, 209, 210), FIRE)),
     # the magic axes (worldgear.py): the bone and obsidian Axes and the metal Great Axe, every other
@@ -418,17 +434,17 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     # violet; the Belt in red silk with gold flecks; the Bow, its string in the fire colours; the
     # Necklace, every other pixel of its cord violet
     ("Girdle of Back Defense", 0xFBE6, 2606, 2607,
-     lambda r: glow(r, lambda p, x, y: p in (137, 138) and (x + y) % 2 == 0, VIOLET)),
+     lambda r: shining(r, lambda p, x, y: p in (137, 138) and (x + y) % 2 == 0, VIOLET)),
     ("Golden Girdle of Urnst", 0xFBE6, 2608, 2609, urnst_icon),
     ("Amulet of Magic Resistance", 0x86DD, 2612, 2613,
-     lambda r: glow(r, lambda p, x, y: 17 <= p <= 20 and (x + y) % 2 == 0, VIOLET)),
+     lambda r: shining(r, lambda p, x, y: 17 <= p <= 20 and (x + y) % 2 == 0, VIOLET)),
     # the Spellarcher's spell arrows (spellarrows.py): the game's Arrows, their heads in the spell's
     # colours: Burning Hands' fire, Chill Touch's icy white and blue, Shocking Grasp's gold and white,
     # Vampiric Touch's violet
     ("Burning Arrows", 0xFBD2, 2614, 2615, lambda r: glow(r, arrow_head, FIRE)),
-    ("Chill Arrows", 0xFBD2, 2616, 2617, lambda r: glow(r, arrow_head, CHILL)),
-    ("Shocking Arrows", 0xFBD2, 2618, 2619, lambda r: glow(r, arrow_head, SHOCK)),
-    ("Vampiric Arrows", 0xFBD2, 2620, 2621, lambda r: glow(r, arrow_head, VIOLET)),
+    ("Chill Arrows", 0xFBD2, 2616, 2617, lambda r: shining(r, arrow_head, CHILL)),
+    ("Shocking Arrows", 0xFBD2, 2618, 2619, lambda r: shining(r, arrow_head, SHOCK)),
+    ("Vampiric Arrows", 0xFBD2, 2620, 2621, lambda r: shining(r, arrow_head, VIOLET)),
     # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
     # hasn't: blank in a shop or a pack. The Sling's, every other pixel of its strap in the fire colours
     ("Sling +1", 0xFC09, 2644, 2645, lambda r: glow(r, lambda p, x, y: 137 <= p <= 140 and (x + y) % 2 == 0, FIRE)),

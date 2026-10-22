@@ -136,7 +136,8 @@ class CopyTests(unittest.TestCase):
             self.assertEqual(icons.PICTURES[name], 0x10000 - obj)
         rings = [{p for r in icons.decode(new[("BMP ", icon)]) for p in r} - {None}
                  for name, _, _, icon, _ in icons.ICONS if "Ring" in name]
-        self.assertLessEqual(rings[0], set(icons.VIOLET))  # Pehtucl's
+        self.assertLessEqual(rings[0], set(icons.VIOLET) | set(icons.WATER))  # Pehtucl's: violet, shining
+        self.assertTrue(rings[0] & set(icons.WATER))
         self.assertLessEqual(rings[1], set(icons.FIRE))  # the arena's
         ids = [k for k in new if k[0] == "BMP "]
         self.assertEqual(len(ids), len(set(ids)))  # no icon numbered as another's map picture
