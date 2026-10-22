@@ -8,8 +8,8 @@ USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): a slot 
 level is used up and a stack of ARROWS_PER_LEVEL arrows for each of the Spellarcher's preserver
 levels goes in its backpack, worth nothing (no merchant pays for them). Slots are the only limit.
 
-At a rest (a script's rest request, as at a fire ring, or the vulture meal) every spell arrow left
-anywhere fades (`vanish`).
+At a rest (the game's own, from its menu or a script, as at a fire ring; a script's other rest
+request; or the vulture meal) every spell arrow left anywhere fades (`vanish`).
 
 An arrow casts its spell on what it hits, shot from a bow (DSCLOG's ARROW_HIT: the game casts only
 a bow's own spell; the arrow's, told by its name, takes its place), at the archer's caster level as
@@ -46,7 +46,7 @@ TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")  # (w
 ARROWS_DROP = 3         # USE_TAKEN: PICK_TEXT holds an item record for DSCLOG's ARROWS_DROP
 ARROWS_BY = 0xFE00      # USE_ITEM for an arrow button's click (DSCLOG's ARROWS_BY): the member its low byte
 KNOWN_FROM_DS, KNOWN_OFF, KNOWN_STRIDE = 0x4356 - 0x3800, 0x168, 0x8A  # (DSCLOG's KNOWN_*)
-REST_REQUESTS = (1, 4)  # a script's REQUEST that rests the party (dicelog.REQUEST_NAMES)
+REST_REQUESTS = (0, 1, 4)  # a REQUEST that rests the party (dicelog.REQUEST_NAMES; 0 the game's rest, DSCLOG's REST_SITE)
 NOT_IN_A_FIGHT = "Spell arrows can't be made in a fight."
 
 

@@ -276,6 +276,10 @@ WHOSE_TURN = 0x4979  # DS word: the combatant whose turn it is (outside a fight:
 # DS word: 1 while the party is in a fight. The routine that starts a fight sets it (DSUN.EXE
 # 1DD8Bh, unless it is already 1); the one that ends it clears it (1DFE8h)
 IN_COMBAT = 0x1168
+# ... though it stays 1 while the party walks spread out (uncollapsed) with no one to fight. The
+# game's own test for a fight (its rest's "NO RESTING DURING COMBAT", the USE screen's buttons;
+# DSCLOG's PP_FIGHTING) is the word at +19h of the fight's state, a segment this far below DS
+FIGHT_STATE_FROM_DS, FIGHT_STATE_ON = 0x4356 - 0x377E, 0x19
 REGION = 0x117C  # DS word: the region the party is in
 POSITIONS = 0x669D  # DS: each map object's x, y (in 16ths of a square), 32 bytes apart; the party's leader is object 0
 # The party's money, in ceramic pieces (the inventory screen's bottom bar): a dword the game's
@@ -1000,6 +1004,12 @@ class GameData:
     def in_combat(self) -> bool:
         """The party is in a fight (the game's own flag, IN_COMBAT)."""
         return self._word(IN_COMBAT) != 0
+
+    def fight_on(self) -> bool:
+        """A fight is on, as the game's rest and USE screen tell (FIGHT_STATE_ON), not merely the
+        party spread out (IN_COMBAT)."""
+        at = (self.ds - FIGHT_STATE_FROM_DS) * 16 + FIGHT_STATE_ON
+        return struct.unpack("<H", self.guest.read(at, 2))[0] != 0
 
     def whose_turn(self) -> Optional[int]:
         """The combatant whose turn it is in a fight (the game's word at WHOSE_TURN)."""

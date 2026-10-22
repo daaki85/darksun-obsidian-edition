@@ -202,7 +202,7 @@ KIND_SCRIPT = 5  # DSCLOG's scripts' random command (PROBE_SCRIPT_RAND): raw = r
 KIND_REQUEST = 6  # DSCLOG's REQ_SITE: a script's REQUEST (command 22h): raw = the request, the frame
 # its arguments: [BP+8] who, [BP+0Ah] and [BP+0Ch] its two values (the game's jump table at 7FF30h)
 REQUEST_NAMES = {
-    1: "the party rests (and the fallen get up)", 2: "a door opened or closed", 3: "a skill check",
+    0: "the party rests (the game's own rest, each member)", 1: "the party rests (and the fallen get up)", 2: "a door opened or closed", 3: "a skill check",
     4: "the party rests", 5: "an object's state turned", 6: "a cinematic plays", 7: "a trap goes off",
     8: "random monsters come", 9: "a creature transforms", 10: "a map cell blocked", 11: "a map cell unblocked",
     12: "a map cell blocks sight", 13: "a map cell stops blocking sight", 14: "an arena bout begins",
@@ -1748,10 +1748,11 @@ class DiceLog:
         return None
 
     def _fighting(self) -> bool:
-        """In a fight, by the game's own flag (game time barely moves outside fights, so the time
-        since the last round can't tell: the party stood "in a fight" until they rested)."""
+        """In a fight, by the game's own test (game.fight_on: as its rest's and the USE screen's;
+        its IN_COMBAT flag stays up while the party walks spread out, uncollapsed, with no one to
+        fight; game time barely moves outside fights, so the time since the last round can't tell)."""
         try:
-            return self.game.in_combat()
+            return self.game.fight_on()
         except (struct.error, IndexError, ValueError):
             return False
 

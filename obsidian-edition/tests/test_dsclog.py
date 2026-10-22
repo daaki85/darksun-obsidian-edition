@@ -2911,6 +2911,29 @@ class NewSpellTests(RuleTests):
         e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
         self.assertEqual((e.kind, e.raw, e.arg(6), e.arg(8)), (8, 11, 2, 0x29))
 
+    def test_games_rest(self):
+        """REST_SITE (806C3h, "mov ax,si / imul ax,ax,3Ah" in the game's rest, each member's turn):
+        recorded as request 0 (kind 6), then AX the member times 3Ah, as the game's instructions
+        leave it; the other registers kept."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "game_rest")
+        self.assertEqual((patch.offset, len(patch.replacement)), (0x806C3, 5))
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        self.at += 0x20
+        start = CALLER * 16 + self.at
+        mu.mem_write(start, patch.replacement)
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=0x1111,
+                                ecx=0x3333, esi=2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(start, start + 5)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_CX,
+                                                   r.UC_X86_REG_SI)], [0x800, 2 * 0x3A, 0x3333, 2])
+        seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+        e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
+        self.assertEqual((e.kind, e.raw), (6, 0))
+
     def test_spell_aim(self):
         """AIM_SITE (8455Bh, "cmp dx,-1" after a clicked cast's aim check, DX = AX): a refusal (AX
         negative) recorded (kind 7: the answer, the spell DS:9428h, the caster DS:9426h in EXTRA);

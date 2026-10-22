@@ -108,6 +108,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Checked in the game with a single, a two- and a three-class character and a dual-class human.
 
 **Fixed**
+- **Spell arrows fade at the game's own rest.** They faded only at a script's rest request and the
+  vulture meal; camping at a fire ring runs the game's rest routine (8066Dh, also its REST from a
+  script) without one. A site in its loop over the members (806C3h, `REST_SITE`) records it as
+  request 0, and the arrows fade in the next pass.
+- **Spell arrows (and Pick Pockets, and the vulture meal) work with the party spread out.** The
+  Loader's fight check read the game's DS:1168h, which stays 1 while the party walks uncollapsed
+  with no one to fight, so it answered "can't be made in a fight". It now reads the game's own
+  test, the fight state's +19h (`game.fight_on`), as its rest and the USE screen do.
+- **The pointer on a spell arrow button lights that button.** Turn Undead's handler, which the
+  buttons beside it share, lit and unlit the frame at Turn Undead's place (DS:30F8h) as the
+  pointer came and went, so the Vampiric Arrows button lit the Burning Arrows one; two 4-byte
+  patches (89528h, 8956Fh) light the button's own place, as its press already did.
 - **A Fireball no longer floods the dice log.** The filter for `random(low, high)` (1A0A:2FA9h,
   kept for psionic ranges) also recorded the eleven picture-point calls a spell burst makes, so a
   Fireball filled the ring ("148 rolls came too fast to record"). It now records only the calls

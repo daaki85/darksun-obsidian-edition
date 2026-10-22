@@ -150,6 +150,7 @@ AIM_SITE = NS_IMAGE + 26  # (a spell cast with a click, refused: why, recorded f
 AMULET_SITE = NS_IMAGE + 27  # (a creature's magic resistance: the Amulet of Magic Resistance's 15% added)
 ARROW_HIT_SITE, ARROW_SPELL_SITE = NS_IMAGE + 28, NS_IMAGE + 29  # (a hit's spell: a spell arrow's, spellarrows.py)
 CAST_SITE = NS_IMAGE + 30  # (a spell cast: recorded, its name floated over the caster, labels.py)
+REST_SITE = NS_IMAGE + 31  # (the game's rest: recorded, the spell arrows fade, spellarrows.py)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -393,6 +394,9 @@ PATCHES = (
     Patch("arrow_spell", 0x58B78, bytes.fromhex("268a4f0f"), _site(ARROW_SPELL_SITE, 4)),
     # the routine casting a spell or a power, its caster read: recorded (DSCLOG's CAST_SITE)
     Patch("spell_cast", 0x772AA, bytes.fromhex("8b4e06"), _site(CAST_SITE, 3)),
+    # the game's rest (its REST and a script's request 1, past "NO RESTING DURING COMBAT"), each
+    # member's turn as their slots refill: recorded as request 0 (DSCLOG's REST_SITE)
+    Patch("game_rest", 0x806C3, bytes.fromhex("8bc66bc03a"), _site(REST_SITE, 5)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"
@@ -407,6 +411,11 @@ PATCHES = (
     Patch("pp_text_hover", 0x89541, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
     Patch("pp_text_info", 0x8967A, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
     Patch("pp_info", 0x8968E, bytes.fromhex("a1de9c"), _site(PP_INFO, 3)),
+    # ... and its frame lit as the pointer comes onto it and put back as it leaves, at the button's
+    # own place ("push word [30F8h]", Turn Undead's, to "push word [bp-2]", the button's, as its
+    # press already has it): the buttons beside it, which share its handler, light themselves
+    Patch("pp_light_on", 0x89528, bytes.fromhex("ff36f830"), bytes.fromhex("ff76fe90")),
+    Patch("pp_light_off", 0x8956F, bytes.fromhex("ff36f830"), bytes.fromhex("ff76fe90")),
     # ... a cleric/thief's purse beside Turn Undead, its icon let go of where the screen, closing,
     # lets go of Turn Undead's ("cmp dword [30F4h],0")
     Patch("pp_close", 0x88504, bytes.fromhex("66833ef43000"), _site(PP_CLOSE, 6)),

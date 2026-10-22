@@ -10999,6 +10999,23 @@ cast_site:
         mov cx, [bp + 6]
         iret
 
+; REST_SITE: "mov ax,si / imul ax,ax,3Ah" (806C3h; 5 bytes: the INT, the site's number and two
+; NOPs) in the game's rest (8066Dh: its REST and a script's request 1, past its "NO RESTING DURING
+; COMBAT"), each member's turn as their slots are refilled. Recorded as a REQUEST of REQ_REST (the
+; dicelog's: the spell arrows fade), then the two instructions done.
+REQ_REST equ 0
+rest_site:
+        push si
+        mov si, sp
+        sub si, 4                       ; (SS:SI+6: the INT's return address)
+        mov ax, REQ_REST
+        mov word [cs:kind], KIND_REQUEST
+        call record
+        pop si
+        mov ax, si
+        imul ax, ax, 0x3A
+        iret
+
 ; AIM_SITE: "cmp dx,-1" (8455Bh; 3 bytes: the INT and the site's number) where a click on the map
 ; takes the readied spell's target (84538h; the cast follows, 8458Ch), DX and AX the aim check's
 ; answer (84C54h; the pointer's own use of it, 8404Bh, runs on every pass and isn't hooked):
@@ -13247,6 +13264,7 @@ AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against
 ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (ARROW_HIT)
 ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
+REST_SITE equ NS_IMAGE + 31     ; 806C3h: the party rests, a member's turn
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13316,6 +13334,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je arrow_spell
         cmp byte [cs:rl_site], CAST_SITE
         je cast_site
+        cmp byte [cs:rl_site], REST_SITE
+        je rest_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
