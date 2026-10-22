@@ -124,6 +124,10 @@ class ItemWatchTest(unittest.TestCase):
         self.assertIn("freed its record", out[0])
         self.assertIsNone(itemwatch.ordinary_loss(was, bytes(after), False, False))
         self.assertIn("outside the party", itemwatch.ordinary_loss(was, bytes(helm), False, False))
+        # a quest item a script takes, or a wand's last charge, frees the record the same way
+        for typ in (61, 71, 104):
+            gone = ItemSeen(14, 0, "Garyn", "pack", "Quest", typ, bytes(helm), bytes(game.ITEM_TYPE_SIZE))
+            self.assertIn("used up", itemwatch.ordinary_loss(gone, bytes(after), False, False))
 
     def test_ordinary_losses_get_no_report(self):
         """Used up (fruit, arrows, scrolls), a spell's weapon, sold (money up), broken: nothing said."""
