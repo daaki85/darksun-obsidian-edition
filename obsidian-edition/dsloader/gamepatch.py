@@ -145,6 +145,8 @@ SHOP_SHINE = NS_IMAGE + 21  # (the wait for an event: a shop's magic items' shin
 SHOP_LOOP = NS_IMAGE + 22  # (... and a shop's own event loop)
 DET_ITEM = NS_IMAGE + 23  # (Detonate's blast on an item: the check recorded for the dice log)
 WANDER_DMG = NS_IMAGE + 24  # (a spell's damage: a Wanderer guarded from fire and cold, halving it)
+REQ_SITE = NS_IMAGE + 25  # (a script's REQUEST: recorded for the dice log)
+AIM_SITE = NS_IMAGE + 26  # (a spell cast with a click, refused: why, recorded for the dice log)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -377,6 +379,10 @@ PATCHES = (
     # ... and the kinds of a spell's damage a creature is guarded from, which halves a spell all of
     # those kinds (DSCLOG's WANDER_DMG: a Wanderer's fire and cold, as Resist Fire and Resist Cold)
     Patch("wanderer_damage", 0x7B56F, bytes.fromhex("857e0c"), _site(WANDER_DMG, 3)),
+    # a script's REQUEST (command 22h), its number read: recorded for the dice log (DSCLOG's REQ_SITE)
+    Patch("script_request", 0x7FF42, bytes.fromhex("8b5e064b"), _site(REQ_SITE, 4)),
+    # a spell cast with a click, the aim check's answer: a refusal recorded (DSCLOG's AIM_SITE)
+    Patch("spell_aim", 0x84100, bytes.fromhex("3dffff"), _site(AIM_SITE, 3)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

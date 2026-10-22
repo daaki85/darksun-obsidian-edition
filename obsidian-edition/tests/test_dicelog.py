@@ -528,6 +528,24 @@ class SaveTests(unittest.TestCase):
         struct.pack_into("<h", log.guest.mem, dag, 34)
         self.assertEqual(log.psp_changes(), ["    Dag spends 18 PSP (52 -> 34)"])
 
+    def test_script_request(self):
+        """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with all rolls shown."""
+        log = make_game()
+        e = entry(8, frame=words(0, 0, 8, 0x7FFE, 1, 0), kind=dicelog.KIND_REQUEST)
+        self.assertEqual(log.describe(e), ["Script: random monsters come (request 8: 32766, 1, 0)"])
+        e = entry(10, frame=words(0, 0, 10, 3, 40, 12), kind=dicelog.KIND_REQUEST)
+        self.assertEqual(log.describe(e), [])
+        self.assertEqual(log.describe(e, show_all=True), ["Script: a map cell blocked (request 10: 3, 40, 12)"])
+
+    def test_aim_refused(self):
+        """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), with the reason."""
+        log = make_game()
+        e = entry(0xFC | 27 << 8, kind=dicelog.KIND_AIM)
+        e.extra = 0
+        line = log.describe(e)
+        self.assertEqual(len(line), 1)
+        self.assertIn("there: no line of sight", line[0])
+
     def test_abilities(self):
         """An ability score's change is told once it holds at two looks (Remove Curse's STR back)."""
         log = make_game()

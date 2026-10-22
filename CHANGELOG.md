@@ -12,6 +12,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #55 (in progress)
 
 **Added**
+- **The dice log names a refused cast's reason** (`can't cast Fireball there: no line of sight`;
+  DSCLOG's `AIM_SITE`) **and the scripts' requests** (`Script: random monsters come`;
+  `REQ_SITE`, all 20 named, from the yuan-ti project's notes on the game).
 - **The Wanderer halves fire and cold spells' damage**, as Resist Fire and Resist Cold do (it had
   their saves only): DSCLOG's `WANDER_DMG` at the game's own test of what a creature is guarded
   from (7B56Fh); the log says `(halved: Wanderer)`.

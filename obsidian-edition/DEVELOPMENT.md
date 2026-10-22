@@ -2494,6 +2494,23 @@ it the game draws again. While anyone walks, the rectangle the game draws again
 round what moved is made to take the puffs in; once everyone stands, DSCLOG has
 the view drawn again a few times a second until the last puff is gone.
 
+### Scripts' requests and refused casts in the dice log
+
+Two `NS_IMAGE` sites record what the game does without a roll:
+
+- `REQ_SITE` (DSUN.EXE 7FF42h, "mov bx,[bp+6] / dec bx") in the routine running a script's
+  REQUEST (command 22h, 7FF30h; a jump table of 20 at its CS:177h): kind 6 (`KIND_REQUEST`),
+  the request as the entry's value, the frame for who and the two values. `REQUEST_NAMES`
+  names all 20 (from the yuan-ti project's notes on the game: rest, door, skill check, rest,
+  an object's state, cinematic, trap, random monsters, transform, block and unblock a cell
+  and its sight, arena bout, the pointer to walk, music, place an object, change sides, game
+  over, count creatures).
+- `AIM_SITE` (84100h, "cmp ax,0FFFFh") where a click casts the spell readied (8404Bh, from the
+  map's click handler) after the aim check (84C54h): -1 no creature there, -2 not one the
+  spell takes, -3 a wall too long, -4 out of sight (its line-of-sight call, 0020:00A4 in the
+  overlay's terms), -5 too far. A refusal is kind 7 (`KIND_AIM`): the answer and the spell
+  (DS:9428h) in the value, the caster (DS:9426h) in EXTRA.
+
 ### Choosing an enemy: Tab, Enter and the rings
 
 ([In the features page](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings).)

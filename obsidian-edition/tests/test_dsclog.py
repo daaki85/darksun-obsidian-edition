@@ -2741,6 +2741,60 @@ class NewSpellTests(RuleTests):
         self.assertEqual(bytes(mu.mem_read(records + 0xCA * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
         self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
 
+    def test_script_request(self):
+        """REQ_SITE (7FF42h, "mov bx,[bp+6] / dec bx" in the REQUEST routine): the request recorded
+        (kind 6, the request as its value, the frame for who and the two values), then BX the
+        request less 1, as the game's two instructions leave it."""
+        from dsloader import gamepatch
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        mu.mem_write(SS * 16 + BP + 6, struct.pack("<4H", 8, 0x7FFE, 1, 0))
+        self.at += 0x20
+        start = CALLER * 16 + self.at
+        mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.REQ_SITE, 0x90)))
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=0x1111,
+                                esi=0x2222).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(start, start + 4)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BX, r.UC_X86_REG_AX,
+                                                   r.UC_X86_REG_SI)], [0x800, 7, 0x1111, 0x2222])
+        seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+        e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
+        self.assertEqual((e.kind, e.raw, e.arg(8), e.arg(0x0A), e.arg(0x0C)), (6, 8, 0x7FFE, 1, 0))
+
+    def test_spell_aim(self):
+        """AIM_SITE (84100h, "cmp ax,0FFFFh" after a clicked cast's aim check): a refusal (AX
+        negative) recorded (kind 7: the answer, the spell DS:9428h, the caster DS:9426h in EXTRA);
+        the compare's flags returned either way, every register kept."""
+        from dsloader import gamepatch
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        mu.mem_write(GAME_DS * 16 + 0x9426, struct.pack("<HH", 2, 27))
+        def aim(ax):
+            seq_before = struct.unpack("<H", mu.mem_read(TSR * 16 + hdr_off + 8, 2))[0]
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.AIM_SITE)))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=ax,
+                                    esi=0x2222).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + 3)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_SI)],
+                             [0x800, ax, 0x2222])
+            flags = mu.reg_read(r.UC_X86_REG_EFLAGS)
+            seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+            e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
+            return seq != seq_before, e, flags
+        recorded, e, flags = aim(0xFFFC)
+        self.assertTrue(recorded)
+        self.assertEqual((e.kind, e.raw, e.extra), (7, 0xFC | 27 << 8, 2))
+        self.assertEqual(flags & 0x8C0, 0x80)  # -4 against -1: SF, no OF or ZF ("jng" taken)
+        recorded, e, flags = aim(1)
+        self.assertFalse(recorded)
+        self.assertEqual(flags & 0x8C0, 0)  # 1 against -1: "jng" not taken
+
     def test_side_back(self):
         """NS_SIDE (78785h, "jmp 788BBh", the effect ended at the game's [BP+8]): Berserk (3) and
         Confused (11) on to the charm's case (787E9h), which puts the side back; any other to 788BBh."""
@@ -4113,6 +4167,31 @@ class KitTests(unittest.TestCase):
                 self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
                 self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 25 + kits.initiative(first_kit(bytes(sheet))))
                 self.assertEqual((self.mu.reg_read(r.UC_X86_REG_AX), self.mu.reg_read(r.UC_X86_REG_SP)), (0x1111, 0x7FC))
+
+    def test_wanderer_damage(self):
+        """WANDER_DMG (7B56Fh, "test [bp+0Ch],di" in the routine giving a spell's damage share,
+        [BP-4] the creature): fire and cold (6) added to the kinds DI guards from for a Wanderer,
+        the test's flags returned and DI left so (a spell all those kinds then does half)."""
+        from dsloader import gamepatch, kitpages
+        image = load_image()
+        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        self.assertGreater(at, 0)
+        self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        self.rules(game.RULE_KITS)
+        def test(kit, kinds, di):
+            self.creature(5, kit)  # (a druid class; kit 3 the Wanderer)
+            self.mu.mem_write(SS * 16 + 0x800 - 4, struct.pack("<H", 5))
+            self.mu.mem_write(SS * 16 + 0x800 + 0x0C, struct.pack("<H", kinds))
+            self.mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.WANDER_DMG)))
+            for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F0, ebp=0x800, eflags=IF | 2, edi=di).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
+            return self.mu.reg_read(r.UC_X86_REG_DI), not self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40
+        self.assertEqual(test(0, 0x02, 0), (0, False))  # fire, nothing guarding it
+        self.assertEqual(test(0, 0x02, 0x02), (0x02, True))  # Resist Fire's
+        self.assertEqual(test(3, 0x04, 0), (0x06, True))  # a Wanderer: cold guarded
+        self.assertEqual(test(3, 0x80, 0), (0x06, False))  # ... not lightning
 
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky

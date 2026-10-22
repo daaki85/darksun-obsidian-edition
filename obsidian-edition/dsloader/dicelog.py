@@ -198,6 +198,23 @@ ITEM_DETONATE = 0x4000  # (... Detonate's blast on a worn item: DSCLOG's DET_ITE
 # Detonate's 1d20 against a worn item (7AAEBh): the line comes with DET_ITEM's record
 DETONATE_ROLL_RETURN = bytes.fromhex("83c4048bde6bdb0a8d96e4fc")
 KIND_SCRIPT = 5  # DSCLOG's scripts' random command (PROBE_SCRIPT_RAND): raw = result | N << 8
+KIND_REQUEST = 6  # DSCLOG's REQ_SITE: a script's REQUEST (command 22h): raw = the request, the frame
+# its arguments: [BP+8] who, [BP+0Ah] and [BP+0Ch] its two values (the game's jump table at 7FF30h)
+REQUEST_NAMES = {
+    1: "the party rests (and the fallen get up)", 2: "a door opened or closed", 3: "a skill check",
+    4: "the party rests", 5: "an object's state turned", 6: "a cinematic plays", 7: "a trap goes off",
+    8: "random monsters come", 9: "a creature transforms", 10: "a map cell blocked", 11: "a map cell unblocked",
+    12: "a map cell blocks sight", 13: "a map cell stops blocking sight", 14: "an arena bout begins",
+    15: "the pointer set to walk", 16: "the music's level set", 17: "an object placed on the map",
+    18: "a creature changes sides", 19: "game over", 20: "creatures counted",
+}
+KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
+# extra the caster. The aim check's (84C54h) answers:
+AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
+               -3: "the wall would be too long", -4: "no line of sight", -5: "too far away"}
+# the requests worth a line of their own (the others only with "Show unlabelled rolls"; skill
+# checks and traps have their rolls' lines)
+REQUESTS_SHOWN = frozenset((1, 4, 6, 8, 9, 14, 17, 18, 19))
 FIGHT_LINES_AFTER = 5.0  # seconds after a fight its lines still go into the combat log's panel (XP, the last kill)
 REGENERATES = 20  # CON from which a creature regains a hit point now and then by itself
 
@@ -1824,6 +1841,10 @@ class DiceLog:
             return self._item_check(e)
         if e.kind == KIND_SCRIPT:
             return self._script_roll(e, show_all)
+        if e.kind == KIND_REQUEST:
+            return self._request(e, show_all)
+        if e.kind == KIND_AIM:
+            return self._aim(e)
         code = e.code
         if code.startswith(ATTACK_SITE):
             self._spell_until = 0.0
@@ -2292,6 +2313,24 @@ class DiceLog:
         if not lines and show_all:
             lines = [f"Script roll: 0-{most} = {result} (script position {e.extra})"]
         return lines
+
+    def _request(self, e: Entry, show_all: bool) -> List[str]:
+        """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with "Show
+        unlabelled rolls"."""
+        number = e.raw & 0xFFFF
+        if number not in REQUESTS_SHOWN and not show_all:
+            return []
+        name = REQUEST_NAMES.get(number, "an unknown request")
+        values = ", ".join(str(v) for v in (e.arg(8), e.arg(0x0A), e.arg(0x0C)) if v is not None)
+        return [f"Script: {name} (request {number}: {values})"]
+
+    def _aim(self, e: Entry) -> List[str]:
+        """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), and why: the game
+        itself only shows the crossed-out pointer."""
+        answer = struct.unpack("b", bytes([e.raw & 0xFF]))[0]
+        spell = e.raw >> 8 & 0xFF
+        why = AIM_REASONS.get(answer, f"refused ({answer})")
+        return [f"{self._name(e.extra)} can't cast {self.game.spell_name(spell)} there: {why}"]
 
     def _item_check(self, e: Entry) -> List[str]:
         """An item the acid or corroding touch could destroy, after a failed save (DSCLOG's
