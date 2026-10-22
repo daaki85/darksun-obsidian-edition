@@ -189,6 +189,9 @@ RANDOM_NAME_RETURNS = (bytes.fromhex("83c40448eb11"), bytes.fromhex("83c40405630
 KIND_ROLL, KIND_SAVE, KIND_AC = 0, 1, 2
 KIND_ITEM = 4  # DSCLOG's item save against acid (PROBE_ITEM_*): raw = d20 | needed << 8
 ITEM_ARMOUR = 0x8000  # (in the entry's extra, with the item)
+ITEM_DETONATE = 0x4000  # (... Detonate's blast on a worn item: DSCLOG's DET_ITEM)
+# Detonate's 1d20 against a worn item (7AAEBh): the line comes with DET_ITEM's record
+DETONATE_ROLL_RETURN = bytes.fromhex("83c4048bde6bdb0a8d96e4fc")
 KIND_SCRIPT = 5  # DSCLOG's scripts' random command (PROBE_SCRIPT_RAND): raw = result | N << 8
 FIGHT_LINES_AFTER = 5.0  # seconds after a fight its lines still go into the combat log's panel (XP, the last kill)
 REGENERATES = 20  # CON from which a creature regains a hit point now and then by itself
@@ -2034,6 +2037,8 @@ class DiceLog:
                     self._image_line(target, faces[0], 0 if ours else self.game.image_chance(target), spell=True)]
             if count == 1 and sides == 100 and e.parent_code.startswith(DISPEL_ROLL_RETURN):
                 return self._dispel(e, faces[0])
+            if count == 1 and sides == 20 and e.parent_code.startswith(DETONATE_ROLL_RETURN):
+                return []  # (DET_ITEM's record shows it, with the item and the number)
             if count == 1 and sides == 20 and e.parent_code.startswith(ABJURE_ROLL_RETURN):
                 return self._abjure(e, faces[0])
             if count == 1 and e.parent_code.startswith(SUMMON_ROLL_RETURN):
@@ -2251,6 +2256,8 @@ class DiceLog:
         """An item the acid or corroding touch could destroy, after a failed save (DSCLOG's
         PROBE_ITEM_*): the d20, the number it needed and whose number that was."""
         roll, needed = e.raw & 0xFF, struct.unpack("b", bytes([e.raw >> 8 & 0xFF]))[0]
+        if e.extra & ITEM_DETONATE and not e.extra & ITEM_ARMOUR:
+            return self._detonate_item(e, e.extra & 0x3FFF, roll, needed)
         item, armour = e.extra & 0x7FFF, bool(e.extra & ITEM_ARMOUR)
         g = self.game
         save = g.item_save(item, armour)
@@ -2285,6 +2292,18 @@ class DiceLog:
                 why = " (the game's)"
         need = f"needs {needed}" if needed > 1 else "safe whatever the roll"
         return [f"{head}: d20 = {roll}, {need}{why} -> {'CORRODED' if corroded else 'safe'}"]
+
+    def _detonate_item(self, e: Entry, item: int, roll: int, needed: int) -> List[str]:
+        """Detonate's blast on the target's worn item that breaks most easily (the lowest item
+        +10h, under 6): a d20 under 15 less its plus, or it's gone (one of a stack)."""
+        who = self._name(e.arg(6)) if e.arg(6) is not None else "someone"
+        rec = self.game.item_record(item)
+        name = self.game.item_label(rec, self.game.item_type_record(rec)) if len(rec) == game.ITEM_SIZE else "item"
+        plus = 15 - needed
+        why = f"15 {signed(-plus)} for its plus" if plus else "15"
+        gone = roll < needed
+        return [f"  Detonate's blast on {who}'s {name}: d20 = {roll}, breaks it under {needed} ({why}) -> "
+                + ("DESTROYED" if gone else "safe")]
 
     def _break_check(self, e: Entry, first: bool, show_all: bool) -> List[str]:
         """After an attack the game checks the weapon: non-magical wood, bone, stone and

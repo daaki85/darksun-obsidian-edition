@@ -123,6 +123,12 @@ their own:
   characters): over it, "psionics disrupted by static". Otherwise the Static's
   keeper rolls a d20 at or under their own Synaptic Static score, and no lower
   than the user's, to disrupt it. The log shows each of these rolls.
+- **Detonate** (the daggorans use it too): besides 1d10 from the blast, it
+  picks the worn item that breaks most easily, the one with the lowest
+  fragility number (under 6: a cloak 3, a bone helm or leather chest armour 4,
+  bone scale arm and leg armour 5; a short sword's 6 is never picked; on a tie,
+  the first), and destroys it outright on a d20 under 15 less its plus (70% for
+  a plain item; one of a stack). The log shows the check.
 - **Psionic defence.** Attacked by a psionic attack mode (Psychic Crush, Ego
   Whip, Id Insinuation, Psionic Blast), a character defends with WIS − 7, or
   with a defence mode already raised (used beforehand, it stays up at no cost

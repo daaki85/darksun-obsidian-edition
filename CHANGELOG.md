@@ -46,6 +46,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   where the game was still shows.
 
 **Added**
+- **Detonate's blast on an item in the dice log.** The power (a daggoran's too) destroys the
+  target's worn item with the lowest item +10h (under 6) on a 1d20 under 15 less its plus
+  (DSUN 7AAEBh, from the effect switch's case 138 at 797F6h; the item taken away by 4E0:7Ah,
+  one of a stack), and nothing showed it. DSCLOG's `DET_ITEM` (7AB95h) records the item, the
+  d20 and the number: `Detonate's blast on Cilla's Bone Helm: d20 = 7, breaks it under 15 (15)
+  -> DESTROYED`.
 - **Find in the dice log and the dialogue.** A box above each (Ctrl+F): every match (any case)
   highlighted, the one shown in amber with `n of N`, Enter / **Next** and Shift+Enter /
   **Previous** round the end, Escape to clear; details hidden aren't searched, and the log stops

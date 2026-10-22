@@ -741,6 +741,20 @@ each class's next level in its tables and shows the lowest. Where it adds the
 closing bracket, the helper (`INT D2h`) finds which classes that number
 belongs to and adds their letters first.
 
+### Detonate's blast on an item
+
+The effect switch (its values at CS:0D96h of the segment at file 78BA0h, case
+138 at 797F6h) queues effect 195 (the blast, 1d10) on the target, then calls
+7AAEBh: of the target's items listed by A0:1A2Dh, those worn (+2 = 1), the one
+whose item +10h is lowest and under 6 (the first on a tie); a 1d20 (the dice
+routine, 0538:0089h through the overlay stub) under 15 less its item +14h
+(the plus) has 4E0:7Ah take it away (one off a stack whose type's +0Fh has
+bit 2, else the whole item; nothing left in its place). The item templates'
++10h: cloak 3, bone helm and leather chest 4, bone scale arm and leg 5, short
+sword 6. `DET_ITEM` replaces its "mov dx,0Fh / sub dx,ax" (7AB95h) to record
+the check (KIND_ITEM, extra the item | 4000h); the d20's own dice entry (its
+caller's code `DETONATE_ROLL_RETURN`) is left out for it.
+
 ### The psionic power check
 
 ([In How the game works](HOW-THE-GAME-WORKS.md#psionics).)

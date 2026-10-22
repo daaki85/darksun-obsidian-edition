@@ -408,8 +408,11 @@ Defiler's saving throw vs Acid from Rampager (paralysis/poison/death): d20 = 20 
   Rampager's acid on Defiler's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe
 ```
 
-The Detonate psionic power, which can blow up an item a target carries, keeps
-the game's own rule (a d20 under 15 less the item's plus).
+The Detonate psionic power (the daggorans' too) keeps the game's own rule: besides
+its blast, it picks the item the target wears that breaks most easily (a cloak,
+then a bone helm or leather chest armour, then bone scale armour) and
+destroys it on a d20 under 15 less the item's plus, so 70% for a plain item.
+The dice log shows that check and its outcome.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
 

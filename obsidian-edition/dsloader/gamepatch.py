@@ -143,6 +143,7 @@ NS_SIDE = NS_IMAGE + 19  # (an effect ended: Berserk and Confused give the side 
 NS_WALL = NS_IMAGE + 20  # (the computer's cast: a wall across the line of fire)
 SHOP_SHINE = NS_IMAGE + 21  # (the wait for an event: a shop's magic items' shine turned, as on the map)
 SHOP_LOOP = NS_IMAGE + 22  # (... and a shop's own event loop)
+DET_ITEM = NS_IMAGE + 23  # (Detonate's blast on an item: the check recorded for the dice log)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xCA
 
@@ -369,6 +370,9 @@ PATCHES = (
     # [11B2h],1" (DSCLOG's SHOP_SHINE, SHOP_LOOP: the cycles turned when due, a shop open)
     Patch("shop_shine", 0x2AFA6, bytes.fromhex("0bff74b5"), _site(SHOP_SHINE, 4)),
     Patch("shop_loop", 0x7DE11, bytes.fromhex("833eb21101"), _site(SHOP_LOOP, 5)),
+    # Detonate's blast on an item (7AAEBh) left nothing in the dice log: "mov dx,0Fh / sub dx,ax",
+    # the number its d20 must be under (DSCLOG's DET_ITEM: the check recorded, the game's rule kept)
+    Patch("detonate_item", 0x7AB95, bytes.fromhex("ba0f002bd0"), _site(DET_ITEM, 5)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

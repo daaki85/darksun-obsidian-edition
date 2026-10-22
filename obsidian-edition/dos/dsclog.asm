@@ -10736,6 +10736,28 @@ item_record:
         pop si
         iret
 
+; DET_ITEM: "mov dx,0Fh / sub dx,ax" (7AB95h; 5 bytes: the site's number and 2 NOPs after the INT) in
+; Detonate's blast on an item (7AAEBh, the target [BP+6]): of the items it wears, the one whose +10h
+; is lowest (under 6) breaks on a d20 (pushed, under the INT's frame) under 15 less its plus (AX);
+; the game's 4E0:7Ah then takes it away (one of a stack). DX as the game's, the check recorded as
+; ITEM_RECORD does (EXTRA the item, ITEM_DETONATE): the d20 and the number it must be under.
+ITEM_DETONATE equ 0x4000
+det_item:
+        push si
+        push ax
+        push bx
+        push cx
+        push di
+        mov dx, 15
+        sub dx, ax
+        mov di, si
+        imul di, di, 0x0A
+        mov bx, [bp+di-0x31C]           ; (the item, from the list at BP-320h)
+        mov si, sp
+        mov ax, [ss:si + 16]            ; (the d20: above the five pushes and the INT's frame)
+        mov cx, ITEM_DETONATE
+        jmp item_record
+
 ; ADND_NEEDED: CX = AD&D's save against acid for item BX (DS the game's): its material's
 ; number, less its plus, less 1 for a magical power. Keeps every other register.
 adnd_needed:
@@ -12786,6 +12808,7 @@ NS_SIDE   equ NS_IMAGE + 19      ; 78785h: an effect ended, past the game's own 
 NS_WALL   equ NS_IMAGE + 20      ; 5A38Ch: the computer's cast, its two points
 SHOP_SHINE equ NS_IMAGE + 21     ; 2AFA6h: the wait for an event, its test (a shop's shine)
 SHOP_LOOP equ NS_IMAGE + 22      ; 7DE11h: a shop's own event loop, its test (... too)
+DET_ITEM  equ NS_IMAGE + 23      ; 7AB95h: Detonate's blast on an item, the number its d20 must be under
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -12839,6 +12862,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je shop_shine
         cmp byte [cs:rl_site], SHOP_LOOP
         je shop_loop
+        cmp byte [cs:rl_site], DET_ITEM
+        je det_item
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
