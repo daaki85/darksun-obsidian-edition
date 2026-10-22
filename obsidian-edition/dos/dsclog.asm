@@ -151,7 +151,7 @@ VEC_TICK equ 0x87          ; PROBE_TICK
 VEC_POISON equ 0x86        ; PROBE_POISON
 VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
-TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
+TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
 NENT    equ 66          ; entries in the ring (66: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
@@ -204,10 +204,11 @@ filt:                           ; +34  up to 8 filters: a length (1-8), then tha
         db 7, 0x66,0x0F,0xBF,0xC0,0x66,0x69,0xC0, 0     ; imul eax,eax,imm32
         db 7, 0x66,0x0F,0xBF,0xC0,0x66,0xC1,0xE0, 0     ; shl eax,n
         db 8, 0x66,0x0F,0xBF,0xC0,0x66,0x0F,0xBF,0x56   ; N = word [bp+x] (the dice routines)
-        db 8, 0x66,0x0F,0xBF,0xC0,0x8B,0xD7,0x2B,0xD6   ; random(low, high): a psionic power's check
+        db 8, 0x66,0x0F,0xBF,0xC0,0x8B,0xD7,0x2B,0xD6   ; random(low, high): a psionic power's check (RANGE_FILTER)
         db 8, 0xBB,0x64,0x00,0x99,0xF7,0xFB,0x3B,0x56   ; percentile check
         db 7, 0xEB,0x05,'IMAGE', 0                      ; NS_BLOW's d100 (an image taking a hit)
 NFILT   equ ($ - filt) / 9
+RANGE_FILTER equ 4             ; (the fifth: only its psionic callers recorded, INT_RAND)
         times (8 - NFILT) * 9 db 0
 skipped  dw 0                   ; +106 calls not recorded because no filter matched
 probe_save_off dw probe_save    ; +108 offset of PROBE_SAVE in this segment
@@ -475,6 +476,23 @@ stub:
         pop di
         pop si
         pop ds
+        cmp bx, filt + RANGE_FILTER * 9
+        jne .record
+        push es                 ; random(low, high): only the psionic power check's and defence's
+        push bx                 ;   calls (dsloader's POWER_CHECK_RETURN and the rest: "add sp,4"
+        les bx, [ss:bp + 2]     ;   then 88h, 8Ah or 5Ah), not the points of spells' pictures
+        mov bl, [es:bx + 3]     ;   (60041h: 89h, 8Bh, 50h), whose bursts filled the ring
+        cmp bl, 0x88
+        je .range_ok
+        cmp bl, 0x8A
+        je .range_ok
+        cmp bl, 0x5A
+.range_ok:
+        pop bx
+        pop es
+        je .record
+        inc word [cs:skipped]
+        jmp .done
 
 .record:
         mov word [cs:kind], 0

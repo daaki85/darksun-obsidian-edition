@@ -391,8 +391,9 @@ the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
 ring lies over the install code) clears the ring and stays resident with it.
-The text buffer (`TSIZE`) is 4 KB; the Loader reads its size from the header
-and drains it every few tens of milliseconds.
+The text buffer (`TSIZE`) is 2 KB; the Loader reads its size from the header
+and drains it every 20 ms (at most 251 bytes came in between two reads in the
+opening show, the busiest stretch measured).
 
 The helper has to load into upper memory, or the game loses 62 KB of
 conventional memory (570 KB free rather than 632 KB). With GOG's settings
@@ -408,7 +409,9 @@ check that again: the ring is 66 entries, not 128 (96 until the new spells'
 code, when the game no longer started for lack of memory; 88 until STORE and
 RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
 fitted in the block and loaded low; 74 until the names over figures), and the
-text buffer 4 KB, not 8, to make that room.
+text buffer 2 KB, not 8 (4 until the memory pass for 6th-level spells), to make
+that room. The most entries put in the ring in 2 seconds, measured, is 43
+(the opening show), 16 in a fight.
 
 The second block also holds the game's overlay buffer (32,992 bytes: twice the
 largest overlay, the code the overlay manager loads as needed). The game asks
@@ -419,7 +422,7 @@ over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
 own block down to what stays, then takes the buffer's block in the memory the
 install code had, while the ring and the panel's picture were taken at the
 top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
-57,648 bytes of the helper, the buffer, 2.5 KB free, the panel and the ring.
+59 KB of the helper, the buffer, 2.2 KB free, the panel and the ring.
 The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
 the map open this left 86 KB free in conventional memory, against 53 KB (and
@@ -427,7 +430,7 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
 (`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
 D00Ah to F000h): the build fails past it (a negative `times`), and so does
-`test_fits_upper_memory`; 2.5 KB are spare now. If the buffer still ends up in
+`test_fits_upper_memory`; 2.2 KB (141 paragraphs) are spare now. If the buffer still ends up in
 the heap (another DOSBox, less upper memory), the Loader says so in the dice
 log once, and crash reports say where it is (`heapcheck.py`). With EMS on,
 GOG's own setting, the helper itself no longer fits upper memory (it loads in

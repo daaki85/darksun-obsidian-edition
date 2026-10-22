@@ -210,6 +210,16 @@ class StubTests(unittest.TestCase):
         # a shorter filter matches on its own length
         self.assertEqual(call_with_filters(after[:3]), (72, 1))
         self.assertEqual(call_with_filters(after[:2] + b"\x00"), (72, 2))
+        # the fifth (random(low, high)): recorded only for the psionic callers, whose code after the
+        # call has 88h, 8Ah or 5Ah after its "add sp,4" (the parent's return, PARENT:0040h), not the
+        # points of spells' pictures, whose bursts filled the ring
+        five = (b"\x11" * 8,) * 4 + (after[:8],)
+        self.assertEqual(call_with_filters(*five), (72, 3))  # (53: a picture's)
+        for byte, seq in ((0x88, 73), (0x8A, 74), (0x5A, 75), (0x89, 75), (0x8B, 75), (0x50, 75)):
+            mu.mem_write(PARENT * 16 + 0x43, bytes((byte,)))
+            with self.subTest(byte=hex(byte)):
+                self.assertEqual(call_with_filters(*five)[0], seq)
+        mu.mem_write(PARENT * 16 + 0x43, bytes((53,)))
 
         call_at = [0x400]
 

@@ -97,6 +97,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   2F0h) are in DEVELOPMENT.md.
 
 **Fixed**
+- **A Fireball no longer floods the dice log.** The filter for `random(low, high)` (1A0A:2FA9h,
+  kept for psionic ranges) also recorded the eleven picture-point calls a spell burst makes, so a
+  Fireball filled the ring ("148 rolls came too fast to record"). It now records only the calls
+  whose code goes on as the psionic sites' does (88h, 8Ah or 5Ah three bytes past the return).
+- **More room in the helper's upper memory.** Its text buffer is 2 KB, not 4 (251 bytes came in
+  between two of the Loader's reads at most), leaving 2.2 KB of the upper memory block spare
+  rather than 224 bytes, for features to come.
 - **An item the game destroys gets its crash-log report.** The game frees a destroyed item
   (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record
   and linking it into the free list: its type and name stay. The item watch took that record for
