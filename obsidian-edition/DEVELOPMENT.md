@@ -2187,6 +2187,16 @@ their descriptions (SPIN 197-202, the spell + 1 as the game's own) and icons
 (21196-21201) are chunks of the launcher's copy of RESOURCE.GFF (`spelltexts.py`,
 `icons.py`), so they take no room in the helper.
 
+Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest spells to come) are
+read from the player's own copy of that game, a folder beside Shattered Lands' with Ravager in
+its name, and never kept in the repository. Its icons are a kind of picture Shattered Lands
+hasn't: the frame header as usual, then `0FFh "PLNR"`, the bits a pixel (4 or 5), a colour map
+of that many bits' worth of palette numbers, and codes of those bits, the highest first, where
+0 0 is colour 0 and 0 k the last pixel k + 2 more times (worked out on the 101 spells both games
+have; 38 match Shattered Lands' pixel for pixel). Its palette isn't Shattered Lands', so each
+colour becomes the nearest Shattered Lands colour no region changes. Checked in the game: the
+Heal icon in a known spell's place on the USE screen.
+
 **The effects.**
 - Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of
   its own (`INT EEh`: 54, a number the game leaves unused); the routine that
