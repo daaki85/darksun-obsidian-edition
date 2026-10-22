@@ -106,10 +106,10 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual([g.items for g in worldgear.MAGIC if g.name == "Kel"], [(worldgear.ARROWBANE_ITEM, worldgear.VEILED_ROBE, worldgear.MR_AMULET_ITEM)])
         self.assertEqual(gift("Keldar").objects, (28,))
 
-    def test_girdles_bow_and_amulet(self):
-        """The girdles (worn at the waist), the Titanstring Bow (the game's Bow, +1, its own name) and
-        the Amulet of Magic Resistance (worn at the neck): their types, names of 15 letters at most,
-        icons, and places (the Troop Leader, Wyrmias, the Bowyer, Kel)."""
+    def test_girdles_and_amulet(self):
+        """The girdles (worn at the waist) and the Amulet of Magic Resistance (worn at the neck):
+        their types, names of 15 letters at most, icons, and places (the Troop Leader, Wyrmias,
+        Kel)."""
         waist, neck = game.EQUIP_SLOTS.index("waist"), game.EQUIP_SLOTS.index("neck")
         for item, type_, slot, name in ((worldgear.BACK_GIRDLE_ITEM, game.BACK_GIRDLE_TYPE, waist, "Girdle of Back Defense"),
                                         (worldgear.URNST_GIRDLE_ITEM, game.URNST_GIRDLE_TYPE, waist, "Golden Girdle of Urnst"),
@@ -120,15 +120,11 @@ class WorldGearTests(unittest.TestCase):
             self.assertFalse(restrict.is_armour(typ))
             self.assertEqual(icons.which(item), name)
             self.assertEqual(item[game.ITEM_PLUS], 0)
-        bow = worldgear.weapon(*worldgear.TITANSTRING_1)
-        self.assertEqual((struct.unpack_from("<H", bow, game.ITEM_TYPE)[0], bow[game.ITEM_PLUS]), (1, 1))
-        self.assertEqual(icons.which(bow), "Titanstring Bow")
         self.assertEqual(icons.which(worldgear.weapon(*worldgear.BOW_1)), "Dunesong")
-        for entry in (worldgear.BACK_GIRDLE, worldgear.URNST_GIRDLE, worldgear.TITANSTRING, worldgear.MR_AMULET):
+        for entry in (worldgear.BACK_GIRDLE, worldgear.URNST_GIRDLE, worldgear.MR_AMULET):
             self.assertLessEqual(len(names.NAMES[entry]), 15)
         self.assertIn(worldgear.BACK_GIRDLE_ITEM, gift("Troop Leader").items)
         self.assertIn(worldgear.URNST_GIRDLE_ITEM, gift("Wyrmias").items)
-        self.assertIn(bow, gift("Bowyer").items)
         self.assertIn(worldgear.MR_AMULET_ITEM, gift("Kel").items)
 
     def test_wardens_plate(self):

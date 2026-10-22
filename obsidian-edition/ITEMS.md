@@ -64,7 +64,6 @@ out (a reward, a gift or a find).
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a chest |
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | — |
 | ![](docs/items/dunesong.png) | Wooden | bow | ***Dunesong*** | a bow +1 | sold by the **Bowyer** |
-| ![](docs/items/titanstring-bow.png) | Wooden | bow | ***Titanstring Bow*** | a bow +1 whose archer adds their strength's damage bonus (or minus) to its arrows, as with a melee weapon | sold by the **Bowyer** |
 | ![](docs/items/sling-plus2.png) | Leather | sling | Sling +2 | +2 | Chaya and her apology chest; a chest |
 | ![](docs/items/sling-plus1.png) | Leather | sling | Sling +1 | +1 | a chest |
 | ![](docs/items/windlash.png) | Leather | staff sling | ***Windlash*** | a staff sling +1 (the game has no magic staff sling) | sold by the **Bowyer** |
@@ -87,7 +86,7 @@ out (a reward, a gift or a find).
 | Quarterstaff | Quarterstaff +2, Balk's Staff +1, Parting Staff +1 |
 | Sling | Sling +2, Sling +1 |
 | Club, pick, cahulaks | ***Gutterknot*** +1, ***Deepbiter*** +1, Cahulaks +1 |
-| Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1, ***Titanstring Bow*** +1 |
+| Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
 | Staff sling, chatkcha | ***Windlash*** +1, ***Skycutter*** +2, Chatkcha +1 |
 
 **Body armour:**

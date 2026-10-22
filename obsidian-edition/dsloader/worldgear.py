@@ -220,23 +220,21 @@ METAL_SHIELD_3 = armour(game.METAL_SHIELD_TYPE, IRONBULWARK, 0x10000 - 2588, 650
 WARRENS, WARRENS_SKELETON, SKELETON = 0x28, 85, 2266  # (the skeleton at 1913, 577; object 2266 is shared)
 GUARDIAN, BALKAZARS = 216, 0x0D  # (the Guardian of Balkazar's fortress, with the Chatkcha +1)
 NAMES[FLAME_BLADE_NAME] = b"Flame Blade"
-# the girdles, the bow and the amulet (15 letters at most, as the game's own names; the Loader's
+# the girdles and the amulet (15 letters at most, as the game's own names; the Loader's
 # screens give the whole: FULL_NAMES): the Girdle of Back Defense (no attack from behind or
 # backstab against its wearer: DSCLOG's ITEM_REAR), the Golden Girdle of Urnst (3 better AC against
-# swords), the Titanstring Bow (a bow +1 adding its archer's STR to damage: TITAN_DAMAGE), the
-# Amulet of Magic Resistance (15%: AMULET_MR)
-BACK_GIRDLE, URNST_GIRDLE, TITANSTRING, MR_AMULET = 0x169, 0x16A, 0x16B, 0x16C
-NAMES.update({BACK_GIRDLE: b"Girdle/Back Def", URNST_GIRDLE: b"Girdle of Urnst", TITANSTRING: b"Titanstring Bow",
+# swords), the Amulet of Magic Resistance (15%: AMULET_MR)
+BACK_GIRDLE, URNST_GIRDLE, MR_AMULET = 0x169, 0x16A, 0x16B
+NAMES.update({BACK_GIRDLE: b"Girdle/Back Def", URNST_GIRDLE: b"Girdle of Urnst",
               MR_AMULET: b"Amulet/MagicRes"})
 FULL_NAMES = {BACK_GIRDLE: "Girdle of Back Defense", URNST_GIRDLE: "Golden Girdle of Urnst",
-              TITANSTRING: "Titanstring Bow", MR_AMULET: "Amulet of Magic Resistance"}
+              MR_AMULET: "Amulet of Magic Resistance"}
 URNST_AC, AMULET_PERCENT = 3, 15  # (DSCLOG's URNST_AC, AMULET_PERCENT)
 SWORD_KINDS = (KIND("long sword"), KIND("short sword"))
 # priced as the game's magic clothes and jewellery (the Serpent Boots 20,000, the Chameleon Gloves
-# 30,000; its necklaces 50,000); the bow as Dunesong, a bow +1
+# 30,000; its necklaces 50,000)
 BACK_GIRDLE_ITEM = armour(game.BACK_GIRDLE_TYPE, BACK_GIRDLE, 0x10000 - 2606, 25000, plus=0)
 URNST_GIRDLE_ITEM = armour(game.URNST_GIRDLE_TYPE, URNST_GIRDLE, 0x10000 - 2608, 20000, plus=0)
-TITANSTRING_1 = ((BOW, TITANSTRING, 0x10000 - 2610, PLUS_VALUE), 1)
 MR_AMULET_ITEM = armour(game.MR_AMULET_TYPE, MR_AMULET, 0x10000 - 2612, 35000, plus=0)
 TROOP_LEADER, WYRMIAS = 18, 32
 
@@ -304,7 +302,7 @@ PENS_RACK_OBJECT = 2599
 RACK_TYPE = 0x6C  # (the weapon racks' item type)
 DAGOLAR, BALKAZAR = 26, 14  # (Dagolar: the one with Dag's Dagger, object 26; his double is 27)
 MAGIC: Tuple[Gift, ...] = (
-    Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1), weapon(*TITANSTRING_1)), (283,), 0x0B),
+    Gift("Bowyer", (weapon(*STAFF_SLING_1), weapon(*BOW_1)), (283,), 0x0B),
     Gift("Undermt Folk", (weapon(*PICK_1),), (51,), 0x1E, clone=(169, 2561)),  # (one of the four miners)
     Gift("Churrr", (weapon(*CLUB_1),), (9,), 0x28),  # (the warrens' fighter, with his club)
     Gift("Arant", (weapon(*SHORT_SWORD_2),), (22,), 0x04),  # (the gladiators' captor, Silt Sea Summoning)

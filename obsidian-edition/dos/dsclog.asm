@@ -3068,7 +3068,6 @@ war_kit_halves:
 
 probe_spec_damage:
         add [bp - 0x12], ax
-        call titan_damage
         call kit_attack_damage
         push ax
         call kit_extra
@@ -11068,45 +11067,6 @@ item_rear:
         pop ax
 .ret:   ret
 
-; TITAN_DAMAGE: in PROBE_SPEC_DAMAGE, a missile attack ([BP+16h] above 1) by a creature ([BP+0Eh])
-; with the Titanstring Bow (dsloader/worldgear.py: its name, TITAN_NAME) in its missile slot: its
-; STR's damage bonus added (the game's table, STR_DAMAGE: melee's). All registers kept.
-TITAN_NAME  equ NAMES_OWN + 41
-STR_DAMAGE  equ 0x7A8           ; DS: the damage STR adds in melee, a signed byte for each STR
-STR_MOST    equ 25
-titan_damage:
-        cmp word [bp + 0x16], 1
-        jle .ret
-        pusha
-        push es
-        mov ax, [bp + 0x0E]
-        mov word [cs:ws_type], 0xFFFF
-        mov word [cs:ws_slot], MISSILE_SLOT_W
-        mov dx, ds
-        add dx, THINGS_SEG
-        mov [cs:r_things], dx
-        call worn_scan
-        cmp word [cs:ws_count], 0
-        je .out
-        les bx, [ITEMS]
-        imul ax, [cs:ws_item], 0x15
-        add bx, ax
-        cmp word [es:bx + 0x12], TITAN_NAME
-        jne .out
-        les bx, [CREATURES]
-        imul ax, [bp + 0x0E], 0x3A
-        add bx, ax
-        mov bl, [es:bx + 0x22]          ; (its STR)
-        xor bh, bh
-        cmp bx, STR_MOST
-        ja .out
-        mov al, [STR_DAMAGE + bx]
-        cbw
-        add [bp - 0x12], ax
-.out:   pop es
-        popa
-.ret:   ret
-
 ; AMULET_MR: "cmp word [bp-0Ch],0" (7A4FDh; 4 bytes: the INT, the site's number and a NOP) in the
 ; routine giving a creature's magic resistance against a spell (7A4A1h: [BP+6] the target's
 ; combatant, [BP-0Ch] its sheet's resistance, Mind Bar's 75 added; Lower Resistance halves it
@@ -14516,7 +14476,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAMES_EXTRA  equ 43
+NAMES_EXTRA  equ 42
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -14850,15 +14810,13 @@ extra_names:
         times NAME_SIZE - 8 db 0
         db "Skycutter"                  ; a chatkcha +2)
         times NAME_SIZE - 9 db 0
-        db "Girdle/Back Def"            ; (the girdles, the bow and the amulet of
+        db "Girdle/Back Def"            ; (the girdles and the amulet of
         times NAME_SIZE - 15 db 0       ; dsloader/worldgear.py: 15 letters at most, as the
         db "Girdle of Urnst"            ; game's own)
         times NAME_SIZE - 15 db 0
-        db "Titanstring Bow"
-        times NAME_SIZE - 15 db 0
         db "Amulet/MagicRes"
         times NAME_SIZE - 15 db 0
-        times (NAMES_EXTRA - 43) * NAME_SIZE db 0
+        times (NAMES_EXTRA - 42) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,

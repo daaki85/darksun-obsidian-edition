@@ -2196,7 +2196,7 @@ for +2 where there are any. The Loader: `restrict.is_robe`, `robes.save`,
 Veiled Robe in the data (`worldgear.MAGIC`), and Kalzith's Ashen Robe is put
 on him with his cloak and scrolls (`kalzith.stock`).
 
-### Girdles, Titanstring and the amulet
+### Girdles and the amulet
 
 ([In the item tables](ITEMS.md).) Three more helper types follow the robe:
 `GIRDLE_BACK` (27), `GIRDLE_URNST` (28), a belt's record each (+8: 40h, +9: 2,
@@ -2211,11 +2211,6 @@ the waist), and `MR_AMULET` (29), a necklace's (+9: 7, the neck), every class
 - **Golden Girdle of Urnst:** `ITEM_REAR` also adds `URNST_AC` (3) for a melee
   attack ([BP+0Eh] 1) whose weapon type ([BP-4]) is a long or short sword in
   the spec kinds table.
-- **Titanstring Bow:** a bow +1 (the game's Bow +1 type) told apart by its name
-  (`TITAN_NAME`, the 42nd new name). `TITAN_DAMAGE`, called first from
-  `PROBE_SPEC_DAMAGE`, adds the STR damage table's byte (DS:7A8h) to [BP-12h]
-  for a missile attack when the missile slot holds it. The inventory's DAM
-  line, which counts melee only, leaves it out.
 - **Amulet of Magic Resistance:** `AMULET_SITE` (`NS_IMAGE+27`) replaces the
   `cmp word [bp-0Ch],0` after Mind Bar's +75 at 7A4FDh in the routine that
   works out a target's magic resistance (7A4A1h): `AMULET_MR` adds
@@ -2224,9 +2219,9 @@ the waist), and `MR_AMULET` (29), a necklace's (+9: 7, the neck), every class
   6th-level spell or higher, which is left out on purpose).
 
 The Loader's dice log names each (`_thac0_breakdown`'s Urnst part,
-`_magic_resistance`, `_titan_str`); `GameData.wears_type` reads the slot. The
-icons are drawn (`icons.ICONS`, objects 2606 to 2613); placement is
-`worldgear.GIFTS` (the Bowyer, Kel, Wyrmias, the Troop Leader).
+`_magic_resistance`); `GameData.wears_type` reads the slot. The
+icons are drawn (`icons.ICONS`, objects 2606 to 2609, 2612 and 2613); placement
+is `worldgear.GIFTS` (Kel, Wyrmias, the Troop Leader).
 
 ### Kalzith
 

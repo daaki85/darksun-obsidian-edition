@@ -126,7 +126,7 @@ CONFUSION_RESULTS = ((1, "runs off"), (6, "does nothing"), (9, "fights for a sid
 STRENGTH_ROLL_RETURN = bytes.fromhex("83c40450660fbf4618")
 STR_MOST = 24
 MIND_BAR, LOW_RESISTANCE, MIND_BAR_RESISTANCE = 32, 31, 75
-WAIST_SLOT, NECK_SLOT, MISSILE_SLOT = (game.EQUIP_SLOTS.index(s) for s in ("waist", "neck", "missile"))
+WAIST_SLOT, NECK_SLOT = (game.EQUIP_SLOTS.index(s) for s in ("waist", "neck"))
 # The magic resistance roll made straight from the spell code (arguments: target, spell, level)
 RESISTANCE_ROLL_RETURN = bytes.fromhex("83c404508a460a50ff76")
 # Dispel Magic, for each effect on the target (the effect id in [BP-2], the dispeller's level
@@ -2164,12 +2164,9 @@ class DiceLog:
         skill = self.weapon_skill(attacker, e.parent_arg(0x14))
         extra = specialize.damage(skill)
         kit_name, _, kit = self._kit_attack(attacker, e.parent_arg(0x14), mode, e.glob[0])
-        titan = self._titan_str(attacker, mode)  # (the Titanstring Bow: DSCLOG's TITAN_DAMAGE)
-        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(bonus - extra - kit - titan[0])} weapon"
-                                                    if bonus - extra - kit - titan[0] else "") \
+        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(bonus - extra - kit)} weapon" if bonus - extra - kit else "") \
             + (f" {signed(extra)} {specialize.SKILL_NAMES[skill]}" if extra else "") \
-            + (f" {signed(kit)} {kit_name}" if kit else "") \
-            + (f" {signed(titan[0])} STR {titan[1]} (Titanstring Bow)" if titan[0] else "")
+            + (f" {signed(kit)} {kit_name}" if kit else "")
         if skill == specialize.GRAND:
             steps += f" (d{sides} for d{sides - 2}: grand mastery)"
         if sum(faces) + bonus < 1:
@@ -2203,18 +2200,6 @@ class DiceLog:
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         return ["  " + line]
-
-    def _titan_str(self, attacker: Optional[int], mode: Optional[int]) -> Tuple[int, int]:
-        """(what STR adds to the damage, the STR) for a missile attack by one who has the Titanstring
-        Bow in their missile slot; (0, 0) else."""
-        g = self.game
-        if attacker is None or mode is None or mode <= 1:
-            return 0, 0
-        if not any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == worldgear.TITANSTRING
-                   for item in g.worn_in(attacker, MISSILE_SLOT)):
-            return 0, 0
-        strength = g.creature(attacker)[CREATURE_ABILITIES]
-        return g.str_damage(strength), strength
 
     def _enlarge_level(self, combatant: Optional[int]) -> int:
         """The level Enlarge counts at on COMBATANT: each Enlarge on them at its caster's level

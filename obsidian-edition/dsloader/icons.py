@@ -410,7 +410,6 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Girdle of Back Defense", 0xFBE6, 2606, 2607,
      lambda r: glow(r, lambda p, x, y: p in (137, 138) and (x + y) % 2 == 0, VIOLET)),
     ("Golden Girdle of Urnst", 0xFBE6, 2608, 2609, urnst_icon),
-    ("Titanstring Bow", 0xFC07, 2610, 2611, lambda r: glow(r, lambda p, x, y: 210 <= p <= 214, FIRE)),
     ("Amulet of Magic Resistance", 0x86DD, 2612, 2613,
      lambda r: glow(r, lambda p, x, y: 17 <= p <= 20 and (x + y) % 2 == 0, VIOLET)),
     # the game's own Sling +1 (in a chest, object 1068) names a picture, object 2644, that its data
@@ -952,7 +951,6 @@ def _plate_types() -> Dict[int, str]:
 PLATE_TYPES = _plate_types()
 OBSIDIAN_LONG_SWORD, FLAME_BLADE_NAME = 45, 0x156  # (the Flame Blade: worldgear.py)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
-TITANSTRING = 0x16B  # (the Titanstring Bow's name: worldgear.py)
 WOODEN_SHIELD_TYPE, GUTTERWARD = 16, 0x163  # (the game's wooden Shield; Gutterward's name: worldgear.py)
 
 
@@ -984,7 +982,7 @@ def which(rec: bytes) -> Optional[str]:
     if kind == 17 and plus == 2:
         return "Nightsliver"
     if kind == 1 and plus == 1:
-        return "Titanstring Bow" if struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == TITANSTRING else "Dunesong"
+        return "Dunesong"
     if kind == game.BACK_GIRDLE_TYPE:
         return "Girdle of Back Defense"
     if kind == game.URNST_GIRDLE_TYPE:

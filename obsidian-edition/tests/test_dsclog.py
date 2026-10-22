@@ -905,11 +905,10 @@ class SpecializeTests(unittest.TestCase):
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
 
     def attack(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False, race=0,
-               kit=0, shield=False, me=5, target_race=None, bow=None, strength=18):
+               kit=0, shield=False, me=5, target_race=None):
         """(attacks in halves, THAC0, damage bonus, sides) after both probes, with THAC0 15, a
         damage bonus of 1 before the STR bonus of 2 is added, 1d8; the attacker (thing 7,
-        creature 5, STR STRENGTH) with a shield in its left hand or none (SHIELD), or a bow of
-        name entry BOW in its missile slot."""
+        creature 5) with a shield in its left hand or none (SHIELD)."""
         mu = self.mu
         hdr = TSR * 16 + load_image().find(HDR_SIG)
         mu.mem_write(hdr + self.RULES, struct.pack("<H", rules & 0xFFFF))
@@ -923,10 +922,8 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(self.SHEETS * 16 + 3 * 0x47, bytes(sheet))  # (sheet 3)
         rec = bytearray(0x3A)
         struct.pack_into("<HHHH", rec, 4, 3, 0, 0, 0)
-        struct.pack_into("<HHH", rec, 8, 8 if shield or bow is not None else 0x270F, 0x270F, 0x270F)
-        rec[0x22] = strength
+        struct.pack_into("<HHH", rec, 8, 8 if shield else 0x270F, 0x270F, 0x270F)
         mu.mem_write(self.CREATURES * 16 + me * 0x3A, bytes(rec))
-        mu.mem_write(self.DS * 16 + 0x7A8, bytes(game.STR_DAMAGE.get(n, 0) & 0xFF for n in range(26)))
         things = (self.DS + 0x3972 - 0x4356) * 16 + 0xC36
         mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, me))
         mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", me))  # (the attacker, its creature)
@@ -940,9 +937,8 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(things + 8 * 3, struct.pack("<Bh", 1, 3))
         item = bytearray(0x15)
         struct.pack_into("<H", item, 4, 0x270F)
-        struct.pack_into("<H", item, 0x0A, self.SHIELD if bow is None else 1)
-        struct.pack_into("<H", item, 0x12, bow or 0)
-        item[0x11] = 10 if bow is None else 2  # (the left hand; the missile slot)
+        struct.pack_into("<H", item, 0x0A, self.SHIELD)
+        item[0x11] = 10  # (the left hand)
         mu.mem_write(self.ITEMS * 16 + 3 * 0x15, bytes(item))
         mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<H", 15))
         mu.mem_write(SS * 16 + BP + 0x10, struct.pack("<H", 3))
@@ -1115,18 +1111,6 @@ class SpecializeTests(unittest.TestCase):
             self.assertEqual(specialize.skill(bytes(sheet), self.LONG_SWORD), specialize.PLAIN)
         finally:
             game.RULES_IN_FORCE = old
-
-    def test_titanstring(self):
-        """TITAN_DAMAGE: a missile attack by one with the Titanstring Bow (worldgear.TITANSTRING) in
-        its missile slot adds its STR's damage (the game's table, as in melee: STR 18 +4, 9 -0, 3
-        -1); another bow, or a melee attack, doesn't."""
-        from dsloader import worldgear
-        plain = self.attack(2, 1, missile=True, bow=0x10)[2]
-        self.assertEqual(self.attack(2, 1, missile=True, bow=worldgear.TITANSTRING)[2], plain + 4)
-        self.assertEqual(self.attack(2, 1, missile=True, bow=worldgear.TITANSTRING, strength=9)[2], plain)
-        self.assertEqual(self.attack(2, 1, missile=True, bow=worldgear.TITANSTRING, strength=3)[2], plain - 1)
-        self.assertEqual(self.attack(2, self.LONG_SWORD, bow=worldgear.TITANSTRING)[2],
-                         self.attack(2, self.LONG_SWORD, bow=0x10)[2])
 
     def test_war_kit_expertise(self):
         """A Crusader or Mind Warrior (kits and weapon specialization on): the expertise rate with
@@ -3168,7 +3152,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc3304" "8356fe00"))  # 43 names of 25 bytes: 433h
+        size = image.find(bytes.fromhex("8146fc1a04" "8356fe00"))  # 42 names of 25 bytes: 41Ah
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -3187,7 +3171,7 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 9125), (0xFF00, 0xFF00 + 1075)):
+        for size, want in ((8050, 9100), (0xFF00, 0xFF00 + 1050)):
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +

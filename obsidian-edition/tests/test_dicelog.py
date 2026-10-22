@@ -390,22 +390,6 @@ class BackstabTests(unittest.TestCase):
                   parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
 
-    def test_titanstring_bow(self):
-        """A missile attack with the Titanstring Bow in the missile slot: the STR bonus DSCLOG added
-        (TITAN_DAMAGE) told apart from the weapon's; with another bow, none."""
-        from dsloader import worldgear
-        log = make_game()
-        bow = bytearray(game.ITEM_SIZE)
-        struct.pack_into("<H", bow, game.ITEM_NAME, worldgear.TITANSTRING)
-        log.game.worn_in = lambda creature, slot: [bytes(bow)] if slot == game.EQUIP_SLOTS.index("missile") else []
-        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0)  # ([BP+16h] 2: a missile)
-        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 13), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
-        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24 "
-                                           "(Titanstring Bow)"])
-        struct.pack_into("<H", bow, game.ITEM_NAME, 0x167)  # (Dunesong)
-        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +13 weapon"])
-
     def test_enlarge_before_the_backstab(self):
         log = make_game()
         sheet = SHEETS + 0 * game.SHEET_SIZE

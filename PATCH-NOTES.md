@@ -168,7 +168,6 @@ A few of them:
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
 | **Dunesong** | a bow +1, sold in a shop |
-| **Titanstring Bow** | a bow +1 that adds its archer's strength to the damage, sold in a shop |
 | **Windlash** | a staff sling +1, the game's first magic staff sling, sold in a shop |
 | **Skycutter** | a chatkcha +2 |
 

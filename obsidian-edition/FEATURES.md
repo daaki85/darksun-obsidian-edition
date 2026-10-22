@@ -1218,7 +1218,7 @@ dearest, the Wand of Missiles, is 65,000):
 
 | Items | Price |
 |---|---|
-| Magic melee weapons, and Dunesong and Titanstring | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
+| Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
 | Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
 | Plain metal weapons | 50 to 300 |
 | Bracers of defense | 5,000 a point of AC |
