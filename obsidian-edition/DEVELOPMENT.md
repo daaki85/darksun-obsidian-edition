@@ -422,7 +422,7 @@ over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
 own block down to what stays, then takes the buffer's block in the memory the
 install code had, while the ring and the panel's picture were taken at the
 top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
-59 KB of the helper, the buffer, 2.2 KB free, the panel and the ring.
+58 KB of the helper, the buffer, 3.8 KB free, the panel and the ring.
 The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
 the map open this left 86 KB free in conventional memory, against 53 KB (and
@@ -430,7 +430,9 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
 (`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
 D00Ah to F000h): the build fails past it (a negative `times`), and so does
-`test_fits_upper_memory`; 2.2 KB (141 paragraphs) are spare now. If the buffer still ends up in
+`test_fits_upper_memory`; 3.8 KB (244 paragraphs) are spare now. Text the game
+reads from RESOURCE.GFF belongs in the Loader's copy of it, not in the helper
+(`spelltexts.py`: the descriptions moved there freed 1.6 KB). If the buffer still ends up in
 the heap (another DOSBox, less upper memory), the Loader says so in the dice
 log once, and crash reports say where it is (`heapcheck.py`). With EMS on,
 GOG's own setting, the helper itself no longer fits upper memory (it loads in
@@ -1907,7 +1909,9 @@ the closing set put back), and the pointer is made the one for talking
 (`PP_TEXT`). A right click (`PP_INFO`) asks the game's description box
 (8C5F6h) for Turn Undead's kind of entry with the purse's icon (its number
 200, Turn Undead's 196 to 199: the element's icon less 0BE4h, plus 0C4h), and
-the helper gives it its own text in place of Turn Undead's (SPIN 1000). The
+its text is SPIN 1001 in Turn Undead's 1000's place (`PROBE_CHUNK_ID` asks for
+999 + `TU_INFO`; a spell arrow's button, 1002-1005), a chunk of the Loader's
+copy of RESOURCE.GFF (`spelltexts.py`). The
 new spells (196 to 201) share those numbers, so for these two boxes the
 helper leaves the box's spell test (8C64Eh, `NS_CMP_INFO`) as the game has
 it; before, Turn Undead's showed a new spell's (Fogbolt's for an earth
@@ -2158,9 +2162,9 @@ level, a scroll used...). Each such compare is `INT 98h` and a site number
 (`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's `ns_cmp_sites`);
 the helper makes a new spell compare as a wizard's spell does, and hands back
 the flags. The name routine (500:61h, `NS_NAME` at 5E560h) gives their names;
-their descriptions (RESOURCE.GFF's SPIN 197-199, which the game hasn't) come
-from the helper after the read; the icons (21196-21198) are in the launcher's
-copy of RESOURCE.GFF.
+their descriptions (SPIN 197-202, the spell + 1 as the game's own) and icons
+(21196-21201) are chunks of the launcher's copy of RESOURCE.GFF (`spelltexts.py`,
+`icons.py`), so they take no room in the helper.
 
 **The effects.**
 - Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of

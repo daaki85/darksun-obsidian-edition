@@ -859,7 +859,7 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
 
 def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
-    button's, the save/load
+    button's, the descriptions of both and of the spell arrows (spelltexts.py), the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py) and, with ROLL_STORE, the creation screen's
     STORE and RECALL (rollstore.py), to DEST."""
     with open(source, "rb") as f:
@@ -874,6 +874,8 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
              ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)]))),
              **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
+    from . import spelltexts
+    added.update(spelltexts.chunks())
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))

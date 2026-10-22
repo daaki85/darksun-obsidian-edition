@@ -2462,59 +2462,65 @@ class RuleTests(RingTests):
         self.assertEqual([self.two_handed(r) for r in (5, 1)], [True, False])
         self.assertEqual([self.two_handed(r, flags=0) for r in (5, 1)], [True, True])
 
-    def spell_text(self, spin, length=112):
-        """INT VEC_SPELL_TEXT after the game read SPIN chunk SPIN (LENGTH bytes) into the buffer
-        at the game's [BP-8]: (the buffer's text, AX), with SP back past the read's arguments."""
-        image = load_image()
-        # three pops, "add sp,0Ch", three pushes, then "cmp di,1000" (Turn Undead's SPIN: TU_SPIN)
+    def tu_info_at(self, image):
+        """The helper's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT: three pops, "add sp,0Ch",
+        three pushes, then "mov byte [cs:tu_info],0" and IRET; and the probe's offset."""
         import re
-        found = re.search(rb"(?:\x2e\x8f\x06..){3}\x83\xc4\x0c(?:\x2e\xff\x36..){3}\x81\xff\xe8\x03", image, re.S)
+        found = re.search(rb"(?:\x2e\x8f\x06..){3}\x83\xc4\x0c(?:\x2e\xff\x36..){3}\x2e\xc6\x06(..)\x00\xcf",
+                          image, re.S)
         self.assertIsNotNone(found)
-        probe = found.start()
+        return TSR * 16 + struct.unpack("<H", found.group(1))[0], found.start()
+
+    def test_spell_text_ends_tu_info(self):
+        """After the game read a description (SPIN DI, 12 bytes of arguments): SP past them,
+        TU_INFO 0, the text as read (the mod's own are SPIN chunks: spelltexts.py)."""
+        tu_info, probe = self.tu_info_at(load_image())
         self.mu.mem_write(VEC_SPELL_TEXT * 4, struct.pack("<HH", probe, TSR))
-        buf = self.TYPES * 16 + 0x500
-        self.mu.mem_write(buf, b"FLAMING SPHERE:  Creates a burning globe.\r\n\0".ljust(200, b"\0"))
-        self.mu.mem_write(SS * 16 + BP - 8, struct.pack("<HH", 0x500, self.TYPES))
-        code = bytes.fromhex("666a00666a00666a00") + bytes((0xCD, VEC_SPELL_TEXT))  # 12 bytes of arguments
+        self.mu.mem_write(tu_info, bytes((2,)))
+        code = bytes.fromhex("666a00666a00666a00") + bytes((0xCD, VEC_SPELL_TEXT))
         self.at += 0x20
         self.mu.mem_write(CALLER * 16 + self.at, code)
-        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, edi=spin, eax=length).items():
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, edi=1000, eax=112).items():
             self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
         self.mu.emu_start(CALLER * 16 + self.at, CALLER * 16 + self.at + len(code))
-        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SP), 0x800)
-        text = bytes(self.mu.mem_read(buf, 200)).split(b"\0")[0]
-        return text, self.mu.reg_read(r.UC_X86_REG_AX)
+        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_DI)],
+                         [0x800, 112, 1000])
+        self.assertEqual(self.mu.mem_read(tu_info, 1), b"\0")
 
-    def test_new_spells_descriptions(self):
-        """Rule 32: the new spells' descriptions (SPIN 197-199, which the game hasn't: AX FFFFh) are
-        the helper's; the game's own, and without the rule, as read."""
-        grace = b"CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.\r\n"
-        self.rules(32)
-        self.assertEqual(self.spell_text(197, 0xFFFF), (grace, len(grace)))
-        self.assertTrue(self.spell_text(198, 0xFFFF)[0].startswith(b"ERDLU CLAW:  "))
-        self.assertTrue(self.spell_text(199, 0xFFFF)[0].startswith(b"FOGBOLT:  "))
-        self.assertEqual(self.spell_text(15)[0][:15], b"FLAMING SPHERE:")
-        self.assertEqual(self.spell_text(1000)[0][:15], b"FLAMING SPHERE:")  # (Turn Undead's, unasked: as read)
-        self.rules(0)
-        self.assertEqual(self.spell_text(197, 0xFFFF)[1], 0xFFFF)
-
-    def chunk_id(self, limit=0x0100):
-        """INT VEC_CHUNK_ID at the start of a chunk-loading routine, the game's stack limit (DS:9Ch)
-        LIMIT: CF from the stack check."""
+    def chunk_id(self, limit=0x0100, kind=b"ICON", number=21000, info=0):
+        """INT VEC_CHUNK_ID at the start of a chunk-loading routine (its [BP+6] chunk KIND, [BP+0Ah]
+        NUMBER), the game's stack limit (DS:9Ch) LIMIT, the helper's TU_INFO INFO: CF from the stack
+        check, and the number the routine goes on with."""
         image = load_image()
-        probe = image.find(bytes.fromhex("fb5089e083c008"))
+        tu_info, _ = self.tu_info_at(image)
+        probe = image.find(bytes.fromhex("fb2e803e") + struct.pack("<H", tu_info - TSR * 16))
         self.assertGreater(probe, 0)
         self.mu.mem_write(VEC_CHUNK_ID * 4, struct.pack("<HH", probe, TSR))
         self.mu.mem_write(GAME_DS * 16 + 0x9C, struct.pack("<H", limit))
+        self.mu.mem_write(tu_info, bytes((info,)))
+        self.mu.mem_write(SS * 16 + BP + 6, kind + struct.pack("<I", number))
         self.run_at(bytes((0xCD, VEC_CHUNK_ID)), eax=0x1234)
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x1234)
         self.assertTrue(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & IF)  # (interrupts on: RETF 2 keeps flags)
-        return self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 1
+        number, = struct.unpack("<I", self.mu.mem_read(SS * 16 + BP + 10, 4))
+        return self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 1, number
+
+    def test_chunk_spin_for_the_purse_and_arrows(self):
+        """Turn Undead's SPIN 1000 read for the purse's box (TU_INFO 2) or a spell arrow's (3-6) is
+        999 + TU_INFO (spelltexts.PICK_SPIN on); for Turn Undead's own (1), another SPIN or another
+        type, as asked."""
+        from dsloader import spelltexts
+        for info in range(2, 7):
+            self.assertEqual(self.chunk_id(kind=b"SPIN", number=1000, info=info)[1], spelltexts.PICK_SPIN + info - 2)
+        self.assertEqual(self.chunk_id(kind=b"SPIN", number=1000, info=1)[1], 1000)
+        self.assertEqual(self.chunk_id(kind=b"SPIN", number=197, info=2)[1], 197)
+        self.assertEqual(self.chunk_id(kind=b"ICON", number=1000, info=2)[1], 1000)
+        self.assertTrue(all(len(t) + 2 < 195 for t in spelltexts.TEXTS.values()))
 
     def test_chunk_stack_check(self):
         """The stack check as the game's: CF when its limit is below SP (0x800), not when above."""
-        self.assertEqual(self.chunk_id(), 1)
-        self.assertEqual(self.chunk_id(limit=0x900), 0)
+        self.assertEqual(self.chunk_id()[0], 1)
+        self.assertEqual(self.chunk_id(limit=0x900)[0], 0)
 
     def con_levels(self, cls, level):
         """INT VEC_HD_CON with AL a class's level, ES:BX its group (dice up to 9), the game's

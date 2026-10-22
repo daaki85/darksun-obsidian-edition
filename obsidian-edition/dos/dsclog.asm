@@ -12016,10 +12016,10 @@ probe_two_handed:
         retf 2
 
 ; PROBE_SPELL_TEXT: INT VEC_SPELL_TEXT replaces "add sp,0Ch" (3 bytes: INT + NOP) after the game
-; reads a spell's description (RESOURCE.GFF's SPIN chunk DI, the spell's number + 1) into the
-; buffer at the game's [BP-8] (far), AX its length or FFFFh. With RULE_NEW_SPELLS, the new spells'
-; (NEW SPELLS: SPIN 197 to 199, which the game hasn't, so AX is FFFFh) are NS_TEXTS', in the
-; game's words for its own.
+; reads a spell's description (RESOURCE.GFF's SPIN chunk DI, the spell's number + 1) for its box.
+; The new spells', the purse's and the spell arrows' are SPIN chunks in the Loader's copy of
+; RESOURCE.GFF (spelltexts.py; PROBE_CHUNK_ID): here TU_INFO is done with.
+TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box reads it too)
 probe_spell_text:
         pop word [cs:n_ip]
         pop word [cs:n_cs]
@@ -12028,102 +12028,30 @@ probe_spell_text:
         push word [cs:n_fl]
         push word [cs:n_cs]
         push word [cs:n_ip]
-        cmp di, TU_SPIN
-        jne .spells
-        cmp byte [cs:tu_info], TU_INFO_PICK
-        jb .tu_out
-        push cx
-        push si
-        push di
-        push ds
-        push es
-        movzx si, byte [cs:tu_info]     ; (the purse's, or a Spellarcher's arrows')
         mov byte [cs:tu_info], 0
-        shl si, 1
-        mov si, [cs:si + pp_texts - 2 * TU_INFO_PICK]
-        jmp .found
-.tu_out:
-        mov byte [cs:tu_info], 0
-        jmp .out
-.spells:
-        mov byte [cs:tu_info], 0
-        test byte [cs:rules], RULE_NEW_SPELLS
-        jz .out
-        cmp di, NS_FIRST + 1
-        jb .out
-        cmp di, NS_LAST + 1
-        ja .out
-        push cx
-        push si
-        push di
-        push ds
-        push es
-        mov si, ns_texts
-        sub di, NS_FIRST + 1
-        jz .found
-.skip:  cmp byte [cs:si], 0     ; (past the texts before it, each ended by a NUL)
-        lea si, [si + 1]
-        jne .skip
-        dec di
-        jnz .skip
-.found: push dx
-        mov dx, si
-        les di, [bp-8]
-        push cs
-        pop ds
-        cld
-.copy:  lodsb
-        stosb
-        or al, al
-        jnz .copy
-        sub si, dx
-        lea ax, [si - 1]        ; (its length, the NUL not counted, as the game's read gives it)
-        pop dx
-        pop es
-        pop ds
-        pop di
-        pop si
-        pop cx
-.out:   iret
-TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box reads it too)
-pp_text_info:
-        db "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
-        db "If it fails, the thief tries to slip away unseen. Not in a fight.", 13, 10, 0
-; (each text under 195 bytes: the description box reads it into 200, from its 5th byte)
-pp_texts dw pp_text_info, arrows_text_0, arrows_text_1, arrows_text_2, arrows_text_3
-arrows_text_0:
-        db "BURNING ARROWS:  Weaves Burning Hands into 5 arrows per level, using a 1st-level slot. Eac"
-        db "h casts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
-arrows_text_1:
-        db "CHILL ARROWS:  Weaves Chill Touch into 5 arrows per level, using a 1st-level slot. Each ca"
-        db "sts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
-arrows_text_2:
-        db "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows per level, using a 1st-level slot. E"
-        db "ach casts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
-arrows_text_3:
-        db "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows per level, using a 3rd-level slot. E"
-        db "ach casts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
-ns_texts:
-        db "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.", 13, 10, 0
-        db "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
-        db "Animal Affinity's dice), +1 to hit, as a +1 weapon. Lasts 5 rounds per level.", 13, 10, 0
-        db "FOGBOLT:  A bolt of fog clings to one creature: -3 to hit and Armor Class 2 worse for "
-        db "2 to 8 rounds. A saving throw negates it.", 13, 10, 0
-        db "REFLECTED IMAGE:  An image of the caster moves with it: an attack may strike the "
-        db "image instead, which then vanishes. Mirror Image takes its place.", 13, 10, 0
-        db "SPOOK:  One creature flees in fear for 3 rounds. Its saving throw is 1 worse for each "
-        db "2 caster levels (up to 6). Undead are not affected.", 13, 10, 0
-        db "FRIENDS:  The caster's charisma rises by 2d4 (to 25 at most) for 1d4 rounds and 1 "
-        db "per level.", 13, 10, 0
+        iret
 
 ; PROBE_CHUNK_ID: INT VEC_CHUNK_ID replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack
 ; check) at the start of the game's two routines that load a GFF chunk, whose [BP+6] is the
 ; chunk's type and [BP+0Ah] its number (dwords). (It once asked for Cat's Grace's icon in Flaming
 ; Sphere's place; the new spells' icons are their own numbers, 21000 + the spell, in the
-; companion's copy of RESOURCE.GFF.) The stack check, with the routine's SP; RETF 2 keeps its flags.
+; companion's copy of RESOURCE.GFF.) While Turn Undead's box is the purse's or a spell arrow's
+; (TU_INFO), its SPIN 1000 becomes 999 + TU_INFO (spelltexts.PICK_SPIN on). The stack check, with
+; the routine's SP; RETF 2 keeps its flags.
 probe_chunk_id:
         sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        cmp byte [cs:tu_info], TU_INFO_PICK
+        jb .check
+        cmp dword [bp + 6], 'SPIN'
+        jne .check
+        cmp dword [bp + 0x0A], TU_SPIN
+        jne .check
         push ax
+        movzx ax, byte [cs:tu_info]
+        add ax, TU_SPIN - 1
+        mov [bp + 0x0A], ax
+        pop ax
+.check: push ax
         mov ax, sp
         add ax, 8               ; (the routine's SP: past this push and INT's IP, CS and flags)
         cmp [0x9C], ax
@@ -14260,7 +14188,7 @@ cr_labels:
 ; TU_INFO: the description box (8C5F6h) asked for by PP_INFO: the game gives Turn Undead's
 ; numbers 196 on (its element's icon less 0BE4h, + 0C4h; the purse's 200) its icon and SPIN 1000,
 ; where the new spells (196-201) are spells: NS_CMP leaves the info box's compare as the game has
-; it (NS_CMP_INFO), and PROBE_SPELL_TEXT gives the purse its own text (PP_TEXT_INFO).
+; it (NS_CMP_INFO), and PROBE_CHUNK_ID gives the purse its own text (SPIN 1001: spelltexts.py).
 TU_INFO_TURN equ 1
 TU_INFO_PICK equ 2
 TU_NAME     equ 0x3262          ; DS: "TURN UNDEAD"
