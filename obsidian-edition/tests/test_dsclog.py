@@ -2633,9 +2633,9 @@ class NewSpellTests(RuleTests):
         self.assertEqual(self.site(site, edx=199) & (CF | ZF), 0)  # (no room for its record yet)
         self.assertEqual(self.site(site, edx=0x95) & (CF | ZF), CF)
         self.moved(1)
-        for spell in (199, 200, 201, 202, 205):  # (and the Spellarcher's arrow spells)
+        for spell in (199, 200, 201):
             self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
-        self.assertEqual(self.site(site, edx=206) & (CF | ZF), 0)
+        self.assertEqual(self.site(site, edx=202) & (CF | ZF), 0)
         self.rules(0)
         self.assertEqual(self.site(site, edx=196) & (CF | ZF), ZF)
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 196)
@@ -2822,23 +2822,6 @@ class NewSpellTests(RuleTests):
         seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
         e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
         self.assertEqual((e.kind, e.raw, e.arg(6), e.arg(8)), (8, 11, 2, 0x29))
-        # an arrow spell (the Spellarcher's, 202-205): recorded, then on to the routine's way out
-        # for a spell it doesn't cast (77330h), BX 0
-        mu.mem_write(SS * 16 + BP + 6, struct.pack("<3H", 2, 2, 203))
-        self.at += 0x100
-        start = CALLER * 16 + self.at
-        out = start + 3 + 0x77330 - 0x772AD
-        mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.CAST_SITE)))
-        mu.mem_write(out, b"\x90")
-        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
-                                ebx=0x4444).items():
-            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
-        mu.emu_start(start, out, count=2000)
-        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_IP, r.UC_X86_REG_SP, r.UC_X86_REG_BX)],
-                         [out - CALLER * 16, 0x800, 0])
-        seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
-        e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
-        self.assertEqual((e.kind, e.raw), (8, 203))
 
     def test_spell_aim(self):
         """AIM_SITE (8455Bh, "cmp dx,-1" after a clicked cast's aim check, DX = AX): a refusal (AX

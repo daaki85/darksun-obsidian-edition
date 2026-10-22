@@ -6948,9 +6948,7 @@ shinobi_knows:
         jne .yes
         clc
         ret
-.new:   cmp ax, ARROW_FIRST
-        jae .yes                ; (an arrow spell: never offered)
-        push ax
+.new:   push ax
         call ns_new             ; (off, or no room for its record yet: as known, not offered)
         pop ax
         jnc .yes
@@ -8077,7 +8075,7 @@ pick_int_any:
         jnc .found
 .new_next:
         inc al
-        cmp al, ARROW_FIRST - 1         ; (not the arrow spells: never learnt)
+        cmp al, NS_LAST
         jbe .new
 .none:  pop dx
         pop cx
@@ -10908,10 +10906,8 @@ req_site:
 ; routine casting a spell or a power (772A5h, the game's 598:89h; a weapon's spell on a hit too):
 ; [BP+6] the caster, [BP+8] the target, [BP+0Ah] the spell. Recorded (kind KIND_CAST, the spell in
 ; the entry's value, the frame for the rest: the Loader floats its name over the caster, labels.py),
-; then the move done. An arrow spell (ARROW SPELLS) goes no further: on to the routine's way out
-; for a spell it doesn't cast (77330h, BX 0), the Loader making the arrows.
+; then the move done.
 KIND_CAST equ 8
-CAST_TO_END equ 0x77330 - 0x772AD
 cast_site:
         push si
         push ax
@@ -10923,16 +10919,7 @@ cast_site:
         pop ax
         pop si
         mov cx, [bp + 6]
-        cmp word [bp + 0x0A], ARROW_FIRST
-        jb .ret
-        cmp word [bp + 0x0A], NS_LAST
-        ja .ret
-        xor bx, bx
-        push bp
-        mov bp, sp
-        add word [bp + 2], CAST_TO_END
-        pop bp
-.ret:   iret
+        iret
 
 ; AIM_SITE: "cmp dx,-1" (8455Bh; 3 bytes: the INT and the site's number) where a click on the map
 ; takes the readied spell's target (84538h; the cast follows, 8458Ch), DX and AX the aim check's
@@ -11979,15 +11966,20 @@ probe_spell_text:
         cmp di, TU_SPIN
         jne .spells
         cmp byte [cs:tu_info], TU_INFO_PICK
-        mov byte [cs:tu_info], 0
-        jne .out
+        jb .tu_out
         push cx
         push si
         push di
         push ds
         push es
-        mov si, pp_text_info
+        movzx si, byte [cs:tu_info]     ; (the purse's, or a Spellarcher's arrows')
+        mov byte [cs:tu_info], 0
+        shl si, 1
+        mov si, [cs:si + pp_texts - 2 * TU_INFO_PICK]
         jmp .found
+.tu_out:
+        mov byte [cs:tu_info], 0
+        jmp .out
 .spells:
         mov byte [cs:tu_info], 0
         test byte [cs:rules], RULE_NEW_SPELLS
@@ -12032,6 +12024,20 @@ TU_SPIN equ 1000                ; (Turn Undead's description: the purse's box re
 pp_text_info:
         db "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
         db "If it fails, the thief tries to slip away unseen. Not in a fight.", 13, 10, 0
+; (each text under 195 bytes: the description box reads it into 200, from its 5th byte)
+pp_texts dw pp_text_info, arrows_text_0, arrows_text_1, arrows_text_2, arrows_text_3
+arrows_text_0:
+        db "BURNING ARROWS:  Weaves Burning Hands into 5 arrows per level, using a 1st-level slot. Eac"
+        db "h casts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
+arrows_text_1:
+        db "CHILL ARROWS:  Weaves Chill Touch into 5 arrows per level, using a 1st-level slot. Each ca"
+        db "sts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
+arrows_text_2:
+        db "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows per level, using a 1st-level slot. E"
+        db "ach casts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
+arrows_text_3:
+        db "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows per level, using a 3rd-level slot. E"
+        db "ach casts it on what it hits. They fade at the next rest. Not in a fight.", 13, 10, 0
 ns_texts:
         db "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.", 13, 10, 0
         db "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
@@ -12044,14 +12050,6 @@ ns_texts:
         db "2 caster levels (up to 6). Undead are not affected.", 13, 10, 0
         db "FRIENDS:  The caster's charisma rises by 2d4 (to 25 at most) for 1d4 rounds and 1 "
         db "per level.", 13, 10, 0
-        db "BURNING ARROWS:  The spellarcher weaves Burning Hands into 5 arrows per level, put in its "
-        db "backpack. Shot from a bow, each casts Burning Hands on what it hits. They fade at the next rest.", 13, 10, 0
-        db "CHILL ARROWS:  The spellarcher weaves Chill Touch into 5 arrows per level, put in its "
-        db "backpack. Shot from a bow, each casts Chill Touch on what it hits. They fade at the next rest.", 13, 10, 0
-        db "SHOCKING ARROWS:  The spellarcher weaves Shocking Grasp into 5 arrows per level, put in its "
-        db "backpack. Shot from a bow, each casts Shocking Grasp on what it hits. They fade at the next rest.", 13, 10, 0
-        db "VAMPIRIC ARROWS:  The spellarcher weaves Vampiric Touch into 5 arrows per level, put in its "
-        db "backpack. Shot from a bow, each casts Vampiric Touch on what it hits. They fade at the next rest.", 13, 10, 0
 
 ; PROBE_CHUNK_ID: INT VEC_CHUNK_ID replaces "cmp [9Ch],sp" (4 bytes: INT + 2 NOPs; the stack
 ; check) at the start of the game's two routines that load a GFF chunk, whose [BP+6] is the
@@ -12438,9 +12436,7 @@ copies:
 ; better than its own (NS_CLAW). Fogbolt puts its (27)
 ; on a creature that fails its save: -3 to hit, and +2 to hit it (NS_HIT).
 NS_FIRST     equ 0xC4
-NS_COUNT     equ 10
-NS_LEARNT    equ 6                ; (those learnt and known by the sheet's bits; the rest are the
-ARROW_FIRST  equ NS_FIRST + NS_LEARNT ;   Spellarcher's arrow spells, 202-205: ARROW SPELLS)
+NS_COUNT     equ 6
 NS_LAST      equ NS_FIRST + NS_COUNT - 1
 GRACE_SPELL  equ NS_FIRST
 CLAW_SPELL   equ NS_FIRST + 1
@@ -12452,7 +12448,6 @@ STRENGTH_SPELL equ 23
 ENLARGE_SPELL equ 5
 CHARM_SPELL  equ 2
 MIRROR_SPELL equ 19
-BLUR_SPELL   equ 12
 GRACE_EFFECT equ 54
 CLAW_EFFECT  equ 6
 FOG_EFFECT   equ 27
@@ -12580,16 +12575,15 @@ probe_grace_ability:
 ; has them now (see NEW SPELLS), and flight 15 Fogbolt's grey bolt once the game has the objects'
 ; copy open (FLIGHTS). DS the game's; all registers kept.
 ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up (0FFh: not yet)
-ns_levels    db 2, 1, 1, 1, 1, 1, 1, 1, 1, 3 ; each one's spell level ...
+ns_levels    db 2, 1, 1, 1, 1, 1 ; each one's spell level ...
 ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL, MIRROR_SPELL, CHARM_SPELL, STRENGTH_SPELL
-             times 4 db BLUR_SPELL ; ... the spell whose record it takes (the arrow spells: Blur's,
-                                ;   on the caster alone, so one click casts it) ...
+                                ; ... the spell whose record it takes ...
 ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT, MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT
-             times 4 db 0       ; ... its effect ...
-ns_effect_how db 2, 1, 1, 0, 3, 2, 0, 0, 0, 0 ; ... put in the record and named by the helper (1), put in
+                                ; ... its effect ...
+ns_effect_how db 2, 1, 1, 0, 3, 2 ; ... put in the record and named by the helper (1), put in
                                 ;   the record, the game's own (3), the template's (0), or by the
                                 ;   handler (PROBE_GRACE_EFFECT) and named by the helper (2) ...
-ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0, 0, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
+ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
                                 ;   Grasp's, Fog Cloud's (0: the template's) ...
 ns_known_at  db NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, KIT_BYTE ; ... and the sheet's
 ns_known_bit db 0x10, 0x20, 0x40, 0x08, 0x80, 0x80 ;   byte and bit that say a member knows it
@@ -12620,17 +12614,12 @@ ns_patches:
         NS_PATCH FRIENDS_SPELL, 0x0C, 1, 7
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
-             dw ns_name_burning, ns_name_chill, ns_name_shocking, ns_name_vampiric
 ns_name_grace db "CAT'S GRACE", 0
 ns_name_claw db "ERDLU CLAW", 0
 ns_name_fog  db "FOGBOLT", 0
 ns_name_reflect db "REFLECTED IMAGE", 0
 ns_name_spook db "SPOOK", 0
 ns_name_friends db "FRIENDS", 0
-ns_name_burning db "BURNING ARROWS", 0
-ns_name_chill db "CHILL ARROWS", 0
-ns_name_shocking db "SHOCKING ARROWS", 0
-ns_name_vampiric db "VAMPIRIC ARROWS", 0
 ns_setup:
         push ax
         mov al, [cs:rules]
@@ -12821,56 +12810,14 @@ ns_flags:
         ret
 
 ; NS_KNOWS: CF set if party member AX (its thing) knows new spell CL (0 to NS_COUNT - 1): its
-; sheet's bit (NS_SHEET_KNOWS), or for an arrow spell ARROW_KNOWS. DS the game's; all registers kept.
+; sheet's bit (NS_SHEET_KNOWS). DS the game's; all registers kept.
 ns_knows:
-        cmp cl, NS_LEARNT
-        jae arrow_knows
         push bx
         push es
         call thing_sheet
         call ns_sheet_knows
         pop es
         pop bx
-        ret
-
-; ARROW SPELLS: the Spellarcher's four, Burning, Chill, Shocking and Vampiric Arrows (202-205),
-; wizard spells of their touch spell's level (ARROW_SPELLS) on the caster alone, known to a party
-; member who is a Spellarcher and knows that touch spell, never learnt nor offered to learn (the
-; game's list of spells not known ends before them: gamepatch's NS_UNKNOWN_END). One click on the
-; USE screen casts one, the game using up the slot; CAST_SITE then records it and leaves the rest of
-; the cast out, and the Loader puts the arrows in the caster's backpack (spellarrows.py).
-; ARROW_KNOWS: CF set if party member AX (its thing, 0-3) is a Spellarcher who knows arrow spell
-; CL's touch spell (CL NS_LEARNT on). DS the game's; all registers kept.
-arrow_knows:
-        cmp ax, 4
-        jae .no
-        push bx
-        push es
-        push ds
-        call thing_sheet
-        call kit_is_b
-        db KIT_SPELLARCHER
-        jne .not
-        movzx bx, cl
-        movzx bx, byte [cs:bx + arrow_spells - NS_LEARNT]
-        push ax
-        imul ax, ax, KNOWN_SIZE
-        add bx, ax
-        mov ax, ds
-        sub ax, KNOWN_FROM_DS
-        mov ds, ax
-        pop ax
-        test byte [bx + KNOWN_OFF], 0x0F
-        jz .not
-        pop ds
-        pop es
-        pop bx
-        stc
-        ret
-.not:   pop ds
-        pop es
-        pop bx
-.no:    clc
         ret
 
 ; NS_BIT: DI the sheet's byte that says a member knows new spell CL (0 to NS_COUNT - 1: NS_KNOWN_AT),
@@ -12937,7 +12884,7 @@ ns_forget_all:
         xor cx, cx
 .each:  call ns_sheet_forget
         inc cx
-        cmp cx, NS_LEARNT
+        cmp cx, NS_COUNT
         jb .each
         pop cx
         ret
@@ -13027,7 +12974,7 @@ ns_count_of:
         jne .next
 .count: inc dl
 .next:  inc cx
-        cmp cx, NS_LEARNT
+        cmp cx, NS_COUNT
         jb .each
 .out:   movzx ax, dl
         pop es
@@ -13373,8 +13320,6 @@ ns_learn:
         mov ax, bx
         mov cl, NS_COUNT
         div cl                  ; (AL the member, AH the new spell)
-        cmp ah, NS_LEARNT
-        jae .out                ; (an arrow spell: no bit)
         mov cl, ah
         movzx ax, al
         call thing_sheet
@@ -13845,6 +13790,10 @@ blow_charge dw CHARGE_OFF, 0
 ; with the pointer for talking (5ECD0h; its [BP+6] the thing under it), which opens the box to
 ; talk to someone (or trade, look) or picks up a thing.
 PP_ICON     equ 3048            ; ICON 3048 (RESOURCE.GFF, icons.py): the thief's purse
+PP_ARROWS   equ 2               ; (a button's kind: 0 the game's, 1 the purse, PP_ARROWS + N a
+                                ;   Spellarcher's arrows of ARROW_SPELLS' Nth: its icon PP_ICON - 1
+                                ;   + the kind, 3049-3052, icons.ARROW_BUTTONS)
+EXTRA_MOST  equ 4               ; (the slots beside Turn Undead's: PP_EXTRAS)
 PP_ELEMENT  equ 9               ; (past the switch's 1-8: the icon kept)
 TU_ELEMENT  equ 0x9B82          ; DS: the Turn Undead button's element (0: none)
 TU_ICON     equ 0x9CDE          ; DS: its icon
@@ -13866,26 +13815,41 @@ pp_show:
         pushad
         push es
         mov byte [cs:pp_shown], 0
-        mov byte [cs:pp_second], 0
+        mov dword [cs:pp_extra], 0
         test byte [cs:pick_on], PICK_BUTTON
         jz .icon
         call pp_fighting
         jne .icon
-        les bx, [TU_SHEET]
+        mov di, -1              ; (DI: where the next goes: -1 Turn Undead's place while no
+        cmp word [TU_ELEMENT], 0 ;   priest's element has it, then the slots beside it)
+        je .kinds
+        xor di, di
+.kinds: les bx, [TU_SHEET]
         mov si, 0x21
 .cls:   cmp byte [es:bx + si], THIEF_CLASS
         je .thief
         inc si
         cmp si, 0x24
         jb .cls
-        jmp .icon
-.thief: cmp word [TU_ELEMENT], 0
-        je .own
-        mov byte [cs:pp_second], 1 ; (a priest too: Turn Undead here, the purse beside it)
-        jmp .icon
-.own:   mov byte [cs:pp_shown], 1
-        mov word [TU_ELEMENT], PP_ELEMENT
-        mov word [TU_ICON], PP_ICON
+        jmp .arrows
+.thief: mov al, 1               ; the thief's purse
+        call pp_put
+.arrows:
+        mov ax, ds              ; a Spellarcher's arrows, a button for each touch spell it knows
+        add ax, USE_WHO_SEG
+        mov es, ax
+        movzx ax, byte [es:0x25B]
+        xor cx, cx
+.arrow: call arrow_knows
+        jnc .anext
+        push ax
+        mov al, cl
+        add al, PP_ARROWS
+        call pp_put
+        pop ax
+.anext: inc cx
+        cmp cx, 4
+        jb .arrow
 .icon:  mov ax, [TU_ICON]       ; the icon to be shown: the element's, or as it is
         mov bx, [TU_ELEMENT]
         cmp bx, PP_ELEMENT
@@ -13921,22 +13885,18 @@ pp_show:
         and ax, FLAGS_MASK
         and word [bp + 6], ~FLAGS_MASK
         or [bp + 6], ax
-        mov al, [cs:pp_second]
-        or al, [cs:pp_second_on]
-        jz .out                 ; (no second button, shown or to show)
-        ; the second button shown, or taken off: the game's routines, which may load overlays,
+        mov eax, [cs:pp_extra]
+        or eax, [cs:pp_extra_on]
+        jz .out                 ; (no button beside it, shown or to show)
+        ; the buttons beside it shown, or taken off: the game's routines, which may load overlays,
         ; called in a frame the overlay manager can fix up (the way back, and the game's BP)
         mov bx, sp
         push word [bp + 4]
         push word [bp + 2]
         push word [bp]
         mov bp, sp
-        cmp byte [cs:pp_second], 0
-        je .off
-        call pp_second_draw
-        jmp .back
-.off:   call pp_second_hide
-.back:  pop ax                  ; (the game's BP)
+        call pp_extras
+        pop ax                  ; (the game's BP)
         pop ax                  ; the way back, as the overlay manager has left it
         pop dx
         mov bp, sp
@@ -13948,14 +13908,36 @@ pp_show:
         pop bp
         iret
 
-; PP_MINE: AL 1 if the button whose handler's frame is BX (its +8 the button) is the thief's: Turn
-; Undead's shown as the purse (PP_SHOWN), or the second one (SECOND_ID); 0 if not
+; PP_PUT: a button of kind AL wanted: in Turn Undead's place while DI is -1 (PP_SHOWN, its element
+; and icon), else in the slot DI beside it (PP_EXTRA; none past EXTRA_MOST); DI the next. AX lost.
+pp_put:
+        cmp di, -1
+        jne .extra
+        mov [cs:pp_shown], al
+        mov word [TU_ELEMENT], PP_ELEMENT
+        movzx ax, al
+        add ax, PP_ICON - 1
+        mov [TU_ICON], ax
+        xor di, di
+        ret
+.extra: cmp di, EXTRA_MOST
+        jae .ret
+        mov [cs:di + pp_extra], al
+        inc di
+.ret:   ret
+
+; PP_MINE: AL the kind of the button whose handler's frame is BX (its +8 the button): Turn
+; Undead's (PP_SHOWN: 0 the game's), or one beside it (PP_EXTRA)
 pp_mine:
         mov al, [cs:pp_shown]
-        cmp word [ss:bx + 8], SECOND_ID
-        jne .ret
-        mov al, 1
-.ret:   ret
+        push si
+        mov si, [ss:bx + 8]
+        sub si, SECOND_ID
+        cmp si, EXTRA_MOST
+        jae .ret
+        mov al, [cs:si + pp_extra]
+.ret:   pop si
+        ret
 
 pp_click:
         push bx
@@ -13981,11 +13963,12 @@ pp_click:
         pop bx
         iret
 
-; PP_SECOND_DRAW: the purse beside Turn Undead (a cleric/thief's), as the game shows its button
-; (899B2h): its icon loaded (once a screen, PP_ICON2), the slot SECOND_ID given the button's
-; handler, its frame and its icon drawn. PP_SECOND_HIDE: the slot's handler taken off. DS the
-; game's.
-SECOND_ID    equ 0x2BE7         ; (the empty slot right of Turn Undead's: 2BCDh + 1Ah)
+; PP_EXTRAS: the buttons beside Turn Undead's (a cleric/thief's purse, a Spellarcher's arrows: the
+; slots SECOND_ID on, PP_EXTRA's kinds) as the game shows its button (899B2h): each one's icon
+; loaded (once a screen, PP_ICONS2; again for another kind), its slot given the button's handler,
+; its frame and its icon drawn (PP_EXTRA_DRAW); a slot no longer wanted has its handler taken off
+; (PP_EXTRA_HIDE). DS the game's.
+SECOND_ID    equ 0x2BE7         ; (the empty slots right of Turn Undead's: 2BCDh + 1Ah on)
 SECOND_INDEX equ SECOND_ID - 0x2BCD
 STUB_630     equ 0x4319         ; (DSUN.EXE, less the load segment) the USE screen's overlay's stubs:
 DRAW_OFF     equ 0x004D         ;   896BCh, a button drawn; 894E2h, Turn Undead's handler
@@ -13996,12 +13979,36 @@ LOAD_SEG     equ 0x2460         ; 100h:4A4h, a chunk loaded (its tag, its number
 LOAD_OFF     equ 0x04A4
 WIN_LIST_SEG equ 0x40BC         ; the USE screen's window, far at this segment:0
 FRAME_SEG    equ 0x3931         ; the buttons' frame picture, far at this segment:2Fh
-pp_second_draw:
-        cmp dword [cs:pp_icon2], 0
+pp_extras:
+        xor si, si
+.slot:  mov al, [cs:si + pp_extra]
+        or al, al
+        jz .hide
+        call pp_extra_draw
+        jmp .next
+.hide:  cmp byte [cs:si + pp_extra_on], 0
+        je .next
+        call pp_extra_hide
+.next:  inc si
+        cmp si, EXTRA_MOST
+        jb .slot
+        ret
+
+pp_extra_draw:                  ; slot SI, kind AL
+        mov bx, si
+        shl bx, 2
+        add bx, pp_icons2       ; (BX: its icon's far pointer)
+        cmp al, [cs:si + pp_icon_kind]
+        je .load
+        mov [cs:si + pp_icon_kind], al
+        call pp_free_icon       ; (another kind's: let go of)
+.load:  cmp dword [cs:bx], 0
         jne .reg
         push cs
-        push word pp_icon2
-        push dword PP_ICON
+        push bx
+        movzx eax, byte [cs:si + pp_icon_kind]
+        add ax, PP_ICON - 1
+        push eax
         push dword 0x4E4F4349   ; ("ICON")
         mov ax, LOAD_SEG
         mov dx, LOAD_OFF
@@ -14013,15 +14020,16 @@ pp_second_draw:
         sub ax, DGROUP_SEG - STUB_630
         push ax
         push word HANDLER_OFF
-        call pp_list_push       ; (SECOND_ID and the window)
+        call pp_list_push       ; (its slot and the window)
         mov ax, STUB_530
         mov dx, REG_OFF
         call pp_aim
         call far [cs:pp_call]
         add sp, 12
-        mov byte [cs:pp_second_on], 1
+        mov byte [cs:si + pp_extra_on], 1
         push dword 2            ; its frame, as the game draws Turn Undead's
-        push word SECOND_INDEX
+        lea ax, [si + SECOND_INDEX]
+        push ax
         mov ax, ds
         sub ax, DGROUP_SEG - FRAME_SEG
         mov es, ax
@@ -14032,11 +14040,14 @@ pp_second_draw:
         call pp_aim
         call far [cs:pp_call]
         add sp, 12
-        cmp dword [cs:pp_icon2], 0
+        mov bx, si
+        shl bx, 2
+        cmp dword [cs:bx + pp_icons2], 0
         je .ret
         push dword 0            ; and its icon
-        push word SECOND_INDEX
-        push dword [cs:pp_icon2]
+        lea ax, [si + SECOND_INDEX]
+        push ax
+        push dword [cs:bx + pp_icons2]
         push word 1
         mov ax, STUB_630
         mov dx, DRAW_OFF
@@ -14045,7 +14056,7 @@ pp_second_draw:
         add sp, 12
 .ret:   ret
 
-pp_second_hide:
+pp_extra_hide:                  ; slot SI
         push word 0
         push dword 0
         call pp_list_push
@@ -14054,17 +14065,35 @@ pp_second_hide:
         call pp_aim
         call far [cs:pp_call]
         add sp, 12
-        mov byte [cs:pp_second_on], 0
+        mov byte [cs:si + pp_extra_on], 0
         ret
 
-pp_list_push:                   ; pushes SECOND_ID, then the window (far), under the return address
+pp_list_push:                   ; pushes slot SI's button, then the window (far), under the return address
         pop word [cs:pp_ret]
-        push word SECOND_ID
+        lea ax, [si + SECOND_ID]
+        push ax
         mov ax, ds
         sub ax, DGROUP_SEG - WIN_LIST_SEG
         mov es, ax
         push dword [es:0]
         jmp word [cs:pp_ret]
+
+pp_free_icon:                   ; the icon at CS:BX let go of, if loaded (the game's 1A8h:8Ch); AX, CX, DX lost
+        cmp dword [cs:bx], 0
+        je .ret
+        mov ax, ds
+        sub ax, DGROUP_SEG - FREE_SEG
+        mov [cs:free_call + 2], ax
+        push bx                 ; (the game's far calls lose BX and ES)
+        push es
+        push dword [cs:bx]
+        call far [cs:free_call]
+        add sp, 4
+        pop es
+        pop bx
+        mov [cs:bx], ax
+        mov [cs:bx + 2], dx
+.ret:   ret
 
 pp_aim:                         ; PP_CALL aimed at the game's segment AX (less the load segment):DX
         mov [cs:pp_call], dx
@@ -14077,23 +14106,19 @@ pp_aim:                         ; PP_CALL aimed at the game's segment AX (less t
         ret
 
 ; PP_CLOSE: "cmp dword [30F4h],0" (88504h; 6 bytes) where the USE screen, closing (884B3h), lets go
-; of Turn Undead's icon: the second button's let go of too, its flags given back.
+; of Turn Undead's icon: the buttons beside it let go of too, its flags given back.
 pp_close:
         push bp
         mov bp, sp
         pushad
         push es
-        cmp dword [cs:pp_icon2], 0
-        je .flags
-        mov ax, ds
-        sub ax, DGROUP_SEG - FREE_SEG
-        mov [cs:free_call + 2], ax
-        push dword [cs:pp_icon2]
-        call far [cs:free_call]
-        add sp, 4
-        mov [cs:pp_icon2], ax
-        mov [cs:pp_icon2 + 2], dx
-.flags: mov byte [cs:pp_second_on], 0
+        mov bx, pp_icons2
+.free:  call pp_free_icon
+        add bx, 4
+        cmp bx, pp_icons2 + 4 * EXTRA_MOST
+        jb .free
+        mov dword [cs:pp_extra_on], 0
+        mov dword [cs:pp_icon_kind], 0
         cmp dword [TU_CACHE], 0
         pushf
         pop ax
@@ -14194,7 +14219,15 @@ pp_text:
         or al, al
         je .out
         mov word [bp + 8], pp_name
-        mov [bp + 10], cs
+        sub al, PP_ARROWS
+        jb .cs
+        push bx
+        movzx bx, al
+        shl bx, 1
+        mov ax, [cs:bx + arrows_names]
+        mov [bp + 8], ax
+        pop bx
+.cs:    mov [bp + 10], cs
 .out:   pop ax
         pop bp
         iret
@@ -14204,12 +14237,13 @@ pp_info:
         mov bx, bp
         call pp_mine
         pop bx
-        mov byte [cs:tu_info], TU_INFO_TURN
-        cmp al, 0
+        inc al                  ; (TU_INFO_TURN for the game's, TU_INFO_PICK the purse's, on for
+        mov [cs:tu_info], al    ;   the arrows')
+        cmp al, TU_INFO_TURN
         mov ax, [TU_ICON]       ; (the replaced instruction)
         je .ret
-        mov byte [cs:tu_info], TU_INFO_PICK
-        mov ax, PP_ICON
+        movzx ax, byte [cs:tu_info]
+        add ax, PP_ICON - TU_INFO_PICK
 .ret:   iret
 
 pp_lit:
@@ -14237,7 +14271,9 @@ pp_arm:
         pop ax
         pop bp
         iret
-.pick:  mov byte [cs:pp_arming], 0
+.pick:  cmp byte [cs:pp_arming], PP_ARROWS
+        jae arrows_arm
+        mov byte [cs:pp_arming], 0
         push bp
         mov bp, sp
         add word [bp + 2], ARM_OUT
@@ -14350,6 +14386,121 @@ pp_disarm:
         mov byte [cs:pp_armed], 0
 .ret:   ret
 
+; ARROWS_ARM: PP_ARM for a Spellarcher's arrows button (let go of, the USE screen closed): nothing
+; readied, and ARROWS_ASK. The game's routines it calls may load overlays: the way back is put in
+; a frame the overlay manager can fix up (pushed as a far call's, with the game's BP).
+arrows_arm:
+        push ax
+        mov al, [cs:pp_arming]
+        sub al, PP_ARROWS
+        mov [cs:arrows_which], al
+        pop ax
+        mov byte [cs:pp_arming], 0
+        push bp
+        mov bp, sp
+        add word [bp + 2], ARM_OUT
+        call pp_restore         ; (no spell readied: as before the screen was closed)
+        pushad
+        push es
+        push word [bp + 4]
+        push word [bp + 2]
+        push word [bp]
+        mov bp, sp
+        call arrows_ask
+        pop ax                  ; (the game's BP)
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 36], ax
+        mov [ss:bx + 38], dx
+        pop es
+        popad
+        pop bp
+        iret
+
+; ARROWS_ASK: the Spellarcher on show asks for the arrows of ARROWS_WHICH's touch spell: to the
+; Loader as an item used on the map is (USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place
+; in ARROW_SPELLS: dsloader/spellarrows.py), which uses up a slot, makes them and says what came of
+; it (PICK_TEXT, shown). DS the game's; registers changed.
+ARROWS_BY  equ 0xFE00
+arrows_ask:
+        mov ax, ds
+        add ax, USE_WHO_SEG
+        mov es, ax
+        movzx di, byte [es:0x25B]
+        cmp di, 4
+        jae .done
+        movzx ax, byte [cs:arrows_which]
+        mov [cs:use_who], ax
+        mov word [cs:use_taken], 0
+        or di, ARROWS_BY
+        mov [cs:use_item], di
+        mov byte [cs:pick_text], 0
+        inc word [cs:use_seq]
+        push es
+        xor ax, ax
+        mov es, ax
+        mov cx, [es:0x46C]      ; the BIOS timer
+        call rtc_begin
+.wait:  mov ax, [cs:use_reply]
+        cmp ax, [cs:use_seq]
+        je .ready
+        mov ax, [es:0x46C]
+        sub ax, cx
+        cmp ax, PICK_WAIT
+        jae .late
+        call rtc_waited
+        jnc .wait
+.late:  pop es
+        ret                     ; (no answer: the Loader isn't reading)
+.ready: pop es
+        cmp byte [cs:pick_text], 0
+        je .done
+        mov word [cs:show_text], pick_text
+        call show_window
+.done:  ret
+
+; ARROW_KNOWS: CF set if party member AX (0-3) is a Spellarcher who knows the touch spell of
+; ARROW_SPELLS' CLth (the game's known table). DS the game's; all registers kept.
+arrow_knows:
+        cmp ax, 4
+        jae .no
+        push bx
+        push es
+        push ds
+        call thing_sheet
+        call kit_is_b
+        db KIT_SPELLARCHER
+        jne .not
+        movzx bx, cl
+        movzx bx, byte [cs:bx + arrow_spells]
+        push ax
+        imul ax, ax, KNOWN_SIZE
+        add bx, ax
+        mov ax, ds
+        sub ax, KNOWN_FROM_DS
+        mov ds, ax
+        pop ax
+        test byte [bx + KNOWN_OFF], 0x0F
+        jz .not
+        pop ds
+        pop es
+        pop bx
+        stc
+        ret
+.not:   pop ds
+        pop es
+        pop bx
+.no:    clc
+        ret
+
+arrows_which db 0
+arrows_names dw arrows_n0, arrows_n1, arrows_n2, arrows_n3
+arrows_n0    db "BURNING ARROWS", 0
+arrows_n1    db "CHILL ARROWS", 0
+arrows_n2    db "SHOCKING ARROWS", 0
+arrows_n3    db "VAMPIRIC ARROWS", 0
+
 pp_name  db "PICK POCKETS", 0
 pp_icons dw 1, 0x0BE4, 2, 0x0BE5, 4, 0x0BE6, 8, 0x0BE7 ; (the elements' Turn Undead icons)
 pp_icons_end:
@@ -14359,10 +14510,11 @@ pp_arming db 0                  ; 1 from its letting go to PP_ARM
 pp_armed  db 0                  ; 1 while the next talk is a pick
 pp_who    db 0                  ; (the thief)
 pp_loaded dw 0                  ; the icon the game has loaded (TU_CACHE)
-pp_second    db 0               ; 1: the purse wanted beside Turn Undead (PP_SECOND_DRAW)
-pp_second_on db 0               ; 1 while it is shown
+pp_extra     times EXTRA_MOST db 0 ; each slot beside Turn Undead's: the kind of button wanted (PP_EXTRAS)
+pp_extra_on  times EXTRA_MOST db 0 ; ... 1 while it is shown
+pp_icon_kind times EXTRA_MOST db 0 ; ... the kind whose icon is loaded
 tu_info    db 0                 ; TU_INFO_TURN or TU_INFO_PICK: the description box asked for (PP_INFO)
-pp_icon2     dd 0               ; its icon, loaded (let go of as the screen closes)
+pp_icons2    times EXTRA_MOST dd 0 ; ... and the icon, loaded (let go of as the screen closes)
 pp_call      dd 0
 pp_ret       dw 0
 pp_kept_who  db 0               ; (PP_KEEP's)

@@ -7,6 +7,14 @@ from dsloader import game, names, spellarrows, weaponchoice
 
 class FakeGame:
     """The bits of GameData SpellArrows asks for: party member 0 a 4th-level Spellarcher."""
+    def __init__(self):
+        self.slots = {1: 2, 3: 0}
+        self.written = []
+        self.guest = mock.Mock()
+        self.guest.write = lambda at, data: self.written.append((at, data))
+        self.guest.read = lambda at, size: bytes((self.slots.get((at - 0x10000 - game.SLOTS_LEFT["Wizard"]) % 0x1E, 0),))
+        self.ds = 0x1000
+
     def class_level(self, member, cls):
         return 4 if cls == game.PRESERVER else 5
 
@@ -32,32 +40,25 @@ class SpellArrowsTests(unittest.TestCase):
         self.assertTrue(all(len(n) <= 15 for n in spellarrows.NAMES.values()))
         self.assertEqual(max(names.NAMES), names.OWN + names.EXTRA - 1)
 
-    def test_cast_makes_arrows(self):
-        """An arrow spell cast by a party member: 5 arrows a preserver level in its backpack in the
-        next pass (the game has used the slot); others' casts, and other spells, nothing."""
+    def test_make(self):
+        """A Spellarcher's button: a slot of the spell's level used, 5 arrows a preserver level in
+        the backpack; as often as slots are left; none for a spell it doesn't know or without a slot."""
         gd = FakeGame()
+        known = {1, 3, 39}
         arrows = spellarrows.SpellArrows()
-        arrows.cast(0, 203)
-        arrows.cast(7, 203)  # (not a party member)
-        arrows.cast(0, 3)  # (Chill Touch itself)
-        with mock.patch.object(spellarrows.npcitems, "add_to", return_value=True) as add:
-            lines = arrows.made(gd)
-            self.assertEqual(len(lines), 1)
-            self.assertIn("Daaki makes 20 chill arrows", lines[0])
-            self.assertEqual(add.call_args[0][1], 0)
+        with mock.patch.object(spellarrows, "is_spellarcher", lambda gd, m: m == 0), \
+                mock.patch.object(spellarrows, "knows", lambda gd, m, s: s in known), \
+                mock.patch.object(spellarrows.npcitems, "add_to", return_value=True) as add:
+            done = arrows.make(gd, 0, 1)
+            self.assertIn("20 chill arrows", done.text)
             rec = add.call_args[0][2]
             self.assertEqual(struct.unpack_from("<HH", rec, 0)[1], 20)
-            self.assertEqual(struct.unpack_from("<H", rec, game.ITEM_NAME)[0], 0x16D)
-            self.assertEqual(arrows.made(gd), [])
-        arrows.cast(0, 205)
-        with mock.patch.object(spellarrows.npcitems, "add_to", return_value=False):
-            self.assertIn("no room", arrows.made(gd)[0])
-
-    def test_arrow_spells(self):
-        """The arrow spells' numbers and names as the game has them (game.ARROW_SPELLS)."""
-        self.assertEqual({a.cast: game.ARROW_SPELLS[a.cast] for a in spellarrows.ARROWS},
-                         {202: "Burning Arrows", 203: "Chill Arrows", 204: "Shocking Arrows", 205: "Vampiric Arrows"})
-        self.assertEqual([a.level for a in spellarrows.ARROWS], [1, 1, 1, 3])
+            self.assertEqual(gd.written[-1][1], bytes((1,)))  # (a 1st-level slot used: 2 to 1)
+            self.assertIn("20 burning arrows", arrows.make(gd, 0, 0).text)  # (again: a slot left)
+            self.assertIn("can't weave Shocking Grasp", arrows.make(gd, 0, 2).text)  # (not known)
+            self.assertIn("no 3rd-level spell left", arrows.make(gd, 0, 3).text)
+            self.assertIn("can't weave", arrows.make(gd, 1, 1).text)  # (not a Spellarcher)
+            self.assertEqual(add.call_count, 2)
 
 
 if __name__ == "__main__":

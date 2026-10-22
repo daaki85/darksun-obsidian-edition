@@ -20,14 +20,15 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (`labels.py`), put again from the game's timer every other strike so swings and damage
   bursts don't wipe them, placed and erased from the main loop. The dice ring is 66 entries
   (74) for the room.
-- **Spellarcher spell arrows.** Four wizard spells of the Spellarcher's, Burning, Chill,
-  Shocking and Vampiric Arrows (202-205), each its touch spell's level, on the USE screen with
-  its other spells once it knows that touch spell (never learnt or offered to learn). One click
-  casts one, the game using up the slot, and puts 5 arrows a preserver level in the backpack,
-  worth nothing, each casting its spell on what it hits at the archer's caster level. Slots are the
-  only limit; every spell arrow fades at the next rest (a script's rest request, or the vulture
-  meal). DSCLOG's `ARROW_KNOWS`, the cast left out at `CAST_SITE`, `ARROW_HIT`, `ARROW_SPELL` and
-  `PROBE_ARROW`'s kept name; `spellarrows.py`; icons for the four spells and the four arrows.
+- **Spellarcher spell arrows.** Outside a fight, a Spellarcher's USE screen has a button for
+  each touch spell it knows (Burning, Chill, Shocking and Vampiric Arrows) in the row of class
+  abilities, the first where a priest's Turn Undead is, the rest beside it. One click uses a
+  slot of the spell's level and puts 5 arrows a preserver level in the backpack, worth nothing,
+  each casting its spell on what it hits at the archer's caster level. Slots are the only limit;
+  every spell arrow fades at the next rest (a script's rest request, or the vulture meal).
+  DSCLOG's `ARROW_KNOWS`, the ability row's spare places, `ARROWS_ASK`, `ARROW_HIT`,
+  `ARROW_SPELL` and `PROBE_ARROW`'s kept name; `spellarrows.py`; icons for the four buttons and
+  the four arrows.
 - **Three new magic items** (with New items on), each with its own icon:
   the **Girdle of Back Defense** (no enemy gets the bonus for attacking its wearer from behind,
   nor a backstab; the Troop Leader carries it), the **Golden Girdle of Urnst** (AC 3 better

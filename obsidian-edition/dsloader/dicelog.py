@@ -665,6 +665,12 @@ class DiceLog:
                 taken = 2 if meal.used_up else True
                 result = pickpocket.Attempt(meal.text, meal.log)
                 self._rest_due = self._rest_due or meal.used_up  # (a full rest)
+            elif spellarrows.ARROWS_BY <= item < PICKED_BY:
+                taken = True
+                if self._fighting():
+                    result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
+                else:
+                    result = self._arrows.make(self.game, item & 0xFF, thing)
             elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
                 if self._fighting():
@@ -688,15 +694,13 @@ class DiceLog:
         return result.log or [result.text]
 
     def _arrows_pass(self) -> List[str]:
-        """The Spellarchers' spell arrows: those of the arrow spells cast, made; after a rest,
-        every one fades (spellarrows.py)."""
+        """The Spellarchers' spell arrows: after a rest, every one fades (spellarrows.py)."""
         if self.tsr_hdr is None:
             return []
         out: List[str] = []
         try:
-            out = self._arrows.made(self.game)
             if self._rest_due:
-                out += self._arrows.rest(self.game)
+                out = self._arrows.rest(self.game)
                 self._rest_due = False
         except itemgate.ItemsBusy:
             pass  # (tried again in the next pass)
@@ -1876,8 +1880,6 @@ class DiceLog:
             return self._aim(e)
         if e.kind == KIND_CAST:
             self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
-            if e.raw in spellarrows.BY_CAST and e.arg(6) is not None:
-                self._arrows.cast(self.game.combatant_creature(e.arg(6)), e.raw)  # (made in _arrows_pass)
             return []
         code = e.code
         if code.startswith(ATTACK_SITE):

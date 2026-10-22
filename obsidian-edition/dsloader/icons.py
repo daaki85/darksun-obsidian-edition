@@ -751,12 +751,12 @@ def friends_icon(hold: Rows) -> Rows:
 # is, ICON 3044-3047 by element): Turn Undead's earth tile, its glyph taken off, a drawstring purse
 # in its dark line with a gold coin in it.
 TURN_EARTH_ICON, PICK_ICON = 3045, 3048
-# The Spellarcher's arrow spells (spellarrows.py, game.ARROW_SPELLS), ICON 21000 + the spell as the
-# new spells': each its touch spell's tile (ICON 21000 + that spell), the hand taken off, an arrow
+# The Spellarcher's arrows buttons (spellarrows.py; DSCLOG's PP_SHOW), ICON 3049-3052 after the
+# purse's, one for each touch spell: its tile (ICON 21000 + the spell), the hand taken off, an arrow
 # in the hand's dark line with its light line below and right: the touch spell, the hand's dark and
 # light lines, and the tile's two fills.
-ARROW_SPELL_ICONS = {202: (1, 202, 149, (164, 44)), 203: (3, 49, 217, (73, 162)),
-                     204: (10, 254, 160, (159, 158)), 205: (39, 254, 211, (209, 208))}
+ARROW_BUTTONS = {3049: (1, 202, 149, (164, 44)), 3050: (3, 49, 217, (73, 162)),
+                 3051: (10, 254, 160, (159, 158)), 3052: (39, 254, 211, (209, 208))}
 ARROW_GLYPH = (
     "..........DDDD..",
     "...........DDD..",
@@ -797,7 +797,7 @@ def pick_icon(earth: Rows) -> Rows:
 
 
 def arrow_spell_icon(touch: Rows, dark: int, light: int, fills: Tuple[int, int]) -> Rows:
-    """An arrow spell's icon from its touch spell's: the hand (DARK, LIGHT) off, the arrow on."""
+    """An arrows button's icon from its touch spell's: the hand (DARK, LIGHT) off, the arrow on."""
     return glyph_icon(untiled(touch, {dark, light}, fills), set(), 0, ARROW_GLYPH, 2, dark, light)
 
 
@@ -871,8 +871,8 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
              ("ICON", SPOOK_ICON): encode(spook_icon(decode(chunks[("ICON", SCARE_ICON)]))),
              ("ICON", FRIENDS_ICON): encode(friends_icon(decode(chunks[("ICON", HOLD_ICON)]))),
              ("ICON", PICK_ICON): encode(pick_icon(decode(chunks[("ICON", TURN_EARTH_ICON)]))),
-             **{("ICON", 21000 + spell): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
-                for spell, (touch, *how) in ARROW_SPELL_ICONS.items()}}
+             **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
+                for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))
