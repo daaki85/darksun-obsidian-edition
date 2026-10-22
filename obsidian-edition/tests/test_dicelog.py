@@ -187,6 +187,15 @@ class AttackTests(unittest.TestCase):
             "Dag attacks Mountain Stalker from behind with Wooden Long Sword (1d8): d20 = 5, needs 9+ (60%), hits AC 6, target AC 2 -> miss",
             "    THAC0 16, +2 from behind, +6 STR, -3 wooden = 11"])
 
+    def test_miss_floats_over_the_target(self):
+        """A miss floats "Miss" over its target (labels.py); a hit floats nothing."""
+        log = make_game()
+        floated = []
+        log._float = lambda thing, text, colour, now: floated.append((thing, text))
+        log.describe(self.attack(5, 11, 2, 6, 10, after_f1=8, hit_bonus=-3, m1a=1))
+        log.describe(self.attack(18, 8, 4, 5, 9, after_f1=9, hit_bonus=1))
+        self.assertEqual(floated, [(0x29, "Miss")])
+
     def test_backstab_is_named(self):
         log = make_game()
         lines = log.describe(self.attack(12, 11, 4, 6, 10, after_f1=8, hit_bonus=-3, m1a=1, m24=1))
@@ -549,6 +558,16 @@ class SaveTests(unittest.TestCase):
         e = entry(10, frame=words(0, 0, 10, 3, 40, 12), kind=dicelog.KIND_REQUEST)
         self.assertEqual(log.describe(e), [])
         self.assertEqual(log.describe(e, show_all=True), ["Script: a map cell blocked (request 10: 3, 40, 12)"])
+
+    def test_spell_cast_floats_its_name(self):
+        """A spell cast (DSCLOG's CAST_SITE: the caster at [BP+6], the spell its value): its name
+        floats over the caster (labels.py), and no line."""
+        log = make_game()
+        floated = []
+        log._float = lambda thing, text, colour, now: floated.append((thing, text))
+        e = entry(game.FRIENDS_SPELL, frame=words(0, 0, 2, 0x29, game.FRIENDS_SPELL), kind=dicelog.KIND_CAST)
+        self.assertEqual(log.describe(e), [])
+        self.assertEqual(floated, [(2, log.game.spell_name(game.FRIENDS_SPELL))])
 
     def test_aim_refused(self):
         """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), with the reason."""

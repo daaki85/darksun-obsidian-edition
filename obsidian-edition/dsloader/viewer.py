@@ -350,6 +350,10 @@ class Viewer:
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # names floating over figures on the map for a moment (labels.py)
+        self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
+        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, and \"Miss\" over whoever an attack missed",
+                        variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
@@ -607,7 +611,7 @@ class Viewer:
             return
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
-        for var in (self.monster_info, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
+        for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still):
             var.set(True)
@@ -979,6 +983,7 @@ class Viewer:
                 self.dice.show_shadows = self.show_shadows.get()
                 self.dice.combat_log = self.combat_log.get()
                 self.dice.combat_log_level = self.combat_log_level.get()
+                self.dice.floating_names = self.floating_names.get()
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.show_dust = self.show_dust.get()
                 self.dice.elf_looks = self.elf_looks.get()
@@ -1075,6 +1080,7 @@ class Viewer:
         for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
             settings.pop(old, None)
         settings["monster_info"] = self.monster_info.get()
+        settings["floating_names"] = self.floating_names.get()
         settings["combat_log"] = self.combat_log.get()
         settings["combat_log_level"] = self.combat_log_level.get()
         settings["combat_log_strip"] = self.combat_log_strip.get()
@@ -1108,6 +1114,7 @@ class Viewer:
             self.dice.show_dust = self.show_dust.get()
             self.dice.combat_log = self.combat_log.get()
             self.dice.combat_log_level = self.combat_log_level.get()
+            self.dice.floating_names = self.floating_names.get()
             self.dice.ring_mode = self.ring_mode.get()
             self.dice.use_targeting = self.use_targeting.get()
             self.dice.scroll_map = self.scroll_map.get()

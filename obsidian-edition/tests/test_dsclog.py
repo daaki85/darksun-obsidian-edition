@@ -32,7 +32,7 @@ except ImportError:  # optional dependency
     Uc = None
 
 EXE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")
-TSR, GAME_DS, SS, CALLER, PARENT, RAND = 0x2000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000
+TSR, GAME_DS, SS, CALLER, PARENT, RAND = 0x1000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000
 SEG_MOVED = 306  # the header's: SEG_MOVE has made the new spells' records' room
 RING_SEG = 0xC000  # where the tests put the ring (DSCLOG's install puts it past its image)
 IF = 0x200  # the interrupt flag
@@ -2799,6 +2799,29 @@ class NewSpellTests(RuleTests):
         seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
         e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
         self.assertEqual((e.kind, e.raw, e.arg(8), e.arg(0x0A), e.arg(0x0C)), (6, 8, 0x7FFE, 1, 0))
+
+    def test_spell_cast(self):
+        """CAST_SITE (772AAh, "mov cx,[bp+6]" in the routine casting a spell or a power): the cast
+        recorded (kind 8, the spell as its value, the frame for the caster and the target), then CX
+        the caster, as the game's instruction leaves it."""
+        from dsloader import gamepatch
+        self.assertEqual(next(p for p in gamepatch.PATCHES if p.name == "spell_cast").offset, 0x772AA)
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        mu.mem_write(SS * 16 + BP + 6, struct.pack("<3H", 2, 0x29, 11))
+        self.at += 0x20
+        start = CALLER * 16 + self.at
+        mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.CAST_SITE)))
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=0x1111,
+                                ecx=0x3333, esi=0x2222).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(start, start + 3)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_CX, r.UC_X86_REG_AX,
+                                                   r.UC_X86_REG_SI)], [0x800, 2, 0x1111, 0x2222])
+        seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+        e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
+        self.assertEqual((e.kind, e.raw, e.arg(6), e.arg(8)), (8, 11, 2, 0x29))
 
     def test_spell_aim(self):
         """AIM_SITE (8455Bh, "cmp dx,-1" after a clicked cast's aim check, DX = AX): a refusal (AX

@@ -1681,6 +1681,7 @@ AD&D's tables:
 | | how much it says: at the least, in short or in detail | in short |
 | | ... always shown, below the map instead of over it | off |
 | | describe monsters when you Look at them in a fight | on |
+| | float a spell's name over its caster, and "Miss" over whoever an attack missed | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
 | More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |

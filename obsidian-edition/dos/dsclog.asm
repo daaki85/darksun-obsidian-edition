@@ -153,8 +153,13 @@ VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
 TSIZE    equ 4096     ; bytes in the text buffer (a power of two)
 
-NENT    equ 74          ; entries in the ring (74: the helper and it fit in upper memory)
+NENT    equ 66          ; entries in the ring (66: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
+LBL_SLOTS  equ 2        ; names floating over figures at once (LABELS)
+LBL_ROW    equ 16       ; bytes a row of a label's mask: LBL_ROW * 8 pixels wide at most
+LBL_H_MOST equ 11       ; its rows at most
+LBL_MASK   equ LBL_ROW * LBL_H_MOST
+LBL_SIZE   equ 8 + 2 * LBL_MASK
 STACK   equ 256         ; bytes of stack while installing
 
 ; ---- MZ header: no relocations, and only as much memory as the image needs ----
@@ -380,6 +385,12 @@ umb_need   dw UMB_NEED          ; +372 paragraphs the helper puts in upper memor
                                 ;      (UMB_ROOM is what DOSBox gives it; the build fails past it)
 arrow_offer times 4 db 0        ; +374 the Loader's: each party member's spell arrows it may make
                                 ;      now, bit N for ARROW_SPELLS' Nth (spellarrows.py)
+lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; +378 the Loader's: names floating over figures (LABELS;
+                                ;      labels.py), LBL_SIZE bytes each: +0 0 none, else the label's
+                                ;      number (a new one for each label), +1 width, +2 height, +3 how
+                                ;      far above the feet, +4 ink, +5 edge (palette indices), +6 the
+                                ;      map thing, +8 the ink's mask, then the edge's (LBL_ROW bytes a
+                                ;      row, bit 0 of the first the leftmost)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1978,7 +1989,10 @@ probe_tick:
         mov ds, [bp + 4]        ; the handler's CS
         inc word [4]            ; the replaced instruction
         inc word [cs:tick_count]
-        test byte [cs:tick_count], TICK_EVERY - 1
+        test byte [cs:tick_count], 1
+        jnz .seen
+        call label_stamp                ; (every other strike: the labels put again)
+.seen:  test byte [cs:tick_count], TICK_EVERY - 1
         jnz .out
         mov bx, [cs:tick_seq]
         and bx, TICK_SLOTS - 1
@@ -10890,6 +10904,25 @@ req_site:
         dec bx
         iret
 
+; CAST_SITE: "mov cx,[bp+6]" (772AAh; 3 bytes: the INT and the site's number) at the start of the
+; routine casting a spell or a power (772A5h, the game's 598:89h; a weapon's spell on a hit too):
+; [BP+6] the caster, [BP+8] the target, [BP+0Ah] the spell. Recorded (kind KIND_CAST, the spell in
+; the entry's value, the frame for the rest: the Loader floats its name over the caster, labels.py),
+; then the move done.
+KIND_CAST equ 8
+cast_site:
+        push si
+        push ax
+        mov si, sp
+        sub si, 2                       ; (SS:SI+6: the INT's return address)
+        mov ax, [bp + 0x0A]
+        mov word [cs:kind], KIND_CAST
+        call record
+        pop ax
+        pop si
+        mov cx, [bp + 6]
+        iret
+
 ; AIM_SITE: "cmp dx,-1" (8455Bh; 3 bytes: the INT and the site's number) where a click on the map
 ; takes the readied spell's target (84538h; the cast follows, 8458Ch), DX and AX the aim check's
 ; answer (84C54h; the pointer's own use of it, 8404Bh, runs on every pass and isn't hooked):
@@ -13085,6 +13118,7 @@ AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim ch
 AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against a spell
 ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (ARROW_HIT)
 ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
+CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13152,6 +13186,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je arrow_hit
         cmp byte [cs:rl_site], ARROW_SPELL_SITE
         je arrow_spell
+        cmp byte [cs:rl_site], CAST_SITE
+        je cast_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -16323,6 +16359,7 @@ probe_scroll:
         mov word [cs:view_redraw], 0
         call view_again
 .panel: call panel_tick
+        call label_tick
 .read:  mov ax, 3
         int 0x33                        ; BX = buttons, CX, DX = where
         cmp word [cs:scroll_on], 0
@@ -16679,6 +16716,317 @@ view_again:
         pop cx
         pop bx
         pop ax
+        ret
+
+; LABELS: names floating over figures (a spell's over its caster, "Miss" over who an attack missed:
+; labels.py), the Loader's LBL_SLOTS. The map is drawn straight into the screen on show, a rectangle
+; at a time, and figures are drawn again as they move or swing, so a label is put again after the
+; game draws: from the timer, every other strike (LABEL_STAMP from PROBE_TICK, ~60 a second), and
+; from the main loop, which also places them (LABEL_TICK: over the thing's feet, its bottom UP rows
+; above them, under them if it would reach the game's boxes at the top, kept on screen) and has
+; where one was drawn again when it goes or moves (LABEL_ERASE). The game's scrolling copies the
+; screen, labels too: then all are put again, the view drawn again whole first (VIEW_AGAIN).
+LBL_TOP equ 40                  ; (screen rows above: the game's boxes, in a fight)
+LS_SEEN  equ 0                  ; (each label's state, LBL_STATE: the Loader's number for it,
+LS_SHOWN equ 1                  ;   1 while it is on screen, its width and height, its top left)
+LS_W     equ 2
+LS_H     equ 3
+LS_X     equ 4
+LS_Y     equ 6
+lbl_state times LBL_SLOTS * 8 db 0
+lbl_busy  db 0
+lbl_cx    dw 0                  ; (the view's top left at the last LABEL_TICK)
+lbl_cy    dw 0
+lp_line   dw 0
+lp_ink    db 0
+lp_edge   db 0
+lp_clip   db 0
+
+; LABEL_TICK: from the main loop on the map (DS the game's): the labels placed, the old places of
+; those gone or moved drawn again, then all put
+label_tick:
+        cmp byte [cs:lbl_busy], 0
+        jne .ret
+        mov ax, [CAM_X]
+        mov bx, [CAM_Y]
+        xchg ax, [cs:lbl_cx]
+        xchg bx, [cs:lbl_cy]
+        cmp ax, [cs:lbl_cx]
+        jne .cam
+        cmp bx, [cs:lbl_cy]
+        je .slots
+.cam:   xor si, si                      ; (the view scrolled: all hidden, the view drawn again)
+        xor cx, cx
+.hide:  xor al, al
+        xchg al, [cs:lbl_state + si + LS_SHOWN]
+        or cl, al
+        add si, 8
+        cmp si, LBL_SLOTS * 8
+        jb .hide
+        jcxz .slots
+        mov byte [cs:lbl_busy], 1
+        call view_again
+        mov byte [cs:lbl_busy], 0
+.slots: mov si, lbl_state
+        mov di, lbl_slots
+.slot:  call label_where
+        jc .off
+        mov dl, [cs:di]
+        cmp byte [cs:si + LS_SHOWN], 0
+        je .new
+        cmp dl, [cs:si + LS_SEEN]
+        jne .move
+        cmp ax, [cs:si + LS_X]
+        jne .move
+        cmp bx, [cs:si + LS_Y]
+        je .next
+.move:  call label_erase
+.new:   call label_adopt
+        jmp .next
+.off:   cmp byte [cs:si + LS_SHOWN], 0
+        je .next
+        call label_erase
+.next:  add di, LBL_SIZE
+        add si, 8
+        cmp si, lbl_state + LBL_SLOTS * 8
+        jb .slot
+        jmp label_stamp
+.ret:   ret
+
+; LABEL_ADOPT: label DI (the Loader's slot, DL its number) shown from now at AX, BX (SI its state)
+label_adopt:
+        mov [cs:si + LS_SEEN], dl
+        mov [cs:si + LS_X], ax
+        mov [cs:si + LS_Y], bx
+        mov ax, [cs:di + 1]
+        mov [cs:si + LS_W], ax          ; (and LS_H)
+        mov byte [cs:si + LS_SHOWN], 1
+        ret
+
+; LABEL_WHERE: CF clear and AX, BX the top left on screen of label DI (the Loader's slot) if it is
+; to be shown: one, its size in bounds, on the map, its thing in OBJ_LIST; DS the game's; CX kept
+label_where:
+        cmp byte [cs:di], 0
+        je .no
+        cmp byte [cs:di + 1], LBL_ROW * 8
+        ja .no
+        cmp byte [cs:di + 2], LBL_H_MOST
+        ja .no
+        call strip_on_map
+        jne .no
+        push cx
+        push es
+        les bx, [OBJ_LIST]
+        mov cx, [OBJ_COUNT]
+        mov ax, [cs:di + 6]
+        jcxz .none
+.find:  cmp [es:bx + 6], ax
+        je .got
+        add bx, 8
+        loop .find
+.none:  pop es
+        pop cx
+.no:    stc
+        ret
+.got:   pop es
+        pop cx
+        cmp ax, MAP_COUNT
+        jae .no
+        mov bx, ax
+        shl bx, 5
+        movzx ax, byte [cs:di + 1]
+        shr ax, 1
+        neg ax
+        add ax, [bx + MAP_THINGS + 9]   ; (its feet, on the map)
+        sub ax, [CAM_X]
+        jge .x0
+        xor ax, ax
+.x0:    push dx
+        mov dx, 320
+        sub dl, [cs:di + 1]
+        sbb dh, 0
+        cmp ax, dx
+        jle .x1
+        mov ax, dx
+.x1:    mov bx, [bx + MAP_THINGS + 11]
+        sub bx, [CAM_Y]
+        mov dx, bx                      ; (its feet, on screen)
+        sub bl, [cs:di + 3]
+        sbb bh, 0
+        sub bl, [cs:di + 2]
+        sbb bh, 0
+        cmp bx, LBL_TOP
+        jge .y1
+        mov bx, dx                      ; (under its feet)
+        add bx, 2
+.y1:    mov dx, 200
+        sub dl, [cs:di + 2]
+        sbb dh, 0
+        cmp bx, dx
+        jle .y2
+        mov bx, dx
+.y2:    pop dx
+        clc
+        ret
+
+; LABEL_ERASE: where label SI (its LBL_STATE) was drawn again by the game's routine for a rectangle
+; of the view (REDRAW_SEG:REDRAW_OFF; page 1 and a flip, as the game's own call at 28185h), through
+; PROBE_REDRAW (round the combat log's panel); it is no longer shown. DS the game's; keeps all.
+label_erase:
+        mov byte [cs:si + LS_SHOWN], 0
+        pusha
+        push es
+        mov byte [cs:lbl_busy], 1
+        mov ax, ds
+        sub ax, DGROUP_SEG - REDRAW_SEG
+        mov [cs:redraw_far + 2], ax
+        push word 1                     ; (the flip)
+        movzx ax, byte [cs:si + LS_H]
+        add ax, [cs:si + LS_Y]
+        dec ax
+        push ax                         ; y1
+        movzx ax, byte [cs:si + LS_W]
+        add ax, [cs:si + LS_X]
+        dec ax
+        push ax                         ; x1
+        push word [cs:si + LS_Y]
+        push word [cs:si + LS_X]
+        push word 1                     ; (the page)
+        push word [CAM_Y]
+        push word [CAM_X]
+        call far [cs:redraw_far]
+        add sp, 16
+        mov byte [cs:lbl_busy], 0
+        pop es
+        popa
+        ret
+
+; LABEL_STAMP: the labels shown put on the screen on show (as the Loader has them: not one it is
+; changing), off the combat log's panel; on the map only, the view where LABEL_TICK last saw it.
+; A new label (none of it on screen yet) is placed here too, as the main loop doesn't run while
+; the game shows an attack or a spell. Any DS; keeps all.
+label_stamp:
+        cmp byte [cs:lbl_busy], 0
+        jne .ret
+        mov byte [cs:lbl_busy], 1
+        pusha
+        push ds
+        push es
+        call strip_on_map
+        jne .out
+        mov ds, [cs:strip_ds]
+        mov ax, [CAM_X]
+        cmp ax, [cs:lbl_cx]
+        jne .out
+        mov ax, [CAM_Y]
+        cmp ax, [cs:lbl_cy]
+        jne .out
+        mov dx, 0x3D4                   ; the screen on show: where the VGA starts it (the high
+        in al, dx                       ;   byte its page flip sets: A000h, A400h, or with the
+        mov ah, al                      ;   strip below the map A070h, A460h), the CRTC's index
+        mov al, 0x0C                    ;   kept
+        out dx, al
+        inc dx
+        in al, dx
+        dec dx
+        xchg al, ah
+        out dx, al
+        xor al, al
+        shr ax, 4
+        add ax, 0xA000
+        mov es, ax
+        call panel_live
+        sete [cs:lp_clip]
+        call vga_save
+        mov si, lbl_state
+        mov di, lbl_slots
+.slot:  mov dl, [cs:di]
+        cmp byte [cs:si + LS_SHOWN], 0
+        jne .shown
+        push es
+        call label_where
+        pop es
+        jc .next
+        call label_adopt
+.shown: cmp dl, [cs:si + LS_SEEN]
+        jne .next
+        call label_put
+.next:  add di, LBL_SIZE
+        add si, 8
+        cmp si, lbl_state + LBL_SLOTS * 8
+        jb .slot
+        call vga_restore
+.out:   pop es
+        pop ds
+        popa
+        mov byte [cs:lbl_busy], 0
+.ret:   ret
+
+; LABEL_PUT: label DI (the Loader's slot; SI its state) into ES, the screen, a plane at a time;
+; AX to DX not kept
+label_put:
+        push bp
+        push di
+        mov ax, [cs:di + 4]
+        mov [cs:lp_ink], ax             ; (and LP_EDGE)
+        add di, 8                       ; (DI: the ink's mask, a row of it)
+        xor bp, bp                      ; (BP: the plane)
+.plane: mov dx, 0x3C4
+        mov cx, bp
+        mov ax, 0x0102
+        shl ah, cl
+        out dx, ax
+        mov bx, di
+        mov ax, [cs:si + LS_Y]
+        imul ax, ax, 80
+        mov [cs:lp_line], ax
+        xor dx, dx                      ; (DX: the row)
+.row:   mov cx, bp
+        sub cx, [cs:si + LS_X]
+        and cx, 3                       ; (CX: the label's first x in this plane)
+        push di
+        mov di, [cs:si + LS_X]
+        add di, cx
+        shr di, 2
+        add di, [cs:lp_line]
+.px:    cmp cl, [cs:si + LS_W]
+        jae .nrow
+        bt word [cs:bx], cx
+        mov al, [cs:lp_ink]
+        jc .put
+        bt word [cs:bx + LBL_MASK], cx
+        jnc .npx
+        mov al, [cs:lp_edge]
+.put:   cmp byte [cs:lp_clip], 0
+        je .w
+        push ax
+        mov ax, [cs:si + LS_X]
+        add ax, cx
+        cmp ax, PANEL_X0
+        jb .wp
+        mov ax, [cs:si + LS_Y]
+        add ax, dx
+        sub ax, [cs:panel_top]
+        cmp ax, [cs:panel_rows]
+        pop ax
+        jb .npx
+        jmp .w
+.wp:    pop ax
+.w:     mov [es:di], al
+.npx:   add cx, 4
+        inc di
+        jmp .px
+.nrow:  pop di
+        add bx, LBL_ROW
+        add word [cs:lp_line], 80
+        inc dx
+        cmp dl, [cs:si + LS_H]
+        jb .row
+        inc bp
+        cmp bp, 4
+        jb .plane
+        pop di
+        pop bp
         ret
 
 ; PANEL: the combat log's panel over the map, bottom right. The Loader draws it (combatlog.py:

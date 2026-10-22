@@ -32,6 +32,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Known issues](#known-issues)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
+  - [Names over figures](#names-over-figures)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
@@ -426,6 +427,21 @@ DOSBox's window is a little taller than 4:3.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
 
+### Names over figures
+
+With **Float a spell's name over its caster, and "Miss" over whoever an attack
+missed** ticked on the Options tab (the default), a spell's name floats over
+its caster for a second and a half as it is cast, and "Miss" over anyone an
+attack misses, in the game's lettering with a dark edge. They work in and out
+of fights, for the party and the monsters alike, and a weapon's spell on a hit
+shows too. A name stays with its figure; near the top of the screen it goes
+under the figure's feet, clear of the game's boxes. Long names are shortened
+("Lesser Water Elem."), and at most two show at once.
+
+![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
+
 ### THAC0, saves and thief skills
 
 Started with the dice log, the game's own inventory screen (the one with the
@@ -648,7 +664,7 @@ Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
 - **In the game**: the combat log, where it goes and how much it says,
-  monster descriptions ([In the game](#in-the-game)).
+  names floating over figures, monster descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules closer
   to AD&D.
 - **More character customization**

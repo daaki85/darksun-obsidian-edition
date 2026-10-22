@@ -309,7 +309,7 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 74 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 66 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -327,11 +327,11 @@ is still at most 64 KB (everything through CS), so the second block is room
 for data kept apart from it, as the ring is. The helper asks for its resident
 part and the ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB
 free and a few KB of upper memory left. A change that adds much code should
-check that again: the ring is 74 entries, not 128 (96 until the new spells'
+check that again: the ring is 66 entries, not 128 (96 until the new spells'
 code, when the game no longer started for lack of memory; 88 until STORE and
 RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
-fitted in the block and loaded low), and the text buffer 4 KB, not 8, to make
-that room.
+fitted in the block and loaded low; 74 until the names over figures), and the
+text buffer 4 KB, not 8, to make that room.
 
 The second block also holds the game's overlay buffer (32,992 bytes: twice the
 largest overlay, the code the overlay manager loads as needed). The game asks
@@ -736,6 +736,60 @@ which may have changed since.
   square pixels (the map a sixth flatter) and the frame came 60 times a
   second, not 70 (the game about 14% slower); a longer line with the 28 MHz
   clock gave back the shape at 56 a second.
+
+### Names over figures
+
+([In the README](README.md#names-over-figures).)
+
+- **What starts one.** A spell's cast: `CAST_SITE` (INT 98h and its site
+  number over `mov cx,[bp+6]` at 772AAh, the start of the routine at 772A5h
+  that casts a spell or a power, the game's `598:89h`: `[BP+6]` the caster's
+  combatant, `[BP+8]` the target's, `[BP+0Ah]` the spell) records an entry of
+  kind 8, `KIND_CAST`, with the spell as its value. Every cast goes through it:
+  the party's from the USE screen or a click, the monsters', a weapon's or a
+  spell arrow's on a hit. The dice log floats the spell's name over the caster
+  (`dicelog._float`), and "Miss" over the target of an attack whose roll
+  missed. A combatant's number is its map thing's (the game's table of
+  combatants, `3972:0C36h`, has one entry a thing).
+- **The Loader's side** (`labels.py`). Each label is drawn in the game's font,
+  its ink with a dark edge a pixel round it (the colours nearest gold or
+  light grey and near black in the palette DSCLOG last read), as two one-bit
+  masks of 16 bytes a row (128 pixels; longer names shortened word by word,
+  then cut) and 11 rows. They go into one of two slots in the header (`+378`,
+  `LBL_SIZE` 360 bytes each: the label's number, width, height, how far above
+  the feet, the two colours, the map thing, the masks), the number written
+  0 first and last of all, so DSCLOG never takes a half-written one. A label
+  stays 1.5 seconds; a new one takes the slot of one over the same figure,
+  else a free one, else the oldest.
+- **DSCLOG's side** (`LABEL_*`). The map is drawn straight into the screen on
+  show, and figures are drawn again as they move, swing and take damage, by
+  routines that weren't all hooked in the first trial (a label over melee was
+  whole in only a third of the frames). So the labels are put again from the
+  game's timer: `PROBE_TICK` (about 118 strikes a second) calls `LABEL_STAMP`
+  every other strike. It writes only (no reads of video memory, so the VGA's
+  latches are left alone), keeps the VGA's registers as the shadows do
+  (`VGA_SAVE`), finds the screen on show from where the VGA starts it (CRTC
+  0Ch, the high byte the game's page flip sets: A000h or A400h, A070h or
+  A460h with the strip below the map), stays off the combat log's panel, and
+  does nothing while the game's busy flag for it is up or off the map. It
+  also places a new label (`LABEL_WHERE`: centred over the thing's feet, its
+  bottom `UP` rows above them, under the feet if it would reach the game's
+  boxes at the top, row 40, and kept on the screen), as the main loop doesn't
+  run while the game shows an attack or a spell.
+- **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`)
+  places labels too, and has where one was drawn again when it goes, moves or
+  changes (`LABEL_ERASE`: the game's routine for a rectangle of the view,
+  `1DF3:142Fh`, with page 1 and a flip, as its own call at 28185h; page 0
+  without one drew to the screen not shown and left the label). When the view
+  has scrolled, the game's scrolling has copied any label with it, so all are
+  taken off and the view drawn again whole (`VIEW_AGAIN`); the timer doesn't
+  put labels while the view isn't where the main loop last saw it.
+- **Memory.** The two slots and the code cost about 1.5 KB of the helper's
+  upper memory; the ring went from 74 entries to 66 for it.
+- **Measured** in DOSBox, a fight in the slave pens with every attack made to
+  miss, a slot watcher grabbing the screen as each label came: "Miss" was in
+  every one of nine grabs half a second in, through swings and damage
+  bursts; a cast from the USE screen showed its name once the map was back.
 
 ### THAC0, saves and thief skills
 

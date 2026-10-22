@@ -12,6 +12,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #55 (in progress)
 
 **Added**
+- **Names over figures.** A spell's name floats over its caster for 1.5 seconds as it is cast
+  (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an
+  attack that missed, in the game's font with a dark edge; at most two at once. An Options switch
+  in the game section, on by default. DSCLOG's `CAST_SITE` (772AAh, the cast routine: a new
+  record kind, 8) and `LABEL_*`: two slots in the header (+378) the Loader fills
+  (`labels.py`), put again from the game's timer every other strike so swings and damage
+  bursts don't wipe them, placed and erased from the main loop. The dice ring is 66 entries
+  (74) for the room.
 - **Spellarcher spell arrows.** Outside a fight, a Spellarcher's USE screen has a SPELL
   ARROWS button where a priest's Turn Undead is; the game's three-row menu offers the touch
   spells it knows with a slot left (Burning Hands, Chill Touch, Shocking Grasp, Vampiric Touch;

@@ -24,7 +24,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -209,6 +209,7 @@ REQUEST_NAMES = {
     15: "the pointer set to walk", 16: "the music's level set", 17: "an object placed on the map",
     18: "a creature changes sides", 19: "game over", 20: "creatures counted",
 }
+KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the frame (caster [BP+6])
 KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
 # extra the caster. The aim check's (84C54h) answers:
 AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
@@ -430,7 +431,10 @@ class DiceLog:
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
         self.combat_log = False  # the combat log's panel in the game, in a fight (combatlog.py)
+        self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
         self._panel = combatlog.Panel()
+        self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
+        self._labels_font_tried = False
         self.combat_log_level = combatlog.SHORT  # ... its lines in short, in detail or the results only
         self._fight_at: Optional[float] = None  # ... when a fight was last seen (its last lines go in too)
         self._fight_monsters: set = set()  # ... the monsters' names in it (their colour)
@@ -724,6 +728,7 @@ class DiceLog:
         self.starting_gear = bool(settings.get("starting_gear", True))
         self.show_shadows = bool(settings.get("shadows", True))
         self.combat_log = bool(settings.get("combat_log", True))
+        self.floating_names = bool(settings.get("floating_names", True))
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
@@ -1196,6 +1201,8 @@ class DiceLog:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
                                  needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log)
             self._update_panel(now)
+            self._labels.on = self.floating_names
+            self._labels.tick(self.game.guest, self.tsr_hdr, now)
             foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
@@ -1875,10 +1882,16 @@ class DiceLog:
             return self._request(e, show_all)
         if e.kind == KIND_AIM:
             return self._aim(e)
+        if e.kind == KIND_CAST:
+            self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
+            return []
         code = e.code
         if code.startswith(ATTACK_SITE):
             self._spell_until = 0.0
-            return self.flush(now, force=True) + self._attack(e)
+            out = self.flush(now, force=True) + self._attack(e)
+            if len(out) >= 2 and out[-2].endswith("-> miss"):
+                self._float(e.glob[0], labels.MISS, labels.MISS_INK, now)
+            return out
         if code.startswith(DICE_SITE):
             return self._dice_roll(e, show_all, now)
         if code.startswith(IMAGE_BLOW_SITE):
@@ -1946,6 +1959,18 @@ class DiceLog:
         if rest:  # the only other part of the chance: the equipment penalty
             steps.append(f"{signed(rest)} equipment")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
+
+    def _float(self, thing: Optional[int], text: str, colour, now: float) -> None:
+        """TEXT floating over combatant THING for a moment (labels.py), with the switch on."""
+        if not self.floating_names or self.tsr_hdr is None:
+            return
+        if not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        try:
+            self._labels.show(self.game.guest, self.tsr_hdr, thing, text, colour, now)
+        except (struct.error, IndexError, ValueError):
+            pass
 
     # attacks ---------------------------------------------------------------------
 
