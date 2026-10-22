@@ -51,6 +51,10 @@ SPHERE2, SPHERE2_MASK = 0x45, 0x07
 # a Battle Mage's weapon specs to choose from (DSCLOG's KIT_BM_KINDS): the one-handed melee ones, not
 # thrown: long sword, club, dagger, short sword, mace, axe, pick
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
+# a Crusader's and a Mind Warrior's one weapon spec of expertise (DSCLOG's SPEC_OF_SHEET): any
+# melee one its class lets it use (not the chatkcha, bow, sling or staff sling: kinds 12-15)
+WAR_KIT_EXPERT = (CRUSADER, MIND_WARRIOR)
+MELEE_KINDS = frozenset(range(12))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
 # level up from thief level SHINOBI_FIRST, and its own from scrolls once read (read languages); it casts at its thief level less 5.
 # Fogbolt, Reflected Image, Spook and Friends, new spells, only with the new spells on (their known bits: NS_KNOWS)

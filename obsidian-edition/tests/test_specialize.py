@@ -225,6 +225,23 @@ class NewCharacterTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    def test_war_kits_pick_one(self):
+        """A Crusader or Mind Warrior (kits on) keeps one weapon spec (its kinds: DSCLOG's
+        KindsAllowedTests); a cleric of another kit none."""
+        from dsloader import weaponchoice
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = game.RULE_KITS | game.RULE_SPECIALIZE
+            for cls, kit in ((1, 3), (12, 2)):
+                s = bytearray(sheet((5, 2), classes=(cls, 0, 0)))
+                s[0x43] = kit
+                with self.subTest(cls=cls, kit=kit):
+                    self.assertEqual(weaponchoice.kinds_for(bytes(s)), [6, 0, 0, 0])
+                    s[0x43] = 1
+                    self.assertEqual(weaponchoice.kinds_for(bytes(s)), [0, 0, 0, 0])
+        finally:
+            game.RULES_IN_FORCE = old
+
     def test_own_defaults(self):
         """Picks left unmade on the weapon window: a Ghetto Fighter's dagger (kits on), a
         thri-kreen's chatkcha; kept to what's allowed."""

@@ -108,8 +108,9 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
     active = active_classes(sheet)
     classes = {c for c, _ in active}
     if not classes & ({FIGHTER, GLADIATOR} | set(RANGERS)):
-        # (a Battle Mage's expertise; else a dual-classed warrior, until the new class's level passes the old)
-        return EXPERT if battle_mage(sheet) else PLAIN
+        # (a Battle Mage's, Crusader's or Mind Warrior's expertise; else a dual-classed warrior, until
+        # the new class's level passes the old)
+        return EXPERT if battle_mage(sheet) or war_kit(sheet) is not None else PLAIN
     if not {FIGHTER, GLADIATOR} & classes:
         return EXPERT
     first = chosen.index(kind + 1)
@@ -131,14 +132,25 @@ def battle_mage(sheet: bytes) -> bool:
     return bool(game.RULES_IN_FORCE & game.RULE_KITS) and kits.BATTLE_MAGE in kitpages.kit_ids(sheet)
 
 
+def war_kit(sheet: bytes) -> Optional[int]:
+    """The Crusader or Mind Warrior kit of the character (awake, the rule for kits in force), which
+    has expertise in its one chosen weapon spec, or None."""
+    from . import kitpages, kits
+    if not game.RULES_IN_FORCE & game.RULE_KITS:
+        return None
+    return next((k for k in kits.WAR_KIT_EXPERT if k in kitpages.kit_ids(sheet)), None)
+
+
 def expert_attacks(halves: int, level: int, sheet: bytes) -> int:
     """The melee attacks a round (in halves) of a character who isn't a warrior (HALVES the game's,
-    2 or fewer) with skill LEVEL, as DSCLOG's EXPERT_HALVES: a Battle Mage's chosen weapon spec
-    (EXPERT) the expertise rate, 3/2 a round, 2 from 7th level; else HALVES."""
+    2 or fewer) with skill LEVEL, as DSCLOG's EXPERT_HALVES: a Battle Mage's, Crusader's or Mind
+    Warrior's chosen weapon spec (EXPERT) the expertise rate, 3/2 a round, 2 from 7th level (of the
+    kit's class); else HALVES."""
     from . import kitpages, kits
     if level != EXPERT or halves > 2:
         return halves
-    return 4 if kitpages.kit_level(sheet, kits.BATTLE_MAGE) >= 7 else 3  # (the Battle Mage's preserver level)
+    kid = kits.BATTLE_MAGE if battle_mage(sheet) else war_kit(sheet)
+    return 4 if kid is not None and kitpages.kit_level(sheet, kid) >= 7 else 3
 
 
 def attacks(halves: int, level: int, missile: bool = False) -> int:

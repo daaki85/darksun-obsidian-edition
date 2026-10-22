@@ -1112,6 +1112,34 @@ class SpecializeTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    def test_war_kit_expertise(self):
+        """A Crusader or Mind Warrior (kits and weapon specialization on): the expertise rate with
+        its chosen melee weapon spec, 3/2 a round, 2 from 7th level; another weapon the war kits'
+        own rate, the game's 1 before 7th level (specialize.skill, expert_attacks)."""
+        from dsloader import specialize
+        both = 4096 | game.RULE_KITS
+        for cls, kit in ((1, 3), (12, 2)):
+            war = dict(classes=(cls, 0, 0), levels=(3, 0, 0), chosen=(0,), kit=kit, rules=both)
+            seventh = dict(war, levels=(7, 0, 0))
+            with self.subTest(cls=cls, kit=kit):
+                self.assertEqual(self.attack(2, self.LONG_SWORD, **war)[0], 3)
+                self.assertEqual(self.attack(2, self.LONG_SWORD, **seventh)[0], 4)
+                self.assertEqual(self.attack(2, self.AXE, **war)[0], 2)
+                self.assertEqual(self.attack(2, self.AXE, **seventh)[0], 3)
+                self.assertEqual(self.attack(2, self.LONG_SWORD, **dict(war, rules=4096))[0], 2)
+                self.assertEqual(self.attack(2, self.LONG_SWORD, **dict(war, kit=1))[0], 2)
+                sheet = bytearray(game.SHEET_SIZE)
+                sheet[0x14], sheet[0x21], sheet[0x24], sheet[0x43] = 1, cls, 3, kit
+                old = game.RULES_IN_FORCE
+                try:
+                    game.RULES_IN_FORCE = both
+                    skill = specialize.skill(bytes(sheet), self.LONG_SWORD)
+                    self.assertEqual((skill, specialize.skill(bytes(sheet), self.AXE)),
+                                     (specialize.EXPERT, specialize.PLAIN))
+                    self.assertEqual(specialize.expert_attacks(2, skill, bytes(sheet)), 3)
+                finally:
+                    game.RULES_IN_FORCE = old
+
     def test_justifier(self):
         """A Justifier (kits on): its chosen weapon spec and the bow specialized, +1 to hit and +2
         damage, where another ranger has expertise; another kind the plain rate (specialize.skill)."""
@@ -1859,7 +1887,8 @@ class KindsAllowedTests(unittest.TestCase):
             game.RULES_IN_FORCE = game.RULE_KITS
             mu.mem_write(hdr + 270, struct.pack("<H", 1))
             for classes, kit in (((10,), 3), ((10,), 2), ((5,), 2), ((17,), 3), ((5,), 1), ((11,), 2), ((11,), 1),
-                                 ((13,), 3), ((14,), 3), ((15,), 3), ((16,), 3), ((13,), 2), ((1,), 1), ((3,), 1)):
+                                 ((13,), 3), ((14,), 3), ((15,), 3), ((16,), 3), ((13,), 2), ((1,), 1), ((3,), 1),
+                                 ((1,), 3), ((12,), 2)):
                 s = bytearray(sheet(*classes))
                 s[0x43] = kit
                 with self.subTest(classes=classes, kit=kit):
@@ -1870,6 +1899,14 @@ class KindsAllowedTests(unittest.TestCase):
                     mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
                     got = mu.reg_read(r.UC_X86_REG_AX)
                     self.assertEqual([k for k in range(16) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
+            from dsloader import kits
+            for classes, kit in (((1,), 3), ((12,), 2)):  # a Crusader's, a Mind Warrior's: melee kinds only
+                s = bytearray(sheet(*classes))
+                s[0x43] = kit
+                war = restrict.allowed_kinds(bytes(s), self.record)
+                s[0x43] = 1
+                self.assertTrue(war and set(war) <= kits.MELEE_KINDS)
+                self.assertGreater(set(restrict.allowed_kinds(bytes(s), self.record)) - kits.MELEE_KINDS, set())
             s = bytearray(sheet(9, 11))  # a half-elf fighter/preserver Spellarcher: the bow only
             s[0x18], s[0x43] = 4, 1
             mu.mem_write(SS * 16 + 0x500, bytes(s))

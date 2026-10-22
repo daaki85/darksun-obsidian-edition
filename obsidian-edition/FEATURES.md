@@ -517,7 +517,7 @@ fighter, gladiator and ranger levels; characters stop at 10):
 |---|---|---|---|---|---|---|---|
 | none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
 | not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits): its chosen weapon spec (melee only) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits): its chosen weapon spec (melee only; by its own class's level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
@@ -534,7 +534,7 @@ weapons and gloves are none.
 | chatkcha, bow, sling, staff sling |
 
 **Choosing at creation.** Press **DONE** on the character creation screen and
-a warrior (and a [Battle Mage](#kits)) picks its weapon specs on the weapon
+a warrior (and a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits)) picks its weapon specs on the weapon
 window, the one a level gained brings up (below), as a preserver picks its
 spells on CHOOSE A SPELL: a fighter or ranger one, a gladiator two, a
 [Myrmidon](#kits) two. A preserver warrior picks its spells first. A
@@ -594,7 +594,7 @@ rule) picks the rest the way a psionicist picks a new power: in the game's own
 pop-up, made bigger, a picture of each weapon spec on a slot, six to a row,
 those its classes can't use (or it has) greyed. The pointer on a slot names it
 under them (**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick
-would be expertise: a ranger's, a Battle Mage's; as CHOOSE A SPELL names a
+would be expertise: a ranger's, a Battle Mage's, a Crusader's or Mind Warrior's; as CHOOSE A SPELL names a
 spell), and lights the slot if it can be picked; off the slots the title comes
 back. The picks left are beside **EXIT** (which asks, as for powers, whether
 to leave with picks unmade: they're offered again at the next level).

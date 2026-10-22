@@ -921,8 +921,8 @@ their own ([Multiclass kits](#multiclass-kits)). Each gives something and
 costs something; [the Kits page](KITS.md) has each kit's
 numbers and starting gear, the class sections above who takes it on Athas.
 
-- The **Myrmidon** chooses its second weapon spec, and the **Battle Mage** its
-  one, in the weapon window after DONE, and the **Elementalist** its second sphere on the
+- The **Myrmidon** chooses its second weapon spec, and the **Battle Mage**,
+  **Crusader** and **Mind Warrior** their one, in the weapon window after DONE, and the **Elementalist** its second sphere on the
   CLERICAL SPHERE list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old.
@@ -1026,12 +1026,13 @@ ranger level). 3/2 means one attack one round and two the next.
 | a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
 | a chosen weapon spec (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
-| a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), any weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
+| a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), its chosen weapon spec | 3/2 | 2 | | | | |
+| a **Crusader** or **Mind Warrior**, any other weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
 | a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
-For the three kits the level is their own class's. A Battle Mage's chosen
-weapon spec is a melee weapon. With [two weapons](#two-weapons), the off hand
+For the three kits the level is their own class's. Their chosen weapon spec
+is a melee weapon. With [two weapons](#two-weapons), the off hand
 attacks once a round whatever the rate.
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th

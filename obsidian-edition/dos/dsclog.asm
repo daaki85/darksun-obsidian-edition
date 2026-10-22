@@ -2960,7 +2960,8 @@ expert_of:
 
 ; EXPERT_HALVES: AX the attacks a round (halves) of a character who isn't a warrior (the game's 2:
 ; 1 a round), DL its skill with the weapon (SPEC_OF_SHEET), ES:BX its sheet: with SPEC_EXPERT (a
-; Battle Mage's chosen weapon spec, kits.py; no warrior has fewer than 3 halves) the expertise
+; Battle Mage's, Crusader's or Mind Warrior's chosen weapon spec, kits.py; no warrior has fewer
+; than 3 halves; the kit's class level, KIT_WHERE as SPEC_OF_SHEET left it) the expertise
 ; rate, 3/2 a round, 2 from 7th level (specialize.expert_attacks). Others kept.
 expert_halves:
         cmp dl, SPEC_EXPERT
@@ -3017,6 +3018,17 @@ war_kit_of:
         call war_kit_halves
         pop es
         pop bx
+.ret:   ret
+
+; WAR_KIT_IS: ZF set if the character whose sheet is at ES:BX is a Crusader or a Mind Warrior (kit
+; awake, KIT_WHERE that kit's for KIT_LEVEL), which has expertise in its one chosen weapon spec.
+; All registers kept.
+war_kit_is:
+        call kit_is_b
+        db KIT_CRUSADER
+        je .ret
+        call kit_is_b
+        db KIT_MIND_WARRIOR
 .ret:   ret
 
 ; WAR_KIT_HALVES: AX the melee attacks a round (halves) of a character who isn't a warrior (2 or
@@ -4619,9 +4631,10 @@ wp_rules:
 ; use (a fire cleric's long sword the obsidian one, not the plain bone one); not the bow for a
 ; ranger (its class flags, +12h: 200h), who has expertise with it already; a Battle Mage the
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
-; the bow only; a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword).
-; DS = the game's. Others kept.
+; the bow only; a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
+; a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS). DS = the game's. Others kept.
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
+KIT_MELEE_KINDS equ 0x0FFF      ; (not the chatkcha, bow, sling or staff sling)
 kinds_allowed:
         push cx
         push dx
@@ -4668,6 +4681,10 @@ kinds_allowed:
 .no:    inc dx
         cmp dx, KIND_TYPES
         jb .type
+        call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds)
+        jne .ranger
+        and di, KIT_MELEE_KINDS
+.ranger:
         test word [es:bx + 0x12], 0x200
         jz .all                 ; (a ranger)
         btr di, BOW_KIND - 1
@@ -4885,11 +4902,14 @@ lv_due:
 .next:  inc si
         cmp si, 3
         jb .class
-        or cl, cl               ; (a Battle Mage: one)
+        or cl, cl               ; (a Battle Mage, Crusader or Mind Warrior: one)
         jnz .myrmidon
         call kit_is_b
         db KIT_BATTLE_MAGE
+        je .one_kit
+        call war_kit_is
         jne .out
+.one_kit:
         mov cl, 1
 .myrmidon:
         cmp byte [cs:lv_creating], 0    ; (a new Myrmidon: two, the second its own choice)
@@ -8769,14 +8789,18 @@ wp_classes:
 .next:  inc bx
         dec cl
         jnz .class
-        or al, al               ; (a Battle Mage, with weapon specialization: a warrior here)
+        or al, al               ; (a Battle Mage, Crusader or Mind Warrior, with weapon specialization: a warrior here)
         jnz .out
         test word [cs:rules], RULE_SPECIALIZE
         jz .out
         push ax
         call kit_made
         cmp al, KIT_BATTLE_MAGE
-        pop ax
+        je .made
+        cmp al, KIT_CRUSADER
+        je .made
+        cmp al, KIT_MIND_WARRIOR
+.made:  pop ax
         jne .out
         mov al, 1
 .out:   pop es
@@ -9946,8 +9970,8 @@ spec_of:
 ; SPEC_NONE (it has chosen no kinds), SPEC_PLAIN (not this kind), SPEC_EXPERT (a ranger's: no
 ; fighter or gladiator class; and every ranger's with the bow, chosen or not), SPEC_SPECIAL,
 ; SPEC_MASTER (a fighter's own kind, the first, from 5th level; a Myrmidon's second too),
-; SPEC_GRAND (9th). A Battle Mage's chosen kind SPEC_EXPERT; a Justifier's expertise (its chosen
-; kind and the bow) SPEC_SPECIAL.
+; SPEC_GRAND (9th). A Battle Mage's, Crusader's or Mind Warrior's chosen kind SPEC_EXPERT; a
+; Justifier's expertise (its chosen kind and the bow) SPEC_SPECIAL.
 BOW_KIND equ 14                 ; (the bow's kind + 1)
 spec_of_sheet:
         push ax
@@ -10043,9 +10067,12 @@ spec_of_sheet:
         or al, al
         jnz .warrior
         mov dl, SPEC_PLAIN      ; (a warrior class not back yet)
-        call kit_is_b           ; (a Battle Mage's expertise)
+        call kit_is_b           ; (a Battle Mage's expertise, a Crusader's, a Mind Warrior's)
         db KIT_BATTLE_MAGE
+        je .expert
+        call war_kit_is
         jne .ret
+.expert:
         mov dl, SPEC_EXPERT
         jmp .ret
 .warrior:

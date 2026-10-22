@@ -12,6 +12,10 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #55 (in progress)
 
 **Added**
+- **The Crusader and Mind Warrior have expertise in one melee weapon spec of their choice**
+  (with weapon specialization), as the Battle Mage has: 3/2 attacks a round, 2 from 7th level,
+  picked on the weapon window after DONE. DSCLOG's `war_kit_is` in the pick count,
+  `KINDS_ALLOWED` (melee kinds only) and the spec lookup; `specialize.war_kit`.
 - **The dice log names a refused cast's reason** (`can't cast Fireball there: no line of sight`;
   DSCLOG's `AIM_SITE`) **and the scripts' requests** (`Script: random monsters come`;
   `REQ_SITE`, all 20 named, from the yuan-ti project's notes on the game).
