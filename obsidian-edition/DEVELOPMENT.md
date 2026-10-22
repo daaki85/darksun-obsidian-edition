@@ -135,7 +135,8 @@ so only what is committed goes in) and publishes it with
 `release-notes/v<version>.md` as its notes. Before it:
 
 1. Set the version in `dsloader/__init__.py` (`__version__`), the patch notes'
-   "Current version" and the front page's "**Obsidian Edition ...** is out";
+   "Current version" (and drop their line on what comes with the next release)
+   and the front page's "**Obsidian Edition ...** is out";
    `tests/test_version.py` checks they agree and that the release notes exist.
 2. Finish `release-notes/v<version>.md` and the CHANGELOG's entry, and
    rebuild `DSCLOG.EXE` and the web pages if their sources changed.

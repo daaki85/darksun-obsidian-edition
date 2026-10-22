@@ -345,6 +345,9 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
 
 - **The game can stop with an error after a fight in the arena.** The Loader
   writes a crash report; load the last save to go on.
+- **In a long session, figures can vanish from the screen and the game then
+  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
+  it happens, press **Freeze report** on the Loader before closing DOSBox.
 
 ## In the game
 
@@ -530,20 +533,8 @@ the Loader isn't running.
 in brackets on View Character's experience line is the XP at which the first
 of their classes goes up a level, and the Loader adds which class that is:
 `EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each class
-is a letter, except preserver and psionicist, which both start with P:
-
-| Class | Letters |
-|---|---|
-| Cleric | C |
-| Druid | D |
-| Fighter | F |
-| Gladiator | G |
-| Preserver | Pr |
-| Psionicist | Ps |
-| Ranger | R |
-| Thief | T |
-
-When two classes go up at the same XP, both are named: `(20000 Pr/T)`. A class
+is its first letter (C, D, F, G, R, T), except the preserver's Pr and the
+psionicist's Ps. When two classes go up at the same XP, both are named: `(20000 Pr/T)`. A class
 already at the highest level (9, or 10 with
 [levels up to 10](FEATURES.md#levels-up-to-10)) has no next level, so it is never named.
 A character of one class shows the line as the game always has, and so does a

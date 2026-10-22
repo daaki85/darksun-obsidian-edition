@@ -963,13 +963,13 @@ guide moves and acts that little bit quicker.
 weave a little magic into every arrow. The technique is a secret, and the bow
 is all they train with. For each touch spell a Spellarcher knows (Burning
 Hands, Chill Touch, Shocking Grasp or Vampiric Touch) it has an arrow button
-on the USE screen, beside where a priest's Turn Undead goes: outside a fight,
-one click weaves the spell into a quiver of arrows, 5 for each preserver level,
-each casting the spell on what it hits (on the ground at its feet if its
-backpack is full). Its bow skill works on them too: they fly as +1 arrows. Only
-a Spellarcher can ready them; anyone else can only carry them. Each
-costs a spell slot of the touch spell's level; the arrows are worth nothing to a merchant, and fade at
-the next rest.
+on the USE screen, beside where a priest's Turn Undead goes. Outside a fight,
+a click spends a spell slot of that spell's level to weave it into 5 arrows
+for each preserver level (left at its feet if the backpack is full), each
+casting the spell on what it hits; they fly as +1 arrows too. Only a
+Spellarcher can ready them. They're worth nothing to a merchant and fade at
+the next rest (a pile still on the ground, at the first rest after it's
+picked up).
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.

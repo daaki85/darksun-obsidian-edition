@@ -148,6 +148,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   table of contents; the front page and How the game works credit yuan-ti's notes; pull
   request #54 (the 2.6.0 release) is in this changelog, and #55's two lists of additions are
   one.
+- A second review: the patch notes say which of their changes come with the next release, not
+  2.6.0, and name the Battle Mage's, Crusader's and Mind Warrior's weapon expertise (the
+  release steps now drop that line); the README's known issues add the vanishing figures and
+  freeze, and lose a class-letter table that repeated its sentence; spell arrows left on the
+  ground fade at the first rest after they're picked up (KITS, the player's guide, whose
+  paragraph is rewritten).
 
 ## Pull request #54 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/54))
 
