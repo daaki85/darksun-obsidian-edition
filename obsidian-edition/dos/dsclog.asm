@@ -10806,8 +10806,9 @@ req_site:
         dec bx
         iret
 
-; AIM_SITE: "cmp ax,0FFFFh" (84100h; 3 bytes: the INT and the site's number) where a click casts
-; the spell readied (8404Bh, from the map's click handler), AX the aim check's answer (84C54h):
+; AIM_SITE: "cmp dx,-1" (8455Bh; 3 bytes: the INT and the site's number) where a click on the map
+; takes the readied spell's target (84538h; the cast follows, 8458Ch), DX and AX the aim check's
+; answer (84C54h; the pointer's own use of it, 8404Bh, runs on every pass and isn't hooked):
 ; -1 no creature there, -2 not one the spell takes (its side), -3 a wall too long, -4 out of
 ; sight, -5 too far. A refusal is recorded (kind KIND_AIM: the answer in the value's low byte,
 ; the spell, DS:9428h, in its high; EXTRA the caster, DS:9426h); the compare made, its flags returned.
@@ -10825,7 +10826,7 @@ aim_site:
         lea si, [di + 28]               ; (SS:SI+6: the INT's return address)
         mov word [cs:kind], KIND_AIM
         call record
-.test:  cmp word [ss:di + NS_AX], 0xFFFF
+.test:  cmp word [ss:di + NS_DX], -1
         pushf
         pop ax
         call ns_flags
@@ -12886,7 +12887,7 @@ SHOP_LOOP equ NS_IMAGE + 22      ; 7DE11h: a shop's own event loop, its test (..
 DET_ITEM  equ NS_IMAGE + 23      ; 7AB95h: Detonate's blast on an item, the number its d20 must be under
 WANDER_DMG equ NS_IMAGE + 24     ; 7B56Fh: a spell's damage, the kinds a creature is protected from
 REQ_SITE  equ NS_IMAGE + 25      ; 7FF42h: a script's REQUEST, its number read
-AIM_SITE  equ NS_IMAGE + 26      ; 84100h: a spell cast with a click, the aim check's answer
+AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim check's answer
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known

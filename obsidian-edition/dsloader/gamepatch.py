@@ -381,8 +381,8 @@ PATCHES = (
     Patch("wanderer_damage", 0x7B56F, bytes.fromhex("857e0c"), _site(WANDER_DMG, 3)),
     # a script's REQUEST (command 22h), its number read: recorded for the dice log (DSCLOG's REQ_SITE)
     Patch("script_request", 0x7FF42, bytes.fromhex("8b5e064b"), _site(REQ_SITE, 4)),
-    # a spell cast with a click, the aim check's answer: a refusal recorded (DSCLOG's AIM_SITE)
-    Patch("spell_aim", 0x84100, bytes.fromhex("3dffff"), _site(AIM_SITE, 3)),
+    # a click taking a readied spell's target, the aim check's answer: a refusal recorded (DSCLOG's AIM_SITE)
+    Patch("spell_aim", 0x8455B, bytes.fromhex("83faff"), _site(AIM_SITE, 3)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

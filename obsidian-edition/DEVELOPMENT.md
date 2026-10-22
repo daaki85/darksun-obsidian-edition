@@ -2505,8 +2505,9 @@ Two `NS_IMAGE` sites record what the game does without a roll:
   an object's state, cinematic, trap, random monsters, transform, block and unblock a cell
   and its sight, arena bout, the pointer to walk, music, place an object, change sides, game
   over, count creatures).
-- `AIM_SITE` (84100h, "cmp ax,0FFFFh") where a click casts the spell readied (8404Bh, from the
-  map's click handler) after the aim check (84C54h): -1 no creature there, -2 not one the
+- `AIM_SITE` (8455Bh, "cmp dx,-1") where a click on the map takes the readied spell's target
+  (84538h; the cast follows) after the aim check (84C54h; its other caller, 8404Bh, picks the
+  pointer's form on every pass of the main loop, about 2,000 times a second, and is left alone): -1 no creature there, -2 not one the
   spell takes, -3 a wall too long, -4 out of sight (its line-of-sight call, 0020:00A4 in the
   overlay's terms), -5 too far. A refusal is kind 7 (`KIND_AIM`): the answer and the spell
   (DS:9428h) in the value, the caster (DS:9426h) in EXTRA.

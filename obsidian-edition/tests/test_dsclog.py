@@ -2764,7 +2764,7 @@ class NewSpellTests(RuleTests):
         self.assertEqual((e.kind, e.raw, e.arg(8), e.arg(0x0A), e.arg(0x0C)), (6, 8, 0x7FFE, 1, 0))
 
     def test_spell_aim(self):
-        """AIM_SITE (84100h, "cmp ax,0FFFFh" after a clicked cast's aim check): a refusal (AX
+        """AIM_SITE (8455Bh, "cmp dx,-1" after a clicked cast's aim check, DX = AX): a refusal (AX
         negative) recorded (kind 7: the answer, the spell DS:9428h, the caster DS:9426h in EXTRA);
         the compare's flags returned either way, every register kept."""
         from dsloader import gamepatch
@@ -2778,7 +2778,7 @@ class NewSpellTests(RuleTests):
             start = CALLER * 16 + self.at
             mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.AIM_SITE)))
             for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=ax,
-                                    esi=0x2222).items():
+                                    edx=ax, esi=0x2222).items():
                 mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
             mu.emu_start(start, start + 3)
             self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_SI)],
