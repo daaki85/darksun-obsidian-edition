@@ -1776,11 +1776,12 @@ nothing is shown; refused (not known, no slot), its words (`PICK_TEXT`) are.
 left (`SLOTS_LEFT`; none left, it says so) and puts a stack of the game's Arrows (type 62) in the
 backpack (`npcitems.add_to`), or, with no room, hands the stack's record to DSCLOG in `PICK_TEXT`
 (`USE_TAKEN` 3): `ARROWS_DROP` leaves it on the ground as the game's script DROP (2Fh, 6A894h)
-leaves an item, making a thing of the game's Arrows (object 1070, picture FBD2h: a quiver on the
-map) at the
-party's figure (B8h:55Ah: the object, -1, x, y, 0, the item's +10h, 0Fh; 2C0h:369h the figure),
-and writing the arrows' record over the item it comes with (its link kept). Picked up, they go
-on the pointer as any item on the ground does. The stack is named Burning, Chill, Shocking or
+leaves an item, making a thing of the arrows' own object (their picture negated, so the pile shows
+their icon) at the party's figure (B8h:55Ah: the object, -1, x, y, 0, the item's +10h, 0Fh;
+2C0h:369h the figure). The Loader's objects have no item record (RDFF), so the thing comes as a
+picture alone (kind 0): an item from the game's free list becomes the arrows' record and the
+thing's list, as the inventory's DROP leaves a Loader's item. Picked up, they go on the pointer
+as any item on the ground does. The stack is named Burning, Chill, Shocking or
 Vampiric Arrows (names 16Ch-16Fh), their pictures objects 2614-2621 (the Arrows' icon, its heads
 in the spell's colours), value 0, 5 a preserver level. Slots are the only limit. At a rest (a
 script's REQUEST 1 or 4, `REQ_SITE`, as at a fire ring, or the vulture meal) `vanish` gives every
@@ -2241,7 +2242,11 @@ it shows one); and the icons are objects in the Loader's copy of
 `SEGOBJEX.GFF` (`dsloader/icons.py`), which the helper has the game open
 instead of its own (its `INT 21h` hook). The copy also has the game's
 Polearm picture made 22 pixels tall (`icons.fit_box`): at its own 36, the
-item box's lines, which start below the picture, ran out of the box.
+item box's lines, which start below the picture, ran out of the box. An item
+on the ground is drawn with its object's icon (the thing's map record, +0Fh),
+so the Loader's items, dropped from the inventory or left by the dead, lie on
+the ground as their own icons (checked: the Short Sword, the Ashen Robe, the
+spell arrows).
 Where the game adds up AC and saving throws, the helper counts the rings
 and the cloak (`INT F8h` and the save probes). Shadowseeker's sight is
 the game's own way with a magic item's spell: readied, it puts Detect

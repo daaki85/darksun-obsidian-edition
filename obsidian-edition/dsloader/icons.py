@@ -22,7 +22,8 @@ writes a copy of that file next to the patched game (the dos folder, D: in DOSBo
 object added for each of these icons, and DSCLOG has the game open the copy instead (its INT
 21h hook, PROBE_DOS_OPEN).
 An object (OJFF) is an item's picture number negated; its word +0Ch names its icon (a BMP chunk),
-and a BMP chunk of its own number is its picture on the map, here the plain item's.
+which is also how the item looks on the ground: a thing on the map of an item's object is drawn
+with that icon (its map record's +0Fh), so each of these lies on the ground as its own icon.
 """
 
 import os
@@ -410,7 +411,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Obsidian Great Axe", 0xFC06, 2576, 2577, lambda r: recolour(r, {1: 58, 2: 59, **TEAL_TO_OBSIDIAN})),
     # the bone Dagger (weaponchoice.py): the obsidian Dagger's, its blade in the bone weapons' whites
     ("Bone Dagger", 0xFB60, 2578, 2579, lambda r: recolour(r, DAGGER_BONE)),
-    # the robes (robes.py), drawn (on the map: the Cloak's)
+    # the robes (robes.py), drawn
     ("Ashen Robe", 0xFBE3, 2580, 2581, ashen_robe_icon),
     ("Veiled Robe", 0xFBE3, 2582, 2583, veiled_robe_icon),
     # the girdles, the bow and the amulet (worldgear.py): the Belt's, its brightest leather glowing
@@ -461,8 +462,8 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
         old_icon, = struct.unpack_from("<H", record, OJFF_ICON)
         struct.pack_into("<H", record, OJFF_ICON, icon)
         out[("OJFF", number)] = bytes(record)
-        if ("BMP ", base) in chunks:  # its picture on the map: the plain item's (a necklace has
-            out[("BMP ", number)] = chunks[("BMP ", base)]  # none of its number: kept so in the copy)
+        if ("BMP ", base) in chunks:  # (the plain item's BMP of its own number, as the game's objects
+            out[("BMP ", number)] = chunks[("BMP ", base)]  # have one; a necklace has none: kept so)
         rows = smaller.get(old_icon) or decode(chunks[("BMP ", old_icon)])
         out[("BMP ", icon)] = encode(make(rows))
     return out

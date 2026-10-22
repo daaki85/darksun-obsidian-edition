@@ -14512,15 +14512,19 @@ arrows_ask:
 ; ARROWS_DROP: the arrows left on the ground at the party's feet (no room in the backpack): PICK_TEXT
 ; holds their item record. As the game's script DROP (2Fh, 6A894h) leaves an item: B8h:55Ah makes a
 ; thing of an object at a place (the object, -1, x, y, 0, the item's +10h, 0Fh; the thing back, or
-; -1), here of the game's Arrows (object 1070, whose map picture the pile has) at the party's figure
-; (2C0h:369h; its x and y at [WALL_POS]); the item it comes with becomes the arrows' record (its
-; link to the next kept). DS the game's; registers changed.
+; -1), here of the arrows' own object (their picture negated: the pile on the map is drawn with
+; that object's icon, the spell's arrows) at the party's figure
+; (2C0h:369h; its x and y at [WALL_POS]). The Loader's objects have no item record (RDFF), so the
+; thing comes as a picture alone (kind 0): an item record from the game's free list becomes the
+; arrows' and the thing's list, as the inventory's DROP leaves one of them. (An object with an
+; item of its own: that item becomes the arrows', its link to the next kept.) DS the game's;
+; registers changed.
 ARROWS_DROP  equ 3              ; (USE_TAKEN: dsloader/spellarrows.py)
 PILE_SEG     equ 0x1DF3         ; (DSUN.EXE, less the load segment) B8h:55Ah, a thing made
 PILE_OFF     equ 0x55A
 FIGURE_SEG   equ 0x3781 - 0x4356 ; the party's figure on the map: its thing at this segment:369h, from DS
-ARROWS_OBJECT equ 1070          ; (the game's Arrows: picture FBD2h)
 THING_MOST   equ 0x208          ; (the things table: objects 0-519)
+FREE_ITEMS   equ 0x4D76         ; DS: the first free item record (each names the next at +04h)
 arrows_drop:
         mov ax, ds
         add ax, FIGURE_SEG
@@ -14536,7 +14540,9 @@ arrows_drop:
         push word [bx + WALL_POS + 2]
         push word [bx + WALL_POS]
         push word -1
-        push word ARROWS_OBJECT
+        mov ax, [cs:pick_text]  ; (the arrows' own object: their picture negated)
+        neg ax
+        push ax
         mov ax, PILE_SEG
         mov dx, PILE_OFF
         call pp_aim
@@ -14549,15 +14555,29 @@ arrows_drop:
         add ax, THINGS_SEG
         mov es, ax
         cmp byte [es:bx + COMBATANT_CREATURE - 1], 1
-        jne .ret                ; (not a list of items)
-        mov ax, [es:bx + COMBATANT_CREATURE]
+        je .item                ; (an object with an item of its own: it becomes the arrows)
+        cmp byte [es:bx + COMBATANT_CREATURE - 1], 0
+        jne .ret
+        mov ax, [FREE_ITEMS]    ; (a picture alone, the Loader's objects having no item record:
+        cmp ax, 9999            ;   an item from the game's free list, the thing its list)
+        jae .ret
+        mov byte [es:bx + COMBATANT_CREATURE - 1], 1
+        mov [es:bx + COMBATANT_CREATURE], ax
+        imul ax, ax, 0x15
+        les di, [ITEMS]
+        add di, ax
+        mov ax, [es:di + 4]
+        mov [FREE_ITEMS], ax
+        push word 9999          ; (the only one in it)
+        jmp .copy
+.item:  mov ax, [es:bx + COMBATANT_CREATURE]
         cmp ax, 9999
         jae .ret
         imul ax, ax, 0x15
         les di, [ITEMS]
         add di, ax
         push word [es:di + 4]   ; (its link to the next)
-        push ds
+.copy:  push ds
         push cs
         pop ds
         mov si, pick_text
