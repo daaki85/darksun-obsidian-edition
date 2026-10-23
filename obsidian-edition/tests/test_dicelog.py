@@ -802,6 +802,19 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(duration), [])
         self.assertEqual(len(log.describe(duration)), 1)  # (only the one after a burn)
 
+    def test_sunstroke_heat(self):
+        """Sunstroke's heat (DSCLOG's BURN_PASS: Acid's burn made 1d4 of fire named Sunstroke, at
+        each round's start while it holds); its damage's duration roll after it says nothing."""
+        log = make_game()
+        heat = entry(raw_for(3, 4), dicelog.DICE_SITE, words(0, 0, 1, 4), words(0, 0, 0x29, 1),
+                     parent_code=dicelog.CHARGE_USED_RETURN)
+        self.assertEqual(log.describe(heat), ["    Sunstroke's heat on Mountain Stalker: 1d4 = [3] = 3 fire damage"])
+        self.assertTrue(log._sun_burn)
+        duration = entry(raw_for(2, 4), dicelog.DICE_SITE, words(0, 0, 1, 4), words(0, 0, game.SUNSTROKE_SPELL, 11),
+                         parent_code=dicelog.SPELL_DURATION_RETURN)
+        self.assertEqual(log.describe(duration), [])
+        self.assertFalse(log._sun_burn)
+
     def test_mirror_images(self):
         """Mirror Images' d100: on a foe's spell (7A5BFh's 1d100, NS_IMAGE: the spell routine's
         target and caster), none from the target's own side; on an attack's hit (DSCLOG's NS_BLOW:

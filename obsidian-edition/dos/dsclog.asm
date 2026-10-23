@@ -11244,6 +11244,14 @@ USE_STUB    equ 0x59C - 0x663   ; (76803h's stub segment, less DS's)
 USE_ENTRY   equ 0x57
 USE_OUT     equ 0x768FE - 0x7680B ; (76803h's "pop di / pop si / pop bp / retf", from the INT's return)
 PERMANENT_DUR equ -9999
+BURN_STUB   equ 0x5B0 - 0x663   ; (7897Bh's stub segment, less DS's)
+BURN_ENTRY  equ 0x4D
+HELD_EFFECT equ 34              ; Paralyzed
+BURN_DICE   equ 2               ; (from 7897Bh's way back from ACID_BURN: its "push 40002h"'s
+BURN_SPELL  equ 789C1h - 78985h ;   dice, 2d4, and its "push 400012h"'s spell and damage kind)
+SUN_KIND    equ 2               ; fire
+ACID_ARROW_SPELL equ 0x12
+ACID_KIND   equ 0x40
 
 ; ACID_ROUNDS: "cmp dword [bp+0Eh],-9999" (76525h; 8 bytes: the INT, the site's number, 5 NOPs) in
 ; the routine adding an effect (76442h: [BP+0Ch] the effect, [BP+0Eh] its time, a dword; less than
@@ -11283,6 +11291,22 @@ acid_rounds:
 acid_burn:
         mov byte [cs:acid_burning], 1
         mov si, [bp + 6]
+        push bx
+        push es
+        push ax
+        mov bx, sp
+        les bx, [ss:bx + 6]             ; (ES:BX the way back: the burn's "push 40002h")
+        mov word [es:bx + BURN_DICE], 2
+        mov word [es:bx + BURN_SPELL], ACID_ARROW_SPELL
+        mov word [es:bx + BURN_SPELL + 2], ACID_KIND
+        cmp byte [cs:sun_heat], 0
+        je .out
+        mov word [es:bx + BURN_DICE], 1 ; (Sunstroke's heat: 1d4 of fire, named Sunstroke)
+        mov word [es:bx + BURN_SPELL], SUNSTROKE_SPELL
+        mov word [es:bx + BURN_SPELL + 2], SUN_KIND
+.out:   pop ax
+        pop es
+        pop bx
         iret
 
 ; ACID_ONCE: "cmp word [bp-1Eh],0" (78DEFh; 4 bytes: the INT, the site's number and a NOP) where a
@@ -11334,6 +11358,26 @@ acid_round:
         push es
         sti
         mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
+        mov byte [cs:sun_pass], 0
+        call burn_pass                  ; each creature's Acid
+        mov byte [cs:sun_pass], 1
+        call burn_pass                  ; each creature Sunstroke holds: its heat
+        mov di, sp
+        cmp word [0x55A], 0
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+; BURN_PASS: for ACID_ROUND (SS:BX+34 the INT's way back), in order of their numbers, each creature
+; with Acid's charges, each spending one through 76803h (SUN_PASS 0); or each Sunstroke holds
+; (Paralyzed from it), burnt through Acid's burn, 7897Bh, its heat (SUN_HEAT: ACID_BURN makes it
+; 1d4 of fire named Sunstroke) (SUN_PASS 1). Ends when Sunstroke's paralysis does, or is cured.
+sun_pass db 0
+sun_heat db 0
+burn_pass:
         mov dx, -1                      ; (DX the last creature done)
 .next:  mov ax, ds
         sub ax, EFFECTS_FROM_DS
@@ -11345,11 +11389,18 @@ acid_round:
         imul si, cx, 10
         add si, EFFECTS_OFF
         inc cx
+        cmp byte [cs:sun_pass], 0
+        jne .held
         cmp byte [es:si + 6], ACID_EFFECT
         jne .scan
         cmp byte [es:si + 8], 0
         je .scan
-        mov ax, [es:si]
+        jmp .match
+.held:  cmp byte [es:si + 6], HELD_EFFECT
+        jne .scan
+        cmp word [es:si + 4], SUNSTROKE_SPELL
+        jne .scan
+.match: mov ax, [es:si]
         cmp dx, -1
         je .first
         cmp ax, dx
@@ -11372,11 +11423,19 @@ acid_round:
         mov [cs:acid_far + 2], ax
         mov word [cs:acid_far], USE_ENTRY
         mov byte [cs:acid_mine], 1
-        push word ACID_EFFECT
+        cmp byte [cs:sun_pass], 0
+        je .call
+        mov ax, ds
+        add ax, BURN_STUB
+        mov [cs:acid_far + 2], ax
+        mov word [cs:acid_far], BURN_ENTRY
+        mov byte [cs:sun_heat], 1
+.call:  push word ACID_EFFECT
         push di
         call far [cs:acid_far]
         add sp, 4
         mov byte [cs:acid_mine], 0
+        mov byte [cs:sun_heat], 0
         pop bp
         pop ax                          ; (the way back, as the overlay manager has left it)
         pop cx
@@ -11385,14 +11444,7 @@ acid_round:
         mov [ss:bx + 34], ax
         mov [ss:bx + 36], cx
         jmp .next
-.done:  mov di, sp
-        cmp word [0x55A], 0
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+.done:  ret
 
 ; BACKSTAB DICE (RULE_HI_BACKSTAB): the game's backstab multiplies the whole of a hit's damage,
 ; STR's bonus and the weapon's included (x2 to x5 by thief level: 595C4h); AD&D's multiplies the

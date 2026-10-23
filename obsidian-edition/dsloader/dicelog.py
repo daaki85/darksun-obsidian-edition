@@ -524,6 +524,7 @@ class DiceLog:
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
         self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
+        self._sun_burn = False  # a Sunstroke heat line just given (the same)
         self._spell_name = ""
         self._spell_id: Optional[int] = None
         self.tracker: Optional[PartyTracker] = None
@@ -2189,6 +2190,10 @@ class DiceLog:
                 return [f"    Summoning: 1d{sides} = {faces[0]} picks which of its {sides} creatures comes"]
             if e.parent_code.startswith(CHARGE_USED_RETURN):
                 who, eid = self._name(e.parent_arg(6)), e.parent_arg(8)
+                if eid == ACID and count == 1:  # (DSCLOG's BURN_PASS: Sunstroke's heat, 1d4 of fire)
+                    self._sun_burn = True  # (the damage's own duration roll after it means nothing)
+                    return self.flush(now, force=True) + [
+                        f"    Sunstroke's heat on {who}: 1d{sides} = {faces_text} = {sum(faces)} fire damage"]
                 if eid == ACID:
                     self._acid_burn = True  # (the damage's own duration roll after it means nothing)
                     return self.flush(now, force=True) + [
@@ -2325,6 +2330,9 @@ class DiceLog:
         g = self.game
         spell, level = e.parent_arg(6), (e.parent_arg(8) or 0) & 0xFF
         if spell is None:
+            return []
+        if spell == game.SUNSTROKE_SPELL and self._sun_burn:
+            self._sun_burn = False  # (Sunstroke's heat: the same)
             return []
         dice = f"{count}d{sides}" + (f" = [{' + '.join(map(str, faces))}]" if sides > 1 else "")
         rec = g.spell_record(spell)
