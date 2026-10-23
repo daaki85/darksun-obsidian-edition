@@ -39,6 +39,19 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
   fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
   to the game's.
+- **Spheres:** Blade Barrier is air's, Wall of Thorns earth's and Sunstroke fire's, not the
+  cosmos's (`P6_MASKS`, `game.PRIEST6_MASKS`: `AIR_MASK`, `EARTH_MASK` 0010808Ah, the earth's
+  own 5th-level rows', `FIRE_MASK`); the cosmos keeps Heal and Harm.
+- **Whirlwind lasts and sweeps:** built on Stinking Cloud (its record, `ns_templates`; its
+  ground entry, a lasting one whose spell acts each round on those in it, `AREA_NEW 8`) with
+  Sand Storm's picture: 1d4 rounds and 1 more from 7th level, 2d8 crushing each round, a save
+  vs spell for half. A failed save reaches the damage routine's effect step (78DEFh, after the
+  save at 78DB0h), where `ACID_ONCE` now has `SWEPT_MARK` mark the creature (`SWEPT`) and put
+  nothing on (the record's Stuck is never put on), recorded (kind 11:
+  `X is swept off its feet: loses its next turn`). At the next round's start `PROBE_MOVE`
+  (57566h, each creature's movement) gives a marked one no movement and the initiative -1 the
+  game gives a held creature, so it doesn't act, then clears the mark; a fight's first round
+  clears them all. Not helpless: attacks, saves and damage against it are as usual.
 - **Sunstroke's heat:** 1d4 of fire at the start of each round on a creature Sunstroke holds.
   `ACID_ROUND`'s pass (now `BURN_PASS`, twice: Acid, then Sunstroke) calls Acid's burn (7897Bh,
   through its stub) for each creature with a Paralyzed entry from Sunstroke, `SUN_HEAT` set:

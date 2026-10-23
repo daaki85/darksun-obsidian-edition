@@ -215,6 +215,7 @@ REQUEST_NAMES = {
 KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the frame (caster [BP+6])
 KIND_HEAT = 10  # DSCLOG's HEAT_SITE: Sunstroke's heat on a creature: raw = the damage | the spell << 8,
 # the creature the extra (its 1d4 rolled just before, by a caller the overlay manager may hide)
+KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that failed its save: raw = it
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
@@ -1909,6 +1910,8 @@ class DiceLog:
             return self._wall(e, now)
         if e.kind == KIND_HEAT:
             return self._heat(e, now)
+        if e.kind == KIND_SWEPT:
+            return [f"    {self._name(e.raw)} is swept off its feet: loses its next turn"]
         if e.kind == KIND_CAST:
             self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
             return []

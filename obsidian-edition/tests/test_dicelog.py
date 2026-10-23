@@ -821,6 +821,12 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(duration), [])
         self.assertFalse(log._sun_burn)
 
+    def test_swept(self):
+        """Whirlwind's damage after a failed save (DSCLOG's SWEPT_MARK: the combatant): its next turn lost."""
+        log = make_game()
+        self.assertEqual(log.describe(entry(0x29, kind=dicelog.KIND_SWEPT)),
+                         ["    Mountain Stalker is swept off its feet: loses its next turn"])
+
     def test_mirror_images(self):
         """Mirror Images' d100: on a foe's spell (7A5BFh's 1d100, NS_IMAGE: the spell routine's
         target and caster), none from the target's own side; on an attack's hit (DSCLOG's NS_BLOW:

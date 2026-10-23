@@ -25,18 +25,19 @@ TEXTS: Dict[int, str] = {
     203: "HEAL:  A touch cures every wound, disease and blindness. Cosmos, 6th level.",
     204: "HARM:  A touch leaves a creature 1d4 hit points, and diseased. No saving throw. Cosmos, 6th level.",
     205: "BLADE BARRIER:  A wall of whirling blades: 8d8 to any creature in it or passing through. "
-         "Cosmos, 6th level.",
+         "Air, 6th level.",
     206: "WALL OF THORNS:  A wall of tangled thorns: 8 plus its armour class to any creature in it "
-         "or pushing through, so the less armoured are torn the worse. Cosmos, 6th level.",
+         "or pushing through, so the less armoured are torn the worse. Earth, 6th level.",
     207: "SUNSTROKE:  A beam of searing sunlight: the creature it strikes, if it fails its saving "
-         "throw, collapses, helpless, for 2 rounds per level. Cosmos, 6th level.",
+         "throw, collapses, helpless, for 2 rounds per level, burning for 1d4 each round. Fire, 6th level.",
     208: "FIRE SEEDS:  Four acorns of fire, 2d8 each, hurled together: 8d8 where they burst, a "
          "saving throw for half. Fire, 6th level.",
     209: "HEARTSEEKER:  An arrow of living wood seeks the heart: the creature it strikes must save "
          "against death or die. Earth and water, 6th level.",
     210: "WATER OF LIFE:  A touch heals a creature's wounds by taking them onto the caster, who keeps "
          "5 hit points. Water, 6th level.",
-    211: "WHIRLWIND:  A whirlwind tears through an area: 2d8, a saving throw for half. Air, 6th level.",
+    211: "WHIRLWIND:  A whirlwind that stays 1d4 rounds (+1 from 7th level): 2d8 to any creature in "
+         "it, a saving throw for half; one that fails is swept off its feet and loses its next turn. Air.",
     PICK_SPIN: "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
                "If it fails, the thief tries to slip away unseen. Not in a fight.",
     PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows per level, using a 1st-level slot. "

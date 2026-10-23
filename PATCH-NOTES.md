@@ -147,13 +147,13 @@ A few of them:
 |---|---|---|
 | **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
 | **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
-| **Blade Barrier** | druids, Healer clerics | a wall: 8d8 to each creature in it, a save for none |
-| **Wall of Thorns** | druids, Healer clerics | a wall: 8 plus the creature's AC to each creature in it |
-| **Sunstroke** | druids, Healer clerics | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |
+| **Blade Barrier** | air | a wall: 8d8 to each creature in it, a save for none |
+| **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
+| **Sunstroke** | fire | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |
 | **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
 | **Heartseeker** | earth, water | save against death or die |
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
-| **Whirlwind** | air | 2d8 in an area, a save for half |
+| **Whirlwind** | air | a whirlwind that stays 1d4 rounds: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn |
 
   The walls look like circling blades and a tangle of thorns, Fire Seeds bursts as a fireball and Whirlwind swirls as a sand storm (Wake of the Ravager's pictures, when it's installed; the walls recoloured fire walls without it).
 

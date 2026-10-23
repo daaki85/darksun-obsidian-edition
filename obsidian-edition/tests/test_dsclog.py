@@ -4275,7 +4275,7 @@ class KitTests(unittest.TestCase):
         self.assertEqual(moved[:45 * 18], areas)
         for n, (template, spell, picture) in enumerate(((22, game.BLADE_SPELL, 8419), (22, game.THORNS_SPELL, 8419),
                                                          (37, game.SEEDS_SPELL, 8405),
-                                                         (18, game.WHIRLWIND_SPELL, 8403))):
+                                                         (8, game.WHIRLWIND_SPELL, 8403))):
             want = bytearray(areas[template * 18:template * 18 + 18])
             struct.pack_into("<H", want, 0, spell)
             struct.pack_into("<H", want, 3, picture)

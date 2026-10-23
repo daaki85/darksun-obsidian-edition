@@ -11240,6 +11240,7 @@ area_site:
 ; burnt in turn): ACID_BURN notes a burn starting and ACID_ONCE has its damage put no effect on.
 ACID_EFFECT equ 1
 ROUND_SECONDS equ 60
+STUCK_EFFECT equ 51
 USE_STUB    equ 0x59C - 0x663   ; (76803h's stub segment, less DS's)
 USE_ENTRY   equ 0x57
 USE_OUT     equ 0x768FE - 0x7680B ; (76803h's "pop di / pop si / pop bp / retf", from the INT's return)
@@ -11331,6 +11332,27 @@ heat_site:
 .move:  mov si, [bp + 0x0A]
         iret
 
+; SWEPT_MARK: for ACID_ONCE, Whirlwind's damage on combatant [BP+6] after a failed save: marked
+; (SWEPT), for PROBE_MOVE to take its next turn; recorded (KIND_SWEPT: the combatant). All kept.
+KIND_SWEPT  equ 11
+SWEPT_MAX   equ 64
+swept   times SWEPT_MAX db 0
+swept_mark:
+        pushad
+        push es
+        mov bx, [bp + 6]
+        cmp bx, SWEPT_MAX
+        jae .out
+        mov byte [cs:swept + bx], 1
+        mov ax, bx
+        mov si, sp
+        add si, 28 + 2 + 4              ; (SS:SI+6: the INT's return address, past this call and
+        mov word [cs:kind], KIND_SWEPT  ;   ACID_ONCE's AX and DI)
+        call record
+.out:   pop es
+        popad
+        ret
+
 ; ACID_ONCE: "cmp word [bp-1Eh],0" (78DEFh; 4 bytes: the INT, the site's number and a NOP) where a
 ; spell's damage (78C19h) puts the record's effect ([BP-1Eh]) on the target it hurt: during an Acid
 ; burn (ACID_BURNING, then cleared) none, as if the record had none; else the compare made, its
@@ -11338,7 +11360,12 @@ heat_site:
 acid_once:
         push di
         push ax
-        cmp byte [cs:acid_burning], 0
+        cmp word [bp + 0x0A], WHIRLWIND_SPELL
+        jne .burn
+        call swept_mark
+        xor ax, ax                      ; (ZF set: "none")
+        jmp .flags
+.burn:  cmp byte [cs:acid_burning], 0
         je .test
         mov byte [cs:acid_burning], 0
         xor ax, ax                      ; (ZF set: "none")
@@ -11380,7 +11407,21 @@ acid_round:
         push es
         sti
         mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
-        mov byte [cs:sun_pass], 0
+        cmp word [0x55A], 0
+        je .marks
+        push cx                         ; (a fight's first round: no SWEPT left from another)
+        push di
+        push es
+        push cs
+        pop es
+        mov di, swept
+        mov cx, SWEPT_MAX
+        xor al, al
+        rep stosb
+        pop es
+        pop di
+        pop cx
+.marks: mov byte [cs:sun_pass], 0
         call burn_pass                  ; each creature's Acid
         mov byte [cs:sun_pass], 1
         call burn_pass                  ; each creature Sunstroke holds: its heat
@@ -11818,7 +11859,17 @@ THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 probe_move:
         call kit_move
 .store: mov [es:bx+0x22B], ax
-        iret
+        cmp di, SWEPT_MAX               ; (DI the combatant, BX its creature x 2: Whirlwind's
+        jae .out                        ;   SWEPT, its turn lost: no movement, and the
+        cmp byte [cs:swept + di], 0     ;   initiative of one that doesn't act, -1)
+        je .out
+        mov byte [cs:swept + di], 0
+        mov word [es:bx+0x22B], 0
+        push bx
+        shl bx, 1                       ; (the initiative's a creature x 4)
+        mov word [es:bx+0xD9], -1
+        pop bx
+.out:   iret
 
 ; PROBE_TWO: INT VEC_TWO replaces "neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx" (10
 ; bytes: INT + 8 NOPs) in the routine that gives an attack's to-hit adjustment for two weapons
@@ -13011,7 +13062,8 @@ area_new:
         AREA_NEW 22, BLADE_SPELL, FIRE_WALL_OBJECT  ; (the fire walls' entry: NS_SETUP puts the blades
         AREA_NEW 22, THORNS_SPELL, FIRE_WALL_OBJECT ;   and thorns in, with the copy)
         AREA_NEW 37, SEEDS_SPELL, 8405  ; (Flame Strike's: the fireball)
-        AREA_NEW 18, WHIRLWIND_SPELL, 8403 ; (Ice Storm's: Sand Storm's, as in Wake of the Ravager's)
+        AREA_NEW 8, WHIRLWIND_SPELL, 8403 ; (Stinking Cloud's, lasting, its spell each round on those in
+                                ;   it: Sand Storm's picture, as in Wake of the Ravager's)
 area_new_end:
 seg_move:
         cmp byte [cs:seg_moved], 0
@@ -13164,6 +13216,7 @@ WIZARD_WALL_FIRE equ 54
 FLAME_STRIKE equ 131
 SLAY_LIVING  equ 136
 HOLD_PERSON  equ 86
+STINKING_CLOUD equ 22
 PERMANENT_TIME equ 0xD8F1      ; (-9999: a record's time unit for an effect until it is taken away)
 LEND_HEALTH  equ 156            ; (the psionic power whose handler moves hit points: Water of Life's)
 STRENGTH_SPELL equ 23
@@ -13308,7 +13361,7 @@ ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up 
 ns_levels    db 2, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 ; each one's spell level ...
 ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL, MIRROR_SPELL, CHARM_SPELL, STRENGTH_SPELL
              db CURE_CRITICAL, CAUSE_CRITICAL, PRIEST_WALL_FIRE, PRIEST_WALL_FIRE, HOLD_PERSON
-             db FLAME_STRIKE, SLAY_LIVING, CURE_CRITICAL, FLAME_STRIKE
+             db FLAME_STRIKE, SLAY_LIVING, CURE_CRITICAL, STINKING_CLOUD
                                 ; ... the spell whose record it takes ...
 ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT, MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT
              times NS_COUNT - PRIEST6 db 0
@@ -13325,8 +13378,12 @@ ns_known_bit db 0x10, 0x20, 0x40, 0x08, 0x80, 0x80 ;   byte and bit that say a m
 ; ... the 6th-level priest spells' masks in the table of spell levels (the game's own, by sphere: the
 ; cosmos's at 4th and 5th level, the druids' alone; the elements' as their 5th-level spells')
 COSMOS_MASK  equ 0x001003C2
-P6_MASKS:    dd COSMOS_MASK, COSMOS_MASK, COSMOS_MASK, COSMOS_MASK, COSMOS_MASK
-             dd 0x00110112, 0x001282AA, 0x00120222, 0x00104046 ; (fire; earth and water; water; air)
+FIRE_MASK    equ 0x00110112
+EARTH_MASK   equ 0x0010808A
+AIR_MASK     equ 0x00104046
+P6_MASKS:    dd COSMOS_MASK, COSMOS_MASK, AIR_MASK, EARTH_MASK, FIRE_MASK ; (Heal, Harm; Blade Barrier,
+             dd FIRE_MASK, 0x001282AA, 0x00120222, AIR_MASK ; Wall of Thorns, Sunstroke; Fire Seeds;
+                                ;   Heartseeker, earth and water's; Water of Life, water's; Whirlwind)
 ; NS_PATCHES: the records' changes from their templates': the new spell (0 to NS_COUNT - 1), the
 ; place, 1 (a byte) or 2 (a word), the value; 0FFh ends them.
 %macro NS_PATCH 4
@@ -13375,7 +13432,11 @@ ns_patches:
         NS_PATCH SEEDS_SPELL, 0x1D, 1, 0x47
         NS_PATCH SEEDS_SPELL, 0x1E, 1, 8
         NS_PATCH SEEDS_SPELL, 0x17, 1, AREA_COUNT + 2 ; (its own picture: the fireball)
-        NS_PATCH WHIRLWIND_SPELL, 0x1A, 2, 0x208 ; Whirlwind: 2d8 crushing (no damage kind is no damage), Ice Storm's storm to see (Dust Cloud's whirl deals nothing)
+        NS_PATCH WHIRLWIND_SPELL, 0x1A, 2, 0x208 ; Whirlwind: Stinking Cloud's lasting area, 2d8 crushing
+        NS_PATCH WHIRLWIND_SPELL, 0x1F, 1, 0xA1 ;   each round, a save vs spell for half; a failed save
+        NS_PATCH WHIRLWIND_SPELL, 0x19, 1, STUCK_EFFECT ; sweeps the creature off its feet (SWEPT; the
+        NS_PATCH WHIRLWIND_SPELL, 4, 1, 0x41    ;   effect only a mark, never put on); 1d4 rounds and
+        NS_PATCH WHIRLWIND_SPELL, 5, 2, 1       ;   1 a "level" (+1Dh's 7 levels), not the cloud's 1d6
         NS_PATCH WHIRLWIND_SPELL, 0x1C, 1, 0
         NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x17
         NS_PATCH WHIRLWIND_SPELL, 0x1E, 1, 8

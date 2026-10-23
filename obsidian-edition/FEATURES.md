@@ -1232,21 +1232,25 @@ slots.
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
 | **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
-| **Blade Barrier** | cosmos | a wall | 8d8 to each creature in it or passing through; a save for none |
-| **Wall of Thorns** | cosmos | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
-| **Sunstroke** | cosmos | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
+| **Blade Barrier** | air | a wall | 8d8 to each creature in it or passing through; a save for none |
+| **Wall of Thorns** | earth | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
+| **Sunstroke** | fire | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
 | **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
 | **Heartseeker** | earth, water | one creature | it saves against death or dies |
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
-| **Whirlwind** | air | an area | 2d8 crushing, a save for half |
+| **Whirlwind** | air | an area, 1d4 rounds (+1 from 7th level) | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
 How they're made, and where they differ from the books:
 
 - Each is built on a spell the game already has, so the game's own code casts
   it: Heal on Cure Critical Wounds, Harm on Cause Critical Wounds, the walls
-  on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds and
-  Whirlwind on Flame Strike, Heartseeker on Slay Living and Water of Life on
-  Lend Health.
+  on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds on Flame
+  Strike, Whirlwind on Stinking Cloud, Heartseeker on Slay Living and Water of
+  Life on Lend Health.
+- Their spheres: Heal and Harm are the cosmos's (every druid's, and a Healer
+  cleric's); Blade Barrier and Whirlwind air's, Wall of Thorns earth's,
+  Sunstroke and Fire Seeds fire's, Heartseeker earth's and water's, Water of
+  Life water's.
 - **Blade Barrier and Wall of Thorns are walls of their own**, made as the
   game makes its fire walls but each with its own damage and its own picture:
   a ring of circling blades and a tangle of thorns, Wake of the Ravager's (the
@@ -1265,9 +1269,12 @@ How they're made, and where they differ from the books:
   bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
   Lands has too) where Flame Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot.
-- **Whirlwind** works as Ice Storm's storm (the game's dust cloud does no
-  damage) and looks like Wake of the Ravager's Sand Storm, a swirl of dust; it
-  doesn't move or hold its victims.
+- **Whirlwind** stays where it is cast, as Stinking Cloud does, for 1d4
+  rounds (1 more from 7th level), and looks like Wake of the Ravager's Sand
+  Storm, a swirl of dust. Each round it does 2d8 crushing to every creature in
+  it (a save for half), your party included; one that fails its save is swept
+  off its feet and loses its next turn (no movement, no action), without being
+  helpless as a held creature is. It doesn't move.
 - **Harm** on a helpless creature, which the game hits with the most its dice
   can do, still leaves it 1d4 hit points.
 

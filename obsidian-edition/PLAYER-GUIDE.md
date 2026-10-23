@@ -1415,7 +1415,7 @@ each has its own element's.
 | 3 | Bestow Curse, Cause Blindness or Deafness, Cause Disease, Cure Blindness or Deafness, Cure Disease, Dispel Magic, Magical Vestments, Negative Plane Protection, Prayer, Remove Curse, Remove Paralysis | |
 | 4 | | Abjure, Cause Serious Wounds, Cloak of Bravery, Cloak of Fear, Cure Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius |
 | 5 | | Cause Critical Wounds, Cure Critical Wounds, Dispel Evil, Raise Dead, Slay Living |
-| 6 | | Blade Barrier, Harm, Heal, Sunstroke, Wall of Thorns |
+| 6 | | Harm, Heal |
 
 | Level | Air | Earth | Fire | Water |
 |---|---|---|---|---|
@@ -1424,7 +1424,7 @@ each has its own element's.
 | 3 | Conjure Lesser Air Elemental, Summon Insects | Conjure Lesser Earth Elemental | Conjure Lesser Fire Elemental, Protection from Fire | Conjure Lesser Water Elemental |
 | 4 | Dust Cloud, Protection from Lightning | Condense, Dust Cloud | Focus Heat, Produce Fire | Blood Flow, Dehydrate |
 | 5 | Conjure Air Elemental, Deflection, Insect Plague | Conjure Earth Elemental, Ironskin, Quicksand | Conjure Fire Elemental, Flame Strike, Wall of Fire | Conjure Water Elemental, Quicksand |
-| 6 | Whirlwind | Heartseeker | Fire Seeds | Heartseeker, Water of Life |
+| 6 | Blade Barrier, Whirlwind | Heartseeker, Wall of Thorns | Fire Seeds, Sunstroke | Heartseeker, Water of Life |
 
 An Elementalist has its second sphere's column too.
 
@@ -1443,7 +1443,9 @@ AD&D's spell tables and the new spells switched on):
 - **Heartseeker**: one creature saves against death or dies.
 - **Water of Life** (touch): the creature's wounds pass to the caster, who
   keeps at least 5 hit points.
-- **Whirlwind**: 2d8 in an area, a save for half.
+- **Whirlwind**: a whirlwind that stays 1d4 rounds (one more from 7th level):
+  2d8 each round to each creature in it, a save for half; one that fails is
+  swept off its feet and loses its next turn.
 
 ### Effects
 
