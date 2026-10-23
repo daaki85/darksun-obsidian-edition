@@ -135,6 +135,67 @@ def spell_icons(wotr_resources: str, sl_gpldata: str) -> Dict[str, List[List[int
         return {}
 
 
+# Its pictures on the ground for two of them (OBJEX.GFF, beside its RESOURCE.GFF): its table of a
+# spell's area picture gives Blade Barrier object 8432 (circling blades) and Wall of Thorns 8425
+# (a tangle of thorns), neither in Shattered Lands. AREA_OBJECTS: each, by name, its object and
+# picture (BMP) numbers in the Loader's copy of SEGOBJEX.GFF (the same objects; free pictures),
+# made from Shattered Lands' fire wall's object (8419: its +2 and +4 the picture's anchor, from
+# Wake of the Ravager's) and recoloured in the stable colours (DSCLOG's AREA_NOTE puts them in the
+# walls' entry as each is cast). Without Wake of the Ravager, AREA_FALLBACKS: the fire wall's own
+# picture in a colour of the spell's, as bright as each pixel.
+OBJECTS_FILE = "OBJEX.GFF"
+FIRE_WALL_OBJECT = 8419
+AREA_OBJECTS: Dict[str, Tuple[int, int]] = {"Blade Barrier": (8432, 2650), "Wall of Thorns": (8425, 2651)}
+AREA_FALLBACKS: Dict[str, Tuple[int, int, int]] = {"Blade Barrier": (200, 210, 235), "Wall of Thorns": (120, 80, 35)}
+OJFF_ANCHOR = 2  # (two words: x and y)
+
+
+def _nearest_map(colours: Sequence[Tuple[int, int, int]], stable) -> Dict[int, int]:
+    return {p: min(stable, key=lambda e: sum((a - b) ** 2 for a, b in zip(e[1], rgb)))[0]
+            for p, rgb in enumerate(colours)}
+
+
+def area_chunks(wotr_resources: Optional[str], sl_chunks: gff.Chunks, sl_gpldata: str) -> gff.Chunks:
+    """AREA_OBJECTS' objects and pictures for the Loader's SEGOBJEX.GFF (SL_CHUNKS the game's):
+    Wake of the Ravager's (beside WOTR_RESOURCES), else AREA_FALLBACKS' ({} if neither can be made)."""
+    try:
+        with open(sl_gpldata, "rb") as f:
+            gpl = f.read()
+        stable = stable_colours(gpl)
+        sl_palette = next(art.palette_colours(v) for k, v in sorted(gff.read_gff(gpl).items())
+                          if k[0] == "PAL " and len(v) >= 768)
+        wall = sl_chunks[("OJFF", FIRE_WALL_OBJECT)]
+        wall_picture = sl_chunks[("BMP ", struct.unpack_from("<H", wall, icons.OJFF_ICON)[0])]
+    except (OSError, StopIteration, KeyError, ValueError, IndexError, struct.error, gff.GffError):
+        return {}
+    theirs: gff.Chunks = {}
+    folder = os.path.dirname(wotr_resources) if wotr_resources else None
+    objex = art._find(folder, OBJECTS_FILE) if folder else None
+    try:
+        if objex:
+            with open(objex, "rb") as f:
+                theirs = gff.read_gff(f.read())
+            with open(wotr_resources, "rb") as f:
+                wotr_map = _nearest_map(art.palette_colours(gff.read_gff(f.read())[PALETTE]), stable)
+    except (OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
+        theirs = {}
+    out: gff.Chunks = {}
+    for name, (number, picture) in AREA_OBJECTS.items():
+        record = bytearray(wall)
+        struct.pack_into("<H", record, icons.OJFF_ICON, picture)
+        try:
+            own = theirs[("OJFF", number)]
+            frames = icons.recolour_frames(theirs[("BMP ", struct.unpack_from("<H", own, icons.OJFF_ICON)[0])], wotr_map)
+            record[OJFF_ANCHOR:OJFF_ANCHOR + 4] = own[OJFF_ANCHOR:OJFF_ANCHOR + 4]
+        except (KeyError, ValueError, IndexError, struct.error):
+            tint = AREA_FALLBACKS[name]
+            shades = [tuple(c * (r * 3 + g * 6 + b) // 2550 for c in tint) for r, g, b in sl_palette]
+            frames = icons.recolour_frames(wall_picture, _nearest_map(shades, stable))
+        out[("OJFF", number)] = bytes(record)
+        out[("BMP ", picture)] = frames
+    return out
+
+
 def tinted(rows: Sequence[Sequence[Optional[int]]], palette, stable, tint: Tuple[int, int, int]) -> List[List[Optional[int]]]:
     """ROWS (Shattered Lands' palette numbers) each halfway toward TINT, in the nearest STABLE colour."""
     cache: Dict[int, int] = {}

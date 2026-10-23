@@ -11051,6 +11051,7 @@ cast_site:
         mov word [cs:kind], KIND_CAST
         call record
         call wall_note
+        call area_note
         pop ax
         pop si
         mov cx, [bp + 6]
@@ -11070,6 +11071,59 @@ wall_note:
 .wall:  mov [cs:wall_last], al
 .done:  ret
 wall_last db 0
+
+; AREA_NOTE: AX a spell being cast: the pictures some new spells leave on the ground, in the game's
+; table of them (AREAS_FROM_DS: 18 bytes an entry, a record's +17h the entry, the object at +3),
+; set for this cast in the entries they share with their templates, as the thing put on the map
+; takes its object when it's made: Blade Barrier's circling blades and Wall of Thorns' thorns
+; (objects of the Loader's copy, with NS_OBJECTS: wotrart.AREA_OBJECTS) in the fire walls' entry,
+; Fire Seeds' fireball in Flame Strike's, Whirlwind's sand storm in Ice Storm's; any other spell's
+; the game's own (and theirs with NEW SPELLS off). Keeps every register; DS the game's.
+AREAS_FROM_DS equ SPELLS_FROM_DS + 0x33 ; (the table: the records' segment less 330h)
+AREA_WALL    equ 22 * 18 + 3    ; the fire walls' entry's object: 8419 (BLADE_OBJECT, THORNS_OBJECT)
+AREA_STRIKE  equ 37 * 18 + 3    ; Flame Strike's: 8406 (Fire Seeds the fireball's, 8405)
+AREA_STORM   equ 18 * 18 + 3    ; Ice Storm's: 8412 (Whirlwind Sand Storm's, 8403, in Wake of the
+FIRE_WALL_OBJECT equ 8419       ;   Ravager's table too)
+BLADE_OBJECT equ 8432
+THORNS_OBJECT equ 8425
+area_note:
+        push es
+        push bx
+        push cx
+        push dx
+        mov bx, ds
+        sub bx, AREAS_FROM_DS
+        mov es, bx
+        mov bx, FIRE_WALL_OBJECT
+        mov cx, 8406
+        mov dx, 8412
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .put
+        cmp ax, SEEDS_SPELL
+        jne .storm
+        mov cx, 8405
+.storm: cmp ax, WHIRLWIND_SPELL
+        jne .walls
+        mov dx, 8403
+.walls: cmp byte [cs:ns_state], 0xFF
+        je .put                 ; (not set up yet)
+        test byte [cs:ns_state], NS_OBJECTS
+        jz .put                 ; (no copy: no blades nor thorns)
+        cmp ax, BLADE_SPELL
+        jne .thorns
+        mov bx, BLADE_OBJECT
+.thorns:
+        cmp ax, THORNS_SPELL
+        jne .put
+        mov bx, THORNS_OBJECT
+.put:   mov [es:AREA_WALL], bx
+        mov [es:AREA_STRIKE], cx
+        mov [es:AREA_STORM], dx
+        pop dx
+        pop cx
+        pop bx
+        pop es
+        ret
 
 ; REST_SITE: "mov ax,si / imul ax,ax,3Ah" (806C3h; 5 bytes: the INT, the site's number and two
 ; NOPs) in the game's rest (8066Dh: its REST and a script's request 1, past its "NO RESTING DURING

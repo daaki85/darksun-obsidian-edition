@@ -971,6 +971,11 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
         added.update(bolt_chunks(chunks))
     except (KeyError, ValueError, IndexError, struct.error):
         pass  # (a game without Magic Missile's bolt: none to copy)
+    from . import art, wotrart  # (Blade Barrier's and Wall of Thorns' walls: Wake of the Ravager's, else tinted)
+    folder = os.path.dirname(os.path.abspath(source))
+    gpldata = art._find(folder, "GPLDATA.GFF")
+    if gpldata:
+        added.update(wotrart.area_chunks(wotrart.find_resources(folder), chunks, gpldata))
     from . import worldgear
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)
