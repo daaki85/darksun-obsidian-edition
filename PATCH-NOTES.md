@@ -155,8 +155,6 @@ A few of them:
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
 | **Whirlwind** | air | a whirlwind that stays a round a caster level: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn; nothing can be shot or cast through it |
 
-  The walls look like circling blades and a tangle of thorns, Fire Seeds bursts as a fireball (Wake of the Ravager's pictures, when it's installed; the walls recoloured fire walls without it) and Whirlwind is a tall, turning funnel of dust, its ring of dust at the edge of its area.
-
 ## Improved Thieving
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
@@ -246,6 +244,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
+- **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades and Wall of Thorns' tangle of thorns (Wake of the Ravager's, when it's installed; recoloured fire walls without it), Fire Seeds' fireball, and Whirlwind's tall funnel of dust, turning.
 
 ## Quality of Life
 

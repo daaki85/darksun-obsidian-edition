@@ -670,8 +670,8 @@ Everything there applies in games started from the Loader; a switch that says
   screen, and fuller starting gear.
 - **Expanded features** ([Expanded features](FEATURES.md#expanded-features)): the
   leader's CHA at shops, buying back magical items, and **Improved thieving**
-  (AD&D's thief skills, hiding to backstab, the cloak, boots and belt, and
-  picking pockets).
+  (AD&D's thief skills, hiding to backstab, the cloak, boots and belt,
+  backstabs multiplying the weapon's dice only, and picking pockets).
 - **New content** ([New content](FEATURES.md#new-content)): the new spells, at once; the
   new people, the vulture, defilers' scrolls and the new items, from the next
   time the game is started (what a saved game already has stays in it).

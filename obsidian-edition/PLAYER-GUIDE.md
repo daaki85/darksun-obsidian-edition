@@ -1443,9 +1443,10 @@ AD&D's spell tables and the new spells switched on):
 - **Heartseeker**: one creature saves against death or dies.
 - **Water of Life** (touch): the creature's wounds pass to the caster, who
   keeps at least 5 hit points.
-- **Whirlwind**: a turning funnel of dust that stays a round a caster level: 2d8 each
-  round to each creature in it, a save for half; one that fails is swept off
-  its feet and loses its next turn. Nothing can be shot or cast through it.
+- **Whirlwind**: a turning funnel of dust that stays a round a caster level:
+  2d8 each round to each creature in it, a save for half; one that fails is
+  swept off its feet and loses its next turn. Nothing can be shot or cast
+  through it.
 
 ### Effects
 
@@ -1737,8 +1738,8 @@ AD&D's tables:
 | | float a spell's name over its caster, and "Miss" over whoever an attack missed | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
 | More character customization | weapon specialization; kits; the XP level cap; STORE and RECALL on the creation screen; fuller starting gear | all on |
-| Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
-| New content | new wizard spells; new people; a small quest; new items; defilers' scrolls | all on |
+| Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
+| New content | the new spells (six wizard spells and nine 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; spells kept on a click on the Effects screen | on |
 | | rings in a fight: none, under the enemy chosen with Tab, or under all the enemies | under the enemy chosen |

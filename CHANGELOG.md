@@ -311,6 +311,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   where the game was still shows.
 
 **Documentation**
+- **Reviews, pictures and the since-2.6.0 list:** the patch notes' list of what comes after
+  2.6.0 brought up to date; the XP cap, the 6th-level spells and the new switches in the Loader
+  README, the guide's Options summary and the dice log table; Wake of the Ravager as an optional
+  install; a link and anchor check over every page (none broken, no picture unused). New
+  pictures: the nine 6th-level priest spells' descriptions (`new-priest-spells.png`) and
+  Whirlwind's turning funnel (`whirlwind.gif`, under Graphics: Spells on the ground); retaken:
+  the Options tab and the USE screen's spell slot line (`use-slots.png`, `default-party-armor.png`).
+  Three spell descriptions shortened to fit the game's box (Wall of Thorns, Sunstroke, Whirlwind).
 - A review of every page. The patch notes gain the spell arrows (under Items, and the
   Spellarcher among the kits described; its row in the kit table back to a name), and the
   dice log's new lines move from Quality of Life to The Loader with those missing (refused

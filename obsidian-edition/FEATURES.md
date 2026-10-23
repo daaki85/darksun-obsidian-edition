@@ -58,6 +58,7 @@ fixed, more saves and characters, and the game's speed. How each is done is in
   - [What the party wears](#what-the-party-wears)
   - [Shadows](#shadows)
   - [Dust](#dust)
+  - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
@@ -1241,6 +1242,8 @@ slots.
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
 | **Whirlwind** | air | an area, a round a caster level | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
+![The nine 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds and Water of Life](docs/new-priest-spells.png)
+
 How they're made, and where they differ from the books:
 
 - Each is built on a spell the game already has, so the game's own code casts
@@ -1673,6 +1676,19 @@ stand in front of them, as with the shadows. Switch it off on the Options tab.
 ![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
+
+### Spells on the ground
+
+The [6th-level priest spells](#6th-level-priest-spells) that stay on the map have
+pictures of their own: Blade Barrier a ring of circling blades and Wall of Thorns
+a tangle of thorns (Wake of the Ravager's, when it is installed; the game's fire
+wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
+funnel of dust in the middle of its area that turns as you watch, its ring of
+dust at the edge.
+
+![Whirlwind in the Scar fight: a tall grey funnel of dust turning over the party and Scar's henchmen](docs/whirlwind.gif)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ## Controls
 

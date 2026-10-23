@@ -423,15 +423,19 @@ over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
 own block down to what stays, then takes the buffer's block in the memory the
 install code had, while the ring and the panel's picture were taken at the
 top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
-58 KB of the helper, the buffer, 3.8 KB free, the panel and the ring.
+62 KB of the helper, the buffer, what is left free, the panel and the ring.
 The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
-the map open this left 86 KB free in conventional memory, against 53 KB (and
+the map open this left 86 KB free in conventional memory (85 KB measured again
+with the 6th-level spells, the largest piece 87,744 bytes), against 53 KB (and
 the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
 (`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
 D00Ah to F000h): the build fails past it (a negative `times`), and so does
-`test_fits_upper_memory`; 3.8 KB (244 paragraphs) are spare now. Text the game
+`test_fits_upper_memory`. Only 3 paragraphs (48 bytes) are spare now (3.8 KB
+before the 6th-level spells, the names over figures and Whirlwind's funnel), so
+new helper code needs room found first: each of the ring's entries is 12
+paragraphs (`NENT`), and the helper's own segment still has about 2.3 KB. Text the game
 reads from RESOURCE.GFF belongs in the Loader's copy of it, not in the helper
 (`spelltexts.py`: the descriptions moved there freed 1.6 KB). If the buffer still ends up in
 the heap (another DOSBox, less upper memory), the Loader says so in the dice
