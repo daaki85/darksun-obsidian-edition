@@ -976,6 +976,12 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     gpldata = art._find(folder, "GPLDATA.GFF")
     if gpldata:
         added.update(wotrart.area_chunks(wotrart.find_resources(folder), chunks, gpldata))
+        from . import whirlart  # (Whirlwind's funnel of dust)
+        try:
+            with open(gpldata, "rb") as f:
+                added.update(whirlart.chunks(chunks, wotrart.stable_colours(f.read())))
+        except (OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
+            pass
     from . import worldgear
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)

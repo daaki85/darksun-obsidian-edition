@@ -13053,6 +13053,11 @@ AREA_THORNS  equ AREA_BLADE + AREA_SIZE
 FIRE_WALL_OBJECT equ 8419       ; (the fire walls' picture: Blade Barrier's and Wall of Thorns' without
 BLADE_OBJECT equ 8432           ;   the Loader's copy of the objects, NS_OBJECTS; wotrart.AREA_OBJECTS)
 THORNS_OBJECT equ 8425
+AREA_WHIRL   equ AREA_BLADE + 3 * AREA_SIZE
+SAND_STORM_OBJECT equ 8403     ; (Whirlwind's without the copy; with it the funnel, whirlart.OBJECT)
+WHIRL_OBJECT equ 8433
+AREA_DRAW    equ 5              ; (an entry's byte for how its picture is drawn: low bits 1, one
+WHIRL_DRAW   equ 0x45           ;   picture, as Flame Strike's; Stinking Cloud's 47h, scattered)
 area_seg   dw 0                 ; AREA_SPACE's segment once SEG_MOVE has moved the table there
 %macro AREA_NEW 3
         db %1
@@ -13625,12 +13630,18 @@ ns_setup:
         mov es, ax
         mov ax, FIRE_WALL_OBJECT
         mov bx, ax
+        mov cx, SAND_STORM_OBJECT
         test byte [cs:ns_state], NS_OBJECTS
         jz .walls
         mov ax, BLADE_OBJECT
         mov bx, THORNS_OBJECT
+        mov cx, WHIRL_OBJECT
 .walls: mov [es:AREA_BLADE + 3], ax
         mov [es:AREA_THORNS + 3], bx
+        mov [es:AREA_WHIRL + 3], cx
+        cmp cx, WHIRL_OBJECT            ; (the funnel drawn once, not scattered as the cloud's)
+        jne .done
+        mov byte [es:AREA_WHIRL + AREA_DRAW], WHIRL_DRAW
 .done:  pop es
         popa
         pop ax
