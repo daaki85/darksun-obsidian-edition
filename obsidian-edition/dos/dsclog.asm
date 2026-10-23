@@ -153,7 +153,7 @@ VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
-NENT    equ 66          ; entries in the ring (66: the helper and it fit in upper memory)
+NENT    equ 65          ; entries in the ring (65: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
 LBL_SLOTS  equ 2        ; names floating over figures at once (LABELS)
 LBL_ROW    equ 16       ; bytes a row of a label's mask: LBL_ROW * 8 pixels wide at most
@@ -11388,6 +11388,72 @@ draw_site:
         pop bp
         iret
 
+; WHIRL_TICK: from the main loop (PROBE_SCROLL; DS the game's): the funnel last drawn (WT_THING)
+; turns, its thing's frame (+11h, every copy's) one on each WHIRL_TICKS of the BIOS clock, and its
+; picture is to be drawn again, as the dust's puffs are (D_DIRTY's rectangle: DUST_UNION has the
+; game's redrawing of what moved take it in, DUST_NUDGE draws the view again when nothing moves).
+WHIRL_TICKS  equ 3              ; (6 turns a second)
+WHIRL_FRAMES equ 4              ; (whirlart.FRAMES)
+wt_turned dw 0
+whirl_tick:
+        cmp word [cs:wt_thing], 0xFFFF
+        je .ret
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:BIOS_TICKS]
+        pop es
+        mov [cs:d_now], ax
+        mov dx, ax
+        sub dx, [cs:wt_turned]
+        cmp dx, WHIRL_TICKS
+        jb .ret
+        mov [cs:wt_turned], ax
+        mov bx, [cs:wt_thing]
+        shl bx, 5
+        add bx, MAP_THINGS
+        cmp word [bx + 0x1A], WHIRL_OBJECT
+        je .turn
+        mov word [cs:wt_thing], 0xFFFF  ; (its area gone, the thing another's)
+.ret:   ret
+.turn:  mov al, [bx + 0x11]
+        inc ax
+        cmp al, WHIRL_FRAMES
+        jb .frame
+        xor al, al
+.frame: mov [bx + 0x11], al
+        movzx dx, byte [bx + 7]         ; its picture's rectangle on the map
+        mov ax, [cs:wt_x]
+        sub ax, dx
+        movzx dx, byte [bx + 8]
+        mov cx, [cs:wt_y]
+        sub cx, dx
+        movzx dx, byte [bx + 0x12]
+        add dx, ax
+        movzx si, byte [bx + 0x13]
+        add si, cx
+        cmp byte [cs:d_dirty], 0        ; (with the puffs', if any)
+        je .set
+        cmp ax, [cs:d_x0]
+        jge .x1
+        mov [cs:d_x0], ax
+.x1:    cmp dx, [cs:d_x1]
+        jle .y0
+        mov [cs:d_x1], dx
+.y0:    cmp cx, [cs:d_y0]
+        jge .y1
+        mov [cs:d_y0], cx
+.y1:    cmp si, [cs:d_y1]
+        jle .nudge
+        mov [cs:d_y1], si
+        jmp short .nudge
+.set:   mov [cs:d_x0], ax
+        mov [cs:d_x1], dx
+        mov [cs:d_y0], cx
+        mov [cs:d_y1], si
+        mov byte [cs:d_dirty], 1
+.nudge: jmp dust_nudge
+
 ; WHIRL_PICK: WT_X, WT_Y the middle of thing BX's copies in the draw list (OBJ_LIST: the entries
 ; of the thing with 20h), WT_KX, WT_KY the copy nearest it; worked out again for another thing
 ; (WT_THING) or when cleared (each round's start, each cast: a thing's number is used again once
@@ -17574,6 +17640,7 @@ probe_scroll:
         inc word [cs:main_ticks]
         mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
         call dust_tick
+        call whirl_tick
         call target_click
         cmp word [cs:view_redraw], 0
         je .panel
