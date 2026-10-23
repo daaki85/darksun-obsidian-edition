@@ -145,12 +145,12 @@ A few of them:
 
 | Spell | Who | What it does |
 |---|---|---|
-| **Heal** | druids, Healer clerics | every wound healed |
+| **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
 | **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
 | **Blade Barrier** | druids, Healer clerics | a wall: 8d8 to each creature in it |
-| **Wall of Thorns** | druids, Healer clerics | a wall: 1d10 + 8 to each creature in it |
-| **Sunstroke** | druids, Healer clerics | creatures that fail their save collapse, helpless |
-| **Fire Seeds** | fire | 8d8 in an area, a save for half |
+| **Wall of Thorns** | druids, Healer clerics | a wall: 8 plus the creature's AC to each creature in it |
+| **Sunstroke** | druids, Healer clerics | one creature that fails its save collapses, helpless |
+| **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
 | **Heartseeker** | earth, water | save against death or die |
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
 | **Whirlwind** | air | 2d8 in an area, a save for half |

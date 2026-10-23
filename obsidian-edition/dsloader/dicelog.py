@@ -214,7 +214,8 @@ KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the
 KIND_WALL = 9  # DSCLOG's WALL_DAMAGE: a fire wall's damage when the last wall cast was a Blade
 # Barrier or Wall of Thorns (the game rolls Wall of Fire's for any fire wall): raw = the damage |
 # the spell << 8, extra the creature
-WALL_DICE = {game.BLADE_SPELL: "8d8", game.THORNS_SPELL: "1d10 + 8"}
+WALL_DICE = {game.BLADE_SPELL: "8d8"}
+THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
 KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
 # extra the caster. The aim check's (84C54h) answers:
 AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
@@ -2402,6 +2403,10 @@ class DiceLog:
         self._spell_cast(spell, now)
         self._last_damage = (spell, damage)
         whose = f"{name}'" if name.endswith("s") else f"{name}'s"
+        if spell == game.THORNS_SPELL:
+            ac = (e.extra >> 8 & 0xFF) - 0x80
+            low = " (at least 1)" if THORNS_BASE + ac < 1 else ""
+            return [f"  {whose} wall instead: {THORNS_BASE} + AC {ac} = {damage}{low}"]
         return [f"  {whose} wall instead: {WALL_DICE.get(spell, '')} = {damage}"]
 
     def _aim(self, e: Entry) -> List[str]:

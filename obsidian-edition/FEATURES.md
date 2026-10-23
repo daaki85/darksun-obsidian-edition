@@ -1224,12 +1224,12 @@ slots.
 
 | Spell | Who | Cast on | Does |
 |---|---|---|---|
-| **Heal** | cosmos | touch | every wound healed |
+| **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
 | **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
 | **Blade Barrier** | cosmos | a wall | 8d8 to each creature in it or passing through |
-| **Wall of Thorns** | cosmos | a wall | 1d10 + 8 to each creature in it or pushing through |
-| **Sunstroke** | cosmos | creatures picked one by one | each that fails its save collapses, helpless, for 2 rounds a level |
-| **Fire Seeds** | fire | an area | 8d8, a save for half |
+| **Wall of Thorns** | cosmos | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
+| **Sunstroke** | cosmos | one creature | if it fails its save it collapses, helpless, for 2 rounds a level |
+| **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
 | **Heartseeker** | earth, water | one creature | it saves against death or dies |
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
 | **Whirlwind** | air | an area | 2d8 crushing, a save for half |
@@ -1247,12 +1247,17 @@ How they're made, and where they differ from the books:
   fire wall in grey or dark brown without it). The game rolls Wall of Fire's
   damage for any fire wall; the mod puts the last wall cast's own in its place,
   so a Wall of Fire cast while a Blade Barrier still stands makes both burn as
-  Wall of Fire. Wall of Thorns does 1d10 + 8 where the book's thorns do 8 plus
-  the creature's AC.
-- **Sunstroke** holds its victims as Hold Person does; the book's burns each
-  round are left out. Like Hold Person it is aimed at creatures one by one;
-  a right-click ends the picking.
-- **Fire Seeds** is one burst of 8d8, not four seeds thrown one by one; it
+  Wall of Fire. Wall of Thorns does the book's 8 plus the creature's AC (so the
+  unarmoured suffer most): a monster's own AC, a party member's as the game
+  last worked it out when something attacked them (before that, AC 10).
+- **Blade Barrier** has no saving throw: Wake of the Ravager's allows one, but
+  the game's saving throw can't be reached from where the walls do their
+  damage.
+- **Sunstroke** strikes one creature, as in Wake of the Ravager, and holds it
+  as Hold Person does, for 2 rounds a level; the book's 1d4 a round while it
+  lies there is left out, as the game has nothing that hurts each round.
+- **Fire Seeds** throws its four seeds of 2d8 together, one burst of 8d8 (the
+  same dice), not one by one at different places; it
   bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
   Lands has too) where Flame Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot.

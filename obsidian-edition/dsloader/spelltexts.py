@@ -22,16 +22,16 @@ TEXTS: Dict[int, str] = {
          "2 caster levels (up to 6). Undead are not affected.",
     202: "FRIENDS:  The caster's charisma rises by 2d4 (to 25 at most) for 1d4 rounds and 1 "
          "per level.",
-    203: "HEAL:  A touch cures every wound. Cosmos, 6th level.",
+    203: "HEAL:  A touch cures every wound, disease and blindness. Cosmos, 6th level.",
     204: "HARM:  A touch leaves a creature 1d4 hit points, and diseased. No saving throw. Cosmos, 6th level.",
     205: "BLADE BARRIER:  A wall of whirling blades: 8d8 to any creature in it or passing through. "
          "Cosmos, 6th level.",
-    206: "WALL OF THORNS:  A wall of tangled thorns: 1d10 + 8 to any creature in it or pushing "
-         "through. Cosmos, 6th level.",
-    207: "SUNSTROKE:  Beams of searing sunlight: each creature chosen that fails its saving throw "
-         "collapses, helpless, for 2 rounds per level. Cosmos, 6th level.",
-    208: "FIRE SEEDS:  Four seeds of fire hurled together: 8d8 where they burst, a saving throw for "
-         "half. Fire, 6th level.",
+    206: "WALL OF THORNS:  A wall of tangled thorns: 8 plus its armour class to any creature in it "
+         "or pushing through, so the less armoured are torn the worse. Cosmos, 6th level.",
+    207: "SUNSTROKE:  A beam of searing sunlight: the creature it strikes, if it fails its saving "
+         "throw, collapses, helpless, for 2 rounds per level. Cosmos, 6th level.",
+    208: "FIRE SEEDS:  Four acorns of fire, 2d8 each, hurled together: 8d8 where they burst, a "
+         "saving throw for half. Fire, 6th level.",
     209: "HEARTSEEKER:  An arrow of living wood seeks the heart: the creature it strikes must save "
          "against death or die. Earth and water, 6th level.",
     210: "WATER OF LIFE:  A touch heals a creature's wounds by taking them onto the caster, who keeps "

@@ -655,12 +655,19 @@ probe_ac:
         mov ax, [bp-6]
         add ax, si
         call kit_ac
-        mov si, sp
+        mov si, [bp + 6]        ; (the combatant: a party member's AC kept, AC_SEEN)
+        cmp si, 3
+        ja .rec
+        mov [cs:si + ac_seen], al
+.rec:   mov si, sp
         sub si, 4
         mov word [cs:kind], 2
         call record
         pop si
         retf 2
+AC_UNSEEN equ 0x7F
+ac_seen times 4 db AC_UNSEEN    ; each party member's AC as the game last worked it out (an attack
+                                ;   on it), for Wall of Thorns (WALL_DAMAGE); AC_UNSEEN none yet
 
 ; GPL_HOOK: the game's script interpreter calls the far pointer at DS:00ACh with
 ; each command's number before running it. The Loader points it here and
@@ -11052,6 +11059,7 @@ cast_site:
         call record
         call wall_note
         call area_note
+        call heal_sight
         pop ax
         pop si
         mov cx, [bp + 6]
@@ -11071,6 +11079,53 @@ wall_note:
 .wall:  mov [cs:wall_last], al
 .done:  ret
 wall_last db 0
+
+; HEAL_SIGHT: AX a spell being cast ([BP+8] its target): Heal (NEW SPELLS) cures blindness too, as
+; the books' and Wake of the Ravager's (its record cures disease, the one effect a record takes
+; away): the target's Blind entries taken out of the game's table of active effects (the ones after
+; moved down). DS the game's; all registers kept.
+BLIND_EFFECT equ 8
+heal_sight:
+        cmp ax, HEAL_SPELL
+        jne .ret
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .ret
+        pusha
+        push ds
+        push es
+        mov dx, [bp + 8]
+        mov ax, ds
+        sub ax, EFFECTS_FROM_DS
+        mov es, ax
+        mov bx, EFFECTS_OFF
+        mov cx, [EFFECTS_COUNT]
+.each:  jcxz .done
+        cmp [es:bx], dx
+        jne .next
+        cmp byte [es:bx + 6], BLIND_EFFECT
+        jne .next
+        push cx                 ; (the entries after it, CX - 1 of them, moved down one)
+        push ds
+        dec cx
+        imul cx, cx, 5
+        push es
+        pop ds
+        mov di, bx
+        lea si, [bx + 10]
+        cld
+        rep movsw
+        pop ds
+        pop cx
+        dec word [EFFECTS_COUNT]
+        dec cx
+        jmp .each               ; (the entry now at BX looked at too)
+.next:  add bx, 10
+        dec cx
+        jmp .each
+.done:  pop es
+        pop ds
+        popa
+.ret:   ret
 
 ; AREA_NOTE: AX a spell being cast: the pictures some new spells leave on the ground, in the game's
 ; table of them (AREAS_FROM_DS: 18 bytes an entry, a record's +17h the entry, the object at +3),
@@ -11167,8 +11222,9 @@ harm_site:
 
 ; WALL_DAMAGE: HARM_SITE's for a fire wall's damage on creature SI (the game rolls the wizard's
 ; Wall of Fire for any fire wall, each creature in it on its own): with NEW SPELLS and the last
-; wall cast (WALL_LAST) a Blade Barrier, 8d8, a Wall of Thorns, 1d10 + 8, instead, and the most it
-; could roll ([BP-8]: a helpless creature's); recorded (KIND_WALL: the damage | the spell << 8,
+; wall cast (WALL_LAST) a Blade Barrier, 8d8, a Wall of Thorns, 8 + the creature's AC (THORNS_AC; at
+; least 1), instead, and the most it could roll ([BP-8]: a helpless creature's); recorded
+; (KIND_WALL: the damage | the spell << 8,
 ; the creature in the entry's extra). Then the move done.
 KIND_WALL equ 9
 wall_damage:
@@ -11184,9 +11240,18 @@ wall_damage:
         je .roll
         cmp dl, THORNS_SPELL
         jne .done
-        mov cx, 1               ; (Wall of Thorns: 1d10 + 8)
-        mov bx, 10
-        mov di, 8
+        call thorns_ac          ; (Wall of Thorns: 8 + its AC, no dice; the AC + 80h in the
+        lea di, [eax + THORNS_BASE] ;   extra's high byte for the dice log)
+        or di, di
+        jg .some
+        mov di, 1               ; (at least 1)
+.some:  add al, 0x80
+        mov ah, al
+        mov al, 0
+        or ax, si
+        mov [cs:extra], ax
+        mov si, di
+        jmp .rolled
 .roll:  mov [cs:extra], si
         mov si, di              ; (SI the damage, DI the most)
 .die:   mov ax, bx
@@ -11194,6 +11259,7 @@ wall_damage:
         add si, ax
         add di, bx
         loop .die
+.rolled:
         mov [bp - 8], di
         mov ax, si
         mov ah, dl
@@ -11206,6 +11272,30 @@ wall_damage:
         popad
 .store: mov [bp - 6], ax
         iret
+
+; THORNS_AC: EAX the AC of combatant SI (signed): a party member's as the game last worked it
+; out (AC_SEEN), else its sheet's (+27h: a monster's own; a member never attacked yet, its
+; base). DS the game's; others kept.
+THORNS_BASE equ 8
+SHEET_AC    equ 0x27
+thorns_ac:
+        push bx
+        push es
+        cmp si, 3
+        ja .sheet
+        movsx eax, byte [cs:si + ac_seen]
+        cmp al, AC_UNSEEN
+        jne .out
+.sheet: mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, si, 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        call creature_sheet
+        movsx eax, byte [es:bx + SHEET_AC]
+.out:   pop es
+        pop bx
+        ret
 
 REQ_REST equ 0
 rest_site:
@@ -13001,10 +13091,11 @@ ns_patches:
         NS_PATCH BLADE_SPELL, 0x1C, 1, 0
         NS_PATCH BLADE_SPELL, 0x1D, 1, 0x47
         NS_PATCH BLADE_SPELL, 0x1E, 1, 8
-        NS_PATCH THORNS_SPELL, 0x1A, 2, 0       ; Wall of Thorns: 1d10 + 8, no fire
+        NS_PATCH THORNS_SPELL, 0x1A, 2, 0       ; Wall of Thorns: no fire (its damage WALL_DAMAGE's, 8 + AC)
         NS_PATCH THORNS_SPELL, 0x1C, 1, 8
         NS_PATCH THORNS_SPELL, 0x1D, 1, 0x0F
         NS_PATCH THORNS_SPELL, 0x1E, 1, 10
+        NS_PATCH SUNSTROKE_SPELL, 0x0C, 1, 4    ; Sunstroke: one creature (Slay Living's aim), not Hold Person's several
         NS_PATCH SEEDS_SPELL, 0x1C, 1, 0        ; Fire Seeds: 8d8 of fire (Flame Strike's 6d8)
         NS_PATCH SEEDS_SPELL, 0x1D, 1, 0x47
         NS_PATCH SEEDS_SPELL, 0x1E, 1, 8

@@ -606,6 +606,12 @@ class SaveTests(unittest.TestCase):
         e.extra = 40
         self.assertEqual(log.describe(e), ["  Blade Barrier's wall instead: 8d8 = 37"])
         self.assertEqual((log._spell_name, log._last_damage), ("Blade Barrier", (game.BLADE_SPELL, 37)))
+        e = entry(13 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
+        e.extra = 40 | (5 + 0x80) << 8  # (the creature's AC + 80h in the high byte)
+        self.assertEqual(log.describe(e), ["  Wall of Thorns' wall instead: 8 + AC 5 = 13"])
+        e = entry(1 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
+        e.extra = 40 | (-9 + 0x80) << 8
+        self.assertEqual(log.describe(e), ["  Wall of Thorns' wall instead: 8 + AC -9 = 1 (at least 1)"])
 
     def test_abilities(self):
         """An ability score's change is told once it holds at two looks (Remove Curse's STR back)."""

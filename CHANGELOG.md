@@ -21,9 +21,19 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `tables.slots`). `HARM_SITE` (761A9h, the one-target damage roll): Harm leaves 1d4 hit points
   (and the most it could roll the same, for a helpless target); a fire wall's damage there
   (the game rolls Wall of Fire's for any) is the last wall cast's: Blade Barrier 8d8, Wall of
-  Thorns 1d10 + 8 (`CAST_SITE` notes it; record kind 9 for the dice log). Whirlwind has the
+  Thorns 8 + its AC (`CAST_SITE` notes it; record kind 9 for the dice log). Whirlwind has the
   crushing damage kind and Ice Storm's picture: a record with no damage kind, or Dust Cloud's
   picture, does no damage. Checked live, each spell cast in the Scar fight.
+- **The 6th-level priest spells closer to the books and Wake of the Ravager.** Wall of Thorns
+  does 8 + the creature's AC (at least 1; `THORNS_AC`: a monster's sheet +27h, a party member's
+  AC as the game last worked it out, kept by `PROBE_AC` in `AC_SEEN`; the dice log shows the AC,
+  carried in the entry's extra's high byte + 80h), not 1d10 + 8. Sunstroke strikes one creature
+  (its record's +0Ch aim, 4, as Slay Living's), not Hold Person's several. Heal cures blindness
+  too (`HEAL_SIGHT` at `CAST_SITE`: the target's Blind entries taken out of the game's table of
+  active effects; its record already cured disease). Fire Seeds' description says four seeds of
+  2d8 (the same 8d8). Left as they were: Blade Barrier's saving throw (the game's saving throw,
+  79A71h, is in another overlay than the wall's damage, so it can't be called there) and
+  Sunstroke's 1d4 a round (the game has nothing that hurts each round).
 - **Pictures on the ground for the 6th-level priest spells**, Wake of the Ravager's: Blade
   Barrier's circling blades and Wall of Thorns' thorns (its objects 8432 and 8425, added to the
   Loader's SEGOBJEX copy by `wotrart.area_chunks`, recoloured; without it the fire wall tinted

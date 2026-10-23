@@ -1431,14 +1431,14 @@ An Elementalist has its second sphere's column too.
 **The 6th-level spells** are the mod's, for priests of 11th level and up (with
 AD&D's spell tables and the new spells switched on):
 
-- **Heal** (touch): every wound healed.
+- **Heal** (touch): every wound healed, disease and blindness cured.
 - **Harm** (touch): the creature is left 1d4 hit points, and diseased; no save.
 - **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades) or
-  1d10 + 8 (thorns) to each creature in it or passing through: circling blades
-  or a tangle of thorns. Mind where you put it: it hurts your party too.
-- **Sunstroke**: creatures you pick one by one (right-click to stop picking)
-  collapse, helpless, for 2 rounds a level unless they save.
-- **Fire Seeds**: 8d8 where they burst, a save for half.
+  8 plus the creature's AC (thorns: the less armour, the worse) to each
+  creature in it or passing through: circling blades or a tangle of thorns. Mind where you put it: it hurts your party too.
+- **Sunstroke**: one creature collapses, helpless, for 2 rounds a level unless
+  it saves.
+- **Fire Seeds**: four seeds of 2d8 burst together where you aim, a save for half.
 - **Heartseeker**: one creature saves against death or dies.
 - **Water of Life** (touch): the creature's wounds pass to the caster, who
   keeps at least 5 hit points.

@@ -2214,6 +2214,21 @@ the fireball for Fire Seeds; Ice Storm's (18) to the dust for Whirlwind; any oth
 game's own. The thing put on the map keeps the object it was made with, so a wall already
 standing keeps its picture.
 
+**Closer to the books.** Wall of Thorns' damage (`WALL_DAMAGE`, in the one-target damage roll,
+761A9h) is 8 + the creature's AC, at least 1 (`THORNS_AC`). The game keeps no AC: its AC routine
+(58DD3h) works one out from items and effects for each attack, and it is in another overlay
+(41BEh) than the damage roll (428Fh), so calling it there could have the overlay manager move the
+code it returns to. A monster's AC is its sheet's +27h (the Look box's); a party member's sheet
+says 10 there whatever it wears, so `PROBE_AC`, at the AC routine's end, keeps each member's last
+AC (`AC_SEEN`, its `[BP+6]` the combatant; 7Fh none yet: then the sheet's). The dice log shows
+it: the entry's extra carries the AC + 80h in its high byte. Blade Barrier's saving throw is left
+out for the same reason: the game's saving throw (79A71h, `push cs / call`, so it ends RETF) is in
+a third overlay (42ABh) and has no far entry. Sunstroke's record takes Slay Living's aim (+0Ch 4,
+one creature) in place of Hold Person's (1). Heal's record takes one effect away (Diseased, as
+Cure Disease's -13); `HEAL_SIGHT` (from `CAST_SITE`) takes the target's Blind entries (8) out of
+the game's table of active effects (DS - 760h:0106h, 10 bytes each: the thing, the caster, the
+spell, the effect; the count DS:1E24h), moving the rest down.
+
 **The effects.**
 - Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of
   its own (`INT EEh`: 54, a number the game leaves unused); the routine that
