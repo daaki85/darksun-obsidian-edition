@@ -1433,9 +1433,10 @@ AD&D's spell tables and the new spells switched on):
 
 - **Heal** (touch): every wound healed, disease and blindness cured.
 - **Harm** (touch): the creature is left 1d4 hit points, and diseased; no save.
-- **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades) or
-  8 plus the creature's AC (thorns: the less armour, the worse) to each
-  creature in it or passing through: circling blades or a tangle of thorns. Mind where you put it: it hurts your party too.
+- **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades, a
+  save for none) or 8 plus the creature's AC (thorns, no save: the less
+  armour, the worse) to each creature in it or passing through: circling
+  blades or a tangle of thorns. Mind where you put it: it hurts your party too.
 - **Sunstroke**: one creature collapses, helpless, for 2 rounds a level unless
   it saves.
 - **Fire Seeds**: four seeds of 2d8 burst together where you aim, a save for half.

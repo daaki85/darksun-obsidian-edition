@@ -1226,7 +1226,7 @@ slots.
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
 | **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
-| **Blade Barrier** | cosmos | a wall | 8d8 to each creature in it or passing through |
+| **Blade Barrier** | cosmos | a wall | 8d8 to each creature in it or passing through; a save for none |
 | **Wall of Thorns** | cosmos | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
 | **Sunstroke** | cosmos | one creature | if it fails its save it collapses, helpless, for 2 rounds a level |
 | **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
@@ -1241,18 +1241,15 @@ How they're made, and where they differ from the books:
   on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds and
   Whirlwind on Flame Strike, Heartseeker on Slay Living and Water of Life on
   Lend Health.
-- **Blade Barrier and Wall of Thorns are walls of fire underneath**, as the
-  game has no other damaging wall, but they look like their own: a ring of
-  circling blades and a tangle of thorns, Wake of the Ravager's pictures (the
-  fire wall in grey or dark brown without it). The game rolls Wall of Fire's
-  damage for any fire wall; the mod puts the last wall cast's own in its place,
-  so a Wall of Fire cast while a Blade Barrier still stands makes both burn as
-  Wall of Fire. Wall of Thorns does the book's 8 plus the creature's AC (so the
-  unarmoured suffer most): a monster's own AC, a party member's as the game
-  last worked it out when something attacked them (before that, AC 10).
-- **Blade Barrier** has no saving throw: Wake of the Ravager's allows one, but
-  the game's saving throw can't be reached from where the walls do their
-  damage.
+- **Blade Barrier and Wall of Thorns are walls of their own**, made as the
+  game makes its fire walls but each with its own damage and its own picture:
+  a ring of circling blades and a tangle of thorns, Wake of the Ravager's (the
+  fire wall in grey or dark brown without it). Any number of walls can stand at
+  once, each doing its own. Blade Barrier's blades are edged, with a saving
+  throw for none, as Wake of the Ravager's. Wall of Thorns does the book's 8
+  plus the creature's AC (so the unarmoured suffer most), with no save: a
+  monster's own AC, a party member's as the game last worked it out when
+  something attacked them (before that, AC 10).
 - **Sunstroke** strikes one creature, as in Wake of the Ravager, and holds it
   as Hold Person does, for 2 rounds a level; the book's 1d4 a round while it
   lies there is left out, as the game has nothing that hurts each round.
@@ -1268,8 +1265,8 @@ How they're made, and where they differ from the books:
   can do, still leaves it 1d4 hit points.
 
 The dice log names each one: Harm's line says the game's own roll goes
-unused, and a wall's says when its damage is Blade Barrier's or Wall of
-Thorns' (`Blade Barrier's wall instead: 8d8 = 37`). Without Wake of the
+unused, and Wall of Thorns' gives the AC its damage came from
+(`Wall of Thorns' wall instead: 8 + AC 10 = 18`). Without Wake of the
 Ravager installed the spells have icons of their own (the game's, recoloured),
 and the two walls the fire wall's picture recoloured.
 

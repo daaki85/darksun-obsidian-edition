@@ -2988,12 +2988,11 @@ class NewSpellTests(RuleTests):
         self.assertEqual(damage(game.HEAL_SPELL, 96), (18, 27))
 
     def test_wall_damage(self):
-        """HARM_SITE for a fire wall's damage (761A9h; DI 54 or 137: the game rolls 54's for any
-        fire wall, each creature on its own, SI): after a Blade Barrier cast (CAST_SITE) 8d8 (its most,
-        [BP-8], 64), a Wall of Thorns 8 + the creature's AC (its sheet's, at least 1; the most the
-        same); recorded (kind 9: the damage | the spell << 8, the creature the extra, with the
-        thorns' AC + 80h in its high byte). After a Wall of Fire, any other spell, or the rule
-        off: the roll kept."""
+        """HARM_SITE for Wall of Thorns' damage (761A9h; DI the spell, keyed in its own ground
+        picture's entry; each creature on its own, SI): 8 + the creature's AC (its sheet's, at
+        least 1; the most, [BP-8], the same); recorded (kind 9: the damage | the spell << 8, the
+        creature the extra, with the AC + 80h in its high byte). Blade Barrier's, the fire walls',
+        any other spell's, or with the rule off: the roll kept."""
         from dsloader import gamepatch, game
         patch = next(p for p in gamepatch.PATCHES if p.name == "harm_damage")
         mu = self.mu
@@ -3007,9 +3006,6 @@ class NewSpellTests(RuleTests):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
             mu.emu_start(start, start + len(code))
             self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
-        def cast(spell):
-            mu.mem_write(SS * 16 + BP + 6, struct.pack("<3H", 1, 0x29, spell))
-            run(bytes((0xCD, 0x98, gamepatch.CAST_SITE)), dict(eax=0x1111))
         def damage(spell=54, roll=16, rules=32, who=40):
             self.rules(rules)
             mu.mem_write(SS * 16 + BP - 8, struct.pack("<h", 22))
@@ -3026,14 +3022,8 @@ class NewSpellTests(RuleTests):
                 e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
                 entry = (e.kind, e.raw, e.extra)
             return dealt, most, entry
-        self.assertEqual(damage(), (16, 22, None))  # (no wall cast yet)
-        cast(game.BLADE_SPELL)
-        for _ in range(6):
-            dealt, most, entry = damage()
-            self.assertIn(dealt, range(8, 65))
-            self.assertEqual((most, entry), (64, (9, dealt | game.BLADE_SPELL << 8, 40)))
-        cast(game.HEAL_SPELL)  # (not a wall: the last wall kept)
-        cast(game.THORNS_SPELL)
+        for spell in (54, 137, game.BLADE_SPELL):  # (their own dice, rolled by the game)
+            self.assertEqual(damage(spell), (16, 22, None))
         # (Wall of Thorns: 8 + the creature's AC, its sheet's +27h: creature 7, sheet 3, AC 4)
         things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
         mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))
@@ -3041,20 +3031,18 @@ class NewSpellTests(RuleTests):
         mu.mem_write(0x9000 * 16 + 7 * 0x3A + 4, struct.pack("<H", 3))
         mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, 0x9400))
         mu.mem_write(0x9400 * 16 + 3 * 0x47 + 0x27, struct.pack("b", 4))
-        self.assertEqual(damage(spell=137), (12, 12, (9, 12 | game.THORNS_SPELL << 8, 40 | (4 + 0x80) << 8)))
+        self.assertEqual(damage(spell=game.THORNS_SPELL), (12, 12, (9, 12 | game.THORNS_SPELL << 8, 40 | (4 + 0x80) << 8)))
         mu.mem_write(0x9400 * 16 + 3 * 0x47 + 0x27, struct.pack("b", -9))  # (AC -9: at least 1)
-        self.assertEqual(damage(spell=137), (1, 1, (9, 1 | game.THORNS_SPELL << 8, 40 | (-9 + 0x80) << 8)))
+        self.assertEqual(damage(spell=game.THORNS_SPELL), (1, 1, (9, 1 | game.THORNS_SPELL << 8, 40 | (-9 + 0x80) << 8)))
         # (a party member: the AC the game last worked out for it, PROBE_AC's [BP+6] the combatant)
         mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 2))
         mu.mem_write(SS * 16 + BP - 6, struct.pack("<h", 3))
         mu.mem_write(VEC_AC * 4, struct.pack("<HH", struct.unpack_from("<H", image, hdr_off + 110)[0], TSR))
         run(bytes((0xCD, VEC_AC)), dict(esi=0xFFFF))  # (AC 3 - 1 = 2)
-        self.assertEqual(damage(spell=137, who=2)[:2], (10, 10))
-        self.assertEqual(damage(spell=137, who=1)[:2], (8, 8))  # (none seen yet: its sheet's, 0 here)
-        self.assertEqual(damage(spell=55), (16, 22, None))  # (not a fire wall)
-        self.assertEqual(damage(rules=0), (16, 22, None))
-        cast(54)  # (a Wall of Fire since)
-        self.assertEqual(damage(), (16, 22, None))
+        self.assertEqual(damage(spell=game.THORNS_SPELL, who=2)[:2], (10, 10))
+        self.assertEqual(damage(spell=game.THORNS_SPELL, who=1)[:2], (8, 8))  # (none seen yet: its sheet's, 0 here)
+        self.assertEqual(damage(spell=55), (16, 22, None))  # (not a wall)
+        self.assertEqual(damage(spell=game.THORNS_SPELL, rules=0), (16, 22, None))
 
     def test_heal_cures_blindness(self):
         """CAST_SITE's HEAL_SIGHT: Heal (with the new spells) takes its target's Blind entries (8)
@@ -4150,11 +4138,16 @@ class KitTests(unittest.TestCase):
     def test_seg_move(self):
         """SEG_MOVE (at a file open, the game's PSP from DOS's 62h): the segment table's entries for
         3E3Fh and 3E45h (selectors 3B8h, 3C0h), the 200h bytes from 3E3Fh copied into SEG_SPACE and
-        the entries pointing there, once; nothing if the table isn't the game's."""
+        the entries pointing there, once; the ground pictures' table (3C81h, selector 3A8h: 45
+        entries of 18 bytes) copied into AREA_SPACE with Blade Barrier's, Wall of Thorns', Fire
+        Seeds' and Whirlwind's after it (their templates' entries, keyed to them, their pictures),
+        AREA_SITE then reading it there; nothing if the table isn't the game's."""
         import re
+        from dsloader import gamepatch
         mu = self.mu
-        at = re.search(rb"\x60\x1e\x06\xb4\x62\x9c\x2e\xff\x1e(..)", self.image, re.S)
-        start, old21 = at.start() - 8, struct.unpack("<H", at.group(1))[0]
+        at = re.search(rb"\x2e\x80\x3e..\x00(?:\x75.|\x0f\x85..)\x60\x1e\x06\xb4\x62\x9c\x2e\xff\x1e(..)",
+                       self.image, re.S)
+        start, old21 = at.start(), struct.unpack("<H", at.group(1))[0]
         stub = 0x8F00  # (DOS: AH=62h, BX the PSP)
         mu.mem_write(stub * 16, bytes.fromhex("bbf06fcf"))  # mov bx,6FF0h / iret
         mu.mem_write(TSR * 16 + old21, struct.pack("<HH", 0, stub))
@@ -4166,18 +4159,48 @@ class KitTests(unittest.TestCase):
             mu.mem_write(table + 0x3B8, struct.pack("<HH", load + 0x3E3F, 0x60))
             mu.mem_write(table + 0x3C0, struct.pack("<HH", load + 0x3E45, 0x192))
             mu.mem_write((load + 0x3E3F) * 16, data)
+            mu.mem_write(table + 0x3A8, struct.pack("<HH", load + 0x3C81, 45 * 18))
+            mu.mem_write((load + 0x3C81) * 16, areas)
+        areas = bytes(i * 7 & 0xFF for i in range(45 * 18))
         def run():
             self.call(re.escape(self.image[start:start + 16]))
             return struct.unpack("<HH", mu.mem_read(table + 0x3B8, 4))[0], \
                 struct.unpack("<H", mu.mem_read(table + 0x3C0, 2))[0], mu.mem_read(self.hdr + SEG_MOVED, 1)[0]
+        # AREA_SITE (the game's own reads): AX and ES the table's segment, AL entry BX's +2
+        patch = next(p for p in gamepatch.PATCHES if p.name == "area_table_0")
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        at = self.image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
+        def area_site():
+            code = stub * 16 + 0x100
+            mu.mem_write(code, patch.replacement)
+            for name, value in dict(cs=stub, ds=self.DS, ss=SS, esp=0x7FC, ebx=46 * 18, eax=0).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(code, code + len(patch.replacement))
+            return mu.reg_read(r.UC_X86_REG_ES), mu.reg_read(r.UC_X86_REG_AX)
         mu.mem_write(self.hdr + SEG_MOVED, b"\x00")
         setup(records_len=0x1234)
         self.assertEqual(run(), (load + 0x3E3F, load + 0x3E45, 0))  # (not the game's table: left)
+        mu.mem_write(0x3C81 * 16 + 46 * 18 + 2, b"\x5A")  # (and read where the code's word says)
+        self.assertEqual(area_site(), (0x3C81, 0x3C5A))
         setup()
         stack, kinds, moved = run()
         self.assertEqual((kinds - stack, moved), (6, 1))
         self.assertTrue(TSR <= stack and (stack - TSR) * 16 + 0x200 <= len(self.image))  # (in the helper)
         self.assertEqual(bytes(mu.mem_read(stack * 16, 0x200)), data)
+        seg, length = struct.unpack("<HH", mu.mem_read(table + 0x3A8, 4))
+        self.assertEqual(length, 49 * 18)
+        self.assertTrue(TSR <= seg and (seg - TSR) * 16 + 49 * 18 <= len(self.image))
+        moved = bytes(mu.mem_read(seg * 16, 49 * 18))
+        self.assertEqual(moved[:45 * 18], areas)
+        for n, (template, spell, picture) in enumerate(((22, game.BLADE_SPELL, 8419), (22, game.THORNS_SPELL, 8419),
+                                                         (37, game.SEEDS_SPELL, 8405),
+                                                         (18, game.WHIRLWIND_SPELL, 8403))):
+            want = bytearray(areas[template * 18:template * 18 + 18])
+            struct.pack_into("<H", want, 0, spell)
+            struct.pack_into("<H", want, 3, picture)
+            self.assertEqual(moved[(45 + n) * 18:(46 + n) * 18], want)
+        self.assertEqual(area_site(), (seg, seg & 0xFF00 | moved[46 * 18 + 2]))
         mu.mem_write(table + 0x3B8, struct.pack("<H", load + 0x3E3F))
         self.assertEqual(run()[0], load + 0x3E3F)  # (once only)
 

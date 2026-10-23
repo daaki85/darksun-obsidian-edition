@@ -147,7 +147,7 @@ A few of them:
 |---|---|---|
 | **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
 | **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
-| **Blade Barrier** | druids, Healer clerics | a wall: 8d8 to each creature in it |
+| **Blade Barrier** | druids, Healer clerics | a wall: 8d8 to each creature in it, a save for none |
 | **Wall of Thorns** | druids, Healer clerics | a wall: 8 plus the creature's AC to each creature in it |
 | **Sunstroke** | druids, Healer clerics | one creature that fails its save collapses, helpless |
 | **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |

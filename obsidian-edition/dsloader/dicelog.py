@@ -20,9 +20,9 @@ import random
 import re
 import struct
 import time
-from collections import Counter
+from collections import Counter, deque
 from dataclasses import dataclass
-from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from . import buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
@@ -211,10 +211,8 @@ REQUEST_NAMES = {
     18: "a creature changes sides", 19: "game over", 20: "creatures counted",
 }
 KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the frame (caster [BP+6])
-KIND_WALL = 9  # DSCLOG's WALL_DAMAGE: a fire wall's damage when the last wall cast was a Blade
-# Barrier or Wall of Thorns (the game rolls Wall of Fire's for any fire wall): raw = the damage |
-# the spell << 8, extra the creature
-WALL_DICE = {game.BLADE_SPELL: "8d8"}
+KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
+# its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
 KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
 # extra the caster. The aim check's (84C54h) answers:
@@ -259,6 +257,7 @@ ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
+RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
@@ -420,6 +419,9 @@ class DiceLog:
         self.itemwatch = ItemWatch()  # the party's items, and a report when one is gone (itemwatch.py)
         self._settings: Optional[dict] = None  # as last given to use_settings, for the reports
         self._last_damage: Optional[Tuple[int, int]] = None  # (spell, damage) last rolled
+        # the last few spell damages rolled, (spell, damage), to tell which spell an HP loss came from
+        # when two hurt the same creature before its HP is seen (two walls standing)
+        self._recent_damage: Deque[Tuple[int, int]] = deque(maxlen=RECENT_DAMAGE)
         self._turn: Optional[int] = None  # whose turn it was when last looked at
         self.round_order: List[Tuple[Optional[int], str, int]] = []  # this round: (combatant, name, score)
         self.round_number = 0
@@ -1487,9 +1489,10 @@ class DiceLog:
                 # the game's damage code gives a creature that was Out Cold the most the dice can do
                 out_cold = " (Out Cold: the most the dice can do)" if was_out_cold else ""
                 also = f" and {hit} from the hit" if hit else ""
-                halved = g.damage_halved_by(combatant, self._spell_id) if self._spell_id is not None else None
+                spell_id, spell_name = self._damage_source(before - hp - hit)
+                halved = g.damage_halved_by(combatant, spell_id) if spell_id is not None else None
                 halved = f" (halved: {halved})" if halved else ""
-                out.append(f"  {who} takes {before - hp - hit} from {self._spell_name}{halved}{out_cold}{also}, {left}")
+                out.append(f"  {who} takes {before - hp - hit} from {spell_name}{halved}{out_cold}{also}, {left}")
             elif now <= self._spell_until and hp > before:
                 out.append(f"  {who} regains {hp - before} HP from {self._spell_name}, {left}")
             elif hp < before:
@@ -1562,6 +1565,16 @@ class DiceLog:
         except (struct.error, IndexError, ValueError):
             return None
         return monsters.weapon_reason(d) if d is not None else None
+
+    def _damage_source(self, lost: int) -> Tuple[Optional[int], str]:
+        """The spell an HP loss of LOST came from: the latest recent roll it matches, whole or
+        halved (taken off the list), else the spell being cast."""
+        for i in range(len(self._recent_damage) - 1, -1, -1):
+            spell, rolled = self._recent_damage[i]
+            if lost in (rolled, rolled // 2):
+                del self._recent_damage[i]
+                return spell, self.game.spell_name(spell)
+        return self._spell_id, self._spell_name
 
     def _spell_cast(self, spell: Optional[int], now: float) -> None:
         """A spell is taking effect: HP changes for the next few seconds are its doing."""
@@ -2347,11 +2360,13 @@ class DiceLog:
         text = f"{name} damage: {count}d{sides} = [" + " + ".join(map(str, faces)) + "]"
         rule = g.spell_damage(spell) if spell is not None else None
         self._last_damage = (spell, sum(faces))
+        self._recent_damage.append(self._last_damage)
         if rule is None or rule.sides != sides:
             return f"{text} = {sum(faces)}"
         steps = rule.steps(level) if missile_steps is None else missile_steps
         bonus = rule.step_bonus * steps
         self._last_damage = (spell, sum(faces) + bonus)
+        self._recent_damage[-1] = self._last_damage
         if bonus:
             text += f" {signed(bonus)}"
         text += f" = {sum(faces) + bonus}"
@@ -2396,18 +2411,17 @@ class DiceLog:
         return [f"Script: {name} (request {number}: {values})"]
 
     def _wall(self, e: Entry, now: float) -> List[str]:
-        """A fire wall's damage that is a Blade Barrier's or a Wall of Thorns' (DSCLOG's WALL_DAMAGE):
-        the game rolled Wall of Fire's (the line before), the wall's own taken instead."""
+        """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE): the game rolled its record's dice (the
+        line before), 8 + the creature's AC taken instead."""
         damage, spell = e.raw & 0xFF, e.raw >> 8 & 0xFF
         name = self.game.spell_name(spell)
         self._spell_cast(spell, now)
         self._last_damage = (spell, damage)
+        self._recent_damage.append(self._last_damage)
         whose = f"{name}'" if name.endswith("s") else f"{name}'s"
-        if spell == game.THORNS_SPELL:
-            ac = (e.extra >> 8 & 0xFF) - 0x80
-            low = " (at least 1)" if THORNS_BASE + ac < 1 else ""
-            return [f"  {whose} wall instead: {THORNS_BASE} + AC {ac} = {damage}{low}"]
-        return [f"  {whose} wall instead: {WALL_DICE.get(spell, '')} = {damage}"]
+        ac = (e.extra >> 8 & 0xFF) - 0x80
+        low = " (at least 1)" if THORNS_BASE + ac < 1 else ""
+        return [f"  {whose} wall instead: {THORNS_BASE} + AC {ac} = {damage}{low}"]
 
     def _aim(self, e: Entry) -> List[str]:
         """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), and why: the game

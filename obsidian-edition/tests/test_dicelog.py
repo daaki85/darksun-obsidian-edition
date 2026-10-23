@@ -599,19 +599,29 @@ class SaveTests(unittest.TestCase):
         self.assertIn("there: no line of sight", line[0])
 
     def test_wall_instead(self):
-        """A fire wall's damage that is a Blade Barrier's (DSCLOG's WALL_SITE: the damage | the
-        spell << 8): a line with the wall's own dice, and the HP lost after it put down to it."""
+        """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE: the damage | the spell << 8, the
+        creature's AC + 80h in the extra's high byte): 8 + AC, the HP lost after it put down to it."""
         log = make_game()
-        e = entry(37 | game.BLADE_SPELL << 8, kind=dicelog.KIND_WALL)
-        e.extra = 40
-        self.assertEqual(log.describe(e), ["  Blade Barrier's wall instead: 8d8 = 37"])
-        self.assertEqual((log._spell_name, log._last_damage), ("Blade Barrier", (game.BLADE_SPELL, 37)))
         e = entry(13 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
         e.extra = 40 | (5 + 0x80) << 8  # (the creature's AC + 80h in the high byte)
         self.assertEqual(log.describe(e), ["  Wall of Thorns' wall instead: 8 + AC 5 = 13"])
+        self.assertEqual((log._spell_name, log._last_damage), ("Wall of Thorns", (game.THORNS_SPELL, 13)))
         e = entry(1 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
         e.extra = 40 | (-9 + 0x80) << 8
         self.assertEqual(log.describe(e), ["  Wall of Thorns' wall instead: 8 + AC -9 = 1 (at least 1)"])
+
+    def test_damage_source(self):
+        """Two walls hurting the same creature before its HP is seen: each loss put down to the
+        spell whose roll it matches (whole, or halved by a save), else the spell being cast."""
+        log = make_game()
+        e = entry(18 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
+        e.extra = 40 | (10 + 0x80) << 8
+        log.describe(e)
+        log._recent_damage.append((game.BLADE_SPELL, 34))
+        log._spell_cast(game.BLADE_SPELL, 0.0)
+        self.assertEqual(log._damage_source(18), (game.THORNS_SPELL, "Wall of Thorns"))
+        self.assertEqual(log._damage_source(17), (game.BLADE_SPELL, "Blade Barrier"))  # (34 halved)
+        self.assertEqual(log._damage_source(18), (game.BLADE_SPELL, "Blade Barrier"))  # (taken off: the spell cast)
 
     def test_abilities(self):
         """An ability score's change is told once it holds at two looks (Remove Curse's STR back)."""

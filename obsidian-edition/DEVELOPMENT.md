@@ -2207,23 +2207,31 @@ Storm's dust (8403), which it has. The two new ones go in the Loader's copy of S
 (`wotrart.area_chunks`, from `icons.write_objects`): the fire wall's object (8419) naming
 pictures 2650 and 2651, its anchor (+2, +4) Wake of the Ravager's, the frames read from its
 OBJEX.GFF and each colour made the nearest stable one; without it, the fire wall's frames in
-grey and in dark brown. The new spells share their templates' entries (each also says how the
-area behaves), so `AREA_NOTE` (from `CAST_SITE`) sets those entries' objects for each cast: the
-fire walls' (22) to the blades or the thorns, with the objects' copy open; Flame Strike's (37) to
-the fireball for Fire Seeds; Ice Storm's (18) to the dust for Whirlwind; any other cast, the
-game's own. The thing put on the map keeps the object it was made with, so a wall already
-standing keeps its picture.
+grey and in dark brown. Each new spell has an entry of its own: `SEG_MOVE` moves the table into
+DSCLOG's memory (`AREA_SPACE`, selector 3A8h's segment and length in the segment table, as for
+the records' room) with four entries after the game's 45 (`AREA_NEW`): copies of the fire walls'
+(22) for Blade Barrier and Wall of Thorns, of Flame Strike's (37) for Fire Seeds and of Ice
+Storm's (18) for Whirlwind, keyed to the spell, with its object; the records' +17h name them
+(`NS_PATCH`). `NS_SETUP` puts the blades and the thorns in their entries while the objects' copy
+is open (else the fire wall's). An entry's key is the spell whose damage a wall deals each round
+(7607Dh passes it to the one-target roll, 76175h, as DI), so each wall rolls its own record's
+dice and saving throw. The overlays find the table through the segment table as they are read
+in; six places in the game's own code (23D32h, 23D65h, 23EBDh, 23EF0h, 28092h, 280C6h) load its
+segment as a constant DOS fixes up, "mov ax,3C81h / mov es,ax / mov al,es:[bx+2]": the Loader
+makes each "cmp ax,3C81h" (the fixed-up word kept) and `AREA_SITE`, which returns the moved
+segment.
 
-**Closer to the books.** Wall of Thorns' damage (`WALL_DAMAGE`, in the one-target damage roll,
-761A9h) is 8 + the creature's AC, at least 1 (`THORNS_AC`). The game keeps no AC: its AC routine
+**Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the one-target damage roll,
+761A9h, DI its spell) is 8 + the creature's AC, at least 1 (`THORNS_AC`), with no save (+1Fh
+A0h). The game keeps no AC: its AC routine
 (58DD3h) works one out from items and effects for each attack, and it is in another overlay
 (41BEh) than the damage roll (428Fh), so calling it there could have the overlay manager move the
 code it returns to. A monster's AC is its sheet's +27h (the Look box's); a party member's sheet
 says 10 there whatever it wears, so `PROBE_AC`, at the AC routine's end, keeps each member's last
 AC (`AC_SEEN`, its `[BP+6]` the combatant; 7Fh none yet: then the sheet's). The dice log shows
-it: the entry's extra carries the AC + 80h in its high byte. Blade Barrier's saving throw is left
-out for the same reason: the game's saving throw (79A71h, `push cs / call`, so it ends RETF) is in
-a third overlay (42ABh) and has no far entry. Sunstroke's record takes Slay Living's aim (+0Ch 4,
+it: the entry's extra carries the AC + 80h in its high byte. Blade Barrier's record has its own
+8d8, edged (+1Ah 210h), and the game's saving throw against spells (+1Fh A1h) for none (+11h's
+8000h), as Wake of the Ravager's. Sunstroke's record takes Slay Living's aim (+0Ch 4,
 one creature) in place of Hold Person's (1). Heal's record takes one effect away (Diseased, as
 Cure Disease's -13); `HEAL_SIGHT` (from `CAST_SITE`) takes the target's Blind entries (8) out of
 the game's table of active effects (DS - 760h:0106h, 10 bytes each: the thing, the caster, the

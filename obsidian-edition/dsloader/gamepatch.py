@@ -152,6 +152,7 @@ ARROW_HIT_SITE, ARROW_SPELL_SITE = NS_IMAGE + 28, NS_IMAGE + 29  # (a hit's spel
 CAST_SITE = NS_IMAGE + 30  # (a spell cast: recorded, its name floated over the caster, labels.py)
 REST_SITE = NS_IMAGE + 31  # (the game's rest: recorded, the spell arrows fade, spellarrows.py)
 HARM_SITE = NS_IMAGE + 32  # (a one-target spell's damage: Harm's all but 1d4)
+AREA_SITE = NS_IMAGE + 33  # (the game's own code reading the ground pictures' table: DSCLOG's copy)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xD3  # (past the new spells: 196-210, DSCLOG's NS_FIRST + NS_COUNT)
 
@@ -399,9 +400,15 @@ PATCHES = (
     # member's turn as their slots refill: recorded as request 0 (DSCLOG's REST_SITE)
     Patch("game_rest", 0x806C3, bytes.fromhex("8bc66bc03a"), _site(REST_SITE, 5)),
     # a one-target spell's rolled damage stored (76175h: SI the target, DI the spell): Harm's all the
-    # target's hit points but 1d4; a fire wall's Blade Barrier's or Wall of Thorns' after one of
-    # them (DSCLOG's HARM_SITE)
+    # target's hit points but 1d4; Wall of Thorns' 8 + AC (DSCLOG's HARM_SITE)
     Patch("harm_damage", 0x761A9, bytes.fromhex("8946fa"), _site(HARM_SITE, 3)),
+    # the game's own code reading a ground picture's entry from its table, "mov ax,3C81h / mov es,ax
+    # / mov al,es:[bx+2]": "cmp ax,3C81h" (the segment's word kept, as DOS fixes it up) and the
+    # site, AX and ES the table's segment where DSCLOG has moved it (with an entry each for Blade
+    # Barrier, Wall of Thorns, Fire Seeds and Whirlwind: DSCLOG's SEG_MOVE, AREA_SITE)
+    *(Patch(f"area_table_{n}", offset, bytes.fromhex("b8813c8ec0268a870200"),
+            bytes.fromhex("3d813c") + _site(AREA_SITE, 7))
+      for n, offset in enumerate((0x23D32, 0x23D65, 0x23EBD, 0x23EF0, 0x28092, 0x280C6))),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

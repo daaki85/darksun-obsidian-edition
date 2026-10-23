@@ -11057,28 +11057,11 @@ cast_site:
         mov ax, [bp + 0x0A]
         mov word [cs:kind], KIND_CAST
         call record
-        call wall_note
-        call area_note
         call heal_sight
         pop ax
         pop si
         mov cx, [bp + 6]
         iret
-
-; WALL_NOTE: AX a spell being cast: a wall's (Blade Barrier, Wall of Thorns or either Wall of
-; Fire) kept as the last wall cast (WALL_LAST), for WALL_DAMAGE. Keeps every register.
-wall_note:
-        cmp ax, BLADE_SPELL
-        je .wall
-        cmp ax, THORNS_SPELL
-        je .wall
-        cmp ax, WIZARD_WALL_FIRE
-        je .wall
-        cmp ax, PRIEST_WALL_FIRE
-        jne .done
-.wall:  mov [cs:wall_last], al
-.done:  ret
-wall_last db 0
 
 ; HEAL_SIGHT: AX a spell being cast ([BP+8] its target): Heal (NEW SPELLS) cures blindness too, as
 ; the books' and Wake of the Ravager's (its record cures disease, the one effect a record takes
@@ -11127,72 +11110,17 @@ heal_sight:
         popa
 .ret:   ret
 
-; AREA_NOTE: AX a spell being cast: the pictures some new spells leave on the ground, in the game's
-; table of them (AREAS_FROM_DS: 18 bytes an entry, a record's +17h the entry, the object at +3),
-; set for this cast in the entries they share with their templates, as the thing put on the map
-; takes its object when it's made: Blade Barrier's circling blades and Wall of Thorns' thorns
-; (objects of the Loader's copy, with NS_OBJECTS: wotrart.AREA_OBJECTS) in the fire walls' entry,
-; Fire Seeds' fireball in Flame Strike's, Whirlwind's sand storm in Ice Storm's; any other spell's
-; the game's own (and theirs with NEW SPELLS off). Keeps every register; DS the game's.
-AREAS_FROM_DS equ SPELLS_FROM_DS + 0x33 ; (the table: the records' segment less 330h)
-AREA_WALL    equ 22 * 18 + 3    ; the fire walls' entry's object: 8419 (BLADE_OBJECT, THORNS_OBJECT)
-AREA_STRIKE  equ 37 * 18 + 3    ; Flame Strike's: 8406 (Fire Seeds the fireball's, 8405)
-AREA_STORM   equ 18 * 18 + 3    ; Ice Storm's: 8412 (Whirlwind Sand Storm's, 8403, in Wake of the
-FIRE_WALL_OBJECT equ 8419       ;   Ravager's table too)
-BLADE_OBJECT equ 8432
-THORNS_OBJECT equ 8425
-area_note:
-        push es
-        push bx
-        push cx
-        push dx
-        mov bx, ds
-        sub bx, AREAS_FROM_DS
-        mov es, bx
-        mov bx, FIRE_WALL_OBJECT
-        mov cx, 8406
-        mov dx, 8412
-        test byte [cs:rules], RULE_NEW_SPELLS
-        jz .put
-        cmp ax, SEEDS_SPELL
-        jne .storm
-        mov cx, 8405
-.storm: cmp ax, WHIRLWIND_SPELL
-        jne .walls
-        mov dx, 8403
-.walls: cmp byte [cs:ns_state], 0xFF
-        je .put                 ; (not set up yet)
-        test byte [cs:ns_state], NS_OBJECTS
-        jz .put                 ; (no copy: no blades nor thorns)
-        cmp ax, BLADE_SPELL
-        jne .thorns
-        mov bx, BLADE_OBJECT
-.thorns:
-        cmp ax, THORNS_SPELL
-        jne .put
-        mov bx, THORNS_OBJECT
-.put:   mov [es:AREA_WALL], bx
-        mov [es:AREA_STRIKE], cx
-        mov [es:AREA_STORM], dx
-        pop dx
-        pop cx
-        pop bx
-        pop es
-        ret
-
 ; REST_SITE: "mov ax,si / imul ax,ax,3Ah" (806C3h; 5 bytes: the INT, the site's number and two
 ; NOPs) in the game's rest (8066Dh: its REST and a script's request 1, past its "NO RESTING DURING
 ; COMBAT"), each member's turn as their slots are refilled. Recorded as a REQUEST of REQ_REST (the
 ; dicelog's: the spell arrows fade), then the two instructions done.
 ; HARM_SITE: "mov [bp-6],ax" (761A9h; 3 bytes) where a spell on one creature (76175h: SI the
 ; target, DI the spell) has rolled its damage (AX): Harm's (NEW SPELLS) all the target's hit points
-; but 1d4, and the most it could roll ([BP-8]: what a helpless target takes) the same; a fire
-; wall's (WALL_DAMAGE). Then the move done.
+; but 1d4, and the most it could roll ([BP-8]: what a helpless target takes) the same; Wall of
+; Thorns' (THORNS_DAMAGE). Then the move done.
 harm_site:
-        cmp di, WIZARD_WALL_FIRE
-        je wall_damage
-        cmp di, PRIEST_WALL_FIRE
-        je wall_damage
+        cmp di, THORNS_SPELL
+        je thorns_damage
         cmp di, HARM_SPELL
         jne .store
         test byte [cs:rules], RULE_NEW_SPELLS
@@ -11220,28 +11148,19 @@ harm_site:
 .store: mov [bp - 6], ax
         iret
 
-; WALL_DAMAGE: HARM_SITE's for a fire wall's damage on creature SI (the game rolls the wizard's
-; Wall of Fire for any fire wall, each creature in it on its own): with NEW SPELLS and the last
-; wall cast (WALL_LAST) a Blade Barrier, 8d8, a Wall of Thorns, 8 + the creature's AC (THORNS_AC; at
-; least 1), instead, and the most it could roll ([BP-8]: a helpless creature's); recorded
-; (KIND_WALL: the damage | the spell << 8,
-; the creature in the entry's extra). Then the move done.
+; THORNS_DAMAGE: HARM_SITE's for Wall of Thorns' damage on creature SI (each creature in the wall
+; on its own, as it stands in it, its own ground picture's entry keyed to the spell: AREA_SPACE):
+; with NEW SPELLS 8 + the creature's AC (THORNS_AC; at least 1) instead of its record's dice, and
+; the most it could roll ([BP-8]: a helpless creature's) the same; recorded (KIND_WALL: the damage
+; | the spell << 8, the creature and its AC + 80h in the entry's extra). Then the move done.
 KIND_WALL equ 9
-wall_damage:
+thorns_damage:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .store
         pushad
         push es
-        mov dl, [cs:wall_last]
-        mov cx, 8               ; (Blade Barrier: 8d8)
-        mov bx, 8
-        xor di, di
-        cmp dl, BLADE_SPELL
-        je .roll
-        cmp dl, THORNS_SPELL
-        jne .done
-        call thorns_ac          ; (Wall of Thorns: 8 + its AC, no dice; the AC + 80h in the
-        lea di, [eax + THORNS_BASE] ;   extra's high byte for the dice log)
+        call thorns_ac
+        lea di, [eax + THORNS_BASE]
         or di, di
         jg .some
         mov di, 1               ; (at least 1)
@@ -11250,25 +11169,15 @@ wall_damage:
         mov al, 0
         or ax, si
         mov [cs:extra], ax
-        mov si, di
-        jmp .rolled
-.roll:  mov [cs:extra], si
-        mov si, di              ; (SI the damage, DI the most)
-.die:   mov ax, bx
-        call game_die
-        add si, ax
-        add di, bx
-        loop .die
-.rolled:
         mov [bp - 8], di
-        mov ax, si
-        mov ah, dl
-        mov di, sp
-        mov [ss:di + NS_AX], si
-        lea si, [di + 28]               ; (SS:SI+6: the INT's return address)
+        mov ax, di
+        mov ah, THORNS_SPELL
+        mov si, sp
+        mov [ss:si + NS_AX], di
+        add si, 28                      ; (SS:SI+6: the INT's return address)
         mov word [cs:kind], KIND_WALL
         call record
-.done:  pop es
+        pop es
         popad
 .store: mov [bp - 6], ax
         iret
@@ -11296,6 +11205,28 @@ thorns_ac:
 .out:   pop es
         pop bx
         ret
+
+; AREA_SITE: "mov ax,3C81h / mov es,ax / mov al,es:[bx+2]" (10 bytes; DSUN.EXE 23D32h, 23D65h,
+; 23EBDh, 23EF0h, 28092h, 280C6h: the game's own code, not an overlay's, reading a ground picture's
+; entry BX's byte +2) made "cmp ax,3C81h" (its segment's word kept: DOS fixes it up as the game
+; is loaded), the INT, the site's number and 4 NOPs: AX and ES the table's segment (AREA_SEG once
+; SEG_MOVE has moved it, else that word), AL the byte.
+area_site:
+        push bp
+        mov bp, sp
+        mov ax, [cs:area_seg]
+        or ax, ax
+        jnz .got
+        push ds
+        push si
+        lds si, [bp + 2]
+        mov ax, [si - 5]        ; (the word, 5 before the way back)
+        pop si
+        pop ds
+.got:   mov es, ax
+        mov al, [es:bx + 2]
+        pop bp
+        iret
 
 REQ_REST equ 0
 rest_site:
@@ -12772,6 +12703,34 @@ SEG_RECORDS  equ 0x3CB4
 SEG_STACK    equ 0x3E3F
 SEG_KINDS    equ 0x3E45
 SEG_BYTES    equ 0x200
+; ... and the game's table of the pictures spells leave on the ground (selector 3A8h, 3C81h: 18 bytes
+; an entry, its spell first (the damage each round the walls deal is that spell's), then a byte
+; whose low 4 bits tell what it does (3: a wall, 1: a picture alone), then the object at +3; a
+; record's +17h its entry, a thing on the map the entry + 1 at +0Eh) moved to AREA_SPACE, with an
+; entry of its own after the game's 45 for Blade Barrier, Wall of Thorns, Fire Seeds and Whirlwind
+; (AREA_NEW: its template's entry, keyed to it, with its own picture): the game reads it there,
+; its overlays from the segment table, its own code through AREA_SITE.
+SEL_AREAS    equ 0x3A8
+SEG_AREAS    equ 0x3C81
+AREA_SIZE    equ 18
+AREA_COUNT   equ 45
+AREA_BYTES   equ (AREA_COUNT + (area_new_end - area_new) / 5) * AREA_SIZE
+AREA_BLADE   equ AREA_COUNT * AREA_SIZE     ; (the new entries' places, in AREA_NEW's order)
+AREA_THORNS  equ AREA_BLADE + AREA_SIZE
+FIRE_WALL_OBJECT equ 8419       ; (the fire walls' picture: Blade Barrier's and Wall of Thorns' without
+BLADE_OBJECT equ 8432           ;   the Loader's copy of the objects, NS_OBJECTS; wotrart.AREA_OBJECTS)
+THORNS_OBJECT equ 8425
+area_seg   dw 0                 ; AREA_SPACE's segment once SEG_MOVE has moved the table there
+%macro AREA_NEW 3
+        db %1
+        dw %2, %3
+%endmacro
+area_new:
+        AREA_NEW 22, BLADE_SPELL, FIRE_WALL_OBJECT  ; (the fire walls' entry: NS_SETUP puts the blades
+        AREA_NEW 22, THORNS_SPELL, FIRE_WALL_OBJECT ;   and thorns in, with the copy)
+        AREA_NEW 37, SEEDS_SPELL, 8405  ; (Flame Strike's: the fireball)
+        AREA_NEW 18, WHIRLWIND_SPELL, 8403 ; (Ice Storm's: Sand Storm's, as in Wake of the Ravager's)
+area_new_end:
 seg_move:
         cmp byte [cs:seg_moved], 0
         jne .ret
@@ -12797,6 +12756,11 @@ seg_move:
         jne .out
         cmp word [es:SEL_KINDS + 2], 0x192
         jne .out
+        lea ax, [bx + 0x10 + SEG_AREAS]
+        cmp [es:SEL_AREAS], ax
+        jne .out
+        cmp word [es:SEL_AREAS + 2], AREA_COUNT * AREA_SIZE
+        jne .out
         mov ds, [es:SEL_STACK]  ; (the 200h bytes, here)
         xor si, si
         mov ax, cs
@@ -12812,6 +12776,31 @@ seg_move:
         cld
         rep movsw
         pop es
+        push es
+        mov ds, [es:SEL_AREAS]  ; (the pictures' table, here, and the new entries after it)
+        xor si, si
+        mov ax, cs
+        add ax, (area_space - hdr) / 16
+        mov es, ax
+        xor di, di
+        mov cx, AREA_COUNT * AREA_SIZE / 2
+        rep movsw
+        mov bx, area_new
+.new:   movzx si, byte [cs:bx]
+        imul si, si, AREA_SIZE
+        mov cx, AREA_SIZE / 2
+        rep movsw
+        mov dx, [cs:bx + 1]
+        mov [es:di - AREA_SIZE], dx
+        mov dx, [cs:bx + 3]
+        mov [es:di - AREA_SIZE + 3], dx
+        add bx, 5
+        cmp bx, area_new_end
+        jb .new
+        pop es
+        mov [es:SEL_AREAS], ax
+        mov word [es:SEL_AREAS + 2], AREA_BYTES
+        mov [cs:area_seg], ax
         mov byte [cs:seg_moved], 1
 .out:   pop es
         pop ds
@@ -13087,11 +13076,15 @@ ns_patches:
         NS_PATCH HARM_SPELL, 4, 1, 0x11         ;   damage all but 1d4 (HARM_SITE)
         NS_PATCH HARM_SPELL, 5, 2, 0
         NS_PATCH HARM_SPELL, 7, 2, PERMANENT_TIME
-        NS_PATCH BLADE_SPELL, 0x1A, 2, 0        ; Blade Barrier: 8d8, no fire
+        NS_PATCH BLADE_SPELL, 0x1A, 2, 0x210    ; Blade Barrier: 8d8 edged, a save vs spell (A1h)
+        NS_PATCH BLADE_SPELL, 0x12, 1, 0xC0     ;   for none (+11h's 8000h), its own wall (AREA_NEW)
+        NS_PATCH BLADE_SPELL, 0x1F, 1, 0xA1
+        NS_PATCH BLADE_SPELL, 0x17, 1, AREA_COUNT
         NS_PATCH BLADE_SPELL, 0x1C, 1, 0
         NS_PATCH BLADE_SPELL, 0x1D, 1, 0x47
         NS_PATCH BLADE_SPELL, 0x1E, 1, 8
-        NS_PATCH THORNS_SPELL, 0x1A, 2, 0       ; Wall of Thorns: no fire (its damage WALL_DAMAGE's, 8 + AC)
+        NS_PATCH THORNS_SPELL, 0x1A, 2, 0x220   ; Wall of Thorns: pointed, no save (its damage
+        NS_PATCH THORNS_SPELL, 0x17, 1, AREA_COUNT + 1 ; THORNS_DAMAGE's, 8 + AC), its own wall
         NS_PATCH THORNS_SPELL, 0x1C, 1, 8
         NS_PATCH THORNS_SPELL, 0x1D, 1, 0x0F
         NS_PATCH THORNS_SPELL, 0x1E, 1, 10
@@ -13099,11 +13092,12 @@ ns_patches:
         NS_PATCH SEEDS_SPELL, 0x1C, 1, 0        ; Fire Seeds: 8d8 of fire (Flame Strike's 6d8)
         NS_PATCH SEEDS_SPELL, 0x1D, 1, 0x47
         NS_PATCH SEEDS_SPELL, 0x1E, 1, 8
+        NS_PATCH SEEDS_SPELL, 0x17, 1, AREA_COUNT + 2 ; (its own picture: the fireball)
         NS_PATCH WHIRLWIND_SPELL, 0x1A, 2, 0x208 ; Whirlwind: 2d8 crushing (no damage kind is no damage), Ice Storm's storm to see (Dust Cloud's whirl deals nothing)
         NS_PATCH WHIRLWIND_SPELL, 0x1C, 1, 0
         NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x17
         NS_PATCH WHIRLWIND_SPELL, 0x1E, 1, 8
-        NS_PATCH WHIRLWIND_SPELL, 0x17, 1, 0x12
+        NS_PATCH WHIRLWIND_SPELL, 0x17, 1, AREA_COUNT + 3 ; (its own picture: the sand storm)
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
              dw ns_name_heal, ns_name_harm, ns_name_blade, ns_name_thorns, ns_name_sun, ns_name_seeds
@@ -13276,12 +13270,24 @@ ns_setup:
         mov word [es:FLIGHTS + FOG_FLIGHT * 3], FLIGHT15_OBJECT
         mov byte [es:FLIGHTS + FOG_FLIGHT * 3 + 2], FLIGHT15_BYTE
         or dl, dl
-        jz .done
+        jz .areas
         test byte [cs:ns_state], NS_OBJECTS
-        jz .done
+        jz .areas
         mov word [es:FLIGHTS + FOG_FLIGHT * 3], FOG_BOLT
         mov al, [es:FLIGHTS + MISSILE_FLIGHT * 3 + 2]
         mov [es:FLIGHTS + FOG_FLIGHT * 3 + 2], al
+.areas: mov ax, [cs:area_seg]   ; Blade Barrier's and Wall of Thorns' pictures: the copy's
+        or ax, ax               ;   blades and thorns, else the fire walls'
+        jz .done
+        mov es, ax
+        mov ax, FIRE_WALL_OBJECT
+        mov bx, ax
+        test byte [cs:ns_state], NS_OBJECTS
+        jz .walls
+        mov ax, BLADE_OBJECT
+        mov bx, THORNS_OBJECT
+.walls: mov [es:AREA_BLADE + 3], ax
+        mov [es:AREA_THORNS + 3], bx
 .done:  pop es
         popa
         pop ax
@@ -13695,6 +13701,7 @@ ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
 REST_SITE equ NS_IMAGE + 31     ; 806C3h: the party rests, a member's turn
 HARM_SITE equ NS_IMAGE + 32     ; 761A9h: a one-target spell's damage, rolled
+AREA_SITE equ NS_IMAGE + 33     ; 23D32h and 5 more: the pictures' table read (SEG_MOVE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13768,6 +13775,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je rest_site
         cmp byte [cs:rl_site], HARM_SITE
         je harm_site
+        cmp byte [cs:rl_site], AREA_SITE
+        je area_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -19795,6 +19804,7 @@ keep:   mov ax, [cs:psp]
 
 align 16
 seg_space times SEG_BYTES db 0   ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
+area_space times (AREA_BYTES + 15) & ~15 db 0 ; (... and the pictures' table)
 resident_end:                   ; (the ring follows, in a segment of its own)
 RING_BYTES equ NENT * ESIZE
 

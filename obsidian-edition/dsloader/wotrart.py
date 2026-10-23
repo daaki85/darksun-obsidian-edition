@@ -140,8 +140,8 @@ def spell_icons(wotr_resources: str, sl_gpldata: str) -> Dict[str, List[List[int
 # (a tangle of thorns), neither in Shattered Lands. AREA_OBJECTS: each, by name, its object and
 # picture (BMP) numbers in the Loader's copy of SEGOBJEX.GFF (the same objects; free pictures),
 # made from Shattered Lands' fire wall's object (8419: its +2 and +4 the picture's anchor, from
-# Wake of the Ravager's) and recoloured in the stable colours (DSCLOG's AREA_NOTE puts them in the
-# walls' entry as each is cast). Without Wake of the Ravager, AREA_FALLBACKS: the fire wall's own
+# Wake of the Ravager's) and recoloured in the stable colours (DSCLOG's NS_SETUP puts them in the
+# walls' own entries, AREA_NEW). Without Wake of the Ravager, AREA_FALLBACKS: the fire wall's own
 # picture in a colour of the spell's, as bright as each pixel.
 OBJECTS_FILE = "OBJEX.GFF"
 FIRE_WALL_OBJECT = 8419

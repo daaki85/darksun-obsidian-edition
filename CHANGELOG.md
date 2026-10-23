@@ -20,8 +20,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (`NS_PATCH`). A priest's 6th-level slot at 11th, two at 12th (`probe_adnd_slots`,
   `tables.slots`). `HARM_SITE` (761A9h, the one-target damage roll): Harm leaves 1d4 hit points
   (and the most it could roll the same, for a helpless target); a fire wall's damage there
-  (the game rolls Wall of Fire's for any) is the last wall cast's: Blade Barrier 8d8, Wall of
-  Thorns 8 + its AC (`CAST_SITE` notes it; record kind 9 for the dice log). Whirlwind has the
+  (the game rolled Wall of Fire's for any) was the last wall cast's: Blade Barrier 8d8, Wall of
+  Thorns 8 + its AC (`CAST_SITE` noted it; record kind 9 for the dice log; since replaced by
+  walls of their own, below). Whirlwind has the
   crushing damage kind and Ice Storm's picture: a record with no damage kind, or Dust Cloud's
   picture, does no damage. Checked live, each spell cast in the Scar fight.
 - **The 6th-level priest spells closer to the books and Wake of the Ravager.** Wall of Thorns
@@ -31,21 +32,32 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (its record's +0Ch aim, 4, as Slay Living's), not Hold Person's several. Heal cures blindness
   too (`HEAL_SIGHT` at `CAST_SITE`: the target's Blind entries taken out of the game's table of
   active effects; its record already cured disease). Fire Seeds' description says four seeds of
-  2d8 (the same 8d8). Left as they were: Blade Barrier's saving throw (the game's saving throw,
-  79A71h, is in another overlay than the wall's damage, so it can't be called there) and
+  2d8 (the same 8d8). Left as they were: Blade Barrier's saving throw (since added, below) and
   Sunstroke's 1d4 a round (the game has nothing that hurts each round). Checked live in the
   Scar fight: thorns 8 + AC 10 = 18 on Scar's henchmen, Sunstroke on Scar alone with one click
   (paralysed on a failed save), Heal on a blinded Xan leaving no Blind entry.
 - **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
   fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
   to the game's.
+- **Walls of their own.** Blade Barrier, Wall of Thorns, Fire Seeds and Whirlwind each have an
+  entry of their own in the table of ground pictures, so walls no longer share Wall of Fire's (a
+  Wall of Fire cast while a Blade Barrier stood made both burn as Wall of Fire). `SEG_MOVE` moves
+  the table (selector 3A8h) into DSCLOG's memory with four entries after the game's 45, keyed to
+  the spells (`AREA_NEW`), their records' +17h naming them; the game's own code reads it through
+  `AREA_SITE` (six places, patched by the Loader: `area_table_*`). A wall's damage each round is
+  its own spell's: Blade Barrier its record's 8d8, edged, with a saving throw for none, as Wake of
+  the Ravager's; Wall of Thorns 8 + AC (`THORNS_DAMAGE`, keyed on the spell). `WALL_NOTE`,
+  `WALL_LAST` and `AREA_NOTE` are gone. The dice log puts an HP loss down to the spell whose
+  recent roll it matches, so two walls hurting one creature are each named. Checked live in the
+  Scar fight: a Blade Barrier and a Wall of Thorns standing together, the blades 8d8 with saves
+  (a natural 20 saved for none), the thorns 8 + AC 10 = 18, each named in the log.
 - **Pictures on the ground for the 6th-level priest spells**, Wake of the Ravager's: Blade
   Barrier's circling blades and Wall of Thorns' thorns (its objects 8432 and 8425, added to the
   Loader's SEGOBJEX copy by `wotrart.area_chunks`, recoloured; without it the fire wall tinted
   grey or dark brown), Fire Seeds' fireball (8405) and Whirlwind's Sand Storm dust (8403).
-  DSCLOG's `AREA_NOTE` (from `CAST_SITE`) sets the object of the area-picture entries they share
-  with their templates (the table before the flights: 18 bytes an entry, a record's +17h the
-  entry) at each cast, and the game's own for any other spell.
+  DSCLOG's `AREA_NOTE` (from `CAST_SITE`) set the object of the area-picture entries they
+  shared with their templates (the table before the flights: 18 bytes an entry, a record's +17h
+  the entry) at each cast (since replaced by entries of their own, below).
 - **Names over figures.** A spell's name floats over its caster for 1.5 seconds as it is cast
   (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an
   attack that missed, in the game's font with a dark edge; at most two at once. An Options switch
