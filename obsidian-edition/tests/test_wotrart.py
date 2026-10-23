@@ -125,5 +125,48 @@ class AreaTests(unittest.TestCase):
         self.assertEqual(wotrart.area_chunks(None, {}, self.gpldata), {})
 
 
+class FindTests(unittest.TestCase):
+    """Where the Loader looks for Wake of the Ravager's RESOURCE.GFF (find_resources)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = self.tmp.name
+        self.sl = os.path.join(self.root, "Dark Sun Shattered Lands")
+        os.makedirs(self.sl)
+        self.chosen, self.own = None, wotrart._chosen
+        wotrart._chosen = lambda: self.chosen  # (not the Loader's own settings)
+
+    def tearDown(self):
+        wotrart._chosen = self.own
+        self.tmp.cleanup()
+
+    def install(self, *parts, heal=wotrart.HEAL_SPIN[1]):
+        folder = os.path.join(self.root, *parts)
+        os.makedirs(folder, exist_ok=True)
+        with open(os.path.join(folder, "RESOURCE.GFF"), "wb") as f:
+            f.write(build_gff({("SPIN", wotrart.HEAL_SPIN[0]): heal + b"  Cures..."}))
+        return os.path.join(folder, "RESOURCE.GFF")
+
+    def test_beside_by_either_name(self):
+        self.assertIsNone(wotrart.find_resources(self.sl))
+        path = self.install("Dark Sun 2 Wake")
+        self.assertEqual(wotrart.find_resources(self.sl), path)
+
+    def test_a_folder_inside(self):
+        path = self.install("Dark Sun Wake of the Ravager", "DARKSUN2")
+        self.assertEqual(wotrart.find_resources(self.sl), path)
+
+    def test_chosen_folder(self):
+        path = self.install("Games", "Elsewhere")
+        self.assertIsNone(wotrart.find_resources(self.sl))
+        self.chosen = os.path.dirname(path)
+        self.assertEqual(wotrart.find_resources(self.sl), path)
+        self.assertEqual(wotrart.find_resources(None, os.path.dirname(path)), path)
+
+    def test_not_shattered_lands_own(self):
+        self.install("Wake of the Ravager", heal=b"BLESS:")
+        self.assertIsNone(wotrart.find_resources(self.sl))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -11,6 +11,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 ## Next pull request (in progress)
 
+**Added**
+- **Wake of the Ravager found in more places, or chosen** (`wotrart.find_resources`): beside
+  Shattered Lands a folder with Wake or Ravager in its name, GOG's usual folders on any drive, and
+  a folder inside each; the Options tab's new **Wake of the Ravager** section says where it was
+  found, or that it wasn't, and **Choose its folder...** keeps one installed anywhere else
+  (`wotr_dir`). Before, the Loader looked beside Shattered Lands only and said nothing, so a player
+  whose copy was elsewhere saw the Loader's own icons without knowing why.
+
 **Changed**
 - **Monsters' powers named in the dice log** by what their records do (`game._power_name`,
   `POWER_EFFECT_NAMES`): the effect a power puts on (`Paralysing attack`, `Disease attack`,

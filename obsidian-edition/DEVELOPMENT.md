@@ -2233,8 +2233,10 @@ game's own: the name in capitals, two spaces, then a terse line with damage as a
 and cuts off the rest, so check a changed one on the USE screen (right-click the icon).
 
 Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest spells) are
-read from the player's own copy of that game, a folder beside Shattered Lands' with Ravager in
-its name, and never kept in the repository. Its icons are a kind of picture Shattered Lands
+read from the player's own copy of that game, and never kept in the repository: the folder chosen
+on the Options tab (`wotr_dir` in the settings), else one beside Shattered Lands' with Ravager or
+Wake in its name, else GOG's usual folders on any drive, each or a folder inside it holding a
+RESOURCE.GFF whose Heal description is Wake of the Ravager's (`find_resources`). Its icons are a kind of picture Shattered Lands
 hasn't: the frame header as usual, then `0FFh "PLNR"`, the bits a pixel (4 or 5), a colour map
 of that many bits' worth of palette numbers, and codes of those bits, the highest first, where
 0 0 is colour 0 and 0 k the last pixel k + 2 more times (worked out on the 101 spells both games

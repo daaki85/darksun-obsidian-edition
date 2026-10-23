@@ -540,6 +540,14 @@ class Viewer:
                                       "(needs a faster PC)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
+        # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
+        ravager = section("ravager", "Wake of the Ravager (optional)")
+        self.wotr_status = tk.StringVar(value=self._wotr_status())
+        found = ttk.Label(ravager, textvariable=self.wotr_status, style="Status.TLabel", wraplength=460,
+                          justify="left")
+        found.pack(anchor="w")
+        ravager.bind("<Configure>", lambda e: found.configure(wraplength=max(200, e.width - 20)), add="+")
+        ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
         about = ttk.Label(kept, text="Every save is copied, as the game writes it, into the Loader's \"Named "
@@ -552,6 +560,28 @@ class Viewer:
         ttk.Button(buttons, text="Open the folder", command=self.open_named_saves).pack(side="left")
         ttk.Button(buttons, text="Put a save in a slot...", command=self.restore_save).pack(side="left", padx=(8, 0))
         ttk.Button(options, text="Restore defaults", command=self.restore_defaults).pack(anchor="w", pady=(12, 0))
+
+    def _wotr_status(self) -> str:
+        """Where the Loader finds Wake of the Ravager, for the 6th-level priest spells' art."""
+        from . import wotrart
+        found = wotrart.find_resources(launch.find_game_dir())
+        if found:
+            return (f"Found in {os.path.dirname(found)}: the 6th-level priest spells use its icons and "
+                    "pictures.")
+        return ("Not found (looked beside the game's folder and in GOG's usual folders): the 6th-level "
+                "priest spells use the Loader's own icons. If it is installed, choose its folder.")
+
+    def choose_wotr(self) -> None:
+        from . import wotrart
+        folder = filedialog.askdirectory(parent=self.root, title="Where is Dark Sun: Wake of the Ravager installed?")
+        if not folder:
+            return
+        if not wotrart.find_resources(None, folder):
+            messagebox.showerror("Wake of the Ravager", f"{folder} has no Wake of the Ravager RESOURCE.GFF.",
+                                 parent=self.root)
+            return
+        launch.save_settings(dict(launch.load_settings(), **{wotrart.SETTING: folder}))
+        self.wotr_status.set(self._wotr_status() + " (From the next start of the game.)")
 
     def _saves_game_dir(self) -> Optional[str]:
         game_dir = self._game_dir or launch.find_game_dir()

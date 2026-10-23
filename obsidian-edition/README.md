@@ -117,11 +117,13 @@ game artwork is copied.
   ([One-time setup](#one-time-setup)); it needs no extra packages.
 - Linux works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
-- **Optional: Wake of the Ravager** (GOG's), installed beside Shattered Lands
-  (a folder with "Ravager" in its name, in the same place). If it's there, the
+- **Optional: Wake of the Ravager** (GOG's). If the Loader finds it, the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
   and pictures, read from it as the game starts; without it they have the
-  Loader's own.
+  Loader's own. It looks beside Shattered Lands (a folder with "Ravager" or
+  "Wake" in its name) and in GOG's usual folders; the Options tab's **Wake of
+  the Ravager** section says whether it found it, and **Choose its folder...**
+  points it to one installed anywhere else.
 
 ### Suggested system requirements
 
