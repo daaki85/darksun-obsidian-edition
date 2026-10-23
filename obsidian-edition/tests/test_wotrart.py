@@ -152,12 +152,24 @@ class FindTests(unittest.TestCase):
         path = self.install("Dark Sun 2 Wake")
         self.assertEqual(wotrart.find_resources(self.sl), path)
 
+    def test_gog_galaxy_name(self):
+        """GOG Galaxy installs it as "Dark Sun 2", beside "Dark Sun" (Shattered Lands)."""
+        self.install("Baldur's Gate - Enhanced Edition", heal=b"MAGIC MISSILE:")
+        path = self.install("Dark Sun 2")
+        self.assertEqual(wotrart.find_resources(self.sl), path)
+
+    def test_any_name_beside(self):
+        path = self.install("Some Other Name")
+        self.assertEqual(wotrart.find_resources(self.sl), path)
+
     def test_a_folder_inside(self):
         path = self.install("Dark Sun Wake of the Ravager", "DARKSUN2")
         self.assertEqual(wotrart.find_resources(self.sl), path)
 
     def test_chosen_folder(self):
-        path = self.install("Games", "Elsewhere")
+        self.sl = os.path.join(self.root, "Games", "Dark Sun")  # (alone in its folder)
+        os.makedirs(self.sl)
+        path = self.install("Elsewhere")
         self.assertIsNone(wotrart.find_resources(self.sl))
         self.chosen = os.path.dirname(path)
         self.assertEqual(wotrart.find_resources(self.sl), path)

@@ -120,8 +120,8 @@ game artwork is copied.
 - **Optional: Wake of the Ravager** (GOG's). If the Loader finds it, the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
   and pictures, read from it as the game starts; without it they have the
-  Loader's own. It looks beside Shattered Lands (a folder with "Ravager" or
-  "Wake" in its name) and in GOG's usual folders; the Options tab's **Wake of
+  Loader's own. It looks in every folder beside Shattered Lands (GOG Galaxy
+  installs the two as `Dark Sun` and `Dark Sun 2`) and in GOG's usual folders; the Options tab's **Wake of
   the Ravager** section says whether it found it, and **Choose its folder...**
   points it to one installed anywhere else.
 
