@@ -33,7 +33,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   active effects; its record already cured disease). Fire Seeds' description says four seeds of
   2d8 (the same 8d8). Left as they were: Blade Barrier's saving throw (the game's saving throw,
   79A71h, is in another overlay than the wall's damage, so it can't be called there) and
-  Sunstroke's 1d4 a round (the game has nothing that hurts each round).
+  Sunstroke's 1d4 a round (the game has nothing that hurts each round). Checked live in the
+  Scar fight: thorns 8 + AC 10 = 18 on Scar's henchmen, Sunstroke on Scar alone with one click
+  (paralysed on a failed save), Heal on a blinded Xan leaving no Blind entry.
+- **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
+  fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
+  to the game's.
 - **Pictures on the ground for the 6th-level priest spells**, Wake of the Ravager's: Blade
   Barrier's circling blades and Wall of Thorns' thorns (its objects 8432 and 8425, added to the
   Loader's SEGOBJEX copy by `wotrart.area_chunks`, recoloured; without it the fire wall tinted
