@@ -37,6 +37,7 @@ TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 96
 SLOTS_LINES = 3  # lines of spell slots the USE screen has room for
+SLOTS_PER_LINE = 5  # spell levels a line: a 6th ("PRI 5/8 5/7 2/6 2/5 0/2 2/1") runs off the panel
 # ... and what the Look box says about a monster (PROBE_LOOK)
 TSR_LOOK_SEQ, TSR_LOOK_REPLY, TSR_LOOK_WHO, TSR_LOOK_OFF, TSR_LOOK_FULL_OFF, TSR_LOOK_ON = 150, 152, 154, 156, 158, 160
 LOOK_SIZE, LOOK_FULL_SIZE = 80, 700
@@ -821,7 +822,7 @@ class DiceLog:
 
     def slots_lines(self, member: int) -> str:
         """A party member's spell slots for the game's USE screen, "|" between lines:
-        "SPELLS LEFT BY LEVEL|WIZ 2/2 1/1|PRI 5/5 3/3 2/2 1/1" (six levels a line). The
+        "SPELLS LEFT BY LEVEL|WIZ 2/2 1/1|PRI 5/5 3/3 2/2 1/1" (SLOTS_PER_LINE levels a line). The
         screen has room for SLOTS_LINES lines above the icons of any usable items, so the
         heading goes when the slots need them all, and anything past them is cut."""
         lines = []
@@ -829,8 +830,9 @@ class DiceLog:
             top = max(level for level, _, _ in levels)
             by_level = {level: (left, most) for level, left, most in levels}
             cells = [f"{by_level.get(n, (0, 0))[0]}/{by_level.get(n, (0, 0))[1]}" for n in range(1, top + 1)]
-            for i in range(0, len(cells), 6):
-                lines.append(("    " if i else f"{SLOT_KINDS.get(kind, kind[:3].upper())} ") + " ".join(cells[i:i + 6]))
+            for i in range(0, len(cells), SLOTS_PER_LINE):
+                lines.append(("    " if i else f"{SLOT_KINDS.get(kind, kind[:3].upper())} ")
+                             + " ".join(cells[i:i + SLOTS_PER_LINE]))
         if lines and self.game.no_spells(member):  # (a multiclass preserver in armour: class restrictions)
             heading = "NO SPELLS IN ARMOUR"
         else:

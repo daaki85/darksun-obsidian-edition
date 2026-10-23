@@ -381,10 +381,13 @@ class SlotsForTheGameTests(unittest.TestCase):
         log.game.spell_slots = lambda member: {
             0: [("Wizard", [(1, 2, 2), (2, 1, 1)]), ("Priest", [(n, 1, 2) for n in range(1, 8)])]}.get(member, [])
         # three lines fit above the usable items' icons: no room left for the heading
-        self.assertEqual(log.slots_lines(0), "WIZ 2/2 1/1|PRI 1/2 1/2 1/2 1/2 1/2 1/2|    1/2")
+        self.assertEqual(log.slots_lines(0), "WIZ 2/2 1/1|PRI 1/2 1/2 1/2 1/2 1/2|    1/2 1/2")
         self.assertEqual(log.slots_lines(1), "")
         log.game.spell_slots = lambda member: [("Priest", [(1, 5, 5), (2, 3, 3)])]
         self.assertEqual(log.slots_lines(0), "SPELLS LEFT BY LEVEL|PRI 5/5 3/3")
+        # a 6th level on a line of its own: six don't fit the panel
+        log.game.spell_slots = lambda member: [("Priest", [(1, 5, 8), (2, 5, 7), (3, 2, 6), (4, 2, 5), (5, 0, 2), (6, 2, 1)])]
+        self.assertEqual(log.slots_lines(0), "SPELLS LEFT BY LEVEL|PRI 5/8 5/7 2/6 2/5 0/2|    2/1")
 
 
 class BackstabTests(unittest.TestCase):

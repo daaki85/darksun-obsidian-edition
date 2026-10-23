@@ -126,6 +126,8 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   so whoever casts the spell holds its weapon.
 
 **Fixed**
+- The USE screen's spell slots line ran off its panel with a 6th spell level: five
+  levels a line now (`SLOTS_PER_LINE`), the 6th on the line below.
 - **Spell arrows fade at the game's own rest.** They faded only at a script's rest request and the
   vulture meal; camping at a fire ring runs the game's rest routine (8066Dh, also its REST from a
   script) without one. A site in its loop over the members (806C3h, `REST_SITE`) records it as
