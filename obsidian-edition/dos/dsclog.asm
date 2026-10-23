@@ -12927,11 +12927,11 @@ ns_patches:
         NS_PATCH SEEDS_SPELL, 0x1C, 1, 0        ; Fire Seeds: 8d8 of fire (Flame Strike's 6d8)
         NS_PATCH SEEDS_SPELL, 0x1D, 1, 0x47
         NS_PATCH SEEDS_SPELL, 0x1E, 1, 8
-        NS_PATCH WHIRLWIND_SPELL, 0x1A, 2, 0x208 ; Whirlwind: 2d8 crushing (no damage kind is no damage), Dust Cloud's whirl to see
+        NS_PATCH WHIRLWIND_SPELL, 0x1A, 2, 0x208 ; Whirlwind: 2d8 crushing (no damage kind is no damage), Ice Storm's storm to see (Dust Cloud's whirl deals nothing)
         NS_PATCH WHIRLWIND_SPELL, 0x1C, 1, 0
         NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x17
         NS_PATCH WHIRLWIND_SPELL, 0x1E, 1, 8
-        NS_PATCH WHIRLWIND_SPELL, 0x17, 1, 0x21
+        NS_PATCH WHIRLWIND_SPELL, 0x17, 1, 0x12
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
              dw ns_name_heal, ns_name_harm, ns_name_blade, ns_name_thorns, ns_name_sun, ns_name_seeds
