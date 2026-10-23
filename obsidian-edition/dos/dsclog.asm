@@ -17579,7 +17579,9 @@ label_where:
 
 ; LABEL_ERASE: where label SI (its LBL_STATE) was drawn again by the game's routine for a rectangle
 ; of the view (REDRAW_SEG:REDRAW_OFF; page 1 and a flip, as the game's own call at 28185h), through
-; PROBE_REDRAW (round the combat log's panel); it is no longer shown. DS the game's; keeps all.
+; PROBE_REDRAW (round the combat log's panel); it is no longer shown. The rectangle is widened to
+; whole bytes of the planes (4 pixels): the routine draws only those inside it, so a label starting
+; mid-byte left its first columns behind. DS the game's; keeps all.
 label_erase:
         mov byte [cs:si + LS_SHOWN], 0
         pusha
@@ -17596,9 +17598,15 @@ label_erase:
         movzx ax, byte [cs:si + LS_W]
         add ax, [cs:si + LS_X]
         dec ax
-        push ax                         ; x1
+        or ax, 3
+        cmp ax, 319
+        jbe .x1
+        mov ax, 319
+.x1:    push ax                         ; x1
         push word [cs:si + LS_Y]
-        push word [cs:si + LS_X]
+        mov ax, [cs:si + LS_X]
+        and ax, ~3
+        push ax                         ; x0
         push word 1                     ; (the page)
         push word [CAM_Y]
         push word [CAM_X]

@@ -39,6 +39,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
   fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
   to the game's.
+- **Names over figures: no leftover sliver.** When a label went away the game's redraw of its
+  rectangle only drew whole bytes of the VGA planes inside it, so a label starting mid-byte left
+  its first columns on the map (seen after Prayer's cloud, a "[" left on the sand). `LABEL_ERASE`
+  widens the rectangle to whole 4-pixel columns. Checked live: Prayer cast in the Scar fight, the
+  name over the cloud and nothing left after it.
 - **Walls of their own.** Blade Barrier, Wall of Thorns, Fire Seeds and Whirlwind each have an
   entry of their own in the table of ground pictures, so walls no longer share Wall of Fire's (a
   Wall of Fire cast while a Blade Barrier stood made both burn as Wall of Fire). `SEG_MOVE` moves
