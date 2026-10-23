@@ -11023,15 +11023,144 @@ cast_site:
         mov ax, [bp + 0x0A]
         mov word [cs:kind], KIND_CAST
         call record
+        call wall_note
         pop ax
         pop si
         mov cx, [bp + 6]
         iret
 
+; WALL_NOTE: AX a spell being cast by thing [BP+6]: a wall's (Blade Barrier, Wall of Thorns or
+; either Wall of Fire) kept as that caster's last wall in WALL_BY (WALL_COUNT of them, the oldest
+; replaced), for WALL_SITE. Keeps every register.
+WALL_COUNT equ 4
+wall_note:
+        cmp ax, BLADE_SPELL
+        je .wall
+        cmp ax, THORNS_SPELL
+        je .wall
+        cmp ax, WIZARD_WALL_FIRE
+        je .wall
+        cmp ax, PRIEST_WALL_FIRE
+        jne .done
+.wall:  push bx
+        push cx
+        mov cx, [bp + 6]
+        call wall_find
+        jnc .put
+        movzx bx, byte [cs:wall_next]
+        inc byte [cs:wall_next]
+        and byte [cs:wall_next], WALL_COUNT - 1
+        imul bx, bx, 3
+.put:   mov [cs:bx + wall_by], cx
+        mov [cs:bx + wall_by + 2], al
+        pop cx
+        pop bx
+.done:  ret
+
+; WALL_FIND: BX the offset in WALL_BY of caster CX's entry, carry clear; carry set if none.
+wall_find:
+        xor bx, bx
+.next:  cmp [cs:bx + wall_by], cx
+        jne .on
+        cmp byte [cs:bx + wall_by + 2], 0
+        jne .found
+.on:    add bx, 3
+        cmp bx, 3 * WALL_COUNT
+        jb .next
+        stc
+        ret
+.found: clc
+        ret
+wall_by   times 3 * WALL_COUNT db 0
+wall_next db 0
+
 ; REST_SITE: "mov ax,si / imul ax,ax,3Ah" (806C3h; 5 bytes: the INT, the site's number and two
 ; NOPs) in the game's rest (8066Dh: its REST and a script's request 1, past its "NO RESTING DURING
 ; COMBAT"), each member's turn as their slots are refilled. Recorded as a REQUEST of REQ_REST (the
 ; dicelog's: the spell arrows fade), then the two instructions done.
+; HARM_SITE: "mov [bp-6],ax" (761A9h; 3 bytes) where a spell on one creature (76175h: SI the
+; target, DI the spell) has rolled its damage (AX): Harm's (NEW SPELLS) all the target's hit points
+; but 1d4, and the most it could roll ([BP-8]: what a helpless target takes) the same. Then the
+; move done.
+harm_site:
+        cmp di, HARM_SPELL
+        jne .store
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .store
+        push bx
+        push es
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, si, 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        les bx, [CREATURES]
+        imul ax, ax, 0x3A
+        add bx, ax
+        mov bx, [es:bx]         ; (its hit points)
+        mov ax, 4
+        call game_die
+        sub bx, ax
+        jg .left
+        xor bx, bx
+.left:  mov ax, bx
+        mov [bp - 8], ax
+        pop es
+        pop bx
+.store: mov [bp - 6], ax
+        iret
+
+; WALL_SITE: "mov [bp-12h],ax" (754ECh; 3 bytes) where a spell on an area (7511Bh: SI the caster,
+; DI the spell, [BP-18h] the creature) has rolled its damage (AX): a fire wall's (the game rolls
+; the wizard's Wall of Fire for any) from a caster whose last wall was Blade Barrier (8d8) or Wall
+; of Thorns (1d10 + 8) with NEW SPELLS, that spell's instead, and the most it could roll ([BP-14h]:
+; a helpless creature's); recorded (KIND_WALL: the damage | the spell << 8, the creature in the
+; entry's extra). Then the move done.
+KIND_WALL equ 9
+wall_site:
+        cmp di, WIZARD_WALL_FIRE
+        je .fire
+        cmp di, PRIEST_WALL_FIRE
+        jne .store
+.fire:  test byte [cs:rules], RULE_NEW_SPELLS
+        jz .store
+        pushad
+        push es
+        mov cx, si
+        call wall_find
+        jc .done
+        mov dl, [cs:bx + wall_by + 2]
+        mov cx, 8               ; (Blade Barrier: 8d8)
+        mov si, 8
+        xor di, di
+        cmp dl, BLADE_SPELL
+        je .roll
+        cmp dl, THORNS_SPELL
+        jne .done
+        mov cx, 1               ; (Wall of Thorns: 1d10 + 8)
+        mov si, 10
+        mov di, 8
+.roll:  mov bx, di              ; (BX the damage, DI the most)
+.die:   mov ax, si
+        call game_die
+        add bx, ax
+        add di, si
+        loop .die
+        mov [bp - 0x14], di
+        mov ax, bx
+        mov ah, dl
+        mov di, sp
+        mov [ss:di + NS_AX], bx
+        mov cx, [bp - 0x18]
+        mov [cs:extra], cx
+        lea si, [di + 28]               ; (SS:SI+6: the INT's return address)
+        mov word [cs:kind], KIND_WALL
+        call record
+.done:  pop es
+        popad
+.store: mov [bp - 0x12], ax
+        iret
+
 REQ_REST equ 0
 rest_site:
         push si
@@ -12624,9 +12753,11 @@ WHIRLWIND_SPELL equ HEAL_SPELL + 8
 CURE_CRITICAL equ 127
 CAUSE_CRITICAL equ 128
 PRIEST_WALL_FIRE equ 137
+WIZARD_WALL_FIRE equ 54
 FLAME_STRIKE equ 131
 SLAY_LIVING  equ 136
 HOLD_PERSON  equ 86
+PERMANENT_TIME equ 0xD8F1      ; (-9999: a record's time unit for an effect until it is taken away)
 LEND_HEALTH  equ 156            ; (the psionic power whose handler moves hit points: Water of Life's)
 STRENGTH_SPELL equ 23
 ENLARGE_SPELL equ 5
@@ -12813,6 +12944,29 @@ ns_patches:
         NS_PATCH FRIENDS_SPELL, 0x1D, 1, 1
         NS_PATCH FRIENDS_SPELL, 1, 2, 0xFFFF    ; ... on the caster alone, as Mirror Image
         NS_PATCH FRIENDS_SPELL, 0x0C, 1, 7
+        ; the 6th-level priest spells (their damage +1Ch-1Eh: a step's dice x 32 + its bonus, the dice x 8
+        ; + the levels a step, the sides; 7 levels a step, so one step, the caster's level held at 10):
+        NS_PATCH HEAL_SPELL, 0x19, 1, 0xF3      ; Heal: disease taken away (Cure Disease's -13), as it heals
+        NS_PATCH HARM_SPELL, 0x19, 1, 13        ; Harm: diseased (Cause Disease's 13, until cured), its
+        NS_PATCH HARM_SPELL, 4, 1, 0x11         ;   damage all but 1d4 (HARM_SITE)
+        NS_PATCH HARM_SPELL, 5, 2, 0
+        NS_PATCH HARM_SPELL, 7, 2, PERMANENT_TIME
+        NS_PATCH BLADE_SPELL, 0x1A, 2, 0        ; Blade Barrier: 8d8, no fire
+        NS_PATCH BLADE_SPELL, 0x1C, 1, 0
+        NS_PATCH BLADE_SPELL, 0x1D, 1, 0x47
+        NS_PATCH BLADE_SPELL, 0x1E, 1, 8
+        NS_PATCH THORNS_SPELL, 0x1A, 2, 0       ; Wall of Thorns: 1d10 + 8, no fire
+        NS_PATCH THORNS_SPELL, 0x1C, 1, 8
+        NS_PATCH THORNS_SPELL, 0x1D, 1, 0x0F
+        NS_PATCH THORNS_SPELL, 0x1E, 1, 10
+        NS_PATCH SEEDS_SPELL, 0x1C, 1, 0        ; Fire Seeds: 8d8 of fire (Flame Strike's 6d8)
+        NS_PATCH SEEDS_SPELL, 0x1D, 1, 0x47
+        NS_PATCH SEEDS_SPELL, 0x1E, 1, 8
+        NS_PATCH WHIRLWIND_SPELL, 0x1A, 2, 0    ; Whirlwind: 2d8, no fire, Dust Cloud's whirl to see
+        NS_PATCH WHIRLWIND_SPELL, 0x1C, 1, 0
+        NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x17
+        NS_PATCH WHIRLWIND_SPELL, 0x1E, 1, 8
+        NS_PATCH WHIRLWIND_SPELL, 0x17, 1, 0x21
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
              dw ns_name_heal, ns_name_harm, ns_name_blade, ns_name_thorns, ns_name_sun, ns_name_seeds
@@ -13403,6 +13557,8 @@ ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (AR
 ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
 REST_SITE equ NS_IMAGE + 31     ; 806C3h: the party rests, a member's turn
+HARM_SITE equ NS_IMAGE + 32     ; 761A9h: a one-target spell's damage, rolled
+WALL_SITE equ NS_IMAGE + 33     ; 754ECh: an area spell's damage, rolled
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13474,6 +13630,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je cast_site
         cmp byte [cs:rl_site], REST_SITE
         je rest_site
+        cmp byte [cs:rl_site], HARM_SITE
+        je harm_site
+        cmp byte [cs:rl_site], WALL_SITE
+        je wall_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS

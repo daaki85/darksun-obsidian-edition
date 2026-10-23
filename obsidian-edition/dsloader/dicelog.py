@@ -210,6 +210,10 @@ REQUEST_NAMES = {
     18: "a creature changes sides", 19: "game over", 20: "creatures counted",
 }
 KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the frame (caster [BP+6])
+KIND_WALL = 9  # DSCLOG's WALL_SITE: a fire wall's damage from a Blade Barrier or Wall of Thorns
+# instead (the game rolls Wall of Fire's for any fire wall): raw = the damage | the spell << 8,
+# extra the creature
+WALL_DICE = {game.BLADE_SPELL: "8d8", game.THORNS_SPELL: "1d10 + 8"}
 KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
 # extra the caster. The aim check's (84C54h) answers:
 AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
@@ -1886,6 +1890,8 @@ class DiceLog:
             return self._request(e, show_all)
         if e.kind == KIND_AIM:
             return self._aim(e)
+        if e.kind == KIND_WALL:
+            return self._wall(e, now)
         if e.kind == KIND_CAST:
             self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
             return []
@@ -2339,6 +2345,9 @@ class DiceLog:
         g = self.game
         spell, level = e.parent_arg(6), (e.parent_arg(8) or 0) & 0xFF
         name = g.spell_name(spell) if spell is not None else "Spell"
+        if spell == game.HARM_SPELL:  # (DSCLOG's HARM_SITE puts its own in the roll's place)
+            self._last_damage = None
+            return f"{name}: all the target's hit points but 1d4 (the {count}d{sides} the game rolls goes unused)"
         text = f"{name} damage: {count}d{sides} = [" + " + ".join(map(str, faces)) + "]"
         rule = g.spell_damage(spell) if spell is not None else None
         self._last_damage = (spell, sum(faces))
@@ -2389,6 +2398,15 @@ class DiceLog:
         name = REQUEST_NAMES.get(number, "an unknown request")
         values = ", ".join(str(v) for v in (e.arg(8), e.arg(0x0A), e.arg(0x0C)) if v is not None)
         return [f"Script: {name} (request {number}: {values})"]
+
+    def _wall(self, e: Entry, now: float) -> List[str]:
+        """A fire wall's damage that is a Blade Barrier's or a Wall of Thorns' (DSCLOG's WALL_SITE):
+        the game rolled Wall of Fire's (the line before), the wall's own taken instead."""
+        damage, spell = e.raw & 0xFF, e.raw >> 8 & 0xFF
+        name = self.game.spell_name(spell)
+        self._spell_cast(spell, now)
+        self._last_damage = (spell, damage)
+        return [f"  {name}'s wall instead: {WALL_DICE.get(spell, '')} = {damage}"]
 
     def _aim(self, e: Entry) -> List[str]:
         """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), and why: the game

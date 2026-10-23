@@ -151,6 +151,8 @@ AMULET_SITE = NS_IMAGE + 27  # (a creature's magic resistance: the Amulet of Mag
 ARROW_HIT_SITE, ARROW_SPELL_SITE = NS_IMAGE + 28, NS_IMAGE + 29  # (a hit's spell: a spell arrow's, spellarrows.py)
 CAST_SITE = NS_IMAGE + 30  # (a spell cast: recorded, its name floated over the caster, labels.py)
 REST_SITE = NS_IMAGE + 31  # (the game's rest: recorded, the spell arrows fade, spellarrows.py)
+HARM_SITE = NS_IMAGE + 32  # (a one-target spell's damage: Harm's all but 1d4)
+WALL_SITE = NS_IMAGE + 33  # (an area spell's damage: Blade Barrier's and Wall of Thorns' walls)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xD3  # (past the new spells: 196-210, DSCLOG's NS_FIRST + NS_COUNT)
 
@@ -397,6 +399,12 @@ PATCHES = (
     # the game's rest (its REST and a script's request 1, past "NO RESTING DURING COMBAT"), each
     # member's turn as their slots refill: recorded as request 0 (DSCLOG's REST_SITE)
     Patch("game_rest", 0x806C3, bytes.fromhex("8bc66bc03a"), _site(REST_SITE, 5)),
+    # a one-target spell's rolled damage stored (76175h: SI the target, DI the spell): Harm's all the
+    # target's hit points but 1d4 (DSCLOG's HARM_SITE)
+    Patch("harm_damage", 0x761A9, bytes.fromhex("8946fa"), _site(HARM_SITE, 3)),
+    # an area spell's damage (7511Bh), rolled: a fire wall's (the game rolls Wall of Fire's for
+    # any) from a caster whose last wall was Blade Barrier or Wall of Thorns, theirs (WALL_SITE)
+    Patch("wall_damage", 0x754EC, bytes.fromhex("8946ee"), _site(WALL_SITE, 3)),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"

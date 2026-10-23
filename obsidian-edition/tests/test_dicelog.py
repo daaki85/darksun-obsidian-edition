@@ -587,6 +587,15 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(len(line), 1)
         self.assertIn("there: no line of sight", line[0])
 
+    def test_wall_instead(self):
+        """A fire wall's damage that is a Blade Barrier's (DSCLOG's WALL_SITE: the damage | the
+        spell << 8): a line with the wall's own dice, and the HP lost after it put down to it."""
+        log = make_game()
+        e = entry(37 | game.BLADE_SPELL << 8, kind=dicelog.KIND_WALL)
+        e.extra = 40
+        self.assertEqual(log.describe(e), ["  Blade Barrier's wall instead: 8d8 = 37"])
+        self.assertEqual((log._spell_name, log._last_damage), ("Blade Barrier", (game.BLADE_SPELL, 37)))
+
     def test_abilities(self):
         """An ability score's change is told once it holds at two looks (Remove Curse's STR back)."""
         log = make_game()

@@ -2949,6 +2949,101 @@ class NewSpellTests(RuleTests):
         e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
         self.assertEqual((e.kind, e.raw), (6, 0))
 
+    def test_harm_damage(self):
+        """HARM_SITE (761A9h, "mov [bp-6],ax" after a one-target spell's damage roll; SI the target
+        thing, DI the spell): Harm's damage the target's hit points less 1d4 (none below 0), with
+        the new spells on, and the most it could roll ([BP-8], a helpless target's) the same; any
+        other spell, or the rule off, the roll kept."""
+        from dsloader import gamepatch, game
+        patch = next(p for p in gamepatch.PATCHES if p.name == "harm_damage")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x761A9, gamepatch.HARM_SITE))
+        mu = self.mu
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))
+        mu.mem_write(things, struct.pack("<BH", 2, 0))
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        mu.mem_write(0x9000 * 16, struct.pack("<h", 31))
+        def damage(spell, hp, roll=18, rules=32):
+            self.rules(rules)
+            mu.mem_write(0x9000 * 16 + 7 * 0x3A, struct.pack("<h", hp))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=roll,
+                                    ebx=0x2222, esi=40, edi=spell, es=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.mem_write(SS * 16 + BP - 8, struct.pack("<h", 27))
+            mu.emu_start(start, start + 3)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BX, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_ES)],
+                             [0x800, 0x2222, 40, spell, 0x4444])
+            dealt, most = struct.unpack("<hh", mu.mem_read(SS * 16 + BP - 6, 2) + mu.mem_read(SS * 16 + BP - 8, 2))
+            return dealt, most
+        for _ in range(8):
+            dealt, most = damage(game.HARM_SPELL, 96)
+            self.assertIn(dealt, range(92, 96))
+            self.assertEqual(most, dealt)
+        self.assertEqual(damage(game.HARM_SPELL, 1), (0, 0))
+        self.assertEqual(damage(game.HARM_SPELL, 96, rules=0), (18, 27))
+        self.assertEqual(damage(game.HEAL_SPELL, 96), (18, 27))
+
+    def test_wall_damage(self):
+        """WALL_SITE (754ECh, "mov [bp-12h],ax" after an area spell's damage roll; SI the caster, DI
+        the spell): a Wall of Fire's roll (54 or 137: the game rolls 54's for any fire wall) from a
+        caster whose last wall (CAST_SITE) was Blade Barrier is 8d8, Wall of Thorns 1d10 + 8, and
+        their most ([BP-14h]) 64 or 18; recorded (kind 9: the damage | the spell << 8, the creature
+        [BP-18h] the extra). A caster whose last wall was a Wall of Fire, any other caster or
+        spell, or the rule off: the roll kept."""
+        from dsloader import gamepatch, game
+        patch = next(p for p in gamepatch.PATCHES if p.name == "wall_damage")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x754EC, gamepatch.WALL_SITE))
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        def run(code, regs):
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, code)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + len(code))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
+        def cast(caster, spell):
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<3H", caster, 0x29, spell))
+            run(bytes((0xCD, 0x98, gamepatch.CAST_SITE)), dict(eax=0x1111))
+        def damage(caster, spell=54, roll=16, rules=32):
+            self.rules(rules)
+            mu.mem_write(SS * 16 + BP - 0x18, struct.pack("<hhh", 40, 0, 22))
+            seq_before = struct.unpack("<H", mu.mem_read(TSR * 16 + hdr_off + 8, 2))[0]
+            run(patch.replacement, dict(eax=roll, ebx=0x2222, ecx=0x3333, esi=caster, edi=spell, es=0x4444))
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_ES)],
+                             [0x2222, 0x3333, caster, spell, 0x4444])
+            dealt, most = struct.unpack("<hh", mu.mem_read(SS * 16 + BP - 0x12, 2) + mu.mem_read(SS * 16 + BP - 0x14, 2))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), dealt)
+            seq, _, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+            entry = None
+            if seq != seq_before:
+                e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((seq - 1) % nent) * Entry.SIZE, Entry.SIZE)))
+                entry = (e.kind, e.raw, e.extra)
+            return dealt, most, entry
+        cast(1, game.BLADE_SPELL)
+        cast(2, game.THORNS_SPELL)
+        for _ in range(6):
+            dealt, most, entry = damage(1)
+            self.assertIn(dealt, range(8, 65))
+            self.assertEqual((most, entry), (64, (9, dealt | game.BLADE_SPELL << 8, 40)))
+            dealt, most, entry = damage(2, spell=137)
+            self.assertIn(dealt, range(9, 19))
+            self.assertEqual((most, entry), (18, (9, dealt | game.THORNS_SPELL << 8, 40)))
+        self.assertEqual(damage(3), (16, 22, None))  # (no wall of theirs)
+        self.assertEqual(damage(1, spell=55), (16, 22, None))  # (not a fire wall)
+        self.assertEqual(damage(1, rules=0), (16, 22, None))
+        cast(1, 54)  # (a Wall of Fire of their own since)
+        self.assertEqual(damage(1), (16, 22, None))
+        cast(1, game.BLADE_SPELL)
+        self.assertEqual(damage(1)[1], 64)
+
     def test_spell_aim(self):
         """AIM_SITE (8455Bh, "cmp dx,-1" after a clicked cast's aim check, DX = AX): a refusal (AX
         negative) recorded (kind 7: the answer, the spell DS:9428h, the caster DS:9426h in EXTRA);
