@@ -26,10 +26,10 @@ TEXTS: Dict[int, str] = {
     204: "HARM:  A touch leaves a creature 1d4 hit points, and diseased. No saving throw. Cosmos, 6th level.",
     205: "BLADE BARRIER:  A wall of whirling blades: 8d8 to any creature in it or passing through. "
          "Cosmos, 6th level.",
-    206: "WALL OF THORNS:  A wall of tangled thorns: 8 damage plus the creature's armor class to any "
-         "creature in it or pushing through. Cosmos, 6th level.",
-    207: "SUNSTROKE:  A beam of sunlight: a creature that fails its saving throw collapses, helpless, "
-         "and burns each round. Cosmos, 6th level.",
+    206: "WALL OF THORNS:  A wall of tangled thorns: 1d10 + 8 to any creature in it or pushing "
+         "through. Cosmos, 6th level.",
+    207: "SUNSTROKE:  Beams of searing sunlight: each creature chosen that fails its saving throw "
+         "collapses, helpless, for 2 rounds per level. Cosmos, 6th level.",
     208: "FIRE SEEDS:  Four seeds of fire hurled together: 8d8 where they burst, a saving throw for "
          "half. Fire, 6th level.",
     209: "HEARTSEEKER:  An arrow of living wood seeks the heart: the creature it strikes must save "

@@ -11029,10 +11029,8 @@ cast_site:
         mov cx, [bp + 6]
         iret
 
-; WALL_NOTE: AX a spell being cast by thing [BP+6]: a wall's (Blade Barrier, Wall of Thorns or
-; either Wall of Fire) kept as that caster's last wall in WALL_BY (WALL_COUNT of them, the oldest
-; replaced), for WALL_SITE. Keeps every register.
-WALL_COUNT equ 4
+; WALL_NOTE: AX a spell being cast: a wall's (Blade Barrier, Wall of Thorns or either Wall of
+; Fire) kept as the last wall cast (WALL_LAST), for WALL_DAMAGE. Keeps every register.
 wall_note:
         cmp ax, BLADE_SPELL
         je .wall
@@ -11042,37 +11040,9 @@ wall_note:
         je .wall
         cmp ax, PRIEST_WALL_FIRE
         jne .done
-.wall:  push bx
-        push cx
-        mov cx, [bp + 6]
-        call wall_find
-        jnc .put
-        movzx bx, byte [cs:wall_next]
-        inc byte [cs:wall_next]
-        and byte [cs:wall_next], WALL_COUNT - 1
-        imul bx, bx, 3
-.put:   mov [cs:bx + wall_by], cx
-        mov [cs:bx + wall_by + 2], al
-        pop cx
-        pop bx
+.wall:  mov [cs:wall_last], al
 .done:  ret
-
-; WALL_FIND: BX the offset in WALL_BY of caster CX's entry, carry clear; carry set if none.
-wall_find:
-        xor bx, bx
-.next:  cmp [cs:bx + wall_by], cx
-        jne .on
-        cmp byte [cs:bx + wall_by + 2], 0
-        jne .found
-.on:    add bx, 3
-        cmp bx, 3 * WALL_COUNT
-        jb .next
-        stc
-        ret
-.found: clc
-        ret
-wall_by   times 3 * WALL_COUNT db 0
-wall_next db 0
+wall_last db 0
 
 ; REST_SITE: "mov ax,si / imul ax,ax,3Ah" (806C3h; 5 bytes: the INT, the site's number and two
 ; NOPs) in the game's rest (8066Dh: its REST and a script's request 1, past its "NO RESTING DURING
@@ -11080,9 +11050,13 @@ wall_next db 0
 ; dicelog's: the spell arrows fade), then the two instructions done.
 ; HARM_SITE: "mov [bp-6],ax" (761A9h; 3 bytes) where a spell on one creature (76175h: SI the
 ; target, DI the spell) has rolled its damage (AX): Harm's (NEW SPELLS) all the target's hit points
-; but 1d4, and the most it could roll ([BP-8]: what a helpless target takes) the same. Then the
-; move done.
+; but 1d4, and the most it could roll ([BP-8]: what a helpless target takes) the same; a fire
+; wall's (WALL_DAMAGE). Then the move done.
 harm_site:
+        cmp di, WIZARD_WALL_FIRE
+        je wall_damage
+        cmp di, PRIEST_WALL_FIRE
+        je wall_damage
         cmp di, HARM_SPELL
         jne .store
         test byte [cs:rules], RULE_NEW_SPELLS
@@ -11110,55 +11084,46 @@ harm_site:
 .store: mov [bp - 6], ax
         iret
 
-; WALL_SITE: "mov [bp-12h],ax" (754ECh; 3 bytes) where a spell on an area (7511Bh: SI the caster,
-; DI the spell, [BP-18h] the creature) has rolled its damage (AX): a fire wall's (the game rolls
-; the wizard's Wall of Fire for any) from a caster whose last wall was Blade Barrier (8d8) or Wall
-; of Thorns (1d10 + 8) with NEW SPELLS, that spell's instead, and the most it could roll ([BP-14h]:
-; a helpless creature's); recorded (KIND_WALL: the damage | the spell << 8, the creature in the
-; entry's extra). Then the move done.
+; WALL_DAMAGE: HARM_SITE's for a fire wall's damage on creature SI (the game rolls the wizard's
+; Wall of Fire for any fire wall, each creature in it on its own): with NEW SPELLS and the last
+; wall cast (WALL_LAST) a Blade Barrier, 8d8, a Wall of Thorns, 1d10 + 8, instead, and the most it
+; could roll ([BP-8]: a helpless creature's); recorded (KIND_WALL: the damage | the spell << 8,
+; the creature in the entry's extra). Then the move done.
 KIND_WALL equ 9
-wall_site:
-        cmp di, WIZARD_WALL_FIRE
-        je .fire
-        cmp di, PRIEST_WALL_FIRE
-        jne .store
-.fire:  test byte [cs:rules], RULE_NEW_SPELLS
+wall_damage:
+        test byte [cs:rules], RULE_NEW_SPELLS
         jz .store
         pushad
         push es
-        mov cx, si
-        call wall_find
-        jc .done
-        mov dl, [cs:bx + wall_by + 2]
+        mov dl, [cs:wall_last]
         mov cx, 8               ; (Blade Barrier: 8d8)
-        mov si, 8
+        mov bx, 8
         xor di, di
         cmp dl, BLADE_SPELL
         je .roll
         cmp dl, THORNS_SPELL
         jne .done
         mov cx, 1               ; (Wall of Thorns: 1d10 + 8)
-        mov si, 10
+        mov bx, 10
         mov di, 8
-.roll:  mov bx, di              ; (BX the damage, DI the most)
-.die:   mov ax, si
+.roll:  mov [cs:extra], si
+        mov si, di              ; (SI the damage, DI the most)
+.die:   mov ax, bx
         call game_die
-        add bx, ax
-        add di, si
+        add si, ax
+        add di, bx
         loop .die
-        mov [bp - 0x14], di
-        mov ax, bx
+        mov [bp - 8], di
+        mov ax, si
         mov ah, dl
         mov di, sp
-        mov [ss:di + NS_AX], bx
-        mov cx, [bp - 0x18]
-        mov [cs:extra], cx
+        mov [ss:di + NS_AX], si
         lea si, [di + 28]               ; (SS:SI+6: the INT's return address)
         mov word [cs:kind], KIND_WALL
         call record
 .done:  pop es
         popad
-.store: mov [bp - 0x12], ax
+.store: mov [bp - 6], ax
         iret
 
 REQ_REST equ 0
@@ -13558,7 +13523,6 @@ ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
 REST_SITE equ NS_IMAGE + 31     ; 806C3h: the party rests, a member's turn
 HARM_SITE equ NS_IMAGE + 32     ; 761A9h: a one-target spell's damage, rolled
-WALL_SITE equ NS_IMAGE + 33     ; 754ECh: an area spell's damage, rolled
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13632,8 +13596,6 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je rest_site
         cmp byte [cs:rl_site], HARM_SITE
         je harm_site
-        cmp byte [cs:rl_site], WALL_SITE
-        je wall_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
