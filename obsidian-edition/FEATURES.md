@@ -1233,7 +1233,7 @@ slots.
 | Spell | Who | Cast on | Does |
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
-| **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
+| **Harm** | cosmos | touch | the creature is left 1d4 hit points; no save |
 | **Blade Barrier** | air | a wall | 8d8 to each creature in it or passing through; a save for none |
 | **Wall of Thorns** | earth | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
 | **Sunstroke** | fire | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
@@ -1277,7 +1277,9 @@ How they're made, and where they differ from the books:
   off its feet and loses its next turn (no movement, no action), without being
   helpless as a held creature is. It doesn't move.
 - **Harm** on a helpless creature, which the game hits with the most its dice
-  can do, still leaves it 1d4 hit points.
+  can do, still leaves it 1d4 hit points. It also leaves the creature Diseased,
+  as in AD&D, which here only keeps a STR lowered by something else from
+  coming back ([Cause Disease](HOW-THE-GAME-WORKS.md#each-cleric-spell-against-the-manual)).
 
 The dice log names each one: Harm's line says the game's own roll goes
 unused, and Wall of Thorns' gives the AC its damage came from

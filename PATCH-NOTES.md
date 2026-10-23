@@ -1,14 +1,12 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.6.0 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.7.0 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
 *These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
-
-*They follow the repository, so these come with the next release, not 2.6.0: the nine 6th-level priest spells; levels capped by XP instead of at 9th; backstabs multiplying the weapon's dice only; names over figures; the Spellarcher's spell arrows; the two girdles and the Amulet of Magic Resistance; the Crusader's and Mind Warrior's weapon expertise; weapons made by spells counting for specialization; Find and the dice log's newer lines; the tables of cleric spells and psionic powers; and eight bug fixes (Acid Arrow's acid, three script bugs in Darkhold, the Lava Rifts and Gedron, the party's thief skill roll, random monsters, figures vanishing, magic items' shine in shops).*
 
 ## Contents
 
@@ -146,7 +144,7 @@ A few of them:
 | Spell | Who | What it does |
 |---|---|---|
 | **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
-| **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
+| **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, no save |
 | **Blade Barrier** | air | a wall: 8d8 to each creature in it, a save for none |
 | **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
 | **Sunstroke** | fire | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |
@@ -294,7 +292,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
 - **[Fixed]** The **Trustee** in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to; and a save made while he was walking no longer leaves him standing still when it's loaded (the same for anyone else who walks rounds of their own).
-- **[Fixed]** In a long session the game could stop with **"Out of memory in OEOpenGraph"**: each time the map comes back (after the USE screen, a talk, a menu) it needs 60,000 bytes in one piece, and little was left over. Part of the game's code now runs from upper memory, which leaves about 86 KB to spare with the map up (the original game: 57 KB).
+- **[Fixed]** In a long session the game could stop with **"Out of memory in OEOpenGraph"**: each time the map comes back (after the USE screen, a talk, a menu) it needs 60,000 bytes in one piece, and little was left over. Part of the game's code now runs from upper memory, which leaves about 85 KB to spare with the map up (the original game: 57 KB).
 - **[Fixed]** When the game rolls a thief skill for the **whole party** (a trap going off, listening in by a wagon), the first party member always rolled, however poor at it. Now the member with the best chance does.
 - **[Fixed]** **Random monsters** came in numbers worked out from the wrong monster, and in some areas could crash the game ("Divide error"). Now the count fits the monster that comes, and the crash can't happen.
 - **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).

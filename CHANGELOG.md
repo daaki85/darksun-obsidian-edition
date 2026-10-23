@@ -2,14 +2,36 @@
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first: the record for developers and testers.
-For what a release brings, read its notes ([2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
+For what a release brings, read its notes ([2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
 [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
 [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
 [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #55 (in progress)
+## Pull request #56 (in progress)
+
+**Release**
+- **Obsidian Edition 2.7.0** (pull requests #55 and #56): the version is 2.7.0, with its notes
+  in `release-notes/v2.7.0.md`, listed on the front page with the others.
+
+**Changed**
+- **The 6th-level priest spells' descriptions in the game's own style** (`spelltexts.py`): the
+  name, then a terse line with damage as ranges ("Inflicts 8 to 64 pts of damage"), and no level
+  or sphere, which none of the game's own descriptions give. Harm's text no longer says the
+  target is diseased: the Diseased effect here lowers nothing, it only keeps a STR lowered by
+  something else from coming back (see Cause Disease in HOW-THE-GAME-WORKS); the docs say so too.
+  The priest spells screenshot retaken.
+
+**Documentation**
+- A fourth review. The root README says what the repository has beyond 2.6.0 (the patch notes
+  already did). FEATURES moves Harm's Diseased note out of its table row into the spell's notes,
+  linked to Cause Disease. DEVELOPMENT gives the 6th-level priest spells' description chunks
+  (SPIN 203-211), the game's description style and the box's size. The patch notes' memory
+  figure matches the latest measure (85 KB). Links, anchors and every screenshot checked; none
+  out of date.
+
+## Pull request #55 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/55))
 
 **Added**
 - **6th-level priest spells** (with **New wizard spells**, slots with AD&D's tables): Heal, Harm,

@@ -2223,9 +2223,12 @@ level, a scroll used...). Each such compare is `INT 98h` and a site number
 (`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's `ns_cmp_sites`);
 the helper makes a new spell compare as a wizard's spell does, and hands back
 the flags. The name routine (500:61h, `NS_NAME` at 5E560h) gives their names;
-their descriptions (SPIN 197-202, the spell + 1 as the game's own) and icons
-(21196-21201) are chunks of the launcher's copy of RESOURCE.GFF (`spelltexts.py`,
-`icons.py`), so they take no room in the helper.
+their descriptions (SPIN 197-202, and 203-211 for the 6th-level priest spells: the spell + 1
+as the game's own) and icons (21196-21201) are chunks of the launcher's copy of RESOURCE.GFF
+(`spelltexts.py`, `icons.py`), so they take no room in the helper. A description follows the
+game's own: the name in capitals, two spaces, then a terse line with damage as a range ("Inflicts
+8 to 64 pts of damage"), and no level or sphere. Its box shows about 7 lines of about 24 characters
+and cuts off the rest, so check a changed one on the USE screen (right-click the icon).
 
 Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest spells) are
 read from the player's own copy of that game, a folder beside Shattered Lands' with Ravager in

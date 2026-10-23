@@ -1432,7 +1432,7 @@ An Elementalist has its second sphere's column too.
 AD&D's spell tables and the new spells switched on):
 
 - **Heal** (touch): every wound healed, disease and blindness cured.
-- **Harm** (touch): the creature is left 1d4 hit points, and diseased; no save.
+- **Harm** (touch): the creature is left 1d4 hit points; no save.
 - **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades, a
   save for none) or 8 plus the creature's AC (thorns, no save: the less
   armour, the worse) to each creature in it or passing through: circling

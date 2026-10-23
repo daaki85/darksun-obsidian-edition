@@ -22,22 +22,21 @@ TEXTS: Dict[int, str] = {
          "2 caster levels (up to 6). Undead are not affected.",
     202: "FRIENDS:  The caster's charisma rises by 2d4 (to 25 at most) for 1d4 rounds and 1 "
          "per level.",
-    203: "HEAL:  A touch cures every wound, disease and blindness. Cosmos, 6th level.",
-    204: "HARM:  A touch leaves a creature 1d4 hit points, and diseased. No saving throw. Cosmos, 6th level.",
-    205: "BLADE BARRIER:  A wall of whirling blades: 8d8 to any creature in it or passing through, "
-         "a saving throw for none. Air, 6th level.",
-    206: "WALL OF THORNS:  A wall of thorns: 8 plus its armour class to any creature in it or "
-         "pushing through; the less armoured suffer most. Earth, 6th level.",
-    207: "SUNSTROKE:  Searing sunlight: a creature that fails its saving throw collapses for 2 "
-         "rounds per level, burning for 1d4 a round. Fire, 6th level.",
-    208: "FIRE SEEDS:  Four acorns of fire, 2d8 each, hurled together: 8d8 where they burst, a "
-         "saving throw for half. Fire, 6th level.",
-    209: "HEARTSEEKER:  Living wood seeks out a creature's heart: it must save against death or "
-         "die. Earth and water, 6th level.",
-    210: "WATER OF LIFE:  A touch heals a creature's wounds by taking them onto the caster, who keeps "
-         "5 hit points. Water, 6th level.",
-    211: "WHIRLWIND:  Lasts 1 round per level: 2d8 to any creature in it, a save for half; one "
-         "that fails loses its next turn. It blocks shots and spells. Air.",
+    203: "HEAL:  Cures all damage, disease and blindness of one target.",
+    204: "HARM:  Leaves one target with only 1 to 4 hit points. No saving throw.",
+    205: "BLADE BARRIER:  Creates a wall of whirling blades. Inflicts 8 to 64 pts of damage on "
+         "creatures in or passing through it, unless they save.",
+    206: "WALL OF THORNS:  Creates a wall of thorns. Inflicts 8 pts plus the target's AC in damage "
+         "on creatures in or passing through it.",
+    207: "SUNSTROKE:  Paralyzes one target for 2 rounds per level of caster unless it saves, "
+         "burning it for 1 to 4 pts of fire damage each round.",
+    208: "FIRE SEEDS:  Inflicts 8 to 64 pts of fire damage on creatures within its area of effect. "
+         "A successful save halves the damage.",
+    209: "HEARTSEEKER:  Slays one target unless it saves versus death.",
+    210: "WATER OF LIFE:  Heals a target's wounds by passing them to the caster, who keeps at "
+         "least 5 hit points.",
+    211: "WHIRLWIND:  Inflicts 2 to 16 pts of damage a round on creatures in it, half on a save; "
+         "those failing lose a turn. Lasts 1 round per level. Blocks missiles.",
     PICK_SPIN: "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
                "If it fails, the thief tries to slip away unseen. Not in a fight.",
     PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows per level, using a 1st-level slot. "
