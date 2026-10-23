@@ -11247,11 +11247,9 @@ PERMANENT_DUR equ -9999
 BURN_STUB   equ 0x5B0 - 0x663   ; (7897Bh's stub segment, less DS's)
 BURN_ENTRY  equ 0x4D
 HELD_EFFECT equ 34              ; Paralyzed
-BURN_DICE   equ 2               ; (from 7897Bh's way back from ACID_BURN: its "push 40002h"'s
-BURN_SPELL  equ 789C1h - 78985h ;   dice, 2d4, and its "push 400012h"'s spell and damage kind)
+BURN_DICE   equ 2               ; (from 7897Bh's way back from ACID_BURN: its "push 40002h"'s dice, 2d4)
 SUN_KIND    equ 2               ; fire
-ACID_ARROW_SPELL equ 0x12
-ACID_KIND   equ 0x40
+KIND_HEAT   equ 10
 
 ; ACID_ROUNDS: "cmp dword [bp+0Eh],-9999" (76525h; 8 bytes: the INT, the site's number, 5 NOPs) in
 ; the routine adding an effect (76442h: [BP+0Ch] the effect, [BP+0Eh] its time, a dword; less than
@@ -11297,16 +11295,40 @@ acid_burn:
         mov bx, sp
         les bx, [ss:bx + 6]             ; (ES:BX the way back: the burn's "push 40002h")
         mov word [es:bx + BURN_DICE], 2
-        mov word [es:bx + BURN_SPELL], ACID_ARROW_SPELL
-        mov word [es:bx + BURN_SPELL + 2], ACID_KIND
         cmp byte [cs:sun_heat], 0
         je .out
-        mov word [es:bx + BURN_DICE], 1 ; (Sunstroke's heat: 1d4 of fire, named Sunstroke)
-        mov word [es:bx + BURN_SPELL], SUNSTROKE_SPELL
-        mov word [es:bx + BURN_SPELL + 2], SUN_KIND
-.out:   pop ax
+        mov word [es:bx + BURN_DICE], 1 ; (Sunstroke's heat: 1d4; the rest at HEAT_SITE, as the
+.out:   pop ax                          ;  roll's own overlay may load this code again from the file)
         pop es
         pop bx
+        iret
+
+; HEAT_SITE: "mov si,[bp+0Ah]" (78C24h; 3 bytes) at the start of a spell's damage on a creature
+; (78C19h: [BP+6] the creature, [BP+0Ah] the spell, [BP+0Ch] the damage's kind, [BP+0Eh] a far
+; pointer to the damage rolled, [BP+12h] what a helpless creature takes): during Sunstroke's heat
+; (SUN_HEAT) the spell made Sunstroke, the kind fire, a helpless creature's the roll (the burn's
+; was 2d4's 8); recorded (KIND_HEAT: the damage | the spell << 8, the creature the extra). Then
+; the move made.
+heat_site:
+        cmp byte [cs:sun_heat], 0
+        je .move
+        pushad
+        push es
+        mov word [bp + 0x0A], SUNSTROKE_SPELL
+        mov word [bp + 0x0C], SUN_KIND
+        les bx, [bp + 0x0E]
+        mov ax, [es:bx]
+        mov [bp + 0x12], ax
+        mov ah, SUNSTROKE_SPELL
+        mov dx, [bp + 6]
+        mov [cs:extra], dx
+        mov si, sp
+        add si, 28                      ; (SS:SI+6: the INT's return address)
+        mov word [cs:kind], KIND_HEAT
+        call record
+        pop es
+        popad
+.move:  mov si, [bp + 0x0A]
         iret
 
 ; ACID_ONCE: "cmp word [bp-1Eh],0" (78DEFh; 4 bytes: the INT, the site's number and a NOP) where a
@@ -13969,6 +13991,7 @@ USE_SITE  equ NS_IMAGE + 37     ; 76808h: an effect's charges about to be used (
 ROUND_SITE equ NS_IMAGE + 38    ; 5741Dh: a round starting, before its initiative (ACID_ROUND)
 STAB_SITE equ NS_IMAGE + 39     ; 58A29h: a weapon's damage rolled, before STR (STAB_ROLL)
 TIMES_SITE equ NS_IMAGE + 40    ; 58A80h: a backstab's damage multiplied (STAB_TIMES)
+HEAT_SITE equ NS_IMAGE + 41     ; 78C24h: a spell's damage on a creature, its spell read (HEAT_SITE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -14058,6 +14081,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je stab_roll
         cmp byte [cs:rl_site], TIMES_SITE
         je stab_times
+        cmp byte [cs:rl_site], HEAT_SITE
+        je heat_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS

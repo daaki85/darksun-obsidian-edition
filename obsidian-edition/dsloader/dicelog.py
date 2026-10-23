@@ -213,6 +213,8 @@ REQUEST_NAMES = {
     18: "a creature changes sides", 19: "game over", 20: "creatures counted",
 }
 KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the frame (caster [BP+6])
+KIND_HEAT = 10  # DSCLOG's HEAT_SITE: Sunstroke's heat on a creature: raw = the damage | the spell << 8,
+# the creature the extra (its 1d4 rolled just before, by a caller the overlay manager may hide)
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
@@ -1905,6 +1907,8 @@ class DiceLog:
             return self._aim(e)
         if e.kind == KIND_WALL:
             return self._wall(e, now)
+        if e.kind == KIND_HEAT:
+            return self._heat(e, now)
         if e.kind == KIND_CAST:
             self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
             return []
@@ -2190,10 +2194,8 @@ class DiceLog:
                 return [f"    Summoning: 1d{sides} = {faces[0]} picks which of its {sides} creatures comes"]
             if e.parent_code.startswith(CHARGE_USED_RETURN):
                 who, eid = self._name(e.parent_arg(6)), e.parent_arg(8)
-                if eid == ACID and count == 1:  # (DSCLOG's BURN_PASS: Sunstroke's heat, 1d4 of fire)
-                    self._sun_burn = True  # (the damage's own duration roll after it means nothing)
-                    return self.flush(now, force=True) + [
-                        f"    Sunstroke's heat on {who}: 1d{sides} = {faces_text} = {sum(faces)} fire damage"]
+                if eid == ACID and count == 1:  # (DSCLOG's BURN_PASS: Sunstroke's heat; its line KIND_HEAT's)
+                    return []
                 if eid == ACID:
                     self._acid_burn = True  # (the damage's own duration roll after it means nothing)
                     return self.flush(now, force=True) + [
@@ -2450,6 +2452,21 @@ class DiceLog:
         ac = (e.extra >> 8 & 0xFF) - 0x80
         low = " (at least 1)" if THORNS_BASE + ac < 1 else ""
         return [f"  {whose} wall instead: {THORNS_BASE} + AC {ac} = {damage}{low}"]
+
+    def _heat(self, e: Entry, now: float) -> List[str]:
+        """Sunstroke's heat at a round's start on a creature it holds (DSCLOG's BURN_PASS, HEAT_SITE):
+        1d4 of fire. The roll's own line, if its caller was hidden (left pending), is dropped."""
+        damage, spell = e.raw & 0xFF, e.raw >> 8 & 0xFF
+        rolled = f"1d4 = [{damage}] = {damage}"
+        for p in self._pending:
+            if p.text == rolled:
+                self._pending.remove(p)
+                break
+        self._spell_cast(spell, now)
+        self._last_damage = (spell, damage)
+        self._recent_damage.append(self._last_damage)
+        self._sun_burn = True  # (the damage's own duration roll after it means nothing)
+        return [f"    Sunstroke's heat on {self._name(e.extra)}: 1d4 = {damage} fire damage"]
 
     def _aim(self, e: Entry) -> List[str]:
         """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), and why: the game

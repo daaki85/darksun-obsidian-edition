@@ -33,12 +33,21 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   too (`HEAL_SIGHT` at `CAST_SITE`: the target's Blind entries taken out of the game's table of
   active effects; its record already cured disease). Fire Seeds' description says four seeds of
   2d8 (the same 8d8). Left as they were: Blade Barrier's saving throw (since added, below) and
-  Sunstroke's 1d4 a round (the game has nothing that hurts each round). Checked live in the
+  Sunstroke's 1d4 a round (since added, above). Checked live in the
   Scar fight: thorns 8 + AC 10 = 18 on Scar's henchmen, Sunstroke on Scar alone with one click
   (paralysed on a failed save), Heal on a blinded Xan leaving no Blind entry.
 - **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
   fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
   to the game's.
+- **Sunstroke's heat:** 1d4 of fire at the start of each round on a creature Sunstroke holds.
+  `ACID_ROUND`'s pass (now `BURN_PASS`, twice: Acid, then Sunstroke) calls Acid's burn (7897Bh,
+  through its stub) for each creature with a Paralyzed entry from Sunstroke, `SUN_HEAT` set:
+  `ACID_BURN` makes its dice 1d4, and `HEAT_SITE` (78C24h, the start of a spell's damage on a
+  creature) makes the spell Sunstroke, the kind fire, and what a helpless creature takes the
+  roll (the burn's own 8, 2d4's most, would have been taken by every held creature). These are
+  changed in the damage routine's frame, not the burn's code: the 1d4's own overlay can load
+  the burn's code again from the file. No entry of its own: the heat ends with the paralysis.
+  Recorded (kind 10) for the dice log's `Sunstroke's heat on X: 1d4 = N fire damage`.
 - **Backstabs multiply the weapon's dice only** (new option `backstab_dice`, `RULE_BACKSTAB`,
   DSCLOG's `RULE_HI_BACKSTAB`, on by default): `STAB_ROLL` (58A29h) keeps a hit's dice (the
   roll less `[BP-12h]`), `STAB_TIMES` (58A80h, where the game multiplies the whole damage by

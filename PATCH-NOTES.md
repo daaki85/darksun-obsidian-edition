@@ -149,7 +149,7 @@ A few of them:
 | **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
 | **Blade Barrier** | druids, Healer clerics | a wall: 8d8 to each creature in it, a save for none |
 | **Wall of Thorns** | druids, Healer clerics | a wall: 8 plus the creature's AC to each creature in it |
-| **Sunstroke** | druids, Healer clerics | one creature that fails its save collapses, helpless |
+| **Sunstroke** | druids, Healer clerics | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |
 | **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
 | **Heartseeker** | earth, water | save against death or die |
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |

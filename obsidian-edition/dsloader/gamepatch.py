@@ -156,6 +156,7 @@ AREA_SITE = NS_IMAGE + 33  # (the game's own code reading the ground pictures' t
 ACID_SITE = NS_IMAGE + 34  # (an effect added: Acid's time made rounds as charges, DSCLOG's ACID_ROUNDS)
 BURN_SITE, ONCE_SITE = NS_IMAGE + 35, NS_IMAGE + 36
 STAB_SITE, TIMES_SITE = NS_IMAGE + 39, NS_IMAGE + 40  # (a backstab: the weapon's dice only, RULE_BACKSTAB)
+HEAT_SITE = NS_IMAGE + 41  # (a spell's damage on a creature: Sunstroke's heat named and made fire, DSCLOG's HEAT_SITE)
 USE_SITE, ROUND_SITE = NS_IMAGE + 37, NS_IMAGE + 38  # (Acid spent once a round, at its start, and only then)  # (an Acid's burn: its damage puts no Acid on again)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xD3  # (past the new spells: 196-210, DSCLOG's NS_FIRST + NS_COUNT)
@@ -421,6 +422,10 @@ PATCHES = (
     Patch("acid_once", 0x78DEF, bytes.fromhex("837ee200"), _site(ONCE_SITE, 4)),
     Patch("acid_use", 0x76808, bytes.fromhex("8b7e06"), _site(USE_SITE, 3)),
     Patch("acid_round", 0x5741D, bytes.fromhex("833e5a0500"), _site(ROUND_SITE, 5)),
+    # Sunstroke's heat, burnt each round through Acid's burn: at the start of a spell's damage on a
+    # creature, "mov si,[bp+0Ah]" (the spell), its spell, kind and a helpless creature's damage
+    # made Sunstroke's (DSCLOG's HEAT_SITE)
+    Patch("sun_heat", 0x78C24, bytes.fromhex("8b760a"), _site(HEAT_SITE, 3)),
     # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
     Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),

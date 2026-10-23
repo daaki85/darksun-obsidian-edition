@@ -1234,7 +1234,7 @@ slots.
 | **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
 | **Blade Barrier** | cosmos | a wall | 8d8 to each creature in it or passing through; a save for none |
 | **Wall of Thorns** | cosmos | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
-| **Sunstroke** | cosmos | one creature | if it fails its save it collapses, helpless, for 2 rounds a level |
+| **Sunstroke** | cosmos | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
 | **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
 | **Heartseeker** | earth, water | one creature | it saves against death or dies |
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
@@ -1257,8 +1257,9 @@ How they're made, and where they differ from the books:
   monster's own AC, a party member's as the game last worked it out when
   something attacked them (before that, AC 10).
 - **Sunstroke** strikes one creature, as in Wake of the Ravager, and holds it
-  as Hold Person does, for 2 rounds a level; the book's 1d4 a round while it
-  lies there is left out, as the game has nothing that hurts each round.
+  as Hold Person does, for 2 rounds a level, and the heat burns it for the
+  book's 1d4 of fire at the start of each round while it lies there (a fire
+  resistance counts). It ends with the paralysis, or when that is cured.
 - **Fire Seeds** throws its four seeds of 2d8 together, one burst of 8d8 (the
   same dice), not one by one at different places; it
   bursts as a fireball (Wake of the Ravager's picture for it, which Shattered

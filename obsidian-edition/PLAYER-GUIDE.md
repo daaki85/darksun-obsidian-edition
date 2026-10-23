@@ -1438,7 +1438,7 @@ AD&D's spell tables and the new spells switched on):
   armour, the worse) to each creature in it or passing through: circling
   blades or a tangle of thorns. Mind where you put it: it hurts your party too.
 - **Sunstroke**: one creature collapses, helpless, for 2 rounds a level unless
-  it saves.
+  it saves, and the heat burns it for 1d4 at the start of each round.
 - **Fire Seeds**: four seeds of 2d8 burst together where you aim, a save for half.
 - **Heartseeker**: one creature saves against death or dies.
 - **Water of Life** (touch): the creature's wounds pass to the caster, who

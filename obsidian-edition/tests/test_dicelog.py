@@ -803,13 +803,19 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(len(log.describe(duration)), 1)  # (only the one after a burn)
 
     def test_sunstroke_heat(self):
-        """Sunstroke's heat (DSCLOG's BURN_PASS: Acid's burn made 1d4 of fire named Sunstroke, at
-        each round's start while it holds); its damage's duration roll after it says nothing."""
+        """Sunstroke's heat (DSCLOG's BURN_PASS through Acid's burn, its 1d4; HEAT_SITE's record:
+        the damage | the spell << 8, the creature the extra): one line, the roll's own hidden line
+        dropped, the HP lost after it put down to Sunstroke; its damage's duration roll says
+        nothing."""
         log = make_game()
-        heat = entry(raw_for(3, 4), dicelog.DICE_SITE, words(0, 0, 1, 4), words(0, 0, 0x29, 1),
+        roll = entry(raw_for(3, 4), dicelog.DICE_SITE, words(0, 0, 1, 4), words(0, 0, 0x29, 1),
                      parent_code=dicelog.CHARGE_USED_RETURN)
-        self.assertEqual(log.describe(heat), ["    Sunstroke's heat on Mountain Stalker: 1d4 = [3] = 3 fire damage"])
-        self.assertTrue(log._sun_burn)
+        self.assertEqual(log.describe(roll), [])
+        log._pending.append(dicelog.PendingDice("1d4 = [3] = 3", 0.0))
+        e = entry(3 | game.SUNSTROKE_SPELL << 8, kind=dicelog.KIND_HEAT)
+        e.extra = 0x29
+        self.assertEqual(log.describe(e), ["    Sunstroke's heat on Mountain Stalker: 1d4 = 3 fire damage"])
+        self.assertEqual((log._pending, log._last_damage), ([], (game.SUNSTROKE_SPELL, 3)))
         duration = entry(raw_for(2, 4), dicelog.DICE_SITE, words(0, 0, 1, 4), words(0, 0, game.SUNSTROKE_SPELL, 11),
                          parent_code=dicelog.SPELL_DURATION_RETURN)
         self.assertEqual(log.describe(duration), [])
