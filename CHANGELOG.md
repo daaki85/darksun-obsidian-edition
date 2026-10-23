@@ -48,6 +48,8 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   changed in the damage routine's frame, not the burn's code: the 1d4's own overlay can load
   the burn's code again from the file. No entry of its own: the heat ends with the paralysis.
   Recorded (kind 10) for the dice log's `Sunstroke's heat on X: 1d4 = N fire damage`.
+  Checked live in the Scar fight: a held henchman burned 4, then 3, at the next two rounds'
+  starts, the HP lost exactly the roll and put down to Sunstroke.
 - **Backstabs multiply the weapon's dice only** (new option `backstab_dice`, `RULE_BACKSTAB`,
   DSCLOG's `RULE_HI_BACKSTAB`, on by default): `STAB_ROLL` (58A29h) keeps a hit's dice (the
   roll less `[BP-12h]`), `STAB_TIMES` (58A80h, where the game multiplies the whole damage by
