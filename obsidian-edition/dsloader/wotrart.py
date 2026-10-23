@@ -12,7 +12,9 @@ fewer allow.) Its palette (RESOURCE.GFF's PAL 1000) isn't Shattered Lands', so e
 the nearest of Shattered Lands' that no region changes (the same in all its GPLDATA.GFF palettes).
 
 ICONS: the 6th-level priest spells' icons, by name: its number in Wake of the Ravager (Whirlwind,
-which it hasn't, takes its Sand Storm's, "a very large version of a dust devil")."""
+which it hasn't, takes its Sand Storm's, "a very large version of a dust devil"). Without Wake of
+the Ravager (or for an icon it can't give), FALLBACKS: a Shattered Lands icon (its template's, or
+the nearest in kind) tinted halfway toward the spell's colour, in the same stable colours."""
 
 import os
 import struct
@@ -23,6 +25,14 @@ from . import art, gff, icons
 ICONS: Dict[str, int] = {
     "Blade Barrier": 21208, "Fire Seeds": 21209, "Heal": 21210, "Harm": 21211, "Heartseeker": 21212,
     "Sunstroke": 21213, "Wall of Thorns": 21214, "Water of Life": 21215, "Whirlwind": 21205,
+}
+# ... and without it: Shattered Lands' icon (ICON 21000 + its spell) and the tint, by name
+FALLBACKS: Dict[str, Tuple[int, Tuple[int, int, int]]] = {
+    "Heal": (21127, (255, 230, 140)), "Harm": (21128, (110, 0, 20)),  # Cure and Cause Critical Wounds'
+    "Blade Barrier": (21137, (180, 190, 210)), "Wall of Thorns": (21073, (40, 110, 30)),  # Wall of Fire's, Entangle's
+    "Sunstroke": (21131, (255, 210, 0)), "Fire Seeds": (21120, (255, 90, 0)),  # Flame Strike's, Produce Fire's
+    "Heartseeker": (21136, (90, 140, 40)), "Water of Life": (21127, (40, 110, 255)),  # Slay Living's, Cure Critical's
+    "Whirlwind": (21083, (215, 215, 230)),  # Dust Devil's
 }
 HEAL_SPIN = (211, b"HEAL:")  # (how a RESOURCE.GFF is told for Wake of the Ravager's)
 PALETTE = ("PAL ", 1000)
@@ -125,7 +135,40 @@ def spell_icons(wotr_resources: str, sl_gpldata: str) -> Dict[str, List[List[int
         return {}
 
 
-def chunks(wotr_resources: str, sl_gpldata: str, numbers: Dict[str, int]) -> Dict[Tuple[str, int], bytes]:
-    """ICON chunks for Shattered Lands, NUMBERS each spell's icon number there."""
-    found = spell_icons(wotr_resources, sl_gpldata)
-    return {("ICON", numbers[name]): icons.encode(rows) for name, rows in found.items() if name in numbers}
+def tinted(rows: Sequence[Sequence[Optional[int]]], palette, stable, tint: Tuple[int, int, int]) -> List[List[Optional[int]]]:
+    """ROWS (Shattered Lands' palette numbers) each halfway toward TINT, in the nearest STABLE colour."""
+    cache: Dict[int, int] = {}
+
+    def shade(p: int) -> int:
+        if p not in cache:
+            rgb = tuple((a + b) // 2 for a, b in zip(palette[p], tint))
+            cache[p] = min(stable, key=lambda e: sum((a - b) ** 2 for a, b in zip(e[1], rgb)))[0]
+        return cache[p]
+    return [[shade(p) if p is not None else None for p in row] for row in rows]
+
+
+def chunks(wotr_resources: Optional[str], sl_gpldata: str, numbers: Dict[str, int],
+           sl_chunks: Optional[Dict[Tuple[str, int], bytes]] = None) -> Dict[Tuple[str, int], bytes]:
+    """ICON chunks for Shattered Lands, NUMBERS each spell's icon number there: Wake of the
+    Ravager's (WOTR_RESOURCES, if found), else FALLBACKS' from SL_CHUNKS (its RESOURCE.GFF's)."""
+    found = spell_icons(wotr_resources, sl_gpldata) if wotr_resources else {}
+    out = {("ICON", numbers[name]): icons.encode(rows) for name, rows in found.items() if name in numbers}
+    if sl_chunks is None:
+        return out
+    try:
+        with open(sl_gpldata, "rb") as f:
+            gpl = f.read()
+        stable = stable_colours(gpl)
+        palette = next(art.palette_colours(v) for k, v in sorted(gff.read_gff(gpl).items())
+                       if k[0] == "PAL " and len(v) >= 768)
+    except (OSError, StopIteration, ValueError, IndexError, struct.error, gff.GffError):
+        return out
+    for name, number in numbers.items():
+        if ("ICON", number) in out or name not in FALLBACKS:
+            continue
+        icon, tint = FALLBACKS[name]
+        try:
+            out[("ICON", number)] = icons.encode(tinted(icons.decode(sl_chunks[("ICON", icon)]), palette, stable, tint))
+        except (KeyError, ValueError, IndexError, struct.error):
+            pass  # (no icon: the game draws none)
+    return out

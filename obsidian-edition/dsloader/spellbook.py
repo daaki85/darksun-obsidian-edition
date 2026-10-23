@@ -5,6 +5,7 @@ import struct
 from typing import List, NamedTuple, Optional
 
 from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
+                   PRIEST6_LEVEL, PRIEST6_SPELLS,
                    PERMANENT, PSIONIC_COUNT, PSIONIC_FIRST, RULE_NEW_SPELLS, SAVE_NAMES,
                    SPELL_COUNT, SPELL_FIRST, SPELL_INFO_OFF, SPELL_INFO_SIZE, SPELL_LEVEL_CAP, SPELL_SIZE, GameData, kind_to_save,
                    ordinal)
@@ -136,6 +137,8 @@ def lasts_text(gd: GameData, spell: int, rec: bytes) -> str:
 def spell_level(gd: GameData, spell: int) -> Optional[int]:
     if spell in NEW_SPELLS:
         return NEW_SPELL_LEVELS[spell]
+    if spell in PRIEST6_SPELLS:
+        return PRIEST6_LEVEL
     if not SPELL_FIRST <= spell <= SPELL_COUNT:
         return None
     return gd.guest.read(gd.load_seg * 16 + SPELL_INFO_OFF + (spell - 1) * SPELL_INFO_SIZE, 1)[0] or None
@@ -147,6 +150,8 @@ def spell_info(gd: GameData, spell: int, party: List[int]) -> Optional[SpellInfo
         return None
     if spell in NEW_SPELLS:
         magic = "Wizard"
+    elif spell in PRIEST6_SPELLS:
+        magic = "Priest"
     elif spell >= PSIONIC_FIRST:
         magic = "Psionic"
     else:
@@ -168,7 +173,7 @@ def all_spells(gd: GameData, party: Optional[List[int]] = None) -> List[SpellInf
     spells while their rule is on."""
     party = list(range(PARTY_SIZE)) if party is None else party
     out = []
-    new = list(NEW_SPELLS) if gd.rules & RULE_NEW_SPELLS else []
+    new = list(NEW_SPELLS) + list(PRIEST6_SPELLS) if gd.rules & RULE_NEW_SPELLS else []
     for spell in list(range(SPELL_FIRST, SPELL_COUNT + 1)) + new + list(range(PSIONIC_FIRST, PSIONIC_FIRST + PSIONIC_COUNT)):
         info = spell_info(gd, spell, party)
         if info:

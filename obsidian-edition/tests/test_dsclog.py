@@ -2732,7 +2732,13 @@ class NewSpellTests(RuleTests):
         self.moved(1)
         for spell in (199, 200, 201):
             self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
-        self.assertEqual(self.site(site, edx=202) & (CF | ZF), 0)
+        for spell in range(202, 211):  # (the 6th-level priest spells: as a priest's, below it too)
+            self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
+        self.assertEqual(self.site(site, edx=211) & (CF | ZF), 0)
+        priest = gamepatch.NS_CMP + 1  # (55865h, "cmp si,45h": a wizard's spell below it, a priest's not)
+        self.assertEqual(gamepatch.NS_CMP_SITES[1], (0x55865, "83fe45"))
+        self.assertEqual(self.site(priest, esi=200) & (CF | ZF), CF)
+        self.assertEqual(self.site(priest, esi=202) & (CF | ZF), ZF)
         self.rules(0)
         self.assertEqual(self.site(site, edx=196) & (CF | ZF), ZF)
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 196)
@@ -2850,13 +2856,13 @@ class NewSpellTests(RuleTests):
     def test_npp_save(self):
         """NS_NPP (7A7E9h, "add sp,4 / push 6 / push 27h", the charge's two arguments still on the
         stack): they become the save's, 6 and the record: Vampiric Touch's (27h) until the records
-        have room, then NPP_SAVE (0CAh), Vampiric Touch's record copied with a save allowed (21h)."""
+        have room, then NPP_SAVE (0D3h, past the new spells), Vampiric Touch's record copied with a save allowed (21h)."""
         from dsloader import gamepatch
         mu = self.mu
         records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
         touch = bytes(range(0x1F)) + bytes((0xA0,))
         mu.mem_write(records + 0x27 * 0x20, touch)
-        mu.mem_write(records + 0xCA * 0x20, bytes(0x20))
+        mu.mem_write(records + 0xD3 * 0x20, bytes(0x20))
         def save():
             self.at += 0x20
             start = CALLER * 16 + self.at
@@ -2869,10 +2875,10 @@ class NewSpellTests(RuleTests):
             return struct.unpack("<HH", bytes(mu.mem_read(SS * 16 + 0x7FC, 4)))
         self.moved(0)
         self.assertEqual(save(), (0x27, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xCA * 0x20, 0x20)), bytes(0x20))
+        self.assertEqual(bytes(mu.mem_read(records + 0xD3 * 0x20, 0x20)), bytes(0x20))
         self.moved(1)
-        self.assertEqual(save(), (0xCA, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xCA * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
+        self.assertEqual(save(), (0xD3, 6))
+        self.assertEqual(bytes(mu.mem_read(records + 0xD3 * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
         self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
 
     def test_script_request(self):

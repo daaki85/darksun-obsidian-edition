@@ -46,7 +46,9 @@ class NewSpellTests(unittest.TestCase):
         self.assertEqual([log.game.spell_name(s) for s in range(196, 202)],
                          ["Cat's Grace", "Erdlu Claw", "Fogbolt", "Reflected Image", "Spook", "Friends"])
         self.assertTrue(game.cast_spell(197) and game.cast_spell(201) and game.cast_spell(5)
-                        and not game.cast_spell(180) and not game.cast_spell(202))
+                        and game.cast_spell(202) and game.cast_spell(210)  # (the 6th-level priest spells)
+                        and not game.cast_spell(180) and not game.cast_spell(211))
+        self.assertEqual([log.game.spell_name(s) for s in (202, 206, 210)], ["Heal", "Sunstroke", "Whirlwind"])
 
     def test_known_bits(self):
         """Each new spell's bit: +45h's (but its low three bits, the second sphere), Friends' the kit

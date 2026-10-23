@@ -892,6 +892,12 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import spelltexts
     added.update(spelltexts.chunks())
+    from . import art, game, wotrart  # the 6th-level priest spells' (Wake of the Ravager's, else tinted ones)
+    folder = os.path.dirname(os.path.abspath(source))
+    gpldata = art._find(folder, "GPLDATA.GFF")
+    if gpldata:
+        numbers = {name: 21000 + spell for spell, name in game.PRIEST6_SPELLS.items()}
+        added.update(wotrart.chunks(wotrart.find_resources(folder), gpldata, numbers, chunks))
     from . import savepages
     try:
         added.update(savepages.chunks(chunks))

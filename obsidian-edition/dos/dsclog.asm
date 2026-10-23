@@ -6540,7 +6540,11 @@ probe_cure:
         mov [bp + 8], ax        ; (the CS the code pushed)
         mov di, [bp]            ; the game's BP
         mov ax, [ss:di + 0x0E]
-        mov bx, CURE_SPELLS
+        cmp ax, HEAL_SPELL      ; Heal (NEW SPELLS: Cure Critical Wounds' handler): every wound
+        jne .cures              ;   (the routine that heals stops at the most)
+        mov word [bp + 0x0C], 0x7FFF
+        jmp .out
+.cures: mov bx, CURE_SPELLS
 .find:  cmp [cs:bx], al
         je .spell
         add bx, 3
@@ -10404,8 +10408,19 @@ probe_adnd_slots:
         mov ax, [bp + 0x0C]
         dec ax
         cmp ax, 5
+        jb .col
+        ja .none
+        cmp bx, SLOT_LEVELS * 5 ; 6th level: a priest's alone (AD&D's: 1 at 11th, 2 at 12th)
         jae .none
-        add bx, ax
+        mov al, cl
+        sub al, 10
+        jbe .none
+        cmp al, 2
+        jbe .sixth
+        mov al, 2
+.sixth: mov ah, 0
+        jmp .sum
+.col:   add bx, ax
         mov al, [cs:bx + adnd_slots]
         mov ah, 0
         jmp .sum
@@ -12588,7 +12603,8 @@ copies:
 ; better than its own (NS_CLAW). Fogbolt puts its (27)
 ; on a creature that fails its save: -3 to hit, and +2 to hit it (NS_HIT).
 NS_FIRST     equ 0xC4
-NS_COUNT     equ 6
+NS_COUNT     equ 15
+PRIEST6      equ 6              ; (the new spells' places from here: the 6th-level priest spells)
 NS_LAST      equ NS_FIRST + NS_COUNT - 1
 GRACE_SPELL  equ NS_FIRST
 CLAW_SPELL   equ NS_FIRST + 1
@@ -12596,6 +12612,22 @@ FOG_SPELL    equ NS_FIRST + 2
 REFLECT_SPELL equ NS_FIRST + 3
 SPOOK_SPELL  equ NS_FIRST + 4
 FRIENDS_SPELL equ NS_FIRST + 5
+HEAL_SPELL   equ NS_FIRST + PRIEST6
+HARM_SPELL   equ HEAL_SPELL + 1
+BLADE_SPELL  equ HEAL_SPELL + 2
+THORNS_SPELL equ HEAL_SPELL + 3
+SUNSTROKE_SPELL equ HEAL_SPELL + 4
+SEEDS_SPELL  equ HEAL_SPELL + 5
+HEARTSEEKER_SPELL equ HEAL_SPELL + 6
+WATER_LIFE_SPELL equ HEAL_SPELL + 7
+WHIRLWIND_SPELL equ HEAL_SPELL + 8
+CURE_CRITICAL equ 127
+CAUSE_CRITICAL equ 128
+PRIEST_WALL_FIRE equ 137
+FLAME_STRIKE equ 131
+SLAY_LIVING  equ 136
+HOLD_PERSON  equ 86
+LEND_HEALTH  equ 156            ; (the psionic power whose handler moves hit points: Water of Life's)
 STRENGTH_SPELL equ 23
 ENLARGE_SPELL equ 5
 CHARM_SPELL  equ 2
@@ -12639,7 +12671,15 @@ probe_grace_cast:
         cmp ax, GRACE_SPELL
         je .strength
         cmp ax, FRIENDS_SPELL   ; (Friends too)
+        je .strength
+        cmp ax, HEAL_SPELL      ; Heal: Cure Critical Wounds' (its healing PROBE_CURE's)
+        je .cure
+        cmp ax, WATER_LIFE_SPELL ; Water of Life: Lend Health's, the target's wounds the caster's
         jne .store
+        mov ax, LEND_HEALTH
+        jmp .store
+.cure:  mov ax, CURE_CRITICAL
+        jmp .store
 .strength:
         mov ax, STRENGTH_SPELL
 .store: mov [bp-0x1A], ax
@@ -12727,19 +12767,28 @@ probe_grace_ability:
 ; has them now (see NEW SPELLS), and flight 15 Fogbolt's grey bolt once the game has the objects'
 ; copy open (FLIGHTS). DS the game's; all registers kept.
 ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up (0FFh: not yet)
-ns_levels    db 2, 1, 1, 1, 1, 1 ; each one's spell level ...
+ns_levels    db 2, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 ; each one's spell level ...
 ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL, MIRROR_SPELL, CHARM_SPELL, STRENGTH_SPELL
+             db CURE_CRITICAL, CAUSE_CRITICAL, PRIEST_WALL_FIRE, PRIEST_WALL_FIRE, HOLD_PERSON
+             db FLAME_STRIKE, SLAY_LIVING, CURE_CRITICAL, FLAME_STRIKE
                                 ; ... the spell whose record it takes ...
 ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT, MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT
+             times NS_COUNT - PRIEST6 db 0
                                 ; ... its effect ...
-ns_effect_how db 2, 1, 1, 0, 3, 2 ; ... put in the record and named by the helper (1), put in
+ns_effect_how db 2, 1, 1, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... put in the record and named by the helper (1), put in
                                 ;   the record, the game's own (3), the template's (0), or by the
                                 ;   handler (PROBE_GRACE_EFFECT) and named by the helper (2) ...
-ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
+ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
                                 ;   Grasp's, Fog Cloud's (0: the template's) ...
 ns_known_at  db NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, KIT_BYTE ; ... and the sheet's
 ns_known_bit db 0x10, 0x20, 0x40, 0x08, 0x80, 0x80 ;   byte and bit that say a member knows it
-                                ;   (KIT_BYTE's 0FFh, KIT_OPEN, none: NS_BIT_AT)
+                                ;   (KIT_BYTE's 0FFh, KIT_OPEN, none: NS_BIT_AT); a priest
+                                ;   spell's none: known by its sphere (NS_PRIEST_KNOWS) ...
+; ... the 6th-level priest spells' masks in the table of spell levels (the game's own, by sphere: the
+; cosmos's at 4th and 5th level, the druids' alone; the elements' as their 5th-level spells')
+COSMOS_MASK  equ 0x001003C2
+P6_MASKS:    dd COSMOS_MASK, COSMOS_MASK, COSMOS_MASK, COSMOS_MASK, COSMOS_MASK
+             dd 0x00110112, 0x001282AA, 0x00120222, 0x00104046 ; (fire; earth and water; water; air)
 ; NS_PATCHES: the records' changes from their templates': the new spell (0 to NS_COUNT - 1), the
 ; place, 1 (a byte) or 2 (a word), the value; 0FFh ends them.
 %macro NS_PATCH 4
@@ -12766,6 +12815,17 @@ ns_patches:
         NS_PATCH FRIENDS_SPELL, 0x0C, 1, 7
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
+             dw ns_name_heal, ns_name_harm, ns_name_blade, ns_name_thorns, ns_name_sun, ns_name_seeds
+             dw ns_name_heart, ns_name_water, ns_name_whirl
+ns_name_heal db "HEAL", 0
+ns_name_harm db "HARM", 0
+ns_name_blade db "BLADE BARRIER", 0
+ns_name_thorns db "WALL OF THORNS", 0
+ns_name_sun  db "SUNSTROKE", 0
+ns_name_seeds db "FIRE SEEDS", 0
+ns_name_heart db "HEARTSEEKER", 0
+ns_name_water db "WATER OF LIFE", 0
+ns_name_whirl db "WHIRLWIND", 0
 ns_name_grace db "CAT'S GRACE", 0
 ns_name_claw db "ERDLU CLAW", 0
 ns_name_fog  db "FOGBOLT", 0
@@ -12812,7 +12872,14 @@ ns_setup:
         mov al, [cs:si + ns_levels]
         mov [es:di], al
         mov eax, [es:SPELL_LEVELS + 1]
-        mov [es:di + 1], eax
+        cmp si, PRIEST6
+        jb .mask
+        push bx                 ; (a priest spell: its sphere's)
+        mov bx, si
+        shl bx, 2
+        mov eax, [cs:bx + P6_MASKS - 4 * PRIEST6]
+        pop bx
+.mask:  mov [es:di + 1], eax
 .record:
         mov ax, ds              ; its record: its template's, changed, or nothing
         sub ax, SPELLS_FROM_DS
@@ -12983,8 +13050,10 @@ ns_bit:
         ret
 
 ; NS_SHEET_KNOWS: CF set if sheet ES:BX says it knows new spell CL (KIT_BYTE's KIT_OPEN: none
-; chosen, and no spell known). All registers kept.
+; chosen, and no spell known); a priest spell's by its sphere (NS_PRIEST_KNOWS). All registers kept.
 ns_sheet_knows:
+        cmp cl, PRIEST6
+        jae ns_priest_knows
         push ax
         push di
         call ns_bit
@@ -13001,6 +13070,61 @@ ns_sheet_knows:
 .no:    pop di
         pop ax
         clc
+        ret
+
+; NS_PRIEST_KNOWS: CF set if sheet ES:BX casts 6th-level priest spell CL (PRIEST6 on): its mask
+; (P6_MASKS) meets its priest classes' (the classes' masks, less the wizard and priest bits, of those
+; with the priest bit), as the game gives a priest the spells of its spheres (5E401h) and as an
+; Elementalist's second sphere's (its own sphere's too) and a Healer's cosmos (its cleric's: EL_SPHERES).
+; All registers kept.
+CLASS_MAGIC  equ 0x118          ; (the classes' masks, a dword each, at KNOWN_FROM_DS below DS)
+ns_priest_knows:
+        pushad
+        push fs
+        movzx si, cl
+        shl si, 2
+        mov edx, [cs:si + P6_MASKS - 4 * PRIEST6]
+        call el_second          ; (AL its second sphere, 0-3)
+        jz .healer
+        mov cl, al
+        mov eax, 4
+        shl eax, cl
+        test edx, eax
+        jz .healer
+        call kit_class_of_sheet ; (its cleric's bit too)
+        mov cl, al
+        mov eax, 2
+        shl eax, cl
+        or edx, eax
+.healer:
+        call kit_is_b
+        db KIT_HEALER
+        jne .classes
+        call kit_class_of_sheet
+        call healer_cosmos
+.classes:
+        mov ax, ds
+        sub ax, KNOWN_FROM_DS
+        mov fs, ax
+        xor eax, eax
+        xor si, si
+.class: movzx di, byte [es:bx + si + 0x21]
+        cmp di, 32
+        jae .next
+        shl di, 2
+        mov ecx, [fs:di + CLASS_MAGIC]
+        test cl, 2
+        jz .next
+        and cl, 0xFC
+        or eax, ecx
+.next:  inc si
+        cmp si, 3
+        jb .class
+        test eax, edx           ; (CF clear)
+        jz .out
+        stc
+.out:   pop fs
+        popad
         ret
 
 ; NS_SHEET_LEARN: sheet ES:BX knows new spell CL (a KIT_OPEN kit byte made 0, no kit, first);
@@ -13036,7 +13160,7 @@ ns_forget_all:
         xor cx, cx
 .each:  call ns_sheet_forget
         inc cx
-        cmp cx, NS_COUNT
+        cmp cx, PRIEST6         ; (the wizard spells': the priest spells known by sphere)
         jb .each
         pop cx
         ret
@@ -13126,7 +13250,7 @@ ns_count_of:
         jne .next
 .count: inc dl
 .next:  inc cx
-        cmp cx, NS_COUNT
+        cmp cx, PRIEST6         ; (a wizard's: the priest spells count against no INT)
         jb .each
 .out:   movzx ax, dl
         pop es
@@ -13404,9 +13528,14 @@ ns_cmp:
         jne .cmp
 .new:   push ax
         call ns_new
+        jnc .old
+        cmp al, PRIEST6
         pop ax
-        jnc .cmp
-        xor ax, ax              ; (a new spell: as a wizard's)
+        mov ax, 0               ; (a new spell: as a wizard's ...
+        jb .cmp
+        mov al, 0x45            ;   ... or a priest's)
+        jmp .cmp
+.old:   pop ax
 .cmp:   mov dx, [cs:si + 3]
         test cl, 1
         jz .word
@@ -13702,7 +13831,7 @@ ns_hold:
 ; room (SEG_MOVED), as against NPP_SAVE, Vampiric Touch's record copied with a save against
 ; paralysis, poison and death allowed (21h at +1Fh), AD&D's save against death magic.
 NPP_TOUCH equ 0x27
-NPP_SAVE  equ 0xCA              ; (NS_END: past the new spells, in the records' room, no list's)
+NPP_SAVE  equ NS_FIRST + NS_COUNT ; (NS_END: past the new spells, the last of the records' room, no list's)
 NPP_SAVE_BYTE equ 0x21
 ns_npp:
         push bp

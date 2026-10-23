@@ -152,7 +152,7 @@ ARROW_HIT_SITE, ARROW_SPELL_SITE = NS_IMAGE + 28, NS_IMAGE + 29  # (a hit's spel
 CAST_SITE = NS_IMAGE + 30  # (a spell cast: recorded, its name floated over the caster, labels.py)
 REST_SITE = NS_IMAGE + 31  # (the game's rest: recorded, the spell arrows fade, spellarrows.py)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
-NS_END = 0xCA
+NS_END = 0xD3  # (past the new spells: 196-210, DSCLOG's NS_FIRST + NS_COUNT)
 
 
 def _site(number: int, length: int) -> bytes:

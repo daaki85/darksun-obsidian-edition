@@ -184,10 +184,24 @@ NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "
               REFLECT_SPELL: "Reflected Image", SPOOK_SPELL: "Spook", FRIENDS_SPELL: "Friends"}
 NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
                     FRIENDS_SPELL: 1}
-NEW_SPELLS_END = 202  # (past the last)
+# ... and nine 6th-level priest spells after them (DSCLOG's PRIEST6 on): Wake of the Ravager's eight
+# and Whirlwind, the air's. A priest casts those of its spheres, as the game's own: their rows' masks
+# (PRIEST6_MASKS: the cosmos's as its 4th- and 5th-level spells', the druids'; the elements' as
+# theirs), meeting its priest classes' (DSCLOG's NS_PRIEST_KNOWS; the sheet holds no bit for them)
+HEAL_SPELL, HARM_SPELL, BLADE_SPELL, THORNS_SPELL, SUNSTROKE_SPELL = range(202, 207)
+SEEDS_SPELL, HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL = range(207, 211)
+PRIEST6_SPELLS = {HEAL_SPELL: "Heal", HARM_SPELL: "Harm", BLADE_SPELL: "Blade Barrier",
+                  THORNS_SPELL: "Wall of Thorns", SUNSTROKE_SPELL: "Sunstroke", SEEDS_SPELL: "Fire Seeds",
+                  HEARTSEEKER_SPELL: "Heartseeker", WATER_LIFE_SPELL: "Water of Life", WHIRLWIND_SPELL: "Whirlwind"}
+COSMOS_MASK = 0x001003C2
+PRIEST6_MASKS = {HEAL_SPELL: COSMOS_MASK, HARM_SPELL: COSMOS_MASK, BLADE_SPELL: COSMOS_MASK,
+                 THORNS_SPELL: COSMOS_MASK, SUNSTROKE_SPELL: COSMOS_MASK, SEEDS_SPELL: 0x00110112,
+                 HEARTSEEKER_SPELL: 0x001282AA, WATER_LIFE_SPELL: 0x00120222, WHIRLWIND_SPELL: 0x00104046}
+PRIEST6_LEVEL = 6
+NEW_SPELLS_END = 211  # (past the last)
 # Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
 # record copied to the records' room past the new spells, a save against death allowed
-NPP_SAVE_RECORD = 202
+NPP_SAVE_RECORD = 211
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16
@@ -198,7 +212,8 @@ FLAMING_SPHERE = 14  # (once Cat's Grace's place)
 
 def cast_spell(spell: Optional[int]) -> bool:
     """A wizard's or priest's spell, a psionic power, or a new spell: not a monster's power."""
-    return spell is not None and (SPELL_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT or spell in NEW_SPELLS)
+    return spell is not None and (SPELL_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT or spell in NEW_SPELLS
+                                  or spell in PRIEST6_SPELLS)
 DETECT_INVISIBILITY = 13  # the spell (as the Loader numbers them: 1 Burning Hands)
 # the sheet's byte and bit that say a character knows each new spell: most in +45h, whose low three
 # bits are an Elementalist's second sphere (kits.SPHERE2); Friends' in the kit byte's top bit (its
@@ -1084,6 +1099,8 @@ class GameData:
             return title(text) if text else f"psionic power {spell}"
         if spell in NEW_SPELLS:
             return NEW_SPELLS[spell]
+        if spell in PRIEST6_SPELLS:
+            return PRIEST6_SPELLS[spell]
         if spell == NPP_SAVE_RECORD:
             return "Negative Plane Protection"
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)
