@@ -32,6 +32,7 @@ of the game's data, the tools for mapping it, and how each part of the
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
   - [No manual check](#no-manual-check)
+  - [The game's script bugs](#the-games-script-bugs)
   - [Class restrictions](#class-restrictions)
   - [Multiclass hit points](#multiclass-hit-points)
   - [Hit dice: the better of two](#hit-dice-the-better-of-two)
@@ -60,7 +61,7 @@ of the game's data, the tools for mapping it, and how each part of the
   - [Picking pockets](#picking-pockets)
   - [Mirror Image](#mirror-image)
   - [The game's spells](#the-games-spells)
-  - [New wizard spells](#new-wizard-spells)
+  - [New wizard spells](#new-spells-wizard-and-6th-level-priest)
   - [New items](#new-items)
   - [Bracers of defense](#bracers-of-defense)
   - [Robes](#robes)
@@ -975,6 +976,23 @@ and, in region 28h, that bit. In the Loader's copy of the scripts
 question. It is replaced only if it is the dragon's (its `" word on page "`
 line).
 
+### The game's script bugs
+
+([In the features page](FEATURES.md#the-games-bugs-fixed).)
+
+How: `dsloader/scriptfixes.py` changes a few bytes in the Loader's copy of the
+game's scripts (GPLDATA.GFF), each re-pointing one trigger or call: in Darkhold
+the triggers story events re-register to script 200 at 909h (a lone exit) go
+back to their own handlers (scripts 41 and 203: look text; 195: the portcullis
+guard's attack); the Lava Rifts ranger's re-armed sight trigger goes to his own
+handler (script 100 at 445h, not the hermit's at 56h); Linara's talk after the
+extract calls her menu (script 68 at 209h). They are the OpenDS project's
+(darkfix), as yuan-ti lists them (`GplRepairs.cs`), each checked against the GOG
+file: a repair is made only where its script holds the expected bytes. The
+fourth OpenDS repair, starting the final battle's stages without their pause,
+is left out (yuan-ti keeps it off too: with the game's clock running the stage
+gate waits its window out). Not seen in play yet: all are past the slave pens.
+
 ### Class restrictions
 
 ([In the features page](FEATURES.md#class-restrictions).)
@@ -1388,7 +1406,7 @@ Handbook*), up to 10th level, and the Shinobi has spells of its own (the game's
 and four new ones): both in [the Kits page's spell slots](KITS.md#kits-spell-slots).
 Their spells are cast at the table's casting level, not the ranger's or thief's.
 
-Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-wizard-spells),
+Fogbolt, Reflected Image, Spook and Friends, [new spells](#new-spells-wizard-and-6th-level-priest),
 are known by its bit in the sheet (`NS_KNOWS`) rather than the game's byte:
 `SHINOBI_KNOWS` reads either for the level up's offer (`SHINOBI_UNKNOWN`,
 `PROBE_PICK_LIST`), and counts them as known (not offered) while the new
@@ -2150,7 +2168,7 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
   is 1, then the replaced test.
 
-### New wizard spells
+### New spells (wizard and 6th-level priest)
 
 ([In the features page](FEATURES.md#new-wizard-spells).)
 
@@ -2220,8 +2238,9 @@ Heal icon in a known spell's place on the USE screen.
 segment less 330h, 18 bytes each: the spell it was made for, a byte, the object, then how it
 behaves), the same table Wake of the Ravager has, longer and looked up there by spell. Its
 entries for the 6th-level priest spells name Blade Barrier's circling blades (object 8432) and
-Wall of Thorns' thorns (8425), which Shattered Lands hasn't, Fire Seed's fireball (8405) and Sand
-Storm's dust (8403), which it has. The two new ones go in the Loader's copy of SEGOBJEX.GFF
+Wall of Thorns' thorns (8425), which Shattered Lands hasn't, Fire Seed's fireball (8405), which it
+has, and for Whirlwind Sand Storm's dust (8403), which the mod replaces with a funnel of its own
+(object 8433, drawn by `whirlart.py`, put in its entry by `NS_SETUP`). The two new walls go in the Loader's copy of SEGOBJEX.GFF
 (`wotrart.area_chunks`, from `icons.write_objects`): the fire wall's object (8419) naming
 pictures 2650 and 2651, its anchor (+2, +4) Wake of the Ravager's, the frames read from its
 OBJEX.GFF and each colour made the nearest stable one; without it, the fire wall's frames in

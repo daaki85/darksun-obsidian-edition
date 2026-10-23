@@ -475,7 +475,7 @@ Okay with the mod, so a party's thief skills show while it is made (see
 Some effects rule out a skill:
 - Blind, Afraid, Confused, Berserk and Paralyzed stop them all, except that a
   blind thief can still hear noise.
-- Slowed stops all but picking pockets.
+- Slowed stops picking pockets only.
 - Fire Shield stops picking pockets and hiding; Mirror Image stops hiding.
 - Graft Weapon stops picking pockets, opening locks and climbing.
 - Feeblemind stops reading languages.

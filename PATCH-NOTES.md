@@ -8,7 +8,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 *These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
 
-*They follow the repository, so some changes come with the next release, not 2.6.0: names over figures; the Spellarcher's spell arrows; the two girdles and the Amulet of Magic Resistance; the Crusader's and Mind Warrior's weapon expertise; Find and the dice log's newer lines; the tables of cleric spells and psionic powers; and four bug fixes (the party's thief skill roll, random monsters, figures vanishing, magic items' shine in shops).*
+*They follow the repository, so these come with the next release, not 2.6.0: the nine 6th-level priest spells; levels capped by XP instead of at 9th; backstabs multiplying the weapon's dice only; names over figures; the Spellarcher's spell arrows; the two girdles and the Amulet of Magic Resistance; the Crusader's and Mind Warrior's weapon expertise; weapons made by spells counting for specialization; Find and the dice log's newer lines; the tables of cleric spells and psionic powers; and eight bug fixes (Acid Arrow's acid, three script bugs in Darkhold, the Lava Rifts and Gedron, the party's thief skill roll, random monsters, figures vanishing, magic items' shine in shops).*
 
 ## Contents
 
@@ -153,7 +153,7 @@ A few of them:
 | **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
 | **Heartseeker** | earth, water | save against death or die |
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
-| **Whirlwind** | air | a whirlwind that stays 1d4 rounds: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn; nothing can be shot or cast through it |
+| **Whirlwind** | air | a whirlwind that stays 1d4+1 rounds: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn; nothing can be shot or cast through it |
 
   The walls look like circling blades and a tangle of thorns, Fire Seeds bursts as a fireball (Wake of the Ravager's pictures, when it's installed; the walls recoloured fire walls without it) and Whirlwind is a tall, turning funnel of dust, its ring of dust at the edge of its area.
 
@@ -161,6 +161,7 @@ A few of them:
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
+- **[Changed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100)*.
 - **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 
@@ -284,7 +285,6 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Absorb Disease** gave the psionicist 1d6 STR as well (and the STR alone with no disease to take). Now it only takes the disease.
 - **[Fixed]** **Bless** and **Aid** left out the wrong allies: the check for an enemy beside each one measured from the wrong place.
 - **[Fixed]** **Negative Plane Protection** never stopped anything: it saved as against Vampiric Touch, which allows no save. Now a save against death magic stops an undead's draining touch, and the undead takes 2d6.
-- **[Changed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100)*. An option, on unless unticked.
 - **[Fixed]** **Acid Arrow**'s acid never burned after the hit. Now it does 2d4 at the start of each round it lasts (four rounds for an 11th-level caster).
 - **[Fixed]** **Cloak of Bravery**'s +4 on saves against fear never applied. Now it does against Scare, Fear, Cause Fear and Insect Plague, and the new Spook.
 - **[Fixed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
@@ -301,6 +301,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
 Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); and thief skills (Improved Thieving).

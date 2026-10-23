@@ -68,8 +68,8 @@ rules without spoilers, with a section for each class and its kits (also as a we
   saving throws and multiclass hit points as the books have them, and scores
   and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and thirteen for races' pairs of classes), levels up
-  to 10, STORE and RECALL for a creation roll, fuller starting gear, and
+  (three for each class, and thirteen for races' pairs of classes), levels
+  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a creation roll, fuller starting gear, and
   features of their own for the game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
 - **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
@@ -79,7 +79,8 @@ rules without spoilers, with a section for each class and its kits (also as a we
 - **More of Athas:** new weapons in every material, magic items with stories
   of their own (robes and bracers among them, for those who wear no armour),
   six wizard spells
-  ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends](FEATURES.md#new-wizard-spells)),
+  ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends](FEATURES.md#new-wizard-spells))
+  and nine [6th-level priest spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier, Whirlwind...),
   Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
   Semyon's story, and a use for the cooked vulture
   ([New content](FEATURES.md#new-content)). On the map, the party wears its weapons and
@@ -116,6 +117,11 @@ game artwork is copied.
   ([One-time setup](#one-time-setup)); it needs no extra packages.
 - Linux works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
+- **Optional: Wake of the Ravager** (GOG's), installed beside Shattered Lands
+  (a folder with "Ravager" in its name, in the same place). If it's there, the
+  [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
+  and pictures, read from it as the game starts; without it they have the
+  Loader's own.
 
 ### Suggested system requirements
 
@@ -733,7 +739,10 @@ running game's records: its damage dice and kinds (and that damage stops
 growing at caster level 10), its saving throw (which of the five, any
 modifier, whether the d20 counts double, and whether saving halves or stops
 the damage), the effect it gives and what that does, how long it lasts, and
-each party member's caster level for it. **Show** picks wizard, priest or
+each party member's caster level for it. With the [new spells](FEATURES.md#new-content)
+on, the mod's spells are listed too; a 6th-level priest spell built on another
+spell's record (Harm on Cause Critical Wounds', say) has its lines written out,
+as the record would mislead. **Show** picks wizard, priest or
 psionic, and **Only spells the party has a caster level for** leaves out the
 rest. **Save...** writes it to a text file. It's filled when you open the tab
 (or press **Refresh**) while the game is running.
@@ -833,6 +842,7 @@ critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `    Blur lasts 23 rounds (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 3d1)` | How long a spell's effect lasts, and how the game worked it out. A round is 60 game seconds. The game often "rolls" dice with one side, which are fixed numbers. |
 | `    Stoneskin has 23 charges (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 1d4 = [3])` | Effects that last a number of uses rather than a time (Stoneskin's blows, Mirror Image's images, Invisibility's one attack, Poison's rounds): the game stores them as charges, worked out like a duration. |
 | `    Acid on Slig: 2d4 = [3 + 1] = 4 acid damage` / `    Sunstroke's heat on Scar: 1d4 = 3 fire damage` / `    Ironskin on Cilla: one charge used` | Acid Arrow's damage each round while the acid lasts; Sunstroke's heat each round while it holds; and an effect with charges using one up (Stoneskin or Ironskin stopping a blow, Mirror Image losing an image...). |
+| `Harm: all the target's hit points but 1d4 (...)` / `  Wall of Thorns' wall instead: 8 + AC 3 = 11` / `    Slig is swept off its feet: loses its next turn` | The [6th-level priest spells](FEATURES.md#6th-level-priest-spells)' own lines: Harm leaving 1d4 hit points (the dice the game rolls go unused), Wall of Thorns' damage by the creature's AC in place of the dice rolled, and a creature that fails its save against Whirlwind losing its next turn. |
 | `Strength: 1d6 = 5 -> Cilla's STR +5 while it lasts (at most 24)` | The amount Strength (or Adrenalin Control) adds. |
 | `Y magic resistance 30% vs Fireball: d100 = 71 -> not resisted` | The magic resistance roll (only shown for targets that have some), counting Mind Bar and Lower Resistance. |
 | `    Dispel Magic on Slig's Blessed: d100 = 60, needs 85 or less (50 + 5 x 7 - 5 x 0 (its caster's level)) -> dispelled` | Dispel Magic tries each effect on its target separately: 50 + 5 for each of the dispeller's levels, less 5 for each of the level the effect was cast at. It can't touch some (Biofeedback, Diseased, Feeblemind, Poisoned, Graft Weapon, No spell use, Stuck, Mind Bar and a few more). |

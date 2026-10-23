@@ -513,7 +513,7 @@ its other missile weapons faster too, a step behind a specialist, as in melee
 hit and damage count for missiles too.
 
 **Attacks a round,** by skill and level (a warrior's level: the highest of its
-fighter, gladiator and ranger levels; characters stop at 10):
+fighter, gladiator and ranger levels; a warrior class goes no higher than 10th under the [XP cap](#level-cap-by-xp)):
 
 | Skill with the weapon | Who | Melee, levels 1–6 | Melee, levels 7–10 | Bow, levels 1–6 | Bow, levels 7–10 | Sling, staff sling or chatkcha, levels 1–6 | Sling, staff sling or chatkcha, levels 7–10 |
 |---|---|---|---|---|---|---|---|
@@ -1216,7 +1216,7 @@ and the game is as it was.
 
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### 6th-level priest spells
 
@@ -1239,7 +1239,7 @@ slots.
 | **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
 | **Heartseeker** | earth, water | one creature | it saves against death or dies |
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
-| **Whirlwind** | air | an area, 1d4 rounds (+1 from 7th level) | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
+| **Whirlwind** | air | an area, 1d4+1 rounds | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
 How they're made, and where they differ from the books:
 
@@ -1248,10 +1248,6 @@ How they're made, and where they differ from the books:
   on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds on Flame
   Strike, Whirlwind on Stinking Cloud, Heartseeker on Slay Living and Water of
   Life on Lend Health.
-- Their spheres: Heal and Harm are the cosmos's (every druid's, and a Healer
-  cleric's); Blade Barrier and Whirlwind air's, Wall of Thorns earth's,
-  Sunstroke and Fire Seeds fire's, Heartseeker earth's and water's, Water of
-  Life water's.
 - **Blade Barrier and Wall of Thorns are walls of their own**, made as the
   game makes its fire walls but each with its own damage and its own picture:
   a ring of circling blades and a tangle of thorns, Wake of the Ravager's (the
@@ -1271,7 +1267,8 @@ How they're made, and where they differ from the books:
   Lands has too) where Flame Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot.
 - **Whirlwind** stays where it is cast, as Stinking Cloud does, for 1d4
-  rounds (1 more from 7th level): one tall, turning funnel of dust in the middle of
+  rounds and 1 more for each 7 caster levels (so 1d4+1 for a priest of 11th
+  to 13th): one tall, turning funnel of dust in the middle of
   its area, its ring of dust at the area's edge. Nothing can be shot or cast
   through it (it blocks sight, as Wall of Fog does). Each round it does 2d8 crushing to every creature in
   it (a save for half), your party included; one that fails its save is swept
@@ -1282,11 +1279,11 @@ How they're made, and where they differ from the books:
 
 The dice log names each one: Harm's line says the game's own roll goes
 unused, and Wall of Thorns' gives the AC its damage came from
-(`Wall of Thorns' wall instead: 8 + AC 10 = 18`). Without Wake of the
-Ravager installed the spells have icons of their own (the game's, recoloured),
-and the two walls the fire wall's picture recoloured.
+(`Wall of Thorns' wall instead: 8 + AC 10 = 18`), and a creature Whirlwind
+sweeps off its feet has a line of its own. Without Wake of the Ravager
+installed the spells have icons of their own (the game's, recoloured).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### New items
 
@@ -1759,12 +1756,17 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
+| **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
+| The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
+| **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it
 ([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
+[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs (Darkhold,
+the Lava Rifts, Linara) were found by the OpenDS project and checked by yuan-ti;
+the Loader mends them in its copy of the game's scripts (`scriptfixes.py`).
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is

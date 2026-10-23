@@ -101,7 +101,8 @@ Problems and ideas: [the project's Issues page](https://github.com/daaki85/darks
 - **Research:** the notes of [yuan-ti](https://github.com/CalvinRodo/yuan-ti),
   CalvinRodo's new engine for the game, which pointed to several of the
   original game's bugs fixed here (facts only, each checked in the game's own
-  code; none of its code is used).
+  code; none of its code is used), and through it the OpenDS project's fixes to
+  the game's scripts.
 - **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities* and
   *The Complete Ranger's Handbook*, where the mod's rule changes and the
   Seeker's and Justifier's tables come from; Baldur's Gate, for keeping a

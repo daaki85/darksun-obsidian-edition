@@ -224,6 +224,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   so whoever casts the spell holds its weapon.
 
 **Fixed**
+- **Three of the game's script bugs mended** (`scriptfixes.py`, always on, in the Loader's copy of
+  GPLDATA.GFF): each re-points one trigger or call to the handler it was meant to have, applied
+  only where the script holds the expected bytes. Darkhold: the wyvern scene's creature and two in
+  the queen's chamber keep their look text (scripts 41, 203), and the portcullis guard fights back
+  (195); the Lava Rifts ranger keeps his own sight trigger, not the hermit's (100); Linara's talk
+  goes on to her menu after the extract (68). Found by the OpenDS project (darkfix), checked by
+  yuan-ti and here against the GOG file. Not checked in play yet (all are past the slave pens).
 - **The Spells tab's 6th-level priest spells:** they were described from the records they are built
   on, so Harm read as 3d8+3 draining, Heartseeker as 4d8 halved by a save, Wall of Thorns as
   1d10+8, Heal and Water of Life as next to nothing, Sunstroke without its heat and Whirlwind as
