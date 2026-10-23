@@ -199,6 +199,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   2F0h) are in DEVELOPMENT.md.
 
 **Changed**
+- **Axes and maces on figures look like the game's own:** the axe was a thin stick in its metal
+  with a hollow hook for a head (it read as a fork), the mace the same with a thin diamond.
+  Now (`spritegear._shape`) an axe, great axe or mace has a wooden haft (`WOOD`: the wood's
+  colours whatever the weapon's material) and a solid head, after Scar's henchmen's axes
+  (picture 240). On a half-giant (`MODEL_SCALE` 1.35) only the haft is drawn longer (`HEADS`),
+  as the stretched head smeared into a spiked ball. Checked in the Loader's own pictures in the
+  running game. In-game spell texts brought in line with the docs: Blade Barrier's save for none,
+  Heartseeker no longer called an arrow, Whirlwind blocking shots and spells.
 - **Level cap by XP.** The levels-up-to-10 rule is now an XP cap: a class goes up while its next level
   needs no more than 749,999 XP, the whole of it for a character of one class, an even share for each
   class of a multiclass character (as the game shares out XP), and for a human who changed class the cap
