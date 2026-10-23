@@ -11232,8 +11232,8 @@ area_site:
 ; ACID: the game's Acid (effect 1, Acid Arrow's) never burned after the arrow's hit. The game has
 ; a routine spending a creature's charges of an effect (76803h: each entry's +8 less what its burn
 ; used, the entry taken out at none; Acid's burn 7897Bh, 2d4 acid named Acid Arrow), but calls it
-; for Acid only on chance events, and Acid Arrow's time is seconds, on the clock that stands still
-; in a fight (DS:[9B72h]), so there were no charges to spend. ACID_ROUNDS makes an Acid's time
+; for Acid only on chance events, and Acid Arrow's time is seconds on the game clock (DS:[9B72h],
+; 60 at each round's start in a fight), a timer that only ends it: no charges to spend. ACID_ROUNDS makes an Acid's time
 ; rounds (1 a started minute) as charges; ACID_ROUND, at each round's start, spends one for each
 ; creature with Acid, through 76803h's stub; ACID_USE lets no other call spend Acid's. The burn's
 ; damage is Acid Arrow's, whose record would put Acid on again (a new entry at the caster's level,
@@ -11392,6 +11392,47 @@ acid_round:
         call ns_flags
         pop es
         popad
+        iret
+
+; BACKSTAB DICE (RULE_HI_BACKSTAB): the game's backstab multiplies the whole of a hit's damage,
+; STR's bonus and the weapon's included (x2 to x5 by thief level: 595C4h); AD&D's multiplies the
+; weapon's dice only, the rest added once. STAB_ROLL: "cmp word [bp+16h],1" (58A29h; 4 bytes) in the
+; attack (AX the damage just rolled, [BP-12h] what it added to the dice): the dice's sum kept, then
+; the compare made, its flags returned. STAB_TIMES: "push ax / mov ax,[bp-4] / pop dx / imul dx /
+; mov [bp-4],ax" (58A80h; 10 bytes, AX the multiplier): with the rule, the dice's sum added again
+; for each time past the first; else the game's.
+stab_dice  dw 0
+stab_known db 0                 ; (1 from STAB_ROLL to STAB_TIMES: a hit's dice kept)
+stab_roll:
+        push di
+        push ax
+        sub ax, [bp - 0x12]
+        mov [cs:stab_dice], ax
+        mov byte [cs:stab_known], 1
+        cmp word [bp + 0x16], 1
+        pushf
+        pop ax
+        mov di, sp
+        sub di, 30                      ; (SS:DI+38: the INT's flags, past AX and DI)
+        call ns_flags
+        pop ax
+        pop di
+        iret
+
+stab_times:
+        test word [cs:rules_hi], RULE_HI_BACKSTAB
+        jz .whole
+        cmp byte [cs:stab_known], 0
+        je .whole
+        cmp word [bp - 4], 0
+        jle .whole                      ; (a miss: none)
+        dec ax
+        imul word [cs:stab_dice]
+        add ax, [bp - 4]
+        jmp .put
+.whole: imul word [bp - 4]
+.put:   mov [bp - 4], ax
+        mov byte [cs:stab_known], 0
         iret
 
 REQ_REST equ 0
@@ -11694,6 +11735,7 @@ RULE_HI_TABLES equ 8            ; (RULES_HI) AD&D's class tables: XP, priests' T
 RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's spell and most spells a level (INT_LEARN)
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
 RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
+RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -13873,6 +13915,8 @@ BURN_SITE equ NS_IMAGE + 35     ; 78982h: an Acid's burn starting (ACID_BURN)
 ONCE_SITE equ NS_IMAGE + 36     ; 78DEFh: a spell's damage putting its effect on (ACID_ONCE)
 USE_SITE  equ NS_IMAGE + 37     ; 76808h: an effect's charges about to be used (ACID_USE)
 ROUND_SITE equ NS_IMAGE + 38    ; 5741Dh: a round starting, before its initiative (ACID_ROUND)
+STAB_SITE equ NS_IMAGE + 39     ; 58A29h: a weapon's damage rolled, before STR (STAB_ROLL)
+TIMES_SITE equ NS_IMAGE + 40    ; 58A80h: a backstab's damage multiplied (STAB_TIMES)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13958,6 +14002,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je acid_use
         cmp byte [cs:rl_site], ROUND_SITE
         je acid_round
+        cmp byte [cs:rl_site], STAB_SITE
+        je stab_roll
+        cmp byte [cs:rl_site], TIMES_SITE
+        je stab_times
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS

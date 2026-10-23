@@ -144,6 +144,9 @@ RULE_CHA_PRICES = 1048576
 RULE_ROLLED = 2097152
 # magical items sold to a merchant kept in its pack, to buy back (buyback.py; DSCLOG's RULE_HI_BUYBACK)
 RULE_BUYBACK = 4194304
+# a backstab multiplies the weapon's dice only, STR and the rest added after (the PHB; DSCLOG's
+# RULE_HI_BACKSTAB, STAB_TIMES); else the game's, the whole damage multiplied
+RULE_BACKSTAB = 8388608
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # AD&D's item saving throws against acid (the DMG's table), by the game's materials: wood
 # (thick), bone, stone and obsidian (glass's), metal, leather; and cloth for no material
@@ -165,7 +168,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("multiclass_hp", RULE_MULTI_HP), ("best_hit_die", RULE_HP_BEST), ("kits", RULE_KITS),
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
-                 ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK))
+                 ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
+                 ("backstab_dice", RULE_BACKSTAB))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows

@@ -3034,6 +3034,39 @@ class NewSpellTests(RuleTests):
         _, ip = run("acid_use")
         self.assertEqual((ip, mu.reg_read(r.UC_X86_REG_DI)), (3, 0x2C))
 
+    def test_backstab_dice(self):
+        """STAB_ROLL (58A29h, AX the damage rolled, [BP-12h] what it added to the dice) keeps the
+        dice's sum and returns "cmp word [bp+16h],1"'s flags; STAB_TIMES (58A80h, AX the
+        multiplier, [BP-4] the damage): with RULE_HI_BACKSTAB (128) the dice added again for each
+        time past the first, else the whole multiplied; a miss (0) stays 0."""
+        from dsloader import gamepatch
+        mu = self.mu
+        patches = {p.name: p for p in gamepatch.PATCHES}
+        def run(name, ax):
+            self.at += 0x200
+            start = CALLER * 16 + self.at
+            code = patches[name].replacement
+            mu.mem_write(start, code)
+            for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eax=ax,
+                                   eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+            mu.emu_start(start, start + len(code))
+            return mu.reg_read(r.UC_X86_REG_EFLAGS)
+        def stab(rules_hi, rolled, bonus, damage, times, mode=1):
+            self.rules_hi(rules_hi)
+            mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
+            mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", mode))
+            flags = run("stab_roll", rolled)
+            mu.mem_write(SS * 16 + BP - 4, struct.pack("<h", damage))  # (after the STR bonus)
+            run("stab_times", times)
+            return struct.unpack("<h", mu.mem_read(SS * 16 + BP - 4, 2))[0], flags
+        # 1d8 rolled 5, -1 bone: 4; +12 STR: 16; x3
+        self.assertEqual(stab(128, 4, -1, 16, 3)[0], 26)  # (5 x 3 - 1 + 12)
+        self.assertEqual(stab(0, 4, -1, 16, 3)[0], 48)
+        self.assertEqual(stab(128, 4, -1, 0, 3)[0], 0)
+        self.assertEqual(stab(128, 4, -1, 16, 3, mode=1)[1] & 0x40, 0x40)  # (melee: ZF)
+        self.assertEqual(stab(128, 4, -1, 16, 3, mode=2)[1] & 0x40, 0)
+
     def test_wall_damage(self):
         """HARM_SITE for Wall of Thorns' damage (761A9h; DI the spell, keyed in its own ground
         picture's entry; each creature on its own, SI): 8 + the creature's AC (its sheet's, at

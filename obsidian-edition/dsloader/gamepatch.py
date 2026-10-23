@@ -155,6 +155,7 @@ HARM_SITE = NS_IMAGE + 32  # (a one-target spell's damage: Harm's all but 1d4)
 AREA_SITE = NS_IMAGE + 33  # (the game's own code reading the ground pictures' table: DSCLOG's copy)
 ACID_SITE = NS_IMAGE + 34  # (an effect added: Acid's time made rounds as charges, DSCLOG's ACID_ROUNDS)
 BURN_SITE, ONCE_SITE = NS_IMAGE + 35, NS_IMAGE + 36
+STAB_SITE, TIMES_SITE = NS_IMAGE + 39, NS_IMAGE + 40  # (a backstab: the weapon's dice only, RULE_BACKSTAB)
 USE_SITE, ROUND_SITE = NS_IMAGE + 37, NS_IMAGE + 38  # (Acid spent once a round, at its start, and only then)  # (an Acid's burn: its damage puts no Acid on again)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xD3  # (past the new spells: 196-210, DSCLOG's NS_FIRST + NS_COUNT)
@@ -420,6 +421,10 @@ PATCHES = (
     Patch("acid_once", 0x78DEF, bytes.fromhex("837ee200"), _site(ONCE_SITE, 4)),
     Patch("acid_use", 0x76808, bytes.fromhex("8b7e06"), _site(USE_SITE, 3)),
     Patch("acid_round", 0x5741D, bytes.fromhex("833e5a0500"), _site(ROUND_SITE, 5)),
+    # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
+    # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
+    Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),
+    Patch("stab_times", 0x58A80, bytes.fromhex("508b46fc5af7ea8946fc"), _site(TIMES_SITE, 10)),
     *(Patch(f"area_table_{n}", offset, bytes.fromhex("b8813c8ec0268a870200"),
             bytes.fromhex("3d813c") + _site(AREA_SITE, 7))
       for n, offset in enumerate((0x23D32, 0x23D65, 0x23EBD, 0x23EF0, 0x28092, 0x280C6))),

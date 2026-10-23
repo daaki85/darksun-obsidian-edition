@@ -39,9 +39,16 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
   fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
   to the game's.
+- **Backstabs multiply the weapon's dice only** (new option `backstab_dice`, `RULE_BACKSTAB`,
+  DSCLOG's `RULE_HI_BACKSTAB`, on by default): `STAB_ROLL` (58A29h) keeps a hit's dice (the
+  roll less `[BP-12h]`), `STAB_TIMES` (58A80h, where the game multiplies the whole damage by
+  595C4h's x2-x5) adds them again for each time past the first instead. The dice log shows
+  `+10 backstab (the dice x3)`. The multiplier itself already followed AD&D's table past 10th
+  level (x4 at 9-12, x5 from 13); the docs said x4 at 9 and 10.
 - **Acid Arrow burns each round.** In the game its acid never burned after the hit: the routine
   spending an effect's charges (76803h, Acid's burn 7897Bh) was called for Acid only on chance
-  events, and Acid Arrow's time was seconds on the clock that stands still in a fight. DSCLOG's
+  events, and Acid Arrow's time was seconds on the game clock (DS:[9B72h], 60 a round in a fight), a
+  timer that only ended it, with no charges to spend. DSCLOG's
   `ACID_ROUNDS` makes an Acid's time rounds as charges, `ACID_ROUND` spends one for each creature
   at the start of each round (through 76803h's stub, in a frame the overlay manager can fix up),
   `ACID_USE` lets no other call spend them, and `ACID_BURN`/`ACID_ONCE` keep the burn's damage from

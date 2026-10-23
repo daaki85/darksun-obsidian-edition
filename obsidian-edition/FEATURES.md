@@ -986,8 +986,14 @@ Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) ->
   Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
 Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
     THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
-  Tezral hits Slig for 16: (1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19) x2 backstab
+  Tezral hits Slig for 9: 1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice x2)
 ```
+
+With **A backstab multiplies the weapon's dice only** (on unless unticked, in
+the same Options group) a backstab multiplies the weapon's dice and adds STR,
+the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
+backstab (the dice x3)` is 27 where the game made it 51. The multiplier is x2
+at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for
 an Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are
@@ -1729,7 +1735,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does (its code ran on into Strength's), and the STR alone when there was no disease to take | Takes the disease only |
 | **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place (a slip in the code), so the wrong ones were left out | Measured from where each stands |
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
-| **Acid Arrow** | After the hit its acid never burned again: its time was counted in seconds on a clock that stands still in a fight, and nothing spent it | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
+| **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
 | **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |

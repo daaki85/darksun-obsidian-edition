@@ -370,7 +370,7 @@ class Viewer:
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
         where = {"weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features, "buyback": features,
-                 "thief_table": thieves, "stealth": thieves, "new_spells": new}
+                 "thief_table": thieves, "stealth": thieves, "backstab_dice": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
@@ -433,6 +433,8 @@ class Viewer:
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
                             "(with no enemy beside them; a thief's chance halved in daylight, a ranger's "
                             "indoors; a few kits differ)"),
+                ("backstab_dice", "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
+                                  "AD&D (the game multiplies the whole damage, STR included)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
                                "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends; "
                                "and nine 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):

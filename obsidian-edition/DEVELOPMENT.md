@@ -2096,8 +2096,9 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   (the entry's +8) through 76803h, which calls the effect's handler (for Acid
   7897Bh: 2d4 acid, the damage named Acid Arrow) and takes the entry out at
   none, but it calls it for Acid only on chance events, and Acid Arrow's time
-  is in seconds (+8 none) on DS:[9B72h]'s clock, which stands still in a
-  fight, so the acid never burned again after the hit. DSCLOG's `ACID_ROUNDS`
+  is in seconds (+8 none) on DS:[9B72h]'s clock (60 at each round's start in
+  a fight), a timer that only ends it, so the acid never burned again after
+  the hit. DSCLOG's `ACID_ROUNDS`
   (76525h, in the routine adding an effect) makes an Acid's seconds rounds as
   charges (1 a started minute, at most 127); `ACID_ROUND` (5741Dh, the start
   of the routine starting each round, before its initiative) calls 76803h

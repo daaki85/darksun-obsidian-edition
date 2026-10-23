@@ -2263,15 +2263,21 @@ class DiceLog:
                 steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
         # that on the attacker's first attack of the round: x2, x3 from thief level 5, x4 from 9,
-        # x5 from 13. The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
+        # x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once (DSCLOG's
+        # STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
         # attacks already made this round
         backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x0A)
         if backstab and rear and made is not None and made <= 1:
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
-            total *= times
-            steps = f"({steps}) x{times} backstab"
+            if self.rules & game.RULE_BACKSTAB:
+                more = (times - 1) * sum(faces)
+                total += more
+                steps += f" +{more} backstab (the dice x{times})"
+            else:
+                total *= times
+                steps = f"({steps}) x{times} backstab"
         target = g.combatant_creature(e.glob[0])
         if target is not None:  # so the HP it takes isn't put down to a spell being cast
             self._hit(target, total, now)

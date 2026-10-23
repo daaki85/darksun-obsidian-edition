@@ -429,6 +429,27 @@ class BackstabTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 69: ((1d8 = [5] +12 STR 24) x140% Enlarge "
                                            "(level 4)) x3 backstab"])
 
+    def backstab(self, level, rules):
+        log = make_game()
+        log.rules = rules
+        sheet = SHEETS + 0 * game.SHEET_SIZE
+        log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, level
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
+        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
+        return log.describe(e)
+
+    def test_dice_only(self):
+        """RULE_BACKSTAB (DSCLOG's STAB_TIMES): the dice multiplied, STR added once."""
+        self.assertEqual(self.backstab(6, game.RULE_BACKSTAB),
+                         ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice x3)"])
+
+    def test_times_by_level(self):
+        """x4 at thief levels 9 to 12, x5 from 13 (the game's 595C4h, as AD&D's table)."""
+        self.assertIn("+15 backstab (the dice x4)", self.backstab(12, game.RULE_BACKSTAB)[0])
+        self.assertIn("+20 backstab (the dice x5)", self.backstab(13, game.RULE_BACKSTAB)[0])
+        self.assertIn("x5 backstab", self.backstab(14, 0)[0])
+
 
 class SaveTests(unittest.TestCase):
     def save_roll(self, log, natural, target=0x29, caster=0, spell=HOLD_PERSON):
