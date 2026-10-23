@@ -1443,7 +1443,7 @@ AD&D's spell tables and the new spells switched on):
 - **Heartseeker**: one creature saves against death or dies.
 - **Water of Life** (touch): the creature's wounds pass to the caster, who
   keeps at least 5 hit points.
-- **Whirlwind**: a turning funnel of dust that stays 1d4+1 rounds: 2d8 each
+- **Whirlwind**: a turning funnel of dust that stays a round a caster level: 2d8 each
   round to each creature in it, a save for half; one that fails is swept off
   its feet and loses its next turn. Nothing can be shot or cast through it.
 

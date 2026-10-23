@@ -13640,10 +13640,10 @@ ns_patches:
         NS_PATCH WHIRLWIND_SPELL, 0x1A, 2, 0x208 ; Whirlwind: Stinking Cloud's lasting area, 2d8 crushing
         NS_PATCH WHIRLWIND_SPELL, 0x1F, 1, 0xA1 ;   each round, a save vs spell for half; a failed save
         NS_PATCH WHIRLWIND_SPELL, 0x19, 1, STUCK_EFFECT ; sweeps the creature off its feet (SWEPT; the
-        NS_PATCH WHIRLWIND_SPELL, 4, 1, 0x41    ;   effect only a mark, never put on); 1d4 rounds and
-        NS_PATCH WHIRLWIND_SPELL, 5, 2, 1       ;   1 a "level" (+1Dh's 7 levels), not the cloud's 1d6
-        NS_PATCH WHIRLWIND_SPELL, 0x1C, 1, 0
-        NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x17
+        NS_PATCH WHIRLWIND_SPELL, 4, 1, 0       ;   effect only a mark, never put on); a round a caster
+        NS_PATCH WHIRLWIND_SPELL, 5, 2, 1       ;   level, as the books have it (no dice, as Blink's), not
+        NS_PATCH WHIRLWIND_SPELL, 0x1C, 1, 0    ;   the cloud's 1d6 (+1Dh: 2 dice, a "level" each level)
+        NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x11
         NS_PATCH WHIRLWIND_SPELL, 0x1E, 1, 8
         NS_PATCH WHIRLWIND_SPELL, 0x17, 1, AREA_COUNT + 3 ; (its own picture: the sand storm)
         db 0xFF

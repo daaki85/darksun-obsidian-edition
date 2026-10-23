@@ -1239,7 +1239,7 @@ slots.
 | **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
 | **Heartseeker** | earth, water | one creature | it saves against death or dies |
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
-| **Whirlwind** | air | an area, 1d4+1 rounds | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
+| **Whirlwind** | air | an area, a round a caster level | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
 How they're made, and where they differ from the books:
 
@@ -1266,9 +1266,8 @@ How they're made, and where they differ from the books:
   bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
   Lands has too) where Flame Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot.
-- **Whirlwind** stays where it is cast, as Stinking Cloud does, for 1d4
-  rounds and 1 more for each 7 caster levels (so 1d4+1 for a priest of 11th
-  to 13th): one tall, turning funnel of dust in the middle of
+- **Whirlwind** stays where it is cast, as Stinking Cloud does, for a
+  round a caster level, as AD&D has it: one tall, turning funnel of dust in the middle of
   its area, its ring of dust at the area's edge. Nothing can be shot or cast
   through it (it blocks sight, as Wall of Fog does). Each round it does 2d8 crushing to every creature in
   it (a save for half), your party included; one that fails its save is swept

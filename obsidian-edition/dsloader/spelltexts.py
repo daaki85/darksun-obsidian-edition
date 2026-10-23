@@ -36,7 +36,7 @@ TEXTS: Dict[int, str] = {
          "die. Earth and water, 6th level.",
     210: "WATER OF LIFE:  A touch heals a creature's wounds by taking them onto the caster, who keeps "
          "5 hit points. Water, 6th level.",
-    211: "WHIRLWIND:  A whirlwind stays 1d4+1 rounds: 2d8 to any creature in it, "
+    211: "WHIRLWIND:  A whirlwind stays 1 round per level: 2d8 to any creature in it, "
          "a save for half; one that fails loses its next turn. Nothing is shot or cast through it. Air.",
     PICK_SPIN: "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
                "If it fails, the thief tries to slip away unseen. Not in a fight.",

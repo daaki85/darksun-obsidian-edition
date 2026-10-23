@@ -224,6 +224,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   so whoever casts the spell holds its weapon.
 
 **Fixed**
+- **Whirlwind lasts a round a caster level,** as AD&D has it (11 rounds or more for a priest who
+  can cast it), not Stinking Cloud's shape of 1d4 + 1 for each 7 levels (`NS_PATCH`: no dice, as
+  Blink's and Cause Fear's records, and the level rule's step 1).
 - **Three of the game's script bugs mended** (`scriptfixes.py`, always on, in the Loader's copy of
   GPLDATA.GFF): each re-points one trigger or call to the handler it was meant to have, applied
   only where the script holds the expected bytes. Darkhold: the wyvern scene's creature and two in
