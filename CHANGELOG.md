@@ -60,7 +60,9 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   of Whirlwind's but the one nearest their middle and draws that one at the middle
   (`WHIRL_PICK`, worked out again at each round's start and each cast). Its entry's 10h is set
   (`AREA_SIGHT`): the tiles under the copies block sight (tile bit 80h, as Wall of Fog's), which
-  the missile and spell paths stop at (84300h's trace).
+  the missile and spell paths stop at (84300h's trace). The funnel turns: `WHIRL_TICK` steps
+  its 4 frames every 3 timer ticks and redraws the funnel's rectangle through the dust's redraw
+  (`DUST_UNION`/`DUST_NUDGE`); the dice ring goes to 65 entries for the room.
 - **Sunstroke's heat:** 1d4 of fire at the start of each round on a creature Sunstroke holds.
   `ACID_ROUND`'s pass (now `BURN_PASS`, twice: Acid, then Sunstroke) calls Acid's burn (7897Bh,
   through its stub) for each creature with a Paralyzed entry from Sunstroke, `SUN_HEAT` set:

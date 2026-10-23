@@ -386,7 +386,7 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 66 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 65 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -405,10 +405,10 @@ is still at most 64 KB (everything through CS), so the second block is room
 for data kept apart from it, as the ring is. The helper asks for its resident
 part and the ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB
 free and a few KB of upper memory left. A change that adds much code should
-check that again: the ring is 66 entries, not 128 (96 until the new spells'
+check that again: the ring is 65 entries, not 128 (96 until the new spells'
 code, when the game no longer started for lack of memory; 88 until STORE and
 RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
-fitted in the block and loaded low; 74 until the names over figures), and the
+fitted in the block and loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned), and the
 text buffer 2 KB, not 8 (4 until the memory pass for 6th-level spells), to make
 that room. The most entries put in the ring in 2 seconds, measured, is 43
 (the opening show), 16 in a fight.
@@ -2253,6 +2253,11 @@ Whirlwind's funnel is passed over (its way back moved past the call, `WD_SKIP`) 
 one nearest the copies' middle, which is drawn at the middle (`WHIRL_PICK`: one thing at a time,
 worked out again at each round's start and each cast, when a thing's number may be used again).
 Whirlwind's entry gets 10h (`AREA_SIGHT`), so it blocks sight as Wall of Fog's does.
+The funnel turns: `WHIRL_TICK`, from the main loop's scroll probe after `DUST_TICK`, steps the
+picked thing's frame (+11h) through its 4 frames every 3 timer ticks (about 6 a second) and
+puts the funnel's rectangle into the dust's redraw rectangle (`d_x0`..`d_y1`), so the game
+redraws just that part of the map (`DUST_NUDGE` when the view is still). It stops when the
+thing's object is no longer Whirlwind's (the area gone).
 
 **Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the one-target damage roll,
 761A9h, DI its spell) is 8 + the creature's AC, at least 1 (`THORNS_AC`), with no save (+1Fh
