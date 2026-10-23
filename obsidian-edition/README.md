@@ -548,20 +548,17 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thac0-saves-and-thief-skills).
 ### Spell slots on the USE screen
 
 The game's USE (cast spells) screen shows, at the top of the panel under the
-spells, how many spells of each level the selected character can still cast,
-and the most they get after resting: `WIZ` for preservers' wizard spells, `PRI`
-for clerics', druids' and rangers' priest spells, one `left/most` per spell
-level from the 1st (six to a line), up to the highest level the character can
-cast (more appear as they level up):
+spells, how many spells of the level on show (its LEVEL button) the selected
+character can still cast, and the most they get after resting: `SPELLS LEFT`,
+then `WIZ` for preservers' wizard spells and `PRI` for clerics', druids' and
+rangers' priest spells, as `left/most` (`PRI 2/1`). Another level shows its own
+when the LEVEL button turns to it:
 
 ![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
 
 The numbers go down as spells are cast (the screen shows the new count when it
-is next drawn) and back up after resting. That panel is where the game puts
-the icons of the character's usable magic items (fruit, wands and the like),
-along its bottom from the left, so the slots take only the three lines above
-them: a character with both wizard and priest spells gets the two lines without
-the `SPELLS LEFT BY LEVEL` heading.
+is next drawn) and back up after resting. A preserver in armour reads `NO
+SPELLS IN ARMOUR` in place of the heading.
 
 The numbers are the Characters tab's (see [spell slots](#the-characters-tab)),
 WIS bonus included, printed with the game's own text routine; they show while

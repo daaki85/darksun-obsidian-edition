@@ -33,7 +33,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** In the slave pens and the arena, between fights, the combat log panel's top line shows how many arena fights the party has had (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
-- **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
+- **[New]** The USE screen shows the spell slots left at the spell level on show, and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
 - **[New]** The Effects screen lists your kits and weapon specializations.

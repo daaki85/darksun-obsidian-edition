@@ -377,17 +377,23 @@ class AttackTests(unittest.TestCase):
 
 class SlotsForTheGameTests(unittest.TestCase):
     def test_slot_lines(self):
+        """A heading, then each spell level's slots on a line of its own (DSCLOG shows the one
+        the USE screen is on)."""
         log = make_game()
         log.game.spell_slots = lambda member: {
             0: [("Wizard", [(1, 2, 2), (2, 1, 1)]), ("Priest", [(n, 1, 2) for n in range(1, 8)])]}.get(member, [])
-        # three lines fit above the usable items' icons: no room left for the heading
-        self.assertEqual(log.slots_lines(0), "WIZ 2/2 1/1|PRI 1/2 1/2 1/2 1/2 1/2|    1/2 1/2")
+        self.assertEqual(log.slots_lines(0), "SPELLS LEFT|WIZ 2/2 PRI 1/2|WIZ 1/1 PRI 1/2|PRI 1/2|PRI 1/2|PRI 1/2"
+                                             "|PRI 1/2|PRI 1/2")
         self.assertEqual(log.slots_lines(1), "")
-        log.game.spell_slots = lambda member: [("Priest", [(1, 5, 5), (2, 3, 3)])]
-        self.assertEqual(log.slots_lines(0), "SPELLS LEFT BY LEVEL|PRI 5/5 3/3")
-        # a 6th level on a line of its own: six don't fit the panel
         log.game.spell_slots = lambda member: [("Priest", [(1, 5, 8), (2, 5, 7), (3, 2, 6), (4, 2, 5), (5, 0, 2), (6, 2, 1)])]
-        self.assertEqual(log.slots_lines(0), "SPELLS LEFT BY LEVEL|PRI 5/8 5/7 2/6 2/5 0/2|    2/1")
+        self.assertEqual(log.slots_lines(0), "SPELLS LEFT|PRI 5/8|PRI 5/7|PRI 2/6|PRI 2/5|PRI 0/2|PRI 2/1")
+        log.game.no_spells = lambda member: True
+        self.assertTrue(log.slots_lines(0).startswith("NO SPELLS IN ARMOUR|PRI 5/8|"))
+        # the longest a member can have (a cleric/preserver: six priest levels, five wizard) fits
+        log.game.no_spells = lambda member: False
+        log.game.spell_slots = lambda member: [("Wizard", [(n, 4, 4) for n in range(1, 6)]),
+                                               ("Priest", [(n, 6, 6) for n in range(1, 7)])]
+        self.assertLess(len(log.slots_lines(0)), dicelog.SLOTS_SIZE)
 
 
 class BackstabTests(unittest.TestCase):
