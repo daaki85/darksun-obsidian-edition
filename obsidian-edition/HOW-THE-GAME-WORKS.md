@@ -88,7 +88,7 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
 | No spell use, Feeblemind | Can't cast spells |
 | Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |
-| Acid (Acid Arrow) | 2d4 acid damage each round |
+| Acid (Acid Arrow) | 2d4 acid damage at the start of each round it lasts, a round for each started minute of its time. In the game it never burned after the hit; the patched game burns it ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
 | Poisoned | Fatal (1000 damage) if time passes out of combat, for instance resting, before it wears off or is cured |
 | Cloak of Fear | Whoever hits the wearer has Cause Fear cast on them, once |
 

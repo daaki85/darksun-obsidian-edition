@@ -760,6 +760,27 @@ class SaveTests(unittest.TestCase):
                    parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
         self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Ironskin on Mountain Stalker: one charge used"])
 
+    def test_acid_rounds(self):
+        """An Acid's time (Acid Arrow's: 20 seconds a level) is rounds of burning (DSCLOG's
+        ACID_ROUNDS: 1 a started minute); after a round's burn, its damage's own duration roll
+        (the effect it no longer puts on) says nothing."""
+        log = make_game()
+        self.damage_formula(log, FIREBALL, 0, 0x01, 0)
+        record = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + FIREBALL * game.SPELL_SIZE
+        struct.pack_into("<Hh", log.guest.mem, record + 5, 20, 1)
+        log.guest.mem[record + 0x19] = dicelog.ACID
+        duration = entry(raw_for(1, 1), dicelog.DICE_SITE, words(0, 0, 1, 1), words(0, 0, FIREBALL, 11),
+                         parent_code=dicelog.SPELL_DURATION_RETURN)
+        line = log.describe(duration)
+        self.assertEqual(len(line), 1)
+        self.assertTrue(line[0].startswith("    Fireball burns 4 rounds more, 2d4 at the start of each ("), line)
+        burn = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 1),
+                      parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
+        self.assertEqual(log.describe(burn[0]) + log.describe(burn[1]),
+                         ["    Acid on Mountain Stalker: 2d4 = [3 + 1] = 4 acid damage"])
+        self.assertEqual(log.describe(duration), [])
+        self.assertEqual(len(log.describe(duration)), 1)  # (only the one after a burn)
+
     def test_mirror_images(self):
         """Mirror Images' d100: on a foe's spell (7A5BFh's 1d100, NS_IMAGE: the spell routine's
         target and caster), none from the target's own side; on an attack's hit (DSCLOG's NS_BLOW:

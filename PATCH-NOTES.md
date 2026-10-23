@@ -284,6 +284,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Absorb Disease** gave the psionicist 1d6 STR as well (and the STR alone with no disease to take). Now it only takes the disease.
 - **[Fixed]** **Bless** and **Aid** left out the wrong allies: the check for an enemy beside each one measured from the wrong place.
 - **[Fixed]** **Negative Plane Protection** never stopped anything: it saved as against Vampiric Touch, which allows no save. Now a save against death magic stops an undead's draining touch, and the undead takes 2d6.
+- **[Fixed]** **Acid Arrow**'s acid never burned after the hit. Now it does 2d4 at the start of each round it lasts (four rounds for an 11th-level caster).
 - **[Fixed]** **Cloak of Bravery**'s +4 on saves against fear never applied. Now it does against Scare, Fear, Cause Fear and Insect Plague, and the new Spook.
 - **[Fixed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 - **[Fixed]** A **berserk** or **confused** party member could be left fighting for the monsters when it wore off. Now they're back on your side.

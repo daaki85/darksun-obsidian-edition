@@ -11057,6 +11057,7 @@ cast_site:
         mov ax, [bp + 0x0A]
         mov word [cs:kind], KIND_CAST
         call record
+        mov byte [cs:acid_burning], 0   ; (a burn's damage that never put its effect: over)
         call heal_sight
         pop ax
         pop si
@@ -11226,6 +11227,171 @@ area_site:
 .got:   mov es, ax
         mov al, [es:bx + 2]
         pop bp
+        iret
+
+; ACID: the game's Acid (effect 1, Acid Arrow's) never burned after the arrow's hit. The game has
+; a routine spending a creature's charges of an effect (76803h: each entry's +8 less what its burn
+; used, the entry taken out at none; Acid's burn 7897Bh, 2d4 acid named Acid Arrow), but calls it
+; for Acid only on chance events, and Acid Arrow's time is seconds, on the clock that stands still
+; in a fight (DS:[9B72h]), so there were no charges to spend. ACID_ROUNDS makes an Acid's time
+; rounds (1 a started minute) as charges; ACID_ROUND, at each round's start, spends one for each
+; creature with Acid, through 76803h's stub; ACID_USE lets no other call spend Acid's. The burn's
+; damage is Acid Arrow's, whose record would put Acid on again (a new entry at the caster's level,
+; burnt in turn): ACID_BURN notes a burn starting and ACID_ONCE has its damage put no effect on.
+ACID_EFFECT equ 1
+ROUND_SECONDS equ 60
+USE_STUB    equ 0x59C - 0x663   ; (76803h's stub segment, less DS's)
+USE_ENTRY   equ 0x57
+USE_OUT     equ 0x768FE - 0x7680B ; (76803h's "pop di / pop si / pop bp / retf", from the INT's return)
+PERMANENT_DUR equ -9999
+
+; ACID_ROUNDS: "cmp dword [bp+0Eh],-9999" (76525h; 8 bytes: the INT, the site's number, 5 NOPs) in
+; the routine adding an effect (76442h: [BP+0Ch] the effect, [BP+0Eh] its time, a dword; less than
+; 0 charges, kept in the entry's +8): an Acid's time in seconds made rounds as charges (at least
+; 1); then the compare made, its flags returned.
+acid_burning db 0                ; (1 from ACID_BURN until its damage's effect is passed: ACID_ONCE)
+acid_mine    db 0                ; (1 while ACID_ROUND's call spends Acid: ACID_USE)
+acid_far     dd 0
+acid_rounds:
+        pushad
+        push es
+        mov di, sp
+        cmp byte [bp + 0x0C], ACID_EFFECT
+        jne .test
+        mov eax, [bp + 0x0E]
+        or eax, eax
+        jle .test
+        add eax, ROUND_SECONDS - 1
+        xor edx, edx
+        mov ecx, ROUND_SECONDS
+        div ecx
+        cmp eax, 0x7F
+        jbe .neg
+        mov eax, 0x7F
+.neg:   neg eax
+        mov [bp + 0x0E], eax
+.test:  cmp dword [bp + 0x0E], PERMANENT_DUR
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+; ACID_BURN: "mov si,[bp+6]" (78982h; 3 bytes: the INT and the site's number) at the start of
+; Acid's burn (7897Bh: [BP+6] the creature, [BP+8] the effect): noted (ACID_BURNING), the move made.
+acid_burn:
+        mov byte [cs:acid_burning], 1
+        mov si, [bp + 6]
+        iret
+
+; ACID_ONCE: "cmp word [bp-1Eh],0" (78DEFh; 4 bytes: the INT, the site's number and a NOP) where a
+; spell's damage (78C19h) puts the record's effect ([BP-1Eh]) on the target it hurt: during an Acid
+; burn (ACID_BURNING, then cleared) none, as if the record had none; else the compare made, its
+; flags returned.
+acid_once:
+        push di
+        push ax
+        cmp byte [cs:acid_burning], 0
+        je .test
+        mov byte [cs:acid_burning], 0
+        xor ax, ax                      ; (ZF set: "none")
+        jmp .flags
+.test:  cmp word [bp - 0x1E], 0
+.flags: pushf
+        pop ax
+        mov di, sp
+        sub di, 30                      ; (SS:DI+38: the INT's flags, past AX and DI)
+        call ns_flags
+        pop ax
+        pop di
+        iret
+
+; ACID_USE: "mov di,[bp+6]" (76808h; 3 bytes: the INT and the site's number) at the start of the
+; routine spending creature [BP+6]'s charges of effect [BP+8] (76803h): Acid's spent only from
+; ACID_ROUND (ACID_MINE), any other call returning at once; else the move made.
+acid_use:
+        cmp byte [bp + 8], ACID_EFFECT
+        jne .go
+        cmp byte [cs:acid_mine], 0
+        jne .go
+        push bp
+        mov bp, sp
+        add word [bp + 2], USE_OUT      ; (none spent: return at once)
+        pop bp
+        iret
+.go:    mov di, [bp + 6]
+        iret
+
+; ACID_ROUND: "cmp word [55Ah],0" (5741Dh; 5 bytes: the INT, the site's number, 2 NOPs) at the start
+; of the routine starting each round (57414h: its initiative rolled after): each creature with Acid
+; charges (ACID_ROUNDS) has one spent (76803h through its stub, the way back in a frame the overlay
+; manager can fix up, as it may load that code over the caller's), the creatures in turn by their
+; number (the table changes as entries go); then the compare made, its flags returned. DS the
+; game's; all registers kept.
+acid_round:
+        pushad
+        push es
+        sti
+        mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
+        mov dx, -1                      ; (DX the last creature done)
+.next:  mov ax, ds
+        sub ax, EFFECTS_FROM_DS
+        mov es, ax
+        mov di, 0xFFFF                  ; (DI the least creature past DX with Acid charges)
+        xor cx, cx
+.scan:  cmp cx, [EFFECTS_COUNT]
+        jae .found
+        imul si, cx, 10
+        add si, EFFECTS_OFF
+        inc cx
+        cmp byte [es:si + 6], ACID_EFFECT
+        jne .scan
+        cmp byte [es:si + 8], 0
+        je .scan
+        mov ax, [es:si]
+        cmp dx, -1
+        je .first
+        cmp ax, dx
+        jbe .scan
+.first: cmp ax, di
+        jae .scan
+        mov di, ax
+        jmp .scan
+.found: cmp di, 0xFFFF
+        je .done
+        mov dx, di
+        push bx
+        push dx
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, USE_STUB
+        mov [cs:acid_far + 2], ax
+        mov word [cs:acid_far], USE_ENTRY
+        mov byte [cs:acid_mine], 1
+        push word ACID_EFFECT
+        push di
+        call far [cs:acid_far]
+        add sp, 4
+        mov byte [cs:acid_mine], 0
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop dx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        jmp .next
+.done:  mov di, sp
+        cmp word [0x55A], 0
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
         iret
 
 REQ_REST equ 0
@@ -13702,6 +13868,11 @@ CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
 REST_SITE equ NS_IMAGE + 31     ; 806C3h: the party rests, a member's turn
 HARM_SITE equ NS_IMAGE + 32     ; 761A9h: a one-target spell's damage, rolled
 AREA_SITE equ NS_IMAGE + 33     ; 23D32h and 5 more: the pictures' table read (SEG_MOVE)
+ACID_SITE equ NS_IMAGE + 34     ; 76525h: an effect added, its time looked at (ACID_ROUNDS)
+BURN_SITE equ NS_IMAGE + 35     ; 78982h: an Acid's burn starting (ACID_BURN)
+ONCE_SITE equ NS_IMAGE + 36     ; 78DEFh: a spell's damage putting its effect on (ACID_ONCE)
+USE_SITE  equ NS_IMAGE + 37     ; 76808h: an effect's charges about to be used (ACID_USE)
+ROUND_SITE equ NS_IMAGE + 38    ; 5741Dh: a round starting, before its initiative (ACID_ROUND)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -13777,6 +13948,16 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je harm_site
         cmp byte [cs:rl_site], AREA_SITE
         je area_site
+        cmp byte [cs:rl_site], ACID_SITE
+        je acid_rounds
+        cmp byte [cs:rl_site], BURN_SITE
+        je acid_burn
+        cmp byte [cs:rl_site], ONCE_SITE
+        je acid_once
+        cmp byte [cs:rl_site], USE_SITE
+        je acid_use
+        cmp byte [cs:rl_site], ROUND_SITE
+        je acid_round
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS

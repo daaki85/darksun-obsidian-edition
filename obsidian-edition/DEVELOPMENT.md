@@ -2092,6 +2092,23 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
   (SEG_MOVED), record 202 (`NPP_SAVE`, past the new spells), Vampiric Touch's
   copied with a save against paralysis, poison and death allowed (21h). Saved,
   the game stops the touch and gives the undead 2d6.
+- **Acid** (effect 1, Acid Arrow's): the game spends an effect's charges
+  (the entry's +8) through 76803h, which calls the effect's handler (for Acid
+  7897Bh: 2d4 acid, the damage named Acid Arrow) and takes the entry out at
+  none, but it calls it for Acid only on chance events, and Acid Arrow's time
+  is in seconds (+8 none) on DS:[9B72h]'s clock, which stands still in a
+  fight, so the acid never burned again after the hit. DSCLOG's `ACID_ROUNDS`
+  (76525h, in the routine adding an effect) makes an Acid's seconds rounds as
+  charges (1 a started minute, at most 127); `ACID_ROUND` (5741Dh, the start
+  of the routine starting each round, before its initiative) calls 76803h
+  for each creature with Acid charges through its stub (DS-0C7h:57h), the way
+  back in a frame the overlay manager can fix up; `ACID_USE` (76808h) has any
+  other call spending Acid's return at once. The burn's damage is Acid
+  Arrow's, whose record would put Acid on again at the caster's level (a new
+  entry, burnt in turn): `ACID_BURN` (78982h) notes a burn and `ACID_ONCE`
+  (78DEFh, where a spell's damage puts its record's effect on) answers "none"
+  once. The dice log shows the rounds (`Acid Arrow burns 4 rounds more, 2d4
+  at the start of each`) and each burn.
 - **Berserk and Confused** (effects 3 and 11): on a computer-run turn the
   game rolls the creature's side (its creature's +1Dh) anew (8053:000Eh), and
   when the effect ends (7872Fh) only a charm (10) had its side put back, from

@@ -153,6 +153,9 @@ CAST_SITE = NS_IMAGE + 30  # (a spell cast: recorded, its name floated over the 
 REST_SITE = NS_IMAGE + 31  # (the game's rest: recorded, the spell arrows fade, spellarrows.py)
 HARM_SITE = NS_IMAGE + 32  # (a one-target spell's damage: Harm's all but 1d4)
 AREA_SITE = NS_IMAGE + 33  # (the game's own code reading the ground pictures' table: DSCLOG's copy)
+ACID_SITE = NS_IMAGE + 34  # (an effect added: Acid's time made rounds as charges, DSCLOG's ACID_ROUNDS)
+BURN_SITE, ONCE_SITE = NS_IMAGE + 35, NS_IMAGE + 36
+USE_SITE, ROUND_SITE = NS_IMAGE + 37, NS_IMAGE + 38  # (Acid spent once a round, at its start, and only then)  # (an Acid's burn: its damage puts no Acid on again)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xD3  # (past the new spells: 196-210, DSCLOG's NS_FIRST + NS_COUNT)
 
@@ -406,6 +409,17 @@ PATCHES = (
     # / mov al,es:[bx+2]": "cmp ax,3C81h" (the segment's word kept, as DOS fixes it up) and the
     # site, AX and ES the table's segment where DSCLOG has moved it (with an entry each for Blade
     # Barrier, Wall of Thorns, Fire Seeds and Whirlwind: DSCLOG's SEG_MOVE, AREA_SITE)
+    # Acid (Acid Arrow's) burning each round: in the routine adding an effect, "cmp dword
+    # [bp+0Eh],-9999" (its time), an Acid's seconds made rounds as charges, which the game spends a
+    # turn at a time; at the burn's start, "mov si,[bp+6]"; where a spell's damage puts its effect
+    # on, "cmp word [bp-1Eh],0": none during a burn; where a round starts, "cmp word [55Ah],0",
+    # each creature's Acid spent; at the start of the routine spending charges, "mov di,[bp+6]":
+    # Acid's spent only then (DSCLOG's ACID_ROUNDS, ACID_BURN, ACID_ONCE, ACID_ROUND, ACID_USE)
+    Patch("acid_rounds", 0x76525, bytes.fromhex("66817e0ef1d8ffff"), _site(ACID_SITE, 8)),
+    Patch("acid_burn", 0x78982, bytes.fromhex("8b7606"), _site(BURN_SITE, 3)),
+    Patch("acid_once", 0x78DEF, bytes.fromhex("837ee200"), _site(ONCE_SITE, 4)),
+    Patch("acid_use", 0x76808, bytes.fromhex("8b7e06"), _site(USE_SITE, 3)),
+    Patch("acid_round", 0x5741D, bytes.fromhex("833e5a0500"), _site(ROUND_SITE, 5)),
     *(Patch(f"area_table_{n}", offset, bytes.fromhex("b8813c8ec0268a870200"),
             bytes.fromhex("3d813c") + _site(AREA_SITE, 7))
       for n, offset in enumerate((0x23D32, 0x23D65, 0x23EBD, 0x23EF0, 0x28092, 0x280C6))),

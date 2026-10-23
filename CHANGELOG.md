@@ -39,6 +39,15 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 - **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
   fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
   to the game's.
+- **Acid Arrow burns each round.** In the game its acid never burned after the hit: the routine
+  spending an effect's charges (76803h, Acid's burn 7897Bh) was called for Acid only on chance
+  events, and Acid Arrow's time was seconds on the clock that stands still in a fight. DSCLOG's
+  `ACID_ROUNDS` makes an Acid's time rounds as charges, `ACID_ROUND` spends one for each creature
+  at the start of each round (through 76803h's stub, in a frame the overlay manager can fix up),
+  `ACID_USE` lets no other call spend them, and `ACID_BURN`/`ACID_ONCE` keep the burn's damage from
+  putting Acid on again. The dice log gives the rounds and leaves out the burn's duration roll.
+  Checked live in the Scar fight: an 11th-level Acid Arrow hit for 8, then 6, 4, 3 and 5 at the
+  start of the next four rounds, and ended.
 - **Names over figures: no leftover sliver.** When a label went away the game's redraw of its
   rectangle only drew whole bytes of the VGA planes inside it, so a label starting mid-byte left
   its first columns on the map (seen after Prayer's cloud, a "[" left on the sand). `LABEL_ERASE`

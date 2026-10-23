@@ -2987,6 +2987,53 @@ class NewSpellTests(RuleTests):
         self.assertEqual(damage(game.HARM_SPELL, 96, rules=0), (18, 27))
         self.assertEqual(damage(game.HEAL_SPELL, 96), (18, 27))
 
+    def test_acid_sites(self):
+        """Acid burning each round: ACID_ROUNDS (76525h, the routine adding an effect: [BP+0Ch] the
+        effect, [BP+0Eh] its time) makes an Acid's seconds rounds as charges (negative: 1 a started
+        minute), others kept, and returns the compare with -9999's flags; ACID_BURN (78982h) notes
+        a burn, which ACID_ONCE (78DEFh) then answers "no effect" once (ZF set), else compares
+        [BP-1Eh]; ACID_USE (76808h) makes a call spending Acid's charges return at once (its IP
+        moved to the routine's end) unless ACID_ROUND made it."""
+        from dsloader import gamepatch
+        mu = self.mu
+        patches = {p.name: p for p in gamepatch.PATCHES}
+        def run(name, until=None):
+            self.at += 0x200
+            start = CALLER * 16 + self.at
+            code = patches[name].replacement
+            mu.mem_write(start, code)
+            for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+            mu.emu_start(start, start + (until or len(code)))
+            return mu.reg_read(r.UC_X86_REG_EFLAGS), mu.reg_read(r.UC_X86_REG_IP) - self.at
+        def rounds(effect, time):
+            mu.mem_write(SS * 16 + BP + 0x0C, struct.pack("<Bxi", effect, time))
+            flags, _ = run("acid_rounds")
+            return struct.unpack("<i", mu.mem_read(SS * 16 + BP + 0x0E, 4))[0], flags
+        self.assertEqual(rounds(1, 221)[0], -4)
+        self.assertEqual(rounds(1, 60)[0], -1)
+        self.assertEqual(rounds(1, 1)[0], -1)
+        self.assertEqual(rounds(1, 100000)[0], -127)
+        self.assertEqual(rounds(1, -3)[0], -3)  # (charges already)
+        self.assertEqual(rounds(34, 221)[0], 221)  # (not Acid)
+        time, flags = rounds(1, -9999)
+        self.assertEqual((time, flags & 0x40), (-9999, 0x40))  # (permanent: the compare's ZF)
+        self.assertEqual(rounds(34, 221)[1] & 0x40, 0)
+        # a burn: its damage puts no effect on, once
+        mu.mem_write(SS * 16 + BP - 0x1E, struct.pack("<H", 1))
+        mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 0x2C))
+        run("acid_burn")
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SI), 0x2C)
+        self.assertEqual(run("acid_once")[0] & 0x40, 0x40)
+        self.assertEqual(run("acid_once")[0] & 0x40, 0)
+        # Acid's charges spent by the game's own calls: none (out at once); another effect's, on
+        mu.mem_write(SS * 16 + BP + 6, struct.pack("<HH", 0x2C, 1))
+        _, ip = run("acid_use", until=3 + 0x768FE - 0x7680B)
+        self.assertEqual(ip, 3 + 0x768FE - 0x7680B)
+        mu.mem_write(SS * 16 + BP + 6, struct.pack("<HH", 0x2C, 2))
+        _, ip = run("acid_use")
+        self.assertEqual((ip, mu.reg_read(r.UC_X86_REG_DI)), (3, 0x2C))
+
     def test_wall_damage(self):
         """HARM_SITE for Wall of Thorns' damage (761A9h; DI the spell, keyed in its own ground
         picture's entry; each creature on its own, SI): 8 + the creature's AC (its sheet's, at

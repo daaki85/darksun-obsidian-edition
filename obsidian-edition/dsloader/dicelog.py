@@ -112,9 +112,11 @@ SPELL_DAMAGE_RETURN = bytes.fromhex("83c4045a03d0")
 # the dice are often NdS with S = 1, a fixed number
 SPELL_DURATION_RETURN = bytes.fromhex("83c406660fbfc0665a66")
 # The routine run whenever an effect uses up a charge (arguments: creature, effect): it rolls
-# 2d4 first, and deals it as acid damage only for the acid effect (Acid Arrow, each round)
+# 2d4 first, and deals it as acid damage only for the acid effect (Acid Arrow: DSCLOG's ACID
+# makes its time rounds as charges and spends one at each round's start)
 CHARGE_USED_RETURN = bytes.fromhex("83c4048946fe8b4608")
 ACID = 1
+ROUND_SECONDS = 60  # (DSCLOG's ACID_ROUNDS: an Acid's time in rounds, 1 a started minute, at most 127)
 # A confused creature's turn (its routine's first argument is the creature): d10, 1 it runs
 # off, 2-6 it does nothing, 7-9 it fights for a side picked with a d2 (as a berserk creature
 # always does), 10 it acts normally
@@ -521,6 +523,7 @@ class DiceLog:
         self._tries_at = -CREATION_TUMBLE  # ... and when it last moved
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
+        self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
         self._spell_name = ""
         self._spell_id: Optional[int] = None
         self.tracker: Optional[PartyTracker] = None
@@ -2187,6 +2190,7 @@ class DiceLog:
             if e.parent_code.startswith(CHARGE_USED_RETURN):
                 who, eid = self._name(e.parent_arg(6)), e.parent_arg(8)
                 if eid == ACID:
+                    self._acid_burn = True  # (the damage's own duration roll after it means nothing)
                     return self.flush(now, force=True) + [
                         f"    {EFFECT_NAMES[ACID]} on {who}: {count}d{sides} = {faces_text} = {sum(faces)} acid damage"]
                 # the 2d4 means nothing here: a Stoneskin, Ironskin, Mirror Image... used a charge
@@ -2317,9 +2321,19 @@ class DiceLog:
         if spell is None:
             return []
         dice = f"{count}d{sides}" + (f" = [{' + '.join(map(str, faces))}]" if sides > 1 else "")
+        rec = g.spell_record(spell)
+        acid = len(rec) > 0x19 and rec[0x19] == ACID
+        if acid and self._acid_burn:
+            self._acid_burn = False  # (a round's burn: the damage rolls the time it puts on no more)
+            return []
         found = g.spell_duration(spell, level, sum(faces))
         if found is not None:
             units, how = found
+            if acid:
+                rounds = min(max(-(-units // ROUND_SECONDS), 1), 0x7F)
+                return [f"    {g.spell_name(spell)} burns {rounds} round{'' if rounds == 1 else 's'} more, "
+                        f"2d4 at the start of each ({game.game_time(units)}: caster level {level}: {how}; "
+                        f"dice {dice})"]
             return [f"    {g.spell_name(spell)} lasts {game.game_time(units)} (caster level {level}: {how}; "
                     f"dice {dice})"]
         charges = g.spell_charges(spell, level, sum(faces))
