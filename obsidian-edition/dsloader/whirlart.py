@@ -13,7 +13,9 @@ the game's colours that no region changes, the game doesn't cycle and that isn't
 (wotrart.stable_colours).
 OBJECT and PICTURE: its object (a copy of Sand Storm's, 8403, its picture and its anchor, the
 funnel's foot, changed) and picture numbers in the copy; DSCLOG's NS_SETUP puts the object in
-Whirlwind's ground entry (AREA_NEW) once the game has the copy (NS_OBJECTS)."""
+Whirlwind's ground entry (AREA_NEW) once the game has the copy (NS_OBJECTS). The game scatters
+a lasting area's picture over it as many copies; DSCLOG's DRAW_SITE draws Whirlwind's once, at
+their middle."""
 
 import colorsys
 import math

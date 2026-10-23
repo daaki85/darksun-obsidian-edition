@@ -2228,8 +2228,8 @@ OBJEX.GFF and each colour made the nearest stable one; without it, the fire wall
 grey and in dark brown. Each new spell has an entry of its own: `SEG_MOVE` moves the table into
 DSCLOG's memory (`AREA_SPACE`, selector 3A8h's segment and length in the segment table, as for
 the records' room) with four entries after the game's 45 (`AREA_NEW`): copies of the fire walls'
-(22) for Blade Barrier and Wall of Thorns, of Flame Strike's (37) for Fire Seeds and of Ice
-Storm's (18) for Whirlwind, keyed to the spell, with its object; the records' +17h name them
+(22) for Blade Barrier and Wall of Thorns, of Flame Strike's (37) for Fire Seeds and of
+Stinking Cloud's (8) for Whirlwind, keyed to the spell, with its object; the records' +17h name them
 (`NS_PATCH`). `NS_SETUP` puts the blades and the thorns in their entries while the objects' copy
 is open (else the fire wall's). An entry's key is the spell whose damage a wall deals each round
 (7607Dh passes it to the one-target roll, 76175h, as DI), so each wall rolls its own record's
@@ -2238,6 +2238,21 @@ in; six places in the game's own code (23D32h, 23D65h, 23EBDh, 23EF0h, 28092h, 2
 segment as a constant DOS fixes up, "mov ax,3C81h / mov es,ax / mov al,es:[bx+2]": the Loader
 makes each "cmp ax,3C81h" (the fixed-up word kept) and `AREA_SITE`, which returns the moved
 segment.
+
+**Whirlwind drawn once.** An entry whose low 4 bits of +2 are 3 lasts and acts each round, and the
+game draws it as 18 to 46 copies of its picture scattered over the area: entries of the draw list
+(DS:6690h, 8 bytes each: x, y, height, flags, thing) with flag 20h, all of one map thing
+(DS:6694h + its number * 32: its picture's cache slot at +0Fh and frame at +11h, shared by every
+copy). The copies are the area: a creature takes the damage where they are (moved off the map,
+none do), and an entry with 10h at +2 marks the tile under each copy as blocking sight (bit 80h
+of the tile map at DS:556h, cleared again by 23D32h's routine as the area goes; the missile and
+spell path traces stop at it, 84300h's through 0058:0114). So they stay as they are, and
+`DRAW_SITE` changes only the drawing: in the routine that draws the walls and things standing on
+the map (1DBD:0002), just before it draws an entry (232D4h, the call at 23308h), a copy of
+Whirlwind's funnel is passed over (its way back moved past the call, `WD_SKIP`) unless it is the
+one nearest the copies' middle, which is drawn at the middle (`WHIRL_PICK`: one thing at a time,
+worked out again at each round's start and each cast, when a thing's number may be used again).
+Whirlwind's entry gets 10h (`AREA_SIGHT`), so it blocks sight as Wall of Fog's does.
 
 **Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the one-target damage roll,
 761A9h, DI its spell) is 8 + the creature's AC, at least 1 (`THORNS_AC`), with no save (+1Fh

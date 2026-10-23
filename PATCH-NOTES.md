@@ -153,9 +153,9 @@ A few of them:
 | **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
 | **Heartseeker** | earth, water | save against death or die |
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
-| **Whirlwind** | air | a whirlwind that stays 1d4 rounds: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn |
+| **Whirlwind** | air | a whirlwind that stays 1d4 rounds: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn; nothing can be shot or cast through it |
 
-  The walls look like circling blades and a tangle of thorns, Fire Seeds bursts as a fireball and Whirlwind swirls as a sand storm (Wake of the Ravager's pictures, when it's installed; the walls recoloured fire walls without it).
+  The walls look like circling blades and a tangle of thorns, Fire Seeds bursts as a fireball (Wake of the Ravager's pictures, when it's installed; the walls recoloured fire walls without it) and Whirlwind is a tall funnel of dust, its ring of dust at the edge of its area.
 
 ## Improved Thieving
 

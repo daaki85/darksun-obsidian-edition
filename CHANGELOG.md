@@ -52,6 +52,15 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   (57566h, each creature's movement) gives a marked one no movement and the initiative -1 the
   game gives a held creature, so it doesn't act, then clears the mark; a fight's first round
   clears them all. Not helpless: attacks, saves and damage against it are as usual.
+- **Whirlwind's funnel, drawn once, blocking sight:** its own picture (`whirlart.py`: a funnel
+  of dust in ground ellipses, object 8433 in the Loader's SEGOBJEX copy, put in its entry by
+  `NS_SETUP`). The game draws a lasting area as 18-46 copies of its picture scattered over the
+  area (draw-list entries with 20h), and its damage and blocked tiles go by those copies, so
+  they stay; `DRAW_SITE` (232D4h, the draw of each thing on the map, 1DBD:0002) passes over all
+  of Whirlwind's but the one nearest their middle and draws that one at the middle
+  (`WHIRL_PICK`, worked out again at each round's start and each cast). Its entry's 10h is set
+  (`AREA_SIGHT`): the tiles under the copies block sight (tile bit 80h, as Wall of Fog's), which
+  the missile and spell paths stop at (84300h's trace).
 - **Sunstroke's heat:** 1d4 of fire at the start of each round on a creature Sunstroke holds.
   `ACID_ROUND`'s pass (now `BURN_PASS`, twice: Acid, then Sunstroke) calls Acid's burn (7897Bh,
   through its stub) for each creature with a Paralyzed entry from Sunstroke, `SUN_HEAT` set:

@@ -1271,8 +1271,9 @@ How they're made, and where they differ from the books:
   Lands has too) where Flame Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot.
 - **Whirlwind** stays where it is cast, as Stinking Cloud does, for 1d4
-  rounds (1 more from 7th level), and looks like Wake of the Ravager's Sand
-  Storm, a swirl of dust. Each round it does 2d8 crushing to every creature in
+  rounds (1 more from 7th level): one tall funnel of dust in the middle of
+  its area, its ring of dust at the area's edge. Nothing can be shot or cast
+  through it (it blocks sight, as Wall of Fog does). Each round it does 2d8 crushing to every creature in
   it (a save for half), your party included; one that fails its save is swept
   off its feet and loses its next turn (no movement, no action), without being
   helpless as a held creature is. It doesn't move.

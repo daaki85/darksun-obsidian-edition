@@ -11050,6 +11050,7 @@ req_site:
 ; then the move done.
 KIND_CAST equ 8
 cast_site:
+        mov word [cs:wt_thing], 0xFFFF
         push si
         push ax
         mov si, sp
@@ -11332,6 +11333,137 @@ heat_site:
 .move:  mov si, [bp + 0x0A]
         iret
 
+; DRAW_SITE: "mov si,0 / mov ax,[bx+0Fh]" (232D4h; 6 bytes) in the routine drawing the walls and
+; things standing on the map (1DBD:0002), just before it draws draw-list entry ES:DI of thing BX
+; (MAP_THINGS + its number * 32; DS the game's) at [BP-2], [BP-4] (screen x, y; the camera at
+; [BP+6], [BP+8]): its picture's cache slot from the thing's +0Fh, its frame from +11h, so every
+; copy of a thing is drawn alike. A lasting area is a thing with many copies in the list (the
+; entry's 20h: 18 to 46 of them scattered over the area), which the game's damage, and the tiles
+; blocking sight (the area's 10h), go by. Whirlwind's (the funnel, WHIRL_OBJECT) is drawn once:
+; its copies stay as they are, but only the one nearest their middle is drawn, and at the middle
+; (WHIRL_PICK); the rest are passed over (the way back moved past the draw call, WD_SKIP).
+WD_SKIP      equ 0x23313 - (0x232D4 + 3)
+wt_thing dw 0xFFFF              ; (WHIRL_PICK's: the thing last looked at, the middle of its copies,
+wt_x     dw 0                   ;   the copy nearest it)
+wt_y     dw 0
+wt_kx    dw 0
+wt_ky    dw 0
+draw_site:
+        cmp word [bx + 0x1A], WHIRL_OBJECT
+        jne .plain
+        test byte [es:di + 5], 0x20
+        jz .plain
+        push ax
+        push cx
+        call whirl_pick                 ; (CF: no copies found)
+        jc .drawn
+        mov ax, [cs:wt_kx]
+        cmp ax, [es:di]
+        jne .skip
+        mov ax, [cs:wt_ky]
+        cmp ax, [es:di + 2]
+        jne .skip
+        mov ax, [cs:wt_x]               ; (as the game puts a copy: its x less the picture's
+        movzx cx, byte [bx + 7]         ;   anchor and the camera, its y less the anchor, its
+        sub ax, cx                      ;   height and the camera)
+        sub ax, [bp + 6]
+        mov [bp - 2], ax
+        mov ax, [cs:wt_y]
+        movzx cx, byte [bx + 8]
+        sub ax, cx
+        movzx cx, byte [es:di + 4]
+        sub ax, cx
+        sub ax, [bp + 8]
+        mov [bp - 4], ax
+.drawn: pop cx
+        pop ax
+.plain: mov si, 0
+        mov ax, [bx + 0x0F]
+        iret
+.skip:  pop cx
+        pop ax
+        push bp
+        mov bp, sp
+        add word [bp + 2], WD_SKIP
+        pop bp
+        iret
+
+; WHIRL_PICK: WT_X, WT_Y the middle of thing BX's copies in the draw list (OBJ_LIST: the entries
+; of the thing with 20h), WT_KX, WT_KY the copy nearest it; worked out again for another thing
+; (WT_THING) or when cleared (each round's start, each cast: a thing's number is used again once
+; its area is gone). CF set if the thing has no copies.
+whirl_pick:
+        pushad
+        push es
+        mov ax, bx
+        sub ax, MAP_THINGS
+        shr ax, 5
+        cmp ax, [cs:wt_thing]
+        je .done
+        mov [cs:wt_thing], ax
+        xor ebx, ebx                    ; (the sums of x and y, and the count)
+        xor ebp, ebp
+        xor esi, esi
+        call .scan
+        or esi, esi
+        jz .none
+        mov eax, ebx
+        cdq
+        div esi
+        mov [cs:wt_x], ax
+        mov eax, ebp
+        cdq
+        div esi
+        mov [cs:wt_y], ax
+        mov si, 0xFFFF                  ; (SI: now the nearest; BP the least |dx| + |dy| so far)
+        mov bp, si
+        mov ax, [cs:wt_thing]
+        call .scan
+.done:  pop es
+        popad
+        clc
+        ret
+.none:  mov word [cs:wt_thing], 0xFFFF
+        pop es
+        popad
+        stc
+        ret
+.scan:                                  ; each copy: summed (SI 32 bits: a count), else the nearest
+        les di, [OBJ_LIST]
+        mov cx, [OBJ_COUNT]
+.next:  jcxz .end
+        cmp [es:di + 6], ax
+        jne .on
+        test byte [es:di + 5], 0x20
+        jz .on
+        movzx edx, word [es:di]
+        cmp si, 0xFFFF
+        jae .near
+        add ebx, edx
+        movzx edx, word [es:di + 2]
+        add ebp, edx
+        inc esi
+        jmp short .on
+.near:  sub dx, [cs:wt_x]
+        jns .dx
+        neg dx
+.dx:    mov bx, [es:di + 2]
+        sub bx, [cs:wt_y]
+        jns .dy
+        neg bx
+.dy:    add dx, bx
+        cmp dx, bp
+        jae .on
+        mov bp, dx
+        mov dx, [es:di]
+        mov [cs:wt_kx], dx
+        mov dx, [es:di + 2]
+        mov [cs:wt_ky], dx
+.on:    add di, 8
+        dec cx
+        jmp short .next
+.end:   ret
+
 ; SWEPT_MARK: for ACID_ONCE, Whirlwind's damage on combatant [BP+6] after a failed save: marked
 ; (SWEPT), for PROBE_MOVE to take its next turn; recorded (KIND_SWEPT: the combatant). All kept.
 KIND_SWEPT  equ 11
@@ -11403,6 +11535,7 @@ acid_use:
 ; number (the table changes as entries go); then the compare made, its flags returned. DS the
 ; game's; all registers kept.
 acid_round:
+        mov word [cs:wt_thing], 0xFFFF  ; (DRAW_SITE: each Whirlwind's middle found again)
         pushad
         push es
         sti
@@ -13054,10 +13187,11 @@ FIRE_WALL_OBJECT equ 8419       ; (the fire walls' picture: Blade Barrier's and 
 BLADE_OBJECT equ 8432           ;   the Loader's copy of the objects, NS_OBJECTS; wotrart.AREA_OBJECTS)
 THORNS_OBJECT equ 8425
 AREA_WHIRL   equ AREA_BLADE + 3 * AREA_SIZE
-SAND_STORM_OBJECT equ 8403     ; (Whirlwind's without the copy; with it the funnel, whirlart.OBJECT)
-WHIRL_OBJECT equ 8433
-AREA_DRAW    equ 5              ; (an entry's byte for how its picture is drawn: low bits 1, one
-WHIRL_DRAW   equ 0x45           ;   picture, as Flame Strike's; Stinking Cloud's 47h, scattered)
+SAND_STORM_OBJECT equ 8403     ; (Whirlwind's without the copy; with it the funnel, whirlart.OBJECT,
+WHIRL_OBJECT equ 8433           ;   drawn once: DRAW_SITE)
+AREA_DOES    equ 2              ; (an entry's byte for what it does: 10h, the tiles under its copies
+AREA_SIGHT   equ 0x10           ;   block sight, as Wall of Fog's and Wall of Fire's; cleared again
+                                ;   as it goes)
 area_seg   dw 0                 ; AREA_SPACE's segment once SEG_MOVE has moved the table there
 %macro AREA_NEW 3
         db %1
@@ -13639,9 +13773,7 @@ ns_setup:
 .walls: mov [es:AREA_BLADE + 3], ax
         mov [es:AREA_THORNS + 3], bx
         mov [es:AREA_WHIRL + 3], cx
-        cmp cx, WHIRL_OBJECT            ; (the funnel drawn once, not scattered as the cloud's)
-        jne .done
-        mov byte [es:AREA_WHIRL + AREA_DRAW], WHIRL_DRAW
+        or byte [es:AREA_WHIRL + AREA_DOES], AREA_SIGHT ; (Whirlwind's dust: no shots through it)
 .done:  pop es
         popa
         pop ax
@@ -14064,6 +14196,7 @@ ROUND_SITE equ NS_IMAGE + 38    ; 5741Dh: a round starting, before its initiativ
 STAB_SITE equ NS_IMAGE + 39     ; 58A29h: a weapon's damage rolled, before STR (STAB_ROLL)
 TIMES_SITE equ NS_IMAGE + 40    ; 58A80h: a backstab's damage multiplied (STAB_TIMES)
 HEAT_SITE equ NS_IMAGE + 41     ; 78C24h: a spell's damage on a creature, its spell read (HEAT_SITE)
+DRAW_SITE equ NS_IMAGE + 42     ; 232D4h: a thing on the map about to be drawn (DRAW_SITE: Whirlwind's)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -14155,6 +14288,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je stab_times
         cmp byte [cs:rl_site], HEAT_SITE
         je heat_site
+        cmp byte [cs:rl_site], DRAW_SITE
+        je draw_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
