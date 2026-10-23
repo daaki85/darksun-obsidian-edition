@@ -19,6 +19,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   something else from coming back (see Cause Disease in HOW-THE-GAME-WORKS); the docs say so too.
   The priest spells screenshot retaken.
 
+**Documentation**
+- A fourth review. The root README says what the repository has beyond 2.6.0 (the patch notes
+  already did). FEATURES moves Harm's Diseased note out of its table row into the spell's notes,
+  linked to Cause Disease. DEVELOPMENT gives the 6th-level priest spells' description chunks
+  (SPIN 203-211), the game's description style and the box's size. The patch notes' memory
+  figure matches the latest measure (85 KB). Links, anchors and every screenshot checked; none
+  out of date.
+
 ## Pull request #55 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/55))
 
 **Added**
