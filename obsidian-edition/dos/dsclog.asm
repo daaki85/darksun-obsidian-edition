@@ -13632,7 +13632,8 @@ ns_patches:
         NS_PATCH THORNS_SPELL, 0x1C, 1, 8
         NS_PATCH THORNS_SPELL, 0x1D, 1, 0x0F
         NS_PATCH THORNS_SPELL, 0x1E, 1, 10
-        NS_PATCH SUNSTROKE_SPELL, 0x0C, 1, 4    ; Sunstroke: one creature (Slay Living's aim), not Hold Person's several
+        NS_PATCH SUNSTROKE_SPELL, 0, 1, 4       ; Sunstroke: one creature (+0, the aim: Slay Living's 4), not Hold Person's
+                                                ;   several (10h: the turn waits for more targets)
         NS_PATCH SEEDS_SPELL, 0x1C, 1, 0        ; Fire Seeds: 8d8 of fire (Flame Strike's 6d8)
         NS_PATCH SEEDS_SPELL, 0x1D, 1, 0x47
         NS_PATCH SEEDS_SPELL, 0x1E, 1, 8

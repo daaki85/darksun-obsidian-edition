@@ -2300,8 +2300,9 @@ says 10 there whatever it wears, so `PROBE_AC`, at the AC routine's end, keeps e
 AC (`AC_SEEN`, its `[BP+6]` the combatant; 7Fh none yet: then the sheet's). The dice log shows
 it: the entry's extra carries the AC + 80h in its high byte. Blade Barrier's record has its own
 8d8, edged (+1Ah 210h), and the game's saving throw against spells (+1Fh A1h) for none (+11h's
-8000h), as Wake of the Ravager's. Sunstroke's record takes Slay Living's aim (+0Ch 4,
-one creature) in place of Hold Person's (1). Heal's record takes one effect away (Diseased, as
+8000h), as Wake of the Ravager's. Sunstroke's record takes Slay Living's aim (+00h 4,
+one creature) in place of Hold Person's (10h, several: the caster's turn waits, the spell still
+armed, for more targets; only Hold Person and Hold Monster have it). Heal's record takes one effect away (Diseased, as
 Cure Disease's -13); `HEAL_SIGHT` (from `CAST_SITE`) takes the target's Blind entries (8) out of
 the game's table of active effects (DS - 760h:0106h, 10 bytes each: the thing, the caster, the
 spell, the effect; the count DS:1E24h), moving the rest down.

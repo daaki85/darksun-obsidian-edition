@@ -9,7 +9,15 @@ For what a release brings, read its notes ([2.7.1](release-notes/v2.7.1.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #58 (in progress)
+## Next pull request (in progress)
+
+**Fixed**
+- **Sunstroke ends the caster's turn.** Its record kept Hold Person's aim (+00h 10h, the holds'
+  several targets: after the first the spell stayed armed and the turn went on); it now has Slay
+  Living's (4, one creature), as meant (the patch had changed +0Ch, the same in both). Checked in
+  the game: Grog's Sunstroke on Scar, and the turn passed straight on.
+
+## Pull request #58 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/58))
 
 **Release**
 - **Obsidian Edition 2.7.1** (pull request #57): the version is 2.7.1, with its notes in
