@@ -32,6 +32,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Known issues](#known-issues)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
+  - [Names over figures](#names-over-figures)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
@@ -58,16 +59,17 @@ rules without spoilers, with a section for each class and its kits (also as a we
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
   character creation, each with what it needed and where every bonus came from
-  ([the dice log](#the-dice-log)). **L** shows a combat log over the map, the
-  game's own screens gain THAC0, saves, thief skills and spell slots, and the
-  Look box tells you what can hurt a monster ([In the game](#in-the-game)).
+  ([the dice log](#the-dice-log)). **L** shows a combat log over the map, a
+  spell's name floats over its caster, the game's own screens gain THAC0,
+  saves, thief skills and spell slots, and the Look box tells you what can
+  hurt a monster ([In the game](#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
   (experience, priests' THAC0, spell slots), INT's limits on learning spells,
   saving throws and multiclass hit points as the books have them, and scores
   and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and thirteen for races' pairs of classes), levels up
-  to 10, STORE and RECALL for a creation roll, fuller starting gear, and
+  (three for each class, and thirteen for races' pairs of classes), levels
+  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a creation roll, fuller starting gear, and
   features of their own for the game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
 - **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
@@ -77,7 +79,8 @@ rules without spoilers, with a section for each class and its kits (also as a we
 - **More of Athas:** new weapons in every material, magic items with stories
   of their own (robes and bracers among them, for those who wear no armour),
   six wizard spells
-  ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends](FEATURES.md#new-wizard-spells)),
+  ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends](FEATURES.md#new-wizard-spells))
+  and nine [6th-level priest spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier, Whirlwind...),
   Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
   Semyon's story, and a use for the cooked vulture
   ([New content](FEATURES.md#new-content)). On the map, the party wears its weapons and
@@ -114,6 +117,11 @@ game artwork is copied.
   ([One-time setup](#one-time-setup)); it needs no extra packages.
 - Linux works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
+- **Optional: Wake of the Ravager** (GOG's), installed beside Shattered Lands
+  (a folder with "Ravager" in its name, in the same place). If it's there, the
+  [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
+  and pictures, read from it as the game starts; without it they have the
+  Loader's own.
 
 ### Suggested system requirements
 
@@ -272,7 +280,8 @@ exists outside the party (dropped, put in a chest, given, sold or stolen), one
 used up or taken for a quest (fruit, quest items, arrows, scrolls), one a
 spell made (Shillelagh, Flame Blade, Spiritual Hammer), one sold (the party's
 money went up by what a shop pays for it), and a weapon that broke (a Broken
-Weapon in its place). Nor is an item handed to another member news, even where
+Weapon in its place). An item the game destroys (acid, Detonate's blast) is
+reported too, so the loss is on record. Nor is an item handed to another member news, even where
 the game gives it a new record, or one moved and back within the two seconds.
 A change of area gives every item a new record at once: the Loader matches
 each to its new one (same owner, place and item) and reports only an item with
@@ -342,6 +351,9 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
 
 - **The game can stop with an error after a fight in the arena.** The Loader
   writes a crash report; load the last save to go on.
+- **In a long session, figures can vanish from the screen and the game then
+  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
+  it happens, press **Freeze report** on the Loader before closing DOSBox.
 
 ## In the game
 
@@ -425,6 +437,21 @@ DOSBox's window is a little taller than 4:3.
 ![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
+
+### Names over figures
+
+With **Float a spell's name over its caster, and "Miss" over whoever an attack
+missed** ticked on the Options tab (the default), a spell's name floats over
+its caster for a second and a half as it is cast, and "Miss" over anyone an
+attack misses, in the game's lettering with a dark edge. They work in and out
+of fights, for the party and the monsters alike, and a weapon's spell on a hit
+shows too. A name stays with its figure; near the top of the screen it goes
+under the figure's feet, clear of the game's boxes. Long names are shortened
+("Lesser Water Elem."), and at most two show at once.
+
+![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
 
 ### THAC0, saves and thief skills
 
@@ -512,22 +539,10 @@ the Loader isn't running.
 in brackets on View Character's experience line is the XP at which the first
 of their classes goes up a level, and the Loader adds which class that is:
 `EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each class
-is a letter, except preserver and psionicist, which both start with P:
-
-| Class | Letters |
-|---|---|
-| Cleric | C |
-| Druid | D |
-| Fighter | F |
-| Gladiator | G |
-| Preserver | Pr |
-| Psionicist | Ps |
-| Ranger | R |
-| Thief | T |
-
-When two classes go up at the same XP, both are named: `(20000 Pr/T)`. A class
-already at the highest level (9, or 10 with
-[levels up to 10](FEATURES.md#levels-up-to-10)) has no next level, so it is never named.
+is its first letter (C, D, F, G, R, T), except the preserver's Pr and the
+psionicist's Ps. When two classes go up at the same XP, both are named: `(20000 Pr/T)`. A class
+already at the highest level (9, or its share of the XP cap with
+[Level cap by XP](FEATURES.md#level-cap-by-xp)) has no next level, so it is never named.
 A character of one class shows the line as the game always has, and so does a
 human, who can only dual-class: the game counts only one of their classes
 there.
@@ -539,20 +554,18 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thac0-saves-and-thief-skills).
 ### Spell slots on the USE screen
 
 The game's USE (cast spells) screen shows, at the top of the panel under the
-spells, how many spells of each level the selected character can still cast,
-and the most they get after resting: `WIZ` for preservers' wizard spells, `PRI`
-for clerics', druids' and rangers' priest spells, one `left/most` per spell
-level from the 1st (six to a line), up to the highest level the character can
-cast (more appear as they level up):
+spells, how many spells of the level on show (its LEVEL button) the selected
+character can still cast, and the most they get after resting, for the list on
+show only: `SPELLS LEFT`, then `WIZ` on the MAGE list (preservers' wizard
+spells) or `PRI` on the CLERIC list (clerics', druids' and rangers' priest
+spells), as `left/most` (`PRI 2/1`). The PSIONIC list shows none. Another level
+or list shows its own when the LEVEL or list button turns to it:
 
 ![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
 
 The numbers go down as spells are cast (the screen shows the new count when it
-is next drawn) and back up after resting. That panel is where the game puts
-the icons of the character's usable magic items (fruit, wands and the like),
-along its bottom from the left, so the slots take only the three lines above
-them: a character with both wizard and priest spells gets the two lines without
-the `SPELLS LEFT BY LEVEL` heading.
+is next drawn) and back up after resting. A preserver in armour reads `NO
+SPELLS IN ARMOUR` in place of the heading.
 
 The numbers are the Characters tab's (see [spell slots](#the-characters-tab)),
 WIS bonus included, printed with the game's own text routine; they show while
@@ -648,17 +661,17 @@ Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
 - **In the game**: the combat log, where it goes and how much it says,
-  monster descriptions ([In the game](#in-the-game)).
+  names floating over figures, monster descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules closer
   to AD&D.
 - **More character customization**
   ([More character customization](FEATURES.md#more-character-customization)): weapon
-  specialization, kits, levels up to 10, STORE and RECALL on the creation
+  specialization, kits, the XP level cap, STORE and RECALL on the creation
   screen, and fuller starting gear.
 - **Expanded features** ([Expanded features](FEATURES.md#expanded-features)): the
   leader's CHA at shops, buying back magical items, and **Improved thieving**
-  (AD&D's thief skills, hiding to backstab, the cloak, boots and belt, and
-  picking pockets).
+  (AD&D's thief skills, hiding to backstab, the cloak, boots and belt,
+  backstabs multiplying the weapon's dice only, and picking pockets).
 - **New content** ([New content](FEATURES.md#new-content)): the new spells, at once; the
   new people, the vulture, defilers' scrolls and the new items, from the next
   time the game is started (what a saved game already has stays in it).
@@ -726,7 +739,10 @@ running game's records: its damage dice and kinds (and that damage stops
 growing at caster level 10), its saving throw (which of the five, any
 modifier, whether the d20 counts double, and whether saving halves or stops
 the damage), the effect it gives and what that does, how long it lasts, and
-each party member's caster level for it. **Show** picks wizard, priest or
+each party member's caster level for it. With the [new spells](FEATURES.md#new-content)
+on, the mod's spells are listed too; a 6th-level priest spell built on another
+spell's record (Harm on Cause Critical Wounds', say) has its lines written out,
+as the record would mislead. **Show** picks wizard, priest or
 psionic, and **Only spells the party has a caster level for** leaves out the
 rest. **Save...** writes it to a text file. It's filled when you open the tab
 (or press **Refresh**) while the game is running.
@@ -773,6 +789,14 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Magic Missile on the Rampager and the Rampager's acid killing the Defiler](docs/dicelog.png)
 
+**Finding something.** Type a word in **Find** above the log (Ctrl+F puts
+you there) and press Enter: every match lights up, the log jumps to the first,
+and the count beside it says which one of how many you're on. Enter or **Next**
+goes on to the next, Shift+Enter or **Previous** back, round the end either
+way; Escape clears it. Case doesn't matter, and hidden details aren't searched
+(tick **Show details** to include them). While you're looking at a match the
+log stays put as new lines come in. The Dialogue tab has the same box.
+
 **Reading it at a glance.** Lines at the left edge are the events: a round
 starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented
 two spaces are their results (damage, HP left); lines indented four spaces are
@@ -796,7 +820,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice: the d20, the roll this attacker needed against this target (THAC0 − target AC) and the chance of it, the lowest AC the roll hits, and the target's AC as the game used it. More below the table. |
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](FEATURES.md#two-weapons)), and the difficulty setting for monsters. |
 | `  X hits Y for 14: 1d8 = [6] +8 STR 20` | The damage of that hit: the dice, the weapon's bonus, and the STR bonus the game adds for melee. Damage is at least 1. |
-| `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the whole damage, STR bonus included. |
+| `  X hits Y for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice x3)` / `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the weapon's dice, the rest added once; with that option off, the whole damage, STR bonus included. |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](KITS.md#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)). |
 
@@ -814,13 +838,17 @@ critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | Line | Meaning |
 |---|---|
 | `Shocking Grasp damage: 1d8 = [5] +10 = 15 (1d8 + 1 for each caster level: 10 at caster level 20, which counts as 10)` | A spell's damage roll, rolled for each target before its saving throw, with the spell's formula from the game's data. Damage stops growing at caster level 10 (Fireball does at most 10d6). Magic Missile, Flame Arrow and Minute Meteors are rolled elsewhere in the game, without the caster's level, so their line says how many steps the dice stand for. |
-| `  Slig takes 15 from Shocking Grasp, now 3/18 HP` | What the spell really did to each creature, after its save, resistances and protections (or the healing it gave). A creature that is Out Cold gets no save and takes the most the dice can do (the game's damage code does that), marked `(Out Cold: the most the dice can do)`. |
+| `  Slig takes 15 from Shocking Grasp, now 3/18 HP` / `  Cilla takes 9 from Fireball (halved: Prot Fire)` | What the spell really did to each creature, after its save, resistances and protections (or the healing it gave). A protection that halved it is named: Resist Fire or Cold, Protection from Fire or Lightning, Fire Shield, a Wanderer's own. A creature that is Out Cold gets no save and takes the most the dice can do (the game's damage code does that), marked `(Out Cold: the most the dice can do)`. |
 | `    Blur lasts 23 rounds (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 3d1)` | How long a spell's effect lasts, and how the game worked it out. A round is 60 game seconds. The game often "rolls" dice with one side, which are fixed numbers. |
 | `    Stoneskin has 23 charges (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 1d4 = [3])` | Effects that last a number of uses rather than a time (Stoneskin's blows, Mirror Image's images, Invisibility's one attack, Poison's rounds): the game stores them as charges, worked out like a duration. |
-| `    Acid on Slig: 2d4 = [3 + 1] = 4 acid damage` / `    Ironskin on Cilla: one charge used` | Acid Arrow's damage each round while the acid lasts; and an effect with charges using one up (Stoneskin or Ironskin stopping a blow, Mirror Image losing an image...). |
+| `    Acid on Slig: 2d4 = [3 + 1] = 4 acid damage` / `    Sunstroke's heat on Scar: 1d4 = 3 fire damage` / `    Ironskin on Cilla: one charge used` | Acid Arrow's damage each round while the acid lasts; Sunstroke's heat each round while it holds; and an effect with charges using one up (Stoneskin or Ironskin stopping a blow, Mirror Image losing an image...). |
+| `Harm: all the target's hit points but 1d4 (...)` / `  Wall of Thorns' wall instead: 8 + AC 3 = 11` / `    Slig is swept off its feet: loses its next turn` | The [6th-level priest spells](FEATURES.md#6th-level-priest-spells)' own lines: Harm leaving 1d4 hit points (the dice the game rolls go unused), Wall of Thorns' damage by the creature's AC in place of the dice rolled, and a creature that fails its save against Whirlwind losing its next turn. |
 | `Strength: 1d6 = 5 -> Cilla's STR +5 while it lasts (at most 24)` | The amount Strength (or Adrenalin Control) adds. |
 | `Y magic resistance 30% vs Fireball: d100 = 71 -> not resisted` | The magic resistance roll (only shown for targets that have some), counting Mind Bar and Lower Resistance. |
 | `    Dispel Magic on Slig's Blessed: d100 = 60, needs 85 or less (50 + 5 x 7 - 5 x 0 (its caster's level)) -> dispelled` | Dispel Magic tries each effect on its target separately: 50 + 5 for each of the dispeller's levels, less 5 for each of the level the effect was cast at. It can't touch some (Biofeedback, Diseased, Feeblemind, Poisoned, Graft Weapon, No spell use, Stuck, Mind Bar and a few more). |
+| `Cilla can't cast Fireball there: no line of sight` | A spell you clicked to cast that the game refused, and why: no creature there, not a creature that spell takes, a wall too long, no line of sight, or too far away. The game itself only crosses out the pointer. |
+| `Script: random monsters come (request 8: 32766, 1, 0)` | Something a script asked the game to do: the party resting, random monsters, an arena bout, a creature changing sides, a cinematic, game over. The numbers are the request's own values. The everyday ones (doors, blocked cells, music) only show with "Show unlabelled rolls". |
+| `Cilla's STR 12 -> 16` | A party member's ability score changed, once the change holds: a spell's or effect's (Strength, Remove Curse giving back a lowered STR, Raise Dead's point of CON), and the game's own. |
 | `    Abjure on Y: d20 = 14, needs 12 or more (11 - caster level 5 + its level 6) -> sent away` | Abjure sends a summoned creature away (1000 damage) on a d20 at or over 11 - the caster's level + the creature's. |
 | `    Summoning: 1d3 = 2 picks which of its 3 creatures comes` | Which creature a summoning spell brings. |
 | `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (anything the log can't account for shows as `other`), the number it had to reach and the chance of that; for a damaging spell, what the save left of that target's damage roll. More below the table. |
@@ -846,10 +874,13 @@ creatures save again as they stay in them; those lines have no "from".
 |---|---|
 | `X DEX check: d20 = 9, needs 16 or less (DEX 16) -> success` | An ability check. A natural 20 always fails. |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), and what its chance is made of. |
+| `Zulak uses Graft Weapon: power check d20 = 14, needs 11 or less -> it fails` / `    power score 11 = 16 CON - 5 Graft Weapon` | A psionic power's check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)): a d20 at or under the power's score, the ability it uses plus the power's adjustment. A failure is the game's `psionic power check fails`, and costs half the PSP. A line `... within X's Synaptic Static: ...` comes first when someone else keeps Synaptic Static up. |
+| `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20) -> resisted` | A psionic attack mode (Ego Whip, Id Insinuation, Psychic Crush, Psionic Blast) resisted or not: its target rolls 1 to its defence twice, each needing more than the attacker's power check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)). |
 | `Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Tezral moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](FEATURES.md#hiding-in-shadows-to-backstab) on). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
 | `    X's Bone Long Sword nearly broke: 0 on 0-7, then 12 on 0-19 (needed 0)` / `... BREAKS` | The weapon check the game makes after an attack sequence whose last attack hit. Only non-magical wood, bone, stone and obsidian weapons can break (and not every kind: clubs and quarterstaffs can't): they break when a 0-7 roll and then a 0-19 roll both come up 0, 1 chance in 160. The line only appears when the first roll comes up 0. |
 | `  Rampager's acid on Gerakis's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe` | An item the Rampager's acid or the Babau's corroding touch could destroy: the d20, the number it needed and whose number that was (see [Items saving against acid](FEATURES.md#items-saving-against-acid)). |
+| `Detonate's blast on Cilla's Bone Helm: d20 = 7, breaks it under 15 (15) -> DESTROYED` | Detonate (a daggoran's too) trying to destroy its target's worn item: the one that breaks most easily, a bone helm before bone armour, on a d20 under 15 less its plus. |
 | `Haystack searched: 0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)` / `  The rat's bite: 0-4 = 3 damage` | Searching a junk pile, a haystack or a wardrobe: the game's roll, what it found, and how far its count has got (see [Searching junk, hay and wardrobes](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes)); a rat's bite or a falling pot rolls its damage the same way. |
 
 **Hit points, kills and levels**
@@ -863,7 +894,7 @@ creatures save again as they stay in them; those lines have no "from".
 | `XP: Gerakis +67, K'ratchek +22, ... (for Slig 270)` | Experience the party got, and for which kills, with each one's XP from its character sheet. The game gives it right after the kill: an equal share to each character, split again between a multiclass character's classes (the sheet counts XP per class, so a three-class thri-kreen shows a third of the share). |
 | `Cilla is now a 3rd level Ranger` / `    max HP 15 -> 21 (+6)` | A level gained, and the new maximum HP. |
 | `    max HP unchanged: the game divides the hit point total by the classes, ...` | A multiclass character gained a level and its most hit points stayed the same: every class level rolls its die, but the game divides the whole total by the number of classes, so a small roll can add only a fraction (it counts at a later level). A human who changed class gets none in the new class until its level passes the old class's. |
-| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](FEATURES.md#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [levels up to 10](FEATURES.md#levels-up-to-10)). With [the better of two](FEATURES.md#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](FEATURES.md#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
+| `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; three [kits](FEATURES.md#kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [Level cap by XP](FEATURES.md#level-cap-by-xp)). With [the better of two](FEATURES.md#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](FEATURES.md#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`). |
 
 **Character creation**
 
@@ -880,6 +911,7 @@ creatures save again as they stay in them; those lines have no "from".
 |---|---|
 | `Message: Long Sword is broken !` | The game's own message boxes: broken or corroded weapons and armour, level-ups, "NO PATH FROM HERE" and so on. |
 | `Dinos cooks the vulture and the party eats with him: ... restored as after a full rest (HP, PSP and spell slots); the game gives each 100 XP` | Dinos asked about the cooked vulture (see [The cooked vulture](FEATURES.md#the-cooked-vulture)); the XP itself is on the `XP:` line after it. |
+| `Daaki makes 20 burning arrows (5 a preserver level, 4): a 1st-level slot used; ...` | A Spellarcher's arrow button (see [Multiclass kits](KITS.md#multiclass-kits)); `no room in the backpack: left on the ground` when they went at the party's feet. |
 | `Dice: 1d8 = [3] = 3` | Dice the log couldn't tie to anything (for example a spell with no saving throw). |
 | `(The Loader stopped one of its own writes over the game's memory: ...)` | A safety net: the Loader never writes over the start of memory (the interrupt vectors, the BIOS's and DOS's data) or the first bytes of the game's data, which its C runtime checks ("Null pointer assignment"). Such a write could only come from a pointer the game has left empty for a moment; the line says where in the Loader it came from. Please report it. |
 

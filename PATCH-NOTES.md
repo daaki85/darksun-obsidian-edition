@@ -8,6 +8,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 *These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
 
+*They follow the repository, so these come with the next release, not 2.6.0: the nine 6th-level priest spells; levels capped by XP instead of at 9th; backstabs multiplying the weapon's dice only; names over figures; the Spellarcher's spell arrows; the two girdles and the Amulet of Magic Resistance; the Crusader's and Mind Warrior's weapon expertise; weapons made by spells counting for specialization; Find and the dice log's newer lines; the tables of cleric spells and psionic powers; and eight bug fixes (Acid Arrow's acid, three script bugs in Darkhold, the Lava Rifts and Gedron, the party's thief skill roll, random monsters, figures vanishing, magic items' shine in shops).*
+
 ## Contents
 
 - [In the Game's Screens](#in-the-games-screens)
@@ -27,10 +29,11 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[New]** A combat log in the game: **L** on the map shows every roll, in the game's own lettering and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points).
 - **[New]** The combat log is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves); or, as an option, a strip always shown below the map (the game's screen 22 rows taller).
+- **[New]** Names over figures: a spell's name floats over its caster as it is cast, and "Miss" over anyone an attack misses, in the game's lettering (an Options switch, on).
 - **[New]** In the slave pens and the arena, between fights, the combat log panel's top line shows how many arena fights the party has had (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
-- **[New]** The USE screen shows the spell slots left at each spell level, and the most you get after resting.
+- **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
 - **[New]** The Effects screen lists your kits and weapon specializations.
@@ -40,8 +43,9 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Weapon specialization**
 
 - **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
-- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec.
+- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one weapon spec of their choice (3/2 attacks a round, 2 from 7th level).
 - **[Changed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
+- **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
 
 **Saving throws**
 
@@ -67,7 +71,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **All classes**
 
-- **[Changed]** Every class can reach **10th level** *(was 9th)*.
+- **[Changed]** Levels stop at a cap of **749,999 XP** instead of 9th level, shared out: one class goes as far as its next level needs no more (cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief 13th); two or three classes share it evenly (374,999 or 249,999 each); a human who changed class has what its old classes' levels didn't use *(was 9th level for every class)*.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
 - **[Changed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
@@ -118,6 +122,7 @@ A few of them:
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
+- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level, each casting its spell on what it hits.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
 - **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
 
@@ -136,10 +141,25 @@ A few of them:
 | **Spook** | 1st | a creature flees for 3 rounds unless it saves |
 | **Friends** | 1st | CHA +2d4 for a short while, for better prices |
 
+- **[New]** Nine 6th-level priest spells for clerics and druids of 11th level and up, with a 6th-level slot at 11th and two at 12th:
+
+| Spell | Who | What it does |
+|---|---|---|
+| **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
+| **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
+| **Blade Barrier** | air | a wall: 8d8 to each creature in it, a save for none |
+| **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
+| **Sunstroke** | fire | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |
+| **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
+| **Heartseeker** | earth, water | save against death or die |
+| **Water of Life** | water | heals a creature by taking its wounds onto the caster |
+| **Whirlwind** | air | a whirlwind that stays a round a caster level: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn; nothing can be shot or cast through it |
+
 ## Improved Thieving
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
+- **[Changed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100)*.
 - **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 
@@ -185,6 +205,9 @@ A few of them:
 - **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
 - **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
 - **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
+- **[New]** **Girdle of Back Defense**: no enemy gets the bonus for attacking its wearer from behind, nor a backstab.
+- **[New]** **Golden Girdle of Urnst**: AC 3 better against long and short swords.
+- **[New]** **Amulet of Magic Resistance**: 15% magic resistance. Unlike AD&D's, it never shatters.
 - **[New]** **Gutterward**, a wooden shield +1, and **Ironbulwark**, a metal shield +3: the game had no metal shield.
 
 **Other magic items**
@@ -192,6 +215,7 @@ A few of them:
 - **[New]** **Tome of Understanding**: read it for +1 WIS for good.
 - **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.
 - **[New]** **Defilers' scrolls**: a defiler in a fight may carry a scroll of a preserver spell, one time in 20, found on its body.
+- **[New]** **Burning, Chill, Shocking and Vampiric Arrows**: a Spellarcher's own, woven from its touch spells; each casts its spell on what it hits, and they fade at the next rest.
 
 **Mundane items**
 
@@ -220,6 +244,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
+- **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades and Wall of Thorns' tangle of thorns (Wake of the Ravager's, when it's installed; recoloured fire walls without it), Fire Seeds' fireball, and Whirlwind's tall funnel of dust, turning.
 
 ## Quality of Life
 
@@ -230,7 +255,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message and how much memory it had left; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** A warning when memory runs low: the dice log tells you to save and restart before the game runs out (a fresh start has all of it back).
-- **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
+- **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
 - **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
 
@@ -241,6 +266,9 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
+- **[New]** **Find** in the dice log and the dialogue (Ctrl+F): every match highlighted, Enter for the next.
+- **[New]** More in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; **Detonate**'s blast on an item (which one, the d20, and whether it's gone: it picks the worn item that breaks most easily, a bone helm before bone armour); why the game **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); and a party member's **ability score** changing.
+- **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** **Options:** every rule change and addition in these notes has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
@@ -256,6 +284,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Absorb Disease** gave the psionicist 1d6 STR as well (and the STR alone with no disease to take). Now it only takes the disease.
 - **[Fixed]** **Bless** and **Aid** left out the wrong allies: the check for an enemy beside each one measured from the wrong place.
 - **[Fixed]** **Negative Plane Protection** never stopped anything: it saved as against Vampiric Touch, which allows no save. Now a save against death magic stops an undead's draining touch, and the undead takes 2d6.
+- **[Fixed]** **Acid Arrow**'s acid never burned after the hit. Now it does 2d4 at the start of each round it lasts (four rounds for an 11th-level caster).
 - **[Fixed]** **Cloak of Bravery**'s +4 on saves against fear never applied. Now it does against Scare, Fear, Cause Fear and Insect Plague, and the new Spook.
 - **[Fixed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 - **[Fixed]** A **berserk** or **confused** party member could be left fighting for the monsters when it wore off. Now they're back on your side.
@@ -266,7 +295,12 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
 - **[Fixed]** The **Trustee** in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to; and a save made while he was walking no longer leaves him standing still when it's loaded (the same for anyone else who walks rounds of their own).
 - **[Fixed]** In a long session the game could stop with **"Out of memory in OEOpenGraph"**: each time the map comes back (after the USE screen, a talk, a menu) it needs 60,000 bytes in one piece, and little was left over. Part of the game's code now runs from upper memory, which leaves about 86 KB to spare with the map up (the original game: 57 KB).
+- **[Fixed]** When the game rolls a thief skill for the **whole party** (a trap going off, listening in by a wagon), the first party member always rolled, however poor at it. Now the member with the best chance does.
+- **[Fixed]** **Random monsters** came in numbers worked out from the wrong monster, and in some areas could crash the game ("Divide error"). Now the count fits the monster that comes, and the crash can't happen.
+- **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
+- **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
 Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); and thief skills (Improved Thieving).

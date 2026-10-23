@@ -141,8 +141,26 @@ CR_WEAPONS = NS_IMAGE + 17  # (the creation screen's DONE: a warrior picks its w
 NS_NPP = NS_IMAGE + 18  # (Negative Plane Protection's save: one allowed)
 NS_SIDE = NS_IMAGE + 19  # (an effect ended: Berserk and Confused give the side back)
 NS_WALL = NS_IMAGE + 20  # (the computer's cast: a wall across the line of fire)
+SHOP_SHINE = NS_IMAGE + 21  # (the wait for an event: a shop's magic items' shine turned, as on the map)
+SHOP_LOOP = NS_IMAGE + 22  # (... and a shop's own event loop)
+DET_ITEM = NS_IMAGE + 23  # (Detonate's blast on an item: the check recorded for the dice log)
+WANDER_DMG = NS_IMAGE + 24  # (a spell's damage: a Wanderer guarded from fire and cold, halving it)
+REQ_SITE = NS_IMAGE + 25  # (a script's REQUEST: recorded for the dice log)
+AIM_SITE = NS_IMAGE + 26  # (a spell cast with a click, refused: why, recorded for the dice log)
+AMULET_SITE = NS_IMAGE + 27  # (a creature's magic resistance: the Amulet of Magic Resistance's 15% added)
+ARROW_HIT_SITE, ARROW_SPELL_SITE = NS_IMAGE + 28, NS_IMAGE + 29  # (a hit's spell: a spell arrow's, spellarrows.py)
+CAST_SITE = NS_IMAGE + 30  # (a spell cast: recorded, its name floated over the caster, labels.py)
+REST_SITE = NS_IMAGE + 31  # (the game's rest: recorded, the spell arrows fade, spellarrows.py)
+HARM_SITE = NS_IMAGE + 32  # (a one-target spell's damage: Harm's all but 1d4)
+AREA_SITE = NS_IMAGE + 33  # (the game's own code reading the ground pictures' table: DSCLOG's copy)
+ACID_SITE = NS_IMAGE + 34  # (an effect added: Acid's time made rounds as charges, DSCLOG's ACID_ROUNDS)
+BURN_SITE, ONCE_SITE = NS_IMAGE + 35, NS_IMAGE + 36
+STAB_SITE, TIMES_SITE = NS_IMAGE + 39, NS_IMAGE + 40  # (a backstab: the weapon's dice only, RULE_BACKSTAB)
+DRAW_SITE = NS_IMAGE + 42  # (a thing on the map about to be drawn: Whirlwind's funnel once, DSCLOG's DRAW_SITE)
+HEAT_SITE = NS_IMAGE + 41  # (a spell's damage on a creature: Sunstroke's heat named and made fire, DSCLOG's HEAT_SITE)
+USE_SITE, ROUND_SITE = NS_IMAGE + 37, NS_IMAGE + 38  # (Acid spent once a round, at its start, and only then)  # (an Acid's burn: its damage puts no Acid on again)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
-NS_END = 0xCA
+NS_END = 0xD3  # (past the new spells: 196-210, DSCLOG's NS_FIRST + NS_COUNT)
 
 
 def _site(number: int, length: int) -> bytes:
@@ -343,6 +361,17 @@ PATCHES = (
     # ... Negative Plane Protection saved as against Vampiric Touch, which allows none, so it never
     # stopped anything: "add sp,4 / push 6 / push 27h" (DSCLOG's NS_NPP: a save allowed) ...
     Patch("npp_save", 0x7A7E9, bytes.fromhex("83c4046a066a27"), _site(NS_NPP, 7)),
+    # ... a thief skill for the whole party (801BDh: a trap's find/remove traps, GPL 28's hear
+    # noise) was to go to the member with the best chance, but kept the lower, unsigned, of a best
+    # that starts at 0: none was ever lower, so the first member rolled. "jna" made "jge": the
+    # highest chance above 0 (one who can't, or isn't standing, has 0: the first then, as before)
+    Patch("party_best", 0x80201, bytes.fromhex("7605"), bytes.fromhex("7d05")),
+    # ... and how many of a random monster come (REQUEST 8, 80BE4h; GPL 99 and 106): 2 x the
+    # party's strength / the monster's, but its search left SI one past the slot found, so the
+    # next slot's strength (the last slot's: the next record's first OJFF), and an empty one (the
+    # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
+    # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
+    Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
     # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
     # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
     Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),
@@ -350,6 +379,64 @@ PATCHES = (
     # walls were a single point: the four pushes (DSCLOG's NS_WALL: a wall across the line of fire)
     Patch("ai_wall", 0x5A38C, bytes.fromhex("8b46fcc1e004050800508b46fec1e004050800508b46fcc1e00405080050"
                                             "8b46fec1e00405080050"), _site(NS_WALL, 0x28)),
+    # ... and a shop's magic items didn't shine: the map's main loop turns the palette's colour
+    # cycles; a shop (opened from a conversation) runs a loop of its own and waits in the game's
+    # wait for an event. The wait's test, "or di,di / jz 084Fh", and the shop's loop's, "cmp word
+    # [11B2h],1" (DSCLOG's SHOP_SHINE, SHOP_LOOP: the cycles turned when due, a shop open)
+    Patch("shop_shine", 0x2AFA6, bytes.fromhex("0bff74b5"), _site(SHOP_SHINE, 4)),
+    Patch("shop_loop", 0x7DE11, bytes.fromhex("833eb21101"), _site(SHOP_LOOP, 5)),
+    # Detonate's blast on an item (7AAEBh) left nothing in the dice log: "mov dx,0Fh / sub dx,ax",
+    # the number its d20 must be under (DSCLOG's DET_ITEM: the check recorded, the game's rule kept)
+    Patch("detonate_item", 0x7AB95, bytes.fromhex("ba0f002bd0"), _site(DET_ITEM, 5)),
+    # ... and the kinds of a spell's damage a creature is guarded from, which halves a spell all of
+    # those kinds (DSCLOG's WANDER_DMG: a Wanderer's fire and cold, as Resist Fire and Resist Cold)
+    Patch("wanderer_damage", 0x7B56F, bytes.fromhex("857e0c"), _site(WANDER_DMG, 3)),
+    # a script's REQUEST (command 22h), its number read: recorded for the dice log (DSCLOG's REQ_SITE)
+    Patch("script_request", 0x7FF42, bytes.fromhex("8b5e064b"), _site(REQ_SITE, 4)),
+    # a click taking a readied spell's target, the aim check's answer: a refusal recorded (DSCLOG's AIM_SITE)
+    Patch("spell_aim", 0x8455B, bytes.fromhex("83faff"), _site(AIM_SITE, 3)),
+    # a creature's magic resistance against a spell, before the test for none: an Amulet of Magic
+    # Resistance worn at the neck adds its 15% (DSCLOG's AMULET_MR; worldgear.py)
+    Patch("amulet_resistance", 0x7A4FD, bytes.fromhex("837ef400"), _site(AMULET_SITE, 4)),
+    Patch("arrow_hit", 0x58B63, bytes.fromhex("26807f0f00"), _site(ARROW_HIT_SITE, 5)),
+    Patch("arrow_spell", 0x58B78, bytes.fromhex("268a4f0f"), _site(ARROW_SPELL_SITE, 4)),
+    # the routine casting a spell or a power, its caster read: recorded (DSCLOG's CAST_SITE)
+    Patch("spell_cast", 0x772AA, bytes.fromhex("8b4e06"), _site(CAST_SITE, 3)),
+    # the game's rest (its REST and a script's request 1, past "NO RESTING DURING COMBAT"), each
+    # member's turn as their slots refill: recorded as request 0 (DSCLOG's REST_SITE)
+    Patch("game_rest", 0x806C3, bytes.fromhex("8bc66bc03a"), _site(REST_SITE, 5)),
+    # a one-target spell's rolled damage stored (76175h: SI the target, DI the spell): Harm's all the
+    # target's hit points but 1d4; Wall of Thorns' 8 + AC (DSCLOG's HARM_SITE)
+    Patch("harm_damage", 0x761A9, bytes.fromhex("8946fa"), _site(HARM_SITE, 3)),
+    # the game's own code reading a ground picture's entry from its table, "mov ax,3C81h / mov es,ax
+    # / mov al,es:[bx+2]": "cmp ax,3C81h" (the segment's word kept, as DOS fixes it up) and the
+    # site, AX and ES the table's segment where DSCLOG has moved it (with an entry each for Blade
+    # Barrier, Wall of Thorns, Fire Seeds and Whirlwind: DSCLOG's SEG_MOVE, AREA_SITE)
+    # Acid (Acid Arrow's) burning each round: in the routine adding an effect, "cmp dword
+    # [bp+0Eh],-9999" (its time), an Acid's seconds made rounds as charges, which the game spends a
+    # turn at a time; at the burn's start, "mov si,[bp+6]"; where a spell's damage puts its effect
+    # on, "cmp word [bp-1Eh],0": none during a burn; where a round starts, "cmp word [55Ah],0",
+    # each creature's Acid spent; at the start of the routine spending charges, "mov di,[bp+6]":
+    # Acid's spent only then (DSCLOG's ACID_ROUNDS, ACID_BURN, ACID_ONCE, ACID_ROUND, ACID_USE)
+    Patch("acid_rounds", 0x76525, bytes.fromhex("66817e0ef1d8ffff"), _site(ACID_SITE, 8)),
+    Patch("acid_burn", 0x78982, bytes.fromhex("8b7606"), _site(BURN_SITE, 3)),
+    Patch("acid_once", 0x78DEF, bytes.fromhex("837ee200"), _site(ONCE_SITE, 4)),
+    Patch("acid_use", 0x76808, bytes.fromhex("8b7e06"), _site(USE_SITE, 3)),
+    Patch("acid_round", 0x5741D, bytes.fromhex("833e5a0500"), _site(ROUND_SITE, 5)),
+    # Sunstroke's heat, burnt each round through Acid's burn: at the start of a spell's damage on a
+    # creature, "mov si,[bp+0Ah]" (the spell), its spell, kind and a helpless creature's damage
+    # made Sunstroke's (DSCLOG's HEAT_SITE)
+    Patch("sun_heat", 0x78C24, bytes.fromhex("8b760a"), _site(HEAT_SITE, 3)),
+    # a thing on the map about to be drawn: of a lasting area's copies of Whirlwind's funnel, only
+    # one, at their middle (DSCLOG's DRAW_SITE)
+    Patch("whirl_draw", 0x232D4, bytes.fromhex("be00008b470f"), _site(DRAW_SITE, 6)),
+    # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
+    # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
+    Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),
+    Patch("stab_times", 0x58A80, bytes.fromhex("508b46fc5af7ea8946fc"), _site(TIMES_SITE, 10)),
+    *(Patch(f"area_table_{n}", offset, bytes.fromhex("b8813c8ec0268a870200"),
+            bytes.fromhex("3d813c") + _site(AREA_SITE, 7))
+      for n, offset in enumerate((0x23D32, 0x23D65, 0x23EBD, 0x23EF0, 0x28092, 0x280C6))),
     # A thief's Pick Pockets button (DSCLOG's PICK POCKETS; pickpocket.py): in the USE screen's
     # routine showing the Turn Undead button, "cmp word [9B82h],0" (the element: 0, none); in
     # the button's handler, "cmp word [9CDCh],0" (pressed) as it is let go of, "mov ax,[9CDEh]"
@@ -364,6 +451,11 @@ PATCHES = (
     Patch("pp_text_hover", 0x89541, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
     Patch("pp_text_info", 0x8967A, bytes.fromhex("1e686232"), _site(PP_TEXT, 4)),
     Patch("pp_info", 0x8968E, bytes.fromhex("a1de9c"), _site(PP_INFO, 3)),
+    # ... and its frame lit as the pointer comes onto it and put back as it leaves, at the button's
+    # own place ("push word [30F8h]", Turn Undead's, to "push word [bp-2]", the button's, as its
+    # press already has it): the buttons beside it, which share its handler, light themselves
+    Patch("pp_light_on", 0x89528, bytes.fromhex("ff36f830"), bytes.fromhex("ff76fe90")),
+    Patch("pp_light_off", 0x8956F, bytes.fromhex("ff36f830"), bytes.fromhex("ff76fe90")),
     # ... a cleric/thief's purse beside Turn Undead, its icon let go of where the screen, closing,
     # lets go of Turn Undead's ("cmp dword [30F4h],0")
     Patch("pp_close", 0x88504, bytes.fromhex("66833ef43000"), _site(PP_CLOSE, 6)),

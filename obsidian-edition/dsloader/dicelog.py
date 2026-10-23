@@ -20,11 +20,11 @@ import random
 import re
 import struct
 import time
-from collections import Counter
+from collections import Counter, deque
 from dataclasses import dataclass
-from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, itemgate, combatlog, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice
+from . import buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -35,8 +35,9 @@ from .tracker import PartyTracker
 HDR_SIG = b"DSCLOGva"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
-TSR_SLOTS_OFF, SLOTS_SIZE = 148, 96
-SLOTS_LINES = 3  # lines of spell slots the USE screen has room for
+TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
+SLOT_LIST = {"Wizard": 1, "Priest": 2}  # the USE screen's list on show (DS:4AE8h + the member): 1 MAGE, 2 CLERIC, 3 PSIONIC
+SLOT_KEY = 0x80  # a line's first byte: SLOT_KEY | the list << 4 | the spell level (0: the heading)
 # ... and what the Look box says about a monster (PROBE_LOOK)
 TSR_LOOK_SEQ, TSR_LOOK_REPLY, TSR_LOOK_WHO, TSR_LOOK_OFF, TSR_LOOK_FULL_OFF, TSR_LOOK_ON = 150, 152, 154, 156, 158, 160
 LOOK_SIZE, LOOK_FULL_SIZE = 80, 700
@@ -91,15 +92,31 @@ WEAPON_DAMAGE_RETURN = bytes.fromhex("83c4068946fc0bc07f05")
 # ... and after the 1d10 for a creature's 1-in-10 special effect on a hit (the thri-kreen
 # bite, for one); the caller's arguments are (target, attacker)
 SPECIAL_EFFECT_RETURN = bytes.fromhex("83c4043d01007510")
+# The code after rand() in the game's random(low, high) (1A0A:2FA9h): low + rand() * (high - low + 1) / 8000h
+RANGE_SITE = bytes.fromhex("660fbfc08bd72bd642660fbfd2660fafc2")
+# ... and after its calls in a psionic power's check (5D59Dh; its arguments: combatant, power 0-33, bonus): the
+# d20 against [BP-2], the power's score (POWER_CHECK_RETURN); with someone else's Synaptic Static
+# about, first a d20 against [BP-8] (STATIC_FIRST_RETURN) and one against [BP-6], the Static's own
+# score, by the one keeping it up ([BP-4]; STATIC_SECOND_RETURN)
+POWER_CHECK_RETURN = bytes.fromhex("83c4048846ff807eff147413")
+STATIC_FIRST_RETURN = bytes.fromhex("83c4048846ff666801001400")
+STATIC_SECOND_RETURN = bytes.fromhex("83c4048ad08a46ff983b46f8")
+# A psionic attack mode's target defends (5D718h, the target, the attack's elements 400h): two
+# random(1, its defence) rolls, each over the attacker's power check d20 (pushed after them, the
+# call's [BP+0Ah]); both over it resist the attack (the second rolled only after a first over it)
+DEFENCE_FIRST_RETURN = bytes.fromhex("83c4045a3bd07d20")
+DEFENCE_SECOND_RETURN = bytes.fromhex("83c4045a3bd07d05")
 # ... and in the routine that adds up a spell's damage dice
 SPELL_DAMAGE_RETURN = bytes.fromhex("83c4045a03d0")
 # ... and in the routine that works out a spell's duration (its arguments: spell, caster level);
 # the dice are often NdS with S = 1, a fixed number
 SPELL_DURATION_RETURN = bytes.fromhex("83c406660fbfc0665a66")
 # The routine run whenever an effect uses up a charge (arguments: creature, effect): it rolls
-# 2d4 first, and deals it as acid damage only for the acid effect (Acid Arrow, each round)
+# 2d4 first, and deals it as acid damage only for the acid effect (Acid Arrow: DSCLOG's ACID
+# makes its time rounds as charges and spends one at each round's start)
 CHARGE_USED_RETURN = bytes.fromhex("83c4048946fe8b4608")
 ACID = 1
+ROUND_SECONDS = 60  # (DSCLOG's ACID_ROUNDS: an Acid's time in rounds, 1 a started minute, at most 127)
 # A confused creature's turn (its routine's first argument is the creature): d10, 1 it runs
 # off, 2-6 it does nothing, 7-9 it fights for a side picked with a d2 (as a berserk creature
 # always does), 10 it acts normally
@@ -112,6 +129,7 @@ CONFUSION_RESULTS = ((1, "runs off"), (6, "does nothing"), (9, "fights for a sid
 STRENGTH_ROLL_RETURN = bytes.fromhex("83c40450660fbf4618")
 STR_MOST = 24
 MIND_BAR, LOW_RESISTANCE, MIND_BAR_RESISTANCE = 32, 31, 75
+WAIST_SLOT, NECK_SLOT = (game.EQUIP_SLOTS.index(s) for s in ("waist", "neck"))
 # The magic resistance roll made straight from the spell code (arguments: target, spell, level)
 RESISTANCE_ROLL_RETURN = bytes.fromhex("83c404508a460a50ff76")
 # Dispel Magic, for each effect on the target (the effect id in [BP-2], the dispeller's level
@@ -138,7 +156,9 @@ OVERLAY_TRAP = b"\xcd\x3f"
 # and the percentile check. The same list is built into DSCLOG.
 SCALED_ROLL = b"\x66\x0f\xbf\xc0"  # movsx eax, ax
 FILTERS = tuple(SCALED_ROLL + bytes.fromhex(h) for h in (
-    "666bc0", "6669c0", "66c1e0", "660fbf56")) + (PERCENT_SITE[:8], b"\xeb\x05IMAGE")  # (DSCLOG's NS_BLOW: IMAGE_BLOW_SITE)
+    "666bc0", "6669c0", "66c1e0", "660fbf56", "8bd72bd6")) + (PERCENT_SITE[:8], b"\xeb\x05IMAGE")  # (DSCLOG's NS_BLOW: IMAGE_BLOW_SITE)
+# (the fifth: random(low, high), RANGE_SITE: the psionic power check's d20s, and points of some
+# spells' pictures, which the log passes over)
 
 # The rolls at the start of each round (the code after each rand() call): initiative
 # 20 + 0-9 + DEX + effects for every combatant, then 0-199 to break ties
@@ -178,7 +198,34 @@ RANDOM_NAME_RETURNS = (bytes.fromhex("83c40448eb11"), bytes.fromhex("83c40405630
 KIND_ROLL, KIND_SAVE, KIND_AC = 0, 1, 2
 KIND_ITEM = 4  # DSCLOG's item save against acid (PROBE_ITEM_*): raw = d20 | needed << 8
 ITEM_ARMOUR = 0x8000  # (in the entry's extra, with the item)
+ITEM_DETONATE = 0x4000  # (... Detonate's blast on a worn item: DSCLOG's DET_ITEM)
+# Detonate's 1d20 against a worn item (7AAEBh): the line comes with DET_ITEM's record
+DETONATE_ROLL_RETURN = bytes.fromhex("83c4048bde6bdb0a8d96e4fc")
 KIND_SCRIPT = 5  # DSCLOG's scripts' random command (PROBE_SCRIPT_RAND): raw = result | N << 8
+KIND_REQUEST = 6  # DSCLOG's REQ_SITE: a script's REQUEST (command 22h): raw = the request, the frame
+# its arguments: [BP+8] who, [BP+0Ah] and [BP+0Ch] its two values (the game's jump table at 7FF30h)
+REQUEST_NAMES = {
+    0: "the party rests (the game's own rest, each member)", 1: "the party rests (and the fallen get up)", 2: "a door opened or closed", 3: "a skill check",
+    4: "the party rests", 5: "an object's state turned", 6: "a cinematic plays", 7: "a trap goes off",
+    8: "random monsters come", 9: "a creature transforms", 10: "a map cell blocked", 11: "a map cell unblocked",
+    12: "a map cell blocks sight", 13: "a map cell stops blocking sight", 14: "an arena bout begins",
+    15: "the pointer set to walk", 16: "the music's level set", 17: "an object placed on the map",
+    18: "a creature changes sides", 19: "game over", 20: "creatures counted",
+}
+KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the frame (caster [BP+6])
+KIND_HEAT = 10  # DSCLOG's HEAT_SITE: Sunstroke's heat on a creature: raw = the damage | the spell << 8,
+# the creature the extra (its 1d4 rolled just before, by a caller the overlay manager may hide)
+KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that failed its save: raw = it
+KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
+# its record's dice: raw = the damage | the spell << 8, extra the creature
+THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
+KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
+# extra the caster. The aim check's (84C54h) answers:
+AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
+               -3: "the wall would be too long", -4: "no line of sight", -5: "too far away"}
+# the requests worth a line of their own (the others only with "Show unlabelled rolls"; skill
+# checks and traps have their rolls' lines)
+REQUESTS_SHOWN = frozenset((1, 4, 6, 8, 9, 14, 17, 18, 19))
 FIGHT_LINES_AFTER = 5.0  # seconds after a fight its lines still go into the combat log's panel (XP, the last kill)
 REGENERATES = 20  # CON from which a creature regains a hit point now and then by itself
 
@@ -215,6 +262,7 @@ ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
+RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
@@ -370,9 +418,15 @@ class DiceLog:
         self._pending: List[PendingDice] = []
         self._out_cold: Dict[int, bool] = {}  # creature index -> Out Cold when last looked at
         self._psp: Dict[int, int] = {}  # party member -> PSP when last looked at
+        # party member -> (name, scores) last reported, and a change seen once (reported when it holds)
+        self._abilities: Dict[int, Tuple[str, Tuple[int, ...]]] = {}
+        self._abilities_new: Dict[int, Tuple[str, Tuple[int, ...]]] = {}
         self.itemwatch = ItemWatch()  # the party's items, and a report when one is gone (itemwatch.py)
         self._settings: Optional[dict] = None  # as last given to use_settings, for the reports
         self._last_damage: Optional[Tuple[int, int]] = None  # (spell, damage) last rolled
+        # the last few spell damages rolled, (spell, damage), to tell which spell an HP loss came from
+        # when two hurt the same creature before its HP is seen (two walls standing)
+        self._recent_damage: Deque[Tuple[int, int]] = deque(maxlen=RECENT_DAMAGE)
         self._turn: Optional[int] = None  # whose turn it was when last looked at
         self.round_order: List[Tuple[Optional[int], str, int]] = []  # this round: (combatant, name, score)
         self.round_number = 0
@@ -390,7 +444,10 @@ class DiceLog:
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
         self.combat_log = False  # the combat log's panel in the game, in a fight (combatlog.py)
+        self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
         self._panel = combatlog.Panel()
+        self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
+        self._labels_font_tried = False
         self.combat_log_level = combatlog.SHORT  # ... its lines in short, in detail or the results only
         self._fight_at: Optional[float] = None  # ... when a fight was last seen (its last lines go in too)
         self._fight_monsters: set = set()  # ... the monsters' names in it (their colour)
@@ -437,12 +494,16 @@ class DiceLog:
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
+        self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, made and faded)
+        self._rest_due = False  # (a rest seen: the spell arrows fade in the next pass)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
         self._out_of_fight: Optional[float] = None  # (since when the game's fight flag is down)
         self._fight_seen = False  # (the flag seen up since the dances and Wild Fighting were rolled)
         self._kits_due = False  # (a fight is over: the next round rolls the dances and Wild Fighting)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
+        self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
+        self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
@@ -465,7 +526,10 @@ class DiceLog:
         self._tries_at = -CREATION_TUMBLE  # ... and when it last moved
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
+        self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
+        self._sun_burn = False  # a Sunstroke heat line just given (the same)
         self._spell_name = ""
+        self._spell_id: Optional[int] = None
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
         self.walkers = stuckwalk.StuckWalkers()  # (people a saved walk left standing)
@@ -584,9 +648,12 @@ class DiceLog:
         self._clock = now
 
     def _write_pick_text(self, text: str) -> None:
+        self._write_pick_bytes(text.encode("cp437", "replace")[:PICK_SIZE - 1] + b"\0")
+
+    def _write_pick_bytes(self, data: bytes) -> None:
         offset = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_PICK_OFF, 2))[0]
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_HDR_OFF, 2))[0]
-        self.guest.write(base + offset, text.encode("cp437", "replace")[:PICK_SIZE - 1] + b"\0")
+        self.guest.write(base + offset, data)
 
     def _write_xp(self, result: Optional["pickpocket.Attempt"]) -> None:
         """The XP that came with what was lifted (Kurzak's Short Sword), for DSCLOG to give with
@@ -615,6 +682,13 @@ class DiceLog:
             if meal is not None:
                 taken = 2 if meal.used_up else True
                 result = pickpocket.Attempt(meal.text, meal.log)
+                self._rest_due = self._rest_due or meal.used_up  # (a full rest)
+            elif spellarrows.ARROWS_BY <= item < PICKED_BY:
+                taken = True
+                if self._fighting():
+                    result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
+                else:
+                    result = self._arrows.make(self.game, item & 0xFF, thing)
             elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
                 if self._fighting():
@@ -627,7 +701,11 @@ class DiceLog:
             return []  # (the game changing its item lists: answered in a later pass)
         except (struct.error, IndexError, ValueError):
             result, taken = None, False
-        self._write_pick_text(result.text if result else "")
+        if result is not None and result.drop is not None:
+            self._write_pick_bytes(result.drop)  # (an item record, not a text: DSCLOG's ARROWS_DROP)
+            taken = spellarrows.ARROWS_DROP
+        else:
+            self._write_pick_text(result.text if result else "")
         self._write_xp(result)
         self.guest.write(self.tsr_hdr + TSR_USE_TAKEN, struct.pack("<H", int(taken)))
         self.guest.write(self.tsr_hdr + TSR_USE_REPLY, seq)
@@ -636,6 +714,21 @@ class DiceLog:
         if result.key:
             self._remember_pick(result.key)
         return result.log or [result.text]
+
+    def _arrows_pass(self) -> List[str]:
+        """The Spellarchers' spell arrows: after a rest, every one fades (spellarrows.py)."""
+        if self.tsr_hdr is None:
+            return []
+        out: List[str] = []
+        try:
+            if self._rest_due:
+                out = self._arrows.rest(self.game)
+                self._rest_due = False
+        except itemgate.ItemsBusy:
+            pass  # (tried again in the next pass)
+        except (struct.error, IndexError, ValueError):
+            pass
+        return out
 
     def set_monster_info(self, on: bool) -> None:
         """Have the game's Look box (in a fight) say what hurts a monster, and then show all of it."""
@@ -653,6 +746,7 @@ class DiceLog:
         self.starting_gear = bool(settings.get("starting_gear", True))
         self.show_shadows = bool(settings.get("shadows", True))
         self.combat_log = bool(settings.get("combat_log", True))
+        self.floating_names = bool(settings.get("floating_names", True))
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
@@ -737,26 +831,20 @@ class DiceLog:
         return [f"Look: {full[0]}"] + [f"    {line}" for line in full[1:]] if full else []
 
     def slots_lines(self, member: int) -> str:
-        """A party member's spell slots for the game's USE screen, "|" between lines:
-        "SPELLS LEFT BY LEVEL|WIZ 2/2 1/1|PRI 5/5 3/3 2/2 1/1" (six levels a line). The
-        screen has room for SLOTS_LINES lines above the icons of any usable items, so the
-        heading goes when the slots need them all, and anything past them is cut."""
+        """A party member's spell slots for the game's USE screen, "|" between lines, each line
+        keyed by its first character (SLOT_KEY | the list << 4 | the spell level, level 0 the
+        heading): for each kind of spells, a heading then a line for each spell level,
+        "SPELLS LEFT", "PRI 5/5". DSCLOG shows the heading and the line of the list and level
+        the screen is on. A multiclass preserver in armour has "NO SPELLS IN ARMOUR" for its
+        wizard spells."""
         lines = []
         for kind, levels in self.game.spell_slots(member):
-            top = max(level for level, _, _ in levels)
-            by_level = {level: (left, most) for level, left, most in levels}
-            cells = [f"{by_level.get(n, (0, 0))[0]}/{by_level.get(n, (0, 0))[1]}" for n in range(1, top + 1)]
-            for i in range(0, len(cells), 6):
-                lines.append(("    " if i else f"{SLOT_KINDS.get(kind, kind[:3].upper())} ") + " ".join(cells[i:i + 6]))
-        if lines and self.game.no_spells(member):  # (a multiclass preserver in armour: class restrictions)
-            heading = "NO SPELLS IN ARMOUR"
-        else:
-            heading = "SPELLS LEFT BY LEVEL"
-        if lines and len(lines) < SLOTS_LINES:
-            lines.insert(0, heading)
-        elif lines and heading != "SPELLS LEFT BY LEVEL":
-            lines[-1] = heading
-        return "|".join(lines[:SLOTS_LINES])
+            key = SLOT_KEY | SLOT_LIST.get(kind, 0) << 4
+            name = SLOT_KINDS.get(kind, kind[:3].upper())
+            armour = kind == "Wizard" and self.game.no_spells(member)
+            lines.append(chr(key) + ("NO SPELLS IN ARMOUR" if armour else "SPELLS LEFT"))
+            lines += [chr(key | level) + f"{name} {left}/{most}" for level, left, most in levels]
+        return "|".join(lines)
 
     def _write_slots(self) -> None:
         """Keep DSCLOG's copy of the party's spell slots current."""
@@ -770,7 +858,7 @@ class DiceLog:
                 text = self.slots_lines(member)
             except (struct.error, IndexError, ValueError):
                 text = ""
-            data += text.encode("cp437", "replace")[:SLOTS_SIZE - 1].ljust(SLOTS_SIZE, b"\0")
+            data += text.encode("latin-1", "replace")[:SLOTS_SIZE - 1].ljust(SLOTS_SIZE, b"\0")
         if data != self._slots_written:
             self.guest.write(table, data)
             self._slots_written = data
@@ -984,8 +1072,9 @@ class DiceLog:
         self._kit_tick(now)
         self._answer_stats()
         out += self._answer_use()
+        out += self._arrows_pass()
         out += self._answer_look()
-        changes = self.hp_changes(now) + self.psp_changes()
+        changes = self.hp_changes(now) + self.psp_changes() + self.ability_changes()
         if not self._party_check(now):  # not while a game is loading: its records are half-filled
             out += changes
         for rec in self.text.poll():
@@ -1124,6 +1213,8 @@ class DiceLog:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
                                  needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log)
             self._update_panel(now)
+            self._labels.on = self.floating_names
+            self._labels.tick(self.game.guest, self.tsr_hdr, now)
             foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
@@ -1350,6 +1441,34 @@ class DiceLog:
                 out.append(f"    {who} regains {psp - before} PSP ({before} -> {psp})")
         return out
 
+    def ability_changes(self) -> List[str]:
+        """The party's ability scores going up or down, once a change holds at two looks: a
+        spell's or an effect's (Strength, Remove Curse giving back a lowered STR, Raise Dead's
+        point of CON), and the game's own as time passes."""
+        out = []
+        for index in range(game.PARTY_SIZE):
+            rec = self.game.creature(index)
+            if len(rec) < CREATURE_ABILITIES + len(ABILITIES) or not rec[game.CREATURE_NAME]:
+                self._abilities.pop(index, None)
+                continue
+            seen = (self.game.creature_name(index), tuple(rec[CREATURE_ABILITIES:CREATURE_ABILITIES + len(ABILITIES)]))
+            before = self._abilities.get(index)
+            if before is None or before[0] != seen[0] or not all(1 <= v <= 25 for v in before[1]):
+                self._abilities[index] = seen  # (a new member, or a record being loaded)
+                self._abilities_new.pop(index, None)
+                continue
+            if seen == before:
+                self._abilities_new.pop(index, None)
+                continue
+            if self._abilities_new.get(index) != seen:
+                self._abilities_new[index] = seen  # (seen once: it must hold)
+                continue
+            del self._abilities_new[index]
+            self._abilities[index] = seen
+            moved = [f"{name} {a} -> {b}" for name, a, b in zip(ABILITIES, before[1], seen[1]) if a != b]
+            out.append(f"    {seen[0]}'s {', '.join(moved)}")
+        return out
+
     def hp_changes(self, now: float) -> List[str]:
         """Every combatant's HP going down or up, with what's left (the game never shows a
         monster's HP). Put down to a spell while one is being cast (the damage after saves,
@@ -1377,7 +1496,10 @@ class DiceLog:
                 # the game's damage code gives a creature that was Out Cold the most the dice can do
                 out_cold = " (Out Cold: the most the dice can do)" if was_out_cold else ""
                 also = f" and {hit} from the hit" if hit else ""
-                out.append(f"  {who} takes {before - hp - hit} from {self._spell_name}{out_cold}{also}, {left}")
+                spell_id, spell_name = self._damage_source(before - hp - hit)
+                halved = g.damage_halved_by(combatant, spell_id) if spell_id is not None else None
+                halved = f" (halved: {halved})" if halved else ""
+                out.append(f"  {who} takes {before - hp - hit} from {spell_name}{halved}{out_cold}{also}, {left}")
             elif now <= self._spell_until and hp > before:
                 out.append(f"  {who} regains {hp - before} HP from {self._spell_name}, {left}")
             elif hp < before:
@@ -1451,10 +1573,21 @@ class DiceLog:
             return None
         return monsters.weapon_reason(d) if d is not None else None
 
+    def _damage_source(self, lost: int) -> Tuple[Optional[int], str]:
+        """The spell an HP loss of LOST came from: the latest recent roll it matches, whole or
+        halved (taken off the list), else the spell being cast."""
+        for i in range(len(self._recent_damage) - 1, -1, -1):
+            spell, rolled = self._recent_damage[i]
+            if lost in (rolled, rolled // 2):
+                del self._recent_damage[i]
+                return spell, self.game.spell_name(spell)
+        return self._spell_id, self._spell_name
+
     def _spell_cast(self, spell: Optional[int], now: float) -> None:
         """A spell is taking effect: HP changes for the next few seconds are its doing."""
         if spell is not None:
             self._spell_name = self.game.spell_name(spell)
+            self._spell_id = spell
             self._spell_until = now + SPELL_WINDOW
 
     def speaker(self, portrait: Optional[int]) -> str:
@@ -1635,10 +1768,11 @@ class DiceLog:
         return None
 
     def _fighting(self) -> bool:
-        """In a fight, by the game's own flag (game time barely moves outside fights, so the time
-        since the last round can't tell: the party stood "in a fight" until they rested)."""
+        """In a fight, by the game's own test (game.fight_on: as its rest's and the USE screen's;
+        its IN_COMBAT flag stays up while the party walks spread out, uncollapsed, with no one to
+        fight; game time barely moves outside fights, so the time since the last round can't tell)."""
         try:
-            return self.game.in_combat()
+            return self.game.fight_on()
         except (struct.error, IndexError, ValueError):
             return False
 
@@ -1768,10 +1902,26 @@ class DiceLog:
             return self._item_check(e)
         if e.kind == KIND_SCRIPT:
             return self._script_roll(e, show_all)
+        if e.kind == KIND_REQUEST:
+            return self._request(e, show_all)
+        if e.kind == KIND_AIM:
+            return self._aim(e)
+        if e.kind == KIND_WALL:
+            return self._wall(e, now)
+        if e.kind == KIND_HEAT:
+            return self._heat(e, now)
+        if e.kind == KIND_SWEPT:
+            return [f"    {self._name(e.raw)} is swept off its feet: loses its next turn"]
+        if e.kind == KIND_CAST:
+            self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
+            return []
         code = e.code
         if code.startswith(ATTACK_SITE):
             self._spell_until = 0.0
-            return self.flush(now, force=True) + self._attack(e)
+            out = self.flush(now, force=True) + self._attack(e)
+            if len(out) >= 2 and out[-2].endswith("-> miss"):
+                self._float(e.glob[0], labels.MISS, labels.MISS_INK, now)
+            return out
         if code.startswith(DICE_SITE):
             return self._dice_roll(e, show_all, now)
         if code.startswith(IMAGE_BLOW_SITE):
@@ -1785,6 +1935,10 @@ class DiceLog:
             return self._break_check(e, code.startswith(BREAK_ROLL_1), show_all)
         if code.startswith(PERCENT_SITE):
             return self._thief_skill(e)
+        if code.startswith(RANGE_SITE):
+            lines = self._range_roll(e)
+            if lines is not None:
+                return lines
         if show_all:
             generic = generic_roll(code, e)
             where = f"{e.cs:04x}:{e.ip:04x}"
@@ -1836,6 +1990,18 @@ class DiceLog:
             steps.append(f"{signed(rest)} equipment")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
 
+    def _float(self, thing: Optional[int], text: str, colour, now: float) -> None:
+        """TEXT floating over combatant THING for a moment (labels.py), with the switch on."""
+        if not self.floating_names or self.tsr_hdr is None:
+            return
+        if not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        try:
+            self._labels.show(self.game.guest, self.tsr_hdr, thing, text, colour, now)
+        except (struct.error, IndexError, ValueError):
+            pass
+
     # attacks ---------------------------------------------------------------------
 
     def _attack(self, e: Entry) -> List[str]:
@@ -1864,7 +2030,7 @@ class DiceLog:
                 f"{needs} ({chance}%), hits AC {thac0 - d20}, target AC {ac} -> {'HIT' if hit else 'miss'}")
         skill = self.weapon_skill(attacker, item_type)
         kit_name, kit_hit, _ = self._kit_attack(attacker, item_type, mode, target_combatant)
-        breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode,
+        breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode, item_type,
                                           (specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)),
                                           [(kit_name, kit_hit)] if kit_hit else [])
         return [head, "    " + breakdown]
@@ -1877,7 +2043,8 @@ class DiceLog:
         return specialize.skill(sheet, item_type) if len(sheet) >= game.SHEET_SIZE else specialize.NONE
 
     def _thac0_breakdown(self, e: Entry, thac0: int, attacker: int, attacker_combatant: int,
-                         target_combatant: int, weapon, mode: int, skill: Tuple[str, int] = ("", 0),
+                         target_combatant: int, weapon, mode: int, item_type: Optional[int] = None,
+                         skill: Tuple[str, int] = ("", 0),
                          kit: Sequence[Tuple[str, int]] = ()) -> str:
         """'THAC0 16, +6 STR, +1 Blessed, ... = 9', from the attack setup's locals and the game's rules
         (and SKILL, weapon specialization's (name, to-hit), which DSCLOG takes off after them)."""
@@ -1905,6 +2072,10 @@ class DiceLog:
         if on(target_combatant, 55):
             parts.append(("target's Blur", -2))
             situational += 2
+        if mode is not None and mode <= 1 and specialize.kind_of(item_type) in worldgear.SWORD_KINDS \
+                and g.wears_type(g.combatant_creature(target_combatant), game.URNST_GIRDLE_TYPE, WAIST_SLOT):
+            parts.append(("target's Girdle of Urnst", -worldgear.URNST_AC))  # (DSCLOG's ITEM_REAR)
+            situational += worldgear.URNST_AC
         if on(attacker_combatant, game.FOG_EFFECT):  # (the new spells' Fogbolt: DSCLOG's NS_HIT)
             parts.append(("Fogbolt", -3))
             situational += 3
@@ -2018,13 +2189,18 @@ class DiceLog:
                     self._image_line(target, faces[0], 0 if ours else self.game.image_chance(target), spell=True)]
             if count == 1 and sides == 100 and e.parent_code.startswith(DISPEL_ROLL_RETURN):
                 return self._dispel(e, faces[0])
+            if count == 1 and sides == 20 and e.parent_code.startswith(DETONATE_ROLL_RETURN):
+                return []  # (DET_ITEM's record shows it, with the item and the number)
             if count == 1 and sides == 20 and e.parent_code.startswith(ABJURE_ROLL_RETURN):
                 return self._abjure(e, faces[0])
             if count == 1 and e.parent_code.startswith(SUMMON_ROLL_RETURN):
                 return [f"    Summoning: 1d{sides} = {faces[0]} picks which of its {sides} creatures comes"]
             if e.parent_code.startswith(CHARGE_USED_RETURN):
                 who, eid = self._name(e.parent_arg(6)), e.parent_arg(8)
+                if eid == ACID and count == 1:  # (DSCLOG's BURN_PASS: Sunstroke's heat; its line KIND_HEAT's)
+                    return []
                 if eid == ACID:
+                    self._acid_burn = True  # (the damage's own duration roll after it means nothing)
                     return self.flush(now, force=True) + [
                         f"    {EFFECT_NAMES[ACID]} on {who}: {count}d{sides} = {faces_text} = {sum(faces)} acid damage"]
                 # the 2d4 means nothing here: a Stoneskin, Ironskin, Mirror Image... used a charge
@@ -2097,15 +2273,21 @@ class DiceLog:
                 steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
         # that on the attacker's first attack of the round: x2, x3 from thief level 5, x4 from 9,
-        # x5 from 13. The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
+        # x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once (DSCLOG's
+        # STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
         # attacks already made this round
         backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x0A)
         if backstab and rear and made is not None and made <= 1:
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
-            total *= times
-            steps = f"({steps}) x{times} backstab"
+            if self.rules & game.RULE_BACKSTAB:
+                more = (times - 1) * sum(faces)
+                total += more
+                steps += f" +{more} backstab (the dice x{times})"
+            else:
+                total *= times
+                steps = f"({steps}) x{times} backstab"
         target = g.combatant_creature(e.glob[0])
         if target is not None:  # so the HP it takes isn't put down to a spell being cast
             self._hit(target, total, now)
@@ -2154,10 +2336,23 @@ class DiceLog:
         spell, level = e.parent_arg(6), (e.parent_arg(8) or 0) & 0xFF
         if spell is None:
             return []
+        if spell == game.SUNSTROKE_SPELL and self._sun_burn:
+            self._sun_burn = False  # (Sunstroke's heat: the same)
+            return []
         dice = f"{count}d{sides}" + (f" = [{' + '.join(map(str, faces))}]" if sides > 1 else "")
+        rec = g.spell_record(spell)
+        acid = len(rec) > 0x19 and rec[0x19] == ACID
+        if acid and self._acid_burn:
+            self._acid_burn = False  # (a round's burn: the damage rolls the time it puts on no more)
+            return []
         found = g.spell_duration(spell, level, sum(faces))
         if found is not None:
             units, how = found
+            if acid:
+                rounds = min(max(-(-units // ROUND_SECONDS), 1), 0x7F)
+                return [f"    {g.spell_name(spell)} burns {rounds} round{'' if rounds == 1 else 's'} more, "
+                        f"2d4 at the start of each ({game.game_time(units)}: caster level {level}: {how}; "
+                        f"dice {dice})"]
             return [f"    {g.spell_name(spell)} lasts {game.game_time(units)} (caster level {level}: {how}; "
                     f"dice {dice})"]
         charges = g.spell_charges(spell, level, sum(faces))
@@ -2192,14 +2387,19 @@ class DiceLog:
         g = self.game
         spell, level = e.parent_arg(6), (e.parent_arg(8) or 0) & 0xFF
         name = g.spell_name(spell) if spell is not None else "Spell"
+        if spell == game.HARM_SPELL:  # (DSCLOG's HARM_SITE puts its own in the roll's place)
+            self._last_damage = None
+            return f"{name}: all the target's hit points but 1d4 (the {count}d{sides} the game rolls goes unused)"
         text = f"{name} damage: {count}d{sides} = [" + " + ".join(map(str, faces)) + "]"
         rule = g.spell_damage(spell) if spell is not None else None
         self._last_damage = (spell, sum(faces))
+        self._recent_damage.append(self._last_damage)
         if rule is None or rule.sides != sides:
             return f"{text} = {sum(faces)}"
         steps = rule.steps(level) if missile_steps is None else missile_steps
         bonus = rule.step_bonus * steps
         self._last_damage = (spell, sum(faces) + bonus)
+        self._recent_damage[-1] = self._last_damage
         if bonus:
             text += f" {signed(bonus)}"
         text += f" = {sum(faces) + bonus}"
@@ -2231,10 +2431,60 @@ class DiceLog:
             lines = [f"Script roll: 0-{most} = {result} (script position {e.extra})"]
         return lines
 
+    def _request(self, e: Entry, show_all: bool) -> List[str]:
+        """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with "Show
+        unlabelled rolls"."""
+        number = e.raw & 0xFFFF
+        if number in spellarrows.REST_REQUESTS:
+            self._rest_due = True  # (the spell arrows fade)
+        if number not in REQUESTS_SHOWN and not show_all:
+            return []
+        name = REQUEST_NAMES.get(number, "an unknown request")
+        values = ", ".join(str(v) for v in (e.arg(8), e.arg(0x0A), e.arg(0x0C)) if v is not None)
+        return [f"Script: {name} (request {number}: {values})"]
+
+    def _wall(self, e: Entry, now: float) -> List[str]:
+        """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE): the game rolled its record's dice (the
+        line before), 8 + the creature's AC taken instead."""
+        damage, spell = e.raw & 0xFF, e.raw >> 8 & 0xFF
+        name = self.game.spell_name(spell)
+        self._spell_cast(spell, now)
+        self._last_damage = (spell, damage)
+        self._recent_damage.append(self._last_damage)
+        whose = f"{name}'" if name.endswith("s") else f"{name}'s"
+        ac = (e.extra >> 8 & 0xFF) - 0x80
+        low = " (at least 1)" if THORNS_BASE + ac < 1 else ""
+        return [f"  {whose} wall instead: {THORNS_BASE} + AC {ac} = {damage}{low}"]
+
+    def _heat(self, e: Entry, now: float) -> List[str]:
+        """Sunstroke's heat at a round's start on a creature it holds (DSCLOG's BURN_PASS, HEAT_SITE):
+        1d4 of fire. The roll's own line, if its caller was hidden (left pending), is dropped."""
+        damage, spell = e.raw & 0xFF, e.raw >> 8 & 0xFF
+        rolled = f"1d4 = [{damage}] = {damage}"
+        for p in self._pending:
+            if p.text == rolled:
+                self._pending.remove(p)
+                break
+        self._spell_cast(spell, now)
+        self._last_damage = (spell, damage)
+        self._recent_damage.append(self._last_damage)
+        self._sun_burn = True  # (the damage's own duration roll after it means nothing)
+        return [f"    Sunstroke's heat on {self._name(e.extra)}: 1d4 = {damage} fire damage"]
+
+    def _aim(self, e: Entry) -> List[str]:
+        """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), and why: the game
+        itself only shows the crossed-out pointer."""
+        answer = struct.unpack("b", bytes([e.raw & 0xFF]))[0]
+        spell = e.raw >> 8 & 0xFF
+        why = AIM_REASONS.get(answer, f"refused ({answer})")
+        return [f"{self._name(e.extra)} can't cast {self.game.spell_name(spell)} there: {why}"]
+
     def _item_check(self, e: Entry) -> List[str]:
         """An item the acid or corroding touch could destroy, after a failed save (DSCLOG's
         PROBE_ITEM_*): the d20, the number it needed and whose number that was."""
         roll, needed = e.raw & 0xFF, struct.unpack("b", bytes([e.raw >> 8 & 0xFF]))[0]
+        if e.extra & ITEM_DETONATE and not e.extra & ITEM_ARMOUR:
+            return self._detonate_item(e, e.extra & 0x3FFF, roll, needed)
         item, armour = e.extra & 0x7FFF, bool(e.extra & ITEM_ARMOUR)
         g = self.game
         save = g.item_save(item, armour)
@@ -2269,6 +2519,18 @@ class DiceLog:
                 why = " (the game's)"
         need = f"needs {needed}" if needed > 1 else "safe whatever the roll"
         return [f"{head}: d20 = {roll}, {need}{why} -> {'CORRODED' if corroded else 'safe'}"]
+
+    def _detonate_item(self, e: Entry, item: int, roll: int, needed: int) -> List[str]:
+        """Detonate's blast on the target's worn item that breaks most easily (the lowest item
+        +10h, under 6): a d20 under 15 less its plus, or it's gone (one of a stack)."""
+        who = self._name(e.arg(6)) if e.arg(6) is not None else "someone"
+        rec = self.game.item_record(item)
+        name = self.game.item_label(rec, self.game.item_type_record(rec)) if len(rec) == game.ITEM_SIZE else "item"
+        plus = 15 - needed
+        why = f"15 {signed(-plus)} for its plus" if plus else "15"
+        gone = roll < needed
+        return [f"  Detonate's blast on {who}'s {name}: d20 = {roll}, breaks it under {needed} ({why}) -> "
+                + ("DESTROYED" if gone else "safe")]
 
     def _break_check(self, e: Entry, first: bool, show_all: bool) -> List[str]:
         """After an attack the game checks the weapon: non-magical wood, bone, stone and
@@ -2551,6 +2813,90 @@ class DiceLog:
         table = game.far_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
         return (seg & 0xFFFF) * 16 + (off & 0xFFFF) == table + index * game.CREATURE_SIZE
 
+    def _range_roll(self, e: Entry) -> Optional[List[str]]:
+        """A number from LOW to HIGH (the game's 1A0A:2FA9h, arguments low, high): the psionic
+        power check's d20s; None for one the log doesn't know."""
+        low, high = e.arg(6), e.arg(8)
+        if low is None or high is None or high < low:
+            return None
+        roll = low + scaled(e.raw, high - low + 1)
+        if e.parent_code.startswith(DEFENCE_FIRST_RETURN) or e.parent_code.startswith(DEFENCE_SECOND_RETURN):
+            return self._psionic_defence(e, roll, high, e.parent_code.startswith(DEFENCE_SECOND_RETURN))
+        if (low, high) != (1, 20):
+            return None
+        if e.parent_code.startswith(POWER_CHECK_RETURN):
+            return self._power_check(e, roll)
+        if e.parent_code.startswith(STATIC_FIRST_RETURN):
+            self._static_rolls[(e.ss, e.parent_bp)] = roll
+            return []
+        if e.parent_code.startswith(STATIC_SECOND_RETURN):
+            return self._static_check(e, roll)
+        return None
+
+    def _power_check(self, e: Entry, roll: int) -> List[str]:
+        """A psionic power's check: a d20 at or under the power's score, a 1 always and a 20
+        never; the score is the ability the power uses (as the game reads it now) + the power's
+        adjustment + the user's own for it (the game keeps one a power, 1 and up, from 1) - 1 +
+        the call's bonus (none so far)."""
+        who, power, bonus = e.parent_arg(6), e.parent_arg(8), e.parent_arg(0x0A) or 0
+        if who is None or power is None:
+            return []
+        score = struct.unpack("<b", e.parent_locals[0x28 - 2:0x28 - 1])[0]
+        works = roll != 20 and (roll <= score or roll == 1)
+        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        head = f"{self._name(who)} uses {name}: power check d20 = {roll}, needs {score} or less"
+        if roll in (1, 20):
+            head += f" (a {roll} always {'works' if roll == 1 else 'fails'})"
+        out = [f"{head} -> {'it works' if works else 'it fails'}"]
+        parts = self.game.power_score_parts(who, power)
+        if parts is not None:
+            ability, adjustment, own = parts
+            level = score - adjustment - own - bonus
+            steps = [f"{level} {ability}", f"{signed(adjustment)} {name}"]
+            if own:
+                steps.append(f"{signed(own)} practised")
+            if bonus:
+                steps.append(f"{signed(bonus)} this use")
+            out.append(f"    power score {score} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - "))
+        return out
+
+    def _psionic_defence(self, e: Entry, roll: int, defence: int, second: bool) -> List[str]:
+        """A psionic attack mode's target resists with two rolls of 1 to its defence (the better of
+        WIS - 7, a raised defence mode's, a monster's level; at least 1), each over the attacker's
+        power check d20: the first, then the second only if the first is over it."""
+        attack, who = e.arg(0x0A), e.parent_arg(6)
+        if attack is None:
+            return []
+        name = self._name(who) if who is not None else "the target"
+        head = f"  {name}'s psionic defence: d{defence} = "
+        need = f"over {attack} (the attacker's power check d20)"
+        key = (e.ss, e.parent_bp)
+        if not second:
+            if roll > attack:
+                self._defence_rolls[key] = roll
+                return []
+            return [f"{head}{roll}, needs {need} -> not resisted"]
+        first = self._defence_rolls.pop(key, None)
+        rolls = f"{first} and {roll}" if first is not None else f"... and {roll}"
+        return [f"{head}{rolls}, both need {need} -> {'resisted' if roll > attack else 'not resisted'}"]
+
+    def _static_check(self, e: Entry, second: int) -> List[str]:
+        """Someone else's Synaptic Static against a power: the user's d20 (the first) over its
+        number ([BP-8]: the game means the power's score, but its ability is read and dropped, so
+        it is the user's own number for the power, 1 for a monster) disrupts it; else the Static's
+        keeper ([BP-4]) rolls at or under its own Static score ([BP-6]) and no lower than the first
+        to disrupt it. Otherwise the power check follows."""
+        first = self._static_rolls.pop((e.ss, e.parent_bp), None)
+        who, power = e.parent_arg(6), e.parent_arg(8)
+        keeper, against, holds = e.parent_local(-4), e.parent_local(-6), e.parent_local(-8)
+        if first is None or who is None or power is None or None in (keeper, against, holds):
+            return []
+        disrupted = first > holds or (second <= against and second >= first)
+        name = self.game.spell_name(game.PSIONIC_FIRST + power)
+        return [f"{self._name(who)} uses {name} within {self._name(keeper)}'s Synaptic Static: "
+                f"d20 = {first} against {holds}, {self._name(keeper)}'s d20 = {second} against {against} "
+                f"(and at least {first}) -> {'disrupted by the static' if disrupted else 'not disrupted: the power check follows'}"]
+
     def _save_roll(self, e: Entry, now: float = 0.0) -> List[str]:
         """The d20 of a saving throw. A natural 1 or 20 ends the save here; otherwise the
         save probe reports the total."""
@@ -2612,6 +2958,9 @@ class DiceLog:
         g = self.game
         resistance = g.magic_resistance(target) or 0
         how = []
+        if g.wears_type(g.combatant_creature(target), game.MR_AMULET_TYPE, NECK_SLOT):  # (DSCLOG's AMULET_MR)
+            resistance += worldgear.AMULET_PERCENT
+            how.append(f"+{worldgear.AMULET_PERCENT} Amulet of Magic Resistance")
         # the game's rules (its routine at 7A4A1h): Mind Bar +75 against mind-affecting spells,
         # then Lower Resistance halves it
         on = {x.id for x in g.effects() if x.owner == target}

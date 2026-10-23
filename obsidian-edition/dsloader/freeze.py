@@ -9,6 +9,7 @@ game's state from afterwards. Everything goes in one zip in crash-logs/.
 """
 
 import os
+import re
 import struct
 import time
 import zipfile
@@ -16,6 +17,7 @@ from collections import Counter
 from typing import Callable, Dict, List, NamedTuple, Optional
 
 from . import game
+from .dicelog import HDR_SIG
 
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_MAIN_TICKS = 260  # the map's main loop run (counted)
@@ -101,13 +103,14 @@ def report_text(read: Callable[[int, int], bytes], hdr: Optional[int], ds: Optio
     """The report's text (READ the guest's memory; HDR DSCLOG's header's address, DS the game's
     data segment, either None when not found)."""
     lines = [f"Obsidian Edition freeze report, {stamp}", f"Loader {version}", ""]
-    load_seg = ds - game.DGROUP if ds is not None else None
+    load_seg = ds - game.DGROUP if ds is not None else load_from_block(read(0, 0xA0000))
     if hdr is None:
         lines.append("DSCLOG wasn't found in memory, so where the game was isn't known.")
     else:
         tsr_seg = (hdr - struct.unpack("<H", read(hdr + TSR_HDR_OFF, 2))[0]) // 16
         lines.append(f"DSCLOG's segment {tsr_seg:04X}; the game's load segment "
-                     + (f"{load_seg:04X}, DS {ds:04X}" if ds is not None else "not found"))
+                     + (f"{load_seg:04X}, DS {ds:04X}" if ds is not None else
+                        f"{load_seg:04X} (from its memory block: its DS not found)" if load_seg is not None else "not found"))
         if moved is not None:
             lines.append(f"In {WATCH_SECONDS:g} s the timer was noted {moved['tick']} times "
                          f"(0: the game's timer isn't striking) and the map's main loop ran {moved['main']} times.")
@@ -161,7 +164,22 @@ def freeze_report(read: Callable[[int, int], bytes], hdr: Optional[int], ds: Opt
                   switches: Dict[str, object], dice: str, dialogue: str, folder: str) -> str:
     """Watch the counters a moment, write the report and the memory; returns the zip's path."""
     now = time.time()
+    memory = read(0, game.CONVENTIONAL_AND_UPPER)
+    if hdr is None:  # (the dice log no longer attached: the game's memory overwritten, say, its DS lost)
+        hdr = find_header(memory)
     moved = _watch(read, hdr, WATCH_SECONDS) if hdr is not None else None
     text = report_text(read, hdr, ds, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now)), version,
                        switches, dice, dialogue, moved)
-    return write_report(folder, now, text, read(0, game.CONVENTIONAL_AND_UPPER))
+    return write_report(folder, now, text, memory)
+
+
+def load_from_block(memory: bytes) -> Optional[int]:
+    """The game's load segment from its DOS memory block (named DSUNLOG: the PSP's 256 bytes, then
+    the program), for when its DS can't be found (overwritten)."""
+    found = next((m.start() for m in re.finditer(re.escape(b"DSUNLOG\0"), memory) if m.start() % 16 == 8), None)
+    return None if found is None else (found - 8) // 16 + 1 + 0x10
+
+
+def find_header(memory: bytes) -> Optional[int]:
+    """DSCLOG's header in MEMORY (conventional and upper), by its signature on a paragraph."""
+    return next((m.start() for m in re.finditer(re.escape(HDR_SIG), memory) if m.start() % 16 == 0), None)

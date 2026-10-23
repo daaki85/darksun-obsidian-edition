@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, spellbook
+from dsloader import game, kits, spellbook
 from dsloader.game import SpellDamage, SpellRules
 
 
@@ -39,7 +39,26 @@ def record(dice=0, per_level=0, unit=0, effect=0, kinds=0, save=0):
     return bytes(rec)
 
 
+class PriestSixStub(StubGame):
+    def spell_record(self, spell):
+        return record(dice=4, kinds=0x900, save=(3 << 5) | 1)  # (Slay Living's kind: 4d8 draining/death)
+
+    def effect_caster_level(self, creature, spell):
+        return 0
+
+
 class TextTests(unittest.TestCase):
+    def test_sixth_level_lines_by_hand(self):
+        # Heartseeker's record (Slay Living's) would read as dice halved by a save: its own lines say
+        # what DSCLOG makes it do, the rest are still read from the record
+        gd = PriestSixStub(SpellDamage(0, 4, 0, 1, 0, 8), SpellRules(True, 0, "spell"), name="Heartseeker")
+        info = spellbook.spell_info(gd, game.HEARTSEEKER_SPELL, [])
+        self.assertEqual((info.magic, info.level, info.damage), ("Priest", 6, ""))
+        self.assertIn("one that fails it dies", info.save)
+        self.assertTrue(set(spellbook.OWN_LINES) <= set(game.PRIEST6_SPELLS))
+        for lines in spellbook.OWN_LINES.values():
+            self.assertTrue(set(lines) <= {"damage", "save", "effect", "lasts"})
+
     def test_fireball(self):
         gd = StubGame(SpellDamage(0, 1, 0, 1, 0, 6), SpellRules(True, 0, "fire"))
         rec = record(kinds=0x202, save=(4 << 5) | 1)
@@ -101,13 +120,39 @@ class PowerNameTests(unittest.TestCase):
 
     def test_dice_and_kinds(self):
         gd = self.gd(SpellDamage(1, 0, 0, 1, 0, 10), 0x08)
-        self.assertEqual(gd.spell_name(195), "special attack 195 (1d10 crushing)")
+        self.assertEqual(gd.spell_name(195), "Detonate's blast (1d10 crushing)")
+        self.assertEqual(gd.spell_name(194), "special attack 194 (1d10 crushing)")
 
     def test_no_dice(self):
         gd = self.gd(None, 0)
         self.assertEqual(gd.spell_name(190), "special attack 190")
         gd = self.gd(SpellDamage(1, 1, 0, 1, 0, 6), 0x02)  # grows with level: no fixed dice to show
         self.assertEqual(gd.spell_name(190), "special attack 190")
+
+
+class DamageHalvedTests(unittest.TestCase):
+    """Resist Fire and the like halve a spell's damage when it is all of their kind (7B4C0h)."""
+
+    def gd(self, kinds, effects, kit=None):
+        gd = object.__new__(game.GameData)
+        gd.combatant_creature = lambda combatant: combatant
+        gd.kit_ids = lambda index: [kit] if kit is not None and index == 3 else []
+        gd.spell_record = lambda spell: bytes(0x1A) + struct.pack("<H", kinds) + bytes(game.SPELL_SIZE - 0x1C)
+        gd.effects = lambda: [game.Effect(owner, 0, eff) for owner, eff in effects]
+        return gd
+
+    def test_halved(self):
+        fire = [(3, game.EFFECT_PROT_FIRE)]
+        self.assertEqual(self.gd(0x02, fire).damage_halved_by(3, 27), "Prot Fire")
+        self.assertEqual(self.gd(0x202, fire).damage_halved_by(3, 27), "Prot Fire")  # (magic aside)
+        self.assertIsNone(self.gd(0x02, fire).damage_halved_by(4, 27))  # someone else's
+        self.assertIsNone(self.gd(0x04, fire).damage_halved_by(3, 27))  # cold
+        self.assertIsNone(self.gd(0x0A, fire).damage_halved_by(3, 27))  # fire and crushing
+        both = [(3, game.EFFECT_FIRE_SHIELD)]
+        self.assertEqual(self.gd(0x06, both).damage_halved_by(3, 27), "Fire Shield")
+        # a Wanderer, as by Resist Fire and Resist Cold (the patched game's WANDER_DMG)
+        self.assertEqual(self.gd(0x04, [], kits.WANDERER).damage_halved_by(3, 27), "Wanderer")
+        self.assertIsNone(self.gd(0x80, [], kits.WANDERER).damage_halved_by(3, 27))
 
 
 if __name__ == "__main__":

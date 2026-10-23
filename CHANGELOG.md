@@ -9,6 +9,341 @@ For what a release brings, read its notes ([2.6.0](release-notes/v2.6.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
+## Pull request #55 (in progress)
+
+**Added**
+- **6th-level priest spells** (with **New wizard spells**, slots with AD&D's tables): Heal, Harm,
+  Blade Barrier, Wall of Thorns and Sunstroke (cosmos: druids and Healer clerics), Fire Seeds
+  (fire), Heartseeker (earth, water), Water of Life (water) and Whirlwind (air), spells 202-210,
+  each on a template record the game already casts (Cure and Cause Critical Wounds, the priest's
+  Wall of Fire, Hold Person, Flame Strike, Slay Living, Lend Health) with its own changes
+  (`NS_PATCH`). A priest's 6th-level slot at 11th, two at 12th (`probe_adnd_slots`,
+  `tables.slots`). `HARM_SITE` (761A9h, the one-target damage roll): Harm leaves 1d4 hit points
+  (and the most it could roll the same, for a helpless target); a fire wall's damage there
+  (the game rolled Wall of Fire's for any) was the last wall cast's: Blade Barrier 8d8, Wall of
+  Thorns 8 + its AC (`CAST_SITE` noted it; record kind 9 for the dice log; since replaced by
+  walls of their own, below). Whirlwind has the
+  crushing damage kind and Ice Storm's picture: a record with no damage kind, or Dust Cloud's
+  picture, does no damage. Checked live, each spell cast in the Scar fight.
+- **The 6th-level priest spells closer to the books and Wake of the Ravager.** Wall of Thorns
+  does 8 + the creature's AC (at least 1; `THORNS_AC`: a monster's sheet +27h, a party member's
+  AC as the game last worked it out, kept by `PROBE_AC` in `AC_SEEN`; the dice log shows the AC,
+  carried in the entry's extra's high byte + 80h), not 1d10 + 8. Sunstroke strikes one creature
+  (its record's +0Ch aim, 4, as Slay Living's), not Hold Person's several. Heal cures blindness
+  too (`HEAL_SIGHT` at `CAST_SITE`: the target's Blind entries taken out of the game's table of
+  active effects; its record already cured disease). Fire Seeds' description says four seeds of
+  2d8 (the same 8d8). Left as they were: Blade Barrier's saving throw (since added, below) and
+  Sunstroke's 1d4 a round (since added, above). Checked live in the
+  Scar fight: thorns 8 + AC 10 = 18 on Scar's henchmen, Sunstroke on Scar alone with one click
+  (paralysed on a failed save), Heal on a blinded Xan leaving no Blind entry.
+- **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
+  fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
+  to the game's.
+- **Spheres:** Blade Barrier is air's, Wall of Thorns earth's and Sunstroke fire's, not the
+  cosmos's (`P6_MASKS`, `game.PRIEST6_MASKS`: `AIR_MASK`, `EARTH_MASK` 0010808Ah, the earth's
+  own 5th-level rows', `FIRE_MASK`); the cosmos keeps Heal and Harm.
+- **Whirlwind lasts and sweeps:** built on Stinking Cloud (its record, `ns_templates`; its
+  ground entry, a lasting one whose spell acts each round on those in it, `AREA_NEW 8`) with
+  Sand Storm's picture: 1d4 rounds and 1 more from 7th level, 2d8 crushing each round, a save
+  vs spell for half. A failed save reaches the damage routine's effect step (78DEFh, after the
+  save at 78DB0h), where `ACID_ONCE` now has `SWEPT_MARK` mark the creature (`SWEPT`) and put
+  nothing on (the record's Stuck is never put on), recorded (kind 11:
+  `X is swept off its feet: loses its next turn`). At the next round's start `PROBE_MOVE`
+  (57566h, each creature's movement) gives a marked one no movement and the initiative -1 the
+  game gives a held creature, so it doesn't act, then clears the mark; a fight's first round
+  clears them all. Not helpless: attacks, saves and damage against it are as usual.
+- **Whirlwind's funnel, drawn once, blocking sight:** its own picture (`whirlart.py`: a funnel
+  of dust in ground ellipses, object 8433 in the Loader's SEGOBJEX copy, put in its entry by
+  `NS_SETUP`). The game draws a lasting area as 18-46 copies of its picture scattered over the
+  area (draw-list entries with 20h), and its damage and blocked tiles go by those copies, so
+  they stay; `DRAW_SITE` (232D4h, the draw of each thing on the map, 1DBD:0002) passes over all
+  of Whirlwind's but the one nearest their middle and draws that one at the middle
+  (`WHIRL_PICK`, worked out again at each round's start and each cast). Its entry's 10h is set
+  (`AREA_SIGHT`): the tiles under the copies block sight (tile bit 80h, as Wall of Fog's), which
+  the missile and spell paths stop at (84300h's trace). The funnel turns: `WHIRL_TICK` steps
+  its 4 frames every 3 timer ticks and redraws the funnel's rectangle through the dust's redraw
+  (`DUST_UNION`/`DUST_NUDGE`); the dice ring goes to 65 entries for the room.
+- **Sunstroke's heat:** 1d4 of fire at the start of each round on a creature Sunstroke holds.
+  `ACID_ROUND`'s pass (now `BURN_PASS`, twice: Acid, then Sunstroke) calls Acid's burn (7897Bh,
+  through its stub) for each creature with a Paralyzed entry from Sunstroke, `SUN_HEAT` set:
+  `ACID_BURN` makes its dice 1d4, and `HEAT_SITE` (78C24h, the start of a spell's damage on a
+  creature) makes the spell Sunstroke, the kind fire, and what a helpless creature takes the
+  roll (the burn's own 8, 2d4's most, would have been taken by every held creature). These are
+  changed in the damage routine's frame, not the burn's code: the 1d4's own overlay can load
+  the burn's code again from the file. No entry of its own: the heat ends with the paralysis.
+  Recorded (kind 10) for the dice log's `Sunstroke's heat on X: 1d4 = N fire damage`.
+  Checked live in the Scar fight: a held henchman burned 4, then 3, at the next two rounds'
+  starts, the HP lost exactly the roll and put down to Sunstroke.
+- **Backstabs multiply the weapon's dice only** (new option `backstab_dice`, `RULE_BACKSTAB`,
+  DSCLOG's `RULE_HI_BACKSTAB`, on by default): `STAB_ROLL` (58A29h) keeps a hit's dice (the
+  roll less `[BP-12h]`), `STAB_TIMES` (58A80h, where the game multiplies the whole damage by
+  595C4h's x2-x5) adds them again for each time past the first instead. The dice log shows
+  `+10 backstab (the dice x3)`. The multiplier itself already followed AD&D's table past 10th
+  level (x4 at 9-12, x5 from 13); the docs said x4 at 9 and 10.
+- **Acid Arrow burns each round.** In the game its acid never burned after the hit: the routine
+  spending an effect's charges (76803h, Acid's burn 7897Bh) was called for Acid only on chance
+  events, and Acid Arrow's time was seconds on the game clock (DS:[9B72h], 60 a round in a fight), a
+  timer that only ended it, with no charges to spend. DSCLOG's
+  `ACID_ROUNDS` makes an Acid's time rounds as charges, `ACID_ROUND` spends one for each creature
+  at the start of each round (through 76803h's stub, in a frame the overlay manager can fix up),
+  `ACID_USE` lets no other call spend them, and `ACID_BURN`/`ACID_ONCE` keep the burn's damage from
+  putting Acid on again. The dice log gives the rounds and leaves out the burn's duration roll.
+  Checked live in the Scar fight: an 11th-level Acid Arrow hit for 8, then 6, 4, 3 and 5 at the
+  start of the next four rounds, and ended.
+- **Names over figures: no leftover sliver.** When a label went away the game's redraw of its
+  rectangle only drew whole bytes of the VGA planes inside it, so a label starting mid-byte left
+  its first columns on the map (seen after Prayer's cloud, a "[" left on the sand). `LABEL_ERASE`
+  widens the rectangle to whole 4-pixel columns. Checked live: Prayer cast in the Scar fight, the
+  name over the cloud and nothing left after it.
+- **Walls of their own.** Blade Barrier, Wall of Thorns, Fire Seeds and Whirlwind each have an
+  entry of their own in the table of ground pictures, so walls no longer share Wall of Fire's (a
+  Wall of Fire cast while a Blade Barrier stood made both burn as Wall of Fire). `SEG_MOVE` moves
+  the table (selector 3A8h) into DSCLOG's memory with four entries after the game's 45, keyed to
+  the spells (`AREA_NEW`), their records' +17h naming them; the game's own code reads it through
+  `AREA_SITE` (six places, patched by the Loader: `area_table_*`). A wall's damage each round is
+  its own spell's: Blade Barrier its record's 8d8, edged, with a saving throw for none, as Wake of
+  the Ravager's; Wall of Thorns 8 + AC (`THORNS_DAMAGE`, keyed on the spell). `WALL_NOTE`,
+  `WALL_LAST` and `AREA_NOTE` are gone. The dice log puts an HP loss down to the spell whose
+  recent roll it matches, so two walls hurting one creature are each named. Checked live in the
+  Scar fight: a Blade Barrier and a Wall of Thorns standing together, the blades 8d8 with saves
+  (a natural 20 saved for none), the thorns 8 + AC 10 = 18, each named in the log.
+- **Pictures on the ground for the 6th-level priest spells**, Wake of the Ravager's: Blade
+  Barrier's circling blades and Wall of Thorns' thorns (its objects 8432 and 8425, added to the
+  Loader's SEGOBJEX copy by `wotrart.area_chunks`, recoloured; without it the fire wall tinted
+  grey or dark brown), Fire Seeds' fireball (8405) and Whirlwind's Sand Storm dust (8403).
+  DSCLOG's `AREA_NOTE` (from `CAST_SITE`) set the object of the area-picture entries they
+  shared with their templates (the table before the flights: 18 bytes an entry, a record's +17h
+  the entry) at each cast (since replaced by entries of their own, below).
+- **Names over figures.** A spell's name floats over its caster for 1.5 seconds as it is cast
+  (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an
+  attack that missed, in the game's font with a dark edge; at most two at once. An Options switch
+  in the game section, on by default. DSCLOG's `CAST_SITE` (772AAh, the cast routine: a new
+  record kind, 8) and `LABEL_*`: two slots in the header (+374) the Loader fills
+  (`labels.py`), put again from the game's timer every other strike so swings and damage
+  bursts don't wipe them, placed and erased from the main loop. The dice ring is 66 entries
+  (74) for the room.
+- **Spellarcher spell arrows.** Outside a fight, a Spellarcher's USE screen has a button for
+  each touch spell it knows (Burning, Chill, Shocking and Vampiric Arrows) in the row of class
+  abilities, the first where a priest's Turn Undead is, the rest beside it. One click uses a
+  slot of the spell's level and puts 5 arrows a preserver level in the backpack (on the ground
+  at the party's feet when it is full; no window either way), worth nothing,
+  each casting its spell on what it hits at the archer's caster level; only a Spellarcher can
+  ready them or cast their spell (`ARROWS_FORBID`). Slots are the only limit;
+  every spell arrow fades at the next rest (a script's rest request, or the vulture meal).
+  DSCLOG's `ARROW_KNOWS`, the ability row's spare places, `ARROWS_ASK`, `ARROWS_DROP`, `ARROW_HIT`,
+  `ARROW_SPELL` and `PROBE_ARROW`'s kept name; `spellarrows.py`; icons for the four buttons and
+  the four arrows.
+- **Three new magic items** (with New items on), each with its own icon:
+  the **Girdle of Back Defense** (no enemy gets the bonus for attacking its wearer from behind,
+  nor a backstab; the Troop Leader carries it), the **Golden Girdle of Urnst** (AC 3 better
+  against long and short swords; Wyrmias) and the **Amulet of Magic Resistance** (15% magic
+  resistance; it never shatters; sold by Kel). DSCLOG's `ITEM_REAR` and `AMULET_SITE`; the dice log names each.
+- **The Crusader and Mind Warrior have expertise in one melee weapon spec of their choice**
+  (with weapon specialization), as the Battle Mage has: 3/2 attacks a round, 2 from 7th level,
+  picked on the weapon window after DONE. DSCLOG's `war_kit_is` in the pick count,
+  `KINDS_ALLOWED` (melee kinds only) and the spec lookup; `specialize.war_kit`.
+- **The dice log names a refused cast's reason** (`can't cast Fireball there: no line of sight`;
+  DSCLOG's `AIM_SITE`) **and the scripts' requests** (`Script: random monsters come`;
+  `REQ_SITE`, all 20 named, from the yuan-ti project's notes on the game).
+- **The Wanderer halves fire and cold spells' damage**, as Resist Fire and Resist Cold do (it had
+  their saves only): DSCLOG's `WANDER_DMG` at the game's own test of what a creature is guarded
+  from (7B56Fh); the log says `(halved: Wanderer)`.
+- **The Myrmidon's initiative is 2 worse**, a second drawback beside its −4 against charms
+  (`PROBE_INIT`; the log's initiative line names it).
+- **Cleric spells against the manual.** HOW-THE-GAME-WORKS has a table of every cleric spell:
+  the manual's text, what the game's records and code do, and what the log shows. Among the
+  differences: Remove Curse only puts a lowered STR back (no curse ends), Bestow Curse is −1 to
+  hit with no save, Cause Disease lowers nothing, Raise Dead always works, Summon Insects and
+  Dust Devil summon a creature, Insect Plague is fear with no damage, Blood Flow paralyses an
+  enemy with no save.
+- **The log names a protection that halves a spell's damage.** The game's damage routine
+  (7B4C0h) halves a spell that is all fire under Resist Fire or Protection from Fire, all cold
+  under Resist Cold, all electricity under Protection from Lightning, fire or cold under Fire
+  Shield: `takes 9 from Fireball (halved: Prot Fire)`. Their effect lines say so too; Diseased,
+  Detect Traps, Fire Shield, Protection from Evil 10' and Negative Plane Protection got lines
+  of what they do.
+- **A party member's ability scores changing** get a line once the change holds:
+  `Cilla's STR 12 -> 16` (Strength, Remove Curse, Raise Dead's CON, the Tome).
+- **Psionic powers checked against the manual.** A table in How the game works, power by
+  power: the manual's text, what the game's code does (Detonate hits only its target, no save;
+  Cell Adjustment heals 2 and cures nothing; Biofeedback gives AC -1 and takes no damage off;
+  Inertial Barrier makes missile attacks miss and does nothing else; Psionic Blast takes real
+  HP down to a fifth; Control Body and the dominations are a charm; Mass Domination's record
+  targets one creature) and what the log shows.
+- **The psionic defence in the dice log.** An attack mode's target rolls 1 to its defence twice,
+  each over the attacker's power check d20, to resist (5D718h); the log skipped both rolls:
+  `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20)
+  -> resisted`.
+- **What more powers do, in the log's effect lines:** Inertial Barrier (missile attacks miss),
+  Energy Containment (no damage from fire, cold, electricity or magic alone), Synaptic
+  Static, Enhanced Strength (STR 24, read from the game's stats code), Adrenalin Control
+  (STR + 1d6) and Share Strength's lender (STR - twice the amount); Detonate's 1d10 named
+  "Detonate's blast".
+- **Detonate's blast on an item in the dice log.** The power (a daggoran's too) destroys the
+  target's worn item with the lowest item +10h (under 6) on a 1d20 under 15 less its plus
+  (DSUN 7AAEBh, from the effect switch's case 138 at 797F6h; the item taken away by 4E0:7Ah,
+  one of a stack), and nothing showed it. DSCLOG's `DET_ITEM` (7AB95h) records the item, the
+  d20 and the number: `Detonate's blast on Cilla's Bone Helm: d20 = 7, breaks it under 15 (15)
+  -> DESTROYED`.
+- **Find in the dice log and the dialogue.** A box above each (Ctrl+F): every match (any case)
+  highlighted, the one shown in amber with `n of N`, Enter / **Next** and Shift+Enter /
+  **Previous** round the end, Escape to clear; details hidden aren't searched, and the log stops
+  following its newest line while a match is shown (`viewer.Viewer._find_bar`, `tests/test_find.py`;
+  the highlight colours are in `palette.TEXT_PAIRS`).
+- **The psionic power check in the dice log.** `Zulak uses Graft Weapon: power check d20 = 14,
+  needs 11 or less -> it fails` with the score's parts (`16 CON - 5 Graft Weapon`), and the
+  Synaptic Static contest when someone else keeps it up. The game rolls these with its
+  random(low, high) (1A0A:2FA9h), whose rolls the helper didn't record: a new roll filter
+  (`RANGE_SITE`; it also makes points of some spells' pictures, which the log passes over). The
+  check (5D59Dh) and the table it reads (`game.POWERS_SEG`, the per-character byte at selector
+  2F0h) are in DEVELOPMENT.md.
+
+**Changed**
+- **Axes and maces on figures look like the game's own:** the axe was a thin stick in its metal
+  with a hollow hook for a head (it read as a fork), the mace the same with a thin diamond.
+  Now (`spritegear._shape`) an axe, great axe or mace has a wooden haft (`WOOD`: the wood's
+  colours whatever the weapon's material) and a solid head, after Scar's henchmen's axes
+  (picture 240). On a half-giant (`MODEL_SCALE` 1.35) only the haft is drawn longer (`HEADS`),
+  as the stretched head smeared into a spiked ball. Checked in the Loader's own pictures in the
+  running game. In-game spell texts brought in line with the docs: Blade Barrier's save for none,
+  Heartseeker no longer called an arrow, Whirlwind blocking shots and spells.
+- **Level cap by XP.** The levels-up-to-10 rule is now an XP cap: a class goes up while its next level
+  needs no more than 749,999 XP, the whole of it for a character of one class, an even share for each
+  class of a multiclass character (as the game shares out XP), and for a human who changed class the cap
+  less what its old classes' levels needed (the game starts the new class at 0). With AD&D's class tables
+  that is cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief
+  13th; 749,999 keeps a druid from 13th and a preserver from 12th (and 6th-level spells). DSCLOG's
+  `PROBE_LEVEL` and `PROBE_XP_NEXT` ask `LEVEL_ROOM`; AD&D's XP table to 14th level, slots to 12th, thief
+  skills to 13th (`tables.py`, `game.AD_D_THIEF`); CHOOSE A SPELL no higher than 5th (`WIZ_LEVEL_MOST`).
+  Checked in the game with a single, a two- and a three-class character and a dual-class human.
+
+- **Weapons spells make count for weapon specialization.** The Flame Blade counts as a long
+  sword (AD&D's scimitar, which Athas hasn't), Shillelagh as a club, Spiritual Hammer as a mace
+  (the war hammer's nearest): DSCLOG's `SPEC_KIND` and `specialize.spec_kind_of`, for the
+  specialization's attacks, to-hit and damage alone. Class and kit restrictions still see no kind,
+  so whoever casts the spell holds its weapon.
+
+**Fixed**
+- **Whirlwind lasts a round a caster level,** as AD&D has it (11 rounds or more for a priest who
+  can cast it), not Stinking Cloud's shape of 1d4 + 1 for each 7 levels (`NS_PATCH`: no dice, as
+  Blink's and Cause Fear's records, and the level rule's step 1).
+- **Three of the game's script bugs mended** (`scriptfixes.py`, always on, in the Loader's copy of
+  GPLDATA.GFF): each re-points one trigger or call to the handler it was meant to have, applied
+  only where the script holds the expected bytes. Darkhold: the wyvern scene's creature and two in
+  the queen's chamber keep their look text (scripts 41, 203), and the portcullis guard fights back
+  (195); the Lava Rifts ranger keeps his own sight trigger, not the hermit's (100); Linara's talk
+  goes on to her menu after the extract (68). Found by the OpenDS project (darkfix), checked by
+  yuan-ti and here against the GOG file. Not checked in play yet (all are past the slave pens).
+- **The Spells tab's 6th-level priest spells:** they were described from the records they are built
+  on, so Harm read as 3d8+3 draining, Heartseeker as 4d8 halved by a save, Wall of Thorns as
+  1d10+8, Heal and Water of Life as next to nothing, Sunstroke without its heat and Whirlwind as
+  "can't move". `spellbook.OWN_LINES` gives those spells' lines by hand, as FEATURES.md has them.
+- The USE screen's spell slots line ran off its panel with a 6th spell level: the panel now
+  shows the slots of the level and list on show only (`SPELLS LEFT`, then e.g. `PRI 2/1`: `WIZ`
+  on MAGE, `PRI` on CLERIC, none on PSIONIC). Each line's first byte is a key (80h | the list
+  << 4 | the level, 0 the heading); DSCLOG picks the lines by the LEVEL button's DS:4AECh and
+  the member's list byte, DS:4AE8h + the member. `SLOTS_SIZE` 128 (was 96).
+- **Spell arrows fade at the game's own rest.** They faded only at a script's rest request and the
+  vulture meal; camping at a fire ring runs the game's rest routine (8066Dh, also its REST from a
+  script) without one. A site in its loop over the members (806C3h, `REST_SITE`) records it as
+  request 0, and the arrows fade in the next pass.
+- **Spell arrows (and Pick Pockets, and the vulture meal) work with the party spread out.** The
+  Loader's fight check read the game's DS:1168h, which stays 1 while the party walks uncollapsed
+  with no one to fight, so it answered "can't be made in a fight". It now reads the game's own
+  test, the fight state's +19h (`game.fight_on`), as its rest and the USE screen do.
+- **The pointer on a spell arrow button lights that button.** Turn Undead's handler, which the
+  buttons beside it share, lit and unlit the frame at Turn Undead's place (DS:30F8h) as the
+  pointer came and went, so the Vampiric Arrows button lit the Burning Arrows one; two 4-byte
+  patches (89528h, 8956Fh) light the button's own place, as its press already did.
+- **Every magic item of the Loader's shines.** The game shines a magic item by cycling palette
+  colours (11-15, the water's, and 224-255, fire's among them); icons tinted in colours it doesn't
+  cycle stood still: the Chill, Shocking and Vampiric Arrows, Shadowseeker, the Cloak of Protection
+  +1, Pehtucl's ring, the Girdle of Back Defense, the Amulet of Magic Resistance, the Veiled Robe,
+  the Cloak and Boots of Elvenkind and the Golden Girdle of Urnst. Every other column of their
+  tint is now in the water's colours (`icons.shining`), so they keep their tint and shimmer.
+- **A Fireball no longer floods the dice log.** The filter for `random(low, high)` (1A0A:2FA9h,
+  kept for psionic ranges) also recorded the eleven picture-point calls a spell burst makes, so a
+  Fireball filled the ring ("148 rolls came too fast to record"). It now records only the calls
+  whose code goes on as the psionic sites' does (88h, 8Ah or 5Ah three bytes past the return).
+- **More room in the helper's upper memory.** Its text buffer is 2 KB, not 4 (251 bytes came in
+  between two of the Loader's reads at most), and the descriptions of the new spells, Pick
+  Pockets and the spell arrows are SPIN chunks in the Loader's copy of RESOURCE.GFF
+  (`spelltexts.py`; `PROBE_CHUNK_ID` points Turn Undead's box at the purse's or an arrow's),
+  not the helper's text: 3.8 KB of the upper memory block spare rather than 224 bytes, for
+  features to come.
+- **An item the game destroys gets its crash-log report.** The game frees a destroyed item
+  (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record
+  and linking it into the free list: its type and name stay. The item watch took that record for
+  an item still in the world (dropped, or put in a container) and wrote nothing, so a bone helm
+  lost to a daggoran's Detonate left no report. A record whose first word went to 0 is now
+  reported as freed by the game; quest items a script takes (types 61, 87, 104 as well as 60)
+  and a wand's last charge free a record the same way and stay silent.
+- **A party's thief skill roll goes to its best member.** Where the game asks the whole party
+  (a trap's find/remove traps, all 50 trap triggers with the arena prisoner's among them, and
+  hear noise by the wagon), its pick (DSUN 801BDh) was to keep the highest chance but kept the
+  lower, unsigned, of a best starting at 0: no one was ever lower, so the first party member
+  always rolled. `party_best` makes its "jna" a "jge": the highest chance above 0 rolls (no one
+  able, the first member, as before). A character's own checks (pick pockets, the scripted
+  searches, the Loader's stealth rolls) were never picked this way and don't change.
+- **Random monsters come in the right numbers and can't crash the game.** REQUEST 8 (80BE4h,
+  scripts 99 and 106) sends 2 x the party's strength / the monster's, 1 to 6, but took the
+  strength of the slot after the one picked: from the next region's record after the tenth, and
+  0 after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255, a division by 0 that ends the
+  game ("Divide error"). `monster_count` reads the picked slot's own. Both found from the notes of
+  CalvinRodo/yuan-ti and checked in DSUN.EXE.
+- **A likely cause of figures vanishing and then a freeze.** A freeze report (2.6.0, 49 minutes
+  into an arena trip) had the game's picture row decoder (0980:709Ch) unpacking a figure's picture
+  from garbage: never meeting the row's end, it copied on from its 5,408-byte buffer (0980:11BCh)
+  over the code after it, itself included, and the game's data segment was then overwritten by its
+  own stack (all 64 KB the word 44F8h: the dialogue's `D°D°D°`). For a figure's shadow DSCLOG had
+  the game load its picture into the cache when it wasn't there, in the middle of drawing the floor,
+  which can push out or move a picture the game is drawing. Shadows now use only pictures already
+  in the cache (a newly seen figure's shadow comes a frame later). Not proven to be the cause.
+- **Magic items shine in a shop.** The palette's colour cycles (the glow of a magic weapon's
+  icon) turn only in the map's main loop, when the timer asks (DS:1194h, then 22F8h:047Ch); a shop,
+  opened from a conversation, runs its own event loop (7DDE4h) and waits in the game's wait for an
+  event (2531:083Ch), and neither turned them, so its items stood still. DSCLOG's `SHOP_SHINE` and
+  `SHOP_LOOP` (sites at 2AFA6h and 7DE11h) do as the main loop while a character's screen is open
+  (DS:11B2h).
+- **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the
+  dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature
+  and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so
+  where the game was still shows.
+
+**Documentation**
+- **Reviews, pictures and the since-2.6.0 list:** the patch notes' list of what comes after
+  2.6.0 brought up to date; the XP cap, the 6th-level spells and the new switches in the Loader
+  README, the guide's Options summary and the dice log table; Wake of the Ravager as an optional
+  install; a link and anchor check over every page (none broken, no picture unused). New
+  pictures: the nine 6th-level priest spells' descriptions (`new-priest-spells.png`) and
+  Whirlwind's turning funnel (`whirlwind.gif`, under Graphics: Spells on the ground); retaken:
+  the Options tab and the USE screen's spell slot line (`use-slots.png`, `default-party-armor.png`).
+  Three spell descriptions shortened to fit the game's box (Wall of Thorns, Sunstroke, Whirlwind).
+- A review of every page. The patch notes gain the spell arrows (under Items, and the
+  Spellarcher among the kits described; its row in the kit table back to a name), and the
+  dice log's new lines move from Quality of Life to The Loader with those missing (refused
+  casts, scripts' requests, the protection that halved a spell, ability scores changing; the
+  cleric spell and psionic power tables). Item reports now say that an item the game destroys
+  is reported (patch notes, player's guide, README). The README's dice log tables have rows for
+  the psionic defence, Detonate's blast, the halving protection and the spell arrows; the
+  player's guide a row for names over figures. DEVELOPMENT.md and How the game works have a
+  table of contents; the front page and How the game works credit yuan-ti's notes; pull
+  request #54 (the 2.6.0 release) is in this changelog, and #55's two lists of additions are
+  one.
+- A second review: the patch notes say which of their changes come with the next release, not
+  2.6.0, and name the Battle Mage's, Crusader's and Mind Warrior's weapon expertise (the
+  release steps now drop that line); the README's known issues add the vanishing figures and
+  freeze, and lose a class-letter table that repeated its sentence; spell arrows left on the
+  ground fade at the first rest after they're picked up (KITS, the player's guide, whose
+  paragraph is rewritten).
+
+## Pull request #54 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/54))
+
+**Release**
+- **Obsidian Edition 2.6.0** (pull requests #52 and #53): the version is
+  2.6.0, with its notes in `release-notes/v2.6.0.md`, listed on the front
+  page with the others.
+
 ## Pull request #53 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/53))
 
 **Changed**

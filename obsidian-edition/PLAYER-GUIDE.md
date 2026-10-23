@@ -96,6 +96,7 @@ easier.
 | Change | What it does |
 |---|---|
 | **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. In the slave pens and the arena, between fights, its top line counts the party's arena fights. Or, on the Options tab, a strip always shown below the map (the mouse wheel reads back, on Windows). |
+| **Names over figures** | A spell's name floats over its caster as it's cast, and "Miss" over anyone an attack misses. |
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
@@ -114,7 +115,7 @@ easier.
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
 | **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
 | **Crash and freeze reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send, with the game's own error message in it; if the game freezes, **Freeze report** on the Loader saves what it was doing. |
-| **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), the Loader saves a report to send, as for a crash. |
+| **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report to send, as for a crash. |
 
 **In the Loader's window:**
 
@@ -306,13 +307,13 @@ classes a human could change to ([kits](#kits)).
 
 AD&D's tables; a character of several classes uses its best.
 
-| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Fighter, gladiator, ranger | 20 | 19 | 18 | 17 | 16 | 15 | 14 | 13 | 12 | 11 |
-| Cleric, druid | 20 | 20 | 20 | 18 | 18 | 18 | 16 | 16 | 16 | 14 |
-| Thief | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 |
-| Psionicist | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 |
-| Preserver | 20 | 20 | 20 | 19 | 19 | 19 | 18 | 18 | 18 | 17 |
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Fighter, gladiator, ranger | 20 | 19 | 18 | 17 | 16 | 15 | 14 | 13 | 12 | 11 | 10 | 9 | 8 |
+| Cleric, druid | 20 | 20 | 20 | 18 | 18 | 18 | 16 | 16 | 16 | 14 | 14 | 14 | 12 |
+| Thief | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
+| Psionicist | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
+| Preserver | 20 | 20 | 20 | 19 | 19 | 19 | 18 | 18 | 18 | 17 | 17 | 17 | 16 |
 
 *Without the mod:* clerics and druids improve by about 2/3 a level (19 at
 3rd, 17 at 6th, 15 at 9th); the rest are as above.
@@ -399,7 +400,7 @@ with care: it is the fighter's weapon for the whole game.
   level (+3 and +3), **grand mastery** at 9th (the damage die a size larger
   and one more attack). Other weapons attack once a round until 7th level.
   *Without the mod:* 3/2 attacks with any weapon, no other bonus.
-- Up to 10th level; hit dice rolled twice.
+- Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 - [Two weapons](#two-weapons) cost to-hit, and the off hand attacks once a round.
 
 **Weapons and armour.** Everything. A fighter with other classes is held to
@@ -409,7 +410,8 @@ theirs ([what each class may use](#what-each-class-may-use)).
 
 *Myrmidon.* Drilled in a sorcerer-king's legions, where a soldier who falls out
 of step is left for the kanks. They master two weapons where others master one,
-but years of obeying orders leave their minds open to anyone who barks them.
+but years of obeying orders leave their minds open to anyone who barks them,
+and they wait for the order to strike.
 
 *Sentinel.* Caravan guards and city-gate wardens who live behind their shields,
 first to see the raiders coming and last to give ground. They trust bone and
@@ -470,7 +472,7 @@ single class** (a human may still change class).
   3/2 attacks with each. *Without the mod:* 3/2 attacks with any weapon.
 - AC 1 better from 5th level and 2 better at 10th, with or without armour.
 - AD&D's experience table. *Without the mod:* the fighter's.
-- Up to 10th level; hit dice rolled twice.
+- Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** Everything.
 
@@ -527,7 +529,7 @@ strike from behind, and a little priest magic late on.
   less 7 for damage and duration too (1 slot at 8th, 2 at 9th, 2 and 1 at
   10th). *Without the mod:* cast at its full level.
 - AD&D's experience table (2,250 for 2nd level; *without the mod:* 2,200).
-- Up to 10th level; hit dice rolled twice.
+- Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** Everything; any multiclass ranger keeps the bow
 whatever its other classes allow.
@@ -592,7 +594,7 @@ so keep it off the front line.
 - A worn cloak, boots and belt help hiding, moving silently, picking pockets
   and opening locks.
 - AD&D's experience table (1,250 for 2nd level; *without the mod:* 1,200).
-- Up to 10th level, a d6 at 10th; hit dice rolled twice.
+- A d6 at 10th too; hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** Any weapon, but only one no heavier than a long sword
 backstabs (see [Equipment](#equipment)); light armour only (leather, hide,
@@ -666,7 +668,7 @@ character hit in a round can't cast), and choose its spells well.
 - With another class it may wear that class's armour but **can't cast in
   it**. **Bracers of defense** and the mod's two **robes** give AC without
   being armour.
-- Up to 10th level; hit dice rolled twice.
+- Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** No armour or shield as a single class. Daggers,
 quarterstaffs, slings and staff slings (and the odd magic weapon the game
@@ -727,7 +729,7 @@ has the most, air and fire the fewest.
   3rd).
 - With another class, its sphere still limits weapons. *Without the mod:* the
   other class's list was enough.
-- Up to 10th level; hit dice rolled twice.
+- Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** Any armour and shield. Weapons by sphere:
 
@@ -809,7 +811,7 @@ and electricity.
 **What the mod changes.**
 
 - AD&D's priest [spell slots](#spell-slots) and THAC0, as the cleric's.
-- Up to 10th level; hit dice rolled twice.
+- Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** No armour or shield, but the mod's two robes. Every
 weapon but the great axes (the game's lists).
@@ -863,7 +865,7 @@ other character has one discipline and uses it as a 1st-level psionicist.
 
 - Its limits on armour and weapons hold whatever its other classes. *Without
   the mod:* another class's lists were enough.
-- Up to 10th level; hit dice rolled twice.
+- Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** Light armour, a leather shield, or one of the mod's
 robes. Daggers, bone and obsidian short swords, clubs, chatkchas and bows (the
@@ -920,8 +922,8 @@ their own ([Multiclass kits](#multiclass-kits)). Each gives something and
 costs something; [the Kits page](KITS.md) has each kit's
 numbers and starting gear, the class sections above who takes it on Athas.
 
-- The **Myrmidon** chooses its second weapon spec, and the **Battle Mage** its
-  one, in the weapon window after DONE, and the **Elementalist** its second sphere on the
+- The **Myrmidon** chooses its second weapon spec, and the **Battle Mage**,
+  **Crusader** and **Mind Warrior** their one, in the weapon window after DONE, and the **Elementalist** its second sphere on the
   CLERICAL SPHERE list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old.
@@ -959,7 +961,15 @@ guide moves and acts that little bit quicker.
 
 *Spellarcher* (half-elf fighter/preserver). Half-elf freedom fighters who
 weave a little magic into every arrow. The technique is a secret, and the bow
-is all they train with.
+is all they train with. For each touch spell a Spellarcher knows (Burning
+Hands, Chill Touch, Shocking Grasp or Vampiric Touch) it has an arrow button
+on the USE screen, beside where a priest's Turn Undead goes. Outside a fight,
+a click spends a spell slot of that spell's level to weave it into 5 arrows
+for each preserver level (left at its feet if the backpack is full), each
+casting the spell on what it hits; they fly as +1 arrows too. Only a
+Spellarcher can ready them. They're worth nothing to a merchant and fade at
+the next rest (a pile still on the ground, at the first rest after it's
+picked up).
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
@@ -1025,12 +1035,13 @@ ranger level). 3/2 means one attack one round and two the next.
 | a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
 | a chosen weapon spec (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
-| a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), any weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
+| a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), its chosen weapon spec | 3/2 | 2 | | | | |
+| a **Crusader** or **Mind Warrior**, any other weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
 | a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
-For the three kits the level is their own class's. A Battle Mage's chosen
-weapon spec is a melee weapon. With [two weapons](#two-weapons), the off hand
+For the three kits the level is their own class's. Their chosen weapon spec
+is a melee weapon. With [two weapons](#two-weapons), the off hand
 attacks once a round whatever the rate.
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
@@ -1170,16 +1181,16 @@ Berserk or Paralyzed, can't use them. Nothing worn stands in the way,
 but for a thief with another class in armour heavier than leather, hide or
 silk (all 0).
 
-| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 |
-| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 |
-| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
-| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 |
-| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 |
-| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 |
-| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 |
-| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 |
+| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 | 90 | 95 | 99 |
+| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 | 72 | 77 | 82 |
+| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 75 | 80 |
+| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 | 86 | 94 | 99 |
+| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 | 70 | 77 | 85 |
+| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 | 35 | 35 | 40 |
+| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 | 99 | 99 | 99 |
+| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
 
 | Race | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows | Hear noise | Climb walls | Read languages |
 |---|---|---|---|---|---|---|---|---|
@@ -1256,13 +1267,18 @@ AD&D's tables:
 | 8 | 3 3 3 2 | 4 3 3 2 |
 | 9 | 4 4 3 2 1 | 4 3 3 2 1 |
 | 10 | 4 4 3 3 2 | 4 4 3 2 2 |
+| 11 | 5 4 4 3 2 | 4 4 4 3 3 |
+| 12 | 6 5 5 3 2 | – |
+
+Priests also have a 6th-level slot at 11th level and two at 12th, for the
+mod's 6th-level spells.
 
 (The slots at 1st, 2nd, 3rd... spell level.) *Without the mod:* one table for
 all three: 1; 2; 2 1; 2 2; 3 2 1; 3 2 2; 4 3 2 1; 4 3 2 2; 5 4 3 2 1; 5 4 3 2
 2.
 
 **Rangers** have one 1st-level slot at 8th level, two at 9th, and a 2nd-level
-slot at 10th, as in AD&D. No spell is above 5th level.
+slot at 10th, as in AD&D. No preserver spell is above 5th level.
 
 **Clerics and druids** have more for WIS, only at spell levels their class
 level reaches:
@@ -1350,7 +1366,9 @@ can cast. INT sets two limits:
   psionicist STR too.
 - **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as the Cure spells
   heal (Light: 1d8 both ways). *Without the mod:* 2d9 and 3d9.
-- Shillelagh, Flame Blade and Spiritual Hammer need an empty hand.
+- Shillelagh, Flame Blade and Spiritual Hammer need an empty hand. With weapon
+  specialization on, a spec counts with them as with a club, a long sword and a
+  mace.
 - Six **new wizard spells**, learnt like any other:
   - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for
     an hour of game time a caster level, which betters AC, initiative, thief
@@ -1397,6 +1415,7 @@ each has its own element's.
 | 3 | Bestow Curse, Cause Blindness or Deafness, Cause Disease, Cure Blindness or Deafness, Cure Disease, Dispel Magic, Magical Vestments, Negative Plane Protection, Prayer, Remove Curse, Remove Paralysis | |
 | 4 | | Abjure, Cause Serious Wounds, Cloak of Bravery, Cloak of Fear, Cure Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius |
 | 5 | | Cause Critical Wounds, Cure Critical Wounds, Dispel Evil, Raise Dead, Slay Living |
+| 6 | | Harm, Heal |
 
 | Level | Air | Earth | Fire | Water |
 |---|---|---|---|---|
@@ -1405,8 +1424,29 @@ each has its own element's.
 | 3 | Conjure Lesser Air Elemental, Summon Insects | Conjure Lesser Earth Elemental | Conjure Lesser Fire Elemental, Protection from Fire | Conjure Lesser Water Elemental |
 | 4 | Dust Cloud, Protection from Lightning | Condense, Dust Cloud | Focus Heat, Produce Fire | Blood Flow, Dehydrate |
 | 5 | Conjure Air Elemental, Deflection, Insect Plague | Conjure Earth Elemental, Ironskin, Quicksand | Conjure Fire Elemental, Flame Strike, Wall of Fire | Conjure Water Elemental, Quicksand |
+| 6 | Blade Barrier, Whirlwind | Heartseeker, Wall of Thorns | Fire Seeds, Sunstroke | Heartseeker, Water of Life |
 
 An Elementalist has its second sphere's column too.
+
+**The 6th-level spells** are the mod's, for priests of 11th level and up (with
+AD&D's spell tables and the new spells switched on):
+
+- **Heal** (touch): every wound healed, disease and blindness cured.
+- **Harm** (touch): the creature is left 1d4 hit points, and diseased; no save.
+- **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades, a
+  save for none) or 8 plus the creature's AC (thorns, no save: the less
+  armour, the worse) to each creature in it or passing through: circling
+  blades or a tangle of thorns. Mind where you put it: it hurts your party too.
+- **Sunstroke**: one creature collapses, helpless, for 2 rounds a level unless
+  it saves, and the heat burns it for 1d4 at the start of each round.
+- **Fire Seeds**: four seeds of 2d8 burst together where you aim, a save for half.
+- **Heartseeker**: one creature saves against death or dies.
+- **Water of Life** (touch): the creature's wounds pass to the caster, who
+  keeps at least 5 hit points.
+- **Whirlwind**: a turning funnel of dust that stays a round a caster level:
+  2d8 each round to each creature in it, a save for half; one that fails is
+  swept off its feet and loses its next turn. Nothing can be shot or cast
+  through it.
 
 ### Effects
 
@@ -1580,6 +1620,9 @@ chosen type, often one of these.
 | Ironbulwark | a metal shield +3, the game's only metal shield: AC 4 better in a hand |
 | Warden's Chest, Arms, Legs and Helm | plate armour +1 in four pieces: the chest 4 points of AC better, the arms and legs 3 each, the helm 2 (a helm's AC 1, +1): 12 better as a set, so AC 10 becomes −2 before DEX; the chest gives Resist Fire, the helm Cloak of Bravery, while worn |
 | Arrowbane | a circlet: Protection from Normal Missiles while worn; not armour |
+| Girdle of Back Defense | a belt: no enemy gets the bonuses for attacking its wearer from behind, and no backstab |
+| Golden Girdle of Urnst | a belt: AC 3 better against long and short swords |
+| Amulet of Magic Resistance | 15% magic resistance, added to any the wearer has |
 | Sunking Crown | a crown: Protection from Evil while worn; not armour |
 | Cloak of Elvenkind, Boots of Elvenkind | help a thief or ranger [hide and move silently](#hiding-in-shadows); thieves and rangers only |
 | Tome of Understanding | read from the inventory as a scroll: +1 WIS for good (at most 25) |
@@ -1595,7 +1638,24 @@ between a character's classes) and from deeds along the way. A level up comes
 by itself, with hit points, a better THAC0 and saves, spell slots, a new
 preserver spell or psionic power, and any weapon spec due.
 
-Every class goes up to **10th level**. *Without the mod:* 9th.
+Levels stop at a cap of **749,999 XP**, shared out: a character of one class
+goes up while its next level needs no more; two classes share it evenly
+(374,999 each), three too (249,999); and a human who changed class has the
+cap less what its old classes' levels needed (the game starts the new class
+at 0 XP). XP keeps counting past the cap. The highest levels:
+
+| Class | One class | Two classes | Three classes |
+|---|---|---|---|
+| Cleric | 11 | 9 | 9 |
+| Druid | 12 | 12 | 11 |
+| Fighter | 10 | 9 | 8 |
+| Gladiator | 10 | – | – |
+| Preserver | 11 | 10 | 9 |
+| Psionicist | 11 | 9 | 9 |
+| Ranger | 10 | 9 | 8 |
+| Thief | 13 | 11 | 11 |
+
+*Without the mod:* every class stops at 9th.
 
 AD&D's tables:
 
@@ -1610,6 +1670,9 @@ AD&D's tables:
 | 8 | 125,000 | 150,000 | 110,000 | 60,000 | 90,000 | 100,000 | 70,000 |
 | 9 | 250,000 | 300,000 | 225,000 | 90,000 | 135,000 | 200,000 | 110,000 |
 | 10 | 500,000 | 600,000 | 450,000 | 125,000 | 250,000 | 400,000 | 160,000 |
+| 11 | 750,000 | 900,000 | 675,000 | 200,000 | 375,000 | 600,000 | 220,000 |
+| 12 | 1,000,000 | 1,200,000 | 900,000 | 300,000 | 750,000 | 800,000 | 440,000 |
+| 13 | 1,250,000 | 1,500,000 | 1,125,000 | 750,000 | 1,125,000 | 1,000,000 | 660,000 |
 
 *Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
 2nd level and a thief 1,200.
@@ -1672,10 +1735,11 @@ AD&D's tables:
 | | how much it says: at the least, in short or in detail | in short |
 | | ... always shown, below the map instead of over it | off |
 | | describe monsters when you Look at them in a fight | on |
+| | float a spell's name over its caster, and "Miss" over whoever an attack missed | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
-| More character customization | weapon specialization; kits; levels up to 10; STORE and RECALL on the creation screen; fuller starting gear | all on |
-| Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
-| New content | new wizard spells; new people; a small quest; new items; defilers' scrolls | all on |
+| More character customization | weapon specialization; kits; the XP level cap; STORE and RECALL on the creation screen; fuller starting gear | all on |
+| Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
+| New content | the new spells (six wizard spells and nine 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; spells kept on a click on the Effects screen | on |
 | | rings in a fight: none, under the enemy chosen with Tab, or under all the enemies | under the enemy chosen |

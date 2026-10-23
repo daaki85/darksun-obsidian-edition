@@ -5,7 +5,10 @@ The game has no notion of a weapon's kind: its item types are one per weapon and
 metal, a bone and an obsidian long sword are three), and its named weapons are types of their
 own (Bloodwrath, Swiftbite). KIND_OF_TYPE sorts every weapon type into one of the sixteen KINDS,
 by its dice, weight and name; the spell-made weapons (Flame Blade, Shillelagh, Spiritual
-Hammer), the gloves and the broken weapon are none.
+Hammer), the gloves and the broken weapon are none. For specialization alone the spell-made ones
+count as their AD&D weapon's kind (CONJURED_KINDS, spec_kind_of): the Flame Blade a long sword
+(AD&D's scimitar, which Athas hasn't), Shillelagh a club, Spiritual Hammer a mace (the war
+hammer's nearest); restrictions treat them as the game does.
 
 The kinds come in the order of the weapon window's slots, long sword first: the default for a
 pick left unmade; a gladiator's second is the club, the next.
@@ -48,6 +51,17 @@ KIND_OF_TYPE: Dict[int, int] = {t: KINDS.index(kind) for kind, types in _TYPES.i
 def kind_of(item_type: int) -> Optional[int]:
     """The weapon kind (its number in KINDS) of an item type, or None for one that is none."""
     return KIND_OF_TYPE.get(item_type)
+
+
+# the weapons spells make, by item type (the game's), and the kind each counts as for
+# specialization (DSCLOG's CONJURED_KINDS): Shillelagh, the Flame Blade, Spiritual Hammer
+CONJURED_KINDS: Dict[int, int] = {28: KINDS.index("club"), 29: KINDS.index("long sword"), 30: KINDS.index("mace")}
+
+
+def spec_kind_of(item_type: int) -> Optional[int]:
+    """The kind an item type counts as for weapon specialization: kind_of's, or a spell-made
+    weapon's (CONJURED_KINDS); DSCLOG's SPEC_KIND."""
+    return CONJURED_KINDS.get(item_type, KIND_OF_TYPE.get(item_type))
 
 
 # A character's skill with a weapon, as DSCLOG's SPEC_OF works it out (game.SPEC_SLOTS holds the
@@ -93,7 +107,7 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
     chosen = sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]
     if not any(chosen):
         return NONE
-    kind = kind_of(item_type) if item_type is not None else None
+    kind = spec_kind_of(item_type) if item_type is not None else None
     bm = kitpages.kit_place_of(sheet, kits.BATTLE_MAGE)
     if game.RULES_IN_FORCE & game.RULE_KITS and bm is not None and sheet[0x22]:
         # (a Battle Mage who has changed class: its weapon spec the kit's alone, nothing while asleep)
@@ -108,8 +122,9 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
     active = active_classes(sheet)
     classes = {c for c, _ in active}
     if not classes & ({FIGHTER, GLADIATOR} | set(RANGERS)):
-        # (a Battle Mage's expertise; else a dual-classed warrior, until the new class's level passes the old)
-        return EXPERT if battle_mage(sheet) else PLAIN
+        # (a Battle Mage's, Crusader's or Mind Warrior's expertise; else a dual-classed warrior, until
+        # the new class's level passes the old)
+        return EXPERT if battle_mage(sheet) or war_kit(sheet) is not None else PLAIN
     if not {FIGHTER, GLADIATOR} & classes:
         return EXPERT
     first = chosen.index(kind + 1)
@@ -131,14 +146,25 @@ def battle_mage(sheet: bytes) -> bool:
     return bool(game.RULES_IN_FORCE & game.RULE_KITS) and kits.BATTLE_MAGE in kitpages.kit_ids(sheet)
 
 
+def war_kit(sheet: bytes) -> Optional[int]:
+    """The Crusader or Mind Warrior kit of the character (awake, the rule for kits in force), which
+    has expertise in its one chosen weapon spec, or None."""
+    from . import kitpages, kits
+    if not game.RULES_IN_FORCE & game.RULE_KITS:
+        return None
+    return next((k for k in kits.WAR_KIT_EXPERT if k in kitpages.kit_ids(sheet)), None)
+
+
 def expert_attacks(halves: int, level: int, sheet: bytes) -> int:
     """The melee attacks a round (in halves) of a character who isn't a warrior (HALVES the game's,
-    2 or fewer) with skill LEVEL, as DSCLOG's EXPERT_HALVES: a Battle Mage's chosen weapon spec
-    (EXPERT) the expertise rate, 3/2 a round, 2 from 7th level; else HALVES."""
+    2 or fewer) with skill LEVEL, as DSCLOG's EXPERT_HALVES: a Battle Mage's, Crusader's or Mind
+    Warrior's chosen weapon spec (EXPERT) the expertise rate, 3/2 a round, 2 from 7th level (of the
+    kit's class); else HALVES."""
     from . import kitpages, kits
     if level != EXPERT or halves > 2:
         return halves
-    return 4 if kitpages.kit_level(sheet, kits.BATTLE_MAGE) >= 7 else 3  # (the Battle Mage's preserver level)
+    kid = kits.BATTLE_MAGE if battle_mage(sheet) else war_kit(sheet)
+    return 4 if kid is not None and kitpages.kit_level(sheet, kid) >= 7 else 3
 
 
 def attacks(halves: int, level: int, missile: bool = False) -> int:

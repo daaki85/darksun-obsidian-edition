@@ -102,13 +102,16 @@ BONE_GREAT_AXE_TYPE, OBSIDIAN_GREAT_AXE_TYPE = GAME_TYPES + 22, GAME_TYPES + 23 
 BONE_DAGGER_TYPE = GAME_TYPES + 24  # (a water cleric's dagger: weaponchoice.py)
 ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armour
 METAL_SHIELD_TYPE = GAME_TYPES + 26  # a metal shield (worldgear.py's Ironbulwark): the game has none
+# the Girdle of Back Defense, the Golden Girdle of Urnst and the Amulet of Magic Resistance (worldgear.py)
+BACK_GIRDLE_TYPE, URNST_GIRDLE_TYPE, MR_AMULET_TYPE = GAME_TYPES + 27, GAME_TYPES + 28, GAME_TYPES + 29
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
 RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
-RULE_LEVEL_10 = 128  # class levels go up to 10 (the game stops at 9)
+RULE_LEVEL_10 = 128  # an XP cap (XP_CAP, shared out) in place of the game's level cap of 9
+XP_CAP = 749_999  # DSCLOG's XP_CAP
 RULE_THIEF_TABLE = 256  # thief skills from AD&D's table and Dark Sun's DEX adjustments
 RULE_HALF_GIANT = 512  # half-giants wield two-handed weapons in one hand
 # AD&D's rings and cloaks of protection: of two rings only the better counts, and a ring betters
@@ -141,6 +144,9 @@ RULE_CHA_PRICES = 1048576
 RULE_ROLLED = 2097152
 # magical items sold to a merchant kept in its pack, to buy back (buyback.py; DSCLOG's RULE_HI_BUYBACK)
 RULE_BUYBACK = 4194304
+# a backstab multiplies the weapon's dice only, STR and the rest added after (the PHB; DSCLOG's
+# RULE_HI_BACKSTAB, STAB_TIMES); else the game's, the whole damage multiplied
+RULE_BACKSTAB = 8388608
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # AD&D's item saving throws against acid (the DMG's table), by the game's materials: wood
 # (thick), bone, stone and obsidian (glass's), metal, leather; and cloth for no material
@@ -162,7 +168,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("multiclass_hp", RULE_MULTI_HP), ("best_hit_die", RULE_HP_BEST), ("kits", RULE_KITS),
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
-                 ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK))
+                 ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
+                 ("backstab_dice", RULE_BACKSTAB))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
@@ -181,10 +188,24 @@ NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "
               REFLECT_SPELL: "Reflected Image", SPOOK_SPELL: "Spook", FRIENDS_SPELL: "Friends"}
 NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
                     FRIENDS_SPELL: 1}
-NEW_SPELLS_END = 202  # (past the last)
+# ... and nine 6th-level priest spells after them (DSCLOG's PRIEST6 on): Wake of the Ravager's eight
+# and Whirlwind, the air's. A priest casts those of its spheres, as the game's own: their rows' masks
+# (PRIEST6_MASKS: the cosmos's as its 4th- and 5th-level spells', the druids'; the elements' as
+# theirs), meeting its priest classes' (DSCLOG's NS_PRIEST_KNOWS; the sheet holds no bit for them)
+HEAL_SPELL, HARM_SPELL, BLADE_SPELL, THORNS_SPELL, SUNSTROKE_SPELL = range(202, 207)
+SEEDS_SPELL, HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL = range(207, 211)
+PRIEST6_SPELLS = {HEAL_SPELL: "Heal", HARM_SPELL: "Harm", BLADE_SPELL: "Blade Barrier",
+                  THORNS_SPELL: "Wall of Thorns", SUNSTROKE_SPELL: "Sunstroke", SEEDS_SPELL: "Fire Seeds",
+                  HEARTSEEKER_SPELL: "Heartseeker", WATER_LIFE_SPELL: "Water of Life", WHIRLWIND_SPELL: "Whirlwind"}
+COSMOS_MASK, FIRE_MASK, EARTH_MASK, AIR_MASK = 0x001003C2, 0x00110112, 0x0010808A, 0x00104046
+PRIEST6_MASKS = {HEAL_SPELL: COSMOS_MASK, HARM_SPELL: COSMOS_MASK, BLADE_SPELL: AIR_MASK,
+                 THORNS_SPELL: EARTH_MASK, SUNSTROKE_SPELL: FIRE_MASK, SEEDS_SPELL: FIRE_MASK,
+                 HEARTSEEKER_SPELL: 0x001282AA, WATER_LIFE_SPELL: 0x00120222, WHIRLWIND_SPELL: AIR_MASK}
+PRIEST6_LEVEL = 6
+NEW_SPELLS_END = 211  # (past the last)
 # Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
 # record copied to the records' room past the new spells, a save against death allowed
-NPP_SAVE_RECORD = 202
+NPP_SAVE_RECORD = 211
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16
@@ -195,7 +216,8 @@ FLAMING_SPHERE = 14  # (once Cat's Grace's place)
 
 def cast_spell(spell: Optional[int]) -> bool:
     """A wizard's or priest's spell, a psionic power, or a new spell: not a monster's power."""
-    return spell is not None and (SPELL_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT or spell in NEW_SPELLS)
+    return spell is not None and (SPELL_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT or spell in NEW_SPELLS
+                                  or spell in PRIEST6_SPELLS)
 DETECT_INVISIBILITY = 13  # the spell (as the Loader numbers them: 1 Burning Hands)
 # the sheet's byte and bit that say a character knows each new spell: most in +45h, whose low three
 # bits are an Elementalist's second sphere (kits.SPHERE2); Friends' in the kit byte's top bit (its
@@ -273,6 +295,10 @@ WHOSE_TURN = 0x4979  # DS word: the combatant whose turn it is (outside a fight:
 # DS word: 1 while the party is in a fight. The routine that starts a fight sets it (DSUN.EXE
 # 1DD8Bh, unless it is already 1); the one that ends it clears it (1DFE8h)
 IN_COMBAT = 0x1168
+# ... though it stays 1 while the party walks spread out (uncollapsed) with no one to fight. The
+# game's own test for a fight (its rest's "NO RESTING DURING COMBAT", the USE screen's buttons;
+# DSCLOG's PP_FIGHTING) is the word at +19h of the fight's state, a segment this far below DS
+FIGHT_STATE_FROM_DS, FIGHT_STATE_ON = 0x4356 - 0x377E, 0x19
 REGION = 0x117C  # DS word: the region the party is in
 POSITIONS = 0x669D  # DS: each map object's x, y (in 16ths of a square), 32 bytes apart; the party's leader is object 0
 # The party's money, in ceramic pieces (the inventory screen's bottom bar): a dword the game's
@@ -308,6 +334,15 @@ PSIONIC_FIRST, PSIONIC_COUNT = 138, 34
 # bits 5-7: the kind of save)
 SPELLS_SEG, SPELLS_OFF, SPELL_SIZE = 0x3CB4, 0x40, 0x20
 SPELL_LEVELS_SEG, SPELL_LEVELS_OFF = 0x3FB9, 0x19C  # each spell's level, 7 bytes a spell (DSCLOG's SPELL_LEVELS)
+# The psionic powers' table, 8 bytes a power (0-33) from 3FB9h:0000h: +0 the ability its check uses
+# (bits 0-2: STR, DEX, CON, INT, WIS, CHA) and the power's adjustment (bits 3-7, signed); +1 its
+# PSP. And a byte a party member a power (selector 2F0h, +77h + member * 22h + power) whose bits 3-7
+# are the member's own number for it: 0 not known, 1 known, more adding to the check (the game has
+# code to raise and lower it, 1 to 30; nothing found to call it)
+POWERS_SEG, POWER_SIZE = 0x3FB9, 8
+POWER_OWN_SELECTOR, POWER_OWN_OFF, POWER_OWN_STRIDE = 0x2F0, 0x77, 0x22
+SEGMENT_TABLE = 0x4137  # the game's segment table: a selector's segment at +selector (8 bytes each)
+ABILITY_NAMES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 SHEET_MAGIC_RESISTANCE = 0x29
 SPHERE_NAMES = ("air", "earth", "fire", "water")  # the clerics' and druids' spheres, by class order
 SHEET_ATTACKS = 0x2A  # the game's attacks a round, in halves (2: 1, 3: 3/2)
@@ -337,6 +372,7 @@ CREATION_SEG, CREATION_RACE_OFF, CREATION_CLASS_OFF = 0x38D4, 0x14D, 0x180
 CREATION_PRIME_MINIMUM = 17
 ITEM_NAME_SIZE = 25
 BROKEN_ITEM_TYPE = 0x6B  # what a broken weapon becomes
+DETONATE_BLAST = 195  # the effect Detonate puts on its target besides the power: 1d10, no save
 
 MATERIALS = ("Wooden", "Bone", "Stone", "Obsidian", "Metal", "Leather")
 NO_MATERIAL = 0x40  # in the type's material byte, with material 0: things with none (rings, bodies)
@@ -371,18 +407,24 @@ EFFECT_NAMES = {
 EFFECT_RULES = {
     2: "armour AC at most 6", 4: "AC -1", 7: "+1 to hit, +1 on saves", 8: "AC 4 worse",
     12: "-1 to hit", 16: "+10% melee damage per level of the spell",
-    36: "+3 on saves against cold spells", 38: "AC -2 and +2 on saves against evil",
-    40: "+3 on saves against fire spells", 41: "+4 on saves against lightning spells",
+    36: "+3 on saves against cold spells, half damage from them",
+    38: "AC -2 and +2 on saves against evil",
+    40: "+3 on saves against fire spells, half damage from them",
+    41: "+4 on saves against lightning spells, half damage from them",
     45: "-1 on saves", 46: "AC 4 except from behind", 47: "-4 to hit, AC 4 worse", 49: "+1 to hit",
     52: "AC -7 against evil", 55: "attackers -2 to hit", 56: "armour AC at most 4, +3 on saves",
     57: "AC at most 6 - level/4, +1 on saves", 58: "AC -2", 59: "AC at most 10 - level",
-    60: "AC 5, 1 better per 3 caster levels above 5", 63: "higher STR", 64: "STR + the amount borrowed, at most 24",
+    60: "AC 5, 1 better per 3 caster levels above 5", 63: "STR 24 (higher kept)",
+    64: "STR + the amount borrowed, at most 24", 65: "STR - twice the amount lent, at least 3",
+    66: "STR + 1d6, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
     CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
+    28: "missile attacks miss it", 37: "no damage from fire, cold, electricity or magic alone",
+    30: "its keeper can use no psionic powers; anyone else must beat the static to use one",
     1: "2d4 acid damage each round",
     3: "fights for a side picked at random each turn; can't cast spells",
     9: "ends fear, and the next fear fails (which ends it); +4 on saves against fear spells",
@@ -407,6 +449,13 @@ EFFECT_RULES = {
     50: "can't cast spells",
     51: "can't move (Free Action prevents it; some creatures are immune)",
     53: "no damage from weapons, using up one charge each time",
+    # (the time routine, 8066Dh: a STR below the score's own comes back as time passes, unless Diseased)
+    13: "a lowered STR doesn't come back until it is cured (the spell itself lowers nothing)",
+    14: "finds traps for certain, thief or not",
+    20: "half damage from spells that are all fire or cold",
+    # (the effect routine, 78223h: each round Protection from Evil, for a round, on its keeper's side near it)
+    39: "each round gives Prot Evil (AC -2, +2 on saves against evil) to its side close by",
+    42: "one undead's draining touch: a save against paralysis/poison/death stops it (and the undead takes 2d6)",
     # psionic powers' effects
     31: "magic resistance halved",
     32: "+75% magic resistance against mind-affecting spells (charms, holds, fear, confusion...)",
@@ -525,6 +574,13 @@ DRUID_CLASSES, PSIONICIST = range(5, 9), 12
 DWARF, HALFLING, UNDEAD = 2, 6, 9
 EFFECT_BLESSED, EFFECT_BLIND, EFFECT_DETECT_INVIS, EFFECT_INVISIBLE, EFFECT_INVIS_UNDEAD = 7, 8, 15, 23, 24
 EFFECT_PROT_EVIL, EFFECT_PROT_COLD, EFFECT_PROT_FIRE, EFFECT_PROT_LIGHTNING = 38, 36, 40, 41
+EFFECT_FIRE_SHIELD = 20
+# The game's damage routine (7B4C0h) halves a spell's damage when every kind it does (its record's
+# +1Ah; magic, 200h, aside) is one the target is protected from: Resist and Protection from Fire
+# fire (2), Resist Cold cold (4), Protection from Lightning electricity (80h), Fire Shield both
+# fire and cold
+HALVING_EFFECTS = ((EFFECT_PROT_FIRE, 0x02), (EFFECT_PROT_COLD, 0x04), (EFFECT_PROT_LIGHTNING, 0x80),
+                   (EFFECT_FIRE_SHIELD, 0x06))
 EFFECT_SAVE_PENALTY, EFFECT_SPIRIT_ARMOR, EFFECT_BARKSKIN, EFFECT_PRAYER = 45, 56, 57, 73
 EFFECT_BRAVE = 9  # (Cloak of Bravery: +4 against a spell flagged FEAR_CATEGORY, a charge used)
 FEAR_CATEGORY = 0x100  # (a record's +11h word: the patched game's fear spells, gamepatch brave_fear_*)
@@ -703,14 +759,14 @@ THIEF_PENALTY_SLOTS = tuple(EQUIP_SLOTS.index(s) for s in ("legs", "ammo", "left
 # game's race adjustment (Dark Sun's own numbers already), plus Dark Sun's DEX adjustment (AD&D's
 # table to 19, the Dark Sun rules' past it, 9-22; none for the last three skills) in place of the
 # game's DEX formula
-AD_D_THIEF = ((30, 35, 40, 45, 50, 55, 60, 65, 70, 80),  # pick pockets
-              (25, 29, 33, 37, 42, 47, 52, 57, 62, 67),  # open locks
-              (20, 25, 30, 35, 40, 45, 50, 55, 60, 65),  # find/remove traps
-              (15, 21, 27, 33, 40, 47, 55, 62, 70, 78),  # move silently
-              (10, 15, 20, 25, 31, 37, 43, 49, 56, 63),  # hide in shadows
-              (10, 10, 15, 15, 20, 20, 25, 25, 30, 30),  # hear noise
-              (85, 86, 87, 88, 90, 92, 94, 96, 98, 99),  # climb walls
-              (0, 0, 0, 20, 25, 30, 35, 40, 45, 50))     # read languages
+AD_D_THIEF = ((30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99),  # pick pockets
+              (25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82),  # open locks
+              (20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80),  # find/remove traps
+              (15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99),  # move silently
+              (10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85),  # hide in shadows
+              (10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40),  # hear noise
+              (85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99),  # climb walls
+              (0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65))     # read languages
 DEX_FIRST = 9
 DEX_ADJUST = ((-15, -10, -10, -20, -10), (-10, -5, -10, -15, -5), (-5, 0, -5, -10, 0), (0, 0, 0, -5, 0),  # 9-12
               (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 0, 0, 0, 0), (0, 5, 0, 0, 0),  # 13-16
@@ -725,7 +781,7 @@ def dex_adjustment(dex: int, skill: int) -> int:
     return DEX_ADJUST[min(max(dex, DEX_FIRST), DEX_FIRST + len(DEX_ADJUST) - 1) - DEX_FIRST][skill]
 
 
-# AD&D's ranger: hide in shadows and move silently by ranger level (1-10), the Loader's own
+# AD&D's ranger: hide in shadows and move silently by ranger level (1-13), the Loader's own
 # (the game gives rangers no thief skills); race and DEX adjust them as a thief's
 RANGER_HIDE = AD_D_THIEF[4]
 RANGER_MOVE = AD_D_THIEF[3]
@@ -968,6 +1024,12 @@ class GameData:
         """The party is in a fight (the game's own flag, IN_COMBAT)."""
         return self._word(IN_COMBAT) != 0
 
+    def fight_on(self) -> bool:
+        """A fight is on, as the game's rest and USE screen tell (FIGHT_STATE_ON), not merely the
+        party spread out (IN_COMBAT)."""
+        at = (self.ds - FIGHT_STATE_FROM_DS) * 16 + FIGHT_STATE_ON
+        return struct.unpack("<H", self.guest.read(at, 2))[0] != 0
+
     def whose_turn(self) -> Optional[int]:
         """The combatant whose turn it is in a fight (the game's word at WHOSE_TURN)."""
         turn = self._word(WHOSE_TURN)
@@ -1014,6 +1076,25 @@ class GameData:
         names = [name for bit, name in spellbook.DAMAGE_KINDS if kinds & bit]
         return f" ({rule.base_dice}d{rule.sides}{' ' + ', '.join(names) if names else ''})"
 
+    def power_score_parts(self, combatant: int, power: int) -> Optional[Tuple[str, int, int]]:
+        """A psionic power's check score parts for COMBATANT (as the game's 5D59Dh adds them): the
+        ability's name, the power's adjustment, and the user's own number for it less 1 (a party
+        member's; a monster's is 1, so 0)."""
+        if not 0 <= power < PSIONIC_COUNT:
+            return None
+        try:
+            first = self.guest.read((self.load_seg + POWERS_SEG) * 16 + power * POWER_SIZE, 1)[0]
+            own = 0
+            if 0 <= combatant < PARTY_SIZE:
+                seg, = struct.unpack("<H", self.guest.read((self.load_seg + SEGMENT_TABLE) * 16 + POWER_OWN_SELECTOR, 2))
+                byte = self.guest.read(seg * 16 + POWER_OWN_OFF + combatant * POWER_OWN_STRIDE + power, 1)[0]
+                own = max((byte >> 3) - 1, 0)
+        except (OSError, ValueError):
+            return None
+        index = first & 7
+        adjustment = (first >> 3) - 32 if first >> 3 > 15 else first >> 3
+        return (ABILITY_NAMES[index] if index < len(ABILITY_NAMES) else f"ability {index}"), adjustment, own
+
     def spell_name(self, spell: int) -> str:
         if PSIONIC_FIRST <= spell < PSIONIC_FIRST + PSIONIC_COUNT:
             # the psionic powers' names come first in the names list, in number order
@@ -1022,12 +1103,16 @@ class GameData:
             return title(text) if text else f"psionic power {spell}"
         if spell in NEW_SPELLS:
             return NEW_SPELLS[spell]
+        if spell in PRIEST6_SPELLS:
+            return PRIEST6_SPELLS[spell]
         if spell == NPP_SAVE_RECORD:
             return "Negative Plane Protection"
         if spell in ITEM_ATTACKS:  # (the ones that can destroy an item)
             return ITEM_ATTACKS[spell].capitalize()
         if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
             return POISON_POWERS[spell]
+        if spell == DETONATE_BLAST:
+            return f"Detonate's blast{self._power_dice(spell)}"
         if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch: the game names none
             return f"special attack {spell}{self._power_dice(spell)}"
         if SPELL_FIRST <= spell <= SPELL_COUNT:
@@ -1124,6 +1209,29 @@ class GameData:
                        + (f" ({signed_text(adjust)})" if adjust else "") + f" = {levels}")
         how.append(f"{roll} from the dice")
         return total, " + ".join(how)
+
+    def damage_halved_by(self, target: int, spell: int) -> Optional[str]:
+        """The protection on combatant TARGET that halves SPELL's damage (as the game's damage
+        routine does), or None."""
+        rec = self.spell_record(spell)
+        if len(rec) < SPELL_SIZE:
+            return None
+        kinds = struct.unpack_from("<H", rec, 0x1A)[0]
+        mine = {x.id for x in self.effects() if x.owner == target}
+        guarded = 0
+        names = []
+        for eff, bits in HALVING_EFFECTS:
+            if eff in mine and kinds & bits:
+                guarded |= bits
+                names.append(EFFECT_NAMES[eff])
+        from . import kits
+        ti = self.combatant_creature(target)  # (the patched game's WANDER_DMG: as Resist Fire and Cold)
+        if ti is not None and kinds & kits.WANDERER_GUARDS and kits.WANDERER in self.kit_ids(ti):
+            guarded |= kits.WANDERER_GUARDS
+            names.append("Wanderer")
+        if not guarded or kinds & ~(guarded | 0x200):
+            return None
+        return " and ".join(names)
 
     def save_negates_damage(self, spell: int) -> bool:
         """A successful save stops all the damage (else it halves it): flag 8000h of the word at +11h."""
@@ -1384,7 +1492,7 @@ class GameData:
         signed_byte = lambda offset: struct.unpack_from("b", table, offset)[0]
         race, dex = sheet[SHEET_RACE], rec[CREATURE_ABILITIES + 1]
         if self.rules & RULE_THIEF_TABLE:
-            parts = [(f"thief level {level}", AD_D_THIEF[skill][min(level, 10) - 1])]
+            parts = [(f"thief level {level}", AD_D_THIEF[skill][min(level, len(AD_D_THIEF[0])) - 1])]
         else:
             parts = [("base", signed_byte(THIEF_BASE + skill)),
                      (f"thief level {level}", level * THIEF_PER_LEVEL)]
@@ -1450,7 +1558,7 @@ class GameData:
         table = self.guest.read((self.load_seg + THIEF_TABLE_SEG) * 16, THIEF_ARMOUR + 8)
         signed_byte = lambda offset: struct.unpack_from("b", table, offset)[0]
         race, dex = sheet[SHEET_RACE], rec[CREATURE_ABILITIES + 1]
-        parts = [(f"ranger level {level}", (RANGER_HIDE if skill == 4 else RANGER_MOVE)[min(level, 10) - 1])]
+        parts = [(f"ranger level {level}", (RANGER_HIDE if skill == 4 else RANGER_MOVE)[min(level, len(RANGER_HIDE)) - 1])]
         if avenger:
             parts = [(f"ranger as a Wilderness Avenger, level {level}", kits.AVENGER_STEALTH * level)]
         if 1 <= race <= 8:
@@ -1577,6 +1685,16 @@ class GameData:
         out = [(item[ITEM_SLOT], self.item_label(item, typ)) for _, item, typ in self._worn(creature)]
         out.sort(key=lambda x: x[0])
         return [(EQUIP_SLOTS[slot] if slot < len(EQUIP_SLOTS) else None, name) for slot, name in out]
+
+    def worn_in(self, creature: Optional[int], slot: int) -> List[bytes]:
+        """The item records a creature wears in SLOT (an index of EQUIP_SLOTS)."""
+        if creature is None:
+            return []
+        return [item for _, item, _ in self._worn(creature) if item[ITEM_SLOT] == slot]
+
+    def wears_type(self, creature: Optional[int], item_type: int, slot: int) -> bool:
+        """Whether a creature wears an item of ITEM_TYPE in SLOT."""
+        return any(struct.unpack_from("<H", item, ITEM_TYPE)[0] == item_type for item in self.worn_in(creature, slot))
 
     def _worn(self, creature: int):
         """(item number, item record, type record) for each of a creature's items."""

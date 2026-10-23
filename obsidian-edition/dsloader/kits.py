@@ -51,6 +51,10 @@ SPHERE2, SPHERE2_MASK = 0x45, 0x07
 # a Battle Mage's weapon specs to choose from (DSCLOG's KIT_BM_KINDS): the one-handed melee ones, not
 # thrown: long sword, club, dagger, short sword, mace, axe, pick
 BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
+# a Crusader's and a Mind Warrior's one weapon spec of expertise (DSCLOG's SPEC_OF_SHEET): any
+# melee one its class lets it use (not the chatkcha, bow, sling or staff sling: kinds 12-15)
+WAR_KIT_EXPERT = (CRUSADER, MIND_WARRIOR)
+MELEE_KINDS = frozenset(range(12))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
 # level up from thief level SHINOBI_FIRST, and its own from scrolls once read (read languages); it casts at its thief level less 5.
 # Fogbolt, Reflected Image, Spook and Friends, new spells, only with the new spells on (their known bits: NS_KNOWS)
@@ -65,6 +69,7 @@ RANGER_CLASSES = range(13, 17)
 CHARMS = (2, 40, 61, 82, 158, 159)
 SPELL_LAST = 137  # (the wizards' and priests' spells: 0 to this; psionic powers and monsters' after)
 FIRE, COLD = 0x02, 0x04  # (a spell record's +1Ah: what it is, as the game's Resist Fire and Resist Cold read it)
+WANDERER_GUARDS = FIRE | COLD  # (a Wanderer halves a spell all fire or cold: DSCLOG's WANDER_DMG)
 # a Ravager's base AC by level, 1-10, the highest the game goes (DSCLOG's RAVAGER_AC)
 RAVAGER_AC = (7, 7, 6, 6, 5, 5, 4, 4, 3, 3)
 # the multiclass kits (kitpages.MULTI)
@@ -382,11 +387,16 @@ def move(kid: int) -> int:
     return 2 if kid == STALKER else 0
 
 
+MYRMIDON_INITIATIVE = -2  # (the drilled soldier waits for the order to strike: PROBE_INIT)
+
+
 def initiative(kid: int, outdoors: bool = False) -> int:
     """Added to initiative (PROBE_INIT): a Sentinel's 2, a Military Scout's 2 under the open sky
-    (OUTDOORS)."""
+    (OUTDOORS), a Myrmidon's 2 less."""
     if kid == SENTINEL:
         return 2
+    if kid == MYRMIDON:
+        return MYRMIDON_INITIATIVE
     return 2 if kid == SCOUT and outdoors else 0
 
 

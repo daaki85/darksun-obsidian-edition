@@ -6,7 +6,8 @@ on it.
   * Weapons and shields: in a fight in the hands (each pose's grip set by hand); walking, a shield
     on the arm (from the side, on the far arm held forward of the chest) and a one-handed weapon
     worn at the belt like a scabbard; a bow and quiver on the back, a sling or chatkcha at the hip:
-    drawn, in their material's colours (Kreenfang's and Shadowseeker's blades in their icons').
+    drawn, in their material's colours (Kreenfang's and Shadowseeker's blades in their icons'; an
+    axe's or mace's haft wood, its head solid; on a bigger figure only the haft is longer).
   * Body armour (chest, arms, legs), boots and belts: the character's own clothing, feet or waist
     recoloured toward the material, shade for shade.
   * Helms: a circlet at the brow, blended into the hair under it.
@@ -141,8 +142,13 @@ def _put(rows: Rows, x: float, y: float, colour: int, behind: bool, body: Rows) 
         rows[y][x] = colour
 
 
+# Where a headed weapon's head starts (steps from the hand): drawn larger, only its haft is longer
+HEADS = {AXE: 4, GREAT_AXE: 5, MACE: 4}
+
 # Each shape along its line: (from, to) steps from the hand, and the half-width at each step, with
-# which colour, as a list of (step, offsets across, colour index: 0 outline, 1 body, 2 light)
+# which colour, as a list of (step, offsets across, colour index: 0 outline, 1 body, 2 light; WOOD +
+# one of those, the wood's colour whatever the weapon's material: an axe's haft)
+WOOD = 3
 def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
     if shape == DAGGER:
         return [(0, [(-1, 0), (0, 0), (1, 0)])] + [(s, [(0, 2), (1, 0)]) for s in range(1, 4)] + [(4, [(0, 1)])]
@@ -152,15 +158,18 @@ def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
     if shape == CLUB:
         return [(s, [(0, 1), (1, 0)]) for s in range(-1, 3)] + [(s, [(-1, 0), (0, 2), (1, 1), (2, 0)]) for s in range(3, 6)] \
             + [(6, [(0, 0), (1, 0)])]
-    if shape == MACE:
-        return [(s, [(0, 1)]) for s in range(-1, 4)] + [(4, [(-1, 0), (0, 1), (1, 0)]), (5, [(-1, 1), (0, 2), (1, 1)]),
-                                                        (6, [(-1, 0), (0, 1), (1, 0)])]
-    if shape == AXE:
-        return [(s, [(0, 1)]) for s in range(-1, 6)] + [(4, [(1, 0), (2, 0)]), (5, [(1, 2), (2, 1), (3, 0)]),
-                                                        (6, [(0, 0), (1, 1), (2, 0)])]
-    if shape == GREAT_AXE:
-        return [(s, [(0, 1)]) for s in range(-4, 8)] + [(5, [(1, 0), (2, 0), (-1, 0)]), (6, [(1, 2), (2, 1), (3, 0), (-1, 2), (-2, 0)]),
-                                                        (7, [(1, 1), (2, 0), (-1, 1), (-2, 0)])]
+    if shape == MACE:  # (a wooden haft, a solid round head)
+        return [(s, [(0, WOOD + 1)]) for s in range(-1, 4)] + [
+            (4, [(-1, 0), (0, 1), (1, 0)]), (5, [(-2, 0), (-1, 1), (0, 2), (1, 1), (2, 0)]),
+            (6, [(-2, 0), (-1, 1), (0, 1), (1, 1), (2, 0)]), (7, [(-1, 0), (0, 0), (1, 0)])]
+    if shape == AXE:  # (a wooden haft, the head a solid wedge on one side, as the game's own axemen's)
+        return [(s, [(0, WOOD + 1)]) for s in range(-1, 5)] + [
+            (4, [(-1, 0), (1, 0), (2, 0)]), (5, [(-1, 0), (0, 1), (1, 2), (2, 2), (3, 0)]),
+            (6, [(-1, 0), (0, 1), (1, 1), (2, 1), (3, 0)]), (7, [(0, 0), (1, 0), (2, 0)])]
+    if shape == GREAT_AXE:  # (a longer haft, a head each side)
+        return [(s, [(0, WOOD + 1)]) for s in range(-4, 6)] + [
+            (5, [(-2, 0), (-1, 0), (1, 0), (2, 0)]), (6, [(-3, 0), (-2, 2), (-1, 1), (0, 1), (1, 2), (2, 2), (3, 0)]),
+            (7, [(-3, 0), (-2, 1), (-1, 1), (0, 1), (1, 1), (2, 1), (3, 0)]), (8, [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0)])]
     if shape == POLEARM:
         return [(s, [(0, 1)]) for s in range(-5, 9)] + [(9, [(0, 2), (1, 0)]), (10, [(0, 2), (1, 0)]), (11, [(0, 0)])]
     if shape == GYTHKA:
@@ -183,12 +192,18 @@ def draw_weapon(rows: Rows, body: Rows, hand: sp.Point, angle: float, shape: str
     hx, hy = hand
     across = (across[0] / scale, across[1] / scale)  # (only the length scales)
     steps = sorted(_shape(shape), key=lambda c: c[0])
+    head = HEADS.get(shape)
     for step, cells in steps:
         for offset, colour in cells:
-            for sub in ((0.0, 0.5) if scale > 1 else (0.0,)):  # (no gaps in a longer one)
-                x = hx + dx * (step + sub) + across[0] * offset
-                y = hy + dy * (step + sub) + across[1] * offset
-                _put(rows, x, y, (blade if blade and on_blade(step) else colours)[colour], behind, body)
+            if head is not None and step >= head:  # (a head keeps its size: only the haft is longer)
+                spots = (step / scale + round(head * (scale - 1)) / scale,)
+            else:
+                spots = tuple(step + sub for sub in ((0.0, 0.5) if scale > 1 else (0.0,)))  # (no gaps in a longer one)
+            for at in spots:
+                x = hx + dx * at + across[0] * offset
+                y = hy + dy * at + across[1] * offset
+                ramp = MATERIAL_COLOURS[0] if colour >= WOOD else blade if blade and on_blade(step) else colours
+                _put(rows, x, y, ramp[colour % WOOD], behind, body)
 
 
 def draw_hilt(rows: Rows, body: Rows, at: sp.Point, angle: float, colours: Tuple[int, int, int], behind: bool) -> None:

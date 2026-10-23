@@ -132,14 +132,33 @@ class CopyTests(unittest.TestCase):
         self.assertEqual(new[("BMP ", 40)], plain)  # (16 pixels: it fits as it is)
         for name, number, obj, icon, _ in icons.ICONS:
             self.assertEqual(struct.unpack_from("<H", new[("OJFF", obj)], icons.OJFF_ICON)[0], icon)
-            self.assertEqual(new[("BMP ", obj)], chunks[("BMP ", 0x10000 - number)])
+            self.assertEqual(new.get(("BMP ", obj)), chunks.get(("BMP ", 0x10000 - number)))
             self.assertEqual(icons.PICTURES[name], 0x10000 - obj)
         rings = [{p for r in icons.decode(new[("BMP ", icon)]) for p in r} - {None}
                  for name, _, _, icon, _ in icons.ICONS if "Ring" in name]
-        self.assertLessEqual(rings[0], set(icons.VIOLET))  # Pehtucl's
+        self.assertLessEqual(rings[0], set(icons.VIOLET) | set(icons.WATER))  # Pehtucl's: violet, shining
+        self.assertTrue(rings[0] & set(icons.WATER))
         self.assertLessEqual(rings[1], set(icons.FIRE))  # the arena's
         ids = [k for k in new if k[0] == "BMP "]
         self.assertEqual(len(ids), len(set(ids)))  # no icon numbered as another's map picture
+
+    def test_no_map_picture(self):
+        """A plain item with no map picture of its own number (the game's necklaces): its icon still
+        made, the object copied as it is, no map picture added (and nothing else lost)."""
+        plain = icons.encode([[0x3A if x == y else None for x in range(16)] for y in range(16)])
+        chunks = {}
+        for _, number, _, _, _ in icons.ICONS:
+            base = 0x10000 - number
+            chunks[("OJFF", base)] = bytes(12) + struct.pack("<H", 40) + b"rest"
+            if number != 0x86DD:  # (the Necklace's object, 31011, has none)
+                chunks[("BMP ", base)] = b"map"
+        chunks[("BMP ", 40)] = plain
+        new = icons.new_chunks(chunks)
+        amulet = next(e for e in icons.ICONS if e[0] == "Amulet of Magic Resistance")
+        self.assertIn(("OJFF", amulet[2]), new)
+        self.assertIn(("BMP ", amulet[3]), new)
+        self.assertNotIn(("BMP ", amulet[2]), new)
+        self.assertEqual(sum(1 for k in new if k[0] == "OJFF"), len(icons.ICONS))
 
     def test_fog_bolt(self):
         """Fogbolt's bolt: Magic Missile's object naming the grey picture, which is Magic Missile's

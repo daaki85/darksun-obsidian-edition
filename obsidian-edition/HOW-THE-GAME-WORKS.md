@@ -5,7 +5,27 @@ the curious. [The README](README.md) is about the mod.*
 
 What the game does that its manual doesn't say, from its code and checked in
 play. The dice log shows each as it happens, and the
-[rule changes](FEATURES.md#rule-changes) change some of it.
+[rule changes](FEATURES.md#rule-changes) change some of it. Several findings
+were first pointed out by the notes of [yuan-ti](https://github.com/CalvinRodo/yuan-ti),
+CalvinRodo's new engine for the game, and checked here in the game's own code.
+
+## Contents
+
+- [Initiative](#initiative)
+- [Spells and effects](#spells-and-effects)
+  - [Each cleric spell against the manual](#each-cleric-spell-against-the-manual)
+- [Psionics](#psionics)
+  - [Each power against the manual](#each-power-against-the-manual)
+- [Character creation](#character-creation)
+- [Monsters' defences](#monsters-defences)
+- [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
+- [No critical hits](#no-critical-hits)
+- [The game's two weapons](#the-games-two-weapons)
+- [How the game works out thief skills](#how-the-game-works-out-thief-skills)
+- [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)
+- [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
+- [The game's saving throws](#the-games-saving-throws)
+- [The arena's count of fights](#the-arenas-count-of-fights)
 
 ## Initiative
 
@@ -68,7 +88,7 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
 | No spell use, Feeblemind | Can't cast spells |
 | Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |
-| Acid (Acid Arrow) | 2d4 acid damage each round |
+| Acid (Acid Arrow) | 2d4 acid damage at the start of each round it lasts, a round for each started minute of its time. In the game it never burned after the hit; the patched game burns it ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
 | Poisoned | Fatal (1000 damage) if time passes out of combat, for instance resting, before it wears off or is cured |
 | Cloak of Fear | Whoever hits the wearer has Cause Fear cast on them, once |
 
@@ -96,6 +116,78 @@ Other things the game does its own way:
 The spell's area catches its caster too. Cilla's Scare made her Afraid, and her
 Fireball, cast at a Slig next to her, killed her.
 
+### Each cleric spell against the manual
+
+What the game's records and code do with each cleric spell, next to the manual
+(pages 68–78). "Save" is the game's petrification/polymorph save unless named
+(the spell save with the [rule change](FEATURES.md#spells-saved-against-with-the-spell-save));
+durations are in rounds (a turn is ten). The log column is what the dice log
+shows for it; every effect line also says what the effect does.
+
+| Spell | The manual | The game | The log |
+|---|---|---|---|
+| Bless | +1 to hit; not on anyone next to a monster; 6 rounds | +1 to hit and +1 on saves; not on anyone next to an enemy (the patched game measures that from where each stands); cancels Curse; 6 rounds | the effect |
+| Cause Fear | flees 1d4 rounds; save | Afraid for 1 round a level on a failed save; undead immune; Cloak of Bravery +4 (with the patched game) | the save and the effect |
+| Cause Light Wounds | 1d8 | 1d8, no save | the roll and the HP lost |
+| Cure Light Wounds | heals 1d8 | heals 1d8 (Healer kit +1) | the roll and the HP regained |
+| Curse | −1 to hit; not next to the party; 6 rounds | −1 to hit, no save; cancels Bless; 6 rounds | the effect |
+| Entangle | moves very slowly; save for half; 1 turn a level | Stuck (can't move at all) on a failed save, for 1 round | the save and the effect |
+| Invisibility to Undead | undead ignore the warded creature; 6 rounds | until it attacks or casts at an enemy; +4 on saves against an undead caster's spells aimed at it | the effect |
+| Magical Stone | three stones, 1d4 each, 2d8 against undead | one 1d4 crushing, no save; its record has nothing more against undead | the roll and the HP lost |
+| Protection from Evil | AC and saves +2 against evil; 3 rounds a level | AC −2, +2 on saves against an evil caster; 3 rounds a level | the effect |
+| Remove Fear | ends fear | ends Afraid | the effect ending |
+| Shillelagh | a magical club in hand | a Shillelagh in an empty hand (a weapon held: "Failed, weapon in hand"); 4 + 1 a level rounds | the effect |
+| Aid | as Bless, and 1d8 extra HP | Blessed and 1d8 extra HP; 1 + 1 a level rounds | the 1d8 and the effects |
+| Barkskin | base AC 6, 1 better per 4 levels; +1 on saves | the same | the effect |
+| Charm Person or Mammal | fights for the cleric; save; combat only | Charmed on a failed save | the save and the effect |
+| Dust Devil | a dust devil fights for the cleric; 2 rounds a level | summons one, 2 rounds a level (none answers in the arena) | the summoning |
+| Find Traps | traps found; 3 turns | Detect Traps: anyone finds traps for certain; 3 turns | the effect |
+| Flame Blade | a blade of fire, 1d4+6; 4 rounds + 1 per 2 levels | a Flame Blade in an empty hand, as Shillelagh | the effect |
+| Hold Person | rigid; 2 rounds a level; save | Paralyzed on a failed save, 2 rounds a level | the save and the effect |
+| Resist Fire, Resist Cold | half damage, +3 on saves; 1 round a level | +3 on saves against fire (cold) spells, and half the damage of a spell that is all fire (cold) | the effect, and "(halved: ...)" on the damage |
+| Spiritual Hammer | a hammer that hits +1 monsters | a Spiritual Hammer in an empty hand, as Shillelagh; 3 + 1 a level rounds | the effect |
+| Bestow Curse | −4 on attacks and saves; save; permanent | Cursed: −1 to hit only, no save; its record gives no duration (it stays until dispelled); Remove Curse doesn't end it | the effect |
+| Cause Blindness or Deafness | blind or deaf; save | Blind (AC 4 worse, −2 initiative, no spells needing sight) on a failed save, until cured | the save and the effect |
+| Cause Disease | saps STR and HP; save | Diseased on a failed save: nothing is lowered; a STR something else lowered stays down until it is cured | the save and the effect |
+| Conjure Lesser Elemental (four) | 1 turn + 1 round a level | summons one, 10 + 1 a level rounds | the summoning |
+| Cure Blindness or Deafness, Cure Disease | cure them | end Blind, Diseased | the effect ending |
+| Dispel Magic | removes spells | each effect separately, d100 under 50 + 5 x (caster level − the effect's caster level); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck | each d100 |
+| Magical Vestments | AC 5, 1 better per 3 levels above 5; 5 rounds a level | the same | the effect |
+| Negative Plane Protection | stops one draining attack by undead | the game's own never worked; the patched game: a save against paralysis/poison/death stops one, and the undead takes 2d6 | the save and the effect |
+| Prayer | +1 to hit and saves for friends, −1 for foes; 1 round a level | the same | the effect, and each save's ±1 |
+| Protection from Fire | +3 on saves, half damage | as Resist Fire, lasting 1 turn a level | as Resist Fire |
+| Remove Curse | ends Bestow Curse; unreadies cursed items | puts a lowered STR back to the score; ends no curse | the STR change |
+| Remove Paralysis | ends paralysis and slow | ends Paralyzed and Slowed | the effects ending |
+| Summon Insects | a cloud: 4 a round, AC 2 worse, −2 to hit | summons a creature for 1 round a level | the summoning |
+| Abjure | sends extraplanar creatures home | d20 of 11 − caster level + the target's level or more, then a summoned creature is sent away (1000 damage) | the d20 and the result |
+| Blood Flow | heals 2d6, or stuns an enemy up to 4 rounds; save | heals its own side 2d6; anyone else is Paralyzed for 1d4 rounds, no save, and takes no damage | the roll, or the effect |
+| Cloak of Bravery | +4 on saves against fear, once | ends fear; the next fear fails and ends it; +4 against fear spells (with the patched game) | the effect |
+| Cloak of Fear | the first who hits it must save or flee, once | the first who hits it has Cause Fear cast on them | the effect, then the Cause Fear |
+| Condense | 3d6 | 3d6 crushing, no save | the roll and the HP lost |
+| Cure Serious Wounds | heals 3–17 | heals 2d8+1 (Healer kit +1 a die) | the roll and the HP regained |
+| Cause Serious Wounds | 3–17 | 2d9 in the game; 2d8+1 with the patched game | the roll and the HP lost |
+| Dehydrate | 2d6 + 1 a level | the same, no save | the roll and the HP lost |
+| Dust Cloud | blocks sight and missiles | a cloud on the ground; its record has no damage or effect | the cast |
+| Focus Heat | 2d6 + 1 a level; save for half | the same, fire (the save's d20 doubled, or DEX with the rule change) | the save, roll and HP |
+| Free Action | breaks slow, hold and webs | ends Paralyzed and Slowed when cast; then can't be Paralyzed, Slowed or Stuck, 1 turn a level | the effect |
+| Neutralize Poison | ends poison | ends Poisoned | the effect ending |
+| Poison | save or die | Poisoned on a failed save against paralysis/poison/death: no harm in a fight, but 1000 damage once time passes out of one (a rest) before it's cured | the save and the effect |
+| Produce Fire | 2–5 in a 12' square | 1d6 fire, no save | the roll and the HP lost |
+| Protection from Evil 10' Radius | +2 AC and saves for the target and friends beside it | each round, Protection from Evil for that round on its side close by; 1 turn a level | the effect |
+| Protection from Lightning | +4 on saves, half damage | +4 on saves against lightning spells, and half a spell's damage that is all electricity | as Resist Fire |
+| Cause Critical Wounds | 6–27 | 3d9 in the game; 3d8+3 with the patched game | the roll and the HP lost |
+| Conjure Elemental (four) | 1 turn a level | summons one for 10 + 1 a level rounds | the summoning |
+| Cure Critical Wounds | heals 6–27 | heals 3d8+3 (Healer kit +1 a die) | the roll and the HP regained |
+| Deflection | small missiles miss | missile attacks miss it | the effect |
+| Dispel Evil | AC −7 against summoned evil creatures, which save when hit | AC −7 against evil; no save for the creature | the effect |
+| Flame Strike | 6d8; save for half | the same, fire | the save, roll and HP |
+| Insect Plague | 1 a round, blocks sight, no spellcasting | Afraid on a failed save, 2 rounds a level, and no spells for a round; no damage | the save and the effects |
+| Ironskin | immune to weapons | 1d6 blows stopped | the effect |
+| Quicksand | sinks and is held; 1 turn + 1 round a level | Stuck on a failed save, for 1 round | the save and the effect |
+| Raise Dead | by CON and how long dead; −1 CON; 1 HP | always works on someone dead who isn't an elf: −1 CON, 1 HP | the HP and the CON change |
+| Slay Living | dies on a failed save, 3–17 if saved | HP + 10 damage on a failed save against paralysis/poison/death; half of 4d8 if saved | the save and the damage |
+| Wall of Fire | fire to those passing through | 4d4 + 1 a level fire, no save | the roll and the HP lost |
+
 ## Psionics
 
 Psionic powers are numbered after the spells (Detonate 138 to Thought Shield
@@ -110,6 +202,25 @@ their own:
   the game puts them on again for another round; when the PSP runs short, the
   power drops. The log shows every change in a party member's PSP
   (` K'ratchek spends 18 PSP (52 -> 34)`).
+- **The power check.** Each use rolls a d20 that must come up at or under the
+  power's score: the ability the power uses (CON for most psychometabolism and
+  psychokinesis, WIS for telepathy and Disintegrate, INT for Superior
+  Invisibility, Mind Bar and Synaptic Static) plus the power's adjustment, from
+  −1 (Lend Health) to −7 (Mind Blank). A 1 always works and a 20 always fails;
+  a failure says "psionic power check fails" and costs half the PSP. The game
+  also keeps a number for each power a character knows, and adds anything
+  above 1 to the score, but no code was found that raises it. Near someone
+  else's **Synaptic Static**, the user first rolls a d20 against that number
+  (the game reads the ability for it and drops it, so it's 1 for most
+  characters): over it, "psionics disrupted by static". Otherwise the Static's
+  keeper rolls a d20 at or under their own Synaptic Static score, and no lower
+  than the user's, to disrupt it. The log shows each of these rolls.
+- **Detonate** (the daggorans use it too): besides 1d10 from the blast, it
+  picks the worn item that breaks most easily, the one with the lowest
+  fragility number (under 6: a cloak 3, a bone helm or leather chest armour 4,
+  bone scale arm and leg armour 5; a short sword's 6 is never picked; on a tie,
+  the first), and destroys it outright on a d20 under 15 less its plus (70% for
+  a plain item; one of a stack). The log shows the check.
 - **Psionic defence.** Attacked by a psionic attack mode (Psychic Crush, Ego
   Whip, Id Insinuation, Psionic Blast), a character defends with WIS − 7, or
   with a defence mode already raised (used beforehand, it stays up at no cost
@@ -123,6 +234,44 @@ their own:
 - **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least 1d10.
 - Monsters use them too: the Screamer Beetle's special attack is Psychic
   Crush (1d8, save vs paralysis/poison/death for half).
+
+### Each power against the manual
+
+What the game's code does with each power, next to the manual's text. Every use
+also logs the power check and the PSP spent; a power with a save logs the save.
+
+| Power | The manual | The game | The log |
+|---|---|---|---|
+| Detonate | 1d10 to everyone within 10'; may turn an item to ash | 1d10 to the target only, no save; then destroys its worn item that breaks most easily on a d20 under 15 less its plus (above) | the blast's damage and the item check |
+| Disintegrate | save vs death or turned to ash | save vs paralysis/poison/death (the same save) or 10,000 damage | the save and the damage |
+| Project Force | 1d6 plus the target's AC | 1d6 plus the target's AC (less against a good AC), no save | the 1d6 and the HP lost (with the AC in it) |
+| Ballistic Attack | 1d6 on a successful hit | 1d6, no attack roll, no save | the damage |
+| Control Body | the target fights for you at −6 to hit | Charmed for 5 rounds on a failed save vs paralysis/poison/death: it joins your side under the computer's control, with no −6 | the save and the charm |
+| Inertial Barrier | halves damage from breath, missiles, gas, acid, ice storms | missile attacks miss its user outright; nothing else | "missile attacks miss it" |
+| Animal Affinity | claws, 1d10 | unarmed attacks at least 1d10 | the effect |
+| Energy Containment | no damage from electricity, cold, fire, heat, sound | no damage that is only fire, cold, electricity or magic | the effect |
+| Life Draining | drains up to 6 HP as extra HP for an hour | 1d6 damage, the same as extra HP for the user | the drain roll and the HP |
+| Absorb Disease | takes the target's disease to cure it | takes the disease (the mod's fix: the game also gave 1d6 STR) | the effect |
+| Adrenalin Control | STR + 1 to 6 | STR + 1d6, at most 24 | the 1d6 and the STR |
+| Biofeedback | damage −2 and AC −1 | AC −1 only; no damage is taken off | "AC −1" |
+| Body Weaponry | the arm as a wood or steel weapon | unarmed attacks 2d4 | the effect |
+| Cell Adjustment | heals wounds, cures diseases | heals 2 HP; cures nothing | the HP regained |
+| Displacement | attacks miss the image; AC −2 | AC −2 | the effect |
+| Enhanced Strength | STR up to 24, cost twice the points | STR 24 (a higher one kept), cost (24 − STR) × 2 | the effect and the PSP |
+| Flesh Armor | armour by level, no penalties | AC 10 − level at best | the effect |
+| Graft Weapon | +1 to hit, can't switch weapons | +1 to hit; stops picking pockets, locks and climbing | the effect |
+| Lend Health | gives HP, within both maximums | gives the target's missing HP, keeping the user at 5 or more | the HP both ways |
+| Share Strength | gives STR at 2 for 1 | target + a, user − 2a (a up to 24 − its STR and (the user's STR − 3) / 2) | the effects (not the amount) |
+| Domination | controls the target; combat only | Charmed for 5 rounds on a failed spell save; combat only | the save and the charm |
+| Mass Domination | up to 5 creatures | its record targets one creature, as Domination, for 10 rounds | the save and the charm |
+| Psychic Crush | up to 6 damage | 1d8, half on a save vs paralysis/poison/death; psionic defence first | the defence, save and damage |
+| Superior Invisibility | unseen; ends if it attacks | Invisible; attacking or casting at an enemy ends it | the effect |
+| Ego Whip | stunned 1d4 rounds | can't attack or cast harmful spells for 1d4 rounds; psionic defence, no save | the defence and the effect |
+| Id Insinuation | paralyzed 1d4 rounds; combat only | Paralyzed 1d4 rounds; psionic defence, no save; combat only | the defence and the effect |
+| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first | the defence, save and HP lost |
+| Mind Bar | 75% resistance to mind spells | the same | the resistance roll |
+| Synaptic Static | no one nearby can use psionics | its keeper can't; anyone else must beat the static (above) | the contest |
+| Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |
 
 What each costs, from the game's own table, and for three of them worked out as
 they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination and
@@ -326,7 +475,7 @@ Okay with the mod, so a party's thief skills show while it is made (see
 Some effects rule out a skill:
 - Blind, Afraid, Confused, Berserk and Paralyzed stop them all, except that a
   blind thief can still hear noise.
-- Slowed stops all but picking pockets.
+- Slowed stops picking pockets only.
 - Fire Shield stops picking pockets and hiding; Mirror Image stops hiding.
 - Graft Weapon stops picking pockets, opening locks and climbing.
 - Feeblemind stops reading languages.
@@ -362,8 +511,10 @@ doors, walls...), which ask in two ways. Every script in GPLDATA.GFF decodes
   Detect Traps on the character who set it off, avoids it. This is the roll the
   arena prisoner makes.
 
-A party check always goes to the member with the best chance. (The game also
-has a script command that lets each member try in turn, but no script uses it.)
+A party check goes to the member with the best chance. *Without the mod* it
+always went to the first party member: the game's pick meant to find the best
+but compared the wrong way round. (The game also has a script command that lets
+each member try in turn, but no script uses it.)
 
 **The game never rolls move silently, hide in shadows or read languages**, so
 on their own they make no difference, nor does the equipment penalty on them.
@@ -400,7 +551,10 @@ From the game's code:
   that isn't too heavy (the game's weight value at most 40, a metal long
   sword's). It gets another +2 to hit (+4 in all), and on the thief's first
   attack of the round the damage, STR bonus included, is multiplied: x2 at
-  thief levels 1-4, x3 at 5-8 and x4 at 9 and 10.
+  thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13 (AD&D's table). With
+  **A backstab multiplies the weapon's dice only** ticked, only the dice are
+  multiplied and STR, the weapon's plus and any other bonus are added once, as
+  in AD&D (DSCLOG's `STAB_TIMES`).
 
 Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items) (magic
 ones included). Weight belongs to the weapon's type and material, in the

@@ -70,6 +70,10 @@ out (a reward, a gift or a find).
 | ![](docs/items/skycutter.png) | Obsidian | chatkcha | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | chatkcha | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | | chests; Kel and the Elven Leader (+1) |
+| ![](docs/items/burning-arrows.png) | Wooden | arrows | ***Burning Arrows*** | cast Burning Hands on what they hit | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons), and readied by a Spellarcher only; worth nothing, gone at the next rest |
+| ![](docs/items/chill-arrows.png) | Wooden | arrows | ***Chill Arrows*** | cast Chill Touch on what they hit | the same |
+| ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit | the same |
+| ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit | the same |
 
 **By weapon spec**, for [weapon specialization](FEATURES.md#weapon-specialization):
 
@@ -142,12 +146,15 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | Kalzith ([Robes](FEATURES.md#robes)) |
 | ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by Kel ([Robes](FEATURES.md#robes)) |
 | ![](docs/items/belt-of-might.png) | Waist | Belt of Might | strength | — |
+| ![](docs/items/girdle-of-back-defense.png) | Waist | ***Girdle of Back Defense*** | no enemy gets the +2 to hit for attacking its wearer from behind, nor a thief's backstab | carried by the **Troop Leader**, with Linebreaker |
+| ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a chest |
 | ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +1 |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
 | ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | worn by Pehtucl |
 | ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](FEATURES.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
 | ![](docs/items/silver-necklace.png) | Neck | Silver Necklace | Biofeedback | — |
+| ![](docs/items/amulet-of-magic-resistance.png) | Neck | ***Amulet of Magic Resistance*** | 15% magic resistance, added to the wearer's own (as from Mind Bar); it never shatters | sold by **Kel** |
 | ![](docs/items/obsidian-necklace.png) | Neck | Obsidian Necklace | Disintegrate | the Troop Leader |
 | ![](docs/items/iron-necklace.png) | Neck | Iron Necklace | Fireball | the Hermit |
 | ![](docs/items/golden-torque.png) | Neck | Golden Torque | takes on its maker's morals | — |
@@ -217,16 +224,43 @@ caravan. The game's plain stone pick is only ever a
 ## Items against acid
 
 What each item's chance is against the Rampager's acid and the Babau's corroding touch, in the game and with
-[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material):
+[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material).
+Only what is worn on the arms, legs or chest can be lost, and the melee weapon held: helms, shields, cloaks,
+boots, belts, rings and amulets never are. A worn piece with no magical power is lost at once in the game (0%);
+one with a power never is (100%).
+
+**Chest:**
 
 | Item | Saved in the game | Saved with the rule |
 |---|---|---|
 | Leather Chest Armor | 0% | 55% (needs 10) |
-| Leather Chest Armor +1 | 0% | 60% (needs 9) |
+| Leather Chest Armor +1, ***Inixhide*** | 0% | 60% (needs 9) |
 | Bone scale chest | 0% | 50% (needs 11) |
 | Chain chest | 0% | 40% (needs 13) |
-| Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
-| Drake Armor +1 (a power) | 100% | 100% (the game's) |
+| Tanelyv's Armor (metal, no plus) | 0% | 40% (needs 13) |
+| Silk Armor +2 (no material: cloth's) | 0% | 55% (needs 10) |
+| Drake Armor +1, Shimmer Armor +3, ***Warden's Chest*** +1 (each with a power) | 100% | 100% (the game's) |
+| ***Ashen Robe*** (cloth, +1) | 0% | 50% (needs 11) |
+| ***Veiled Robe*** (cloth, +2) | 0% | 55% (needs 10) |
+
+**Arms and legs** (each piece on its own, as the chest):
+
+| Item | Saved in the game | Saved with the rule |
+|---|---|---|
+| Leather arm or leg armour | 0% | 55% (needs 10) |
+| Bone scale arm or leg armour | 0% | 50% (needs 11) |
+| Chain arm or leg armour; Grey's Scale (metal) | 0% | 40% (needs 13) |
+| ***Warden's Arms***, ***Warden's Legs*** (metal, +1) | 0% | 45% (needs 12) |
+| Tanelyv's Armor arms or legs (metal, +2) | 0% | 50% (needs 11) |
+| ***Bracers of Defense*** AC 6 (no material: cloth's, +4) | 0% | 65% (needs 8) |
+| ***Bracers of Defense*** AC 5 (+5) | 0% | 70% (needs 7) |
+| ***Bracers of Defense*** AC 4 (+6) | 0% | 75% (needs 6) |
+| ***Bracers of Defense*** AC 2 (+8) | 0% | 85% (needs 4) |
+
+**Weapons** (the first melee weapon held):
+
+| Item | Saved in the game | Saved with the rule |
+|---|---|---|
 | Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
 | Shadowseeker (metal, +1) | 70% | 70% (the game's: needs 7) |
 | Obsidian Dagger | 65% | 80% (needs 5) |

@@ -17,6 +17,15 @@ class FakeGame:
     def item_save(self, item, armour):
         return self.saves[item]
 
+    def item_record(self, item):
+        return bytes([item]).ljust(game.ITEM_SIZE, b"\0")
+
+    def item_type_record(self, rec):
+        return bytes(game.ITEM_TYPE_SIZE)
+
+    def item_label(self, rec, typ):
+        return {5: "Bone Helm", 6: "Leather Cloak +1"}[rec[0]]
+
     def combatant_name(self, who):
         return {3: "Gerakis", 44: "Rampager"}[who]
 
@@ -42,7 +51,22 @@ def lines(rules, e):
     return log._item_check(e)
 
 
+def detonate(roll, needed, item):
+    e = entry(roll, needed, item)
+    e.extra = item | dicelog.ITEM_DETONATE
+    return e
+
+
 class ItemCheckTests(unittest.TestCase):
+    def test_detonate(self):
+        """Detonate's blast on the worn item that breaks most easily: gone on a d20 under 15 less
+        its plus."""
+        self.assertEqual(lines(0, detonate(7, 15, 5)),
+                         ["  Detonate's blast on Gerakis's Bone Helm: d20 = 7, breaks it under 15 (15) -> DESTROYED"])
+        self.assertEqual(lines(0, detonate(14, 14, 6)),
+                         ["  Detonate's blast on Gerakis's Leather Cloak +1: d20 = 14, breaks it under 14 "
+                          "(15 -1 for its plus) -> safe"])
+
     def test_the_games_no_roll(self):
         self.assertEqual(lines(0, entry(0, 21, 1, True)),
                          ["  Rampager's acid on Gerakis's Leather Chest Armor: no magical power, destroyed "

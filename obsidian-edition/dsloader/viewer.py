@@ -146,6 +146,8 @@ class Viewer:
             side="right", padx=4)
         self.dice_status = tk.StringVar(value="Waiting for the game...")
         ttk.Label(row, textvariable=self.dice_status).pack(side="left", fill="x")
+        dice_find = ttk.Frame(dice)
+        dice_find.pack(fill="x", pady=(4, 0))
         # what the log shows (the game's switches are on the Options tab)
         row = ttk.Frame(dice)
         row.pack(fill="x", pady=(4, 0))
@@ -182,6 +184,8 @@ class Viewer:
             self.dice_text.tag_configure(f"member{n}", foreground=colour, font="LedgerFixedBold")
         self.dice_text.tag_configure("monster", foreground=theme.MONSTER_COLOUR, font="LedgerFixedBold")
         self._monster_names: Set[str] = set()  # every monster seen in a fight this session
+        self._finds: Dict[ttk.Frame, ttk.Entry] = {}  # each tab's find box, for Ctrl+F
+        self._find_bar(dice_find, self.dice_text, dice)
 
         talk = ttk.Frame(tabs, padding=6)
         tabs.add(talk, text="Dialogue", underline=1)
@@ -194,6 +198,8 @@ class Viewer:
         # for the latest speaker), and the name sticks for every line from that portrait
         ttk.Button(row, text="Name speaker...", command=lambda: self.name_speaker(self._last_portrait)).pack(
             side="right")
+        talk_find = ttk.Frame(talk)
+        talk_find.pack(fill="x", pady=(4, 0))
         box = ttk.Frame(talk)
         box.pack(fill="both", expand=True, pady=(6, 0))
         self.talk_text = tk.Text(box, wrap="word", height=20, font="TkTextFont")
@@ -209,6 +215,10 @@ class Viewer:
         self.talk_text.tag_configure("chosen", foreground=theme.GREEN)
         self._last_portrait: Optional[int] = None
         self.talk_text.tag_bind("speaker", "<Button-3>", self._speaker_clicked)
+        self._find_bar(talk_find, self.talk_text, talk)
+        # Ctrl+F: the find box of the log tab shown
+        self.root.bind_all("<Control-f>", lambda _e: self._focus_find(tabs))
+        self.root.bind_all("<Control-F>", lambda _e: self._focus_find(tabs))
 
         # what each spell and psionic power really does, from the game's records
         spells = ttk.Frame(tabs, padding=6)
@@ -340,6 +350,10 @@ class Viewer:
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # names floating over figures on the map for a moment (labels.py)
+        self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
+        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, and \"Miss\" over whoever an attack missed",
+                        variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
@@ -356,7 +370,7 @@ class Viewer:
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
         where = {"weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features, "buyback": features,
-                 "thief_table": thieves, "stealth": thieves, "new_spells": new}
+                 "thief_table": thieves, "stealth": thieves, "backstab_dice": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
@@ -407,7 +421,9 @@ class Viewer:
                          "races' pairs of classes have kits of their own, each giving something and "
                          "costing something (chosen on the creation panel's KIT page); the game's own "
                          "party gets features of its own"),
-                ("level_10", "Class levels go up to 10 (the game stops at 9; no spells past 5th level are needed)"),
+                ("level_10", "An XP cap of 749,999 in place of the game's level cap of 9: a single class rises while "
+                             "its next level needs no more; a multiclass character's classes share it evenly; "
+                             "a human's new class gets what its old classes' levels didn't use"),
                 ("cha_prices", "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
                                "point after, to 40% at 25; shops pay 60% of an item's price"),
                 ("buyback", "Merchants keep the magical items the party sells them, to buy back at their price "
@@ -417,8 +433,11 @@ class Viewer:
                 ("stealth", "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
                             "(with no enemy beside them; a thief's chance halved in daylight, a ranger's "
                             "indoors; a few kits differ)"),
+                ("backstab_dice", "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
+                                  "AD&D (the game multiplies the whole damage, STR included)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
-                               "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends")):
+                               "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends; "
+                               "and nine 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
             self.rule_vars[key] = tk.BooleanVar(
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = where.get(key, rules)
@@ -597,7 +616,7 @@ class Viewer:
             return
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
-        for var in (self.monster_info, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
+        for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still):
             var.set(True)
@@ -969,6 +988,7 @@ class Viewer:
                 self.dice.show_shadows = self.show_shadows.get()
                 self.dice.combat_log = self.combat_log.get()
                 self.dice.combat_log_level = self.combat_log_level.get()
+                self.dice.floating_names = self.floating_names.get()
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.show_dust = self.show_dust.get()
                 self.dice.elf_looks = self.elf_looks.get()
@@ -1065,6 +1085,7 @@ class Viewer:
         for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
             settings.pop(old, None)
         settings["monster_info"] = self.monster_info.get()
+        settings["floating_names"] = self.floating_names.get()
         settings["combat_log"] = self.combat_log.get()
         settings["combat_log_level"] = self.combat_log_level.get()
         settings["combat_log_strip"] = self.combat_log_strip.get()
@@ -1098,6 +1119,7 @@ class Viewer:
             self.dice.show_dust = self.show_dust.get()
             self.dice.combat_log = self.combat_log.get()
             self.dice.combat_log_level = self.combat_log_level.get()
+            self.dice.floating_names = self.floating_names.get()
             self.dice.ring_mode = self.ring_mode.get()
             self.dice.use_targeting = self.use_targeting.get()
             self.dice.scroll_map = self.scroll_map.get()
@@ -1197,6 +1219,83 @@ class Viewer:
             self.talk_text.insert("end", "\n")
         if self._following.get(self.talk_text, True):
             self.talk_text.see("end")
+
+    def _find_bar(self, row: ttk.Frame, text: tk.Text, tab: ttk.Frame) -> None:
+        """A find box over a log: every match (any case) marked, Enter or Next to the next one,
+        Shift+Enter or Previous back (round the end), Escape to clear; the log stops following
+        its newest line while a match is shown, so new lines don't take it away. Hidden lines
+        (details turned off) aren't searched."""
+        wanted = tk.StringVar()
+        where = tk.StringVar()
+        ttk.Label(row, text="Find (Ctrl+F):").pack(side="left")
+        entry = ttk.Entry(row, textvariable=wanted, width=16)
+        entry.pack(side="left", padx=(4, 0))
+        self._finds[tab] = entry
+        text.tag_configure("found", background=theme.SAND, foreground=theme.SHADOW)
+        text.tag_configure("found_now", background=theme.AMBER, foreground=theme.SHADOW)
+        shown = {"at": None}
+
+        def matches() -> List[Tuple[str, str]]:
+            text.tag_remove("found", "1.0", "end")
+            text.tag_remove("found_now", "1.0", "end")
+            pattern = wanted.get()
+            if not pattern:
+                return []
+            out, start, length = [], "1.0", tk.IntVar()
+            while True:
+                at = text.search(pattern, start, stopindex="end", nocase=True, count=length)
+                if not at or length.get() == 0:
+                    return out
+                end = f"{at}+{length.get()}c"
+                out.append((at, end))
+                text.tag_add("found", at, end)
+                start = end
+
+        def go(step: int) -> None:
+            found = matches()
+            if not found:
+                shown["at"] = None
+                where.set("no match" if wanted.get() else "")
+                return
+            starts = [text.index(a) for a, _ in found]
+            last = shown["at"]
+            if last is None:  # (a new search: Next from the top, Previous from the bottom)
+                k = 0 if step > 0 else len(found) - 1
+            else:
+                after = [i for i, a in enumerate(starts) if text.compare(a, ">" if step > 0 else "<", last)]
+                k = (after[0] if step > 0 else after[-1]) if after else (0 if step > 0 else len(found) - 1)
+            at, end = found[k]
+            shown["at"] = starts[k]
+            text.tag_add("found_now", at, end)
+            text.tag_raise("found")
+            text.tag_raise("found_now")
+            self._following[text] = False
+            text.see(at)
+            where.set(f"{k + 1} of {len(found)}")
+
+        def clear(_event=None) -> str:
+            wanted.set("")
+            shown["at"] = None
+            matches()
+            where.set("")
+            return "break"
+
+        entry.bind("<Return>", lambda _e: go(1))
+        entry.bind("<KP_Enter>", lambda _e: go(1))
+        entry.bind("<Shift-Return>", lambda _e: go(-1))
+        entry.bind("<Escape>", clear)
+        wanted.trace_add("write", lambda *_a: shown.update(at=None))
+        ttk.Button(row, text="Previous", command=lambda: go(-1)).pack(side="left", padx=(4, 0))
+        ttk.Button(row, text="Next", command=lambda: go(1)).pack(side="left", padx=(4, 0))
+        ttk.Label(row, textvariable=where).pack(side="left", padx=(8, 0))
+
+    def _focus_find(self, tabs: ttk.Notebook) -> str:
+        """Ctrl+F: the find box of the log tab shown (none on the others)."""
+        entry = self._finds.get(self.root.nametowidget(tabs.select())) if tabs.select() else None
+        if entry is not None:
+            entry.focus_set()
+            entry.select_range(0, "end")
+        return "break"
 
     def _follow_end(self, text: tk.Text, scroll: ttk.Scrollbar) -> None:
         """A log keeps its newest line in view unless the reader has scrolled up to read back:

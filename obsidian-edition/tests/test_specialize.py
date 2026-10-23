@@ -225,6 +225,23 @@ class NewCharacterTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    def test_war_kits_pick_one(self):
+        """A Crusader or Mind Warrior (kits on) keeps one weapon spec (its kinds: DSCLOG's
+        KindsAllowedTests); a cleric of another kit none."""
+        from dsloader import weaponchoice
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = game.RULE_KITS | game.RULE_SPECIALIZE
+            for cls, kit in ((1, 3), (12, 2)):
+                s = bytearray(sheet((5, 2), classes=(cls, 0, 0)))
+                s[0x43] = kit
+                with self.subTest(cls=cls, kit=kit):
+                    self.assertEqual(weaponchoice.kinds_for(bytes(s)), [6, 0, 0, 0])
+                    s[0x43] = 1
+                    self.assertEqual(weaponchoice.kinds_for(bytes(s)), [0, 0, 0, 0])
+        finally:
+            game.RULES_IN_FORCE = old
+
     def test_own_defaults(self):
         """Picks left unmade on the weapon window: a Ghetto Fighter's dagger (kits on), a
         thri-kreen's chatkcha; kept to what's allowed."""
@@ -706,6 +723,16 @@ class KitGearTests(FinishNewTests):
         self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
         self.assertEqual(weaponchoice.kit_gear(self.gd), [])
         self.assertEqual(self.item(0), (weaponchoice.START_TYPE, right))
+
+class ConjuredTests(unittest.TestCase):
+    def test_conjured_count_for_specialization_only(self):
+        """Shillelagh a club, the Flame Blade a long sword, Spiritual Hammer a mace for weapon
+        specialization; no kind for restrictions (kind_of), as the game has them."""
+        for t, kind in ((28, "club"), (29, "long sword"), (30, "mace")):
+            self.assertEqual(specialize.spec_kind_of(t), specialize.KINDS.index(kind))
+            self.assertIsNone(specialize.kind_of(t))
+        self.assertEqual(specialize.spec_kind_of(45), specialize.kind_of(45))
+
 
 if __name__ == "__main__":
     unittest.main()

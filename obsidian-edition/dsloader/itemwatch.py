@@ -17,7 +17,7 @@ move it, under another (the same item, a new number, within the wait: ARRIVED).
 Only a loss with nothing ordinary to show for it is written as a report; the rest pass in
 silence (each was a dice log line, which a shop or a hand-over made a stream of): an item that
 still exists outside the party (dropped, put in a chest, given, sold or stolen), one that is used
-up or taken by a script (fruit and quest items, arrows, scrolls), one a spell made (Shillelagh,
+up or taken by a script (fruit and quest items, arrows, scrolls, a wand's last charge), one a spell made (Shillelagh,
 the spell's Flame Blade, Spiritual Hammer), one sold (the party's money went up), and a weapon
 that broke (a Broken Weapon came in its place). A change of area renumbers every item at once:
 the old items are matched with the new (BULK_MATCH), and one with no match is news. A game
@@ -50,10 +50,11 @@ MOST_GONE = 3          # (at least this many, and over half the party's items)
 # with no match is news; fewer, a game loaded. Not settled in BULK_WAIT seconds: a load too.
 BULK_MATCH, BULK_WAIT = 0.5, 30.0
 DICE_LINES, TALK_LINES = 300, 80   # context kept for the report, as the crash report keeps it
-# item types whose going is ordinary: fruit and quest items (60), arrows (62), scrolls (96),
-# psionic scrolls (99) and grain (110), used up or taken by scripts; and the items spells make,
+# item types whose going is ordinary: fruit and quest items (60, 61, 87, 104), arrows (62),
+# scrolls (96), psionic scrolls (99), grain (110) and the wands (70 to 73), used up or taken by
+# scripts (which free the item's record, as Detonate and acid do); and the items spells make,
 # Shillelagh (28), Flame Blade (29) and Spiritual Hammer (30), gone when the spell ends
-USED_UP = frozenset((60, 62, 96, 99, 110))
+USED_UP = frozenset((60, 61, 62, 70, 71, 72, 73, 87, 96, 99, 104, 110))
 SPELL_MADE = frozenset((28, 29, 30))
 BROKEN = frozenset((93, 107))  # (a Broken Weapon: the game's, in place of one that broke)
 
@@ -205,6 +206,17 @@ class ItemWatch:
 
 
 ITEM_VALUE = 0x06  # an item's price, in its record (npcitems.ITEM_VALUE)
+# The game frees an item (A0:1CD6h, then 1A0A:0A3Ah) by zeroing the word at its +0 and linking it
+# into the free list (+4); its type, name and the rest stay as they were. It does so for Detonate's
+# blast and acid, the last arrow or charge, a spell's weapon ending, the scripts' TAKE (5Ch, to
+# no one) and DROP (2Fh: the item becomes a thing on the map), and new characters' gear
+ITEM_ID = 0x00
+
+
+def freed(was: ItemSeen, record: bytes) -> bool:
+    """The item's record freed since it was seen: its +0 word zeroed (the rest may be unchanged)."""
+    return len(record) >= game_mod.ITEM_SIZE and not struct.unpack_from("<H", record, ITEM_ID)[0] \
+        and bool(struct.unpack_from("<H", was.record, ITEM_ID)[0])
 
 
 def sale_prices(record: bytes) -> set:
@@ -272,13 +284,13 @@ def _read(get) -> Optional[int]:
 
 def ordinary_loss(was: ItemSeen, record: bytes, sold: bool, broke: bool) -> Optional[str]:
     """Why the item's going is nothing to report, or None (a report is written)."""
-    if len(record) >= game_mod.ITEM_SIZE:
+    if len(record) >= game_mod.ITEM_SIZE and not freed(was, record):
         typ, name = struct.unpack_from("<HH", record, game_mod.ITEM_TYPE)[0], \
             struct.unpack_from("<H", record, game_mod.ITEM_NAME)[0]
         if record == was.record or (typ == was.type and name == struct.unpack_from("<H", was.record, game_mod.ITEM_NAME)[0]):
             return "it is outside the party (dropped, put away, given or stolen)"
     if was.type in USED_UP:
-        return "used up, or taken for a quest"
+        return "used up (a wand's last charge too), or taken for a quest"
     if was.type in SPELL_MADE:
         return "a spell made it, and the spell is over"
     if broke:
@@ -292,6 +304,9 @@ def describe_fate(was: ItemSeen, record: bytes) -> str:
     """What the item's record says now, in a few words."""
     if len(record) < game_mod.ITEM_SIZE:
         return "its record could not be read"
+    if freed(was, record):
+        return ("the game freed its record: destroyed (Detonate's blast, acid), or taken or dropped "
+                "on the ground by a script (the dice log and the dialogue below say which)")
     if record == was.record:
         return "the item still exists outside the party, as it was (dropped, sold, given or stolen)"
     typ, = struct.unpack_from("<H", record, game_mod.ITEM_TYPE)

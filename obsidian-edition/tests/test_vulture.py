@@ -19,6 +19,11 @@ def cooked():
     return bytes.fromhex("b4f501000000010000003c000000000006ff010100")  # the game's own template
 
 
+def set_fight(m, on):
+    """The game's own test for a fight (game.fight_on): the fight state's word at +19h."""
+    struct.pack_into("<H", m, (DS - game.FIGHT_STATE_FROM_DS) * 16 + game.FIGHT_STATE_ON, on)
+
+
 class VultureTests(unittest.TestCase):
     def setUp(self):
         """Dag, Daaki and Jellybelly (the party, Jellybelly a 7th level cleric with WIS 18), and
@@ -144,25 +149,27 @@ class VultureTests(unittest.TestCase):
         return lines, bytes(self.m[HDR + 0x600:HDR + 0x700]).split(b"\0")[0].decode("cp437")
 
     def test_fighting_is_the_games_flag(self):
-        """A fight is on while the game's flag (DS:1168h) says so: not for the minutes after it,
-        as when only the game clock was looked at (it hardly moves outside fights: Dinos wouldn't
-        take the vulture until the party rested)."""
+        """A fight is on while the game's own test says so (game.fight_on, the fight state's +19h,
+        as its rest's): not for the minutes after it, as when only the game clock was looked at
+        (it hardly moves outside fights: Dinos wouldn't take the vulture until the party rested),
+        nor with IN_COMBAT alone, which stays up while the party walks spread out."""
         log = self.log
         set_clock(log, 5000)
         log._round_time = 4990  # (a round a moment ago, by the clock)
-        struct.pack_into("<H", self.m, DS * 16 + game.IN_COMBAT, 0)
-        self.assertFalse(log._fighting())
         struct.pack_into("<H", self.m, DS * 16 + game.IN_COMBAT, 1)
+        set_fight(self.m, 0)
+        self.assertFalse(log._fighting())
+        set_fight(self.m, 1)
         self.assertTrue(log._fighting())
 
     def test_no_pockets_picked_in_a_fight(self):
         """The Pick Pockets button's pick (PICKED_BY and the thief) does nothing in a fight; out of
         one, that thief tries."""
-        struct.pack_into("<H", self.m, DS * 16 + game.IN_COMBAT, 1)
+        set_fight(self.m, 1)
         lines, text = self.ask(dicelog.PICKED_BY + 2, None)
         self.assertEqual((lines, text), ([pickpocket.NOT_IN_A_FIGHT], pickpocket.NOT_IN_A_FIGHT))
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_USE_TAKEN)[0], 1)
-        struct.pack_into("<H", self.m, DS * 16 + game.IN_COMBAT, 0)
+        set_fight(self.m, 0)
         tried = []
         real = pickpocket.attempt
         pickpocket.attempt = lambda gd, picked, **kw: tried.append(kw) or pickpocket.Attempt("tried", [])

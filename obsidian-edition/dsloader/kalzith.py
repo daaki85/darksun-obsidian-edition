@@ -627,6 +627,8 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
         out.update(haystash.script_chunks(chunks, field_types))
     from . import manualcheck  # no manual check (the dragon's question): always
     out.update(manualcheck.script_chunks(chunks, field_types))
+    from . import scriptfixes  # the game's own script bugs mended (scriptfixes.py): always
+    out.update(scriptfixes.script_chunks(chunks, out))
     if ring:  # the XP for finding the arena's ring (ring.py), in the same script as Semyon's exit
         from . import ring as rg
         body = ("GPL ", rg.BODY_SCRIPT)

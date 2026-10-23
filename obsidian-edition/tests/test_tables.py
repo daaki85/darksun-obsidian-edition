@@ -16,17 +16,20 @@ class TablesTests(unittest.TestCase):
         self.assertEqual(tables.xp_needed("thief", 1), 1250)
         self.assertEqual(tables.xp_needed("preserver", 9), 250000)
         self.assertEqual(tables.xp_needed("cleric", 10), 675000)
-        self.assertIsNone(tables.xp_needed("fighter", 11))
+        self.assertEqual(tables.xp_needed("thief", 12), 660000)
+        self.assertEqual(tables.xp_needed("druid", 12), 750000)
+        self.assertIsNone(tables.xp_needed("fighter", 14))
         for row in tables.ROWS:
             xp = tables.XP[row]
-            self.assertEqual(len(xp), 11)
+            self.assertEqual(len(xp), 14)
             self.assertEqual(list(xp), sorted(xp))
 
     def test_slots(self):
         self.assertEqual([tables.slots(1, 5, s) for s in range(1, 6)], [3, 3, 1, 0, 0])  # cleric
         self.assertEqual([tables.slots(6, 9, s) for s in range(1, 6)], [4, 4, 3, 2, 1])  # druid
         self.assertEqual([tables.slots(11, 5, s) for s in range(1, 6)], [4, 2, 1, 0, 0])  # preserver
-        self.assertEqual(tables.slots(11, 12, 5), 2)  # (10th's past it)
+        self.assertEqual([tables.slots(5, 12, s) for s in range(1, 6)], [6, 5, 5, 3, 2])  # druid 12th
+        self.assertEqual(tables.slots(11, 14, 5), 4)  # (12th's past it)
         self.assertEqual(tables.slots(1, 0, 1), 0)
         self.assertEqual(tables.slots(1, 3, 6), 0)
         for cls in (9, 13, 17):  # fighter, ranger, thief: the game's

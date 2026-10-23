@@ -51,6 +51,22 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(sorted(p.offset for p in gamepatch.PATCHES if p.name.startswith("brave_fear")),
                          [0x5400 + 0x3CB4 * 16 + 0x30 + n * 0x20 + 0x12 for n in (21, 43, 78, 132)])
 
+    def test_party_and_monster_slips_mended(self):
+        """The party's thief skill pick keeps the highest chance (a signed "jge" past it when the
+        best so far is as high), and the random monster's count divides by the slot found's
+        strength (+0 from SI, one past it, not +4: the next slot's, 0 after a ninth)."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        self.assertEqual(by["party_best"].replacement[0], 0x7D)
+        self.assertEqual(by["monster_count"].replacement[-1], 0)
+
+    def test_shop_shine_sites(self):
+        """A shop turns the colour cycles: the event wait's test (4 bytes) and the shop's loop's
+        (5), each DSCLOG's numbered site, its own number."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        self.assertEqual(by["shop_shine"].replacement, bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.SHOP_SHINE, 0x90)))
+        self.assertEqual(by["shop_loop"].replacement[2], gamepatch.SHOP_LOOP)
+        self.assertEqual(len(by["shop_loop"].replacement), len(by["shop_loop"].original))
+
     def test_relocated_words_kept(self):
         """A word DOS relocates (from the EXE's relocation table) must be left as it was: the
         camera patch keeps its "mov ax,377Eh" at 1CA15h; a patch changing such a word is refused."""

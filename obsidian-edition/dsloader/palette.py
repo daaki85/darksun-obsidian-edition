@@ -85,6 +85,8 @@ TEXT_PAIRS: Dict[str, Tuple[str, str]] = {
     "character card condition": (AMBER, DEEP),
     "selected text": (YELLOW, PANEL),
     "hex, changed byte": (SHADOW, AMBER),
+    "log, a found match": (SHADOW, SAND),
+    "log, the found match shown": (SHADOW, AMBER),
     "hex, selected byte": (SHADOW, PSI_BLUE),
     "title": (AMBER, ROCK[-1]),
     "subtitle": (SAND, ROCK[-1]),

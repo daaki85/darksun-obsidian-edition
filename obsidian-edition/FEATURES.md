@@ -29,7 +29,7 @@ fixed, more saves and characters, and the game's speed. How each is done is in
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
-  - [Levels up to 10](#levels-up-to-10)
+  - [Level cap by XP](#level-cap-by-xp)
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [Preservers' first spells](#preservers-first-spells)
@@ -43,6 +43,7 @@ fixed, more saves and characters, and the game's speed. How each is done is in
     - [Picking pockets](#picking-pockets)
 - [New content](#new-content)
   - [New wizard spells](#new-wizard-spells)
+  - [6th-level priest spells](#6th-level-priest-spells)
   - [New items](#new-items)
     - [Bracers of defense](#bracers-of-defense)
     - [Robes](#robes)
@@ -57,6 +58,7 @@ fixed, more saves and characters, and the game's speed. How each is done is in
   - [What the party wears](#what-the-party-wears)
   - [Shadows](#shadows)
   - [Dust](#dust)
+  - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
@@ -295,7 +297,7 @@ full):
   level, the game 3 2 1), preservers AD&D's wizard table (4 2 1 at 5th); WIS
   still adds a priest's bonus slots. Rangers' slots were AD&D's already.
 
-Hit points were AD&D's already (with [Levels up to 10](#levels-up-to-10)).
+Hit points were AD&D's already (with [Level cap by XP](#level-cap-by-xp)).
 Kits change these as before.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#adds-class-tables).
@@ -361,7 +363,8 @@ melee weapon held (the first one in the character's list of held items; bows
 and slings never). The game makes the check on every such hit, whether or not
 the target's saving throw against the attack succeeds, and shows its own
 message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
-pieces worn on the arms, legs or chest count, not helms or shields, and at
+pieces worn on the arms, legs or chest count (bracers and robes among them), not
+helms, shields, cloaks, boots or belts, and at
 most one piece of armour is lost to a hit: the first that fails, in the order
 of the character's list.
 
@@ -393,7 +396,7 @@ less the item's plus, and 1 less again for a magical power:
 |---|---|---|
 | Leather Chest Armor | 0% | 55% (needs 10) |
 | Chain chest | 0% | 40% (needs 13) |
-| Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
+| Tanelyv's arm or leg armour (metal, +2) | 0% | 50% (needs 11) |
 | Drake Armor +1 (a power) | 100% | 100% (the game's) |
 | Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
 | Obsidian Dagger | 65% | 80% (needs 5) |
@@ -408,8 +411,11 @@ Defiler's saving throw vs Acid from Rampager (paralysis/poison/death): d20 = 20 
   Rampager's acid on Defiler's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe
 ```
 
-The Detonate psionic power, which can blow up an item a target carries, keeps
-the game's own rule (a d20 under 15 less the item's plus).
+The Detonate psionic power (the daggorans' too) keeps the game's own rule: besides
+its blast, it picks the item the target wears that breaks most easily (a cloak,
+then a bone helm or leather chest armour, then bone scale armour) and
+destroys it on a d20 under 15 less the item's plus, so 70% for a plain item.
+The dice log shows that check and its outcome.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
 
@@ -476,7 +482,7 @@ from the next start); untick one and the game is as it was.
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes have kits of their own |
-| [Levels up to 10](#levels-up-to-10) | every class goes to 10th level (the game stops at 9) |
+| [Level cap by XP](#level-cap-by-xp) | classes go up to a cap of 749,999 XP, shared between a character's classes (the game stops at 9th level) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 | [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
 
@@ -508,20 +514,24 @@ its other missile weapons faster too, a step behind a specialist, as in melee
 hit and damage count for missiles too.
 
 **Attacks a round,** by skill and level (a warrior's level: the highest of its
-fighter, gladiator and ranger levels; characters stop at 10):
+fighter, gladiator and ranger levels; a warrior class goes no higher than 10th under the [XP cap](#level-cap-by-xp)):
 
 | Skill with the weapon | Who | Melee, levels 1–6 | Melee, levels 7–10 | Bow, levels 1–6 | Bow, levels 7–10 | Sling, staff sling or chatkcha, levels 1–6 | Sling, staff sling or chatkcha, levels 7–10 |
 |---|---|---|---|---|---|---|---|
 | none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
 | not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits): its chosen weapon spec (melee only) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits): its chosen weapon spec (melee only; by its own class's level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
 
 The sixteen weapon specs take in the game's weapons of every material and its
-named ones (Bloodwrath, Swiftbite and the like are long swords); spell-made
-weapons and gloves are none.
+named ones (Bloodwrath, Swiftbite and the like are long swords); gloves are none.
+The weapons spells make count for specialization as their AD&D weapon: the
+Flame Blade a long sword (AD&D's scimitar, which Athas hasn't), Shillelagh a
+club, Spiritual Hammer a mace (the war hammer's nearest). Class and kit
+restrictions leave them as the game has them: anyone who can cast the spell can
+hold its weapon.
 
 | Weapon specs (the weapon window's rows, from the top) |
 |---|
@@ -531,7 +541,7 @@ weapons and gloves are none.
 | chatkcha, bow, sling, staff sling |
 
 **Choosing at creation.** Press **DONE** on the character creation screen and
-a warrior (and a [Battle Mage](#kits)) picks its weapon specs on the weapon
+a warrior (and a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits)) picks its weapon specs on the weapon
 window, the one a level gained brings up (below), as a preserver picks its
 spells on CHOOSE A SPELL: a fighter or ranger one, a gladiator two, a
 [Myrmidon](#kits) two. A preserver warrior picks its spells first. A
@@ -591,7 +601,7 @@ rule) picks the rest the way a psionicist picks a new power: in the game's own
 pop-up, made bigger, a picture of each weapon spec on a slot, six to a row,
 those its classes can't use (or it has) greyed. The pointer on a slot names it
 under them (**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick
-would be expertise: a ranger's, a Battle Mage's; as CHOOSE A SPELL names a
+would be expertise: a ranger's, a Battle Mage's, a Crusader's or Mind Warrior's; as CHOOSE A SPELL names a
 spell), and lights the slot if it can be picked; off the slots the title comes
 back. The picks left are beside **EXIT** (which asks, as for powers, whether
 to leave with picks unmade: they're offered again at the next level).
@@ -645,59 +655,81 @@ The game's own party gets features of its own
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#kits).
 
-### Levels up to 10
+### Level cap by XP
 
 The game stops every class at level 9 (its manual's tables end there too).
-With **Class levels go up to 10** ticked, each class goes one level further,
-at the XP AD&D gives for 10th level:
+With **Level cap by XP** ticked, a class goes up instead while its next level
+needs no more than **749,999 XP**, shared out:
 
-| Class | XP for 10th level |
+| Character | A class goes up while its next level needs no more than |
 |---|---|
-| Cleric | 450,000 |
-| Druid | 125,000 |
-| Fighter | 500,000 |
-| Gladiator | 600,000 (500,000 with AD&D's class tables off) |
-| Preserver | 250,000 |
-| Psionicist | 400,000 |
-| Ranger | 600,000 |
-| Thief | 160,000 |
+| One class | 749,999 |
+| Two or three classes | an even share: 374,999 each for two, 249,999 for three |
+| A human who changed class | 749,999 less what its old classes' levels needed |
 
-Everything else at 10th level is the game's own: it had it all along, and
+A character of several classes already has its XP shared: the game splits
+every award between the classes, and the sheet shows one class's share. A
+human's XP starts again at 0 when it changes class, so its old classes' levels
+count against the new one: a fighter who changed to cleric at 9th (250,000 XP)
+can take the cleric to 10th, at 7th (64,000) to 11th. XP keeps counting past
+the cap; only the levels stop. With [AD&D's class tables](#adds-class-tables),
+the highest levels are:
+
+| Class | One class | Two classes | Three classes |
+|---|---|---|---|
+| Cleric | 11 | 9 | 9 |
+| Druid | 12 | 12 | 11 |
+| Fighter | 10 | 9 | 8 |
+| Gladiator | 10 | – | – |
+| Preserver | 11 | 10 | 9 |
+| Psionicist | 11 | 9 | 9 |
+| Ranger | 10 | 9 | 8 |
+| Thief | 13 | 11 | 11 |
+
+749,999 is the most XP that keeps a druid from 13th and a preserver from 12th
+(both need 750,000), where a preserver would cast 6th-level spells. Without
+AD&D's tables the game's own XP tables count.
+
+Everything else past 9th level is the game's own: it had it all along, and
 only the cap kept it out of reach. Its XP tables go on to level 20 (druids
 with a table of their own, not the cleric's), and THAC0, saves, spell slots
-and thief skills are worked out from the level. So at 10th level:
+and thief skills are worked out from the level. So past 9th:
 
-- **Hit points** follow AD&D past 9th: preservers and thieves still roll (d4
-  and d6, CON's bonus counting too), while the others gain a fixed amount (+3
-  for fighters, gladiators and rangers, +2 for clerics, druids and
-  psionicists). The game's own table has the fixed gain for thieves too, as it
-  keeps thieves and psionicists together and AD&D's psionicist stops rolling
-  at 9th; with the rule thieves roll their 10th die.
+- **Hit points** follow AD&D: preservers roll their d4 to 10th and thieves
+  their d6 to 10th (CON's bonus counting too), then gain a fixed amount; the
+  others gain a fixed amount from 10th (+3 for fighters, gladiators and
+  rangers, +2 for clerics, druids and psionicists). The game's own table has
+  the fixed gain for thieves at 10th too, as it keeps thieves and psionicists
+  together and AD&D's psionicist stops rolling at 9th; with the rule thieves
+  roll their 10th die.
 - **Gladiators** optimise their armour, as the game already has them do: AC 1
   better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
   Loader counts it in **AC: spells, rings, other**. The game gives it with or
   without armour.)
-- **THAC0 and saves** improve as the game's formulas give: 11 for a
-  gladiator, 14 for a druid, as for AD&D's warriors and priests.
-- **Spell slots** grow at the levels casters already have, up to 5th; no class
-  gets 6th-level slots (a cleric would at 11, a preserver at 12), so no spells
-  past 5th level are needed. A 10th-level preserver or druid has 5 4 3 2 2
-  before WIS by the game's table; with
-  [AD&D's class tables](#adds-class-tables), 4 4 3 2 2 and 4 4 3 3 2.
+- **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
+  gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
+- **Spell slots** grow at the levels casters already have, up to 5th. With
+  AD&D's class tables a priest has 5 4 4 3 2 at 11th and 6 5 5 3 2 at 12th, a
+  preserver 4 4 4 3 3 at 11th. Priests also have a 6th-level slot at 11th
+  and two at 12th, for the mod's [6th-level priest spells](#6th-level-priest-spells);
+  preservers have no 6th-level spells.
+- **Thief skills** from AD&D's table go on to 13th
+  ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).
 - **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
-  as at every level, offered from spell level (class level + 1) / 2 down:
-  5th at 10th as at 9th. **A psionicist picks a new power** (the game gives
-  one at each level, two at odd levels and 4th).
-- Spell damage that grows with the caster's level already counts up to level
-  10 in the game, so a 10th-level caster gets the last step.
+  as at every level, offered from spell level (class level + 1) / 2 down, but
+  no higher than 5th (the game would offer an empty 6th-level page at 11th).
+  **A psionicist picks a new power** (the game gives one at each level, two at
+  odd levels and 4th).
+- Spell damage that grows with the caster's level counts up to level 10 in
+  the game, so a caster past 10th does no more.
 
 The level-up comes as the game's usual one ("Gerakis gains a level"), and
-View Character stops showing the XP for the next level at 10, as it does at
-9 without the rule. For a character of more than one class, a class already
-at 10 isn't named in the brackets, since it has no next level. Untick it and
-nobody goes past the level they have: a 10th-level character stays 10th.
+View Character stops showing the XP for the next level at the cap, as it does
+at 9 without the rule. For a character of more than one class, a class
+already at its cap isn't named in the brackets, since it has no next level.
+Untick it and nobody goes past the level they have.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#levels-up-to-10).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#level-cap-by-xp).
 
 ### STORE and RECALL on the creation screen
 
@@ -887,16 +919,16 @@ ticked, a skill is:
 
 AD&D's averages, by thief level:
 
-| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 |
-| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 |
-| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
-| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 |
-| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 |
-| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 |
-| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 |
-| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 |
+| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 | 90 | 95 | 99 |
+| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 | 72 | 77 | 82 |
+| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 75 | 80 |
+| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 | 86 | 94 | 99 |
+| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 | 70 | 77 | 85 |
+| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 | 35 | 35 | 40 |
+| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 | 99 | 99 | 99 |
+| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
 
 The race adjustments, as the game has them (humans, half-giants and
 thri-kreen have none):
@@ -956,8 +988,14 @@ Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) ->
   Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
 Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
     THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
-  Tezral hits Slig for 16: (1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19) x2 backstab
+  Tezral hits Slig for 9: 1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice x2)
 ```
+
+With **A backstab multiplies the weapon's dice only** (on unless unticked, in
+the same Options group) a backstab multiplies the weapon's dice and adds STR,
+the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
+backstab (the dice x3)` is 27 where the game made it 51. The multiplier is x2
+at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for
 an Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are
@@ -1179,7 +1217,75 @@ and the game is as it was.
 
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
+
+### 6th-level priest spells
+
+Nine 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
+202-210). A cleric or druid gets them at 11th level, with AD&D's spell slots:
+one 6th-level slot at 11th and two at 12th (a druid reaches 12th under the XP
+cap, a cleric 11th). Like the 4th and 5th-level common spells, the cosmos
+ones are for druids and a Healer cleric; each element's are for the clerics
+and druids of that sphere (an Elementalist's second sphere counts). They come
+with the **New wizard spells** switch, and with **AD&D's tables** for the
+slots.
+
+| Spell | Who | Cast on | Does |
+|---|---|---|---|
+| **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
+| **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
+| **Blade Barrier** | air | a wall | 8d8 to each creature in it or passing through; a save for none |
+| **Wall of Thorns** | earth | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
+| **Sunstroke** | fire | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
+| **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
+| **Heartseeker** | earth, water | one creature | it saves against death or dies |
+| **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
+| **Whirlwind** | air | an area, a round a caster level | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
+
+![The nine 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds and Water of Life](docs/new-priest-spells.png)
+
+How they're made, and where they differ from the books:
+
+- Each is built on a spell the game already has, so the game's own code casts
+  it: Heal on Cure Critical Wounds, Harm on Cause Critical Wounds, the walls
+  on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds on Flame
+  Strike, Whirlwind on Stinking Cloud, Heartseeker on Slay Living and Water of
+  Life on Lend Health.
+- **Blade Barrier and Wall of Thorns are walls of their own**, made as the
+  game makes its fire walls but each with its own damage and its own picture:
+  a ring of circling blades and a tangle of thorns, Wake of the Ravager's (the
+  fire wall in grey or dark brown without it). Any number of walls can stand at
+  once, each doing its own. Blade Barrier's blades are edged, with a saving
+  throw for none, as Wake of the Ravager's. Wall of Thorns does the book's 8
+  plus the creature's AC (so the unarmoured suffer most), with no save: a
+  monster's own AC, a party member's as the game last worked it out when
+  something attacked them (before that, AC 10).
+- **Sunstroke** strikes one creature, as in Wake of the Ravager, and holds it
+  as Hold Person does, for 2 rounds a level, and the heat burns it for the
+  book's 1d4 of fire at the start of each round while it lies there (a fire
+  resistance counts). It ends with the paralysis, or when that is cured.
+- **Fire Seeds** throws its four seeds of 2d8 together, one burst of 8d8 (the
+  same dice), not one by one at different places; it
+  bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
+  Lands has too) where Flame Strike rises as a column of fire.
+- **Heartseeker** is a spell of death, not an arrow to shoot.
+- **Whirlwind** stays where it is cast, as Stinking Cloud does, for a
+  round a caster level, as AD&D has it: one tall, turning funnel of dust in the middle of
+  its area, its ring of dust at the area's edge. Nothing can be shot or cast
+  through it (it blocks sight, as Wall of Fog does). Each round it does 2d8 crushing to every creature in
+  it (a save for half), your party included; one that fails its save is swept
+  off its feet and loses its next turn (no movement, no action), without being
+  helpless as a held creature is. It doesn't move.
+- **Harm** on a helpless creature, which the game hits with the most its dice
+  can do, still leaves it 1d4 hit points.
+
+The dice log names each one: Harm's line says the game's own roll goes
+unused, and Wall of Thorns' gives the AC its damage came from
+(`Wall of Thorns' wall instead: 8 + AC 10 = 18`), and a creature Whirlwind
+sweeps off its feet has a line of its own. Without Wake of the Ravager
+installed the spells have icons of their own (the game's, recoloured).
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### New items
 
@@ -1225,6 +1331,7 @@ dearest, the Wand of Missiles, is 65,000):
 | Cloak and Boots of Elvenkind | 25,000 and 20,000 |
 | Warden's Arms and Legs; Chest; Helm | 27,000 each; 36,000; 30,000 |
 | Arrowbane; Sunking Crown | 30,000; 40,000 |
+| Girdle of Back Defense; Golden Girdle of Urnst; Amulet of Magic Resistance | 25,000; 20,000; 35,000 |
 | Gutterward; Ironbulwark | 25,000; 65,000 (the game's Drake Shield +1 is 25,400, El's Shield +2 50,200) |
 | Tome of Understanding | 43,500 (AD&D's) |
 
@@ -1531,7 +1638,7 @@ walking and fighting:
 
 | Worn | Shown |
 |---|---|
-| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
+| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; an axe or mace on a wooden haft, its head solid, as the game's own axemen carry them; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
 | **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
 | **Armour** | the character's own clothing recoloured toward its material, shade for shade (leather, bone, chain, plate, scale...): the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures the artist drew mostly bare (the mul, the dwarf man) only their straps and loincloth change, so it shows little |
 | **Helms** | a circlet at the brow blended into the hair: a feather on leather, a dark stone on iron, low spikes on bone |
@@ -1569,6 +1676,19 @@ stand in front of them, as with the shadows. Switch it off on the Options tab.
 ![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
+
+### Spells on the ground
+
+The [6th-level priest spells](#6th-level-priest-spells) that stay on the map have
+pictures of their own: Blade Barrier a ring of circling blades and Wall of Thorns
+a tangle of thorns (Wake of the Ravager's, when it is installed; the game's fire
+wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
+funnel of dust in the middle of its area that turns as you watch, its ring of
+dust at the edge.
+
+![Whirlwind in the Scar fight: a tall grey funnel of dust turning over the party and Scar's henchmen](docs/whirlwind.gif)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ## Controls
 
@@ -1637,6 +1757,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does (its code ran on into Strength's), and the STR alone when there was no disease to take | Takes the disease only |
 | **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place (a slip in the code), so the wrong ones were left out | Measured from where each stands |
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
+| **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
 | **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |
@@ -1646,13 +1767,21 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
+| A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
+| **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
+| A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
+| **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
+| The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
+| **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it
 ([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
+[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs (Darkhold,
+the Lava Rifts, Linara) were found by the OpenDS project and checked by yuan-ti;
+the Loader mends them in its copy of the game's scripts (`scriptfixes.py`).
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is

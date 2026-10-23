@@ -187,11 +187,33 @@ class AttackTests(unittest.TestCase):
             "Dag attacks Mountain Stalker from behind with Wooden Long Sword (1d8): d20 = 5, needs 9+ (60%), hits AC 6, target AC 2 -> miss",
             "    THAC0 16, +2 from behind, +6 STR, -3 wooden = 11"])
 
+    def test_miss_floats_over_the_target(self):
+        """A miss floats "Miss" over its target (labels.py); a hit floats nothing."""
+        log = make_game()
+        floated = []
+        log._float = lambda thing, text, colour, now: floated.append((thing, text))
+        log.describe(self.attack(5, 11, 2, 6, 10, after_f1=8, hit_bonus=-3, m1a=1))
+        log.describe(self.attack(18, 8, 4, 5, 9, after_f1=9, hit_bonus=1))
+        self.assertEqual(floated, [(0x29, "Miss")])
+
     def test_backstab_is_named(self):
         log = make_game()
         lines = log.describe(self.attack(12, 11, 4, 6, 10, after_f1=8, hit_bonus=-3, m1a=1, m24=1))
         self.assertTrue(lines[0].startswith("Dag attacks Mountain Stalker BACKSTAB with Wooden Long Sword"))
         self.assertEqual(lines[1], "    THAC0 16, +2 from behind, +2 backstab, +4 STR, -3 wooden = 11")
+
+    def test_girdle_of_urnst(self):
+        """A sword's attack on a target wearing the Golden Girdle of Urnst: its 3 in the THAC0 line
+        (DSCLOG's ITEM_REAR), not a club's."""
+        from dsloader import specialize
+        log = make_game()
+        log.game.wears_type = lambda creature, item_type, slot: item_type == game.URNST_GIRDLE_TYPE
+        sword = next(t for t, k in specialize.KIND_OF_TYPE.items() if k == specialize.KINDS.index("long sword"))
+        club = next(t for t, k in specialize.KIND_OF_TYPE.items() if k == specialize.KINDS.index("club"))
+        lines = log.describe(self.attack(18, 12, 4, 5, sword, after_f1=13, hit_bonus=1))
+        self.assertEqual(lines[1], "    THAC0 16, -3 target's Girdle of Urnst, +6 STR, +1 weapon = 12")
+        lines = log.describe(self.attack(18, 9, 4, 5, club, after_f1=10, hit_bonus=1))
+        self.assertNotIn("Urnst", lines[1])
 
     def test_two_weapons(self):
         log = make_game()
@@ -355,14 +377,25 @@ class AttackTests(unittest.TestCase):
 
 class SlotsForTheGameTests(unittest.TestCase):
     def test_slot_lines(self):
+        """For each kind of spells a heading, then each spell level's slots, each line keyed by
+        the list and level (DSCLOG shows the ones the USE screen is on)."""
         log = make_game()
+        key = lambda lst, level: chr(dicelog.SLOT_KEY | lst << 4 | level)
         log.game.spell_slots = lambda member: {
-            0: [("Wizard", [(1, 2, 2), (2, 1, 1)]), ("Priest", [(n, 1, 2) for n in range(1, 8)])]}.get(member, [])
-        # three lines fit above the usable items' icons: no room left for the heading
-        self.assertEqual(log.slots_lines(0), "WIZ 2/2 1/1|PRI 1/2 1/2 1/2 1/2 1/2 1/2|    1/2")
+            0: [("Wizard", [(1, 2, 2), (2, 1, 1)]), ("Priest", [(1, 5, 8), (6, 2, 1)])]}.get(member, [])
+        self.assertEqual(log.slots_lines(0).split("|"),
+                         [key(1, 0) + "SPELLS LEFT", key(1, 1) + "WIZ 2/2", key(1, 2) + "WIZ 1/1",
+                          key(2, 0) + "SPELLS LEFT", key(2, 1) + "PRI 5/8", key(2, 6) + "PRI 2/1"])
         self.assertEqual(log.slots_lines(1), "")
-        log.game.spell_slots = lambda member: [("Priest", [(1, 5, 5), (2, 3, 3)])]
-        self.assertEqual(log.slots_lines(0), "SPELLS LEFT BY LEVEL|PRI 5/5 3/3")
+        # a multiclass preserver in armour: no wizard spells, its priest spells as ever
+        log.game.no_spells = lambda member: True
+        lines = log.slots_lines(0).split("|")
+        self.assertEqual((lines[0], lines[3]), (key(1, 0) + "NO SPELLS IN ARMOUR", key(2, 0) + "SPELLS LEFT"))
+        # the longest a member can have (a cleric/preserver: six priest levels, five wizard) fits
+        log.game.no_spells = lambda member: False
+        log.game.spell_slots = lambda member: [("Wizard", [(n, 9, 9) for n in range(1, 6)]),
+                                               ("Priest", [(n, 9, 9) for n in range(1, 7)])]
+        self.assertLess(len(log.slots_lines(0)), dicelog.SLOTS_SIZE)
 
 
 class BackstabTests(unittest.TestCase):
@@ -395,6 +428,27 @@ class BackstabTests(unittest.TestCase):
         # (5 + 12) x 140% = 23.8, rounded down; then x3
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 69: ((1d8 = [5] +12 STR 24) x140% Enlarge "
                                            "(level 4)) x3 backstab"])
+
+    def backstab(self, level, rules):
+        log = make_game()
+        log.rules = rules
+        sheet = SHEETS + 0 * game.SHEET_SIZE
+        log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, level
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
+        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
+        return log.describe(e)
+
+    def test_dice_only(self):
+        """RULE_BACKSTAB (DSCLOG's STAB_TIMES): the dice multiplied, STR added once."""
+        self.assertEqual(self.backstab(6, game.RULE_BACKSTAB),
+                         ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice x3)"])
+
+    def test_times_by_level(self):
+        """x4 at thief levels 9 to 12, x5 from 13 (the game's 595C4h, as AD&D's table)."""
+        self.assertIn("+15 backstab (the dice x4)", self.backstab(12, game.RULE_BACKSTAB)[0])
+        self.assertIn("+20 backstab (the dice x5)", self.backstab(13, game.RULE_BACKSTAB)[0])
+        self.assertIn("x5 backstab", self.backstab(14, 0)[0])
 
 
 class SaveTests(unittest.TestCase):
@@ -528,11 +582,152 @@ class SaveTests(unittest.TestCase):
         struct.pack_into("<h", log.guest.mem, dag, 34)
         self.assertEqual(log.psp_changes(), ["    Dag spends 18 PSP (52 -> 34)"])
 
+    def test_script_request(self):
+        """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with all rolls shown."""
+        log = make_game()
+        e = entry(8, frame=words(0, 0, 8, 0x7FFE, 1, 0), kind=dicelog.KIND_REQUEST)
+        self.assertEqual(log.describe(e), ["Script: random monsters come (request 8: 32766, 1, 0)"])
+        e = entry(10, frame=words(0, 0, 10, 3, 40, 12), kind=dicelog.KIND_REQUEST)
+        self.assertEqual(log.describe(e), [])
+        self.assertEqual(log.describe(e, show_all=True), ["Script: a map cell blocked (request 10: 3, 40, 12)"])
+
+    def test_games_rest_fades_the_arrows(self):
+        """The game's own rest (DSCLOG's REST_SITE: request 0, each member's turn): no line, but
+        the spell arrows fade in the next pass, as for a script's rest request."""
+        log = make_game()
+        self.assertFalse(log._rest_due)
+        e = entry(0, frame=words(0, 0, 1, 0, 0, 0), kind=dicelog.KIND_REQUEST)
+        self.assertEqual(log.describe(e), [])
+        self.assertTrue(log._rest_due)
+
+    def test_spell_cast_floats_its_name(self):
+        """A spell cast (DSCLOG's CAST_SITE: the caster at [BP+6], the spell its value): its name
+        floats over the caster (labels.py), and no line."""
+        log = make_game()
+        floated = []
+        log._float = lambda thing, text, colour, now: floated.append((thing, text))
+        e = entry(game.FRIENDS_SPELL, frame=words(0, 0, 2, 0x29, game.FRIENDS_SPELL), kind=dicelog.KIND_CAST)
+        self.assertEqual(log.describe(e), [])
+        self.assertEqual(floated, [(2, log.game.spell_name(game.FRIENDS_SPELL))])
+
+    def test_aim_refused(self):
+        """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), with the reason."""
+        log = make_game()
+        e = entry(0xFC | 27 << 8, kind=dicelog.KIND_AIM)
+        e.extra = 0
+        line = log.describe(e)
+        self.assertEqual(len(line), 1)
+        self.assertIn("there: no line of sight", line[0])
+
+    def test_wall_instead(self):
+        """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE: the damage | the spell << 8, the
+        creature's AC + 80h in the extra's high byte): 8 + AC, the HP lost after it put down to it."""
+        log = make_game()
+        e = entry(13 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
+        e.extra = 40 | (5 + 0x80) << 8  # (the creature's AC + 80h in the high byte)
+        self.assertEqual(log.describe(e), ["  Wall of Thorns' wall instead: 8 + AC 5 = 13"])
+        self.assertEqual((log._spell_name, log._last_damage), ("Wall of Thorns", (game.THORNS_SPELL, 13)))
+        e = entry(1 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
+        e.extra = 40 | (-9 + 0x80) << 8
+        self.assertEqual(log.describe(e), ["  Wall of Thorns' wall instead: 8 + AC -9 = 1 (at least 1)"])
+
+    def test_damage_source(self):
+        """Two walls hurting the same creature before its HP is seen: each loss put down to the
+        spell whose roll it matches (whole, or halved by a save), else the spell being cast."""
+        log = make_game()
+        e = entry(18 | game.THORNS_SPELL << 8, kind=dicelog.KIND_WALL)
+        e.extra = 40 | (10 + 0x80) << 8
+        log.describe(e)
+        log._recent_damage.append((game.BLADE_SPELL, 34))
+        log._spell_cast(game.BLADE_SPELL, 0.0)
+        self.assertEqual(log._damage_source(18), (game.THORNS_SPELL, "Wall of Thorns"))
+        self.assertEqual(log._damage_source(17), (game.BLADE_SPELL, "Blade Barrier"))  # (34 halved)
+        self.assertEqual(log._damage_source(18), (game.BLADE_SPELL, "Blade Barrier"))  # (taken off: the spell cast)
+
+    def test_abilities(self):
+        """An ability score's change is told once it holds at two looks (Remove Curse's STR back)."""
+        log = make_game()
+        at = CREATURES + game.CREATURE_ABILITIES
+        log.guest.mem[at:at + 6] = bytes((12, 14, 15, 10, 16, 9))
+        self.assertEqual(log.ability_changes(), [])  # the first look
+        log.guest.mem[at] = 16
+        self.assertEqual(log.ability_changes(), [])  # once: it must hold
+        self.assertEqual(log.ability_changes(), ["    Dag's STR 12 -> 16"])
+        self.assertEqual(log.ability_changes(), [])
+        log.guest.mem[at + 2] = 14
+        log.ability_changes()
+        log.guest.mem[at + 2] = 15  # (back before it held: nothing)
+        self.assertEqual(log.ability_changes(), [])
+
     def test_psionic_names(self):
         log = make_game()
         m = log.guest.mem
         m[DS * 16 + game.SPELL_NAMES:DS * 16 + game.SPELL_NAMES + 30] = b"DETONATE\0DISINTEGRATE\0" + bytes(7)
         self.assertEqual(game.GameData(log.guest, DS).spell_name(139), "Disintegrate")
+
+    def power_check_game(self):
+        """Dag (combatant 0) knowing Graft Weapon (power 17: CON - 5) at 2, the Mountain
+        Stalker's Synaptic Static about."""
+        log = make_game()
+        m = log.guest.mem
+        m[(LOAD_SEG + game.POWERS_SEG) * 16 + 17 * game.POWER_SIZE] = (-5 & 0x1F) << 3 | 2
+        own_seg = 0x6A00
+        struct.pack_into("<H", m, (LOAD_SEG + game.SEGMENT_TABLE) * 16 + game.POWER_OWN_SELECTOR, own_seg)
+        m[own_seg * 16 + game.POWER_OWN_OFF + 17] = 2 << 3
+        log.game.spell_name = lambda spell: "Graft Weapon" if spell == game.PSIONIC_FIRST + 17 else "?"
+        return log
+
+    def test_power_check(self):
+        """The d20 at or under the power's score ([BP-2]): CON 16 - 5 Graft Weapon + 1 practised = 12."""
+        log = self.power_check_game()
+        score = locals_at(0x28, m2=12)  # (the score is the byte at [BP-2])
+        e = entry(raw_for(9, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                  parent_code=dicelog.POWER_CHECK_RETURN, parent_locals=score)
+        self.assertEqual(log.describe(e), ["Dag uses Graft Weapon: power check d20 = 9, needs 12 or less -> it works",
+                                           "    power score 12 = 16 CON - 5 Graft Weapon + 1 practised"])
+        e = entry(raw_for(20, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                  parent_code=dicelog.POWER_CHECK_RETURN, parent_locals=score)
+        self.assertEqual(log.describe(e)[0], "Dag uses Graft Weapon: power check d20 = 20, needs 12 or less "
+                                             "(a 20 always fails) -> it fails")
+
+    def test_other_ranges_left_out(self):
+        """random(low, high) also makes points of some spells' pictures: no line for those."""
+        log = self.power_check_game()
+        e = entry(raw_for(3, 40), dicelog.RANGE_SITE, words(0, 0, 0, 40), parent_code=bytes(12))
+        self.assertEqual(log.describe(e), [])
+        self.assertTrue(any(dicelog.RANGE_SITE.startswith(f) for f in dicelog.FILTERS))
+
+    def test_psionic_defence(self):
+        """Two rolls of 1 to the defence (here 6), both over the attacker's d20 (4) to resist."""
+        log = self.power_check_game()
+        frame = locals_at(0x10)
+        first = entry(raw_for(5, 6), dicelog.RANGE_SITE, words(0, 0, 1, 6, 4), words(0, 0, 0),
+                      parent_code=dicelog.DEFENCE_FIRST_RETURN, parent_locals=frame)
+        self.assertEqual(log.describe(first), [])
+        second = entry(raw_for(6, 6), dicelog.RANGE_SITE, words(0, 0, 1, 6, 4), words(0, 0, 0),
+                       parent_code=dicelog.DEFENCE_SECOND_RETURN, parent_locals=frame)
+        self.assertEqual(log.describe(second), ["  Dag's psionic defence: d6 = 5 and 6, both need over 4 "
+                                                "(the attacker's power check d20) -> resisted"])
+        fail = entry(raw_for(2, 6), dicelog.RANGE_SITE, words(0, 0, 1, 6, 4), words(0, 0, 0),
+                     parent_code=dicelog.DEFENCE_FIRST_RETURN, parent_locals=frame)
+        self.assertEqual(log.describe(fail), ["  Dag's psionic defence: d6 = 2, needs over 4 "
+                                              "(the attacker's power check d20) -> not resisted"])
+
+    def test_static_contest(self):
+        """With the Stalker's Synaptic Static about: Dag's d20 over [BP-8] disrupts the power; else the
+        Stalker's at or under its Static score [BP-6] and no lower than Dag's."""
+        log = self.power_check_game()
+        frame = locals_at(0x28, m4=0x29, m6=11, m8=2)
+        for first, second, verdict in ((5, 3, "disrupted by the static"), (2, 8, "disrupted by the static"),
+                                       (2, 15, "not disrupted: the power check follows")):
+            e = entry(raw_for(first, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                      parent_code=dicelog.STATIC_FIRST_RETURN, parent_locals=frame)
+            self.assertEqual(log.describe(e), [])
+            e = entry(raw_for(second, 20), dicelog.RANGE_SITE, words(0, 0, 1, 20), words(0, 0, 0, 17, 0),
+                      parent_code=dicelog.STATIC_SECOND_RETURN, parent_locals=frame)
+            self.assertEqual(log.describe(e), [
+                f"Dag uses Graft Weapon within Mountain Stalker's Synaptic Static: d20 = {first} against 2, "
+                f"Mountain Stalker's d20 = {second} against 11 (and at least {first}) -> {verdict}"])
 
     def test_out_cold_takes_the_most(self):
         log = make_game()
@@ -585,6 +780,52 @@ class SaveTests(unittest.TestCase):
         e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 53),
                    parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
         self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Ironskin on Mountain Stalker: one charge used"])
+
+    def test_acid_rounds(self):
+        """An Acid's time (Acid Arrow's: 20 seconds a level) is rounds of burning (DSCLOG's
+        ACID_ROUNDS: 1 a started minute); after a round's burn, its damage's own duration roll
+        (the effect it no longer puts on) says nothing."""
+        log = make_game()
+        self.damage_formula(log, FIREBALL, 0, 0x01, 0)
+        record = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + FIREBALL * game.SPELL_SIZE
+        struct.pack_into("<Hh", log.guest.mem, record + 5, 20, 1)
+        log.guest.mem[record + 0x19] = dicelog.ACID
+        duration = entry(raw_for(1, 1), dicelog.DICE_SITE, words(0, 0, 1, 1), words(0, 0, FIREBALL, 11),
+                         parent_code=dicelog.SPELL_DURATION_RETURN)
+        line = log.describe(duration)
+        self.assertEqual(len(line), 1)
+        self.assertTrue(line[0].startswith("    Fireball burns 4 rounds more, 2d4 at the start of each ("), line)
+        burn = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 1),
+                      parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
+        self.assertEqual(log.describe(burn[0]) + log.describe(burn[1]),
+                         ["    Acid on Mountain Stalker: 2d4 = [3 + 1] = 4 acid damage"])
+        self.assertEqual(log.describe(duration), [])
+        self.assertEqual(len(log.describe(duration)), 1)  # (only the one after a burn)
+
+    def test_sunstroke_heat(self):
+        """Sunstroke's heat (DSCLOG's BURN_PASS through Acid's burn, its 1d4; HEAT_SITE's record:
+        the damage | the spell << 8, the creature the extra): one line, the roll's own hidden line
+        dropped, the HP lost after it put down to Sunstroke; its damage's duration roll says
+        nothing."""
+        log = make_game()
+        roll = entry(raw_for(3, 4), dicelog.DICE_SITE, words(0, 0, 1, 4), words(0, 0, 0x29, 1),
+                     parent_code=dicelog.CHARGE_USED_RETURN)
+        self.assertEqual(log.describe(roll), [])
+        log._pending.append(dicelog.PendingDice("1d4 = [3] = 3", 0.0))
+        e = entry(3 | game.SUNSTROKE_SPELL << 8, kind=dicelog.KIND_HEAT)
+        e.extra = 0x29
+        self.assertEqual(log.describe(e), ["    Sunstroke's heat on Mountain Stalker: 1d4 = 3 fire damage"])
+        self.assertEqual((log._pending, log._last_damage), ([], (game.SUNSTROKE_SPELL, 3)))
+        duration = entry(raw_for(2, 4), dicelog.DICE_SITE, words(0, 0, 1, 4), words(0, 0, game.SUNSTROKE_SPELL, 11),
+                         parent_code=dicelog.SPELL_DURATION_RETURN)
+        self.assertEqual(log.describe(duration), [])
+        self.assertFalse(log._sun_burn)
+
+    def test_swept(self):
+        """Whirlwind's damage after a failed save (DSCLOG's SWEPT_MARK: the combatant): its next turn lost."""
+        log = make_game()
+        self.assertEqual(log.describe(entry(0x29, kind=dicelog.KIND_SWEPT)),
+                         ["    Mountain Stalker is swept off its feet: loses its next turn"])
 
     def test_mirror_images(self):
         """Mirror Images' d100: on a foe's spell (7A5BFh's 1d100, NS_IMAGE: the spell routine's
@@ -772,6 +1013,15 @@ class SaveTests(unittest.TestCase):
         log.describe(self.magic_resistance(40), now=1.0)  # resisted: no saving throw follows
         self.assertEqual(log.flush(2.5),
                          ["Mountain Stalker magic resistance 50% vs Fireball: d100 = 40 -> resisted"])
+
+    def test_amulet_of_magic_resistance(self):
+        """The Amulet of Magic Resistance at the target's neck: its 15% in the line (AMULET_MR)."""
+        log = make_game()
+        log.game.wears_type = lambda creature, item_type, slot: item_type == game.MR_AMULET_TYPE \
+            and slot == game.EQUIP_SLOTS.index("neck")
+        log.describe(self.magic_resistance(10), now=1.0)
+        self.assertEqual(log.flush(2.5), ["Mountain Stalker magic resistance 15% (+15 Amulet of Magic Resistance) "
+                                          "vs Fireball: d100 = 10 -> resisted"])
 
     def test_dice_without_a_spell_are_shown_after_a_while(self):
         log = make_game()

@@ -8,44 +8,49 @@ from typing import Optional
 
 # the game's class rows (its XP table, View Character's copy of a sheet): 1-8
 ROWS = ("cleric", "druid", "fighter", "gladiator", "preserver", "psionicist", "ranger", "thief")
-# by row, the XP needed for each level 1-11 (DSCLOG's ADND_XP: an entry is the next level's)
+# by row, the XP needed for each level 1-14 (DSCLOG's ADND_XP: an entry is the next level's)
 XP = {
-    "cleric": (0, 1500, 3000, 6000, 13000, 27500, 55000, 110000, 225000, 450000, 675000),
-    "druid": (0, 2000, 4000, 7500, 12500, 20000, 35000, 60000, 90000, 125000, 200000),
-    "fighter": (0, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 750000),
-    "gladiator": (0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000),
-    "preserver": (0, 2500, 5000, 10000, 20000, 40000, 60000, 90000, 135000, 250000, 375000),
-    "psionicist": (0, 2200, 4400, 8800, 16500, 30000, 55000, 100000, 200000, 400000, 600000),
-    "ranger": (0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000),
-    "thief": (0, 1250, 2500, 5000, 10000, 20000, 40000, 70000, 110000, 160000, 220000),
+    "cleric": (0, 1500, 3000, 6000, 13000, 27500, 55000, 110000, 225000, 450000, 675000, 900000, 1125000, 1350000),
+    "druid": (0, 2000, 4000, 7500, 12500, 20000, 35000, 60000, 90000, 125000, 200000, 300000, 750000, 1500000),
+    "fighter": (0, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 750000, 1000000, 1250000, 1500000),
+    "gladiator": (0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000),
+    "preserver": (0, 2500, 5000, 10000, 20000, 40000, 60000, 90000, 135000, 250000, 375000, 750000, 1125000, 1500000),
+    "psionicist": (0, 2200, 4400, 8800, 16500, 30000, 55000, 100000, 200000, 400000, 600000, 800000, 1000000, 1200000),
+    "ranger": (0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000),
+    "thief": (0, 1250, 2500, 5000, 10000, 20000, 40000, 70000, 110000, 160000, 220000, 440000, 660000, 880000),
 }
-# spell slots at spell levels 1-5, by class level 1-10 (DSCLOG's ADND_SLOTS)
+# spell slots at spell levels 1-5, by class level 1-12 (DSCLOG's ADND_SLOTS; a priest's 6th: slots())
 PRIEST_SLOTS = ((1, 0, 0, 0, 0), (2, 0, 0, 0, 0), (2, 1, 0, 0, 0), (3, 2, 0, 0, 0), (3, 3, 1, 0, 0),
-                (3, 3, 2, 0, 0), (3, 3, 2, 1, 0), (3, 3, 3, 2, 0), (4, 4, 3, 2, 1), (4, 4, 3, 3, 2))
+                (3, 3, 2, 0, 0), (3, 3, 2, 1, 0), (3, 3, 3, 2, 0), (4, 4, 3, 2, 1), (4, 4, 3, 3, 2),
+                (5, 4, 4, 3, 2), (6, 5, 5, 3, 2))
 WIZARD_SLOTS = ((1, 0, 0, 0, 0), (2, 0, 0, 0, 0), (2, 1, 0, 0, 0), (3, 2, 0, 0, 0), (4, 2, 1, 0, 0),
-                (4, 2, 2, 0, 0), (4, 3, 2, 1, 0), (4, 3, 3, 2, 0), (4, 3, 3, 2, 1), (4, 4, 3, 2, 2))
+                (4, 2, 2, 0, 0), (4, 3, 2, 1, 0), (4, 3, 3, 2, 0), (4, 3, 3, 2, 1), (4, 4, 3, 2, 2),
+                (4, 4, 4, 3, 3), (4, 4, 4, 4, 4))
 PRESERVER = 11
 PRIESTS = range(1, 9)  # (the sheet's classes: clerics 1-4, druids 5-8)
 
 
 def xp_needed(row: str, level: int) -> Optional[int]:
-    """The XP a character of class ROW and LEVEL needs for the next level (None past 10th)."""
+    """The XP a character of class ROW and LEVEL needs for the next level (None past 13th)."""
     table = XP[row]
     return table[level] if 0 <= level < len(table) else None
 
 
 def slots(cls: int, level: int, spell_level: int) -> Optional[int]:
-    """AD&D's slots for the class levels of sheet class CLS at SPELL_LEVEL (1-5), None for a
-    class whose slots stay the game's (rangers')."""
+    """AD&D's slots for the class levels of sheet class CLS at SPELL_LEVEL (1-6: the 6th a priest's
+    alone, AD&D's 1 at 11th level and 2 at 12th; a wizard has no 6th-level spells to cast), None
+    for a class whose slots stay the game's (rangers')."""
     if cls == PRESERVER:
         table = WIZARD_SLOTS
     elif cls in PRIESTS:
         table = PRIEST_SLOTS
     else:
         return None
+    if spell_level == 6 and table is PRIEST_SLOTS:
+        return min(max(level - 10, 0), 2)
     if level < 1 or not 1 <= spell_level <= 5:
         return 0
-    return table[min(level, 10) - 1][spell_level - 1]
+    return table[min(level, len(table)) - 1][spell_level - 1]
 
 
 def priest_thac0(level: int) -> int:

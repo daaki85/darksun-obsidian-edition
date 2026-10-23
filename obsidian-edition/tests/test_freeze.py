@@ -72,6 +72,18 @@ class FreezeTests(unittest.TestCase):
         text = freeze.report_text(lambda a, n: bytes(n), None, None, "now", "9.9", {}, "", "", None)
         self.assertIn("DSCLOG wasn't found in memory", text)
 
+    def test_game_data_overwritten(self):
+        """The game's DS lost (its data segment overwritten): the helper is found by its signature
+        and the game's load segment from its DOS block, so the places still read as the game's."""
+        mem, hdr = memory([(0x1A2 + 0x980, 0x70AB)] * 8)
+        mem[hdr:hdr + len(freeze.HDR_SIG)] = freeze.HDR_SIG
+        mem[0x191 * 16 + 8:0x191 * 16 + 16] = b"DSUNLOG\0"  # (the game's MCB: its PSP at 192h, loaded at 1A2h)
+        self.assertEqual(freeze.find_header(bytes(mem)), hdr)
+        self.assertEqual(freeze.load_from_block(bytes(mem)), 0x1A2)
+        text = freeze.report_text(lambda a, n: bytes(mem[a:a + n]), hdr, None, "now", "9.9", {}, "", "", None)
+        self.assertIn("load segment 01A2 (from its memory block", text)
+        self.assertIn("game 0980:70AB", text)
+
     def test_zip(self):
         mem, hdr = memory([(0x2000, 0x10)])
         with tempfile.TemporaryDirectory() as folder:

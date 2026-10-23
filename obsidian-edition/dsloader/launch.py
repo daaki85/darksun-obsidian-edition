@@ -417,7 +417,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
-SWITCH_DEFAULTS = {"monster_info": True, "pickpockets": True,
+SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
                    "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True, "combat_log_strip": False,
                    "targeting": True, "scroll_map": True, "scroll_right": False, "cycles": DEFAULT_SPEED}
 
