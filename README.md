@@ -59,17 +59,16 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.7.0** is out ([release notes](release-notes/v2.7.0.md)):
-nine 6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with pictures
+**Obsidian Edition 2.7.1** is out ([release notes](release-notes/v2.7.1.md)):
+Wake of the Ravager's icons and pictures are found where GOG Galaxy installs
+it, and the dice log names what a monster's special attack does. 2.7.0 before
+it ([release notes](release-notes/v2.7.0.md)) brought nine 6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with pictures
 of their own; levels capped by XP instead of at 9th, so priests reach 11th and
 12th; backstabs as AD&D has them; spell names floating over their casters; the
 Spellarcher's spell arrows; three new magic items; and more of the original
-game's bugs fixed, three script bugs among them. 2.6.0 before it
-([release notes](release-notes/v2.6.0.md)) made the Healer the water cleric's
-healer, gave the game much more memory in long sessions and fixed seven of the
-original game's bugs.
+game's bugs fixed, three script bugs among them.
 
-Every release has notes of its own: [2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
+Every release has notes of its own: [2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
 have every change from the original game in one page, whatever the version.
 
 ## About
