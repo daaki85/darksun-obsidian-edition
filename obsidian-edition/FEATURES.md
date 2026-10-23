@@ -362,7 +362,8 @@ melee weapon held (the first one in the character's list of held items; bows
 and slings never). The game makes the check on every such hit, whether or not
 the target's saving throw against the attack succeeds, and shows its own
 message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
-pieces worn on the arms, legs or chest count, not helms or shields, and at
+pieces worn on the arms, legs or chest count (bracers and robes among them), not
+helms, shields, cloaks, boots or belts, and at
 most one piece of armour is lost to a hit: the first that fails, in the order
 of the character's list.
 
@@ -394,7 +395,7 @@ less the item's plus, and 1 less again for a magical power:
 |---|---|---|
 | Leather Chest Armor | 0% | 55% (needs 10) |
 | Chain chest | 0% | 40% (needs 13) |
-| Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
+| Tanelyv's arm or leg armour (metal, +2) | 0% | 50% (needs 11) |
 | Drake Armor +1 (a power) | 100% | 100% (the game's) |
 | Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
 | Obsidian Dagger | 65% | 80% (needs 5) |

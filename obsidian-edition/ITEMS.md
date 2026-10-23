@@ -224,16 +224,43 @@ caravan. The game's plain stone pick is only ever a
 ## Items against acid
 
 What each item's chance is against the Rampager's acid and the Babau's corroding touch, in the game and with
-[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material):
+[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material).
+Only what is worn on the arms, legs or chest can be lost, and the melee weapon held: helms, shields, cloaks,
+boots, belts, rings and amulets never are. A worn piece with no magical power is lost at once in the game (0%);
+one with a power never is (100%).
+
+**Chest:**
 
 | Item | Saved in the game | Saved with the rule |
 |---|---|---|
 | Leather Chest Armor | 0% | 55% (needs 10) |
-| Leather Chest Armor +1 | 0% | 60% (needs 9) |
+| Leather Chest Armor +1, ***Inixhide*** | 0% | 60% (needs 9) |
 | Bone scale chest | 0% | 50% (needs 11) |
 | Chain chest | 0% | 40% (needs 13) |
-| Tanelyv's Armor +2 (metal) | 0% | 50% (needs 11) |
-| Drake Armor +1 (a power) | 100% | 100% (the game's) |
+| Tanelyv's Armor (metal, no plus) | 0% | 40% (needs 13) |
+| Silk Armor +2 (no material: cloth's) | 0% | 55% (needs 10) |
+| Drake Armor +1, Shimmer Armor +3, ***Warden's Chest*** +1 (each with a power) | 100% | 100% (the game's) |
+| ***Ashen Robe*** (cloth, +1) | 0% | 50% (needs 11) |
+| ***Veiled Robe*** (cloth, +2) | 0% | 55% (needs 10) |
+
+**Arms and legs** (each piece on its own, as the chest):
+
+| Item | Saved in the game | Saved with the rule |
+|---|---|---|
+| Leather arm or leg armour | 0% | 55% (needs 10) |
+| Bone scale arm or leg armour | 0% | 50% (needs 11) |
+| Chain arm or leg armour; Grey's Scale (metal) | 0% | 40% (needs 13) |
+| ***Warden's Arms***, ***Warden's Legs*** (metal, +1) | 0% | 45% (needs 12) |
+| Tanelyv's Armor arms or legs (metal, +2) | 0% | 50% (needs 11) |
+| ***Bracers of Defense*** AC 6 (no material: cloth's, +4) | 0% | 65% (needs 8) |
+| ***Bracers of Defense*** AC 5 (+5) | 0% | 70% (needs 7) |
+| ***Bracers of Defense*** AC 4 (+6) | 0% | 75% (needs 6) |
+| ***Bracers of Defense*** AC 2 (+8) | 0% | 85% (needs 4) |
+
+**Weapons** (the first melee weapon held):
+
+| Item | Saved in the game | Saved with the rule |
+|---|---|---|
 | Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
 | Shadowseeker (metal, +1) | 70% | 70% (the game's: needs 7) |
 | Obsidian Dagger | 65% | 80% (needs 5) |
