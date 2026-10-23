@@ -224,6 +224,10 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   so whoever casts the spell holds its weapon.
 
 **Fixed**
+- **The Spells tab's 6th-level priest spells:** they were described from the records they are built
+  on, so Harm read as 3d8+3 draining, Heartseeker as 4d8 halved by a save, Wall of Thorns as
+  1d10+8, Heal and Water of Life as next to nothing, Sunstroke without its heat and Whirlwind as
+  "can't move". `spellbook.OWN_LINES` gives those spells' lines by hand, as FEATURES.md has them.
 - The USE screen's spell slots line ran off its panel with a 6th spell level: the panel now
   shows the slots of the level and list on show only (`SPELLS LEFT`, then e.g. `PRI 2/1`: `WIZ`
   on MAGE, `PRI` on CLERIC, none on PSIONIC). Each line's first byte is a key (80h | the list

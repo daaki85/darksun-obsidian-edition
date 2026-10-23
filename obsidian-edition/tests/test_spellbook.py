@@ -39,7 +39,26 @@ def record(dice=0, per_level=0, unit=0, effect=0, kinds=0, save=0):
     return bytes(rec)
 
 
+class PriestSixStub(StubGame):
+    def spell_record(self, spell):
+        return record(dice=4, kinds=0x900, save=(3 << 5) | 1)  # (Slay Living's kind: 4d8 draining/death)
+
+    def effect_caster_level(self, creature, spell):
+        return 0
+
+
 class TextTests(unittest.TestCase):
+    def test_sixth_level_lines_by_hand(self):
+        # Heartseeker's record (Slay Living's) would read as dice halved by a save: its own lines say
+        # what DSCLOG makes it do, the rest are still read from the record
+        gd = PriestSixStub(SpellDamage(0, 4, 0, 1, 0, 8), SpellRules(True, 0, "spell"), name="Heartseeker")
+        info = spellbook.spell_info(gd, game.HEARTSEEKER_SPELL, [])
+        self.assertEqual((info.magic, info.level, info.damage), ("Priest", 6, ""))
+        self.assertIn("one that fails it dies", info.save)
+        self.assertTrue(set(spellbook.OWN_LINES) <= set(game.PRIEST6_SPELLS))
+        for lines in spellbook.OWN_LINES.values():
+            self.assertTrue(set(lines) <= {"damage", "save", "effect", "lasts"})
+
     def test_fireball(self):
         gd = StubGame(SpellDamage(0, 1, 0, 1, 0, 6), SpellRules(True, 0, "fire"))
         rec = record(kinds=0x202, save=(4 << 5) | 1)

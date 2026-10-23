@@ -5,7 +5,8 @@ import struct
 from typing import List, NamedTuple, Optional
 
 from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
-                   PRIEST6_LEVEL, PRIEST6_SPELLS,
+                   PRIEST6_LEVEL, PRIEST6_SPELLS, HEAL_SPELL, HARM_SPELL, THORNS_SPELL, SUNSTROKE_SPELL,
+                   HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL,
                    PERMANENT, PSIONIC_COUNT, PSIONIC_FIRST, RULE_NEW_SPELLS, SAVE_NAMES,
                    SPELL_COUNT, SPELL_FIRST, SPELL_INFO_OFF, SPELL_INFO_SIZE, SPELL_LEVEL_CAP, SPELL_SIZE, GameData, kind_to_save,
                    ordinal)
@@ -21,6 +22,22 @@ DAMAGE_KINDS = ((0x02, "fire"), (0x04, "cold"), (0x80, "electricity"), (0x40, "a
 # rolled by code of their own rather than from the record (see the README's dice log table)
 OWN_DICE = {"Magic Missile", "Flame Arrow", "Minute Meteors"}
 ROUND = 60  # game seconds
+# The 6th-level priest spells whose records (the game's spells they are built on: Cure and Cause
+# Critical Wounds, Slay Living, Lend Health...) don't tell what DSCLOG makes them do: those lines
+# by hand, as FEATURES.md has them (the others' lines from the record)
+OWN_LINES = {
+    HEAL_SPELL: {"damage": "", "save": "none", "effect": "every wound healed; disease and blindness cured"},
+    HARM_SPELL: {"damage": "the creature is left 1d4 hit points", "save": "none"},
+    THORNS_SPELL: {"damage": "8 + the creature's AC, at least 1 [pointed], in the wall or pushing through",
+                   "save": "none"},
+    SUNSTROKE_SPELL: {"damage": "1d4 [fire] at the start of each round it holds"},
+    HEARTSEEKER_SPELL: {"damage": "", "save": "paralysis/poison/death; one that fails it dies"},
+    WATER_LIFE_SPELL: {"effect": "the creature's wounds healed by taking them onto the caster, who keeps "
+                                 "at least 5 hit points"},
+    WHIRLWIND_SPELL: {"damage": "2d8 [crushing] each round to each creature in it",
+                      "effect": "one that fails its save is swept off its feet and loses its next turn (no "
+                                "move, no action); nothing can be shot or cast through it"},
+}
 
 
 class SpellInfo(NamedTuple):
@@ -164,8 +181,11 @@ def spell_info(gd: GameData, spell: int, party: List[int]) -> Optional[SpellInfo
             if level:
                 casters.append(f"{gd.creature_name(creature)} {ordinal(level)}")
     name = gd.spell_name(spell)
-    return SpellInfo(spell, name, magic, spell_level(gd, spell), damage,
-                     save_text(gd, spell, rec, bool(damage)), effect_text(rec, name), lasts_text(gd, spell, rec), casters)
+    lines = {"damage": damage, "save": save_text(gd, spell, rec, bool(damage)), "effect": effect_text(rec, name),
+             "lasts": lasts_text(gd, spell, rec)}
+    lines.update(OWN_LINES.get(spell, {}))
+    return SpellInfo(spell, name, magic, spell_level(gd, spell), lines["damage"], lines["save"], lines["effect"],
+                     lines["lasts"], casters)
 
 
 def all_spells(gd: GameData, party: Optional[List[int]] = None) -> List[SpellInfo]:
