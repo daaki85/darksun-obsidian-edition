@@ -9,7 +9,17 @@ For what a release brings, read its notes ([2.6.0](release-notes/v2.6.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #55 (in progress)
+## Next pull request (in progress)
+
+**Changed**
+- **The 6th-level priest spells' descriptions in the game's own style** (`spelltexts.py`): the
+  name, then a terse line with damage as ranges ("Inflicts 8 to 64 pts of damage"), and no level
+  or sphere, which none of the game's own descriptions give. Harm's text no longer says the
+  target is diseased: the Diseased effect here lowers nothing, it only keeps a STR lowered by
+  something else from coming back (see Cause Disease in HOW-THE-GAME-WORKS); the docs say so too.
+  The priest spells screenshot retaken.
+
+## Pull request #55 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/55))
 
 **Added**
 - **6th-level priest spells** (with **New wizard spells**, slots with AD&D's tables): Heal, Harm,

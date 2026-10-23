@@ -146,7 +146,7 @@ A few of them:
 | Spell | Who | What it does |
 |---|---|---|
 | **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
-| **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
+| **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, no save |
 | **Blade Barrier** | air | a wall: 8d8 to each creature in it, a save for none |
 | **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
 | **Sunstroke** | fire | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |

@@ -1233,7 +1233,7 @@ slots.
 | Spell | Who | Cast on | Does |
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
-| **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
+| **Harm** | cosmos | touch | the creature is left 1d4 hit points; no save. It is also Diseased, as in AD&D, which in this game only keeps a lowered STR from coming back |
 | **Blade Barrier** | air | a wall | 8d8 to each creature in it or passing through; a save for none |
 | **Wall of Thorns** | earth | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
 | **Sunstroke** | fire | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
