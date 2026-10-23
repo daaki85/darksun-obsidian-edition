@@ -117,9 +117,10 @@ game artwork is copied.
   ([One-time setup](#one-time-setup)); it needs no extra packages.
 - Linux works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
-- **Optional: Wake of the Ravager** (GOG's). If the Loader finds it, the
+- **Wake of the Ravager**, which GOG sells with Shattered Lands: the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
-  and pictures, read from it as the game starts; without it they have the
+  and pictures, read from your copy as the game starts (none of its files are
+  in the mod). Without it (an old copy of Shattered Lands alone) they have the
   Loader's own. It looks in every folder beside Shattered Lands (GOG Galaxy
   installs the two as `Dark Sun` and `Dark Sun 2`) and in GOG's usual folders; the Options tab's **Wake of
   the Ravager** section says whether it found it, and **Choose its folder...**

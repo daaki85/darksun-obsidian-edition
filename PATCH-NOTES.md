@@ -8,6 +8,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 *These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
 
+*They follow the repository, so these come with the next release, not 2.7.0: monsters' special attacks named in the dice log, and Wake of the Ravager found where GOG Galaxy installs it.*
+
 ## Contents
 
 - [In the Game's Screens](#in-the-games-screens)
@@ -242,7 +244,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
-- **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades and Wall of Thorns' tangle of thorns (Wake of the Ravager's, when it's installed; recoloured fire walls without it), Fire Seeds' fireball, and Whirlwind's tall funnel of dust, turning.
+- **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades and Wall of Thorns' tangle of thorns (Wake of the Ravager's, read from your copy: GOG sells it with Shattered Lands; recoloured fire walls without it), Fire Seeds' fireball, and Whirlwind's tall funnel of dust, turning.
 
 ## Quality of Life
 
@@ -265,7 +267,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F): every match highlighted, Enter for the next.
-- **[New]** More in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; **Detonate**'s blast on an item (which one, the d20, and whether it's gone: it picks the worn item that breaks most easily, a bone helm before bone armour); why the game **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); and a party member's **ability score** changing.
+- **[New]** More in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; **Detonate**'s blast on an item (which one, the d20, and whether it's gone: it picks the worn item that breaks most easily, a bone helm before bone armour); why the game **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); and a party member's **ability score** changing; and what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`).
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** **Options:** every rule change and addition in these notes has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.

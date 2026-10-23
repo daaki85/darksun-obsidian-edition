@@ -9,7 +9,7 @@ For what a release brings, read its notes ([2.7.0](release-notes/v2.7.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Next pull request (in progress)
+## Pull request #57 (in progress)
 
 **Added**
 - **Wake of the Ravager found in more places, or chosen** (`wotrart.find_resources`): any folder
@@ -27,6 +27,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   number as before. The dice rolled before the save against one that puts on an effect are its
   duration, and the log says so (`Paralysing attack: lasts 7 rounds unless saved against (2d4 =
   [4 + 3] = 7)`; the Red Slaad's 182 was `special attack 182: 2d4 = [4 + 3] = 7`).
+
+**Documentation**
+- Wake of the Ravager described as what it is for nearly every player, the game GOG sells with
+  Shattered Lands, rather than an optional extra (the Loader README's requirements, FEATURES, the
+  patch notes); the patch notes list this pull request's changes as coming after 2.7.0.
 
 ## Pull request #56 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/56))
 
