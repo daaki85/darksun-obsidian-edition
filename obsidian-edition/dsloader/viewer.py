@@ -434,7 +434,8 @@ class Viewer:
                             "(with no enemy beside them; a thief's chance halved in daylight, a ranger's "
                             "indoors; a few kits differ)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
-                               "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends")):
+                               "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends; "
+                               "and nine 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
             self.rule_vars[key] = tk.BooleanVar(
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = where.get(key, rules)

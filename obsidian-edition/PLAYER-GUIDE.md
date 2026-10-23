@@ -1270,12 +1270,15 @@ AD&D's tables:
 | 11 | 5 4 4 3 2 | 4 4 4 3 3 |
 | 12 | 6 5 5 3 2 | – |
 
+Priests also have a 6th-level slot at 11th level and two at 12th, for the
+mod's 6th-level spells.
+
 (The slots at 1st, 2nd, 3rd... spell level.) *Without the mod:* one table for
 all three: 1; 2; 2 1; 2 2; 3 2 1; 3 2 2; 4 3 2 1; 4 3 2 2; 5 4 3 2 1; 5 4 3 2
 2.
 
 **Rangers** have one 1st-level slot at 8th level, two at 9th, and a 2nd-level
-slot at 10th, as in AD&D. No spell is above 5th level.
+slot at 10th, as in AD&D. No preserver spell is above 5th level.
 
 **Clerics and druids** have more for WIS, only at spell levels their class
 level reaches:
@@ -1412,6 +1415,7 @@ each has its own element's.
 | 3 | Bestow Curse, Cause Blindness or Deafness, Cause Disease, Cure Blindness or Deafness, Cure Disease, Dispel Magic, Magical Vestments, Negative Plane Protection, Prayer, Remove Curse, Remove Paralysis | |
 | 4 | | Abjure, Cause Serious Wounds, Cloak of Bravery, Cloak of Fear, Cure Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius |
 | 5 | | Cause Critical Wounds, Cure Critical Wounds, Dispel Evil, Raise Dead, Slay Living |
+| 6 | | Blade Barrier, Harm, Heal, Sunstroke, Wall of Thorns |
 
 | Level | Air | Earth | Fire | Water |
 |---|---|---|---|---|
@@ -1420,8 +1424,25 @@ each has its own element's.
 | 3 | Conjure Lesser Air Elemental, Summon Insects | Conjure Lesser Earth Elemental | Conjure Lesser Fire Elemental, Protection from Fire | Conjure Lesser Water Elemental |
 | 4 | Dust Cloud, Protection from Lightning | Condense, Dust Cloud | Focus Heat, Produce Fire | Blood Flow, Dehydrate |
 | 5 | Conjure Air Elemental, Deflection, Insect Plague | Conjure Earth Elemental, Ironskin, Quicksand | Conjure Fire Elemental, Flame Strike, Wall of Fire | Conjure Water Elemental, Quicksand |
+| 6 | Whirlwind | Heartseeker | Fire Seeds | Heartseeker, Water of Life |
 
 An Elementalist has its second sphere's column too.
+
+**The 6th-level spells** are the mod's, for priests of 11th level and up (with
+AD&D's spell tables and the new spells switched on):
+
+- **Heal** (touch): every wound healed.
+- **Harm** (touch): the creature is left 1d4 hit points, and diseased; no save.
+- **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades) or
+  1d10 + 8 (thorns) to each creature in it or passing through. Both look like
+  a wall of fire. Mind where you put it: it hurts your party too.
+- **Sunstroke**: creatures you pick one by one (right-click to stop picking)
+  collapse, helpless, for 2 rounds a level unless they save.
+- **Fire Seeds**: 8d8 where they burst, a save for half.
+- **Heartseeker**: one creature saves against death or dies.
+- **Water of Life** (touch): the creature's wounds pass to the caster, who
+  keeps at least 5 hit points.
+- **Whirlwind**: 2d8 in an area, a save for half.
 
 ### Effects
 

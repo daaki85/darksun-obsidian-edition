@@ -12,6 +12,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Pull request #55 (in progress)
 
 **Added**
+- **6th-level priest spells** (with **New wizard spells**, slots with AD&D's tables): Heal, Harm,
+  Blade Barrier, Wall of Thorns and Sunstroke (cosmos: druids and Healer clerics), Fire Seeds
+  (fire), Heartseeker (earth, water), Water of Life (water) and Whirlwind (air), spells 202-210,
+  each on a template record the game already casts (Cure and Cause Critical Wounds, the priest's
+  Wall of Fire, Hold Person, Flame Strike, Slay Living, Lend Health) with its own changes
+  (`NS_PATCH`). A priest's 6th-level slot at 11th, two at 12th (`probe_adnd_slots`,
+  `tables.slots`). `HARM_SITE` (761A9h, the one-target damage roll): Harm leaves 1d4 hit points
+  (and the most it could roll the same, for a helpless target); a fire wall's damage there
+  (the game rolls Wall of Fire's for any) is the last wall cast's: Blade Barrier 8d8, Wall of
+  Thorns 1d10 + 8 (`CAST_SITE` notes it; record kind 9 for the dice log). Whirlwind has the
+  crushing damage kind and Ice Storm's picture: a record with no damage kind, or Dust Cloud's
+  picture, does no damage. Checked live, each spell cast in the Scar fight.
 - **Names over figures.** A spell's name floats over its caster for 1.5 seconds as it is cast
   (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an
   attack that missed, in the game's font with a dark edge; at most two at once. An Options switch

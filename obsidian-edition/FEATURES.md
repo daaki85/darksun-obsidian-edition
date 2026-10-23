@@ -43,6 +43,7 @@ fixed, more saves and characters, and the game's speed. How each is done is in
     - [Picking pockets](#picking-pockets)
 - [New content](#new-content)
   - [New wizard spells](#new-wizard-spells)
+  - [6th-level priest spells](#6th-level-priest-spells)
   - [New items](#new-items)
     - [Bracers of defense](#bracers-of-defense)
     - [Robes](#robes)
@@ -707,7 +708,9 @@ and thief skills are worked out from the level. So past 9th:
   gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
 - **Spell slots** grow at the levels casters already have, up to 5th. With
   AD&D's class tables a priest has 5 4 4 3 2 at 11th and 6 5 5 3 2 at 12th, a
-  preserver 4 4 4 3 3 at 11th. No class has 6th-level slots or spells yet.
+  preserver 4 4 4 3 3 at 11th. Priests also have a 6th-level slot at 11th
+  and two at 12th, for the mod's [6th-level priest spells](#6th-level-priest-spells);
+  preservers have no 6th-level spells.
 - **Thief skills** from AD&D's table go on to 13th
   ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).
 - **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
@@ -1205,6 +1208,59 @@ and the game is as it was.
 ![The Effects screen with Cat's Grace and Erdlu Claw on Daaki, the claw's name below](docs/new-spells-effects.png)
 
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
+
+### 6th-level priest spells
+
+Nine 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
+202-210). A cleric or druid gets them at 11th level, with AD&D's spell slots:
+one 6th-level slot at 11th and two at 12th (a druid reaches 12th under the XP
+cap, a cleric 11th). Like the 4th and 5th-level common spells, the cosmos
+ones are for druids and a Healer cleric; each element's are for the clerics
+and druids of that sphere (an Elementalist's second sphere counts). They come
+with the **New wizard spells** switch, and with **AD&D's tables** for the
+slots.
+
+| Spell | Who | Cast on | Does |
+|---|---|---|---|
+| **Heal** | cosmos | touch | every wound healed |
+| **Harm** | cosmos | touch | the creature is left 1d4 hit points, and diseased; no save |
+| **Blade Barrier** | cosmos | a wall | 8d8 to each creature in it or passing through |
+| **Wall of Thorns** | cosmos | a wall | 1d10 + 8 to each creature in it or pushing through |
+| **Sunstroke** | cosmos | creatures picked one by one | each that fails its save collapses, helpless, for 2 rounds a level |
+| **Fire Seeds** | fire | an area | 8d8, a save for half |
+| **Heartseeker** | earth, water | one creature | it saves against death or dies |
+| **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
+| **Whirlwind** | air | an area | 2d8 crushing, a save for half |
+
+How they're made, and where they differ from the books:
+
+- Each is built on a spell the game already has, so the game's own code casts
+  it: Heal on Cure Critical Wounds, Harm on Cause Critical Wounds, the walls
+  on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds and
+  Whirlwind on Flame Strike, Heartseeker on Slay Living and Water of Life on
+  Lend Health.
+- **Blade Barrier and Wall of Thorns look like walls of fire**, as the game
+  has no other damaging wall. The game rolls Wall of Fire's damage for any
+  fire wall; the mod puts the last wall cast's own in its place, so a Wall of
+  Fire cast while a Blade Barrier still stands makes both burn as Wall of
+  Fire. Wall of Thorns does 1d10 + 8 where the book's thorns do 8 plus the
+  creature's AC.
+- **Sunstroke** holds its victims as Hold Person does; the book's burns each
+  round are left out. Like Hold Person it is aimed at creatures one by one;
+  a right-click ends the picking.
+- **Fire Seeds** is one burst of 8d8, not four seeds thrown one by one.
+- **Heartseeker** is a spell of death, not an arrow to shoot.
+- **Whirlwind** looks like Ice Storm (the game's dust cloud does no damage),
+  and doesn't move or hold its victims.
+- **Harm** on a helpless creature, which the game hits with the most its dice
+  can do, still leaves it 1d4 hit points.
+
+The dice log names each one: Harm's line says the game's own roll goes
+unused, and a wall's says when its damage is Blade Barrier's or Wall of
+Thorns' (`Blade Barrier's wall instead: 8d8 = 37`). Without Wake of the
+Ravager installed the spells have icons of their own (the game's, recoloured).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
 

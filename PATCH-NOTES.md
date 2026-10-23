@@ -141,6 +141,20 @@ A few of them:
 | **Spook** | 1st | a creature flees for 3 rounds unless it saves |
 | **Friends** | 1st | CHA +2d4 for a short while, for better prices |
 
+- **[New]** Nine 6th-level priest spells for clerics and druids of 11th level and up, with a 6th-level slot at 11th and two at 12th:
+
+| Spell | Who | What it does |
+|---|---|---|
+| **Heal** | druids, Healer clerics | every wound healed |
+| **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, and diseased |
+| **Blade Barrier** | druids, Healer clerics | a wall: 8d8 to each creature in it |
+| **Wall of Thorns** | druids, Healer clerics | a wall: 1d10 + 8 to each creature in it |
+| **Sunstroke** | druids, Healer clerics | creatures that fail their save collapse, helpless |
+| **Fire Seeds** | fire | 8d8 in an area, a save for half |
+| **Heartseeker** | earth, water | save against death or die |
+| **Water of Life** | water | heals a creature by taking its wounds onto the caster |
+| **Whirlwind** | air | 2d8 in an area, a save for half |
+
 ## Improved Thieving
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
