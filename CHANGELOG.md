@@ -2,14 +2,20 @@
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first: the record for developers and testers.
-For what a release brings, read its notes ([2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
+For what a release brings, read its notes ([2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
 [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
 [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
 [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #57 (in progress)
+## Pull request #58 (in progress)
+
+**Release**
+- **Obsidian Edition 2.7.1** (pull request #57): the version is 2.7.1, with its notes in
+  `release-notes/v2.7.1.md`, listed on the front page with the others.
+
+## Pull request #57 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/57))
 
 **Added**
 - **Wake of the Ravager found in more places, or chosen** (`wotrart.find_resources`): any folder
