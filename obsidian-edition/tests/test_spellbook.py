@@ -110,18 +110,27 @@ class TextTests(unittest.TestCase):
 
 
 class PowerNameTests(unittest.TestCase):
-    """A monster's power has no name in the game: the log tells it by its damage dice and kinds."""
+    """A monster's power has no name in the game: the log names it by the effect it puts on, else
+    its damage dice and kinds."""
 
-    def gd(self, damage, kinds):
+    def gd(self, damage, kinds, effect=0):
         gd = object.__new__(game.GameData)
         gd.spell_damage = lambda spell: damage
-        gd.spell_record = lambda spell: bytes(0x1A) + struct.pack("<H", kinds)
+        gd.spell_record = lambda spell: bytes(0x19) + struct.pack("<bH", effect, kinds)
         return gd
 
     def test_dice_and_kinds(self):
         gd = self.gd(SpellDamage(1, 0, 0, 1, 0, 10), 0x08)
         self.assertEqual(gd.spell_name(195), "Detonate's blast (1d10 crushing)")
-        self.assertEqual(gd.spell_name(194), "special attack 194 (1d10 crushing)")
+        self.assertEqual(gd.spell_name(194), "Crushing attack (1d10 crushing)")
+        gd = self.gd(SpellDamage(1, 0, 0, 1, 0, 6), 0x20)
+        self.assertEqual(gd.spell_name(180), "Piercing attack (1d6 pointed)")
+
+    def test_effect(self):
+        # (the Red Slaad's: paralysed for 2d4 rounds unless saved against; its dice are the time)
+        gd = self.gd(SpellDamage(2, 0, 0, 1, 0, 4), 0, effect=34)
+        self.assertEqual(gd.spell_name(182), "Paralysing attack")
+        self.assertEqual(self.gd(None, 0, effect=13).spell_name(184), "Disease attack")
 
     def test_no_dice(self):
         gd = self.gd(None, 0)

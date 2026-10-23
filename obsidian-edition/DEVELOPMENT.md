@@ -2180,7 +2180,9 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the
 load segment + 3E3Fh) has 96 bytes after 195, room for 196-198, then the
 monster kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198,
-Reflected Image 199, Spook 200, Friends 201.
+Reflected Image 199, Spook 200, Friends 201. The game names none of the monsters' powers: the
+log names one by its record's effect (+19h, `game.POWER_EFFECT_NAMES`), else its damage's kind, else
+its number; a roll before a save against one that puts on an effect is its duration (`_power_lasts`).
 
 **Room for 199-201 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
 game's segment table (load + 4137h, 8 bytes a selector: segment, length) has

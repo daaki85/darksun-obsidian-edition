@@ -2983,10 +2983,24 @@ class DiceLog:
         for p in self._pending:
             if p.resistance:
                 out += self._magic_resistance(*p.resistance)
+            elif not p.damage and self._power_lasts(spell, p.text):
+                out.append(f"{name}: {self._power_lasts(spell, p.text)} unless saved against ({p.text})")
             else:
                 out.append(f"{name}{' damage' if p.damage else ''}: {p.text}")
         self._pending.clear()
         return out
+
+    def _power_lasts(self, spell: int, dice: str) -> str:
+        """"lasts 7 rounds" when DICE (a pending roll's text) are how long a monster's power's
+        effect would last (the game rolls its record's dice for that before the saving throw),
+        else ""."""
+        if spell is None or spell <= game.SPELL_COUNT or self.game.power_effect(spell) <= 0:
+            return ""
+        try:
+            found = self.game.spell_duration(spell, 0, int(dice.rsplit("=", 1)[1]))
+        except (ValueError, IndexError, struct.error, OSError):
+            return ""
+        return f"lasts {game.game_time(found[0])}" if found else ""
 
     def _save_line(self, target, caster, spell, index, natural, total, needed) -> str:
         g = self.game
