@@ -549,10 +549,11 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thac0-saves-and-thief-skills).
 
 The game's USE (cast spells) screen shows, at the top of the panel under the
 spells, how many spells of the level on show (its LEVEL button) the selected
-character can still cast, and the most they get after resting: `SPELLS LEFT`,
-then `WIZ` for preservers' wizard spells and `PRI` for clerics', druids' and
-rangers' priest spells, as `left/most` (`PRI 2/1`). Another level shows its own
-when the LEVEL button turns to it:
+character can still cast, and the most they get after resting, for the list on
+show only: `SPELLS LEFT`, then `WIZ` on the MAGE list (preservers' wizard
+spells) or `PRI` on the CLERIC list (clerics', druids' and rangers' priest
+spells), as `left/most` (`PRI 2/1`). The PSIONIC list shows none. Another level
+or list shows its own when the LEVEL or list button turns to it:
 
 ![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
 

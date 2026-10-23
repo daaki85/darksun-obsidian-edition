@@ -377,22 +377,24 @@ class AttackTests(unittest.TestCase):
 
 class SlotsForTheGameTests(unittest.TestCase):
     def test_slot_lines(self):
-        """A heading, then each spell level's slots on a line of its own (DSCLOG shows the one
-        the USE screen is on)."""
+        """For each kind of spells a heading, then each spell level's slots, each line keyed by
+        the list and level (DSCLOG shows the ones the USE screen is on)."""
         log = make_game()
+        key = lambda lst, level: chr(dicelog.SLOT_KEY | lst << 4 | level)
         log.game.spell_slots = lambda member: {
-            0: [("Wizard", [(1, 2, 2), (2, 1, 1)]), ("Priest", [(n, 1, 2) for n in range(1, 8)])]}.get(member, [])
-        self.assertEqual(log.slots_lines(0), "SPELLS LEFT|WIZ 2/2 PRI 1/2|WIZ 1/1 PRI 1/2|PRI 1/2|PRI 1/2|PRI 1/2"
-                                             "|PRI 1/2|PRI 1/2")
+            0: [("Wizard", [(1, 2, 2), (2, 1, 1)]), ("Priest", [(1, 5, 8), (6, 2, 1)])]}.get(member, [])
+        self.assertEqual(log.slots_lines(0).split("|"),
+                         [key(1, 0) + "SPELLS LEFT", key(1, 1) + "WIZ 2/2", key(1, 2) + "WIZ 1/1",
+                          key(2, 0) + "SPELLS LEFT", key(2, 1) + "PRI 5/8", key(2, 6) + "PRI 2/1"])
         self.assertEqual(log.slots_lines(1), "")
-        log.game.spell_slots = lambda member: [("Priest", [(1, 5, 8), (2, 5, 7), (3, 2, 6), (4, 2, 5), (5, 0, 2), (6, 2, 1)])]
-        self.assertEqual(log.slots_lines(0), "SPELLS LEFT|PRI 5/8|PRI 5/7|PRI 2/6|PRI 2/5|PRI 0/2|PRI 2/1")
+        # a multiclass preserver in armour: no wizard spells, its priest spells as ever
         log.game.no_spells = lambda member: True
-        self.assertTrue(log.slots_lines(0).startswith("NO SPELLS IN ARMOUR|PRI 5/8|"))
+        lines = log.slots_lines(0).split("|")
+        self.assertEqual((lines[0], lines[3]), (key(1, 0) + "NO SPELLS IN ARMOUR", key(2, 0) + "SPELLS LEFT"))
         # the longest a member can have (a cleric/preserver: six priest levels, five wizard) fits
         log.game.no_spells = lambda member: False
-        log.game.spell_slots = lambda member: [("Wizard", [(n, 4, 4) for n in range(1, 6)]),
-                                               ("Priest", [(n, 6, 6) for n in range(1, 7)])]
+        log.game.spell_slots = lambda member: [("Wizard", [(n, 9, 9) for n in range(1, 6)]),
+                                               ("Priest", [(n, 9, 9) for n in range(1, 7)])]
         self.assertLess(len(log.slots_lines(0)), dicelog.SLOTS_SIZE)
 
 

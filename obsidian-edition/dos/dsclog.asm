@@ -1463,13 +1463,14 @@ showing db 0                    ; 1 while SHOW_WINDOW has its window up
 ; PROBE_USE: INT VEC_USE replaces "add sp,0Ch" (3 bytes: INT + NOP) in the USE (cast spells)
 ; screen's routine that labels its LEVEL button, which runs whenever the screen is drawn
 ; or the level changes. Draws the selected character's spell slots (SLOTS_TEXT, from the
-; companion: a heading, then a line for each spell level, "|" between) in the empty panel under
-; the spells, with the game's own text routine: the heading, and the line of the level on show
-; (USE_LEVEL).
+; companion: "|" between lines, each keyed by its first byte, SLOT_KEY | the list << 4 | the
+; spell level, level 0 a heading) in the empty panel under the spells, with the game's own text
+; routine: the heading and the line of the list (USE_LIST: MAGE, CLERIC or PSIONIC) and level
+; (USE_LEVEL) on show.
 USE_TEXT_SEG equ 0x2B7A - 0x4356 ; the text routine's segment (DSUN.EXE: 2B7Ah) less DS's
 USE_TEXT_OFF equ 0x16D
 USE_WHO_SEG  equ 0x3931 - 0x4356 ; the selected character's number is at this segment:25Bh
-SLOTS_SIZE   equ 112
+SLOTS_SIZE   equ 128
 probe_use:
         push bp                 ; the replaced "add sp,0Ch": move the interrupt frame (and BP)
         mov bp, sp              ; up over the 12 bytes
@@ -1834,6 +1835,8 @@ sl_busy    db 0
 sl_page    db 0
 
 USE_LEVEL equ 0x4AEC             ; DS: the spell level the USE screen shows (its LEVEL button's)
+USE_LIST  equ 0x4AE8             ; DS: the list it shows, a byte per member: 1 MAGE, 2 CLERIC, 3 PSIONIC
+SLOT_KEY  equ 0x80
 use_draw:                       ; the selected character's slots in the USE screen's panel
         mov ax, ds
         add ax, USE_WHO_SEG
@@ -1851,27 +1854,35 @@ use_draw:                       ; the selected character's slots in the USE scre
         mov word [cs:c_draw], USE_TEXT_OFF
         mov eax, [0x11A4]       ; the screen's window
         mov [cs:c_winptr], eax
+        mov bl, [bx + USE_LIST] ; (BX still the member)
+        and bl, 7
+        shl bl, 4
+        or bl, SLOT_KEY         ; (BL the heading's key, BH the level's line's)
+        mov bh, [USE_LEVEL]
+        and bh, 0x0F
+        or bh, bl
+        push si
         mov dx, USE_FIRST_Y
-        call .line              ; the heading
-        movzx cx, byte [USE_LEVEL]
-        jcxz .done
-.skip:  cmp byte [cs:si], '|'   ; on to the level's line
-        jne .done               ; (none: no slots of that level)
-        inc si
-        dec cx
-        jz .draw
-.past:  mov al, [cs:si]
-        cmp al, 0
-        je .done
-        cmp al, '|'
-        je .skip
-        inc si
-        jmp .past
-.draw:  add dx, USE_STEP
-        call .line
+        call .find
+        pop si
+        jc .done                ; (no heading: no spells of that list)
+        mov bl, bh
+        mov dx, USE_FIRST_Y + USE_STEP
+        call .find
 .done:  ret
-.line:  mov di, u_line          ; copy one line (up to "|" or the end) and draw it at y DX,
-.copy:  mov al, [cs:si]         ; SI left on the "|" or the end
+.find:  cmp [cs:si], bl         ; the line keyed BL from SI drawn at y DX, carry clear; carry set
+        je .line                ; if none
+.next:  mov al, [cs:si]
+        inc si
+        cmp al, '|'
+        je .find
+        or al, al
+        jnz .next
+        stc
+        ret
+.line:  inc si                  ; (past its key)
+        mov di, u_line          ; copy the line (up to "|" or the end) and draw it
+.copy:  mov al, [cs:si]
         cmp al, '|'
         je .cut
         cmp al, 0
@@ -1882,7 +1893,7 @@ use_draw:                       ; the selected character's slots in the USE scre
         cmp di, u_line + SLOTS_SIZE - 1
         jb .copy
 .cut:   mov byte [cs:di], 0
-        push si
+        push bx
         push dx
         push dx                 ; y
         push word USE_X         ; x
@@ -1890,7 +1901,8 @@ use_draw:                       ; the selected character's slots in the USE scre
         push word u_line
         call c_draw_line
         pop dx
-        pop si
+        pop bx
+        clc
         ret
 ; PROBE_LOOK: INT VEC_LOOK replaces "mov si,ax / xor di,di" (4 bytes: INT + 2 NOPs) in the
 ; routine that fills the Look box (right-click to Look, then a monster in a fight), where the

@@ -35,7 +35,9 @@ from .tracker import PartyTracker
 HDR_SIG = b"DSCLOGva"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
-TSR_SLOTS_OFF, SLOTS_SIZE = 148, 112
+TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
+SLOT_LIST = {"Wizard": 1, "Priest": 2}  # the USE screen's list on show (DS:4AE8h + the member): 1 MAGE, 2 CLERIC, 3 PSIONIC
+SLOT_KEY = 0x80  # a line's first byte: SLOT_KEY | the list << 4 | the spell level (0: the heading)
 # ... and what the Look box says about a monster (PROBE_LOOK)
 TSR_LOOK_SEQ, TSR_LOOK_REPLY, TSR_LOOK_WHO, TSR_LOOK_OFF, TSR_LOOK_FULL_OFF, TSR_LOOK_ON = 150, 152, 154, 156, 158, 160
 LOOK_SIZE, LOOK_FULL_SIZE = 80, 700
@@ -819,22 +821,19 @@ class DiceLog:
         return [f"Look: {full[0]}"] + [f"    {line}" for line in full[1:]] if full else []
 
     def slots_lines(self, member: int) -> str:
-        """A party member's spell slots for the game's USE screen, "|" between lines: a heading,
-        then a line for each spell level, "SPELLS LEFT|WIZ 2/2 PRI 5/5|WIZ 1/1 PRI 3/3|PRI 2/2";
-        DSCLOG shows the heading and the line of the level the screen is on."""
-        slots = self.game.spell_slots(member)
-        if not slots:
-            return ""
-        top = max(level for _, levels in slots for level, _, _ in levels)
-        lines = ["NO SPELLS IN ARMOUR" if self.game.no_spells(member) else "SPELLS LEFT"]
-        for n in range(1, top + 1):
-            cells = []
-            for kind, levels in slots:
-                by_level = {level: (left, most) for level, left, most in levels}
-                if n in by_level:
-                    left, most = by_level[n]
-                    cells.append(f"{SLOT_KINDS.get(kind, kind[:3].upper())} {left}/{most}")
-            lines.append(" ".join(cells))
+        """A party member's spell slots for the game's USE screen, "|" between lines, each line
+        keyed by its first character (SLOT_KEY | the list << 4 | the spell level, level 0 the
+        heading): for each kind of spells, a heading then a line for each spell level,
+        "SPELLS LEFT", "PRI 5/5". DSCLOG shows the heading and the line of the list and level
+        the screen is on. A multiclass preserver in armour has "NO SPELLS IN ARMOUR" for its
+        wizard spells."""
+        lines = []
+        for kind, levels in self.game.spell_slots(member):
+            key = SLOT_KEY | SLOT_LIST.get(kind, 0) << 4
+            name = SLOT_KINDS.get(kind, kind[:3].upper())
+            armour = kind == "Wizard" and self.game.no_spells(member)
+            lines.append(chr(key) + ("NO SPELLS IN ARMOUR" if armour else "SPELLS LEFT"))
+            lines += [chr(key | level) + f"{name} {left}/{most}" for level, left, most in levels]
         return "|".join(lines)
 
     def _write_slots(self) -> None:
@@ -849,7 +848,7 @@ class DiceLog:
                 text = self.slots_lines(member)
             except (struct.error, IndexError, ValueError):
                 text = ""
-            data += text.encode("cp437", "replace")[:SLOTS_SIZE - 1].ljust(SLOTS_SIZE, b"\0")
+            data += text.encode("latin-1", "replace")[:SLOTS_SIZE - 1].ljust(SLOTS_SIZE, b"\0")
         if data != self._slots_written:
             self.guest.write(table, data)
             self._slots_written = data
