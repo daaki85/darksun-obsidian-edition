@@ -24,6 +24,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Thorns 1d10 + 8 (`CAST_SITE` notes it; record kind 9 for the dice log). Whirlwind has the
   crushing damage kind and Ice Storm's picture: a record with no damage kind, or Dust Cloud's
   picture, does no damage. Checked live, each spell cast in the Scar fight.
+- **Pictures on the ground for the 6th-level priest spells**, Wake of the Ravager's: Blade
+  Barrier's circling blades and Wall of Thorns' thorns (its objects 8432 and 8425, added to the
+  Loader's SEGOBJEX copy by `wotrart.area_chunks`, recoloured; without it the fire wall tinted
+  grey or dark brown), Fire Seeds' fireball (8405) and Whirlwind's Sand Storm dust (8403).
+  DSCLOG's `AREA_NOTE` (from `CAST_SITE`) sets the object of the area-picture entries they share
+  with their templates (the table before the flights: 18 bytes an entry, a record's +17h the
+  entry) at each cast, and the game's own for any other spell.
 - **Names over figures.** A spell's name floats over its caster for 1.5 seconds as it is cast
   (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an
   attack that missed, in the game's font with a dark edge; at most two at once. An Options switch

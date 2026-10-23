@@ -155,6 +155,8 @@ A few of them:
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
 | **Whirlwind** | air | 2d8 in an area, a save for half |
 
+  The walls look like circling blades and a tangle of thorns, Fire Seeds bursts as a fireball and Whirlwind swirls as a sand storm (Wake of the Ravager's pictures, when it's installed; the walls recoloured fire walls without it).
+
 ## Improved Thieving
 
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.

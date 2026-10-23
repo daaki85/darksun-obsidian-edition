@@ -1241,26 +1241,32 @@ How they're made, and where they differ from the books:
   on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds and
   Whirlwind on Flame Strike, Heartseeker on Slay Living and Water of Life on
   Lend Health.
-- **Blade Barrier and Wall of Thorns look like walls of fire**, as the game
-  has no other damaging wall. The game rolls Wall of Fire's damage for any
-  fire wall; the mod puts the last wall cast's own in its place, so a Wall of
-  Fire cast while a Blade Barrier still stands makes both burn as Wall of
-  Fire. Wall of Thorns does 1d10 + 8 where the book's thorns do 8 plus the
-  creature's AC.
+- **Blade Barrier and Wall of Thorns are walls of fire underneath**, as the
+  game has no other damaging wall, but they look like their own: a ring of
+  circling blades and a tangle of thorns, Wake of the Ravager's pictures (the
+  fire wall in grey or dark brown without it). The game rolls Wall of Fire's
+  damage for any fire wall; the mod puts the last wall cast's own in its place,
+  so a Wall of Fire cast while a Blade Barrier still stands makes both burn as
+  Wall of Fire. Wall of Thorns does 1d10 + 8 where the book's thorns do 8 plus
+  the creature's AC.
 - **Sunstroke** holds its victims as Hold Person does; the book's burns each
   round are left out. Like Hold Person it is aimed at creatures one by one;
   a right-click ends the picking.
-- **Fire Seeds** is one burst of 8d8, not four seeds thrown one by one.
+- **Fire Seeds** is one burst of 8d8, not four seeds thrown one by one; it
+  bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
+  Lands has too) where Flame Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot.
-- **Whirlwind** looks like Ice Storm (the game's dust cloud does no damage),
-  and doesn't move or hold its victims.
+- **Whirlwind** works as Ice Storm's storm (the game's dust cloud does no
+  damage) and looks like Wake of the Ravager's Sand Storm, a swirl of dust; it
+  doesn't move or hold its victims.
 - **Harm** on a helpless creature, which the game hits with the most its dice
   can do, still leaves it 1d4 hit points.
 
 The dice log names each one: Harm's line says the game's own roll goes
 unused, and a wall's says when its damage is Blade Barrier's or Wall of
 Thorns' (`Blade Barrier's wall instead: 8d8 = 37`). Without Wake of the
-Ravager installed the spells have icons of their own (the game's, recoloured).
+Ravager installed the spells have icons of their own (the game's, recoloured),
+and the two walls the fire wall's picture recoloured.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-wizard-spells).
 

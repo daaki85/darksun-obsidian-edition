@@ -2187,7 +2187,7 @@ their descriptions (SPIN 197-202, the spell + 1 as the game's own) and icons
 (21196-21201) are chunks of the launcher's copy of RESOURCE.GFF (`spelltexts.py`,
 `icons.py`), so they take no room in the helper.
 
-Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest spells to come) are
+Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest spells) are
 read from the player's own copy of that game, a folder beside Shattered Lands' with Ravager in
 its name, and never kept in the repository. Its icons are a kind of picture Shattered Lands
 hasn't: the frame header as usual, then `0FFh "PLNR"`, the bits a pixel (4 or 5), a colour map
@@ -2196,6 +2196,23 @@ of that many bits' worth of palette numbers, and codes of those bits, the highes
 have; 38 match Shattered Lands' pixel for pixel). Its palette isn't Shattered Lands', so each
 colour becomes the nearest Shattered Lands colour no region changes. Checked in the game: the
 Heal icon in a known spell's place on the USE screen.
+
+**Pictures on the ground.** A spell's record names the picture it leaves on the ground by its
++17h (FFh none): an entry of a table of 45 just before the flights and records (the records'
+segment less 330h, 18 bytes each: the spell it was made for, a byte, the object, then how it
+behaves), the same table Wake of the Ravager has, longer and looked up there by spell. Its
+entries for the 6th-level priest spells name Blade Barrier's circling blades (object 8432) and
+Wall of Thorns' thorns (8425), which Shattered Lands hasn't, Fire Seed's fireball (8405) and Sand
+Storm's dust (8403), which it has. The two new ones go in the Loader's copy of SEGOBJEX.GFF
+(`wotrart.area_chunks`, from `icons.write_objects`): the fire wall's object (8419) naming
+pictures 2650 and 2651, its anchor (+2, +4) Wake of the Ravager's, the frames read from its
+OBJEX.GFF and each colour made the nearest stable one; without it, the fire wall's frames in
+grey and in dark brown. The new spells share their templates' entries (each also says how the
+area behaves), so `AREA_NOTE` (from `CAST_SITE`) sets those entries' objects for each cast: the
+fire walls' (22) to the blades or the thorns, with the objects' copy open; Flame Strike's (37) to
+the fireball for Fire Seeds; Ice Storm's (18) to the dust for Whirlwind; any other cast, the
+game's own. The thing put on the map keeps the object it was made with, so a wall already
+standing keeps its picture.
 
 **The effects.**
 - Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of
