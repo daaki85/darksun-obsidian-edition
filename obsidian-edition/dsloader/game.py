@@ -158,6 +158,10 @@ ITEM_ATTACKS = {ACID: "acid", TOUCH_ARMOUR: "corroding touch", TOUCH_WEAPON: "co
 # the powers a monster's hit casts for its poison properties (monsters.SPECIAL_ATTACKS: bits 13 and
 # 14, the routine giving a hit's special effects, DSUN.EXE 7A776h)
 POISON_POWERS = {176: "Poison (10 damage)", 177: "Poison (30 damage)"}
+# a monster's power the game has no name for, named by the effect its record puts on (+19h)
+POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entangling attack",
+                      35: "Poison attack"}
+POWER_KIND_NAMES = {"pointed": "piercing", "edged": "slashing"}  # (else the damage kind's own name)
 # the Options' setting for each, all on unless unticked
 RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("spell_save", RULE_SPELL_SAVE), ("no_doubled_save", RULE_NO_DOUBLE),
@@ -1076,6 +1080,26 @@ class GameData:
         names = [name for bit, name in spellbook.DAMAGE_KINDS if kinds & bit]
         return f" ({rule.base_dice}d{rule.sides}{' ' + ', '.join(names) if names else ''})"
 
+    def power_effect(self, spell: int) -> int:
+        """The effect a monster's power puts on (its record's +19h), 0 for none."""
+        try:
+            rec = self.spell_record(spell)
+        except (struct.error, IndexError, ValueError, OSError):
+            return 0
+        return struct.unpack_from("b", rec, 0x19)[0] if len(rec) > 0x19 else 0
+
+    def _power_name(self, spell: int) -> str:
+        """A monster's power, named by what its record does: the effect it puts on ("Paralysing
+        attack"), else its damage's kind ("Fire attack (6d6 fire)"), else its number."""
+        dice = self._power_dice(spell)
+        harms = " " in dice.strip(" ()")  # (dice with a damage kind: else they may be its time)
+        if self.power_effect(spell) in POWER_EFFECT_NAMES:
+            return POWER_EFFECT_NAMES[self.power_effect(spell)] + (dice if harms else "")
+        if harms:
+            kind = dice.strip(" ()").split(" ", 1)[1].split(",")[0]
+            return f"{POWER_KIND_NAMES.get(kind, kind).capitalize()} attack{dice}"
+        return f"special attack {spell}{dice}"
+
     def power_score_parts(self, combatant: int, power: int) -> Optional[Tuple[str, int, int]]:
         """A psionic power's check score parts for COMBATANT (as the game's 5D59Dh adds them): the
         ability's name, the power's adjustment, and the user's own number for it less 1 (a party
@@ -1114,7 +1138,7 @@ class GameData:
         if spell == DETONATE_BLAST:
             return f"Detonate's blast{self._power_dice(spell)}"
         if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch: the game names none
-            return f"special attack {spell}{self._power_dice(spell)}"
+            return self._power_name(spell)
         if SPELL_FIRST <= spell <= SPELL_COUNT:
             info = self.load_seg * 16 + SPELL_INFO_OFF + (spell - 1) * SPELL_INFO_SIZE
             name = struct.unpack("<H", self.guest.read(info + 5, 2))[0]

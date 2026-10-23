@@ -1284,8 +1284,9 @@ How they're made, and where they differ from the books:
 The dice log names each one: Harm's line says the game's own roll goes
 unused, and Wall of Thorns' gives the AC its damage came from
 (`Wall of Thorns' wall instead: 8 + AC 10 = 18`), and a creature Whirlwind
-sweeps off its feet has a line of its own. Without Wake of the Ravager
-installed the spells have icons of their own (the game's, recoloured).
+sweeps off its feet has a line of its own. Their icons are Wake of the
+Ravager's, read from your copy (GOG sells it with Shattered Lands); without it
+they have icons of their own (the game's, recoloured).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
@@ -1683,7 +1684,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
 
 The [6th-level priest spells](#6th-level-priest-spells) that stay on the map have
 pictures of their own: Blade Barrier a ring of circling blades and Wall of Thorns
-a tangle of thorns (Wake of the Ravager's, when it is installed; the game's fire
+a tangle of thorns (Wake of the Ravager's, from your copy; the game's fire
 wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
 funnel of dust in the middle of its area that turns as you watch, its ring of
 dust at the edge.

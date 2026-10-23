@@ -117,11 +117,14 @@ game artwork is copied.
   ([One-time setup](#one-time-setup)); it needs no extra packages.
 - Linux works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
-- **Optional: Wake of the Ravager** (GOG's), installed beside Shattered Lands
-  (a folder with "Ravager" in its name, in the same place). If it's there, the
+- **Wake of the Ravager**, which GOG sells with Shattered Lands: the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
-  and pictures, read from it as the game starts; without it they have the
-  Loader's own.
+  and pictures, read from your copy as the game starts (none of its files are
+  in the mod). Without it (an old copy of Shattered Lands alone) they have the
+  Loader's own. It looks in every folder beside Shattered Lands (GOG Galaxy
+  installs the two as `Dark Sun` and `Dark Sun 2`) and in GOG's usual folders; the Options tab's **Wake of
+  the Ravager** section says whether it found it, and **Choose its folder...**
+  points it to one installed anywhere else.
 
 ### Suggested system requirements
 
@@ -851,6 +854,7 @@ critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `Cilla's STR 12 -> 16` | A party member's ability score changed, once the change holds: a spell's or effect's (Strength, Remove Curse giving back a lowered STR, Raise Dead's point of CON), and the game's own. |
 | `    Abjure on Y: d20 = 14, needs 12 or more (11 - caster level 5 + its level 6) -> sent away` | Abjure sends a summoned creature away (1000 damage) on a d20 at or over 11 - the caster's level + the creature's. |
 | `    Summoning: 1d3 = 2 picks which of its 3 creatures comes` | Which creature a summoning spell brings. |
+| `Paralysing attack: lasts 7 rounds unless saved against (2d4 = [4 + 3] = 7)` | A monster's power the game has no name for (its records 172-195), named by what its record does: the effect it puts on (Paralysing, Disease, Entangling, Poison attack), else its damage's kind (`Fire attack (6d6 fire)`), else its number (`special attack 190`). Dice rolled just before the save are how long the effect would last. |
 | `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (anything the log can't account for shows as `other`), the number it had to reach and the chance of that; for a damaging spell, what the save left of that target's damage roll. More below the table. |
 | `X gives Blessed to Y, Z: +1 to hit, +1 on saves` / `Blessed ends on Y` | A spell or psionic effect starting or ending, with what it does in the game's code where that is known: to-hit, AC and saving throws, movement and attacks, whether the creature can attack or cast, who controls it (see [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)). `Stuck on Y` (no "gives") is an effect a creature has from a spell on the ground or cast on itself. |
 

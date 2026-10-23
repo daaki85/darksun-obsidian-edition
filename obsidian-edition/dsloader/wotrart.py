@@ -37,7 +37,7 @@ FALLBACKS: Dict[str, Tuple[int, Tuple[int, int, int]]] = {
 HEAL_SPIN = (211, b"HEAL:")  # (how a RESOURCE.GFF is told for Wake of the Ravager's)
 PALETTE = ("PAL ", 1000)
 PLNR = b"\xffPLNR"
-GOG_NAMES = ("Dark Sun Wake of the Ravager", "Dark Sun - Wake of the Ravager", "Wake of the Ravager")
+GOG_NAMES = ("Dark Sun 2", "Dark Sun Wake of the Ravager", "Dark Sun - Wake of the Ravager", "Wake of the Ravager")
 
 
 def _codes(data: bytes, bits: int) -> Iterator[int]:
@@ -85,20 +85,60 @@ def is_wotr_resources(path: str) -> bool:
     return spin.startswith(HEAL_SPIN[1])
 
 
+# where GOG puts it, on any drive (as launch.GOG_SUBDIRS for Shattered Lands)
+GOG_PARENTS = (r"GOG Games", r"Program Files (x86)\GOG Galaxy\Games", r"Program Files\GOG Galaxy\Games",
+               r"GOG Galaxy\Games")
+SETTING = "wotr_dir"  # (the Loader's settings: the folder the player chose, if any)
+
+
+def _gog_folders() -> List[str]:
+    drives = [f"{d}:\\" for d in "CDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")] if os.name == "nt" else []
+    return [os.path.join(drive, parent, name) for drive in drives for parent in GOG_PARENTS for name in GOG_NAMES]
+
+
+def _beside(sl_dir: Optional[str]) -> List[str]:
+    """The folders beside Shattered Lands' (SL_DIR): those with Ravager, Wake or Dark Sun in their
+    names first (GOG Galaxy names it "Dark Sun 2"), then the rest."""
+    if not sl_dir:
+        return []
+    own = os.path.abspath(sl_dir)
+    parent = os.path.dirname(own)
+    try:
+        folders = [os.path.join(parent, d) for d in sorted(os.listdir(parent))
+                   if os.path.join(parent, d) != own]
+    except OSError:
+        return []
+    likely = [f for f in folders if any(w in os.path.basename(f).lower() for w in ("ravager", "wake", "dark sun"))]
+    return likely + [f for f in folders if f not in likely]
+
+
+def _chosen() -> Optional[str]:
+    from . import launch  # (its settings: here, so the import stays one way)
+    try:
+        return launch.load_settings().get(SETTING) or None
+    except (OSError, ValueError):
+        return None
+
+
 def find_resources(sl_dir: Optional[str], given: Optional[str] = None) -> Optional[str]:
-    """Wake of the Ravager's RESOURCE.GFF: in GIVEN (a folder), else in a folder beside Shattered
-    Lands' SL_DIR with Ravager in its name, else None."""
-    folders = [given] if given else []
-    if sl_dir:
-        parent = os.path.dirname(os.path.abspath(sl_dir))
+    """Wake of the Ravager's RESOURCE.GFF: in GIVEN (a folder; else the one chosen on the Loader's
+    Options tab), else in a folder beside Shattered Lands' SL_DIR (whatever its name: GOG Galaxy's
+    is "Dark Sun 2"), else in GOG's usual places; in each, or in a folder inside it. None if none is
+    found."""
+    first = given or _chosen()
+    for folder in ([first] if first else []) + _beside(sl_dir) + _gog_folders():
+        if not folder or not os.path.isdir(folder):
+            continue
+        inner = []
         try:
-            folders += [os.path.join(parent, d) for d in sorted(os.listdir(parent)) if "ravager" in d.lower()]
+            inner = [os.path.join(folder, d) for d in sorted(os.listdir(folder))
+                     if os.path.isdir(os.path.join(folder, d))]
         except OSError:
             pass
-    for folder in folders:
-        path = art._find(folder, "RESOURCE.GFF") if folder and os.path.isdir(folder) else None
-        if path and is_wotr_resources(path):
-            return path
+        for place in [folder] + inner:
+            path = art._find(place, "RESOURCE.GFF")
+            if path and is_wotr_resources(path):
+                return path
     return None
 
 

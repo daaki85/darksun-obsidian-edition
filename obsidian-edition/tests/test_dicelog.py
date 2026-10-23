@@ -482,6 +482,19 @@ class SaveTests(unittest.TestCase):
                          ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): d20 = 13 +2 other = 15, "
                           "needs 14 (45% to save) -> saved"])
 
+    def test_power_duration_named(self):
+        """A monster's power the game names none of (the Red Slaad's 182): named by its effect, and
+        the dice rolled before the save said to be how long it would last."""
+        log = make_game()
+        log.game.spell_name = lambda spell: "Paralysing attack"
+        log.game.power_effect = lambda spell: 34  # (Paralyzed)
+        log.game.spell_duration = lambda spell, level, roll: (roll * 60, f"{roll} from the dice")
+        for f in (4, 3):
+            log.describe(entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 182)),
+                         now=1.0)
+        self.assertEqual(log.describe(self.save_roll(log, 13, spell=182), now=1.1),
+                         ["Paralysing attack: lasts 7 rounds unless saved against (2d4 = [4 + 3] = 7)"])
+
     def test_save_shows_what_it_leaves(self):
         """Fireball's damage for this target, then its save: the save line says what's left."""
         log = make_game()

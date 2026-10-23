@@ -9,7 +9,31 @@ For what a release brings, read its notes ([2.7.0](release-notes/v2.7.0.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #56 (in progress)
+## Pull request #57 (in progress)
+
+**Added**
+- **Wake of the Ravager found in more places, or chosen** (`wotrart.find_resources`): any folder
+  beside Shattered Lands (GOG Galaxy installs them as `Dark Sun` and `Dark Sun 2`, so a Galaxy
+  install was never found), GOG's usual folders on any drive, and a folder inside each; the Options tab's new **Wake of the Ravager** section says where it was
+  found, or that it wasn't, and **Choose its folder...** keeps one installed anywhere else
+  (`wotr_dir`). Before, the Loader looked beside Shattered Lands only and said nothing, so a player
+  whose copy was elsewhere saw the Loader's own icons without knowing why. GOG Galaxy's `Dark Sun`
+  is among the places the Loader looks for Shattered Lands too (`launch.GOG_SUBDIRS`).
+
+**Changed**
+- **Monsters' powers named in the dice log** by what their records do (`game._power_name`,
+  `POWER_EFFECT_NAMES`): the effect a power puts on (`Paralysing attack`, `Disease attack`,
+  `Entangling attack`, `Poison attack`), else its damage's kind (`Fire attack (6d6 fire)`), else its
+  number as before. The dice rolled before the save against one that puts on an effect are its
+  duration, and the log says so (`Paralysing attack: lasts 7 rounds unless saved against (2d4 =
+  [4 + 3] = 7)`; the Red Slaad's 182 was `special attack 182: 2d4 = [4 + 3] = 7`).
+
+**Documentation**
+- Wake of the Ravager described as what it is for nearly every player, the game GOG sells with
+  Shattered Lands, rather than an optional extra (the Loader README's requirements, FEATURES, the
+  patch notes); the patch notes list this pull request's changes as coming after 2.7.0.
+
+## Pull request #56 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/56))
 
 **Release**
 - **Obsidian Edition 2.7.0** (pull requests #55 and #56): the version is 2.7.0, with its notes

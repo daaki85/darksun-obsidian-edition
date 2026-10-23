@@ -32,6 +32,9 @@ GOG_SUBDIRS = (
     r"Program Files\GOG Galaxy\Games\Dark Sun Shattered Lands",
     r"GOG Galaxy\Games\Dark Sun Shattered Lands",
     r"Games\Dark Sun Shattered Lands",
+    r"Program Files (x86)\GOG Galaxy\Games\Dark Sun",  # (GOG Galaxy's own name for it)
+    r"Program Files\GOG Galaxy\Games\Dark Sun",
+    r"GOG Galaxy\Games\Dark Sun",
 )
 
 

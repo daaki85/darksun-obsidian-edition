@@ -2180,7 +2180,9 @@ the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`, after the
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the
 load segment + 3E3Fh) has 96 bytes after 195, room for 196-198, then the
 monster kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198,
-Reflected Image 199, Spook 200, Friends 201.
+Reflected Image 199, Spook 200, Friends 201. The game names none of the monsters' powers: the
+log names one by its record's effect (+19h, `game.POWER_EFFECT_NAMES`), else its damage's kind, else
+its number; a roll before a save against one that puts on an effect is its duration (`_power_lasts`).
 
 **Room for 199-201 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
 game's segment table (load + 4137h, 8 bytes a selector: segment, length) has
@@ -2231,8 +2233,11 @@ game's own: the name in capitals, two spaces, then a terse line with damage as a
 and cuts off the rest, so check a changed one on the USE screen (right-click the icon).
 
 Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest spells) are
-read from the player's own copy of that game, a folder beside Shattered Lands' with Ravager in
-its name, and never kept in the repository. Its icons are a kind of picture Shattered Lands
+read from the player's own copy of that game, and never kept in the repository: the folder chosen
+on the Options tab (`wotr_dir` in the settings), else any folder beside Shattered Lands' (those
+named Ravager, Wake or Dark Sun first: GOG Galaxy's are `Dark Sun` and `Dark Sun 2`), else GOG's
+usual folders on any drive, each or a folder inside it holding a
+RESOURCE.GFF whose Heal description is Wake of the Ravager's (`find_resources`). Its icons are a kind of picture Shattered Lands
 hasn't: the frame header as usual, then `0FFh "PLNR"`, the bits a pixel (4 or 5), a colour map
 of that many bits' worth of palette numbers, and codes of those bits, the highest first, where
 0 0 is colour 0 and 0 k the last pixel k + 2 more times (worked out on the 101 spells both games
