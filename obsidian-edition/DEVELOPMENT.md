@@ -432,8 +432,10 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
 (`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
 D00Ah to F000h): the build fails past it (a negative `times`), and so does
-`test_fits_upper_memory`. No paragraph is spare now (3.8 KB before the 6th-level
-spells, the names over figures, Whirlwind's funnel and Wall of Thorns' armour), so
+`test_fits_upper_memory`. 54 paragraphs (864 bytes) are spare now, after the
+shadow table became a bit for each thing and the added item names 16 bytes each, padded to the
+game's 25 as they are copied (3.8 KB before the 6th-level spells, the names over figures,
+Whirlwind's funnel and Wall of Thorns' armour), so
 new helper code needs room found first: each of the ring's entries is 12
 paragraphs (`NENT`), and the helper's own segment still has about 2.3 KB. Text the game
 reads from RESOURCE.GFF belongs in the Loader's copy of it, not in the helper

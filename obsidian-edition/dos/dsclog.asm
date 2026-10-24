@@ -263,7 +263,8 @@ swap_seq   dw 0                 ; +192 counted up when it has been
 swap_off   dw swap_match        ; +194 offset of SWAP_MATCH (SWAP_SIZE bytes, NUL-terminated),
                                 ;      then SWAP_TEXT (TSIZE_SWAP bytes)
 names_off  dw extra_names       ; +196 offset of EXTRA_NAMES: the names past the game's own (NAMES_EXTRA
-                                ;      of NAME_SIZE bytes), copied into the game's table each time it loads
+                                ;      of NAME_KEPT bytes), copied into the game's table (NAME_SIZE each)
+                                ;      each time it loads
 names_count dw NAMES_EXTRA      ; +198 how many
 names_ptr  dd 0                 ; +200 the game's name table, as last loaded with them (0: not yet)
 stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and
@@ -277,8 +278,9 @@ types_ptr  dd 0                 ; +214 the game's item type table, as last loade
 objects_on dw 0                 ; +218 1 once the game has opened the Loader's copy of
                                 ;      SEGOBJEX.GFF (its icons: see PROBE_DOS_OPEN)
 shadows_on dw 0                 ; +220 the Loader sets 1 to have figures cast shadows (SHADOWS)
-shadow_tab_off dw shadow_tab    ; +222 offset of SHADOW_TAB: a byte for each of the game's 520 things,
-                                ;      1 for those that cast a shadow (the Loader keeps it)
+shadow_tab_off dw shadow_tab    ; +222 offset of SHADOW_TAB: a bit for each of the game's 520 things
+                                ;      (thing N: byte N / 8, bit N % 8), set for those that cast a
+                                ;      shadow (the Loader keeps it)
 dark_build dw 0                 ; +224 the Loader sets 1 to have DARK made again from the palette
                                 ;      (after the area, so the palette, changes); 0 once it is
 shadow_passes dw 0              ; +226 shadow passes drawn (counted)
@@ -16124,6 +16126,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
+NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own)
 NAMES_EXTRA  equ 46
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
@@ -16155,7 +16158,9 @@ probe_names_fill:
         push word [cs:n_ip]
         or ax, ax
         jnz .out
+        push ax
         push cx
+        push dx
         push si
         push di
         push ds
@@ -16167,14 +16172,22 @@ probe_names_fill:
         push cs
         pop ds
         mov si, extra_names
-        mov cx, NAMES_EXTRA * NAME_SIZE
+        mov dx, NAMES_EXTRA
         cld
+.name:  mov cx, NAME_KEPT
         rep movsb
+        xor al, al
+        mov cx, NAME_SIZE - NAME_KEPT   ; (the rest of the game's 25, blank)
+        rep stosb
+        dec dx
+        jnz .name
         pop es
         pop ds
         pop di
         pop si
+        pop dx
         pop cx
+        pop ax
 .out:   iret
 n_ip    dw 0
 n_cs    dw 0
@@ -16381,97 +16394,97 @@ extra_types:
 ; NAMES in dsloader/names.py), the rest blank until it writes more
 extra_names:
         db "Ring/Protection"
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Thieves' Tools"
-        times NAME_SIZE - 14 db 0
+        times NAME_KEPT - 14 db 0
         db "Short Sword"                ; (Kurzak's, of type TYPES' first)
-        times NAME_SIZE - 11 db 0
+        times NAME_KEPT - 11 db 0
         db "Cloak/Protectn"             ; (Pehtucl's, the game's way of shortening)
-        times NAME_SIZE - 14 db 0
+        times NAME_KEPT - 14 db 0
         db "Ring/Protection"            ; (Pehtucl's ring: the arena's is the first; their icons differ)
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Shadowseeker"               ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
-        times NAME_SIZE - 12 db 0
+        times NAME_KEPT - 12 db 0
         db "Kreenfang"                  ; (the arena's Bone Gythka made +1)
-        times NAME_SIZE - 9 db 0
+        times NAME_KEPT - 9 db 0
         db "Bracers/Defense"            ; (bracers of defense: BRACERS, dsloader/worldgear.py)
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Gutterknot"                 ; (the magic weapons of dsloader/worldgear.py: a club +1,
-        times NAME_SIZE - 10 db 0
+        times NAME_KEPT - 10 db 0
         db "Deepbiter"                  ; a stone pick +1,
-        times NAME_SIZE - 9 db 0
+        times NAME_KEPT - 9 db 0
         db "Windlash"                   ; a staff sling +1,
-        times NAME_SIZE - 8 db 0
+        times NAME_KEPT - 8 db 0
         db "Greenbright"                ; a metal short sword +2)
-        times NAME_SIZE - 11 db 0
+        times NAME_KEPT - 11 db 0
         db "Arrowbane"                  ; (the circlet and the crown of dsloader/worldgear.py)
-        times NAME_SIZE - 9 db 0
+        times NAME_KEPT - 9 db 0
         db "Sunking Crown"
-        times NAME_SIZE - 13 db 0
+        times NAME_KEPT - 13 db 0
         db "Warden's Chest"             ; (the Warden's Plate of dsloader/worldgear.py)
-        times NAME_SIZE - 14 db 0
+        times NAME_KEPT - 14 db 0
         db "Warden's Arms"
-        times NAME_SIZE - 13 db 0
+        times NAME_KEPT - 13 db 0
         db "Warden's Legs"
-        times NAME_SIZE - 13 db 0
+        times NAME_KEPT - 13 db 0
         db "Warden's Helm"
-        times NAME_SIZE - 13 db 0
+        times NAME_KEPT - 13 db 0
         db "Cloak/Elvenkind"            ; (the Cloak and Boots of Elvenkind)
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Boots/Elvenkind"
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Flame Blade"                ; (an obsidian long sword +1, Focus Heat on what it hits)
-        times NAME_SIZE - 11 db 0
+        times NAME_KEPT - 11 db 0
         db "Tome/Understand"            ; (the Tome of Understanding: dsloader/tome.py)
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Inixhide"                   ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
-        times NAME_SIZE - 8 db 0
+        times NAME_KEPT - 8 db 0
         db "Drakejaw"                   ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
-        times NAME_SIZE - 8 db 0
+        times NAME_KEPT - 8 db 0
         db "Glasshewer"                 ; an obsidian axe +2,
-        times NAME_SIZE - 10 db 0
+        times NAME_KEPT - 10 db 0
         db "Headsman"                   ; a metal great axe +2)
-        times NAME_SIZE - 8 db 0
+        times NAME_KEPT - 8 db 0
         db "Galefang"                   ; (more magic weapons of dsloader/worldgear.py: an air
-        times NAME_SIZE - 8 db 0        ; cleric's dagger +2,
+        times NAME_KEPT - 8 db 0        ; cleric's dagger +2,
         db "Mindshard"                  ; an obsidian short sword +1,
-        times NAME_SIZE - 9 db 0
+        times NAME_KEPT - 9 db 0
         db "Stillwater"                 ; a bone short sword +1,
-        times NAME_SIZE - 10 db 0
+        times NAME_KEPT - 10 db 0
         db "Linebreaker"                ; a metal polearm +2,
-        times NAME_SIZE - 11 db 0
+        times NAME_KEPT - 11 db 0
         db "Thornwall"                  ; a bone polearm +1)
-        times NAME_SIZE - 9 db 0
+        times NAME_KEPT - 9 db 0
         db "Ashen Robe"                 ; (the robes: dsloader/robes.py)
-        times NAME_SIZE - 10 db 0
+        times NAME_KEPT - 10 db 0
         db "Veiled Robe"
-        times NAME_SIZE - 11 db 0
+        times NAME_KEPT - 11 db 0
         db "Gutterward"                 ; (the magic shields of dsloader/worldgear.py: a wooden
-        times NAME_SIZE - 10 db 0       ; shield +1,
+        times NAME_KEPT - 10 db 0       ; shield +1,
         db "Ironbulwark"                ; a metal shield +3)
-        times NAME_SIZE - 11 db 0
+        times NAME_KEPT - 11 db 0
         db "Hayneedle"                  ; (the weapons for the kits with too few, dsloader/
-        times NAME_SIZE - 9 db 0        ; worldgear.py: a bone dagger +1,
+        times NAME_KEPT - 9 db 0        ; worldgear.py: a bone dagger +1,
         db "Nightsliver"                ; an obsidian dagger +2,
-        times NAME_SIZE - 11 db 0
+        times NAME_KEPT - 11 db 0
         db "Dunesong"                   ; a bow +1,
-        times NAME_SIZE - 8 db 0
+        times NAME_KEPT - 8 db 0
         db "Skycutter"                  ; a chatkcha +2)
-        times NAME_SIZE - 9 db 0
+        times NAME_KEPT - 9 db 0
         db "Girdle/Back Def"            ; (the girdles and the amulet of
-        times NAME_SIZE - 15 db 0       ; dsloader/worldgear.py: 15 letters at most, as the
+        times NAME_KEPT - 15 db 0       ; dsloader/worldgear.py: 15 letters at most, as the
         db "Girdle of Urnst"            ; game's own)
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Amulet/MagicRes"
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Burning Arrows"             ; (the Spellarcher's spell arrows, dsloader/
-        times NAME_SIZE - 14 db 0       ; spellarrows.py: ARROW_NAME on)
+        times NAME_KEPT - 14 db 0       ; spellarrows.py: ARROW_NAME on)
         db "Chill Arrows"
-        times NAME_SIZE - 12 db 0
+        times NAME_KEPT - 12 db 0
         db "Shocking Arrows"
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         db "Vampiric Arrows"
-        times NAME_SIZE - 15 db 0
+        times NAME_KEPT - 15 db 0
         times (NAMES_EXTRA - 46) * NAME_SIZE db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
@@ -17150,8 +17163,8 @@ shadow_of:
         mov bx, [es:di + 6]
         cmp bx, MAP_COUNT - 1
         ja .no                          ; (none)
-        cmp byte [cs:shadow_tab + bx], 0
-        je .no
+        bt [cs:shadow_tab], bx
+        jnc .no
         call shadow_gone                ; (a creature dying or dead since SHADOW_TAB was made: none,
         jc .no                          ;   nor its new pictures loaded in the middle of a drawing)
         shl bx, 5
@@ -17889,8 +17902,8 @@ dust_tick:                      ; DS = the game's
         mov bx, [es:di + 6]
         cmp bx, MAP_COUNT - 1
         ja .tnext
-        cmp byte [cs:shadow_tab + bx], 0
-        je .tnext
+        bt [cs:shadow_tab], bx
+        jnc .tnext
         mov [cs:t_thing], bx
         mov ax, [es:di]
         mov [cs:t_x], ax
@@ -20355,7 +20368,7 @@ lit_sum    dw 0
 lit_most   dw 0
 best_c     db 0
 want       times 3 db 0
-shadow_tab times MAP_COUNT db 0
+shadow_tab times (MAP_COUNT + 7) / 8 db 0
 dark       times 256 db 0
 dac        times 768 db 0
 

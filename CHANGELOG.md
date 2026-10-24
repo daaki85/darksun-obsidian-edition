@@ -25,6 +25,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   make room. Checked in the game: Scar (leather arm and chest armour, DEX 17) took 8 + AC 5 = 13,
   his AC as the game had it when he was attacked, not 18; his henchmen 18 (AC 10); the party
   their own ACs.
+- **Room in upper memory: 54 paragraphs spare (none).** DSCLOG's `SHADOW_TAB` is a bit for each
+  of the game's 520 things, not a byte (`shadows.casting` writes it so; the helper tests it with
+  `BT`), and `EXTRA_NAMES` keeps its 46 names in 16 bytes each (`NAME_KEPT`: 15 letters at most),
+  `PROBE_NAMES_FILL` padding each to the game's 25 as it copies them: 455 and 414 bytes. Checked
+  in the game: all 46 names in the game's table as before, and the figures' shadows drawn.
 - **Heartseeker's and Slay Living's descriptions.** A creature that saves still takes half of
   4d8, 2 to 16: Heartseeker's said only that it slays, and Slay Living's said 3 to 17 (the book's
   2d8+1, not what the game rolls). `spelltexts.py` puts both right (SPIN 209 and 137), and the
