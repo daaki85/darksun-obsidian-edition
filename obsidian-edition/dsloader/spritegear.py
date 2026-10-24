@@ -44,6 +44,24 @@ MAGIC = "magic"
 GLINT = tuple(range(240, 249))
 MAGIC_ARMOUR = 0x10000  # (with an armour's item type in armed's ARMOUR: it is magic, and glints)
 
+
+def _magic(item: Tuple) -> bool:
+    return len(item) > 2 and item[2] == MAGIC
+
+
+def sparkle(rows: Rows, before: Rows) -> None:
+    """Magic worn gear: a scatter of the pixels a piece changed (ROWS against BEFORE) in the fire
+    colours the game cycles (GLINT), on a diagonal (sparser on a piece as large as a cloak); a
+    small piece (a circlet, boots) at least every other pixel of it, so it shows."""
+    changed = [(x, y) for y, row in enumerate(rows) for x, p in enumerate(row)
+               if p is not None and p != before[y][x]]
+    step = 5 if len(changed) < 150 else 9  # (a cloak, sparser)
+    picked = [(x, y) for x, y in changed if (x + 2 * y) % step == 0]
+    if len(picked) < 2:
+        picked = changed[::2]
+    for x, y in picked:
+        rows[y][x] = GLINT[(x + y) % len(GLINT)]
+
 # Shapes, by item type (the game's item type numbers)
 DAGGER, SWORD, CLUB, MACE, AXE, GREAT_AXE, POLEARM, GYTHKA, CAHULAKS, STAFF, SHIELD, SLING, BOW, \
     CHATKCHA = ("dagger", "sword", "club", "mace", "axe", "great axe", "polearm", "gythka", "cahulaks",
@@ -655,7 +673,8 @@ def draw_cloak(rows: Rows, body: Rows, model: int, parts: sp.Parts, item_type: i
 
 # Boots and belts, recoloured like armour (the artist's pixels kept): boots the feet and lower
 # shins, a belt a band at the waist across the body. Item type: shades, dark to light.
-BOOTS = {68: (204, 207, 205, 194, 206)}  # Boots: faded leather
+BOOTS = {68: (204, 207, 205, 194, 206),  # Boots: faded leather
+         game.ELVEN_BOOTS_TYPE: (210, 53, 54, 55, 56)}  # Boots of Elvenkind: soft forest green
 BELTS = {42: (204, 207, 205, 206), 35: (204, 207, 205, 206)}  # Belt, Belt of Might
 MIGHT_BELT, BUCKLE = 35, 168
 
@@ -774,14 +793,24 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     if parts.facing is not None:
         for item_type in armour:
             if item_type & ~MAGIC_ARMOUR in ARMOUR:
-                draw_armour(out, model, parts, item_type & ~MAGIC_ARMOUR, pad, own, bool(item_type & MAGIC_ARMOUR))
+                before = [list(r) for r in out] if item_type & MAGIC_ARMOUR else None
+                draw_armour(out, model, parts, item_type & ~MAGIC_ARMOUR, pad, own)
+                if before is not None:
+                    sparkle(out, before)
     if parts.facing is not None and model != sp.KREEN:
         if "boots" in weapons:
+            before = [list(r) for r in out]
             draw_boots(out, parts, weapons["boots"][0], pad)
+            if _magic(weapons["boots"]):
+                sparkle(out, before)
         if "belt" in weapons:
+            before = [list(r) for r in out]
             draw_belt(out, parts, weapons["belt"][0], pad, own.cloak if own is not None else frozenset())
+            if _magic(weapons["belt"]):
+                sparkle(out, before)
     if "cloak" in weapons and parts.facing is not None and model != sp.KREEN:
         kind = weapons["cloak"][0]
+        before = [list(r) for r in out]
         if model == CLOAK_MODEL:  # (her own cloak, in the cloak's colours: option 2)
             shades = CLOAK_COLOURS.get(kind, CLOAK_COLOURS[65])
             greens = own.cloak if own is not None and own.cloak else CLOAK_GREENS
@@ -813,8 +842,13 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                             out[y][nx + pad] = p
         elif cloak is not None:
             draw_cloak(out, [list(r) for r in out], model, parts, kind, pad, cloak)
+        if _magic(weapons["cloak"]):
+            sparkle(out, before)
     if "helm" in weapons and parts.facing is not None and model != sp.KREEN:
+        before = [list(r) for r in out]
         draw_helm(out, parts, weapons["helm"][0], pad, model)
+        if _magic(weapons["helm"]):
+            sparkle(out, before)
     body = [list(r) for r in out]
     missile = weapons.get("missile")
     if missile or "ammo" in weapons:  # (the bow, quiver, sling or chatkcha carried)
@@ -840,7 +874,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             continue
         item_type, material = weapons[hand][:2]
         blade = BLADE_COLOURS.get(weapons[hand][2]) if len(weapons[hand]) > 2 else None
-        glint = len(weapons[hand]) > 2 and weapons[hand][2] == MAGIC
+        glint = _magic(weapons[hand]) or blade is not None  # (a named blade is magic too)
         shape = WEAPON_SHAPES.get(item_type)
         side = shape == SHIELD and not combat and parts.facing == sp.SIDE  # (placed by side_shield)
         if hand not in hands and not (shape == SHIELD and pose and hand == "left") and not side:
@@ -882,7 +916,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             draw_shield(out, body, (hx + pad, hy + pad), parts.facing, colours, behind, MODEL_SCALE.get(model, 1.0), glint)
         else:
             draw_weapon(out, body, (hx + pad, hy + pad), g[0], shape, colours, g[1], scale, blade,
-                        glint and blade is None and colours != FLAME)
+                        glint and blade != FLAME and colours != FLAME)
     return out
 
 
@@ -964,11 +998,9 @@ def _pattern(pattern: str, x: int, y: int, shade: int, top: int) -> int:
     return shade
 
 
-def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int, own: Optional[Own] = None,
-                glint: bool = False) -> None:
+def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: int, own: Optional[Own] = None) -> None:
     """One piece of armour: the model's clothing (OWN's, a figure of its own) in its part of the
-    (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak);
-    with GLINT (magic armour) a scatter of its lightest pixels in the fire colours (GLINT)."""
+    (padded) picture ROWS recoloured into the armour's shades (never black within its own cloak)."""
     piece, shades, pattern = ARMOUR[item_type]
     clothes = own.clothes if own is not None and own.clothes else CLOTHES.get(model, ())
     cloak = own.cloak if own is not None else frozenset()
@@ -995,8 +1027,5 @@ def draw_armour(rows: Rows, model: int, parts: sp.Parts, item_type: int, pad: in
             part = ARMOUR_ARMS if by_hand else (ARMOUR_CHEST if y <= parts.waist else ARMOUR_LEGS)
             if part != piece:
                 continue
-            shade = _pattern(pattern, x, y, min(top, int(rank[p] * top + 0.5)), top)
-            if glint and shade >= top // 2 and (x + 2 * y) % 5 == 0:
-                rows[y + pad][x + pad] = GLINT[(x + y) % len(GLINT)]
-            else:
-                rows[y + pad][x + pad] = shades[shade]
+            shade = min(top, int(rank[p] * top + 0.5))
+            rows[y + pad][x + pad] = shades[_pattern(pattern, x, y, shade, top)]

@@ -913,6 +913,12 @@ class SaveTests(unittest.TestCase):
         log.hp_changes(0.5)
         struct.pack_into("<h", m, stalker, 21)
         self.assertEqual(log.hp_changes(1.0), ["  Mountain Stalker regenerates 1 HP (CON 22), now 21 HP"])
+        log._spell_until, log._spell_name = 5.0, "Fire attack (6d6 fire)"  # (just after an attack:
+        struct.pack_into("<h", m, stalker, 22)                            #  still the CON's doing)
+        self.assertEqual(log.hp_changes(1.5), ["  Mountain Stalker regenerates 1 HP (CON 22), now 22 HP"])
+        log._spell_until = 0.0
+        struct.pack_into("<h", m, stalker, 21)
+        log.hp_changes(1.6)
         m[stalker + game.CREATURE_ABILITIES + 2] = 19
         struct.pack_into("<h", m, stalker, 22)
         self.assertEqual(log.hp_changes(2.0), ["  Mountain Stalker now 22 HP (+1)"])

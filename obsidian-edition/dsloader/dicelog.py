@@ -224,8 +224,9 @@ KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the
 AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
                -3: "the wall would be too long", -4: "no line of sight", -5: "too far away"}
 # the requests worth a line of their own (the others only with "Show unlabelled rolls"; skill
-# checks and traps have their rolls' lines)
-REQUESTS_SHOWN = frozenset((1, 4, 6, 8, 9, 14, 17, 18, 19))
+# checks and traps have their rolls' lines; a creature changing sides, 18, comes in runs of a
+# dozen as a fight's scripts set up)
+REQUESTS_SHOWN = frozenset((1, 4, 6, 8, 9, 14, 17, 19))
 FIGHT_LINES_AFTER = 5.0  # seconds after a fight its lines still go into the combat log's panel (XP, the last kill)
 REGENERATES = 20  # CON from which a creature regains a hit point now and then by itself
 
@@ -1500,13 +1501,14 @@ class DiceLog:
                 halved = g.damage_halved_by(combatant, spell_id) if spell_id is not None else None
                 halved = f" (halved: {halved})" if halved else ""
                 out.append(f"  {who} takes {before - hp - hit} from {spell_name}{halved}{out_cold}{also}, {left}")
+            elif hp - before == 1 and rec[game.CREATURE_ABILITIES + 2] >= REGENERATES:
+                con = rec[game.CREATURE_ABILITIES + 2]  # (as AD&D's CON 20 and more: the game's own;
+                # before a spell's healing: a tick of it just after a fire attack isn't the attack's)
+                out.append(f"  {who} regenerates 1 HP (CON {con}), {left}")
             elif now <= self._spell_until and hp > before:
                 out.append(f"  {who} regains {hp - before} HP from {self._spell_name}, {left}")
             elif hp < before:
                 out.append(f"  {who} {left} (-{before - hp}{resisted})")
-            elif hp - before == 1 and rec[game.CREATURE_ABILITIES + 2] >= REGENERATES:
-                con = rec[game.CREATURE_ABILITIES + 2]  # (as AD&D's CON 20 and more: the game's own)
-                out.append(f"  {who} regenerates 1 HP (CON {con}), {left}")
             else:
                 out.append(f"  {who} {left} (+{hp - before})")
         self._hp = current

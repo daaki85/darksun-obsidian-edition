@@ -77,6 +77,21 @@ class WornTests(unittest.TestCase):
         self.assertTrue(drawn(True) & set(sg.GLINT))
         self.assertTrue(drawn(True, sg.STAFF) & set(sg.GLINT))  # (a staff has no light cells: every third)
 
+    def test_sparkle(self):
+        """Magic worn gear glints only on the pixels it changed; a small piece at least twice."""
+        before = [[1] * 20 for _ in range(20)]
+        rows = [r[:] for r in before]
+        for x in range(10):
+            rows[5][x] = 7
+        sg.sparkle(rows, before)
+        glints = [(x, y) for y, r in enumerate(rows) for x, p in enumerate(r) if p in sg.GLINT]
+        self.assertGreaterEqual(len(glints), 2)
+        self.assertTrue(all(y == 5 and x < 10 for x, y in glints))
+        tiny = [r[:] for r in before]
+        tiny[3][3] = tiny[3][4] = 7
+        sg.sparkle(tiny, before)
+        self.assertTrue(any(p in sg.GLINT for r in tiny for p in r))
+
     def test_magic_shield_glint(self):
         """A magic shield's light and part of its rim glint; a plain one's don't."""
         def drawn(glint):

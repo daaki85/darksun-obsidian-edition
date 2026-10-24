@@ -12,6 +12,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Next pull request (in progress)
 
 **New**
+- **The glow on every magic item a figure shows.** `spritegear.sparkle` marks, after a magic piece
+  is drawn, every fifth pixel (every ninth on a piece as large as a cloak; at least every other
+  on a small one) of those it changed, on a diagonal, in `GLINT`: armour (in place of picking its
+  light shades, which the human and half-elf women's dark clothes hadn't), bracers, cloaks,
+  helms, boots and belts. A named blade that isn't fire (Shadowseeker) glints along its edge as
+  other magic weapons do. Checked over every party figure (objects 300-307), walking and
+  fighting: each item's glint pixels on each. Boots of Elvenkind were not drawn at all (`BOOTS`
+  had only the plain ones): soft green now.
 - **The pointer at the desktop's speed in a window.** Captured, DOSBox 0.74 moves the driver's
   pointer a game pixel for each desktop pixel the mouse moves (at 8 mickeys a pixel), three
   screen pixels in the usual window: too fast and coarse for placing items. With `mouse_start`
@@ -27,6 +35,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
 
 **Fixed**
+- **"Regains 1 HP from Fire attack."** A hit point regenerated (CON 20 or more) in the moment
+  after a spell or attack was put down to it, the spell's healing tested first; regeneration is
+  tested first now.
+- **"Script: a creature changes sides" in runs of a dozen** as a fight's scripts set up: request
+  18 only with "Show unlabelled rolls" (`REQUESTS_SHOWN`).
 - **An archer's pointer with shots left.** The weapon attack routine (5883Ah) counts a combatant's
   attacks this round (+181h of the round's tables) and makes it 99 once all are made, allowing
   another while it is under 99; the pointer's missile test (1D5AEh) refused any count but 0, so
