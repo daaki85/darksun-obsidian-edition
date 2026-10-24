@@ -2211,6 +2211,16 @@ after the `ns_list_` patches):
   always rolled. `party_best` makes it "jge" (80201h): the highest chance above
   0, else member 0 as before. A named character skips the pick altogether.
   Found from CalvinRodo/yuan-ti's notes.
+- **An archer's pointer** (1D66Ah, the pointer's form in a fight: 6003 the
+  sword, 6004 can't attack, 6005 the missile, 6006 can't shoot; the missile
+  test 1D5AEh): a missile weapon ready (41BE:89h), arrows for it (41BE:75h)
+  and the range, then, in a fight, none of the round's melee swings (+1ABh of
+  the round's tables at 37BDh, a byte a combatant) or shots (+181h) made. The
+  weapon attack routine (5883Ah) counts the shots at +181h, makes it 63h once
+  all are made (58C45h) and lets another go while it is under 63h, so after a
+  shot that killed the pointer said "can't" while a click still shot.
+  `shots_left` makes the shots' test "cmp ...,63h / jnl" (1D657h); the melee
+  swings' stays (no shooting after a swing).
 - **Random monsters** (REQUEST 8, 80BE4h; scripts 99 and 106): `MONR` 1 of
   `RESOURCE.GFF`, 42-byte records {region, 10 x {OJFF, strength}}. With a ≠ 0
   the count is 2 x the party's strength / the monster's, 1 to 6, but the slot

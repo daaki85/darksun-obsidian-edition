@@ -368,6 +368,12 @@ PATCHES = (
     # that starts at 0: none was ever lower, so the first member rolled. "jna" made "jge": the
     # highest chance above 0 (one who can't, or isn't standing, has 0: the first then, as before)
     Patch("party_best", 0x80201, bytes.fromhex("7605"), bytes.fromhex("7d05")),
+    # ... and an archer's pointer showed "can't shoot" (ICON 6006) after a shot that killed, with
+    # shots left: the weapon attack routine (5883Ah) counts a combatant's attacks this round in a
+    # byte (+181h of the round's tables, 37BDh) and makes it 63h (99) once all are made, and lets
+    # another go while it is under 63h (58454h), but the pointer's missile test (1D5AEh) refused
+    # any count but 0. "cmp byte es:[si+181h],0 / jnz" made "cmp ...,63h / jnl": as the attack
+    Patch("shots_left", 0x1D657, bytes.fromhex("2680bc8101007505"), bytes.fromhex("2680bc8101637d05")),
     # ... and how many of a random monster come (REQUEST 8, 80BE4h; GPL 99 and 106): 2 x the
     # party's strength / the monster's, but its search left SI one past the slot found, so the
     # next slot's strength (the last slot's: the next record's first OJFF), and an empty one (the

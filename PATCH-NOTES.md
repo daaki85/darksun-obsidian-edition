@@ -300,6 +300,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** An archer's pointer showed "can't shoot" after a shot that killed, with shots left (a click still shot). Now it shows "can't" only once every shot of the round is made.
 - **[Fixed]** **Slay Living**'s description said a creature that saves takes 3 to 17; the game does 2 to 16 (half of 4d8). It says so now.
 - **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).

@@ -12,6 +12,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Next pull request (in progress)
 
 **Fixed**
+- **An archer's pointer with shots left.** The weapon attack routine (5883Ah) counts a combatant's
+  attacks this round (+181h of the round's tables) and makes it 99 once all are made, allowing
+  another while it is under 99; the pointer's missile test (1D5AEh) refused any count but 0, so
+  after a shot that killed (the round's shots not all made) it showed ICON 6006, "can't shoot",
+  though a click still shot. `gamepatch.shots_left` (1D657h) makes its "cmp ...,0 / jnz" "cmp
+  ...,63h / jnl". Not seen in a fight yet: the test harness couldn't hold an archer's turn.
 - **Cermak's Arcanist slot at the start of a new game.** The game fills the party's spell slots as
   a new game begins, before the Loader makes Cermak an Arcanist, so the USE screen showed WIZ 1/2
   until his first rest. `defaultparty.set_kit` now adds the slots the kit gives to what he has
