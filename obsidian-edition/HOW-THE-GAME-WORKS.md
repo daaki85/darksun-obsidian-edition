@@ -320,9 +320,9 @@ Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11, below
 Every click of the die on the creation screen (and every change of race or sex)
 rolls a new character. From the game's code, and checked against the screen:
 
-* **Abilities.** Each score is rolled four times as 4d4 + 4 + the race's
-  adjustment, and the best of the four counts. That's 8 to 20 before the race's
-  adjustment. The score is then raised, if need be, to the least that the
+* **Abilities.** Each score is rolled four times as 4d4 + 4 (8 to 20), the
+  best of the four kept, and the race's adjustment added. The score is then
+  raised, if need be, to the least that the
   classes allow: 17 in the class's prime requisite (STR for fighters and
   gladiators, WIS for clerics, druids, psionicists and rangers, INT for
   preservers, DEX for thieves), and otherwise 9 (clerics, fighters, preservers,
@@ -361,7 +361,8 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   psionic, death, and for weapons crushing, edged or pointed, from the item's
   type; a natural (unarmed) attack's is crushing, fists and monsters' claws
   alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
-  Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)). A weapon's hit also carries its magic: one bit for +1 or better, one
+  Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)).
+  A weapon's hit also carries its magic: one bit for +1 or better, one
   for +2 or better and one for +3 or better (the weapon's plus, or its
   ammunition's if that's higher). A monster's own attacks count as magical by
   its level: (level - 2) / 2, so a 6th-level monster hits like a +2 weapon.
@@ -454,7 +455,7 @@ chance out as:
   the game's own check: it doesn't look at what the item is (leather or metal)
   and ignores chest and arm armour and helmets, so a thief holding any weapon
   pays it. (The manual's "anything other than leather-type armor" is AD&D's
-  rule, not what the code does.) In games started with the dice log there is
+  rule, not what the code does.) In games started from the Loader there is
   no equipment penalty at all: the slots are a list in the game's data (legs,
   quiver, left hand, right hand), and the dice log's copy of the game empties
   it. The Loader reads the list from the running game, so its numbers match
@@ -462,8 +463,8 @@ chance out as:
 - plus the situation's bonus or penalty (a hard lock, say).
 
 With **Thief skills from AD&D's table** ticked (see
-[Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)), the first
-two and the DEX part are AD&D's instead.
+[Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)),
+the first two and the DEX part are AD&D's instead.
 
 Only characters with thief levels have the skills; everyone else's chance is
 0. The character's condition must be Okay (the status the character screen
@@ -519,16 +520,16 @@ each member try in turn, but no script uses it.)
 **The game never rolls move silently, hide in shadows or read languages**, so
 on their own they make no difference, nor does the equipment penalty on them.
 The Loader rolls them: move silently when a pocket isn't picked
-([Picking pockets](FEATURES.md#picking-pockets)), hide in shadows and move silently in
-fights ([backstabs](FEATURES.md#hiding-in-shadows-to-backstab)), and read languages when
-a [Shinobi](KITS.md#thief-kits) reads a scroll. The scripts also make
-3 ability checks (a d20 under the ability): CHA twice and STR once.
+([Picking pockets](FEATURES.md#picking-pockets)), hide in shadows and move
+silently in fights ([backstabs](FEATURES.md#hiding-in-shadows-to-backstab)),
+and read languages when a [Shinobi](KITS.md#thief-kits) reads a scroll. The
+scripts also make 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
 `python -m dsloader checks` lists them all with the script's text around
 each (spoilers).
 
 The **Characters** tab shows each thief's chances as they stand, with the
-equipment penalty (none in games started with the dice log) and effects (but
+equipment penalty (none in games started from the Loader) and effects (but
 not the situation's bonus or penalty), for the five skills the game rolls
 (pick pockets, open locks, find/remove traps, hear noise, climb walls) and
 the two the Loader rolls: move silently (when a pocket isn't picked, see
@@ -556,8 +557,8 @@ From the game's code:
   multiplied and STR, the weapon's plus and any other bonus are added once, as
   in AD&D (DSCLOG's `STAB_TIMES`).
 
-Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items) (magic
-ones included). Weight belongs to the weapon's type and material, in the
+Which weapons can backstab, the game's and the
+[Loader's](FEATURES.md#new-items) (magic ones included). Weight belongs to the weapon's type and material, in the
 game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
 mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
 (slings, bows, a thrown chatkcha) never backstab: it has to be melee.
@@ -609,8 +610,8 @@ In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
 a normal d20 saves 35% of the time and a doubled one 70%, which is why
 Fireball's victims usually get away with half damage. It isn't AD&D, and the
 game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. Two of the
-mod's [rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
+each save: `d20 = 7, doubled against fire = 14`. Two of the mod's
+[rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
 spell save back and take the doubled d20 away.
 
 The target's spells and effects:
@@ -646,21 +647,22 @@ creature that is both an elf and a half-elf, so no one qualifies.
 Rules in the code that never come into play: Cloak of Bravery's +4 against
 fear applies only to a kind of spell that no spell in the game is marked as
 (the patched game marks the fear spells: see
-[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)), and so does AD&D's DEX defensive adjustment for attacks that can be dodged (+5
-at DEX 1 to −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
-[rule change](FEATURES.md#rule-changes) puts it on the fire, cold and electricity spells.
-And nothing in the game gives saves from items: there are no rings or cloaks
-of protection, which is why the mod adds [two rings and a cloak](FEATURES.md#new-items). Their +1 is in the log's saving throws as
-`+1 Ring of Protection` and `+1 Cloak of Protection` (with
-[AD&D's rules for them](FEATURES.md#rings-and-cloaks-of-protection) off, all of it as
-`Ring of Protection`).
+[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)), and so does
+AD&D's DEX defensive adjustment for attacks that can be dodged (+5 at DEX 1 to
+−6 at DEX 25 on AC, so −5 to +6 on the save), unless the
+[rule change](FEATURES.md#rule-changes) puts it on the fire, cold and
+electricity spells. And nothing in the game gives saves from items: there are
+no rings or cloaks of protection, which is why the mod adds
+[two rings and a cloak](FEATURES.md#new-items). Their +1 is in the log's
+saving throws as `+1 Ring of Protection` and `+1 Cloak of Protection` (with
+[AD&D's rules for them](FEATURES.md#rings-and-cloaks-of-protection) off, all
+of it as `Ring of Protection`).
 
 ## The arena's count of fights
 
 The game counts the party's trips into Draj's arena (its global number 12; the
 combat log panel's top line shows it between fights in the slave pens and the
-arena). It goes up by one each time the
-party walks out of the arena's gate after being called, however many waves
+arena). It goes up by one each time the party walks out of the arena's gate after being called, however many waves
 came that day; extra waves don't count. Being called needs the game's clock to
 run: Kurzak's call comes once a little over 8 hours of game time (8 h 05 min)
 have passed since the last trip, and the clock stands still while the Look

@@ -1,19 +1,21 @@
 # Items
 
-*Part of Obsidian Edition's documentation: every magic item and every mundane
-weapon, with where each is. **Spoilers:** for where things are without them, the
-[player's guide](PLAYER-GUIDE.md#new-items) lists what the mod adds and who can use it.*
+*Part of Obsidian Edition's documentation. **Spoilers:** this page says where
+every item is. The [player's guide](PLAYER-GUIDE.md#new-items) lists what the
+mod adds and who can use it, without saying where.*
 
 Every magic item and every mundane weapon in a game with the mod's
-[new items](FEATURES.md#new-items), the game's and the mod's, with their icons.
+[new items](FEATURES.md#new-items), the game's and the mod's, with their icons
+and where each is; then each item's chance
+[against acid](#items-against-acid).
 
 ## Every magic item
 
 All the magic items in a game with the mod's new content on: the game's own,
 read from its data (each item type's slot and material, each item's plus and
-power, and who carries it), and the mod's, in ***bold italics***. In **Where**, "—"
-means the item isn't placed with anyone in the data: the game's scripts hand it
-out (a reward, a gift or a find).
+power, and who carries it), and the mod's, in ***bold italics***. In
+**Where**, "—" means the item isn't placed with anyone in the data: the game's
+scripts hand it out (a reward, a gift or a find).
 
 **Weapons**, by material, then type:
 
@@ -186,7 +188,8 @@ by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in Kel's
 caravan. The game's plain stone pick is only ever a
-[starting weapon](FEATURES.md#weapon-specialization); Deepbiter is its magic one.
+[starting weapon](FEATURES.md#weapon-specialization); Deepbiter is its magic
+one.
 
 | Icon | Type | Material | Sold by | Carried by, or found in | The mod's |
 |---|---|---|---|---|---|
@@ -223,11 +226,14 @@ caravan. The game's plain stone pick is only ever a
 
 ## Items against acid
 
-What each item's chance is against the Rampager's acid and the Babau's corroding touch, in the game and with
-[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid) (the easier of the game's number and AD&D's by material).
-Only what is worn on the arms, legs or chest can be lost, and the melee weapon held: helms, shields, cloaks,
-boots, belts, rings and amulets never are. A worn piece with no magical power is lost at once in the game (0%);
-one with a power never is (100%).
+What each item's chance is against the Rampager's acid and the Babau's
+corroding touch, in the game and with
+[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid)
+(the easier of the game's number and AD&D's by material). Only what is worn on
+the arms, legs or chest can be lost, and the melee weapon held: helms,
+shields, cloaks, boots, belts, rings and amulets never are. A worn piece with
+no magical power is lost at once in the game (0%); one with a power never is
+(100%).
 
 **Chest:**
 
