@@ -236,11 +236,29 @@ def _magic(item) -> bool:
     return struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0] > 0 or bool(item[game.ITEM_POWER])
 
 
-def worn(gd: GameData, member: int) -> Tuple[Dict[str, Tuple[int, ...]], Tuple[int, ...]]:
+def item_glow(chunks, item) -> int:
+    """Which of spritegear.GLOWS a magic ITEM glows in: the one nearest its icon's colour (the
+    item's picture word, negated, its object; the object's icon), else the blue."""
+    from . import icons
+    obj = -struct.unpack_from("<h", item, 0)[0]
+    record = chunks.get(("OJFF", obj)) if chunks else None
+    if not record or len(record) < icons.OJFF_ICON + 2:
+        return sg.BLUE_GLOW
+    picture = chunks.get(("BMP ", struct.unpack_from("<H", record, icons.OJFF_ICON)[0]))
+    if not picture:
+        return sg.BLUE_GLOW
+    try:
+        return sg.glow_for(icons.decode(picture))
+    except (ValueError, IndexError, struct.error):
+        return sg.BLUE_GLOW
+
+
+def worn(gd: GameData, member: int, chunks=None) -> Tuple[Dict[str, Tuple[int, ...]], Tuple[int, ...]]:
     """What a party member wears, as spritegear takes it: ({place: (item type, material[, name])},
     armour), the name for one of the Loader's weapons spritegear colours as its icon, else MAGIC for
     any other with a plus or a power (its edge glints); a magic piece of armour's type with
-    MAGIC_ARMOUR added (it glints too)."""
+    MAGIC_ARMOUR added (it glints too). With the objects file's CHUNKS, each glows in the colours
+    nearest its icon's (item_glow: a 4th element, or GLOW_SHIFT's bits); without, the fire's."""
     from .icons import which
     gear: Dict[str, Tuple[int, ...]] = {}
     armour: List[int] = []
@@ -251,14 +269,16 @@ def worn(gd: GameData, member: int) -> Tuple[Dict[str, Tuple[int, ...]], Tuple[i
         name = game.EQUIP_SLOTS[slot]
         kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
         material = typ[0x08] & 0x0F if len(typ) == game.ITEM_TYPE_SIZE else 4
+        magic = _magic(item)
+        glow = item_glow(chunks, item) if magic and chunks is not None else sg.FIRE_GLOW
         if name in ARMOUR_SLOTS:
-            armour.append(kind | (sg.MAGIC_ARMOUR if _magic(item) else 0))
+            armour.append(kind | (sg.MAGIC_ARMOUR | glow << sg.GLOW_SHIFT if magic else 0))
         elif name in HANDS:
             special = which(bytes(item))
             if special in sg.BLADE_COLOURS:
-                gear[HANDS[name]] = (kind, material, special)
-            elif _magic(item):
-                gear[HANDS[name]] = (kind, material, sg.MAGIC)  # (its edge glints: spritegear.GLINT)
+                gear[HANDS[name]] = (kind, material, special, glow)
+            elif magic:
+                gear[HANDS[name]] = (kind, material, sg.MAGIC, glow)  # (its edge glints: spritegear.GLOWS)
             else:
                 gear[HANDS[name]] = (kind, material)
     return gear, tuple(sorted(armour))
@@ -428,7 +448,7 @@ class Dresser:
             return []
         changed = []
         for obj, (member, figure) in self.objects().items():
-            outfit = worn(self.gd, member) if on else ({}, ())
+            outfit = worn(self.gd, member, self.pics.chunks) if on else ({}, ())
             model = self.pics.model(figure)
             key = (model, figure, repr(sorted(outfit[0].items())), outfit[1])
             fresh = self.shown.get(obj) != key

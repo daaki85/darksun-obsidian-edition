@@ -42,17 +42,66 @@ BLADE_COLOURS: Dict[str, Tuple[int, int, int]] = {"Kreenfang": FLAME, "Shadowsee
 # cells, in the fire colours the game cycles, stepping along them, so it shimmers as its icon does
 MAGIC = "magic"
 GLINT = tuple(range(240, 249))
+# The colours the game cycles on the map (its colour cycler's four runs, the same in every area's
+# palette but for a step or two): a magic item glows in the one nearest its icon's colour (GLOWS'
+# index: worn's 4th element, or MAGIC_ARMOUR's GLOW_SHIFT bits for armour)
+FIRE_GLOW, GREEN_GLOW, VIOLET_GLOW, BLUE_GLOW = range(4)
+GLOWS = (GLINT, (1, 2, 3, 4, 5), (6, 7, 8, 9, 10), (11, 12, 13, 14, 15))
 MAGIC_ARMOUR = 0x10000  # (with an armour's item type in armed's ARMOUR: it is magic, and glints)
+GLOW_SHIFT = 17  # (... in the colours GLOWS[type >> GLOW_SHIFT])
 
 
 def _magic(item: Tuple) -> bool:
     return len(item) > 2 and item[2] == MAGIC
 
 
-def sparkle(rows: Rows, before: Rows) -> None:
-    """Magic worn gear: a scatter of the pixels a piece changed (ROWS against BEFORE) in the fire
-    colours the game cycles (GLINT), on a diagonal (sparser on a piece as large as a cloak); a
-    small piece (a circlet, boots) at least every other pixel of it, so it shows."""
+def _glow(item: Tuple) -> Tuple[int, ...]:
+    return GLOWS[item[3]] if len(item) > 3 and 0 <= item[3] < len(GLOWS) else GLINT
+
+
+def glow_for(icon: Rows, colours: Optional[List[Tuple[int, int, int]]] = None) -> int:
+    """Which of GLOWS suits an item's ICON: the cycled colours it shines in, as it does in the
+    inventory (the Loader's icons: fire, or the water's blue on a tint the game doesn't cycle);
+    else the hue its vivid pixels have, each by how vivid (red to yellow fire, green, blue,
+    violet; wood's, leather's and bone's browns and tans left out), where they weigh a fifth of
+    it or more (not a sword's hilt); else (greys, steel, plain browns) the blue."""
+    import colorsys
+    colours = colours or _RGB
+    shine = [0] * len(GLOWS)
+    votes = [0.0] * len(GLOWS)
+    total = 0
+    for row in icon:
+        for p in row:
+            if p is None:
+                continue
+            total += 1
+            group = next((i for i, glow in enumerate(GLOWS) if p in glow), None)
+            if group is not None:
+                shine[group] += 1  # (a shine it already has)
+                continue
+            if p >= len(colours):
+                continue
+            r, g, b = colours[p]
+            chroma = max(r, g, b) - min(r, g, b)
+            if chroma < 60:
+                continue  # (greys)
+            h, _, _ = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+            deg = h * 360
+            if 12 <= deg <= 50 and max(r, g, b) < 200:
+                continue  # (browns and tans: wood, leather, bone)
+            votes[FIRE_GLOW if deg < 70 or deg >= 340 else GREEN_GLOW if deg < 170
+                  else BLUE_GLOW if deg < 255 else VIOLET_GLOW] += chroma / 255
+    best = max(range(len(GLOWS)), key=lambda i: shine[i])
+    if shine[best] >= 3:
+        return best
+    best = max(range(len(GLOWS)), key=lambda i: votes[i])
+    return best if votes[best] >= max(2.0, total / 5) else BLUE_GLOW
+
+
+def sparkle(rows: Rows, before: Rows, colours: Tuple[int, ...] = GLINT) -> None:
+    """Magic worn gear: a scatter of the pixels a piece changed (ROWS against BEFORE) in COLOURS,
+    ones the game cycles, on a diagonal (sparser on a piece as large as a cloak); a small piece
+    (a circlet, boots) at least every other pixel of it, so it shows."""
     changed = [(x, y) for y, row in enumerate(rows) for x, p in enumerate(row)
                if p is not None and p != before[y][x]]
     step = 5 if len(changed) < 150 else 9  # (a cloak, sparser)
@@ -60,7 +109,7 @@ def sparkle(rows: Rows, before: Rows) -> None:
     if len(picked) < 2:
         picked = changed[::2]
     for x, y in picked:
-        rows[y][x] = GLINT[(x + y) % len(GLINT)]
+        rows[y][x] = colours[(x + y) % len(colours)]
 
 # Shapes, by item type (the game's item type numbers)
 DAGGER, SWORD, CLUB, MACE, AXE, GREAT_AXE, POLEARM, GYTHKA, CAHULAKS, STAFF, SHIELD, SLING, BOW, \
@@ -207,7 +256,7 @@ def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
 
 def draw_weapon(rows: Rows, body: Rows, hand: sp.Point, angle: float, shape: str, colours: Tuple[int, int, int],
                 behind: bool, scale: float = 1.0, blade: Optional[Tuple[int, int, int]] = None,
-                glint: bool = False) -> None:
+                glint: bool = False, shine: Tuple[int, ...] = GLINT) -> None:
     """SHAPE drawn on ROWS (BODY: the picture without it, for what is in front) from HAND, pointing
     at ANGLE, SCALE times its length; its blade (BLADE_STEPS) in BLADE's colours, if given; with
     GLINT (a magic weapon) its lightest cells in the fire colours the game cycles (a shape with
@@ -231,7 +280,7 @@ def draw_weapon(rows: Rows, body: Rows, hand: sp.Point, angle: float, shape: str
                 y = hy + dy * at + across[1] * offset
                 ramp = MATERIAL_COLOURS[0] if colour >= WOOD else blade if blade and on_blade(step) else colours
                 if glint and colour < WOOD and (colour == light or light is None and colour == 1 and step % 3 == 0):
-                    _put(rows, x, y, GLINT[(step + offset) % len(GLINT)], behind, body)
+                    _put(rows, x, y, shine[(step + offset) % len(shine)], behind, body)
                 else:
                     _put(rows, x, y, ramp[colour % WOOD], behind, body)
 
@@ -341,7 +390,7 @@ def side_shield(rows: Rows, parts: sp.Parts) -> Optional[sp.Point]:
 
 
 def draw_shield(rows: Rows, body: Rows, hand: sp.Point, facing: Optional[str], colours: Tuple[int, int, int],
-                behind: bool, scale: float = 1.0, glint: bool = False) -> None:
+                behind: bool, scale: float = 1.0, glint: bool = False, shine: Tuple[int, ...] = GLINT) -> None:
     """A round shield on the forearm (about 7 by 9 pixels on a human): its face, rim and boss from
     the front, its strapped back from behind, edge on from the side; on the far arm from the side
     (SIDE_FAR), turned partly toward us, behind the body with its front half showing. With GLINT
@@ -373,7 +422,7 @@ def draw_shield(rows: Rows, body: Rows, hand: sp.Point, facing: Optional[str], c
             else:
                 c = fill
             if glint and (c == light or c == outline and edge and (dx + dy) % 3 == 0):
-                c = GLINT[(dx + dy) % len(GLINT)]
+                c = shine[(dx + dy) % len(shine)]
             _put(rows, cx + dx, cy + dy, c, behind, body)
 
 
@@ -446,12 +495,14 @@ CIRCLET_STONE = 243  # Arrowbane's stone: the fire colours' brightest
 FEATHER_GREYS, STONE_RED = (210, 212, 211), 195
 
 _LIGHT: Dict[int, float] = {}
+_RGB: List[Tuple[int, int, int]] = []
 
 
 def set_palette(colours: List[Tuple[int, int, int]]) -> None:
     """The palette (art.palette_colours): each colour's brightness, for blending a helm into the
     hair under it."""
     _LIGHT.clear()
+    _RGB[:] = list(colours)
     _LIGHT.update({i: (0.3 * r + 0.59 * g + 0.11 * b) / 255 for i, (r, g, b) in enumerate(colours)})
 
 
@@ -600,6 +651,10 @@ def draw_cloak(rows: Rows, body: Rows, model: int, parts: sp.Parts, item_type: i
         _, sa, sb = parts.shoulders
         centre, back = (sa + sb) / 2, (sb - sa) * 0.38  # (the shoulder line runs over the arms)
         placed = {k: v for k, v in placed.items() if abs(k[0] - centre) <= back}
+    elif parts.facing == sp.FRONT:  # (from the front, hanging behind: no wider than the shoulders,
+        _, sa, sb = parts.shoulders  # where hers swings out to one side, like something held)
+        centre, half = (sa + sb) / 2, (sb - sa) * 0.38  # (the shoulder line runs over the arms)
+        placed = {k: v for k, v in placed.items() if abs(k[0] - centre) <= half}
     on_body = {(x, y) for x, y in filled}
     seen: set = set()
     kept: Dict[sp.Point, int] = {}
@@ -792,22 +847,23 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
     if parts.facing is not None:
         for item_type in armour:
-            if item_type & ~MAGIC_ARMOUR in ARMOUR:
+            kind = item_type & (MAGIC_ARMOUR - 1)
+            if kind in ARMOUR:
                 before = [list(r) for r in out] if item_type & MAGIC_ARMOUR else None
-                draw_armour(out, model, parts, item_type & ~MAGIC_ARMOUR, pad, own)
+                draw_armour(out, model, parts, kind, pad, own)
                 if before is not None:
-                    sparkle(out, before)
+                    sparkle(out, before, GLOWS[(item_type >> GLOW_SHIFT) % len(GLOWS)])
     if parts.facing is not None and model != sp.KREEN:
         if "boots" in weapons:
             before = [list(r) for r in out]
             draw_boots(out, parts, weapons["boots"][0], pad)
             if _magic(weapons["boots"]):
-                sparkle(out, before)
+                sparkle(out, before, _glow(weapons["boots"]))
         if "belt" in weapons:
             before = [list(r) for r in out]
             draw_belt(out, parts, weapons["belt"][0], pad, own.cloak if own is not None else frozenset())
             if _magic(weapons["belt"]):
-                sparkle(out, before)
+                sparkle(out, before, _glow(weapons["belt"]))
     if "cloak" in weapons and parts.facing is not None and model != sp.KREEN:
         kind = weapons["cloak"][0]
         before = [list(r) for r in out]
@@ -843,12 +899,12 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         elif cloak is not None:
             draw_cloak(out, [list(r) for r in out], model, parts, kind, pad, cloak)
         if _magic(weapons["cloak"]):
-            sparkle(out, before)
+            sparkle(out, before, _glow(weapons["cloak"]))
     if "helm" in weapons and parts.facing is not None and model != sp.KREEN:
         before = [list(r) for r in out]
         draw_helm(out, parts, weapons["helm"][0], pad, model)
         if _magic(weapons["helm"]):
-            sparkle(out, before)
+            sparkle(out, before, _glow(weapons["helm"]))
     body = [list(r) for r in out]
     missile = weapons.get("missile")
     if missile or "ammo" in weapons:  # (the bow, quiver, sling or chatkcha carried)
@@ -875,6 +931,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         item_type, material = weapons[hand][:2]
         blade = BLADE_COLOURS.get(weapons[hand][2]) if len(weapons[hand]) > 2 else None
         glint = _magic(weapons[hand]) or blade is not None  # (a named blade is magic too)
+        shine = _glow(weapons[hand])
         shape = WEAPON_SHAPES.get(item_type)
         side = shape == SHIELD and not combat and parts.facing == sp.SIDE  # (placed by side_shield)
         if hand not in hands and not (shape == SHIELD and pose and hand == "left") and not side:
@@ -900,7 +957,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
         if shape == SHIELD and not combat and parts.facing == sp.SIDE:
             spot = side_shield(rows, parts)
             if spot is not None:
-                draw_shield(out, body, (spot[0] + pad, spot[1] + pad), SIDE_FAR, colours, True, MODEL_SCALE.get(model, 1.0), glint)
+                draw_shield(out, body, (spot[0] + pad, spot[1] + pad), SIDE_FAR, colours, True, MODEL_SCALE.get(model, 1.0), glint, shine)
         elif shape == SHIELD:
             behind = g[1] or parts.facing == sp.BACK  # (from behind: held in front of the body)
             if pose and hand == "left":
@@ -913,10 +970,10 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                     continue
                 hx, hy, hidden = spot
                 behind = behind or hidden
-            draw_shield(out, body, (hx + pad, hy + pad), parts.facing, colours, behind, MODEL_SCALE.get(model, 1.0), glint)
+            draw_shield(out, body, (hx + pad, hy + pad), parts.facing, colours, behind, MODEL_SCALE.get(model, 1.0), glint, shine)
         else:
             draw_weapon(out, body, (hx + pad, hy + pad), g[0], shape, colours, g[1], scale, blade,
-                        glint and blade != FLAME and colours != FLAME)
+                        glint and blade != FLAME and colours != FLAME, shine)
     return out
 
 

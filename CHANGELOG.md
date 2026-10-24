@@ -12,6 +12,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Next pull request (in progress)
 
 **New**
+- **The glow in each item's own colour.** The game's palette cycles four runs on the map (its
+  cycler's table: 1-5 green, 6-10 violet, 11-15 the water's blue, 240-248 fire), the same in every
+  area's palette but for a step. `spritegear.glow_for` picks one from the item's icon
+  (`sprites.item_glow`: its picture word negated, the object's icon in the Loader's objects
+  copy): the run its icon already shines in, else its vivid pixels' hue, each by its chroma,
+  browns and tans left out, a fifth of the icon or more; else blue. `worn` passes it as the gear's
+  4th element (`GLOWS` index) or armour's `GLOW_SHIFT` bits. Of the 116 item icons in ITEMS.md:
+  66 blue, 40 fire, 6 green, 4 violet.
+- **A cloak from the front no longer looks held.** The cloak is fitted from the human woman's,
+  which swings out to one side as she walks; on the elves and the half-elf man that showed as a
+  dark panel by one hand. From the front it is now kept within 0.38 of the shoulder line each side
+  of its middle (the line runs over the arms), as from behind.
 - **The glow on every magic item a figure shows.** `spritegear.sparkle` marks, after a magic piece
   is drawn, every fifth pixel (every ninth on a piece as large as a cloak; at least every other
   on a small one) of those it changed, on a diagonal, in `GLINT`: armour (in place of picking its

@@ -51,12 +51,12 @@ class WornTests(unittest.TestCase):
 
         right = game.EQUIP_SLOTS.index("right hand")
         gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 1, right)]), 0)
-        self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1, "Kreenfang"))
+        self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1, "Kreenfang", sg.FIRE_GLOW))
         gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 0, right)]), 0)
         self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1))
         sword = 45  # any other weapon with a plus: MAGIC, its edge glinting
         gear, _ = sprites.worn(Worn([item(sword, 2, right)]), 0)
-        self.assertEqual(gear["right"], (sword, 1, sg.MAGIC))
+        self.assertEqual(gear["right"], (sword, 1, sg.MAGIC, sg.FIRE_GLOW))  # (no objects file: the fire's)
         gear, _ = sprites.worn(Worn([item(sword, 0, right)]), 0)
         self.assertEqual(gear["right"], (sword, 1))
         chest = game.EQUIP_SLOTS.index("chest")
@@ -64,6 +64,17 @@ class WornTests(unittest.TestCase):
         self.assertEqual(armour, (57 | sg.MAGIC_ARMOUR,))
         _, armour = sprites.worn(Worn([item(57, 0, chest)]), 0)
         self.assertEqual(armour, (57,))
+
+    def test_glow_for(self):
+        """A magic item glows in the cycled colours nearest its icon's: one already shining in
+        them, else by hue; greys the blue."""
+        sg.set_palette([(0, 0, 0)] * 16 + [(40, 200, 40), (200, 40, 230), (128, 128, 128), (230, 60, 20)] + [(0, 0, 0)] * 236)
+        self.assertEqual(sg.glow_for([[16] * 8]), sg.GREEN_GLOW)
+        self.assertEqual(sg.glow_for([[17] * 8]), sg.VIOLET_GLOW)
+        self.assertEqual(sg.glow_for([[19] * 8]), sg.FIRE_GLOW)
+        self.assertEqual(sg.glow_for([[18] * 8]), sg.BLUE_GLOW)
+        self.assertEqual(sg.glow_for([[12, 12, 13, 18]]), sg.BLUE_GLOW)  # (the water's shine)
+        self.assertEqual(sg.glow_for([[242, 243, 244, 18]]), sg.FIRE_GLOW)
 
     def test_magic_glint(self):
         """A magic weapon's lightest cells are drawn in the fire colours the game cycles; a plain
@@ -245,7 +256,7 @@ class SpriteTests(unittest.TestCase):
         so), the game's loaded ones taken out of its table, the figure loaded again; nothing more
         while it stays the same."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)
@@ -275,7 +286,7 @@ class SpriteTests(unittest.TestCase):
         """Shortly after pictures are loaded anew the view is drawn again (their shadows: the floor
         is drawn before the figures, while the new picture was still loading)."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)
@@ -294,7 +305,7 @@ class SpriteTests(unittest.TestCase):
     def test_copy_written_anew(self):
         """The launcher writes the copy anew (plain) for the next game: the outfit written again."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)
@@ -310,7 +321,7 @@ class SpriteTests(unittest.TestCase):
     def test_copy_not_writable(self):
         """The copy can't be written: nothing changed in the game, tried again next time."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)
