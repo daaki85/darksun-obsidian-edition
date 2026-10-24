@@ -12,8 +12,8 @@ Everything here is the mod with its **default options**, which is how the
 Loader starts. Every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance)); where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
-The [README](README.md) has every rule in full detail, and the [Kits](KITS.md)
-page each kit's numbers: the guide links to its tables.
+The [features page](FEATURES.md) has every rule in full detail, and the
+[Kits](KITS.md) page each kit's numbers: the guide links to their tables.
 
 ## Contents
 
@@ -86,36 +86,48 @@ and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
 **Use** or **Pick Up** it, and at a monster in a fight to see its hit points,
 AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 
-The [quality of life changes](#quality-of-life) list what the mod makes
-easier.
-
 ## Quality of life
 
-**In the game:**
+**On the game's screens:**
 
 | Change | What it does |
 |---|---|
 | **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. In the slave pens and the arena, between fights, its top line counts the party's arena fights. Or, on the Options tab, a strip always shown below the map (the mouse wheel reads back, on Windows). |
 | **Names over figures** | A spell's name floats over its caster as it's cast, and "Miss" over anyone an attack misses. |
-| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
-| **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
-| **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
-| **The pointer's start and speed** | The pointer starts in the middle of the screen and moves as far up and down as across. *Without the mod:* it starts at the right edge and moves half as far up and down. |
-| **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
-| **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
-| **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
-| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
-| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
-| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
-| **No copy protection** | The question from the manual never comes. |
 | **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
 | **The Effects screen** | Names each kit and weapon spec, a page at a time when there are many. |
+| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
+
+**Controls:**
+
+| Change | What it does |
+|---|---|
+| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
+| **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
+| **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
+| **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
+| **The pointer's start and speed** | The pointer starts in the middle of the screen and moves as far up and down as across. *Without the mod:* it starts at the right edge and moves half as far up and down. |
+| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
+
+**Saves and characters:**
+
+| Change | What it does |
+|---|---|
+| **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
+| **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
+| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
+
+**Running the game:**
+
+| Change | What it does |
+|---|---|
+| **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
 | **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), so the party walks smoothly with shadows and dust. |
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
-| **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
+| **No copy protection** | The question from the manual never comes. |
 | **Crash and freeze reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send, with the game's own error message in it; if the game freezes, **Freeze report** on the Loader saves what it was doing. |
 | **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report to send, as for a crash. |
 

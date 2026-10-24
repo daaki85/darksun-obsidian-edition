@@ -31,6 +31,15 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   troubleshooting says how to let go of the mouse (Ctrl+F10) and the freeze report's 4 samples a
   second; the patch notes' pointer line reads better; a picture of the pointer in scenes in FEATURES.
 
+- **Organisation and trims.** The Loader README gathers Troubleshooting, Known issues, the reports
+  and Reporting a problem under **When something goes wrong**; its How the game works and Item
+  tables indexes become one **More pages** list; the character card's contents move into
+  **The Characters tab**; the game window's command-line options and the practice program move to
+  DEVELOPMENT.md; a shorter Requirements, game window and item-report text. FEATURES follows the
+  Options tab's order, with the game's bugs fixed last. The player guide's quality-of-life table is
+  grouped (screens, controls, saves, running the game), and its intro points to the features page
+  for the rules.
+
 **Changed**
 - **The freeze report's records**: 16, every 32nd timer strike (were 32, every 16th; the same 4
   seconds), to make room in upper memory for the above.

@@ -12,6 +12,7 @@ of the game's data, the tools for mapping it, and how each part of the
   - [Tests](#tests)
   - [Making a release](#making-a-release)
   - [From a command prompt](#from-a-command-prompt)
+  - [Practising without the game](#practising-without-the-game)
   - [Mapping memory](#mapping-memory)
   - [Command-line mapping tools](#command-line-mapping-tools)
 - [How the dice log works](#how-the-dice-log-works)
@@ -163,7 +164,23 @@ python -m dsloader save C:\path\to\SAVE01.SAV   # the party stored in a save
 python -m dsloader processes                     # is DOSBox found?
 ```
 
-If more than one DOSBox is running, add `--pid <number>` (from `processes`).
+After `launch` or `play`, `--window-scale 2` to `4`, `--fullscreen` or
+`--windowed` choose the game's window as **Game window** does. If more than
+one DOSBox is running, add `--pid <number>` (from `processes`).
+
+### Practising without the game
+
+`tests/make_fake_party.py` writes `FAKEPTY.COM`, a tiny DOS
+program holding two made-up characters in the same record shapes as the game.
+The first character loses 1 HP every second. Run it in DOSBox and try the
+Loader (search for `SADIRA`).
+
+```
+python tests/make_fake_party.py
+dosbox FAKEPTY.COM
+```
+
+![The Loader on the practice program: All fields with Sadira and Rikus, and Memory tools with her record found and its bytes](docs/viewer.png)
 
 ### Mapping memory
 

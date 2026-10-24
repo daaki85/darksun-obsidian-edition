@@ -11,10 +11,10 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **To learn the rules:** [the player's guide](PLAYER-GUIDE.md), without
   spoilers, with a [glossary](PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and
   the rest.
-- **If something goes wrong:** [Troubleshooting](#troubleshooting),
-  [Known issues](#known-issues) and [Reporting a problem](#reporting-a-problem).
+- **If something goes wrong:** [When something goes wrong](#when-something-goes-wrong).
 - **Everything in detail:** the contents below, the [features and rules](FEATURES.md), the [kits](KITS.md), the
-  [items](ITEMS.md) (spoilers) and the [patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md).
+  [items](ITEMS.md) (spoilers), the [patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
+  and, for developers, the [development notes](DEVELOPMENT.md).
 
 ## Contents
 
@@ -25,11 +25,12 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [One-time setup](#one-time-setup)
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
-  - [Crash, freeze and item reports](#crash-freeze-and-item-reports)
-  - [Reporting a problem](#reporting-a-problem)
   - [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files)
+- [When something goes wrong](#when-something-goes-wrong)
   - [Troubleshooting](#troubleshooting)
   - [Known issues](#known-issues)
+  - [Crash, freeze and item reports](#crash-freeze-and-item-reports)
+  - [Reporting a problem](#reporting-a-problem)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [Names over figures](#names-over-figures)
@@ -43,18 +44,10 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
 - [The dice log](#the-dice-log)
-- [How the game works](#how-the-game-works)
-- [Features and rules](FEATURES.md): rule changes, character customization, expanded features, new content, graphics, controls, the game's bugs fixed, more saves and characters, game speed
-- [Item tables](#item-tables) (a page of its own: [Items](ITEMS.md))
+- [More pages](#more-pages)
 - [Accessibility](#accessibility)
-- [Without the game](#without-the-game)
-- [The player's guide](PLAYER-GUIDE.md)
-- [Development](DEVELOPMENT.md)
 
 ## What it does
-
-New to the game, or to the mod? [The player's guide](PLAYER-GUIDE.md) has its
-rules without spoilers, with a section for each class and its kits (also as a web page, [`player-guide.html`](player-guide.html)).
 
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
@@ -106,26 +99,21 @@ writes to the game folder only your saves and characters. A save with the new
 items in it needs the Loader to load. Every file it writes, and how to update
 or back up: [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files).
 
-The Loader's window is dressed in the game's own colours, sampled from it; no
-game artwork is copied.
-
 ## Requirements
 
 - **Windows** and the **GOG release** of Dark Sun: Shattered Lands. The
   Loader runs it in the DOSBox that comes with it.
-- **64-bit Python 3.8+** (64-bit, as 64-bit DOSBox can't be read from 32-bit
-  Python). The `.bat` files offer to install it
-  ([One-time setup](#one-time-setup)); it needs no extra packages.
+- **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
+  with no extra packages. The `.bat` files offer to install it
+  ([One-time setup](#one-time-setup)).
 - Linux works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
-- **Wake of the Ravager**, which GOG sells with Shattered Lands: the
+- **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
-  and pictures, read from your copy as the game starts (none of its files are
-  in the mod). Without it (an old copy of Shattered Lands alone) they have the
-  Loader's own. It looks in every folder beside Shattered Lands (GOG Galaxy
-  installs the two as `Dark Sun` and `Dark Sun 2`) and in GOG's usual folders; the Options tab's **Wake of
-  the Ravager** section says whether it found it, and **Choose its folder...**
-  points it to one installed anywhere else.
+  and pictures, read from your copy as the game starts; without it they have
+  the Loader's own. The Loader looks beside Shattered Lands and in GOG's usual
+  folders; the Options tab's **Wake of the Ravager** section says whether it
+  found it, and **Choose its folder...** points it anywhere else.
 
 ### Suggested system requirements
 
@@ -146,10 +134,6 @@ If the computer can't keep up, the sound crackles or stutters and the game
 slows instead of speeding up: choose the next setting down.
 
 ## Running it (Windows)
-
-The Loader starts DOSBox with a patched copy of the game and your options,
-and stays open while you play. You don't install anything into the game
-folder.
 
 ### One-time setup
 
@@ -199,17 +183,11 @@ Your saves are the same ones the game normally uses. The first time, it looks
 for the game in the usual GOG folders; if it can't find it, it asks you where
 the game is installed and remembers the answer.
 
-DOSBox opens in a window three times the game's size (960x720), not full
-screen. To change that, pick **Game window** at the top of the Loader:
-**Double (640x480)**, **Triple (960x720)**, **Quadruple (1280x960)** or **Full
-screen**. It's remembered, and used from the next time you start the game.
-Alt+Enter switches between window and full screen while playing. (From a
-command prompt: `--window-scale 2` to `4`, `--fullscreen` or `--windowed` after
-`launch` or `play` do the same.) GOG's DOSBox has no four-times scaler, so
-Quadruple has DOSBox stretch its window with OpenGL (`output=opengl`,
-`windowresolution=1280x960`); if your graphics driver doesn't take to that,
-pick Triple. With the [combat log below the map](#the-combat-log-in-the-game)
-(an option) each is a little taller: 640x532, 960x798, 1280x1064.
+DOSBox opens in a window three times the game's size (960x720). **Game
+window** at the top of the Loader picks **Double**, **Triple**, **Quadruple**
+or **Full screen** from the next start, and Alt+Enter switches between window
+and full screen while playing. Quadruple has DOSBox stretch its window with
+OpenGL; if your graphics driver doesn't take to that, pick Triple.
 
 Load your game. The party's stats fill in by themselves, and rolls appear in
 the **Dice log** tab as they happen.
@@ -229,6 +207,72 @@ last set them (the combat log, monster descriptions, picking pockets, the rule
 changes); the new items, the new people and the cooked vulture are there too.
 If anything goes wrong it says so in a message box and writes the details to
 `play.log`.
+
+**Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
+**`Show Save.bat`** to see the party it holds.
+
+### Updating, backups and the Loader's files
+
+**Updating.** Unzip the new release into a folder of its own and copy
+`settings.json` from the old folder into it to keep your options (the
+**Named saves** folder too, if you want its copies). Your saves and characters
+are in the game folder, so nothing else needs moving. Then delete the old
+folder.
+
+**Back up your saves first.** Before the first game with the mod, copy the
+game folder's save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once
+you have them) and `CHARSAVE.GFF` somewhere safe. The Loader never
+changes the game's own files, but your saves are written by the patched game:
+one with the new items ticked can hold item types the original game doesn't
+have, so load such a save with the Loader. To go back to the original game,
+start it the GOG way and load a save from before the mod.
+
+**What the Loader writes**, all in its own folder (beside
+`Start Obsidian Edition.bat`) but the saves:
+
+| File or folder | What it holds |
+|---|---|
+| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names) |
+| `crash-logs` | crash, freeze and item reports |
+| `Named saves` | a copy of each save under the name you gave it |
+| `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
+| `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
+| the game folder | your saves (pages 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and characters 20 to 29 in `CHARSAVE.GFF` |
+
+**The game version.** Only the GOG release is supported (its `DSUN.EXE` is
+611,408 bytes). With another one, the Loader starts the game without the dice
+log and says why.
+
+## When something goes wrong
+
+### Troubleshooting
+
+- **Windows warns about the `.bat` file** ("Open File - Security Warning"):
+  see [One-time setup](#one-time-setup).
+- **An antivirus program blocks or quarantines the Loader.** The Loader reads
+  and writes DOSBox's memory while you play, as debuggers and game trainers do,
+  which some antivirus programs distrust. Allow the Loader's folder, or start
+  just the game with **`Play Dark Sun (in-game rolls).bat`** to see whether
+  the trouble is the Loader's window.
+- **The game runs slowly, or the sound stutters:** choose a lower
+  [game speed](FEATURES.md#game-speed).
+- **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
+  takes the mouse at the first click in its window (that click does nothing
+  in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
+- **The Loader shows no party or rolls:** check that Python is the 64-bit one
+  ([Requirements](#requirements)) and that the game was started from the
+  Loader or one of its `.bat` files.
+
+### Known issues
+
+Being looked into; a crash report, a save from just before and what you were
+doing help (see [Reporting a problem](#reporting-a-problem)):
+
+- **The game can stop with an error after a fight in the arena.** The Loader
+  writes a crash report; load the last save to go on.
+- **In a long session, figures can vanish from the screen and the game then
+  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
+  it happens, press **Freeze report** on the Loader before closing DOSBox.
 
 ### Crash, freeze and item reports
 
@@ -272,25 +316,18 @@ the game for a second, then saves the zip and says where.
 
 **An item gone.** The Loader watches the party's items (every member's, worn
 or carried). When one is gone from the whole party for two seconds with
-nothing ordinary to explain it, it saves the report. It watches through rests
-too; only loading a game starts it afresh:
+nothing ordinary to explain it, it saves the report (loading a game starts
+the watch afresh):
 
 ```
 Inix Hide Chest Armor is gone from Garyn's chest: its record is empty: the game freed it (destroyed, used up or discarded). An item report is saved in ...
 ```
 
-The ordinary ways for an item to go pass in silence: an item that still
-exists outside the party (dropped, put in a chest, given, sold or stolen), one
-used up or taken for a quest (fruit, quest items, arrows, scrolls), one a
-spell made (Shillelagh, Flame Blade, Spiritual Hammer), one sold (the party's
-money went up by what a shop pays for it), and a weapon that broke (a Broken
-Weapon in its place). An item the game destroys (acid, Detonate's blast) is
-reported too, so the loss is on record. Nor is an item handed to another member news, even where
-the game gives it a new record, or one moved and back within the two seconds.
-A change of area gives every item a new record at once: the Loader matches
-each to its new one (same owner, place and item) and reports only an item with
-no match. A game loaded (even a later save of the same party) starts the watch
-afresh.
+The ordinary ways for an item to go pass in silence: dropped, put in a chest,
+given, sold or stolen; used up or taken for a quest; a spell's weapon
+(Shillelagh, Flame Blade) ending; a weapon that broke; an item handed to
+another member or moved between areas. An item the game destroys (acid,
+Detonate's blast) is reported too, so the loss is on record.
 
 ### Reporting a problem
 
@@ -300,67 +337,6 @@ saying what you were doing, the version (the Loader's title bar), and
 attaching the crash, freeze or item report if there is one (all three are in
 `crash-logs`). A save from just before
 it happened helps most of all.
-
-### Updating, backups and the Loader's files
-
-**Updating.** Unzip the new release into a folder of its own and copy
-`settings.json` from the old folder into it to keep your options (the
-**Named saves** folder too, if you want its copies). Your saves and characters
-are in the game folder, so nothing else needs moving. Then delete the old
-folder.
-
-**Back up your saves first.** Before the first game with the mod, copy the
-game folder's save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once
-you have them) and `CHARSAVE.GFF` somewhere safe. The Loader never
-changes the game's own files, but your saves are written by the patched game:
-one with the new items ticked can hold item types the original game doesn't
-have, so load such a save with the Loader. To go back to the original game,
-start it the GOG way and load a save from before the mod.
-
-**What the Loader writes**, all in its own folder (beside
-`Start Obsidian Edition.bat`) but the saves:
-
-| File or folder | What it holds |
-|---|---|
-| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names) |
-| `crash-logs` | crash, freeze and item reports |
-| `Named saves` | a copy of each save under the name you gave it |
-| `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
-| `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
-| the game folder | your saves (pages 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and characters 20 to 29 in `CHARSAVE.GFF` |
-
-**The game version.** Only the GOG release is supported (its `DSUN.EXE` is
-611,408 bytes). With another one, the Loader starts the game without the dice
-log and says why.
-
-### Troubleshooting
-
-- **Windows warns about the `.bat` file** ("Open File - Security Warning"):
-  see [One-time setup](#one-time-setup).
-- **An antivirus program blocks or quarantines the Loader.** The Loader reads
-  and writes DOSBox's memory while you play, as debuggers and game trainers do,
-  which some antivirus programs distrust. Allow the Loader's folder, or start
-  just the game with **`Play Dark Sun (in-game rolls).bat`** to see whether
-  the trouble is the Loader's window.
-- **The game runs slowly, or the sound stutters:** choose a lower
-  [game speed](FEATURES.md#game-speed).
-- **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
-  takes the mouse at the first click in its window (that click does nothing
-  in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
-- **The Loader shows no party or rolls:** check that Python is the 64-bit one
-  ([Requirements](#requirements)) and that the game was started from the
-  Loader or one of its `.bat` files.
-
-### Known issues
-
-Being looked into; a crash report, a save from just before and what you were
-doing help (see [Reporting a problem](#reporting-a-problem)):
-
-- **The game can stop with an error after a fight in the arena.** The Loader
-  writes a crash report; load the last save to go on.
-- **In a long session, figures can vanish from the screen and the game then
-  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
-  it happens, press **Freeze report** on the Loader before closing DOSBox.
 
 ## In the game
 
@@ -636,26 +612,7 @@ The window has the party on one side and the logs and tools on the other, with
 (to find the game again) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
-  View Character screen (scroll with the mouse wheel, or Tab to the cards and
-  use the arrow and Page keys):
-  - the figure for their race and sex (as on the character creation screen,
-    read from your install), their name, and HP and PSP (PSP in blue);
-  - their condition (New, for a character not yet played, Okay, Stunned, Out
-    Cold, Dying, Dead, Animated, Petrified or Gone), then the spells and
-    effects on them with the rounds or charges left: `Blur (22 rounds)`,
-    `Stoneskin (5 charges)`;
-  - the character sheet: scores, sex, race and alignment, classes and levels,
-    experience, AC (the one the game last used in a fight, with the base AC
-    beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
-    with Wooden Bow (base 19)`), the saves as the d20 needed now (see
-    [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
-    a fight: Stalker)`) and attacks;
-  - what they wear and hold, by the game's own slot names ("Right hand: Bone
-    Long Sword"; "Carried" for the backpack), with each item's material and
-    plus;
-  - last, spell slots for spellcasters (see below), thief skills for thieves,
-    and for rangers, with hiding to backstab on, their chances to hide and move
-    silently (`Ranger skills now`).
+  View Character screen ([The Characters tab](#the-characters-tab)).
 - **All fields** (Alt+A): every field the layout maps, in a table, with rows
   of its own for the AC in a fight and what it's made of, THAC0 with each
   weapon and the saves now, and at the end the spell slots, thief skills and
@@ -705,7 +662,29 @@ wheel, or arrow and page keys once it has the focus).
 
 ### The Characters tab
 
-What some of a card's lines mean.
+A card holds, from the top (scroll with the mouse wheel, or Tab to the cards
+and use the arrow and Page keys):
+
+- the figure for their race and sex (as on the character creation screen,
+  read from your install), their name, and HP and PSP (PSP in blue);
+- their condition (New, for a character not yet played, Okay, Stunned, Out
+  Cold, Dying, Dead, Animated, Petrified or Gone), then the spells and
+  effects on them with the rounds or charges left: `Blur (22 rounds)`,
+  `Stoneskin (5 charges)`;
+- the character sheet: scores, sex, race and alignment, classes and levels,
+  experience, AC (the one the game last used in a fight, with the base AC
+  beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
+  with Wooden Bow (base 19)`), the saves as the d20 needed now (see
+  [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
+  a fight: Stalker)`) and attacks;
+- what they wear and hold, by the game's own slot names ("Right hand: Bone
+  Long Sword"; "Carried" for the backpack), with each item's material and
+  plus;
+- last, spell slots for spellcasters (see below), thief skills for thieves,
+  and for rangers, with hiding to backstab on, their chances to hide and move
+  silently (`Ranger skills now`).
+
+What some of its lines mean:
 
 **Spell slots.** `Priest spells left: 1st 5/5, 2nd 3/3, 3rd 2/2` means five
 first-level priest spells can still be cast out of five, and so on. Casting a
@@ -938,34 +917,13 @@ randomises (creatures wandering, animations and so on), as raw numbers with
 where in the game's code they came from. It's noisy, but useful for finding
 more rolls worth labelling.
 
-## How the game works
+## More pages
 
-What the game does that its manual doesn't say, from its code and checked in
-play, has a page of its own, [How the game works](HOW-THE-GAME-WORKS.md):
-
-- [Initiative](HOW-THE-GAME-WORKS.md#initiative)
-- [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)
-- [Psionics](HOW-THE-GAME-WORKS.md#psionics)
-- [Character creation](HOW-THE-GAME-WORKS.md#character-creation)
-- [Monsters' defences](HOW-THE-GAME-WORKS.md#monsters-defences)
-- [Searching junk, hay and wardrobes](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes)
-- [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)
-- [The game's two weapons](HOW-THE-GAME-WORKS.md#the-games-two-weapons)
-- [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)
-- [Where the game rolls thief skills](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)
-- [Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)
-- [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)
-- [The arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)
-
-## Item tables
-
-Every magic item and every mundane weapon, the game's and the mod's, with
-their icons and where each is, has a page of its own, [Items](ITEMS.md)
-(spoilers):
-
-- [Every magic item](ITEMS.md#every-magic-item): weapons and missile weapons (and the magic weapons by weapon spec), armour, helms, shields, rings and the rest
-- [Every mundane weapon](ITEMS.md#every-mundane-weapon): who sells and who carries each plain weapon
-- [Items against acid](ITEMS.md#items-against-acid): each armour piece's and weapon's chance to come through acid
+- [How the game works](HOW-THE-GAME-WORKS.md): what the original game does
+  that its manual doesn't say, from its code and checked in play (initiative,
+  spells and psionics, monsters' defences, thief skills, saving throws...).
+- [Items](ITEMS.md) (spoilers): every magic item and every mundane weapon, the
+  game's and the mod's, with their icons and where each is.
 
 ## Accessibility
 
@@ -998,20 +956,3 @@ level AA:
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
   and `python -m dsloader dicelog` prints the same log (dialogue included) in
   a command prompt, which screen readers do read.
-
-## Without the game
-
-**Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
-**`Show Save.bat`**.
-
-**Practising:** `tests/make_fake_party.py` writes `FAKEPTY.COM`, a tiny DOS
-program holding two made-up characters in the same record shapes as the game.
-The first character loses 1 HP every second. Run it in DOSBox and try the
-Loader (search for `SADIRA`).
-
-```
-python tests/make_fake_party.py
-dosbox FAKEPTY.COM
-```
-
-![The Loader on the practice program: All fields with Sadira and Rikus, and Memory tools with her record found and its bytes](docs/viewer.png)

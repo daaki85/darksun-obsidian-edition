@@ -3,11 +3,9 @@
 *Part of Obsidian Edition's documentation, from the [README](README.md). The
 [player's guide](PLAYER-GUIDE.md) tells the same without the detail.*
 
-Everything the mod changes and adds in the game, each with its switch in the
-Loader's Options tab: the rule changes, more character customization, the
-expanded features, the new content, the graphics, the controls, the game's bugs
-fixed, more saves and characters, and the game's speed. How each is done is in
-[DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
+Everything the mod changes and adds in the game, in the order of the Loader's
+Options tab, each with its switch there; the game's bugs fixed come last. How
+each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
 
 ## Contents
 
@@ -64,14 +62,14 @@ fixed, more saves and characters, and the game's speed. How each is done is in
   - [Scrolling the map](#scrolling-the-map)
   - [The view in fights](#the-view-in-fights)
   - [The pointer in scenes, and where it starts](#the-pointer-in-scenes-and-where-it-starts)
-- [The game's bugs, fixed](#the-games-bugs-fixed)
-  - [Spells on the Effects screen](#spells-on-the-effects-screen)
-  - [Rules the game got wrong](#rules-the-game-got-wrong)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
     - [Saves under their names](#saves-under-their-names)
   - [More characters](#more-characters)
 - [Game speed](#game-speed)
+- [The game's bugs, fixed](#the-games-bugs-fixed)
+  - [Spells on the Effects screen](#spells-on-the-effects-screen)
+  - [Rules the game got wrong](#rules-the-game-got-wrong)
 
 ## Rule changes
 
@@ -1771,84 +1769,6 @@ Each has its switch on the Options tab, on by default (from the next start).
 How it works:
 [DEVELOPMENT.md](DEVELOPMENT.md#the-pointer-in-scenes-and-where-it-starts).
 
-## The game's bugs, fixed
-
-The patched game mends these whatever the Options tab says (the rules the game
-got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
-
-| | The game | With the Loader |
-|---|---|---|
-| **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](HOW-THE-GAME-WORKS.md#spells-and-effects)) |
-| **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
-| **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
-| **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
-| **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
-| **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does (its code ran on into Strength's), and the STR alone when there was no disease to take | Takes the disease only |
-| **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place (a slip in the code), so the wrong ones were left out | Measured from where each stands |
-| **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
-| **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
-| **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
-| A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
-| The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |
-| **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
-| A **thri-kreen's claws** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
-| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
-| **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
-| A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
-| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
-| A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
-| **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
-| A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
-| The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
-| **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
-| The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
-| **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
-
-Two more have a switch: Cilla's figure (the game gives the elf the half-elf
-woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
-spell's icon on the Effects screen ending it
-([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs (Darkhold,
-the Lava Rifts, Linara) were found by the OpenDS project and checked by yuan-ti;
-the Loader mends them in its copy of the game's scripts (`scriptfixes.py`).
-
-**Saved games.** There's no need to start a new game for these: they're in
-the patched game, not in a save, so they work from the moment a game is
-loaded, on effects already running too. What a bug already did stays in the
-save: a character who kept Share Strength's strength still has it (load a save
-from before the power was used to be rid of it), and one silenced by the
-preserver's Dispel Magic casts again once that wears off. A new game is still
-the way to see all of the mod: kits, STORE and RECALL and fuller starting gear
-come with characters made with it, and much of the
-[new content](#new-content) is in the game's first areas.
-
-### Spells on the Effects screen
-
-On the Effects screen (a character's spells and powers in effect), a click on
-an effect's icon ends it in the game, so a stray click loses a spell. With the
-Loader a click leaves a spell on; a psionic power's effect still ends, as that
-is how a power is stopped. It has a switch in the Options tab's **Controls** section (**A click on a
-spell's icon on the Effects screen leaves it on**, from the next start).
-
-### Rules the game got wrong
-
-Where the game's own rules contradict its manual or AD&D, or each other, a
-[rule change](#rule-changes) puts them right. Each has a switch on the
-Options tab, on by default:
-
-| | The game | With the rule |
-|---|---|---|
-| **Saving throws against spells** | Almost every spell saved against with petrification/polymorph | The spell save ([spell save](#spells-saved-against-with-the-spell-save)) |
-| **Fire, cold and electricity** | The save's d20 rolled twice and added up, so most creatures shrugged off a Fireball (70% to save where 35% was due) | One d20, with DEX's defensive adjustment for dodging ([DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)) |
-| **Two weapons** | No penalty (a small bonus at DEX 5 or less), and each hand attacking at the whole rate | −2 main hand, −4 off hand, DEX helping; the off hand attacks once a round ([two weapons](#two-weapons)) |
-| **Warriors' attacks** | Every fighter, gladiator and ranger attacking at a specialist's 3/2 a round with any weapon | AD&D's plain rate, the specialist's only with a chosen weapon spec ([weapon specialization](#weapon-specialization)) |
-| **Multiclass characters' gear** | Any one class allowing an item was enough | Each class's limits hold ([class restrictions](#class-restrictions)) |
-| **Multiclass hit points** | CON's bonus once a level of the highest class | On every hit die, shared between the classes ([multiclass hit points](#multiclass-hit-points)) |
-| **Rangers' spells** | Cast at the ranger level less 7 for the spell levels allowed, but lasting and hurting as the whole level | The level less 7 for both ([rangers' casting level](#rangers-casting-level)) |
-| **Acid on armour** | Any armour without a magical power destroyed outright, its plus ignored | A save by material, a plus helping ([items saving against acid](#items-saving-against-acid)) |
-| **Class tables** | Priests' THAC0 improving a level early (19 at 3rd), fewer priest and preserver spell slots (3 2 1 at 5th), and gladiators, rangers and thieves needing AD&D's XP less a little | AD&D's tables ([AD&D's class tables](#adds-class-tables)) |
-| **Thief skills** | A table of the game's own, high from the start (a 3rd-level elf: move silently 66, hide in shadows 61) | AD&D's table by level, with Dark Sun's race and DEX adjustments ([thief skills from AD&D's table](#thief-skills-from-adds-table)) |
-
 ## More saves and characters
 
 ### More saves
@@ -1950,3 +1870,81 @@ the shadows. What each setting asks of the computer:
 [Suggested system requirements](README.md#suggested-system-requirements).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#game-speed).
+
+## The game's bugs, fixed
+
+The patched game mends these whatever the Options tab says (the rules the game
+got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
+
+| | The game | With the Loader |
+|---|---|---|
+| **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](HOW-THE-GAME-WORKS.md#spells-and-effects)) |
+| **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
+| **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
+| **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
+| **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
+| **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does (its code ran on into Strength's), and the STR alone when there was no disease to take | Takes the disease only |
+| **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place (a slip in the code), so the wrong ones were left out | Measured from where each stands |
+| **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
+| **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
+| **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
+| A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
+| The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |
+| **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
+| A **thri-kreen's claws** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
+| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
+| **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
+| A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
+| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
+| A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
+| **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
+| A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
+| The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
+| **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
+| The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
+| **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
+
+Two more have a switch: Cilla's figure (the game gives the elf the half-elf
+woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
+spell's icon on the Effects screen ending it
+([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes work:
+[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs (Darkhold,
+the Lava Rifts, Linara) were found by the OpenDS project and checked by yuan-ti;
+the Loader mends them in its copy of the game's scripts (`scriptfixes.py`).
+
+**Saved games.** There's no need to start a new game for these: they're in
+the patched game, not in a save, so they work from the moment a game is
+loaded, on effects already running too. What a bug already did stays in the
+save: a character who kept Share Strength's strength still has it (load a save
+from before the power was used to be rid of it), and one silenced by the
+preserver's Dispel Magic casts again once that wears off. A new game is still
+the way to see all of the mod: kits, STORE and RECALL and fuller starting gear
+come with characters made with it, and much of the
+[new content](#new-content) is in the game's first areas.
+
+### Spells on the Effects screen
+
+On the Effects screen (a character's spells and powers in effect), a click on
+an effect's icon ends it in the game, so a stray click loses a spell. With the
+Loader a click leaves a spell on; a psionic power's effect still ends, as that
+is how a power is stopped. It has a switch in the Options tab's **Controls** section (**A click on a
+spell's icon on the Effects screen leaves it on**, from the next start).
+
+### Rules the game got wrong
+
+Where the game's own rules contradict its manual or AD&D, or each other, a
+[rule change](#rule-changes) puts them right. Each has a switch on the
+Options tab, on by default:
+
+| | The game | With the rule |
+|---|---|---|
+| **Saving throws against spells** | Almost every spell saved against with petrification/polymorph | The spell save ([spell save](#spells-saved-against-with-the-spell-save)) |
+| **Fire, cold and electricity** | The save's d20 rolled twice and added up, so most creatures shrugged off a Fireball (70% to save where 35% was due) | One d20, with DEX's defensive adjustment for dodging ([DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)) |
+| **Two weapons** | No penalty (a small bonus at DEX 5 or less), and each hand attacking at the whole rate | −2 main hand, −4 off hand, DEX helping; the off hand attacks once a round ([two weapons](#two-weapons)) |
+| **Warriors' attacks** | Every fighter, gladiator and ranger attacking at a specialist's 3/2 a round with any weapon | AD&D's plain rate, the specialist's only with a chosen weapon spec ([weapon specialization](#weapon-specialization)) |
+| **Multiclass characters' gear** | Any one class allowing an item was enough | Each class's limits hold ([class restrictions](#class-restrictions)) |
+| **Multiclass hit points** | CON's bonus once a level of the highest class | On every hit die, shared between the classes ([multiclass hit points](#multiclass-hit-points)) |
+| **Rangers' spells** | Cast at the ranger level less 7 for the spell levels allowed, but lasting and hurting as the whole level | The level less 7 for both ([rangers' casting level](#rangers-casting-level)) |
+| **Acid on armour** | Any armour without a magical power destroyed outright, its plus ignored | A save by material, a plus helping ([items saving against acid](#items-saving-against-acid)) |
+| **Class tables** | Priests' THAC0 improving a level early (19 at 3rd), fewer priest and preserver spell slots (3 2 1 at 5th), and gladiators, rangers and thieves needing AD&D's XP less a little | AD&D's tables ([AD&D's class tables](#adds-class-tables)) |
+| **Thief skills** | A table of the game's own, high from the start (a 3rd-level elf: move silently 66, hide in shadows 61) | AD&D's table by level, with Dark Sun's race and DEX adjustments ([thief skills from AD&D's table](#thief-skills-from-adds-table)) |
