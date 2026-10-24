@@ -111,12 +111,26 @@ class DefaultPartyTests(unittest.TestCase):
                 rec[game.CREATURE_SHEET_INDEX] = 2
                 return bytes(rec)
 
+            def max_spell_slots(self, member, bit, level):  # a 1st-level preserver's, the Arcanist's 1 more
+                arcanist = kits.ARCANIST in kitpages.kit_ids(self.sheet(member))
+                return 1 + arcanist if bit == 1 and level == 1 else 0
+
+            def left(self, member, level):
+                return self.guest.read(self.ds * 16 + game.SLOTS_LEFT["Wizard"] + member * game.SLOTS_STRIDE + level, 1)[0]
+
         cermak = bytearray(sheet(1, (11, 10, 0)))
         gd = Gd(bytes(cermak))
+        gd.guest.write(gd.ds * 16 + game.SLOTS_LEFT["Wizard"] + 1, b"\x01")  # as the game filled it: WIZ 1/1
         self.assertEqual(dp.set_kit(gd, 0, "Cermak"), ["Cermak is an Arcanist."])
         self.assertEqual(kitpages.kit_ids(gd.sheet(0)), [kits.ARCANIST])
         self.assertEqual(kitpages.kit_names(gd.sheet(0)), ["Arcanist"])
+        self.assertEqual((gd.left(0, 1), gd.left(0, 2)), (2, 0))  # the kit's slot added: WIZ 2/2
         self.assertEqual(dp.set_kit(gd, 0, "Cermak"), [])
+        self.assertEqual(gd.left(0, 1), 2)
+        # one already cast before the kit came: 1 left of 2, not a free one
+        gd = Gd(bytes(cermak))
+        dp.set_kit(gd, 0, "Cermak")
+        self.assertEqual(gd.left(0, 1), 1)
 
         # Cilla's own feature: the kit byte's OWN_BIT, her (no) kits as they were; once
         cilla = bytearray(sheet(3, (11, 6, 17)))

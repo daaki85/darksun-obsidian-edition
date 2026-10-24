@@ -9,6 +9,15 @@ For what a release brings, read its notes ([2.7.2](release-notes/v2.7.2.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
+## Next pull request (in progress)
+
+**Fixed**
+- **Cermak's Arcanist slot at the start of a new game.** The game fills the party's spell slots as
+  a new game begins, before the Loader makes Cermak an Arcanist, so the USE screen showed WIZ 1/2
+  until his first rest. `defaultparty.set_kit` now adds the slots the kit gives to what he has
+  left (`_add_slots`: the most before and after the kit, the difference added, so a spell already
+  cast isn't given back). Checked in the game: WIZ 2/2 from the start.
+
 ## Pull request #60 ([merged 2026-10-24](https://github.com/daaki85/darksun-obsidian-edition/pull/60))
 
 **New**
