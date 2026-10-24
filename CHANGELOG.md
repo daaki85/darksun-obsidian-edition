@@ -11,6 +11,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 ## Next pull request (in progress)
 
+**New**
+- **Magic weapons, shields and armour glow on figures.** `sprites.worn` marks a weapon or shield
+  with a plus or a power `spritegear.MAGIC` (Kreenfang and the Flame Blade keep their own colours),
+  and a piece of armour's type with `MAGIC_ARMOUR` (10000h) added. `draw_weapon` draws the shape's
+  light cells (a staff, which has none, every third cell of its shaft) in `GLINT`, the fire colours
+  240-248 the game's palette cycles; `draw_shield` its light and every third rim pixel; and
+  `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
+
 **Fixed**
 - **An archer's pointer with shots left.** The weapon attack routine (5883Ah) counts a combatant's
   attacks this round (+181h of the round's tables) and makes it 99 once all are made, allowing

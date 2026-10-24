@@ -9,7 +9,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import art, game, gff, icons, sprites, spritegear as sg
+from dsloader import art, game, gff, icons, sprites, spriteparts as sp, spritegear as sg
 from test_spriteparts import rows
 
 SWORD, METAL = 63, 4
@@ -54,6 +54,37 @@ class WornTests(unittest.TestCase):
         self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1, "Kreenfang"))
         gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 0, right)]), 0)
         self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1))
+        sword = 45  # any other weapon with a plus: MAGIC, its edge glinting
+        gear, _ = sprites.worn(Worn([item(sword, 2, right)]), 0)
+        self.assertEqual(gear["right"], (sword, 1, sg.MAGIC))
+        gear, _ = sprites.worn(Worn([item(sword, 0, right)]), 0)
+        self.assertEqual(gear["right"], (sword, 1))
+        chest = game.EQUIP_SLOTS.index("chest")
+        _, armour = sprites.worn(Worn([item(57, 1, chest)]), 0)  # (chain mail +1: glints)
+        self.assertEqual(armour, (57 | sg.MAGIC_ARMOUR,))
+        _, armour = sprites.worn(Worn([item(57, 0, chest)]), 0)
+        self.assertEqual(armour, (57,))
+
+    def test_magic_glint(self):
+        """A magic weapon's lightest cells are drawn in the fire colours the game cycles; a plain
+        one's in its material's."""
+        def drawn(glint, shape=sg.SWORD):
+            rows = [[None] * 30 for _ in range(30)]
+            sg.draw_weapon(rows, [r[:] for r in rows], (5, 15), 0.0, shape, sg.MATERIAL_COLOURS[4], False,
+                           glint=glint)
+            return {p for r in rows for p in r if p is not None}
+        self.assertFalse(drawn(False) & set(sg.GLINT))
+        self.assertTrue(drawn(True) & set(sg.GLINT))
+        self.assertTrue(drawn(True, sg.STAFF) & set(sg.GLINT))  # (a staff has no light cells: every third)
+
+    def test_magic_shield_glint(self):
+        """A magic shield's light and part of its rim glint; a plain one's don't."""
+        def drawn(glint):
+            rows = [[None] * 30 for _ in range(30)]
+            sg.draw_shield(rows, [r[:] for r in rows], (15, 15), sp.FRONT, sg.MATERIAL_COLOURS[4], False, glint=glint)
+            return {p for r in rows for p in r if p is not None}
+        self.assertFalse(drawn(False) & set(sg.GLINT))
+        self.assertTrue(drawn(True) & set(sg.GLINT))
 
 class SpriteTests(unittest.TestCase):
     def test_encode_round_trip(self):

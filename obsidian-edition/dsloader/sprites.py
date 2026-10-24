@@ -231,9 +231,16 @@ def new_room(chunks, new: Dict[Tuple[str, int], bytes], looks: bool = True) -> D
     return out
 
 
+def _magic(item) -> bool:
+    """A plus or a power."""
+    return struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0] > 0 or bool(item[game.ITEM_POWER])
+
+
 def worn(gd: GameData, member: int) -> Tuple[Dict[str, Tuple[int, ...]], Tuple[int, ...]]:
     """What a party member wears, as spritegear takes it: ({place: (item type, material[, name])},
-    armour), the name for one of the Loader's weapons spritegear colours as its icon."""
+    armour), the name for one of the Loader's weapons spritegear colours as its icon, else MAGIC for
+    any other with a plus or a power (its edge glints); a magic piece of armour's type with
+    MAGIC_ARMOUR added (it glints too)."""
     from .icons import which
     gear: Dict[str, Tuple[int, ...]] = {}
     armour: List[int] = []
@@ -245,10 +252,15 @@ def worn(gd: GameData, member: int) -> Tuple[Dict[str, Tuple[int, ...]], Tuple[i
         kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
         material = typ[0x08] & 0x0F if len(typ) == game.ITEM_TYPE_SIZE else 4
         if name in ARMOUR_SLOTS:
-            armour.append(kind)
+            armour.append(kind | (sg.MAGIC_ARMOUR if _magic(item) else 0))
         elif name in HANDS:
             special = which(bytes(item))
-            gear[HANDS[name]] = (kind, material, special) if special in sg.BLADE_COLOURS else (kind, material)
+            if special in sg.BLADE_COLOURS:
+                gear[HANDS[name]] = (kind, material, special)
+            elif _magic(item):
+                gear[HANDS[name]] = (kind, material, sg.MAGIC)  # (its edge glints: spritegear.GLINT)
+            else:
+                gear[HANDS[name]] = (kind, material)
     return gear, tuple(sorted(armour))
 
 

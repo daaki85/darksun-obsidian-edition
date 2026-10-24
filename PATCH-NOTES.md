@@ -239,6 +239,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 ## Graphics
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.
+- **[New]** Magic weapons, shields and armour glow on the party's figures, as Kreenfang and the Flame Blade do: a weapon's bright edge, a shield's boss and rim, and sparks on armour cycle through the fire colours.
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
