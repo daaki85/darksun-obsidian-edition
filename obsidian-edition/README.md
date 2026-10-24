@@ -62,8 +62,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels
-  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a creation roll, fuller starting gear, and
-  features of their own for the game's own party
+  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a
+  creation roll, fuller starting gear, and features of their own for the
+  game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
 - **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
   and pick pockets, the party leader's CHA lowers shop prices, and merchants
@@ -73,20 +74,21 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   of their own (robes and bracers among them, for those who wear no armour),
   six wizard spells
   ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends](FEATURES.md#new-wizard-spells))
-  and nine [6th-level priest spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier, Whirlwind...),
-  Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
-  Semyon's story, and a use for the cooked vulture
-  ([New content](FEATURES.md#new-content)). On the map, the party wears its weapons and
-  armour, figures cast shadows and kick up dust, and elves and half-elves have
-  a look of their own ([Graphics](FEATURES.md#graphics)).
+  and nine [6th-level priest spells](FEATURES.md#6th-level-priest-spells)
+  (Heal, Blade Barrier, Whirlwind...), Kalzith (a defiler who sells scrolls),
+  defilers who drop scrolls, more of Semyon's story, and a use for the cooked
+  vulture ([New content](FEATURES.md#new-content)). On the map, the party
+  wears its weapons and armour, figures cast shadows and kick up dust, and
+  elves and half-elves have a look of their own ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
   a view that stays put in fights, dragging the map with the mouse wheel held
   down, a pointer in the intro and scenes that a click skips
-  ([Controls](FEATURES.md#controls)), 40 saves, each also kept under its name, and
-  29 saved characters
-  ([More saves and characters](FEATURES.md#more-saves-and-characters)), a game speed
-  setting ([Game speed](FEATURES.md#game-speed)), crash, freeze and item reports, and no dragon asking for
-  a word from the manual ([No manual check](#no-manual-check)).
+  ([Controls](FEATURES.md#controls)); 40 saves, each also kept under its name,
+  and 29 saved characters
+  ([More saves and characters](FEATURES.md#more-saves-and-characters)); a
+  [game speed](FEATURES.md#game-speed) setting; crash, freeze and item
+  reports; and no dragon asking for a word from the manual
+  ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
   Negative Plane Protection never working, Cause Wounds' odd dice, and more; and the
@@ -95,18 +97,19 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 
 **What it changes on your computer.** The game's own files are never
 modified: the Loader runs a patched copy of the game from its own folder, and
-writes to the game folder only your saves and characters. A save with the new
-items in it needs the Loader to load. Every file it writes, and how to update
-or back up: [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files).
+writes to the game folder only your saves and characters. Every file it
+writes, and how to update or back up: [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files).
 
 ## Requirements
 
-- **Windows** and the **GOG release** of Dark Sun: Shattered Lands. The
-  Loader runs it in the DOSBox that comes with it.
+- **Windows** and the **GOG release** of Dark Sun: Shattered Lands (its
+  `DSUN.EXE` is 611,408 bytes; with another version the Loader starts the game
+  without the dice log and says why). The Loader runs it in the DOSBox that
+  comes with it.
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
-- Linux works too if you can read other processes' memory (root, or
+- **Linux** works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
 - **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
@@ -161,10 +164,10 @@ zip, choose **Properties**, tick **Unblock** and press **OK**. Otherwise press
 in its own folder (what that Unblock box does, and nothing outside the
 folder), so the other `.bat` files start without asking.
 
-Everything else is plain text you can read: the `.bat` files, the Python
-code in `dsloader`, and the dice log helper's source (`dos\dsclog.asm`,
-which builds `dos\DSCLOG.EXE`, the small DOS program DOSBox loads). There is
-no packaged program to trust.
+Nothing in the download is a packaged program to trust: the `.bat` files and
+the Python code in `dsloader` are plain text, and so is the source of the one
+built file, the small DOS program DOSBox loads (`dos\dsclog.asm`, which builds
+`dos\DSCLOG.EXE`).
 
 ### Every time you play
 
@@ -174,8 +177,7 @@ no packaged program to trust.
    content, picking pockets, the combat log in the game and so on (see
    [The Loader's window](#the-loaders-window) and [Rule changes](FEATURES.md#rule-changes)).
    They're remembered for next time.
-3. Pick the **Game window** size at the top if you like, then press **Start
-   the game** (top left).
+3. Press **Start the game** (top left).
 
 That starts Shattered Lands (through GOG's own DOSBox) with the dice log helper
 loaded and your options in force, and the Loader picks it up once DOSBox is up.
@@ -238,10 +240,6 @@ start it the GOG way and load a save from before the mod.
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | the game folder | your saves (pages 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and characters 20 to 29 in `CHARSAVE.GFF` |
-
-**The game version.** Only the GOG release is supported (its `DSUN.EXE` is
-611,408 bytes). With another one, the Loader starts the game without the dice
-log and says why.
 
 ## When something goes wrong
 
@@ -335,8 +333,7 @@ Open an issue on
 [the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues),
 saying what you were doing, the version (the Loader's title bar), and
 attaching the crash, freeze or item report if there is one (all three are in
-`crash-logs`). A save from just before
-it happened helps most of all.
+`crash-logs`). A save from just before it happened helps most of all.
 
 ## In the game
 
@@ -364,8 +361,7 @@ Below the switch, pick how much it says: **at the least**
 `Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
 the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
 target's AC; a natural 20 always hits, a 1 always misses). It never waits for
-a click, and needs the game started from the Loader (which turns off DOSBox's
-EMS to make room for it).
+a click.
 
 ![The combat log in the arena, in short](docs/combat-log.png)
 
@@ -386,7 +382,7 @@ there; **-** makes it smaller, or the strip below the map covers nothing.
   many waves come (see
   [the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)).
   In a fight it says the round, and once the party has escaped Draj it's gone.
-  (Docked or expanded; collapsed, the one line stays the newest.)
+  (Not when the panel is collapsed to one line: that line stays the newest.)
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
@@ -438,7 +434,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
 
 ### THAC0, saves and thief skills
 
-Started with the dice log, the game's own inventory screen (the one with the
+Started from the Loader, the game's own inventory screen (the one with the
 character's figure and their equipment) shows five more things in its
 right-hand panel, drawn by the game's text routine so they look like the rest:
 
@@ -458,7 +454,7 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   [picking pockets](FEATURES.md#picking-pockets) and
   [hiding to backstab](FEATURES.md#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
   `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE`
-  and boots' 10 in `MOVE` (the Cloak and Boots of Elvenkind's 95). Hear noise
+  and boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise
   (one script check) and read languages (none) are left out for want of room.
   A ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the
   same places, the cloak and boots counted (the other four left out);
@@ -523,9 +519,10 @@ in brackets on View Character's experience line is the XP at which the first
 of their classes goes up a level, and the Loader adds which class that is:
 `EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each class
 is its first letter (C, D, F, G, R, T), except the preserver's Pr and the
-psionicist's Ps. When two classes go up at the same XP, both are named: `(20000 Pr/T)`. A class
-already at the highest level (9, or its share of the XP cap with
-[Level cap by XP](FEATURES.md#level-cap-by-xp)) has no next level, so it is never named.
+psionicist's Ps. When two classes go up at the same XP, both are named:
+`(20000 Pr/T)`. A class already at the highest level (9, or its share of the
+XP cap with [Level cap by XP](FEATURES.md#level-cap-by-xp)) has no next level,
+so it is never named.
 A character of one class shows the line as the game always has, and so does a
 human, who can only dual-class: the game counts only one of their classes
 there.
@@ -556,7 +553,7 @@ the Loader (or its command-line dice log) is running.
 
 ### What hurts a monster (the Look box)
 
-In a fight, Look at a monster (right-click until the cursor is the Look icon,
+In a fight, Look at a monster (right-click until the pointer is the Look icon,
 then click the monster) and the game's small box, under its name and level,
 now also shows its hit points and AC (`HP 15/15 AC 2`), its THAC0 and
 alignment (`THAC0 17 AL TN`), its magic resistance beside its level
@@ -577,9 +574,8 @@ off.
 
 ![The Look box on a Screamer Beetle in the arena: LEVEL: 3, then HP 15/15 AC 2 and THAC0 17 AL TN added](docs/look-box.png)
 
-(The arena's first monsters, like the people in the early fights, have no
-magic resistance or special defences, so the box shows just the numbers and
-the alignment.)
+The arena's first monsters have no magic resistance or special defences, so
+their box shows just the numbers and the alignment.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-hurts-a-monster-the-look-box).
 
