@@ -523,6 +523,14 @@ class Viewer:
         ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
                         "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.scene_pointer = tk.BooleanVar(value=settings.get("scene_pointer", True) is not False)
+        ttk.Checkbutton(controls, text="A pointer in the intro and the game's other scenes, and a click skips "
+                        "a scene as a key does; from the next start", variable=self.scene_pointer,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.mouse_start = tk.BooleanVar(value=settings.get("mouse_start", True) is not False)
+        ttk.Checkbutton(controls, text="The pointer starts in the middle of the screen and moves as far up and "
+                        "down as across (the game's: at the right edge, half as far); from the next start",
+                        variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
                         "ends it; psionic powers can still be stopped); from the next start",
@@ -648,7 +656,7 @@ class Viewer:
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
-                    self.scroll_map, self.effects_kept, self.camera_still):
+                    self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start):
             var.set(True)
         for var in (self.scroll_right, self.combat_log):
             var.set(False)
@@ -1136,6 +1144,8 @@ class Viewer:
         settings["stealth_gear"] = self.stealth_gear.get()
         settings["roll_store"] = self.roll_store.get()
         settings["camera_still"] = self.camera_still.get()
+        settings["scene_pointer"] = self.scene_pointer.get()
+        settings["mouse_start"] = self.mouse_start.get()
         for key, var in self.rule_vars.items():
             settings[key] = var.get()
         launch.save_settings(settings)

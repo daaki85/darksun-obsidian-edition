@@ -2029,8 +2029,8 @@ probe_look:
 ; game's timers run from it). Does that, and every TICK_EVERY strikes notes where the game was
 ; (what the timer interrupted) in TICKS, for the Loader's freeze report: its CS:IP, flags, SS,
 ; SP (before the interrupt), BP, DS and ES, and the strikes counted. Interrupts stay off.
-TICK_EVERY equ 16
-TICK_SLOTS equ 32
+TICK_EVERY equ 32
+TICK_SLOTS equ 16
 TICK_SIZE  equ 16
 probe_tick:
         push bp
@@ -2041,7 +2041,10 @@ probe_tick:
         mov ds, [bp + 4]        ; the handler's CS
         inc word [4]            ; the replaced instruction
         inc word [cs:tick_count]
-        test byte [cs:tick_count], 1
+        cmp byte [cs:cine_shown], 0
+        je .plain
+        call cp_follow
+.plain: test byte [cs:tick_count], 1
         jnz .seen
         call label_stamp                ; (every other strike: the labels put again)
 .seen:  test byte [cs:tick_count], TICK_EVERY - 1
@@ -11467,6 +11470,391 @@ draw_site:
         pop bp
         iret
 
+; CINE_STEP: "or dx,dx / jz" (92A28h; 4 bytes) in the scene player's check between its steps
+; (92A09h: an event taken from the game's queue into DX; 1, a key, ends the scene, as it ends the
+; whole intro), its "cmp dx,1 / jnz" after it kept. Through scenes and logos the game has no
+; pointer of its own, and the mouse driver's can't be drawn in their VGA modes (unchained): an
+; arrow is drawn at each step where the driver has the pointer (CP_DRAW), and a button pressed
+; since the last step ends the scene as a key does (DX 1). CINE_HIDE wipes it at the end.
+CE_SKIP      equ 0x56BC8 - (0x56BBE + 3)
+CP_ROWS      equ 11
+cine_shown db 0                 ; (1 while a scene plays: the driver's ranges the screen's)
+cp_drawn   db 0                 ; (1: the arrow on the screen, at CP_X, CP_Y, CP_PAGE in A000h,
+cp_x       dw 0                 ;   in CP_DARK and CP_LIGHT, CP_UNDER what was under it)
+cp_y       dw 0
+cp_page    dw 0
+cp_now     dw 0
+cp_dark    db 0
+cp_light   db 0
+cp_op      db 0
+cp_last    dw 0                 ; (TICK_COUNT at the last step's drawing: 30 a second at most)
+cp_seq_i   db 0
+cp_mask    db 0
+cp_gc_i    db 0
+cp_gc_ix   db 1, 3, 4, 5, 8     ; (the graphics controller's registers kept: set/reset enable,
+cp_gc      times 5 db 0         ;   rotate, read plane, mode, bit mask)
+cp_under   times CP_ROWS * 8 db 0
+cp_shape:                       ; (2 bits a pixel, the left first: 1 the dark colour, 2 the light)
+        dw 0x0001               ; #.......
+        dw 0x0005               ; ##......
+        dw 0x0019               ; #o#.....
+        dw 0x0069               ; #oo#....
+        dw 0x01A9               ; #ooo#...
+        dw 0x06A9               ; #oooo#..
+        dw 0x1AA9               ; #ooooo#.
+        dw 0x6AA9               ; #oooooo#
+        dw 0x55A9               ; #ooo####
+        dw 0x1A59               ; #o##oo#.
+        dw 0x1505               ; ##..###.
+cine_step:
+        or dx, dx
+        jnz .event
+        push ax
+        push bx
+        push cx
+        cmp byte [cs:cine_shown], 0
+        jne .ask
+        mov byte [cs:cine_shown], 1
+        call cine_mouse
+        call cine_presses               ; (the presses before the scene let go)
+        jmp .draw
+.ask:   call cine_presses               ; (ZF: none)
+        jz .draw
+        mov dx, 1
+        jmp .kept
+.draw:  mov ax, [cs:tick_count]
+        sub ax, [cs:cp_last]
+        cmp ax, 4
+        jb .kept
+        add [cs:cp_last], ax
+        call cp_draw
+.kept:  pop cx
+        pop bx
+        pop ax
+.event: cmp dx, 1
+        jne .done
+        call cine_hide
+.done:  iret
+cine_presses:                           ; ZF: neither button pressed since asked last (AX, BX, CX)
+        push dx
+        mov ax, 5
+        xor bx, bx
+        int 0x33
+        push bx
+        mov ax, 5
+        mov bx, 1
+        int 0x33
+        pop ax
+        or ax, bx
+        pop dx
+        ret
+cine_mouse:                             ; the driver's ranges the screen's, the pointer in the middle
+        pusha
+        mov ax, 7
+        xor cx, cx
+        mov dx, 319
+        int 0x33
+        mov ax, 8
+        xor cx, cx
+        mov dx, 199
+        int 0x33
+        mov ax, 4
+        mov cx, 160
+        mov dx, 100
+        int 0x33
+        popa
+        ret
+cine_where:                             ; CX, DX: the pointer (a video mode set puts the driver
+        mov ax, 3                       ;   back to 640 across, in its middle: CINE_MOUSE again)
+        int 0x33
+        cmp cx, 319
+        jbe .ok
+        call cine_mouse
+        mov cx, 160
+        mov dx, 100
+.ok:    ret
+cine_hide:                              ; the arrow wiped (the game sets its ranges again with
+        mov byte [cs:cine_shown], 0     ;   its next screen's video mode: MOUSE_SET)
+        jmp cp_erase
+
+; CP_DRAW: the arrow wiped (CP_ERASE) and drawn again where the driver has the pointer, in the
+; palette's darkest and lightest colours, what it covers kept. CP_ERASE puts that back only where
+; the arrow still is (a scene's frame drawn over it since is left as it is).
+cp_draw:
+        pusha
+        call cp_erase
+        call cp_colours
+        call cp_put
+        popa
+        ret
+cp_follow:                              ; (the game's timer, while a scene plays: the arrow moved
+        test byte [cs:tick_count], 3    ;   with the pointer between its steps, 30 times a second,
+        jnz .out                        ;   and drawn afresh 7 times, as a still scene fades in:
+        pusha                           ;   the game sets its palette with interrupts off)
+        test byte [cs:tick_count], 15
+        jz .fresh
+        mov ax, 3
+        int 0x33
+        cmp cx, [cs:cp_x]
+        jne .move
+        cmp dx, [cs:cp_y]
+        je .same
+.move:  call cp_erase
+        call cp_put
+        jmp .same
+.fresh: call cp_draw
+.same:  popa
+.out:   ret
+cp_put:
+        push es
+        call cine_where
+        mov [cs:cp_x], cx
+        mov [cs:cp_y], dx
+        mov ax, 0xA000
+        mov es, ax
+        call cp_vga
+        mov ax, [cs:cp_now]
+        mov [cs:cp_page], ax
+        mov byte [cs:cp_op], 0
+        call cp_pass
+        call cp_vga_back
+        mov byte [cs:cp_drawn], 1
+        pop es
+        ret
+cp_erase:
+        cmp byte [cs:cp_drawn], 0
+        je .out
+        mov byte [cs:cp_drawn], 0
+        pusha
+        push es
+        mov ax, 0xA000
+        mov es, ax
+        call cp_vga
+        mov byte [cs:cp_op], 1
+        call cp_pass
+        call cp_vga_back
+        pop es
+        popa
+.out:   ret
+cp_colours:                             ; CP_DARK, CP_LIGHT: the palette's (its 3 parts' sums; of
+                                        ;   equals the last: a picture's colours seldom are)
+        mov dx, 0x3C7
+        xor al, al
+        out dx, al
+        mov dx, 0x3C9
+        xor cx, cx
+        mov bh, 0xFF                    ; (the least sum so far, BH; the most, AH)
+        xor ah, ah
+.each:  in al, dx
+        mov bl, al
+        in al, dx
+        add bl, al
+        in al, dx
+        add bl, al
+        cmp bl, bh
+        ja .light
+        mov bh, bl
+        mov [cs:cp_dark], cl
+.light: cmp bl, ah
+        jb .next
+        mov ah, bl
+        mov [cs:cp_light], cl
+.next:  inc cx
+        cmp cx, 256
+        jb .each
+        ret
+cp_vga:                                 ; the VGA's registers the drawing changes kept and set;
+        mov dx, 0x3C4                   ;   CP_NOW the page shown (the scenes' modes unchained)
+        in al, dx
+        mov [cs:cp_seq_i], al
+        mov al, 2
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_mask], al
+        mov al, 0x0F
+        out dx, al
+        mov dx, 0x3CE
+        in al, dx
+        mov [cs:cp_gc_i], al
+        xor bx, bx
+.keep:  mov al, [cs:cp_gc_ix + bx]
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_gc + bx], al
+        dec dx
+        inc bx
+        cmp bx, 5
+        jb .keep
+        mov ax, 0x0001
+        out dx, ax
+        mov ax, 0x0003
+        out dx, ax
+        mov ah, [cs:cp_gc + 3]
+        and ah, 0x40
+        mov al, 5
+        out dx, ax
+        mov ax, 0xFF08
+        out dx, ax
+        mov dx, 0x3D4
+        in al, dx
+        mov cl, al
+        mov al, 0x0C
+        out dx, al
+        inc dx
+        in al, dx
+        mov ah, al
+        dec dx
+        mov al, 0x0D
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_now], ax
+        dec dx
+        mov al, cl
+        out dx, al
+        ret
+cp_vga_back:
+        mov dx, 0x3CE
+        xor bx, bx
+.back:  mov al, [cs:cp_gc_ix + bx]
+        mov ah, [cs:cp_gc + bx]
+        out dx, ax
+        inc bx
+        cmp bx, 5
+        jb .back
+        mov al, [cs:cp_gc_i]
+        out dx, al
+        mov dx, 0x3C4
+        mov al, 2
+        mov ah, [cs:cp_mask]
+        out dx, ax
+        mov al, [cs:cp_seq_i]
+        out dx, al
+        ret
+cp_pass:                                ; CP_OP 0: drawn, what's under kept; 1: put back
+        xor si, si                      ; (SI the row, BX its bytes in CP_UNDER, CX the x)
+.row:   mov dx, [cs:cp_y]
+        add dx, si
+        cmp dx, 200
+        jae .done
+        mov bx, si
+        add bx, bx
+        mov bp, [cs:cp_shape + bx]
+        shl bx, 2
+        add bx, cp_under
+        mov cx, [cs:cp_x]
+.col:   mov ax, bp
+        and al, 3
+        jz .next
+        cmp cx, 320
+        jae .next
+        mov ah, [cs:cp_dark]
+        dec al
+        jz .addr
+        mov ah, [cs:cp_light]
+.addr:  call cp_addr
+        cmp byte [cs:cp_op], 0
+        jne .back
+        mov al, [es:di]
+        mov [cs:bx], al
+        mov [es:di], ah
+        jmp .next
+.back:  cmp [es:di], ah
+        jne .next
+        mov al, [cs:bx]
+        mov [es:di], al
+.next:  inc bx
+        inc cx
+        shr bp, 2
+        jnz .col
+        inc si
+        cmp si, CP_ROWS
+        jb .row
+.done:  ret
+cp_addr:                                ; DI: pixel CX, DX's (its plane read and written)
+        push ax
+        push cx
+        push dx
+        imul di, dx, 80
+        mov ax, cx
+        shr ax, 2
+        add di, ax
+        add di, [cs:cp_page]
+        and cl, 3
+        mov ah, 1
+        shl ah, cl
+        mov al, 2
+        mov dx, 0x3C4
+        out dx, ax
+        mov ah, cl
+        mov al, 4
+        mov dx, 0x3CE
+        out dx, ax
+        pop dx
+        pop cx
+        pop ax
+        ret
+
+; CINE_END: "or si,si / jz" (56BBEh; 4 bytes) at the end of the scenes' routine (568BEh), where
+; every scene, played or ended, comes: the arrow wiped (CINE_HIDE), and its "jz" made.
+cine_end:
+        call cine_hide
+        or si, si
+        jnz .done
+        push bp
+        mov bp, sp
+        add word [bp + 2], CE_SKIP
+        pop bp
+.done:  iret
+
+; MOUSE_INIT: "or ax,ax / jnz" (356F5h; 4 bytes) as the game starts, just after it resets the
+; mouse driver (AX 0: none): the pointer made to move as far up and down as across (MOUSE_RATIO),
+; through the intro too, and the "jnz" made.
+MI_SKIP      equ 0x35704 - (0x356F5 + 3)
+mouse_init:
+        or ax, ax
+        jz .none
+        push bp
+        mov bp, sp
+        add word [bp + 2], MI_SKIP
+        pop bp
+        pusha
+        call mouse_ratio
+        popa
+.none:  iret
+
+; MOUSE_SET: "mov word [0A12Dh],0" (2A912h; 6 bytes) just after the game gives the mouse its
+; ranges (the screen's 320 by 200), as its screens start. A video mode set leaves the driver's
+; pointer in the middle of its 640 across, which these ranges put at the right edge (318, 100):
+; there it's put in the middle. The pointer moves as far up and down as across (MOUSE_RATIO).
+mouse_set:
+        mov word [0xA12D], 0
+        call cine_hide
+        pushad
+        mov ax, 3
+        int 0x33
+        cmp cx, 318
+        jb .ratio
+        cmp dx, 100
+        jne .ratio
+        call mouse_mid
+.ratio: call mouse_ratio
+        popad
+        iret
+mouse_mid:
+        mov ax, 4
+        mov cx, 160
+        mov dx, 100
+        int 0x33
+mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 8)
+        mov ax, 0x0F
+        mov cx, 8
+        mov dx, 8
+        int 0x33
+        ret
+
 ; WHIRL_TICK: from the main loop (PROBE_SCROLL; DS the game's): the funnel last drawn (WT_THING)
 ; turns, its thing's frame (+11h, every copy's) one on each WHIRL_TICKS of the BIOS clock, and its
 ; picture is to be drawn again, as the dust's puffs are (D_DIRTY's rectangle: DUST_UNION has the
@@ -14343,6 +14731,10 @@ STAB_SITE equ NS_IMAGE + 39     ; 58A29h: a weapon's damage rolled, before STR (
 TIMES_SITE equ NS_IMAGE + 40    ; 58A80h: a backstab's damage multiplied (STAB_TIMES)
 HEAT_SITE equ NS_IMAGE + 41     ; 78C24h: a spell's damage on a creature, its spell read (HEAT_SITE)
 DRAW_SITE equ NS_IMAGE + 42     ; 232D4h: a thing on the map about to be drawn (DRAW_SITE: Whirlwind's)
+CINE_STEP equ NS_IMAGE + 43     ; 92A28h: a scene's step, an event taken (CINE_STEP)
+CINE_END  equ NS_IMAGE + 44     ; 56BBEh: the scenes' routine at its end (CINE_END)
+MOUSE_SET equ NS_IMAGE + 45     ; 2A912h: the mouse given its ranges (MOUSE_SET)
+MOUSE_INIT equ NS_IMAGE + 46    ; 356F5h: the mouse driver reset, at the game's start (MOUSE_INIT)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -14436,6 +14828,14 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je heat_site
         cmp byte [cs:rl_site], DRAW_SITE
         je draw_site
+        cmp byte [cs:rl_site], CINE_STEP
+        je cine_step
+        cmp byte [cs:rl_site], CINE_END
+        je cine_end
+        cmp byte [cs:rl_site], MOUSE_SET
+        je mouse_set
+        cmp byte [cs:rl_site], MOUSE_INIT
+        je mouse_init
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS

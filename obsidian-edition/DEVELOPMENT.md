@@ -472,10 +472,11 @@ off while it ran (`launch.CUT_OFF`), and that is a crash report too.
 ## The freeze report
 
 The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
-start; its timers run from it) begins with `INT VEC_TICK` (`PROBE_TICK`). Every
-16th strike (about 8 a second) DSCLOG notes what the timer interrupted: CS:IP,
-flags, SS:SP before the interrupt, BP, DS and ES, in `TICKS` (32 records of 16
-bytes; the header's +356 its offset, +358 the records taken). The Loader's
+start; its timers run from it, 120 strikes a second) begins with `INT VEC_TICK`
+(`PROBE_TICK`). Every 32nd strike (about 4 a second) DSCLOG notes what the
+timer interrupted: CS:IP, flags, SS:SP before the interrupt, BP, DS and ES, in
+`TICKS` (16 records of 16 bytes, the last 4 seconds; the header's +356 its
+offset, +358 the records taken). The Loader's
 **Freeze report** (`freeze.py`) reads them newest first, names each place
 (DSCLOG's, the BIOS's, or the game's segment and DSUN.EXE offset, which overlaid
 code doesn't keep), shows the code there now and the newest stack, counts the
@@ -2945,6 +2946,53 @@ table), and a first version, which put other code there, ran garbled.
 opening, the party walking out through the gate: held still, the party never
 left the view and the scene never went on), so there it is as the game has it,
 as is the map's own walking.
+
+### The pointer in scenes, and where it starts
+
+([In the features page](FEATURES.md#the-pointer-in-scenes-and-where-it-starts).)
+
+How: the scenes (the intro, its logos, the decree and the rest) are played by
+one routine (`DSUN.EXE` 568BEh, each piece through `660:20`), whose player
+asks the game's event queue between a piece's steps (`929F5h`); a key, DX 1,
+ends the scene (`92A28h`). The game's own mouse handler isn't installed yet in
+the intro, and the mouse driver's pointer can't be drawn there: the scenes'
+VGA mode is unchained (mode X, 4 planes, page flipping), which DOSBox's driver
+draws as garbage. So DSCLOG draws its own 8 by 11 arrow:
+
+- **At each step** (`CINE_STEP`, the step's `or dx,dx / jz`): a button pressed
+  since the last step (`INT 33h` function 5, both buttons) makes DX 1, as a key
+  does. At most 30 times a second the arrow is wiped and drawn again where the
+  driver has the pointer (function 3), in the palette's darkest and lightest
+  colours (read from the DAC; of equals the last, as a picture seldom uses
+  them), in the page shown (the CRTC's start address), each pixel's plane
+  selected with the sequencer's map mask and the graphics controller's read
+  map (both saved and put back, with the controller's mode, bit mask, set/reset
+  and rotate). What was under it is kept, and put back only where the arrow
+  still is: a frame drawn over it since stays as it is.
+- **From the game's timer** (`PROBE_TICK`, while a scene plays): 30 times a
+  second the arrow follows the pointer, and about 7 times it is drawn afresh,
+  palette and all, so a still picture fading in shows it. The game writes its
+  palette with interrupts off, so the timer never reads the DAC halfway
+  through its writing.
+- **At the scene's start** the driver's ranges are made the screen's (0 to 319,
+  0 to 199; its own are 640 across) and the pointer put in the middle; a video
+  mode set puts them back, which the next step sees (an x past 319) and sets
+  again.
+- **At the end** (`CINE_END`, the scenes' routine's `or si,si / jz`, where
+  every scene comes, played or skipped) the arrow is wiped.
+
+**Where the pointer starts.** After a video mode set the driver puts its
+pointer in the middle of its 640 across; the game then gives it the ranges 0
+to 319 (`2A8F2h`), which leave it at the right edge (318, 100). Just after
+that (`MOUSE_SET`, its `mov word [0A12Dh],0`) DSCLOG moves it to the middle
+when it is there (function 4). The driver's own speed is 8 mickeys a pixel
+across and 16 up and down; as the game resets the driver at its start
+(`MOUSE_INIT`, `356F5h`, after function 0) and again with the ranges, DSCLOG
+makes both 8 (function 0Fh).
+
+The two are switches (`SCENE_POINTER`: `cine_step`, `cine_end`; `MOUSE_START`:
+`mouse_set`, `mouse_init`). The room in upper memory came from the freeze
+report's records (32 to 16, taken half as often).
 
 ### More saves
 

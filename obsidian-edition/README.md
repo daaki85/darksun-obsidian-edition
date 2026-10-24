@@ -88,7 +88,8 @@ rules without spoilers, with a section for each class and its kits (also as a we
   a look of their own ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
   a view that stays put in fights, dragging the map with the mouse wheel held
-  down ([Controls](FEATURES.md#controls)), 40 saves, each also kept under its name, and
+  down, a pointer in the intro and scenes that a click skips
+  ([Controls](FEATURES.md#controls)), 40 saves, each also kept under its name, and
   29 saved characters
   ([More saves and characters](FEATURES.md#more-saves-and-characters)), a game speed
   setting ([Game speed](FEATURES.md#game-speed)), crash, freeze and item reports, and no dragon asking for

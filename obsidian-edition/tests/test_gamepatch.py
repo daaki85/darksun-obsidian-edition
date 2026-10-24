@@ -95,6 +95,25 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(r[0x23:0x26], bytes.fromhex("b87e37"))  # (mov ax,377Eh where the game has it)
         self.assertIn(bytes.fromhex("833e681100"), r)  # (in a fight only: IN_COMBAT, DS:1168h)
 
+    def test_mouse_sites(self):
+        """The scenes' pointer (SCENE_POINTER: the step's "or dx,dx / jz", the scenes' routine's
+        "or si,si / jz" at its end) and the pointer's start (MOUSE_START: the ranges' "mov word
+        [0A12Dh],0", the reset's "or ax,ax / jnz"), each DSCLOG's numbered site over the bytes it
+        replaces; two switches."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        for name, offset, number in (("cine_step", 0x92A28, gamepatch.CINE_STEP),
+                                     ("cine_end", 0x56BBE, gamepatch.CINE_END),
+                                     ("mouse_set", 0x2A912, gamepatch.MOUSE_SET),
+                                     ("mouse_init", 0x356F5, gamepatch.MOUSE_INIT)):
+            p = by[name]
+            self.assertEqual(p.offset, offset)
+            self.assertEqual(p.replacement[:3], bytes((0xCD, gamepatch.VEC_CR_SPELLS, number)))
+            self.assertEqual(len(p.replacement), len(p.original))
+        self.assertEqual(len({gamepatch.CINE_STEP, gamepatch.CINE_END, gamepatch.MOUSE_SET, gamepatch.MOUSE_INIT,
+                              gamepatch.DRAW_SITE}), 5)
+        self.assertEqual(set(gamepatch.SCENE_POINTER) | set(gamepatch.MOUSE_START),
+                         {"cine_step", "cine_end", "mouse_set", "mouse_init"})
+
     def test_enter_out_of_the_save_windows_keys(self):
         """The save/load window's key table (Esc, Enter, Up, Down) without Enter, which PROBE_SAVE_PAGE
         then takes."""

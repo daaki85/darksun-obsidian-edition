@@ -63,6 +63,7 @@ fixed, more saves and characters, and the game's speed. How each is done is in
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
   - [The view in fights](#the-view-in-fights)
+  - [The pointer in scenes, and where it starts](#the-pointer-in-scenes-and-where-it-starts)
 - [The game's bugs, fixed](#the-games-bugs-fixed)
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
   - [Rules the game got wrong](#rules-the-game-got-wrong)
@@ -1747,6 +1748,25 @@ as the game has it.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its part
 on the view in a fight).
+
+### The pointer in scenes, and where it starts
+
+The game shows no pointer in its intro, the logos before it and its other
+scenes (the king's decree, the arena gate), and only a key skips them. Now a
+small arrow follows the mouse there, and a click of either button skips a
+scene as a key does: in the intro, straight to the main menu. (With DOSBox's
+**autolock**, as GOG's setup has it, the first click in the window only takes
+the mouse; the next one skips.) As before, a key or click is noticed between a
+scene's steps, so a long still picture, like the decree, plays to its end.
+
+The game left the pointer at the right edge of the screen when its menu came
+up, and it moved half as far up and down as across (the mouse driver's own
+setting). Now it starts in the middle and moves as far each way.
+
+Each has its switch on the Options tab, on by default (from the next start).
+
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#the-pointer-in-scenes-and-where-it-starts).
 
 ## The game's bugs, fixed
 

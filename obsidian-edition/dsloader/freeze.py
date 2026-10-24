@@ -1,7 +1,7 @@
 """The freeze report: what the Loader can see of a game that has stopped while DOSBox runs on.
 
 DSCLOG notes where the game was as its timer struck (PROBE_TICK: TICKS, the header's +356, a
-record of TICK_SIZE bytes for every 16 strikes, counted at +358). The report gives those places,
+record of TICK_SIZE bytes for every 32 strikes, counted at +358). The report gives those places,
 newest first, with what is at each now (the game's code, or DSCLOG's own), whether the timer and
 the map's main loop still run, DSCLOG's header, the switches and the dice log's and dialogue's
 last lines; and keeps all of the emulated PC's memory below 1 MB + 64 KB beside it, to read the
@@ -22,7 +22,7 @@ from .dicelog import HDR_SIG
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_MAIN_TICKS = 260  # the map's main loop run (counted)
 TSR_TICK_OFF, TSR_TICK_SEQ = 356, 358  # TICKS's offset; records taken (counted)
-TICK_SLOTS, TICK_SIZE = 32, 16
+TICK_SLOTS, TICK_SIZE = 16, 16
 HEADER_BYTES = 362  # DSCLOG's header, as it was, in the report (to KIT_POISONED, +360, and CREATING, +361)
 EXE_HEADER = 0x5400  # DSUN.EXE's header: a load-segment address + this is its place in the file
 CODE_BYTES = 24  # what is at each place now

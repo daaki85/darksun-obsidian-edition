@@ -9,7 +9,26 @@ For what a release brings, read its notes ([2.7.2](release-notes/v2.7.2.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #59 (in progress)
+## Next pull request (in progress)
+
+**New**
+- **A pointer in scenes, and a click skips one.** The intro, its logos and the game's other scenes
+  had no pointer, and only a key skipped them. DSCLOG draws an arrow there (the scenes' VGA mode
+  is unchained, which the mouse driver's pointer can't draw in): at each step of the scene player
+  (`CINE_STEP`, 92A28h) and from the game's timer while a scene plays, in the palette's darkest and
+  lightest colours, what was under it put back only where it still is; a button pressed since the
+  last step ends the scene as a key does, and the scenes' routine's end (`CINE_END`, 56BBEh) wipes
+  it. A switch, `scene_pointer`, on.
+- **The pointer starts in the middle and moves as far up and down as across.** The game's ranges
+  (0 to 319) left the driver's pointer at the right edge (318, 100) after a video mode set: it is
+  put in the middle there (`MOUSE_SET`, 2A912h); and the driver's 16 mickeys a pixel up and down
+  are made 8, as across, from the game's start (`MOUSE_INIT`, 356F5h). A switch, `mouse_start`, on.
+
+**Changed**
+- **The freeze report's records**: 16, every 32nd timer strike (were 32, every 16th; the same 4
+  seconds), to make room in upper memory for the above.
+
+## Pull request #59 ([merged 2026-10-24](https://github.com/daaki85/darksun-obsidian-edition/pull/59))
 
 **Release**
 - **Obsidian Edition 2.7.2**: the version is 2.7.2, with its notes in `release-notes/v2.7.2.md`,

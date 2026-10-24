@@ -223,7 +223,7 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
 # The Options tab's new content and game changes (settings keys), each on unless switched off;
 # the game's copies are written with them as they stand when it is started
 CONTENT = ("kalzith", "semyon", "vulture", "pens_gear", "magic_arms", "world_gear", "world_magic", "effects_kept", "stealth_gear", "arena_ring",
-           "elf_looks", "roll_store", "cilla_elf", "camera_still")
+           "elf_looks", "roll_store", "cilla_elf", "camera_still", "scene_pointer", "mouse_start")
 # the new items' parts (worldgear.data_chunks', and the arena's ring, ring.py), all switched by
 # one box: NEW_ITEMS
 ITEM_PARTS, NEW_ITEMS = ("pens_gear", "magic_arms", "world_gear", "world_magic", "arena_ring"), "new_items"
@@ -247,6 +247,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
         | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
         | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
+        | (frozenset() if on["scene_pointer"] else frozenset(gamepatch.SCENE_POINTER)) \
+        | (frozenset() if on["mouse_start"] else frozenset(gamepatch.MOUSE_START)) \
         | (frozenset() if strip else frozenset(gamepatch.STRIP))
     try:
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)

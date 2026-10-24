@@ -3567,7 +3567,7 @@ def kits_to_level():
 class TickTests(unittest.TestCase):
     """PROBE_TICK: the game's timer handler's first instruction done, and every TICK_EVERY
     strikes where the game was noted in TICKS (the header's +356, counted at +358)."""
-    VEC_TICK, EVERY, SLOTS = 0x87, 16, 32
+    VEC_TICK, EVERY, SLOTS = 0x87, 32, 16
 
     def setUp(self):
         self.image = image = load_image()
@@ -3601,10 +3601,10 @@ class TickTests(unittest.TestCase):
         self.assertEqual(struct.unpack("<H", mu.mem_read(CALLER * 16 + 4, 2))[0], self.EVERY * (self.SLOTS + 2))
         self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 358, 2))[0], self.SLOTS + 2)
         slots = [struct.unpack("<8H", mu.mem_read(TSR * 16 + ticks + 16 * k, 16)) for k in range(self.SLOTS)]
-        # the newest (the 34th) in slot 1, the 33rd in slot 0, the 3rd in slot 2
+        # the newest (the 18th) in slot 1, the 17th in slot 0, the 3rd in slot 2
         want = lambda k: (0x1000 + self.EVERY * k - 1, 0x5678, 0x0246, SS, 0x800, BP, GAME_DS, 0x4321)
-        self.assertEqual(slots[1], want(34))
-        self.assertEqual(slots[0], want(33))
+        self.assertEqual(slots[1], want(self.SLOTS + 2))
+        self.assertEqual(slots[0], want(self.SLOTS + 1))
         self.assertEqual(slots[2], want(3))
 
 
