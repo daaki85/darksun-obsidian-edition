@@ -75,9 +75,9 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
 
 Fourteen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section. All are on by default,
-and they take effect in games started with the dice log: with the Loader
-running, or with **Play Dark Sun (in-game rolls)**, which uses the Options as
-last set. Untick one and the game's own rule is back at once.
+and they take effect in games started from the Loader or its `.bat` files
+(**Play Dark Sun (in-game rolls)** uses the Options as last set). Untick one
+and the game's own rule is back at once.
 [How the game works](HOW-THE-GAME-WORKS.md) has what the game does without them.
 
 | Rule | What it changes |
@@ -128,10 +128,10 @@ A **multiclass thief** (a fighter/thief, a cleric/thief), or a human thief who
 was a fighter, gladiator, ranger or cleric, may wear the armour its other class
 allows; in armour that isn't light, every **thief skill is 0** (the inventory
 screen's PICK to CLMB, the Characters tab's "none in armour that isn't light")
-and it can't **backstab** (nor hide, for the stealth rule). A human warrior who
+and it can't **backstab** (nor hide in shadows to backstab). A human warrior who
 was a thief is the same. The Assassin, Shinobi, Shadowblade, Poisoner and
-Spellarcher wear light armour only, even a human's kit asleep after changing
-class ([Kits](#kits)).
+Spellarcher wear light armour only, even while a human's kit is asleep after
+a change of class ([Kits](KITS.md)).
 
 A human who has changed class is held by the class it has now; another race by
 all of its classes. A ranger turned cleric uses both spheres' weapons, and a
@@ -233,8 +233,8 @@ but a spell's duration and damage take the whole ranger level: that ranger's
 spells lasted as a 9th-level priest's. With **Rangers' casting level**
 ticked, they take the level less 7 too. A character with another class that
 casts the spell (a cleric/ranger of the same element) casts it at the better
-of the two, the ranger's counted 7 less. The Seeker's and Justifier's kits
-take 5 and 9 off, ticked or not. A 9th-level ranger's Protection from Evil
+of the two, the ranger's counted 7 less. The Seeker and Justifier kits take
+off 5 and 9 instead, ticked or not. A 9th-level ranger's Protection from Evil
 (3 rounds a level) lasts 6 rounds with the rule, 27 without. The dice log's
 duration and damage lines show the level wherever they roll dice.
 
@@ -296,8 +296,8 @@ full):
   level, the game 3 2 1), preservers AD&D's wizard table (4 2 1 at 5th); WIS
   still adds a priest's bonus slots. Rangers' slots were AD&D's already.
 
-Hit points were AD&D's already (with [Level cap by XP](#level-cap-by-xp)).
-Kits change these as before.
+Hit dice were AD&D's already, past 9th level too with
+[Level cap by XP](#level-cap-by-xp). Kits still change these tables.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#adds-class-tables).
 
@@ -362,10 +362,9 @@ melee weapon held (the first one in the character's list of held items; bows
 and slings never). The game makes the check on every such hit, whether or not
 the target's saving throw against the attack succeeds, and shows its own
 message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
-pieces worn on the arms, legs or chest count (bracers and robes among them), not
-helms, shields, cloaks, boots or belts, and at
-most one piece of armour is lost to a hit: the first that fails, in the order
-of the character's list.
+pieces worn on the arms, legs or chest count (bracers and robes among them),
+not helms, shields, cloaks, boots or belts, and at most one piece of armour is
+lost to a hit: the first that fails, in the order of the character's list.
 
 The game's own checks:
 
@@ -470,12 +469,13 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 
 ## More character customization
 
-More choices for each character: a weapon to specialize in, a kit, a 10th
-level to reach, a roll to keep while trying the die again, and fuller
-starting gear. Each has a box in the Options tab's **More character
-customization** section. All are on by default and, like the rule changes,
-take effect at once in games started with the dice log (STORE and RECALL
-from the next start); untick one and the game is as it was.
+More choices for each character: a weapon to specialize in, a kit, levels
+past 9th, a roll to keep while trying the die again, and fuller starting
+gear. Each has a box in the Options tab's **More character customization**
+section. All are on by default and, like the rule changes, take effect at
+once (STORE and RECALL from the next start); untick one and the game is as it
+was. New preservers picking their first spells, and the game's own party
+fitted to these choices, come with them.
 
 | Box on the Options tab | What it adds |
 |---|---|
@@ -513,7 +513,8 @@ its other missile weapons faster too, a step behind a specialist, as in melee
 hit and damage count for missiles too.
 
 **Attacks a round,** by skill and level (a warrior's level: the highest of its
-fighter, gladiator and ranger levels; a warrior class goes no higher than 10th under the [XP cap](#level-cap-by-xp)):
+fighter, gladiator and ranger levels; a warrior class goes no higher than
+10th under the [XP cap](#level-cap-by-xp)):
 
 | Skill with the weapon | Who | Melee, levels 1–6 | Melee, levels 7–10 | Bow, levels 1–6 | Bow, levels 7–10 | Sling, staff sling or chatkcha, levels 1–6 | Sling, staff sling or chatkcha, levels 7–10 |
 |---|---|---|---|---|---|---|---|
@@ -540,8 +541,9 @@ hold its weapon.
 | chatkcha, bow, sling, staff sling |
 
 **Choosing at creation.** Press **DONE** on the character creation screen and
-a warrior (and a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits)) picks its weapon specs on the weapon
-window, the one a level gained brings up (below), as a preserver picks its
+a warrior (and a [Battle Mage](#kits), [Crusader](#kits) or
+[Mind Warrior](#kits)) picks its weapon specs on the weapon window, the one a
+level gained brings up (below), as a preserver picks its
 spells on CHOOSE A SPELL: a fighter or ranger one, a gladiator two, a
 [Myrmidon](#kits) two. A preserver warrior picks its spells first. A
 multiclass warrior can choose only the weapon specs its other class lets it
@@ -600,8 +602,8 @@ rule) picks the rest the way a psionicist picks a new power: in the game's own
 pop-up, made bigger, a picture of each weapon spec on a slot, six to a row,
 those its classes can't use (or it has) greyed. The pointer on a slot names it
 under them (**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick
-would be expertise: a ranger's, a Battle Mage's, a Crusader's or Mind Warrior's; as CHOOSE A SPELL names a
-spell), and lights the slot if it can be picked; off the slots the title comes
+would be expertise: a ranger's, a Battle Mage's, a Crusader's or Mind
+Warrior's; as CHOOSE A SPELL names a spell), and lights the slot if it can be picked; off the slots the title comes
 back. The picks left are beside **EXIT** (which asks, as for powers, whether
 to leave with picks unmade: they're offered again at the next level).
 
@@ -624,7 +626,7 @@ has it, gives a character's melee rate whatever weapon is ready.
 A human who dual-classes keeps what it earned as a fighter, gladiator or
 ranger: its weapon specs, and the weapons it chose, whatever the new class (or
 a kit) allows, count again once the new class's level passes the old. Till
-then they sleep, as the class does.
+then they are asleep, as the class is.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
 
@@ -794,11 +796,11 @@ as a Scholar picks one more at each level up.
 
 A new preserver picks its starting spells the same way when **DONE** is
 clicked on the creation screen, in place of the ones the game handed out by
-its starting level: two 1st-level spells at 1st level (the game's Grease and
-Magic Missile), four at 2nd (and Shield and Wall of Fog), four and two of 2nd
-level at 3rd (and Fog Cloud and Mirror Image). A Scholar picks one more for
-each level. A multiclass preserver too. (The game's own party, used when no
-party is made, keeps the game's spells.)
+its starting level: two 1st-level spells at 1st level (where the game gives
+Grease and Magic Missile), four at 2nd (the game adds Shield and Wall of
+Fog), and four 1st-level and two 2nd-level at 3rd (the game adds Fog Cloud and
+Mirror Image). A Scholar picks one more for each level. A multiclass preserver
+picks too.
 
 **EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
 picking, at creation and on changing class: the spells still to pick are the
@@ -849,8 +851,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
 
 New things to do in play, each with a box in the Options tab's **Expanded
 features** section. All are on by default and, like the rule changes, take
-effect at once in games started with the dice log; untick one and the game is
-as it was.
+effect at once; untick one and the game is as it was.
 
 | Box on the Options tab | What it adds |
 |---|---|
@@ -998,8 +999,8 @@ at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for
 an Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are
-under the open sky goes by the game's regions: open desert and rock, the villages' open
-ground and the arena are; the slave pens, the sewers, the lava caverns and
+under the open sky goes by the game's regions: open desert and rock, the
+villages' open ground and the arena are; the slave pens, the sewers, the lava caverns and
 the other underground or roofed places aren't. Three maps have both, buildings
 with floors of their own standing on open ground: there it goes by the floor
 under the thief (from the game's map of the region in memory), so a thief in
@@ -1138,7 +1139,7 @@ they say. [The player's guide](PLAYER-GUIDE.md) has the rules without them.*
 Spells, people, a quest and items the mod adds to the game, each with a box
 in the Options tab's **New content** section: the people, the quest and the
 items from the next time the game is started, the spells and the defilers'
-scrolls at once in games started with the dice log.
+scrolls at once.
 
 ### New wizard spells
 
@@ -1170,10 +1171,10 @@ sheet, so it saves with the game and the character.
   better on average, as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in
   the log's THAC0 breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons
   hurt creatures that only magical weapons can. They cut: edged, where the
-  game makes every unarmed attack crushing, so a creature crushing weapons
-  can't hurt (a mastyrial) is hurt by them. A thri-kreen in the party fights
-  with edged claws the same way, with or without the spell. With **Body Weaponry** or
-  **Animal Affinity** up, the power's dice for the first attack get the claw's
+  game makes every unarmed attack crushing, so they hurt a creature that
+  crushing weapons can't (a mastyrial). A thri-kreen in the party fights with
+  edged claws the same way, with or without the spell. With **Body Weaponry**
+  or **Animal Affinity** up, the power's dice for the first attack get the claw's
   +1: 2d4+1 or 1d10+1.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
@@ -1182,8 +1183,7 @@ sheet, so it saves with the game and the character.
   attacks against it. Its icon is a grey cloud.
 - **Reflected Image** is a smaller Mirror Image: one image, struck by a hit or
   a foe's spell instead of the caster half the time (Mirror Image's are three
-  quarters of the time).
-  The two don't add up: casting either one replaces the other, and casting
+  quarters of the time). The two don't add up: casting either one replaces the other, and casting
   Reflected Image again only gives the one image back. Dispel Magic ends it.
   Its icon is a hand mirror with one figure in it, on the Effects screen too,
   where it is named REFLECTED IMAGE (as in the Look box and under the
@@ -1226,8 +1226,8 @@ one 6th-level slot at 11th and two at 12th (a druid reaches 12th under the XP
 cap, a cleric 11th). Like the 4th and 5th-level common spells, the cosmos
 ones are for druids and a Healer cleric; each element's are for the clerics
 and druids of that sphere (an Elementalist's second sphere counts). They come
-with the **New wizard spells** switch, and with **AD&D's tables** for the
-slots.
+with the **New wizard spells** switch (it covers these too), and with
+**AD&D's class tables** for the slots.
 
 | Spell | Who | Cast on | Does |
 |---|---|---|---|
@@ -1266,16 +1266,15 @@ How they're made, and where they differ from the books:
   book's 1d4 of fire at the start of each round while it lies there (a fire
   resistance counts). It ends with the paralysis, or when that is cured.
 - **Fire Seeds** throws its four seeds of 2d8 together, one burst of 8d8 (the
-  same dice), not one by one at different places; it
-  bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
+  same dice), not one by one at different places; it bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
   Lands has too) where Flame Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot. It is
   Slay Living's, so one that saves still takes half of 4d8.
 - **Whirlwind** stays where it is cast, as Stinking Cloud does, for a
-  round a caster level, as AD&D has it: one tall, turning funnel of dust in the middle of
-  its area, its ring of dust at the area's edge. Nothing can be shot or cast
-  through it (it blocks sight, as Wall of Fog does). Each round it does 2d8 crushing to every creature in
-  it (a save for half), your party included; one that fails its save is swept
+  round a caster level, as AD&D has it: one tall, turning funnel of dust in
+  the middle of its area, its ring of dust at the area's edge. Nothing can be
+  shot or cast through it (it blocks sight, as Wall of Fog does). Each round
+  it does 2d8 crushing to every creature in it (a save for half), your party included; one that fails its save is swept
   off its feet and loses its next turn (no movement, no action), without being
   helpless as a held creature is. It doesn't move.
 - **Harm** on a helpless creature, which the game hits with the most its dice
@@ -1302,14 +1301,15 @@ effect in regions the party hasn't visited yet; start a new game to have them
 all. The log doesn't say where they are: they're there to be found.
 
 **New items, magical and mundane** on the Options tab places them all, the
-arena's ring too. A thief can
-[lift](#picking-pockets) Pehtucl's ring, Shadowseeker, Gutterknot and
+arena's ring too. A thief can [lift](#picking-pockets) Pehtucl's ring, Shadowseeker, Gutterknot and
 Mindshard (200 XP for each weapon).
 
 **Where they are.** The mod's items are in the [item tables](ITEMS.md) with the
-game's own: in ***bold italics*** in [Every magic item](ITEMS.md#every-magic-item), each with where it is and
-what it does, and marked **new** in [Every mundane weapon](ITEMS.md#every-mundane-weapon). The game
-has no short sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
+game's own: in ***bold italics*** in
+[Every magic item](ITEMS.md#every-magic-item), each with where it is and what
+it does, and marked **new** in
+[Every mundane weapon](ITEMS.md#every-mundane-weapon). The game has no short
+sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
 metal weapons and no magic club, pick or staff sling. Two more, armour:
 
 | Icon | Item | Where | What it is |
@@ -1414,13 +1414,13 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#robes).
 
 ### New people
 
-Two people of the slave pens, in new games: those that reach the pens with the
-Loader's copies of the game's files in use (a save keeps the pens as they were
-when the party first went in).
+Two new people in the slave pens. They are there when the party first enters
+the pens in a game started from the Loader; a save made after that keeps the
+pens as they were.
 
 #### Kalzith
 
-A new person in the slave pens: **Kalzith**, a defiler slave the templars put
+**Kalzith** is a defiler slave the templars put
 in the arena now and then (the crowd loves to watch a defiler burn), kept in a
 pen of his own in the middle column the rest of the time. He has the arena
 Defiler's figure and a face of his own: the game's portrait 61 with a slave's
@@ -1697,7 +1697,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-pr
 
 ## Controls
 
-Each is switched on the Options tab's **Controls** group.
+Each has a switch in the Options tab's **Controls** section.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
@@ -1845,9 +1845,9 @@ party "speeds up the game"), the gear on them, the shadows, the dust.
 
 The Loader gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
-**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there, with everything on, the
-whole party in view walks as fast as the leader alone, but it needs a faster
-computer. It applies the next time the game is started. The Loader's two
+**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there, with
+everything on, the whole party in view walks as fast as the leader alone, but
+it needs a faster computer. It applies the next time the game is started. The Loader's two
 speeds run on DOSBox's dynamic core (GOG's settings run this game on the slower
 normal core): the same cycles do more, and cost the computer about a third
 less.
@@ -1907,10 +1907,10 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it
-([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs (Darkhold,
-the Lava Rifts, Linara) were found by the OpenDS project and checked by yuan-ti;
-the Loader mends them in its copy of the game's scripts (`scriptfixes.py`).
+([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes
+work: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs
+(Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and
+checked by yuan-ti; the Loader mends them in its copy of the game's scripts (`scriptfixes.py`).
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is
@@ -1927,8 +1927,9 @@ come with characters made with it, and much of the
 On the Effects screen (a character's spells and powers in effect), a click on
 an effect's icon ends it in the game, so a stray click loses a spell. With the
 Loader a click leaves a spell on; a psionic power's effect still ends, as that
-is how a power is stopped. It has a switch in the Options tab's **Controls** section (**A click on a
-spell's icon on the Effects screen leaves it on**, from the next start).
+is how a power is stopped. It has a switch in the Options tab's **Controls**
+section (**A click on a spell's icon on the Effects screen leaves it on**,
+from the next start).
 
 ### Rules the game got wrong
 
