@@ -9,7 +9,7 @@ For what a release brings, read its notes ([2.7.2](release-notes/v2.7.2.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Next pull request (in progress)
+## Pull request #60 ([merged 2026-10-24](https://github.com/daaki85/darksun-obsidian-edition/pull/60))
 
 **New**
 - **A pointer in scenes, and a click skips one.** The intro, its logos and the game's other scenes
