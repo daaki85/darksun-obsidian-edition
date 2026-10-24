@@ -20498,6 +20498,8 @@ RING_BYTES equ NENT * ESIZE
 ; from the helper's MCB on. In it: the helper (PSP and resident image), the overlay buffer
 ; (OVR_RESERVE), the panel's picture and the ring, each with its MCB. The build fails if they
 ; outgrow it: the overlay buffer would go back into the game's heap (33 KB less for the game).
+; (UMBPLUS.COM, run first, moves the block's start down to C900h where it can, 28 KB more; the
+; helper still has to fit without it.)
 UMB_ROOM equ 0xF000 - 0xD00A
 UMB_NEED equ (1 + 0x10 + (resident_end - hdr) / 16) + (1 + OVR_RESERVE) + (1 + (PANEL_BYTES + 15) / 16) + (1 + (RING_BYTES + 15) / 16)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)

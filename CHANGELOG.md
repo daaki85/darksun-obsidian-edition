@@ -46,6 +46,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   240-248 the game's palette cycles; `draw_shield` its light and every third rim pixel; and
   `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
 
+**New**
+- **28 KB more upper memory.** DOSBox 0.74 starts its upper memory block at D000h, but C800h-CFFFh
+  is RAM too, and DOSBox's own tables (`DOS_PRIVATE_SEGMENT`) use only its start (to C8C0h with
+  the game running). `UMBPLUS.COM` (`dos/umbplus.asm`), run by the launcher's config just before
+  the helper is loaded high, moves the block's start to C900h: the system MCB at 9FFFh cut to end
+  there, a free block's MCB at C900h to F000h. Only on DOSBox 0.74's exact chain, with C900h-CFFFh
+  all zero and RAM; otherwise nothing changes. `mem`: 155 KB of upper memory instead of 127, 29 KB
+  free with the helper loaded instead of 1. Seen in DOSBox with the user's arena save: the helper at
+  C90Ah, the overlay buffer in upper memory, walking, the arena's area change and a fight as
+  usual, DOSBox's tables still at C8C0h; the game's 640 KB unchanged (85 KB free with the map
+  open). The helper still fits the old block, so it works where the move can't be made.
+
 **Removed** (to free the helper's memory)
 - **Scrolling by holding the right button.** `MOUSE_EVENT` passes the right button straight to
   the game again (`SCROLL_RIGHT`, `DRAG_START` and the click-or-drag test gone); the wheel's drag

@@ -218,7 +218,9 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
         lines.append(r'mount C "..\cloud_saves" -t overlay')  # where GOG keeps the saves
     lines += [f'mount d "{DOS_DIR}"', "c:"]
     # the game runs from C: (the game folder), where the patched copy looks for its files
-    lines += [r"lh d:\dsclog.exe", "cls", "d:\\" + PATCHED_EXE.lower()] if dice_log else ["darksun"]
+    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from C900h, not D000h, 28 KB more for the helper)
+    lines += ["d:\\" + UMB_PLUS_COM.lower(), r"lh d:\dsclog.exe", "cls",
+              "d:\\" + PATCHED_EXE.lower()] if dice_log else ["darksun"]
     # a game that stops with an error ("Null pointer assignment", "Stack overflow!") leaves its
     # message on screen until a key is pressed, rather than DOSBox closing over it, and saved for
     # the crash report (GAMEEND.COM: the screen's text, or a return code other than 0)
@@ -350,6 +352,7 @@ def closed_line(code: int) -> str:
 # GAMEEND.COM, run after the game, notes in GAMEEND.TXT (in DOS_DIR) how the game stopped with an
 # error; the Loader's crash reports go in CRASH_DIR
 GAME_END_COM = "GAMEEND.COM"
+UMB_PLUS_COM = "UMBPLUS.COM"  # (dos/umbplus.asm)
 GAME_END = os.path.join(DOS_DIR, "GAMEEND.TXT")
 # and in GAMEOK.TXT that it ended as usual: without either, DOSBox closed while the game still ran
 GAME_OK = os.path.join(DOS_DIR, "GAMEOK.TXT")

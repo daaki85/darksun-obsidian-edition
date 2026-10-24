@@ -99,7 +99,7 @@ of the game's data, the tools for mapping it, and how each part of the
 | Folder or file | What it holds |
 |---|---|
 | `dsloader/` | the Loader: its window (`viewer.py`), starting the game (`launch.py`), the dice log (`dicelog.py`), the patched game (`gamepatch.py`) and the data written into the game's files (one module for each feature) |
-| `dos/` | the helper DOSBox loads, `dsclog.asm` (built to `DSCLOG.EXE`), and `gameend.asm` (`GAMEEND.COM`) |
+| `dos/` | the helper DOSBox loads, `dsclog.asm` (built to `DSCLOG.EXE`), `umbplus.asm` (`UMBPLUS.COM`) and `gameend.asm` (`GAMEEND.COM`) |
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for practising without the game |
 | `docs/` | the screenshots and the item icons the documentation shows |
@@ -131,11 +131,13 @@ The header's signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the
 helper and the Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`),
 so a Loader never talks to an older helper.
 
-The post-game check that keeps an error on screen for the crash report is
-built the same way:
+The post-game check that keeps an error on screen for the crash report, and
+the program that moves upper memory down before the helper loads (see [Room in
+the helper](#room-in-the-helper)), are built the same way:
 
 ```
 nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
+nasm -f bin -o dos/UMBPLUS.COM dos/umbplus.asm
 ```
 
 ### Making a release
@@ -424,7 +426,41 @@ and drains it every 20 ms (at most 251 bytes came in between two reads in the
 opening show, the busiest stretch measured).
 
 The helper has to load into upper memory, or the game loses 62 KB of
-conventional memory (570 KB free rather than 632 KB). With GOG's settings there
+conventional memory (570 KB free rather than 632 KB).
+
+**Where DOSBox's memory is** (DOSBox 0.74, GOG's; its source comes with the
+game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
+
+| Memory | Size | What uses it |
+|---|---|---|
+| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 85 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
+| C000h-C7FFh | 32 KB | the video BIOS (ROM) |
+| C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the panel's picture 23 KB, the ring 12 KB, 29 KB free |
+| F000h-FFFFh | 64 KB | the BIOS (ROM) |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA: unused (DOSBox's XMS says there is none; reached only with A20 on) |
+| above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
+
+DOSBox makes its upper memory block at D000h, but C800h-CFFFh is RAM too, and
+DOSBox's tables use only its first 192 paragraphs (at most a few more later: a
+program asking for more than 20 file handles, INT 21h AH=67h, takes some each
+time; the game does once, at DSUN.EXE 54F3h). `UMBPLUS.COM`, run by the
+launcher's config just before `lh d:\dsclog.exe`, moves the block's start to
+C900h: the system MCB at 9FFFh (owner 8, "SC") is cut to end there and a free
+block's MCB goes at C900h, reaching F000h as before. It does so only if the
+chain is exactly DOSBox 0.74's (9FFFh 'M' to D000h, D000h 'Z' free to F000h)
+and C900h-CFFFh is all zero and keeps what is written to it; otherwise it
+changes nothing and the helper loads at D00Ah as before. 63 paragraphs stay
+between DOSBox's tables and the block. Measured with the user's arena save
+(walking, the arena's fight): the tables at C8C0h throughout, the helper at
+C90Ah, the overlay buffer in upper memory, 29.1 KB free in one piece.
+
+The helper still has to fit D000h-EFFFh (`UMB_ROOM`, below), so it works
+where the block can't be moved; the 28 KB more is room for what it can do
+without (a bigger ring, more of the game's own blocks moved out of the 640 KB,
+data moved out of the helper's 64 KB segment).
+
+With GOG's settings there
 is one upper memory block of 63 KB, EMS's 64 KB page frame taking the rest; the
 launcher's config turns EMS off (`launch.DOS_LINES`: the game uses XMS instead),
 which leaves the helper a second 64 KB block (65 KB free with it loaded; see
@@ -460,14 +496,17 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. One paragraph (16 bytes) is spare now.
+and so does `test_fits_upper_memory`. 74 paragraphs (1.2 KB) are spare in it
+now, after the right button's scrolling, the rings under every enemy and the
+strip below the map were taken out (it was one).
 The shadow table becoming a bit for each thing and the added item names 16
 bytes each (padded to the game's 25 as they are copied) once left 3.8 KB; the
 6th-level spells, the names over figures, Whirlwind's funnel, Wall of Thorns'
 armour and the pointer in scenes (with the freeze report cut from 32 records
 to 16) have used it. So new helper code needs room found first: each of the
 ring's entries is 12 paragraphs (`NENT`), and the helper's own segment still
-has about 2 KB. Text the game reads from RESOURCE.GFF belongs in the Loader's
+has about 4.6 KB (its resident part 60,912 bytes of 65,536): that, not upper
+memory, is now the tighter limit for new code. Text the game reads from RESOURCE.GFF belongs in the Loader's
 copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
 freed 1.6 KB), and so does data read from the player's game (the pointer's
 picture, `POINTER.BIN`). If the buffer still ends up in the heap (another
