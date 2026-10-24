@@ -76,8 +76,8 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 
 Already playing? Saves made before the mod load and play with its fixes and
 rules, but kits, fuller starting gear and much of the new content come with a
-new game (see the features page's [saved games](FEATURES.md#the-games-bugs-fixed)
-note).
+new game (see the features page's [saved
+games](FEATURES.md#the-games-bugs-fixed) note).
 
 ## Playing
 
@@ -415,7 +415,8 @@ it is the fighter's weapon for the whole game.
   and one more attack). Other weapons attack once a round until 7th level.
   *Without the mod:* 3/2 attacks with any weapon, no other bonus.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
-- [Two weapons](#two-weapons) cost to-hit, and the off hand attacks once a round.
+- [Two weapons](#two-weapons) cost to-hit, and the off hand attacks once a
+  round.
 
 **Weapons and armour.** Everything. A fighter with other classes is held to
 theirs ([what each class may use](#what-each-class-may-use)).
@@ -463,10 +464,10 @@ starting gear, also a sling.
 Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, Flame Blade\* +1;
 Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Stillwater\* +1; Dag's
 Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1;
-Glasshewer\* +2, Drakejaw\* +1, Soulcrusher +1, Axe +1; Great Axe +3, Headsman\* +2; Gythka +3, Gythka +2\*,
-Kreenfang\* +1; Linebreaker\* +2, Polearm +1, Thornwall\* +1; Mace +2,
-Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting Staff +1;
-Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1,
+Glasshewer\* +2, Drakejaw\* +1, Soulcrusher +1, Axe +1; Great Axe +3, Headsman\*
++2; Gythka +3, Gythka +2\*, Kreenfang\* +1; Linebreaker\* +2, Polearm +1,
+Thornwall\* +1; Mace +2, Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting
+Staff +1; Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1,
 Dunesong\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
 **Ravager** none of the bows, slings, Windlash, chatkchas or Dag's Dagger
 (thrown).
@@ -482,8 +483,8 @@ single class** (a human may still change class).
 **What the mod changes.**
 
 - [Weapon specialization](#weapon-specialization-and-attacks) in **two** weapon
-  types at 1st level, a third at 6th and a fourth at 9th: +1 to hit, +2
-  damage and 3/2 attacks with each. *Without the mod:* 3/2 attacks with any weapon.
+  types at 1st level, a third at 6th and a fourth at 9th: +1 to hit, +2 damage
+  and 3/2 attacks with each. *Without the mod:* 3/2 attacks with any weapon.
 - AC 1 better from 5th level and 2 better at 10th, with or without armour.
 - AD&D's experience table. *Without the mod:* the fighter's.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
@@ -674,9 +675,10 @@ character hit in a round can't cast), and choose its spells well.
 
 **What the mod changes.**
 
-- **INT limits learning:** a chance to learn each scroll's spell, and a limit
-  on the spells it knows of each level ([learning spells](#learning-preserver-spells)).
-  *Without the mod:* every scroll learnt, no limit.
+- **INT limits learning:** a chance to learn each scroll's spell, and a limit on
+  the spells it knows of each level ([learning
+  spells](#learning-preserver-spells)). *Without the mod:* every scroll learnt,
+  no limit.
 - It **chooses** its starting spells and one at each level up. EXIT while
   choosing its starting spells gives it the game's usual ones for the rest.
 - AD&D's wizard [spell slots](#spell-slots) (4 2 1 at 5th level; *without the
@@ -903,9 +905,9 @@ bending wills. Moving the world with thought alone comes harder to them.
 *Kineticist.* Psionicists who move the world with their minds, throwing stone
 and flame with a thought. Reaching into another mind costs them more.
 
-Each kit's gains, costs and starting gear:
-[Psionicist kits](KITS.md#psionicist-kits) on the Kits page. The powers and their
-costs are in [Psionics](#psionics).
+Each kit's gains, costs and starting gear: [Psionicist
+kits](KITS.md#psionicist-kits) on the Kits page. The powers and their costs are
+in [Psionics](#psionics).
 
 **Starting gear.** Club, bow and arrows, leather chest armour; with fuller
 starting gear, also leather arm and leg armour.

@@ -11,9 +11,12 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **To learn the rules:** [the player's guide](PLAYER-GUIDE.md), without
   spoilers, with a [glossary](PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and
   the rest.
-- **If something goes wrong:** [When something goes wrong](#when-something-goes-wrong).
-- **Everything in detail:** the contents below, the [features and rules](FEATURES.md), the [kits](KITS.md), the
-  [items](ITEMS.md) (spoilers), the [patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
+- **If something goes wrong:** [When something goes
+  wrong](#when-something-goes-wrong).
+- **Everything in detail:** the contents below, the [features and
+  rules](FEATURES.md), the [kits](KITS.md), the [items](ITEMS.md) (spoilers),
+  the [patch
+  notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
   and, for developers, the [development notes](DEVELOPMENT.md).
 
 ## Contents
@@ -25,7 +28,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [One-time setup](#one-time-setup)
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
-  - [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files)
+  - [Updating, backups and the Loader's
+    files](#updating-backups-and-the-loaders-files)
 - [When something goes wrong](#when-something-goes-wrong)
   - [Troubleshooting](#troubleshooting)
   - [Known issues](#known-issues)
@@ -70,16 +74,16 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and pick pockets, the party leader's CHA lowers shop prices, and merchants
   sell back the magical items you sold them
   ([Expanded features](FEATURES.md#expanded-features)).
-- **More of Athas:** new weapons in every material, magic items with stories
-  of their own (robes and bracers among them, for those who wear no armour),
-  six wizard spells
-  ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends](FEATURES.md#new-wizard-spells))
-  and nine [6th-level priest spells](FEATURES.md#6th-level-priest-spells)
-  (Heal, Blade Barrier, Whirlwind...), Kalzith (a defiler who sells scrolls),
-  defilers who drop scrolls, more of Semyon's story, and a use for the cooked
-  vulture ([New content](FEATURES.md#new-content)). On the map, the party
-  wears its weapons and armour, figures cast shadows and kick up dust, and
-  elves and half-elves have a look of their own ([Graphics](FEATURES.md#graphics)).
+- **More of Athas:** new weapons in every material, magic items with stories of
+  their own (robes and bracers among them, for those who wear no armour), six
+  wizard spells ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and
+  Friends](FEATURES.md#new-wizard-spells)) and nine [6th-level priest
+  spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
+  Whirlwind...), Kalzith (a defiler who sells scrolls), defilers who drop
+  scrolls, more of Semyon's story, and a use for the cooked vulture ([New
+  content](FEATURES.md#new-content)). On the map, the party wears its weapons
+  and armour, figures cast shadows and kick up dust, and elves and half-elves
+  have a look of their own ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
   a view that stays put in fights, dragging the map with the mouse wheel held
   down, a pointer in the intro and scenes that a click skips
@@ -91,14 +95,15 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Negative Plane Protection never working, Cause Wounds' odd dice, and more; and the
-  rules it got wrong, from spell saves to warriors' attacks, put right
-  ([The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
+  Negative Plane Protection never working, Cause Wounds' odd dice, and more; and
+  the rules it got wrong, from spell saves to warriors' attacks, put right ([The
+  game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 
-**What it changes on your computer.** The game's own files are never
-modified: the Loader runs a patched copy of the game from its own folder, and
-writes to the game folder only your saves and characters. Every file it
-writes, and how to update or back up: [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files).
+**What it changes on your computer.** The game's own files are never modified:
+the Loader runs a patched copy of the game from its own folder, and writes to
+the game folder only your saves and characters. Every file it writes, and how to
+update or back up: [Updating, backups and the Loader's
+files](#updating-backups-and-the-loaders-files).
 
 ## Requirements
 
@@ -120,8 +125,8 @@ writes, and how to update or back up: [Updating, backups and the Loader's files]
 
 ### Suggested system requirements
 
-DOSBox runs the whole game on one processor core, so what counts is the speed
-of a single core, not how many there are. By [game speed](FEATURES.md#game-speed)
+DOSBox runs the whole game on one processor core, so what counts is the speed of
+a single core, not how many there are. By [game speed](FEATURES.md#game-speed)
 setting (suggestions, not tested limits):
 
 | Game speed | Processor (one core's speed) | Memory |
@@ -141,12 +146,12 @@ slows instead of speeding up: choose the next setting down.
 ### One-time setup
 
 1. Download the latest release,
-   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`, from the
-   [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases),
-   and unzip it anywhere: the files you need are in its
-   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>` folder. (Or the
-   project as it stands: on its GitHub page click **Code → Download ZIP**; the
-   files are then in its `obsidian-edition` folder.)
+   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`, from the [Releases
+   page](https://github.com/daaki85/darksun-obsidian-edition/releases), and
+   unzip it anywhere: the files you need are in its
+   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>` folder. (Or the project
+   as it stands: on its GitHub page click **Code → Download ZIP**; the files are
+   then in its `obsidian-edition` folder.)
 2. Python: the first time you double-click one of the `.bat` files, it
    checks for a 64-bit Python 3.8 or later. If there is none, it asks
    whether to install it with Windows' own package manager (winget): that
@@ -174,9 +179,9 @@ built file, the small DOS program DOSBox loads (`dos\dsclog.asm`, which builds
 1. Double-click **`Start Obsidian Edition.bat`** in that folder. The Loader
    opens on its own.
 2. On its **Options** tab, pick what you want: the rule changes, the new
-   content, picking pockets, the combat log in the game and so on (see
-   [The Loader's window](#the-loaders-window) and [Rule changes](FEATURES.md#rule-changes)).
-   They're remembered for next time.
+   content, picking pockets, the combat log in the game and so on (see [The
+   Loader's window](#the-loaders-window) and [Rule
+   changes](FEATURES.md#rule-changes)). They're remembered for next time.
 3. Press **Start the game** (top left).
 
 That starts Shattered Lands (through GOG's own DOSBox) with the dice log helper
@@ -329,11 +334,11 @@ Detonate's blast) is reported too, so the loss is on record.
 
 ### Reporting a problem
 
-Open an issue on
-[the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues),
-saying what you were doing, the version (the Loader's title bar), and
-attaching the crash, freeze or item report if there is one (all three are in
-`crash-logs`). A save from just before it happened helps most of all.
+Open an issue on [the project's Issues
+page](https://github.com/daaki85/darksun-obsidian-edition/issues), saying what
+you were doing, the version (the Loader's title bar), and attaching the crash,
+freeze or item report if there is one (all three are in `crash-logs`). A save
+from just before it happened helps most of all.
 
 ## In the game
 
@@ -377,12 +382,12 @@ there; **-** makes it smaller, or the strip below the map covers nothing.
   click it (or scroll to the end) to follow again. Clicks on the panel are
   its own: the party doesn't walk there.
 - **The arena's count of fights.** Between fights in the slave pens and the
-  arena, the top line says how many arena fights the party has had
-  (`Arena fights: 4`): the game's own count, one a trip into the arena however
-  many waves come (see
-  [the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)).
-  In a fight it says the round, and once the party has escaped Draj it's gone.
-  (Not when the panel is collapsed to one line: that line stays the newest.)
+  arena, the top line says how many arena fights the party has had (`Arena
+  fights: 4`): the game's own count, one a trip into the arena however many
+  waves come (see [the arena's count of
+  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). In a fight it says
+  the round, and once the party has escaped Draj it's gone. (Not when the panel
+  is collapsed to one line: that line stays the newest.)
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
@@ -450,25 +455,25 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
 - right of the abilities, level with STR to CHA, for a character with thief
   levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
-  and hide in shadows are the ones the Loader rolls (for
-  [picking pockets](FEATURES.md#picking-pockets) and
-  [hiding to backstab](FEATURES.md#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
-  `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE`
-  and boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise
-  (one script check) and read languages (none) are left out for want of room.
-  A ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the
-  same places, the cloak and boots counted (the other four left out);
+  and hide in shadows are the ones the Loader rolls (for [picking
+  pockets](FEATURES.md#picking-pockets) and [hiding to
+  backstab](FEATURES.md#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
+  `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
+  boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
+  script check) and read languages (none) are left out for want of room. A
+  ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
+  places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): −6 at DEX 1 to +5 at DEX 24-25, the
-  number the [two-weapon rule](FEATURES.md#two-weapons) adds to its penalties, and the
-  one initiative uses. It is worked out from the character's DEX each time
-  the panel is drawn, so it follows any change (Cat's Grace's, while it
+  number the [two-weapon rule](FEATURES.md#two-weapons) adds to its penalties,
+  and the one initiative uses. It is worked out from the character's DEX each
+  time the panel is drawn, so it follows any change (Cat's Grace's, while it
   lasts);
-- right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as
-  AD&D's table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5
-  at 21-23). The game counts it in AC already; on saving throws against what
-  can be dodged it counts the other way round (DEF −5 is +5 on the save), with
-  the [rule change](FEATURES.md#rule-changes) for fire, cold and electricity. Worked out
+- right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as AD&D's
+  table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5 at 21-23).
+  The game counts it in AC already; on saving throws against what can be dodged
+  it counts the other way round (DEF −5 is +5 on the save), with the [rule
+  change](FEATURES.md#rule-changes) for fire, cold and electricity. Worked out
   the same way as REAC, each time the panel is drawn.
 
 The **View Character** screen gets them too: the five saves under the item
@@ -494,21 +499,21 @@ change.
   weapon's: the right hand's, else the left's, else the missile weapon's.
   What depends on the target (attacking from behind or backstabbing, a Blurred
   target) is left out; the dice log shows it on each attack.
-- **Saves**: the d20 each needs, the character sheet's number less what the
-  game adds to every save: the
-  [Rings of Protection and the Cloak of Protection](FEATURES.md#rings-and-cloaks-of-protection),
-  Bless, Prayer, Barkskin, Spirit Armor (not on PPD), the Save penalty, and on
-  PPD the CON adjustment (and a dwarf's or halfling's CON bonus). What depends
-  on the spell or its caster (WIS against mind spells, Protection from Fire, a
-  doubled d20 against fire...) is left out; the dice log shows it on each
-  save. A 1 always fails and a 20 always saves, so they show between 2 and 20.
+- **Saves**: the d20 each needs, the character sheet's number less what the game
+  adds to every save: the [Rings of Protection and the Cloak of
+  Protection](FEATURES.md#rings-and-cloaks-of-protection), Bless, Prayer,
+  Barkskin, Spirit Armor (not on PPD), the Save penalty, and on PPD the CON
+  adjustment (and a dwarf's or halfling's CON bonus). What depends on the spell
+  or its caster (WIS against mind spells, Protection from Fire, a doubled d20
+  against fire...) is left out; the dice log shows it on each save. A 1 always
+  fails and a 20 always saves, so they show between 2 and 20.
 - **Thief skills**: as they stand (with no equipment penalty in games started
-  with the dice log: see
-  [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)),
-  0 for a skill an effect rules out or when the thief isn't Okay (New counts
-  as Okay), and 100 for one an effect makes certain (Detect Traps). Only the
-  situation's bonus or penalty (a hard lock) is left out: the dice log shows
-  it on each roll.
+  with the dice log: see [How the game works out thief
+  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), 0 for a
+  skill an effect rules out or when the thief isn't Okay (New counts as Okay),
+  and 100 for one an effect makes certain (Detect Traps). Only the situation's
+  bonus or penalty (a hard lock) is left out: the dice log shows it on each
+  roll.
 
 The Characters tab shows the same THAC0 with each weapon and saves. The
 game's own numbers (the character sheet's) come back on these screens when
@@ -577,7 +582,8 @@ off.
 The arena's first monsters have no magic resistance or special defences, so
 their box shows just the numbers and the alignment.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-hurts-a-monster-the-look-box).
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#what-hurts-a-monster-the-look-box).
 
 ### Charges in item boxes
 
@@ -623,30 +629,30 @@ open it, ▸ when closed and ▾ when open. Which sections are open is remembere
 Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
-- **In the game**: the combat log, where it goes and how much it says,
-  names floating over figures, monster descriptions ([In the game](#in-the-game)).
-- **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules closer
-  to AD&D.
-- **More character customization**
-  ([More character customization](FEATURES.md#more-character-customization)): weapon
+- **In the game**: the combat log, where it goes and how much it says, names
+  floating over figures, monster descriptions ([In the game](#in-the-game)).
+- **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules
+  closer to AD&D.
+- **More character customization** ([More character
+  customization](FEATURES.md#more-character-customization)): weapon
   specialization, kits, the XP level cap, STORE and RECALL on the creation
   screen, and fuller starting gear.
-- **Expanded features** ([Expanded features](FEATURES.md#expanded-features)): the
-  leader's CHA at shops, buying back magical items, and **Improved thieving**
-  (AD&D's thief skills, hiding to backstab, the cloak, boots and belt,
-  backstabs multiplying the weapon's dice only, and picking pockets).
-- **New content** ([New content](FEATURES.md#new-content)): the new spells, at once; the
-  new people, the vulture, defilers' scrolls and the new items, from the next
-  time the game is started (what a saved game already has stays in it).
-- **Graphics** ([Graphics](FEATURES.md#graphics)): the elves' and half-elves' looks,
-  Cilla drawn as an elf, what the party wears, shadows and dust.
+- **Expanded features** ([Expanded features](FEATURES.md#expanded-features)):
+  the leader's CHA at shops, buying back magical items, and **Improved
+  thieving** (AD&D's thief skills, hiding to backstab, the cloak, boots and
+  belt, backstabs multiplying the weapon's dice only, and picking pockets).
+- **New content** ([New content](FEATURES.md#new-content)): the new spells, at
+  once; the new people, the vulture, defilers' scrolls and the new items, from
+  the next time the game is started (what a saved game already has stays in it).
+- **Graphics** ([Graphics](FEATURES.md#graphics)): the elves' and half-elves'
+  looks, Cilla drawn as an elf, what the party wears, shadows and dust.
 - **Controls** ([Controls](FEATURES.md#controls)) and **Game speed**
   ([Game speed](FEATURES.md#game-speed)).
 - **Wake of the Ravager (optional)**: whether the Loader found it, for the
   6th-level priest spells' icons and pictures, and **Choose its folder...**
   ([Requirements](#requirements)).
-- **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)): the folder
-  of saves kept under their names, and putting one back in a slot.
+- **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)):
+  the folder of saves kept under their names, and putting one back in a slot.
 
 All are on by default except scrolling by holding the right button and the
 combat log below the map, and are remembered for next time. **Restore
@@ -693,10 +699,10 @@ tables are read from memory):
 - Clerics and druids: from their level plus a WIS bonus.
 - Rangers: from their level only, with their first slot at level 8.
 
-With [AD&D's class tables](FEATURES.md#adds-class-tables) on (the default), clerics',
-druids' and preservers' come from AD&D's tables instead. Some [kits](FEATURES.md#kits)
-have more or fewer, and the [Veiled Robe](ITEMS.md#every-magic-item) adds a wizard slot at
-spell levels 1 to 3.
+With [AD&D's class tables](FEATURES.md#adds-class-tables) on (the default),
+clerics', druids' and preservers' come from AD&D's tables instead. Some
+[kits](FEATURES.md#kits) have more or fewer, and the [Veiled
+Robe](ITEMS.md#every-magic-item) adds a wizard slot at spell levels 1 to 3.
 
 The game's WIS bonus doesn't depend on level, so it gives a 2nd-level druid
 with WIS 19 slots at the 2nd to 4th levels too, though a druid that level
@@ -709,11 +715,11 @@ class's.
 **AC.** The AC shown (**Current AC** on All fields) is the one the game last
 used for each character in a fight (armour, DEX and spells included), and the
 rows under it say what it was made of: armour and shield (and spells that take
-their place, such as Spirit Armor and Magical Vestments), DEX (the game's
-table: −1 at 15 down to −6 at 24; not counted when attacked from behind), and
-spells, rings (the [rings of protection](FEATURES.md#rings-and-cloaks-of-protection)) and
-anything else. They show "-" until the game has worked out that character's AC
-in a fight.
+their place, such as Spirit Armor and Magical Vestments), DEX (the game's table:
+−1 at 15 down to −6 at 24; not counted when attacked from behind), and spells,
+rings (the [rings of protection](FEATURES.md#rings-and-cloaks-of-protection))
+and anything else. They show "-" until the game has worked out that character's
+AC in a fight.
 
 **Scores.** Ability scores such as `STR 24 (20 without spells)` show the score
 now and, in brackets, the character's own score when a spell (Strength, for
@@ -722,18 +728,18 @@ adjustment: a half-giant's 20 + 4 shows as 24.
 
 ### The Spells tab
 
-What each wizard and priest spell and psionic power does, read from the
-running game's records: its damage dice and kinds (and that damage stops
-growing at caster level 10), its saving throw (which of the five, any
-modifier, whether the d20 counts double, and whether saving halves or stops
-the damage), the effect it gives and what that does, how long it lasts, and
-each party member's caster level for it. With the [new spells](FEATURES.md#new-content)
-on, the mod's spells are listed too; a 6th-level priest spell built on another
-spell's record (Harm on Cause Critical Wounds', say) has its lines written out,
-as the record would mislead. **Show** picks wizard, priest or
-psionic, and **Only spells the party has a caster level for** leaves out the
-rest. **Save...** writes it to a text file. It's filled when you open the tab
-(or press **Refresh**) while the game is running.
+What each wizard and priest spell and psionic power does, read from the running
+game's records: its damage dice and kinds (and that damage stops growing at
+caster level 10), its saving throw (which of the five, any modifier, whether the
+d20 counts double, and whether saving halves or stops the damage), the effect it
+gives and what that does, how long it lasts, and each party member's caster
+level for it. With the [new spells](FEATURES.md#new-content) on, the mod's
+spells are listed too; a 6th-level priest spell built on another spell's record
+(Harm on Cause Critical Wounds', say) has its lines written out, as the record
+would mislead. **Show** picks wizard, priest or psionic, and **Only spells the
+party has a caster level for** leaves out the rest. **Save...** writes it to a
+text file. It's filled when you open the tab (or press **Refresh**) while the
+game is running.
 
 ### The Dialogue tab
 
@@ -812,14 +818,14 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](KITS.md#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)). |
 
-**Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20
-hits` replace `needs 12+` when the roll is out of the ordinary range.
-`X attacks Y from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from
-behind and backstabs (see
-[Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)).
-The target's AC includes armour, DEX and spells. A natural 20 always hits and a
-natural 1 always misses, but a 20 does no extra damage: the game has no
-critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
+**Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20 hits`
+replace `needs 12+` when the roll is out of the ordinary range. `X attacks Y
+from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and
+backstabs (see [Attacks from behind and
+backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). The
+target's AC includes armour, DEX and spells. A natural 20 always hits and a
+natural 1 always misses, but a 20 does no extra damage: the game has no critical
+hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 
 **Spells, saves and effects**
 
@@ -843,15 +849,15 @@ critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (anything the log can't account for shows as `other`), the number it had to reach and the chance of that; for a damaging spell, what the save left of that target's damage roll. More below the table. |
 | `X gives Blessed to Y, Z: +1 to hit, +1 on saves` / `Blessed ends on Y` | A spell or psionic effect starting or ending, with what it does in the game's code where that is known: to-hit, AC and saving throws, movement and attacks, whether the creature can attack or cast, who controls it (see [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)). `Stuck on Y` (no "gives") is an effect a creature has from a spell on the ground or cast on itself. |
 
-**Saving throws, in more detail.** The modifiers are those of
-[the game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws). With
-the [rule changes](FEATURES.md#rule-changes) off, the game uses petrification/polymorph for
-almost every spell and doubles the d20 against fire, cold and electricity
+**Saving throws, in more detail.** The modifiers are those of [the game's saving
+throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws). With the [rule
+changes](FEATURES.md#rule-changes) off, the game uses petrification/polymorph
+for almost every spell and doubles the d20 against fire, cold and electricity
 spells, as in the example above, so Fireball's victims usually save; with them
 on (the default), the line names the spell save and DEX's adjustment instead
 (`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 always saves.
-For a damaging spell the result says what the save left: `saved: half damage,
-19 of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as
+For a damaging spell the result says what the save left: `saved: half damage, 19
+of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as
 Chill Touch; the HP line after it shows what the creature really lost, once
 resistances and protections have had their say. A failed save also lets the
 spell's effect take hold. Spells left on the ground (Grease, clouds) make

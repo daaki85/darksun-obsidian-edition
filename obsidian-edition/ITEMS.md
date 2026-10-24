@@ -77,7 +77,8 @@ scripts hand it out (a reward, a gift or a find).
 | ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit | the same |
 | ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit | the same |
 
-**By weapon spec**, for [weapon specialization](FEATURES.md#weapon-specialization):
+**By weapon spec**, for [weapon
+specialization](FEATURES.md#weapon-specialization):
 
 | Weapon spec | Magic weapons |
 |---|---|

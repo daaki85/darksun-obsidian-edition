@@ -4,16 +4,18 @@
 the curious. [The README](README.md) is about the mod.*
 
 What the game does that its manual doesn't say, from its code and checked in
-play. The dice log shows each as it happens, and the
-[rule changes](FEATURES.md#rule-changes) change some of it. Several findings
-were first pointed out by the notes of [yuan-ti](https://github.com/CalvinRodo/yuan-ti),
-CalvinRodo's new engine for the game, and checked here in the game's own code.
+play. The dice log shows each as it happens, and the [rule
+changes](FEATURES.md#rule-changes) change some of it. Several findings were
+first pointed out by the notes of
+[yuan-ti](https://github.com/CalvinRodo/yuan-ti), CalvinRodo's new engine for
+the game, and checked here in the game's own code.
 
 ## Contents
 
 - [Initiative](#initiative)
 - [Spells and effects](#spells-and-effects)
-  - [Each cleric spell against the manual](#each-cleric-spell-against-the-manual)
+  - [Each cleric spell against the
+    manual](#each-cleric-spell-against-the-manual)
 - [Psionics](#psionics)
   - [Each power against the manual](#each-power-against-the-manual)
 - [Character creation](#character-creation)
@@ -98,7 +100,8 @@ Other things the game does its own way:
   (never below 3).
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand: with a
   weapon ready the game says "Failed, weapon in hand" and nothing happens.
-- Death spells (Slay Living, Dismissal) do the target's HP + 10 on a failed save.
+- Death spells (Slay Living, Dismissal) do the target's HP + 10 on a failed
+  save.
 - In the arena, summonings fail ("Your summoning goes unanswered").
 - A spell's caster level is the caster's highest level in a class that shares
   a sphere with the spell. Priests have one element each (cleric, druid and
@@ -120,9 +123,10 @@ Fireball, cast at a Slig next to her, killed her.
 
 What the game's records and code do with each cleric spell, next to the manual
 (pages 68–78). "Save" is the game's petrification/polymorph save unless named
-(the spell save with the [rule change](FEATURES.md#spells-saved-against-with-the-spell-save));
-durations are in rounds (a turn is ten). The log column is what the dice log
-shows for it; every effect line also says what the effect does.
+(the spell save with the [rule
+change](FEATURES.md#spells-saved-against-with-the-spell-save)); durations are in
+rounds (a turn is ten). The log column is what the dice log shows for it; every
+effect line also says what the effect does.
 
 | Spell | The manual | The game | The log |
 |---|---|---|---|
@@ -231,7 +235,8 @@ their own:
 - **Mind Bar** adds 75% magic resistance against mind-affecting spells:
   charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
   magic resistance line counts it, and Lower Resistance halving the result.
-- **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least 1d10.
+- **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least
+  1d10.
 - Monsters use them too: the Screamer Beetle's special attack is Psychic
   Crush (1d8, save vs paralysis/poison/death for half).
 
@@ -274,9 +279,9 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |
 
 What each costs, from the game's own table, and for three of them worked out as
-they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination and
-Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11, below
-16, and up):
+they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination
+and Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11,
+below 16, and up):
 
 | Power | Discipline | PSP to use | PSP each round kept up |
 |---|---|---|---|
@@ -344,8 +349,8 @@ rolls a new character. From the game's code, and checked against the screen:
   Thief raises DEX to 17) and PSP aren't rolled, so they don't appear in the
   log. The creation screen's other random numbers only choose pictures.
 * **The total.** After the six scores comes what they add up to, the most they
-  may add up to with
-  [Scores and hit points as rolled](FEATURES.md#scores-and-hit-points-as-rolled).
+  may add up to with [Scores and hit points as
+  rolled](FEATURES.md#scores-and-hit-points-as-rolled).
 
 Changing sex or race can make the game roll hit points twice, once with the
 old scores and once with the new: the last hit point line is the one that
@@ -376,13 +381,13 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   acid, so that only edged weapons hurt it (the slimes); immune to fire and
   cold (and half from electricity); half from fire; immune to poison; immune
   to psionic attacks.
-- Properties: can't be charmed or held; unaffected by spells left on the
-  ground (fogs, clouds, walls, Web, Grease); not held by Grease, Web,
-  Entangle, Solid Fog or Quicksand; and hits that also cast one of the
-  monsters' powers on the target: 2d6 cold, 2d6 or 20 acid, paralysis,
-  poison of 10 or 30 damage, a deadly Poison, disease on 1 hit in 10. The 20
-  acid (the Rampager's) and a corroding touch (the Babau's) can also destroy a
-  worn item (see [Items saving against acid](FEATURES.md#items-saving-against-acid)).
+- Properties: can't be charmed or held; unaffected by spells left on the ground
+  (fogs, clouds, walls, Web, Grease); not held by Grease, Web, Entangle, Solid
+  Fog or Quicksand; and hits that also cast one of the monsters' powers on the
+  target: 2d6 cold, 2d6 or 20 acid, paralysis, poison of 10 or 30 damage, a
+  deadly Poison, disease on 1 hit in 10. The 20 acid (the Rampager's) and a
+  corroding touch (the Babau's) can also destroy a worn item (see [Items saving
+  against acid](FEATURES.md#items-saving-against-acid)).
 - Undead (race 9 on the character sheet) take nothing from poison and
   draining, and mind-affecting spells, charms and holds don't work on them.
 
@@ -447,9 +452,9 @@ chance out as:
 - plus 4 for each thief level,
 - plus a racial adjustment. These are AD&D's, for example a dwarf gets +10 to
   open locks, +15 to find traps, −10 to climb walls and −5 to read languages.
-- plus DEX: −5 for each point below 12, 11, 12, 13 or 11 (the first five skills);
-  +5 for each point above 16, 15, 17, 16 or 16; and −3 for each point above
-  21, 20, 21, 19 or 19, so very high DEX gains less,
+- plus DEX: −5 for each point below 12, 11, 12, 13 or 11 (the first five
+  skills); +5 for each point above 16, 15, 17, 16 or 16; and −3 for each point
+  above 21, 20, 21, 19 or 19, so very high DEX gains less,
 - minus an equipment penalty (5, 0, 0, 10, 5, 0, 10, 0) when the thief has
   anything at all in the leg armour slot, the quiver or either hand. That is
   the game's own check: it doesn't look at what the item is (leather or metal)
@@ -480,9 +485,10 @@ Some effects rule out a skill:
 - Fire Shield stops picking pockets and hiding; Mirror Image stops hiding.
 - Graft Weapon stops picking pockets, opening locks and climbing.
 - Feeblemind stops reading languages.
-- Enlarge scales the situation's bonus or penalty, not the skill: for hiding it's
-  divided by (100 + 10 × Enlarge's level)%, for climbing multiplied by it. With
-  no bonus or penalty it changes nothing; with a penalty, climbing gets harder.
+- Enlarge scales the situation's bonus or penalty, not the skill: for hiding
+  it's divided by (100 + 10 × Enlarge's level)%, for climbing multiplied by it.
+  With no bonus or penalty it changes nothing; with a penalty, climbing gets
+  harder.
 
 Two effects make a skill certain instead: Detect Traps (anyone, thief or not,
 finds traps) and Invisible (hiding in shadows).
@@ -517,13 +523,13 @@ always went to the first party member: the game's pick meant to find the best
 but compared the wrong way round. (The game also has a script command that lets
 each member try in turn, but no script uses it.)
 
-**The game never rolls move silently, hide in shadows or read languages**, so
-on their own they make no difference, nor does the equipment penalty on them.
-The Loader rolls them: move silently when a pocket isn't picked
-([Picking pockets](FEATURES.md#picking-pockets)), hide in shadows and move
-silently in fights ([backstabs](FEATURES.md#hiding-in-shadows-to-backstab)),
-and read languages when a [Shinobi](KITS.md#thief-kits) reads a scroll. The
-scripts also make 3 ability checks (a d20 under the ability): CHA twice and STR once.
+**The game never rolls move silently, hide in shadows or read languages**, so on
+their own they make no difference, nor does the equipment penalty on them. The
+Loader rolls them: move silently when a pocket isn't picked ([Picking
+pockets](FEATURES.md#picking-pockets)), hide in shadows and move silently in
+fights ([backstabs](FEATURES.md#hiding-in-shadows-to-backstab)), and read
+languages when a [Shinobi](KITS.md#thief-kits) reads a scroll. The scripts also
+make 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
 `python -m dsloader checks` lists them all with the script's text around
 each (spoilers).
@@ -557,8 +563,8 @@ From the game's code:
   multiplied and STR, the weapon's plus and any other bonus are added once, as
   in AD&D (DSCLOG's `STAB_TIMES`).
 
-Which weapons can backstab, the game's and the
-[Loader's](FEATURES.md#new-items) (magic ones included). Weight belongs to the weapon's type and material, in the
+Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items)
+(magic ones included). Weight belongs to the weapon's type and material, in the
 game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
 mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
 (slings, bows, a thrown chatkcha) never backstab: it has to be melee.
@@ -662,12 +668,12 @@ of it as `Ring of Protection`).
 
 The game counts the party's trips into Draj's arena (its global number 12; the
 combat log panel's top line shows it between fights in the slave pens and the
-arena). It goes up by one each time the party walks out of the arena's gate after being called, however many waves
-came that day; extra waves don't count. Being called needs the game's clock to
-run: Kurzak's call comes once a little over 8 hours of game time (8 h 05 min)
-have passed since the last trip, and the clock stands still while the Look
-pointer is chosen, so a party resting by the fire with it chosen is never
-called.
+arena). It goes up by one each time the party walks out of the arena's gate
+after being called, however many waves came that day; extra waves don't count.
+Being called needs the game's clock to run: Kurzak's call comes once a little
+over 8 hours of game time (8 h 05 min) have passed since the last trip, and the
+clock stands still while the Look pointer is chosen, so a party resting by the
+fire with it chosen is never called.
 
 The announcer greets each trip by the count:
 

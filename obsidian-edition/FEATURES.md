@@ -17,8 +17,10 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Rangers' casting level](#rangers-casting-level)
   - [Preservers' INT](#preservers-int)
   - [AD&D's class tables](#adds-class-tables)
-  - [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save)
-  - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
+  - [Spells saved against with the spell
+    save](#spells-saved-against-with-the-spell-save)
+  - [Fire, cold and electricity: DEX instead of a doubled
+    d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
   - [Two weapons](#two-weapons)
   - [Items saving against acid](#items-saving-against-acid)
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
@@ -28,7 +30,8 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
   - [Level cap by XP](#level-cap-by-xp)
-  - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
+  - [STORE and RECALL on the creation
+    screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [Preservers' first spells](#preservers-first-spells)
   - [The game's own party](#the-games-own-party)
@@ -48,7 +51,8 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [New people](#new-people)
     - [Kalzith](#kalzith)
     - [Semyon](#semyon)
-    - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
+    - [What Dinos and the Trustee say about
+      them](#what-dinos-and-the-trustee-say-about-them)
   - [The cooked vulture](#the-cooked-vulture)
   - [Defilers' scrolls](#defilers-scrolls)
 - [Graphics](#graphics)
@@ -58,10 +62,12 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Dust](#dust)
   - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
-  - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
+  - [Choosing an enemy: Tab, Enter and the
+    rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
   - [The view in fights](#the-view-in-fights)
-  - [The pointer in scenes, and where it starts](#the-pointer-in-scenes-and-where-it-starts)
+  - [The pointer in scenes, and where it
+    starts](#the-pointer-in-scenes-and-where-it-starts)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
     - [Saves under their names](#saves-under-their-names)
@@ -272,9 +278,9 @@ every spell. With **Preservers' INT** ticked, AD&D's table for INT holds:
   level the preserver already knows the most of, and doesn't open when
   nothing else is left to learn.
 
-The dice log shows each try:
-`Dreamwalker reads the scroll of Magic Missile: d100 = 37, needs 60 or less (INT 14) -> learnt`.
-Priest spells and psionic powers are as the game has them.
+The dice log shows each try: `Dreamwalker reads the scroll of Magic Missile:
+d100 = 37, needs 60 or less (INT 14) -> learnt`. Priest spells and psionic
+powers are as the game has them.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
 
@@ -331,12 +337,12 @@ How it works:
 
 With **Two weapons** ticked, a character with a melee weapon in each hand
 attacks at −2 with the main (right) hand and −4 with the off (left) hand, plus
-the DEX reaction adjustment (the table under [Initiative](HOW-THE-GAME-WORKS.md#initiative)). That
-can bring the penalty to 0 but never make it a bonus, and low DEX makes it
-worse: DEX 17 gives 0 and −2, DEX 21 0 and 0, DEX 3 −5 and −7. One weapon, a
-two-handed weapon, a weapon and a shield, or a weapon and a bow or sling (the
-missile slot) have no penalty. The game's own rule, a small bonus at DEX 5 or
-less, is gone.
+the DEX reaction adjustment (the table under
+[Initiative](HOW-THE-GAME-WORKS.md#initiative)). That can bring the penalty to 0
+but never make it a bonus, and low DEX makes it worse: DEX 17 gives 0 and −2,
+DEX 21 0 and 0, DEX 3 −5 and −7. One weapon, a two-handed weapon, a weapon and a
+shield, or a weapon and a bow or sling (the missile slot) have no penalty. The
+game's own rule, a small bonus at DEX 5 or less, is gone.
 
 Rangers (their kits too) and [Twin-blades](#kits) have no penalty in light
 armour: every armour piece worn, a helm too, of leather or of no material. In
@@ -399,7 +405,8 @@ less the item's plus, and 1 less again for a magical power:
 | Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
 | Obsidian Dagger | 65% | 80% (needs 5) |
 
-Every other armour piece and weapon, the mod's among them: [Items against acid](ITEMS.md#items-against-acid).
+Every other armour piece and weapon, the mod's among them: [Items against
+acid](ITEMS.md#items-against-acid).
 
 The dice log shows every check, whichever rule is on:
 
@@ -409,11 +416,11 @@ Defiler's saving throw vs Acid from Rampager (paralysis/poison/death): d20 = 20 
   Rampager's acid on Defiler's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe
 ```
 
-The Detonate psionic power (the daggorans' too) keeps the game's own rule: besides
-its blast, it picks the item the target wears that breaks most easily (a cloak,
-then a bone helm or leather chest armour, then bone scale armour) and
-destroys it on a d20 under 15 less the item's plus, so 70% for a plain item.
-The dice log shows that check and its outcome.
+The Detonate psionic power (the daggorans' too) keeps the game's own rule:
+besides its blast, it picks the item the target wears that breaks most easily (a
+cloak, then a bone helm or leather chest armour, then bone scale armour) and
+destroys it on a d20 under 15 less the item's plus, so 70% for a plain item. The
+dice log shows that check and its outcome.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
 
@@ -526,8 +533,8 @@ fighter, gladiator and ranger levels; a warrior class goes no higher than
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
 
 The sixteen weapon specs take in the game's weapons of every material and its
-named ones (Bloodwrath, Swiftbite and the like are long swords); gloves are none.
-The weapons spells make count for specialization as their AD&D weapon: the
+named ones (Bloodwrath, Swiftbite and the like are long swords); gloves are
+none. The weapons spells make count for specialization as their AD&D weapon: the
 Flame Blade a long sword (AD&D's scimitar, which Athas hasn't), Shillelagh a
 club, Spiritual Hammer a mace (the war hammer's nearest). Class and kit
 restrictions leave them as the game has them: anyone who can cast the spell can
@@ -572,10 +579,10 @@ creation screen: DONE has made the character by then.
 
 ![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT](docs/creation-weapons.png)
 
-A new character starts the game with a plain weapon of its first weapon spec
-in place of the bone long sword the game gives warriors, in a material it may
-use, and the log says so
-(`Grog starts with a plain obsidian long sword for the weapon specialization chosen, in place of the bone long sword`):
+A new character starts the game with a plain weapon of its first weapon spec in
+place of the bone long sword the game gives warriors, in a material it may use,
+and the log says so (`Grog starts with a plain obsidian long sword for the
+weapon specialization chosen, in place of the bone long sword`):
 
 | Weapon spec | Starting weapon | For a cleric's sphere that can't use it |
 |---|---|---|
@@ -597,15 +604,16 @@ hands for it. The weapon is made once: a long sword handed to the character
 later stays one.
 
 **At a level gained.** A warrior with fewer weapon specs than it is due (a
-gladiator reaching 6th or 9th, or any warrior from a game begun before the
-rule) picks the rest the way a psionicist picks a new power: in the game's own
-pop-up, made bigger, a picture of each weapon spec on a slot, six to a row,
-those its classes can't use (or it has) greyed. The pointer on a slot names it
-under them (**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick
-would be expertise: a ranger's, a Battle Mage's, a Crusader's or Mind
-Warrior's; as CHOOSE A SPELL names a spell), and lights the slot if it can be picked; off the slots the title comes
-back. The picks left are beside **EXIT** (which asks, as for powers, whether
-to leave with picks unmade: they're offered again at the next level).
+gladiator reaching 6th or 9th, or any warrior from a game begun before the rule)
+picks the rest the way a psionicist picks a new power: in the game's own pop-up,
+made bigger, a picture of each weapon spec on a slot, six to a row, those its
+classes can't use (or it has) greyed. The pointer on a slot names it under them
+(**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick would be
+expertise: a ranger's, a Battle Mage's, a Crusader's or Mind Warrior's; as
+CHOOSE A SPELL names a spell), and lights the slot if it can be picked; off the
+slots the title comes back. The picks left are beside **EXIT** (which asks, as
+for powers, whether to leave with picks unmade: they're offered again at the
+next level).
 
 ![The level-up window: a slot with a picture for each weapon spec, the pointer on the dagger's, lit, and SPECIALIZE IN / DAGGER under them; the club, great axe, pick, quarterstaff and the rest greyed for a fighter/fire cleric](docs/weapon-picker.png)
 
@@ -711,9 +719,9 @@ and thief skills are worked out from the level. So past 9th:
   gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
 - **Spell slots** grow at the levels casters already have, up to 5th. With
   AD&D's class tables a priest has 5 4 4 3 2 at 11th and 6 5 5 3 2 at 12th, a
-  preserver 4 4 4 3 3 at 11th. Priests also have a 6th-level slot at 11th
-  and two at 12th, for the mod's [6th-level priest spells](#6th-level-priest-spells);
-  preservers have no 6th-level spells.
+  preserver 4 4 4 3 3 at 11th. Priests also have a 6th-level slot at 11th and
+  two at 12th, for the mod's [6th-level priest
+  spells](#6th-level-priest-spells); preservers have no 6th-level spells.
 - **Thief skills** from AD&D's table go on to 13th
   ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).
 - **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
@@ -749,7 +757,8 @@ does nothing until STORE keeps another. STORE again keeps the new roll in
 place of the old. Unticked, the screen is as the game has it, from the next
 time the game is started.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall-on-the-creation-screen).
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall-on-the-creation-screen).
 
 ### Fuller starting gear
 
@@ -970,17 +979,17 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thief-skills-from-adds-table).
 
 The game never rolls hide in shadows, and a thief only backstabs a target that
 has turned to face someone else. With **Thieves hide in shadows and move
-silently to backstab, rangers to attack from behind** ticked, a thief whose
-turn comes in a fight with no enemy in any of the eight squares around them
-tries to hide in shadows; if they do, they try to move silently up to someone;
-and if both succeed, their next attack that turn counts as one from behind: +2
-to hit, the target's DEX and shield don't count, and with a weapon that can
-backstab it is a backstab, the damage multiplied as usual. The attack gives
-the thief away, and so does the turn ending without one. An enemy next to the
-thief when the turn comes means no hiding at all: get clear first (a
-[Shadowblade](KITS.md#multiclass-kits) tries anyway). A
-[Military Scout](KITS.md#multiclass-kits) never backstabs: its hiding gives an attack
-from behind.
+silently to backstab, rangers to attack from behind** ticked, a thief whose turn
+comes in a fight with no enemy in any of the eight squares around them tries to
+hide in shadows; if they do, they try to move silently up to someone; and if
+both succeed, their next attack that turn counts as one from behind: +2 to hit,
+the target's DEX and shield don't count, and with a weapon that can backstab it
+is a backstab, the damage multiplied as usual. The attack gives the thief away,
+and so does the turn ending without one. An enemy next to the thief when the
+turn comes means no hiding at all: get clear first (a
+[Shadowblade](KITS.md#multiclass-kits) tries anyway). A [Military
+Scout](KITS.md#multiclass-kits) never backstabs: its hiding gives an attack from
+behind.
 
 ```
 Tezral's turn
@@ -997,16 +1006,16 @@ the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
 backstab (the dice x3)` is 27 where the game made it 51. The multiplier is x2
 at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13.
 
-The chance to hide is **halved in daylight** (with [kits](#kits) on, not for
-an Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are
-under the open sky goes by the game's regions: open desert and rock, the
-villages' open ground and the arena are; the slave pens, the sewers, the lava caverns and
+The chance to hide is **halved in daylight** (with [kits](#kits) on, not for an
+Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are under
+the open sky goes by the game's regions: open desert and rock, the villages'
+open ground and the arena are; the slave pens, the sewers, the lava caverns and
 the other underground or roofed places aren't. Three maps have both, buildings
 with floors of their own standing on open ground: there it goes by the floor
-under the thief (from the game's map of the region in memory), so a thief in
-a building is out of the sun and one in a roofless ruin isn't. The chances
-are the thief's own as they stand (level, race, DEX, and effects:
-Invisibility makes hiding certain, Fire Shield and Mirror Image rule it out).
+under the thief (from the game's map of the region in memory), so a thief in a
+building is out of the sun and one in a roofless ruin isn't. The chances are the
+thief's own as they stand (level, race, DEX, and effects: Invisibility makes
+hiding certain, Fire Shield and Mirror Image rule it out).
 
 **Rangers** hide and move silently too, with the same box ticked. The game
 gives rangers no thief skills, so the Loader uses AD&D's ranger table, by
@@ -1165,29 +1174,28 @@ sheet, so it saves with the game and the character.
   REAC and DEF, thief skills, the two-weapon penalties and the saves against
   fire, cold and electricity. The log says what it rolled:
   `Cat's Grace: 1d6 = 4 -> Gerakis's DEX +4 while it lasts (at most 24)`.
-- **Erdlu Claw** grows talons like an erdlu's. A character with a weapon in
-  hand is unchanged; one fighting unarmed hits for 1d6+1 instead. A
-  thri-kreen's four claws and bite become 1d6+1 each (a natural attack already
-  better on average, as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in
-  the log's THAC0 breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons
-  hurt creatures that only magical weapons can. They cut: edged, where the
-  game makes every unarmed attack crushing, so they hurt a creature that
-  crushing weapons can't (a mastyrial). A thri-kreen in the party fights with
-  edged claws the same way, with or without the spell. With **Body Weaponry**
-  or **Animal Affinity** up, the power's dice for the first attack get the claw's
-  +1: 2d4+1 or 1d10+1.
+- **Erdlu Claw** grows talons like an erdlu's. A character with a weapon in hand
+  is unchanged; one fighting unarmed hits for 1d6+1 instead. A thri-kreen's four
+  claws and bite become 1d6+1 each (a natural attack already better on average,
+  as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in the log's THAC0
+  breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons hurt creatures that
+  only magical weapons can. They cut: edged, where the game makes every unarmed
+  attack crushing, so they hurt a creature that crushing weapons can't (a
+  mastyrial). A thri-kreen in the party fights with edged claws the same way,
+  with or without the spell. With **Body Weaponry** or **Animal Affinity** up,
+  the power's dice for the first attack get the claw's +1: 2d4+1 or 1d10+1.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
   own blue); like any bolt it needs a clear line to the target. Its THAC0
   breakdowns show `-3 Fogbolt` on its own attacks and `+2 target's Fogbolt` on
   attacks against it. Its icon is a grey cloud.
-- **Reflected Image** is a smaller Mirror Image: one image, struck by a hit or
-  a foe's spell instead of the caster half the time (Mirror Image's are three
-  quarters of the time). The two don't add up: casting either one replaces the other, and casting
-  Reflected Image again only gives the one image back. Dispel Magic ends it.
-  Its icon is a hand mirror with one figure in it, on the Effects screen too,
-  where it is named REFLECTED IMAGE (as in the Look box and under the
-  portrait).
+- **Reflected Image** is a smaller Mirror Image: one image, struck by a hit or a
+  foe's spell instead of the caster half the time (Mirror Image's are three
+  quarters of the time). The two don't add up: casting either one replaces the
+  other, and casting Reflected Image again only gives the one image back. Dispel
+  Magic ends it. Its icon is a hand mirror with one figure in it, on the Effects
+  screen too, where it is named REFLECTED IMAGE (as in the Look box and under
+  the portrait).
 - **Spook** frightens one creature into running for 3 rounds. The log's save
   line shows the penalty:
   `d20 = 9 -1 Spook, the caster's levels = 8, needs 16 -> failed`.
@@ -1216,7 +1224,8 @@ and the game is as it was.
 
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### 6th-level priest spells
 
@@ -1266,21 +1275,24 @@ How they're made, and where they differ from the books:
   book's 1d4 of fire at the start of each round while it lies there (a fire
   resistance counts). It ends with the paralysis, or when that is cured.
 - **Fire Seeds** throws its four seeds of 2d8 together, one burst of 8d8 (the
-  same dice), not one by one at different places; it bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
-  Lands has too) where Flame Strike rises as a column of fire.
+  same dice), not one by one at different places; it bursts as a fireball (Wake
+  of the Ravager's picture for it, which Shattered Lands has too) where Flame
+  Strike rises as a column of fire.
 - **Heartseeker** is a spell of death, not an arrow to shoot. It is
   Slay Living's, so one that saves still takes half of 4d8.
-- **Whirlwind** stays where it is cast, as Stinking Cloud does, for a
-  round a caster level, as AD&D has it: one tall, turning funnel of dust in
-  the middle of its area, its ring of dust at the area's edge. Nothing can be
-  shot or cast through it (it blocks sight, as Wall of Fog does). Each round
-  it does 2d8 crushing to every creature in it (a save for half), your party included; one that fails its save is swept
-  off its feet and loses its next turn (no movement, no action), without being
-  helpless as a held creature is. It doesn't move.
+- **Whirlwind** stays where it is cast, as Stinking Cloud does, for a round a
+  caster level, as AD&D has it: one tall, turning funnel of dust in the middle
+  of its area, its ring of dust at the area's edge. Nothing can be shot or cast
+  through it (it blocks sight, as Wall of Fog does). Each round it does 2d8
+  crushing to every creature in it (a save for half), your party included; one
+  that fails its save is swept off its feet and loses its next turn (no
+  movement, no action), without being helpless as a held creature is. It doesn't
+  move.
 - **Harm** on a helpless creature, which the game hits with the most its dice
   can do, still leaves it 1d4 hit points. It also leaves the creature Diseased,
-  as in AD&D, which here only keeps a STR lowered by something else from
-  coming back ([Cause Disease](HOW-THE-GAME-WORKS.md#each-cleric-spell-against-the-manual)).
+  as in AD&D, which here only keeps a STR lowered by something else from coming
+  back ([Cause
+  Disease](HOW-THE-GAME-WORKS.md#each-cleric-spell-against-the-manual)).
 
 The dice log names each one: Harm's line says the game's own roll goes
 unused, and Wall of Thorns' gives the AC its damage came from
@@ -1289,7 +1301,8 @@ sweeps off its feet has a line of its own. Their icons are Wake of the
 Ravager's, read from your copy (GOG sells it with Shattered Lands); without it
 they have icons of their own (the game's, recoloured).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### New items
 
@@ -1301,8 +1314,8 @@ effect in regions the party hasn't visited yet; start a new game to have them
 all. The log doesn't say where they are: they're there to be found.
 
 **New items, magical and mundane** on the Options tab places them all, the
-arena's ring too. A thief can [lift](#picking-pockets) Pehtucl's ring, Shadowseeker, Gutterknot and
-Mindshard (200 XP for each weapon).
+arena's ring too. A thief can [lift](#picking-pockets) Pehtucl's ring,
+Shadowseeker, Gutterknot and Mindshard (200 XP for each weapon).
 
 **Where they are.** The mod's items are in the [item tables](ITEMS.md) with the
 game's own: in ***bold italics*** in
@@ -1379,17 +1392,17 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
 
 #### Bracers of defense
 
-A preserver can't cast in armour (with [class restrictions](#class-restrictions)),
-so the mod adds AD&D's bracers of defense ([where](#new-items)). They are
-worn on the arms, in the arm armour's place, and give the AC their name says:
-AC 6 is 4 better than no armour, AC 2 is 8 better. As in AD&D they give nothing
-while armour is worn: on the arms, legs or chest, or a helm (bone, leather or
-metal, magical or not). A shield, rings and cloaks of protection, and the
-mod's circlet and crown (worn on the head, but not armour) go with them.
-They aren't armour to anything else: a preserver casts in them, a thief wears
-them, and a ring or cloak of protection still counts. In the game they are
-**BRACERS/DEFENSE** with their plus (Bracers/Defense +4 is AC 6), priced 5,000
-a point of AC.
+A preserver can't cast in armour (with [class
+restrictions](#class-restrictions)), so the mod adds AD&D's bracers of defense
+([where](#new-items)). They are worn on the arms, in the arm armour's place, and
+give the AC their name says: AC 6 is 4 better than no armour, AC 2 is 8 better.
+As in AD&D they give nothing while armour is worn: on the arms, legs or chest,
+or a helm (bone, leather or metal, magical or not). A shield, rings and cloaks
+of protection, and the mod's circlet and crown (worn on the head, but not
+armour) go with them. They aren't armour to anything else: a preserver casts in
+them, a thief wears them, and a ring or cloak of protection still counts. In the
+game they are **BRACERS/DEFENSE** with their plus (Bracers/Defense +4 is AC 6),
+priced 5,000 a point of AC.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#bracers-of-defense).
 
@@ -1684,16 +1697,17 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
 
 ### Spells on the ground
 
-The [6th-level priest spells](#6th-level-priest-spells) that stay on the map have
-pictures of their own: Blade Barrier a ring of circling blades and Wall of Thorns
-a tangle of thorns (Wake of the Ravager's, from your copy; the game's fire
-wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
+The [6th-level priest spells](#6th-level-priest-spells) that stay on the map
+have pictures of their own: Blade Barrier a ring of circling blades and Wall of
+Thorns a tangle of thorns (Wake of the Ravager's, from your copy; the game's
+fire wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
 funnel of dust in the middle of its area that turns as you watch, its ring of
 dust at the edge.
 
 ![Whirlwind in the Scar fight: a tall grey funnel of dust turning over the party and Scar's henchmen](docs/whirlwind.gif)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
 
 ## Controls
 
@@ -1843,14 +1857,13 @@ twice as late, and walking goes at half speed. Everything drawn adds up: four
 figures rather than the leader alone (the game's manual says collapsing the
 party "speeds up the game"), the gear on them, the shadows, the dust.
 
-The Loader gives DOSBox more of the computer's time: 20,000 cycles a
-millisecond by default, where GOG's settings give 7,000. On the Options tab
-**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there, with
-everything on, the whole party in view walks as fast as the leader alone, but
-it needs a faster computer. It applies the next time the game is started. The Loader's two
-speeds run on DOSBox's dynamic core (GOG's settings run this game on the slower
-normal core): the same cycles do more, and cost the computer about a third
-less.
+The Loader gives DOSBox more of the computer's time: 20,000 cycles a millisecond
+by default, where GOG's settings give 7,000. On the Options tab **Game speed**
+is GOG's own (7,000), that (20,000), or 35,000: there, with everything on, the
+whole party in view walks as fast as the leader alone, but it needs a faster
+computer. It applies the next time the game is started. The Loader's two speeds
+run on DOSBox's dynamic core (GOG's settings run this game on the slower normal
+core): the same cycles do more, and cost the computer about a third less.
 
 Measured in the slave pens, walking (the leader's speed in pixels a second of
 the game's time; higher is smoother):
@@ -1906,11 +1919,12 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
-spell's icon on the Effects screen ending it
-([Spells on the Effects screen](#spells-on-the-effects-screen)). How the fixes
-work: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs
-(Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and
-checked by yuan-ti; the Loader mends them in its copy of the game's scripts (`scriptfixes.py`).
+spell's icon on the Effects screen ending it ([Spells on the Effects
+screen](#spells-on-the-effects-screen)). How the fixes work:
+[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs
+(Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and checked
+by yuan-ti; the Loader mends them in its copy of the game's scripts
+(`scriptfixes.py`).
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is

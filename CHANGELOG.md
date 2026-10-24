@@ -39,6 +39,16 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Options tab's order, with the game's bugs fixed last. The player guide's quality-of-life table is
   grouped (screens, controls, saves, running the game), and its intro points to the features page
   for the rules.
+- **A line-by-line audit of every page.** Corrected: the player guide's backstab multipliers (×4 at
+  9-12, ×5 at 13, as the game has them), DEVELOPMENT's room in upper memory (1 paragraph spare, not
+  54), its patch count (some 320), the helper's added item types (30), Negative Plane Protection's
+  record (211) and the timer's rate (about 120 a second); the switch the 6th-level priest spells
+  come with named everywhere (**New wizard spells**, with AD&D's class tables). Repeats removed
+  (the README's save note, its window size in the start steps, the combat log's EMS aside, the
+  guide's note on the game's own party's spells); "started from the Loader" and "pointer" used
+  throughout; unclear sentences rewritten (preservers' starting spells, the pens' new people, the
+  Items and Kits headers); DEVELOPMENT's contents list the pointer section; and every page's prose
+  wrapped at 80 columns.
 
 **Changed**
 - **The freeze report's records**: 16, every 32nd timer strike (were 32, every 16th; the same 4

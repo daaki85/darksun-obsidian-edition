@@ -12,14 +12,22 @@ name.)
 
 ## Documentation
 
-- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without spoilers, a section for each class (also as a web page, [`player-guide.html`](obsidian-edition/player-guide.html))
-- [The full documentation](obsidian-edition/README.md): installing, running, the Loader's window and the dice log
-- [Features and rules](obsidian-edition/FEATURES.md): every rule change and addition in detail, with its switch
+- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without
+  spoilers, a section for each class (also as a web page,
+  [`player-guide.html`](obsidian-edition/player-guide.html))
+- [The full documentation](obsidian-edition/README.md): installing, running, the
+  Loader's window and the dice log
+- [Features and rules](obsidian-edition/FEATURES.md): every rule change and
+  addition in detail, with its switch
 - [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
-- [Patch notes](PATCH-NOTES.md): every change from the original game, in one page to share
-- [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with its icon and where it is (spoilers)
-- [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original game's own rules, from its code
-- [Changelog](CHANGELOG.md) and [development notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
+- [Patch notes](PATCH-NOTES.md): every change from the original game, in one
+  page to share
+- [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with
+  its icon and where it is (spoilers)
+- [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
+  game's own rules, from its code
+- [Changelog](CHANGELOG.md) and [development
+  notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
 
 ## What it does
 
@@ -62,16 +70,25 @@ double-click, with the options as last set.)
 **Obsidian Edition 2.7.2** is out ([release notes](release-notes/v2.7.2.md)):
 fixes to the 6th-level priest spells (Sunstroke ends the caster's turn, Wall of
 Thorns counts a monster's armour, Heartseeker's description), and the Look box
-gives a monster's real AC from the start of a fight. 2.7.1
-([release notes](release-notes/v2.7.1.md)) found Wake of the Ravager where GOG
-Galaxy installs it, and 2.7.0 ([release notes](release-notes/v2.7.0.md)) brought nine 6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with pictures
-of their own; levels capped by XP instead of at 9th, so priests reach 11th and
+gives a monster's real AC from the start of a fight. 2.7.1 ([release
+notes](release-notes/v2.7.1.md)) found Wake of the Ravager where GOG Galaxy
+installs it, and 2.7.0 ([release notes](release-notes/v2.7.0.md)) brought nine
+6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with pictures of
+their own; levels capped by XP instead of at 9th, so priests reach 11th and
 12th; backstabs as AD&D has them; spell names floating over their casters; the
 Spellarcher's spell arrows; three new magic items; and more of the original
 game's bugs fixed, three script bugs among them.
 
-Every release has notes of its own: [2.7.2](release-notes/v2.7.2.md), [2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md), [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md), [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md), [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md), [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The [patch notes](PATCH-NOTES.md)
-have every change from the original game in one page, whatever the version.
+Every release has notes of its own: [2.7.2](release-notes/v2.7.2.md),
+[2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md),
+[2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md),
+[2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
+[2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
+[2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
+[2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
+[1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The
+[patch notes](PATCH-NOTES.md) have every change from the original game in one
+page, whatever the version.
 
 ## About
 
@@ -81,11 +98,12 @@ theirs. It includes none of the game's files: you need your own copy of the
 GOG release. Screenshots and item pictures in these pages are taken from the
 game to show what the mod does.
 
-Obsidian Edition's own code and documentation are free software
-under the [GNU General Public License v3.0](LICENSE). That doesn't extend to
+Obsidian Edition's own code and documentation are free software under the
+[GNU General Public License v3.0](LICENSE). That doesn't extend to
 the game's own art shown in these pages, which isn't the project's to license.
 
-Problems and ideas: [the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues).
+Problems and ideas: [the project's Issues
+page](https://github.com/daaki85/darksun-obsidian-edition/issues).
 
 ## Credits
 
@@ -108,6 +126,7 @@ Problems and ideas: [the project's Issues page](https://github.com/daaki85/darks
   Seeker's and Justifier's tables come from; Baldur's Gate, for keeping a
   creation roll (STORE and RECALL) and Charisma's shop prices.
 - **Tools:** [DOSBox](https://www.dosbox.com/), [NASM](https://www.nasm.us/),
-  [Python](https://www.python.org/) and [Unicorn](https://www.unicorn-engine.org/)
-  (the CPU emulator the helper's tests run in); the web pages' fonts, Marcellus
-  SC, Alegreya Sans and IBM Plex Mono, from Google Fonts.
+  [Python](https://www.python.org/) and
+  [Unicorn](https://www.unicorn-engine.org/) (the CPU emulator the helper's
+  tests run in); the web pages' fonts, Marcellus SC, Alegreya Sans and IBM Plex
+  Mono, from Google Fonts.
