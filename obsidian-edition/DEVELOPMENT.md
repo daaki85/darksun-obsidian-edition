@@ -637,9 +637,7 @@ dice log running:
   its bounds (`+404h` x0, `+604h` y0, `+804h` x1, `+A04h` y1). Pages 0 and 1
   are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others
   are windows over them and buffers in the rest of video memory (`A7E8h`, a
-  third 320 x 200; smaller ones to `AE55h`). With the strip below the map the
-  two screens are at `A070h` and `A460h` and the rest from `A848h` (see
-  [The strip below the map](#the-strip-below-the-map)).
+  third 320 x 200; smaller ones to `AE55h`).
 - **The flip.** The routine at `0980:5814` (DSUN.EXE 14414h) shows one screen
   or the other (the CRTC start address; `0980:118E` says which, 1 for `A400h`)
   and swaps them for −1. It is called from 45 places, all in overlays, for
@@ -727,7 +725,9 @@ dice log running:
   on the other screen, the view drawn there again first: the panel is not on
   it, and is back when the window closes. Full screens (USE, View Character)
   stop the main loop, and `PANEL_LIVE` counts the panel as on screen only on
-  the map (`SCREEN_IS` 1): else the hooks that draw the view round the panel
+  the map (`ON_MAP`: the game's `DS:0BC9h`, `SCREEN_IS`, is 1 on the map, 2
+  with a character's screen or a talk over it, 0 on the title, the menus and in
+  character creation; the game's DS is learnt in `PROBE_POINTER`): else the hooks that draw the view round the panel
   and keep its clicks from the game drew a full screen round it too, the panel
   left over it and the clicks there lost. (Drawing it into both
   screens doesn't work: the game keeps other pictures in the one not shown.)
@@ -788,76 +788,6 @@ dice log running:
   allows neither in a fight. DOSBox's window size doesn't matter (it is drawn
   into the game's screen).
 
-#### The strip below the map
-
-The switch `combat_log_strip` (off by default) adds gamepatch's `STRIP`
-patches when the game is started; the Loader knows the game was started so
-from the patch in its memory (`combatlog.strip_patched`), not the setting,
-which may have changed since.
-
-- **The screen.** `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X set
-  up, 0980:2A40h) makes the screen 222 rows within the game's own timing (the
-  clock and the totals untouched: 70 frames a second, 449 scan lines, each row
-  drawn twice): the picture to scan line 443, the blanking from 444 and the
-  sync at 445 to 447; and the line compare at 18Fh, so below scan line 399
-  (row 200) the VGA shows video memory from its start whichever screen is up.
-  DOSBox's aspect correction works out the shape from the timing, unchanged,
-  so each row is stretched by 1.2 as ever (the window 320 × 266).
-- **Video memory.** The strip is video memory's first 1760 bytes a plane;
-  the game's two screens move up past it, each to a multiple of 256 bytes as
-  the page flip (0980:5814h) writes only the start address's high byte:
-  `A070h` and `A460h` (in the screens' set up at 0980:271Bh, and the flip's
-  three segment constants). The pages the game keeps in video memory (a bump
-  allocator, `[0E4Eh]` up to `[0E4Ch]`, `AFFBh`, which gives −1 when full)
-  then start at `A848h`, not `A7E8h`: 31,536 bytes instead of 33,072.
-  Measured with the strip on, loading the ten saves of the first page (the
-  arena's fights and the pens), opening the USE screen and walking: at most
-  26,416 bytes used, 5 KB to spare; the first of them without the strip,
-  27,904 of 33,072 (the strip doesn't make the game use more). Places later
-  in the game aren't measured.
-- **Drawing it.** `STRIP_DRAW` puts the Loader's 320 × 22 picture there
-  (`combatlog.STRIP`: all of it the well's mottled shades, the header and the
-  newest row, no buttons; scrolled back, the **Latest** chip in the header and
-  a notch of the wheel a line); `PANEL_LIVE` is never set, so the clipping and
-  the pointer's handling are left out. Like the panel, it isn't drawn again
-  while the main loop waits on a game menu (it shows what it had). Scrolling
-  and the map dragged with the wheel pressed were checked in the arena's
-  fight.
-- **Between fights.** The Loader keeps the strip on whenever the game runs
-  (`DiceLog._update_panel`: on in a fight, or with `strip_patched`), scrolled
-  to the newest again when a fight starts. Out of fights its top line has no
-  header: `draw` puts the row before the newest there. The lines that come out
-  of fights go in too, those with a die cast in them and the lines under them
-  (`Log.add(rolls_only=True)`: `A_ROLL`, not character creation's).
-- **Scenes.** The map's main loop doesn't run while the game plays a scene
-  out (the arena's opening show), so `STRIP_MIND`, from the game's pointer,
-  also puts a new picture of the log there when the game is on the map.
-- **Empty: blue-grey or black.** Where the picture isn't, `STRIP_CLEAR` fills
-  the strip as `STRIP_WANT` says: black (the darkest of the 256) when the
-  game's `DS:0BC9h` is 0 (the title, the main menu, character creation), else
-  the panel's look without lines (its top line the colour nearest
-  `palette.SHADOW`, the rest nearest `palette.DEEP`, among 16 to 223:
-  `STRIP_COLOURS`, read from the VGA). `0BC9h` is 1 on the map, 2 with a
-  character's screen or a talk over it. It is filled every 512 passes of the
-  main loop with the log off, and each time the game sets colours:
-  `PROBE_COLOURS` (INT CBh at 288BAh, the end of the routine that sets a run
-  of colours, as the title and each step of a fade do; only when the run
-  reaches below the colours the game animates) and `PROBE_PALETTE` (INT 8Bh at
-  144F5h, the end of the one that sets all 256). The log's picture stays
-  through those while the colours 16 to 223 are still those it was put in
-  (`STRIP_SAME`: a sum of them, taken as the main loop puts it; a talk or the
-  game's menu over the map); otherwise it goes, and the main loop puts it
-  again on the map. The title's strip is so black, not the colour 0 video
-  memory is cleared to (lavender there). Screens changed with no new colours
-  (main menu to character creation) are caught from the game's pointer
-  (`PROBE_POINTER` → `STRIP_MIND`, which also learns the game's DS there),
-  filling in the colours found last: the VGA's palette isn't read there, as
-  the pointer may be drawn while the game sets colours.
-- **Tried first:** a 240-row screen in a 480-line timing. DOSBox showed
-  square pixels (the map a sixth flatter) and the frame came 60 times a
-  second, not 70 (the game about 14% slower); a longer line with the 28 MHz
-  clock gave back the shape at 56 a second.
-
 ### Names over figures
 
 ([In the README](README.md#names-over-figures).)
@@ -890,8 +820,7 @@ which may have changed since.
   every other strike. It writes only (no reads of video memory, so the VGA's
   latches are left alone), keeps the VGA's registers as the shadows do
   (`VGA_SAVE`), finds the screen on show from where the VGA starts it (CRTC
-  0Ch, the high byte the game's page flip sets: A000h or A400h, A070h or
-  A460h with the strip below the map), stays off the combat log's panel, and
+  0Ch, the high byte the game's page flip sets: A000h or A400h), stays off the combat log's panel, and
   does nothing while the game's busy flag for it is up or off the map. It
   also places a new label (`LABEL_WHERE`: centred over the thing's feet, its
   bottom `UP` rows above them, under the feet if it would reach the game's
@@ -2974,8 +2903,8 @@ Two `NS_IMAGE` sites record what the game does without a roll:
 
 How: DSCLOG hooks the keyboard (`INT 16h`) and takes Tab, Shift+Tab and, with an
 enemy chosen, Enter from what the game reads, counting them for the Loader
-(`dsloader/targeting.py`), which keeps the enemies marked and the chosen one
-(`dsloader/rings.py`). The rings are drawn in the floor pass, after the
+(`dsloader/targeting.py`), which marks the chosen one in DSCLOG's
+`RING_TAB` (`dsloader/rings.py`). The ring is drawn in the floor pass, after the
 shadows, through a table of each colour's redder one made from the palette. For
 Enter, DSCLOG puts the pointer at the enemy's feet and gives the game a left
 click there, from the main loop, while the routine that finds what is under the
@@ -2989,9 +2918,7 @@ second, whatever stands in front of it.
 How: the game hears of the mouse's buttons from the mouse driver, through a
 handler it gives it (`INT 33h`, function 0Ch). DSCLOG hooks `INT 33h` and puts
 its own handler in between, which keeps the middle button (the wheel pressed)
-from the game, and, with the right button dragging too, keeps the right button
-from it while it is held: a click reaches the game when it is let go (pressed
-and released where it was pressed), a drag never does. The game's main loop
+from the game (the right button is left to it). The game's main loop
 asks where the pointer is (to scroll at the screen's edge); there DSCLOG has
 the game centre its view where the drag puts it, with the game's own routine
 (the one clicking on the overview map uses, which draws the view again), and

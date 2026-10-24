@@ -373,7 +373,7 @@ a click.
 **The panel** sits over the map's lower right. A window the game opens over
 the map (a character's menu, a question) hides it until it closes. Expanded, it
 covers that part of the map, and the game's damage numbers over a creature
-there; **-** makes it smaller, or the strip below the map covers nothing.
+there; **-** makes it smaller.
 
 - **Scrolling:** it keeps the last 200 lines. Drag the scrollbar's handle,
   click the bar above or below it for a page, or turn the mouse wheel with
@@ -397,28 +397,6 @@ there; **-** makes it smaller, or the strip below the map covers nothing.
   throws and magic resistance). Its size is remembered.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
-
-**Below the map instead.** With **... always shown, below the map instead of
-over it** ticked (from the next start), the game's screen is 22 rows taller,
-320 × 222, and the log is a strip under the map, the full width, in the
-panel's darker shade, always there: L doesn't hide it. Nothing of the map is
-covered, and the game runs at its own speed with the map its usual shape;
-DOSBox's window is a little taller than 4:3.
-
-- **What it shows:** in a fight, the round and the newest line; between
-  fights, the two newest lines (the next fight starts again at its newest).
-- **Scrolling:** the pointer doesn't go there, so the strip has no buttons.
-  On Windows the mouse wheel scrolls it a line a notch wherever the pointer
-  is (DOSBox doesn't pass the wheel to the game, so the Loader listens for it
-  itself), with a **Latest** chip while scrolled back; under a talk window it
-  moves once the pointer does. The level is set on the Options tab.
-- **On other screens:** it stays under a talk or a screen over the map, and
-  is kept up while the game plays a scene out (the arena's opening show). A
-  screen in other colours has the panel's blue-grey there instead, the log
-  back on the map; the title, the main menu and character creation have it
-  black.
-
-![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
 
@@ -654,8 +632,7 @@ Everything there applies in games started from the Loader; a switch that says
 - **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)):
   the folder of saves kept under their names, and putting one back in a slot.
 
-All are on by default except scrolling by holding the right button and the
-combat log below the map, and are remembered for next time. **Restore
+All are on by default and are remembered for next time. **Restore
 defaults**, at the bottom of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).

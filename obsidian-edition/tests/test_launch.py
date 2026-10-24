@@ -208,8 +208,6 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("scaler=normal2x", launch.display_lines({"window_scale": 2}))
         four = launch.display_lines({"window_scale": 4})
         self.assertIn("windowresolution=1280x960", four)
-        self.assertIn("windowresolution=1280x1064", launch.display_lines({"window_scale": 4,  # (the strip
-                                                                           "combat_log_strip": True}))  # below: 266 rows)
         self.assertIn("output=opengl", four)
         self.assertEqual(launch.display_lines({"fullscreen": True}), [])  # GOG's own full screen
         # the pointer at the desktop's speed: the mouse's sensitivity 100 over the scale

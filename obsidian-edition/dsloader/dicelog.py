@@ -461,12 +461,11 @@ class DiceLog:
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
         self.stealth_gear = True  # a worn cloak's and boots' bonuses to hiding (stealth.py)
         self._dust = dust.Dust()
-        self.ring_mode = rings.ONLY_CHOSEN  # rings in a fight: off, the chosen enemy's, all the enemies' (rings.py)
+        self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
         self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
         self._targeting = targeting.Targeting()
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
-        self.scroll_right = False  # ... and dragged with the right button held
         self._scrolling = scrolling.Scrolling()
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_tried = False
@@ -762,7 +761,6 @@ class DiceLog:
         self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
         self.use_targeting = bool(settings.get("targeting", True))
-        self.scroll_right = bool(settings.get("scroll_right", False))
         self.load_picked(settings.get("pickpocketed", []))
         self.rules = game.rules_from_settings(settings)
 
@@ -1219,7 +1217,7 @@ class DiceLog:
             foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
-                               self._targeting.chosen, all_enemies=self.ring_mode == rings.ALL)
+                               self._targeting.chosen)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
         except (struct.error, IndexError, ValueError):
             return []
@@ -1227,8 +1225,8 @@ class DiceLog:
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
         """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);
-        out of fights, those with a roll (a thief's skills, a scroll learned), for the strip below
-        the map and for the panel opened with L."""
+        out of fights, those with a roll (a thief's skills, a scroll learned), for the panel opened
+        with L."""
         try:
             if self.game is not None and self.game.in_combat():
                 if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
@@ -1252,7 +1250,7 @@ class DiceLog:
         panel = self._panel
         if not panel.shown:  # (L with the panel over the map hidden: show it)
             try:
-                if panel.keys(self.game, self.tsr_hdr) and self.combat_log and not panel.strip:
+                if panel.keys(self.game, self.tsr_hdr) and self.combat_log:
                     panel.open = True
                     _remember({"combat_log_open": True})
                     self._update_panel(now)
@@ -1274,8 +1272,7 @@ class DiceLog:
             pass
 
     def _update_panel(self, now: float) -> None:
-        """The combat log: the panel over the map while shown (L shows and hides it), the strip
-        below the map always; in a fight with who acts and who is next in the header, the newest
+        """The combat log: the panel over the map while shown (L shows and hides it); in a fight with who acts and who is next in the header, the newest
         lines again when a fight starts."""
         fighting = self.combat_log and self.game.in_combat()
         if fighting:
@@ -1283,7 +1280,7 @@ class DiceLog:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-        on = self.combat_log and (combatlog.strip_patched(self.game) or self._panel.open)
+        on = self.combat_log and self._panel.open
         top, names = "", {}
         if on:
             if not self._font_tried:
@@ -1364,7 +1361,7 @@ class DiceLog:
         if self.tsr_hdr is None:
             return
         try:
-            self._scrolling.update(self.game, self.tsr_hdr, self.scroll_map, self.scroll_right)
+            self._scrolling.update(self.game, self.tsr_hdr, self.scroll_map)
         except (struct.error, IndexError, ValueError):
             pass
 

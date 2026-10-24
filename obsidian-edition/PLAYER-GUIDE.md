@@ -92,7 +92,7 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 
 | Change | What it does |
 |---|---|
-| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. In the slave pens and the arena, between fights, its top line counts the party's arena fights. Or, on the Options tab, a strip always shown below the map (the mouse wheel reads back, on Windows). |
+| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. In the slave pens and the arena, between fights, its top line counts the party's arena fights. |
 | **Names over figures** | A spell's name floats over its caster as it's cast, and "Miss" over anyone an attack misses. |
 | **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
@@ -105,8 +105,8 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 
 | Change | What it does |
 |---|---|
-| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen (or, on the Options tab, every enemy). |
-| **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
+| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
+| **Scrolling with the mouse** | Press the wheel and drag the map. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
 | **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
@@ -1760,7 +1760,6 @@ AD&D's tables:
 |---|---|---|
 | In the game | a combat log in the game (L shows and hides it) | on |
 | | how much it says: at the least, in short or in detail | in short |
-| | ... always shown, below the map instead of over it | off |
 | | describe monsters when you Look at them in a fight | on |
 | | float a spell's name over its caster, and "Miss" over whoever an attack missed | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
@@ -1769,8 +1768,7 @@ AD&D's tables:
 | New content | the new spells (six wizard spells and nine 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; spells kept on a click on the Effects screen | all on |
-| | rings in a fight: none, under the enemy chosen with Tab, or under all the enemies | under the enemy chosen |
-| | scrolling by holding the right button | off |
+| | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 

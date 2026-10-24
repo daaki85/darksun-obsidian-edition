@@ -46,6 +46,21 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   240-248 the game's palette cycles; `draw_shield` its light and every third rim pixel; and
   `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
 
+**Removed** (to free the helper's memory)
+- **Scrolling by holding the right button.** `MOUSE_EVENT` passes the right button straight to
+  the game again (`SCROLL_RIGHT`, `DRAG_START` and the click-or-drag test gone); the wheel's drag
+  stays (`scrolling.DRAG_MIDDLE` the only bit). The `scroll_right` setting is ignored.
+- **Rings under all the enemies.** Only the enemy chosen with Tab gets one (or none);
+  `rings.ring_table` marks only it, and an older `"rings": "all"` reads as the chosen one's.
+- **The combat log strip below the map.** `PROBE_STRIP`, `PROBE_PALETTE`, `PROBE_COLOURS` and the
+  strip's drawing and colours (`STRIP_*`), gamepatch's eight `STRIP` patches and
+  `combatlog.STRIP` are gone; the panel over the map (L) is as it was. What the panel needs of
+  them stays as `ON_MAP` and `POINTER_DS`. The `combat_log_strip` setting is ignored, and the
+  4x window is always 1280 x 960. With the three gone, UMB_NEED is 8108 of 8182 paragraphs (was
+  8171), DSCLOG.EXE 1 KB smaller. Seen in DOSBox, in the user's arena save: a right click still
+  changes the pointer (walk to attack), a right drag scrolls nothing, the wheel's drag scrolls;
+  Tab rings only the enemy chosen, the next on Tab again; L opens the panel.
+
 **Fixed**
 - **The pointer put back in the middle as screens changed.** A video mode set (each scene's
   start, the menus, loading a save) leaves the driver's pointer at the right edge, which

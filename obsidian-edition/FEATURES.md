@@ -1715,18 +1715,16 @@ Each has a switch in the Options tab's **Controls** section.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
-In a fight, a red ring on the ground can mark the enemies, under their feet (the
-figures stand in it, as on their shadows). On a party member's turn, **Tab**
-chooses an enemy, the nearest first, then the next nearest (**Shift+Tab** goes
-back): its ring is drawn thicker and redder, the view scrolls to it if it is
-out of sight, and the log names it. **Enter** then attacks it, as clicking on
-it does (walking up to it first when it is out of reach), even where another
-figure stands in front of it. On the Options tab the rings are **none**, **only
-under the enemy chosen with Tab** (the default: none until Tab is pressed) or
-**under all the enemies** (the chosen one's thicker and redder); Tab and Enter
-have a switch of their own.
+In a fight, on a party member's turn, **Tab** chooses an enemy, the nearest
+first, then the next nearest (**Shift+Tab** goes back): a red ring on the
+ground marks it, under its feet (the figure stands in it, as on its shadow),
+the view scrolls to it if it is out of sight, and the log names it. **Enter**
+then attacks it, as clicking on it does (walking up to it first when it is out
+of reach), even where another figure stands in front of it. On the Options tab
+the ring can be switched off (**none**), and Tab and Enter have a switch of
+their own.
 
-![The arena fight with rings under all the enemies, two Sligs and a Screamer Beetle, one Slig chosen with Tab](docs/rings.png)
+![An arena fight, the Xorn chosen with Tab and the red ring under it](docs/rings.png)
 
 Tab and Enter also make attacking possible without aiming the mouse at all.
 
@@ -1737,9 +1735,7 @@ How it works:
 
 Press the mouse wheel on the map and move the mouse: the map moves with the
 pointer, as if dragged, in fights too. On the Options tab it can be switched
-off, or holding the right button made to drag the map as well (a right click,
-let go before the pointer has moved, still changes the pointer between walking,
-using and looking). The game still scrolls on its own when the pointer touches
+off. The game still scrolls on its own when the pointer touches
 the screen's edge, and still brings the view back to whoever's turn it is in a
 fight.
 

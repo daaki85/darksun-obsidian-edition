@@ -170,9 +170,8 @@ def display_lines(settings: dict) -> List[str]:
     if settings.get("mouse_start", True) is not False:
         sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (captured: uncaptured,
         # DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
-    if scale == 4:  # (the strip below the map: 22 rows taller, 266 with the aspect correction)
-        size = "1280x1064" if settings.get("combat_log_strip") is True else "1280x960"
-        return sdl + ["output=opengl", "windowresolution=" + size, "[render]",
+    if scale == 4:
+        return sdl + ["output=opengl", "windowresolution=1280x960", "[render]",
                       "aspect=true", "scaler=normal2x", ""]
     return sdl + ["[render]", "aspect=true",
                   "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
@@ -252,13 +251,11 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
     the saved settings if none given). Returns why the game can't be patched, or None."""
     on = content(load_settings() if settings is None else settings)
-    strip = (load_settings() if settings is None else settings).get("combat_log_strip") is True
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
         | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
         | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
         | (frozenset() if on["scene_pointer"] else frozenset(gamepatch.SCENE_POINTER)) \
-        | (frozenset() if on["mouse_start"] else frozenset(gamepatch.MOUSE_START)) \
-        | (frozenset() if strip else frozenset(gamepatch.STRIP))
+        | (frozenset() if on["mouse_start"] else frozenset(gamepatch.MOUSE_START))
     try:
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
@@ -435,8 +432,8 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
-                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True, "combat_log_strip": False,
-                   "targeting": True, "scroll_map": True, "scroll_right": False, "cycles": DEFAULT_SPEED}
+                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
+                   "targeting": True, "scroll_map": True, "cycles": DEFAULT_SPEED}
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:
