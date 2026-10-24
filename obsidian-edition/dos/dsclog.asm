@@ -148,6 +148,7 @@ VEC_TICK equ 0x87          ; PROBE_TICK
 VEC_POISON equ 0x86        ; PROBE_POISON
 VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
+VEC_HEAP equ 0xCB          ; PROBE_HEAP
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
 NENT    equ 63          ; entries in the ring (63: the helper and it fit in upper memory)
@@ -17657,10 +17658,12 @@ shadow_of:
         shl si, 4
         cmp dword [es:si + 6], 0
         jl .no
+        mov eax, [es:si + 6]            ; (the picture's own number: SC_KEY)
+        mov [cs:sc_key], eax
         test byte [es:si + 0x0E], 2
-        jz .no                          ; (not in memory: no shadow till the game has loaded it, as
-                                        ;   loading it here, in the middle of a drawing, can push out
-                                        ;   or move a picture the game is about to draw)
+        jz .cached                      ; (not in memory: the shadow as last seen, SC_SEG's; not
+                                        ;   loaded here, as in the middle of a drawing that can push
+                                        ;   out or move a picture the game is about to draw)
         les si, [es:si + 0x0A]
         mov bx, [cs:frame]
         cmp bx, [es:si + 4]
@@ -17682,6 +17685,7 @@ shadow_of:
         mov ax, [es:si + 2]
         dec ax
         mov [cs:f_bottom], ax
+        call sc_start
         add si, 4
 .row:   mov al, [es:si]
         inc si
@@ -17704,6 +17708,7 @@ shadow_of:
         jg .next
         test al, 1
         jnz .next                       ; (every other row: the shadow is half as tall)
+        call sc_put
         push es
         push si
         call cast_run
@@ -17712,10 +17717,157 @@ shadow_of:
 .next:  test byte [cs:r_x + 1], 0x80
         jz .run
         jmp .row
-.drawn: push es                         ; (its runs: drawn)
+.drawn: call sc_end
+        push es                         ; (its runs: drawn)
         call spans_flush
         pop es
 .no:    ret
+.cached:                                ; (its picture let go of: the shadow from SC_SEG)
+        mov al, [cs:frame]
+        call sc_find
+        jc .no
+        movzx ax, byte [es:di + 5]
+        mov [cs:f_w], ax
+        movzx ax, byte [es:di + 6]
+        mov [cs:f_bottom], ax
+        movzx cx, byte [es:di + 7]
+        lea si, [di + 8]
+.crun:  push cx
+        movzx ax, byte [es:si + 1]
+        mov [cs:r_x], ax
+        mov al, [es:si + 2]
+        mov [cs:r_n], al
+        movzx ax, byte [es:si]
+        push es
+        push si
+        call cast_run
+        pop si
+        pop es
+        add si, 3
+        pop cx
+        loop .crun
+        jmp .drawn
+
+; SHADOW CACHE (SC_SEG, KEEP's block in upper memory, if there was room: UMBPLUS.COM): in a big
+; fight the game lets go of pictures it isn't drawing just then, so a figure's could be out of its
+; cache as the floor is drawn, its shadow gone (SHADOW_OF draws only from pictures in memory). So
+; each frame's shadow is kept as it is drawn from its picture: SC_SLOTS slots of SC_SLOT bytes, the
+; picture's number (the cache slot's +6) and the frame, the frame's width and bottom row, how many
+; runs, then the runs that cast a shadow (how far up from the feet, x, pixels: a byte each, at
+; most SC_RUNS), filled in turn (the oldest given up). A figure whose picture is out of memory
+; casts its frame's kept shadow, or another frame's of the same picture.
+SC_SLOT  equ 208
+SC_RUNS  equ 64
+SC_SLOTS equ 80
+SC_PARAS equ SC_SLOTS * SC_SLOT / 16
+sc_seg   dw 0
+sc_next  dw 0                   ; the slot to fill next
+sc_key   dd 0                   ; the picture being drawn
+sc_rec   dw 0xFFFF              ; the slot being filled (0FFFFh: none)
+sc_n     db 0
+
+; SC_FIND: ES:DI the slot with SC_KEY's frame AL, else one with another of its frames; CF if none
+; (AX, BX, CX, DX not kept)
+sc_find:
+        cmp word [cs:sc_seg], 0
+        je .none
+        mov es, [cs:sc_seg]
+        mov ebx, [cs:sc_key]
+        xor di, di
+        mov dx, 0xFFFF
+        mov cx, SC_SLOTS
+.slot:  cmp byte [es:di + 7], 0
+        je .next
+        cmp [es:di], ebx
+        jne .next
+        cmp [es:di + 4], al
+        je .hit
+        mov dx, di
+.next:  add di, SC_SLOT
+        loop .slot
+        cmp dx, 0xFFFF
+        je .none
+        mov di, dx
+.hit:   clc
+        ret
+.none:  stc
+        ret
+
+; SC_START: from SHADOW_OF, the frame's header read (F_W, F_BOTTOM, FRAME): unless that frame is
+; kept already, the next slot taken for it (SC_REC); registers kept
+sc_start:
+        mov word [cs:sc_rec], 0xFFFF
+        cmp word [cs:sc_seg], 0
+        je .ret
+        pushad
+        push es
+        mov al, [cs:frame]
+        call sc_find
+        jc .take
+        cmp al, [es:di + 4]
+        je .out                         ; (kept)
+.take:  mov es, [cs:sc_seg]
+        mov ax, [cs:sc_next]
+        mov bx, SC_SLOT
+        mul bx
+        mov di, ax
+        mov eax, [cs:sc_key]
+        mov [es:di], eax
+        mov al, [cs:frame]
+        mov [es:di + 4], al
+        mov al, [cs:f_w]
+        mov [es:di + 5], al
+        mov al, [cs:f_bottom]
+        mov [es:di + 6], al
+        mov byte [es:di + 7], 0         ; (not to be used till it is whole: SC_END)
+        mov [cs:sc_rec], di
+        mov byte [cs:sc_n], 0
+        inc word [cs:sc_next]
+        cmp word [cs:sc_next], SC_SLOTS
+        jb .out
+        mov word [cs:sc_next], 0
+.out:   pop es
+        popad
+.ret:   ret
+
+; SC_PUT: the run SHADOW_OF is casting (AX rows up from the feet, R_X, R_N) kept; registers kept
+sc_put: cmp word [cs:sc_rec], 0xFFFF
+        je .ret
+        cmp byte [cs:sc_n], SC_RUNS
+        jae .ret
+        push es
+        push di
+        push bx
+        mov es, [cs:sc_seg]
+        movzx di, byte [cs:sc_n]
+        imul di, di, 3
+        add di, [cs:sc_rec]
+        mov [es:di + 8], al
+        mov bl, [cs:r_x]
+        mov [es:di + 9], bl
+        mov bl, [cs:r_n]
+        mov [es:di + 10], bl
+        inc byte [cs:sc_n]
+        pop bx
+        pop di
+        pop es
+.ret:   ret
+
+; SC_END: the frame's runs all seen: its slot made whole (its count of runs; none: still unused)
+sc_end: cmp word [cs:sc_rec], 0xFFFF
+        je .ret
+        push es
+        push di
+        push ax
+        mov es, [cs:sc_seg]
+        mov di, [cs:sc_rec]
+        mov al, [cs:sc_n]
+        mov [es:di + 7], al
+        mov word [cs:sc_rec], 0xFFFF
+        pop ax
+        pop di
+        pop es
+.ret:   ret
 
 ; the shadow of the current run, AX rows up from the feet
 cast_run:
@@ -20461,6 +20613,113 @@ probe_ovr_buf:
         iret
 ovr_far   dd 0
 
+; PROBE_HEAP: INT VEC_HEAP (and a NOP) replaces "push bp / mov bp,sp" at the start of the C
+; library's farmalloc (load:1231h), farfree (load:1127h) and farrealloc (load:138Eh), told apart by
+; where the INT came from. The game keeps some blocks of its far heap from its start to its end;
+; one of them, its music buffer (XMIDI: farmalloc(POOL_SIZE) once, at the start, through its
+; allocation wrapper), is given from a block KEEP took in upper memory (POOL_SEG), with a heap
+; block's own first word (its paragraphs: the wrapper reads it for the guard byte it puts at the
+; end), so the 640 KB has that much more. farfree and farrealloc of it never reach the library:
+; freed, it is given again to the next farmalloc(POOL_SIZE); grown past it, the contents go to a
+; block of the heap. Anything else, and without POOL_SEG, the library's own code, its first two
+; instructions done here.
+HP_MALLOC  equ 0x1233                   ; (the INT's way back: the function's start + 2)
+HP_FREE    equ 0x1129
+HP_REALLOC equ 0x1390
+POOL_SIZE  equ 12001                    ; (the music buffer: 12,000 bytes and the wrapper's guard)
+POOL_PARAS equ (POOL_SIZE + 4 + 15) / 16
+probe_heap:
+        push bp
+        mov bp, sp                      ; [bp+2] IP, +4 CS, +6 flags, +8 the caller's way back,
+        cmp word [cs:pool_seg], 0       ;   +12 the arguments
+        je .orig
+        mov ax, [bp+2]
+        cmp ax, HP_MALLOC
+        je .malloc
+        cmp ax, HP_FREE
+        je .free
+        cmp ax, HP_REALLOC
+        je .realloc
+.orig:  pop bp
+        call hp_enter
+        iret
+.malloc:
+        cmp byte [cs:pool_used], 0
+        jne .orig
+        cmp word [bp+14], 0
+        jne .orig
+        cmp word [bp+12], POOL_SIZE
+        jne .orig
+        mov byte [cs:pool_used], 1
+.give:  mov dx, [cs:pool_seg]
+        mov ax, 4
+        jmp .back
+.free:  mov ax, [bp+14]
+        cmp ax, [cs:pool_seg]
+        jne .orig
+        mov byte [cs:pool_used], 0
+        jmp .back
+.realloc:
+        mov ax, [bp+14]
+        cmp ax, [cs:pool_seg]
+        jne .orig
+        cmp word [bp+18], 0
+        jne .grow
+        cmp word [bp+16], POOL_PARAS * 16 - 4
+        jbe .give
+.grow:  mov ax, [cs:load_seg]           ; a block of the heap (farmalloc: here again, as the
+        mov [cs:hp_far + 2], ax         ;   library's), the contents copied, the pool's free
+        mov word [cs:hp_far], 0x1231
+        push word [bp+18]
+        push word [bp+16]
+        call far [cs:hp_far]
+        add sp, 4
+        mov cx, ax
+        or cx, dx
+        jz .back
+        push ds
+        push si
+        push es
+        push di
+        mov es, dx
+        mov di, ax
+        mov ds, [cs:pool_seg]
+        mov si, 4
+        mov cx, POOL_PARAS * 16 - 4
+        cld
+        rep movsb
+        pop di
+        pop es
+        pop si
+        pop ds
+        mov byte [cs:pool_used], 0
+.back:  push word [bp+6]                ; to the caller, as the function's RETF (its flags as they
+        popf                            ;   were: interrupts on again)
+        pop bp
+        add sp, 6
+        retf
+hp_far    dd 0
+
+; HP_ENTER: the INT's frame moved down past a pushed BP, BP = SP then: the library function's own
+; "push bp / mov bp,sp", done (its caller's registers and flags kept)
+hp_enter:
+        pop word [cs:hp_ret]
+        pop word [cs:hp_ip]
+        pop word [cs:hp_cs]
+        pop word [cs:hp_fl]
+        push bp
+        mov bp, sp
+        push word [cs:hp_fl]
+        push word [cs:hp_cs]
+        push word [cs:hp_ip]
+        jmp word [cs:hp_ret]
+hp_ret    dw 0
+hp_ip     dw 0
+hp_cs     dw 0
+hp_fl     dw 0
+pool_seg  dw 0                  ; (KEEP's block for the music buffer, 0 if none)
+pool_used db 0
+
 ; KEEP: the last of installing, from here, as the ring is where the install code was: clear the
 ; ring and stay resident, the ring with the image (DX the paragraphs). The stack goes to the PSP's
 ; command tail first, out of the ring's way.
@@ -20483,6 +20742,24 @@ keep:   mov ax, [cs:psp]
         jc .no_ovr
         mov [cs:ovr_seg], ax
 .no_ovr:
+        mov bx, POOL_PARAS              ; the music buffer's (PROBE_HEAP) and the shadows' cache
+        call umb_alloc                  ;   (SC_SEG), if upper memory has the room (UMBPLUS.COM)
+        jc .no_pool
+        mov [cs:pool_seg], ax
+        mov es, ax
+        mov word [es:0], POOL_PARAS
+.no_pool:
+        mov bx, SC_PARAS
+        call umb_alloc
+        jc .no_sc
+        mov [cs:sc_seg], ax
+        mov es, ax
+        xor di, di
+        xor ax, ax
+        mov cx, SC_PARAS * 8
+        cld
+        rep stosw
+.no_sc:
         pop dx
         mov ax, 3100h
         int 21h
@@ -20604,6 +20881,9 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov ax, 2500h + VEC_ARROW
         mov dx, probe_arrow
+        int 21h
+        mov ax, 2500h + VEC_HEAP
+        mov dx, probe_heap
         int 21h
         mov ax, 2500h + VEC_OVR_BUF
         mov dx, probe_ovr_buf
@@ -20988,7 +21268,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP
 all_vectors_end:
 
         align 16, db 0

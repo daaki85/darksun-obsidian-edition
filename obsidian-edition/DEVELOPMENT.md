@@ -433,10 +433,10 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 
 | Memory | Size | What uses it |
 |---|---|---|
-| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 85 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
+| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the panel's picture 23 KB, the ring 12 KB, 29 KB free |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the panel's picture 23 KB, the shadows' cache 16 KB, the ring 12 KB, the game's music buffer 12 KB, 0.5 KB free |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA: unused (DOSBox's XMS says there is none; reached only with A20 on) |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -456,9 +456,30 @@ between DOSBox's tables and the block. Measured with the user's arena save
 C90Ah, the overlay buffer in upper memory, 29.1 KB free in one piece.
 
 The helper still has to fit D000h-EFFFh (`UMB_ROOM`, below), so it works
-where the block can't be moved; the 28 KB more is room for what it can do
-without (a bigger ring, more of the game's own blocks moved out of the 640 KB,
-data moved out of the helper's 64 KB segment).
+where the block can't be moved; the 28 KB more holds what it can do without:
+the shadows' cache ([Shadows](#shadows)) and the game's music buffer.
+
+**The game's blocks kept for good.** Of the game's far heap (Borland's,
+farmalloc at load:1231h, farfree 1127h, farrealloc 138Eh), 134 KB is taken
+before the main menu and kept in place through loading a save, walking, an area
+change and a fight, logged by a research build of the helper with those three
+functions hooked: the music buffer (12,001 bytes: an XMIDI file), the sound
+effects' (24,001: a Creative Voice File), both asked for by the sound driver's
+set-up in an overlay; tables of 10,724, 4,963 and 11,778 bytes; the font and
+other resources loaded as the menu comes up. Nearly every request goes through
+the game's wrapper at 34FA4h (farmalloc of the size + 1, a guard byte 77h at the
+block's end, which its farfree wrapper at 34F3Ch checks), and its callers are
+mostly overlays (running in upper memory, so not to be patched by address).
+So `PROBE_HEAP` (INT CBh in place of each function's "push bp / mov bp,sp")
+takes them by size: `farmalloc(12001)` is given `POOL_SEG`, a block KEEP took in
+upper memory, with a heap block's first word (its paragraphs, which the wrapper
+reads for the guard byte); farfree of it marks it free for the next such
+request; farrealloc of it keeps it if the size fits, else moves the contents to
+a block of the heap. Nothing else changes. The music buffer was chosen as it fits
+with the shadows' cache (the sound effects' 24 KB would leave the cache 6 KB):
+with the map open the game has 97 KB spare, not 85 KB. Measured with the user's
+arena save: the buffer in upper memory holding the XMIDI file, walking, the
+arena's area change and a fight as usual.
 
 With GOG's settings there
 is one upper memory block of 63 KB, EMS's 64 KB page frame taking the rest; the
@@ -491,7 +512,8 @@ top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
 The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
 the map open this left 86 KB free in conventional memory (85 KB measured again
-with the 6th-level spells, the largest piece 87,744 bytes), against 53 KB (and
+with the 6th-level spells, the largest piece 87,744 bytes; 97 KB with the music
+buffer in upper memory too, below), against 53 KB (and
 the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
@@ -2879,6 +2901,21 @@ makes from the palette when the Loader asks: after each area change, once its
 fade-in is over, and now and then; the colours the game cycles, for water and
 fire, are never picked as darker ones). The rectangles the game draws again when
 a figure moves are widened by the length of a shadow, so none is left behind.
+
+**Pictures out of memory.** The shadow is traced from the figure's picture in
+the game's picture cache, and in a big fight (the arena, ten monsters) the game
+lets go of most pictures between drawings: in the user's arena save every figure
+but one had its picture out of memory as the floor was drawn, so no shadow.
+Loading one from here, in the middle of a drawing, could push out or move a
+picture the game is about to draw, so instead DSCLOG keeps each frame's shadow
+as it draws it (`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow,
+three bytes each, at most 64, under the picture's number from the cache slot's
+`+6` and the frame) in 80 slots of 208 bytes in upper memory (`SC_SEG`, from
+KEEP, if `UMBPLUS.COM` made the room), the oldest given up first. A figure whose
+picture is out casts its frame's kept shadow, or another frame's of the same
+picture (`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the
+party and the monsters seen in memory once casting shadows after; one whose
+picture was never in memory at a floor drawing still has none.
 Only pictures already in the game's cache cast one: until 2.6.0 DSCLOG had the
 game load a missing one from there (1DF3:2A3Ah), in the middle of drawing the
 floor, which can push out or move another picture while the game is drawing; a

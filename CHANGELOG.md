@@ -47,6 +47,26 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
 
 **New**
+- **Shadows kept for figures whose pictures the game lets go of.** In the arena's fight every figure
+  but one had its picture out of the game's cache as the floor was drawn, so `SHADOW_OF` (which
+  won't load one mid-drawing) drew no shadow. DSCLOG now keeps each frame's shadow as it draws it:
+  `SC_START`/`SC_PUT`/`SC_END`, the runs (up from the feet, x, pixels; at most 64) under the
+  picture's number (the cache slot's `+6`, one per picture: the same for monsters of a kind) and
+  the frame, 80 slots of 208 bytes in a block KEEP takes in upper memory (`SC_SEG`, 16 KB),
+  filled in turn. A picture out of memory casts its frame's kept shadow, else another frame's
+  (`SC_FIND`). Seen in the user's arena save: 74 slots filled in a few rounds; Zulak, walked onto
+  the sand with his picture out, and the fire eels cast shadows (shadows off and on compared); the
+  otyugh, never in memory at a floor drawing, still none.
+- **The game's music buffer in upper memory: 12 KB more of the 640 KB.** A research build of the
+  helper logged the C library's farmalloc, farfree and farrealloc: 134 KB of the far heap is taken
+  before the main menu and kept, never freed or resized through a load, an area change and a fight
+  (music 12,001 bytes, sound effects 24,001, tables). `PROBE_HEAP` (`gamepatch` `heap_malloc`,
+  `heap_free`, `heap_realloc`: INT CBh at each function's start) gives `farmalloc(12001)` a block
+  KEEP took in upper memory (`POOL_SEG`, with a heap block's paragraphs word for the wrapper's
+  guard byte); farfree of it marks it free, farrealloc keeps it or moves it to the heap; nothing
+  else changes. With the map open the game has 97 KB spare, not 85. Seen: the XMIDI file in the
+  block, walking, an area change and a fight as usual. Both need `UMBPLUS.COM`'s room; without it
+  neither is taken.
 - **28 KB more upper memory.** DOSBox 0.74 starts its upper memory block at D000h, but C800h-CFFFh
   is RAM too, and DOSBox's own tables (`DOS_PRIVATE_SEGMENT`) use only its start (to C8C0h with
   the game running). `UMBPLUS.COM` (`dos/umbplus.asm`), run by the launcher's config just before

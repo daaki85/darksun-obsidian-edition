@@ -87,6 +87,7 @@ VEC_TICK = 0x87
 VEC_POISON = 0x86
 VEC_ARROW = 0x85
 VEC_OVR_BUF = 0x84
+VEC_HEAP = 0xCB
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -758,6 +759,13 @@ PATCHES = (
     # the test's word (DSCLOG gives a block it has kept in upper memory, else calls farmalloc): the
     # game's heap, in the 640 KB, that much bigger
     Patch("overlay_umb", 0x3C68C, bytes.fromhex("9a31120000"), bytes.fromhex("cd%02xa90000" % VEC_OVR_BUF)),
+    # ... and its music buffer (12,001 bytes, from its start to its end): the C library's farmalloc,
+    # farfree and farrealloc (load:1231h, 1127h, 138Eh) start "push bp / mov bp,sp", which DSCLOG's
+    # PROBE_HEAP does itself, giving that one block from upper memory and never letting the library
+    # free or grow it
+    Patch("heap_malloc", 0x6631, bytes.fromhex("558bec"), _interrupt(VEC_HEAP, 3)),
+    Patch("heap_free", 0x6527, bytes.fromhex("558bec"), _interrupt(VEC_HEAP, 3)),
+    Patch("heap_realloc", 0x678E, bytes.fromhex("558bec"), _interrupt(VEC_HEAP, 3)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),
