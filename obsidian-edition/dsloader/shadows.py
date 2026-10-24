@@ -31,16 +31,17 @@ BUILD_EVERY = 30.0  # ... and anyway this often
 
 
 def casting(gd) -> bytes:
-    """A byte for each of the game's things: 1 for a living creature (not dying or dead)."""
+    """A bit for each of the game's things (thing N: byte N // 8, bit N % 8, as DSCLOG's SHADOW_TAB),
+    set for a living creature (not dying or dead)."""
     things = gd.guest.read((gd.load_seg + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF, THINGS * 3)
-    out = bytearray(THINGS)
+    out = bytearray((THINGS + 7) // 8)
     for thing in range(THINGS):
         kind, index = struct.unpack_from("<Bh", things, thing * 3)
         if kind != CREATURE or not 0 <= index < 512:
             continue
         rec = gd.creature(index)
         if len(rec) >= game.CREATURE_SIZE and rec[game.CREATURE_NAME] and rec[game.CREATURE_STATUS] not in (STATUS_DYING, STATUS_DEAD):
-            out[thing] = 1
+            out[thing // 8] |= 1 << thing % 8
     return bytes(out)
 
 

@@ -242,6 +242,8 @@ def monster_lines(gd, tables: MonsterTables, creature: int, ac: Optional[int]) -
     attacks = sheet[0x2A]
     undead = sheet[0x18] == UNDEAD_RACE
     d = tables.defences(kind, undead)
+    if ac is None:  # (no attack on it yet: counted as the game would, its armour and DEX)
+        ac = gd.counted_ac(creature)
     ac_text = str(ac) if ac is not None else str(struct.unpack_from("b", sheet, 0x27)[0])
     alignment = ALIGNMENTS.get(sheet[SHEET_ALIGNMENT])
     # magic resistance beside the game's LEVEL; the alignment after THAC0 where it fits (the

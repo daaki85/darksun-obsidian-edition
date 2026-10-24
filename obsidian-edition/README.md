@@ -588,7 +588,10 @@ loses its spaces.) Its own status lines (casting, charmed, held...) follow in
 any row left. When there's more to say, closing the box shows everything in
 the game's dialogue window: the weapons it needs, the damage it's immune to or
 takes half of, spells that don't work on it, and what its hits do besides
-damage. The dice log gets the same lines (`Look: ...`). Untick **Describe
+damage. The AC is the one the game last used against it; before anything
+has attacked it, the Loader works it out as the game would, from its armour,
+shield and DEX (spells on it, such as Barkskin, aren't counted until then).
+The dice log gets the same lines (`Look: ...`). Untick **Describe
 monsters when you Look at them in a fight** on the Options tab to turn this
 off.
 
@@ -682,6 +685,9 @@ Everything there applies in games started from the Loader; a switch that says
   Cilla drawn as an elf, what the party wears, shadows and dust.
 - **Controls** ([Controls](FEATURES.md#controls)) and **Game speed**
   ([Game speed](FEATURES.md#game-speed)).
+- **Wake of the Ravager (optional)**: whether the Loader found it, for the
+  6th-level priest spells' icons and pictures, and **Choose its folder...**
+  ([Requirements](#requirements)).
 - **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)): the folder
   of saves kept under their names, and putting one back in a slot.
 

@@ -362,11 +362,12 @@ class AttackTests(unittest.TestCase):
         log._look_seq = 6
         log._answer_look()
         self.assertEqual(bytes(m[HDR + 0x300:HDR + 0x340]).split(b"\0")[0], b"HP 38/60 AC 4|THAC0 11")
-        # an AC worked out for another creature in the record (an earlier fight's): the sheet's
+        # an AC worked out for another creature in the record (an earlier fight's): counted as
+        # the game counts it, the sheet's 10 and DEX 16's -2 (it wears nothing)
         log._ac_whose[STALKER] = "Defiler"
         struct.pack_into("<HH", m, HDR + dicelog.TSR_LOOK_SEQ, 8, 7)
         log._look_seq = 7
-        self.assertEqual(log._answer_look()[0][:41], "Look: Mountain Stalker: HP 38/60, AC 10, ")
+        self.assertEqual(log._answer_look()[0][:40], "Look: Mountain Stalker: HP 38/60, AC 8, ")
         # a party member: nothing to add (the game shows the View Character screen)
         struct.pack_into("<HH", m, HDR + dicelog.TSR_LOOK_SEQ, 2, 1)
         struct.pack_into("<H", m, HDR + dicelog.TSR_LOOK_WHO, 0)

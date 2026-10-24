@@ -2,14 +2,55 @@
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first: the record for developers and testers.
-For what a release brings, read its notes ([2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
+For what a release brings, read its notes ([2.7.2](release-notes/v2.7.2.md), [2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
 [2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
 [2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
 [2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #58 (in progress)
+## Pull request #59 (in progress)
+
+**Release**
+- **Obsidian Edition 2.7.2**: the version is 2.7.2, with its notes in `release-notes/v2.7.2.md`,
+  listed on the front page with the others.
+
+**Fixed**
+- **Sunstroke ends the caster's turn.** Its record kept Hold Person's aim (+00h 10h, the holds'
+  several targets: after the first the spell stayed armed and the turn went on); it now has Slay
+  Living's (4, one creature), as meant (the patch had changed +0Ch, the same in both). Checked in
+  the game: Grog's Sunstroke on Scar, and the turn passed straight on.
+- **Wall of Thorns counts a monster's armour.** For anyone but a party member the game has seen
+  attacked, `THORNS_AC` took the sheet's base AC (+27h), 10 for an armed man, as the game adds
+  armour in its AC routine (58DD3h, in an overlay the damage's can't call). It now counts as that
+  routine does: less each worn item's plus and its type's AC (types with +0Fh 80h, in the item
+  lists +8 and +0Ah, where putting an item on moves it: the slot byte doesn't matter), a fifth of
+  a gladiator's level and the DEX adjustment; spells' AC still not. The ring is 64 entries (65) to
+  make room. Checked in the game: Scar (leather arm and chest armour, DEX 17) took 8 + AC 5 = 13,
+  his AC as the game had it when he was attacked, not 18; his henchmen 18 (AC 10); the party
+  their own ACs.
+- **Room in upper memory: 54 paragraphs spare (none).** DSCLOG's `SHADOW_TAB` is a bit for each
+  of the game's 520 things, not a byte (`shadows.casting` writes it so; the helper tests it with
+  `BT`), and `EXTRA_NAMES` keeps its 46 names in 16 bytes each (`NAME_KEPT`: 15 letters at most),
+  `PROBE_NAMES_FILL` padding each to the game's 25 as it copies them: 455 and 414 bytes. Checked
+  in the game: all 46 names in the game's table as before, and the figures' shadows drawn.
+- **The Look box's AC counts a monster's armour.** Before anything had attacked a monster, the
+  Look box (and its `Look:` line) gave its sheet's base AC, 10 for an armed man, as Wall of
+  Thorns did. It now counts as the game does (`GameData.counted_ac`, the Loader's twin of
+  `THORNS_AC`: worn armour and its plus, in the item lists +8 and +0Ah, a gladiator's levels and
+  DEX; `_worn` takes the lists to walk). Checked in the game: Scar's Look box AC 5 at the fight's
+  start (it said 10), the AC the game uses when he is attacked; his henchmen 10.
+- **Documentation review.** The Loader README lists the Options tab's Wake of the Ravager section;
+  DEVELOPMENT describes how `THORNS_AC` now counts a monster's AC; How the game works keeps the
+  manual's column the manual's (Slay Living); two sentences in the patch notes untangled. Two
+  screenshots retaken: `options.png` (with the Wake of the Ravager section) and Heartseeker's tile
+  in `new-priest-spells.png` (its new description).
+- **Heartseeker's and Slay Living's descriptions.** A creature that saves still takes half of
+  4d8, 2 to 16: Heartseeker's said only that it slays, and Slay Living's said 3 to 17 (the book's
+  2d8+1, not what the game rolls). `spelltexts.py` puts both right (SPIN 209 and 137), and the
+  spellbook line, FEATURES, the guide and the patch notes say so.
+
+## Pull request #58 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/58))
 
 **Release**
 - **Obsidian Edition 2.7.1** (pull request #57): the version is 2.7.1, with its notes in

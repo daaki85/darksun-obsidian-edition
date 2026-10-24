@@ -49,11 +49,11 @@ class PriestSixStub(StubGame):
 
 class TextTests(unittest.TestCase):
     def test_sixth_level_lines_by_hand(self):
-        # Heartseeker's record (Slay Living's) would read as dice halved by a save: its own lines say
-        # what DSCLOG makes it do, the rest are still read from the record
+        # Heartseeker's record (Slay Living's) would read as dice halved by a save, not the death on
+        # a failed one: its own lines say both, the rest are still read from the record
         gd = PriestSixStub(SpellDamage(0, 4, 0, 1, 0, 8), SpellRules(True, 0, "spell"), name="Heartseeker")
         info = spellbook.spell_info(gd, game.HEARTSEEKER_SPELL, [])
-        self.assertEqual((info.magic, info.level, info.damage), ("Priest", 6, ""))
+        self.assertEqual((info.magic, info.level, info.damage), ("Priest", 6, "half of 4d8 (2 to 16) to one that saves"))
         self.assertIn("one that fails it dies", info.save)
         self.assertTrue(set(spellbook.OWN_LINES) <= set(game.PRIEST6_SPELLS))
         for lines in spellbook.OWN_LINES.values():

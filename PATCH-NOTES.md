@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.7.1 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.7.2 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -149,7 +149,7 @@ A few of them:
 | **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
 | **Sunstroke** | fire | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |
 | **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
-| **Heartseeker** | earth, water | save against death or die |
+| **Heartseeker** | earth, water | save against death or die; 2–16 on a save |
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
 | **Whirlwind** | air | a whirlwind that stays a round a caster level: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn; nothing can be shot or cast through it |
 
@@ -242,7 +242,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
-- **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades and Wall of Thorns' tangle of thorns (Wake of the Ravager's, read from your copy: GOG sells it with Shattered Lands; recoloured fire walls without it), Fire Seeds' fireball, and Whirlwind's tall funnel of dust, turning.
+- **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades, Wall of Thorns' tangle of thorns, Fire Seeds' fireball and Whirlwind's tall, turning funnel of dust. The blades and thorns are Wake of the Ravager's, read from your copy (GOG sells it with Shattered Lands); without it they are the fire wall, recoloured.
 
 ## Quality of Life
 
@@ -265,7 +265,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F): every match highlighted, Enter for the next.
-- **[New]** More in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; **Detonate**'s blast on an item (which one, the d20, and whether it's gone: it picks the worn item that breaks most easily, a bone helm before bone armour); why the game **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); and a party member's **ability score** changing; and what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`).
+- **[New]** More in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; **Detonate**'s blast on an item (which one, the d20, and whether it's gone: it picks the worn item that breaks most easily, a bone helm before bone armour); why the game **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); a party member's **ability score** changing; and what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`).
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** **Options:** every rule change and addition in these notes has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
@@ -298,6 +298,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** **Slay Living**'s description said a creature that saves takes 3 to 17; the game does 2 to 16 (half of 4d8). It says so now.
 - **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 

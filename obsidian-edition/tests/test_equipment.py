@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import game
-from test_dicelog import CREATURES, DS, ITEMS, LOAD_SEG, make_game
+from test_dicelog import CREATURES, DS, ITEM_TYPES, ITEMS, LOAD_SEG, SHEETS, STALKER, make_game
 
 
 class EquipmentTests(unittest.TestCase):
@@ -51,6 +51,53 @@ class EquipmentTests(unittest.TestCase):
         log = make_game()
         struct.pack_into("<hhh", log.guest.mem, CREATURES + 8, 9999, 9999, 9999)
         self.assertEqual(game.GameData(log.guest, DS).equipment(0), [])
+
+
+class CountedAcTests(unittest.TestCase):
+    """A creature's AC as the game's AC routine counts it (the Look box's before any attack on it,
+    and DSCLOG's Wall of Thorns'): base, armour worn, a gladiator's levels and DEX."""
+
+    def setUp(self):
+        self.log = make_game()
+        m = self.m = self.log.guest.mem
+        self.rec = CREATURES + STALKER * game.CREATURE_SIZE
+        self.sheet = SHEETS + STALKER * game.SHEET_SIZE
+        struct.pack_into("b", m, self.sheet + game.SHEET_BASE_AC, 10)
+        m[self.rec + game.CREATURE_ABILITIES + 1] = 17
+        struct.pack_into("b", m, DS * 16 + game.DEX_AC + 17, -3)
+        things = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
+        struct.pack_into("<Bh", m, things + 50 * 3, game.THING_ITEM, 20)  # leather chest armour
+        struct.pack_into("<Bh", m, things + 51 * 3, game.THING_ITEM, 21)  # a sword
+        for item, typ, plus in ((20, 30, 1), (21, 31, 2)):
+            at = ITEMS + item * game.ITEM_SIZE
+            struct.pack_into("<HhB", m, at + game.ITEM_TYPE, typ, 0, 0)
+            struct.pack_into("<h", m, at + game.ITEM_NEXT, game.NO_ITEM)
+            m[at + game.ITEM_PLUS] = plus
+        m[ITEM_TYPES + 30 * game.ITEM_TYPE_SIZE + 0x0F] = 0x80  # counts for AC: AC 1
+        m[ITEM_TYPES + 30 * game.ITEM_TYPE_SIZE + 0x12] = 1
+        self.lists(9999, 51, 50)  # the armour carried, not worn (as before a fight)
+
+    def lists(self, *things):
+        struct.pack_into("<3h", self.m, self.rec + game.CREATURE_ITEM_LISTS[0], *things)
+
+    def ac(self):
+        return game.GameData(self.log.guest, DS).counted_ac(STALKER)
+
+    def test_carried_armour_doesnt_count(self):
+        self.assertEqual(self.ac(), 7)  # 10, DEX -3; the sword's plus never counts
+
+    def test_worn_armour_and_its_plus(self):
+        """Put on (moved to +8, whatever its slot byte): AC 1 and its +1."""
+        self.lists(50, 51, 9999)
+        self.assertEqual(self.ac(), 5)
+
+    def test_gladiator(self):
+        """A fifth of a gladiator's level (10th: 2); not without the sheet's gladiator flag."""
+        self.m[self.sheet + game.SHEET_CLASSES] = game.GLADIATOR_CLASS
+        self.m[self.sheet + game.SHEET_LEVELS] = 10
+        self.assertEqual(self.ac(), 7)
+        struct.pack_into("<H", self.m, self.sheet + game.SHEET_FLAGS, game.SHEET_FLAG_GLADIATOR)
+        self.assertEqual(self.ac(), 5)
 
 
 class EffectsLeftTests(unittest.TestCase):

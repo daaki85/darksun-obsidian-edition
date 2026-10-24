@@ -55,8 +55,8 @@ class ShadowsTests(unittest.TestCase):
     def test_casting(self):
         """The living creatures among all 520 things: not the dying or dead, not items."""
         table = shadows.casting(Game())
-        self.assertEqual(len(table), shadows.THINGS)
-        self.assertEqual([t for t in range(shadows.THINGS) if table[t]], [0, 300])
+        self.assertEqual(len(table), (shadows.THINGS + 7) // 8)
+        self.assertEqual([t for t in range(shadows.THINGS) if table[t // 8] >> t % 8 & 1], [0, 300])
 
     def test_update(self):
         """On: DSCLOG's switch, its table, the darker colours asked for (and again after an area
@@ -67,7 +67,7 @@ class ShadowsTests(unittest.TestCase):
         self.assertEqual(gd.word(HDR + shadows.TSR_ON), 1)
         self.assertEqual(gd.word(HDR + shadows.TSR_BUILD), 1)
         self.assertEqual(gd.guest.read(BASE + TABLE_OFF, 3), b"\x01\x00\x00")
-        self.assertEqual(gd.guest.read(BASE + TABLE_OFF + 300, 1), b"\x01")
+        self.assertEqual(gd.guest.read(BASE + TABLE_OFF + 300 // 8, 1), bytes((1 << 300 % 8,)))
         gd.guest.write(HDR + shadows.TSR_BUILD, struct.pack("<H", 0))  # (DSCLOG made them)
         s.update(gd, HDR, True, 100.3)
         self.assertFalse(gd.redrawn())

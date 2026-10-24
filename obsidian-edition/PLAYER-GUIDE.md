@@ -1440,7 +1440,8 @@ AD&D's spell tables and the new spells switched on):
 - **Sunstroke**: one creature collapses, helpless, for 2 rounds a level unless
   it saves, and the heat burns it for 1d4 at the start of each round.
 - **Fire Seeds**: four seeds of 2d8 burst together where you aim, a save for half.
-- **Heartseeker**: one creature saves against death or dies.
+- **Heartseeker**: one creature saves against death or dies; if it saves, it
+  takes 2 to 16.
 - **Water of Life** (touch): the creature's wounds pass to the caster, who
   keeps at least 5 hit points.
 - **Whirlwind**: a turning funnel of dust that stays a round a caster level:

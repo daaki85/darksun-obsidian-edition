@@ -31,7 +31,8 @@ OWN_LINES = {
     THORNS_SPELL: {"damage": "8 + the creature's AC, at least 1 [pointed], in the wall or pushing through",
                    "save": "none"},
     SUNSTROKE_SPELL: {"damage": "1d4 [fire] at the start of each round it holds"},
-    HEARTSEEKER_SPELL: {"damage": "", "save": "paralysis/poison/death; one that fails it dies"},
+    HEARTSEEKER_SPELL: {"damage": "half of 4d8 (2 to 16) to one that saves",
+                        "save": "paralysis/poison/death; one that fails it dies"},
     WATER_LIFE_SPELL: {"effect": "the creature's wounds healed by taking them onto the caster, who keeps "
                                  "at least 5 hit points"},
     WHIRLWIND_SPELL: {"damage": "2d8 [crushing] each round to each creature in it",

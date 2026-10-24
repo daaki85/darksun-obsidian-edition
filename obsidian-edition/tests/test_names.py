@@ -88,7 +88,7 @@ class HelperTests(unittest.TestCase):
         hdr = image.find(HDR_SIG)
         off, count = struct.unpack_from("<HH", image, hdr + names.TSR_NAMES_OFF)
         self.assertEqual(count, names.EXTRA)
-        size = game.ITEM_NAME_SIZE
+        size = names.KEPT
         listed = [image[off + i * size:off + (i + 1) * size] for i in range(count)]
         want = [names.NAMES.get(names.OWN + i, b"").ljust(size, b"\0") for i in range(count)]
         self.assertEqual(listed, want)

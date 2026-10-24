@@ -387,7 +387,7 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 65 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 64 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -406,10 +406,10 @@ is still at most 64 KB (everything through CS), so the second block is room
 for data kept apart from it, as the ring is. The helper asks for its resident
 part and the ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB
 free and a few KB of upper memory left. A change that adds much code should
-check that again: the ring is 65 entries, not 128 (96 until the new spells'
+check that again: the ring is 64 entries, not 128 (96 until the new spells'
 code, when the game no longer started for lack of memory; 88 until STORE and
 RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
-fitted in the block and loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned), and the
+fitted in the block and loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned; 65 until Wall of Thorns counted a monster's armour), and the
 text buffer 2 KB, not 8 (4 until the memory pass for 6th-level spells), to make
 that room. The most entries put in the ring in 2 seconds, measured, is 43
 (the opening show), 16 in a fight.
@@ -432,8 +432,10 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
 (`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
 D00Ah to F000h): the build fails past it (a negative `times`), and so does
-`test_fits_upper_memory`. Only 3 paragraphs (48 bytes) are spare now (3.8 KB
-before the 6th-level spells, the names over figures and Whirlwind's funnel), so
+`test_fits_upper_memory`. 54 paragraphs (864 bytes) are spare now, after the
+shadow table became a bit for each thing and the added item names 16 bytes each, padded to the
+game's 25 as they are copied (3.8 KB before the 6th-level spells, the names over figures,
+Whirlwind's funnel and Wall of Thorns' armour), so
 new helper code needs room found first: each of the ring's entries is 12
 paragraphs (`NENT`), and the helper's own segment still has about 2.3 KB. Text the game
 reads from RESOURCE.GFF belongs in the Loader's copy of it, not in the helper
@@ -951,6 +953,13 @@ the game calls those itself, looking for sound drivers) where the box has
 drawn its first status rows; the helper asks the Loader and waits a moment for
 its answer, and prints the lines with the game's text routine. `INT F6h`, at
 the end of the routine that closes the box, shows the whole description.
+
+The AC is the one `PROBE_AC` last recorded for the creature (`DiceLog.monster_ac`: the game works
+an AC out only for an attack, and keeps none). Before any attack on it, `GameData.counted_ac`
+counts it as the game's AC routine (58DD3h) does, as `THORNS_AC` does in the helper: the sheet's
+base (+27h, 10 for an armed man), less each worn item's plus and its type's AC (types with
++0Fh 80h, in the item lists +8 and +0Ah), a fifth of a gladiator's level and the DEX adjustment;
+the effects' part (Armor, Barkskin...) is left out.
 
 ### Charges in item boxes
 
@@ -2295,13 +2304,19 @@ thing's object is no longer Whirlwind's (the area gone).
 A0h). The game keeps no AC: its AC routine
 (58DD3h) works one out from items and effects for each attack, and it is in another overlay
 (41BEh) than the damage roll (428Fh), so calling it there could have the overlay manager move the
-code it returns to. A monster's AC is its sheet's +27h (the Look box's); a party member's sheet
-says 10 there whatever it wears, so `PROBE_AC`, at the AC routine's end, keeps each member's last
-AC (`AC_SEEN`, its `[BP+6]` the combatant; 7Fh none yet: then the sheet's). The dice log shows
+code it returns to. So `PROBE_AC`, at the AC routine's end, keeps each party member's last AC
+(`AC_SEEN`, its `[BP+6]` the combatant; 7Fh none yet), and for anyone else (or a member not yet
+attacked) `THORNS_AC` counts as the routine does: the sheet's base (+27h, 10 for an armed man:
+the routine adds the armour), less each worn item's plus and its type's AC (+12h, types with +0Fh
+80h, a shield too) in the creature's item lists +8 and +0Ah (where putting an item on moves it;
+the routine doesn't look at the slot byte, and +0Ch, the backpack, doesn't count), a fifth of a
+gladiator's level (508:25h's) and the DEX adjustment (DS:7F6h by the record's +23h). The
+effects' part (5B8:F2h: Armor, Barkskin and the rest) is left out. The dice log shows
 it: the entry's extra carries the AC + 80h in its high byte. Blade Barrier's record has its own
 8d8, edged (+1Ah 210h), and the game's saving throw against spells (+1Fh A1h) for none (+11h's
-8000h), as Wake of the Ravager's. Sunstroke's record takes Slay Living's aim (+0Ch 4,
-one creature) in place of Hold Person's (1). Heal's record takes one effect away (Diseased, as
+8000h), as Wake of the Ravager's. Sunstroke's record takes Slay Living's aim (+00h 4,
+one creature) in place of Hold Person's (10h, several: the caster's turn waits, the spell still
+armed, for more targets; only Hold Person and Hold Monster have it). Heal's record takes one effect away (Diseased, as
 Cure Disease's -13); `HEAL_SIGHT` (from `CAST_SITE`) takes the target's Blind entries (8) out of
 the game's table of active effects (DS - 760h:0106h, 10 bytes each: the thing, the caster, the
 spell, the effect; the count DS:1E24h), moving the rest down.
