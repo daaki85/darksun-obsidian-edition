@@ -153,7 +153,7 @@ VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
-NENT    equ 65          ; entries in the ring (65: the helper and it fit in upper memory)
+NENT    equ 64          ; entries in the ring (64: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
 LBL_SLOTS  equ 2        ; names floating over figures at once (LABELS)
 LBL_ROW    equ 16       ; bytes a row of a label's mask: LBL_ROW * 8 pixels wide at most
@@ -11185,28 +11185,105 @@ thorns_damage:
         iret
 
 ; THORNS_AC: EAX the AC of combatant SI (signed): a party member's as the game last worked it
-; out (AC_SEEN), else its sheet's (+27h: a monster's own; a member never attacked yet, its
-; base). DS the game's; others kept.
+; out (AC_SEEN), else counted as the game's AC routine (DSUN.EXE 58DD3h, in an overlay: not to be
+; called from the damage's) counts it: its sheet's base (+27h), less each worn item's plus and its
+; type's AC where the type counts for AC (+0Fh 80h; a shield too, the thorns not being from
+; behind; worn: in its first two item lists, +8 and +0Ah, as putting an item on moves it there
+; from +0Ch, whatever its slot byte says), a fifth of a gladiator's level (the sheet's +12h 40h: its class among the three, a
+; human's later class only once past the first's level, as the game's 508:25h has it) and the
+; DEX adjustment (the record's +23h). Spells' changes to AC (5B8:F2h's) aren't counted. DS the
+; game's; SI and BP kept (WALL_DAMAGE's PUSHAD keeps the rest).
 THORNS_BASE equ 8
 SHEET_AC    equ 0x27
+DEX_AC      equ 0x7F6                   ; DS: the AC adjustment for each DEX score (bytes)
 thorns_ac:
-        push bx
-        push es
         cmp si, 3
-        ja .sheet
+        ja .count
         movsx eax, byte [cs:si + ac_seen]
         cmp al, AC_UNSEEN
-        jne .out
-.sheet: mov ax, ds
+        jne .ret
+.count: push bp
+        mov ax, ds
         add ax, THINGS_SEG
+        mov [cs:r_things], ax
         mov es, ax
         imul bx, si, 3
         mov ax, [es:bx + COMBATANT_CREATURE]
+        push ax
         call creature_sheet
-        movsx eax, byte [es:bx + SHEET_AC]
-.out:   pop es
-        pop bx
-        ret
+        movsx di, byte [es:bx + SHEET_AC]
+        test byte [es:bx + 0x12], 0x40
+        jz .items
+        xor cx, cx
+.class: mov di, cx              ; (the base read again after)
+        cmp byte [es:bx + di + 0x21], GLADIATOR_CLASS
+        je .glad
+        inc cx
+        cmp cx, 3
+        jb .class
+        jmp .base
+.glad:  movzx ax, byte [es:bx + di + 0x24]
+        jcxz .fifth
+        cmp byte [es:bx + 0x18], 1      ; (a human: dual-classed)
+        jne .fifth
+        cmp [es:bx + 0x24], al
+        ja .fifth
+.base:  xor ax, ax
+.fifth: mov cl, 5
+        div cl
+        cbw
+        movsx di, byte [es:bx + SHEET_AC]
+        sub di, ax
+.items: pop ax
+        imul ax, ax, 0x3A
+        mov [cs:r_creature], ax
+        les bx, [CREATURES]
+        add bx, ax
+        movzx bx, byte [es:bx + 0x23]   ; DEX
+        cmp bx, 26
+        jae .lists
+        movsx ax, byte [bx + DEX_AC]
+        add di, ax
+.lists: mov cx, 8               ; its worn item lists, each a thing: +8, +0Ah
+.list:  les bx, [CREATURES]
+        add bx, [cs:r_creature]
+        add bx, cx
+        mov dx, [es:bx]
+        cmp dx, NO_THING
+        jae .next
+        mov es, [cs:r_things]
+        mov bx, dx
+        imul bx, bx, 3
+        cmp byte [es:bx + THINGS], 1
+        jne .next               ; not an item
+        mov dx, [es:bx + THINGS + 1]
+        mov byte [cs:r_left], 100
+.item:  cmp dx, NO_THING
+        jae .next
+        les bx, [ITEMS]
+        imul ax, dx, 0x15
+        add bx, ax
+        mov dx, [es:bx + 4]     ; (the next)
+        movsx bp, byte [es:bx + 0x14]   ; the plus
+        mov ax, [es:bx + 0x0A]
+        cmp ax, NO_THING
+        jae .on
+        imul ax, ax, 0x14
+        les bx, [ITEM_TYPES]
+        add bx, ax
+        test byte [es:bx + 0x0F], 0x80
+        jz .on
+        movsx ax, byte [es:bx + 0x12]   ; the type's AC
+        add ax, bp
+        sub di, ax
+.on:    dec byte [cs:r_left]
+        jnz .item
+.next:  add cx, 2
+        cmp cx, 0x0C
+        jb .list
+        movsx eax, di
+        pop bp
+.ret:   ret
 
 ; AREA_SITE: "mov ax,3C81h / mov es,ax / mov al,es:[bx+2]" (10 bytes; DSUN.EXE 23D32h, 23D65h,
 ; 23EBDh, 23EF0h, 28092h, 280C6h: the game's own code, not an overlay's, reading a ground picture's

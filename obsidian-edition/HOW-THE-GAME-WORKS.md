@@ -185,7 +185,7 @@ shows for it; every effect line also says what the effect does.
 | Ironskin | immune to weapons | 1d6 blows stopped | the effect |
 | Quicksand | sinks and is held; 1 turn + 1 round a level | Stuck on a failed save, for 1 round | the save and the effect |
 | Raise Dead | by CON and how long dead; −1 CON; 1 HP | always works on someone dead who isn't an elf: −1 CON, 1 HP | the HP and the CON change |
-| Slay Living | dies on a failed save, 3–17 if saved | HP + 10 damage on a failed save against paralysis/poison/death; half of 4d8 if saved | the save and the damage |
+| Slay Living | dies on a failed save, 3–17 if saved (the Loader's text: 2–16) | HP + 10 damage on a failed save against paralysis/poison/death; half of 4d8 if saved | the save and the damage |
 | Wall of Fire | fire to those passing through | 4d4 + 1 a level fire, no save | the roll and the HP lost |
 
 ## Psionics

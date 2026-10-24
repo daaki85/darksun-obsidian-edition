@@ -1238,7 +1238,7 @@ slots.
 | **Wall of Thorns** | earth | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
 | **Sunstroke** | fire | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
 | **Fire Seeds** | fire | an area | four seeds of 2d8 bursting together (8d8), a save for half |
-| **Heartseeker** | earth, water | one creature | it saves against death or dies |
+| **Heartseeker** | earth, water | one creature | it saves against death or dies; one that saves takes half of 4d8 (2–16), as from Slay Living |
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
 | **Whirlwind** | air | an area, a round a caster level | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
@@ -1258,8 +1258,10 @@ How they're made, and where they differ from the books:
   once, each doing its own. Blade Barrier's blades are edged, with a saving
   throw for none, as Wake of the Ravager's. Wall of Thorns does the book's 8
   plus the creature's AC (so the unarmoured suffer most), with no save: a
-  monster's own AC, a party member's as the game last worked it out when
-  something attacked them (before that, AC 10).
+  party member's AC as the game last worked it out when something attacked
+  them; anyone else's (and a party member's before that) counted as the game
+  counts it, from the armour and shield worn, DEX and a gladiator's levels,
+  but not spells such as Barkskin.
 - **Sunstroke** strikes one creature, as in Wake of the Ravager, and holds it
   as Hold Person does, for 2 rounds a level, and the heat burns it for the
   book's 1d4 of fire at the start of each round while it lies there (a fire
@@ -1268,7 +1270,8 @@ How they're made, and where they differ from the books:
   same dice), not one by one at different places; it
   bursts as a fireball (Wake of the Ravager's picture for it, which Shattered
   Lands has too) where Flame Strike rises as a column of fire.
-- **Heartseeker** is a spell of death, not an arrow to shoot.
+- **Heartseeker** is a spell of death, not an arrow to shoot. It is
+  Slay Living's, so one that saves still takes half of 4d8.
 - **Whirlwind** stays where it is cast, as Stinking Cloud does, for a
   round a caster level, as AD&D has it: one tall, turning funnel of dust in the middle of
   its area, its ring of dust at the area's edge. Nothing can be shot or cast

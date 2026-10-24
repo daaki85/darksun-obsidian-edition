@@ -16,6 +16,19 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   several targets: after the first the spell stayed armed and the turn went on); it now has Slay
   Living's (4, one creature), as meant (the patch had changed +0Ch, the same in both). Checked in
   the game: Grog's Sunstroke on Scar, and the turn passed straight on.
+- **Wall of Thorns counts a monster's armour.** For anyone but a party member the game has seen
+  attacked, `THORNS_AC` took the sheet's base AC (+27h), 10 for an armed man, as the game adds
+  armour in its AC routine (58DD3h, in an overlay the damage's can't call). It now counts as that
+  routine does: less each worn item's plus and its type's AC (types with +0Fh 80h, in the item
+  lists +8 and +0Ah, where putting an item on moves it: the slot byte doesn't matter), a fifth of
+  a gladiator's level and the DEX adjustment; spells' AC still not. The ring is 64 entries (65) to
+  make room. Checked in the game: Scar (leather arm and chest armour, DEX 17) took 8 + AC 5 = 13,
+  his AC as the game had it when he was attacked, not 18; his henchmen 18 (AC 10); the party
+  their own ACs.
+- **Heartseeker's and Slay Living's descriptions.** A creature that saves still takes half of
+  4d8, 2 to 16: Heartseeker's said only that it slays, and Slay Living's said 3 to 17 (the book's
+  2d8+1, not what the game rolls). `spelltexts.py` puts both right (SPIN 209 and 137), and the
+  spellbook line, FEATURES, the guide and the patch notes say so.
 
 ## Pull request #58 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/58))
 

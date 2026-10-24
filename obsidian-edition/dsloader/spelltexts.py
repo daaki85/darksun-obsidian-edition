@@ -2,7 +2,7 @@
 spells' (SPIN the spell's number + 1, as the game's own: 197-202 the wizard spells', 203-211 the
 6th-level priest spells') and, in Turn Undead's box (SPIN 1000),
 the purse's and the spell arrows' (1001-1005: DSCLOG's PROBE_CHUNK_ID asks for 999 + TU_INFO in
-1000's place). They were DSCLOG's own text once; in the Loader's copy of RESOURCE.GFF they take
+1000's place), and Slay Living's (137) put right. They were DSCLOG's own text once; in the Loader's copy of RESOURCE.GFF they take
 no room in the helper. Each is under 195 bytes (the box reads it into 200, from its 5th byte)."""
 
 from typing import Dict, Tuple
@@ -22,6 +22,9 @@ TEXTS: Dict[int, str] = {
          "2 caster levels (up to 6). Undead are not affected.",
     202: "FRIENDS:  The caster's charisma rises by 2d4 (to 25 at most) for 1d4 rounds and 1 "
          "per level.",
+    # Slay Living's own text says 3 to 17 (the book's 2d8+1): the game does half of 4d8
+    137: "SLAY LIVING:  Kills one target. If the target makes its save it suffers 2 to 16 pts of "
+         "damage.",
     203: "HEAL:  Cures all damage, disease and blindness of one target.",
     204: "HARM:  Leaves one target with only 1 to 4 hit points. No saving throw.",
     205: "BLADE BARRIER:  Creates a wall of whirling blades. Inflicts 8 to 64 pts of damage on "
@@ -32,7 +35,8 @@ TEXTS: Dict[int, str] = {
          "burning it for 1 to 4 pts of fire damage each round.",
     208: "FIRE SEEDS:  Inflicts 8 to 64 pts of fire damage on creatures within its area of effect. "
          "A successful save halves the damage.",
-    209: "HEARTSEEKER:  Slays one target unless it saves versus death.",
+    209: "HEARTSEEKER:  Slays one target unless it saves versus death. If it saves, it suffers "
+         "2 to 16 pts of damage.",
     210: "WATER OF LIFE:  Heals a target's wounds by passing them to the caster, who keeps at "
          "least 5 hit points.",
     211: "WHIRLWIND:  Inflicts 2 to 16 pts of damage a round on creatures in it, half on a save; "

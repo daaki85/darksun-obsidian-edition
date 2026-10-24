@@ -149,7 +149,7 @@ A few of them:
 | **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
 | **Sunstroke** | fire | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |
 | **Fire Seeds** | fire | four seeds of 2d8 burst together in an area, a save for half |
-| **Heartseeker** | earth, water | save against death or die |
+| **Heartseeker** | earth, water | save against death or die; 2–16 on a save |
 | **Water of Life** | water | heals a creature by taking its wounds onto the caster |
 | **Whirlwind** | air | a whirlwind that stays a round a caster level: 2d8 each round to each creature in it, a save for half; one that fails loses its next turn; nothing can be shot or cast through it |
 
@@ -298,6 +298,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** **Slay Living**'s description said a creature that saves takes 3 to 17; the game does 2 to 16 (half of 4d8). It says so now.
 - **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 

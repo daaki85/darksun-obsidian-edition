@@ -387,7 +387,7 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 65 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 64 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -406,10 +406,10 @@ is still at most 64 KB (everything through CS), so the second block is room
 for data kept apart from it, as the ring is. The helper asks for its resident
 part and the ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB
 free and a few KB of upper memory left. A change that adds much code should
-check that again: the ring is 65 entries, not 128 (96 until the new spells'
+check that again: the ring is 64 entries, not 128 (96 until the new spells'
 code, when the game no longer started for lack of memory; 88 until STORE and
 RECALL; 84 until spells 199-201 and `seg_space`, when the helper no longer
-fitted in the block and loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned), and the
+fitted in the block and loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned; 65 until Wall of Thorns counted a monster's armour), and the
 text buffer 2 KB, not 8 (4 until the memory pass for 6th-level spells), to make
 that room. The most entries put in the ring in 2 seconds, measured, is 43
 (the opening show), 16 in a fight.
@@ -432,8 +432,8 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it puts there
 (`UMB_NEED`, the header's +372) is checked against the room (`UMB_ROOM`,
 D00Ah to F000h): the build fails past it (a negative `times`), and so does
-`test_fits_upper_memory`. Only 3 paragraphs (48 bytes) are spare now (3.8 KB
-before the 6th-level spells, the names over figures and Whirlwind's funnel), so
+`test_fits_upper_memory`. No paragraph is spare now (3.8 KB before the 6th-level
+spells, the names over figures, Whirlwind's funnel and Wall of Thorns' armour), so
 new helper code needs room found first: each of the ring's entries is 12
 paragraphs (`NENT`), and the helper's own segment still has about 2.3 KB. Text the game
 reads from RESOURCE.GFF belongs in the Loader's copy of it, not in the helper
