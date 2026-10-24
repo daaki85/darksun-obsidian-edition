@@ -16,6 +16,7 @@ RGN*.GFF.tmp
 GAMEEND.TXT
 GAMEOK.TXT
 GAMEMSG.BIN
+POINTER.BIN
 crash-logs/
 Named saves/
 *.SAV

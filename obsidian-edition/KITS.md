@@ -1,22 +1,22 @@
 # Kits
 
-*Part of Obsidian Edition's documentation, from the [README](README.md)'s
-[More character customization](FEATURES.md#more-character-customization). The
+*Part of Obsidian Edition's documentation, from the [README](README.md) and
+[Features and rules](FEATURES.md#kits). The
 [player's guide](PLAYER-GUIDE.md#kits) tells who takes each kit on Athas.*
 
 With **Kits** ticked, a character of one class may take one of three kits for
-its class when it is made, or none (the class as it is). A few pairs of
-classes taken at once by one race have kits of their own
-([Multiclass kits](#multiclass-kits)). Each gives something and costs
-something. The game's own party gets features of its own
-([The game's own party](FEATURES.md#the-games-own-party)). A human who changes class may take a kit for the new class too
-([Changing class](#changing-class)). Each class's three kits have a table of
-their own below: what the kit gives (with the level each part comes at), what
-it costs, what a new character with it starts with
+its class when it is made, or none (the class as it is). A few pairs of classes
+taken at once by one race have kits of their own ([Multiclass
+kits](#multiclass-kits)). Each gives something and costs something. The game's
+own party gets features of its own ([The game's own
+party](FEATURES.md#the-games-own-party)). A human who changes class may take a
+kit for the new class too ([Changing class](#changing-class)). Each class's
+three kits have a table of their own below: what the kit gives (with the level
+each part comes at), what it costs, what a new character with it starts with
 ([Starting gear](#starting-gear)), and what else to know, such as the classes
-and kits it rules out
-([Kits that rule out classes and each other](#kits-that-rule-out-classes-and-each-other)).
-Levels are the kit's own class's.
+and kits it rules out ([Kits that rule out classes and each
+other](#kits-that-rule-out-classes-and-each-other)). Levels are the kit's own
+class's.
 
 ## Contents
 
@@ -34,7 +34,8 @@ Levels are the kit's own class's.
 - [The kits in play](#the-kits-in-play)
 - [Kits' spell slots](#kits-spell-slots)
 - [Changing class](#changing-class)
-- [Kits that rule out classes and each other](#kits-that-rule-out-classes-and-each-other)
+- [Kits that rule out classes and each
+  other](#kits-that-rule-out-classes-and-each-other)
 
 ## Fighter kits
 
@@ -81,7 +82,8 @@ A thief starts with a bone long sword, sling, leather chest armour.
 
 ## Preserver kits
 
-A preserver starts with a quarterstaff and sling, and picks two 1st-level spells.
+A preserver starts with a quarterstaff and sling, and picks two 1st-level
+spells.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
@@ -154,8 +156,8 @@ multiclass character can't change class, so these kits rule nothing else out.
 The kit is chosen on the creation panel's **KIT** page, opened with **KITS**,
 the button at the end of the panel: under the psionic disciplines for a
 fighter, gladiator, preserver, psionicist or thief; under the clerical spheres
-for a cleric, druid or ranger. NO KIT,
-the first row, is what a new character has. As with the clerical spheres, the
+for a cleric, druid or ranger. NO KIT, the first row, is what a new character
+has. As with the clerical spheres, the
 rows not chosen are greyed: click the marked row to take it back, then click
 the kit you want. A few names are shortened to fit the panel (CHAMPION,
 SWASHBUCK, ELEMENTAL, WARDEN, BATTLMAGE, M-BENDER, M-WARRIOR, B-DANCER,
@@ -163,8 +165,8 @@ SHADOWBLD, M-SCOUT, W-AVENGER, G-FIGHTER, SPELLARCH, S-CALLER, WASTE SEER). A
 multiclass character with kits finds KITS where its classes put it: under the
 clerical spheres if one class has them, else under the psionic disciplines.
 Choosing another class puts the kit back to none; a new roll of the die keeps
-it. The Effects screen names the kit
-(`KIT: RAVAGER`), as does the Loader's Characters tab.
+it. The Effects screen names the kit (`KIT: RAVAGER`), as does the Loader's
+Characters tab.
 
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
@@ -183,10 +185,10 @@ start, as its own sphere's are (a priest knows every spell of its spheres from
 the start: the game marks them when the character is made, and again when a
 human changes class, not at a level up).
 
-With its chosen weapon spec the Battle Mage attacks at expertise's rate by its preserver level; with any other weapon, as
-a preserver does. Its light armour holds whatever the class restrictions say
-of a preserver. Without weapon specialization it has no weapon spec, only a
-preserver's weapons.
+With its chosen weapon spec the Battle Mage attacks at expertise's rate by its
+preserver level; with any other weapon, as a preserver does. Its light armour
+holds whatever the class restrictions say of a preserver. Without weapon
+specialization it has no weapon spec, only a preserver's weapons.
 
 The game rolls a new character's hit points and works out its PSP when a
 class is clicked, before a kit can be chosen, so choosing or taking back a
@@ -195,14 +197,14 @@ points and works out the PSP again, and the screen shows the new numbers.
 
 ## Starting gear
 
-The game hands a new character its class's gear (named above each class's
-table) when DONE is clicked. With **Kits** ticked, the Loader fits that gear
-to the kit while the character is new, as each table's **Starts with** says: a
-weapon or shield the kit forbids is swapped or taken away, and a kit with a
-weapon spec of its own gets a plain weapon of it. The dice log says what it
-changed
-(`T'Jun starts with a plain bone axe for the Battle Mage's weapon spec, in place of the Quarterstaff`).
-[Fuller starting gear](FEATURES.md#fuller-starting-gear) adds more on top.
+The game hands a new character its class's gear (named above each class's table)
+when DONE is clicked. With **Kits** ticked, the Loader fits that gear to the kit
+while the character is new, as each table's **Starts with** says: a weapon or
+shield the kit forbids is swapped or taken away, and a kit with a weapon spec of
+its own gets a plain weapon of it. The dice log says what it changed (`T'Jun
+starts with a plain bone axe for the Battle Mage's weapon spec, in place of the
+Quarterstaff`). [Fuller starting gear](FEATURES.md#fuller-starting-gear) adds
+more on top.
 
 ## The kits in play
 

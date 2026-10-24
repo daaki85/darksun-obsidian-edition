@@ -9,7 +9,52 @@ For what a release brings, read its notes ([2.7.2](release-notes/v2.7.2.md), [2.
 [1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
 change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
-## Pull request #59 (in progress)
+## Pull request #60 ([merged 2026-10-24](https://github.com/daaki85/darksun-obsidian-edition/pull/60))
+
+**New**
+- **A pointer in scenes, and a click skips one.** The intro, its logos and the game's other scenes
+  had no pointer, and only a key skipped them. DSCLOG draws the game's own arrow there (the scenes'
+  VGA mode is unchained, which the mouse driver's pointer can't draw in): ICON 6001 and its colours,
+  read from the player's game by the Loader into `dos\POINTER.BIN` (`scenepointer.py`; without it a
+  plain arrow of DSCLOG's own), drawn at each step of the scene player (`CINE_STEP`, 92A28h) and from
+  the game's timer while a scene plays, each colour as the scene palette's nearest, what was under
+  it put back only where it still is; a button pressed since the
+  last step ends the scene as a key does, and the scenes' routine's end (`CINE_END`, 56BBEh) wipes
+  it. A switch, `scene_pointer`, on.
+- **The pointer starts in the middle and moves as far up and down as across.** The game's ranges
+  (0 to 319) left the driver's pointer at the right edge (318, 100) after a video mode set: it is
+  put in the middle there (`MOUSE_SET`, 2A912h); and the driver's 16 mickeys a pixel up and down
+  are made 8, as across, from the game's start (`MOUSE_INIT`, 356F5h). A switch, `mouse_start`, on.
+
+**Docs**
+- The player guide's tables list the scenes' pointer and the pointer's start and speed; the README's
+  troubleshooting says how to let go of the mouse (Ctrl+F10) and the freeze report's 4 samples a
+  second; the patch notes' pointer line reads better; a picture of the pointer in scenes in FEATURES.
+
+- **Organisation and trims.** The Loader README gathers Troubleshooting, Known issues, the reports
+  and Reporting a problem under **When something goes wrong**; its How the game works and Item
+  tables indexes become one **More pages** list; the character card's contents move into
+  **The Characters tab**; the game window's command-line options and the practice program move to
+  DEVELOPMENT.md; a shorter Requirements, game window and item-report text. FEATURES follows the
+  Options tab's order, with the game's bugs fixed last. The player guide's quality-of-life table is
+  grouped (screens, controls, saves, running the game), and its intro points to the features page
+  for the rules.
+- **A line-by-line audit of every page.** Corrected: the player guide's backstab multipliers (×4 at
+  9-12, ×5 at 13, as the game has them), DEVELOPMENT's room in upper memory (1 paragraph spare, not
+  54), its patch count (some 320), the helper's added item types (30), Negative Plane Protection's
+  record (211) and the timer's rate (about 120 a second); the switch the 6th-level priest spells
+  come with named everywhere (**New wizard spells**, with AD&D's class tables). Repeats removed
+  (the README's save note, its window size in the start steps, the combat log's EMS aside, the
+  guide's note on the game's own party's spells); "started from the Loader" and "pointer" used
+  throughout; unclear sentences rewritten (preservers' starting spells, the pens' new people, the
+  Items and Kits headers); DEVELOPMENT's contents list the pointer section; and every page's prose
+  wrapped at 80 columns.
+
+**Changed**
+- **The freeze report's records**: 16, every 32nd timer strike (were 32, every 16th; the same 4
+  seconds), to make room in upper memory for the above.
+
+## Pull request #59 ([merged 2026-10-24](https://github.com/daaki85/darksun-obsidian-edition/pull/59))
 
 **Release**
 - **Obsidian Edition 2.7.2**: the version is 2.7.2, with its notes in `release-notes/v2.7.2.md`,

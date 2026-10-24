@@ -11,10 +11,13 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **To learn the rules:** [the player's guide](PLAYER-GUIDE.md), without
   spoilers, with a [glossary](PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and
   the rest.
-- **If something goes wrong:** [Troubleshooting](#troubleshooting),
-  [Known issues](#known-issues) and [Reporting a problem](#reporting-a-problem).
-- **Everything in detail:** the contents below, the [features and rules](FEATURES.md), the [kits](KITS.md), the
-  [items](ITEMS.md) (spoilers) and the [patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md).
+- **If something goes wrong:** [When something goes
+  wrong](#when-something-goes-wrong).
+- **Everything in detail:** the contents below, the [features and
+  rules](FEATURES.md), the [kits](KITS.md), the [items](ITEMS.md) (spoilers),
+  the [patch
+  notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
+  and, for developers, the [development notes](DEVELOPMENT.md).
 
 ## Contents
 
@@ -25,11 +28,13 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [One-time setup](#one-time-setup)
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
-  - [Crash, freeze and item reports](#crash-freeze-and-item-reports)
-  - [Reporting a problem](#reporting-a-problem)
-  - [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files)
+  - [Updating, backups and the Loader's
+    files](#updating-backups-and-the-loaders-files)
+- [When something goes wrong](#when-something-goes-wrong)
   - [Troubleshooting](#troubleshooting)
   - [Known issues](#known-issues)
+  - [Crash, freeze and item reports](#crash-freeze-and-item-reports)
+  - [Reporting a problem](#reporting-a-problem)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [Names over figures](#names-over-figures)
@@ -43,18 +48,10 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
 - [The dice log](#the-dice-log)
-- [How the game works](#how-the-game-works)
-- [Features and rules](FEATURES.md): rule changes, character customization, expanded features, new content, graphics, controls, the game's bugs fixed, more saves and characters, game speed
-- [Item tables](#item-tables) (a page of its own: [Items](ITEMS.md))
+- [More pages](#more-pages)
 - [Accessibility](#accessibility)
-- [Without the game](#without-the-game)
-- [The player's guide](PLAYER-GUIDE.md)
-- [Development](DEVELOPMENT.md)
 
 ## What it does
-
-New to the game, or to the mod? [The player's guide](PLAYER-GUIDE.md) has its
-rules without spoilers, with a section for each class and its kits (also as a web page, [`player-guide.html`](player-guide.html)).
 
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
@@ -69,67 +66,67 @@ rules without spoilers, with a section for each class and its kits (also as a we
   and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels
-  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a creation roll, fuller starting gear, and
-  features of their own for the game's own party
+  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a
+  creation roll, fuller starting gear, and features of their own for the
+  game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
 - **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
   and pick pockets, the party leader's CHA lowers shop prices, and merchants
   sell back the magical items you sold them
   ([Expanded features](FEATURES.md#expanded-features)).
-- **More of Athas:** new weapons in every material, magic items with stories
-  of their own (robes and bracers among them, for those who wear no armour),
-  six wizard spells
-  ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends](FEATURES.md#new-wizard-spells))
-  and nine [6th-level priest spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier, Whirlwind...),
-  Kalzith (a defiler who sells scrolls), defilers who drop scrolls, more of
-  Semyon's story, and a use for the cooked vulture
-  ([New content](FEATURES.md#new-content)). On the map, the party wears its weapons and
-  armour, figures cast shadows and kick up dust, and elves and half-elves have
-  a look of their own ([Graphics](FEATURES.md#graphics)).
+- **More of Athas:** new weapons in every material, magic items with stories of
+  their own (robes and bracers among them, for those who wear no armour), six
+  wizard spells ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and
+  Friends](FEATURES.md#new-wizard-spells)) and nine [6th-level priest
+  spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
+  Whirlwind...), Kalzith (a defiler who sells scrolls), defilers who drop
+  scrolls, more of Semyon's story, and a use for the cooked vulture ([New
+  content](FEATURES.md#new-content)). On the map, the party wears its weapons
+  and armour, figures cast shadows and kick up dust, and elves and half-elves
+  have a look of their own ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
   a view that stays put in fights, dragging the map with the mouse wheel held
-  down ([Controls](FEATURES.md#controls)), 40 saves, each also kept under its name, and
-  29 saved characters
-  ([More saves and characters](FEATURES.md#more-saves-and-characters)), a game speed
-  setting ([Game speed](FEATURES.md#game-speed)), crash, freeze and item reports, and no dragon asking for
-  a word from the manual ([No manual check](#no-manual-check)).
+  down, a pointer in the intro and scenes that a click skips
+  ([Controls](FEATURES.md#controls)); 40 saves, each also kept under its name,
+  and 29 saved characters
+  ([More saves and characters](FEATURES.md#more-saves-and-characters)); a
+  [game speed](FEATURES.md#game-speed) setting; crash, freeze and item
+  reports; and no dragon asking for a word from the manual
+  ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Negative Plane Protection never working, Cause Wounds' odd dice, and more; and the
-  rules it got wrong, from spell saves to warriors' attacks, put right
-  ([The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
+  Negative Plane Protection never working, Cause Wounds' odd dice, and more; and
+  the rules it got wrong, from spell saves to warriors' attacks, put right ([The
+  game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 
-**What it changes on your computer.** The game's own files are never
-modified: the Loader runs a patched copy of the game from its own folder, and
-writes to the game folder only your saves and characters. A save with the new
-items in it needs the Loader to load. Every file it writes, and how to update
-or back up: [Updating, backups and the Loader's files](#updating-backups-and-the-loaders-files).
-
-The Loader's window is dressed in the game's own colours, sampled from it; no
-game artwork is copied.
+**What it changes on your computer.** The game's own files are never modified:
+the Loader runs a patched copy of the game from its own folder, and writes to
+the game folder only your saves and characters. Every file it writes, and how to
+update or back up: [Updating, backups and the Loader's
+files](#updating-backups-and-the-loaders-files).
 
 ## Requirements
 
-- **Windows** and the **GOG release** of Dark Sun: Shattered Lands. The
-  Loader runs it in the DOSBox that comes with it.
-- **64-bit Python 3.8+** (64-bit, as 64-bit DOSBox can't be read from 32-bit
-  Python). The `.bat` files offer to install it
-  ([One-time setup](#one-time-setup)); it needs no extra packages.
-- Linux works too if you can read other processes' memory (root, or
+- **Windows** and the **GOG release** of Dark Sun: Shattered Lands (its
+  `DSUN.EXE` is 611,408 bytes; with another version the Loader starts the game
+  without the dice log and says why). The Loader runs it in the DOSBox that
+  comes with it.
+- **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
+  with no extra packages. The `.bat` files offer to install it
+  ([One-time setup](#one-time-setup)).
+- **Linux** works too if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`).
-- **Wake of the Ravager**, which GOG sells with Shattered Lands: the
+- **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
-  and pictures, read from your copy as the game starts (none of its files are
-  in the mod). Without it (an old copy of Shattered Lands alone) they have the
-  Loader's own. It looks in every folder beside Shattered Lands (GOG Galaxy
-  installs the two as `Dark Sun` and `Dark Sun 2`) and in GOG's usual folders; the Options tab's **Wake of
-  the Ravager** section says whether it found it, and **Choose its folder...**
-  points it to one installed anywhere else.
+  and pictures, read from your copy as the game starts; without it they have
+  the Loader's own. The Loader looks beside Shattered Lands and in GOG's usual
+  folders; the Options tab's **Wake of the Ravager** section says whether it
+  found it, and **Choose its folder...** points it anywhere else.
 
 ### Suggested system requirements
 
-DOSBox runs the whole game on one processor core, so what counts is the speed
-of a single core, not how many there are. By [game speed](FEATURES.md#game-speed)
+DOSBox runs the whole game on one processor core, so what counts is the speed of
+a single core, not how many there are. By [game speed](FEATURES.md#game-speed)
 setting (suggestions, not tested limits):
 
 | Game speed | Processor (one core's speed) | Memory |
@@ -146,19 +143,15 @@ slows instead of speeding up: choose the next setting down.
 
 ## Running it (Windows)
 
-The Loader starts DOSBox with a patched copy of the game and your options,
-and stays open while you play. You don't install anything into the game
-folder.
-
 ### One-time setup
 
 1. Download the latest release,
-   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`, from the
-   [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases),
-   and unzip it anywhere: the files you need are in its
-   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>` folder. (Or the
-   project as it stands: on its GitHub page click **Code → Download ZIP**; the
-   files are then in its `obsidian-edition` folder.)
+   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`, from the [Releases
+   page](https://github.com/daaki85/darksun-obsidian-edition/releases), and
+   unzip it anywhere: the files you need are in its
+   `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>` folder. (Or the project
+   as it stands: on its GitHub page click **Code → Download ZIP**; the files are
+   then in its `obsidian-edition` folder.)
 2. Python: the first time you double-click one of the `.bat` files, it
    checks for a 64-bit Python 3.8 or later. If there is none, it asks
    whether to install it with Windows' own package manager (winget): that
@@ -176,21 +169,20 @@ zip, choose **Properties**, tick **Unblock** and press **OK**. Otherwise press
 in its own folder (what that Unblock box does, and nothing outside the
 folder), so the other `.bat` files start without asking.
 
-Everything else is plain text you can read: the `.bat` files, the Python
-code in `dsloader`, and the dice log helper's source (`dos\dsclog.asm`,
-which builds `dos\DSCLOG.EXE`, the small DOS program DOSBox loads). There is
-no packaged program to trust.
+Nothing in the download is a packaged program to trust: the `.bat` files and
+the Python code in `dsloader` are plain text, and so is the source of the one
+built file, the small DOS program DOSBox loads (`dos\dsclog.asm`, which builds
+`dos\DSCLOG.EXE`).
 
 ### Every time you play
 
 1. Double-click **`Start Obsidian Edition.bat`** in that folder. The Loader
    opens on its own.
 2. On its **Options** tab, pick what you want: the rule changes, the new
-   content, picking pockets, the combat log in the game and so on (see
-   [The Loader's window](#the-loaders-window) and [Rule changes](FEATURES.md#rule-changes)).
-   They're remembered for next time.
-3. Pick the **Game window** size at the top if you like, then press **Start
-   the game** (top left).
+   content, picking pockets, the combat log in the game and so on (see [The
+   Loader's window](#the-loaders-window) and [Rule
+   changes](FEATURES.md#rule-changes)). They're remembered for next time.
+3. Press **Start the game** (top left).
 
 That starts Shattered Lands (through GOG's own DOSBox) with the dice log helper
 loaded and your options in force, and the Loader picks it up once DOSBox is up.
@@ -198,17 +190,11 @@ Your saves are the same ones the game normally uses. The first time, it looks
 for the game in the usual GOG folders; if it can't find it, it asks you where
 the game is installed and remembers the answer.
 
-DOSBox opens in a window three times the game's size (960x720), not full
-screen. To change that, pick **Game window** at the top of the Loader:
-**Double (640x480)**, **Triple (960x720)**, **Quadruple (1280x960)** or **Full
-screen**. It's remembered, and used from the next time you start the game.
-Alt+Enter switches between window and full screen while playing. (From a
-command prompt: `--window-scale 2` to `4`, `--fullscreen` or `--windowed` after
-`launch` or `play` do the same.) GOG's DOSBox has no four-times scaler, so
-Quadruple has DOSBox stretch its window with OpenGL (`output=opengl`,
-`windowresolution=1280x960`); if your graphics driver doesn't take to that,
-pick Triple. With the [combat log below the map](#the-combat-log-in-the-game)
-(an option) each is a little taller: 640x532, 960x798, 1280x1064.
+DOSBox opens in a window three times the game's size (960x720). **Game
+window** at the top of the Loader picks **Double**, **Triple**, **Quadruple**
+or **Full screen** from the next start, and Alt+Enter switches between window
+and full screen while playing. Quadruple has DOSBox stretch its window with
+OpenGL; if your graphics driver doesn't take to that, pick Triple.
 
 Load your game. The party's stats fill in by themselves, and rolls appear in
 the **Dice log** tab as they happen.
@@ -229,76 +215,8 @@ changes); the new items, the new people and the cooked vulture are there too.
 If anything goes wrong it says so in a message box and writes the details to
 `play.log`.
 
-### Crash, freeze and item reports
-
-When something goes wrong, the Loader saves a report in the `crash-logs`
-folder (beside `Start Obsidian Edition.bat`), named for the time, and says so
-in the dice log (or, with `Play Dark Sun (in-game rolls).bat`, in a message
-box). Send it along with what you were doing just before (see
-[Reporting a problem](#reporting-a-problem)). Reports need the game started
-from the Loader or one of its `.bat` files: from GOG's own shortcut the Loader
-can't see how the game closed. Every report holds the Loader's switches (not
-where the game is installed, nor the party's names), the last 300 lines of the
-dice log and the last 80 of the dialogue, and besides:
-
-| Report | When | What else it holds |
-|---|---|---|
-| **Crash** (`crash-2026-10-04-213012.txt`) | the game stops with an error, or DOSBox closes while the game still runs | how DOSBox closed (its exit code), what the game left on the screen and the message it last wrote, with the calls that led to it; how long the game ran and the game speed; DOSBox's own `stdout.txt` and `stderr.txt`, if it wrote them; any writes into the game the Loader refused as unsafe; the game's memory at the last reading and at its lowest |
-| **Freeze** (`freeze-2026-10-16-213012.zip`) | you press **Freeze report** | where the game was running for the last few seconds (the helper notes it about 8 times a second), whether the game's timer and the map still move, the helper's own state, and a copy of the game's memory (about 1 MB: the party, the map and the fight, nothing outside DOSBox) |
-| **Item** (`item-2026-10-18-213012.txt`) | an item vanishes from the party | the item, who had it and where, what its record in the game's item table says now (freed, or reused for another item), the game's time, the region, whether a fight was on and whose turn, the item's record and its type's before and after, and the owner's and the party's items |
-
-**Memory running low.** The game has little memory to spare, and in a long
-session it can run out ("Out of memory in OEOpenGraph"). The Loader watches it,
-and if it gets low with the map up, the dice log says so: save and restart the
-game soon, as a fresh start has all of it back.
-
-**A crash.** When the game stops with an error (such as "Null pointer
-assignment"), DOSBox waits with the game's message on screen ("The game
-stopped with an error", then press a key) rather than closing over it. Some of
-the game's own errors (its memory manager's `ABEND: ...`, its script engine's
-`Mel Fatal Error`) are printed while the screen is still in graphics and wiped
-as the game quits; the helper keeps what the game last wrote, so the report
-has them anyway. The dice log also says how DOSBox closed:
-`DOSBox closed: it crashed (an access violation, code C0000005h)` means DOSBox
-itself failed, not the game. If DOSBox closes while the game is still running
-(after a freeze, DOSBox stopping with an error of its own, or its window's
-button), the report says the game didn't end on its own. A game ended from
-its own menu (Exit to DOS) writes none.
-
-**A freeze.** If the game stops responding but DOSBox stays open, leave DOSBox
-as it is, switch to the Loader and press **Freeze report**. The Loader watches
-the game for a second, then saves the zip and says where.
-
-**An item gone.** The Loader watches the party's items (every member's, worn
-or carried). When one is gone from the whole party for two seconds with
-nothing ordinary to explain it, it saves the report. It watches through rests
-too; only loading a game starts it afresh:
-
-```
-Inix Hide Chest Armor is gone from Garyn's chest: its record is empty: the game freed it (destroyed, used up or discarded). An item report is saved in ...
-```
-
-The ordinary ways for an item to go pass in silence: an item that still
-exists outside the party (dropped, put in a chest, given, sold or stolen), one
-used up or taken for a quest (fruit, quest items, arrows, scrolls), one a
-spell made (Shillelagh, Flame Blade, Spiritual Hammer), one sold (the party's
-money went up by what a shop pays for it), and a weapon that broke (a Broken
-Weapon in its place). An item the game destroys (acid, Detonate's blast) is
-reported too, so the loss is on record. Nor is an item handed to another member news, even where
-the game gives it a new record, or one moved and back within the two seconds.
-A change of area gives every item a new record at once: the Loader matches
-each to its new one (same owner, place and item) and reports only an item with
-no match. A game loaded (even a later save of the same party) starts the watch
-afresh.
-
-### Reporting a problem
-
-Open an issue on
-[the project's Issues page](https://github.com/daaki85/darksun-obsidian-edition/issues),
-saying what you were doing, the version (the Loader's title bar), and
-attaching the crash, freeze or item report if there is one (all three are in
-`crash-logs`). A save from just before
-it happened helps most of all.
+**Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
+**`Show Save.bat`** to see the party it holds.
 
 ### Updating, backups and the Loader's files
 
@@ -328,9 +246,7 @@ start it the GOG way and load a save from before the mod.
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | the game folder | your saves (pages 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and characters 20 to 29 in `CHARSAVE.GFF` |
 
-**The game version.** Only the GOG release is supported (its `DSUN.EXE` is
-611,408 bytes). With another one, the Loader starts the game without the dice
-log and says why.
+## When something goes wrong
 
 ### Troubleshooting
 
@@ -343,6 +259,9 @@ log and says why.
   the trouble is the Loader's window.
 - **The game runs slowly, or the sound stutters:** choose a lower
   [game speed](FEATURES.md#game-speed).
+- **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
+  takes the mouse at the first click in its window (that click does nothing
+  in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
 - **The Loader shows no party or rolls:** check that Python is the 64-bit one
   ([Requirements](#requirements)) and that the game was started from the
   Loader or one of its `.bat` files.
@@ -357,6 +276,69 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
 - **In a long session, figures can vanish from the screen and the game then
   freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
   it happens, press **Freeze report** on the Loader before closing DOSBox.
+
+### Crash, freeze and item reports
+
+When something goes wrong, the Loader saves a report in the `crash-logs`
+folder (beside `Start Obsidian Edition.bat`), named for the time, and says so
+in the dice log (or, with `Play Dark Sun (in-game rolls).bat`, in a message
+box). Send it along with what you were doing just before (see
+[Reporting a problem](#reporting-a-problem)). Reports need the game started
+from the Loader or one of its `.bat` files: from GOG's own shortcut the Loader
+can't see how the game closed. Every report holds the Loader's switches (not
+where the game is installed, nor the party's names), the last 300 lines of the
+dice log and the last 80 of the dialogue, and besides:
+
+| Report | When | What else it holds |
+|---|---|---|
+| **Crash** (`crash-2026-10-04-213012.txt`) | the game stops with an error, or DOSBox closes while the game still runs | how DOSBox closed (its exit code), what the game left on the screen and the message it last wrote, with the calls that led to it; how long the game ran and the game speed; DOSBox's own `stdout.txt` and `stderr.txt`, if it wrote them; any writes into the game the Loader refused as unsafe; the game's memory at the last reading and at its lowest |
+| **Freeze** (`freeze-2026-10-16-213012.zip`) | you press **Freeze report** | where the game was running for the last few seconds (the helper notes it about 4 times a second), whether the game's timer and the map still move, the helper's own state, and a copy of the game's memory (about 1 MB: the party, the map and the fight, nothing outside DOSBox) |
+| **Item** (`item-2026-10-18-213012.txt`) | an item vanishes from the party | the item, who had it and where, what its record in the game's item table says now (freed, or reused for another item), the game's time, the region, whether a fight was on and whose turn, the item's record and its type's before and after, and the owner's and the party's items |
+
+**Memory running low.** The game has little memory to spare, and in a long
+session it can run out ("Out of memory in OEOpenGraph"). The Loader watches it,
+and if it gets low with the map up, the dice log says so: save and restart the
+game soon, as a fresh start has all of it back.
+
+**A crash.** When the game stops with an error (such as "Null pointer
+assignment"), DOSBox waits with the game's message on screen ("The game
+stopped with an error", then press a key) rather than closing over it. Some of
+the game's own errors (its memory manager's `ABEND: ...`, its script engine's
+`Mel Fatal Error`) are printed while the screen is still in graphics and wiped
+as the game quits; the helper keeps what the game last wrote, so the report
+has them anyway. The dice log also says how DOSBox closed:
+`DOSBox closed: it crashed (an access violation, code C0000005h)` means DOSBox
+itself failed, not the game. If DOSBox closes while the game is still running
+(after a freeze, DOSBox stopping with an error of its own, or its window's
+button), the report says the game didn't end on its own. A game ended from
+its own menu (Exit to DOS) writes none.
+
+**A freeze.** If the game stops responding but DOSBox stays open, leave DOSBox
+as it is, switch to the Loader and press **Freeze report**. The Loader watches
+the game for a second, then saves the zip and says where.
+
+**An item gone.** The Loader watches the party's items (every member's, worn
+or carried). When one is gone from the whole party for two seconds with
+nothing ordinary to explain it, it saves the report (loading a game starts
+the watch afresh):
+
+```
+Inix Hide Chest Armor is gone from Garyn's chest: its record is empty: the game freed it (destroyed, used up or discarded). An item report is saved in ...
+```
+
+The ordinary ways for an item to go pass in silence: dropped, put in a chest,
+given, sold or stolen; used up or taken for a quest; a spell's weapon
+(Shillelagh, Flame Blade) ending; a weapon that broke; an item handed to
+another member or moved between areas. An item the game destroys (acid,
+Detonate's blast) is reported too, so the loss is on record.
+
+### Reporting a problem
+
+Open an issue on [the project's Issues
+page](https://github.com/daaki85/darksun-obsidian-edition/issues), saying what
+you were doing, the version (the Loader's title bar), and attaching the crash,
+freeze or item report if there is one (all three are in `crash-logs`). A save
+from just before it happened helps most of all.
 
 ## In the game
 
@@ -384,8 +366,7 @@ Below the switch, pick how much it says: **at the least**
 `Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
 the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
 target's AC; a natural 20 always hits, a 1 always misses). It never waits for
-a click, and needs the game started from the Loader (which turns off DOSBox's
-EMS to make room for it).
+a click.
 
 ![The combat log in the arena, in short](docs/combat-log.png)
 
@@ -401,12 +382,12 @@ there; **-** makes it smaller, or the strip below the map covers nothing.
   click it (or scroll to the end) to follow again. Clicks on the panel are
   its own: the party doesn't walk there.
 - **The arena's count of fights.** Between fights in the slave pens and the
-  arena, the top line says how many arena fights the party has had
-  (`Arena fights: 4`): the game's own count, one a trip into the arena however
-  many waves come (see
-  [the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)).
-  In a fight it says the round, and once the party has escaped Draj it's gone.
-  (Docked or expanded; collapsed, the one line stays the newest.)
+  arena, the top line says how many arena fights the party has had (`Arena
+  fights: 4`): the game's own count, one a trip into the arena however many
+  waves come (see [the arena's count of
+  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). In a fight it says
+  the round, and once the party has escaped Draj it's gone. (Not when the panel
+  is collapsed to one line: that line stays the newest.)
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
@@ -458,7 +439,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
 
 ### THAC0, saves and thief skills
 
-Started with the dice log, the game's own inventory screen (the one with the
+Started from the Loader, the game's own inventory screen (the one with the
 character's figure and their equipment) shows five more things in its
 right-hand panel, drawn by the game's text routine so they look like the rest:
 
@@ -474,25 +455,25 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
 - right of the abilities, level with STR to CHA, for a character with thief
   levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
   `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
-  and hide in shadows are the ones the Loader rolls (for
-  [picking pockets](FEATURES.md#picking-pockets) and
-  [hiding to backstab](FEATURES.md#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
-  `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE`
-  and boots' 10 in `MOVE` (the Cloak and Boots of Elvenkind's 95). Hear noise
-  (one script check) and read languages (none) are left out for want of room.
-  A ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the
-  same places, the cloak and boots counted (the other four left out);
+  and hide in shadows are the ones the Loader rolls (for [picking
+  pockets](FEATURES.md#picking-pockets) and [hiding to
+  backstab](FEATURES.md#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
+  `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
+  boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
+  script check) and read languages (none) are left out for want of room. A
+  ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
+  places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): −6 at DEX 1 to +5 at DEX 24-25, the
-  number the [two-weapon rule](FEATURES.md#two-weapons) adds to its penalties, and the
-  one initiative uses. It is worked out from the character's DEX each time
-  the panel is drawn, so it follows any change (Cat's Grace's, while it
+  number the [two-weapon rule](FEATURES.md#two-weapons) adds to its penalties,
+  and the one initiative uses. It is worked out from the character's DEX each
+  time the panel is drawn, so it follows any change (Cat's Grace's, while it
   lasts);
-- right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as
-  AD&D's table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5
-  at 21-23). The game counts it in AC already; on saving throws against what
-  can be dodged it counts the other way round (DEF −5 is +5 on the save), with
-  the [rule change](FEATURES.md#rule-changes) for fire, cold and electricity. Worked out
+- right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as AD&D's
+  table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5 at 21-23).
+  The game counts it in AC already; on saving throws against what can be dodged
+  it counts the other way round (DEF −5 is +5 on the save), with the [rule
+  change](FEATURES.md#rule-changes) for fire, cold and electricity. Worked out
   the same way as REAC, each time the panel is drawn.
 
 The **View Character** screen gets them too: the five saves under the item
@@ -518,21 +499,21 @@ change.
   weapon's: the right hand's, else the left's, else the missile weapon's.
   What depends on the target (attacking from behind or backstabbing, a Blurred
   target) is left out; the dice log shows it on each attack.
-- **Saves**: the d20 each needs, the character sheet's number less what the
-  game adds to every save: the
-  [Rings of Protection and the Cloak of Protection](FEATURES.md#rings-and-cloaks-of-protection),
-  Bless, Prayer, Barkskin, Spirit Armor (not on PPD), the Save penalty, and on
-  PPD the CON adjustment (and a dwarf's or halfling's CON bonus). What depends
-  on the spell or its caster (WIS against mind spells, Protection from Fire, a
-  doubled d20 against fire...) is left out; the dice log shows it on each
-  save. A 1 always fails and a 20 always saves, so they show between 2 and 20.
+- **Saves**: the d20 each needs, the character sheet's number less what the game
+  adds to every save: the [Rings of Protection and the Cloak of
+  Protection](FEATURES.md#rings-and-cloaks-of-protection), Bless, Prayer,
+  Barkskin, Spirit Armor (not on PPD), the Save penalty, and on PPD the CON
+  adjustment (and a dwarf's or halfling's CON bonus). What depends on the spell
+  or its caster (WIS against mind spells, Protection from Fire, a doubled d20
+  against fire...) is left out; the dice log shows it on each save. A 1 always
+  fails and a 20 always saves, so they show between 2 and 20.
 - **Thief skills**: as they stand (with no equipment penalty in games started
-  with the dice log: see
-  [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)),
-  0 for a skill an effect rules out or when the thief isn't Okay (New counts
-  as Okay), and 100 for one an effect makes certain (Detect Traps). Only the
-  situation's bonus or penalty (a hard lock) is left out: the dice log shows
-  it on each roll.
+  with the dice log: see [How the game works out thief
+  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), 0 for a
+  skill an effect rules out or when the thief isn't Okay (New counts as Okay),
+  and 100 for one an effect makes certain (Detect Traps). Only the situation's
+  bonus or penalty (a hard lock) is left out: the dice log shows it on each
+  roll.
 
 The Characters tab shows the same THAC0 with each weapon and saves. The
 game's own numbers (the character sheet's) come back on these screens when
@@ -543,9 +524,10 @@ in brackets on View Character's experience line is the XP at which the first
 of their classes goes up a level, and the Loader adds which class that is:
 `EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each class
 is its first letter (C, D, F, G, R, T), except the preserver's Pr and the
-psionicist's Ps. When two classes go up at the same XP, both are named: `(20000 Pr/T)`. A class
-already at the highest level (9, or its share of the XP cap with
-[Level cap by XP](FEATURES.md#level-cap-by-xp)) has no next level, so it is never named.
+psionicist's Ps. When two classes go up at the same XP, both are named:
+`(20000 Pr/T)`. A class already at the highest level (9, or its share of the
+XP cap with [Level cap by XP](FEATURES.md#level-cap-by-xp)) has no next level,
+so it is never named.
 A character of one class shows the line as the game always has, and so does a
 human, who can only dual-class: the game counts only one of their classes
 there.
@@ -576,7 +558,7 @@ the Loader (or its command-line dice log) is running.
 
 ### What hurts a monster (the Look box)
 
-In a fight, Look at a monster (right-click until the cursor is the Look icon,
+In a fight, Look at a monster (right-click until the pointer is the Look icon,
 then click the monster) and the game's small box, under its name and level,
 now also shows its hit points and AC (`HP 15/15 AC 2`), its THAC0 and
 alignment (`THAC0 17 AL TN`), its magic resistance beside its level
@@ -597,11 +579,11 @@ off.
 
 ![The Look box on a Screamer Beetle in the arena: LEVEL: 3, then HP 15/15 AC 2 and THAC0 17 AL TN added](docs/look-box.png)
 
-(The arena's first monsters, like the people in the early fights, have no
-magic resistance or special defences, so the box shows just the numbers and
-the alignment.)
+The arena's first monsters have no magic resistance or special defences, so
+their box shows just the numbers and the alignment.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-hurts-a-monster-the-look-box).
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#what-hurts-a-monster-the-look-box).
 
 ### Charges in item boxes
 
@@ -632,26 +614,7 @@ The window has the party on one side and the logs and tools on the other, with
 (to find the game again) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
-  View Character screen (scroll with the mouse wheel, or Tab to the cards and
-  use the arrow and Page keys):
-  - the figure for their race and sex (as on the character creation screen,
-    read from your install), their name, and HP and PSP (PSP in blue);
-  - their condition (New, for a character not yet played, Okay, Stunned, Out
-    Cold, Dying, Dead, Animated, Petrified or Gone), then the spells and
-    effects on them with the rounds or charges left: `Blur (22 rounds)`,
-    `Stoneskin (5 charges)`;
-  - the character sheet: scores, sex, race and alignment, classes and levels,
-    experience, AC (the one the game last used in a fight, with the base AC
-    beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
-    with Wooden Bow (base 19)`), the saves as the d20 needed now (see
-    [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
-    a fight: Stalker)`) and attacks;
-  - what they wear and hold, by the game's own slot names ("Right hand: Bone
-    Long Sword"; "Carried" for the backpack), with each item's material and
-    plus;
-  - last, spell slots for spellcasters (see below), thief skills for thieves,
-    and for rangers, with hiding to backstab on, their chances to hide and move
-    silently (`Ranger skills now`).
+  View Character screen ([The Characters tab](#the-characters-tab)).
 - **All fields** (Alt+A): every field the layout maps, in a table, with rows
   of its own for the AC in a fight and what it's made of, THAC0 with each
   weapon and the saves now, and at the end the spell slots, thief skills and
@@ -666,30 +629,30 @@ open it, ▸ when closed and ▾ when open. Which sections are open is remembere
 Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
-- **In the game**: the combat log, where it goes and how much it says,
-  names floating over figures, monster descriptions ([In the game](#in-the-game)).
-- **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules closer
-  to AD&D.
-- **More character customization**
-  ([More character customization](FEATURES.md#more-character-customization)): weapon
+- **In the game**: the combat log, where it goes and how much it says, names
+  floating over figures, monster descriptions ([In the game](#in-the-game)).
+- **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules
+  closer to AD&D.
+- **More character customization** ([More character
+  customization](FEATURES.md#more-character-customization)): weapon
   specialization, kits, the XP level cap, STORE and RECALL on the creation
   screen, and fuller starting gear.
-- **Expanded features** ([Expanded features](FEATURES.md#expanded-features)): the
-  leader's CHA at shops, buying back magical items, and **Improved thieving**
-  (AD&D's thief skills, hiding to backstab, the cloak, boots and belt,
-  backstabs multiplying the weapon's dice only, and picking pockets).
-- **New content** ([New content](FEATURES.md#new-content)): the new spells, at once; the
-  new people, the vulture, defilers' scrolls and the new items, from the next
-  time the game is started (what a saved game already has stays in it).
-- **Graphics** ([Graphics](FEATURES.md#graphics)): the elves' and half-elves' looks,
-  Cilla drawn as an elf, what the party wears, shadows and dust.
+- **Expanded features** ([Expanded features](FEATURES.md#expanded-features)):
+  the leader's CHA at shops, buying back magical items, and **Improved
+  thieving** (AD&D's thief skills, hiding to backstab, the cloak, boots and
+  belt, backstabs multiplying the weapon's dice only, and picking pockets).
+- **New content** ([New content](FEATURES.md#new-content)): the new spells, at
+  once; the new people, the vulture, defilers' scrolls and the new items, from
+  the next time the game is started (what a saved game already has stays in it).
+- **Graphics** ([Graphics](FEATURES.md#graphics)): the elves' and half-elves'
+  looks, Cilla drawn as an elf, what the party wears, shadows and dust.
 - **Controls** ([Controls](FEATURES.md#controls)) and **Game speed**
   ([Game speed](FEATURES.md#game-speed)).
 - **Wake of the Ravager (optional)**: whether the Loader found it, for the
   6th-level priest spells' icons and pictures, and **Choose its folder...**
   ([Requirements](#requirements)).
-- **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)): the folder
-  of saves kept under their names, and putting one back in a slot.
+- **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)):
+  the folder of saves kept under their names, and putting one back in a slot.
 
 All are on by default except scrolling by holding the right button and the
 combat log below the map, and are remembered for next time. **Restore
@@ -701,7 +664,29 @@ wheel, or arrow and page keys once it has the focus).
 
 ### The Characters tab
 
-What some of a card's lines mean.
+A card holds, from the top (scroll with the mouse wheel, or Tab to the cards
+and use the arrow and Page keys):
+
+- the figure for their race and sex (as on the character creation screen,
+  read from your install), their name, and HP and PSP (PSP in blue);
+- their condition (New, for a character not yet played, Okay, Stunned, Out
+  Cold, Dying, Dead, Animated, Petrified or Gone), then the spells and
+  effects on them with the rounds or charges left: `Blur (22 rounds)`,
+  `Stoneskin (5 charges)`;
+- the character sheet: scores, sex, race and alignment, classes and levels,
+  experience, AC (the one the game last used in a fight, with the base AC
+  beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
+  with Wooden Bow (base 19)`), the saves as the d20 needed now (see
+  [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
+  a fight: Stalker)`) and attacks;
+- what they wear and hold, by the game's own slot names ("Right hand: Bone
+  Long Sword"; "Carried" for the backpack), with each item's material and
+  plus;
+- last, spell slots for spellcasters (see below), thief skills for thieves,
+  and for rangers, with hiding to backstab on, their chances to hide and move
+  silently (`Ranger skills now`).
+
+What some of its lines mean:
 
 **Spell slots.** `Priest spells left: 1st 5/5, 2nd 3/3, 3rd 2/2` means five
 first-level priest spells can still be cast out of five, and so on. Casting a
@@ -714,10 +699,10 @@ tables are read from memory):
 - Clerics and druids: from their level plus a WIS bonus.
 - Rangers: from their level only, with their first slot at level 8.
 
-With [AD&D's class tables](FEATURES.md#adds-class-tables) on (the default), clerics',
-druids' and preservers' come from AD&D's tables instead. Some [kits](FEATURES.md#kits)
-have more or fewer, and the [Veiled Robe](ITEMS.md#every-magic-item) adds a wizard slot at
-spell levels 1 to 3.
+With [AD&D's class tables](FEATURES.md#adds-class-tables) on (the default),
+clerics', druids' and preservers' come from AD&D's tables instead. Some
+[kits](FEATURES.md#kits) have more or fewer, and the [Veiled
+Robe](ITEMS.md#every-magic-item) adds a wizard slot at spell levels 1 to 3.
 
 The game's WIS bonus doesn't depend on level, so it gives a 2nd-level druid
 with WIS 19 slots at the 2nd to 4th levels too, though a druid that level
@@ -730,11 +715,11 @@ class's.
 **AC.** The AC shown (**Current AC** on All fields) is the one the game last
 used for each character in a fight (armour, DEX and spells included), and the
 rows under it say what it was made of: armour and shield (and spells that take
-their place, such as Spirit Armor and Magical Vestments), DEX (the game's
-table: −1 at 15 down to −6 at 24; not counted when attacked from behind), and
-spells, rings (the [rings of protection](FEATURES.md#rings-and-cloaks-of-protection)) and
-anything else. They show "-" until the game has worked out that character's AC
-in a fight.
+their place, such as Spirit Armor and Magical Vestments), DEX (the game's table:
+−1 at 15 down to −6 at 24; not counted when attacked from behind), and spells,
+rings (the [rings of protection](FEATURES.md#rings-and-cloaks-of-protection))
+and anything else. They show "-" until the game has worked out that character's
+AC in a fight.
 
 **Scores.** Ability scores such as `STR 24 (20 without spells)` show the score
 now and, in brackets, the character's own score when a spell (Strength, for
@@ -743,18 +728,18 @@ adjustment: a half-giant's 20 + 4 shows as 24.
 
 ### The Spells tab
 
-What each wizard and priest spell and psionic power does, read from the
-running game's records: its damage dice and kinds (and that damage stops
-growing at caster level 10), its saving throw (which of the five, any
-modifier, whether the d20 counts double, and whether saving halves or stops
-the damage), the effect it gives and what that does, how long it lasts, and
-each party member's caster level for it. With the [new spells](FEATURES.md#new-content)
-on, the mod's spells are listed too; a 6th-level priest spell built on another
-spell's record (Harm on Cause Critical Wounds', say) has its lines written out,
-as the record would mislead. **Show** picks wizard, priest or
-psionic, and **Only spells the party has a caster level for** leaves out the
-rest. **Save...** writes it to a text file. It's filled when you open the tab
-(or press **Refresh**) while the game is running.
+What each wizard and priest spell and psionic power does, read from the running
+game's records: its damage dice and kinds (and that damage stops growing at
+caster level 10), its saving throw (which of the five, any modifier, whether the
+d20 counts double, and whether saving halves or stops the damage), the effect it
+gives and what that does, how long it lasts, and each party member's caster
+level for it. With the [new spells](FEATURES.md#new-content) on, the mod's
+spells are listed too; a 6th-level priest spell built on another spell's record
+(Harm on Cause Critical Wounds', say) has its lines written out, as the record
+would mislead. **Show** picks wizard, priest or psionic, and **Only spells the
+party has a caster level for** leaves out the rest. **Save...** writes it to a
+text file. It's filled when you open the tab (or press **Refresh**) while the
+game is running.
 
 ### The Dialogue tab
 
@@ -833,14 +818,14 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](KITS.md#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)). |
 
-**Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20
-hits` replace `needs 12+` when the roll is out of the ordinary range.
-`X attacks Y from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from
-behind and backstabs (see
-[Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)).
-The target's AC includes armour, DEX and spells. A natural 20 always hits and a
-natural 1 always misses, but a 20 does no extra damage: the game has no
-critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
+**Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20 hits`
+replace `needs 12+` when the roll is out of the ordinary range. `X attacks Y
+from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and
+backstabs (see [Attacks from behind and
+backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). The
+target's AC includes armour, DEX and spells. A natural 20 always hits and a
+natural 1 always misses, but a 20 does no extra damage: the game has no critical
+hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 
 **Spells, saves and effects**
 
@@ -864,15 +849,15 @@ critical hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `Y's saving throw vs Fireball from X (petrification/polymorph): d20 = 6, doubled against fire = 12 +1 Blessed = 13, needs 11 (80% to save) -> saved: half damage, 19 of 38` | A saving throw: which of the target's five saves it uses, the d20, each of the game's modifiers by name (anything the log can't account for shows as `other`), the number it had to reach and the chance of that; for a damaging spell, what the save left of that target's damage roll. More below the table. |
 | `X gives Blessed to Y, Z: +1 to hit, +1 on saves` / `Blessed ends on Y` | A spell or psionic effect starting or ending, with what it does in the game's code where that is known: to-hit, AC and saving throws, movement and attacks, whether the creature can attack or cast, who controls it (see [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)). `Stuck on Y` (no "gives") is an effect a creature has from a spell on the ground or cast on itself. |
 
-**Saving throws, in more detail.** The modifiers are those of
-[the game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws). With
-the [rule changes](FEATURES.md#rule-changes) off, the game uses petrification/polymorph for
-almost every spell and doubles the d20 against fire, cold and electricity
+**Saving throws, in more detail.** The modifiers are those of [the game's saving
+throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws). With the [rule
+changes](FEATURES.md#rule-changes) off, the game uses petrification/polymorph
+for almost every spell and doubles the d20 against fire, cold and electricity
 spells, as in the example above, so Fireball's victims usually save; with them
 on (the default), the line names the spell save and DEX's adjustment instead
 (`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 always saves.
-For a damaging spell the result says what the save left: `saved: half damage,
-19 of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as
+For a damaging spell the result says what the save left: `saved: half damage, 19
+of 38`, `failed: full damage, 38`, or `saved: no damage` for spells such as
 Chill Touch; the HP line after it shows what the creature really lost, once
 resistances and protections have had their say. A failed save also lets the
 spell's effect take hold. Spells left on the ground (Grease, clouds) make
@@ -934,34 +919,13 @@ randomises (creatures wandering, animations and so on), as raw numbers with
 where in the game's code they came from. It's noisy, but useful for finding
 more rolls worth labelling.
 
-## How the game works
+## More pages
 
-What the game does that its manual doesn't say, from its code and checked in
-play, has a page of its own, [How the game works](HOW-THE-GAME-WORKS.md):
-
-- [Initiative](HOW-THE-GAME-WORKS.md#initiative)
-- [Spells and effects](HOW-THE-GAME-WORKS.md#spells-and-effects)
-- [Psionics](HOW-THE-GAME-WORKS.md#psionics)
-- [Character creation](HOW-THE-GAME-WORKS.md#character-creation)
-- [Monsters' defences](HOW-THE-GAME-WORKS.md#monsters-defences)
-- [Searching junk, hay and wardrobes](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes)
-- [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)
-- [The game's two weapons](HOW-THE-GAME-WORKS.md#the-games-two-weapons)
-- [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)
-- [Where the game rolls thief skills](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)
-- [Attacks from behind and backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)
-- [The game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)
-- [The arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)
-
-## Item tables
-
-Every magic item and every mundane weapon, the game's and the mod's, with
-their icons and where each is, has a page of its own, [Items](ITEMS.md)
-(spoilers):
-
-- [Every magic item](ITEMS.md#every-magic-item): weapons and missile weapons (and the magic weapons by weapon spec), armour, helms, shields, rings and the rest
-- [Every mundane weapon](ITEMS.md#every-mundane-weapon): who sells and who carries each plain weapon
-- [Items against acid](ITEMS.md#items-against-acid): each armour piece's and weapon's chance to come through acid
+- [How the game works](HOW-THE-GAME-WORKS.md): what the original game does
+  that its manual doesn't say, from its code and checked in play (initiative,
+  spells and psionics, monsters' defences, thief skills, saving throws...).
+- [Items](ITEMS.md) (spoilers): every magic item and every mundane weapon, the
+  game's and the mod's, with their icons and where each is.
 
 ## Accessibility
 
@@ -994,20 +958,3 @@ level AA:
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
   and `python -m dsloader dicelog` prints the same log (dialogue included) in
   a command prompt, which screen readers do read.
-
-## Without the game
-
-**Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
-**`Show Save.bat`**.
-
-**Practising:** `tests/make_fake_party.py` writes `FAKEPTY.COM`, a tiny DOS
-program holding two made-up characters in the same record shapes as the game.
-The first character loses 1 HP every second. Run it in DOSBox and try the
-Loader (search for `SADIRA`).
-
-```
-python tests/make_fake_party.py
-dosbox FAKEPTY.COM
-```
-
-![The Loader on the practice program: All fields with Sadira and Rikus, and Memory tools with her record found and its bytes](docs/viewer.png)

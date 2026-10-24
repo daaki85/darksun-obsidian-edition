@@ -157,6 +157,8 @@ ACID_SITE = NS_IMAGE + 34  # (an effect added: Acid's time made rounds as charge
 BURN_SITE, ONCE_SITE = NS_IMAGE + 35, NS_IMAGE + 36
 STAB_SITE, TIMES_SITE = NS_IMAGE + 39, NS_IMAGE + 40  # (a backstab: the weapon's dice only, RULE_BACKSTAB)
 DRAW_SITE = NS_IMAGE + 42  # (a thing on the map about to be drawn: Whirlwind's funnel once, DSCLOG's DRAW_SITE)
+CINE_STEP, CINE_END = NS_IMAGE + 43, NS_IMAGE + 44  # (scenes: the pointer shown, a click ends one)
+MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in the middle, as fast up as across)
 HEAT_SITE = NS_IMAGE + 41  # (a spell's damage on a creature: Sunstroke's heat named and made fire, DSCLOG's HEAT_SITE)
 USE_SITE, ROUND_SITE = NS_IMAGE + 37, NS_IMAGE + 38  # (Acid spent once a round, at its start, and only then)  # (an Acid's burn: its damage puts no Acid on again)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
@@ -430,6 +432,14 @@ PATCHES = (
     # a thing on the map about to be drawn: of a lasting area's copies of Whirlwind's funnel, only
     # one, at their middle (DSCLOG's DRAW_SITE)
     Patch("whirl_draw", 0x232D4, bytes.fromhex("be00008b470f"), _site(DRAW_SITE, 6)),
+    # scenes and logos (the intro's too): the mouse driver's pointer shown, a click ending the scene
+    # as a key does, and hidden at the scenes' end (DSCLOG's CINE_STEP, CINE_END)
+    Patch("cine_step", 0x92A28, bytes.fromhex("0bd2740d"), _site(CINE_STEP, 4)),
+    Patch("cine_end", 0x56BBE, bytes.fromhex("0bf67406"), _site(CINE_END, 4)),
+    # the pointer starts in the middle of the screen, not at its right edge, and moves as far up and
+    # down as across, from the game's start (DSCLOG's MOUSE_SET, MOUSE_INIT)
+    Patch("mouse_set", 0x2A912, bytes.fromhex("c7062da10000"), _site(MOUSE_SET, 6)),
+    Patch("mouse_init", 0x356F5, bytes.fromhex("0bc0750b"), _site(MOUSE_INIT, 4)),
     # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
     Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),
@@ -843,6 +853,8 @@ class PatchError(Exception):
 EFFECTS_KEPT = ("effects_click_low", "effects_click_high")  # a click on the Effects screen keeps a spell
 ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
 CAMERA = ("camera_still",)  # the view in a fight following a figure only off the screen
+SCENE_POINTER = ("cine_step", "cine_end")  # a pointer in the scenes, a click ending one
+MOUSE_START = ("mouse_set", "mouse_init")  # the pointer starting in the middle, as fast up and down as across
 STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_shown0", "strip_shown1",
          "strip_palette", "strip_colours")  # the combat log below the map (off by default)
 
