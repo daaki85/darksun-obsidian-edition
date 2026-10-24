@@ -1764,6 +1764,8 @@ The game left the pointer at the right edge of the screen when its menu came
 up, and it moved half as far up and down as across (the mouse driver's own
 setting). Now it starts in the middle and moves as far each way.
 
+![The game's pointer in the SSI logo before the intro, and on the king's decree that opens a new game](docs/scene-pointer.png)
+
 Each has its switch on the Options tab, on by default (from the next start).
 
 How it works:

@@ -26,6 +26,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   put in the middle there (`MOUSE_SET`, 2A912h); and the driver's 16 mickeys a pixel up and down
   are made 8, as across, from the game's start (`MOUSE_INIT`, 356F5h). A switch, `mouse_start`, on.
 
+**Docs**
+- The player guide's tables list the scenes' pointer and the pointer's start and speed; the README's
+  troubleshooting says how to let go of the mouse (Ctrl+F10) and the freeze report's 4 samples a
+  second; the patch notes' pointer line reads better; a picture of the pointer in scenes in FEATURES.
+
 **Changed**
 - **The freeze report's records**: 16, every 32nd timer strike (were 32, every 16th; the same 4
   seconds), to make room in upper memory for the above.
