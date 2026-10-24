@@ -30,6 +30,11 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `BT`), and `EXTRA_NAMES` keeps its 46 names in 16 bytes each (`NAME_KEPT`: 15 letters at most),
   `PROBE_NAMES_FILL` padding each to the game's 25 as it copies them: 455 and 414 bytes. Checked
   in the game: all 46 names in the game's table as before, and the figures' shadows drawn.
+- **Documentation review.** The Loader README lists the Options tab's Wake of the Ravager section;
+  DEVELOPMENT describes how `THORNS_AC` now counts a monster's AC; How the game works keeps the
+  manual's column the manual's (Slay Living); two sentences in the patch notes untangled. Two
+  screenshots retaken: `options.png` (with the Wake of the Ravager section) and Heartseeker's tile
+  in `new-priest-spells.png` (its new description).
 - **Heartseeker's and Slay Living's descriptions.** A creature that saves still takes half of
   4d8, 2 to 16: Heartseeker's said only that it slays, and Slay Living's said 3 to 17 (the book's
   2d8+1, not what the game rolls). `spelltexts.py` puts both right (SPIN 209 and 137), and the

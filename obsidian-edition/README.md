@@ -682,6 +682,9 @@ Everything there applies in games started from the Loader; a switch that says
   Cilla drawn as an elf, what the party wears, shadows and dust.
 - **Controls** ([Controls](FEATURES.md#controls)) and **Game speed**
   ([Game speed](FEATURES.md#game-speed)).
+- **Wake of the Ravager (optional)**: whether the Loader found it, for the
+  6th-level priest spells' icons and pictures, and **Choose its folder...**
+  ([Requirements](#requirements)).
 - **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)): the folder
   of saves kept under their names, and putting one back in a slot.
 

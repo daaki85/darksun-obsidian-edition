@@ -2297,9 +2297,14 @@ thing's object is no longer Whirlwind's (the area gone).
 A0h). The game keeps no AC: its AC routine
 (58DD3h) works one out from items and effects for each attack, and it is in another overlay
 (41BEh) than the damage roll (428Fh), so calling it there could have the overlay manager move the
-code it returns to. A monster's AC is its sheet's +27h (the Look box's); a party member's sheet
-says 10 there whatever it wears, so `PROBE_AC`, at the AC routine's end, keeps each member's last
-AC (`AC_SEEN`, its `[BP+6]` the combatant; 7Fh none yet: then the sheet's). The dice log shows
+code it returns to. So `PROBE_AC`, at the AC routine's end, keeps each party member's last AC
+(`AC_SEEN`, its `[BP+6]` the combatant; 7Fh none yet), and for anyone else (or a member not yet
+attacked) `THORNS_AC` counts as the routine does: the sheet's base (+27h, 10 for an armed man:
+the routine adds the armour), less each worn item's plus and its type's AC (+12h, types with +0Fh
+80h, a shield too) in the creature's item lists +8 and +0Ah (where putting an item on moves it;
+the routine doesn't look at the slot byte, and +0Ch, the backpack, doesn't count), a fifth of a
+gladiator's level (508:25h's) and the DEX adjustment (DS:7F6h by the record's +23h). The
+effects' part (5B8:F2h: Armor, Barkskin and the rest) is left out. The dice log shows
 it: the entry's extra carries the AC + 80h in its high byte. Blade Barrier's record has its own
 8d8, edged (+1Ah 210h), and the game's saving throw against spells (+1Fh A1h) for none (+11h's
 8000h), as Wake of the Ravager's. Sunstroke's record takes Slay Living's aim (+00h 4,
