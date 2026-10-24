@@ -47,6 +47,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
 
 **Fixed**
+- **The pointer put back in the middle as screens changed.** A video mode set (each scene's
+  start, the menus, loading a save) leaves the driver's pointer at the right edge, which
+  `MOUSE_SET` and the scenes' `CINE_MOUSE`/`CINE_WHERE` put in the middle; they now put it where it
+  was last seen: `MP_X`, `MP_Y`, kept by the scenes' arrow and by `MOUSE_EVENT` (every event the
+  game is sent). The ring is 63 entries (the room: UMB_NEED 8171 of 8182). Seen in DOSBox: moved
+  to (120, 78) in the intro, there at the main menu; (250, 60) on the load screen, there on the
+  map.
 - **"Regains 1 HP from Fire attack."** A hit point regenerated (CON 20 or more) in the moment
   after a spell or attack was put down to it, the spell's healing tested first; regeneration is
   tested first now.

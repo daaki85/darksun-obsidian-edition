@@ -1774,7 +1774,7 @@ scene's steps, so a long still picture, like the decree, plays to its end.
 
 The game left the pointer at the right edge of the screen when its menu came
 up, and it moved half as far up and down as across (the mouse driver's own
-setting). Now it starts in the middle and moves as far each way. In a window
+setting). Now it starts in the middle, stays where you leave it from one screen to the next (the intro, the menus, loading), and moves as far each way. In a window
 it also moves as fast as your desktop's pointer: DOSBox moved it a whole game
 pixel (three screen pixels in the usual window) for each pixel the mouse
 moved, too fast and coarse to put an item where you meant in the inventory.

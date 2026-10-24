@@ -414,7 +414,7 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 64 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 63 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -433,11 +433,11 @@ most 64 KB (everything through CS), so the second block is room for data kept
 apart from it, as the ring is. The helper asks for its resident part and the
 ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few
 KB of upper memory left. A change that adds much code should check that again:
-the ring is 64 entries, not 128 (96 until the new spells' code, when the game no
+the ring is 63 entries, not 128 (96 until the new spells' code, when the game no
 longer started for lack of memory; 88 until STORE and RECALL; 84 until spells
 199-201 and `seg_space`, when the helper no longer fitted in the block and
 loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned;
-65 until Wall of Thorns counted a monster's armour), and the text buffer 2 KB,
+65 until Wall of Thorns counted a monster's armour, 64 until the pointer kept its place), and the text buffer 2 KB,
 not 8 (4 until the memory pass for 6th-level spells), to make that room. The
 most entries put in the ring in 2 seconds, measured, is 43 (the opening show),
 16 in a fight.
@@ -3059,17 +3059,21 @@ black and white arrow of its own, so nothing of the game's is in the mod.
   palette with interrupts off, so the timer never reads the DAC halfway
   through its writing.
 - **At the scene's start** the driver's ranges are made the screen's (0 to 319,
-  0 to 199; its own are 640 across) and the pointer put in the middle; a video
-  mode set puts them back, which the next step sees (an x past 319) and sets
-  again.
+  0 to 199; its own are 640 across) and the pointer put where it was last
+  seen (`MP_X`, `MP_Y`: the arrow's place in a scene, the game's mouse events'
+  out of one; the middle at first); a video mode set puts them back, which the
+  next step sees (an x past 319) and sets again.
 - **At the end** (`CINE_END`, the scenes' routine's `or si,si / jz`, where
   every scene comes, played or skipped) the arrow is wiped.
 
 **Where the pointer starts.** After a video mode set the driver puts its
 pointer in the middle of its 640 across; the game then gives it the ranges 0
 to 319 (`2A8F2h`), which leave it at the right edge (318, 100). Just after
-that (`MOUSE_SET`, its `mov word [0A12Dh],0`) DSCLOG moves it to the middle
-when it is there (function 4). The driver's own speed is 8 mickeys a pixel
+that (`MOUSE_SET`, its `mov word [0A12Dh],0`) DSCLOG moves it back to where
+it was last seen when it is there (function 4; `MP_X`, `MP_Y`, kept by the
+scenes' arrow and by every mouse event the game is sent: the middle before
+the first), so a pointer moved in the intro or on a menu stays put through the
+next screen's video mode set. The driver's own speed is 8 mickeys a pixel
 across and 16 up and down; as the game resets the driver at its start
 (`MOUSE_INIT`, `356F5h`, after function 0) and again with the ranges, DSCLOG
 makes them 8 and 10 (function 0Fh): the window's aspect correction makes a

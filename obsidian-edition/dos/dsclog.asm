@@ -153,7 +153,7 @@ VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
-NENT    equ 64          ; entries in the ring (64: the helper and it fit in upper memory)
+NENT    equ 63          ; entries in the ring (63: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
 LBL_SLOTS  equ 2        ; names floating over figures at once (LABELS)
 LBL_ROW    equ 16       ; bytes a row of a label's mask: LBL_ROW * 8 pixels wide at most
@@ -11485,6 +11485,8 @@ cine_shown db 0                 ; (1 while a scene plays: the driver's ranges th
 cp_drawn   db 0                 ; (1: the arrow on the screen, at CP_X, CP_Y, CP_PAGE in A000h,
 cp_x       dw 0                 ;   in CP_MAP's colours, CP_UNDER what was under it)
 cp_y       dw 0
+mp_x       dw 160               ; (where the pointer was last seen, in the game's 320 by 200: where
+mp_y       dw 100               ;   a mode set or a scene's start puts it back, not the middle)
 cp_page    dw 0
 cp_now     dw 0
 cp_op      db 0
@@ -11573,8 +11575,8 @@ cine_mouse:                             ; the driver's ranges the screen's, the 
         mov dx, 199
         int 0x33
         mov ax, 4
-        mov cx, 160
-        mov dx, 100
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
         int 0x33
         popa
         ret
@@ -11584,9 +11586,11 @@ cine_where:                             ; CX, DX: the pointer (a video mode set 
         cmp cx, 319
         jbe .ok
         call cine_mouse
-        mov cx, 160
-        mov dx, 100
-.ok:    ret
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+.ok:    mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
+        ret
 cine_hide:                              ; the arrow wiped (the game sets its ranges again with
         mov byte [cs:cine_shown], 0     ;   its next screen's video mode: MOUSE_SET)
         jmp cp_erase
@@ -11879,8 +11883,8 @@ mouse_set:
         iret
 mouse_mid:
         mov ax, 4
-        mov cx, 160
-        mov dx, 100
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
         int 0x33
 mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 10:
         mov ax, 0x0F                    ; with the window's aspect correction a pixel is 1.2 times as
@@ -18061,6 +18065,8 @@ int33:
 .chain: jmp far [cs:old33]
 
 mouse_event:                            ; AX = events, BX = buttons held, CX, DX = where
+        mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
         call panel_mouse
         cmp word [cs:scroll_on], 0
         je .pass

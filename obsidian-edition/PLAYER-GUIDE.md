@@ -109,7 +109,7 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 | **Scrolling with the mouse** | Press the wheel and drag the map. Optionally, hold the right button and drag. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
-| **The pointer's start and speed** | The pointer starts in the middle of the screen, moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
+| **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
 | **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
 
 **Saves and characters:**
