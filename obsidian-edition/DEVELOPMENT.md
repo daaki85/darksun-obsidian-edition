@@ -3072,7 +3072,21 @@ that (`MOUSE_SET`, its `mov word [0A12Dh],0`) DSCLOG moves it to the middle
 when it is there (function 4). The driver's own speed is 8 mickeys a pixel
 across and 16 up and down; as the game resets the driver at its start
 (`MOUSE_INIT`, `356F5h`, after function 0) and again with the ranges, DSCLOG
-makes both 8 (function 0Fh).
+makes them 8 and 10 (function 0Fh): the window's aspect correction makes a
+pixel 1.2 times as tall as it is wide, so 10 moves the pointer as far on the
+screen up and down as across.
+
+**Its speed in a window.** With the mouse captured, DOSBox 0.74 moves the
+driver's pointer by the desktop mouse's motion times 8 over the mickeys a
+pixel (`Mouse_CursorMoved`: one game pixel for each desktop pixel at 8), so in
+the usual window, three times the game, the pointer moved three screen pixels
+for each one the desktop pointer would: fast, and in steps of three, which
+made placing items fiddly. The Loader's DOSBox settings set the mouse's
+`sensitivity` (which scales that motion) to 100 over the window's scale, 33 in
+the usual window (`launch.display_lines`, with `MOUSE_START`), and
+`autolock=true`, as GOG has it: uncaptured, DOSBox reads the desktop pointer's
+place in the window instead, which the sensitivity would scale too. In full
+screen the scale depends on the monitor, and DOSBox's own is kept.
 
 The two are switches (`SCENE_POINTER`: `cine_step`, `cine_end`; `MOUSE_START`:
 `mouse_set`, `mouse_init`). The room in upper memory came from the freeze

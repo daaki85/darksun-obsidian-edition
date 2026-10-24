@@ -201,7 +201,7 @@ class LaunchTests(unittest.TestCase):
 
     def test_a_window_three_times_the_game_unless_asked_otherwise(self):
         self.assertEqual(launch.display_lines({}),
-                         ["[sdl]", "fullscreen=false", "[render]", "aspect=true", "scaler=normal3x", ""])
+                         ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=33", "[render]", "aspect=true", "scaler=normal3x", ""])
         self.assertIn("scaler=normal3x", launch.display_lines({"window_scale": 3}))
         self.assertIn("scaler=none", launch.display_lines({"window_scale": 1}))
         self.assertIn("scaler=normal3x", launch.display_lines({"window_scale": 7}))
@@ -212,6 +212,11 @@ class LaunchTests(unittest.TestCase):
                                                                            "combat_log_strip": True}))  # below: 266 rows)
         self.assertIn("output=opengl", four)
         self.assertEqual(launch.display_lines({"fullscreen": True}), [])  # GOG's own full screen
+        # the pointer at the desktop's speed: the mouse's sensitivity 100 over the scale
+        self.assertIn("sensitivity=50", launch.display_lines({"window_scale": 2}))
+        self.assertIn("sensitivity=25", four)
+        self.assertIn("sensitivity=100", launch.display_lines({"window_scale": 1}))
+        self.assertNotIn("sensitivity=33", launch.display_lines({"mouse_start": False}))
         saved = launch.load_settings
         launch.load_settings = lambda: {}
         try:

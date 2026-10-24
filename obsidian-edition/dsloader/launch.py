@@ -156,17 +156,26 @@ def display_lines(settings: dict) -> List[str]:
     game's 320x200 (960x720 with the aspect correction GOG turns on); `window_scale` 2 makes it
     twice, 4 four times, 1 leaves it at 320x240; `fullscreen` true keeps GOG's full screen.
     Alt+Enter switches either way in DOSBox. DOSBox 0.74 has no 4x scaler, so four times is
-    DOSBox scaling the window itself, which needs its OpenGL output."""
+    DOSBox scaling the window itself, which needs its OpenGL output.
+    With the pointer's start and speed (`mouse_start`, on unless switched off) the mouse's
+    `sensitivity` is 100 over the scale: DOSBox moves the captured game's pointer a game pixel for
+    each pixel the hand moves on the desktop, SCALE screen pixels in the window, so this makes it
+    move as the desktop's pointer does (DSCLOG's MOUSE_RATIO allows for the taller pixels); the
+    mouse is captured on a click (`autolock`, as GOG has it)."""
     if settings.get("fullscreen"):
         return []
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
+    sdl = ["[sdl]", "fullscreen=false"]
+    if settings.get("mouse_start", True) is not False:
+        sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (captured: uncaptured,
+        # DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
     if scale == 4:  # (the strip below the map: 22 rows taller, 266 with the aspect correction)
         size = "1280x1064" if settings.get("combat_log_strip") is True else "1280x960"
-        return ["[sdl]", "fullscreen=false", "output=opengl", "windowresolution=" + size, "[render]",
-                "aspect=true", "scaler=normal2x", ""]
-    return ["[sdl]", "fullscreen=false", "[render]", "aspect=true",
-            "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
+        return sdl + ["output=opengl", "windowresolution=" + size, "[render]",
+                      "aspect=true", "scaler=normal2x", ""]
+    return sdl + ["[render]", "aspect=true",
+                  "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
 
 
 # The game's speed: DOSBox's emulated CPU (fixed cycles: instructions a millisecond). The game

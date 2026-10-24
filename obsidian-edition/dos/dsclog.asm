@@ -11882,10 +11882,10 @@ mouse_mid:
         mov cx, 160
         mov dx, 100
         int 0x33
-mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 8)
-        mov ax, 0x0F
-        mov cx, 8
-        mov dx, 8
+mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 10:
+        mov ax, 0x0F                    ; with the window's aspect correction a pixel is 1.2 times as
+        mov cx, 8                       ; tall as it is wide, so up and down moves as far on the
+        mov dx, 10                      ; screen as across)
         int 0x33
         ret
 

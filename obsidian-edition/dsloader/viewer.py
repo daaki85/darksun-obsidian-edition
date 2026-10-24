@@ -528,8 +528,9 @@ class Viewer:
                         "a scene as a key does; from the next start", variable=self.scene_pointer,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.mouse_start = tk.BooleanVar(value=settings.get("mouse_start", True) is not False)
-        ttk.Checkbutton(controls, text="The pointer starts in the middle of the screen and moves as far up and "
-                        "down as across (the game's: at the right edge, half as far); from the next start",
+        ttk.Checkbutton(controls, text="The pointer starts in the middle of the screen, moves as far up and "
+                        "down as across, and in a window as fast as the desktop's pointer (the game's: at the "
+                        "right edge, half as far, three times as fast); from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "

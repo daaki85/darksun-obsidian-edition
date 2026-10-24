@@ -12,6 +12,13 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 ## Next pull request (in progress)
 
 **New**
+- **The pointer at the desktop's speed in a window.** Captured, DOSBox 0.74 moves the driver's
+  pointer a game pixel for each desktop pixel the mouse moves (at 8 mickeys a pixel), three
+  screen pixels in the usual window: too fast and coarse for placing items. With `mouse_start`
+  the Loader's settings give the mouse `sensitivity` 100 over the window's scale (33 in the usual
+  window; `launch.display_lines`) and `autolock=true`, and DSCLOG's `MOUSE_RATIO` makes up and
+  down 10 mickeys, not 8, for the aspect correction's taller pixels. Seen in DOSBox: 30 desktop
+  pixels across move the pointer 8 game pixels, down 7.
 - **Magic weapons, shields and armour glow on figures.** `sprites.worn` marks a weapon or shield
   with a plus or a power `spritegear.MAGIC` (Kreenfang and the Flame Blade keep their own colours),
   and a piece of armour's type with `MAGIC_ARMOUR` (10000h) added. `draw_weapon` draws the shape's
