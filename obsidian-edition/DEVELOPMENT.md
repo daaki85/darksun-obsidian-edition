@@ -954,6 +954,13 @@ drawn its first status rows; the helper asks the Loader and waits a moment for
 its answer, and prints the lines with the game's text routine. `INT F6h`, at
 the end of the routine that closes the box, shows the whole description.
 
+The AC is the one `PROBE_AC` last recorded for the creature (`DiceLog.monster_ac`: the game works
+an AC out only for an attack, and keeps none). Before any attack on it, `GameData.counted_ac`
+counts it as the game's AC routine (58DD3h) does, as `THORNS_AC` does in the helper: the sheet's
+base (+27h, 10 for an armed man), less each worn item's plus and its type's AC (types with
++0Fh 80h, in the item lists +8 and +0Ah), a fifth of a gladiator's level and the DEX adjustment;
+the effects' part (Armor, Barkskin...) is left out.
+
 ### Charges in item boxes
 
 ([In the README](README.md#charges-in-item-boxes).)

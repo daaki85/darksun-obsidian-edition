@@ -30,6 +30,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   `BT`), and `EXTRA_NAMES` keeps its 46 names in 16 bytes each (`NAME_KEPT`: 15 letters at most),
   `PROBE_NAMES_FILL` padding each to the game's 25 as it copies them: 455 and 414 bytes. Checked
   in the game: all 46 names in the game's table as before, and the figures' shadows drawn.
+- **The Look box's AC counts a monster's armour.** Before anything had attacked a monster, the
+  Look box (and its `Look:` line) gave its sheet's base AC, 10 for an armed man, as Wall of
+  Thorns did. It now counts as the game does (`GameData.counted_ac`, the Loader's twin of
+  `THORNS_AC`: worn armour and its plus, in the item lists +8 and +0Ah, a gladiator's levels and
+  DEX; `_worn` takes the lists to walk). Checked in the game: Scar's Look box AC 5 at the fight's
+  start (it said 10), the AC the game uses when he is attacked; his henchmen 10.
 - **Documentation review.** The Loader README lists the Options tab's Wake of the Ravager section;
   DEVELOPMENT describes how `THORNS_AC` now counts a monster's AC; How the game works keeps the
   manual's column the manual's (Slay Living); two sentences in the patch notes untangled. Two

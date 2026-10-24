@@ -359,6 +359,7 @@ SHEET_LEVELS_BEFORE = 0x3F  # the levels before any were lost (the game scales S
 # 0x20, gladiator 0x40, preserver 0x80, psionicist 0x100, ranger 0x200, thief 0x400)
 SHEET_FLAGS = 0x12
 SHEET_FLAG_RANGER = 0x200
+SHEET_FLAG_GLADIATOR, GLADIATOR_CLASS = 0x40, 10
 RACE_HALF_GIANT = 5
 # Hit points per level (segment relative to the load segment): +10h + class = the class's
 # group; group * 4 = (die, levels that roll it, fixed gain after that); +38h + CON = the
@@ -1720,8 +1721,9 @@ class GameData:
         """Whether a creature wears an item of ITEM_TYPE in SLOT."""
         return any(struct.unpack_from("<H", item, ITEM_TYPE)[0] == item_type for item in self.worn_in(creature, slot))
 
-    def _worn(self, creature: int):
-        """(item number, item record, type record) for each of a creature's items."""
+    def _worn(self, creature: int, lists: Tuple[int, ...] = CREATURE_ITEM_LISTS):
+        """(item number, item record, type record) for each of a creature's items (in LISTS, the
+        record's item lists: all three by default)."""
         rec = self.creature(creature)
         if len(rec) < CREATURE_SIZE:
             return
@@ -1729,7 +1731,7 @@ class GameData:
         items = far_pointer(self.guest, self.ds, ITEMS_PTR)
         types = far_pointer(self.guest, self.ds, ITEM_TYPES_PTR)
         seen = set()
-        for field in CREATURE_ITEM_LISTS:
+        for field in lists:
             thing, = struct.unpack_from("<H", rec, field)
             if thing >= NO_ITEM:
                 continue
@@ -2140,6 +2142,31 @@ class GameData:
         from . import restrict
         worn = [typ for _, item, typ in self._worn(creature) if item[ITEM_SLOT] in ARMOUR_SLOTS]
         return restrict.no_spells(self.sheet(creature), worn)
+
+    def counted_ac(self, creature: int) -> Optional[int]:
+        """A creature's AC as the game's AC routine (58DD3h) counts it for each attack, spells' part
+        aside: the sheet's base, less each worn item's plus and its type's AC where the type counts
+        for AC (+0Fh 80h; a shield too), a fifth of a gladiator's level and the DEX adjustment. Worn:
+        in the first two item lists (putting an item on moves it there from +0Ch, whatever its slot
+        byte says). As DSCLOG's THORNS_AC counts it. None without a record and sheet."""
+        rec, sheet = self.creature(creature), self.sheet(creature)
+        if len(rec) < CREATURE_SIZE or len(sheet) < SHEET_SIZE:
+            return None
+        ac = struct.unpack_from("b", sheet, SHEET_BASE_AC)[0]
+        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR:
+            for n in range(3):
+                if sheet[SHEET_CLASSES + n] == GLADIATOR_CLASS:
+                    level = sheet[SHEET_LEVELS + n]
+                    # (a human's later class counts only once past its first's level: 508:25h)
+                    if n and sheet[SHEET_RACE] == HUMAN and sheet[SHEET_LEVELS] <= level:
+                        level = 0
+                    ac -= level // 5
+                    break
+        ac += self.dex_ac(rec[CREATURE_ABILITIES + 1])
+        for _, item, typ in self._worn(creature, CREATURE_ITEM_LISTS[:2]):
+            if struct.unpack_from("<H", item, ITEM_TYPE)[0] < NO_ITEM and typ[0x0F] & 0x80:
+                ac -= struct.unpack_from("b", item, ITEM_PLUS)[0] + struct.unpack_from("b", typ, 0x12)[0]
+        return ac
 
     def dex_ac(self, dex: int) -> int:
         """The game's AC adjustment for a DEX score."""
