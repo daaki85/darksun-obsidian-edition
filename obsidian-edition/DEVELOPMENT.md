@@ -2957,14 +2957,20 @@ asks the game's event queue between a piece's steps (`929F5h`); a key, DX 1,
 ends the scene (`92A28h`). The game's own mouse handler isn't installed yet in
 the intro, and the mouse driver's pointer can't be drawn there: the scenes'
 VGA mode is unchained (mode X, 4 planes, page flipping), which DOSBox's driver
-draws as garbage. So DSCLOG draws its own 8 by 11 arrow:
+draws as garbage. So DSCLOG draws the game's own arrow (its pointer on the
+menus, `RESOURCE.GFF`'s ICON 6001, 10 by 13 in 11 colours of `GPLDATA.GFF`'s
+palette). The Loader reads it from the player's game at each start
+(`scenepointer.py`) into `dos\POINTER.BIN`, which DSCLOG reads over its
+`CP_DATA` as it loads: the rows, the colours (6 bits a part), then each row's
+pixels as colour numbers, ending with 0. Without the file DSCLOG keeps a plain
+black and white arrow of its own, so nothing of the game's is in the mod.
 
 - **At each step** (`CINE_STEP`, the step's `or dx,dx / jz`): a button pressed
   since the last step (`INT 33h` function 5, both buttons) makes DX 1, as a key
   does. At most 30 times a second the arrow is wiped and drawn again where the
-  driver has the pointer (function 3), in the palette's darkest and lightest
-  colours (read from the DAC; of equals the last, as a picture seldom uses
-  them), in the page shown (the CRTC's start address), each pixel's plane
+  driver has the pointer (function 3), each of its colours as the scene's
+  palette's nearest (read from the DAC, the three parts' differences summed;
+  of equals the last, as a picture seldom uses them), in the page shown (the CRTC's start address), each pixel's plane
   selected with the sequencer's map mask and the graphics controller's read
   map (both saved and put back, with the controller's mode, bit mask, set/reset
   and rotate). What was under it is kept, and put back only where the arrow

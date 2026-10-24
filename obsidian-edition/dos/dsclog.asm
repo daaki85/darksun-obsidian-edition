@@ -11477,15 +11477,16 @@ draw_site:
 ; arrow is drawn at each step where the driver has the pointer (CP_DRAW), and a button pressed
 ; since the last step ends the scene as a key does (DX 1). CINE_HIDE wipes it at the end.
 CE_SKIP      equ 0x56BC8 - (0x56BBE + 3)
-CP_ROWS      equ 11
+CP_MAX_ROWS  equ 16             ; (the room for the arrow: dsloader/scenepointer.py's)
+CP_COLS      equ 11
+CP_SHAPE_BYTES equ 88
+CP_PIXELS    equ 76
 cine_shown db 0                 ; (1 while a scene plays: the driver's ranges the screen's)
 cp_drawn   db 0                 ; (1: the arrow on the screen, at CP_X, CP_Y, CP_PAGE in A000h,
-cp_x       dw 0                 ;   in CP_DARK and CP_LIGHT, CP_UNDER what was under it)
+cp_x       dw 0                 ;   in CP_MAP's colours, CP_UNDER what was under it)
 cp_y       dw 0
 cp_page    dw 0
 cp_now     dw 0
-cp_dark    db 0
-cp_light   db 0
 cp_op      db 0
 cp_last    dw 0                 ; (TICK_COUNT at the last step's drawing: 30 a second at most)
 cp_seq_i   db 0
@@ -11493,19 +11494,32 @@ cp_mask    db 0
 cp_gc_i    db 0
 cp_gc_ix   db 1, 3, 4, 5, 8     ; (the graphics controller's registers kept: set/reset enable,
 cp_gc      times 5 db 0         ;   rotate, read plane, mode, bit mask)
-cp_under   times CP_ROWS * 8 db 0
-cp_shape:                       ; (2 bits a pixel, the left first: 1 the dark colour, 2 the light)
-        dw 0x0001               ; #.......
-        dw 0x0005               ; ##......
-        dw 0x0019               ; #o#.....
-        dw 0x0069               ; #oo#....
-        dw 0x01A9               ; #ooo#...
-        dw 0x06A9               ; #oooo#..
-        dw 0x1AA9               ; #ooooo#.
-        dw 0x6AA9               ; #oooooo#
-        dw 0x55A9               ; #ooo####
-        dw 0x1A59               ; #o##oo#.
-        dw 0x1505               ; ##..###.
+cp_map     times CP_COLS db 0   ; (each colour's nearest in the palette, and how near)
+cp_best    times CP_COLS db 0
+cp_under   times CP_PIXELS db 0
+; CP_DATA: the arrow, as POINTER.BIN has it (read over this as the helper loads: the game's own,
+; ICON 6001 and its colours, from the player's game): its rows, its colours, their red, green and
+; blue (6 bits), then each row's pixels from its left (a colour's number from 1, or FFh for
+; none), each row ending with 0. Without the file, a plain arrow of the helper's own.
+cp_data:
+cp_rows    db 11
+cp_ncols   db 2
+cp_rgb     db 0, 0, 0, 63, 63, 63
+           times (CP_COLS - 2) * 3 db 0
+cp_shape:
+        db 1, 0
+        db 1, 1, 0
+        db 1, 2, 1, 0
+        db 1, 2, 2, 1, 0
+        db 1, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 2, 2, 2, 1, 0
+        db 1, 2, 2, 2, 1, 1, 1, 1, 0
+        db 1, 2, 1, 1, 2, 2, 1, 0
+        db 1, 1, 0xFF, 0xFF, 1, 1, 1, 0
+           times CP_SHAPE_BYTES - 69 db 0
+CP_DATA_BYTES equ $ - cp_data
 cine_step:
         or dx, dx
         jnz .event
@@ -11636,32 +11650,52 @@ cp_erase:
         pop es
         popa
 .out:   ret
-cp_colours:                             ; CP_DARK, CP_LIGHT: the palette's (its 3 parts' sums; of
-                                        ;   equals the last: a picture's colours seldom are)
+cp_colours:                             ; CP_MAP: each of the arrow's colours as the palette's
+        xor bx, bx                      ;   nearest (the 3 parts' differences summed; of equals the
+.clear: mov byte [cs:cp_best + bx], 0xFF ;  last: a picture's colours seldom are)
+        inc bx
+        cmp bx, CP_COLS
+        jb .clear
         mov dx, 0x3C7
         xor al, al
         out dx, al
         mov dx, 0x3C9
-        xor cx, cx
-        mov bh, 0xFF                    ; (the least sum so far, BH; the most, AH)
-        xor ah, ah
+        xor cl, cl                      ; (CL the palette's colour, BL, BH, CH its parts)
 .each:  in al, dx
         mov bl, al
         in al, dx
-        add bl, al
+        mov bh, al
         in al, dx
-        add bl, al
-        cmp bl, bh
-        ja .light
-        mov bh, bl
-        mov [cs:cp_dark], cl
-.light: cmp bl, ah
-        jb .next
-        mov ah, bl
-        mov [cs:cp_light], cl
-.next:  inc cx
-        cmp cx, 256
-        jb .each
+        mov ch, al
+        xor si, si                      ; (SI the arrow's colour's parts, DI the colour)
+        xor di, di
+.col:   mov ax, di
+        cmp al, [cs:cp_ncols]
+        jae .next
+        mov al, bl
+        sub al, [cs:cp_rgb + si]
+        jnc .r
+        neg al
+.r:     mov ah, al
+        mov al, bh
+        sub al, [cs:cp_rgb + si + 1]
+        jnc .g
+        neg al
+.g:     add ah, al
+        mov al, ch
+        sub al, [cs:cp_rgb + si + 2]
+        jnc .b
+        neg al
+.b:     add ah, al
+        cmp ah, [cs:cp_best + di]
+        ja .far
+        mov [cs:cp_best + di], ah
+        mov [cs:cp_map + di], cl
+.far:   add si, 3
+        inc di
+        jmp .col
+.next:  inc cl
+        jnz .each
         ret
 cp_vga:                                 ; the VGA's registers the drawing changes kept and set;
         mov dx, 0x3C4                   ;   CP_NOW the page shown (the scenes' modes unchained)
@@ -11734,45 +11768,45 @@ cp_vga_back:
         out dx, al
         ret
 cp_pass:                                ; CP_OP 0: drawn, what's under kept; 1: put back
-        xor si, si                      ; (SI the row, BX its bytes in CP_UNDER, CX the x)
+        xor si, si                      ; (SI the row, BX the shape's byte, BP CP_UNDER's, CX the x)
+        mov bx, cp_shape
+        mov bp, cp_under
 .row:   mov dx, [cs:cp_y]
         add dx, si
-        cmp dx, 200
-        jae .done
-        mov bx, si
-        add bx, bx
-        mov bp, [cs:cp_shape + bx]
-        shl bx, 2
-        add bx, cp_under
         mov cx, [cs:cp_x]
-.col:   mov ax, bp
-        and al, 3
-        jz .next
+.col:   mov al, [cs:bx]
+        inc bx
+        or al, al
+        jz .end
+        cmp al, 0xFF
+        je .next
+        cmp dx, 200
+        jae .next
         cmp cx, 320
         jae .next
-        mov ah, [cs:cp_dark]
-        dec al
-        jz .addr
-        mov ah, [cs:cp_light]
-.addr:  call cp_addr
+        push bx
+        movzx bx, al
+        mov ah, [cs:cp_map + bx - 1]
+        pop bx
+        call cp_addr
         cmp byte [cs:cp_op], 0
         jne .back
         mov al, [es:di]
-        mov [cs:bx], al
+        mov [cs:bp], al
         mov [es:di], ah
         jmp .next
 .back:  cmp [es:di], ah
         jne .next
-        mov al, [cs:bx]
+        mov al, [cs:bp]
         mov [es:di], al
-.next:  inc bx
+.next:  inc bp
         inc cx
-        shr bp, 2
-        jnz .col
-        inc si
-        cmp si, CP_ROWS
+        jmp .col
+.end:   inc si
+        mov ax, si
+        cmp al, [cs:cp_rows]
         jb .row
-.done:  ret
+        ret
 cp_addr:                                ; DI: pixel CX, DX's (its plane read and written)
         push ax
         push cx
@@ -20896,6 +20930,7 @@ UMB_ROOM equ 0xF000 - 0xD00A
 UMB_NEED equ (1 + 0x10 + (resident_end - hdr) / 16) + (1 + OVR_RESERVE) + (1 + (PANEL_BYTES + 15) / 16) + (1 + (RING_BYTES + 15) / 16)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
 
+POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
 install:                        ; DS = ES = PSP, CS = the image
         mov [cs:psp], es
         push cs
@@ -20916,6 +20951,19 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
 .free:
         loop .check
+
+        mov ax, 3D00h                   ; the game's own arrow for the scenes (CP_DATA), if the
+        mov dx, POINTER_FILE            ;   Loader has written it
+        int 21h
+        jc .no_pointer
+        mov bx, ax
+        mov ah, 3Fh
+        mov cx, CP_DATA_BYTES
+        mov dx, cp_data
+        int 21h
+        mov ah, 3Eh
+        int 21h
+.no_pointer:
 
         mov ax, 2500h + VEC_RAND
         mov dx, int_rand

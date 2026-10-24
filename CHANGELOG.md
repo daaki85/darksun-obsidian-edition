@@ -13,10 +13,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
 
 **New**
 - **A pointer in scenes, and a click skips one.** The intro, its logos and the game's other scenes
-  had no pointer, and only a key skipped them. DSCLOG draws an arrow there (the scenes' VGA mode
-  is unchained, which the mouse driver's pointer can't draw in): at each step of the scene player
-  (`CINE_STEP`, 92A28h) and from the game's timer while a scene plays, in the palette's darkest and
-  lightest colours, what was under it put back only where it still is; a button pressed since the
+  had no pointer, and only a key skipped them. DSCLOG draws the game's own arrow there (the scenes'
+  VGA mode is unchained, which the mouse driver's pointer can't draw in): ICON 6001 and its colours,
+  read from the player's game by the Loader into `dos\POINTER.BIN` (`scenepointer.py`; without it a
+  plain arrow of DSCLOG's own), drawn at each step of the scene player (`CINE_STEP`, 92A28h) and from
+  the game's timer while a scene plays, each colour as the scene palette's nearest, what was under
+  it put back only where it still is; a button pressed since the
   last step ends the scene as a key does, and the scenes' routine's end (`CINE_END`, 56BBEh) wipes
   it. A switch, `scene_pointer`, on.
 - **The pointer starts in the middle and moves as far up and down as across.** The game's ranges

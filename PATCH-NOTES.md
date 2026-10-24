@@ -248,7 +248,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen, or all of them.
 - **[New]** Press the mouse wheel and drag to scroll the map (or, as an option, hold the right button).
-- **[New]** A pointer in the intro, the logos and the game's other scenes, and a click skips a scene as a key does *(was: no pointer, and only a key)*.
+- **[New]** The game's pointer in the intro, the logos and the game's other scenes, and a click skips a scene as a key does *(was: no pointer, and only a key)*.
 - **[Changed]** The pointer starts in the middle of the screen and moves as far up and down as across *(was: at the screen's right edge, and half as far up and down)*.
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was: it followed each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.

@@ -1752,8 +1752,9 @@ on the view in a fight).
 ### The pointer in scenes, and where it starts
 
 The game shows no pointer in its intro, the logos before it and its other
-scenes (the king's decree, the arena gate), and only a key skips them. Now a
-small arrow follows the mouse there, and a click of either button skips a
+scenes (the king's decree, the arena gate), and only a key skips them. Now the
+game's own pointer (read from your copy of the game) follows the mouse there,
+in the scene's nearest colours, and a click of either button skips a
 scene as a key does: in the intro, straight to the main menu. (With DOSBox's
 **autolock**, as GOG's setup has it, the first click in the window only takes
 the mouse; the next one skips.) As before, a key or click is noticed between a

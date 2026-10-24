@@ -17,7 +17,7 @@ import subprocess
 import time
 from typing import Dict, List, Optional, Tuple
 
-from . import gamepatch, gff, gpl, icons, kalzith, tome, worldgear
+from . import gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -314,6 +314,9 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
                 os.remove(os.path.join(DOS_DIR, name))
             except OSError:
                 pass
+    # the game's own arrow for the scenes' pointer (DSCLOG's, without it)
+    scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE), _find_file(game_dir, "GPLDATA.GFF"),
+                               os.path.join(DOS_DIR, scenepointer.POINTER_FILE))
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
