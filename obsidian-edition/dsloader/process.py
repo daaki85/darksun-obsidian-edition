@@ -205,17 +205,15 @@ else:
                         yield Region(start, end - start)
 
         def read(self, addr: int, size: int) -> bytes:
-            try:
-                self._mem.seek(addr)
-                return self._mem.read(size)
-            except (OSError, ValueError) as e:
+            try:  # (at a position of its own: the dice log's stats thread reads too)
+                return os.pread(self._mem.fileno(), size, addr)
+            except (OSError, ValueError, OverflowError) as e:
                 raise ProcessError(f"Read at {addr:#x} failed: {e}") from e
 
         def write(self, addr: int, data: bytes) -> None:
             try:
-                self._mem.seek(addr)
-                self._mem.write(data)
-            except (OSError, ValueError) as e:
+                os.pwrite(self._mem.fileno(), data, addr)
+            except (OSError, ValueError, OverflowError) as e:
                 raise ProcessError(f"Write at {addr:#x} failed: {e}") from e
 
         def suspend(self) -> bool:

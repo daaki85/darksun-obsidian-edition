@@ -3,6 +3,7 @@
 import os
 import struct
 import sys
+import time
 import unittest
 from collections import Counter
 
@@ -1098,6 +1099,22 @@ class OtherTests(unittest.TestCase):
         self.assertEqual(log.effect_changes(20.0 + dicelog.LOAD_SETTLE / 2), [])
         set_effects(log, [(0, 0, 63), (1, 0, 63), (2, 0, 7)])
         self.assertEqual(log.effect_changes(30.0), ["Tom gives Blessed to Jellybelly: +1 to hit, +1 on saves"])
+
+    def test_stats_answered_in_background(self):
+        """DSCLOG's request for fresh STATS (the game stands still till it's answered) is answered
+        by the stats thread, without the main loop's pass; closing the log stops the thread."""
+        log = make_game()
+        m = log.guest.mem
+        struct.pack_into("<HH", m, HDR + dicelog.TSR_STATS_REQ, 5, 4)
+        log.answer_stats_in_background()
+        self.addCleanup(log.close)
+        deadline = time.monotonic() + 2
+        while struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0] != 5 and time.monotonic() < deadline:
+            time.sleep(0.001)
+        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0], 5)
+        log.close()
+        log._stats_thread.join(1)
+        self.assertFalse(log._stats_thread.is_alive())
 
     def test_attach_needs_the_patched_game(self):
         log = make_game()

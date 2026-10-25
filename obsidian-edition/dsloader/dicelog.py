@@ -19,6 +19,7 @@ Lands (DSUN.EXE, 611408 bytes).
 import random
 import re
 import struct
+import threading
 import time
 from collections import Counter, deque
 from dataclasses import dataclass
@@ -259,6 +260,8 @@ THIEF = 17  # class number
 
 EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
+STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
+STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
@@ -486,6 +489,9 @@ class DiceLog:
         self._look_seq = 0
         self._slots_written = b""
         self._stats_written = b""
+        self._stats_lock = threading.Lock()  # (the stats thread's and the main loop's writes of STATS)
+        self._stats_thread: Optional[threading.Thread] = None
+        self._stats_stop = threading.Event()  # (close: the stats thread ends)
         self._own_text: set = set()  # summaries shown in the game's window, not to log as dialogue
         self._skip_choice = False
         self._hits: Dict[int, dict] = {}  # creature -> weapon hits not yet seen in its HP: their
@@ -556,9 +562,10 @@ class DiceLog:
         if low[rand_addr:rand_addr + 2] != RAND_PATCHED:
             raise DiceLogError("The game was started without the dice log. "
                                "Restart it with 'Start Game with Dice Log.bat'.")
-        self.tsr_hdr, self.rand_addr = hdr, rand_addr
-        self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
-        self.game = GameData(self.guest, ds)
+        with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
+            self.tsr_hdr, self.rand_addr = hdr, rand_addr
+            self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
+            self.game = GameData(self.guest, ds)
         self._scrolling.forget()  # (a DSCLOG of its own: told again)
         self._dust = dust.Dust()
         self._rings = rings.Rings()
@@ -899,15 +906,38 @@ class DiceLog:
     def _answer_stats(self) -> None:
         """A game screen is about to show THAC0 and the saves: bring them up to date first (the
         game waits for this, so an item just put on counts)."""
-        if self.tsr_hdr is None:
+        with self._stats_lock:
+            if self.tsr_hdr is None or self.rand_addr is None:
+                return
+            req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
+            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
+                self._write_stats_now()
+                self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
+
+    def answer_stats_in_background(self) -> None:
+        """Answer DSCLOG's requests for fresh STATS from a thread of their own, within a
+        millisecond or two: the game stands still while it waits (STATS_SYNC: each time an item is
+        picked up or put down on the inventory screen), and a wait for the main loop's next pass
+        (20-40 ms, more with the Ledger's window) held the pointer still, then made it jump."""
+        if self._stats_thread is not None:
             return
-        req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
-        if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
-            self._write_stats()
-            self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
+        def run() -> None:
+            step = STATS_ANSWER_STEP
+            while not self._stats_stop.wait(step):
+                try:
+                    self._answer_stats()
+                    step = STATS_ANSWER_STEP
+                except Exception:  # (DOSBox gone or restarting: the main loop attaches again)
+                    step = STATS_ANSWER_IDLE
+        self._stats_thread = threading.Thread(target=run, name="stats", daemon=True)
+        self._stats_thread.start()
 
     def _write_stats(self) -> None:
         """Keep DSCLOG's copy of the party's THAC0 and saves current, and say it is."""
+        with self._stats_lock:
+            self._write_stats_now()
+
+    def _write_stats_now(self) -> None:
         if self.tsr_hdr is None:
             return
         offset = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_STATS_OFF, 2))[0]
@@ -959,7 +989,8 @@ class DiceLog:
         self.rand_addr = None
 
     def close(self) -> None:
-        """Done with (nothing of its own to stop now)."""
+        """Done with: the stats thread stops (answer_stats_in_background)."""
+        self._stats_stop.set()
 
     # ---- reading ----------------------------------------------------------------
 

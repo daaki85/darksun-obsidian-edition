@@ -1005,6 +1005,7 @@ class Viewer:
             self.next_try = now + RETRY_SECONDS
             if self.dice is None:
                 self.dice = DiceLog(self.guest)
+                self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
                 self.dice.learned_speakers = launch.learned_speakers()
                 self.dice.monster_info = self.monster_info.get()

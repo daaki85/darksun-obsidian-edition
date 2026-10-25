@@ -917,7 +917,13 @@ of HP's value at its longest), and the routine that lists the weapons through
 `INT FAh` after each one. The Loader keeps the numbers in the helper's memory,
 with the time it last did: older than 5 seconds, the helper shows the sheet's
 numbers instead. Before a screen is drawn, the helper asks the Loader to
-update them and waits for its answer, half a second at most. Nothing else in
+update them and waits for its answer, half a second at most (`STATS_SYNC`:
+`stats_req`, `stats_reply`). The game stands still while it waits, its
+pointer too, so the Loader answers from a thread of its own
+(`DiceLog.answer_stats_in_background`, a look each millisecond, about 4 ms to
+work the numbers out), not from its main loop's next pass: that took 26-79 ms
+with the Ledger's window open, and each item picked up or put down on the
+inventory screen held the pointer that long, then it jumped. Nothing else in
 the game changes.
 
 Which class levels up next, on View Character: the game looks up the XP for

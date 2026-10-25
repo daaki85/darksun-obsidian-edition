@@ -94,6 +94,16 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Tab rings only the enemy chosen, the next on Tab again; L opens the panel.
 
 **Fixed**
+- **The pointer no longer jumps after picking up or putting down an item.** Each time an item
+  moves on the inventory screen the game redraws it, and the helper (`STATS_SYNC`) has the game
+  stand still until the Loader brings the THAC0, saves and thief skills up to date, so an item just
+  put on counts. The Loader answered on its main loop's next pass: measured with the Ledger's window
+  open, 26-79 ms a request, and the pointer held still 55-98 ms, then jumped 6-8 game pixels (moving
+  alone: at most 31 ms and 4). `DiceLog.answer_stats_in_background` (started by `dicelog`, the
+  launcher's loop and the Ledger) answers from a thread of its own: 6-12 ms a request, the pointer
+  held 30-43 ms (one 57), jumps of 4 pixels, as when just moving. `_stats_lock` keeps the thread's
+  and the main loop's writes of STATS apart; on Linux the Loader reads and writes the game's memory
+  with `os.pread`/`os.pwrite` (no shared file position between the threads).
 - **The Loader's own magic items glowed blue on figures.** `sprites.item_glow` looked each item's
   object and icon up in the game's SEGOBJEX.GFF, which has none of the Loader's items (the
   Hayneedle, Kreenfang, Thornwall, Inixhide, the Ashen Robe...), so they fell back to blue whatever

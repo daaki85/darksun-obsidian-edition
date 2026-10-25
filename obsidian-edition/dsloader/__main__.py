@@ -147,6 +147,7 @@ def cmd_dicelog(args) -> None:
             print(f"{e} Waiting...", flush=True)
             time.sleep(2)
     log = DiceLog(guest, record_everything=args.raw)
+    log.answer_stats_in_background()
     log.use_settings(load_settings())  # the Ring +1, the rule changes, monster descriptions
     log.speaker_names = speaker_names()
     log.learned_speakers = learned_speakers()
@@ -278,6 +279,7 @@ def cmd_play(args) -> None:
         if guest is None:
             return
         log = DiceLog(guest)
+        log.answer_stats_in_background()
         log.use_settings(settings)  # as last set on the Loader's Options tab
         log.speaker_names = launch.speaker_names()
         log.learned_speakers = launch.learned_speakers()
