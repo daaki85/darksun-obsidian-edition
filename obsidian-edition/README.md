@@ -15,7 +15,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   wrong](#when-something-goes-wrong).
 - **Everything in detail:** the contents below, the [features and
   rules](FEATURES.md), the [kits](KITS.md), the [items](ITEMS.md) (spoilers),
-  the [patch
+  [how the original game works](HOW-THE-GAME-WORKS.md), from its code, the
+  [patch
   notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
   and, for developers, the [development notes](DEVELOPMENT.md).
 
@@ -48,7 +49,6 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
 - [The dice log](#the-dice-log)
-- [More pages](#more-pages)
 - [Accessibility](#accessibility)
 
 ## What it does
@@ -487,7 +487,8 @@ change.
   fails and a 20 always saves, so they show between 2 and 20.
 - **Thief skills**: as they stand (with no equipment penalty in games started
   with the dice log: see [How the game works out thief
-  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), 0 for a
+  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), at most
+  95 with [AD&D's table](FEATURES.md#thief-skills-from-adds-table), 0 for a
   skill an effect rules out or when the thief isn't Okay (New counts as Okay),
   and 100 for one an effect makes certain (Detect Traps). Only the situation's
   bonus or penalty (a hard lock) is left out: the dice log shows it on each
@@ -607,7 +608,7 @@ open it, ▸ when closed and ▾ when open. Which sections are open is remembere
 Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
-- **In the game**: the combat log, where it goes and how much it says, names
+- **In the game**: the combat log and how much it says, names
   floating over figures, monster descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules
   closer to AD&D.
@@ -895,14 +896,6 @@ more. The Dialogue tab does the same.
 randomises (creatures wandering, animations and so on), as raw numbers with
 where in the game's code they came from. It's noisy, but useful for finding
 more rolls worth labelling.
-
-## More pages
-
-- [How the game works](HOW-THE-GAME-WORKS.md): what the original game does
-  that its manual doesn't say, from its code and checked in play (initiative,
-  spells and psionics, monsters' defences, thief skills, saving throws...).
-- [Items](ITEMS.md) (spoilers): every magic item and every mundane weapon, the
-  game's and the mod's, with their icons and where each is.
 
 ## Accessibility
 

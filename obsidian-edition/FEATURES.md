@@ -891,8 +891,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
 
 ### Buying back magical items
 
-The game destroys whatever the party sells. With **Merchants keep magical
-items sold to them** ticked, a magical item sold (one with a plus, or a power:
+The game destroys whatever the party sells. With **Merchants keep the magical
+items the party sells them** ticked, a magical item sold (one with a plus, or a power:
 a ring, a wand, a scroll...) goes into the merchant's pack instead, and the
 shop offers it for sale at its price, less the leader's CHA discount, so it
 can be bought back. Anything else sold is gone, as in the game. With the CHA

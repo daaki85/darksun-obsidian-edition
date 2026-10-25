@@ -31,12 +31,9 @@ name.)
 
 ## What it does
 
-It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd
-Edition, adds kits, weapon specialization, spells, items and people to Athas,
-dresses the party in what they wear, and fixes the game's bugs. Every rule
-change and addition has a switch. The full list is in
-[What it does](obsidian-edition/README.md#what-it-does), and every change from
-the original game in the [patch notes](PATCH-NOTES.md).
+The full list is in [What it does](obsidian-edition/README.md#what-it-does),
+and every change from the original game in the [patch notes](PATCH-NOTES.md).
+Every rule change and addition has a switch on the Loader's Options tab.
 
 The game's own files are never modified: the Loader runs a patched copy of the
 game from its own folder. It writes to the game folder only your saves (pages
@@ -79,14 +76,7 @@ their own; levels capped by XP instead of at 9th, so priests reach 11th and
 Spellarcher's spell arrows; three new magic items; and more of the original
 game's bugs fixed, three script bugs among them.
 
-Every release has notes of its own: [2.7.2](release-notes/v2.7.2.md),
-[2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md),
-[2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md),
-[2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
-[2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
-[2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
-[2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
-[1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The
+Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
 page, whatever the version.
 

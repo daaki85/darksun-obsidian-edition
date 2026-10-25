@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.7.2 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.7.2, and the changes since for the next release · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -251,7 +251,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Press the mouse wheel and drag to scroll the map.
 - **[New]** The game's pointer in the intro, its logos and its other scenes, and a click skips a scene as a key does *(was no pointer, and only a key)*.
 - **[Changed]** The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer *(was at the screen's right edge, half as far up and down, and in a window three times as fast, so placing items in the inventory was fiddly)*.
-- **[Changed]** The pointer pauses less after you pick up or put down an item in the inventory: about 45 ms putting down, 65 picking up *(was 55 to 105 ms, then a jump)*.
+- **[Changed]** The pointer stands still for less time after you pick up or put down an item in the inventory, so it jumps less far when it moves again *(was up to a tenth of a second)*.
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was following each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
