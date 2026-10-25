@@ -8408,6 +8408,8 @@ int_learn:
         mov ax, si
         mov [cs:learn_who], al
         mov [cs:learn_spell], dl
+        mov byte [cs:learn_read], 0     ; (no read roll: a Shinobi's last one isn't this try's)
+        mov byte [cs:learn_read_chance], 0
         call int_row                    ; (BX the INT's row, AL the INT)
         mov [cs:learn_int], al
         mov al, [cs:int_chance + bx]

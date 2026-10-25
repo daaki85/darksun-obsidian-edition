@@ -58,6 +58,9 @@ notes](PATCH-NOTES.md).
   N damage: <reason>".
 - **"Bracers/Defense+4" ran past the item box**: the name is `Bracers/Defns` (15 characters with
   the plus).
+- **A preserver's scroll line in the dice log showed a read-languages roll** (the last Shinobi's,
+  left in the header: `INT_LEARN` never cleared `LEARN_READ`), as `Daaki reads the scroll of Color
+  Spray: read languages d100 = 48, needs 100 or less -> read; ...`. It clears it now.
 - **The cooked vulture used on a party member** no longer says it is tough and bland
   (`vulture.use` removed; eating it is the game's, with the meal's rest from the Loader as before).
 

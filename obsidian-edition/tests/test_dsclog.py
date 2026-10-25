@@ -6147,9 +6147,11 @@ class KitTests(unittest.TestCase):
                 self.assertEqual(self.mu.mem_read(known_at + 8, 1)[0], 1)
             results.add(result)
         self.assertEqual(results, {intlearn.LEARNT, intlearn.FAILED})
-        # INT 19 and more: no most, 95%
+        # INT 19 and more: no most, 95%; no read roll told (a Shinobi's last one cleared)
         self.int_setup(who, 19, first[:10])
+        self.mu.mem_write(hdr + 366, bytes((48, 100)))
         self.assertEqual(learn(11)[1][:4], [who, 11, 19, 95])
+        self.assertEqual(list(self.mu.mem_read(hdr + 366, 2)), [0, 0])
         # the game's own: the rule off, a priest spell, or a spell it knows (AX 0 already)
         self.int_setup(who, 9, first[:6])
         self.rules(0)
