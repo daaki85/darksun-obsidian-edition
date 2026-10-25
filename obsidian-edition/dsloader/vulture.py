@@ -7,17 +7,14 @@ vulture from the arena.", pensasks.py): he takes it, shows them how to prepare i
 they eat it together, with the sound of a quest done. His script sets the Loader's flag MEAL, on
 which the Loader gives each party member XP_REWARD XP and restores them as after a full rest (HP,
 PSP and spell slots), once (EATEN).
-
-Eaten by the party themselves (used on one of them, DSCLOG's PROBE_USE_ITEM), it is no use.
 """
 
 import struct
-from typing import List, NamedTuple, Optional
+from typing import List
 
 from . import game
 from .game import GameData
 
-COOKED_PICTURE, TYPE = 0xF5B4, 60  # the cooked vulture (object A4Ch); small things carried
 COOKED = 0xA4C  # (its object, as the campfire's script makes it)
 MEAL, EATEN = 780, 781  # (the Loader's flags) set by Dinos's script; the reward given
 OWN_NAME = 0x101  # the game's "Vulture"
@@ -29,18 +26,6 @@ DOWN = (2, 3, 4)  # Stunned, Out Cold, Dying: up again after the meal
 
 MEAL_TEXT = ("A vulture! Give it here. A pinch of salt, some agafari leaf, slow over the coals... "
              "Sit down and eat with me. A meal like this puts the strength back in you.")
-
-
-class Use(NamedTuple):
-    text: str  # for the game's message window
-    log: List[str]  # for the dice log
-    used_up: bool = False  # the vulture is gone (eaten)
-
-
-def is_vulture(rec: bytes) -> bool:
-    """The cooked vulture (by its picture and type)."""
-    return len(rec) >= game.ITEM_SIZE and struct.unpack_from("<H", rec, 0)[0] == COOKED_PICTURE \
-        and struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == TYPE
 
 
 def _sheet_at(gd: GameData, member: int) -> int:
@@ -93,15 +78,3 @@ def meal(gd: GameData) -> List[str]:
         return []
     gd.set_flag(EATEN)
     return eat(gd)
-
-
-def use(gd: GameData, rec: bytes, target: int, fighting: bool = False) -> Optional[Use]:
-    """The item (its record `rec`) on the pointer used on creature `target`: what comes of it, or
-    None when it isn't the cooked vulture or nothing does (the game goes on as usual: on Dinos
-    too, who is asked about it in his talk)."""
-    if not is_vulture(rec):
-        return None
-    if target < game.PARTY_SIZE:
-        return Use("The cooked vulture is tough and bland: hardly worth the chewing. Someone in the pens "
-                   "might know how to make a meal of it.", [])
-    return None

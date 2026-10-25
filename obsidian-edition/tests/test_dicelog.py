@@ -431,15 +431,24 @@ class BackstabTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 69: ((1d8 = [5] +12 STR 24) x140% Enlarge "
                                            "(level 4)) x3 backstab"])
 
-    def backstab(self, level, rules):
+    def backstab(self, level, rules, made=0):
         log = make_game()
         log.rules = rules
         sheet = SHEETS + 0 * game.SHEET_SIZE
         log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, level
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
         e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=made))
         return log.describe(e)
+
+    def test_the_rounds_second_attack(self):
+        """The game multiplies the round's first two attacks ([BP-14h] at most 1); with RULE_BACKSTAB
+        only the first, as in AD&D (DSCLOG's STAB_TIMES); none from the third."""
+        self.assertEqual(self.backstab(6, 0, made=1),
+                         ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
+        self.assertEqual(self.backstab(6, game.RULE_BACKSTAB, made=1),
+                         ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+        self.assertEqual(self.backstab(6, 0, made=2), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
 
     def test_dice_only(self):
         """RULE_BACKSTAB (DSCLOG's STAB_TIMES): the dice multiplied, STR added once."""
@@ -967,6 +976,25 @@ class SaveTests(unittest.TestCase):
         log._hit(STALKER, 4, 9.0)
         self.assertEqual(log.unhurt(6.1, force=True),
                          ["  Mountain Stalker takes none of the 4 damage: a protection or resistance took it"])
+
+    def test_a_hit_passed_over(self):
+        """Hits on a creature immune to the first weapon, its HP falling by the second's only: the
+        first took none (said, with the reason), the second all of it, the third still to come."""
+        log = make_game()
+        m = log.guest.mem
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 25)
+        log.hp_changes(0.5)
+        log._weapon_reason = lambda index: "crushing and pointed weapons can't hurt it"
+        for damage in (19, 22, 19):
+            log._hit(STALKER, damage, 1.0)
+        struct.pack_into("<h", m, stalker, 3)
+        self.assertEqual(log.hp_changes(1.2),
+                         ["  Mountain Stalker takes none of the 19 damage: crushing and pointed weapons can't hurt it",
+                          "  Mountain Stalker now 3 HP (-22)"])
+        struct.pack_into("<h", m, stalker, -16)
+        self.assertEqual(log.hp_changes(1.3), ["  Mountain Stalker now -16 HP (-19)"])
+        self.assertEqual(log.unhurt(1.3 + dicelog.HIT_WAIT, force=True), [])
 
     def test_reduced_hits_seen_together(self):
         """Two hits on a creature that halves weapons, seen as one fall of HP: both of them, and

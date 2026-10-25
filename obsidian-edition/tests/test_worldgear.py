@@ -45,6 +45,8 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual(sold, ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Axe", "Obsidian Mace",
                                 "Short Sword", "Bone Great Axe", "Obsidian Great Axe", "Metal Great Axe", "Metal Pick", "Bone Dagger"])
         self.assertEqual([icons.which(r) for r in gift("Wild Mul").items], ["Bone Axe", "Bone Great Axe"])
+        self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items], gift("Scar's henchman").objects),
+                         (["Bone Axe"], (229,)))
         defilers = [(g.objects, [icons.which(r) or struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in g.items])
                     for g in worldgear.GIFTS if g.name == "Defiler"]  # (a body to leave: a dagger each)
         self.assertEqual(defilers, [((258,), [17]), ((296,), ["Bone Dagger"])])
@@ -88,7 +90,7 @@ class WorldGearTests(unittest.TestCase):
             acs[name] = 10 - rec[game.ITEM_PLUS]
             self.assertEqual(struct.unpack_from("<H", rec, 6)[0], 5000 * rec[game.ITEM_PLUS])
         self.assertEqual(acs, {"Mikquetzl": 6, "Wyrmias": 5, "Balkazar": 4, "Dagolar": 2})
-        self.assertEqual(names.NAMES[worldgear.BRACERS_NAME], b"Bracers/Defense")
+        self.assertEqual(names.NAMES[worldgear.BRACERS_NAME], b"Bracers/Defns")
 
     def test_head_items(self):
         """Arrowbane and the Sunking Crown: worn on the head, not armour, each with its spell (one

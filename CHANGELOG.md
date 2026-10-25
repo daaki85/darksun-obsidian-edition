@@ -6,6 +6,41 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request
+
+**New**
+- **M opens the overhead map**, and M again closes it: DSCLOG's `MAP_KEY` turns M into the game's O
+  on the map and into Escape while the overhead map is up (`OVERHEAD`, cleared by `PANEL_TICK`).
+- **A Shinobi's read languages on the Effects screen**, under its kit: `READ LANG. 40%`
+  (`RL_LINE_OF`, from the Loader's `READ_LANG`).
+- **Scar's henchmen carry bone axes** (`worldgear.GIFTS`, object 229), dropped when they die.
+- **The Parting Staff shines** as the game's magic weapons do: its gem's blues (158-161) in the
+  water's cycling colours (`icons.SHINE`, its own icon, picture 2157, changed in place).
+
+**Fixed**
+- **Spells cast by weapons were at caster level 6** whoever struck: the attack routine pushes 6
+  for every weapon spell (58BE6h). A Spellarcher's spell arrows now go at the archer's preserver
+  level (`ARROW_LEVEL`); a weapon's own spell stays at 6. A 2nd-level archer's Shocking Grasp did
+  1d8+6.
+- **Armor never ran out against weapons.** Since `armor_charge`, only the spell-damage routine used
+  a charge, and weapon blows never reach it. `ARMOR_BLOW` uses one for each damaging blow.
+- **A backstab multiplied the round's second attack too** (an off-hand one after a miss): the game
+  multiplies while fewer than two attacks are made. With the dice-only rule, only the first.
+- **Immunity in the dice log.** The HP line matched hits to the HP lost from the first; a hit the
+  creature was immune to (a slime and a club) was counted and the next one dropped. The hits that
+  sum to the loss are taken (`_hits_matching`), and each passed-over hit gets "takes none of the
+  N damage: <reason>".
+- **"Bracers/Defense+4" ran past the item box**: the name is `Bracers/Defns` (15 characters with
+  the plus).
+- **The cooked vulture used on a party member** no longer says it is tough and bland
+  (`vulture.use` removed; eating it is the game's, with the meal's rest from the Loader as before).
+
+**Known**
+- Learning from a scroll says nothing on the inventory screen: the game's message (4D0:2Ah) isn't
+  seen there, its own YOU LEARN THE SPELL included. A Shinobi's failed read (the scroll used up)
+  or a spell not its own (the scroll kept) looks like nothing happened; the dice log has the roll.
+  A window for it needs room in the helper's upper memory (0 paragraphs left).
+
 ## Pull request #61
 
 - **Obsidian Edition 2.8.0**: the version is 2.8.0, with its notes in `release-notes/v2.8.0.md`,

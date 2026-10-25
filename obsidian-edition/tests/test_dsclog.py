@@ -3052,8 +3052,9 @@ class NewSpellTests(RuleTests):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
             mu.emu_start(start, start + len(code))
             return mu.reg_read(r.UC_X86_REG_EFLAGS)
-        def stab(rules_hi, rolled, bonus, damage, times, mode=1):
+        def stab(rules_hi, rolled, bonus, damage, times, mode=1, made=0):
             self.rules_hi(rules_hi)
+            mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<h", made))  # (the round's attacks so far)
             mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
             mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", mode))
             flags = run("stab_roll", rolled)
@@ -3064,6 +3065,8 @@ class NewSpellTests(RuleTests):
         self.assertEqual(stab(128, 4, -1, 16, 3)[0], 26)  # (5 x 3 - 1 + 12)
         self.assertEqual(stab(0, 4, -1, 16, 3)[0], 48)
         self.assertEqual(stab(128, 4, -1, 0, 3)[0], 0)
+        self.assertEqual(stab(128, 4, -1, 16, 3, made=1)[0], 16)  # (the round's second attack: AD&D's one)
+        self.assertEqual(stab(0, 4, -1, 16, 3, made=1)[0], 48)  # (the game's: its first two)
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=1)[1] & 0x40, 0x40)  # (melee: ZF)
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=2)[1] & 0x40, 0)
 
@@ -4727,7 +4730,7 @@ class KitTests(unittest.TestCase):
         mu.mem_write(self.DS * 16 + 0x4979, struct.pack("<H", 7))  # (thing 7's turn: creature 2)
 
         def hit(name, weapon_type=1, mode=2, own=0, archer=True):
-            self.creature(9, 1, index=2, second=11 if archer else 17, race=4)  # (a Spellarcher, or a Shadowblade)
+            self.creature(9, 1, index=2, level=3, second=11 if archer else 17, race=4)  # (a Spellarcher, or a Shadowblade)
             ammo = bytearray(0x15)
             struct.pack_into("<H", ammo, 0x12, name)
             mu.mem_write(self.ITEMS * 16 + 4 * 0x15, bytes(ammo))
@@ -4741,9 +4744,20 @@ class KitTests(unittest.TestCase):
                        0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.ARROW_SPELL_SITE, 0x90)), 0x640,
                 es=self.ITEMS, ebx=5 * 0x15, ecx=0)
             return mu.reg_read(r.UC_X86_REG_CL), not mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40
+
+        def cast_level(spell):  # (ARROW_LEVEL, after a hit: the level and spell pushed for the cast)
+            mu.mem_write(self.DS * 16 + 0x494A, struct.pack("<H", 8))  # (the target: thing 8, not the archer)
+            run(bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.ARROW_LEVEL, 0x90, 0x90, 0x90, 0x90)), 0x680,
+                ecx=spell, edi=7)  # (the attacker: thing 7)
+            sp = mu.reg_read(r.UC_X86_REG_SP)
+            self.assertEqual((sp, mu.reg_read(r.UC_X86_REG_AX)), (0x7F0 - 4, spell))
+            return struct.unpack("<HH", mu.mem_read(SS * 16 + sp, 4))
         for arrow in spellarrows.ARROWS:
             with self.subTest(arrow=arrow.spell_name):
                 self.assertEqual(hit(arrow.name), (arrow.spell + 1, True))
+                self.assertEqual(cast_level(arrow.spell), (arrow.spell, 3))  # (the preserver level, not 6)
+        hit(0x36, own=0x28)
+        self.assertEqual(cast_level(0x27), (0x27, 6))  # (a bow's own spell: the game's level 6)
         chill = spellarrows.ARROWS[1].name
         self.assertEqual(hit(0x36), (0, False))  # (plain arrows: the bow's, none)
         self.assertEqual(hit(0x36, own=0x28), (0x28, True))  # (Phrain's Bow's own)

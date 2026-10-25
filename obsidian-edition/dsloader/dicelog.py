@@ -16,6 +16,7 @@ Everything game-specific here was taken from the GOG release of Shattered
 Lands (DSUN.EXE, 611408 bytes).
 """
 
+import itertools
 import random
 import re
 import struct
@@ -268,6 +269,7 @@ LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when ef
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
+HITS_MATCHED = 8  # weapon hits waiting on one target at most, for matching an HP fall to them
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
@@ -672,8 +674,8 @@ class DiceLog:
 
     def _answer_use(self) -> List[str]:
         """An item was used on something on the map, or a thief's Pick Pockets button chose someone
-        (PICKED_BY): try their pockets with that thief's hand; for the cooked vulture, see what
-        comes of it (vulture.py); and have DSCLOG show what came of it instead of the game's doing."""
+        (PICKED_BY): try their pockets with that thief's hand; and have DSCLOG show what came of
+        it instead of the game's doing."""
         if self.tsr_hdr is None:
             return []
         seq = self.guest.read(self.tsr_hdr + TSR_USE_SEQ, 2)
@@ -684,14 +686,8 @@ class DiceLog:
             item, thing = struct.unpack("<HH", self.guest.read(self.tsr_hdr + TSR_USE_ITEM, 2) +
                                         self.guest.read(self.tsr_hdr + TSR_USE_WHO, 2))
             it = ring.Items(self.game)
-            rec = it.item(item) if item < game.NO_ITEM else b""
             kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
-            meal = vulture.use(self.game, rec, index, self._fighting()) if rec and kind == 2 and self.vulture_on else None
-            if meal is not None:
-                taken = 2 if meal.used_up else True
-                result = pickpocket.Attempt(meal.text, meal.log)
-                self._rest_due = self._rest_due or meal.used_up  # (a full rest)
-            elif spellarrows.ARROWS_BY <= item < PICKED_BY:
+            if spellarrows.ARROWS_BY <= item < PICKED_BY:
                 taken = True
                 if self._fighting():
                     result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
@@ -1527,7 +1523,10 @@ class DiceLog:
             sheet = g.sheet(index)
             most = struct.unpack_from("<h", sheet, game.SHEET_MAX_HP)[0] if len(sheet) >= game.SHEET_SIZE else None
             left = f"now {hp}/{most} HP" if most and most > 0 else f"now {hp} HP"
-            hit, resisted = self._hits_seen(index, max(before - hp, 0), hp)
+            hit, resisted, unhurt = self._hits_seen(index, max(before - hp, 0), hp)
+            for rolled in unhurt:
+                reason = self._weapon_reason(index) or "a protection or resistance took it"
+                out.append(f"  {who} takes none of the {rolled} damage: {reason}")
             if now <= self._spell_until and before - hp > hit:
                 # the game's damage code gives a creature that was Out Cold the most the dice can do
                 out_cold = " (Out Cold: the most the dice can do)" if was_out_cold else ""
@@ -1555,16 +1554,31 @@ class DiceLog:
         entry["hits"].append(damage)
         entry["at"] = now
 
-    def _hits_seen(self, index: int, lost: int, hp: int) -> Tuple[int, str]:
+    def _hits_seen(self, index: int, lost: int, hp: int) -> Tuple[int, str, List[int]]:
         """The weapon hits a fall of LOST HP (to HP) took in, in the order they landed: (their
-        damage, and a note when one did less than its roll: resisted)."""
+        damage, a note when one did less than its roll: resisted, and the hits before them that
+        took none: immune, when the fall is just the later ones')."""
         entry = self._hits.get(index)
         if not entry:
-            return 0, ""
+            return 0, "", []
         hits, taken, note = entry["hits"], 0, ""
         if hp <= 0:  # (down: whatever was rolled, its HP ran out)
             del self._hits[index]
-            return min(sum(hits), lost), ""
+            return min(sum(hits), lost), "", []
+        unhurt = []
+        if lost and len(hits) <= HITS_MATCHED and not self._hits_prefix(hits, lost) \
+                and self._weapon_reason(index) != monsters.HALF_REASON:  # (halved hits match nothing whole)
+            match = self._hits_matching(hits, lost)
+            if match is not None:  # (the fall is these hits exactly: the ones passed over took none)
+                last = max(match)
+                unhurt = [hits[i] for i in range(last) if i not in match]
+                taken = lost
+                del hits[:last + 1]
+                if not hits:
+                    del self._hits[index]
+                else:
+                    entry["hp"] = hp
+                return taken, note, unhurt
         while hits and lost - taken >= hits[0]:
             taken += hits.pop(0)
         if hits and not taken and lost:  # (less than the hit)
@@ -1579,7 +1593,28 @@ class DiceLog:
             entry["hp"] = hp
         else:
             del self._hits[index]
-        return taken, note
+        return taken, note, unhurt
+
+    @staticmethod
+    def _hits_prefix(hits: List[int], lost: int) -> bool:
+        """Whether the first hits, in order, add up to LOST exactly."""
+        total = 0
+        for damage in hits:
+            total += damage
+            if total == lost:
+                return True
+        return False
+
+    @staticmethod
+    def _hits_matching(hits: List[int], lost: int) -> Optional[Tuple[int, ...]]:
+        """The places of hits adding up to LOST exactly, the set ending soonest (fewest hits
+        passed over), or None."""
+        best = None
+        for size in range(1, len(hits) + 1):
+            for places in itertools.combinations(range(len(hits)), size):
+                if sum(hits[i] for i in places) == lost and (best is None or max(places) < max(best)):
+                    best = places
+        return best
 
     def unhurt(self, now: float, force: bool = False) -> List[str]:
         """Weapon hits that took no HP (HIT_WAIT seconds on, or FORCE: a new round): the target
@@ -2313,12 +2348,13 @@ class DiceLog:
                 total = total * percent // 100
                 steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
-        # that on the attacker's first attack of the round: x2, x3 from thief level 5, x4 from 9,
-        # x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once (DSCLOG's
-        # STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
-        # attacks already made this round
-        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x0A)
-        if backstab and rear and made is not None and made <= 1:
+        # that on the attacker's first two attacks of the round: x2, x3 from thief level 5, x4 from
+        # 9, x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once, and on the
+        # first attack only (DSCLOG's STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h]
+        # from behind, [BP-14h] the attacks already made this round
+        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x14)
+        most = 0 if self.rules & game.RULE_BACKSTAB else 1
+        if backstab and rear and made is not None and made <= most:
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2

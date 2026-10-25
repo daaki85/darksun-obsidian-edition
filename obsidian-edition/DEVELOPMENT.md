@@ -1534,7 +1534,9 @@ The Effects screen's lower panel (`PROBE_EF_ROWS`) has the kit's line first,
 The lower panel has room for five lines (`EF_LINES`); three kits and a
 gladiator's four weapon specs make eight. `EF_DRAW` goes over the lines twice
 (`EF_LINES_OF`, each through `EF_LINE`): first counting them (`EF_COUNT`), then
-putting those of the page on the panel (`EF_PUT`). With more than five, a page
+putting those of the page on the panel (`EF_PUT`). A Shinobi's kit line is followed
+by its read languages (`RL_LINE_OF`: `READ LANG. 40%` from `READ_LANG`, the Loader's,
+for the member `EF_DRAW` keeps in `EF_MEMBER`). With more than five, a page
 has four and `MORE: CLICK HERE` in the fifth row; a page that starts with a
 weapon type has its skill's heading again over it (`EF_HEAD`), and a heading
 that would be a page's last row goes to the next. `PROBE_EF_CLICK` (`INT 97h`,
@@ -1932,6 +1934,12 @@ is from behind and a backstab (`INT EAh`), makes the hidden thief's next one
 so, by the game's own conditions for a backstab (a thief, in melee, a weapon
 of weight 40 or less).
 
+How many attacks: the attack routine multiplies when both backstab flags are set
+and the round's count of attacks so far (`[BP-14h]`) is 1 or less (58A71h), so
+the first two swings of the round, an off-hand one too. `STAB_TIMES` (with
+`RULE_HI_BACKSTAB`) multiplies only when the count is 0; the dice log
+(`dicelog`'s backstab line, `parent_local(-0x14)`) says the same.
+
 ### Spell arrows
 
 ([The Spellarcher](KITS.md#multiclass-kits); `spellarrows.py`.)
@@ -1976,8 +1984,12 @@ the ground's: such arrows fade at the first rest after they are picked up).
 
 **The hit.** The weapon attack routine (5883Ah) casts only the weapon's own
 spell on a hit (its item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with
-the attacker as the caster, so at the attacker's caster level for the spell: a
-Spellarcher's preserver level). `PROBE_ARROW` (58D27h, where the ammunition
+the attacker as the caster and level 6 pushed for every weapon's spell, at 58BE6h:
+`push 6 / mov al,cl / mov ah,0 / push ax`). `ARROW_LEVEL` (`NS_IMAGE+47`, over
+those 7 bytes) keeps 6 for a weapon's own spell and gives a spell arrow's (`ARROW_HIT`
+sets `ARROW_CAST`) the archer's preserver level (DI the attacker: class 11 among the
+sheet's +21h-23h, its level from +24h-26h, at least 1), moving the INT's frame down
+4 bytes to put the two words under it. `PROBE_ARROW` (58D27h, where the ammunition
 routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
 (`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h]
 above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
@@ -2119,7 +2131,13 @@ after the `ns_list_` patches):
 - **Armor** (effect 2): the spell-landing routine (7A539h) used a charge when
   any spell or blow landed on a target with Armor (7A557h, `je` past it
   unless effect 2 is on), and the damage routine (79A3Eh) used another for the
-  damage. `armor_charge` makes the first jump always taken.
+  damage. `armor_charge` makes the first jump always taken. That left weapon blows
+  with none: they never reach the damage routine's charge (79A01h, spells only),
+  so Armor lasted for ever against them. `ARMOR_BLOW` (`NS_IMAGE+48`, over the
+  attack routine's "cmp di,[bp-0Ch]" at 58B27h, after the damage is rolled; the
+  compare done for it and its flags handed back) uses a charge (598:57h, through
+  `CHARGE_STUB` as `NS_BLOW` does) when the blow did damage (`[BP-4]`) and the
+  target (`[BP-0Ch]`) has effect 2.
 - **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
   removed each record of the power cast by DI with 598:48h (owner, handle), but
   passed DI as the owner, so a receiver's record stayed (and a record of the
@@ -3018,6 +3036,13 @@ the game centre its view where the drag puts it, with the game's own routine
 keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
+
+**M for the overhead map.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both
+reads and peeks, turns M into O (the game's key for its overhead map) while the
+map's main loop has run within the last tick or two (`MAP_TICK`, set in
+`PANEL_TICK`) and sets `OVERHEAD`; M again, the loop not run since (the overhead
+map pauses it), turns into Escape, which closes it. `PANEL_TICK` clears
+`OVERHEAD` when the map runs again.
 
 **The view in a fight.** The game writes the view's place (`DS:1178h`,
 `117Ah`) in two routines that centre it (on a figure, `191F:01FFh`, and on a

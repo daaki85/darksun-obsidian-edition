@@ -297,8 +297,8 @@ Each kit sleeps and wakes with its own class.
 ![The KIT menu after DUAL: a Battle Mage turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
 
 The Effects screen lists the kits, oldest first, a line each (the longer names
-shortened as on the KIT page, `(ASLEEP)` after one that sleeps), then the
-weapon specs. Its lower panel has room for five lines: when there are more,
+shortened as on the KIT page, `(ASLEEP)` after one that sleeps; a Shinobi's
+with its read languages under it, `READ LANG. 40%`), then the weapon specs. Its lower panel has room for five lines: when there are more,
 it shows four and **MORE: CLICK HERE** under them, and a click on the panel
 shows the next page (a weapon spec's heading again at the top of a page that
 goes on with its weapons), the first again after the last:

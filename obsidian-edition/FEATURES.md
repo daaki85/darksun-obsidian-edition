@@ -1007,7 +1007,9 @@ With **A backstab multiplies the weapon's dice only** (on unless unticked, in
 the same Options group) a backstab multiplies the weapon's dice and adds STR,
 the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
 backstab (the dice x3)` is 27 where the game made it 51. The multiplier is x2
-at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13.
+at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13. Only the round's
+first attack is a backstab: the game multiplies the first two, so a second
+swing (an off-hand one after a miss) was multiplied too.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for an
 Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are under
@@ -1404,7 +1406,7 @@ or a helm (bone, leather or metal, magical or not). A shield, rings and cloaks
 of protection, and the mod's circlet and crown (worn on the head, but not
 armour) go with them. They aren't armour to anything else: a preserver casts in
 them, a thief wears them, and a ring or cloak of protection still counts. In the
-game they are **BRACERS/DEFENSE** with their plus (Bracers/Defense +4 is AC 6),
+game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
 priced 5,000 a point of AC.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#bracers-of-defense).
@@ -1744,6 +1746,9 @@ fight.
 
 The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.
+
+**M** on the map opens the overhead map, as the game's own **O** does, and **M**
+again closes it (no switch: it is always on).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 

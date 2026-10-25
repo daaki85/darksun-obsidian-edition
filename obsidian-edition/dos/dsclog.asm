@@ -2188,6 +2188,7 @@ ARROW_NAME  equ NAMES_OWN + 42
 arrow_hit:
         push ax
         push si
+        mov byte [cs:arrow_cast], 0
         mov al, [es:bx + 0x0F]
         cmp word [bp + 0x16], 1
         jle .set
@@ -2204,6 +2205,7 @@ arrow_hit:
         je .set                 ; (not shot by a Spellarcher: no spell)
         mov al, [cs:si + arrow_spells]
         inc al
+        mov byte [cs:arrow_cast], 1
 .set:   mov [cs:hit_spell], al
         cmp byte [cs:hit_spell], 0
         pushf
@@ -2221,6 +2223,66 @@ arrow_spell:
         mov cl, [cs:hit_spell]
         iret
 hit_spell    db 0
+arrow_cast   db 0               ; (1 when the hit's spell is a spell arrow's: ARROW_LEVEL)
+
+; ARROW_LEVEL: "push 6 / mov al,cl / mov ah,0 / push ax" (58BE6h; 7 bytes: the INT, the site's
+; number and 4 NOPs), the level and the spell (CL) pushed for the cast of a weapon's spell on the
+; target hit (598:89h): the game casts every weapon's spell at level 6. A spell arrow's (ARROW_HIT's
+; ARROW_CAST) at the archer's preserver level instead (the attacker's, combatant DI; at least 1).
+; Both words go under the INT's frame, as the pushes would have left them; AX the spell, as
+; theirs did.
+arrow_level:
+        push bp
+        mov bp, sp
+        push ax
+        push bx
+        push es
+        mov ax, 6
+        cmp byte [cs:arrow_cast], 0
+        je .put
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, di, 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        call creature_sheet
+        xor ax, ax
+        cmp byte [es:bx + 0x21], PRESERVER_CLASS
+        jne .c2
+        mov al, [es:bx + 0x24]
+.c2:    cmp byte [es:bx + 0x22], PRESERVER_CLASS
+        jne .c3
+        mov al, [es:bx + 0x25]
+.c3:    cmp byte [es:bx + 0x23], PRESERVER_CLASS
+        jne .least
+        mov al, [es:bx + 0x26]
+.least: cmp ax, 1
+        jge .put
+        mov ax, 1
+.put:   mov [cs:arrow_lvl], ax
+        pop es
+        pop bx
+        pop ax
+        pop bp
+        sub sp, 4               ; the INT's frame 4 bytes down: the level and the spell under it
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax        ; (IP)
+        mov ax, [bp + 8]
+        mov [bp + 4], ax        ; (CS)
+        mov ax, [bp + 10]
+        mov [bp + 6], ax        ; (flags)
+        mov ax, [cs:arrow_lvl]
+        mov [bp + 10], ax
+        movzx ax, cl
+        mov [bp + 8], ax
+        pop ax
+        pop bp
+        movzx ax, cl
+        iret
+arrow_lvl    dw 0
 arrow_spells db 1, 3, 10, 39    ; Burning Hands, Chill Touch, Shocking Grasp, Vampiric Touch
 
 ; PROBE_UNLOOK: INT VEC_UNLOOK replaces "mov word [0844h],270Fh" (6 bytes: INT + 4 NOPs) at the
@@ -5418,6 +5480,7 @@ probe_ef_rows:
 ; time, EF_LINES - 1 of them and EF_MORE under them; a click on the panel (PROBE_EF_CLICK) shows the
 ; next page, after the last the first again.
 ef_draw:
+        mov [cs:ef_member], ax
         les bx, [LV_SHEETS]
         mov dx, ax
         imul ax, ax, 0x47
@@ -5468,6 +5531,10 @@ ef_lines_of:
         jnc .line
         call kit_line_asleep
 .line:  call ef_line
+        cmp al, KIT_SHINOBI             ; (a Shinobi: its read languages too, READ_LANG's, which
+        jne .kit_next                   ;   it reads a scroll with)
+        call rl_line_of
+        call ef_line
 .kit_next:
         dec di
         jns .kit
@@ -5538,6 +5605,47 @@ ef_lines_of:
         cmp di, SPEC_COUNT
         jbe .slot
 .ret:   ret
+
+; RL_LINE_OF: CS:SI the line of party member EF_MEMBER's read languages ("READ LANG. 45%",
+; READ_LANG's chance, as the Loader keeps it). Others kept.
+rl_line_of:
+        push ax
+        push bx
+        push dx
+        mov bx, [cs:ef_member]
+        xor ax, ax
+        cmp bx, 3
+        ja .num
+        mov al, [cs:read_lang + bx]
+.num:   mov si, rl_line + RL_DIGITS
+        mov bl, 10
+        cmp al, 100
+        jb .two
+        mov byte [cs:si], '1'           ; (100: certain)
+        inc si
+        sub al, 100
+        mov byte [cs:si], '0'
+        inc si
+        jmp .last
+.two:   cmp al, 10
+        jb .last
+        xor ah, ah
+        div bl
+        add al, '0'
+        mov [cs:si], al
+        inc si
+        mov al, ah
+.last:  add al, '0'
+        mov [cs:si], al
+        mov word [cs:si + 1], '%'       ; (and the 0 after it)
+        mov si, rl_line
+        pop dx
+        pop bx
+        pop ax
+        ret
+RL_DIGITS    equ 11
+rl_line      db 'READ LANG. ', 0, 0, 0, 0, 0
+ef_member    dw 0
 
 ; KIT_OF_SHEET: CS:SI the line naming kit AL (KIT_AT's, not 0: "KIT: RAVAGER", in KIT_LINE), a long
 ; name shorter (KIT_SHORT). KIT_LINE_ASLEEP: " (ASLEEP)" after it. Others kept.
@@ -12218,7 +12326,8 @@ burn_pass:
 ; attack (AX the damage just rolled, [BP-12h] what it added to the dice): the dice's sum kept, then
 ; the compare made, its flags returned. STAB_TIMES: "push ax / mov ax,[bp-4] / pop dx / imul dx /
 ; mov [bp-4],ax" (58A80h; 10 bytes, AX the multiplier): with the rule, the dice's sum added again
-; for each time past the first; else the game's.
+; for each time past the first, and only on the round's first attack (the game's test, 58A71h, lets
+; the first two through: the round's attacks so far, [BP-14h], at most 1); else the game's.
 stab_dice  dw 0
 stab_known db 0                 ; (1 from STAB_ROLL to STAB_TIMES: a hit's dice kept)
 stab_roll:
@@ -12240,6 +12349,11 @@ stab_roll:
 stab_times:
         test word [cs:rules_hi], RULE_HI_BACKSTAB
         jz .whole
+        cmp word [bp - 0x14], 0
+        je .first
+        mov ax, 1                       ; (the round's second attack: no backstab, as in AD&D)
+        jmp .whole
+.first:
         cmp byte [cs:stab_known], 0
         je .whole
         cmp word [bp - 4], 0
@@ -14753,6 +14867,8 @@ WANDER_DMG equ NS_IMAGE + 24     ; 7B56Fh: a spell's damage, the kinds a creatur
 REQ_SITE  equ NS_IMAGE + 25      ; 7FF42h: a script's REQUEST, its number read
 AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim check's answer
 AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against a spell
+ARROW_LEVEL equ NS_IMAGE + 47    ; 58BE6h: a weapon's spell cast at level 6 (ARROW_LEVEL)
+ARMOR_BLOW equ NS_IMAGE + 48     ; 58B27h: a hit's damage taken, Armor's charge (ARMOR_BLOW)
 ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (ARROW_HIT)
 ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
@@ -14839,6 +14955,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je arrow_hit
         cmp byte [cs:rl_site], ARROW_SPELL_SITE
         je arrow_spell
+        cmp byte [cs:rl_site], ARROW_LEVEL
+        je arrow_level
+        cmp byte [cs:rl_site], ARMOR_BLOW
+        je armor_blow
         cmp byte [cs:rl_site], CAST_SITE
         je cast_site
         cmp byte [cs:rl_site], REST_SITE
@@ -15202,6 +15322,53 @@ ns_blow:
         iret
 
 blow_chance dw 0
+
+; ARMOR_BLOW: "cmp di,[bp-0Ch]" (58B27h; 3 bytes: the INT and the site's number) in the attack
+; (5883Ah), just after a hit's damage went to its target ([BP-0Ch], combatant [494Ah]; the
+; damage it took [BP-4]). Armor (effect 2) uses a charge for each damaging hit, as AD&D's absorbs
+; that much damage and no more: the game used one only in the spells' damage routine (79A01h),
+; since the charge it used whenever anything landed is gone (armor_charge), so blows never wore it
+; down. With damage done and Armor on the target, a charge used as BLOW's (598:57h), in a frame
+; the overlay manager can fix up; the compare made, its flags into the INT's frame.
+ARMOR_EFFECT equ 2
+armor_blow:
+        sti
+        pushad
+        push es
+        mov di, sp
+        mov ax, [ss:di + 2]             ; (DI as the game had it)
+        cmp ax, [bp - 0x0C]
+        pushf
+        pop ax
+        call ns_flags
+        cmp word [bp - 4], 0
+        jle .out                        ; (no damage taken)
+        mov si, [bp - 0x0C]             ; (the target)
+        mov ax, si
+        mov cl, ARMOR_EFFECT
+        call ns_has
+        jnz .out
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way back, as a far call's frame with BP)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        sub ax, DGROUP_SEG - CHARGE_STUB
+        mov [cs:blow_charge + 2], ax
+        push word ARMOR_EFFECT
+        push si
+        call far [cs:blow_charge]
+        add sp, 4
+        pop bp
+        pop ax                          ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.out:   pop es
+        popad
+        iret
 
 ; NS_HOLD: "or al,al / je +22h" (7A333h; 4 bytes) in the checks of what a spell (SI) can't do to
 ; thing DI (7A1BFh), just after the game's test whether DI is undead (7BE20h: AL). Undead: on as
@@ -16844,8 +17011,8 @@ extra_names:
         times NAME_KEPT - 12 db 0
         db "Kreenfang"                  ; (the arena's Bone Gythka made +1)
         times NAME_KEPT - 9 db 0
-        db "Bracers/Defense"            ; (bracers of defense: BRACERS, dsloader/worldgear.py)
-        times NAME_KEPT - 15 db 0
+        db "Bracers/Defns"              ; (bracers of defense, short enough for their plus: BRACERS,
+        times NAME_KEPT - 13 db 0       ;   dsloader/worldgear.py)
         db "Gutterknot"                 ; (the magic weapons of dsloader/worldgear.py: a club +1,
         times NAME_KEPT - 10 db 0
         db "Deepbiter"                  ; a stone pick +1,
@@ -18973,12 +19140,13 @@ panel_page  dw 0                ;   was last drawn (PANEL_DRAW), and its top the
 panel_drawn dw PANEL_Y0
 
 panel_tick:
-        push es                         ; (the map's main loop ran: L_ON_MAP)
+        push es                         ; (the map's main loop ran: L_ON_MAP; no overhead map up)
         xor ax, ax
         mov es, ax
         mov ax, [es:0x46C]
         pop es
         mov [cs:map_tick], ax
+        mov byte [cs:overhead], 0
         cmp word [cs:panel_on], 0
         je .off
         push es                         ; (the Loader gone: off, as if it had said so)
@@ -19924,13 +20092,6 @@ EVENT_LEFT_LEAVE equ 4
 LEFT        equ 1
 
 int16:
-        cmp word [cs:target_on], 0
-        jne .on
-        cmp byte [cs:panel_shown], 0    ; (L for the combat log's panel)
-        jne .on
-        cmp word [cs:panel_seg], 0      ; (... or to open it, over the map)
-        je .chain
-.on:
         cmp ah, 0x00
         je .read
         cmp ah, 0x10
@@ -19944,6 +20105,7 @@ int16:
         pushf
         call far [cs:old16]
         jz .none
+        call map_key
         call our_key
         jc .took
         add sp, 2                       ; (not ours: as the BIOS said)
@@ -19970,6 +20132,7 @@ int16:
         push ax
         pushf
         call far [cs:old16]
+        call map_key
         call our_key
         jc .again
         add sp, 2
@@ -20003,6 +20166,41 @@ l_on_map:
         pop ax
         ret
 map_tick   dw 0
+
+; MAP_KEY: M on the map (its main loop run within the last tick or two, the map the screen on
+; show) made O, the game's key for its overhead map, and set OVERHEAD; M with OVERHEAD set and
+; the map's loop not run since (the overhead map up; PANEL_TICK clears OVERHEAD) made Escape,
+; the key that closes it: AX the key, changed or kept; others kept. (A peek and the read after
+; it both find the map fresh, so both see O.)
+KEY_M       equ 0x326D
+KEY_SHIFT_M equ 0x324D
+KEY_O       equ 0x186F
+KEY_ESCAPE  equ 0x011B
+map_key:
+        cmp ax, KEY_M
+        je .m
+        cmp ax, KEY_SHIFT_M
+        jne .ret
+.m:     push ax
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:map_tick]
+        pop es
+        cmp ax, L_FRESH
+        pop ax
+        ja .up
+        call on_map
+        jne .ret
+        mov byte [cs:overhead], 1
+        mov ax, KEY_O
+        ret
+.up:    cmp byte [cs:overhead], 0
+        je .ret
+        mov ax, KEY_ESCAPE
+.ret:   ret
+overhead db 0
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         cmp ax, KEY_L

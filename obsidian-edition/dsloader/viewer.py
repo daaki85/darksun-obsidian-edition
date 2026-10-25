@@ -429,7 +429,8 @@ class Viewer:
                             "(with no enemy beside them; a thief's chance halved in daylight, a ranger's "
                             "indoors; a few kits differ)"),
                 ("backstab_dice", "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
-                                  "AD&D (the game multiplies the whole damage, STR included)"),
+                                  "AD&D, on the round's first attack only (the game multiplies the whole damage, STR "
+                                  "included, on the first two)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
                                "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends; "
                                "and nine 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):

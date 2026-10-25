@@ -126,7 +126,7 @@ GEMFIELDS, GEMFIELDS_KREEN, THRIKREEN = 0x06, 22, 215  # (one of a pack: object 
 # object 2534) a Gythka +2
 ELVEN_LEADER, ELVEN_GYTHKA = 124, 2534
 
-BRACERS_NAME = 0x149  # the name entry DSCLOG adds ("Bracers/Defense")
+BRACERS_NAME = 0x149  # the name entry DSCLOG adds ("Bracers/Defns": with its plus, it fits the item box)
 ARROWBANE, SUNKING_CROWN = 0x14E, 0x14F  # and the circlet's and crown's
 NAMES[ARROWBANE], NAMES[SUNKING_CROWN] = b"Arrowbane", b"Sunking Crown"
 ITEM_SPELL, ITEM_SPELL_SHOWN = 0x0F, 0x02  # a magic item's spell, one past its number (as arms.py's)
@@ -281,6 +281,7 @@ GIFTS: Tuple[Gift, ...] = (
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
     Gift("Renegade", (weapon(BONE_SHORT_SWORD),), (289,)),  # (every one)
     Gift("Wild Mul", (weapon(BONE_AXE), weapon(BONE_GREAT_AXE)), (290,)),
+    Gift("Scar's henchman", (weapon(BONE_AXE),), (229,)),  # (every one; they carried nothing)
     # the defilers (both kinds, made by scripts) carried nothing, so left no body: a dagger each,
     # one kind obsidian (the game's plain one), the other bone
     Gift("Defiler", (weapon(weaponchoice.PLAIN[KIND("dagger")]),), (258,)),
