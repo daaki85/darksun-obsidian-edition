@@ -18,6 +18,13 @@ notes](PATCH-NOTES.md).
   water's cycling colours (`icons.SHINE`, its own icon, picture 2157, changed in place).
 - **A Battle Dancer can't use a shield** (`KIT_FORBIDS`, `kits.forbids`), as it already fought
   with long swords and bows only.
+- **A scroll's answer on the inventory screen.** What the item box's handler says (4D0:2Ah: YOU
+  LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI
+  SPELL, CANNOT LEARN FROM THIS ITEM, the tome's) went to the map's message line only. `BOX_SAID`
+  (8B815h) keeps the text, and for 5 seconds `LINE_SAID` and `LINE_CLEARED` put it on the
+  inventory's line under the paper doll (580h:5Ch, window `DS:11A4h`) each time the pointer's
+  handler writes or clears that line. Nothing written while the box's handler runs reaches the
+  screen, so it shows once the mouse moves.
 
 **Changed**
 - **A backstab's dice log line shows the sum:** `+2 backstab (the dice 1 x3 = 3)`, not `(the dice
@@ -53,12 +60,6 @@ notes](PATCH-NOTES.md).
   the plus).
 - **The cooked vulture used on a party member** no longer says it is tough and bland
   (`vulture.use` removed; eating it is the game's, with the meal's rest from the Loader as before).
-
-**Known**
-- Learning from a scroll says nothing on the inventory screen: the game's message (4D0:2Ah) isn't
-  seen there, its own YOU LEARN THE SPELL included. A Shinobi's failed read (the scroll used up)
-  or a spell not its own (the scroll kept) looks like nothing happened; the dice log has the roll.
-  A window for it now has room (the memory pass above).
 
 ## Pull request #61
 

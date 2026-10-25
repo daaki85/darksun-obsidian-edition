@@ -8644,7 +8644,7 @@ d100_hundred dw 100
 learn_failed_text db 'YOU FAIL TO LEARN THE SPELL', 0
 learn_full_text   db 'TOO MANY SPELLS OF THAT LEVEL', 0
 learn_unread_text db 'YOU CAN NOT READ THE SCROLL', 0
-learn_not_its_text db 'A SHINOBI CAN NOT LEARN THAT SPELL', 0
+learn_not_its_text db 'THAT IS NOT A SHINOBI SPELL', 0
 lm_ip dw 0
 lm_cs dw 0
 lm_fl dw 0
@@ -14878,6 +14878,9 @@ AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against
 ARROW_LEVEL equ NS_IMAGE + 47    ; 58BE6h: a weapon's spell cast at level 6 (ARROW_LEVEL)
 ARMOR_BLOW equ NS_IMAGE + 48     ; 58B27h: a hit's damage taken, Armor's charge (ARMOR_BLOW)
 SCROLL_USE equ NS_IMAGE + 49     ; 6D3B9h: an item's box, its class mask tested (SCROLL_USE)
+BOX_SAID  equ NS_IMAGE + 50     ; 8B815h: an item's box, its message just given (BOX_SAID)
+LINE_SAID equ NS_IMAGE + 51     ; 891A4h...: the inventory's line written by the game (BOX_SAID)
+LINE_CLEARED equ NS_IMAGE + 52  ; 6C9BFh...: ... and cleared (BOX_SAID)
 ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (ARROW_HIT)
 ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
@@ -14970,6 +14973,12 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je armor_blow
         cmp byte [cs:rl_site], SCROLL_USE
         je scroll_use
+        cmp byte [cs:rl_site], BOX_SAID
+        je box_said
+        cmp byte [cs:rl_site], LINE_SAID
+        je line_said
+        cmp byte [cs:rl_site], LINE_CLEARED
+        je line_cleared
         cmp byte [cs:rl_site], CAST_SITE
         je cast_site
         cmp byte [cs:rl_site], REST_SITE
@@ -15333,6 +15342,137 @@ ns_blow:
         iret
 
 blow_chance dw 0
+
+; BOX_SAID: "add sp,4" (8B815h; 3 bytes: the INT and the site's number) just after the item box's
+; handler gave its message (4D0:2Ah, the far pointer to its text still on the stack): what a scroll
+; teaches (YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, PROBE_LEARN_SAID's and
+; PROBE_LEARN_REFUSED's), CANNOT LEARN FROM THIS ITEM, the tome's. The game shows those only on
+; the map's message line, never seen from the inventory, and nothing written to the inventory's
+; line while the box's handler runs reaches the screen. So the text is kept (BOX_TEXT, from the
+; BIOS tick BOX_AT) and put on the inventory's own line under the paper doll (580h:5Ch with its
+; window, DS:11A4h, as 6E111h puts CANNOT USE THIS ITEM there) for BOX_TICKS, as soon as the pointer
+; moves: by LINE_SAID, "add sp,0Ah" after each of the inventory's own writes to that line (6E125h,
+; 891A4h, 89222h, 89552h, 8968Bh, 8A940h: an item's name, or nothing, as the pointer moves), and
+; LINE_CLEARED, "add sp,6" after each time it clears the line (528h:2Ah: 6C9BFh, 701C2h, 89595h).
+; (580h, 528h: overlay code's selectors; their stubs' segments are DSUN.EXE's 4272h, ...) Each in
+; a frame the overlay manager can fix up (as PROBE_USE_ITEM's), then the stack as the "add sp"
+; leaves it.
+BOX_TEXT_SIZE equ 96
+BOX_TICKS   equ 91              ; (5 seconds)
+BOX_LINE_SEG equ 0x4272         ; (the inventory line's routine, 580h:5Ch in overlay code: its stub
+                                ;   segment in DSUN.EXE, less the load segment)
+BOX_LINE_OFF equ 0x5C
+BOX_WIN     equ 0x11A4          ; DS: the inventory line's window (far)
+BOX_LINE_ARG equ 0x2C06         ; (the word 6E111h passes it)
+box_text times BOX_TEXT_SIZE db 0
+box_at   dw 0
+box_line dd 0
+box_said:
+        sti
+        pushad
+        push es
+        mov bx, sp              ; (the INT's frame at BX+34: IP, CS, flags; the text at BX+40)
+        push ds
+        lds si, [ss:bx + 40]
+        push cs
+        pop es
+        mov di, box_text
+        mov cx, BOX_TEXT_SIZE - 1
+        cld
+.copy:  lodsb
+        or al, al
+        jz .end
+        stosb
+        loop .copy
+.end:   mov byte [es:di], 0
+        pop ds
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov [cs:box_at], ax
+        pop es
+        popad
+        jmp box_pop4
+line_said:
+        sti
+        pushad
+        push es
+        mov bx, sp
+        call box_put
+        pop es
+        popad
+        jmp box_pop10
+line_cleared:
+        sti
+        pushad
+        push es
+        mov bx, sp
+        call box_put
+        pop es
+        popad
+        jmp box_pop6
+
+; BOX_PUT: BOX_TEXT on the inventory's line while it is fresh (BOX_TICKS; then forgotten), the
+; INT's frame at SS:BX+34; DS the game's. AX, CX, DX, SI, DI, ES not kept.
+box_put:
+        cmp byte [cs:box_text], 0
+        je .ret
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:box_at]
+        cmp ax, BOX_TICKS
+        jb .fresh
+        mov byte [cs:box_text], 0
+        ret
+.fresh: cmp dword [BOX_WIN], 0
+        je .ret
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        sub ax, DGROUP_SEG - BOX_LINE_SEG
+        mov [cs:box_line + 2], ax
+        mov word [cs:box_line], BOX_LINE_OFF
+        push cs
+        push word box_text
+        push word BOX_LINE_ARG
+        push dword [BOX_WIN]
+        call far [cs:box_line]
+        add sp, 10
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp              ; (BX the caller's again: past BOX_PUT's own way back)
+        add bx, 2
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.ret:   ret
+
+; BOX_POP4, BOX_POP6, BOX_POP10: "add sp,4" / 6 / "0Ah" (all registers as the INT had them): the INT's
+; frame moved up over the bytes under it, then IRET.
+%macro box_pop_n 1
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 6 + %1], ax
+        mov ax, [bp + 4]
+        mov [bp + 4 + %1], ax
+        mov ax, [bp + 2]
+        mov [bp + 2 + %1], ax
+        pop ax
+        pop bp
+        add sp, %1
+        iret
+%endmacro
+box_pop4:
+        box_pop_n 4
+box_pop10:
+        box_pop_n 10
+box_pop6:
+        box_pop_n 6
 
 ; SCROLL_USE: "test [es:bx+10h],ax" (6D3B9h; 4 bytes: the INT, the site's number and a NOP) as the
 ; inventory opens an item's box: ES:BX its type, AX the member's class mask, SI its sheet (in the

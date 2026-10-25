@@ -1253,8 +1253,8 @@ isn't full.
 
 A Shinobi (kits): the same check whether the character on show may learn its
 spell (8B6D3h, `or ax,ax` before the jump to CANNOT LEARN FROM THIS ITEM) goes
-to `SHINOBI_READ` (from `PROBE_SCROLL_LEARN`): not one of its spells, no (`A
-SHINOBI CAN NOT LEARN THAT SPELL`, the scroll kept); else a d100 against its
+to `SHINOBI_READ` (from `PROBE_SCROLL_LEARN`): not one of its spells, no (`THAT IS
+NOT A SHINOBI SPELL`, the scroll kept); else a d100 against its
 read languages, which the Loader keeps for each party member in the header
 (`+362`, with STATS: `game.thief_skills_now`'s skill 7, armour and effects
 counted), and above it the game teaches the spell and uses the scroll up, and
@@ -1270,6 +1270,18 @@ allows: as the inventory opens the box, the game tests the type's class mask
 scroll type (60h) allows wizards only, so a Shinobi, a thief to the game, could
 never click it. `SCROLL_USE` (`INT 98h` and its site number, in place of `test
 [es:bx+10h],ax`) makes the test and passes the scroll type for a Shinobi too.
+
+What the box's handler says (4D0:2Ah, 8B810h: YOU LEARN THE SPELL, a Shinobi's
+answers, the tome's) goes to the map's message line, never seen on the
+inventory screen, and nothing written to the inventory's own line while the
+handler runs reaches the screen. `BOX_SAID` (`INT 98h` and its site number in
+place of the `add sp,4` after it, 8B815h) keeps the text, and for 5 seconds
+`LINE_SAID` (after the inventory's writes to its line, 580h:5Ch: 6E125h,
+891A4h, 89222h, 89552h, 8968Bh, 8A940h) and `LINE_CLEARED` (after its clears,
+528h:2Ah: 6C9BFh, 701C2h, 89595h) write it there again (580h:5Ch on the window
+at `DS:11A4h`, through its stub segment 4272h, in a frame the overlay manager
+can fix up). Those run as the pointer moves, so the message shows then. Not
+redrawing the window (118h:618h) afterwards matters: that draws it blank.
 
 ### AD&D's class tables
 

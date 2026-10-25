@@ -6194,7 +6194,7 @@ class KitTests(unittest.TestCase):
         # not its spell: refused, whatever it reads
         ax, told, read = learn(8, 100, both)
         self.assertEqual((ax, told[:2], told[5], read), (0, [who, 8], intlearn.NOT_ITS, [0, 0]))
-        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x680)[2], b"A SHINOBI CAN NOT LEARN THAT SPELL")
+        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x680)[2], b"THAT IS NOT A SHINOBI SPELL")
         self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x690)[:2], (self.DS, 0x3405))  # (once only)
         # Shield (9), its own, unread at 0%: taught by the game, then taken back
         ax, told, read = learn(9, 0, both)

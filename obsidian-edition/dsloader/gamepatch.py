@@ -161,6 +161,8 @@ MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 ARMOR_BLOW = NS_IMAGE + 48  # (a damaging hit uses a charge of the target's Armor)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
+BOX_SAID, LINE_SAID, LINE_CLEARED = range(NS_IMAGE + 50, NS_IMAGE + 53)  # (an item's box: its message, never seen on the
+#   inventory, put on the inventory's line for 5 s each time the pointer's handler writes or clears it)
 HEAT_SITE = NS_IMAGE + 41  # (a spell's damage on a creature: Sunstroke's heat named and made fire, DSCLOG's HEAT_SITE)
 USE_SITE, ROUND_SITE = NS_IMAGE + 37, NS_IMAGE + 38  # (Acid spent once a round, at its start, and only then)  # (an Acid's burn: its damage puts no Acid on again)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
@@ -413,6 +415,16 @@ PATCHES = (
     Patch("arrow_level", 0x58BE6, bytes.fromhex("6a068ac1b40050"), _site(ARROW_LEVEL, 7)),
     Patch("armor_blow", 0x58B27, bytes.fromhex("3b7ef4"), _site(ARMOR_BLOW, 3)),
     Patch("scroll_use", 0x6D3B9, bytes.fromhex("26854710"), _site(SCROLL_USE, 4)),
+    Patch("box_said", 0x8B815, bytes.fromhex("83c404"), _site(BOX_SAID, 3)),
+    Patch("line_said_6E125", 0x6E125, bytes.fromhex("83c40a"), _site(LINE_SAID, 3)),
+    Patch("line_said_891A4", 0x891A4, bytes.fromhex("83c40a"), _site(LINE_SAID, 3)),
+    Patch("line_said_89222", 0x89222, bytes.fromhex("83c40a"), _site(LINE_SAID, 3)),
+    Patch("line_said_89552", 0x89552, bytes.fromhex("83c40a"), _site(LINE_SAID, 3)),
+    Patch("line_said_8968B", 0x8968B, bytes.fromhex("83c40a"), _site(LINE_SAID, 3)),
+    Patch("line_said_8A940", 0x8A940, bytes.fromhex("83c40a"), _site(LINE_SAID, 3)),
+    Patch("line_cleared_6C9BF", 0x6C9BF, bytes.fromhex("83c406"), _site(LINE_CLEARED, 3)),
+    Patch("line_cleared_701C2", 0x701C2, bytes.fromhex("83c406"), _site(LINE_CLEARED, 3)),
+    Patch("line_cleared_89595", 0x89595, bytes.fromhex("83c406"), _site(LINE_CLEARED, 3)),
     # the routine casting a spell or a power, its caster read: recorded (DSCLOG's CAST_SITE)
     Patch("spell_cast", 0x772AA, bytes.fromhex("8b4e06"), _site(CAST_SITE, 3)),
     # the game's rest (its REST and a script's request 1, past "NO RESTING DURING COMBAT"), each
