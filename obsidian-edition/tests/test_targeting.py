@@ -86,23 +86,24 @@ class TargetingTests(unittest.TestCase):
         r = rings.Rings()
         rings.enemies, saved = (lambda g: [42, 44]), rings.enemies
         try:
-            r.update(gd, HDR, True, 1, chosen=44, all_enemies=False)
+            r.update(gd, HDR, True, 1, chosen=44)
         finally:
             rings.enemies = saved
         table = gd.guest.read(BASE + 0x100, 520)
         self.assertEqual((table[42], table[44]), (0, rings.CHOSEN))
 
     def test_mode(self):
-        """The Options tab's rings: none, the chosen enemy's (the default, and for older settings),
-        or all the enemies'."""
+        """The Options tab's rings: none, or the chosen enemy's (the default, and for older
+        settings, "all" among them)."""
         self.assertEqual(rings.mode({}), rings.ONLY_CHOSEN)
         self.assertEqual(rings.mode({"rings": True}), rings.ONLY_CHOSEN)
         self.assertEqual(rings.mode({"rings": "off"}), rings.OFF)
-        self.assertEqual(rings.mode({"rings": "all"}), rings.ALL)
+        self.assertEqual(rings.mode({"rings": "all"}), rings.ONLY_CHOSEN)
 
     def test_ring_table(self):
-        table = rings.ring_table([42, 44], 44)
-        self.assertEqual((table[42], table[44], table[45]), (rings.RING, rings.CHOSEN, 0))
+        table = rings.ring_table(44)
+        self.assertEqual((table[42], table[44], table[45]), (0, rings.CHOSEN, 0))
+        self.assertFalse(any(rings.ring_table(None)))
 
     def test_red_table(self):
         """A sand colour reddens to the palette's red one; a red one has none redder."""

@@ -156,17 +156,25 @@ def display_lines(settings: dict) -> List[str]:
     game's 320x200 (960x720 with the aspect correction GOG turns on); `window_scale` 2 makes it
     twice, 4 four times, 1 leaves it at 320x240; `fullscreen` true keeps GOG's full screen.
     Alt+Enter switches either way in DOSBox. DOSBox 0.74 has no 4x scaler, so four times is
-    DOSBox scaling the window itself, which needs its OpenGL output."""
+    DOSBox scaling the window itself, which needs its OpenGL output.
+    With the pointer's start and speed (`mouse_start`, on unless switched off) the mouse's
+    `sensitivity` is 100 over the scale: DOSBox moves the captured game's pointer a game pixel for
+    each pixel the hand moves on the desktop, SCALE screen pixels in the window, so this makes it
+    move as the desktop's pointer does (DSCLOG's MOUSE_RATIO allows for the taller pixels); the
+    mouse is captured on a click (`autolock`, as GOG has it)."""
     if settings.get("fullscreen"):
         return []
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
-    if scale == 4:  # (the strip below the map: 22 rows taller, 266 with the aspect correction)
-        size = "1280x1064" if settings.get("combat_log_strip") is True else "1280x960"
-        return ["[sdl]", "fullscreen=false", "output=opengl", "windowresolution=" + size, "[render]",
-                "aspect=true", "scaler=normal2x", ""]
-    return ["[sdl]", "fullscreen=false", "[render]", "aspect=true",
-            "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
+    sdl = ["[sdl]", "fullscreen=false"]
+    if settings.get("mouse_start", True) is not False:
+        sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (captured: uncaptured,
+        # DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
+    if scale == 4:
+        return sdl + ["output=opengl", "windowresolution=1280x960", "[render]",
+                      "aspect=true", "scaler=normal2x", ""]
+    return sdl + ["[render]", "aspect=true",
+                  "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
 
 
 # The game's speed: DOSBox's emulated CPU (fixed cycles: instructions a millisecond). The game
@@ -210,7 +218,9 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
         lines.append(r'mount C "..\cloud_saves" -t overlay')  # where GOG keeps the saves
     lines += [f'mount d "{DOS_DIR}"', "c:"]
     # the game runs from C: (the game folder), where the patched copy looks for its files
-    lines += [r"lh d:\dsclog.exe", "cls", "d:\\" + PATCHED_EXE.lower()] if dice_log else ["darksun"]
+    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from C900h, not D000h, 28 KB more for the helper)
+    lines += ["d:\\" + UMB_PLUS_COM.lower(), r"lh d:\dsclog.exe", "cls",
+              "d:\\" + PATCHED_EXE.lower()] if dice_log else ["darksun"]
     # a game that stops with an error ("Null pointer assignment", "Stack overflow!") leaves its
     # message on screen until a key is pressed, rather than DOSBox closing over it, and saved for
     # the crash report (GAMEEND.COM: the screen's text, or a return code other than 0)
@@ -243,13 +253,11 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
     the saved settings if none given). Returns why the game can't be patched, or None."""
     on = content(load_settings() if settings is None else settings)
-    strip = (load_settings() if settings is None else settings).get("combat_log_strip") is True
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
         | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
         | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
         | (frozenset() if on["scene_pointer"] else frozenset(gamepatch.SCENE_POINTER)) \
-        | (frozenset() if on["mouse_start"] else frozenset(gamepatch.MOUSE_START)) \
-        | (frozenset() if strip else frozenset(gamepatch.STRIP))
+        | (frozenset() if on["mouse_start"] else frozenset(gamepatch.MOUSE_START))
     try:
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
@@ -344,6 +352,7 @@ def closed_line(code: int) -> str:
 # GAMEEND.COM, run after the game, notes in GAMEEND.TXT (in DOS_DIR) how the game stopped with an
 # error; the Loader's crash reports go in CRASH_DIR
 GAME_END_COM = "GAMEEND.COM"
+UMB_PLUS_COM = "UMBPLUS.COM"  # (dos/umbplus.asm)
 GAME_END = os.path.join(DOS_DIR, "GAMEEND.TXT")
 # and in GAMEOK.TXT that it ended as usual: without either, DOSBox closed while the game still ran
 GAME_OK = os.path.join(DOS_DIR, "GAMEOK.TXT")
@@ -426,8 +435,8 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
-                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True, "combat_log_strip": False,
-                   "targeting": True, "scroll_map": True, "scroll_right": False, "cycles": DEFAULT_SPEED}
+                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
+                   "targeting": True, "scroll_map": True, "cycles": DEFAULT_SPEED}
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:

@@ -2,12 +2,160 @@
 
 What changed in Obsidian Edition (called Templar's Ledger up to 1.2.0), pull
 request by pull request, newest first: the record for developers and testers.
-For what a release brings, read its notes ([2.7.2](release-notes/v2.7.2.md), [2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md), [2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md), [2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
-[2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
-[2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
-[2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
-[1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md)); for every
-change from the original game in one page, [the patch notes](PATCH-NOTES.md).
+For what a release brings, read its notes, in [`release-notes`](release-notes);
+for every change from the original game in one page, [the patch
+notes](PATCH-NOTES.md).
+
+## Pull request #61
+
+- **Obsidian Edition 2.8.0**: the version is 2.8.0, with its notes in `release-notes/v2.8.0.md`,
+  for this pull request and #60.
+
+**New**
+- **The glow in each item's own colour.** The game's palette cycles four runs on the map (its
+  cycler's table: 1-5 green, 6-10 violet, 11-15 the water's blue, 240-248 fire), the same in every
+  area's palette but for a step. `spritegear.glow_for` picks one from the item's icon
+  (`sprites.item_glow`: its picture word negated, the object's icon in the Loader's objects
+  copy): the run its icon already shines in, else its vivid pixels' hue, each by its chroma,
+  browns and tans left out, a fifth of the icon or more; else blue. `worn` passes it as the gear's
+  4th element (`GLOWS` index) or armour's `GLOW_SHIFT` bits. Of the 116 item icons in ITEMS.md:
+  66 blue, 40 fire, 6 green, 4 violet.
+- **A cloak from the front no longer looks held.** The cloak is fitted from the human woman's,
+  which swings out to one side as she walks; on the elves and the half-elf man that showed as a
+  dark panel by one hand. From the front it is now kept within 0.38 of the shoulder line each side
+  of its middle (the line runs over the arms), as from behind.
+- **The glow on every magic item a figure shows.** `spritegear.sparkle` marks, after a magic piece
+  is drawn, every fifth pixel (every ninth on a piece as large as a cloak; at least every other
+  on a small one) of those it changed, on a diagonal, in `GLINT`: armour (in place of picking its
+  light shades, which the human and half-elf women's dark clothes hadn't), bracers, cloaks,
+  helms, boots and belts. A named blade that isn't fire (Shadowseeker) glints along its edge as
+  other magic weapons do. Checked over every party figure (objects 300-307), walking and
+  fighting: each item's glint pixels on each. Boots of Elvenkind were not drawn at all (`BOOTS`
+  had only the plain ones): soft green now.
+- **The pointer at the desktop's speed in a window.** Captured, DOSBox 0.74 moves the driver's
+  pointer a game pixel for each desktop pixel the mouse moves (at 8 mickeys a pixel), three
+  screen pixels in the usual window: too fast and coarse for placing items. With `mouse_start`
+  the Loader's settings give the mouse `sensitivity` 100 over the window's scale (33 in the usual
+  window; `launch.display_lines`) and `autolock=true`, and DSCLOG's `MOUSE_RATIO` makes up and
+  down 10 mickeys, not 8, for the aspect correction's taller pixels. Seen in DOSBox: 30 desktop
+  pixels across move the pointer 8 game pixels, down 7.
+- **Magic weapons, shields and armour glow on figures.** `sprites.worn` marks a weapon or shield
+  with a plus or a power `spritegear.MAGIC` (Kreenfang and the Flame Blade keep their own colours),
+  and a piece of armour's type with `MAGIC_ARMOUR` (10000h) added. `draw_weapon` draws the shape's
+  light cells (a staff, which has none, every third cell of its shaft) in `GLINT`, the fire colours
+  240-248 the game's palette cycles; `draw_shield` its light and every third rim pixel; and
+  `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
+
+**New**
+- **Shadows kept for figures whose pictures the game lets go of.** In the arena's fight every figure
+  but one had its picture out of the game's cache as the floor was drawn, so `SHADOW_OF` (which
+  won't load one mid-drawing) drew no shadow. DSCLOG now keeps each frame's shadow as it draws it:
+  `SC_START`/`SC_PUT`/`SC_END`, the runs (up from the feet, x, pixels; at most 64) under the
+  picture's number (the cache slot's `+6`, one per picture: the same for monsters of a kind) and
+  the frame, 80 slots of 208 bytes in a block KEEP takes in upper memory (`SC_SEG`, 16 KB),
+  filled in turn. A picture out of memory casts its frame's kept shadow, else another frame's
+  (`SC_FIND`). Seen in the user's arena save: 74 slots filled in a few rounds; Zulak, walked onto
+  the sand with his picture out, and the fire eels cast shadows (shadows off and on compared); the
+  otyugh, never in memory at a floor drawing, still none.
+- **The game's music buffer in upper memory: 12 KB more of the 640 KB.** A research build of the
+  helper logged the C library's farmalloc, farfree and farrealloc: 134 KB of the far heap is taken
+  before the main menu and kept, never freed or resized through a load, an area change and a fight
+  (music 12,001 bytes, sound effects 24,001, tables). `PROBE_HEAP` (`gamepatch` `heap_malloc`,
+  `heap_free`, `heap_realloc`: INT CBh at each function's start) gives `farmalloc(12001)` a block
+  KEEP took in upper memory (`POOL_SEG`, with a heap block's paragraphs word for the wrapper's
+  guard byte); farfree of it marks it free, farrealloc keeps it or moves it to the heap; nothing
+  else changes. With the map open the game has 97 KB spare, not 85. Seen: the XMIDI file in the
+  block, walking, an area change and a fight as usual. Both need `UMBPLUS.COM`'s room; without it
+  neither is taken.
+- **28 KB more upper memory.** DOSBox 0.74 starts its upper memory block at D000h, but C800h-CFFFh
+  is RAM too, and DOSBox's own tables (`DOS_PRIVATE_SEGMENT`) use only its start (to C8C0h with
+  the game running). `UMBPLUS.COM` (`dos/umbplus.asm`), run by the launcher's config just before
+  the helper is loaded high, moves the block's start to C900h: the system MCB at 9FFFh cut to end
+  there, a free block's MCB at C900h to F000h. Only on DOSBox 0.74's exact chain, with C900h-CFFFh
+  all zero and RAM; otherwise nothing changes. `mem`: 155 KB of upper memory instead of 127, 29 KB
+  free with the helper loaded instead of 1. Seen in DOSBox with the user's arena save: the helper at
+  C90Ah, the overlay buffer in upper memory, walking, the arena's area change and a fight as
+  usual, DOSBox's tables still at C8C0h; the game's 640 KB unchanged (85 KB free with the map
+  open). The helper still fits the old block, so it works where the move can't be made.
+
+**Removed** (to free the helper's memory)
+- **Scrolling by holding the right button.** `MOUSE_EVENT` passes the right button straight to
+  the game again (`SCROLL_RIGHT`, `DRAG_START` and the click-or-drag test gone); the wheel's drag
+  stays (`scrolling.DRAG_MIDDLE` the only bit). The `scroll_right` setting is ignored.
+- **Rings under all the enemies.** Only the enemy chosen with Tab gets one (or none);
+  `rings.ring_table` marks only it, and an older `"rings": "all"` reads as the chosen one's.
+- **The combat log strip below the map.** `PROBE_STRIP`, `PROBE_PALETTE`, `PROBE_COLOURS` and the
+  strip's drawing and colours (`STRIP_*`), gamepatch's eight `STRIP` patches and
+  `combatlog.STRIP` are gone; the panel over the map (L) is as it was. What the panel needs of
+  them stays as `ON_MAP` and `POINTER_DS`. The `combat_log_strip` setting is ignored, and the
+  4x window is always 1280 x 960. With the three gone, UMB_NEED is 8108 of 8182 paragraphs (was
+  8171), DSCLOG.EXE 1 KB smaller. Seen in DOSBox, in the user's arena save: a right click still
+  changes the pointer (walk to attack), a right drag scrolls nothing, the wheel's drag scrolls;
+  Tab rings only the enemy chosen, the next on Tab again; L opens the panel.
+
+**Fixed**
+- **A shorter pause after picking up or putting down an item.** The pointer stood still 56-103 ms
+  (85 on average, Zulak's inventory in the user's save, 20,000 cycles) while the game redrew the
+  inventory: its mouse handler (DSUN.EXE 3573Dh) only queues the moves, and the pointer is drawn
+  again once the redraw is done. Sampled at every timer strike (a research build of `PROBE_TICK`),
+  a quarter of that was the vertical-retrace wait (1167Ah's loop at 11686h), reached from the page
+  flip at 14414h: the redraw flips its two pages, each flip waiting for the next retrace. The blits'
+  own waits (1350Dh-13DFBh) cost nothing measurable. `PROBE_FLIP` (`gamepatch` `flip_wait`, INT 8Bh
+  in place of "push cs / call 1674h" at 1445Fh) waits as the game does except with a full screen up
+  (`SCREEN_IS` 2), where the map's pace isn't concerned: 42-45 ms putting an item down, 63-67 picking
+  one up. Frames captured through a pick-up show no tearing. (Live patches of the game's code
+  through the Loader don't take in DOSBox's dynamic core, which keeps its translated code: tests of
+  such changes go in the patched copy of DSUN.EXE.)
+- **A shorter wait for the Loader after picking up or putting down an item.** Each time an item
+  moves on the inventory screen the game redraws it, and the helper (`STATS_SYNC`) has the game
+  stand still until the Loader brings the THAC0, saves and thief skills up to date, so an item just
+  put on counts. The Loader answered on its main loop's next pass: 26-79 ms a request with the
+  Ledger's window open. `DiceLog.answer_stats_in_background` (started by `dicelog`, the launcher's
+  loop and the Ledger) answers from a thread of its own, 6-12 ms (on Windows with the timer at 1 ms,
+  `timeBeginPeriod`, as its ticks are otherwise 15.6 ms). `_stats_lock` keeps the thread's and the
+  main loop's writes of STATS apart; on Linux the Loader reads and writes the game's memory with
+  `os.pread`/`os.pwrite` (no shared file position between the threads). The pointer still stands
+  still 50-90 ms after a pick-up: measured by where the game last drew it (`DS:A137h`), the game
+  queues the mouse's moves (its handler, DSUN.EXE 3573Dh, only posts them) and draws the pointer
+  only once its pick-up is done; the helper's code is in none of the timer's samples meanwhile, the
+  vertical-retrace waits aren't the cause, and 35,000 cycles take off about 15 ms.
+- **The Loader's own magic items glowed blue on figures.** `sprites.item_glow` looked each item's
+  object and icon up in the game's SEGOBJEX.GFF, which has none of the Loader's items (the
+  Hayneedle, Kreenfang, Thornwall, Inixhide, the Ashen Robe...), so they fell back to blue whatever
+  their icon. The `Dresser` now reads them from the Loader's copy (`items`: the copy's chunks over
+  the game's). Seen in the user's save: Railune's Bone Hayneedle +1 and Inixhide glint in the fire
+  colours, as their icons are.
+- **No thief skill above 95.** With **Thief skills from AD&D's table** a skill had no ceiling: a
+  13th-level thief with DEX 24 showed move silently 121 and pick pockets 117 (AD&D's 99 for the
+  level plus DEX's 30). AD&D allows none above 95% after every adjustment: DSCLOG's `PROBE_BELT`
+  keeps the game's chance to `THIEF_MOST` after the belt, kits and armour (the situation's bonus
+  and effects, which the game's caller adds after, at DSUN.EXE 803D0h, still count), and
+  `game.thief_skills_now` (the inventory screen's numbers, the Ledger) the same; a ranger's hide
+  and move silently, and the stealth rule's rolls, too. The dice log's breakdown shows
+  `(at most 95)`, and its first part no longer prints as `+99 thief level 13`.
+- **The pointer put back in the middle as screens changed.** A video mode set (each scene's
+  start, the menus, loading a save) leaves the driver's pointer at the right edge, which
+  `MOUSE_SET` and the scenes' `CINE_MOUSE`/`CINE_WHERE` put in the middle; they now put it where it
+  was last seen: `MP_X`, `MP_Y`, kept by the scenes' arrow and by `MOUSE_EVENT` (every event the
+  game is sent). The ring is 63 entries (the room: UMB_NEED 8171 of 8182). Seen in DOSBox: moved
+  to (120, 78) in the intro, there at the main menu; (250, 60) on the load screen, there on the
+  map.
+- **"Regains 1 HP from Fire attack."** A hit point regenerated (CON 20 or more) in the moment
+  after a spell or attack was put down to it, the spell's healing tested first; regeneration is
+  tested first now.
+- **"Script: a creature changes sides" in runs of a dozen** as a fight's scripts set up: request
+  18 only with "Show unlabelled rolls" (`REQUESTS_SHOWN`).
+- **An archer's pointer with shots left.** The weapon attack routine (5883Ah) counts a combatant's
+  attacks this round (+181h of the round's tables) and makes it 99 once all are made, allowing
+  another while it is under 99; the pointer's missile test (1D5AEh) refused any count but 0, so
+  after a shot that killed (the round's shots not all made) it showed ICON 6006, "can't shoot",
+  though a click still shot. `gamepatch.shots_left` (1D657h) makes its "cmp ...,0 / jnz" "cmp
+  ...,63h / jnl". Not seen in a fight yet: the test harness couldn't hold an archer's turn.
+- **Cermak's Arcanist slot at the start of a new game.** The game fills the party's spell slots as
+  a new game begins, before the Loader makes Cermak an Arcanist, so the USE screen showed WIZ 1/2
+  until his first rest. `defaultparty.set_kit` now adds the slots the kit gives to what he has
+  left (`_add_slots`: the most before and after the kit, the difference added, so a spell already
+  cast isn't given back). Checked in the game: WIZ 2/2 from the start.
 
 ## Pull request #60 ([merged 2026-10-24](https://github.com/daaki85/darksun-obsidian-edition/pull/60))
 

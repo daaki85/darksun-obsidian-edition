@@ -19,6 +19,8 @@ Lands (DSUN.EXE, 611408 bytes).
 import random
 import re
 import struct
+import sys
+import threading
 import time
 from collections import Counter, deque
 from dataclasses import dataclass
@@ -224,8 +226,9 @@ KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the
 AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
                -3: "the wall would be too long", -4: "no line of sight", -5: "too far away"}
 # the requests worth a line of their own (the others only with "Show unlabelled rolls"; skill
-# checks and traps have their rolls' lines)
-REQUESTS_SHOWN = frozenset((1, 4, 6, 8, 9, 14, 17, 18, 19))
+# checks and traps have their rolls' lines; a creature changing sides, 18, comes in runs of a
+# dozen as a fight's scripts set up)
+REQUESTS_SHOWN = frozenset((1, 4, 6, 8, 9, 14, 17, 19))
 FIGHT_LINES_AFTER = 5.0  # seconds after a fight its lines still go into the combat log's panel (XP, the last kill)
 REGENERATES = 20  # CON from which a creature regains a hit point now and then by itself
 
@@ -258,6 +261,8 @@ THIEF = 17  # class number
 
 EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
+STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
+STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
@@ -460,12 +465,11 @@ class DiceLog:
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
         self.stealth_gear = True  # a worn cloak's and boots' bonuses to hiding (stealth.py)
         self._dust = dust.Dust()
-        self.ring_mode = rings.ONLY_CHOSEN  # rings in a fight: off, the chosen enemy's, all the enemies' (rings.py)
+        self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
         self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
         self._targeting = targeting.Targeting()
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
-        self.scroll_right = False  # ... and dragged with the right button held
         self._scrolling = scrolling.Scrolling()
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_tried = False
@@ -486,6 +490,9 @@ class DiceLog:
         self._look_seq = 0
         self._slots_written = b""
         self._stats_written = b""
+        self._stats_lock = threading.Lock()  # (the stats thread's and the main loop's writes of STATS)
+        self._stats_thread: Optional[threading.Thread] = None
+        self._stats_stop = threading.Event()  # (close: the stats thread ends)
         self._own_text: set = set()  # summaries shown in the game's window, not to log as dialogue
         self._skip_choice = False
         self._hits: Dict[int, dict] = {}  # creature -> weapon hits not yet seen in its HP: their
@@ -556,9 +563,10 @@ class DiceLog:
         if low[rand_addr:rand_addr + 2] != RAND_PATCHED:
             raise DiceLogError("The game was started without the dice log. "
                                "Restart it with 'Start Game with Dice Log.bat'.")
-        self.tsr_hdr, self.rand_addr = hdr, rand_addr
-        self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
-        self.game = GameData(self.guest, ds)
+        with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
+            self.tsr_hdr, self.rand_addr = hdr, rand_addr
+            self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
+            self.game = GameData(self.guest, ds)
         self._scrolling.forget()  # (a DSCLOG of its own: told again)
         self._dust = dust.Dust()
         self._rings = rings.Rings()
@@ -761,7 +769,6 @@ class DiceLog:
         self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
         self.use_targeting = bool(settings.get("targeting", True))
-        self.scroll_right = bool(settings.get("scroll_right", False))
         self.load_picked(settings.get("pickpocketed", []))
         self.rules = game.rules_from_settings(settings)
 
@@ -900,15 +907,44 @@ class DiceLog:
     def _answer_stats(self) -> None:
         """A game screen is about to show THAC0 and the saves: bring them up to date first (the
         game waits for this, so an item just put on counts)."""
-        if self.tsr_hdr is None:
+        with self._stats_lock:
+            if self.tsr_hdr is None or self.rand_addr is None:
+                return
+            req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
+            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
+                self._write_stats_now()
+                self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
+
+    def answer_stats_in_background(self) -> None:
+        """Answer DSCLOG's requests for fresh STATS from a thread of their own, within a
+        millisecond or two: the game stands still while it waits (STATS_SYNC: each time an item is
+        picked up or put down on the inventory screen), and a wait for the main loop's next pass
+        (20-40 ms, more with the Ledger's window) held the pointer still, then made it jump."""
+        if self._stats_thread is not None:
             return
-        req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
-        if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
-            self._write_stats()
-            self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
+        if sys.platform == "win32":  # (Windows' timer ticks every 15.6 ms unless asked: the thread's
+            try:                     #   millisecond waits would last that long)
+                import ctypes
+                ctypes.windll.winmm.timeBeginPeriod(1)
+            except (AttributeError, OSError):
+                pass
+        def run() -> None:
+            step = STATS_ANSWER_STEP
+            while not self._stats_stop.wait(step):
+                try:
+                    self._answer_stats()
+                    step = STATS_ANSWER_STEP
+                except Exception:  # (DOSBox gone or restarting: the main loop attaches again)
+                    step = STATS_ANSWER_IDLE
+        self._stats_thread = threading.Thread(target=run, name="stats", daemon=True)
+        self._stats_thread.start()
 
     def _write_stats(self) -> None:
         """Keep DSCLOG's copy of the party's THAC0 and saves current, and say it is."""
+        with self._stats_lock:
+            self._write_stats_now()
+
+    def _write_stats_now(self) -> None:
         if self.tsr_hdr is None:
             return
         offset = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_STATS_OFF, 2))[0]
@@ -960,7 +996,8 @@ class DiceLog:
         self.rand_addr = None
 
     def close(self) -> None:
-        """Done with (nothing of its own to stop now)."""
+        """Done with: the stats thread stops (answer_stats_in_background)."""
+        self._stats_stop.set()
 
     # ---- reading ----------------------------------------------------------------
 
@@ -1218,7 +1255,7 @@ class DiceLog:
             foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
-                               self._targeting.chosen, all_enemies=self.ring_mode == rings.ALL)
+                               self._targeting.chosen)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
         except (struct.error, IndexError, ValueError):
             return []
@@ -1226,8 +1263,8 @@ class DiceLog:
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
         """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);
-        out of fights, those with a roll (a thief's skills, a scroll learned), for the strip below
-        the map and for the panel opened with L."""
+        out of fights, those with a roll (a thief's skills, a scroll learned), for the panel opened
+        with L."""
         try:
             if self.game is not None and self.game.in_combat():
                 if self._fight_at is None or now - self._fight_at > FIGHT_LINES_AFTER:
@@ -1251,7 +1288,7 @@ class DiceLog:
         panel = self._panel
         if not panel.shown:  # (L with the panel over the map hidden: show it)
             try:
-                if panel.keys(self.game, self.tsr_hdr) and self.combat_log and not panel.strip:
+                if panel.keys(self.game, self.tsr_hdr) and self.combat_log:
                     panel.open = True
                     _remember({"combat_log_open": True})
                     self._update_panel(now)
@@ -1273,8 +1310,7 @@ class DiceLog:
             pass
 
     def _update_panel(self, now: float) -> None:
-        """The combat log: the panel over the map while shown (L shows and hides it), the strip
-        below the map always; in a fight with who acts and who is next in the header, the newest
+        """The combat log: the panel over the map while shown (L shows and hides it); in a fight with who acts and who is next in the header, the newest
         lines again when a fight starts."""
         fighting = self.combat_log and self.game.in_combat()
         if fighting:
@@ -1282,7 +1318,7 @@ class DiceLog:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-        on = self.combat_log and (combatlog.strip_patched(self.game) or self._panel.open)
+        on = self.combat_log and self._panel.open
         top, names = "", {}
         if on:
             if not self._font_tried:
@@ -1363,7 +1399,7 @@ class DiceLog:
         if self.tsr_hdr is None:
             return
         try:
-            self._scrolling.update(self.game, self.tsr_hdr, self.scroll_map, self.scroll_right)
+            self._scrolling.update(self.game, self.tsr_hdr, self.scroll_map)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -1500,13 +1536,14 @@ class DiceLog:
                 halved = g.damage_halved_by(combatant, spell_id) if spell_id is not None else None
                 halved = f" (halved: {halved})" if halved else ""
                 out.append(f"  {who} takes {before - hp - hit} from {spell_name}{halved}{out_cold}{also}, {left}")
+            elif hp - before == 1 and rec[game.CREATURE_ABILITIES + 2] >= REGENERATES:
+                con = rec[game.CREATURE_ABILITIES + 2]  # (as AD&D's CON 20 and more: the game's own;
+                # before a spell's healing: a tick of it just after a fire attack isn't the attack's)
+                out.append(f"  {who} regenerates 1 HP (CON {con}), {left}")
             elif now <= self._spell_until and hp > before:
                 out.append(f"  {who} regains {hp - before} HP from {self._spell_name}, {left}")
             elif hp < before:
                 out.append(f"  {who} {left} (-{before - hp}{resisted})")
-            elif hp - before == 1 and rec[game.CREATURE_ABILITIES + 2] >= REGENERATES:
-                con = rec[game.CREATURE_ABILITIES + 2]  # (as AD&D's CON 20 and more: the game's own)
-                out.append(f"  {who} regenerates 1 HP (CON {con}), {left}")
             else:
                 out.append(f"  {who} {left} (+{hp - before})")
         self._hp = current
@@ -1981,13 +2018,17 @@ class DiceLog:
         if kit and chance == 0:  # (no less than 0: what the kit took off can't be told apart)
             kit = 0
         rest = chance - bonus - kit - sum(n for _, n in parts)
-        steps = [f"{n}" if what == "base" else f"{signed(n)} {what}" for what, n in parts]
+        steps = [f"{n}" if what == "base" else f"{n} {what}" if not i else f"{signed(n)} {what}"
+                 for i, (what, n) in enumerate(parts)]
         if kit:
             steps.append(f"{signed(kit)} {kits.name(kid)}")
+        capped = self.game.rules & game.RULE_THIEF_TABLE and rest < 0 and chance - bonus == game.THIEF_MOST
         if bonus:
             steps.append(f"{signed(bonus)} this attempt")
-        if rest:  # the only other part of the chance: the equipment penalty
+        if rest and not capped:  # the only other part of the chance: the equipment penalty
             steps.append(f"{signed(rest)} equipment")
+        if capped:  # (DSCLOG's PROBE_BELT: AD&D's most, the equipment penalty, if any, within it)
+            steps.append(f"(at most {game.THIEF_MOST})")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
 
     def _float(self, thing: Optional[int], text: str, colour, now: float) -> None:

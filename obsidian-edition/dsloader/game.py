@@ -790,6 +790,9 @@ def dex_adjustment(dex: int, skill: int) -> int:
 # (the game gives rangers no thief skills); race and DEX adjust them as a thief's
 RANGER_HIDE = AD_D_THIEF[4]
 RANGER_MOVE = AD_D_THIEF[3]
+# AD&D's most for a thief skill after every adjustment (a ranger's too): with RULE_THIEF_TABLE,
+# DSCLOG's PROBE_BELT keeps the game's chance to it, and thief_skills_now its own
+THIEF_MOST = 95
 # Effects that rule skills out (the chance can't come up), and ones that make a skill certain
 THIEF_BLOCKED = {8: (0, 1, 2, 3, 4, 6, 7), 17: tuple(range(8)), 11: tuple(range(8)), 3: tuple(range(8)),
                  34: tuple(range(8)), 47: (1, 2, 3, 4, 5, 6, 7), 20: (0, 4), 25: (4,), 49: (0, 1, 6), 19: (7,)}
@@ -1598,8 +1601,8 @@ class GameData:
         """CHANCE at moving silently (3) or hiding in shadows (4) with what the character wears,
         as the stealth rule's rolls count it (stealth.turn): with the cloak, boots and belt switch
         (BELT_IN_FORCE), a worn cloak's or boots' bonus, to no more than stealth.MOST (a chance
-        already above it kept); the Cloak or Boots of Elvenkind's chance, if better (the cloak's
-        under the open sky). Without the stealth rule, CHANCE."""
+        already above it, without RULE_THIEF_TABLE, kept); the Cloak or Boots of Elvenkind's
+        chance, if better (the cloak's under the open sky). Without the stealth rule, CHANCE."""
         from . import stealth
         if skill not in (3, 4) or not self.rules & RULE_STEALTH:
             return chance
@@ -1612,8 +1615,8 @@ class GameData:
         return chance
 
     def ranger_skill_now(self, creature: int, skill: int, gear: bool = True) -> Optional[int]:
-        """A ranger's chance as it stands: effects that rule hiding out or make it certain count
-        as for a thief (no equipment penalty); with GEAR, a worn cloak's or boots' (gear_skill).
+        """A ranger's chance as it stands, to no more than THIEF_MOST: effects that rule hiding out
+        or make it certain count as for a thief (no equipment penalty); with GEAR, a worn cloak's or boots' (gear_skill).
         None without ranger levels."""
         parts = self.ranger_skill_parts(creature, skill)
         if parts is None:
@@ -1623,7 +1626,7 @@ class GameData:
             return 100
         if self.creature(creature)[CREATURE_STATUS] not in STATUS_ABLE or any(skill in THIEF_BLOCKED.get(e, ()) for e in ids):
             return 0
-        chance = sum(n for _, n in parts)
+        chance = min(THIEF_MOST, sum(n for _, n in parts))
         if gear:
             chance = self.gear_skill(creature, skill, chance)
         return max(0, min(255, chance))
@@ -1637,7 +1640,8 @@ class GameData:
     def thief_skills_now(self, creature: int, skills: Tuple[int, ...] = ROLLED_SKILLS,
                          gear: bool = True) -> List[Tuple[str, int]]:
         """[(skill, chance), ...] for the skills the game rolls, as they stand now: with the
-        equipment penalty, a worn belt's bonus (BELT_IN_FORCE), with GEAR a worn cloak's or boots'
+        equipment penalty, a worn belt's bonus (BELT_IN_FORCE), the kits', to no more than
+        THIEF_MOST with RULE_THIEF_TABLE (as DSCLOG's PROBE_BELT), with GEAR a worn cloak's or boots'
         (gear_skill), 0 for a skill an effect rules out (or when the thief isn't Okay or New, or wears armour that isn't light: thief_heavy), 100
         for one an effect makes certain. Not the situation's bonus (a hard lock...). [] for
         someone without thief levels. `skills`: which (numbers in THIEF_SKILLS)."""
@@ -1664,6 +1668,8 @@ class GameData:
             for kid in kids:  # (an Assassin's, a Swashbuckler's...: no less than 0, as DSCLOG's PROBE_BELT)
                 if kits.thief_skill(kid, skill, outdoors):
                     chance = max(0, chance + kits.thief_skill(kid, skill, outdoors))
+            if self.rules & RULE_THIEF_TABLE:
+                chance = min(THIEF_MOST, chance)
             if gear:
                 chance = self.gear_skill(creature, skill, chance)
             if any(skill in THIEF_CERTAIN.get(e, ()) for e in ids):

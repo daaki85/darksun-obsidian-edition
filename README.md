@@ -31,12 +31,9 @@ name.)
 
 ## What it does
 
-It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd
-Edition, adds kits, weapon specialization, spells, items and people to Athas,
-dresses the party in what they wear, and fixes the game's bugs. Every rule
-change and addition has a switch. The full list is in
-[What it does](obsidian-edition/README.md#what-it-does), and every change from
-the original game in the [patch notes](PATCH-NOTES.md).
+The full list is in [What it does](obsidian-edition/README.md#what-it-does),
+and every change from the original game in the [patch notes](PATCH-NOTES.md).
+Every rule change and addition has a switch on the Loader's Options tab.
 
 The game's own files are never modified: the Loader runs a patched copy of the
 game from its own folder. It writes to the game folder only your saves (pages
@@ -67,26 +64,20 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.7.2** is out ([release notes](release-notes/v2.7.2.md)):
-fixes to the 6th-level priest spells (Sunstroke ends the caster's turn, Wall of
-Thorns counts a monster's armour, Heartseeker's description), and the Look box
-gives a monster's real AC from the start of a fight. 2.7.1 ([release
-notes](release-notes/v2.7.1.md)) found Wake of the Ravager where GOG Galaxy
-installs it, and 2.7.0 ([release notes](release-notes/v2.7.0.md)) brought nine
-6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with pictures of
+**Obsidian Edition 2.8.0** is out ([release notes](release-notes/v2.8.0.md)):
+the party's magic gear glows on their figures in its icon's colour; the
+pointer shows in the game's scenes (a click skips one), starts in the middle
+and moves like your desktop's, and pauses less in the inventory; thief skills
+stop at 95 as in AD&D; the game has more memory to spare; and big fights keep
+their shadows. 2.7.2 ([release notes](release-notes/v2.7.2.md)) fixed the
+6th-level priest spells, and 2.7.0 ([release
+notes](release-notes/v2.7.0.md)) brought nine 6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with pictures of
 their own; levels capped by XP instead of at 9th, so priests reach 11th and
 12th; backstabs as AD&D has them; spell names floating over their casters; the
 Spellarcher's spell arrows; three new magic items; and more of the original
 game's bugs fixed, three script bugs among them.
 
-Every release has notes of its own: [2.7.2](release-notes/v2.7.2.md),
-[2.7.1](release-notes/v2.7.1.md), [2.7.0](release-notes/v2.7.0.md),
-[2.6.0](release-notes/v2.6.0.md), [2.5.0](release-notes/v2.5.0.md),
-[2.4.0](release-notes/v2.4.0.md), [2.3.0](release-notes/v2.3.0.md),
-[2.2.1](release-notes/v2.2.1.md), [2.2.0](release-notes/v2.2.0.md),
-[2.1.1](release-notes/v2.1.1.md), [2.1.0](release-notes/v2.1.0.md),
-[2.0.0](release-notes/v2.0.0.md), [1.2.0](release-notes/v1.2.0.md),
-[1.1.0](release-notes/v1.1.0.md) and [1.0.0](release-notes/v1.0.0.md). The
+Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
 page, whatever the version.
 

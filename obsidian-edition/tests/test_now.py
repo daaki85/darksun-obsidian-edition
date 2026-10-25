@@ -249,6 +249,19 @@ class ThiefTests(unittest.TestCase):
         self.log.game.rules = 0
         self.assertEqual(self.log.game.thief_skill_parts(0, 0)[0], ("base", 0))
 
+    def test_ad_d_table_most(self):
+        """With RULE_THIEF_TABLE no skill comes out above AD&D's 95 (a 13th level thief with DEX 22:
+        pick pockets 99 + 27, move silently 99 + 30, climbing 99); without it, the game's sum."""
+        m = self.log.guest.mem
+        m[SHEETS + game.SHEET_LEVELS + 1], m[CREATURES + game.CREATURE_ABILITIES + 1] = 13, 22
+        m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = 0xFF  # (no equipment penalty)
+        m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 0xFF
+        self.log.game.rules = game.RULE_THIEF_TABLE
+        self.assertEqual(self.now(), [95, 95, 95, 95, 40, 95])
+        self.assertEqual(sum(n for _, n in self.log.game.thief_skill_parts(0, 3)), 129)
+        self.log.game.rules = 0
+        self.assertGreater(max(self.now()), 95)
+
     def test_dex_adjustment(self):
         self.assertEqual([game.dex_adjustment(d, 3) for d in (5, 9, 12, 16, 18, 22, 24)], [-20, -20, -5, 0, 10, 30, 30])
         self.assertEqual(game.dex_adjustment(22, 6), 0)  # climb walls: none

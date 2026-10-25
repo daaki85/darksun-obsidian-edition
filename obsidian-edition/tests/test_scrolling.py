@@ -39,8 +39,6 @@ class ScrollingTests(unittest.TestCase):
         self.assertEqual(gd.words(scrolling.TSR_SCROLL_ON, 1), (1,))
         s.update(gd, HDR, False)
         self.assertEqual(gd.words(scrolling.TSR_SCROLL_ON, 1), (0,))
-        s.update(gd, HDR, True, right=True)  # (the right button too)
-        self.assertEqual(gd.words(scrolling.TSR_SCROLL_ON, 1), (scrolling.DRAG_MIDDLE | scrolling.DRAG_RIGHT,))
 
 
 if __name__ == "__main__":

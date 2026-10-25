@@ -102,7 +102,7 @@ PERCENT = re.compile(r"(?P<what>.+?): d100 = (?P<roll>\d+), needs (?P<need>-?\d+
 ROUND = re.compile(r"Round (?P<n>\d+)")
 NOT_THE_FIGHT = ("Message: ", "Dice: ", "Look: ", "Chosen with Tab", "(")
 A_ROLL = re.compile(r"\bd\d+ = |\b\d+d\d+\b")  # (a line with a die cast in it)
-NOT_A_FIGHT_ROLL = ("Character creation",)  # (rolls out of the game: not the strip's)
+NOT_A_FIGHT_ROLL = ("Character creation",)  # (rolls out of the game: not the panel's)
 
 
 def shorten(line: str, level: str) -> Optional[str]:
@@ -276,15 +276,13 @@ def inks(dac: bytes) -> Dict[str, int]:
 
 class Geometry(NamedTuple):
     """A size of the panel: its height (its foot stays at PANEL_Y0 + PANEL_H), the rows of lines
-    in its well (none: collapsed, the newest line in its header), and the filters' row. The strip
-    below the map (STRIP) is wider, at the screen's left, its header and well closer together."""
+    in its well (none: collapsed, the newest line in its header), and the filters' row."""
     height: int
     rows: int
     filters: bool = False
     width: int = PANEL_W
     x0: int = PANEL_X0
     foot: int = PANEL_Y0 + PANEL_H
-    strip: bool = False
 
     @property
     def top(self) -> int:
@@ -292,11 +290,11 @@ class Geometry(NamedTuple):
 
     @property
     def well(self) -> Tuple[int, int, int, int]:
-        return (4, 11, self.width - 5, self.height - 2) if self.strip else (4, 15, self.width - 5, self.height - 5)
+        return 4, 15, self.width - 5, self.height - 5
 
     @property
     def header_y(self) -> int:
-        return 1 if self.strip else HEADER_Y
+        return HEADER_Y
 
     @property
     def plus_x0(self) -> int:
@@ -322,22 +320,11 @@ class Geometry(NamedTuple):
 
     @property
     def text_y(self) -> int:
-        return self.well[1] + (1 if self.strip else 2) + (LINE_H if self.filters else 0)
+        return self.well[1] + 2 + (LINE_H if self.filters else 0)
 
 
 COLLAPSED, DOCKED, EXPANDED = "collapsed", "docked", "expanded"
 SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 11, True)}
-STRIP_W, STRIP_H, STRIP_Y0 = 320, 22, 200  # the strip below the map (the 320 x 222 screen: DSCLOG's STRIP)
-STRIP = Geometry(STRIP_H, 1, False, STRIP_W, 0, STRIP_Y0 + STRIP_H, True)
-DGROUP_SEG = 0x4356  # (the game's data segment, less its load segment: DSCLOG's DGROUP_SEG)
-STRIP_AT, STRIP_INT = 0x11640 - 0x5400, bytes((0xCD, 0xF7))  # the game's code there with the
-#   strip's patch (gamepatch's strip_lines: INT VEC_STRIP), from its load segment
-
-
-def strip_patched(gd) -> bool:
-    """The game was started with the combat log below the map (its screen 320 x 222)."""
-    ds = getattr(gd, "ds", None)
-    return ds is not None and gd.guest.read((ds - DGROUP_SEG) * 16 + STRIP_AT, 2) == STRIP_INT
 SIZE_ORDER = (COLLAPSED, DOCKED, EXPANDED)
 LEVEL_ORDER = (MINIMAL, SHORT, DETAIL)
 LEVEL_NAMES = {MINIMAL: "Least", SHORT: "Short", DETAIL: "Detail"}
@@ -372,16 +359,6 @@ def render(dac: bytes, ink: Optional[Dict[str, int]] = None, g: Geometry = SIZES
             rows[y][x0:x1 + 1] = bytes((colour,)) * (x1 - x0 + 1)
 
     shades = [ink["well0"], ink["well1"], ink["well2"], ink["well3"]]
-    if g.strip:  # the strip: all of it the well's darker shade, the top line too
-        for y in range(h):
-            for x in range(w):
-                rows[y][x] = shades[mottle(x, y)]
-        fill(0, 0, w - 1, 0, ink["outline"])  # (its edge against the map)
-        fill(3, 10, w - 4, 10, ink["well0"])  # (the top line's rule, faint)
-        t = g.track
-        fill(t[0], t[1], t[2], t[3], ink["dark"])
-        return b"".join(bytes(r) for r in rows)
-
     fill(0, 0, w - 1, h - 1, ink["outline"])
     for y in range(1, h - 1):  # the stone, speckled (as the screen's, wherever it is)
         for x in range(1, w - 1):
@@ -530,9 +507,8 @@ def rows_of(font, lines: List[Line], names: Dict[str, str],
 
 
 def visible(first: Optional[int], g: Geometry = SIZES[DOCKED]) -> int:
-    """Rows of lines the well shows: one fewer when scrolled back, for the "Latest" chip (the
-    strip's chip is in its header)."""
-    return g.rows if first is None or g.strip else g.rows - 1
+    """Rows of lines the well shows: one fewer when scrolled back, for the "Latest" chip."""
+    return g.rows if first is None else g.rows - 1
 
 
 def scroll_to(first: Optional[int], total: int, g: Geometry = SIZES[DOCKED]) -> Optional[int]:
@@ -645,20 +621,12 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
             picture[y * w + x0:y * w + x1 + 1] = bytes((ink["handle"],)) * (x1 - x0 + 1)
     if font is None:
         return bytes(picture)
-    level = None if g.strip else level  # (the strip: no buttons, out of the pointer's reach)
     room = (key_rect(font, g)[0] if level else w - 4) - 2
     chip = f"Latest: {new} new" if new else "Latest"
-    if g.strip and first_row is not None:  # (the strip's chip: in its header, at the right)
-        chip_w = _width(font, chip) + 6
-        strip_chip = (g.track[0] - 2 - chip_w, 1, g.track[0] - 2, 10)
-        room = strip_chip[0] - 2
     start = top_row(first_row, len(rows), g)
     shown = [(row, g.text_y + i * LINE_H, g.track[0] - 3) for i, row in enumerate(rows[start:start + visible(first_row, g)])]
-    if g.strip and not top and start > 0:  # (the strip between fights: the row before in the top line)
-        shown.insert(0, (rows[start - 1], g.header_y, room))
-    else:
-        _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names),
-              ink, room)
+    _text(picture, font, HEADER_X, g.header_y, coloured(fit(font, top, room - HEADER_X), "log round", names),
+          ink, room)
     if level:
         _button(picture, font, key_rect(font, g), "L", ink)
         _button(picture, font, level_rect(font, g), LEVEL_NAMES.get(level, level), ink)
@@ -681,7 +649,7 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
                      ink["member0"] if line.side == "party" else ink["monster"])
             _text(picture, font, x, y, runs, ink, right)
     if first_row is not None and g.rows:  # the chip: "Latest" and the rows since
-        _button(picture, font, strip_chip if g.strip else chip_rect(g), chip, ink)
+        _button(picture, font, chip_rect(g), chip, ink)
     return bytes(picture)
 
 
@@ -705,21 +673,18 @@ class Panel:
         self._keys: Optional[int] = None  # ... and of L
         self._grab: Optional[int] = None  # dragging the handle: the press's distance below its top
         self.pointer = (-1, -1)  # where the game's pointer is (DSCLOG's), on the screen
-        self.strip = False  # in the strip below the map (the Options tab's combat_log_strip)
         self.open = False  # the panel over the map shown (L shows and hides it, in fights and out)
 
     @property
     def g(self) -> Geometry:
-        return STRIP if self.strip else SIZES[self.size]
+        return SIZES[self.size]
 
     @property
     def shown(self) -> bool:
         return bool(self._on)
 
     def over(self) -> bool:
-        """The game's pointer is over the panel (the strip: anywhere, as it can't reach it)."""
-        if self.strip:
-            return True
+        """The game's pointer is over the panel."""
         x, y = self.pointer
         return 0 <= x - PANEL_X0 < PANEL_W and 0 <= y - self.g.top < self.g.height
 
@@ -740,8 +705,7 @@ class Panel:
     def wheel(self, notches: int) -> None:
         """The mouse wheel turned over the panel: NOTCHES up (back) or, below 0, down."""
         if notches and self.g.rows:
-            step = 1 if self.strip else WHEEL_ROWS  # (the strip's one row: a line a notch)
-            self._scroll(top_row(self.first, self._rows, self.g) - notches * step)
+            self._scroll(top_row(self.first, self._rows, self.g) - notches * WHEEL_ROWS)
 
     def _key_l(self) -> None:
         """L (or a click on the header's L) with the panel shown: hidden (L shows it again)."""
@@ -822,9 +786,8 @@ class Panel:
         """ON: the panel shown (once it is drawn in a palette DSCLOG has read: PALETTES counts the
         reads), with the header TOP and the log's lines, NAMES their colours' keys. ARENA_COUNT (the
         caller gives one between fights in the slave pens and the arena): the header the count of
-        arena fights instead, while the panel has a header of its own (not collapsed, nor the strip)."""
+        arena fights instead, while the panel has a header of its own (not collapsed)."""
         guest = gd.guest
-        self.strip = strip_patched(gd)
         seg, = struct.unpack("<H", guest.read(tsr_hdr + TSR_PANEL_SEG, 2))
         if not seg:  # (no memory for it: no panel)
             on = False
@@ -840,11 +803,11 @@ class Panel:
         if not on:
             self.first, self._grab = None, None  # (the next fight: its newest lines)
         if on and self._ink is not None:
-            arena = arena_count is not None and not self.strip and self.size != COLLAPSED
+            arena = arena_count is not None and self.size != COLLAPSED
             if arena:
                 top = arena_line(arena_count)
             now = (self._palettes, top, self.log.version, self.level, tuple(sorted(names.items())), self.first,
-                   "strip" if self.strip else self.size, self.filter, arena)
+                   self.size, self.filter, arena)
             if now != self._shown:
                 g, size = self.g, now[6]
                 if size not in self._backgrounds:

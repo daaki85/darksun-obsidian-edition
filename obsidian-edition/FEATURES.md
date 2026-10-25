@@ -891,8 +891,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
 
 ### Buying back magical items
 
-The game destroys whatever the party sells. With **Merchants keep magical
-items sold to them** ticked, a magical item sold (one with a plus, or a power:
+The game destroys whatever the party sells. With **Merchants keep the magical
+items the party sells them** ticked, a magical item sold (one with a plus, or a power:
 a ring, a wand, a scroll...) goes into the merchant's pack instead, and the
 shop offers it for sale at its price, less the leader's CHA discount, so it
 can be bought back. Anything else sold is gone, as in the game. With the CHA
@@ -924,7 +924,10 @@ ticked, a skill is:
   numbers),
 - plus DEX's: AD&D's table up to 19, the Dark Sun rules' exceptional DEX
   past it, for the first five skills (hear noise, climb walls and read
-  languages have none).
+  languages have none),
+- to no more than 95, as in AD&D, after the belt, kits and armour too (the
+  situation's bonus, a hard lock, say, still counts after it). A ranger's
+  hiding and moving silently stop at 95 as well.
 
 AD&D's averages, by thief level:
 
@@ -1656,12 +1659,12 @@ walking and fighting:
 
 | Worn | Shown |
 |---|---|
-| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; an axe or mace on a wooden haft, its head solid, as the game's own axemen carry them; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
+| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield), in its material's colours (wood, bone in ivory, stone, obsidian, metal; an axe or mace on a wooden haft, its head solid, as the game's own axemen carry them; Kreenfang's two blades in the fire colours and Shadowseeker's in night steel, as their icons; any other magic weapon or shield, one with a plus or a power, Shadowseeker too, glints along its bright edge, a staff along its shaft, in whichever of the colours the game animates (fire, green, violet, water blue) is nearest its icon's own shine or colour, blue for steel and plain ones); walking, a one-handed weapon is worn at the belt, hanging down and back like a scabbard, two-handed ones are carried upright, and a shield is on the arm (from the side, on the far arm held forward of the chest, so it shows past the body); in a fight they are in the hands and swung, and the shield is on the other forearm in every pose (placed by hand for each model where the arm is hidden or flung) |
 | **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
-| **Armour** | the character's own clothing recoloured toward its material, shade for shade (leather, bone, chain, plate, scale...): the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures the artist drew mostly bare (the mul, the dwarf man) only their straps and loincloth change, so it shows little |
+| **Armour** | the character's own clothing recoloured toward its material, shade for shade (leather, bone, chain, plate, scale...): the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures the artist drew mostly bare (the mul, the dwarf man) only their straps and loincloth change, so it shows little; magic armour (a plus or a power) has a scatter of sparks over it in its icon's glow colour, as have magic cloaks, helms, boots and belts. Seen from the front, a cloak hangs behind the wearer, its edges no wider than the back |
 | **Helms** | a circlet at the brow blended into the hair: a feather on leather, a dark stone on iron, low spikes on bone |
 | **Cloaks** | the cloak the game draws on the human woman (its folds and swing as she walks and fights), fitted to the wearer, under the hair, in the cloak's colours; a half-elf woman's own purple cloak takes the worn one's colours |
-| **Boots and belts** | the feet and the waist recoloured |
+| **Boots and belts** | the feet and the waist recoloured (Boots of Elvenkind in soft green) |
 
 The colours are muted ones no region's palette changes. A thri-kreen shows
 only weapons and shields (all it can use). Two party members of the same race
@@ -1715,18 +1718,16 @@ Each has a switch in the Options tab's **Controls** section.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
-In a fight, a red ring on the ground can mark the enemies, under their feet (the
-figures stand in it, as on their shadows). On a party member's turn, **Tab**
-chooses an enemy, the nearest first, then the next nearest (**Shift+Tab** goes
-back): its ring is drawn thicker and redder, the view scrolls to it if it is
-out of sight, and the log names it. **Enter** then attacks it, as clicking on
-it does (walking up to it first when it is out of reach), even where another
-figure stands in front of it. On the Options tab the rings are **none**, **only
-under the enemy chosen with Tab** (the default: none until Tab is pressed) or
-**under all the enemies** (the chosen one's thicker and redder); Tab and Enter
-have a switch of their own.
+In a fight, on a party member's turn, **Tab** chooses an enemy, the nearest
+first, then the next nearest (**Shift+Tab** goes back): a red ring on the
+ground marks it, under its feet (the figure stands in it, as on its shadow),
+the view scrolls to it if it is out of sight, and the log names it. **Enter**
+then attacks it, as clicking on it does (walking up to it first when it is out
+of reach), even where another figure stands in front of it. On the Options tab
+the ring can be switched off (**none**), and Tab and Enter have a switch of
+their own.
 
-![The arena fight with rings under all the enemies, two Sligs and a Screamer Beetle, one Slig chosen with Tab](docs/rings.png)
+![An arena fight, the Xorn chosen with Tab and the red ring under it](docs/rings.png)
 
 Tab and Enter also make attacking possible without aiming the mouse at all.
 
@@ -1737,9 +1738,7 @@ How it works:
 
 Press the mouse wheel on the map and move the mouse: the map moves with the
 pointer, as if dragged, in fights too. On the Options tab it can be switched
-off, or holding the right button made to drag the map as well (a right click,
-let go before the pointer has moved, still changes the pointer between walking,
-using and looking). The game still scrolls on its own when the pointer touches
+off. The game still scrolls on its own when the pointer touches
 the screen's edge, and still brings the view back to whoever's turn it is in a
 fight.
 
@@ -1774,7 +1773,10 @@ scene's steps, so a long still picture, like the decree, plays to its end.
 
 The game left the pointer at the right edge of the screen when its menu came
 up, and it moved half as far up and down as across (the mouse driver's own
-setting). Now it starts in the middle and moves as far each way.
+setting). Now it starts in the middle, stays where you leave it from one screen to the next (the intro, the menus, loading), and moves as far each way. In a window
+it also moves as fast as your desktop's pointer: DOSBox moved it a whole game
+pixel (three screen pixels in the usual window) for each pixel the mouse
+moved, too fast and coarse to put an item where you meant in the inventory.
 
 ![The game's pointer in the SSI logo before the intro, and on the king's decree that opens a new game](docs/scene-pointer.png)
 
@@ -1916,6 +1918,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
 | The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
 | **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
+| An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a

@@ -37,6 +37,9 @@ class LaunchTests(unittest.TestCase):
         self.assertIn(r'mount C "..\cloud_saves" -t overlay', lines)
         self.assertIn(f'mount d "{launch.DOS_DIR}"', lines)
         self.assertLess(lines.index(r"lh d:\dsclog.exe"), lines.index(r"d:\dsunlog.exe"))
+        # upper memory moved down to C900h just before the helper loads into it
+        self.assertEqual(lines.index(r"d:\umbplus.com"), lines.index(r"lh d:\dsclog.exe") - 1)
+        self.assertTrue(os.path.isfile(os.path.join(launch.DOS_DIR, launch.UMB_PLUS_COM)))
         self.assertLess(lines.index("c:"), lines.index(r"d:\dsunlog.exe"))  # run from the game folder
         self.assertEqual(lines[-2:], ["exit", ""])
         # a game stopping with an error leaves its message up, saved for the crash report
@@ -201,17 +204,20 @@ class LaunchTests(unittest.TestCase):
 
     def test_a_window_three_times_the_game_unless_asked_otherwise(self):
         self.assertEqual(launch.display_lines({}),
-                         ["[sdl]", "fullscreen=false", "[render]", "aspect=true", "scaler=normal3x", ""])
+                         ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=33", "[render]", "aspect=true", "scaler=normal3x", ""])
         self.assertIn("scaler=normal3x", launch.display_lines({"window_scale": 3}))
         self.assertIn("scaler=none", launch.display_lines({"window_scale": 1}))
         self.assertIn("scaler=normal3x", launch.display_lines({"window_scale": 7}))
         self.assertIn("scaler=normal2x", launch.display_lines({"window_scale": 2}))
         four = launch.display_lines({"window_scale": 4})
         self.assertIn("windowresolution=1280x960", four)
-        self.assertIn("windowresolution=1280x1064", launch.display_lines({"window_scale": 4,  # (the strip
-                                                                           "combat_log_strip": True}))  # below: 266 rows)
         self.assertIn("output=opengl", four)
         self.assertEqual(launch.display_lines({"fullscreen": True}), [])  # GOG's own full screen
+        # the pointer at the desktop's speed: the mouse's sensitivity 100 over the scale
+        self.assertIn("sensitivity=50", launch.display_lines({"window_scale": 2}))
+        self.assertIn("sensitivity=25", four)
+        self.assertIn("sensitivity=100", launch.display_lines({"window_scale": 1}))
+        self.assertNotIn("sensitivity=33", launch.display_lines({"mouse_start": False}))
         saved = launch.load_settings
         launch.load_settings = lambda: {}
         try:

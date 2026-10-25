@@ -9,7 +9,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import art, game, gff, icons, sprites, spritegear as sg
+from dsloader import art, game, gff, icons, sprites, spriteparts as sp, spritegear as sg
 from test_spriteparts import rows
 
 SWORD, METAL = 63, 4
@@ -51,9 +51,66 @@ class WornTests(unittest.TestCase):
 
         right = game.EQUIP_SLOTS.index("right hand")
         gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 1, right)]), 0)
-        self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1, "Kreenfang"))
+        self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1, "Kreenfang", sg.FIRE_GLOW))
         gear, _ = sprites.worn(Worn([item(game.GYTHKA_TYPE, 0, right)]), 0)
         self.assertEqual(gear["right"], (game.GYTHKA_TYPE, 1))
+        sword = 45  # any other weapon with a plus: MAGIC, its edge glinting
+        gear, _ = sprites.worn(Worn([item(sword, 2, right)]), 0)
+        self.assertEqual(gear["right"], (sword, 1, sg.MAGIC, sg.FIRE_GLOW))  # (no objects file: the fire's)
+        gear, _ = sprites.worn(Worn([item(sword, 0, right)]), 0)
+        self.assertEqual(gear["right"], (sword, 1))
+        chest = game.EQUIP_SLOTS.index("chest")
+        _, armour = sprites.worn(Worn([item(57, 1, chest)]), 0)  # (chain mail +1: glints)
+        self.assertEqual(armour, (57 | sg.MAGIC_ARMOUR,))
+        _, armour = sprites.worn(Worn([item(57, 0, chest)]), 0)
+        self.assertEqual(armour, (57,))
+
+    def test_glow_for(self):
+        """A magic item glows in the cycled colours nearest its icon's: one already shining in
+        them, else by hue; greys the blue."""
+        sg.set_palette([(0, 0, 0)] * 16 + [(40, 200, 40), (200, 40, 230), (128, 128, 128), (230, 60, 20)] + [(0, 0, 0)] * 236)
+        self.assertEqual(sg.glow_for([[16] * 8]), sg.GREEN_GLOW)
+        self.assertEqual(sg.glow_for([[17] * 8]), sg.VIOLET_GLOW)
+        self.assertEqual(sg.glow_for([[19] * 8]), sg.FIRE_GLOW)
+        self.assertEqual(sg.glow_for([[18] * 8]), sg.BLUE_GLOW)
+        self.assertEqual(sg.glow_for([[12, 12, 13, 18]]), sg.BLUE_GLOW)  # (the water's shine)
+        self.assertEqual(sg.glow_for([[242, 243, 244, 18]]), sg.FIRE_GLOW)
+
+    def test_magic_glint(self):
+        """A magic weapon's lightest cells are drawn in the fire colours the game cycles; a plain
+        one's in its material's."""
+        def drawn(glint, shape=sg.SWORD):
+            rows = [[None] * 30 for _ in range(30)]
+            sg.draw_weapon(rows, [r[:] for r in rows], (5, 15), 0.0, shape, sg.MATERIAL_COLOURS[4], False,
+                           glint=glint)
+            return {p for r in rows for p in r if p is not None}
+        self.assertFalse(drawn(False) & set(sg.GLINT))
+        self.assertTrue(drawn(True) & set(sg.GLINT))
+        self.assertTrue(drawn(True, sg.STAFF) & set(sg.GLINT))  # (a staff has no light cells: every third)
+
+    def test_sparkle(self):
+        """Magic worn gear glints only on the pixels it changed; a small piece at least twice."""
+        before = [[1] * 20 for _ in range(20)]
+        rows = [r[:] for r in before]
+        for x in range(10):
+            rows[5][x] = 7
+        sg.sparkle(rows, before)
+        glints = [(x, y) for y, r in enumerate(rows) for x, p in enumerate(r) if p in sg.GLINT]
+        self.assertGreaterEqual(len(glints), 2)
+        self.assertTrue(all(y == 5 and x < 10 for x, y in glints))
+        tiny = [r[:] for r in before]
+        tiny[3][3] = tiny[3][4] = 7
+        sg.sparkle(tiny, before)
+        self.assertTrue(any(p in sg.GLINT for r in tiny for p in r))
+
+    def test_magic_shield_glint(self):
+        """A magic shield's light and part of its rim glint; a plain one's don't."""
+        def drawn(glint):
+            rows = [[None] * 30 for _ in range(30)]
+            sg.draw_shield(rows, [r[:] for r in rows], (15, 15), sp.FRONT, sg.MATERIAL_COLOURS[4], False, glint=glint)
+            return {p for r in rows for p in r if p is not None}
+        self.assertFalse(drawn(False) & set(sg.GLINT))
+        self.assertTrue(drawn(True) & set(sg.GLINT))
 
 class SpriteTests(unittest.TestCase):
     def test_encode_round_trip(self):
@@ -192,14 +249,34 @@ class SpriteTests(unittest.TestCase):
         dresser.gd, dresser.pics = FakeGame(figures=list(figures)), sprites.Pictures(chunks)
         dresser.copy_file, dresser.places, dresser._stamp = path, {}, None
         dresser.shown, dresser.request_redraw, dresser._redraw_at = {}, None, None
+        dresser.items = chunks
         return dresser, path
+
+    def test_items_from_the_copy(self):
+        """The Loader's own items (a Hayneedle, object 2590) are only in its copy of SEGOBJEX: the
+        glow looks their objects and icons up there, the game's file's for the rest."""
+        from test_core import build_gff
+        with tempfile.TemporaryDirectory() as d:
+            chunks = game_chunks()
+            own = os.path.join(d, "GAME.GFF")
+            with open(own, "wb") as f:
+                f.write(build_gff(chunks))
+            copy = os.path.join(d, "SEGOBJEX.GFF")
+            with open(copy, "wb") as f:
+                f.write(build_gff({("OJFF", 2590): b"hayneedle"}))
+            dresser = sprites.Dresser(FakeGame(figures=[0]), own, [(0, 0, 0)] * 256, copy)
+            self.assertEqual(dresser.items[("OJFF", 2590)], b"hayneedle")
+            self.assertEqual(dresser.items[("OJFF", 300)], chunks[("OJFF", 300)])
+            self.assertNotIn(("OJFF", 2590), dresser.pics.chunks)
+            plain = sprites.Dresser(FakeGame(figures=[0]), own, [(0, 0, 0)] * 256)
+            self.assertIs(plain.items, plain.pics.chunks)
 
     def test_outfit_written_to_the_copy(self):
         """A new outfit: both pictures written into the copy at their own length (the index says
         so), the game's loaded ones taken out of its table, the figure loaded again; nothing more
         while it stays the same."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)
@@ -229,7 +306,7 @@ class SpriteTests(unittest.TestCase):
         """Shortly after pictures are loaded anew the view is drawn again (their shadows: the floor
         is drawn before the figures, while the new picture was still loading)."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)
@@ -248,7 +325,7 @@ class SpriteTests(unittest.TestCase):
     def test_copy_written_anew(self):
         """The launcher writes the copy anew (plain) for the next game: the outfit written again."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)
@@ -264,7 +341,7 @@ class SpriteTests(unittest.TestCase):
     def test_copy_not_writable(self):
         """The copy can't be written: nothing changed in the game, tried again next time."""
         outfits = [({"right": (SWORD, METAL)}, ())]
-        worn, sprites.worn = sprites.worn, lambda gd, member: outfits[0]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)
         with tempfile.TemporaryDirectory() as d:
             dresser, path = self.dressed_copy(d)

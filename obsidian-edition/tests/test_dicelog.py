@@ -3,6 +3,7 @@
 import os
 import struct
 import sys
+import time
 import unittest
 from collections import Counter
 
@@ -913,6 +914,12 @@ class SaveTests(unittest.TestCase):
         log.hp_changes(0.5)
         struct.pack_into("<h", m, stalker, 21)
         self.assertEqual(log.hp_changes(1.0), ["  Mountain Stalker regenerates 1 HP (CON 22), now 21 HP"])
+        log._spell_until, log._spell_name = 5.0, "Fire attack (6d6 fire)"  # (just after an attack:
+        struct.pack_into("<h", m, stalker, 22)                            #  still the CON's doing)
+        self.assertEqual(log.hp_changes(1.5), ["  Mountain Stalker regenerates 1 HP (CON 22), now 22 HP"])
+        log._spell_until = 0.0
+        struct.pack_into("<h", m, stalker, 21)
+        log.hp_changes(1.6)
         m[stalker + game.CREATURE_ABILITIES + 2] = 19
         struct.pack_into("<h", m, stalker, 22)
         self.assertEqual(log.hp_changes(2.0), ["  Mountain Stalker now 22 HP (+1)"])
@@ -1093,6 +1100,22 @@ class OtherTests(unittest.TestCase):
         set_effects(log, [(0, 0, 63), (1, 0, 63), (2, 0, 7)])
         self.assertEqual(log.effect_changes(30.0), ["Tom gives Blessed to Jellybelly: +1 to hit, +1 on saves"])
 
+    def test_stats_answered_in_background(self):
+        """DSCLOG's request for fresh STATS (the game stands still till it's answered) is answered
+        by the stats thread, without the main loop's pass; closing the log stops the thread."""
+        log = make_game()
+        m = log.guest.mem
+        struct.pack_into("<HH", m, HDR + dicelog.TSR_STATS_REQ, 5, 4)
+        log.answer_stats_in_background()
+        self.addCleanup(log.close)
+        deadline = time.monotonic() + 2
+        while struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0] != 5 and time.monotonic() < deadline:
+            time.sleep(0.001)
+        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0], 5)
+        log.close()
+        log._stats_thread.join(1)
+        self.assertFalse(log._stats_thread.is_alive())
+
     def test_attach_needs_the_patched_game(self):
         log = make_game()
         m = log.guest.mem
@@ -1135,6 +1158,18 @@ class OtherTests(unittest.TestCase):
         # an effect (Blind, Afraid...) takes 1000 off
         e = entry(1223, dicelog.PERCENT_SITE, words(0, 0, 0, 1, 0, 0), locals_=locals_at(0x10, m2=-961))
         self.assertEqual(log.describe(e), ["Dag tries to open locks: d100 = 24 -> failure (an effect stops it)"])
+
+    def test_thief_skill_at_most(self):
+        """With RULE_THIEF_TABLE the helper keeps the chance to 95: the parts above it are shown
+        with "(at most 95)", not as an equipment penalty."""
+        log = make_game()
+        m = log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES + 1], m[SHEETS + game.SHEET_LEVELS + 1] = game.THIEF, 13
+        m[CREATURES + game.CREATURE_ABILITIES + 1] = 22
+        log.game.rules = game.RULE_THIEF_TABLE
+        e = entry(1223, dicelog.PERCENT_SITE, words(0, 0, 0, 3, 0, 0), locals_=locals_at(0x10, m2=95))
+        self.assertEqual(log.describe(e), ["Dag tries to move silently: d100 = 24, needs 95 or less -> success",
+                                           "    move silently 95 = 99 thief level 13 + 30 DEX 22 (at most 95)"])
 
     def test_generic_shapes_when_showing_everything(self):
         log = make_game()

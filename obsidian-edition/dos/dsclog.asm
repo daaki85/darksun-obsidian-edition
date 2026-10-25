@@ -139,9 +139,6 @@ VEC_XP equ 0x90            ; PROBE_XP
 VEC_PRIEST_THAC0 equ 0x8F  ; PROBE_PRIEST_THAC0
 VEC_ADND_SLOTS equ 0x8E    ; PROBE_ADND_SLOTS
 VEC_POINTER equ 0xF1       ; PROBE_POINTER
-VEC_STRIP equ 0xF7         ; PROBE_STRIP
-VEC_PALETTE equ 0x8B       ; PROBE_PALETTE
-VEC_COLOURS equ 0xCB       ; PROBE_COLOURS
 VEC_PRICE equ 0x8D         ; PROBE_PRICE
 VEC_PRICE_EAX equ 0x8C     ; PROBE_PRICE_EAX
 VEC_RS_CLICK equ 0x8A      ; PROBE_RS_CLICK
@@ -151,9 +148,11 @@ VEC_TICK equ 0x87          ; PROBE_TICK
 VEC_POISON equ 0x86        ; PROBE_POISON
 VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
+VEC_HEAP equ 0xCB          ; PROBE_HEAP
+VEC_FLIP equ 0x8B          ; PROBE_FLIP
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
-NENT    equ 64          ; entries in the ring (64: the helper and it fit in upper memory)
+NENT    equ 63          ; entries in the ring (63: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
 LBL_SLOTS  equ 2        ; names floating over figures at once (LABELS)
 LBL_ROW    equ 16       ; bytes a row of a label's mask: LBL_ROW * 8 pixels wide at most
@@ -284,7 +283,7 @@ shadow_tab_off dw shadow_tab    ; +222 offset of SHADOW_TAB: a bit for each of t
 dark_build dw 0                 ; +224 the Loader sets 1 to have DARK made again from the palette
                                 ;      (after the area, so the palette, changes); 0 once it is
 shadow_passes dw 0              ; +226 shadow passes drawn (counted)
-scroll_on  dw 0                 ; +228 the Loader sets SCROLL_MIDDLE and/or SCROLL_RIGHT to have
+scroll_on  dw 0                 ; +228 the Loader sets SCROLL_MIDDLE to have
                                 ;      a drag with that button scroll the map (SCROLLING)
 pan_x      dw 0                 ; +230 the Loader adds to these (wrapping) to scroll the map by
 pan_y      dw 0                 ; +232   as many pixels (to a chosen enemy: TARGETING)
@@ -11485,6 +11484,8 @@ cine_shown db 0                 ; (1 while a scene plays: the driver's ranges th
 cp_drawn   db 0                 ; (1: the arrow on the screen, at CP_X, CP_Y, CP_PAGE in A000h,
 cp_x       dw 0                 ;   in CP_MAP's colours, CP_UNDER what was under it)
 cp_y       dw 0
+mp_x       dw 160               ; (where the pointer was last seen, in the game's 320 by 200: where
+mp_y       dw 100               ;   a mode set or a scene's start puts it back, not the middle)
 cp_page    dw 0
 cp_now     dw 0
 cp_op      db 0
@@ -11573,8 +11574,8 @@ cine_mouse:                             ; the driver's ranges the screen's, the 
         mov dx, 199
         int 0x33
         mov ax, 4
-        mov cx, 160
-        mov dx, 100
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
         int 0x33
         popa
         ret
@@ -11584,9 +11585,11 @@ cine_where:                             ; CX, DX: the pointer (a video mode set 
         cmp cx, 319
         jbe .ok
         call cine_mouse
-        mov cx, 160
-        mov dx, 100
-.ok:    ret
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+.ok:    mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
+        ret
 cine_hide:                              ; the arrow wiped (the game sets its ranges again with
         mov byte [cs:cine_shown], 0     ;   its next screen's video mode: MOUSE_SET)
         jmp cp_erase
@@ -11879,13 +11882,13 @@ mouse_set:
         iret
 mouse_mid:
         mov ax, 4
-        mov cx, 160
-        mov dx, 100
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
         int 0x33
-mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 8)
-        mov ax, 0x0F
-        mov cx, 8
-        mov dx, 8
+mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 10:
+        mov ax, 0x0F                    ; with the window's aspect correction a pixel is 1.2 times as
+        mov cx, 8                       ; tall as it is wide, so up and down moves as far on the
+        mov dx, 10                      ; screen as across)
         int 0x33
         ret
 
@@ -17656,10 +17659,12 @@ shadow_of:
         shl si, 4
         cmp dword [es:si + 6], 0
         jl .no
+        mov eax, [es:si + 6]            ; (the picture's own number: SC_KEY)
+        mov [cs:sc_key], eax
         test byte [es:si + 0x0E], 2
-        jz .no                          ; (not in memory: no shadow till the game has loaded it, as
-                                        ;   loading it here, in the middle of a drawing, can push out
-                                        ;   or move a picture the game is about to draw)
+        jz .cached                      ; (not in memory: the shadow as last seen, SC_SEG's; not
+                                        ;   loaded here, as in the middle of a drawing that can push
+                                        ;   out or move a picture the game is about to draw)
         les si, [es:si + 0x0A]
         mov bx, [cs:frame]
         cmp bx, [es:si + 4]
@@ -17681,6 +17686,7 @@ shadow_of:
         mov ax, [es:si + 2]
         dec ax
         mov [cs:f_bottom], ax
+        call sc_start
         add si, 4
 .row:   mov al, [es:si]
         inc si
@@ -17703,6 +17709,7 @@ shadow_of:
         jg .next
         test al, 1
         jnz .next                       ; (every other row: the shadow is half as tall)
+        call sc_put
         push es
         push si
         call cast_run
@@ -17711,10 +17718,157 @@ shadow_of:
 .next:  test byte [cs:r_x + 1], 0x80
         jz .run
         jmp .row
-.drawn: push es                         ; (its runs: drawn)
+.drawn: call sc_end
+        push es                         ; (its runs: drawn)
         call spans_flush
         pop es
 .no:    ret
+.cached:                                ; (its picture let go of: the shadow from SC_SEG)
+        mov al, [cs:frame]
+        call sc_find
+        jc .no
+        movzx ax, byte [es:di + 5]
+        mov [cs:f_w], ax
+        movzx ax, byte [es:di + 6]
+        mov [cs:f_bottom], ax
+        movzx cx, byte [es:di + 7]
+        lea si, [di + 8]
+.crun:  push cx
+        movzx ax, byte [es:si + 1]
+        mov [cs:r_x], ax
+        mov al, [es:si + 2]
+        mov [cs:r_n], al
+        movzx ax, byte [es:si]
+        push es
+        push si
+        call cast_run
+        pop si
+        pop es
+        add si, 3
+        pop cx
+        loop .crun
+        jmp .drawn
+
+; SHADOW CACHE (SC_SEG, KEEP's block in upper memory, if there was room: UMBPLUS.COM): in a big
+; fight the game lets go of pictures it isn't drawing just then, so a figure's could be out of its
+; cache as the floor is drawn, its shadow gone (SHADOW_OF draws only from pictures in memory). So
+; each frame's shadow is kept as it is drawn from its picture: SC_SLOTS slots of SC_SLOT bytes, the
+; picture's number (the cache slot's +6) and the frame, the frame's width and bottom row, how many
+; runs, then the runs that cast a shadow (how far up from the feet, x, pixels: a byte each, at
+; most SC_RUNS), filled in turn (the oldest given up). A figure whose picture is out of memory
+; casts its frame's kept shadow, or another frame's of the same picture.
+SC_SLOT  equ 208
+SC_RUNS  equ 64
+SC_SLOTS equ 80
+SC_PARAS equ SC_SLOTS * SC_SLOT / 16
+sc_seg   dw 0
+sc_next  dw 0                   ; the slot to fill next
+sc_key   dd 0                   ; the picture being drawn
+sc_rec   dw 0xFFFF              ; the slot being filled (0FFFFh: none)
+sc_n     db 0
+
+; SC_FIND: ES:DI the slot with SC_KEY's frame AL, else one with another of its frames; CF if none
+; (AX, BX, CX, DX not kept)
+sc_find:
+        cmp word [cs:sc_seg], 0
+        je .none
+        mov es, [cs:sc_seg]
+        mov ebx, [cs:sc_key]
+        xor di, di
+        mov dx, 0xFFFF
+        mov cx, SC_SLOTS
+.slot:  cmp byte [es:di + 7], 0
+        je .next
+        cmp [es:di], ebx
+        jne .next
+        cmp [es:di + 4], al
+        je .hit
+        mov dx, di
+.next:  add di, SC_SLOT
+        loop .slot
+        cmp dx, 0xFFFF
+        je .none
+        mov di, dx
+.hit:   clc
+        ret
+.none:  stc
+        ret
+
+; SC_START: from SHADOW_OF, the frame's header read (F_W, F_BOTTOM, FRAME): unless that frame is
+; kept already, the next slot taken for it (SC_REC); registers kept
+sc_start:
+        mov word [cs:sc_rec], 0xFFFF
+        cmp word [cs:sc_seg], 0
+        je .ret
+        pushad
+        push es
+        mov al, [cs:frame]
+        call sc_find
+        jc .take
+        cmp al, [es:di + 4]
+        je .out                         ; (kept)
+.take:  mov es, [cs:sc_seg]
+        mov ax, [cs:sc_next]
+        mov bx, SC_SLOT
+        mul bx
+        mov di, ax
+        mov eax, [cs:sc_key]
+        mov [es:di], eax
+        mov al, [cs:frame]
+        mov [es:di + 4], al
+        mov al, [cs:f_w]
+        mov [es:di + 5], al
+        mov al, [cs:f_bottom]
+        mov [es:di + 6], al
+        mov byte [es:di + 7], 0         ; (not to be used till it is whole: SC_END)
+        mov [cs:sc_rec], di
+        mov byte [cs:sc_n], 0
+        inc word [cs:sc_next]
+        cmp word [cs:sc_next], SC_SLOTS
+        jb .out
+        mov word [cs:sc_next], 0
+.out:   pop es
+        popad
+.ret:   ret
+
+; SC_PUT: the run SHADOW_OF is casting (AX rows up from the feet, R_X, R_N) kept; registers kept
+sc_put: cmp word [cs:sc_rec], 0xFFFF
+        je .ret
+        cmp byte [cs:sc_n], SC_RUNS
+        jae .ret
+        push es
+        push di
+        push bx
+        mov es, [cs:sc_seg]
+        movzx di, byte [cs:sc_n]
+        imul di, di, 3
+        add di, [cs:sc_rec]
+        mov [es:di + 8], al
+        mov bl, [cs:r_x]
+        mov [es:di + 9], bl
+        mov bl, [cs:r_n]
+        mov [es:di + 10], bl
+        inc byte [cs:sc_n]
+        pop bx
+        pop di
+        pop es
+.ret:   ret
+
+; SC_END: the frame's runs all seen: its slot made whole (its count of runs; none: still unused)
+sc_end: cmp word [cs:sc_rec], 0xFFFF
+        je .ret
+        push es
+        push di
+        push ax
+        mov es, [cs:sc_seg]
+        mov di, [cs:sc_rec]
+        mov al, [cs:sc_n]
+        mov [es:di + 7], al
+        mov word [cs:sc_rec], 0xFFFF
+        pop ax
+        pop di
+        pop es
+.ret:   ret
 
 ; the shadow of the current run, AX rows up from the feet
 cast_run:
@@ -18008,34 +18162,26 @@ build_dark:
         clc
         ret
 
-; SCROLLING (SCROLL_ON): holding the right mouse button and moving scrolls the map with the pointer,
-; as if dragging it; a right click (released before the pointer has moved DRAG_START pixels) is
-; still the game's (it changes what the pointer does: walk, use, look).
+; SCROLLING (SCROLL_ON): pressing the mouse wheel and moving scrolls the map with the pointer, as
+; if dragging it (the game has no use for that button).
 ;
 ; The game is told of the mouse's buttons by the mouse driver calling its handler (INT 33h, 0Ch).
-; INT33 puts MOUSE_EVENT in its place, which keeps the right button from the game while it is
-; held: if it was a click, the game gets the press and the release when it is let go; if it was a
-; drag, nothing. The game's main loop reads where the pointer is (DSUN.EXE 1CAACh, the call to the
+; INT33 puts MOUSE_EVENT in its place, which keeps the middle button from the game. The game's main loop reads where the pointer is (DSUN.EXE 1CAACh, the call to the
 ; driver's 03h), to scroll the map when it is at the screen's edge; PROBE_SCROLL makes that call
 ; itself and, while dragging, has the game centre its view where the drag puts it (191F:0281h, as
 ; clicking on the overview map does: the view is then drawn again), and the pointer is kept off
 ; the edges. It also scrolls by what the Loader adds to PAN_X and PAN_Y.
 
-DRAG_START  equ 4               ; pixels the pointer moves before a right click is a drag
 CAM_X       equ 0x1178          ; DS: the view's top left on the map
 CAM_Y       equ 0x117A
 CAM_X_MOST  equ 0x6C0           ; (as far as the game lets it go: the map less the view)
 CAM_Y_MOST  equ 0x558
 CENTRE_SEG  equ 0x191F          ; (DSUN.EXE 1E871h) centre the view on (x, y, 1: draw it again)
 CENTRE_OFF  equ 0x0281
-EVENT_PRESS equ 8               ; the driver's events: right button pressed, released
-EVENT_LEAVE equ 16
-RIGHT       equ 2               ; the right button, in the buttons held
-MIDDLE      equ 4               ; the middle one (pressing the wheel)
-EVENT_MID_PRESS equ 0x20
+MIDDLE      equ 4               ; the middle button (pressing the wheel), in the buttons held
+EVENT_MID_PRESS equ 0x20        ; the driver's events: it pressed, released
 EVENT_MID_LEAVE equ 0x40
-SCROLL_MIDDLE equ 1             ; SCROLL_ON's bits: dragging with the wheel pressed,
-SCROLL_RIGHT  equ 2             ;   with the right button held
+SCROLL_MIDDLE equ 1             ; SCROLL_ON's bit: dragging with the wheel pressed
 
 int33:
         cmp ax, 0x0C
@@ -18061,11 +18207,13 @@ int33:
 .chain: jmp far [cs:old33]
 
 mouse_event:                            ; AX = events, BX = buttons held, CX, DX = where
+        mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
         call panel_mouse
         cmp word [cs:scroll_on], 0
         je .pass
         test byte [cs:scroll_on], SCROLL_MIDDLE
-        jz .right
+        jz .pass
         test al, EVENT_MID_PRESS        ; the wheel pressed: a drag at once (the game has no use
         jz .mheld                       ;   for that button)
         cmp byte [cs:drag], 0
@@ -18076,7 +18224,7 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
         mov [cs:drag_x], cx
         mov [cs:drag_y], dx
 .mheld: cmp byte [cs:drag_mid], 0
-        je .right
+        je .pass
         and bx, ~MIDDLE
         test al, EVENT_MID_LEAVE
         jz .mdone
@@ -18084,50 +18232,6 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
         mov byte [cs:drag_mid], 0
 .mdone: and al, ~(EVENT_MID_PRESS | EVENT_MID_LEAVE)
         jmp .pass
-.right: test byte [cs:scroll_on], SCROLL_RIGHT
-        jz .pass
-        test al, EVENT_PRESS
-        jz .held
-        cmp byte [cs:drag], 0
-        jne .held
-        mov byte [cs:drag], 1
-        mov [cs:drag_x], cx
-        mov [cs:drag_y], dx
-        and al, ~EVENT_PRESS
-.held:  cmp byte [cs:drag], 0
-        je .pass
-        and bx, ~RIGHT
-        cmp byte [cs:drag], 1
-        jne .leave
-        push ax                         ; moved far enough to be a drag?
-        mov ax, cx
-        sub ax, [cs:drag_x]
-        call .apart
-        jnc .y
-        mov ax, dx
-        sub ax, [cs:drag_y]
-        call .apart
-        jc .near
-.y:     mov byte [cs:drag], 2
-        mov byte [cs:drag_new], 1
-.near:  pop ax
-.leave: test al, EVENT_LEAVE
-        jz .pass
-        and al, ~EVENT_LEAVE
-        cmp byte [cs:drag], 1
-        mov byte [cs:drag], 0
-        jne .pass                       ; (a drag: the game never knows)
-        pusha                           ; a click: pressed and released, where it was pressed
-        or bx, RIGHT
-        mov cx, [cs:drag_x]
-        mov dx, [cs:drag_y]
-        mov ax, EVENT_PRESS
-        call .give
-        popa
-        pusha
-        mov ax, EVENT_LEAVE
-        call .give
-        popa
 .pass:  call .give
         retf
 .give:  and ax, [cs:game_mask]          ; the events the game asked for, to its handler
@@ -18140,11 +18244,6 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
         pop ds
         popa
 .none:  ret
-.apart: or ax, ax                       ; CF clear when |AX| >= DRAG_START
-        jns .pos
-        neg ax
-.pos:   cmp ax, DRAG_START
-        ret
 
 ; PROBE_SCROLL: INT VEC_SCROLL replaces the start of "call far 3118:002E" (9Ah 2Eh 00h, then the
 ; segment: A9h makes it a harmless "test ax,<segment>" the loader may relocate), the game's main
@@ -18211,7 +18310,7 @@ probe_scroll:
 .report:
         cmp byte [cs:drag], 0
         je .put
-        and bx, ~(RIGHT | MIDDLE)
+        and bx, ~MIDDLE
         cmp cx, 1                       ; (off the edges: no scrolling of the game's own)
         jge .x1
         mov cx, 1
@@ -18625,7 +18724,7 @@ label_where:
         ja .no
         cmp byte [cs:di + 2], LBL_H_MOST
         ja .no
-        call strip_on_map
+        call on_map
         jne .no
         push cx
         push es
@@ -18733,9 +18832,9 @@ label_stamp:
         pusha
         push ds
         push es
-        call strip_on_map
+        call on_map
         jne .out
-        mov ds, [cs:strip_ds]
+        mov ds, [cs:pointer_ds]
         mov ax, [CAM_X]
         cmp ax, [cs:lbl_cx]
         jne .out
@@ -18743,8 +18842,8 @@ label_stamp:
         cmp ax, [cs:lbl_cy]
         jne .out
         mov dx, 0x3D4                   ; the screen on show: where the VGA starts it (the high
-        in al, dx                       ;   byte its page flip sets: A000h, A400h, or with the
-        mov ah, al                      ;   strip below the map A070h, A460h), the CRTC's index
+        in al, dx                       ;   byte its page flip sets: A000h, A400h), the CRTC's
+        mov ah, al                      ;   index
         mov al, 0x0C                    ;   kept
         out dx, al
         inc dx
@@ -18890,25 +18989,12 @@ panel_tick:
         sub ax, [cs:stats_stamp]
         cmp ax, STATS_FRESH
         jb .on
-.off:   cmp byte [cs:strip_on], 0       ; (the strip: kept empty, in the palette of the moment)
-        je .off2
-        dec word [cs:strip_wait]
-        jnz .off2
-        mov word [cs:strip_wait], STRIP_EVERY
-        call strip_clear
-.off2:  cmp byte [cs:panel_shown], 0
+.off:   cmp byte [cs:panel_shown], 0
         je .ret
         mov byte [cs:panel_shown], 0
-        cmp byte [cs:strip_on], 0
-        jne .unstrip
         call view_again                 ; (the view under it drawn again)
 .ret:   ret
-.unstrip:
-        call strip_clear                ; (the strip: emptied)
-        ret
-.on:    cmp byte [cs:strip_on], 0
-        jne .strip
-        mov ax, [CAM_X]                 ; the view moved by the game's own scrolling (at the edge,
+.on:    mov ax, [CAM_X]                 ; the view moved by the game's own scrolling (at the edge,
         xchg ax, [cs:panel_cx]          ;   following who walks): that copies the screen as it is,
         cmp ax, [cs:panel_cx]           ;   the panel too, and draws only what comes into view, so
         mov ax, [CAM_Y]                 ;   copies of the panel stayed on the map. The view drawn
@@ -18958,28 +19044,8 @@ panel_tick:
         mov [cs:panel_ly], ax
         call panel_draw_pointer
         ret
-.strip: cmp word [cs:panel_new], 0      ; the strip below the map: put when new, and now and
-        jne .sput                       ;   then (nothing of the game's goes there; the game's
-        cmp byte [cs:panel_shown], 0    ;   mode setting clears it)
-        je .sput
-        mov ax, [cs:map_tick]
-        sub ax, [cs:panel_at]
-        cmp ax, STRIP_TICKS
-        jb .ret
-.sput:  mov word [cs:panel_new], 0
-        mov ax, [cs:map_tick]
-        mov [cs:panel_at], ax
-        mov byte [cs:panel_shown], 1
-        mov byte [cs:strip_mode], 0
-        call strip_sum                  ; (the colours it is in: STRIP_SAME)
-        mov [cs:strip_shown_sum], ax
-        call panel_draw
-        ret
 PANEL_TICKS equ 1               ; (BIOS ticks, 18.2 a second, between puts with nothing new)
-STRIP_TICKS equ 9
 panel_at   dw 0                 ; (the BIOS tick of the last put: PANEL_TICK)
-STRIP_EVERY equ 512             ; (passes between the strip's emptying again, the log off)
-strip_wait dw 1
 panel_lx   dw 0
 panel_ly   dw 0
 panel_cx   dw 0                 ; (the view's top left at the last pass: PANEL_TICK)
@@ -18990,8 +19056,6 @@ panel_cy   dw 0
 ; the game on the map (SCREEN_IS 1: not a full screen, USE or the inventory, drawn on that page over
 ; the map, which would else be drawn round the panel and its clicks kept from it)
 panel_live:
-        cmp byte [cs:strip_on], 0       ; (in the strip: never over the map)
-        jne .no
         cmp byte [cs:panel_shown], 0
         je .no
         push es
@@ -19002,7 +19066,7 @@ panel_live:
         pop ax
         pop es
         jne .ret
-        call strip_on_map
+        call on_map
 .ret:   ret
 .no:    cmp sp, 0                       ; (ZF clear)
         ret
@@ -19046,8 +19110,6 @@ panel_mouse:
 panel_draw:
         cmp word [cs:panel_seg], 0
         je .none
-        cmp byte [cs:strip_on], 0
-        jne strip_draw
         pusha
         push ds
         push es
@@ -19176,9 +19238,8 @@ panel_draw_around:
 ; the panel. The stack check, with the routine's SP; RETF 2 keeps its flags. DS the game's.
 probe_pointer:
         sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
-        mov [cs:strip_ds], ds
+        mov [cs:pointer_ds], ds
         call pp_disarm
-        call strip_mind
         call pointer_panel
         push ax
         mov ax, sp
@@ -19258,10 +19319,7 @@ panel_draw_other:
 ; kept). Its top and height read once, the height kept within the screen (never past row 199).
 panel_blit:
         mov es, ax
-        mov word [cs:pb_x4], PANEL_X0 / 4 ; (the panel over the map; STRIP_BLIT sets the strip's)
-        mov word [cs:pb_w4], PANEL_W / 4
-        mov word [cs:pb_end], 200
-pb_go:  mov ax, [cs:panel_top]
+        mov ax, [cs:panel_top]
         cmp ax, [cs:pb_end]
         jae .ret
         mov [cs:pb_top], ax
@@ -19294,7 +19352,6 @@ pb_go:  mov ax, [cs:panel_top]
         mov al, 2
         out dx, ax
         mov ax, [cs:pb_top]             ; the screen's byte for the picture's first row ...
-        sub ax, [cs:pb_row0]
         mov dx, 80
         mul dx
         add ax, [cs:pb_x4]
@@ -19341,9 +19398,8 @@ pb_go:  mov ax, [cs:panel_top]
 pb_top  dw 0
 pb_rows dw 0
 pb_x4   dw PANEL_X0 / 4         ; where the picture goes, its width (bytes of a plane's row), and
-pb_w4   dw PANEL_W / 4          ;   the screen's rows (the panel: 200; the strip: 240)
+pb_w4   dw PANEL_W / 4          ;   the screen's rows
 pb_end  dw 200
-pb_row0 dw 0                    ; (the screen row at the memory's first: the strip's 200)
 pb_skip db 0                    ; set: the box PB_SX0 to PB_SX1 (bytes of a row, the last not in
 pb_sx0  dw 0                    ;   it), PB_SY0 to PB_SY1 (rows, the last not in it) left as it is
 pb_sx1  dw 0
@@ -19362,173 +19418,15 @@ pb_clamp:
         mov ax, [cs:pb_w4]
 .hi:    ret
 
-; STRIP: with the Options tab's "combat log below the map" the game's screen is 320 x 222 (its
-; mode X set up as ever, then 22 rows more in the same timing: PROBE_STRIP), and the game, which
-; knows nothing of it, draws its 200 rows as before. Below row 200 the VGA's split screen (its line
-; compare) shows video memory from its start whichever screen is up: the strip, 22 rows of 80 bytes
-; a plane (1760), the game's two screens moved up past it (A070h, A460h: each at a multiple of 256
-; bytes, as the game's page flip sets only the high byte of where the screen starts; gamepatch's
-; STRIP). The strip is the
-; combat log's: the Loader's picture, STRIP_W x STRIP_H, put there (STRIP_DRAW); the panel's top
-; and height are the Loader's as ever (200, 40). The pointer never goes there.
-STRIP_W   equ 320
-STRIP_ROWS equ 222
-strip_on  db 0                  ; set once the game's screen is 320 x 222
-
-; PROBE_STRIP: INT VEC_STRIP replaces "mov al,2 / mov ah,1 / out dx,ax" (5 bytes: INT + 3 NOPs) at
-; the end of the game's mode X set up (0980:2A40h, DSUN.EXE 11640h; DX 3C4h): that, then the
-; screen 222 rows in the game's own timing (70 a second, 449 scan lines a frame, each row drawn
-; twice: the speed and shape as ever): the picture to scan line 443 (12h: 1BBh), the blanking from
-; 444 (15h, to 16h: 3Fh, the frame's end) and the sync at 445 to 447 (10h, 11h, keeping registers
-; 0-7 locked), and the split after scan line 399 (the line compare, 18h: 18Fh; its bit 9, in 09h,
-; cleared). Their bit 8s are in the overflow (07h, 1Fh: set) as the game has it. Keeps all.
-probe_strip:
-        push ax
-        push dx
-        push si
-        push cx
-        mov dx, 0x3D4
-        mov si, strip_crtc
-        mov cx, STRIP_CRTC_N
-.crtc:  mov ax, [cs:si]
-        out dx, ax
-        add si, 2
-        loop .crtc
-        pop cx
-        pop si
-        mov byte [cs:strip_on], 1
-        mov dx, 0x3C4
-        mov ax, 0x0102                  ; (as the game: all planes off but the first)
-        out dx, ax
-        pop dx
-        pop ax
-        iret
-strip_crtc dw 0x0109, 0xBB12, 0xBC15, 0x3F16, 0xBD10, 0x8F11, 0x8F18
-STRIP_CRTC_N equ ($ - strip_crtc) / 2
-
-; PROBE_PALETTE: INT VEC_PALETTE replaces "sti / pop di" (2 bytes) at the end of the game's
-; routine that sets the whole palette (0980:58F5h, DSUN.EXE 144F5h: a new screen or area): those,
-; then STRIP_NEW_PALETTE. Keeps all.
-probe_palette:
-        push bp
-        mov bp, sp
-        mov di, [bp + 8]                ; (pop di: the word under INT's IP, CS and flags)
-        push word [bp + 6]              ; (the frame moved up over it, interrupts on: sti)
-        push word [bp + 4]
-        push word [bp + 2]
-        pop word [bp + 4]
-        pop word [bp + 6]
-        pop word [bp + 8]
-        or word [bp + 8], 0x200
-        pop bp
-        add sp, 2
-        call strip_new_palette
-        iret
-
-; PROBE_COLOURS: INT VEC_COLOURS replaces "pop dx / pop cx" (2 bytes) at the end of the game's
-; routine that sets a run of colours (DSUN.EXE 288BAh: BX the first, CX how many; the title's,
-; and each step of a fade): those, then as PROBE_PALETTE if the run reaches below the colours
-; the game animates (DARK_LAST). Keeps all but DX and CX, as the routine leaves them.
-probe_colours:
-        push bp
-        mov bp, sp
-        cmp bx, DARK_LAST
-        mov dx, [bp + 8]                ; (pop dx / pop cx: the words under INT's IP, CS, flags)
-        mov cx, [bp + 10]
-        push word [bp + 6]              ; (the frame moved up over them; the flags as they were)
-        push word [bp + 4]
-        push word [bp + 2]
-        pop word [bp + 6]
-        pop word [bp + 8]
-        pop word [bp + 10]
-        pop bp
-        lea sp, [esp + 4]               ; (keeps the flags: the CMP's above)
-        ja .ret
-        call strip_new_palette
-.ret:   iret
-
-; STRIP_NEW_PALETTE: the strip in the new palette: emptied (STRIP_CLEAR) unless the log's picture
-; is in it and the colours it was put in are still those on screen (STRIP_SAME: a window over the
-; map); else it is put again when the map's main loop runs again;
-; registers kept
-strip_new_palette:
-        cmp byte [cs:strip_on], 0
-        je .ret
-        cmp byte [cs:panel_shown], 0
-        je .clear
-        call strip_same
-        je .ret
-        mov byte [cs:panel_shown], 0
-.clear: call strip_clear
-.ret:   ret
-
-; STRIP_SUM: AX a sum of the VGA's colours DARK_FIRST to DARK_LAST (STRIP_SAME's); BX, CX, DX not kept
-strip_sum:
-        mov dx, 0x3C7
-        mov al, DARK_FIRST
-        out dx, al
-        mov dx, 0x3C9
-        mov cx, (DARK_LAST - DARK_FIRST + 1) * 3
-        xor bx, bx
-        xor ah, ah
-.next:  in al, dx
-        rol bx, 1
-        add bx, ax
-        loop .next
-        mov ax, bx
-        ret
-
-; STRIP_SAME: ZF set if the VGA's colours are still those the log's picture was put in (STRIP_SUM as
-; the main loop last put it: STRIP_SHOWN_SUM); registers kept
-strip_same:
-        pusha
-        call strip_sum
-        cmp ax, [cs:strip_shown_sum]
-        popa
-        ret
-strip_shown_sum dw 0
-
-; STRIP_MIND: from the game's pointer (on every screen; DS the game's): on the map, or with the
-; log's picture still in the strip (a talk over the map), a new picture of the log put at once (the map's main loop doesn't run while the game plays a scene out, the
-; arena's opening show); else the empty strip filled again when the screen calls for another look
-; (STRIP_WANT), in the colours STRIP_COLOURS found last (no palette read here: the pointer may be
-; drawn while the game sets colours); registers kept
-strip_mind:
-        cmp byte [cs:strip_on], 0
-        je .ret
-        push ax
-        cmp word [cs:panel_new], 0
-        je .empty
-        cmp word [cs:panel_on], 0
-        je .empty
-        cmp byte [cs:panel_shown], 0    ; (the log's picture still there: its colours too, a
-        jne .put                        ;   talk over the map)
-        call strip_on_map
-        jne .empty
-.put:   mov word [cs:panel_new], 0
-        mov byte [cs:panel_shown], 1
-        mov byte [cs:strip_mode], 0
-        call panel_draw
-        jmp .out
-.empty: cmp byte [cs:panel_shown], 0
-        jne .out
-        call strip_want
-        cmp al, [cs:strip_mode]
-        je .out
-        mov [cs:strip_mode], al
-        call strip_fill
-.out:   pop ax
-.ret:   ret
-
 ; SCREEN_IS: the game's DS:0BC9h, 1 on the map, 2 with a character's screen or a talk over it,
 ; 0 on the title, the menus and in character creation
 SCREEN_IS  equ 0x0BC9
 
-; STRIP_ON_MAP: ZF set if the game is on the map (SCREEN_IS 1); registers kept
-strip_on_map:
+; ON_MAP: ZF set if the game is on the map (SCREEN_IS 1); registers kept
+on_map:
         push es
         push ax
-        mov ax, [cs:strip_ds]
+        mov ax, [cs:pointer_ds]
         cmp ax, 1                       ; (not known yet: ZF clear)
         jb .out
         mov es, ax
@@ -19536,176 +19434,7 @@ strip_on_map:
 .out:   pop ax
         pop es
         ret
-
-; STRIP_WANT: AL the look of the empty strip: STRIP_STONE (the panel's blue-grey) in a game (the
-; map, or a character's screen over it), else STRIP_BLACK (the title, the menus, character creation)
-STRIP_BLACK equ 1
-STRIP_STONE equ 2
-strip_want:
-        push es
-        mov al, STRIP_BLACK
-        cmp word [cs:strip_ds], 0
-        je .out
-        mov es, [cs:strip_ds]
-        cmp word [es:SCREEN_IS], 0
-        je .out
-        mov al, STRIP_STONE
-.out:   pop es
-        ret
-
-strip_ds    dw 0                ; the game's DS (PROBE_POINTER's)
-strip_mode  db 0                ; the strip now: 0 the log's picture (or not yet filled), else STRIP_WANT's
-
-; STRIP_DRAW: the picture into the strip (PANEL_DRAW, in the strip: PANEL_BLIT at the strip's
-; place and width, video memory's first rows showing screen rows 200 on; registers kept)
-strip_draw:
-        pusha
-        push ds
-        push es
-        cld
-        mov ax, 0xA000
-        mov es, ax
-        mov word [cs:pb_x4], 0
-        mov word [cs:pb_w4], STRIP_W / 4
-        mov word [cs:pb_end], STRIP_ROWS
-        mov word [cs:pb_row0], 200
-        mov byte [cs:pb_skip], 0
-        call pb_go
-        mov word [cs:pb_x4], PANEL_X0 / 4
-        mov word [cs:pb_w4], PANEL_W / 4
-        mov word [cs:pb_end], 200
-        mov word [cs:pb_row0], 0
-        pop es
-        pop ds
-        popa
-        ret
-
-; STRIP_COLOURS: from the VGA's palette (from the main loop or after the game has set colours), the
-; empty strip's colours: STRIP_DARKEST the darkest of all 256 (the title's black is among the
-; last), STRIP_EDGE and STRIP_DEEP the colours nearest the panel's outline and its well (combatlog.py
-; COLOURS: palette.SHADOW #202038, palette.DEEP #30304D) among those the game doesn't animate
-; (AX, BX, CX, DX, SI not kept)
-strip_colours:
-        mov dx, 0x3C7
-        xor al, al
-        out dx, al
-        mov dx, 0x3C9
-        xor bx, bx
-        mov word [cs:sc_dark], 0xFFFF
-        mov word [cs:sc_edge], 0xFFFF
-        mov word [cs:sc_deep], 0xFFFF
-.next:  in al, dx
-        mov [cs:sc_rgb], al
-        in al, dx
-        mov [cs:sc_rgb + 1], al
-        in al, dx
-        mov [cs:sc_rgb + 2], al
-        xor ah, ah                      ; the darkest: the least red, green and blue (a byte)
-        mov al, [cs:sc_rgb]
-        add al, [cs:sc_rgb + 1]
-        add al, [cs:sc_rgb + 2]
-        cmp ax, [cs:sc_dark]
-        jae .lit
-        mov [cs:sc_dark], ax
-        mov [cs:strip_darkest], bl
-.lit:   cmp bx, DARK_FIRST
-        jb .skip
-        cmp bx, DARK_LAST
-        ja .skip
-        mov si, sc_deep_rgb
-        call sc_distance
-        cmp ax, [cs:sc_deep]
-        jae .edge
-        mov [cs:sc_deep], ax
-        mov [cs:strip_deep], bl
-.edge:  mov si, sc_edge_rgb
-        call sc_distance
-        cmp ax, [cs:sc_edge]
-        jae .skip
-        mov [cs:sc_edge], ax
-        mov [cs:strip_edge], bl
-.skip:  inc bx
-        cmp bx, 255
-        jbe .next
-        ret
-
-; SC_DISTANCE: AX the square of the distance between SC_RGB and the colour at CS:SI (0-63 a
-; channel); registers but AX kept
-sc_distance:
-        push cx
-        push si
-        push di
-        push bx
-        xor di, di
-        mov bx, sc_rgb
-        mov cx, 3
-.ch:    mov al, [cs:bx]
-        sub al, [cs:si]
-        cbw
-        imul ax, ax
-        add di, ax
-        inc bx
-        inc si
-        loop .ch
-        mov ax, di
-        pop bx
-        pop di
-        pop si
-        pop cx
-        ret
-
-sc_rgb      db 0, 0, 0
-sc_deep_rgb db 0x30 / 4, 0x30 / 4, 0x4D / 4     ; (palette.DEEP)
-sc_edge_rgb db 0x20 / 4, 0x20 / 4, 0x38 / 4     ; (palette.SHADOW)
-sc_dark     dw 0
-sc_deep     dw 0
-sc_edge     dw 0
-strip_darkest db 0
-strip_deep  db 0
-strip_edge  db 0
-
-; STRIP_FILL: the strip emptied as STRIP_MODE has it: all STRIP_DARKEST (STRIP_BLACK), or the
-; panel's look without its lines (STRIP_STONE: its top line STRIP_EDGE, the rest STRIP_DEEP);
-; registers kept
-strip_fill:
-        pusha
-        push es
-        call vga_save
-        mov dx, 0x3C4
-        mov ax, 0x0F02                  ; (all four planes)
-        out dx, ax
-        cld
-        mov bx, 0xA000
-        mov es, bx
-        xor di, di
-        mov al, [cs:strip_darkest]
-        mov ah, al
-        mov cx, (STRIP_ROWS - 200) * 80 / 2
-        cmp byte [cs:strip_mode], STRIP_STONE
-        jne .fill
-        mov al, [cs:strip_edge]
-        mov ah, al
-        mov cx, 80 / 2
-        rep stosw
-        mov al, [cs:strip_deep]
-        mov ah, al
-        mov cx, (STRIP_ROWS - 201) * 80 / 2
-.fill:  rep stosw
-        call vga_restore
-        pop es
-        popa
-        ret
-
-; STRIP_CLEAR: the strip emptied (the log not in it), in the palette of the moment (STRIP_COLOURS),
-; as the screen calls for (STRIP_WANT); registers kept
-strip_clear:
-        pusha
-        call strip_colours
-        call strip_want
-        mov [cs:strip_mode], al
-        call strip_fill
-        popa
-        ret
+pointer_ds  dw 0                ; the game's DS (PROBE_POINTER's)
 
 ; DUST_UNION: in PROBE_REDRAW_ALL (x0 [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]: on screen),
 ; the puffs' ground taken in, as far as it is on screen
@@ -20057,9 +19786,9 @@ walked     times MAP_COUNT db 0
 light      times 256 db 0
 
 ; RINGS (RINGS_ON): a ring on the ground under each thing RING_TAB marks (the Loader marks the
-; enemies in a fight, and the one chosen with Tab), drawn in the floor pass as the shadows are, so
-; the figures stand in it, the ground's colours reddened through RED (made by the Loader from the
-; palette): two pixels thick, the chosen one's three, and redder.
+; enemy chosen with Tab in a fight, kind 2), drawn in the floor pass as the shadows are, so the
+; figure stands in it, the ground's colours reddened through RED (made by the Loader from the
+; palette): a kind 1 ring two pixels thick, a kind 2 one three, and redder.
 ring_pass:
         cmp word [cs:rings_on], 0
         je .ret
@@ -20201,8 +19930,6 @@ int16:
         jne .on
         cmp word [cs:panel_seg], 0      ; (... or to open it, over the map)
         je .chain
-        cmp byte [cs:strip_on], 0
-        jne .chain
 .on:
         cmp ah, 0x00
         je .read
@@ -20248,7 +19975,7 @@ int16:
         add sp, 2
         iret
 
-; L_ON_MAP: ZF set if L should open the panel over the map: the panel there (not the strip), not
+; L_ON_MAP: ZF set if L should open the panel over the map: the panel there, not
 ; on screen, the map's main loop run within the last BIOS tick or two (no game window, save name
 ; or menu waiting on keys) and the Loader there; registers kept
 L_FRESH    equ 2
@@ -20257,8 +19984,6 @@ l_on_map:
         push es
         cmp word [cs:panel_seg], 0
         je .no
-        cmp byte [cs:strip_on], 0
-        jne .no
         cmp byte [cs:panel_shown], 0
         jne .no
         xor ax, ax
@@ -20571,9 +20296,12 @@ ib_elf_quiet db 'Move 95%', 0
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
 ; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), no less
 ; than 0, as the Loader counts them (game.py's thief_skills_now); 0 for a thief in armour that
-; isn't light (THIEF_HEAVY); then AX = the chance, as the code would have.
+; isn't light (THIEF_HEAVY); with RULE_THIEF_TABLE, no more than THIEF_MOST (AD&D's most after
+; every adjustment: game.THIEF_MOST; the situation's bonus and the effects', which the game's caller
+; adds after (DSUN.EXE 803D0h), not counted); then AX = the chance, as the code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
 BELT_BONUS equ 5
+THIEF_MOST equ 95
 COMBATANT_CREATURE equ 0xC37    ; in the things table: an object's creature (3 bytes an object)
 probe_belt:
         sti
@@ -20616,8 +20344,13 @@ probe_belt:
         xor dx, dx
 .done:  mov ax, cx
         call thief_heavy
-        jnc .chance
+        jnc .most
         xor dx, dx
+.most:  test word [cs:rules], RULE_THIEF_TABLE
+        jz .chance
+        cmp dx, THIEF_MOST
+        jle .chance
+        mov dx, THIEF_MOST
 .chance:
         mov ax, dx
         pop es
@@ -20720,7 +20453,7 @@ game_mask    dw 0
 centre       dw CENTRE_OFF, 0
 s_resume     dd 0
 s_resume_fl  dw 0
-drag         db 0               ; 0: no drag; 1: the right button held, not moved yet; 2: dragging
+drag         db 0               ; 0: no drag; 2: dragging
 drag_mid     db 0               ; 1: dragging with the wheel pressed
 drag_new     db 0
 drag_x       dw 0               ; where it was pressed
@@ -20889,6 +20622,152 @@ probe_ovr_buf:
         iret
 ovr_far   dd 0
 
+; PROBE_FLIP: INT VEC_FLIP replaces "push cs / call 1674h" (4 bytes: INT + 2 NOPs; DSUN.EXE
+; 1445Fh) in the game's page flip (14414h: the CRT controller's start address set to the other page,
+; then a wait for the next vertical retrace, so the page just shown isn't drawn into while it is
+; still on screen). With a full screen up (SCREEN_IS 2: the inventory, View Character, USE, a talk)
+; no wait: the game redraws its screen after each item picked up or put down, flipping as it goes,
+; and the mouse's moves wait in its queue meanwhile, the pointer standing still (about 25 ms less
+; of it). On the map, and wherever else, the wait as the game's (its pace may hang on it), with
+; interrupts on if the game had them on. All registers kept.
+probe_flip:
+        push bp
+        mov bp, sp
+        test byte [bp + 7], 2           ; (the caller's flags' IF)
+        jz .quiet
+        sti
+.quiet: push ax
+        push dx
+        push es
+        mov ax, [cs:pointer_ds]
+        or ax, ax
+        jz .wait                        ; (not known yet)
+        mov es, ax
+        cmp word [es:SCREEN_IS], 2
+        je .out
+.wait:  mov ax, 0x40                    ; as the game's 1674h: out of any retrace, then into the next
+        mov es, ax
+        mov dx, [es:0x63]               ; (the CRT controller's port: 3D4h, its status 3DAh)
+        add dl, 6
+.in:    in al, dx
+        test al, 8
+        jnz .in
+.next:  in al, dx
+        test al, 8
+        jz .next
+.out:   pop es
+        pop dx
+        pop ax
+        pop bp
+        iret
+
+; PROBE_HEAP: INT VEC_HEAP (and a NOP) replaces "push bp / mov bp,sp" at the start of the C
+; library's farmalloc (load:1231h), farfree (load:1127h) and farrealloc (load:138Eh), told apart by
+; where the INT came from. The game keeps some blocks of its far heap from its start to its end;
+; one of them, its music buffer (XMIDI: farmalloc(POOL_SIZE) once, at the start, through its
+; allocation wrapper), is given from a block KEEP took in upper memory (POOL_SEG), with a heap
+; block's own first word (its paragraphs: the wrapper reads it for the guard byte it puts at the
+; end), so the 640 KB has that much more. farfree and farrealloc of it never reach the library:
+; freed, it is given again to the next farmalloc(POOL_SIZE); grown past it, the contents go to a
+; block of the heap. Anything else, and without POOL_SEG, the library's own code, its first two
+; instructions done here.
+HP_MALLOC  equ 0x1233                   ; (the INT's way back: the function's start + 2)
+HP_FREE    equ 0x1129
+HP_REALLOC equ 0x1390
+POOL_SIZE  equ 12001                    ; (the music buffer: 12,000 bytes and the wrapper's guard)
+POOL_PARAS equ (POOL_SIZE + 4 + 15) / 16
+probe_heap:
+        push bp
+        mov bp, sp                      ; [bp+2] IP, +4 CS, +6 flags, +8 the caller's way back,
+        cmp word [cs:pool_seg], 0       ;   +12 the arguments
+        je .orig
+        mov ax, [bp+2]
+        cmp ax, HP_MALLOC
+        je .malloc
+        cmp ax, HP_FREE
+        je .free
+        cmp ax, HP_REALLOC
+        je .realloc
+.orig:  pop bp
+        call hp_enter
+        iret
+.malloc:
+        cmp byte [cs:pool_used], 0
+        jne .orig
+        cmp word [bp+14], 0
+        jne .orig
+        cmp word [bp+12], POOL_SIZE
+        jne .orig
+        mov byte [cs:pool_used], 1
+.give:  mov dx, [cs:pool_seg]
+        mov ax, 4
+        jmp .back
+.free:  mov ax, [bp+14]
+        cmp ax, [cs:pool_seg]
+        jne .orig
+        mov byte [cs:pool_used], 0
+        jmp .back
+.realloc:
+        mov ax, [bp+14]
+        cmp ax, [cs:pool_seg]
+        jne .orig
+        cmp word [bp+18], 0
+        jne .grow
+        cmp word [bp+16], POOL_PARAS * 16 - 4
+        jbe .give
+.grow:  mov ax, [cs:load_seg]           ; a block of the heap (farmalloc: here again, as the
+        mov [cs:hp_far + 2], ax         ;   library's), the contents copied, the pool's free
+        mov word [cs:hp_far], 0x1231
+        push word [bp+18]
+        push word [bp+16]
+        call far [cs:hp_far]
+        add sp, 4
+        mov cx, ax
+        or cx, dx
+        jz .back
+        push ds
+        push si
+        push es
+        push di
+        mov es, dx
+        mov di, ax
+        mov ds, [cs:pool_seg]
+        mov si, 4
+        mov cx, POOL_PARAS * 16 - 4
+        cld
+        rep movsb
+        pop di
+        pop es
+        pop si
+        pop ds
+        mov byte [cs:pool_used], 0
+.back:  push word [bp+6]                ; to the caller, as the function's RETF (its flags as they
+        popf                            ;   were: interrupts on again)
+        pop bp
+        add sp, 6
+        retf
+hp_far    dd 0
+
+; HP_ENTER: the INT's frame moved down past a pushed BP, BP = SP then: the library function's own
+; "push bp / mov bp,sp", done (its caller's registers and flags kept)
+hp_enter:
+        pop word [cs:hp_ret]
+        pop word [cs:hp_ip]
+        pop word [cs:hp_cs]
+        pop word [cs:hp_fl]
+        push bp
+        mov bp, sp
+        push word [cs:hp_fl]
+        push word [cs:hp_cs]
+        push word [cs:hp_ip]
+        jmp word [cs:hp_ret]
+hp_ret    dw 0
+hp_ip     dw 0
+hp_cs     dw 0
+hp_fl     dw 0
+pool_seg  dw 0                  ; (KEEP's block for the music buffer, 0 if none)
+pool_used db 0
+
 ; KEEP: the last of installing, from here, as the ring is where the install code was: clear the
 ; ring and stay resident, the ring with the image (DX the paragraphs). The stack goes to the PSP's
 ; command tail first, out of the ring's way.
@@ -20911,6 +20790,24 @@ keep:   mov ax, [cs:psp]
         jc .no_ovr
         mov [cs:ovr_seg], ax
 .no_ovr:
+        mov bx, POOL_PARAS              ; the music buffer's (PROBE_HEAP) and the shadows' cache
+        call umb_alloc                  ;   (SC_SEG), if upper memory has the room (UMBPLUS.COM)
+        jc .no_pool
+        mov [cs:pool_seg], ax
+        mov es, ax
+        mov word [es:0], POOL_PARAS
+.no_pool:
+        mov bx, SC_PARAS
+        call umb_alloc
+        jc .no_sc
+        mov [cs:sc_seg], ax
+        mov es, ax
+        xor di, di
+        xor ax, ax
+        mov cx, SC_PARAS * 8
+        cld
+        rep stosw
+.no_sc:
         pop dx
         mov ax, 3100h
         int 21h
@@ -20926,6 +20823,8 @@ RING_BYTES equ NENT * ESIZE
 ; from the helper's MCB on. In it: the helper (PSP and resident image), the overlay buffer
 ; (OVR_RESERVE), the panel's picture and the ring, each with its MCB. The build fails if they
 ; outgrow it: the overlay buffer would go back into the game's heap (33 KB less for the game).
+; (UMBPLUS.COM, run first, moves the block's start down to C900h where it can, 28 KB more; the
+; helper still has to fit without it.)
 UMB_ROOM equ 0xF000 - 0xD00A
 UMB_NEED equ (1 + 0x10 + (resident_end - hdr) / 16) + (1 + OVR_RESERVE) + (1 + (PANEL_BYTES + 15) / 16) + (1 + (RING_BYTES + 15) / 16)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
@@ -21031,6 +20930,12 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_ARROW
         mov dx, probe_arrow
         int 21h
+        mov ax, 2500h + VEC_HEAP
+        mov dx, probe_heap
+        int 21h
+        mov ax, 2500h + VEC_FLIP
+        mov dx, probe_flip
+        int 21h
         mov ax, 2500h + VEC_OVR_BUF
         mov dx, probe_ovr_buf
         int 21h
@@ -21100,20 +21005,11 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_POINTER
         mov dx, probe_pointer
         int 21h
-        mov ax, 2500h + VEC_STRIP
-        mov dx, probe_strip
-        int 21h
 %ifdef CAMTRACE
         mov ax, 2503h
         mov dx, cam_trace
         int 21h
 %endif
-        mov ax, 2500h + VEC_PALETTE
-        mov dx, probe_palette
-        int 21h
-        mov ax, 2500h + VEC_COLOURS
-        mov dx, probe_colours
-        int 21h
         mov ax, 2500h + VEC_SCROLL
         mov dx, probe_scroll
         int 21h
@@ -21423,7 +21319,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_STRIP, VEC_PALETTE, VEC_COLOURS, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP
 all_vectors_end:
 
         align 16, db 0

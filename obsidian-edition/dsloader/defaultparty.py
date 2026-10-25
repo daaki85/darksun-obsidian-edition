@@ -168,8 +168,28 @@ def set_kit(gd: GameData, member: int, name: str) -> List[str]:
     kit = kitpages.KITS[5].index("Arcanist") + 1
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
     sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    before = _most_slots(gd, member)
     gd.guest.write(sheets + index * game.SHEET_SIZE + kitpages.KIT_BYTE, bytes([kitpages.kit_byte(sheet, 0, kit)]))
+    _add_slots(gd, member, before)
     return [f"{name} is an Arcanist."]
+
+
+def _most_slots(gd: GameData, member: int) -> Dict[str, List[int]]:
+    """MEMBER's most spell slots of each kind, by spell level (1 to 9)."""
+    return {kind: [gd.max_spell_slots(member, bit, level) for level in range(1, game.SPELL_LEVELS + 1)]
+            for kind, bit in game.MAGIC_KINDS}
+
+
+def _add_slots(gd: GameData, member: int, before: Dict[str, List[int]]) -> None:
+    """The slots a kit just given adds, put in what MEMBER has left: the game filled them as the
+    game began, before the kit was there (Cermak's WIZ 1/2 until his first rest)."""
+    after = _most_slots(gd, member)
+    for kind, _bit in game.MAGIC_KINDS:
+        at = gd.ds * 16 + game.SLOTS_LEFT[kind] + member * game.SLOTS_STRIDE + 1
+        left = gd.guest.read(at, game.SPELL_LEVELS)
+        new = bytes(max(0, min(255, n + a - b)) for n, a, b in zip(left, after[kind], before[kind]))
+        if new != left:
+            gd.guest.write(at, new)
 
 
 OWN_LINES = {"Gerakis": "Gerakis fights wild: Wild Fighting, as a fight starts.",

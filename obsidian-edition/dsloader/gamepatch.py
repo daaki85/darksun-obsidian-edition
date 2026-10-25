@@ -79,9 +79,6 @@ VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN = 0x96, 0x95, 0x94, 0
 VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
 VEC_POINTER = 0xF1
-VEC_STRIP = 0xF7
-VEC_PALETTE = 0x8B
-VEC_COLOURS = 0xCB
 VEC_PRICE, VEC_PRICE_EAX = 0x8D, 0x8C
 VEC_RS_CLICK = 0x8A
 VEC_RACE_PANEL = 0x89
@@ -90,6 +87,8 @@ VEC_TICK = 0x87
 VEC_POISON = 0x86
 VEC_ARROW = 0x85
 VEC_OVR_BUF = 0x84
+VEC_HEAP = 0xCB
+VEC_FLIP = 0x8B
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -368,6 +367,12 @@ PATCHES = (
     # that starts at 0: none was ever lower, so the first member rolled. "jna" made "jge": the
     # highest chance above 0 (one who can't, or isn't standing, has 0: the first then, as before)
     Patch("party_best", 0x80201, bytes.fromhex("7605"), bytes.fromhex("7d05")),
+    # ... and an archer's pointer showed "can't shoot" (ICON 6006) after a shot that killed, with
+    # shots left: the weapon attack routine (5883Ah) counts a combatant's attacks this round in a
+    # byte (+181h of the round's tables, 37BDh) and makes it 63h (99) once all are made, and lets
+    # another go while it is under 63h (58454h), but the pointer's missile test (1D5AEh) refused
+    # any count but 0. "cmp byte es:[si+181h],0 / jnz" made "cmp ...,63h / jnl": as the attack
+    Patch("shots_left", 0x1D657, bytes.fromhex("2680bc8101007505"), bytes.fromhex("2680bc8101637d05")),
     # ... and how many of a random monster come (REQUEST 8, 80BE4h; GPL 99 and 106): 2 x the
     # party's strength / the monster's, but its search left SI one past the slot found, so the
     # next slot's strength (the last slot's: the next record's first OJFF), and an empty one (the
@@ -524,26 +529,6 @@ PATCHES = (
     # the combat log's panel under the pointer (DSCLOG's PROBE_POINTER): the stack check, "cmp
     # [9Ch],sp", of the routine that draws the game's pointer (28D1:093D)
     Patch("pointer", 0x2EA55, bytes.fromhex("39269c00"), _interrupt(VEC_POINTER, 4)),
-    # the combat log below the map (DSCLOG's STRIP; a switch, STRIP): the game's screen 320 x 222,
-    # its rows and the split below row 200 set at the end of its mode X set up ("mov al,2 / mov
-    # ah,1 / out dx,ax"); the strip shown there is video memory's first 1760 bytes, so the screens
-    # move up, each to a multiple of 256 bytes (the page flip sets the high byte of where the
-    # screen starts only): A070h and A460h, the pages kept in video memory after them from A848h
-    # (to AFFBh as before). Where the screens are set up (0980:271Bh: "mov cx,0FFBh / mov
-    # ax,0A000h", the second's "add ax,400h") and in the page flip ("mov ax,0A000h / mov
-    # bx,0A400h"; "mov ax,0A000h"; "mov ax,0A400h")
-    Patch("strip_lines", 0x11640, bytes.fromhex("b002b401ef"), _interrupt(VEC_STRIP, 5)),
-    Patch("strip_screens", 0x11323, bytes.fromhex("b9fb0fb800a0"), bytes.fromhex("b98b0fb870a0")),
-    Patch("strip_second", 0x11356, bytes.fromhex("050004"), bytes.fromhex("05f003")),
-    Patch("strip_flip", 0x1442F, bytes.fromhex("b800a0bb00a4"), bytes.fromhex("b870a0bb60a4")),
-    Patch("strip_shown0", 0x14444, bytes.fromhex("b800a0"), bytes.fromhex("b870a0")),
-    Patch("strip_shown1", 0x1444E, bytes.fromhex("b800a4"), bytes.fromhex("b860a4")),
-    # ... and the strip dark in each new palette: "sti / pop di" at the end of the routine that
-    # sets the whole palette (DSCLOG's PROBE_PALETTE)
-    Patch("strip_palette", 0x144F5, bytes.fromhex("fb5f"), bytes((0xCD, VEC_PALETTE))),
-    # ... and "pop dx / pop cx" at the end of the one that sets a run of colours (the title's, a
-    # fade's steps: DSCLOG's PROBE_COLOURS)
-    Patch("strip_colours", 0x288BA, bytes.fromhex("5a59"), bytes((0xCD, VEC_COLOURS))),
     # scrolling (DSCLOG's SCROLLING): the main loop asking where the pointer is, "call far
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)
@@ -775,6 +760,15 @@ PATCHES = (
     # the test's word (DSCLOG gives a block it has kept in upper memory, else calls farmalloc): the
     # game's heap, in the 640 KB, that much bigger
     Patch("overlay_umb", 0x3C68C, bytes.fromhex("9a31120000"), bytes.fromhex("cd%02xa90000" % VEC_OVR_BUF)),
+    # ... and its music buffer (12,001 bytes, from its start to its end): the C library's farmalloc,
+    # farfree and farrealloc (load:1231h, 1127h, 138Eh) start "push bp / mov bp,sp", which DSCLOG's
+    # PROBE_HEAP does itself, giving that one block from upper memory and never letting the library
+    # free or grow it
+    Patch("heap_malloc", 0x6631, bytes.fromhex("558bec"), _interrupt(VEC_HEAP, 3)),
+    Patch("heap_free", 0x6527, bytes.fromhex("558bec"), _interrupt(VEC_HEAP, 3)),
+    Patch("heap_realloc", 0x678E, bytes.fromhex("558bec"), _interrupt(VEC_HEAP, 3)),
+    # the page flip's wait for the vertical retrace, none with a full screen up (DSCLOG's PROBE_FLIP)
+    Patch("flip_wait", 0x1445F, bytes.fromhex("0ee811d2"), _interrupt(VEC_FLIP, 4)),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),
@@ -855,8 +849,6 @@ ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
 CAMERA = ("camera_still",)  # the view in a fight following a figure only off the screen
 SCENE_POINTER = ("cine_step", "cine_end")  # a pointer in the scenes, a click ending one
 MOUSE_START = ("mouse_set", "mouse_init")  # the pointer starting in the middle, as fast up and down as across
-STRIP = ("strip_lines", "strip_screens", "strip_second", "strip_flip", "strip_shown0", "strip_shown1",
-         "strip_palette", "strip_colours")  # the combat log below the map (off by default)
 
 
 def relocated(data: bytes) -> set:

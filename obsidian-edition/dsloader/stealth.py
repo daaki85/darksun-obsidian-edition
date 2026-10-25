@@ -101,9 +101,10 @@ def enemy_beside(gd: GameData, combatant: int) -> Optional[str]:
 
 
 def chance(gd: GameData, creature: int, skill: int) -> Optional[int]:
-    """A thief's chance before what it wears (turn adds that, and says so)."""
+    """A thief's chance before what it wears (turn adds that, and says so), at most MOST (even
+    without RULE_THIEF_TABLE: these rolls are the rule's own)."""
     skills = gd.thief_skills_now(creature, (skill,), gear=False)
-    return skills[0][1] if skills else None
+    return min(MOST, skills[0][1]) if skills else None
 
 
 def ranger_chance(gd: GameData, creature: int, skill: int) -> Optional[int]:
@@ -111,7 +112,7 @@ def ranger_chance(gd: GameData, creature: int, skill: int) -> Optional[int]:
 
 
 CLOAK_HIDE, BOOTS_QUIET = 10, 10  # worn, a cloak helps hide in shadows and boots move silently
-MOST = 95  # (AD&D's most for a thief skill)
+MOST = game.THIEF_MOST  # (AD&D's most for a thief skill)
 ELVEN_HIDE_OUT, ELVEN_HIDE_IN, ELVEN_QUIET = 95, 90, 95  # the Cloak and Boots of Elvenkind
 # what's worn as a cloak, on the feet and as a belt (an item type's +09h); the plain ones cost
 # GEAR_VALUE while they help (the game's Leather Cloak is 20). Magic ones (a plus, or a price above
@@ -170,7 +171,7 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
     extra, note = worn_bonus(gd, creature, game.CLOAK_SLOT, CLOAK_HIDE, "cloak") \
         if gear and not elven_cloak else (0, "")
     shown = f"{hide}{note} = {max(hide, min(MOST, hide + extra))}" if extra else f"{hide}"
-    hide = max(hide, min(MOST, hide + extra))  # (as gd.gear_skill: a chance above MOST kept)
+    hide = max(hide, min(MOST, hide + extra))  # (as gd.gear_skill)
     who = gd.creature_name(creature)
     enemy = enemy_beside(gd, combatant)
     if enemy and kits.SHADOWBLADE not in gd.kit_ids(creature):  # (a Shadowblade hides even so: kits.py)

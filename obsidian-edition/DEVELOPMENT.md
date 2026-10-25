@@ -99,7 +99,7 @@ of the game's data, the tools for mapping it, and how each part of the
 | Folder or file | What it holds |
 |---|---|
 | `dsloader/` | the Loader: its window (`viewer.py`), starting the game (`launch.py`), the dice log (`dicelog.py`), the patched game (`gamepatch.py`) and the data written into the game's files (one module for each feature) |
-| `dos/` | the helper DOSBox loads, `dsclog.asm` (built to `DSCLOG.EXE`), and `gameend.asm` (`GAMEEND.COM`) |
+| `dos/` | the helper DOSBox loads, `dsclog.asm` (built to `DSCLOG.EXE`), `umbplus.asm` (`UMBPLUS.COM`) and `gameend.asm` (`GAMEEND.COM`) |
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for practising without the game |
 | `docs/` | the screenshots and the item icons the documentation shows |
@@ -131,11 +131,13 @@ The header's signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the
 helper and the Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`),
 so a Loader never talks to an older helper.
 
-The post-game check that keeps an error on screen for the crash report is
-built the same way:
+The post-game check that keeps an error on screen for the crash report, and
+the program that moves upper memory down before the helper loads (see [Room in
+the helper](#room-in-the-helper)), are built the same way:
 
 ```
 nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
+nasm -f bin -o dos/UMBPLUS.COM dos/umbplus.asm
 ```
 
 ### Making a release
@@ -414,7 +416,7 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 64 entries of `ESIZE` 192 bytes) follows
+The dice log's ring buffer (`NENT` 63 entries of `ESIZE` 192 bytes) follows
 the resident part in memory, in a segment of its own: the install code sets
 `ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
 the resident image, and its last step (`KEEP`, in the resident part, as the
@@ -424,7 +426,62 @@ and drains it every 20 ms (at most 251 bytes came in between two reads in the
 opening show, the busiest stretch measured).
 
 The helper has to load into upper memory, or the game loses 62 KB of
-conventional memory (570 KB free rather than 632 KB). With GOG's settings there
+conventional memory (570 KB free rather than 632 KB).
+
+**Where DOSBox's memory is** (DOSBox 0.74, GOG's; its source comes with the
+game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
+
+| Memory | Size | What uses it |
+|---|---|---|
+| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
+| C000h-C7FFh | 32 KB | the video BIOS (ROM) |
+| C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the panel's picture 23 KB, the shadows' cache 16 KB, the ring 12 KB, the game's music buffer 12 KB, 0.5 KB free |
+| F000h-FFFFh | 64 KB | the BIOS (ROM) |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA: unused (DOSBox's XMS says there is none; reached only with A20 on) |
+| above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
+
+DOSBox makes its upper memory block at D000h, but C800h-CFFFh is RAM too, and
+DOSBox's tables use only its first 192 paragraphs (at most a few more later: a
+program asking for more than 20 file handles, INT 21h AH=67h, takes some each
+time; the game does once, at DSUN.EXE 54F3h). `UMBPLUS.COM`, run by the
+launcher's config just before `lh d:\dsclog.exe`, moves the block's start to
+C900h: the system MCB at 9FFFh (owner 8, "SC") is cut to end there and a free
+block's MCB goes at C900h, reaching F000h as before. It does so only if the
+chain is exactly DOSBox 0.74's (9FFFh 'M' to D000h, D000h 'Z' free to F000h)
+and C900h-CFFFh is all zero and keeps what is written to it; otherwise it
+changes nothing and the helper loads at D00Ah as before. 63 paragraphs stay
+between DOSBox's tables and the block. Measured with the user's arena save
+(walking, the arena's fight): the tables at C8C0h throughout, the helper at
+C90Ah, the overlay buffer in upper memory, 29.1 KB free in one piece.
+
+The helper still has to fit D000h-EFFFh (`UMB_ROOM`, below), so it works
+where the block can't be moved; the 28 KB more holds what it can do without:
+the shadows' cache ([Shadows](#shadows)) and the game's music buffer.
+
+**The game's blocks kept for good.** Of the game's far heap (Borland's,
+farmalloc at load:1231h, farfree 1127h, farrealloc 138Eh), 134 KB is taken
+before the main menu and kept in place through loading a save, walking, an area
+change and a fight, logged by a research build of the helper with those three
+functions hooked: the music buffer (12,001 bytes: an XMIDI file), the sound
+effects' (24,001: a Creative Voice File), both asked for by the sound driver's
+set-up in an overlay; tables of 10,724, 4,963 and 11,778 bytes; the font and
+other resources loaded as the menu comes up. Nearly every request goes through
+the game's wrapper at 34FA4h (farmalloc of the size + 1, a guard byte 77h at the
+block's end, which its farfree wrapper at 34F3Ch checks), and its callers are
+mostly overlays (running in upper memory, so not to be patched by address).
+So `PROBE_HEAP` (INT CBh in place of each function's "push bp / mov bp,sp")
+takes them by size: `farmalloc(12001)` is given `POOL_SEG`, a block KEEP took in
+upper memory, with a heap block's first word (its paragraphs, which the wrapper
+reads for the guard byte); farfree of it marks it free for the next such
+request; farrealloc of it keeps it if the size fits, else moves the contents to
+a block of the heap. Nothing else changes. The music buffer was chosen as it fits
+with the shadows' cache (the sound effects' 24 KB would leave the cache 6 KB):
+with the map open the game has 97 KB spare, not 85 KB. Measured with the user's
+arena save: the buffer in upper memory holding the XMIDI file, walking, the
+arena's area change and a fight as usual.
+
+With GOG's settings there
 is one upper memory block of 63 KB, EMS's 64 KB page frame taking the rest; the
 launcher's config turns EMS off (`launch.DOS_LINES`: the game uses XMS instead),
 which leaves the helper a second 64 KB block (65 KB free with it loaded; see
@@ -433,11 +490,11 @@ most 64 KB (everything through CS), so the second block is room for data kept
 apart from it, as the ring is. The helper asks for its resident part and the
 ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few
 KB of upper memory left. A change that adds much code should check that again:
-the ring is 64 entries, not 128 (96 until the new spells' code, when the game no
+the ring is 63 entries, not 128 (96 until the new spells' code, when the game no
 longer started for lack of memory; 88 until STORE and RECALL; 84 until spells
 199-201 and `seg_space`, when the helper no longer fitted in the block and
 loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned;
-65 until Wall of Thorns counted a monster's armour), and the text buffer 2 KB,
+65 until Wall of Thorns counted a monster's armour, 64 until the pointer kept its place), and the text buffer 2 KB,
 not 8 (4 until the memory pass for 6th-level spells), to make that room. The
 most entries put in the ring in 2 seconds, measured, is 43 (the opening show),
 16 in a fight.
@@ -455,19 +512,23 @@ top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
 The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
 the map open this left 86 KB free in conventional memory (85 KB measured again
-with the 6th-level spells, the largest piece 87,744 bytes), against 53 KB (and
+with the 6th-level spells, the largest piece 87,744 bytes; 97 KB with the music
+buffer in upper memory too, below), against 53 KB (and
 the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. One paragraph (16 bytes) is spare now.
+and so does `test_fits_upper_memory`. 74 paragraphs (1.2 KB) are spare in it
+now, after the right button's scrolling, the rings under every enemy and the
+strip below the map were taken out (it was one).
 The shadow table becoming a bit for each thing and the added item names 16
 bytes each (padded to the game's 25 as they are copied) once left 3.8 KB; the
 6th-level spells, the names over figures, Whirlwind's funnel, Wall of Thorns'
 armour and the pointer in scenes (with the freeze report cut from 32 records
 to 16) have used it. So new helper code needs room found first: each of the
 ring's entries is 12 paragraphs (`NENT`), and the helper's own segment still
-has about 2 KB. Text the game reads from RESOURCE.GFF belongs in the Loader's
+has about 4.6 KB (its resident part 60,912 bytes of 65,536): that, not upper
+memory, is now the tighter limit for new code. Text the game reads from RESOURCE.GFF belongs in the Loader's
 copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
 freed 1.6 KB), and so does data read from the player's game (the pointer's
 picture, `POINTER.BIN`). If the buffer still ends up in the heap (another
@@ -637,9 +698,7 @@ dice log running:
   its bounds (`+404h` x0, `+604h` y0, `+804h` x1, `+A04h` y1). Pages 0 and 1
   are the two screens (`A400h` and `A000h`, 320 x 200 in mode X); the others
   are windows over them and buffers in the rest of video memory (`A7E8h`, a
-  third 320 x 200; smaller ones to `AE55h`). With the strip below the map the
-  two screens are at `A070h` and `A460h` and the rest from `A848h` (see
-  [The strip below the map](#the-strip-below-the-map)).
+  third 320 x 200; smaller ones to `AE55h`).
 - **The flip.** The routine at `0980:5814` (DSUN.EXE 14414h) shows one screen
   or the other (the CRTC start address; `0980:118E` says which, 1 for `A400h`)
   and swaps them for −1. It is called from 45 places, all in overlays, for
@@ -727,7 +786,9 @@ dice log running:
   on the other screen, the view drawn there again first: the panel is not on
   it, and is back when the window closes. Full screens (USE, View Character)
   stop the main loop, and `PANEL_LIVE` counts the panel as on screen only on
-  the map (`SCREEN_IS` 1): else the hooks that draw the view round the panel
+  the map (`ON_MAP`: the game's `DS:0BC9h`, `SCREEN_IS`, is 1 on the map, 2
+  with a character's screen or a talk over it, 0 on the title, the menus and in
+  character creation; the game's DS is learnt in `PROBE_POINTER`): else the hooks that draw the view round the panel
   and keep its clicks from the game drew a full screen round it too, the panel
   left over it and the clicks there lost. (Drawing it into both
   screens doesn't work: the game keeps other pictures in the one not shown.)
@@ -788,76 +849,6 @@ dice log running:
   allows neither in a fight. DOSBox's window size doesn't matter (it is drawn
   into the game's screen).
 
-#### The strip below the map
-
-The switch `combat_log_strip` (off by default) adds gamepatch's `STRIP`
-patches when the game is started; the Loader knows the game was started so
-from the patch in its memory (`combatlog.strip_patched`), not the setting,
-which may have changed since.
-
-- **The screen.** `PROBE_STRIP` (INT F7h at 11640h, the end of the mode X set
-  up, 0980:2A40h) makes the screen 222 rows within the game's own timing (the
-  clock and the totals untouched: 70 frames a second, 449 scan lines, each row
-  drawn twice): the picture to scan line 443, the blanking from 444 and the
-  sync at 445 to 447; and the line compare at 18Fh, so below scan line 399
-  (row 200) the VGA shows video memory from its start whichever screen is up.
-  DOSBox's aspect correction works out the shape from the timing, unchanged,
-  so each row is stretched by 1.2 as ever (the window 320 × 266).
-- **Video memory.** The strip is video memory's first 1760 bytes a plane;
-  the game's two screens move up past it, each to a multiple of 256 bytes as
-  the page flip (0980:5814h) writes only the start address's high byte:
-  `A070h` and `A460h` (in the screens' set up at 0980:271Bh, and the flip's
-  three segment constants). The pages the game keeps in video memory (a bump
-  allocator, `[0E4Eh]` up to `[0E4Ch]`, `AFFBh`, which gives −1 when full)
-  then start at `A848h`, not `A7E8h`: 31,536 bytes instead of 33,072.
-  Measured with the strip on, loading the ten saves of the first page (the
-  arena's fights and the pens), opening the USE screen and walking: at most
-  26,416 bytes used, 5 KB to spare; the first of them without the strip,
-  27,904 of 33,072 (the strip doesn't make the game use more). Places later
-  in the game aren't measured.
-- **Drawing it.** `STRIP_DRAW` puts the Loader's 320 × 22 picture there
-  (`combatlog.STRIP`: all of it the well's mottled shades, the header and the
-  newest row, no buttons; scrolled back, the **Latest** chip in the header and
-  a notch of the wheel a line); `PANEL_LIVE` is never set, so the clipping and
-  the pointer's handling are left out. Like the panel, it isn't drawn again
-  while the main loop waits on a game menu (it shows what it had). Scrolling
-  and the map dragged with the wheel pressed were checked in the arena's
-  fight.
-- **Between fights.** The Loader keeps the strip on whenever the game runs
-  (`DiceLog._update_panel`: on in a fight, or with `strip_patched`), scrolled
-  to the newest again when a fight starts. Out of fights its top line has no
-  header: `draw` puts the row before the newest there. The lines that come out
-  of fights go in too, those with a die cast in them and the lines under them
-  (`Log.add(rolls_only=True)`: `A_ROLL`, not character creation's).
-- **Scenes.** The map's main loop doesn't run while the game plays a scene
-  out (the arena's opening show), so `STRIP_MIND`, from the game's pointer,
-  also puts a new picture of the log there when the game is on the map.
-- **Empty: blue-grey or black.** Where the picture isn't, `STRIP_CLEAR` fills
-  the strip as `STRIP_WANT` says: black (the darkest of the 256) when the
-  game's `DS:0BC9h` is 0 (the title, the main menu, character creation), else
-  the panel's look without lines (its top line the colour nearest
-  `palette.SHADOW`, the rest nearest `palette.DEEP`, among 16 to 223:
-  `STRIP_COLOURS`, read from the VGA). `0BC9h` is 1 on the map, 2 with a
-  character's screen or a talk over it. It is filled every 512 passes of the
-  main loop with the log off, and each time the game sets colours:
-  `PROBE_COLOURS` (INT CBh at 288BAh, the end of the routine that sets a run
-  of colours, as the title and each step of a fade do; only when the run
-  reaches below the colours the game animates) and `PROBE_PALETTE` (INT 8Bh at
-  144F5h, the end of the one that sets all 256). The log's picture stays
-  through those while the colours 16 to 223 are still those it was put in
-  (`STRIP_SAME`: a sum of them, taken as the main loop puts it; a talk or the
-  game's menu over the map); otherwise it goes, and the main loop puts it
-  again on the map. The title's strip is so black, not the colour 0 video
-  memory is cleared to (lavender there). Screens changed with no new colours
-  (main menu to character creation) are caught from the game's pointer
-  (`PROBE_POINTER` → `STRIP_MIND`, which also learns the game's DS there),
-  filling in the colours found last: the VGA's palette isn't read there, as
-  the pointer may be drawn while the game sets colours.
-- **Tried first:** a 240-row screen in a 480-line timing. DOSBox showed
-  square pixels (the map a sixth flatter) and the frame came 60 times a
-  second, not 70 (the game about 14% slower); a longer line with the 28 MHz
-  clock gave back the shape at 56 a second.
-
 ### Names over figures
 
 ([In the README](README.md#names-over-figures).)
@@ -890,8 +881,7 @@ which may have changed since.
   every other strike. It writes only (no reads of video memory, so the VGA's
   latches are left alone), keeps the VGA's registers as the shadows do
   (`VGA_SAVE`), finds the screen on show from where the VGA starts it (CRTC
-  0Ch, the high byte the game's page flip sets: A000h or A400h, A070h or
-  A460h with the strip below the map), stays off the combat log's panel, and
+  0Ch, the high byte the game's page flip sets: A000h or A400h), stays off the combat log's panel, and
   does nothing while the game's busy flag for it is up or off the map. It
   also places a new label (`LABEL_WHERE`: centred over the thing's feet, its
   bottom `UP` rows above them, under the feet if it would reach the game's
@@ -927,8 +917,24 @@ of HP's value at its longest), and the routine that lists the weapons through
 `INT FAh` after each one. The Loader keeps the numbers in the helper's memory,
 with the time it last did: older than 5 seconds, the helper shows the sheet's
 numbers instead. Before a screen is drawn, the helper asks the Loader to
-update them and waits for its answer, half a second at most. Nothing else in
-the game changes.
+update them and waits for its answer, half a second at most (`STATS_SYNC`:
+`stats_req`, `stats_reply`). The game stands still while it waits, its
+pointer too, so the Loader answers from a thread of its own
+(`DiceLog.answer_stats_in_background`, a look each millisecond, about 4 ms to
+work the numbers out), not from its main loop's next pass: that took 26-79 ms
+with the Ledger's window open, on top of the game's own pause after an item is
+picked up or put down (50-90 ms at 20,000 cycles: its mouse handler, DSUN.EXE
+3573Dh, only queues the moves, and the pointer is drawn again once the game
+has done with the item). That pause is shorter too: the game flips its two
+screen pages as it redraws, and its flip (14414h) waits for the next vertical
+retrace each time; `PROBE_FLIP` (INT 8Bh in place of the flip's call to the
+wait, 1445Fh) skips the wait while a full screen is up (`SCREEN_IS` 2: the
+inventory, View Character, USE, a talk) and waits as the game does on the map,
+whose pace may hang on it. Measured with the user's save (Zulak's inventory,
+20,000 cycles, where the game last drew the pointer, `DS:A137h`): 56-103 ms
+(85 on average) before, 42-45 putting an item down and 63-67 picking one up
+after; skipping every retrace wait saves no more, and the rest is the game's
+own drawing (a faster game speed shortens it). Nothing else in the game changes.
 
 Which class levels up next, on View Character: the game looks up the XP for
 each class's next level in its tables and shows the lowest. Where it adds the
@@ -1905,8 +1911,9 @@ to Kalzith for 1,800 went first in his stock at 3000, and a Cloak (24) sold for
 How: where the game's thief skill routine adds 4 a level, the helper
 (`INT E4h`) puts AD&D's number for the level in place of the game's base and
 level, adds the DEX table's, and jumps past the game's DEX formula to its
-armour and effects. The Loader's screens and the inventory screen's panel
-work the chances out the same way.
+armour and effects. At the routine's end (`INT D9h`, below) the helper keeps
+the chance to 95 (`THIEF_MOST`). The Loader's screens and the inventory
+screen's panel work the chances out the same way.
 
 ### Hiding in shadows to backstab
 
@@ -2211,6 +2218,16 @@ after the `ns_list_` patches):
   always rolled. `party_best` makes it "jge" (80201h): the highest chance above
   0, else member 0 as before. A named character skips the pick altogether.
   Found from CalvinRodo/yuan-ti's notes.
+- **An archer's pointer** (1D66Ah, the pointer's form in a fight: 6003 the
+  sword, 6004 can't attack, 6005 the missile, 6006 can't shoot; the missile
+  test 1D5AEh): a missile weapon ready (41BE:89h), arrows for it (41BE:75h)
+  and the range, then, in a fight, none of the round's melee swings (+1ABh of
+  the round's tables at 37BDh, a byte a combatant) or shots (+181h) made. The
+  weapon attack routine (5883Ah) counts the shots at +181h, makes it 63h once
+  all are made (58C45h) and lets another go while it is under 63h, so after a
+  shot that killed the pointer said "can't" while a click still shot.
+  `shots_left` makes the shots' test "cmp ...,63h / jnl" (1D657h); the melee
+  swings' stays (no shooting after a swing).
 - **Random monsters** (REQUEST 8, 80BE4h; scripts 99 and 106): `MONR` 1 of
   `RESOURCE.GFF`, 42-byte records {region, 10 x {OJFF, strength}}. With a ≠ 0
   the count is 2 x the party's strength / the monster's, 1 to 6, but the slot
@@ -2901,6 +2918,21 @@ makes from the palette when the Loader asks: after each area change, once its
 fade-in is over, and now and then; the colours the game cycles, for water and
 fire, are never picked as darker ones). The rectangles the game draws again when
 a figure moves are widened by the length of a shadow, so none is left behind.
+
+**Pictures out of memory.** The shadow is traced from the figure's picture in
+the game's picture cache, and in a big fight (the arena, ten monsters) the game
+lets go of most pictures between drawings: in the user's arena save every figure
+but one had its picture out of memory as the floor was drawn, so no shadow.
+Loading one from here, in the middle of a drawing, could push out or move a
+picture the game is about to draw, so instead DSCLOG keeps each frame's shadow
+as it draws it (`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow,
+three bytes each, at most 64, under the picture's number from the cache slot's
+`+6` and the frame) in 80 slots of 208 bytes in upper memory (`SC_SEG`, from
+KEEP, if `UMBPLUS.COM` made the room), the oldest given up first. A figure whose
+picture is out casts its frame's kept shadow, or another frame's of the same
+picture (`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the
+party and the monsters seen in memory once casting shadows after; one whose
+picture was never in memory at a floor drawing still has none.
 Only pictures already in the game's cache cast one: until 2.6.0 DSCLOG had the
 game load a missing one from there (1DF3:2A3Ah), in the middle of drawing the
 floor, which can push out or move another picture while the game is drawing; a
@@ -2964,8 +2996,8 @@ Two `NS_IMAGE` sites record what the game does without a roll:
 
 How: DSCLOG hooks the keyboard (`INT 16h`) and takes Tab, Shift+Tab and, with an
 enemy chosen, Enter from what the game reads, counting them for the Loader
-(`dsloader/targeting.py`), which keeps the enemies marked and the chosen one
-(`dsloader/rings.py`). The rings are drawn in the floor pass, after the
+(`dsloader/targeting.py`), which marks the chosen one in DSCLOG's
+`RING_TAB` (`dsloader/rings.py`). The ring is drawn in the floor pass, after the
 shadows, through a table of each colour's redder one made from the palette. For
 Enter, DSCLOG puts the pointer at the enemy's feet and gives the game a left
 click there, from the main loop, while the routine that finds what is under the
@@ -2979,9 +3011,7 @@ second, whatever stands in front of it.
 How: the game hears of the mouse's buttons from the mouse driver, through a
 handler it gives it (`INT 33h`, function 0Ch). DSCLOG hooks `INT 33h` and puts
 its own handler in between, which keeps the middle button (the wheel pressed)
-from the game, and, with the right button dragging too, keeps the right button
-from it while it is held: a click reaches the game when it is let go (pressed
-and released where it was pressed), a drag never does. The game's main loop
+from the game (the right button is left to it). The game's main loop
 asks where the pointer is (to scroll at the screen's edge); there DSCLOG has
 the game centre its view where the drag puts it, with the game's own routine
 (the one clicking on the overview map uses, which draws the view again), and
@@ -3049,20 +3079,38 @@ black and white arrow of its own, so nothing of the game's is in the mod.
   palette with interrupts off, so the timer never reads the DAC halfway
   through its writing.
 - **At the scene's start** the driver's ranges are made the screen's (0 to 319,
-  0 to 199; its own are 640 across) and the pointer put in the middle; a video
-  mode set puts them back, which the next step sees (an x past 319) and sets
-  again.
+  0 to 199; its own are 640 across) and the pointer put where it was last
+  seen (`MP_X`, `MP_Y`: the arrow's place in a scene, the game's mouse events'
+  out of one; the middle at first); a video mode set puts them back, which the
+  next step sees (an x past 319) and sets again.
 - **At the end** (`CINE_END`, the scenes' routine's `or si,si / jz`, where
   every scene comes, played or skipped) the arrow is wiped.
 
 **Where the pointer starts.** After a video mode set the driver puts its
 pointer in the middle of its 640 across; the game then gives it the ranges 0
 to 319 (`2A8F2h`), which leave it at the right edge (318, 100). Just after
-that (`MOUSE_SET`, its `mov word [0A12Dh],0`) DSCLOG moves it to the middle
-when it is there (function 4). The driver's own speed is 8 mickeys a pixel
+that (`MOUSE_SET`, its `mov word [0A12Dh],0`) DSCLOG moves it back to where
+it was last seen when it is there (function 4; `MP_X`, `MP_Y`, kept by the
+scenes' arrow and by every mouse event the game is sent: the middle before
+the first), so a pointer moved in the intro or on a menu stays put through the
+next screen's video mode set. The driver's own speed is 8 mickeys a pixel
 across and 16 up and down; as the game resets the driver at its start
 (`MOUSE_INIT`, `356F5h`, after function 0) and again with the ranges, DSCLOG
-makes both 8 (function 0Fh).
+makes them 8 and 10 (function 0Fh): the window's aspect correction makes a
+pixel 1.2 times as tall as it is wide, so 10 moves the pointer as far on the
+screen up and down as across.
+
+**Its speed in a window.** With the mouse captured, DOSBox 0.74 moves the
+driver's pointer by the desktop mouse's motion times 8 over the mickeys a
+pixel (`Mouse_CursorMoved`: one game pixel for each desktop pixel at 8), so in
+the usual window, three times the game, the pointer moved three screen pixels
+for each one the desktop pointer would: fast, and in steps of three, which
+made placing items fiddly. The Loader's DOSBox settings set the mouse's
+`sensitivity` (which scales that motion) to 100 over the window's scale, 33 in
+the usual window (`launch.display_lines`, with `MOUSE_START`), and
+`autolock=true`, as GOG has it: uncaptured, DOSBox reads the desktop pointer's
+place in the window instead, which the sensitivity would scale too. In full
+screen the scale depends on the monitor, and DOSBox's own is kept.
 
 The two are switches (`SCENE_POINTER`: `cine_step`, `cine_end`; `MOUSE_START`:
 `mouse_set`, `mouse_init`). The room in upper memory came from the freeze

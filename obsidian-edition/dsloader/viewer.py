@@ -341,11 +341,6 @@ class Viewer:
                             (combatlog.DETAIL, "... in detail, as in the log")):
             ttk.Radiobutton(in_game, text=text, value=value, variable=self.combat_log_level,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
-        # ... or in a strip below the map, the game's screen 22 rows taller (gamepatch.STRIP)
-        self.combat_log_strip = tk.BooleanVar(value=settings.get("combat_log_strip") is True)
-        ttk.Checkbutton(in_game, text="... always shown, below the map instead of over it: the round and the newest line; "
-                        "the game's screen 22 rows taller (from the next start)",
-                        variable=self.combat_log_strip, command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
@@ -502,23 +497,18 @@ class Viewer:
         # the mouse and keys in the game
         controls = section("controls", "Controls")
         self.use_targeting = tk.BooleanVar(value=bool(settings.get("targeting", True)))
-        ttk.Checkbutton(controls, text="In a fight, Tab (Shift+Tab back) chooses an enemy, its ring brighter, and "
-                        "Enter attacks it, even behind someone", variable=self.use_targeting,
+        ttk.Checkbutton(controls, text="In a fight, Tab (Shift+Tab back) chooses an enemy and Enter attacks it, "
+                        "even behind someone", variable=self.use_targeting,
                         command=self._options_changed).pack(anchor="w")
         self.ring_mode = tk.StringVar(value=rings.mode(settings))
-        ttk.Label(controls, text="Red rings on the ground in a fight:").pack(anchor="w", pady=(4, 0))
+        ttk.Label(controls, text="A red ring on the ground in a fight:").pack(anchor="w", pady=(4, 0))
         for value, text in ((rings.OFF, "... none"),
-                            (rings.ONLY_CHOSEN, "... under the enemy chosen with Tab"),
-                            (rings.ALL, "... under all the enemies (the chosen one's redder)")):
+                            (rings.ONLY_CHOSEN, "... under the enemy chosen with Tab")):
             ttk.Radiobutton(controls, text=text, value=value, variable=self.ring_mode,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
         ttk.Checkbutton(controls, text="Scroll the map by pressing the mouse wheel and moving", variable=self.scroll_map,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.scroll_right = tk.BooleanVar(value=bool(settings.get("scroll_right", False)))
-        ttk.Checkbutton(controls, text="... or by holding the right mouse button and moving (a right "
-                        "click still changes the pointer)", variable=self.scroll_right,
-                        command=self._options_changed).pack(anchor="w", padx=(20, 0))
         self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
         ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
                         "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
@@ -528,8 +518,9 @@ class Viewer:
                         "a scene as a key does; from the next start", variable=self.scene_pointer,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.mouse_start = tk.BooleanVar(value=settings.get("mouse_start", True) is not False)
-        ttk.Checkbutton(controls, text="The pointer starts in the middle of the screen and moves as far up and "
-                        "down as across (the game's: at the right edge, half as far); from the next start",
+        ttk.Checkbutton(controls, text="The pointer starts in the middle of the screen, stays put as screens change, moves as far up and "
+                        "down as across, and in a window as fast as the desktop's pointer (the game's: at the "
+                        "right edge, half as far, three times as fast); from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
@@ -658,10 +649,8 @@ class Viewer:
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start):
             var.set(True)
-        for var in (self.scroll_right, self.combat_log):
-            var.set(False)
+        self.combat_log.set(False)
         self.combat_log_level.set(dicelog.combat_log_level({}))
-        self.combat_log_strip.set(False)
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self._options_changed()
@@ -1016,6 +1005,7 @@ class Viewer:
             self.next_try = now + RETRY_SECONDS
             if self.dice is None:
                 self.dice = DiceLog(self.guest)
+                self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
                 self.dice.learned_speakers = launch.learned_speakers()
                 self.dice.monster_info = self.monster_info.get()
@@ -1034,7 +1024,6 @@ class Viewer:
                 self.dice.ring_mode = self.ring_mode.get()
                 self.dice.use_targeting = self.use_targeting.get()
                 self.dice.scroll_map = self.scroll_map.get()
-                self.dice.scroll_right = self.scroll_right.get()
                 self.dice.vulture_on = self.content_vars["vulture"].get()
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.stealth_gear = self.stealth_gear.get()
@@ -1126,7 +1115,6 @@ class Viewer:
         settings["floating_names"] = self.floating_names.get()
         settings["combat_log"] = self.combat_log.get()
         settings["combat_log_level"] = self.combat_log_level.get()
-        settings["combat_log_strip"] = self.combat_log_strip.get()
         settings["pickpockets"] = self.pickpockets.get()
         settings["show_gear"] = self.show_gear.get()
         settings["starting_gear"] = self.starting_gear.get()
@@ -1137,7 +1125,6 @@ class Viewer:
         settings["rings"] = self.ring_mode.get()
         settings["targeting"] = self.use_targeting.get()
         settings["scroll_map"] = self.scroll_map.get()
-        settings["scroll_right"] = self.scroll_right.get()
         for key, var in self.content_vars.items():
             settings[key] = var.get()
         settings["effects_kept"] = self.effects_kept.get()
@@ -1163,7 +1150,6 @@ class Viewer:
             self.dice.ring_mode = self.ring_mode.get()
             self.dice.use_targeting = self.use_targeting.get()
             self.dice.scroll_map = self.scroll_map.get()
-            self.dice.scroll_right = self.scroll_right.get()
             self.dice.vulture_on = self.content_vars["vulture"].get()
             self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
             self.dice.stealth_gear = self.stealth_gear.get()

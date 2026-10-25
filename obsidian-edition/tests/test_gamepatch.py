@@ -57,6 +57,7 @@ class GamePatchTests(unittest.TestCase):
         strength (+0 from SI, one past it, not +4: the next slot's, 0 after a ninth)."""
         by = {p.name: p for p in gamepatch.PATCHES}
         self.assertEqual(by["party_best"].replacement[0], 0x7D)
+        self.assertEqual(by["shots_left"].replacement[-3:], bytes.fromhex("637d05"))  # can't only once all are made
         self.assertEqual(by["monster_count"].replacement[-1], 0)
 
     def test_shop_shine_sites(self):

@@ -15,7 +15,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   wrong](#when-something-goes-wrong).
 - **Everything in detail:** the contents below, the [features and
   rules](FEATURES.md), the [kits](KITS.md), the [items](ITEMS.md) (spoilers),
-  the [patch
+  [how the original game works](HOW-THE-GAME-WORKS.md), from its code, the
+  [patch
   notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
   and, for developers, the [development notes](DEVELOPMENT.md).
 
@@ -48,7 +49,6 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
 - [The dice log](#the-dice-log)
-- [More pages](#more-pages)
 - [Accessibility](#accessibility)
 
 ## What it does
@@ -373,7 +373,7 @@ a click.
 **The panel** sits over the map's lower right. A window the game opens over
 the map (a character's menu, a question) hides it until it closes. Expanded, it
 covers that part of the map, and the game's damage numbers over a creature
-there; **-** makes it smaller, or the strip below the map covers nothing.
+there; **-** makes it smaller.
 
 - **Scrolling:** it keeps the last 200 lines. Drag the scrollbar's handle,
   click the bar above or below it for a page, or turn the mouse wheel with
@@ -397,28 +397,6 @@ there; **-** makes it smaller, or the strip below the map covers nothing.
   throws and magic resistance). Its size is remembered.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
-
-**Below the map instead.** With **... always shown, below the map instead of
-over it** ticked (from the next start), the game's screen is 22 rows taller,
-320 × 222, and the log is a strip under the map, the full width, in the
-panel's darker shade, always there: L doesn't hide it. Nothing of the map is
-covered, and the game runs at its own speed with the map its usual shape;
-DOSBox's window is a little taller than 4:3.
-
-- **What it shows:** in a fight, the round and the newest line; between
-  fights, the two newest lines (the next fight starts again at its newest).
-- **Scrolling:** the pointer doesn't go there, so the strip has no buttons.
-  On Windows the mouse wheel scrolls it a line a notch wherever the pointer
-  is (DOSBox doesn't pass the wheel to the game, so the Loader listens for it
-  itself), with a **Latest** chip while scrolled back; under a talk window it
-  moves once the pointer does. The level is set on the Options tab.
-- **On other screens:** it stays under a talk or a screen over the map, and
-  is kept up while the game plays a scene out (the arena's opening show). A
-  screen in other colours has the panel's blue-grey there instead, the log
-  back on the map; the title, the main menu and character creation have it
-  black.
-
-![The combat log in a strip below the map, the screen 320 x 222](docs/combat-log-strip.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
 
@@ -509,7 +487,8 @@ change.
   fails and a 20 always saves, so they show between 2 and 20.
 - **Thief skills**: as they stand (with no equipment penalty in games started
   with the dice log: see [How the game works out thief
-  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), 0 for a
+  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), at most
+  95 with [AD&D's table](FEATURES.md#thief-skills-from-adds-table), 0 for a
   skill an effect rules out or when the thief isn't Okay (New counts as Okay),
   and 100 for one an effect makes certain (Detect Traps). Only the situation's
   bonus or penalty (a hard lock) is left out: the dice log shows it on each
@@ -629,7 +608,7 @@ open it, ▸ when closed and ▾ when open. Which sections are open is remembere
 Everything there applies in games started from the Loader; a switch that says
 "from the next start" waits until the game is started again. The sections:
 
-- **In the game**: the combat log, where it goes and how much it says, names
+- **In the game**: the combat log and how much it says, names
   floating over figures, monster descriptions ([In the game](#in-the-game)).
 - **Rule changes** ([Rule changes](FEATURES.md#rule-changes)): the game's rules
   closer to AD&D.
@@ -654,8 +633,7 @@ Everything there applies in games started from the Loader; a switch that says
 - **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)):
   the folder of saves kept under their names, and putting one back in a slot.
 
-All are on by default except scrolling by holding the right button and the
-combat log below the map, and are remembered for next time. **Restore
+All are on by default and are remembered for next time. **Restore
 defaults**, at the bottom of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
@@ -841,7 +819,7 @@ hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `Y magic resistance 30% vs Fireball: d100 = 71 -> not resisted` | The magic resistance roll (only shown for targets that have some), counting Mind Bar and Lower Resistance. |
 | `    Dispel Magic on Slig's Blessed: d100 = 60, needs 85 or less (50 + 5 x 7 - 5 x 0 (its caster's level)) -> dispelled` | Dispel Magic tries each effect on its target separately: 50 + 5 for each of the dispeller's levels, less 5 for each of the level the effect was cast at. It can't touch some (Biofeedback, Diseased, Feeblemind, Poisoned, Graft Weapon, No spell use, Stuck, Mind Bar and a few more). |
 | `Cilla can't cast Fireball there: no line of sight` | A spell you clicked to cast that the game refused, and why: no creature there, not a creature that spell takes, a wall too long, no line of sight, or too far away. The game itself only crosses out the pointer. |
-| `Script: random monsters come (request 8: 32766, 1, 0)` | Something a script asked the game to do: the party resting, random monsters, an arena bout, a creature changing sides, a cinematic, game over. The numbers are the request's own values. The everyday ones (doors, blocked cells, music) only show with "Show unlabelled rolls". |
+| `Script: random monsters come (request 8: 32766, 1, 0)` | Something a script asked the game to do: the party resting, random monsters, an arena bout, a cinematic, game over. The numbers are the request's own values. The everyday ones (doors, blocked cells, music, creatures changing sides) only show with "Show unlabelled rolls". |
 | `Cilla's STR 12 -> 16` | A party member's ability score changed, once the change holds: a spell's or effect's (Strength, Remove Curse giving back a lowered STR, Raise Dead's point of CON), and the game's own. |
 | `    Abjure on Y: d20 = 14, needs 12 or more (11 - caster level 5 + its level 6) -> sent away` | Abjure sends a summoned creature away (1000 damage) on a d20 at or over 11 - the caster's level + the creature's. |
 | `    Summoning: 1d3 = 2 picks which of its 3 creatures comes` | Which creature a summoning spell brings. |
@@ -918,14 +896,6 @@ more. The Dialogue tab does the same.
 randomises (creatures wandering, animations and so on), as raw numbers with
 where in the game's code they came from. It's noisy, but useful for finding
 more rolls worth labelling.
-
-## More pages
-
-- [How the game works](HOW-THE-GAME-WORKS.md): what the original game does
-  that its manual doesn't say, from its code and checked in play (initiative,
-  spells and psionics, monsters' defences, thief skills, saving throws...).
-- [Items](ITEMS.md) (spoilers): every magic item and every mundane weapon, the
-  game's and the mod's, with their icons and where each is.
 
 ## Accessibility
 
