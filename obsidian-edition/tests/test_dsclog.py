@@ -34,7 +34,7 @@ except ImportError:  # optional dependency
 EXE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")
 TSR, GAME_DS, SS, CALLER, PARENT, RAND = 0x1000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000
 SEG_MOVED = 306  # the header's: SEG_MOVE has made the new spells' records' room
-RING_SEG = 0xC000  # where the tests put the ring (DSCLOG's install puts it past its image)
+RING_SEG = 0xC000  # where the tests put the far block, the ring in it (DSCLOG's install: the HMA)
 IF = 0x200  # the interrupt flag
 # CHOOSE A SPELL as the tests' stand-in (at its stub, DS + 430Ah - 4356h : 5Ch): the call counted at
 # DS:F000h, the spell levels on offer (preserver level 9, through PROBE_PICK_LEVEL) kept from DS:F002h,
@@ -54,7 +54,9 @@ def load_image():
     with open(EXE, "rb") as f:
         exe = f.read()
     image = bytearray(exe[struct.unpack_from("<H", exe, 8)[0] * 16:])
-    image[268:270] = struct.pack("<H", RING_SEG)  # (the ring's segment, as DSCLOG's install sets it)
+    image[268:270] = struct.pack("<H", RING_SEG)  # (the ring's segment, as DSCLOG's install sets it,
+    image[138:140] = struct.pack("<H", RING_SEG)  # and the far block's: the text buffer's and the
+    image[142:144] = struct.pack("<H", RING_SEG)  # other buffers', FAR_SEG)
     return bytes(image)
 
 
@@ -105,8 +107,8 @@ class HeaderTests(unittest.TestCase):
         self.assertEqual(tuple(image[hdr + 112:hdr + 117]), (VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG))
 
     def test_fits_upper_memory(self):
-        """What the helper puts in upper memory (UMB_NEED, the header's +372: itself, the overlay
-        buffer, the panel's picture and the ring, with their MCBs) fits the room DOSBox gives it from
+        """What the helper puts in upper memory (UMB_NEED, the header's +372: itself as loaded and
+        the overlay buffer, with their MCBs) fits the room DOSBox gives it from
         its MCB at D00Ah to F000h, or the game's overlay buffer goes back into its heap."""
         from dsloader import heapcheck
         image = load_image()

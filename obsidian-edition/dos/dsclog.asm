@@ -188,7 +188,7 @@ seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
 esize    dw ESIZE               ; +14
-ring_off dw 0                   ; +16  offset of the ring in RING_SEG's segment
+ring_off dw FAR_RING            ; +16  offset of the ring in RING_SEG's segment (the far block's)
 stub_off dw stub                ; +18  offset of STUB in this segment
 hdr_off  dw hdr                 ; +20  offset of this header in this segment
 seed_off dw 0x4122              ; +22  DS offset of the game's 32-bit rand seed
@@ -218,12 +218,15 @@ int_rand_off dw int_rand        ; +118 offset of INT_RAND (VEC_RAND's handler) i
 gpl_hook_off dw gpl_hook        ; +120 offset of GPL_HOOK in this segment
 gpl_chain dd 0                  ; +122 the game's own hook, which GPL_HOOK passes on to
 tpos     dw 0                   ; +126 bytes written to the text buffer so far (wraps at 65536)
-tbuf_off dw tbuf                ; +128 offset of the text buffer in this segment
+tbuf_off dw FAR_TBUF            ; +128 offset of the text buffer in TBUF_SEG's segment
 tsize    dw TSIZE               ; +130 its size (a power of two)
 probe_text_off dw probe_text    ; +132 offset of PROBE_TEXT in this segment
 probe_msg_off dw probe_msg      ; +134 offset of PROBE_MSG in this segment
 probe_char_off dw probe_char    ; +136 offset of PROBE_CHAR in this segment
-          times 4 dw 0          ; +138 (unused: the turn summaries' pop-up, gone for the combat log)
+tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block's (FAR_SEG)
+panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in PANEL_SEG's segment
+far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
+          dw 0                  ; +144 (unused)
 ended     dw 0                  ; +146 the combatant whose turn just ended
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one per party
                                 ;      member, lines separated by "|", NUL-terminated (the Loader
@@ -316,9 +319,9 @@ skills_on  dw 0                 ; +266 the Loader sets SKILLS_STEALTH to have an
                                 ;      (PROBE_ITEM_BOX), SKILLS_BELT for a worn belt's to picking
                                 ;      pockets and opening locks (PROBE_BELT, and its box's line),
                                 ;      SKILLS_ELVEN the Cloak and Boots of Elvenkind's chances
-ring_seg   dw 0                 ; +268 the ring's segment: a memory block of its own (upper memory
-                                ;      if any has room, else conventional), so the ring takes none
-                                ;      of the helper's 64 KB (set when installed; RING_OFF its offset)
+ring_seg   dw 0                 ; +268 the ring's segment: the far block's (FAR_SEG), so the ring
+                                ;      takes none of the helper's 64 KB (set when installed; RING_OFF
+                                ;      its offset)
 rules_hi   dw 0                 ; +270 more rule changes the Loader turns on (RULE_HI_KITS)
 learn_seq  dw 0                 ; +272 a preserver's try at a scroll's spell (INT_LEARN), counted ...
 learn_who  db 0                 ; +274 ... the party member ...
@@ -340,8 +343,8 @@ panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log'
                                 ;      over the map (PANEL), 0 to have it gone (the view drawn again)
 panel_seg  dw 0                 ; +328 the panel's picture: PANEL_W x PANEL_H palette indices, row
                                 ;      by row, each row its four planes' bytes in turn (PANEL_BLIT),
-                                ;      the Loader's to draw (combatlog.py); its own
-                                ;      memory block (0: none could be had, no panel)
+                                ;      the Loader's to draw (combatlog.py); the far block's
+                                ;      (FAR_SEG, at PANEL_OFF)
 panel_new  dw 0                 ; +330 the Loader sets 1 once it has put a new picture there;
                                 ;      DSCLOG draws it and sets it back to 0
 panel_mx   dw 0                 ; +332 the pointer, as the mouse driver last said (game pixels): x,
@@ -525,6 +528,7 @@ record:
         mov es, [cs:ring_seg]
         mov di, [cs:widx]
         imul di, di, ESIZE
+        add di, FAR_RING
         mov word [es:di], 0xFFFF
         mov cx, [cs:kind]
         mov [es:di+184], cx
@@ -13723,7 +13727,7 @@ old21       dd 0
 ; stderr) kept, its last MSG_BYTES in MSG_RING, then on to DOS. The game prints its fatal errors
 ; ("Mel Fatal Error", "ABEND: VMDelHeap() ...") while the screen is still in graphics, and puts
 ; it back in text mode, clearing it, on its way out: GAMEEND.COM found nothing to read.
-MSG_BYTES   equ 128
+MSG_BYTES   equ 256
 dos_write:
         cmp bx, 2
         ja .chain
@@ -17261,8 +17265,11 @@ slots_text times 4 * SLOTS_SIZE db 0
 
 tput:                           ; AL -> text buffer at position BX
         push bx
+        push es
         and bx, TSIZE - 1
-        mov [cs:tbuf+bx], al
+        mov es, [cs:far_seg]
+        mov [es:FAR_TBUF + bx], al
+        pop es
         pop bx
         inc bx
         ret
@@ -17954,7 +17961,7 @@ shadow_of:
         loop .crun
         jmp .drawn
 
-; SHADOW CACHE (SC_SEG, KEEP's block in upper memory, if there was room: UMBPLUS.COM): in a big
+; SHADOW CACHE (SC_SEG, the far block's, at FAR_SC): in a big
 ; fight the game lets go of pictures it isn't drawing just then, so a figure's could be out of its
 ; cache as the floor is drawn, its shadow gone (SHADOW_OF draws only from pictures in memory). So
 ; each frame's shadow is kept as it is drawn from its picture: SC_SLOTS slots of SC_SLOT bytes, the
@@ -17979,7 +17986,7 @@ sc_find:
         je .none
         mov es, [cs:sc_seg]
         mov ebx, [cs:sc_key]
-        xor di, di
+        mov di, FAR_SC
         mov dx, 0xFFFF
         mov cx, SC_SLOTS
 .slot:  cmp byte [es:di + 7], 0
@@ -18016,6 +18023,7 @@ sc_start:
         mov ax, [cs:sc_next]
         mov bx, SC_SLOT
         mul bx
+        add ax, FAR_SC
         mov di, ax
         mov eax, [cs:sc_key]
         mov [es:di], eax
@@ -18142,15 +18150,20 @@ darken: cmp bx, [cs:clip_y0]
         pop dx
         mov bx, [cs:n_spans]
         imul bx, bx, 6
-        mov [cs:spans + bx], ax
-        mov [cs:spans + bx + 2], dx
-        mov [cs:spans + bx + 4], di
+        push fs
+        mov fs, [cs:far_seg]
+        mov [fs:FAR_SPANS + bx], ax
+        mov [fs:FAR_SPANS + bx + 2], dx
+        mov [fs:FAR_SPANS + bx + 4], di
+        pop fs
         inc word [cs:n_spans]
 .out:   ret
 
 spans_flush:                            ; the noted runs darkened, a plane at a time
         cmp word [cs:n_spans], 0
         je .ret
+        push fs
+        mov fs, [cs:far_seg]
         mov es, [cs:v_seg]
         xor cx, cx                      ; the plane
 .plane: mov dx, 0x3C4                   ; write to this plane, read from it
@@ -18164,16 +18177,16 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
         out dx, ax
         xor si, si
 .span:  mov ax, cx
-        sub ax, [cs:spans + si + 2]
+        sub ax, [fs:FAR_SPANS + si + 2]
         and ax, 3
-        add ax, [cs:spans + si + 2]     ; the first x on this plane
-        mov dx, [cs:spans + si + 4]
+        add ax, [fs:FAR_SPANS + si + 2] ; the first x on this plane
+        mov dx, [fs:FAR_SPANS + si + 4]
         sub dx, ax
         jl .nspan
         shr dx, 2
         inc dx                          ; DX: how many
         shr ax, 2
-        add ax, [cs:spans + si]
+        add ax, [fs:FAR_SPANS + si]
         mov di, ax
         xor bh, bh
 .pix:   mov bl, [es:di]
@@ -18191,10 +18204,11 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
         cmp cx, 4
         jb .plane
         mov word [cs:n_spans], 0
+        pop fs
 .ret:   ret
 
-n_spans dw 0
-spans   times SPANS_MOST * 6 db 0       ; (row's place in the page, first x, last x)
+n_spans dw 0                    ; (the spans in the far block, FAR_SPANS: 6 bytes each, the row's
+                                ;   place in the page, first x, last x)
 
 ; the VGA's registers the shadows change, kept and put back
 vga_save:
@@ -18648,14 +18662,17 @@ dust_tick:                      ; DS = the game's
         mov dx, [es:di + 2]
         mov [cs:t_y], dx
         shl bx, 1
-        sub ax, [cs:last_x + bx]
+        push fs
+        mov fs, [cs:far_seg]
+        sub ax, [fs:FAR_LAST_X + bx]
         mov [cs:t_dx], ax
-        sub dx, [cs:last_y + bx]
+        sub dx, [fs:FAR_LAST_Y + bx]
         mov [cs:t_dy], dx
         mov ax, [cs:t_x]
-        mov [cs:last_x + bx], ax
+        mov [fs:FAR_LAST_X + bx], ax
         mov ax, [cs:t_y]
-        mov [cs:last_y + bx], ax
+        mov [fs:FAR_LAST_Y + bx], ax
+        pop fs
         mov ax, [cs:t_dx]               ; walked a little (not a jump: an area loaded, someone placed)
         call abs16
         cmp ax, JUMP_MOST
@@ -19565,6 +19582,7 @@ panel_blit:
         mov ax, [cs:pb_w4]              ; ... and this plane's bytes of it (each of the picture's
         mul bx                          ;   rows its four planes' bytes in turn: combatlog.py
         mov si, ax                      ;   PLANAR), copied whole
+        add si, FAR_PANEL
         mov dx, [cs:pb_rows]
         mov bp, [cs:pb_top]             ; (BP: the row on screen)
 .row:   mov cx, [cs:pb_w4]
@@ -19986,8 +20004,8 @@ t_dy       dw 0
 t_sx       dw 0
 t_sy       dw 0
 puffs      times PUFFS * PUFF_SIZE db 0
-last_x     times MAP_COUNT dw 0
-last_y     times MAP_COUNT dw 0
+                                ; (each thing's place as last seen: the far block's FAR_LAST_X and
+                                ;   FAR_LAST_Y, a word each)
 walked     times MAP_COUNT db 0
 light      times 256 db 0
 
@@ -20775,7 +20793,6 @@ shadow_tab times (MAP_COUNT + 7) / 8 db 0
 dark       times 256 db 0
 dac        times 768 db 0
 
-tbuf:   times TSIZE db 0
 
 ; UMB_ALLOC: BX paragraphs in upper memory (the upper blocks linked in, high only, last fit: the
 ; top of it, so the space left over stays in one piece for the overlay buffer, OVR_RESERVE), AX
@@ -21004,18 +21021,11 @@ hp_fl     dw 0
 pool_seg  dw 0                  ; (KEEP's block for the music buffer, 0 if none)
 pool_used db 0
 
-; KEEP: the last of installing, from here, as the ring is where the install code was: clear the
-; ring and stay resident, the ring with the image (DX the paragraphs). The stack goes to the PSP's
-; command tail first, out of the ring's way.
+; KEEP: the last of installing, from here, as the install code is let go of: stay resident (DX
+; the paragraphs). The stack goes to the PSP's command tail first, out of the install code's way.
 keep:   mov ax, [cs:psp]
         mov ss, ax
         mov sp, 0x100
-        mov es, [cs:ring_seg]
-        xor di, di
-        xor ax, ax
-        mov cx, RING_BYTES / 2
-        cld
-        rep stosw
         push dx                         ; our block cut down to what stays, the install code's
         mov es, [cs:psp]                ;  memory given back: then the overlay buffer's block
         mov bx, dx                      ;  (OVR_RESERVE) where it was, in upper memory, the rest
@@ -21033,17 +21043,6 @@ keep:   mov ax, [cs:psp]
         mov es, ax
         mov word [es:0], POOL_PARAS
 .no_pool:
-        mov bx, SC_PARAS
-        call umb_alloc
-        jc .no_sc
-        mov [cs:sc_seg], ax
-        mov es, ax
-        xor di, di
-        xor ax, ax
-        mov cx, SC_PARAS * 8
-        cld
-        rep stosw
-.no_sc:
         pop dx
         mov ax, 3100h
         int 21h
@@ -21051,18 +21050,32 @@ keep:   mov ax, [cs:psp]
 align 16
 seg_space times SEG_BYTES db 0   ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
 area_space times (AREA_BYTES + 15) & ~15 db 0 ; (... and the pictures' table)
-resident_end:                   ; (the ring follows, in a segment of its own)
+resident_end:                   ; (the ring and the other big buffers: the far block, FAR_INIT)
 RING_BYTES equ NENT * ESIZE
+
+; THE FAR BLOCK (FAR_SEG, from FAR_RING to FAR_END): the buffers kept out of the helper's 64 KB
+; and out of upper memory, at fixed offsets: the HMA where it is free (FAR_SEG FFFFh), else a block
+; of their own (FAR_INIT).
+FAR_RING   equ 0x10
+FAR_PANEL  equ FAR_RING + RING_BYTES            ; the panel's picture (PANEL_BLIT)
+FAR_SC     equ FAR_PANEL + PANEL_BYTES          ; the shadows' cache (SC_FIND)
+FAR_TBUF   equ FAR_SC + SC_SLOTS * SC_SLOT      ; the text buffer (TPUT)
+FAR_SPANS  equ FAR_TBUF + TSIZE                 ; the shadows' spans (SPANS_FLUSH)
+FAR_LAST_X equ FAR_SPANS + SPANS_MOST * 6       ; each thing's place as last seen (dust)
+FAR_LAST_Y equ FAR_LAST_X + MAP_COUNT * 2
+FAR_END    equ FAR_LAST_Y + MAP_COUNT * 2
+FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
+        times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
 
 ; UPPER MEMORY: DOSBox (umb=true, ems=false, as the launcher's config has it) gives one block,
 ; D000h-EFFFh, its first 10 paragraphs a free scrap ahead of the helper's MCB: UMB_ROOM paragraphs
-; from the helper's MCB on. In it: the helper (PSP and resident image), the overlay buffer
-; (OVR_RESERVE), the panel's picture and the ring, each with its MCB. The build fails if they
+; from the helper's MCB on. In it: the helper (PSP and the image as loaded, its install code and
+; stack too) and the overlay buffer (OVR_RESERVE), each with its MCB. The build fails if they
 ; outgrow it: the overlay buffer would go back into the game's heap (33 KB less for the game).
 ; (UMBPLUS.COM, run first, moves the block's start down to C900h where it can, 28 KB more; the
 ; helper still has to fit without it.)
 UMB_ROOM equ 0xF000 - 0xD00A
-UMB_NEED equ (1 + 0x10 + (resident_end - hdr) / 16) + (1 + OVR_RESERVE) + (1 + (PANEL_BYTES + 15) / 16) + (1 + (RING_BYTES + 15) / 16)
+UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
 
 POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
@@ -21523,31 +21536,90 @@ install:                        ; DS = ES = PSP, CS = the image
         mov dx, msg
         mov ah, 9
         int 21h
-        mov bx, (RING_BYTES + 15) / 16  ; the ring, in a block of its own: upper memory, else any
-        call umb_alloc
-        jnc .ring
-        mov ah, 48h
-        mov bx, (RING_BYTES + 15) / 16
+        call far_init                   ; the far block: the HMA, else a block of its own
+        jnc .far
+        mov dx, no_far
+        mov ah, 9
         int 21h
-        jnc .ring
-        mov ax, cs                      ; (none: the paragraphs after the resident image, which
-        add ax, (resident_end - hdr) / 16   ;  the load's size leaves room for)
+        mov ax, 4C01h
+        int 21h
+.far:   mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
-        mov bx, (PANEL_BYTES + 15) / 16
-        call umb_alloc
-        jc .nopan1
         mov [cs:panel_seg], ax
-.nopan1:
-        mov dx, 0x10 + (resident_end - hdr) / 16 + RING_BYTES / 16  ; PSP, image and ring, in paragraphs
-        jmp keep
-.ring:  mov [cs:ring_seg], ax
-        mov bx, (PANEL_BYTES + 15) / 16 ; the combat log's picture: upper memory only (else no panel)
-        call umb_alloc
-        jc .nopan2
-        mov [cs:panel_seg], ax
-.nopan2:
+        mov [cs:sc_seg], ax
+        mov [cs:tbuf_seg], ax
         mov dx, 0x10 + (resident_end - hdr) / 16    ; PSP and image, in paragraphs
         jmp keep
+
+; FAR_INIT: FAR_SEG set, its FAR_RING to FAR_END cleared; CF if there was no room. The HMA
+; (FFFFh:0010h on, A20 on) when it is ours: given by XMS (function 01h), or, where XMS says
+; there is none (DOSBox 0.74: its XMS blocks start at 1 MB + 64 KB, XMS_START), unused (all
+; zero). Else a block of upper memory, else of conventional memory, FAR_SEG a paragraph below
+; it (so its first byte is FAR_SEG:0010h, as in the HMA).
+far_init:
+        mov ax, 4300h
+        int 2Fh
+        cmp al, 80h
+        jne .block
+        mov ax, 4310h
+        int 2Fh
+        mov [cs:xms], bx
+        mov [cs:xms + 2], es
+        mov ah, 1                       ; the HMA, all of it
+        mov dx, 0xFFFF
+        call far [cs:xms]
+        mov [cs:hma_given], al
+        or ax, ax
+        jnz .a20
+        cmp bl, 90h                     ; (none, as XMS has it: unused if all zero)
+        jne .block
+.a20:   mov ah, 3                       ; A20 on, for good
+        call far [cs:xms]
+        or ax, ax
+        jz .block
+        push ds
+        xor ax, ax                      ; FFFFh:0010h no longer 0000h:0000h
+        mov ds, ax
+        mov ax, 0xFFFF
+        mov es, ax
+        cli
+        mov ax, [ds:0]
+        not word [es:0x10]
+        cmp ax, [ds:0]
+        not word [es:0x10]
+        sti
+        pop ds
+        jne .block
+        cmp byte [cs:hma_given], 0
+        jne .hma
+        mov di, FAR_RING
+        mov cx, (FAR_END - FAR_RING) / 2
+        xor ax, ax
+        cld
+        repe scasw
+        jne .block
+.hma:   mov word [cs:far_seg], 0xFFFF
+        jmp .clear
+.block: mov bx, FAR_PARAS
+        call umb_alloc
+        jnc .got
+        mov ah, 48h
+        mov bx, FAR_PARAS
+        int 21h
+        jc .ret
+.got:   dec ax
+        mov [cs:far_seg], ax
+.clear: mov es, [cs:far_seg]
+        mov di, FAR_RING
+        mov cx, (FAR_END - FAR_RING) / 2
+        xor ax, ax
+        cld
+        rep stosw
+        clc
+.ret:   ret
+xms       dd 0
+hma_given db 0
+no_far  db 'DSCLOG: no memory for its buffers (57 KB). Not loaded.', 13, 10, '$'
 
 
 msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
@@ -21561,7 +21633,5 @@ all_vectors_end:
         align 16, db 0
 image_len equ $ - $$
 file_len  equ image_len + 32
-; the memory past the image to load in: up to the ring's end (the ring follows the resident part,
-; over the install code), and the install's stack beyond it (resident_end + RING_BYTES is the
-; larger: the install code and its stack are smaller than the ring)
-LOAD_EXTRA equ (resident_end - hdr + RING_BYTES - image_len + STACK + 15) / 16
+; the memory past the image to load in: the install's stack
+LOAD_EXTRA equ (STACK + 15) / 16

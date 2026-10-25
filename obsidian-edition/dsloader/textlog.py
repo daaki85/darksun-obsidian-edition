@@ -20,8 +20,9 @@ HEADER = 10  # mark, kind, dword, word, length
 BUTTONS = {"END", "CLOSE", "MORE"}  # the window's buttons, sent like text
 IDLE_SECONDS = 1.5  # a dialogue without END is shown after this long
 
-# DSCLOG header offsets
-TPOS, TBUF_OFF, TSIZE, HDR_OFF = 126, 128, 130, 20
+# DSCLOG header offsets (TBUF_SEG: the text buffer's segment, DSCLOG's far block; 0 in a helper
+# from before it, whose buffer was in its own segment)
+TPOS, TBUF_OFF, TSIZE, HDR_OFF, TBUF_SEG = 126, 128, 130, 20, 138
 
 
 class TextRecord(NamedTuple):
@@ -55,12 +56,19 @@ class TextBuffer:
     def __init__(self, read: Callable[[int, int], bytes], hdr: int):
         self.read = read
         self.hdr = hdr
-        head = read(hdr, 132)
-        base = hdr - struct.unpack_from("<H", head, HDR_OFF)[0]
-        self.buf = base + struct.unpack_from("<H", head, TBUF_OFF)[0]
+        head = read(hdr, 140)
         self.size = struct.unpack_from("<H", head, TSIZE)[0]
         self.pos = struct.unpack_from("<H", head, TPOS)[0]
         self.missed = 0
+
+    def _buffer(self) -> int:
+        """Where the text buffer is: in the far block (TBUF_SEG), else in the helper's segment."""
+        head = self.read(self.hdr, 140)
+        seg, = struct.unpack_from("<H", head, TBUF_SEG)
+        off, = struct.unpack_from("<H", head, TBUF_OFF)
+        if seg:
+            return seg * 16 + off
+        return self.hdr - struct.unpack_from("<H", head, HDR_OFF)[0] + off
 
     def poll(self) -> List[TextRecord]:
         pos = struct.unpack("<H", self.read(self.hdr + TPOS, 2))[0]
@@ -71,7 +79,7 @@ class TextBuffer:
             self.missed += new - self.size
             new = self.size
         start = (pos - new) % self.size
-        ring = self.read(self.buf, self.size)
+        ring = self.read(self._buffer(), self.size)
         data = ring[start:start + new] + (ring[:start + new - self.size] if start + new > self.size else b"")
         self.pos = pos
         return parse_records(data)

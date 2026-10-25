@@ -416,14 +416,27 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 63 entries of `ESIZE` 192 bytes) follows
-the resident part in memory, in a segment of its own: the install code sets
-`ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
-the resident image, and its last step (`KEEP`, in the resident part, as the
-ring lies over the install code) clears the ring and stays resident with it.
-The text buffer (`TSIZE`) is 2 KB; the Loader reads its size from the header
-and drains it every 20 ms (at most 251 bytes came in between two reads in the
-opening show, the busiest stretch measured).
+Its big buffers are kept apart, in its **far block** (`FAR_SEG`, the header's
++142), at fixed offsets from `FAR_RING` (10h) to `FAR_END`: the dice log's ring
+(`NENT` 63 entries of `ESIZE` 192 bytes), the panel's picture, the shadows'
+cache, the text buffer, the shadows' spans and each thing's place as last seen
+(for the dust), 57,800 bytes. `FAR_INIT` (install code) puts it in the **HMA**
+(FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there
+is none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
+`XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
+and checked (FFFFh:0010h no longer 0000h:0000h). The game never calls XMS's
+A20 or HMA functions (its XMS calls are 08h-0Dh), and no file DOSBox runs is
+EXEPACKed (the unpacker fails with A20 on below 64 KB). Without the HMA the
+block is a memory block of its own (upper memory, else conventional),
+`FAR_SEG` a paragraph below it so that its offsets are the same. The header
+gives the Loader each buffer's segment and offset: the ring's `ring_seg`
+(+268) and `ring_off` (+16), the text buffer's `tbuf_seg` (+138) and
+`tbuf_off` (+128), the panel's `panel_seg` (+328) and `panel_off` (+140). The
+helper reaches the internal ones through FS, pushed and set around each use
+(the game never sees it changed). The text buffer (`TSIZE`) is 2 KB; the
+Loader reads its size from the header and drains it every 20 ms (at most 251
+bytes came in between two reads in the opening show, the busiest stretch
+measured).
 
 The helper has to load into upper memory, or the game loses 62 KB of
 conventional memory (570 KB free rather than 632 KB).
@@ -436,9 +449,9 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the panel's picture 23 KB, the shadows' cache 16 KB, the ring 12 KB, the game's music buffer 12 KB, 0.5 KB free |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 55 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 57.8 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA: unused (DOSBox's XMS says there is none; reached only with A20 on) |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 56 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places), 7.5 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 DOSBox makes its upper memory block at D000h, but C800h-CFFFh is RAM too, and
@@ -487,8 +500,8 @@ launcher's config turns EMS off (`launch.DOS_LINES`: the game uses XMS instead),
 which leaves the helper a second 64 KB block (65 KB free with it loaded; see
 [the combat log](#what-the-game-allows)). The helper's own segment is still at
 most 64 KB (everything through CS), so the second block is room for data kept
-apart from it, as the ring is. The helper asks for its resident part and the
-ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few
+apart from it. The helper asks for its image and the install's stack
+(`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few
 KB of upper memory left. A change that adds much code should check that again:
 the ring is 63 entries, not 128 (96 until the new spells' code, when the game no
 longer started for lack of memory; 88 until STORE and RECALL; 84 until spells
@@ -506,9 +519,8 @@ the heap it was the largest block the 640 KB never got back. The patch
 `overlay_umb` makes that call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands
 over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
 own block down to what stays, then takes the buffer's block in the memory the
-install code had, while the ring and the panel's picture were taken at the
-top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
-62 KB of the helper, the buffer, what is left free, the panel and the ring.
+install code had, so the room is in one piece: the helper, the buffer and what
+is left free.
 The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
 the map open this left 86 KB free in conventional memory (85 KB measured again
@@ -518,17 +530,18 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. 74 paragraphs (1.2 KB) are spare in it
-now, after the right button's scrolling, the rings under every enemy and the
-strip below the map were taken out (it was one).
-The shadow table becoming a bit for each thing and the added item names 16
-bytes each (padded to the game's 25 as they are copied) once left 3.8 KB; the
-6th-level spells, the names over figures, Whirlwind's funnel, Wall of Thorns'
-armour and the pointer in scenes (with the freeze report cut from 32 records
-to 16) have used it. So new helper code needs room found first: each of the
-ring's entries is 12 paragraphs (`NENT`), and the helper's own segment still
-has about 4.6 KB (its resident part 60,912 bytes of 65,536): that, not upper
-memory, is now the tighter limit for new code. Text the game reads from RESOURCE.GFF belongs in the Loader's
+and so does `test_fits_upper_memory`. Since the far block went to the HMA,
+2,447 paragraphs (38 KB) are spare in it, and with `UMBPLUS.COM` about 57.8 KB
+are free in one piece (measured in DOSBox: the helper at C90Ah, then the overlay
+buffer, the free block, the music buffer). The helper's own segment is the limit
+for new code: its resident part is 56,496 bytes and its image with the install
+code 58,224, so about 7.1 KB of its 64 KB are spare; the HMA has 7,720 bytes
+left for more buffers. (Before this pass the segment had about 2 KB and upper
+memory 0.5 KB: the right button's scrolling, the rings under every enemy and
+the strip below the map had been taken out, and the freeze report cut to 16
+records, to make room.) The game's sound-effects buffer (24,001 bytes, kept
+for good like the music's) could go to upper memory next for the game's 640
+KB, but the sound driver may play it by DMA, which can't cross a 64 KB page. Text the game reads from RESOURCE.GFF belongs in the Loader's
 copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
 freed 1.6 KB), and so does data read from the player's game (the pointer's
 picture, `POINTER.BIN`). If the buffer still ends up in the heap (another
@@ -550,7 +563,7 @@ GAMEEND.COM only reads what is left on the screen, and the game's own fatal
 errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
 engine's "Mel Fatal Error #: N Trap #: N") are printed while the screen is in
 graphics, then cleared as the game puts it back in text mode on its way out.
-So DSCLOG keeps the last 128 bytes the game writes to handles 1 and 2 (INT 21h
+So DSCLOG keeps the last 256 bytes the game writes to handles 1 and 2 (INT 21h
 AH=40h: `DOS_WRITE`). At the first non-zero exit (AH=4Ch: `DOS_QUIT`), it writes
 them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
 stack. `launch.game_message` turns that into the crash report's lines: the

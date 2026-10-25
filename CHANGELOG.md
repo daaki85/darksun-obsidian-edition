@@ -22,13 +22,21 @@ notes](PATCH-NOTES.md).
 **Changed**
 - **A backstab's dice log line shows the sum:** `+2 backstab (the dice 1 x3 = 3)`, not `(the dice
   x3)`. The die's 1 is already in the line, so the backstab adds 2 more.
+- **The helper's big buffers moved to the HMA** (memory pass): the dice log's ring, the combat
+  log panel's picture, the shadows' cache, the text buffer, the shadows' spans and the dust's
+  last places (57,800 bytes) are DSCLOG's far block (`FAR_INIT`, `FAR_SEG`, header +142), at FFFFh:0010h
+  with A20 on (DOSBox 0.74's XMS leaves the HMA unused; the game never touches A20), else a
+  block of its own. Upper memory: about 57.8 KB free in one piece, from 0.5 KB; the helper's
+  own 64 KB segment: 7.1 KB spare, from 2 KB (resident part 56,496 bytes). The Loader reads the
+  text buffer's and the panel's place from the header (`textlog.TBUF_SEG`,
+  `combatlog.TSR_PANEL_OFF`). Seen in DOSBox: the dice log, the text log, the panel, shadows,
+  dust and the arena's fight (40 shadows cached), with and without `UMBPLUS.COM`.
 
 **Fixed**
 - **A Shinobi couldn't learn from a scroll**: clicking the spell's picture in the scroll's box did
   nothing. The game makes the picture a button only for a class the item type allows (the class
   mask test at 6D3B9h, kept in `DS:9CF6h`), and the scroll type allows wizards only. `SCROLL_USE`
-  passes a scroll for a Shinobi. To make room, the helper keeps the last 128 bytes the game
-  writes to the screen for the crash report (`MSG_BYTES`), not 256.
+  passes a scroll for a Shinobi.
 - **Spells cast by weapons were at caster level 6** whoever struck: the attack routine pushes 6
   for every weapon spell (58BE6h). A Spellarcher's spell arrows now go at the archer's preserver
   level (`ARROW_LEVEL`); a weapon's own spell stays at 6. A 2nd-level archer's Shocking Grasp did
@@ -50,7 +58,7 @@ notes](PATCH-NOTES.md).
 - Learning from a scroll says nothing on the inventory screen: the game's message (4D0:2Ah) isn't
   seen there, its own YOU LEARN THE SPELL included. A Shinobi's failed read (the scroll used up)
   or a spell not its own (the scroll kept) looks like nothing happened; the dice log has the roll.
-  A window for it needs room in the helper's upper memory (4 paragraphs left).
+  A window for it now has room (the memory pass above).
 
 ## Pull request #61
 
