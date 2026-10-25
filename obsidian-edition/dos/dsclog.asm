@@ -14441,9 +14441,7 @@ ns_setup:
         jz .flights
         test byte [cs:ns_state], NS_MOVED
         jz .flights
-        mov word [es:REFLECT_ENTRY], ns_name_reflect
-        mov [es:REFLECT_ENTRY + 2], cs
-        mov word [es:REFLECT_ENTRY + 4], NS_ICON + REFLECT_SPELL
+        call ns_reflect_entry
 .flights:
         mov ax, ds              ; flight 15: Fogbolt's grey bolt, as fast as Magic Missile's; else the game's
         sub ax, SPELLS_FROM_DS
@@ -14882,7 +14880,6 @@ REQ_SITE  equ NS_IMAGE + 25      ; 7FF42h: a script's REQUEST, its number read
 AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim check's answer
 AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against a spell
 ARROW_LEVEL equ NS_IMAGE + 47    ; 58BE6h: a weapon's spell cast at level 6 (ARROW_LEVEL)
-ARMOR_BLOW equ NS_IMAGE + 48     ; 58B27h: a hit's damage taken, Armor's charge (ARMOR_BLOW)
 SCROLL_USE equ NS_IMAGE + 49     ; 6D3B9h: an item's box, its class mask tested (SCROLL_USE)
 BOX_SAID  equ NS_IMAGE + 50     ; 8B815h: an item's box, its message just given (BOX_SAID)
 LINE_SAID equ NS_IMAGE + 51     ; 891A4h...: the inventory's line written by the game (BOX_SAID)
@@ -14975,8 +14972,6 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je arrow_spell
         cmp byte [cs:rl_site], ARROW_LEVEL
         je arrow_level
-        cmp byte [cs:rl_site], ARMOR_BLOW
-        je armor_blow
         cmp byte [cs:rl_site], SCROLL_USE
         je scroll_use
         cmp byte [cs:rl_site], BOX_SAID
@@ -15544,52 +15539,7 @@ scroll_use:
         popad
         iret
 
-; ARMOR_BLOW: "cmp di,[bp-0Ch]" (58B27h; 3 bytes: the INT and the site's number) in the attack
-; (5883Ah), just after a hit's damage went to its target ([BP-0Ch], combatant [494Ah]; the
-; damage it took [BP-4]). Armor (effect 2) uses a charge for each damaging hit, as AD&D's absorbs
-; that much damage and no more: the game used one only in the spells' damage routine (79A01h),
-; since the charge it used whenever anything landed is gone (armor_charge), so blows never wore it
-; down. With damage done and Armor on the target, a charge used as BLOW's (598:57h), in a frame
-; the overlay manager can fix up; the compare made, its flags into the INT's frame.
-ARMOR_EFFECT equ 2
-armor_blow:
-        sti
-        pushad
-        push es
-        mov di, sp
-        mov ax, [ss:di + 2]             ; (DI as the game had it)
-        cmp ax, [bp - 0x0C]
-        pushf
-        pop ax
-        call ns_flags
-        cmp word [bp - 4], 0
-        jle .out                        ; (no damage taken)
-        mov si, [bp - 0x0C]             ; (the target)
-        mov ax, si
-        mov cl, ARMOR_EFFECT
-        call ns_has
-        jnz .out
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way back, as a far call's frame with BP)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
-        mov ax, ds
-        sub ax, DGROUP_SEG - CHARGE_STUB
-        mov [cs:blow_charge + 2], ax
-        push word ARMOR_EFFECT
-        push si
-        call far [cs:blow_charge]
-        add sp, 4
-        pop bp
-        pop ax                          ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-.out:   pop es
-        popad
-        iret
+ARMOR_EFFECT equ 2             ; (the game's Armor, Improved AC)
 
 ; NS_HOLD: "or al,al / je +22h" (7A333h; 4 bytes) in the checks of what a spell (SI) can't do to
 ; thing DI (7A1BFh), just after the game's test whether DI is undead (7BE20h: AL). Undead: on as
@@ -16701,6 +16651,12 @@ ns_entry:
         sub ax, EF_SHOWN_FROM_DS
         mov es, ax
         mov ax, [es:EF_SHOWN]
+        cmp word [ss:di + bx], ARMOR_EFFECT
+        jne .thing
+        call ef_charges         ; (the line under the pointer: Armor's name with its charges)
+        jnc .thing
+        mov word [ss:di + bx], REFLECT_ENTRY + 6
+        jmp .out
 .thing: mov dx, [ss:di + bx]    ; (DX the effect)
         cmp dx, MIRROR_EFFECT
         jne .times
@@ -16713,6 +16669,12 @@ ns_entry:
         call ns_effect_spell
         cmp ax, REFLECT_SPELL
         jne .times
+        push es
+        mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        call ns_reflect_entry   ; (EF_CHARGES may have lent it to Armor's line)
+        pop es
         mov word [ss:di + bx], REFLECT_ENTRY + 6
         jmp .out
 .times: imul dx, dx, 6
@@ -16818,6 +16780,109 @@ sell_keep:
         pop bx
         pop ax
         iret
+
+; NS_REFLECT_ENTRY: Reflected Image's entry past the spell rows (ES the effects' table's segment):
+; its name and icon. All registers kept.
+ns_reflect_entry:
+        mov word [es:REFLECT_ENTRY], ns_name_reflect
+        mov [es:REFLECT_ENTRY + 2], cs
+        mov word [es:REFLECT_ENTRY + 4], NS_ICON + REFLECT_SPELL
+        ret
+
+; EF_CHARGES: CF set when the Effects screen asks for Armor's name (NS_ENTRY, frame at SS:DI) for
+; the line under the pointer (7ED37h, the cell's name to 580:5Ch: there the way back's third byte
+; on is "mov bx,ax", 8Bh; the icons' and the cells' sites have "mov bx,0FFFAh") and thing AX's
+; Armor has charges left (+8 of its record): REFLECT_ENTRY then names it, the game's name with
+; them, "IMPROVED AC (3 CHARGES)", in EF_TEXT (580:5Ch keeps that name's address, not the entry,
+; so Reflected Image's use of the entry after it changes nothing). Only with the room past the
+; spell rows (SEG_MOVE). DS the game's; all registers kept.
+EF_NAME_MAX equ 20
+ef_charges:
+        pusha
+        push es
+        cmp byte [cs:seg_moved], 0
+        je .no
+        les si, [ss:di + 34]            ; (the way back)
+        cmp byte [es:si + 3], 0x8B
+        jne .no
+        mov cl, ARMOR_EFFECT
+        call ns_charges
+        or al, al
+        jz .no
+        mov bl, al                      ; (BL the charges)
+        mov dx, ds
+        sub dx, EFFECT_TABLE_FROM_DS
+        mov es, dx
+        push ds
+        lds si, [es:(ARMOR_EFFECT - 1) * 6]
+        mov di, ef_text
+        mov cx, EF_NAME_MAX
+.name:  lodsb
+        or al, al
+        jz .named
+        mov [cs:di], al
+        inc di
+        loop .name
+.named: pop ds
+        mov word [cs:di], ' ('
+        add di, 2
+        mov al, bl
+        call c_itoa
+        mov si, ef_charge_word
+.word:  mov al, [cs:si]
+        mov [cs:di], al
+        inc si
+        inc di
+        or al, al
+        jnz .word
+        dec di
+        cmp bl, 1
+        je .shut
+        mov byte [cs:di], 'S'
+        inc di
+.shut:  mov word [cs:di], ')'
+        mov ax, [es:(ARMOR_EFFECT - 1) * 6 + 4]
+        mov word [es:REFLECT_ENTRY], ef_text
+        mov [es:REFLECT_ENTRY + 2], cs
+        mov [es:REFLECT_ENTRY + 4], ax
+        pop es
+        popa
+        stc
+        ret
+.no:    pop es
+        popa
+        clc
+        ret
+ef_charge_word db ' CHARGE', 0
+ef_text times EF_NAME_MAX + 16 db 0
+
+; NS_CHARGES: AL the charges left (+8) on effect CL of thing AX (the game's table of active
+; effects), 0 if none. DS the game's; others kept.
+ns_charges:
+        push bx
+        push dx
+        push es
+        mov dx, ds
+        sub dx, EFFECTS_FROM_DS
+        mov es, dx
+        mov dx, [EFFECTS_COUNT]
+        mov bx, EFFECTS_OFF
+.each:  or dx, dx
+        jz .none
+        cmp [es:bx], ax
+        jne .next
+        cmp [es:bx + 6], cl
+        jne .next
+        mov al, [es:bx + 8]
+        jmp .out
+.next:  add bx, 10
+        dec dx
+        jmp .each
+.none:  xor al, al
+.out:   pop es
+        pop dx
+        pop bx
+        ret
 
 ; NS_EFFECT_SPELL: AX the spell that put effect CL on thing AX (the game's table of active effects:
 ; the spell at +4), FFFFh if none. DS the game's; others kept.

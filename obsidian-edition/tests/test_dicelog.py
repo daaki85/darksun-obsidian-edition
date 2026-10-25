@@ -803,7 +803,37 @@ class SaveTests(unittest.TestCase):
         # the same routine for any other effect using a charge (Ironskin stopping a blow)
         e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 53),
                    parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
-        self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Ironskin on Mountain Stalker: one charge used"])
+        self.assertEqual(log.describe(e[0]) + log.describe(e[1]),
+                         ["    Ironskin on Mountain Stalker: one charge used, none left: it ends"])
+
+    def test_charges_left(self):
+        """Each charge used says how many are left: the record's count once the poll's charges
+        are all used, with those still to be told of in the same poll added back."""
+        log = make_game()
+        set_effects(log, [(0x29, 0x29, 2)])  # Armor (effect 2) on combatant 29h, 3 charges left
+        log.guest.mem[(LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF + 8] = 3
+        e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 2),
+                   parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1, 2, 2)]
+        log.count_charges(e)
+        lines = [line for x in e for line in log.describe(x)]
+        self.assertEqual(lines, ["    Improved AC on Mountain Stalker: one charge used, 4 left",
+                                 "    Improved AC on Mountain Stalker: one charge used, 3 left"])
+
+    def test_charge_behind_overlay_trap(self):
+        """The charge routine's 2d4 whose return the overlay manager made an INT 3Fh stub is still
+        a charge when its (creature, effect) has charges; a duration roll's (spell, level) isn't."""
+        log = make_game()
+        set_effects(log, [(0x29, 0x29, 2)])
+        log.guest.mem[(LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF + 8] = 5
+        trap = dicelog.OVERLAY_TRAP + bytes(8)
+        e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 2), parent_code=trap)
+             for f in (3, 1)]
+        log.count_charges(e)
+        self.assertEqual(log.describe(e[0]) + log.describe(e[1]),
+                         ["    Improved AC on Mountain Stalker: one charge used, 5 left"])
+        other = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 7), parent_code=trap)
+                 for f in (3, 1)]
+        self.assertFalse(log._overlay_charge(other[0], 2, 4))
 
     def test_acid_rounds(self):
         """An Acid's time (Acid Arrow's: 20 seconds a level) is rounds of burning (DSCLOG's

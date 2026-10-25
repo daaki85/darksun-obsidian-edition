@@ -9,6 +9,15 @@ notes](PATCH-NOTES.md).
 ## Next pull request
 
 **New**
+- **Charges left, in the dice log and on the Effects screen.** Each charge used says how many are
+  left (`Improved AC on Slig: one charge used, 7 left`, "none left: it ends" for the last): the
+  effect's record (+8) read at the poll, the poll's later charges added back (`count_charges`).
+  The charge routine's 2d4 behind an overlay trap (INT 3Fh in place of its return) is told by its
+  arguments, a creature and an effect it has charges of (`_overlay_charge`); it was a bare
+  "Dice: 2d4" line. Armor's name under the pointer on the Effects screen says them too, IMPROVED
+  AC (10 CHARGES): `EF_CHARGES` in `NS_ENTRY`, at 7ED37h only, points Armor's entry at
+  `REFLECT_ENTRY` with the game's name and the charges (`EF_TEXT`); Reflected Image's use of that
+  entry writes it again first (`ns_reflect_entry`).
 - **M opens the overhead map**, and M again closes it: DSCLOG's `MAP_KEY` turns M into the game's O
   on the map and into Escape while the overhead map is up (`OVERHEAD`, cleared by `PANEL_TICK`).
 - **A Shinobi's read languages on the Effects screen**, under its kit: `READ LANG. 40%`
@@ -51,8 +60,10 @@ notes](PATCH-NOTES.md).
   for every weapon spell (58BE6h). A Spellarcher's spell arrows now go at the archer's preserver
   level (`ARROW_LEVEL`); a weapon's own spell stays at 6. A 2nd-level archer's Shocking Grasp did
   1d8+6.
-- **Armor never ran out against weapons.** Since `armor_charge`, only the spell-damage routine used
-  a charge, and weapon blows never reach it. `ARMOR_BLOW` uses one for each damaging blow.
+- **Armor used two charges for each weapon hit** (since `ARMOR_BLOW`, added in this round): weapon
+  damage, a shot's or a blow's, goes through the damage routine (5B8:20h from the attack routine's
+  one damage call, 58B1Fh), which uses one, so `ARMOR_BLOW` used a second. It is gone; tested in
+  the arena: 9 charges, then 8, 7... one for each hit.
 - **A backstab multiplied the round's second attack too** (an off-hand one after a miss): the game
   multiplies while fewer than two attacks are made. With the dice-only rule, only the first.
 - **Immunity in the dice log.** The HP line matched hits to the HP lost from the first; a hit the

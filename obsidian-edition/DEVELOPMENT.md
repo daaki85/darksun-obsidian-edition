@@ -2169,13 +2169,19 @@ after the `ns_list_` patches):
 - **Armor** (effect 2): the spell-landing routine (7A539h) used a charge when
   any spell or blow landed on a target with Armor (7A557h, `je` past it
   unless effect 2 is on), and the damage routine (79A3Eh) used another for the
-  damage. `armor_charge` makes the first jump always taken. That left weapon blows
-  with none: they never reach the damage routine's charge (79A01h, spells only),
-  so Armor lasted for ever against them. `ARMOR_BLOW` (`NS_IMAGE+48`, over the
-  attack routine's "cmp di,[bp-0Ch]" at 58B27h, after the damage is rolled; the
-  compare done for it and its flags handed back) uses a charge (598:57h, through
-  `CHARGE_STUB` as `NS_BLOW` does) when the blow did damage (`[BP-4]`) and the
-  target (`[BP-0Ch]`) has effect 2.
+  damage. `armor_charge` makes the first jump always taken, leaving one charge
+  for each damaging hit: a weapon's damage, a shot's as a blow's, goes through
+  the damage routine too (the attack routine's one damage call, 5B8:20h at
+  58B1Fh, with spell FFFFh). Seen in the arena: a hit takes Armor from 9 charges
+  to 8. (A helper site that used another for each blow, `ARMOR_BLOW`, at 58B27h,
+  was a mistake and is gone: it made each hit cost two.) The site number
+  `NS_IMAGE+48` is free.
+- **Armor's charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for
+  the line under the pointer, 7ED37h, the way back's third byte on "mov bx,ax")
+  points Armor's entry at `REFLECT_ENTRY` with the game's name and the charges
+  left (+8 of the record): IMPROVED AC (10 CHARGES). 580:5Ch keeps the name's
+  address, not the entry's, so Reflected Image, whose entry that is, writes it
+  again before its own use (`ns_reflect_entry`).
 - **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
   removed each record of the power cast by DI with 598:48h (owner, handle), but
   passed DI as the owner, so a receiver's record stayed (and a record of the

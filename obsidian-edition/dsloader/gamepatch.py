@@ -159,7 +159,6 @@ DRAW_SITE = NS_IMAGE + 42  # (a thing on the map about to be drawn: Whirlwind's 
 CINE_STEP, CINE_END = NS_IMAGE + 43, NS_IMAGE + 44  # (scenes: the pointer shown, a click ends one)
 MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in the middle, as fast up as across)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
-ARMOR_BLOW = NS_IMAGE + 48  # (a damaging hit uses a charge of the target's Armor)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
 BOX_SAID, LINE_SAID, LINE_CLEARED = range(NS_IMAGE + 50, NS_IMAGE + 53)  # (an item's box: its message, never seen on the
 #   inventory, put on the inventory's line for 5 s each time the pointer's handler writes or clears it)
@@ -413,7 +412,6 @@ PATCHES = (
     Patch("arrow_hit", 0x58B63, bytes.fromhex("26807f0f00"), _site(ARROW_HIT_SITE, 5)),
     Patch("arrow_spell", 0x58B78, bytes.fromhex("268a4f0f"), _site(ARROW_SPELL_SITE, 4)),
     Patch("arrow_level", 0x58BE6, bytes.fromhex("6a068ac1b40050"), _site(ARROW_LEVEL, 7)),
-    Patch("armor_blow", 0x58B27, bytes.fromhex("3b7ef4"), _site(ARMOR_BLOW, 3)),
     Patch("scroll_use", 0x6D3B9, bytes.fromhex("26854710"), _site(SCROLL_USE, 4)),
     Patch("box_said", 0x8B815, bytes.fromhex("83c404"), _site(BOX_SAID, 3)),
     Patch("line_said_6E125", 0x6E125, bytes.fromhex("83c40a"), _site(LINE_SAID, 3)),

@@ -536,6 +536,9 @@ class DiceLog:
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
         self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
+        self._charges_ahead: Dict[Tuple[int, int], float] = {}  # charges this poll still to tell of
+        self._charged: set = set()  # (combatant, effect) with charges, at this poll and the last
+        self._charged_before: set = set()
         self._sun_burn = False  # a Sunstroke heat line just given (the same)
         self._spell_name = ""
         self._spell_id: Optional[int] = None
@@ -1099,7 +1102,9 @@ class DiceLog:
     def _lines(self, show_all: bool, now: Optional[float]) -> List[str]:
         now = time.monotonic() if now is None else now
         out: List[str] = []
-        for e in self.poll():
+        entries = self.poll()
+        self.count_charges(entries)
+        for e in entries:
             out += self.describe(e, show_all, now)
         self._forget_undone_picks()
         self._kit_tick(now)
@@ -1728,6 +1733,41 @@ class DiceLog:
 
     # ---- effects (spells and powers on creatures) ------------------------------
 
+    def count_charges(self, entries: Sequence[Entry]) -> None:
+        """The charges these entries use, by (combatant, effect): by the time they are read, the
+        effects' records show them all used, so each charge's line adds back those still to come."""
+        self._charges_ahead = {}
+        if self.game is not None:  # (and the effects with charges now, for _overlay_charge)
+            held = {(effect.owner, effect.id) for effect, charges, _ in self.game.effects_left() if charges}
+            self._charged, self._charged_before = held, self._charged
+        for e in entries:
+            charge = (e.parent_code.startswith(CHARGE_USED_RETURN)
+                      or self._overlay_charge(e, e.arg(6) or 0, e.arg(8) or 0))
+            if (charge and e.parent_arg(6) is not None
+                    and e.parent_arg(8) not in (None, ACID) and (e.arg(6) or 0) > 0):
+                key = (e.parent_arg(6), e.parent_arg(8))  # (each charge's 2d4: one entry a die)
+                self._charges_ahead[key] = self._charges_ahead.get(key, 0) + 1 / e.arg(6)
+
+    def _overlay_charge(self, e: Entry, count: int, sides: int) -> bool:
+        """The charge routine's 2d4 when the overlay manager has swapped its return address for an
+        INT 3Fh stub (so CHARGE_USED_RETURN can't be matched): its arguments are still (creature,
+        effect), an effect that creature has charges of, or had at the last poll (the last charge
+        removes it). A spell's duration roll behind the same stub has (spell, level) there."""
+        if not e.parent_code.startswith(OVERLAY_TRAP) or (count, sides) != (2, 4):
+            return False
+        key = (e.parent_arg(6), e.parent_arg(8))
+        return key in self._charged or key in self._charged_before
+
+    def _charges_after(self, owner: int, eid: int) -> str:
+        """ "3 left" (or "none left: it ends"): the charges on OWNER's effect EID once this charge is
+        used. The record shows every charge used up to the poll, so the ones still to be told of in
+        this poll's entries are added back."""
+        key = (owner, eid)
+        ahead = max(round(self._charges_ahead.get(key, 1)) - 1, 0)
+        self._charges_ahead[key] = ahead
+        left = (self.game.charges_left(owner, eid) if self.game is not None else 0) + ahead
+        return f"{left} left" if left else "none left: it ends"
+
     def _name(self, combatant: int) -> str:
         """A combatant's name, remembered for when the fight is over."""
         name = self.game.combatant_name(combatant)
@@ -2271,7 +2311,7 @@ class DiceLog:
                 return self._abjure(e, faces[0])
             if count == 1 and e.parent_code.startswith(SUMMON_ROLL_RETURN):
                 return [f"    Summoning: 1d{sides} = {faces[0]} picks which of its {sides} creatures comes"]
-            if e.parent_code.startswith(CHARGE_USED_RETURN):
+            if e.parent_code.startswith(CHARGE_USED_RETURN) or self._overlay_charge(e, count, sides):
                 who, eid = self._name(e.parent_arg(6)), e.parent_arg(8)
                 if eid == ACID and count == 1:  # (DSCLOG's BURN_PASS: Sunstroke's heat; its line KIND_HEAT's)
                     return []
@@ -2283,7 +2323,7 @@ class DiceLog:
                 if eid == game.MIRROR_EFFECT:
                     return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes"]
                 name = EFFECT_NAMES.get(eid, f"effect {eid}")
-                return [f"    {name} on {who}: one charge used"]
+                return [f"    {name} on {who}: one charge used, {self._charges_after(e.parent_arg(6), eid)}"]
             handler = next((bonus for code, bonus in SPELL_HANDLER_RETURNS if e.parent_code.startswith(code)), None)
             if handler is not None and e.parent_arg(0x0E) is not None:
                 spell = e.parent_arg(0x0E)
