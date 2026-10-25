@@ -94,6 +94,18 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Tab rings only the enemy chosen, the next on Tab again; L opens the panel.
 
 **Fixed**
+- **A shorter pause after picking up or putting down an item.** The pointer stood still 56-103 ms
+  (85 on average, Zulak's inventory in the user's save, 20,000 cycles) while the game redrew the
+  inventory: its mouse handler (DSUN.EXE 3573Dh) only queues the moves, and the pointer is drawn
+  again once the redraw is done. Sampled at every timer strike (a research build of `PROBE_TICK`),
+  a quarter of that was the vertical-retrace wait (1167Ah's loop at 11686h), reached from the page
+  flip at 14414h: the redraw flips its two pages, each flip waiting for the next retrace. The blits'
+  own waits (1350Dh-13DFBh) cost nothing measurable. `PROBE_FLIP` (`gamepatch` `flip_wait`, INT 8Bh
+  in place of "push cs / call 1674h" at 1445Fh) waits as the game does except with a full screen up
+  (`SCREEN_IS` 2), where the map's pace isn't concerned: 42-45 ms putting an item down, 63-67 picking
+  one up. Frames captured through a pick-up show no tearing. (Live patches of the game's code
+  through the Loader don't take in DOSBox's dynamic core, which keeps its translated code: tests of
+  such changes go in the patched copy of DSUN.EXE.)
 - **A shorter wait for the Loader after picking up or putting down an item.** Each time an item
   moves on the inventory screen the game redraws it, and the helper (`STATS_SYNC`) has the game
   stand still until the Loader brings the THAC0, saves and thief skills up to date, so an item just

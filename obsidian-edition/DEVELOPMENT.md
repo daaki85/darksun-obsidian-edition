@@ -925,7 +925,16 @@ work the numbers out), not from its main loop's next pass: that took 26-79 ms
 with the Ledger's window open, on top of the game's own pause after an item is
 picked up or put down (50-90 ms at 20,000 cycles: its mouse handler, DSUN.EXE
 3573Dh, only queues the moves, and the pointer is drawn again once the game
-has done with the item). Nothing else in the game changes.
+has done with the item). That pause is shorter too: the game flips its two
+screen pages as it redraws, and its flip (14414h) waits for the next vertical
+retrace each time; `PROBE_FLIP` (INT 8Bh in place of the flip's call to the
+wait, 1445Fh) skips the wait while a full screen is up (`SCREEN_IS` 2: the
+inventory, View Character, USE, a talk) and waits as the game does on the map,
+whose pace may hang on it. Measured with the user's save (Zulak's inventory,
+20,000 cycles, where the game last drew the pointer, `DS:A137h`): 56-103 ms
+(85 on average) before, 42-45 putting an item down and 63-67 picking one up
+after; skipping every retrace wait saves no more, and the rest is the game's
+own drawing (a faster game speed shortens it). Nothing else in the game changes.
 
 Which class levels up next, on View Character: the game looks up the XP for
 each class's next level in its tables and shows the lowest. Where it adds the
