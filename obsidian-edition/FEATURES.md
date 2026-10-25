@@ -1000,13 +1000,13 @@ Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) ->
   Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
 Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
     THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
-  Tezral hits Slig for 9: 1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice x2)
+  Tezral hits Slig for 9: 1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice 1 x2 = 2)
 ```
 
 With **A backstab multiplies the weapon's dice only** (on unless unticked, in
 the same Options group) a backstab multiplies the weapon's dice and adds STR,
 the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
-backstab (the dice x3)` is 27 where the game made it 51. The multiplier is x2
+backstab (the dice 5 x3 = 15)` is 27 (the 5 rolled and the 10 more that x3 adds) where the game made it 51. The multiplier is x2
 at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13. Only the round's
 first attack is a backstab: the game multiplies the first two, so a second
 swing (an off-hand one after a miss) was multiplied too.

@@ -453,12 +453,12 @@ class BackstabTests(unittest.TestCase):
     def test_dice_only(self):
         """RULE_BACKSTAB (DSCLOG's STAB_TIMES): the dice multiplied, STR added once."""
         self.assertEqual(self.backstab(6, game.RULE_BACKSTAB),
-                         ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice x3)"])
+                         ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)"])
 
     def test_times_by_level(self):
         """x4 at thief levels 9 to 12, x5 from 13 (the game's 595C4h, as AD&D's table)."""
-        self.assertIn("+15 backstab (the dice x4)", self.backstab(12, game.RULE_BACKSTAB)[0])
-        self.assertIn("+20 backstab (the dice x5)", self.backstab(13, game.RULE_BACKSTAB)[0])
+        self.assertIn("+15 backstab (the dice 5 x4 = 20)", self.backstab(12, game.RULE_BACKSTAB)[0])
+        self.assertIn("+20 backstab (the dice 5 x5 = 25)", self.backstab(13, game.RULE_BACKSTAB)[0])
         self.assertIn("x5 backstab", self.backstab(14, 0)[0])
 
 

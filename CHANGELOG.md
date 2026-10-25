@@ -16,8 +16,19 @@ notes](PATCH-NOTES.md).
 - **Scar's henchmen carry bone axes** (`worldgear.GIFTS`, object 229), dropped when they die.
 - **The Parting Staff shines** as the game's magic weapons do: its gem's blues (158-161) in the
   water's cycling colours (`icons.SHINE`, its own icon, picture 2157, changed in place).
+- **A Battle Dancer can't use a shield** (`KIT_FORBIDS`, `kits.forbids`), as it already fought
+  with long swords and bows only.
+
+**Changed**
+- **A backstab's dice log line shows the sum:** `+2 backstab (the dice 1 x3 = 3)`, not `(the dice
+  x3)`. The die's 1 is already in the line, so the backstab adds 2 more.
 
 **Fixed**
+- **A Shinobi couldn't learn from a scroll**: clicking the spell's picture in the scroll's box did
+  nothing. The game makes the picture a button only for a class the item type allows (the class
+  mask test at 6D3B9h, kept in `DS:9CF6h`), and the scroll type allows wizards only. `SCROLL_USE`
+  passes a scroll for a Shinobi. To make room, the helper keeps the last 128 bytes the game
+  writes to the screen for the crash report (`MSG_BYTES`), not 256.
 - **Spells cast by weapons were at caster level 6** whoever struck: the attack routine pushes 6
   for every weapon spell (58BE6h). A Spellarcher's spell arrows now go at the archer's preserver
   level (`ARROW_LEVEL`); a weapon's own spell stays at 6. A 2nd-level archer's Shocking Grasp did
@@ -39,7 +50,7 @@ notes](PATCH-NOTES.md).
 - Learning from a scroll says nothing on the inventory screen: the game's message (4D0:2Ah) isn't
   seen there, its own YOU LEARN THE SPELL included. A Shinobi's failed read (the scroll used up)
   or a spell not its own (the scroll kept) looks like nothing happened; the dice log has the roll.
-  A window for it needs room in the helper's upper memory (0 paragraphs left).
+  A window for it needs room in the helper's upper memory (4 paragraphs left).
 
 ## Pull request #61
 

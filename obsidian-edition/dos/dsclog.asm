@@ -3578,8 +3578,8 @@ arrows_forbid:
 ; that isn't light (leather, or of no material); an Assassin, Shinobi, Shadowblade, Poisoner or
 ; Spellarcher the same, asleep too (KIT_LIGHT); a Grove Warden a metal weapon; a Lifebinder a
 ; weapon of a kind not blunt (KIT_BLUNT); a Shinobi a shield, armour that isn't light, and a
-; weapon not of its kinds (KIT_SHINOBI); a Seeker a weapon its sphere doesn't allow (as a
-; cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
+; weapon not of its kinds (KIT_SHINOBI); a Battle Dancer a shield, and a weapon not of its kinds
+; (kit_dancer); a Seeker a weapon its sphere doesn't allow (as a cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
 ; SPEC_SLOTS, while they count: SPECS_AWAKE; but choosing one, KF_SPEC) none, but for the off
 ; hand's. DS the game's; all registers kept.
 KT_MELEE   equ 0x01             ; (the item type's +0 flags, +0Fh kind flags)
@@ -3806,9 +3806,13 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 .blunt: mov si, kit_blunt
         cmp cl, KIT_LIFEBINDER
         je .kind
-        mov si, kit_dancer      ; a Battle Dancer: the long sword and the bow only
+        mov si, kit_dancer      ; a Battle Dancer: no shield, the long sword and the bow only
         cmp cl, KIT_BATTLE_DANCER
-        je .kind
+        jne .shinobi
+        test al, KT_SHIELD
+        jnz .no
+        jmp .kind
+.shinobi:
         cmp cl, KIT_SHINOBI
         jne .ok
         test al, KT_SHIELD      ; a Shinobi: no shield, light armour, its own weapons
@@ -13719,7 +13723,7 @@ old21       dd 0
 ; stderr) kept, its last MSG_BYTES in MSG_RING, then on to DOS. The game prints its fatal errors
 ; ("Mel Fatal Error", "ABEND: VMDelHeap() ...") while the screen is still in graphics, and puts
 ; it back in text mode, clearing it, on its way out: GAMEEND.COM found nothing to read.
-MSG_BYTES   equ 256
+MSG_BYTES   equ 128
 dos_write:
         cmp bx, 2
         ja .chain
@@ -14869,6 +14873,7 @@ AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim ch
 AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against a spell
 ARROW_LEVEL equ NS_IMAGE + 47    ; 58BE6h: a weapon's spell cast at level 6 (ARROW_LEVEL)
 ARMOR_BLOW equ NS_IMAGE + 48     ; 58B27h: a hit's damage taken, Armor's charge (ARMOR_BLOW)
+SCROLL_USE equ NS_IMAGE + 49     ; 6D3B9h: an item's box, its class mask tested (SCROLL_USE)
 ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (ARROW_HIT)
 ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
@@ -14959,6 +14964,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je arrow_level
         cmp byte [cs:rl_site], ARMOR_BLOW
         je armor_blow
+        cmp byte [cs:rl_site], SCROLL_USE
+        je scroll_use
         cmp byte [cs:rl_site], CAST_SITE
         je cast_site
         cmp byte [cs:rl_site], REST_SITE
@@ -15322,6 +15329,37 @@ ns_blow:
         iret
 
 blow_chance dw 0
+
+; SCROLL_USE: "test [es:bx+10h],ax" (6D3B9h; 4 bytes: the INT, the site's number and a NOP) as the
+; inventory opens an item's box: ES:BX its type, AX the member's class mask, SI its sheet (in the
+; sheets' segment). The box's spell picture is a button only for a class the type allows (its
+; DS:9CF6h), so a Shinobi, a thief to the game, could never click a scroll to learn its spell
+; (PROBE_SCROLL_LEARN, SHINOBI_READ). The test made; a scroll (type SCROLL_TYPE) passes for a
+; Shinobi too. Its flags into the INT's frame.
+SCROLL_TYPE equ 0x60
+scroll_use:
+        pushad
+        push es
+        mov di, sp
+        test [es:bx + 0x10], ax
+        jnz .flags              ; (allowed: ZF clear)
+        sub bx, [ITEM_TYPES]
+        cmp bx, SCROLL_TYPE * 0x14
+        jne .zero
+        les bx, [LV_SHEETS]     ; (the sheets' segment)
+        mov bx, si
+        call kit_is_b
+        db KIT_SHINOBI
+        jne .zero
+        or al, 1                ; (ZF clear)
+        jmp .flags
+.zero:  xor ax, ax              ; (ZF set)
+.flags: pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
 
 ; ARMOR_BLOW: "cmp di,[bp-0Ch]" (58B27h; 3 bytes: the INT and the site's number) in the attack
 ; (5883Ah), just after a hit's damage went to its target ([BP-0Ch], combatant [494Ah]; the

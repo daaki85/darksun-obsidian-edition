@@ -550,7 +550,7 @@ GAMEEND.COM only reads what is left on the screen, and the game's own fatal
 errors (its memory manager's "ABEND: VM...Heap() returned error N", its script
 engine's "Mel Fatal Error #: N Trap #: N") are printed while the screen is in
 graphics, then cleared as the game puts it back in text mode on its way out.
-So DSCLOG keeps the last 256 bytes the game writes to handles 1 and 2 (INT 21h
+So DSCLOG keeps the last 128 bytes the game writes to handles 1 and 2 (INT 21h
 AH=40h: `DOS_WRITE`). At the first non-zero exit (AH=4Ch: `DOS_QUIT`), it writes
 them to `D:\GAMEMSG.BIN`, with the code, the load segment and 256 bytes of the
 stack. `launch.game_message` turns that into the crash report's lines: the
@@ -1250,6 +1250,14 @@ counted), and above it the game teaches the spell and uses the scroll up, and
 level). The try goes to the Loader as a preserver's (`+272`), with the read
 roll and chance at `+366` (`intlearn.line`).
 
+The box's spell icon is a button only for a character whose class the item type
+allows: as the inventory opens the box, the game tests the type's class mask
+(`+10h`) against the sheet's (`+12h`, 6D3B9h) and passes the answer on to
+`DS:9CF6h`, and with it 0 the icon (button 3BC9h, 8B1A7h) is made inactive. The
+scroll type (60h) allows wizards only, so a Shinobi, a thief to the game, could
+never click it. `SCROLL_USE` (`INT 98h` and its site number, in place of `test
+[es:bx+10h],ax`) makes the test and passes the scroll type for a Shinobi too.
+
 ### AD&D's class tables
 
 ([In the features page](FEATURES.md#adds-class-tables); `tables.py`.)
@@ -1641,7 +1649,7 @@ emulated tests hold the helper to it:
 | shields | Shadowblade, Ghetto Fighter | `KIT_FORBIDS` (`kits.forbids`) |
 | hiding, moving silently | Stalker, Assassin and Military Scout (not halved in daylight: `kits.not_halved_by_sun`), Wilderness Avenger (a ranger's, 5 a level of its best class), Shadowblade (hides with an enemy beside it) | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
 | the two-weapon penalty | Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier (in any armour); Ghetto Fighter (2 less in each hand) | `PROBE_TWO`; `RG_TWO` |
-| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (`kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
+| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (no shield; `kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
 | skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
 | weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior |
 | attacks a round | Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons)) |

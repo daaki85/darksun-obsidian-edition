@@ -2359,9 +2359,10 @@ class DiceLog:
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
             if self.rules & game.RULE_BACKSTAB:
-                more = (times - 1) * sum(faces)
+                dice = sum(faces)
+                more = (times - 1) * dice
                 total += more
-                steps += f" +{more} backstab (the dice x{times})"
+                steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
             else:
                 total *= times
                 steps = f"({steps}) x{times} backstab"

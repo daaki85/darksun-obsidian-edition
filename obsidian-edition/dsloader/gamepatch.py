@@ -160,6 +160,7 @@ CINE_STEP, CINE_END = NS_IMAGE + 43, NS_IMAGE + 44  # (scenes: the pointer shown
 MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in the middle, as fast up as across)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 ARMOR_BLOW = NS_IMAGE + 48  # (a damaging hit uses a charge of the target's Armor)
+SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
 HEAT_SITE = NS_IMAGE + 41  # (a spell's damage on a creature: Sunstroke's heat named and made fire, DSCLOG's HEAT_SITE)
 USE_SITE, ROUND_SITE = NS_IMAGE + 37, NS_IMAGE + 38  # (Acid spent once a round, at its start, and only then)  # (an Acid's burn: its damage puts no Acid on again)
 NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
@@ -411,6 +412,7 @@ PATCHES = (
     Patch("arrow_spell", 0x58B78, bytes.fromhex("268a4f0f"), _site(ARROW_SPELL_SITE, 4)),
     Patch("arrow_level", 0x58BE6, bytes.fromhex("6a068ac1b40050"), _site(ARROW_LEVEL, 7)),
     Patch("armor_blow", 0x58B27, bytes.fromhex("3b7ef4"), _site(ARMOR_BLOW, 3)),
+    Patch("scroll_use", 0x6D3B9, bytes.fromhex("26854710"), _site(SCROLL_USE, 4)),
     # the routine casting a spell or a power, its caster read: recorded (DSCLOG's CAST_SITE)
     Patch("spell_cast", 0x772AA, bytes.fromhex("8b4e06"), _site(CAST_SITE, 3)),
     # the game's rest (its REST and a script's request 1, past "NO RESTING DURING COMBAT"), each
