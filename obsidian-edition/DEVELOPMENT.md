@@ -1895,8 +1895,9 @@ to Kalzith for 1,800 went first in his stock at 3000, and a Cloak (24) sold for
 How: where the game's thief skill routine adds 4 a level, the helper
 (`INT E4h`) puts AD&D's number for the level in place of the game's base and
 level, adds the DEX table's, and jumps past the game's DEX formula to its
-armour and effects. The Loader's screens and the inventory screen's panel
-work the chances out the same way.
+armour and effects. At the routine's end (`INT D9h`, below) the helper keeps
+the chance to 95 (`THIEF_MOST`). The Loader's screens and the inventory
+screen's panel work the chances out the same way.
 
 ### Hiding in shadows to backstab
 

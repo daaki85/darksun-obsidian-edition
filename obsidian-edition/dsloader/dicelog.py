@@ -1980,13 +1980,17 @@ class DiceLog:
         if kit and chance == 0:  # (no less than 0: what the kit took off can't be told apart)
             kit = 0
         rest = chance - bonus - kit - sum(n for _, n in parts)
-        steps = [f"{n}" if what == "base" else f"{signed(n)} {what}" for what, n in parts]
+        steps = [f"{n}" if what == "base" else f"{n} {what}" if not i else f"{signed(n)} {what}"
+                 for i, (what, n) in enumerate(parts)]
         if kit:
             steps.append(f"{signed(kit)} {kits.name(kid)}")
+        capped = self.game.rules & game.RULE_THIEF_TABLE and rest < 0 and chance - bonus == game.THIEF_MOST
         if bonus:
             steps.append(f"{signed(bonus)} this attempt")
-        if rest:  # the only other part of the chance: the equipment penalty
+        if rest and not capped:  # the only other part of the chance: the equipment penalty
             steps.append(f"{signed(rest)} equipment")
+        if capped:  # (DSCLOG's PROBE_BELT: AD&D's most, the equipment penalty, if any, within it)
+            steps.append(f"(at most {game.THIEF_MOST})")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
 
     def _float(self, thing: Optional[int], text: str, colour, now: float) -> None:

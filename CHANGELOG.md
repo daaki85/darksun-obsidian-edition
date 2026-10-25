@@ -94,6 +94,14 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Tab rings only the enemy chosen, the next on Tab again; L opens the panel.
 
 **Fixed**
+- **No thief skill above 95.** With **Thief skills from AD&D's table** a skill had no ceiling: a
+  13th-level thief with DEX 24 showed move silently 121 and pick pockets 117 (AD&D's 99 for the
+  level plus DEX's 30). AD&D allows none above 95% after every adjustment: DSCLOG's `PROBE_BELT`
+  keeps the game's chance to `THIEF_MOST` after the belt, kits and armour (the situation's bonus
+  and effects, which the game's caller adds after, at DSUN.EXE 803D0h, still count), and
+  `game.thief_skills_now` (the inventory screen's numbers, the Ledger) the same; a ranger's hide
+  and move silently, and the stealth rule's rolls, too. The dice log's breakdown shows
+  `(at most 95)`, and its first part no longer prints as `+99 thief level 13`.
 - **The pointer put back in the middle as screens changed.** A video mode set (each scene's
   start, the menus, loading a save) leaves the driver's pointer at the right edge, which
   `MOUSE_SET` and the scenes' `CINE_MOUSE`/`CINE_WHERE` put in the middle; they now put it where it

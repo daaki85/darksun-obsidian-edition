@@ -602,7 +602,7 @@ so keep it off the front line.
 **What the mod changes.**
 
 - [Thief skills](#thieves-skills-and-picking-pockets) from AD&D's table with
-  Dark Sun's race and DEX adjustments. *Without the mod:* the game's own,
+  Dark Sun's race and DEX adjustments, none above 95. *Without the mod:* the game's own,
   much higher, with penalties for what is held.
 - [Hiding in shadows](#hiding-in-shadows) in a fight to backstab, halved in
   daylight. *Without the mod:* backstabs only when the target faces someone

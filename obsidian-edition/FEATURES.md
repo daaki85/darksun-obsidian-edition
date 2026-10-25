@@ -924,7 +924,10 @@ ticked, a skill is:
   numbers),
 - plus DEX's: AD&D's table up to 19, the Dark Sun rules' exceptional DEX
   past it, for the first five skills (hear noise, climb walls and read
-  languages have none).
+  languages have none),
+- to no more than 95, as in AD&D, after the belt, kits and armour too (the
+  situation's bonus, a hard lock, say, still counts after it). A ranger's
+  hiding and moving silently stop at 95 as well.
 
 AD&D's averages, by thief level:
 

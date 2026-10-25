@@ -20295,9 +20295,12 @@ ib_elf_quiet db 'Move 95%', 0
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
 ; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), no less
 ; than 0, as the Loader counts them (game.py's thief_skills_now); 0 for a thief in armour that
-; isn't light (THIEF_HEAVY); then AX = the chance, as the code would have.
+; isn't light (THIEF_HEAVY); with RULE_THIEF_TABLE, no more than THIEF_MOST (AD&D's most after
+; every adjustment: game.THIEF_MOST; the situation's bonus and the effects', which the game's caller
+; adds after (DSUN.EXE 803D0h), not counted); then AX = the chance, as the code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
 BELT_BONUS equ 5
+THIEF_MOST equ 95
 COMBATANT_CREATURE equ 0xC37    ; in the things table: an object's creature (3 bytes an object)
 probe_belt:
         sti
@@ -20340,8 +20343,13 @@ probe_belt:
         xor dx, dx
 .done:  mov ax, cx
         call thief_heavy
-        jnc .chance
+        jnc .most
         xor dx, dx
+.most:  test word [cs:rules], RULE_THIEF_TABLE
+        jz .chance
+        cmp dx, THIEF_MOST
+        jle .chance
+        mov dx, THIEF_MOST
 .chance:
         mov ax, dx
         pop es

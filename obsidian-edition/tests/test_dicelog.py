@@ -1142,6 +1142,18 @@ class OtherTests(unittest.TestCase):
         e = entry(1223, dicelog.PERCENT_SITE, words(0, 0, 0, 1, 0, 0), locals_=locals_at(0x10, m2=-961))
         self.assertEqual(log.describe(e), ["Dag tries to open locks: d100 = 24 -> failure (an effect stops it)"])
 
+    def test_thief_skill_at_most(self):
+        """With RULE_THIEF_TABLE the helper keeps the chance to 95: the parts above it are shown
+        with "(at most 95)", not as an equipment penalty."""
+        log = make_game()
+        m = log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES + 1], m[SHEETS + game.SHEET_LEVELS + 1] = game.THIEF, 13
+        m[CREATURES + game.CREATURE_ABILITIES + 1] = 22
+        log.game.rules = game.RULE_THIEF_TABLE
+        e = entry(1223, dicelog.PERCENT_SITE, words(0, 0, 0, 3, 0, 0), locals_=locals_at(0x10, m2=95))
+        self.assertEqual(log.describe(e), ["Dag tries to move silently: d100 = 24, needs 95 or less -> success",
+                                           "    move silently 95 = 99 thief level 13 + 30 DEX 22 (at most 95)"])
+
     def test_generic_shapes_when_showing_everything(self):
         log = make_game()
         d10 = bytes.fromhex("660fbfc0666bc00a66bb00800000669966f7fb40")
