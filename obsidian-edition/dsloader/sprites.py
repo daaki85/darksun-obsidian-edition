@@ -291,12 +291,19 @@ class Dresser:
 
     def __init__(self, gd: GameData, objects_file: str, palette: List[Tuple[int, int, int]],
                  copy_file: Optional[str] = None, looks: bool = True):
-        from .gff import read_gff
+        from .gff import GffError, read_gff
         with open(objects_file, "rb") as f:
             self.pics = Pictures(read_gff(f.read()), looks)
         sg.set_palette(palette)
         self.gd = gd
         self.copy_file = copy_file
+        self.items = self.pics.chunks  # (where item_glow finds an item's object and icon)
+        if copy_file:  # the Loader's own items and icons are only in its copy (worldgear, icons)
+            try:
+                with open(copy_file, "rb") as f:
+                    self.items = {**self.pics.chunks, **read_gff(f.read())}
+            except (OSError, GffError, ValueError, struct.error):
+                pass
         self.places: Dict[int, Tuple[int, int, int]] = {}  # picture: (index entry, offset, length)
         self._stamp: Optional[Tuple[int, int]] = None  # the copy as the Loader last saw it
         self.shown: Dict[int, tuple] = {}  # object: the outfit its pictures in the copy show
@@ -448,7 +455,7 @@ class Dresser:
             return []
         changed = []
         for obj, (member, figure) in self.objects().items():
-            outfit = worn(self.gd, member, self.pics.chunks) if on else ({}, ())
+            outfit = worn(self.gd, member, self.items) if on else ({}, ())
             model = self.pics.model(figure)
             key = (model, figure, repr(sorted(outfit[0].items())), outfit[1])
             fresh = self.shown.get(obj) != key

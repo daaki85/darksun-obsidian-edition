@@ -249,7 +249,27 @@ class SpriteTests(unittest.TestCase):
         dresser.gd, dresser.pics = FakeGame(figures=list(figures)), sprites.Pictures(chunks)
         dresser.copy_file, dresser.places, dresser._stamp = path, {}, None
         dresser.shown, dresser.request_redraw, dresser._redraw_at = {}, None, None
+        dresser.items = chunks
         return dresser, path
+
+    def test_items_from_the_copy(self):
+        """The Loader's own items (a Hayneedle, object 2590) are only in its copy of SEGOBJEX: the
+        glow looks their objects and icons up there, the game's file's for the rest."""
+        from test_core import build_gff
+        with tempfile.TemporaryDirectory() as d:
+            chunks = game_chunks()
+            own = os.path.join(d, "GAME.GFF")
+            with open(own, "wb") as f:
+                f.write(build_gff(chunks))
+            copy = os.path.join(d, "SEGOBJEX.GFF")
+            with open(copy, "wb") as f:
+                f.write(build_gff({("OJFF", 2590): b"hayneedle"}))
+            dresser = sprites.Dresser(FakeGame(figures=[0]), own, [(0, 0, 0)] * 256, copy)
+            self.assertEqual(dresser.items[("OJFF", 2590)], b"hayneedle")
+            self.assertEqual(dresser.items[("OJFF", 300)], chunks[("OJFF", 300)])
+            self.assertNotIn(("OJFF", 2590), dresser.pics.chunks)
+            plain = sprites.Dresser(FakeGame(figures=[0]), own, [(0, 0, 0)] * 256)
+            self.assertIs(plain.items, plain.pics.chunks)
 
     def test_outfit_written_to_the_copy(self):
         """A new outfit: both pictures written into the copy at their own length (the index says

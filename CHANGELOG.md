@@ -94,6 +94,12 @@ change from the original game in one page, [the patch notes](PATCH-NOTES.md).
   Tab rings only the enemy chosen, the next on Tab again; L opens the panel.
 
 **Fixed**
+- **The Loader's own magic items glowed blue on figures.** `sprites.item_glow` looked each item's
+  object and icon up in the game's SEGOBJEX.GFF, which has none of the Loader's items (the
+  Hayneedle, Kreenfang, Thornwall, Inixhide, the Ashen Robe...), so they fell back to blue whatever
+  their icon. The `Dresser` now reads them from the Loader's copy (`items`: the copy's chunks over
+  the game's). Seen in the user's save: Railune's Bone Hayneedle +1 and Inixhide glint in the fire
+  colours, as their icons are.
 - **No thief skill above 95.** With **Thief skills from AD&D's table** a skill had no ceiling: a
   13th-level thief with DEX 24 showed move silently 121 and pick pockets 117 (AD&D's 99 for the
   level plus DEX's 30). AD&D allows none above 95% after every adjustment: DSCLOG's `PROBE_BELT`
