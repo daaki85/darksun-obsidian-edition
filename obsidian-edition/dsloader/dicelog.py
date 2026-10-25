@@ -19,6 +19,7 @@ Lands (DSUN.EXE, 611408 bytes).
 import random
 import re
 import struct
+import sys
 import threading
 import time
 from collections import Counter, deque
@@ -921,6 +922,12 @@ class DiceLog:
         (20-40 ms, more with the Ledger's window) held the pointer still, then made it jump."""
         if self._stats_thread is not None:
             return
+        if sys.platform == "win32":  # (Windows' timer ticks every 15.6 ms unless asked: the thread's
+            try:                     #   millisecond waits would last that long)
+                import ctypes
+                ctypes.windll.winmm.timeBeginPeriod(1)
+            except (AttributeError, OSError):
+                pass
         def run() -> None:
             step = STATS_ANSWER_STEP
             while not self._stats_stop.wait(step):
