@@ -43,6 +43,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
+  - [What a scroll says](#what-a-scroll-says)
   - [No manual check](#no-manual-check)
 - [The Loader's window](#the-loaders-window)
   - [The Characters tab](#the-characters-tab)
@@ -575,6 +576,17 @@ boots' or belt's box shows what it adds to thief skills (with
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#charges-in-item-boxes).
+
+### What a scroll says
+
+Clicking a scroll's spell icon in its item box gives the result on the line
+under the paper doll: YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU FAIL
+TO LEARN THE SPELL, TOO MANY SPELLS OF THAT LEVEL, or a Shinobi's YOU CAN NOT
+READ THE SCROLL and THAT IS NOT A SHINOBI SPELL. The game wrote these there too,
+but they never reached the screen. Like the game's own messages on that line, it
+stays until the pointer is on something else. Always on.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
 
 ### No manual check
 

@@ -20,14 +20,14 @@ notes](PATCH-NOTES.md).
   with long swords and bows only.
 - **A scroll's answer on the inventory screen.** What the item box's handler says (4D0:2Ah: YOU
   LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI
-  SPELL, CANNOT LEARN FROM THIS ITEM, the tome's) went to the map's message line only. `BOX_SAID`
-  (8B815h) keeps the text, and for 5 seconds `LINE_SAID` and `LINE_CLEARED` put it on the
-  inventory's line under the paper doll (580h:5Ch, window `DS:11A4h`) each time the pointer's
-  handler writes or clears that line. Nothing written while the box's handler runs reaches the
-  screen, so 2 ticks after the message `BOX_NUDGE` (from the timer, `PROBE_TICK`) tells the game's
-  mouse handler the pointer moved, where it is (the driver's buttons and place): the line shows it
-  with the mouse still. As the game's own messages there, it stays till the pointer is on
-  something else.
+  SPELL, CANNOT LEARN FROM THIS ITEM, the tome's) was never seen on the inventory screen: the
+  game writes it to the line under the paper doll while the box's handler runs, and nothing
+  written then reaches the screen. `BOX_SAID` (8B815h) keeps the text, and for 5 seconds
+  `LINE_SAID` and `LINE_CLEARED` put it on that line (580h:5Ch, window `DS:11A4h`) each time the
+  pointer's handler writes or clears it. 2 ticks after the message, `BOX_NUDGE` (from the
+  timer's `PROBE_TICK`) tells the game's mouse handler the pointer moved, with the driver's buttons
+  and place: the line shows the message with the mouse still. As the game's own messages there,
+  it stays till the pointer is on something else.
 
 **Changed**
 - **A backstab's dice log line shows the sum:** `+2 backstab (the dice 1 x3 = 3)`, not `(the dice

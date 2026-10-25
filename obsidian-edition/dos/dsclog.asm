@@ -15352,12 +15352,11 @@ blow_chance dw 0
 ; BOX_SAID: "add sp,4" (8B815h; 3 bytes: the INT and the site's number) just after the item box's
 ; handler gave its message (4D0:2Ah, the far pointer to its text still on the stack): what a scroll
 ; teaches (YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, PROBE_LEARN_SAID's and
-; PROBE_LEARN_REFUSED's), CANNOT LEARN FROM THIS ITEM, the tome's. The game shows those only on
-; the map's message line, never seen from the inventory, and nothing written to the inventory's
-; line while the box's handler runs reaches the screen. So the text is kept (BOX_TEXT, from the
-; BIOS tick BOX_AT) and put on the inventory's own line under the paper doll (580h:5Ch with its
-; window, DS:11A4h, as 6E111h puts CANNOT USE THIS ITEM there) for BOX_TICKS, as soon as the pointer
-; moves: by LINE_SAID, "add sp,0Ah" after each of the inventory's own writes to that line (6E125h,
+; PROBE_LEARN_REFUSED's), CANNOT LEARN FROM THIS ITEM, the tome's. On the inventory screen the
+; game writes those to its line under the paper doll, but nothing written there while the box's
+; handler runs reaches the screen. So the text is kept (BOX_TEXT, from the BIOS tick BOX_AT) and
+; put on that line (580h:5Ch with its window, DS:11A4h, as 6E111h puts CANNOT USE THIS ITEM there)
+; for BOX_TICKS, once the pointer's code runs (BOX_NUDGE makes it run at once): by LINE_SAID, "add sp,0Ah" after each of the inventory's own writes to that line (6E125h,
 ; 891A4h, 89222h, 89552h, 8968Bh, 8A940h: an item's name, or nothing, as the pointer moves), and
 ; LINE_CLEARED, "add sp,6" after each time it clears the line (528h:2Ah: 6C9BFh, 701C2h, 89595h).
 ; (580h, 528h: overlay code's selectors; their stubs' segments are DSUN.EXE's 4272h, ...) Each in

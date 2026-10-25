@@ -1330,8 +1330,9 @@ fewer. The game's USE screen shows what is left of each level.
 ### Learning preserver spells
 
 A preserver chooses a spell at each level up, and can learn more from scrolls
-(right-click the scroll in the inventory, then click its icon), of a level it
-can cast. INT sets two limits:
+(right-click the scroll in the inventory, then click its icon; the result
+shows on the line under the paper doll), of a level it can cast. INT sets two
+limits:
 
 | INT | Chance to learn from a scroll | Most spells of each level |
 |---|---|---|
@@ -1349,14 +1350,14 @@ can cast. INT sets two limits:
 | 20-23 | 96-99% | all |
 | 24-25 | 100% | all |
 
+- **A failed roll uses the scroll up.**
+- **A full spell level** learns no more: the scroll is kept.
+- The level-up choice leaves out levels already full.
 - **A Shinobi** learns only its own spells from scrolls, and first has to read
   the scroll: a roll against its read languages, then INT's chance.
 - **Defilers sometimes carry scrolls:** each defiler in a fight has a 1 in 20
   chance of carrying a scroll of a random preserver spell, found on its body
   when it dies.
-- **A failed roll uses the scroll up.**
-- **A full spell level** learns no more: the scroll is kept.
-- The level-up choice leaves out levels already full.
 
 *Without the mod:* every scroll is learnt, and there is no limit.
 

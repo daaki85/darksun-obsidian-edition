@@ -534,9 +534,9 @@ and so does `test_fits_upper_memory`. Since the far block went to the HMA,
 2,447 paragraphs (38 KB) are spare in it, and with `UMBPLUS.COM` about 57.8 KB
 are free in one piece (measured in DOSBox: the helper at C90Ah, then the overlay
 buffer, the free block, the music buffer). The helper's own segment is the limit
-for new code: its resident part is 56,496 bytes and its image with the install
-code 58,224, so about 7.1 KB of its 64 KB are spare; the HMA has 7,720 bytes
-left for more buffers. (Before this pass the segment had about 2 KB and upper
+for new code: its image with the install code is 58,704 bytes (`image_len`;
+the resident part ends at `resident_end`, DB10h), so about 6.7 KB of its 64 KB
+are spare; the HMA has 7,720 bytes left for more buffers. (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
 records, to make room.) The game's sound-effects buffer (24,001 bytes, kept
@@ -1272,9 +1272,9 @@ never click it. `SCROLL_USE` (`INT 98h` and its site number, in place of `test
 [es:bx+10h],ax`) makes the test and passes the scroll type for a Shinobi too.
 
 What the box's handler says (4D0:2Ah, 8B810h: YOU LEARN THE SPELL, a Shinobi's
-answers, the tome's) goes to the map's message line, never seen on the
-inventory screen, and nothing written to the inventory's own line while the
-handler runs reaches the screen. `BOX_SAID` (`INT 98h` and its site number in
+answers, the tome's) is written, on the inventory screen, to its line under
+the paper doll, but nothing written there while the handler runs reaches the
+screen: the game's own messages were never seen. `BOX_SAID` (`INT 98h` and its site number in
 place of the `add sp,4` after it, 8B815h) keeps the text, and for 5 seconds
 `LINE_SAID` (after the inventory's writes to its line, 580h:5Ch: 6E125h,
 891A4h, 89222h, 89552h, 8968Bh, 8A940h) and `LINE_CLEARED` (after its clears,
