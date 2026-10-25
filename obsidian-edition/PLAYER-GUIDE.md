@@ -637,6 +637,10 @@ little for the quieter arts.
 *Shinobi.* Spies trained in secret by the Veiled Alliance, who carry a few
 spells beside their knives. Their masters teach them only what they need, so
 a scroll is theirs only if they can make out its script, and they travel light.
+The Effects screen (Current Spell Effects) shows a Shinobi's chance to read a
+scroll under its kit:
+
+![The Effects screen for Xan, a Shinobi: "KIT: SHINOBI" and under it "READ LANG. 35%"](docs/effects-shinobi.png)
 
 Each kit's gains, costs and starting gear: [Thief kits](KITS.md#thief-kits),
 and the Shinobi's slots by level in

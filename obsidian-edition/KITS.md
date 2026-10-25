@@ -305,6 +305,8 @@ goes on with its weapons), the first again after the last:
 
 ![The Effects screen, a page at a time: a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
 
+![The Effects screen for Xan, a Shinobi: "KIT: SHINOBI" and under it "READ LANG. 35%", the chance to read a scroll](docs/effects-shinobi.png)
+
 With **Weapon specialization** ticked, a human who becomes a fighter,
 gladiator or ranger (or a Battle Mage) then picks the weapon types it is due
 on the same window as at a level up (**PICK A WEAPON SPECIALTY**), less any it
