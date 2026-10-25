@@ -6,7 +6,10 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request (in progress)
+## Pull request #61
+
+- **Obsidian Edition 2.8.0**: the version is 2.8.0, with its notes in `release-notes/v2.8.0.md`,
+  for this pull request and #60.
 
 **New**
 - **The glow in each item's own colour.** The game's palette cycles four runs on the map (its
