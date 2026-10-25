@@ -2044,6 +2044,10 @@ probe_tick:
         mov ds, [bp + 4]        ; the handler's CS
         inc word [4]            ; the replaced instruction
         inc word [cs:tick_count]
+        cmp byte [cs:box_nudge], 0
+        je .nonudge
+        call box_nudge_now
+.nonudge:
         cmp byte [cs:cine_shown], 0
         je .plain
         call cp_follow
@@ -15368,6 +15372,7 @@ BOX_WIN     equ 0x11A4          ; DS: the inventory line's window (far)
 BOX_LINE_ARG equ 0x2C06         ; (the word 6E111h passes it)
 box_text times BOX_TEXT_SIZE db 0
 box_at   dw 0
+box_nudge db 0
 box_line dd 0
 box_said:
         sti
@@ -15392,6 +15397,7 @@ box_said:
         mov es, ax
         mov ax, [es:0x46C]
         mov [cs:box_at], ax
+        mov byte [cs:box_nudge], 1      ; (the pointer's handler told of a move: BOX_NUDGE)
         pop es
         popad
         jmp box_pop4
@@ -15413,6 +15419,38 @@ line_cleared:
         pop es
         popad
         jmp box_pop6
+
+; BOX_NUDGE (from PROBE_TICK, interrupts off): BOX_NUDGE_TICKS after BOX_SAID, the game's mouse
+; handler is told the pointer moved, where it is (MOUSE_EVENT, as the driver would): the
+; inventory's pointer code writes or clears its line, and LINE_SAID / LINE_CLEARED put the message
+; there, the pointer never moved. (What is written while the box's handler runs never reaches the
+; screen.) As the game's own messages there, it stays till the pointer is on something else (its
+; code writes the line only then; BOX_TICKS after BOX_SAID it is no longer put back). DS, ES and
+; the registers kept.
+BOX_NUDGE_TICKS equ 2
+box_nudge_now:
+        pusha
+        push ds
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:box_at]
+        cmp ax, BOX_NUDGE_TICKS
+        jb .wait
+        mov byte [cs:box_nudge], 0
+        cmp dword [cs:game_handler], 0
+        je .wait
+        mov ax, 3                       ; (the buttons held and where, from the driver)
+        pushf
+        call far [cs:old33]
+        mov ax, 1                       ; (moved)
+        push cs
+        call mouse_event
+.wait:  pop es
+        pop ds
+        popa
+        ret
 
 ; BOX_PUT: BOX_TEXT on the inventory's line while it is fresh (BOX_TICKS; then forgotten), the
 ; INT's frame at SS:BX+34; DS the game's. AX, CX, DX, SI, DI, ES not kept.

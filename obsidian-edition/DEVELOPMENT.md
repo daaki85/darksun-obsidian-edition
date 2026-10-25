@@ -1280,8 +1280,13 @@ place of the `add sp,4` after it, 8B815h) keeps the text, and for 5 seconds
 891A4h, 89222h, 89552h, 8968Bh, 8A940h) and `LINE_CLEARED` (after its clears,
 528h:2Ah: 6C9BFh, 701C2h, 89595h) write it there again (580h:5Ch on the window
 at `DS:11A4h`, through its stub segment 4272h, in a frame the overlay manager
-can fix up). Those run as the pointer moves, so the message shows then. Not
-redrawing the window (118h:618h) afterwards matters: that draws it blank.
+can fix up). Those run as the pointer moves, so 2 ticks after the message
+`BOX_NUDGE` (from the timer's `PROBE_TICK`) tells the game's mouse handler
+(`MOUSE_EVENT`, as the driver would) that the pointer moved, with the driver's
+buttons and place (INT 33h, 03h): the line shows the message with the mouse
+still. As the game's own messages there, it stays till the pointer is on
+something else. Not redrawing the window (118h:618h) afterwards matters: that
+draws it blank.
 
 ### AD&D's class tables
 
