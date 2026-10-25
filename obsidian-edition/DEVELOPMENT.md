@@ -922,9 +922,10 @@ update them and waits for its answer, half a second at most (`STATS_SYNC`:
 pointer too, so the Loader answers from a thread of its own
 (`DiceLog.answer_stats_in_background`, a look each millisecond, about 4 ms to
 work the numbers out), not from its main loop's next pass: that took 26-79 ms
-with the Ledger's window open, and each item picked up or put down on the
-inventory screen held the pointer that long, then it jumped. Nothing else in
-the game changes.
+with the Ledger's window open, on top of the game's own pause after an item is
+picked up or put down (50-90 ms at 20,000 cycles: its mouse handler, DSUN.EXE
+3573Dh, only queues the moves, and the pointer is drawn again once the game
+has done with the item). Nothing else in the game changes.
 
 Which class levels up next, on View Character: the game looks up the XP for
 each class's next level in its tables and shows the lowest. Where it adds the
