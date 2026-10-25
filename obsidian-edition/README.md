@@ -86,7 +86,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and armour, figures cast shadows and kick up dust, and elves and half-elves
   have a look of their own ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
-  a view that stays put in fights, dragging the map with the mouse wheel held
+  M for the overhead map, a view that stays put in fights, dragging the map with the mouse wheel held
   down, a pointer in the intro and scenes that a click skips
   ([Controls](FEATURES.md#controls)); 40 saves, each also kept under its name,
   and 29 saved characters
@@ -439,7 +439,9 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   backstab](FEATURES.md#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
   `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
   boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
-  script check) and read languages (none) are left out for want of room. A
+  script check) and read languages (a Shinobi's, for a scroll: on its
+  [Effects screen](KITS.md#changing-class)) are left out for want of
+  room. A
   ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
   places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
@@ -738,7 +740,7 @@ text, with the replies offered numbered underneath (and the list's title,
 such as "Answer Yes or No", above them), and then the one you picked:
 `You chose: No`.
 
-![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show](docs/dialogue.png)
+![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena](docs/dialogue.png)
 
 **Who's speaking.** The game's dialogue window gets only a portrait number,
 never a name. But when the game runs a script on someone (you click them, or
@@ -771,7 +773,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Magic Missile on the Rampager and the Rampager's acid killing the Defiler](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log with Find showing the first of 24 lines naming the Rampager: the party's kit lines, the first round's initiative, Gerakis's Wild Fighting roll and the Defiler's Fireball](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
@@ -896,6 +898,7 @@ creatures save again as they stay in them; those lines have no "from".
 |---|---|
 | `Message: Long Sword is broken !` | The game's own message boxes: broken or corroded weapons and armour, level-ups, "NO PATH FROM HERE" and so on. |
 | `Dinos cooks the vulture and the party eats with him: ... restored as after a full rest (HP, PSP and spell slots); the game gives each 100 XP` | Dinos asked about the cooked vulture (see [The cooked vulture](FEATURES.md#the-cooked-vulture)); the XP itself is on the `XP:` line after it. |
+| `Dreamwalker reads the scroll of Magic Missile: d100 = 37, needs 60 or less (INT 14) -> learnt` / `Xan reads the scroll of Shield: read languages d100 = 70, needs 35 or less -> can't read it (the scroll is used up)` / `Xan can't learn Armor from the scroll: not one of a Shinobi's spells (the scroll is kept)` | A try at a scroll's spell (see [Preservers' INT](FEATURES.md#preservers-int)): a preserver's d100 against INT's chance; a Shinobi's d100 against its read languages first, then INT's. A spell already known gives no line. |
 | `Daaki makes 20 burning arrows (5 a preserver level, 4): a 1st-level slot used; ...` | A Spellarcher's arrow button (see [Multiclass kits](KITS.md#multiclass-kits)); `no room in the backpack: left on the ground` when they went at the party's feet. |
 | `Dice: 1d8 = [3] = 3` | Dice the log couldn't tie to anything (for example a spell with no saving throw). |
 | `(The Loader stopped one of its own writes over the game's memory: ...)` | A safety net: the Loader never writes over the start of memory (the interrupt vectors, the BIOS's and DOS's data) or the first bytes of the game's data, which its C runtime checks ("Null pointer assignment"). Such a write could only come from a pointer the game has left empty for a moment; the line says where in the Loader it came from. Please report it. |
