@@ -4668,6 +4668,25 @@ class KitTests(unittest.TestCase):
         mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, index))
         mu.mem_write(things + 8 * 3, struct.pack("<Bh", 1, 3))
 
+    def test_assassin_backstab(self):
+        """STAB_TIMES (an INT handler, AX the game's multiplier, [BP-4] the damage, [BP+0Eh] the
+        attacker): an Assassin's (a thief, its second kit) one more; another kit's, a creature not of
+        the party, or the kits off, the game's (kits.backstab_times)."""
+        import re
+        from dsloader import kits
+        at = re.search(rb"\x83\x7e\x0e\x03\x77.\x50\x8b\x46\x0e\xe8", self.image, re.S).start()
+        handler = self.image[at:at + 12].hex()
+        for rules, kit, index, want in ((game.RULE_KITS, 2, 2, 4), (game.RULE_KITS, 1, 2, 3), (game.RULE_KITS, 2, 5, 3),
+                                        (0, 2, 2, 3)):
+            with self.subTest(rules=rules, kit=kit, index=index):
+                self.rules(rules)
+                self.creature(17, kit, index=index)
+                self.mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", index))
+                self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<h", 10))
+                self.run_int(0x70, handler, 2, eax=3)
+                self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 4, 2))[0], 10 * want)
+        self.assertEqual(kits.backstab_times(kits.ASSASSIN, 2), 3)
+
     def test_ac_and_move(self):
         """KIT_AC and KIT_MOVE as kits.ac (without a shield) and kits.move."""
         from dsloader import kits, kitpages

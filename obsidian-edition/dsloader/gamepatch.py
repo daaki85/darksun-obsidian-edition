@@ -90,6 +90,7 @@ VEC_OVR_BUF = 0x84
 VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
 VEC_TAKE = 0xF7
+VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -783,6 +784,9 @@ PATCHES = (
     # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
     # spell arrows in the quiver as those spells keep their weapons)
     Patch("take", 0x6F4B0, bytes.fromhex("7424"), _interrupt(VEC_TAKE, 2)),
+    # the sphere menu after DUAL to a cleric, druid or ranger, its answer compared: cmp ax,1 (DSCLOG
+    # makes it WATER ONLY for a Healer, when the DUAL window opens, and its answer water)
+    Patch("sphere", 0x86BC3, bytes.fromhex("3d0100"), _interrupt(VEC_SPHERE, 3)),
     # the overlay manager's buffer (twice the largest overlay, 32,992 bytes, the game's for good):
     # call far farmalloc becomes "int / test ax,imm16", the call's segment, which DOS relocates,
     # the test's word (DSCLOG gives a block it has kept in upper memory, else calls farmalloc): the

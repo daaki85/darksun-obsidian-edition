@@ -151,6 +151,7 @@ VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
 VEC_HEAP equ 0xCB          ; PROBE_HEAP
 VEC_FLIP equ 0x8B          ; PROBE_FLIP
 VEC_TAKE equ 0xF7          ; PROBE_TAKE
+VEC_SPHERE equ 0xFF        ; PROBE_SPHERE
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
 NENT    equ 63          ; entries in the ring (63: the helper and it fit in upper memory)
@@ -10148,6 +10149,7 @@ probe_el_know:
 ; kits bars (KIT_AT, asleep too; KIT_BANS, kits.DUAL_BANS). The test's flags back to the JZ (RETF 2).
 probe_dual_ban:
         sti
+        call dual_spheres
         or ax, ax
         jz .out
         push bx
@@ -10179,6 +10181,62 @@ probe_dual_ban:
         pop ecx
         pop bx
 .out:   or ax, ax
+        retf 2
+
+; DUAL_SPHERES: (PROBE_DUAL_BAN, the DUAL window's frame: [BP+6] the member) the game's sphere menu
+; after DUAL (its title DS:30A5h the air row, then earth, fire and water) made for the member: for one
+; with a Healer kit (asleep too: kits.DUAL_BANS, water's sphere only), its title WATER ONLY and no other
+; row (an empty row is left out), and SPH_HEALER set for PROBE_SPHERE; the game's own four for anyone
+; else, or with kits off. DS the game's; all registers kept.
+SPH_TEXTS   equ 0x30A5
+SPH_SIZE    equ 29                      ; ("SPHERE: AIR", "EARTH", "FIRE", "WATER")
+sph_healer  db 0
+sph_game    db 'SPHERE: AIR', 0, 'EARTH', 0, 'FIRE', 0, 'WATER', 0
+sph_water   db 'WATER ONLY', 0
+            times SPH_SIZE - 11 db 0
+dual_spheres:
+        pushad
+        push es
+        mov byte [cs:sph_healer], 0
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .set
+        les bx, [0x1661]
+        imul ax, [bp + 6], 0x47
+        add bx, ax
+        call kit_place          ; (each of its kits, asleep too)
+        jc .set
+.place: call kit_at
+        cmp al, KIT_HEALER
+        jne .next
+        mov byte [cs:sph_healer], 1
+.next:  dec di
+        jns .place
+.set:   mov si, sph_game
+        cmp byte [cs:sph_healer], 0
+        je .copy
+        mov si, sph_water
+.copy:  mov di, SPH_TEXTS
+        mov cx, SPH_SIZE
+.byte:  mov al, [cs:si]
+        mov [di], al
+        inc si
+        inc di
+        loop .byte
+        pop es
+        popad
+        ret
+
+; PROBE_SPHERE: INT VEC_SPHERE replaces "cmp ax,1" (3 bytes: INT + NOP; DSUN.EXE 86BC3h) after the
+; sphere menu that follows DUAL to a cleric, druid or ranger (AX the row picked: the title air, 1
+; earth, 2 fire, 3 water): for a Healer (SPH_HEALER: the menu was WATER ONLY) water, whatever the row.
+; Then the compare, its flags back to the JZ (RETF 2).
+SPH_WATER_ROW equ 3
+probe_sphere:
+        sti
+        cmp byte [cs:sph_healer], 0
+        je .cmp
+        mov ax, SPH_WATER_ROW
+.cmp:   cmp ax, 1
         retf 2
 
 ; KIT_BANS: EDX the classes (bit n: class n, 1-17) kit AL bars a human from having as well
@@ -21464,6 +21522,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_TAKE
         mov dx, probe_take
         int 21h
+        mov ax, 2500h + VEC_SPHERE
+        mov dx, probe_sphere
+        int 21h
         mov ax, 2500h + VEC_ARROW
         mov dx, probe_arrow
         int 21h
@@ -21915,7 +21976,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_TAKE
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_TAKE, VEC_SPHERE
 all_vectors_end:
 
         align 16, db 0
