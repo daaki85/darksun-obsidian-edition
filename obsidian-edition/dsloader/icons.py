@@ -489,7 +489,6 @@ SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
     ("Tanelyv's Leg Armor", 1363, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
     ("Grey's Scale Arms", 2531, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
     ("Grey's Scale Legs", 2518, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
-    ("Leather Helm +1", 1021, lambda r: glow(r, lambda p, x, y: 134 <= p <= 137 and (x + y) % 2 == 0, FIRE), None),
     ("Living Cloak", 30022, lambda r: shining(r, lambda p, x, y: 69 <= p <= 73 and (x + y) % 2 == 0, LEAF_GREEN), None),
     # jewellery and the orb: the gold or the gem
     ("Golden Torque", 30052, lambda r: glow(r, lambda p, x, y: 179 <= p <= 187 and (x + y) % 2 == 0, FIRE), None),
