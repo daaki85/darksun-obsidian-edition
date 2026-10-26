@@ -543,6 +543,7 @@ class DiceLog:
         self._sun_burn = False  # a Sunstroke heat line just given (the same)
         self._spell_name = ""
         self._spell_id: Optional[int] = None
+        self._cast: Tuple[Optional[int], Optional[int]] = (None, None)  # (the last spell cast: its caster, the spell)
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
         self.walkers = stuckwalk.StuckWalkers()  # (people a saved walk left standing)
@@ -1195,8 +1196,8 @@ class DiceLog:
                 if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
                     if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
                         out += weaponchoice.kit_gear(self.game)
-                    for member in range(game.PARTY_SIZE):
-                        out += kits.cosmos_spells(self.game, member)
+                    for member in range(game.PARTY_SIZE):  # (and a Wilderness Avenger's healing spells)
+                        out += kits.cosmos_spells(self.game, member) + kits.avenger_heals(self.game, member)
                 if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                     out += startgear.fill(self.game)
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
@@ -2015,6 +2016,7 @@ class DiceLog:
         if e.kind == KIND_SWEPT:
             return [f"    {self._name(e.raw)} is swept off its feet: loses its next turn"]
         if e.kind == KIND_CAST:
+            self._cast = (e.arg(6), e.raw)  # (who cast what, for a kit's damage: DSCLOG's CAST_WHO)
             self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
             return []
         code = e.code
@@ -2495,6 +2497,17 @@ class DiceLog:
         steps, extra = divmod(count - rule.base_dice, rule.step_dice)
         return steps if steps >= 1 and not extra else None
 
+    def _harm_bonus(self, spell: Optional[int]) -> int:
+        """A kit's damage added to SPELL, as DSCLOG's AV_CAUSE has it: a Wilderness Avenger's
+        Cause Wounds, when its caster (the last spell cast, KIND_CAST) is one."""
+        who, cast = self._cast
+        if spell is None or spell != cast or who is None or spell not in kits.CAUSE_DICE:
+            return 0
+        creature = self.game.combatant_creature(who)
+        if creature is None or kits.AVENGER not in self.game.kit_ids(creature):
+            return 0
+        return kits.harm_bonus(kits.AVENGER, spell)
+
     def _spell_damage(self, e: Entry, count: int, sides: int, faces: List[int],
                       missile_steps: Optional[int] = None) -> str:
         """A spell's damage dice, rolled by the routine whose arguments are (spell, caster level):
@@ -2507,17 +2520,20 @@ class DiceLog:
             return f"{name}: all the target's hit points but 1d4 (the {count}d{sides} the game rolls goes unused)"
         text = f"{name} damage: {count}d{sides} = [" + " + ".join(map(str, faces)) + "]"
         rule = g.spell_damage(spell) if spell is not None else None
-        self._last_damage = (spell, sum(faces))
+        kit, kit_text = self._harm_bonus(spell), ""  # (DSCLOG's AV_CAUSE)
+        if kit:
+            kit_text = f" {signed(kit)} {kits.name(kits.AVENGER)}"
+        self._last_damage = (spell, sum(faces) + kit)
         self._recent_damage.append(self._last_damage)
         if rule is None or rule.sides != sides:
-            return f"{text} = {sum(faces)}"
+            return f"{text}{kit_text} = {sum(faces) + kit}"
         steps = rule.steps(level) if missile_steps is None else missile_steps
         bonus = rule.step_bonus * steps
-        self._last_damage = (spell, sum(faces) + bonus)
+        self._last_damage = (spell, sum(faces) + bonus + kit)
         self._recent_damage[-1] = self._last_damage
         if bonus:
             text += f" {signed(bonus)}"
-        text += f" = {sum(faces) + bonus}"
+        text += f"{kit_text} = {sum(faces) + bonus + kit}"
         per = (f"{rule.step_dice}d{sides}" if rule.step_dice else "") + \
             (f"{signed(rule.step_bonus)}" if rule.step_dice and rule.step_bonus else
              f"{rule.step_bonus}" if rule.step_bonus else "")

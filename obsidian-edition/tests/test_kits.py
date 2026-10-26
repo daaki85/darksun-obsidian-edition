@@ -127,3 +127,42 @@ class CosmosSpellTests(unittest.TestCase):
     def test_not_a_healer(self):
         self.assertEqual(self.make(kits.CRUSADER, 4), ([], {}))
         self.assertEqual(self.make(kits.HEALER, 13), ([], {}))  # (not a cleric's kit class)
+
+
+class AvengerHealTests(unittest.TestCase):
+    """kits.avenger_heals: a Wilderness Avenger in the party (one made with 2.10.0 or earlier) has the
+    healing spells it knows (AVENGER_NO_HEAL) marked not known, the bits above the low four kept."""
+
+    def make(self, kid):
+        from unittest import mock
+        from dsloader import game
+        known = bytearray(game.SPELL_COUNT + 1)
+        known[71], known[72], known[112], known[127] = 0x01, 0x01, 0x21, 0x00
+        rec = bytearray(game.CREATURE_SIZE)
+        rec[game.CREATURE_NAME] = ord("A")
+        written = {}
+
+        class Guest:
+            def read(self, at, n):
+                return bytes(known[:n])
+
+            def write(self, at, data):
+                written[at] = data
+
+        class GD:
+            guest, ds = Guest(), 0
+            creature = staticmethod(lambda m: bytes(rec))
+            kit_ids = staticmethod(lambda m: [kid])
+            creature_name = staticmethod(lambda m: "Asha")
+            spell_name = staticmethod(lambda s: f"spell {s}")
+
+        with mock.patch("dsloader.game.far_pointer", lambda *a: 1000):
+            return kits.avenger_heals(GD(), 0), written
+
+    def test_avenger(self):
+        lines, written = self.make(kits.AVENGER)
+        self.assertEqual(written, {1071: bytes((0,)), 1112: bytes((0x20,))})  # (Cause Light Wounds, 72, kept)
+        self.assertEqual(lines, ["Asha, a Wilderness Avenger, knows no healing spells: spell 71, spell 112 taken away"])
+
+    def test_not_an_avenger(self):
+        self.assertEqual(self.make(kits.HEALER), ([], {}))

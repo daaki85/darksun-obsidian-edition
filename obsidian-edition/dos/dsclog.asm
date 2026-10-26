@@ -3689,8 +3689,8 @@ arrows_forbid:
 ; light; a Twin-blade a shield, and a two-handed weapon (but a half-giant's,
 ; with RULE_HALF_GIANT); a Brute a one-handed melee weapon, and a shield (but a half-giant's,
 ; with the rule), and with KF_SPEC set (a weapon spec chosen) a missile weapon; a Stalker armour
-; that isn't light (leather, or of no material); an Assassin, Shinobi, Shadowblade, Poisoner,
-; Spellarcher or Wilderness Avenger the same, asleep too (KIT_LIGHT); a Grove Warden a metal weapon; a Lifebinder a
+; that isn't light (leather, or of no material); an Assassin, Shinobi, Shadowblade, Poisoner or
+; Spellarcher the same, asleep too (KIT_LIGHT); a Grove Warden a metal weapon; a Lifebinder a
 ; weapon of a kind not blunt (KIT_BLUNT); a Shinobi a shield, armour that isn't light, and a
 ; weapon not of its kinds (KIT_SHINOBI); a Battle Dancer a shield, and a weapon not of its kinds
 ; (kit_dancer); a Seeker a weapon its sphere doesn't allow (as a cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
@@ -3727,7 +3727,7 @@ kit_forbids:
         pop ax
         ret
 ; KIT_LIGHT: carry set if kit AL keeps its character to light armour whether awake or asleep (an
-; Assassin, Shinobi, Shadowblade, Poisoner, Spellarcher or Wilderness Avenger: kits.LIGHT_KITS, a thief's own limit
+; Assassin, Shinobi, Shadowblade, Poisoner or Spellarcher: kits.LIGHT_KITS, a thief's own limit
 ; kept after dual-classing) and item type DX is armour that isn't light (leather, or of no
 ; material; not a shield). All registers kept.
 kit_light:
@@ -3763,7 +3763,7 @@ kit_light:
         pop bx
         pop ax
         ret
-light_kits db KIT_ASSASSIN, KIT_SHINOBI, KIT_SHADOWBLADE, KIT_POISONER, KIT_SPELLARCHER, KIT_AVENGER, 0
+light_kits db KIT_ASSASSIN, KIT_SHINOBI, KIT_SHADOWBLADE, KIT_POISONER, KIT_SPELLARCHER, 0
 
 kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         push ax
@@ -10141,9 +10141,58 @@ probe_el_know:
 .test:  pop es
         pop bx
         test [es:bx + 0x19D], ecx
-        pop ecx
+        jz .out
+        call av_know            ; (a Wilderness Avenger's healing spells: not known)
+.out:   pop ecx
         pop eax
         retf 2
+
+; AV_KNOW: (PROBE_EL_KNOW) ZF set if creature SI is a Wilderness Avenger and the spell whose place
+; in the table is BX (the spell x 7) a healing one (AV_HEAL), else clear. Others kept.
+av_know:
+        push ax
+        push dx
+        push bx
+        mov ax, bx
+        xor dx, dx
+        mov bx, 7
+        div bx
+        call av_heal
+        jnc .no
+        mov ax, si
+        call cr_is
+        db KIT_AVENGER
+        jmp .out
+.no:    or sp, sp               ; (ZF clear)
+.out:   pop bx
+        pop dx
+        pop ax
+        ret
+
+; AV_HEAL: CF set if spell AX is one a Wilderness Avenger never knows (kits.AVENGER_NO_HEAL): Cure
+; Light, Serious and Critical Wounds and Blood Flow (Heal and Water of Life: NS_PRIEST_KNOWS). All
+; registers kept.
+av_heals db 71, 108, 112, 127
+AV_HEALS_COUNT equ 4
+av_heal:
+        push si
+        push cx
+        or ah, ah
+        jnz .no
+        mov si, av_heals
+        mov cx, AV_HEALS_COUNT
+.find:  cmp al, [cs:si]
+        je .yes
+        inc si
+        loop .find
+.no:    pop cx
+        pop si
+        clc
+        ret
+.yes:   pop cx
+        pop si
+        stc
+        ret
 
 ; PROBE_DUAL_BAN: INT VEC_DUAL_BAN replaces "or ax,ax" (2 bytes; DSUN.EXE 866FFh) after the test
 ; whether a human may change to a class (86E94h: AX 1 if so), made for each class (SI, 1-17) as
@@ -11304,6 +11353,30 @@ wander_dmg:
         popad
         iret
 
+; AV_GRANT: "test es:[bx+19Dh],edx" (5E499h; 6 bytes: the INT, the site's number and 3 NOPs) in
+; the routine giving a priest the spells of its spheres (5E401h: [BP+6] the character, SI the spell,
+; EDX its priest classes' mask; a spell meeting it learnt): a Wilderness Avenger's healing spells
+; (AV_HEAL) not given. The test made, its flags returned.
+av_grant:
+        pushad
+        push es
+        mov di, sp
+        test [es:bx + 0x19D], edx
+        jz .flags
+        mov ax, si
+        call av_heal
+        jnc .given
+        call cb_is
+        db KIT_AVENGER
+        jmp .flags
+.given: or sp, sp               ; (ZF clear)
+.flags: pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
 ; REQ_SITE: "mov bx,[bp+6] / dec bx" (7FF42h; 4 bytes: the INT, the site's number and a NOP) in the
 ; routine running a script's REQUEST (command 22h; 7FF30h, a jump table of 20 at its CS:177h):
 ; [BP+6] the request (1 to 20), [BP+8] who, [BP+0Ah] and [BP+0Ch] its two values. Recorded
@@ -11337,6 +11410,9 @@ cast_site:
         mov si, sp
         sub si, 2                       ; (SS:SI+6: the INT's return address)
         mov ax, [bp + 0x0A]
+        mov [cs:cast_spell], ax
+        push word [bp + 6]
+        pop word [cs:cast_who]
         mov word [cs:kind], KIND_CAST
         call record
         mov byte [cs:acid_burning], 0   ; (a burn's damage that never put its effect: over)
@@ -11428,8 +11504,66 @@ harm_site:
         mov [bp - 8], ax
         pop es
         pop bx
-.store: mov [bp - 6], ax
+.store: push bx
+        call av_cause
+        add [bp - 8], bx
+        pop bx
+        mov [bp - 6], ax
         iret
+
+; AREA_DMG: "mov [bp-12h],ax" (754ECh; 3 bytes) where the routine dealing a spell's damage to the
+; creatures it reaches (7511Bh: DI the spell; a touch spell's on one too) has rolled it (AX), the
+; most it could roll at [BP-14h] (what a helpless target takes): AV_CAUSE's bonus on both. Then
+; the move done.
+area_dmg:
+        push bx
+        call av_cause
+        add [bp - 0x14], bx
+        pop bx
+        mov [bp - 0x12], ax
+        iret
+
+; AV_CAUSE: (HARM_SITE, AREA_DMG) AX the damage spell DI has rolled: a Wilderness Avenger's Cause
+; Light, Serious and Critical Wounds 1 more a die (+1, +2, +3; kits.harm_bonus) added to AX, and
+; BX that bonus (for what a helpless target takes), when its caster (CAST_WHO, CAST_SITE's) cast
+; that spell; BX 0 otherwise. Others kept.
+av_causes db 72, 1,  113, 2,  128, 3
+AV_CAUSES_END:
+cast_who   dw 0xFFFF            ; (CAST_SITE: the last spell cast, by combatant CAST_WHO)
+cast_spell dw 0xFFFF
+av_cause:
+        xor bx, bx
+        cmp di, [cs:cast_spell]
+        jne .ret
+        push si
+        push es
+        mov si, av_causes
+.find:  cmp di, 0xFF
+        ja .out
+        mov bx, di
+        cmp bl, [cs:si]
+        je .spell
+        add si, 2
+        cmp si, AV_CAUSES_END
+        jb .find
+        jmp .out
+.spell: push ax
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [cs:cast_who], 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        call cr_is
+        db KIT_AVENGER
+        pop ax
+        jne .out
+        movzx bx, byte [cs:si + 1]
+        add ax, bx
+        jmp .done
+.out:   xor bx, bx
+.done:  pop es
+        pop si
+.ret:   ret
 
 ; THORNS_DAMAGE: HARM_SITE's for Wall of Thorns' damage on creature SI (each creature in the wall
 ; on its own, as it stands in it, its own ground picture's entry keyed to the spell: AREA_SPACE):
@@ -14720,6 +14854,16 @@ ns_priest_knows:
         movzx si, cl
         shl si, 2
         mov edx, [cs:si + P6_MASKS - 4 * PRIEST6]
+        cmp cl, HEAL_SPELL - NS_FIRST   ; (a Wilderness Avenger's healing spells: not its: AV_HEAL)
+        je .avenger
+        cmp cl, WATER_LIFE_SPELL - NS_FIRST
+        jne .second
+.avenger:
+        call kit_is_b
+        db KIT_AVENGER
+        jne .second
+        xor edx, edx
+.second:
         call el_second          ; (AL its second sphere, 0-3)
         jz .healer
         mov cl, al
@@ -15031,6 +15175,8 @@ NS_WALL   equ NS_IMAGE + 20      ; 5A38Ch: the computer's cast, its two points
 SHOP_SHINE equ NS_IMAGE + 21     ; 2AFA6h: the wait for an event, its test (a shop's shine)
 SHOP_LOOP equ NS_IMAGE + 22      ; 7DE11h: a shop's own event loop, its test (... too)
 DET_ITEM  equ NS_IMAGE + 23      ; 7AB95h: Detonate's blast on an item, the number its d20 must be under
+AV_GRANT  equ NS_IMAGE + 53     ; 5E499h: a priest given its spells, one's mask tested (AV_GRANT)
+AREA_DMG  equ NS_IMAGE + 54     ; 754ECh: a spell's damage to the creatures it reaches, rolled (AREA_DMG)
 WANDER_DMG equ NS_IMAGE + 24     ; 7B56Fh: a spell's damage, the kinds a creature is protected from
 REQ_SITE  equ NS_IMAGE + 25      ; 7FF42h: a script's REQUEST, its number read
 AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim check's answer
@@ -15116,6 +15262,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je det_item
         cmp byte [cs:rl_site], WANDER_DMG
         je wander_dmg
+        cmp byte [cs:rl_site], AV_GRANT
+        je av_grant
+        cmp byte [cs:rl_site], AREA_DMG
+        je area_dmg
         cmp byte [cs:rl_site], REQ_SITE
         je req_site
         cmp byte [cs:rl_site], AIM_SITE

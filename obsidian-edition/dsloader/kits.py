@@ -7,7 +7,7 @@ that number, 0 for none (the rule off, more than one class, none chosen).
 import struct
 from typing import List, Optional, Tuple
 
-from .game import FOG_SPELL, FRIENDS_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL
+from .game import FOG_SPELL, FRIENDS_SPELL, HEAL_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL, WATER_LIFE_SPELL
 from .kitpages import KIT_IDS, KITS
 
 RAVAGER, SENTINEL, STALKER = KIT_IDS["Ravager"], KIT_IDS["Sentinel"], KIT_IDS["Stalker"]
@@ -30,6 +30,13 @@ HEALER_SPHERE_CLASS = 4  # the Healer is a water cleric's (the cleric of water, 
 # the healing spells' dice (DSCLOG's CURE_SPELLS): Cure Light, Serious and Critical Wounds, Blood Flow
 CURE_LIGHT, CURE_SERIOUS, CURE_CRITICAL, BLOOD_FLOW = 71, 112, 127, 108
 CURE_DICE = {CURE_LIGHT: (1, 8), CURE_SERIOUS: (2, 8), CURE_CRITICAL: (3, 8), BLOOD_FLOW: (2, 6)}
+# the healing spells a Wilderness Avenger never knows (DSCLOG's AV_HEAL; Heal and Water of Life,
+# the 6th-level ones, NS_PRIEST_KNOWS's)
+AVENGER_NO_HEAL = frozenset((CURE_LIGHT, BLOOD_FLOW, CURE_SERIOUS, CURE_CRITICAL, HEAL_SPELL, WATER_LIFE_SPELL))
+# Cause Light, Serious and Critical Wounds, and their dice: a Wilderness Avenger's 1 more a die
+# (DSCLOG's AV_CAUSE)
+CAUSE_LIGHT, CAUSE_SERIOUS, CAUSE_CRITICAL = 72, 113, 128
+CAUSE_DICE = {CAUSE_LIGHT: 1, CAUSE_SERIOUS: 2, CAUSE_CRITICAL: 3}
 # the kits with a warrior's THAC0 (PROBE_THAC0)
 WARRIOR_THAC0 = frozenset((SWASHBUCKLER, CRUSADER, BATTLE_MAGE, MIND_WARRIOR))
 TWIN_BLADE, BRUTE = KIT_IDS["Twin-blade"], KIT_IDS["Brute"]
@@ -291,6 +298,18 @@ def cure_bonus(kid: int, spell: int, outdoors: bool = False) -> int:
     if kid in (HEALER, RESCUER) and spell in CURE_DICE and spell != BLOOD_FLOW:
         return CURE_DICE[spell][0]
     return 0
+
+
+def harm_bonus(kid: int, spell: int) -> int:
+    """Added to the damage of SPELL cast by a character of kit KID (DSCLOG's AV_CAUSE): a
+    Wilderness Avenger's 1 a die of Cause Light, Serious and Critical Wounds."""
+    return CAUSE_DICE.get(spell, 0) if kid == AVENGER else 0
+
+
+def knows_heal(kid: int, spell: int) -> bool:
+    """Whether a character of kit KID may know healing spell SPELL (a Wilderness Avenger never
+    knows AVENGER_NO_HEAL's)."""
+    return not (kid == AVENGER and spell in AVENGER_NO_HEAL)
 
 
 def cure_die(kid: int, spell: int) -> int:
@@ -607,6 +626,27 @@ def cosmos_spells(gd, member: int) -> List[str]:
     return [f"{gd.creature_name(member)}, a Healer, knows the sphere of the cosmos's spells: {', '.join(learnt)}"]
 
 
+def avenger_heals(gd, member: int) -> List[str]:
+    """A Wilderness Avenger in the party knows no healing spell (AVENGER_NO_HEAL), as DSCLOG's
+    AV_KNOW and AV_GRANT keep them from it when it is made and as it goes up a level: one made
+    before (2.10.0 or earlier) has them marked not known, as the game marks a priest's (the low
+    four bits 0). Lines for the log, the spells taken away."""
+    from . import game
+    rec = gd.creature(member)
+    if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or AVENGER not in gd.kit_ids(member):
+        return []
+    known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
+    known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
+    gone = []
+    for spell in sorted(s for s in AVENGER_NO_HEAL if s < len(known)):
+        if known[spell] & 0x0F:
+            gd.guest.write(known_at + spell, bytes((known[spell] & 0xF0,)))
+            gone.append(gd.spell_name(spell))
+    if not gone:
+        return []
+    return [f"{gd.creature_name(member)}, a Wilderness Avenger, knows no healing spells: {', '.join(gone)} taken away"]
+
+
 def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], specialize: bool) -> bool:
     """Whether the kit lets a character use an item type whatever its classes' lists and
     restrictions (TYP its record, KIND its weapon kind or None), as DSCLOG's KIT_ALLOWS: a Battle
@@ -631,7 +671,7 @@ def forbids_off_hand(kid: int, typ: bytes) -> bool:
 
 # the kits held to light armour asleep too (DSCLOG's KIT_LIGHT): a thief's own limit kept after
 # dual-classing, and an archer's
-LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER, SPELLARCHER, AVENGER))
+LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER, SPELLARCHER))
 
 
 def light_only(kid: int, typ: bytes) -> bool:

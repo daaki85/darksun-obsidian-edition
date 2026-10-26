@@ -162,6 +162,8 @@ CINE_STEP, CINE_END = NS_IMAGE + 43, NS_IMAGE + 44  # (scenes: the pointer shown
 MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in the middle, as fast up as across)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
+AREA_DMG = NS_IMAGE + 54  # (a spell's damage to the creatures it reaches: a Wilderness Avenger's Cause Wounds, kits.harm_bonus)
+AV_GRANT = NS_IMAGE + 53  # (a priest given its spheres' spells: a Wilderness Avenger's healing ones not: kits.AVENGER_NO_HEAL)
 BOX_SAID, LINE_SAID, LINE_CLEARED = range(NS_IMAGE + 50, NS_IMAGE + 53)  # (an item's box: its message, never seen on the
 #   inventory, put on the inventory's line for 5 s each time the pointer's handler writes or clears it)
 HEAT_SITE = NS_IMAGE + 41  # (a spell's damage on a creature: Sunstroke's heat named and made fire, DSCLOG's HEAT_SITE)
@@ -440,6 +442,10 @@ PATCHES = (
     # a one-target spell's rolled damage stored (76175h: SI the target, DI the spell): Harm's all the
     # target's hit points but 1d4; Wall of Thorns' 8 + AC (DSCLOG's HARM_SITE)
     Patch("harm_damage", 0x761A9, bytes.fromhex("8946fa"), _site(HARM_SITE, 3)),
+    # ... and where the routine dealing a spell's damage to the creatures it reaches (7511Bh: DI the
+    # spell; a touch spell's too) has rolled it: a Wilderness Avenger's Cause Wounds 1 more a die
+    # (DSCLOG's AREA_DMG and HARM_SITE's AV_CAUSE)
+    Patch("area_damage", 0x754EC, bytes.fromhex("8946ee"), _site(AREA_DMG, 3)),
     # the game's own code reading a ground picture's entry from its table, "mov ax,3C81h / mov es,ax
     # / mov al,es:[bx+2]": "cmp ax,3C81h" (the segment's word kept, as DOS fixes it up) and the
     # site, AX and ES the table's segment where DSCLOG has moved it (with an entry each for Blade
@@ -719,6 +725,9 @@ PATCHES = (
     Patch("el_level", 0x5E375, bytes.fromhex("66268b9f9d01"), _interrupt(VEC_EL_LEVEL, 6)),
     Patch("el_know_new", 0x66FC9, bytes.fromhex("662685879d01"), _interrupt(VEC_EL_KNOW, 6)),
     Patch("el_know_level", 0x86E56, bytes.fromhex("662685879d01"), _interrupt(VEC_EL_KNOW, 6)),
+    # ... and a Wilderness Avenger's healing spells not given where the game gives a priest its
+    # spheres' spells, a spell's mask tested (DSCLOG's AV_GRANT; at creation, PROBE_EL_KNOW's AV_KNOW)
+    Patch("av_grant", 0x5E499, bytes.fromhex("662685979d01"), _site(AV_GRANT, 6)),
     # The classes a kit bars a human from changing to (kits.dual_banned), greyed on the DUAL window
     Patch("dual_ban", 0x866FF, bytes.fromhex("0bc0"), _interrupt(VEC_DUAL_BAN, 2)),
     # A preserver picks its two spells on CHOOSE A SPELL on changing class, as at a level up (the

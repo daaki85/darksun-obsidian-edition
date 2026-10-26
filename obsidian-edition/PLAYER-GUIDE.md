@@ -980,8 +980,9 @@ range ahead of armies and caravans: in the open they are at home, under a roof
 less so.
 
 *Wilderness Avenger* (half-elf druid/fighter). Sworn to the land's living
-things, they hunt whatever profanes it, travel light in leather, and move
-through the wild as quietly as any ranger.
+things, they hunt whatever profanes it and move through the wild as quietly as
+any ranger. They have given up mending for harming: no healing spells, but their
+wounding spells cut deeper.
 
 *Rescuer* (half-elf cleric/ranger). They bring the lost back from the wastes
 alive: their healing runs strong, and they cover ground quickly in a fight,

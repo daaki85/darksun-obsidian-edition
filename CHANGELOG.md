@@ -17,7 +17,14 @@ notes](PATCH-NOTES.md).
   more Move in a fight (`KIT_MOVE`); it may no longer hold a shield (`KIT_FORBIDS`, `kits.forbids`;
   a new one's starting shield is left behind).
 - **Wilderness Avenger**: +1 to hit and damage against anything, not only undead (`KIT_EXTRA`);
-  light armour only (`LIGHT_KITS`, `KIT_LIGHT`) in place of a druid slot fewer at each level.
+  in place of a druid slot fewer at each level, **no healing spells** (Cure Light, Serious and
+  Critical Wounds, Blood Flow, Heal, Water of Life: `AV_HEAL`, kept from it as it is made,
+  `AV_KNOW`, and as it goes up a level, `AV_GRANT` at DSUN.EXE 5E499h; the 6th-level two in
+  `NS_PRIEST_KNOWS`; one in an older save loses them, `kits.avenger_heals`), and Cause Light,
+  Serious and Critical Wounds do 1 more a die (`AV_CAUSE` at `AREA_DMG`, DSUN.EXE 754ECh, and
+  `HARM_SITE`, by `CAST_SITE`'s caster;
+  the dice log's `_harm_bonus`). Druids wear no armour, so the light armour only it had for a
+  while was no cost (dropped from `LIGHT_KITS` and `KIT_LIGHT`).
 - **Assassin**: a backstab's multiplier one more, x3 to x6 (`STAB_TIMES`,
   `kits.backstab_times`).
 - **Poisoner**: every hit poisons, the target's save as before (`PROBE_POISON`; the header's

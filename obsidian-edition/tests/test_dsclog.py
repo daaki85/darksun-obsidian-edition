@@ -4788,6 +4788,82 @@ class KitTests(unittest.TestCase):
         self.assertEqual(test(3, 0x04, 0), (0x06, True))  # a Wanderer: cold guarded
         self.assertEqual(test(3, 0x80, 0), (0x06, False))  # ... not lightning
 
+    def test_avenger_spells(self):
+        """A Wilderness Avenger (a half-elf druid/fighter) never knows the healing spells
+        (kits.AVENGER_NO_HEAL): PROBE_EL_KNOW's AV_KNOW, as a character is made, and AV_GRANT
+        (5E499h, "test es:[bx+19Dh],edx" where a priest is given its spheres' spells, [BP+6] the
+        character, SI the spell), ZF set for them; its other spells, another kit's, or the kits off,
+        the game's test. HARM_SITE's and AREA_DMG's AV_CAUSE: its Cause Light, Serious and Critical
+        Wounds 1 more a die (kits.harm_bonus), on the damage and on a helpless target's, when it cast
+        them (CAST_WHO, CAST_SITE's)."""
+        from dsloader import gamepatch, kits
+        image = load_image()
+        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        if not getattr(self, "hooked", False):
+            self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+            self.hooked = True
+        patch = next(p for p in gamepatch.PATCHES if p.name == "av_grant")
+        self.assertEqual((patch.offset, patch.original.hex()), (0x5E499, "662685979d01"))
+        spells, bit = 0x6600, 2 << 5  # (the air druid's bit)
+        def site(number, length, **regs):
+            self.at = getattr(self, "at", 0x600) + 0x10
+            start = CALLER * 16 + self.at
+            self.mu.mem_write(start, bytes((0xCD, gamepatch.VEC_CR_SPELLS, number)) + b"\x90" * (length - 3))
+            for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F0, ebp=BP, eflags=IF | 2, **regs).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            self.mu.emu_start(start, start + length, count=20000)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SP), 0x7F0)
+        from dsloader.gamepatch import VEC_EL_KNOW
+        for rules in (game.RULE_KITS, 0):
+            self.rules(rules)
+            for kit in (1, 0):
+                self.creature(5, kit, second=9, race=4)  # (combatant 7, creature 5)
+                avenger = self.kit_of(5, kit, rules, 9, 4) == kits.AVENGER
+                self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 7))
+                for spell, mask in ((71, 0x13C3FE), (72, 0x13C3FE), (108, 0x120222), (112, 0x1003C2), (127, 0x1003C2),
+                                    (128, 0x1003C2), (69, 0x13C3FE), (71, 0x10808A)):
+                    self.mu.mem_write(spells * 16 + spell * 7 + 0x19D, struct.pack("<I", mask))
+                    known = bool(mask & bit) and kits.knows_heal(kits.AVENGER if avenger else 0, spell)
+                    with self.subTest(rules=rules, kit=kit, spell=spell, mask=hex(mask), probe="know"):
+                        self.run_vector(VEC_EL_KNOW, 6, eax=bit, ebx=spell * 7, ecx=0x12345678, esi=5, es=spells)
+                        self.assertEqual(not self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40, known)
+                        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_EAX, r.UC_X86_REG_EBX,
+                                                                        r.UC_X86_REG_ECX, r.UC_X86_REG_SI)],
+                                         [bit, spell * 7, 0x12345678, 5])
+                    with self.subTest(rules=rules, kit=kit, spell=spell, mask=hex(mask), probe="grant"):
+                        site(gamepatch.AV_GRANT, 6, ebx=spell * 7, edx=bit, esi=spell, edi=0x7777, es=spells)
+                        self.assertEqual(not self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40, known)
+                        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_EBX, r.UC_X86_REG_EDX,
+                                                                        r.UC_X86_REG_SI, r.UC_X86_REG_DI)],
+                                         [spell * 7, bit, spell, 0x7777])
+                cast = TSR * 16 + image.find(bytes((72, 1, 113, 2, 128, 3))) + 6  # (CAST_WHO, CAST_SPELL)
+                for spell in (72, 113, 128, 71, 131):
+                    for who in (7, 8):
+                        with self.subTest(rules=rules, kit=kit, spell=spell, who=who, probe="cause"):
+                            self.mu.mem_write(cast, struct.pack("<HH", who, spell))
+                            self.mu.mem_write(SS * 16 + BP - 8, struct.pack("<h", 24))
+                            site(gamepatch.HARM_SITE, 3, eax=5, edi=spell, esi=40)
+                            dealt, most = struct.unpack("<hh", self.mu.mem_read(SS * 16 + BP - 8, 4))[::-1]
+                            bonus = kits.harm_bonus(kits.AVENGER, spell) if avenger and who == 7 else 0
+                            self.assertEqual((dealt, most), (5 + bonus, 24 + bonus))
+                            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 5 + bonus)
+                        with self.subTest(rules=rules, kit=kit, spell=spell, who=who, probe="area"):
+                            self.mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<h", 24))
+                            site(gamepatch.AREA_DMG, 3, eax=5, ebx=0x2222, edi=spell, esi=40)
+                            dealt, most = struct.unpack("<hh", self.mu.mem_read(SS * 16 + BP - 0x14, 4))[::-1]
+                            self.assertEqual((dealt, most), (5 + bonus, 24 + bonus))
+                            self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX,
+                                                                            r.UC_X86_REG_SI, r.UC_X86_REG_DI)],
+                                             [5 + bonus, 0x2222, 40, spell])
+                self.mu.mem_write(cast, struct.pack("<HH", 7, 113))  # (another spell cast last: the game's)
+                site(gamepatch.HARM_SITE, 3, eax=5, edi=72, esi=40)
+                self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 6, 2))[0], 5)
+        self.assertEqual([kits.harm_bonus(kits.AVENGER, s) for s in (72, 113, 128, 71)], [1, 2, 3, 0])
+        self.assertEqual(kits.harm_bonus(kits.HEALER, 72), 0)
+        self.assertFalse(kits.knows_heal(kits.AVENGER, game.HEAL_SPELL))
+        self.assertTrue(kits.knows_heal(kits.HEALER, 71))
+
     def test_amulet_resistance(self):
         """AMULET_MR (7A4FDh, "cmp word [bp-0Ch],0" in the magic resistance routine, [BP+6] the
         target's combatant): an Amulet of Magic Resistance at the neck adds 15 to [BP-0Ch] before
