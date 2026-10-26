@@ -21,6 +21,7 @@ the game, and checked here in the game's own code.
 - [Character creation](#character-creation)
 - [Monsters' defences](#monsters-defences)
 - [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
+- [The Bowyer's archery target](#the-bowyers-archery-target)
 - [No critical hits](#no-critical-hits)
 - [The game's two weapons](#the-games-two-weapons)
 - [How the game works out thief skills](#how-the-game-works-out-thief-skills)
@@ -416,6 +417,30 @@ in junk, a skull in hay, coins in a wardrobe...), but its "nothing" check comes
 first, so they never happen.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#searching-junk-hay-and-wardrobes).
+
+## The Bowyer's archery target
+
+In Teaquetzl, the Bowyer keeps an archery target, and his script decides each
+shot at it. The distance is the game's, in squares from the archer to the
+target, and the archer's DEX does the rest:
+
+- From under 5 squares, every shot is a bull's eye ("could hardly miss at that
+  range"), with no roll and no reward.
+- Otherwise the shot rolls 0 to 20 and hits on a roll under **DEX − distance ÷
+  2** (rounded down; 2 if DEX is under the distance). Under it by less than 5
+  is the outer ring, by less than 10 the inner ring, by 10 or more the centre.
+- The centre from **more than 13 squares**, with the Bowyer **within 25** of
+  the archer, has him give **6 Arrows +2**, once a game. From 13 squares or
+  closer, the centre is only "the bull's eye".
+- The archer must have a bow in hand, one of the three the script names: the
+  plain bow, the Bow +2 or Phrain's Bow. With anything else (Dunesong, the
+  mod's bow, among them) the Bowyer only tells you off.
+
+So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
+less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
+the dice log with the distances and what it needed.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-bowyers-archery-target).
 
 ## No critical hits
 

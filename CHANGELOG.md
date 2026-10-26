@@ -28,6 +28,11 @@ notes](PATCH-NOTES.md).
   ported: `bowyer.distance`, from the map things' squares, `GameData.thing_square`/`things_of`)
   and the result: a miss, a ring, the centre, and whether it earns the arrows (`bowyer.py`; its
   random command known by its position, 57Fh, in script 178 alone).
+- **Documentation review.** FEATURES has a section on the magic items' icons (and its Graphics
+  intro and contents say so), DEVELOPMENT how `icons.SHINE` works and its three own pictures,
+  HOW-THE-GAME-WORKS the Bowyer's archery target (the three bows its script names: not the
+  Loader's Dunesong, as ITEMS now says), the Loader README's summary the gear's glint and the
+  icons' shine; the patch notes' long dice-log line is three.
 
 **Fixed**
 - **The Weapon Merchant was missing from Teaquetzl's market** (since 1.2.0), and Jark from Tyr's.

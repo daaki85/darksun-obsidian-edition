@@ -84,8 +84,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   Whirlwind...), Kalzith (a defiler who sells scrolls), defilers who drop
   scrolls, more of Semyon's story, and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
-  and armour, figures cast shadows and kick up dust, and elves and half-elves
-  have a look of their own ([Graphics](FEATURES.md#graphics)).
+  and armour (its magic gear glinting), figures cast shadows and kick up dust,
+  and elves and half-elves have a look of their own; and the game's magic items
+  whose icons stood still shine as the rest do ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
   M for the overhead map, a view that stays put in fights, dragging the map
   with the mouse wheel held down, a pointer in the intro and scenes that a click skips
