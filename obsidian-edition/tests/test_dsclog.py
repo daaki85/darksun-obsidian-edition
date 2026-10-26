@@ -1552,8 +1552,8 @@ class CanUseTests(unittest.TestCase):
 
     def test_no_shield_kits(self):
         """KIT_FORBIDS: a Shadowblade (a half-elf fighter/thief) and a Ghetto Fighter (a dwarf
-        fighter/thief) no shield, as kits.forbids; the same classes with no kit, or a Military
-        Scout, as the game has them."""
+        fighter/thief) and a Rescuer (a half-elf cleric/ranger) no shield, as kits.forbids; the
+        same classes with no kit, or a Military Scout, as the game has them."""
         from dsloader import kitpages
         hdr = TSR * 16 + load_image().find(HDR_SIG)
         old = game.RULES_IN_FORCE
@@ -1571,6 +1571,15 @@ class CanUseTests(unittest.TestCase):
                         self.assertEqual(self.can_use(bytes(s), t, rules=rules), self.expected(s, t))
                 with self.subTest(race=race, kit=kit):
                     self.assertEqual(self.can_use(bytes(s), 4, rules=rules) != 0, shield)  # (a leather shield)
+            for kit, shield in ((1, False), (0, True)):  # (a Rescuer: a half-elf cleric/ranger)
+                s = bytearray(test_restrict.sheet(4, 16, race=kitpages.HALF_ELF))
+                s[0x24:0x26] = bytes((3, 3))
+                s[0x43] = kit
+                for t in test_restrict.TYPES:
+                    with self.subTest(rescuer=kit, type=t):
+                        self.assertEqual(self.can_use(bytes(s), t, rules=rules), self.expected(s, t))
+                with self.subTest(rescuer=kit):
+                    self.assertEqual(self.can_use(bytes(s), 4, rules=rules) != 0, shield)
         finally:
             game.RULES_IN_FORCE = old
             self.mu.mem_write(hdr + 270, struct.pack("<H", 0))

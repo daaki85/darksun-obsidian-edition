@@ -3821,7 +3821,9 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 .ravager:
         cmp byte [cs:kf_chosen], 0
         jne .ok
-        cmp cl, KIT_SHADOWBLADE ; a Shadowblade or Ghetto Fighter: no shield
+        cmp cl, KIT_SHADOWBLADE ; a Shadowblade, Ghetto Fighter or Rescuer: no shield
+        je .unshielded
+        cmp cl, KIT_RESCUER
         je .unshielded
         cmp cl, KIT_GHETTO
         jne .ravager_kit

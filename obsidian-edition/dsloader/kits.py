@@ -652,7 +652,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     blunt; a Shinobi a shield, armour that isn't light, a weapon not of SHINOBI_KINDS; a Seeker a
     weapon (of a kind) its SPHERE (0 air to 3 water) doesn't allow, as a cleric's
     (restrict.sphere_allows), but the bow; a Battle Dancer a shield, and a weapon not of
-    DANCER_KINDS; a Shadowblade and a Ghetto Fighter a shield. Going to the off hand (OFF_HAND): nothing for a Battle
+    DANCER_KINDS; a Shadowblade, a Ghetto Fighter and a Rescuer a shield. Going to the off hand (OFF_HAND): nothing for a Battle
     Mage, no weapon for a Healer."""
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
     weapon = bool(flags & (MELEE | MISSILE))
@@ -686,6 +686,6 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         return kind is not None and kind not in SHINOBI_KINDS
     if kid == BATTLE_DANCER:
         return bool(flags & SHIELD) or kind is not None and kind not in DANCER_KINDS
-    if kid in (SHADOWBLADE, GHETTO):
+    if kid in (SHADOWBLADE, GHETTO, RESCUER):
         return bool(flags & SHIELD)
     return False

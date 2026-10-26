@@ -14,7 +14,8 @@ notes](PATCH-NOTES.md).
 - **Mind Warrior**: the psionicist's d6, not a d8 (`kits.hit_die`, `PROBE_HIT_DIE`,
   `PROBE_CR_DIE`); its tenth fewer PSP stays.
 - **Rescuer**: its cures heal 1 more a die anywhere, not only under the open sky, and it has 2
-  more Move in a fight (`KIT_MOVE`).
+  more Move in a fight (`KIT_MOVE`); it may no longer hold a shield (`KIT_FORBIDS`, `kits.forbids`;
+  a new one's starting shield is left behind).
 - **Wilderness Avenger**: +1 to hit and damage against anything, not only undead (`KIT_EXTRA`);
   light armour only (`LIGHT_KITS`, `KIT_LIGHT`) in place of a druid slot fewer at each level.
 - **Assassin**: a backstab's multiplier one more, x3 to x6 (`STAB_TIMES`,

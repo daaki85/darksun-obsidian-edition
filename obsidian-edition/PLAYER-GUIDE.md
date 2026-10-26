@@ -984,7 +984,8 @@ things, they hunt whatever profanes it, travel light in leather, and move
 through the wild as quietly as any ranger.
 
 *Rescuer* (half-elf cleric/ranger). They bring the lost back from the wastes
-alive: their healing runs strong, and they cover ground quickly in a fight.
+alive: their healing runs strong, and they cover ground quickly in a fight,
+with no shield to slow them.
 
 *Ghetto Fighter* and *Wayfinder* (dwarf fighter/thief). Ghetto Fighters grew
 up in the cities' poorest quarters, where a dagger in each hand settles most
