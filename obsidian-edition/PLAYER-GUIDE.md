@@ -270,8 +270,8 @@ that can take them; in all:
 | Mul | cleric or druid with fighter, psionicist or thief; fighter/psionicist, fighter/thief, psionicist/thief | cleric/fighter/thief, druid/fighter/thief, fighter/psionicist/thief |
 | Thri-kreen | cleric or druid with fighter or psionicist; cleric/ranger, fighter/psionicist, psionicist/ranger | cleric/fighter/psionicist, cleric/psionicist/ranger, druid/fighter/psionicist |
 
-No character is both cleric and druid, nor two of fighter, gladiator and
-ranger.
+No character is both cleric and druid, druid and ranger (a druid is true
+neutral, a ranger good), or fighter and ranger.
 
 **Dual class (humans only).** A human has one class, and can change to another
 with **DUAL** on a portrait's right-click menu when:
