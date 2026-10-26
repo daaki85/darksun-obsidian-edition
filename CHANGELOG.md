@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request
+## Pull request #65 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/65))
 
 **Fixed**
 - **Dunesong counts at the Bowyer's archery target** (script 178 counts the bows in hand by their
