@@ -26,6 +26,8 @@ notes](PATCH-NOTES.md).
 **Docs**
 - FEATURES' and DEVELOPMENT's Game speed, the requirements table's Fastest, the player's guide's
   Game speed and Options rows, the patch notes.
+- FEATURES' Game speed: `steady-pace.gif`, the whole party walking in the slave pens with steady
+  pace off and on side by side (recorded at 70 frames a second, shown at half speed).
 
 ## Pull request #69 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/69))
 

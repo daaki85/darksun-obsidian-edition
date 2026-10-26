@@ -1899,6 +1899,12 @@ screen you see fewer pictures (about 40 a second rather than 70), walkers
 moving two steps between some of them, but no one slows down. Fights draw every
 frame, as the game does.
 
+![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
+
+*The same save and the same clicks, recorded from the game at 70 frames a
+second and played here at half speed (a GIF can't show 70 a second), every
+frame kept. On the right the party reaches each spot sooner, in bigger steps.*
+
 The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
 **Game speed** is GOG's own (7,000), that (20,000), or 35,000: there every
