@@ -1875,8 +1875,7 @@ class GameData:
             skill = 0
             halves = typ[0x0B] if missile else None  # (the game's rate of fire: the weapon's own)
             # the kit's (DSCLOG's KIT_TO_HIT, KIT_EXTRA): a Ravager's, a Brute's, an Arena Champion's,
-            # a Ghetto Fighter's with a dagger, a Battle Dancer's dance (not the target's: a Wilderness
-            # Avenger's against undead)
+            # a Ghetto Fighter's with a dagger, a Battle Dancer's dance, a Wilderness Avenger's 1
             from . import specialize as spec
             kind = spec.kind_of(struct.unpack_from("<H", item, ITEM_TYPE)[0])
             for kid in kids:

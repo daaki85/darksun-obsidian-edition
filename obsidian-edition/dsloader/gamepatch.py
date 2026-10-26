@@ -726,7 +726,8 @@ PATCHES = (
     Patch("el_know_new", 0x66FC9, bytes.fromhex("662685879d01"), _interrupt(VEC_EL_KNOW, 6)),
     Patch("el_know_level", 0x86E56, bytes.fromhex("662685879d01"), _interrupt(VEC_EL_KNOW, 6)),
     # ... and a Wilderness Avenger's healing spells not given where the game gives a priest its
-    # spheres' spells, a spell's mask tested (DSCLOG's AV_GRANT; at creation, PROBE_EL_KNOW's AV_KNOW)
+    # spheres' spells (no caller found, as for el_grant), a spell's mask tested (DSCLOG's AV_GRANT;
+    # at creation, PROBE_EL_KNOW's AV_KNOW)
     Patch("av_grant", 0x5E499, bytes.fromhex("662685979d01"), _site(AV_GRANT, 6)),
     # The classes a kit bars a human from changing to (kits.dual_banned), greyed on the DUAL window
     Patch("dual_ban", 0x866FF, bytes.fromhex("0bc0"), _interrupt(VEC_DUAL_BAN, 2)),

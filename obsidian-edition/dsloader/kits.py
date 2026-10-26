@@ -540,7 +540,9 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 # Mage, Mind Warrior); it needs a shield the class can't hold (Arena Champion, Sentinel), or a
 # two-handed melee weapon the class can't use (Brute: a psionicist's, an air cleric's); a Stalker's
 # hiding would add to a thief's own (the thief); a Grove Warden's AC to a gladiator's own (the
-# gladiator); a Healer's sphere is water's only (the clerics, druids and rangers of air, earth and fire).
+# gladiator); a Healer's sphere is water's only (the rangers of air, earth and fire). The game itself
+# keeps a priest from the other priest class and a ranger (good) from the druid (true neutral), so the
+# priests in _PRIEST and _NOT_WATER only stand guard.
 _NOT_WATER = frozenset((1, 2, 3, 5, 6, 7, 13, 14, 15))
 DUAL_BANS = {SEEKER: _PRIEST, JUSTIFIER: _PRIEST, SHINOBI: frozenset((11,)),
              **{k: _WARRIOR for k in WARRIOR_THAC0},
@@ -628,7 +630,7 @@ def cosmos_spells(gd, member: int) -> List[str]:
 
 def avenger_heals(gd, member: int) -> List[str]:
     """A Wilderness Avenger in the party knows no healing spell (AVENGER_NO_HEAL), as DSCLOG's
-    AV_KNOW and AV_GRANT keep them from it when it is made and as it goes up a level: one made
+    AV_KNOW keeps them from it when it is made (a level up marks no priest spells): one made
     before (2.10.0 or earlier) has them marked not known, as the game marks a priest's (the low
     four bits 0). Lines for the log, the spells taken away."""
     from . import game

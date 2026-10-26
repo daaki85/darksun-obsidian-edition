@@ -775,7 +775,7 @@ has the most, air and fire the fewest.
 temples. They pray to the cosmos as well as to water, so they have the cures
 and other spells only druids are given, Cure Serious and Critical Wounds and
 Raise Dead among them, but no other element answers them, not even if they
-take up another calling: a Healer who becomes a druid or ranger serves water.
+take up another calling: a Healer who becomes a ranger serves water.
 They keep a free hand for the work and won't fill it with a weapon.
 
 *Crusader.* Warrior priests who carry their element's anger into battle, as

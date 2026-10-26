@@ -5018,8 +5018,9 @@ class KitTests(unittest.TestCase):
             self.mu.mem_write(hdr + 350, bytes(1))
 
     def test_poisoner(self):
-        """PROBE_POISON: each hit of a Poisoner's (halfling fighter/thief) queues the monsters'
-        poison (power 176) on the target through the game's routine (790D2h: target, attacker,
+        """PROBE_POISON: each weapon hit of a Poisoner's (halfling fighter/thief; the routine's
+        [BP+12h] -1, no spell or power behind the damage: not the poison's own, which would chain)
+        queues the monsters' poison (power 176) on the target through the game's routine (790D2h: target, attacker,
         power, level; the level from 508:2Ah's far call); then on to the routine's end. KIT_TO_HIT:
         nothing for it, melee or missile."""
         from dsloader import kits
@@ -5046,9 +5047,10 @@ class KitTests(unittest.TestCase):
         mu.hook_add(UC_HOOK_CODE, seen, begin=CALLER * 16 + queue, end=CALLER * 16 + queue)
         self.rules(game.RULE_KITS)
 
-        def hit(creature):
+        def hit(creature, spell=-1):
             del queued[:]
             mu.mem_write(SS * 16 + BP - 6, struct.pack("<H", creature))
+            mu.mem_write(SS * 16 + BP + 0x12, struct.pack("<h", spell))  # (the spell behind the damage; -1 none)
             for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F0, ebp=BP, eflags=IF | 2, esi=0x21,
                                     edi=0x02, eax=0x1111).items():
                 mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
@@ -5063,6 +5065,8 @@ class KitTests(unittest.TestCase):
             self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 17, 6), kits.POISONER)
             self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))
             self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))  # (every hit)
+            self.assertEqual(hit(2, kits.POISON_POWER), ([], 0))  # (the poison's own damage: not again)
+            self.assertEqual(hit(2, 72), ([], 0))  # (a spell's)
             self.assertEqual(hit(5), ([], 0))  # (not a party member)
             self.creature(9, 1, index=2, second=17, race=4)  # a half-elf fighter/thief: a Shadowblade
             self.assertEqual(hit(2), ([], 0))

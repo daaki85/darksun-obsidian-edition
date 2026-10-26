@@ -2087,10 +2087,12 @@ ticks   times TICK_SLOTS * TICK_SIZE db 0
 ; PROBE_POISON: INT VEC_POISON replaces "jmp 7A7C5h" (3 bytes: INT + NOP; DSUN.EXE 7A6DDh) in the
 ; routine giving a hit's special effects (DI the attacker's combatant, SI the target's; the
 ; attacker's creature at its [BP-6]), where a person who isn't a thri-kreen has none and goes on to
-; the end. Each hit of a Poisoner's queues the monsters' poison on the target as a monster's
-; poisoned hit does (the routine at 790D2h: the target, the attacker, power 176, "poison (10
-; damage)", its save the game's, and the attacker's level from 508:2Ah, whose far call is at
-; 7A7ACh). Then on to the end, as the jump went.
+; the end. Each weapon hit of a Poisoner's (the routine's [BP+12h], the spell or power behind
+; the damage, -1: not the poison's own damage, power 176, which comes back through here with the
+; Poisoner as its attacker and would poison again and again) queues the monsters' poison on the
+; target as a monster's poisoned hit does (the routine at 790D2h: the target, the attacker, power
+; 176, "poison (10 damage)", its save the game's, and the attacker's level from 508:2Ah, whose
+; far call is at 7A7ACh). Then on to the end, as the jump went.
 POISON_POWER  equ 176
 PZ_TO_END     equ 0x7A7C5 - 0x7A6DF   ; (from the INT's way back)
 PZ_TO_QUEUE   equ 0x790D2 - 0x7A6DF
@@ -2101,6 +2103,8 @@ probe_poison:
         pushad
         push es
         mov bx, [bp]
+        cmp word [ss:bx + 0x12], -1
+        jne .out                ; (damage with a spell or power behind it: the poison's own too)
         mov ax, [ss:bx - 6]     ; (the attacker's creature)
         cmp ax, 3
         ja .out                 ; (not a party member)
@@ -10312,8 +10316,9 @@ kit_bans:
 ; Justifier's priest slots, a Shinobi's wizard ones); a warrior's THAC0 (a warrior class instead);
 ; a shield it needs (a class with none: druid, preserver); a two-handed melee weapon it needs (a
 ; class with none: psionicist, air cleric); a Stalker's hiding on a thief's own (the thief); a
-; Grove Warden's AC on a gladiator's own (the gladiator); a Healer's water sphere only (the clerics,
-; druids and rangers of air, earth and fire). 0 ends it.
+; Grove Warden's AC on a gladiator's own (the gladiator); a Healer's water sphere only (the rangers
+; of air, earth and fire). The game keeps a priest from the other priest class and a ranger from the
+; druid (good, true neutral), so the priests in DB_PRIEST and DB_NOT_WATER only stand guard. 0 ends it.
 DB_PRIEST   equ 0x1FE                   ; (clerics and druids, 1-8)
 DB_WARRIOR  equ 0x1E600                 ; (fighter 9, gladiator 10, rangers 13-16)
 DB_NO_SHIELD equ 0x1E0 | (1 << 11)      ; (druids 5-8, the preserver)
@@ -11355,8 +11360,8 @@ wander_dmg:
 
 ; AV_GRANT: "test es:[bx+19Dh],edx" (5E499h; 6 bytes: the INT, the site's number and 3 NOPs) in
 ; the routine giving a priest the spells of its spheres (5E401h: [BP+6] the character, SI the spell,
-; EDX its priest classes' mask; a spell meeting it learnt): a Wilderness Avenger's healing spells
-; (AV_HEAL) not given. The test made, its flags returned.
+; EDX its priest classes' mask; a spell meeting it learnt; no caller found, guarded as PROBE_EL_GRANT
+; guards it): a Wilderness Avenger's healing spells (AV_HEAL) not given. The test made, its flags returned.
 av_grant:
         pushad
         push es

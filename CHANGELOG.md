@@ -16,22 +16,26 @@ notes](PATCH-NOTES.md).
 - **Rescuer**: its cures heal 1 more a die anywhere, not only under the open sky, and it has 2
   more Move in a fight (`KIT_MOVE`); it may no longer hold a shield (`KIT_FORBIDS`, `kits.forbids`;
   a new one's starting shield is left behind).
-- **Wilderness Avenger**: +1 to hit and damage against anything, not only undead (`KIT_EXTRA`);
-  in place of a druid slot fewer at each level, **no healing spells** (Cure Light, Serious and
-  Critical Wounds, Blood Flow, Heal, Water of Life: `AV_HEAL`, kept from it as it is made,
-  `AV_KNOW`, and as it goes up a level, `AV_GRANT` at DSUN.EXE 5E499h; the 6th-level two in
-  `NS_PRIEST_KNOWS`; one in an older save loses them, `kits.avenger_heals`), and Cause Light,
-  Serious and Critical Wounds do 1 more a die (`AV_CAUSE` at `AREA_DMG`, DSUN.EXE 754ECh, and
-  `HARM_SITE`, by `CAST_SITE`'s caster;
-  the dice log's `_harm_bonus`). Druids wear no armour, so the light armour only it had for a
-  while was no cost (dropped from `LIGHT_KITS` and `KIT_LIGHT`).
+- **Wilderness Avenger**: +1 to hit and damage against anything, not only undead (`KIT_EXTRA`).
+  Its cost, a druid slot fewer at each level, became light armour only for a while, which cost
+  a druid nothing (no armour anyway; dropped from `LIGHT_KITS` and `KIT_LIGHT`), and is now **no
+  healing spells**: Cure Light, Serious and Critical Wounds, Blood Flow, Heal and Water of Life
+  (`AV_HEAL`) are kept from it as it is made (`AV_KNOW` in `PROBE_EL_KNOW`; a level up marks no
+  priest spells), in the routine giving a priest its spheres' spells (`AV_GRANT`, DSUN.EXE 5E499h:
+  no caller found, guarded as `PROBE_EL_GRANT` guards it) and for the 6th-level two
+  (`NS_PRIEST_KNOWS`); one in an
+  older save loses them when it is loaded (`kits.avenger_heals`). In return its Cause Light,
+  Serious and Critical Wounds do 1 more a die (`AV_CAUSE`, from `AREA_DMG` at DSUN.EXE 754ECh and
+  from `HARM_SITE`, by `CAST_SITE`'s caster; the dice log's `_harm_bonus`).
 - **Assassin**: a backstab's multiplier one more, x3 to x6 (`STAB_TIMES`,
   `kits.backstab_times`).
-- **Poisoner**: every hit poisons, the target's save as before (`PROBE_POISON`; the header's
+- **Poisoner**: every weapon hit poisons, the target's save as before (`PROBE_POISON`, only
+  with no spell or power behind the damage, `[BP+12h]` -1: the poison's own damage comes back
+  through the same routine, and once a fight no longer stopped it poisoning again and again; the header's
   +360, `KIT_POISONED`, kept unused); no −1 to hit; its weapon spec the dagger or the short
   sword only (`KIT_POISON_KINDS` in `KINDS_ALLOWED`, `kits.POISONER_KINDS`).
-- **Healer**: no cleric, druid or ranger of air, earth or fire, either way of DUAL
-  (`DUAL_BANS`); the sphere menu after DUAL is WATER ONLY for a Healer and its answer water
+- **Healer**: no ranger of air, earth or fire, either way of DUAL (`DUAL_BANS`; the game
+  already bars a cleric from becoming a cleric or druid, and a druid a cleric); the sphere menu after DUAL is WATER ONLY for a Healer and its answer water
   (`DUAL_SPHERES`, `PROBE_SPHERE` at DSUN.EXE 86BC3h, `INT FFh`), as the DUAL window keeps a
   ranger's row open while the water ranger is allowed.
 - **Spellarcher**: spell arrows only into an empty quiver (else nothing is made, no slot
@@ -39,9 +43,11 @@ notes](PATCH-NOTES.md).
   6F4B0h, the game's "may this leave its slot" routine) says "Item grafted on", and
   `QUIVER_KEPT` in `PROBE_CAN_USE` refuses anything put in their place. The drop at the party's
   feet (`ARROWS_DROP`, `Attempt.drop`) is gone.
-- Checked in the game: the Spellarcher's quiver (all four cases), and the Healer's DUAL both
-  ways; the rest by the emulated tests (`test_assassin_backstab`, `QuiverTests`, the kits'
-  slots, move, to-hit, poison and kinds tests).
+- Checked in the game: the Spellarcher's quiver (all four cases); the Healer's DUAL both ways,
+  and which classes the game itself bars on DUAL; a new Avenger (no cures known, the causes
+  known), one through a level up (no cures given) and its Cause Wounds' extra die; a Poisoner's
+  hits (one save each); an Assassin's backstab (x5 at 9th level). The rest by the emulated tests
+  (`QuiverTests`, the kits' slots, move, to-hit, poison and kinds tests; the Rescuer's shield).
 
 ## Pull request #67 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/67))
 
