@@ -406,7 +406,10 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
 With **Float a spell's name over its caster, and "Miss" over whoever an attack
 missed** ticked on the Options tab (the default), a spell's name floats over
 its caster for a second and a half as it is cast, and "Miss" over anyone an
-attack misses, in the game's lettering with a dark edge. They work in and out
+attack misses, in the game's lettering with a dark edge. The same switch floats
+a spell's charge being used over whoever has it, in light blue: "Armor: 7 left"
+for a hit Armor took, "Reflected Image: 2 left" for a lost image, "Armor ends"
+for the last. They work in and out
 of fights, for the party and the monsters alike, and a weapon's spell on a hit
 shows too. A name stays with its figure; near the top of the screen it goes
 under the figure's feet, clear of the game's boxes. Long names are shortened

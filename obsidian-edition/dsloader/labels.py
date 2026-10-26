@@ -1,5 +1,6 @@
 """Names floating over figures on the map (DSCLOG's LABELS): a spell's name over its caster as it
-is cast (DSCLOG's CAST_SITE, the dice log's KIND_CAST), "Miss" over whom an attack missed.
+is cast (DSCLOG's CAST_SITE, the dice log's KIND_CAST), "Miss" over whom an attack missed, and
+"Armor: 7 left" over a creature whose spell has used a charge (the dice log's charge lines).
 
 The Loader draws each in the game's font, its ink with a dark edge round it, as two one-bit masks
 (ROW bytes a row, bit 0 of the first byte the leftmost pixel) into one of DSCLOG's SLOTS in its
@@ -25,6 +26,7 @@ SHOW_FOR = 1.5          # seconds a label stays
 UP = 34                 # its bottom row this far above the figure's feet: over a man's head
 SPELL_INK = (255, 220, 90)
 MISS_INK = (225, 225, 225)
+CHARGE_INK = (150, 200, 255)  # (an effect's charge used: "Armor: 7 left")
 EDGE = (12, 8, 4)
 MISS = "Miss"
 # (words shortened, in turn, until a spell's name fits WIDTH_MOST)

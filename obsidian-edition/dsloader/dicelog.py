@@ -538,6 +538,7 @@ class DiceLog:
         self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
         self._charges_ahead: Dict[Tuple[int, int], float] = {}  # charges this poll still to tell of
         self._charged: set = set()  # (combatant, effect) with charges, at this poll and the last
+        self._charge_spells: Dict[Tuple[int, int], int] = {}  # ... and the spell each came from
         self._charged_before: set = set()
         self._sun_burn = False  # a Sunstroke heat line just given (the same)
         self._spell_name = ""
@@ -1740,6 +1741,9 @@ class DiceLog:
         if self.game is not None:  # (and the effects with charges now, for _overlay_charge)
             held = {(effect.owner, effect.id) for effect, charges, _ in self.game.effects_left() if charges}
             self._charged, self._charged_before = held, self._charged
+            for effect, spell in self.game.effect_spells():  # (kept: the last charge takes the record)
+                if (effect.owner, effect.id) in held:
+                    self._charge_spells[(effect.owner, effect.id)] = spell
         for e in entries:
             charge = (e.parent_code.startswith(CHARGE_USED_RETURN)
                       or self._overlay_charge(e, e.arg(6) or 0, e.arg(8) or 0))
@@ -1758,15 +1762,14 @@ class DiceLog:
         key = (e.parent_arg(6), e.parent_arg(8))
         return key in self._charged or key in self._charged_before
 
-    def _charges_after(self, owner: int, eid: int) -> str:
-        """ "3 left" (or "none left: it ends"): the charges on OWNER's effect EID once this charge is
-        used. The record shows every charge used up to the poll, so the ones still to be told of in
-        this poll's entries are added back."""
+    def _charges_after(self, owner: int, eid: int) -> int:
+        """The charges on OWNER's effect EID once this charge is used. The record shows every
+        charge used up to the poll, so the ones still to be told of in this poll's entries are
+        added back."""
         key = (owner, eid)
         ahead = max(round(self._charges_ahead.get(key, 1)) - 1, 0)
         self._charges_ahead[key] = ahead
-        left = (self.game.charges_left(owner, eid) if self.game is not None else 0) + ahead
-        return f"{left} left" if left else "none left: it ends"
+        return (self.game.charges_left(owner, eid) if self.game is not None else 0) + ahead
 
     def _name(self, combatant: int) -> str:
         """A combatant's name, remembered for when the fight is over."""
@@ -2320,10 +2323,16 @@ class DiceLog:
                     return self.flush(now, force=True) + [
                         f"    {EFFECT_NAMES[ACID]} on {who}: {count}d{sides} = {faces_text} = {sum(faces)} acid damage"]
                 # the 2d4 means nothing here: a Stoneskin, Ironskin, Mirror Image... used a charge
+                owner = e.parent_arg(6)
+                left = self._charges_after(owner, eid)
+                spell = self._charge_spells.get((owner, eid))
+                said = self.game.spell_name(spell) if spell is not None else EFFECT_NAMES.get(eid, f"effect {eid}")
+                self._float(owner, f"{said}: {left} left" if left else f"{said} ends", labels.CHARGE_INK, now)
+                tail = f"{left} left" if left else "none left: it ends"
                 if eid == game.MIRROR_EFFECT:
-                    return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes"]
+                    return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes, {tail}"]
                 name = EFFECT_NAMES.get(eid, f"effect {eid}")
-                return [f"    {name} on {who}: one charge used, {self._charges_after(e.parent_arg(6), eid)}"]
+                return [f"    {name} on {who}: one charge used, {tail}"]
             handler = next((bonus for code, bonus in SPELL_HANDLER_RETURNS if e.parent_code.startswith(code)), None)
             if handler is not None and e.parent_arg(0x0E) is not None:
                 spell = e.parent_arg(0x0E)

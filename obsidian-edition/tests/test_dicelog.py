@@ -818,6 +818,13 @@ class SaveTests(unittest.TestCase):
         lines = [line for x in e for line in log.describe(x)]
         self.assertEqual(lines, ["    Improved AC on Mountain Stalker: one charge used, 4 left",
                                  "    Improved AC on Mountain Stalker: one charge used, 3 left"])
+        # each floats over the creature, the spell's name and what is left (labels.py)
+        shown = []
+        log._float = lambda thing, text, colour, now: shown.append((thing, text))
+        log._charge_spells[(0x29, 2)] = 0  # (Armor, spell 0)
+        log.count_charges(e[:2])
+        log.describe(e[0]); log.describe(e[1])
+        self.assertEqual(shown, [(0x29, f"{log.game.spell_name(0)}: 3 left")])  # (the spell's name: Armor)
 
     def test_charge_behind_overlay_trap(self):
         """The charge routine's 2d4 whose return the overlay manager made an INT 3Fh stub is still
@@ -913,7 +920,8 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(blow(76, 75)), [head + "76, 75 or less strikes an image -> the blow gets through"])
         e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 25),
                    parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
-        self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Mirror Images on Mountain Stalker: an image vanishes"])
+        self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Mirror Images on Mountain Stalker: an image vanishes, "
+                                                                   "none left: it ends"])
 
     def test_strength_roll(self):
         log = make_game()

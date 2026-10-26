@@ -20,6 +20,10 @@ notes](PATCH-NOTES.md).
   `REFLECT_ENTRY` with its name and the charges (`EF_TEXT`); not for a permanent effect (its
   spell's time `PERMANENT_TIME`, +8 a stray 15, as Charmed). Reflected Image's own use of that
   entry writes it again first (`ns_reflect_entry`).
+- **A charge used floats over its creature**, as "Miss" does: "Armor: 7 left", "Reflected Image:
+  2 left", "Armor ends" (`labels.CHARGE_INK`, light blue), from each charge line of the dice log;
+  the spell's name from the effect's record, kept for the last charge, which removes the record
+  (`_charge_spells`). The image-lost line says what is left too.
 - **M opens the overhead map**, and M again closes it: DSCLOG's `MAP_KEY` turns M into the game's O
   on the map and into Escape while the overhead map is up (`OVERHEAD`, cleared by `PANEL_TICK`).
 - **A Shinobi's read languages on the Effects screen**, under its kit: `READ LANG. 40%`
