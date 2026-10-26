@@ -16651,9 +16651,8 @@ ns_entry:
         sub ax, EF_SHOWN_FROM_DS
         mov es, ax
         mov ax, [es:EF_SHOWN]
-        cmp word [ss:di + bx], ARMOR_EFFECT
-        jne .thing
-        call ef_charges         ; (the line under the pointer: Armor's name with its charges)
+        mov cl, [ss:di + bx]
+        call ef_charges         ; (the line under the pointer: the effect's name with its charges)
         jnc .thing
         mov word [ss:di + bx], REFLECT_ENTRY + 6
         jmp .out
@@ -16789,14 +16788,16 @@ ns_reflect_entry:
         mov word [es:REFLECT_ENTRY + 4], NS_ICON + REFLECT_SPELL
         ret
 
-; EF_CHARGES: CF set when the Effects screen asks for Armor's name (NS_ENTRY, frame at SS:DI) for
-; the line under the pointer (7ED37h, the cell's name to 580:5Ch: there the way back's third byte
-; on is "mov bx,ax", 8Bh; the icons' and the cells' sites have "mov bx,0FFFAh") and thing AX's
-; Armor has charges left (+8 of its record): REFLECT_ENTRY then names it, the game's name with
-; them, "IMPROVED AC (3 CHARGES)", in EF_TEXT (580:5Ch keeps that name's address, not the entry,
-; so Reflected Image's use of the entry after it changes nothing). Only with the room past the
-; spell rows (SEG_MOVE). DS the game's; all registers kept.
-EF_NAME_MAX equ 20
+; EF_CHARGES: CF set when the Effects screen asks for an effect's name (NS_ENTRY, frame at SS:DI; CL
+; the effect) for the line under the pointer (7ED37h, the cell's name to 580:5Ch: there the way
+; back's third byte on is "mov bx,ax", 8Bh; the icons' and the cells' sites have "mov bx,0FFFAh")
+; and thing AX's effect has charges left (+8 of its record: Armor's hits, Mirror Image's images,
+; Stoneskin's blows...; not a permanent effect's, whose spell's time is PERMANENT_TIME and +8 a stray
+; 15): REFLECT_ENTRY then names it, its name with them, "IMPROVED AC (3 CHARGES)", in EF_TEXT
+; (580:5Ch keeps that name's address, not the entry, so Reflected Image's use of the entry after it
+; changes nothing). Mirror Images from Reflected Image take its name and icon. Only with the room
+; past the spell rows (SEG_MOVE). DS the game's; all registers kept.
+EF_NAME_MAX equ 22
 ef_charges:
         pusha
         push es
@@ -16805,17 +16806,42 @@ ef_charges:
         les si, [ss:di + 34]            ; (the way back)
         cmp byte [es:si + 3], 0x8B
         jne .no
-        mov cl, ARMOR_EFFECT
-        call ns_charges
+        call ns_charges                 ; (AL the charges, DX the spell)
         or al, al
         jz .no
         mov bl, al                      ; (BL the charges)
-        mov dx, ds
-        sub dx, EFFECT_TABLE_FROM_DS
-        mov es, dx
+        cmp dx, 0xFF
+        ja .timed                       ; (no spell record to look at)
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov es, ax
+        mov si, dx
+        shl si, 5
+        cmp word [es:si + SPELL_RECS + 7], PERMANENT_TIME
+        je .no
+.timed: mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        movzx si, cl
+        dec si
+        imul si, si, 6                  ; (the effect's entry)
+        cmp cl, MIRROR_EFFECT
+        jne .entry
+        cmp dx, REFLECT_SPELL
+        jne .entry
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .entry
+        mov ax, NS_ICON + REFLECT_SPELL
+        push ax
         push ds
-        lds si, [es:(ARMOR_EFFECT - 1) * 6]
-        mov di, ef_text
+        push cs
+        pop ds
+        mov si, ns_name_reflect
+        jmp .copy
+.entry: push word [es:si + 4]           ; (its icon)
+        push ds
+        lds si, [es:si]                 ; (its name)
+.copy:  mov di, ef_text
         mov cx, EF_NAME_MAX
 .name:  lodsb
         or al, al
@@ -16841,7 +16867,7 @@ ef_charges:
         mov byte [cs:di], 'S'
         inc di
 .shut:  mov word [cs:di], ')'
-        mov ax, [es:(ARMOR_EFFECT - 1) * 6 + 4]
+        pop ax                          ; (the icon)
         mov word [es:REFLECT_ENTRY], ef_text
         mov [es:REFLECT_ENTRY + 2], cs
         mov [es:REFLECT_ENTRY + 4], ax
@@ -16857,10 +16883,9 @@ ef_charge_word db ' CHARGE', 0
 ef_text times EF_NAME_MAX + 16 db 0
 
 ; NS_CHARGES: AL the charges left (+8) on effect CL of thing AX (the game's table of active
-; effects), 0 if none. DS the game's; others kept.
+; effects), 0 if none, and DX the spell that made it (+4). DS the game's; others kept.
 ns_charges:
         push bx
-        push dx
         push es
         mov dx, ds
         sub dx, EFFECTS_FROM_DS
@@ -16874,13 +16899,14 @@ ns_charges:
         cmp [es:bx + 6], cl
         jne .next
         mov al, [es:bx + 8]
+        mov dx, [es:bx + 4]
         jmp .out
 .next:  add bx, 10
         dec dx
         jmp .each
 .none:  xor al, al
+        mov dx, 0xFFFF
 .out:   pop es
-        pop dx
         pop bx
         ret
 

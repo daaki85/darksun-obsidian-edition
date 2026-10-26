@@ -14,9 +14,11 @@ notes](PATCH-NOTES.md).
   effect's record (+8) read at the poll, the poll's later charges added back (`count_charges`).
   The charge routine's 2d4 behind an overlay trap (INT 3Fh in place of its return) is told by its
   arguments, a creature and an effect it has charges of (`_overlay_charge`); it was a bare
-  "Dice: 2d4" line. Armor's name under the pointer on the Effects screen says them too, IMPROVED
-  AC (10 CHARGES): `EF_CHARGES` in `NS_ENTRY`, at 7ED37h only, points Armor's entry at
-  `REFLECT_ENTRY` with the game's name and the charges (`EF_TEXT`); Reflected Image's use of that
+  "Dice: 2d4" line. On the Effects screen the name under the pointer says them too, for any effect
+  with charges: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2
+  CHARGES). `EF_CHARGES` in `NS_ENTRY`, at 7ED37h only, points the effect's entry at
+  `REFLECT_ENTRY` with its name and the charges (`EF_TEXT`); not for a permanent effect (its
+  spell's time `PERMANENT_TIME`, +8 a stray 15, as Charmed). Reflected Image's own use of that
   entry writes it again first (`ns_reflect_entry`).
 - **M opens the overhead map**, and M again closes it: DSCLOG's `MAP_KEY` turns M into the game's O
   on the map and into Escape while the overhead map is up (`OVERHEAD`, cleared by `PANEL_TICK`).

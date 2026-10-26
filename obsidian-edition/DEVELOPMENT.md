@@ -2176,12 +2176,15 @@ after the `ns_list_` patches):
   to 8. (A helper site that used another for each blow, `ARMOR_BLOW`, at 58B27h,
   was a mistake and is gone: it made each hit cost two.) The site number
   `NS_IMAGE+48` is free.
-- **Armor's charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for
-  the line under the pointer, 7ED37h, the way back's third byte on "mov bx,ax")
-  points Armor's entry at `REFLECT_ENTRY` with the game's name and the charges
-  left (+8 of the record): IMPROVED AC (10 CHARGES). 580:5Ch keeps the name's
-  address, not the entry's, so Reflected Image, whose entry that is, writes it
-  again before its own use (`ns_reflect_entry`).
+- **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
+  under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
+  the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8
+  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Not for a permanent
+  effect: its spell record's time (+7) is `PERMANENT_TIME`, and +8 holds a
+  meaningless 15 (Charmed). Mirror Images from Reflected Image take its name
+  and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
+  Image, whose entry that is, writes it again before its own use
+  (`ns_reflect_entry`).
 - **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
   removed each record of the power cast by DI with 598:48h (owner, handle), but
   passed DI as the owner, so a receiver's record stayed (and a record of the
