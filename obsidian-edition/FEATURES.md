@@ -1886,33 +1886,38 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-characters).
 The game draws the view a frame at a time and shows each at the screen's next
 refresh (70 a second), and a walking figure takes a step a frame. A frame that
 takes a moment longer than a refresh waits for the next one, so it shows
-twice as late, and walking goes at half speed. Everything drawn adds up: four
-figures rather than the leader alone (the game's manual says collapsing the
-party "speeds up the game"), the gear on them, the shadows, the dust.
+twice as late. Everything drawn adds up: four figures rather than the leader
+alone (the game's manual says collapsing the party "speeds up the game"), the
+gear on them, the shadows, the dust. In the game walking slows with it: with
+the whole party in view, shadows and dust on, it went at about half speed.
 
-The Loader gives DOSBox more of the computer's time: 20,000 cycles a millisecond
-by default, where GOG's settings give 7,000. On the Options tab **Game speed**
-is GOG's own (7,000), that (20,000), or 35,000: there, with everything on, the
-whole party in view walks as fast as the leader alone, but it needs a faster
-computer. It applies the next time the game is started. The Loader's two speeds
-run on DOSBox's dynamic core (GOG's settings run this game on the slower normal
-core): the same cycles do more, and cost the computer about a third less.
+**Steady pace** (under Game speed on the Options tab, on unless switched off;
+from the next start): on the map the party walks at its full speed whatever is
+drawn. When a frame is late, the next one isn't drawn: the game still moves
+everyone a step, and the frame after shows all that moved in both. On a busy
+screen you see fewer pictures (about 40 a second rather than 70), walkers
+moving two steps between some of them, but no one slows down. Fights draw every
+frame, as the game does.
 
-Measured in the slave pens, walking (the leader's speed in pixels a second of
-the game's time; higher is smoother):
+The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
+millisecond by default, where GOG's settings give 7,000. On the Options tab
+**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there every
+frame is drawn in time even with the whole party in view, the smoothest, but it
+needs a faster computer. It applies the next time the game is started. The
+Loader's two speeds run on DOSBox's dynamic core (GOG's settings run this game
+on the slower normal core): the same cycles do more, and cost the computer
+about a third less.
 
-| | All four in view | The leader alone |
-|---|---|---|
-| 20,000 cycles, the mod's shadows, dust, rings and gear off | 248 | 254 |
-| 20,000, everything on | 139 | 263 |
-| 30,000, everything on | 214 | 264 |
-| 35,000, everything on | 258 | 254 |
-| 40,000, everything on | 267 | 269 |
+Measured in the slave pens at 20,000 cycles with everything on, walking (the
+leader's speed in pixels a second of the game's time):
 
-So at 20,000 the mod's own drawing is what slows the whole party: without
-it the four walk as fast as one. Of it, the dust costs the most (each puff is
-worked out pixel by pixel, and four walkers raise four times as many), then
-the shadows. What each setting asks of the computer:
+| | The leader's speed |
+|---|---|
+| The whole party in view, steady pace off | 152 to 175 |
+| The whole party in view, steady pace on | 249 to 278 |
+| The leader alone | about 220 to 260 |
+
+What each setting asks of the computer:
 [Suggested system requirements](README.md#suggested-system-requirements).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#game-speed).

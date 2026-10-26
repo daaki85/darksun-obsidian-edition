@@ -3292,6 +3292,25 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 
 ([In the features page](FEATURES.md#game-speed).)
 
+**Steady pace** (`gamepatch.STEADY_PACE`, DSCLOG's STEADY PACE): the map's
+frame (DSUN.EXE 1E8E4h) calls the step for everything (`call far 1DF3:26DC`,
+which also builds the list of what moved at DS:57D0h, 10 bytes each: where
+the thing was drawn, its size, the thing) and then the drawing of that list
+with the page flip (`call far 1DF3:15EA`), the flip waiting for the vertical
+retrace. The game has no other clock for walking: a step is a frame, and the
+"think" that starts a figure on its next square runs once a frame, for one
+creature at a time, so catching up a figure's animation steps alone (tried
+before) only made it wait at the end of its square. PROBE_PACE_DRAW keeps a
+schedule of 70 frames a second on the game's clock (DS:11D6h, 96 ticks a
+second: a tick 70 units, a frame 96): at a frame or more behind, on the map (a
+fight, the fight state's +19h, draws every frame), the drawing and its flip are
+left out and the list is kept in the far block (FAR_PACE, 64 entries); the
+next frame drawn has it added after its own, so the old places of what moved
+in the skipped frame are drawn over too. PROBE_PACE_PASS sets "something
+moved" after the step when a kept list has waited 2 ticks, so a frame is drawn
+for it though nothing has moved since. A pause of 8 ticks (a load, a talk)
+starts the schedule afresh; at most 4 frames are owed.
+
 The Loader's drawing is as cheap as it can be without looking any different:
 a shadow is darkened a plane of the video memory at a time (the graphics
 card's registers set four times for a figure, not four times for each of its

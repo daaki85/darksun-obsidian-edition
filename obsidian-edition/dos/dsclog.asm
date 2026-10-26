@@ -150,6 +150,8 @@ VEC_ARROW equ 0x85         ; PROBE_ARROW
 VEC_OVR_BUF equ 0x84       ; PROBE_OVR_BUF
 VEC_HEAP equ 0xCB          ; PROBE_HEAP
 VEC_FLIP equ 0x8B          ; PROBE_FLIP
+VEC_PACE_PASS equ 0x83     ; PROBE_PACE_PASS
+VEC_PACE_DRAW equ 0x82     ; PROBE_PACE_DRAW
 VEC_TAKE equ 0xF7          ; PROBE_TAKE
 VEC_SPHERE equ 0xFF        ; PROBE_SPHERE
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
@@ -21433,6 +21435,166 @@ probe_flip:
         pop bp
         iret
 
+; STEADY PACE: the map's frame (DSUN.EXE 1E8E4h) moves everything a step (call far 1DF3:26DCh),
+; then draws what moved and flips the page (call far 1DF3:15EAh), the flip waiting for the screen's
+; next refresh (70 a second). A walker takes a step a frame, so a frame drawn a moment late (four
+; figures in view, their shadows and dust) misses a refresh and the party walks at half speed.
+; Here the frames keep a schedule of 70 a second on the game's clock (DS:11D6h, 96 ticks a
+; second): while they are a frame or more behind, a frame's drawing and flip are left out (on the
+; map only: a fight draws each), and the list of what moved (DS:57D0h, 10 bytes each: where it was
+; drawn and its size, then the thing: the drawing takes in where each is now) is kept, in the far
+; block (FAR_PACE), for the next frame drawn. The game's logic still runs every frame, so walking
+; keeps its pace; only fewer pictures are shown.
+PACE_LIST  equ 0x57D0                   ; the game's list of what moved ...
+PACE_LMAX  equ 320                      ; ... and the most it holds (one for each thing)
+PACE_CLOCK equ 0x11D6                   ; the game's clock: 96 ticks a second
+PACE_TICK  equ 70                       ; (a tick in the schedule's units ...
+PACE_FRAME equ 96                       ;  ... and a frame: 70 frames a second)
+PACE_AHEAD equ 4 * PACE_FRAME           ; (behind by no more than this: a burst, then as the game)
+PACE_GAP   equ 8                        ; ticks since the last frame: a pause (a load, a talk), the
+                                        ;   schedule starts afresh
+PACE_HOLD  equ 2                        ; ticks what moved is kept before a frame is drawn for it alone
+PACE_KEPT  equ 64                       ; entries kept at most (more: the frame is drawn)
+
+; PROBE_PACE_PASS: INT VEC_PACE_PASS replaces the start of "call far 1DF3:26DC" (9Ah DCh 26h, then
+; the segment: A9h makes it a "test ax,<segment>" the loader may relocate), the map's step for
+; everything (its arguments: the view's x and y, a word, a near pointer to "something moved", 0).
+; After it, with what moved kept from a frame left undrawn for PACE_HOLD ticks, "something moved"
+; is set, so a frame is drawn for it though nothing moved since.
+probe_pace_pass:
+        pop word [cs:pace_back]
+        pop word [cs:pace_back + 2]
+        popf                            ; (the caller's flags: interrupts as they were)
+        push es
+        push bx
+        les bx, [cs:pace_back]
+        mov bx, [es:bx + 1]             ; (the call's segment, as relocated)
+        mov [cs:pace_call + 2], bx
+        pop bx
+        pop es
+        mov word [cs:pace_call], 0x26DC
+        add word [cs:pace_back], 3
+        call far [cs:pace_call]
+        cmp word [cs:pace_kept], 0
+        je .back
+        push eax
+        mov eax, [PACE_CLOCK]
+        sub eax, [cs:pace_kept_at]
+        cmp eax, PACE_HOLD
+        pop eax
+        jb .back                        ; (kept a moment: the next step draws it too)
+        push bx
+        mov bx, sp
+        mov bx, [ss:bx + 2 + 6]         ; ("something moved", a word in the game's data)
+        mov word [bx], 1
+        pop bx
+.back:  jmp far [cs:pace_back]
+
+; PROBE_PACE_DRAW: INT VEC_PACE_DRAW replaces the start of "call far 1DF3:15EA" as PROBE_PACE_PASS
+; its call: the drawing of what moved, and the flip (its arguments: the view's x and y, 1, how
+; many moved, 1; AX nonzero back if drawn). Each frame here is one on the schedule: PACE_DEBT
+; gains PACE_TICK a tick of the clock and loses PACE_FRAME a frame. At a frame or more behind, the
+; frame isn't drawn (AX 1 back, as drawn) and the list is kept; the next frame drawn gets the list
+; kept added after its own.
+probe_pace_draw:
+        pop word [cs:pace_back]
+        pop word [cs:pace_back + 2]
+        popf
+        push es
+        push bx
+        les bx, [cs:pace_back]
+        mov bx, [es:bx + 1]
+        mov [cs:pace_call + 2], bx
+        pop bx
+        pop es
+        mov word [cs:pace_call], 0x15EA
+        add word [cs:pace_back], 3
+        pusha
+        push es
+        mov bp, sp                      ; ([bp + 24]: how many moved; PUSHA, ES, then x, y, 1)
+        mov eax, [PACE_CLOCK]           ; the schedule
+        mov edx, eax
+        sub eax, [cs:pace_clock]
+        mov [cs:pace_clock], edx
+        cmp eax, PACE_GAP
+        jb .owed
+        mov word [cs:pace_debt], 0      ; (a pause: afresh)
+        jmp short .judge
+.owed:  imul ax, ax, PACE_TICK
+        add ax, [cs:pace_debt]
+        sub ax, PACE_FRAME
+        cmp ax, -PACE_FRAME
+        jge .low
+        mov ax, -PACE_FRAME             ; (ahead: the refresh waits, as the game's)
+.low:   cmp ax, PACE_AHEAD
+        jle .high
+        mov ax, PACE_AHEAD
+.high:  mov [cs:pace_debt], ax
+.judge: mov cx, [bp + 24]
+        jcxz .draw                      ; (nothing new: drawn for what was kept)
+        call pp_fighting
+        jnz .draw
+        cmp word [cs:pace_debt], PACE_FRAME
+        jl .draw
+        mov ax, [cs:pace_kept]
+        add ax, cx
+        cmp ax, PACE_KEPT
+        ja .draw
+        mov di, [cs:pace_kept]          ; left undrawn: the list kept
+        or di, di
+        jnz .more
+        mov edx, [PACE_CLOCK]
+        mov [cs:pace_kept_at], edx
+.more:  mov [cs:pace_kept], ax
+        imul di, di, 10
+        add di, FAR_PACE
+        mov es, [cs:far_seg]
+        mov si, PACE_LIST
+        imul cx, cx, 5
+        cld
+        rep movsw
+        inc word [cs:pace_skipped]
+        pop es
+        popa
+        mov ax, 1
+        jmp far [cs:pace_back]
+.draw:  mov cx, [cs:pace_kept]          ; the list kept, after this frame's own
+        jcxz .go
+        mov word [cs:pace_kept], 0
+        mov bx, [bp + 24]
+        mov ax, bx
+        add ax, cx
+        cmp ax, PACE_LMAX
+        ja .go                          ; (no room: it is dropped)
+        mov [bp + 24], ax
+        imul di, bx, 10
+        add di, PACE_LIST
+        push ds
+        pop es
+        push ds
+        mov ds, [cs:far_seg]
+        mov si, FAR_PACE
+        imul cx, cx, 5
+        cld
+        rep movsw
+        pop ds
+.go:    cmp word [bp + 24], 0
+        pop es
+        popa
+        je .none                        ; (nothing to draw at all: not the game's to see)
+        call far [cs:pace_call]
+        jmp far [cs:pace_back]
+.none:  mov ax, 1
+        jmp far [cs:pace_back]
+
+pace_back    dd 0                       ; (where the INT returns, past the call's segment)
+pace_call    dd 0                       ; (the game's routine, its segment as relocated)
+pace_clock   dd 0                       ; (the clock at the last frame)
+pace_kept_at dd 0                       ; (the clock when the list was first kept)
+pace_debt    dw 0                       ; frames behind the schedule, in PACE_FRAMEs (signed)
+pace_kept    dw 0                       ; entries kept (FAR_PACE)
+pace_skipped dw 0                       ; frames left undrawn (counted)
+
 ; PROBE_HEAP: INT VEC_HEAP (and a NOP) replaces "push bp / mov bp,sp" at the start of the C
 ; library's farmalloc (load:1231h), farfree (load:1127h) and farrealloc (load:138Eh), told apart by
 ; where the INT came from. The game keeps some blocks of its far heap from its start to its end;
@@ -21582,7 +21744,8 @@ FAR_TBUF   equ FAR_SC + SC_SLOTS * SC_SLOT      ; the text buffer (TPUT)
 FAR_SPANS  equ FAR_TBUF + TSIZE                 ; the shadows' spans (SPANS_FLUSH)
 FAR_LAST_X equ FAR_SPANS + SPANS_MOST * 6       ; each thing's place as last seen (dust)
 FAR_LAST_Y equ FAR_LAST_X + MAP_COUNT * 2
-FAR_END    equ FAR_LAST_Y + MAP_COUNT * 2
+FAR_PACE   equ FAR_LAST_Y + MAP_COUNT * 2       ; what moved in frames left undrawn (STEADY PACE)
+FAR_END    equ FAR_PACE + PACE_KEPT * 10
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
 
@@ -21709,6 +21872,12 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov ax, 2500h + VEC_FLIP
         mov dx, probe_flip
+        int 21h
+        mov ax, 2500h + VEC_PACE_PASS
+        mov dx, probe_pace_pass
+        int 21h
+        mov ax, 2500h + VEC_PACE_DRAW
+        mov dx, probe_pace_draw
         int 21h
         mov ax, 2500h + VEC_OVR_BUF
         mov dx, probe_ovr_buf
@@ -22152,7 +22321,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_TAKE, VEC_SPHERE
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_TAKE, VEC_SPHERE
 all_vectors_end:
 
         align 16, db 0

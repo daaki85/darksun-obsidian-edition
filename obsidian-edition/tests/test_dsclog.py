@@ -871,6 +871,125 @@ class OverlayBufferTests(unittest.TestCase):
         self.assertEqual(self.words(), (0, 0xD100))  # (kept for the buffer it fits)
 
 
+@unittest.skipIf(Uc is None, "unicorn is not installed")
+class SteadyPaceTests(unittest.TestCase):
+    """STEADY PACE (PROBE_PACE_PASS, PROBE_PACE_DRAW) in place of the map's frame's two far calls:
+    a frame a frame or more behind the schedule (70 a second on the game's clock) left undrawn, its
+    list of what moved kept for the next frame drawn; a fight's frames all drawn."""
+    GAME = 0x6000  # (the game's code segment, as relocated: the routines' stand-ins at 26DCh and 15EAh)
+    CLOCK, LIST = 0x11D6, 0x57D0
+    FIGHT = (GAME_DS - (0x4356 - 0x377E)) * 16 + 0x19  # (the fight's state's +19h: not 0 in a fight)
+
+    def setUp(self):
+        import re
+        from dsloader.gamepatch import VEC_PACE_PASS, VEC_PACE_DRAW
+        image = load_image()
+        self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, image)
+        start = re.compile(rb"\x2e\x8f\x06..\x2e\x8f\x06..\x9d", re.S)
+        for vec, routine in ((VEC_PACE_PASS, b"\xdc\x26"), (VEC_PACE_DRAW, b"\xea\x15")):
+            at = re.search(rb"\x2e\xc7\x06.." + routine, image, re.S).start()
+            probe = [m.start() for m in start.finditer(image, 0, at)][-1]
+            mu.mem_write(vec * 4, struct.pack("<HH", probe, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        # the step: "something moved" (its near pointer, [bp+0Ch]) set to DS:F010h, AX DS:F012h
+        mu.mem_write(self.GAME * 16 + 0x26DC, bytes.fromhex("5589e58b5e0ca110f08907a112f05dcb"))
+        # the drawing: how many moved ([bp+0Ch]) to DS:F000h, counted at DS:F002h, AX 1
+        mu.mem_write(self.GAME * 16 + 0x15EA, bytes.fromhex("5589e58b460ca300f0ff0602f0b801005dcb"))
+        seg = struct.pack("<H", self.GAME)
+        mu.mem_write(CALLER * 16 + 0x100, bytes((0xCD, VEC_PACE_PASS, 0xA9)) + seg)
+        mu.mem_write(CALLER * 16 + 0x200, bytes((0xCD, VEC_PACE_DRAW, 0xA9)) + seg)
+
+    def run_at(self, at, args):
+        mu = self.mu
+        mu.mem_write(SS * 16 + 0x7F6, b"".join(struct.pack("<H", a) for a in args))
+        for name, value in dict(cs=CALLER, ds=GAME_DS, es=0x1234, ss=SS, esp=0x7F6, ebp=BP, esi=0x5151,
+                                edi=0x7171, eflags=IF | 2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + at, CALLER * 16 + at + 5)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BP, r.UC_X86_REG_SI,
+                                                   r.UC_X86_REG_DI, r.UC_X86_REG_DS, r.UC_X86_REG_ES)],
+                         [0x7F6, BP, 0x5151, 0x7171, GAME_DS, 0x1234])
+        self.assertTrue(mu.reg_read(r.UC_X86_REG_EFLAGS) & IF)
+
+    def frame(self, clock, entries, combat=0):
+        """The drawing called at CLOCK with ENTRIES (each a 5-word tuple) in the list: (how many it
+        was drawn with, or None if left undrawn; AX back)."""
+        mu = self.mu
+        mu.mem_write(GAME_DS * 16 + self.CLOCK, struct.pack("<I", clock))
+        mu.mem_write(self.FIGHT, struct.pack("<H", combat))
+        for i, e in enumerate(entries):
+            mu.mem_write(GAME_DS * 16 + self.LIST + i * 10, struct.pack("<5H", *e))
+        drawn, = struct.unpack("<H", mu.mem_read(GAME_DS * 16 + 0xF002, 2))
+        self.run_at(0x200, (100, 50, 1, len(entries), 1))
+        count, now = struct.unpack("<HH", mu.mem_read(GAME_DS * 16 + 0xF000, 4))
+        return (count if now != drawn else None), self.mu.reg_read(r.UC_X86_REG_AX)
+
+    def listed(self, n):
+        return [struct.unpack_from("<5H", self.mu.mem_read(GAME_DS * 16 + self.LIST, n * 10), i * 10)
+                for i in range(n)]
+
+    def step(self, clock, moved=0):
+        """The step called at CLOCK, "something moved" MOVED before it: what it is after."""
+        mu = self.mu
+        mu.mem_write(GAME_DS * 16 + self.CLOCK, struct.pack("<I", clock))
+        mu.mem_write(GAME_DS * 16 + 0xF010, struct.pack("<HH", moved, 7))
+        self.run_at(0x100, (100, 50, 0, 0x0E00, 0))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 7)
+        return struct.unpack("<H", mu.mem_read(GAME_DS * 16 + 0x0E00, 2))[0]
+
+    A, B, C = (10, 20, 16, 30, 1), (40, 20, 16, 30, 2), (80, 90, 16, 30, 3)
+
+    def test_on_schedule(self):
+        """A frame each tick (sooner than the schedule's 70 a second): every one drawn, as the game's."""
+        for t in range(1000, 1020):
+            self.assertEqual(self.frame(t, [self.A, self.B]), (2, 1))
+
+    def test_behind(self):
+        """A frame behind: left undrawn (AX 1, as drawn), its list kept; the next drawn with its own
+        list and the kept one after it."""
+        self.assertEqual(self.frame(1000, [self.A]), (1, 1))  # (the first: the schedule starts)
+        self.assertEqual(self.frame(1003, [self.A, self.B]), (None, 1))  # (3 ticks: 114 of 96 behind)
+        self.assertEqual(self.frame(1003, [self.C]), (3, 1))  # (18 behind: drawn)
+        self.assertEqual(self.listed(3), [self.C, self.A, self.B])
+        self.assertEqual(self.frame(1004, [self.C]), (1, 1))  # (nothing kept now)
+
+    def test_fight(self):
+        """In a fight (the fight's state's +19h, the game's own test) every frame drawn."""
+        self.frame(1000, [self.A])
+        self.assertEqual(self.frame(1003, [self.A, self.B], combat=1), (2, 1))
+
+    def test_kept_drawn_alone(self):
+        """With a list kept, the step sets "something moved" once it has waited PACE_HOLD ticks (2), so
+        a frame is drawn for it; that frame, with nothing new, draws the kept list alone."""
+        self.frame(1000, [self.A])
+        self.assertEqual(self.frame(1003, [self.B]), (None, 1))
+        self.assertEqual(self.step(1004), 0)
+        self.assertEqual(self.step(1005), 1)
+        self.assertEqual(self.frame(1005, []), (1, 1))
+        self.assertEqual(self.listed(1), [self.B])
+        self.assertEqual(self.step(1009), 0)  # (none kept: left as the step had it)
+        self.assertEqual(self.step(1010, moved=1), 1)
+
+    def test_pause(self):
+        """After a pause (8 ticks or more: a load, a talk) the schedule starts afresh (the kept list
+        drawn with the next frame); nothing to draw at all: the drawing not called (AX 1)."""
+        self.frame(1000, [self.A])
+        self.assertEqual(self.frame(1003, [self.B]), (None, 1))
+        self.assertEqual(self.frame(1020, []), (1, 1))
+        self.assertEqual(self.listed(1), [self.B])
+        self.assertEqual(self.frame(1021, []), (None, 1))
+        self.assertEqual(self.frame(1022, [self.C]), (1, 1))
+
+    def test_kept_most(self):
+        """At most 64 entries kept: a frame that would keep more is drawn."""
+        self.frame(1000, [self.A])
+        self.assertEqual(self.frame(1004, [self.A] * 40), (None, 1))
+        self.assertEqual(self.frame(1006, [self.B] * 30), (70, 1))  # (behind still, but 70 > 64)
+        self.assertEqual(self.listed(70)[30:], [self.A] * 40)
+
+
 class KindTableTests(unittest.TestCase):
     def test_kinds_match_the_companion(self):
         """DSCLOG's weapon kinds by item type are specialize.py's."""

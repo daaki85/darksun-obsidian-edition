@@ -260,6 +260,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was following each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
 - **[New]** A game speed setting, so the whole party walks as smoothly as one.
+- **[Changed]** The whole party walks at full speed on the map with shadows and dust on: when the screen can't keep up, a picture is skipped rather than everyone slowing down *(was half speed with the whole party in view)*. An Options switch, on.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message and how much memory it had left; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** A warning when memory runs low: the dice log tells you to save and restart before the game runs out (a fresh start has all of it back).
 - **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.

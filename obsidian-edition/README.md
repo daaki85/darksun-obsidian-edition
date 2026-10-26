@@ -136,7 +136,7 @@ setting (suggestions, not tested limits):
 |---|---|---|
 | GOG's own | anything that runs GOG's release | 2 GB |
 | Faster (20,000 cycles, the default) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
-| Fastest (35,000 cycles) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
+| Fastest (35,000 cycles: every frame drawn in time, the smoothest) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
 
 The Loader itself (Python and its window) needs about 100 MB of memory and
 little processor time. A screen of 1920×1080 or more shows the game's window

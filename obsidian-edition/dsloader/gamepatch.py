@@ -89,6 +89,7 @@ VEC_ARROW = 0x85
 VEC_OVR_BUF = 0x84
 VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
+VEC_PACE_PASS, VEC_PACE_DRAW = 0x83, 0x82
 VEC_TAKE = 0xF7
 VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
@@ -811,6 +812,12 @@ PATCHES = (
     Patch("heap_realloc", 0x678E, bytes.fromhex("558bec"), _interrupt(VEC_HEAP, 3)),
     # the page flip's wait for the vertical retrace, none with a full screen up (DSCLOG's PROBE_FLIP)
     Patch("flip_wait", 0x1445F, bytes.fromhex("0ee811d2"), _interrupt(VEC_FLIP, 4)),
+    # a steady pace on the map (a switch, STEADY_PACE: DSCLOG's STEADY PACE): the map's frame's
+    # "call far 1DF3:26DC" (everything a step) and "call far 1DF3:15EA" (what moved drawn, the page
+    # flipped), their first 3 bytes (the segments after them are relocated: A9h makes each a "test
+    # ax,<segment>", which DSCLOG returns past); a frame drawn late leaves the next undrawn
+    Patch("pace_pass", 0x1E901, bytes.fromhex("9adc26"), bytes((0xCD, VEC_PACE_PASS, 0xA9))),
+    Patch("pace_draw", 0x1E946, bytes.fromhex("9aea15"), bytes((0xCD, VEC_PACE_DRAW, 0xA9))),
     # A new preserver picks its spells on CHOOSE A SPELL at creation (the game gives Grease, Magic
     # Missile and more by its level)
     Patch("cr_spells", 0x66F2D, bytes.fromhex("8b46fe"), _interrupt(VEC_CR_SPELLS, 3)),
@@ -900,6 +907,7 @@ ROLL_STORE = ("roll_store",)  # STORE and RECALL on the creation screen
 CAMERA = ("camera_still",)  # the view in a fight following a figure only off the screen
 SCENE_POINTER = ("cine_step", "cine_end")  # a pointer in the scenes, a click ending one
 MOUSE_START = ("mouse_set", "mouse_init")  # the pointer starting in the middle, as fast up and down as across
+STEADY_PACE = ("pace_pass", "pace_draw")  # walking at full speed on the map, a late frame's next left undrawn
 
 
 def relocated(data: bytes) -> set:

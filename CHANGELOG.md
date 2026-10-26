@@ -6,7 +6,28 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Pull request #69 (not merged yet)
+## Next pull request (not opened yet)
+
+**New: steady pace**
+- **The whole party walks at full speed on the map**, shadows and dust on, at the default 20,000
+  cycles (in the slave pens: 249 to 278 pixels a second, where it was 152 to 175; the leader alone
+  about 220 to 260). When a frame would be drawn late, the next one isn't drawn: the game's step
+  for everything still runs, and the frame after draws what moved in both. DSCLOG's STEADY PACE
+  (`PROBE_PACE_PASS`, `PROBE_PACE_DRAW`, vectors 83h and 82h) in place of the map's frame's two
+  far calls (DSUN.EXE 1E901h, 1E946h: `gamepatch.STEADY_PACE`, `pace_pass` and `pace_draw`): a
+  schedule of 70 frames a second on the game's clock, the list of what moved (DS:57D0h) kept in
+  the far block (`FAR_PACE`, 64 entries) for the next frame drawn; fights (the fight state's +19h)
+  draw every frame. An Options switch under Game speed (`steady_pace`, on; from the next start),
+  off leaving the game's calls as they are. An earlier try that caught up figures' animation
+  steps alone did nothing: the "think" that starts a figure on its next square runs once a frame.
+- Tests: `SteadyPaceTests` (on schedule, behind, a fight, a kept list drawn alone, a pause, the
+  most kept) and `test_steady_pace`.
+
+**Docs**
+- FEATURES' and DEVELOPMENT's Game speed, the requirements table's Fastest, the player's guide's
+  Game speed and Options rows, the patch notes.
+
+## Pull request #69 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/69))
 
 - **Obsidian Edition 2.11.0**: the version is 2.11.0, with its notes in `release-notes/v2.11.0.md`,
   for #68.
