@@ -308,6 +308,7 @@ classes a human could change to ([kits](#kits)).
   higher CON adds nothing unless they are below the new least.
 - Half-giants roll double. A roll counts at least 2 with CON 20, 3 with CON
   21-22 and 4 with CON 23 or more.
+- Two kits change the die: a **Battle Mage** rolls a d6, an **Arcanist** a d3.
 - **CON's bonus** comes with every level: for a fighter, gladiator or ranger
   +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
   24-25 (−1 at 4-6); for anyone else at most +2.
@@ -996,22 +997,18 @@ guide moves and acts that little bit quicker.
 
 *Spellarcher* (half-elf fighter/preserver). Half-elf freedom fighters who
 weave a little magic into every arrow. The technique is a secret, and the bow
-is all they train with. For each touch spell a Spellarcher knows (Burning
-Hands, Chill Touch, Shocking Grasp or Vampiric Touch) it has an arrow button
-on the USE screen, beside where a priest's Turn Undead goes. Outside a fight,
-with its quiver empty, a click spends a spell slot of that spell's level to
-weave it into 5 arrows for each preserver level, in the quiver, each casting
-the spell on what it hits; they fly as +1 arrows too. They stay in the quiver
-until shot, as a Flame Blade stays in the hand: they can't be taken out, nor
-anything put in their place. They're worth nothing to a merchant and fade at
-the next rest.
+is all they train with. Outside a fight, with its quiver empty, a Spellarcher
+can spend a spell slot to weave one of its touch spells (Burning Hands, Chill
+Touch, Shocking Grasp, Vampiric Touch) into a quiverful of arrows, each casting
+the spell on what it hits, until the next rest
+([how](KITS.md#multiclass-kits)).
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
 
 *Poisoner* (halfling fighter/thief). Hunters from the Forest Ridge whose blades
-carry the jungle's venoms: every wound they deal up close is poisoned. They train with
-the dagger and the short sword alone, and travel light.
+carry the jungle's venoms: every wound they deal up close is poisoned. They
+train with the dagger and the short sword alone, and travel light.
 
 *Spirit Caller* (halfling cleric/psionicist). Shamans of the halfling tribes,
 who speak to the spirits of sky and land. Under the open sky the spirits answer

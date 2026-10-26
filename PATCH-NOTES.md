@@ -134,12 +134,12 @@ A few of them:
 
 | Spell | Level | What it does |
 |---|---|---|
-| **Cat's Grace** | 2nd | DEX +1d6, for an hour of game time a caster level |
 | **Erdlu Claw** | 1st | unarmed attacks become talons: +1 to hit, 1d6+1, as a +1 magical edged weapon (Body Weaponry's and Animal Affinity's dice gain +1) |
 | **Fogbolt** | 1st | a dark grey bolt: the creature has −3 to its attacks and is hit at +2, for 2d4 rounds |
 | **Reflected Image** | 1st | one image of the caster, struck instead of it half the time |
 | **Spook** | 1st | a creature flees for 3 rounds unless it saves |
 | **Friends** | 1st | CHA +2d4 for a short while, for better prices |
+| **Cat's Grace** | 2nd | DEX +1d6, for an hour of game time a caster level |
 
 - **[New]** Nine 6th-level priest spells for clerics and druids of 11th level and up, with a 6th-level slot at 11th and two at 12th:
 
@@ -231,7 +231,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## World
 
-- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.
+- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.

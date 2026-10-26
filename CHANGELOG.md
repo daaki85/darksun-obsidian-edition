@@ -36,9 +36,10 @@ notes](PATCH-NOTES.md).
   no −1 to hit; its weapon spec the dagger or the short
   sword only (`KIT_POISON_KINDS` in `KINDS_ALLOWED`, `kits.POISONER_KINDS`).
 - **Healer**: no ranger of air, earth or fire, either way of DUAL (`DUAL_BANS`; the game
-  already bars a cleric from becoming a cleric or druid, and a druid a cleric); the sphere menu after DUAL is WATER ONLY for a Healer and its answer water
-  (`DUAL_SPHERES`, `PROBE_SPHERE` at DSUN.EXE 86BC3h, `INT FFh`), as the DUAL window keeps a
-  ranger's row open while the water ranger is allowed.
+  already bars a cleric from becoming a cleric or druid, and a druid a cleric); the sphere menu
+  after DUAL is WATER ONLY for a Healer and its answer water (`DUAL_SPHERES`, `PROBE_SPHERE` at
+  DSUN.EXE 86BC3h, `INT FFh`), as the DUAL window keeps a ranger's row open while the water
+  ranger is allowed.
 - **Spellarcher**: spell arrows only into an empty quiver (else nothing is made, no slot
   used), and kept there as a Flame Blade is kept in the hand: `PROBE_TAKE` (`INT F7h`, DSUN.EXE
   6F4B0h, the game's "may this leave its slot" routine) says "Item grafted on", and
@@ -49,6 +50,14 @@ notes](PATCH-NOTES.md).
   known), one through a level up (no cures given) and its Cause Wounds' extra die; a Poisoner's
   hits (one save each); an Assassin's backstab (x5 at 9th level). The rest by the emulated tests
   (`QuiverTests`, the kits' slots, move, to-hit, poison and kinds tests; the Rescuer's shield).
+
+**Docs**
+- Doc review: the dice log's hit-die line names the Battle Mage and Arcanist (the Mind Warrior has
+  the psionicist's die now), and the guide's hit points list them; the item report's example
+  names Inixhide as the log does; the guide's Spellarcher entry is flavour and a link, as the
+  other kits' are; the patch notes' new spells by level, and Kalzith's scrolls said once; a
+  repeated clause gone from the Military Scout's row; long lines wrapped. Screenshots checked:
+  none out of date.
 
 ## Pull request #67 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/67))
 

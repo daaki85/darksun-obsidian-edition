@@ -1008,9 +1008,10 @@ Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55
 With **A backstab multiplies the weapon's dice only** (on unless unticked, in
 the same Options group) a backstab multiplies the weapon's dice and adds STR,
 the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
-backstab (the dice 5 x3 = 15)` is 27 (the 5 rolled and the 10 more that x3 adds) where the game made it 51. The multiplier is x2
-at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13 (an [Assassin](KITS.md#thief-kits)'s one more, x3 to x6). Only the round's
-first attack is a backstab: the game multiplies the first two, so a second
+backstab (the dice 5 x3 = 15)` is 27 (the 5 rolled and the 10 more that x3
+adds) where the game made it 51. The multiplier is x2 at thief levels 1-4, x3
+at 5-8, x4 at 9-12 and x5 from 13 (an [Assassin](KITS.md#thief-kits)'s one
+more, x3 to x6). Only the round's first attack is a backstab: the game multiplies the first two, so a second
 swing (an off-hand one after a miss) was multiplied too.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for an
@@ -1802,9 +1803,10 @@ scene's steps, so a long still picture, like the decree, plays to its end.
 
 The game left the pointer at the right edge of the screen when its menu came
 up, and it moved half as far up and down as across (the mouse driver's own
-setting). Now it starts in the middle, stays where you leave it from one screen to the next (the intro, the menus, loading), and moves as far each way. In a window
-it also moves as fast as your desktop's pointer: DOSBox moved it a whole game
-pixel (three screen pixels in the usual window) for each pixel the mouse
+setting). Now it starts in the middle, stays where you leave it from one screen
+to the next (the intro, the menus, loading), and moves as far each way. In a
+window it also moves as fast as your desktop's pointer: DOSBox moved it a whole
+game pixel (three screen pixels in the usual window) for each pixel the mouse
 moved, too fast and coarse to put an item where you meant in the inventory.
 
 ![The game's pointer in the SSI logo before the intro, and on the king's decree that opens a new game](docs/scene-pointer.png)
