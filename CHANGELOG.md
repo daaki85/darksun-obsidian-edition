@@ -65,7 +65,7 @@ notes](PATCH-NOTES.md).
   (244D3h) then frees the person's map entry: the merchant had 89 records with the Loader's 11
   weapons, Jark 95 (the game's largest, 74). `records_*` (gamepatch) make the table room for 120
   (the frame 0F0h bytes larger), and `test_records_fit` keeps every object the Loader adds to
-  under it. A save already in the village stays without him.
+  under it. A save already in the village has him too (checked in the user's save).
 
 ## Pull request #63 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/63))
 
