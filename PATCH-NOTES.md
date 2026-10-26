@@ -309,6 +309,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
 - **[Fixed]** In a big fight (the arena's), most figures lost their **shadows**: the game lets go of pictures it isn't drawing just then. Each figure's shadow is now kept as it is drawn, and cast from that copy while its picture is away (a creature not yet seen with its picture in memory still has none until it is).
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
+- **[Fixed]** The **Weapon Merchant** in Teaquetzl's market and **Jark** in Tyr's were missing (since 1.2.0): with the weapons the mod gives them, they had more items than the game could read, and it left them out. They're back, in a save already there too.
 - **[Fixed]** The game's Sling +1 had no icon.
 - **[Fixed]** An archer's pointer showed "can't shoot" after a shot that killed, with shots left (a click still shot). Now it shows "can't" only once every shot of the round is made.
 - **[Fixed]** **Slay Living**'s description said a creature that saves takes 3 to 17; the game does 2 to 16 (half of 4d8). It says so now.
@@ -326,7 +327,6 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 - Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
 - A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
-- In a save that has already been to **Teaquetzl**, its market has no **Weapon Merchant**: with the weapons the mod gives him, he had more items than the game could read, and the game left him out. A save from before reaching the village, or a new game, has him. **Jark** in Tyr had the same trouble: get there with this version and he's there.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.
