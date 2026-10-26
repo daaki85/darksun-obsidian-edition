@@ -6,6 +6,11 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Pull request #63
+
+- **Obsidian Edition 2.9.0**: the version is 2.9.0, with its notes in `release-notes/v2.9.0.md`,
+  for this pull request and #62.
+
 ## Pull request #62 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/62))
 
 **New**
