@@ -6,6 +6,17 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Pull request #67 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/67))
+
+- **Obsidian Edition 2.10.0**: the version is 2.10.0, with its notes in `release-notes/v2.10.0.md`,
+  for this pull request and #64 to #66.
+
+## Pull request #66 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/66))
+
+**Docs**
+- The patch notes no longer say a save already in Teaquetzl stays without the Weapon Merchant (the
+  user's save has him); the fix is under Bug Fixes instead.
+
 ## Pull request #65 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/65))
 
 **Fixed**
