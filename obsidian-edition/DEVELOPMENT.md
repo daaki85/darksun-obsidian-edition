@@ -695,6 +695,20 @@ play: a haystack search in the slave pens logged
 `0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)`, as
 the game's own message said.
 
+### The Bowyer's archery target
+
+Shooting at the target in Teaquetzl runs script 178: its distance command (80h)
+gives the archer's distance from the target (object 1314) in squares, as the
+game's distance routine (DSUN.EXE DD8Ch) counts them: the least n, from its
+estimate, with n * n + n at least dx * dx + dy * dy (map squares, the map
+things' 16ths of a square at DS:669Dh shifted by 4). Under 5 is a bull's eye
+with no roll; otherwise a random 0-20 under DEX - distance / 2 (2 if DEX is under
+the distance) hits, under by 10 or more is the centre, which from more than 13
+squares with the Bowyer (object 283) within 25 gives 6 Arrows +2, once (flag
+642). `dsloader/bowyer.py` writes the shot's line from the random command
+PROBE_SCRIPT_RAND records (position 57Fh, script 178's alone), the archer the one
+whose turn it is, the distances worked out the same way from where they stand.
+
 ### Ability checks in the scripts' conditions
 
 Some scripts test an ability without the ability check command: a condition

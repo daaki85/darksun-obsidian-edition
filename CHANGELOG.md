@@ -23,6 +23,11 @@ notes](PATCH-NOTES.md).
   pixel (greens a leaf's shades for the silk and the cloak). Cahulaks +1, Light of Dawn and El's
   Ring share their icon with plain items, so they get pictures of their own (BMP 2653-2655, their
   OJFF +0Ch pointed to them).
+- **The Bowyer's archery target in the dice log** (script 178): each shot's roll, what it needed
+  (DEX - distance / 2), the distances from the target and the Bowyer (the game's distance command
+  ported: `bowyer.distance`, from the map things' squares, `GameData.thing_square`/`things_of`)
+  and the result: a miss, a ring, the centre, and whether it earns the arrows (`bowyer.py`; its
+  random command known by its position, 57Fh, in script 178 alone).
 
 **Fixed**
 - **The Weapon Merchant was missing from Teaquetzl's market** (since 1.2.0), and Jark from Tyr's.

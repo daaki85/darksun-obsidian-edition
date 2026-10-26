@@ -27,7 +27,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -2555,11 +2555,32 @@ class DiceLog:
         result, most = e.raw & 0xFF, e.raw >> 8 & 0xFF
         counts = tuple(e.arg(at) for at in searches.COUNTS_AT)
         lines = searches.describe(result, most, e.extra, counts)
+        if not lines and e.extra == bowyer.POSITION and most == bowyer.MOST:
+            lines = self._archery(result)
         if not lines:
             lines = self._script_check(result, most, e.extra)
         if not lines and show_all:
             lines = [f"Script roll: 0-{most} = {result} (script position {e.extra})"]
         return lines
+
+    def _archery(self, roll: int) -> List[str]:
+        """A shot at the Bowyer's archery target (bowyer.py): the archer is the one whose turn it
+        is (outside a fight, the party's leader), the distances the game's, from where they stand."""
+        turn = self.game.whose_turn()
+        index = self.game.combatant_creature(turn) if turn is not None else None
+        if index is None:
+            return []
+        here = self.game.thing_square(turn)
+
+        def nearest(obj: int) -> Optional[int]:
+            found = [bowyer.distance(*here, *self.game.thing_square(t)) for t in self.game.things_of(obj)]
+            return min(found) if found else None
+        target = nearest(bowyer.TARGET)
+        if target is None:
+            return []
+        dex = self.game.creature(index)[CREATURE_ABILITIES + 1]
+        return bowyer.describe(roll, dex, target, nearest(bowyer.BOWYER), self.game.flag(bowyer.REWARD_FLAG),
+                               self.game.creature_name(index))
 
     def _script_check(self, result: int, most: int, position: int) -> List[str]:
         """A random command a script compares with an ability of the character acting
