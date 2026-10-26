@@ -70,10 +70,10 @@ pointer shows in the game's scenes (a click skips one), starts in the middle
 and moves like your desktop's, and pauses less in the inventory; thief skills
 stop at 95 as in AD&D; the game has more memory to spare; and big fights keep
 their shadows. 2.7.2 ([release notes](release-notes/v2.7.2.md)) fixed the
-6th-level priest spells, and 2.7.0 ([release
-notes](release-notes/v2.7.0.md)) brought nine 6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with pictures of
-their own; levels capped by XP instead of at 9th, so priests reach 11th and
-12th; backstabs as AD&D has them; spell names floating over their casters; the
+6th-level priest spells, and 2.7.0 ([release notes](release-notes/v2.7.0.md))
+brought nine 6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with
+pictures of their own; levels capped by XP instead of at 9th, so priests reach
+11th and 12th; backstabs as AD&D has them; spell names floating over their casters; the
 Spellarcher's spell arrows; three new magic items; and more of the original
 game's bugs fixed, three script bugs among them.
 

@@ -2174,10 +2174,8 @@ after the `ns_list_` patches):
   damage. `armor_charge` makes the first jump always taken, leaving one charge
   for each damaging hit: a weapon's damage, a shot's as a blow's, goes through
   the damage routine too (the attack routine's one damage call, 5B8:20h at
-  58B1Fh, with spell FFFFh). Seen in the arena: a hit takes Armor from 9 charges
-  to 8. (A helper site that used another for each blow, `ARMOR_BLOW`, at 58B27h,
-  was a mistake and is gone: it made each hit cost two.) The site number
-  `NS_IMAGE+48` is free.
+  58B1Fh, with spell FFFFh), so the helper needs no site for blows. Seen in the
+  arena: a hit takes Armor from 9 charges to 8. (Site `NS_IMAGE+48` is free.)
 - **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
   under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
   the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8

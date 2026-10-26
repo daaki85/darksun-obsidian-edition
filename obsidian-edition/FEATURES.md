@@ -65,6 +65,7 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Choosing an enemy: Tab, Enter and the
     rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
+  - [The overhead map: M](#the-overhead-map-m)
   - [The view in fights](#the-view-in-fights)
   - [The pointer in scenes, and where it
     starts](#the-pointer-in-scenes-and-where-it-starts)
@@ -1716,7 +1717,8 @@ How it works:
 
 ## Controls
 
-Each has a switch in the Options tab's **Controls** section.
+Each has a switch in the Options tab's **Controls** section, but M, which is
+always on.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
@@ -1747,8 +1749,12 @@ fight.
 The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.
 
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+
+### The overhead map: M
+
 **M** on the map opens the overhead map, as the game's own **O** does, and **M**
-again closes it (no switch: it is always on).
+again closes it.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 

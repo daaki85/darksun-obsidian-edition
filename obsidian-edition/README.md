@@ -43,6 +43,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
+  - [The Effects screen](#the-effects-screen)
   - [What a scroll says](#what-a-scroll-says)
   - [No manual check](#no-manual-check)
 - [The Loader's window](#the-loaders-window)
@@ -57,10 +58,10 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
   character creation, each with what it needed and where every bonus came from
-  ([the dice log](#the-dice-log)). **L** shows a combat log over the map, a
-  spell's name floats over its caster, the game's own screens gain THAC0,
-  saves, thief skills and spell slots, and the Look box tells you what can
-  hurt a monster ([In the game](#in-the-game)).
+  ([the dice log](#the-dice-log)). **L** shows a combat log over the map,
+  spells' names and charges used float over the figures, the game's own
+  screens gain THAC0, saves, thief skills, spell slots and charges left, and
+  the Look box tells you what can hurt a monster ([In the game](#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
   (experience, priests' THAC0, spell slots), INT's limits on learning spells,
   saving throws and multiclass hit points as the books have them, and scores
@@ -86,8 +87,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and armour, figures cast shadows and kick up dust, and elves and half-elves
   have a look of their own ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
-  M for the overhead map, a view that stays put in fights, dragging the map with the mouse wheel held
-  down, a pointer in the intro and scenes that a click skips
+  M for the overhead map, a view that stays put in fights, dragging the map
+  with the mouse wheel held down, a pointer in the intro and scenes that a click skips
   ([Controls](FEATURES.md#controls)); 40 saves, each also kept under its name,
   and 29 saved characters
   ([More saves and characters](FEATURES.md#more-saves-and-characters)); a
@@ -406,17 +407,20 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
 With **Float a spell's name over its caster, and "Miss" over whoever an attack
 missed** ticked on the Options tab (the default), a spell's name floats over
 its caster for a second and a half as it is cast, and "Miss" over anyone an
-attack misses, in the game's lettering with a dark edge. The same switch floats
-a spell's charge being used over whoever has it, in light blue: "Armor: 7 left"
-for a hit Armor took, "Reflected Image: 2 left" for a lost image, "Armor ends"
-for the last; these stay three seconds, and a "Miss" or spell's name
-doesn't push one out. They work in and out
+attack misses, in the game's lettering with a dark edge. They work in and out
 of fights, for the party and the monsters alike, and a weapon's spell on a hit
 shows too. A name stays with its figure; near the top of the screen it goes
 under the figure's feet, clear of the game's boxes. Long names are shortened
 ("Lesser Water Elem."), and up to four show at once.
 
 ![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
+
+The same switch floats a spell's charge being used over whoever has it, in
+light blue: "Armor: 7 left" for a hit Armor took, "Reflected Image: 2 left" for
+a lost image, "Armor ends" for the last. These stay three seconds, twice as
+long, and a "Miss" or a spell's name never pushes one out.
+
+![An arena fight: "Armor: 8 left" in light blue over a Slig the party's gladiator has just hit, and "Miss" beside it](docs/floating-charges.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
 
@@ -444,8 +448,7 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
   boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
   script check) and read languages (a Shinobi's, for a scroll: on its
-  [Effects screen](KITS.md#changing-class)) are left out for want of
-  room. A
+  [Effects screen](#the-effects-screen)) are left out for want of room. A
   ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
   places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
@@ -582,6 +585,27 @@ boots' or belt's box shows what it adds to thief skills (with
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#charges-in-item-boxes).
+
+### The Effects screen
+
+The Effects screen (Current Spell Effects) shows more
+in its lower panel and under the pointer:
+
+- **Kits and weapon specs:** each kit (`KIT: RAVAGER`), with a Shinobi's chance
+  to read a scroll under it (`READ LANG. 35%`), then the weapon specs, a page
+  at a time when there are more than fit ([Changing
+  class](KITS.md#changing-class) has pictures).
+- **Charges left:** with the pointer on the icon of a spell that lasts a number
+  of uses, the name under the icons says how many are left: IMPROVED AC (4
+  CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
+  Effects that last until removed (Charmed) show none.
+- **A click on a spell's icon leaves it on** (the game ended it); a psionic
+  power's icon still ends the power, as that is how one is stopped ([Spells on
+  the Effects screen](FEATURES.md#spells-on-the-effects-screen)).
+
+![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
 
 ### What a scroll says
 

@@ -68,10 +68,6 @@ notes](PATCH-NOTES.md).
   for every weapon spell (58BE6h). A Spellarcher's spell arrows now go at the archer's preserver
   level (`ARROW_LEVEL`); a weapon's own spell stays at 6. A 2nd-level archer's Shocking Grasp did
   1d8+6.
-- **Armor used two charges for each weapon hit** (since `ARMOR_BLOW`, added in this round): weapon
-  damage, a shot's or a blow's, goes through the damage routine (5B8:20h from the attack routine's
-  one damage call, 58B1Fh), which uses one, so `ARMOR_BLOW` used a second. It is gone; tested in
-  the arena: 9 charges, then 8, 7... one for each hit.
 - **A backstab multiplied the round's second attack too** (an off-hand one after a miss): the game
   multiplies while fewer than two attacks are made. With the dice-only rule, only the first.
 - **Immunity in the dice log.** The HP line matched hits to the HP lost from the first; a hit the
@@ -85,6 +81,12 @@ notes](PATCH-NOTES.md).
   Spray: read languages d100 = 48, needs 100 or less -> read; ...`. It clears it now.
 - **The cooked vulture used on a party member** no longer says it is tough and bland
   (`vulture.use` removed; eating it is the game's, with the meal's rest from the Loader as before).
+
+**Docs**
+- **The Loader README's In the game** has a section for the Effects screen (kits, a Shinobi's read
+  languages, charges under the pointer, the click fix) with `effects-charges.png`, and Names over
+  figures a picture of a charge label beside a "Miss" (`floating-charges.png`). FEATURES gives M
+  its own Controls section; the player guide's screens table gains the scroll's answer.
 
 ## Pull request #61
 
