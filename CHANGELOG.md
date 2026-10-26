@@ -17,6 +17,11 @@ notes](PATCH-NOTES.md).
   moves: the roll is still at 57Fh for the dice log. Checked live: a centre shot with Dunesong
   from 15 squares, and the Bowyer's arrows.
 
+**Docs**
+- Documentation review: Dunesong's line in the patch notes is its row in the Items table (no second
+  bullet under World), and FEATURES' New items says it counts at the Bowyer's target, linking to
+  the target's rules.
+
 ## Pull request #64
 
 **New**

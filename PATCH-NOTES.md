@@ -186,7 +186,7 @@ A few of them:
 | **Thornwall** | a bone polearm +1 |
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
-| **Dunesong** | a bow +1, sold in a shop |
+| **Dunesong** | a bow +1, sold by the Bowyer, whose archery target counts it as it does the game's own bows |
 | **Windlash** | a staff sling +1, the game's first magic staff sling, sold in a shop |
 | **Skycutter** | a chatkcha +2 |
 
@@ -237,7 +237,6 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
 - **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
 - **[New]** Scar's henchmen carry bone axes, which they drop when they fall.
-- **[New]** The Bowyer's archery target counts Dunesong, the bow he sells, as it does the game's own bows.
 
 ## Graphics
 

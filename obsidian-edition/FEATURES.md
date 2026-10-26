@@ -1339,7 +1339,9 @@ metal weapons and no magic club, pick or staff sling. Two more, armour:
 
 The bone and obsidian weapons are also new characters' starting weapons with
 [weapon specialization](#weapon-specialization), each in a material the
-character can use.
+character can use. Dunesong, the bow +1 the Bowyer sells, counts at his
+archery target as the game's own bows do ([the target's
+rules](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target)).
 
 **Prices** follow the game's own (a price can't go past 65,535; the game's
 dearest, the Wand of Missiles, is 65,000):
