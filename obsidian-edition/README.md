@@ -409,11 +409,12 @@ its caster for a second and a half as it is cast, and "Miss" over anyone an
 attack misses, in the game's lettering with a dark edge. The same switch floats
 a spell's charge being used over whoever has it, in light blue: "Armor: 7 left"
 for a hit Armor took, "Reflected Image: 2 left" for a lost image, "Armor ends"
-for the last. They work in and out
+for the last; these stay three seconds, and a "Miss" or spell's name
+doesn't push one out. They work in and out
 of fights, for the party and the monsters alike, and a weapon's spell on a hit
 shows too. A name stays with its figure; near the top of the screen it goes
 under the figure's feet, clear of the game's boxes. Long names are shortened
-("Lesser Water Elem."), and at most two show at once.
+("Lesser Water Elem."), and up to four show at once.
 
 ![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
 

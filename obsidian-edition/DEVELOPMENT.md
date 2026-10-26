@@ -880,12 +880,13 @@ dice log running:
   its ink with a dark edge a pixel round it (the colours nearest gold or
   light grey and near black in the palette DSCLOG last read), as two one-bit
   masks of 16 bytes a row (128 pixels; longer names shortened word by word,
-  then cut) and 11 rows. They go into one of two slots in the header (`+374`,
+  then cut) and 11 rows. They go into one of four slots in the header (`+374`,
   `LBL_SIZE` 360 bytes each: the label's number, width, height, how far above
   the feet, the two colours, the map thing, the masks), the number written
   0 first and last of all, so DSCLOG never takes a half-written one. A label
-  stays 1.5 seconds; a new one takes the slot of one over the same figure,
-  else a free one, else the oldest.
+  stays 1.5 seconds, a charge used 3 (`CHARGE_FOR`); a new one takes the slot
+  of one over the same figure, else a free one, else the oldest, but a "Miss"
+  or spell's name never takes a charge's (its priority).
 - **DSCLOG's side** (`LABEL_*`). The map is drawn straight into the screen on
   show, and figures are drawn again as they move, swing and take damage, by
   routines that weren't all hooked in the first trial (a label over melee was
@@ -908,8 +909,9 @@ dice log running:
   has scrolled, the game's scrolling has copied any label with it, so all are
   taken off and the view drawn again whole (`VIEW_AGAIN`); the timer doesn't
   put labels while the view isn't where the main loop last saw it.
-- **Memory.** The two slots and the code cost about 1.5 KB of the helper's
-  upper memory; the ring went from 74 entries to 66 for it.
+- **Memory.** The first two slots and the code cost about 1.5 KB of the helper's
+  upper memory (the ring went from 74 entries to 66 for it); the other two,
+  720 bytes, fit in the room left.
 - **Measured** in DOSBox, a fight in the slave pens with every attack made to
   miss, a slot watcher grabbing the screen as each label came: "Miss" was in
   every one of nine grabs half a second in, through swings and damage

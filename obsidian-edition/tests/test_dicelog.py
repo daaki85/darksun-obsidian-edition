@@ -820,7 +820,7 @@ class SaveTests(unittest.TestCase):
                                  "    Improved AC on Mountain Stalker: one charge used, 3 left"])
         # each floats over the creature, the spell's name and what is left (labels.py)
         shown = []
-        log._float = lambda thing, text, colour, now: shown.append((thing, text))
+        log._float = lambda thing, text, colour, now, priority=0: shown.append((thing, text))
         log._charge_spells[(0x29, 2)] = 0  # (Armor, spell 0)
         log.count_charges(e[:2])
         log.describe(e[0]); log.describe(e[1])

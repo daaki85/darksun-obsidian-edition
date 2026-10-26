@@ -2109,7 +2109,7 @@ class DiceLog:
             steps.append(f"(at most {game.THIEF_MOST})")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
 
-    def _float(self, thing: Optional[int], text: str, colour, now: float) -> None:
+    def _float(self, thing: Optional[int], text: str, colour, now: float, priority: int = 0) -> None:
         """TEXT floating over combatant THING for a moment (labels.py), with the switch on."""
         if not self.floating_names or self.tsr_hdr is None:
             return
@@ -2117,7 +2117,7 @@ class DiceLog:
             self._labels_font_tried = True
             self._labels.font = _game_font(self.game_dir)
         try:
-            self._labels.show(self.game.guest, self.tsr_hdr, thing, text, colour, now)
+            self._labels.show(self.game.guest, self.tsr_hdr, thing, text, colour, now, priority)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -2327,7 +2327,7 @@ class DiceLog:
                 left = self._charges_after(owner, eid)
                 spell = self._charge_spells.get((owner, eid))
                 said = self.game.spell_name(spell) if spell is not None else EFFECT_NAMES.get(eid, f"effect {eid}")
-                self._float(owner, f"{said}: {left} left" if left else f"{said} ends", labels.CHARGE_INK, now)
+                self._float(owner, f"{said}: {left} left" if left else f"{said} ends", labels.CHARGE_INK, now, priority=1)
                 tail = f"{left} left" if left else "none left: it ends"
                 if eid == game.MIRROR_EFFECT:
                     return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes, {tail}"]

@@ -23,7 +23,9 @@ notes](PATCH-NOTES.md).
 - **A charge used floats over its creature**, as "Miss" does: "Armor: 7 left", "Reflected Image:
   2 left", "Armor ends" (`labels.CHARGE_INK`, light blue), from each charge line of the dice log;
   the spell's name from the effect's record, kept for the last charge, which removes the record
-  (`_charge_spells`). The image-lost line says what is left too.
+  (`_charge_spells`). The image-lost line says what is left too. These stay 3 seconds
+  (`CHARGE_FOR`) and a "Miss" or spell's name doesn't take their slot (`priority`).
+- **Up to four floating labels at once** (were two): `LBL_SLOTS` and `labels.SLOTS` 4.
 - **M opens the overhead map**, and M again closes it: DSCLOG's `MAP_KEY` turns M into the game's O
   on the map and into Escape while the overhead map is up (`OVERHEAD`, cleared by `PANEL_TICK`).
 - **A Shinobi's read languages on the Effects screen**, under its kit: `READ LANG. 40%`

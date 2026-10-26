@@ -154,7 +154,7 @@ TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
 NENT    equ 63          ; entries in the ring (63: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
-LBL_SLOTS  equ 2        ; names floating over figures at once (LABELS)
+LBL_SLOTS  equ 4        ; names floating over figures at once (LABELS)
 LBL_ROW    equ 16       ; bytes a row of a label's mask: LBL_ROW * 8 pixels wide at most
 LBL_H_MOST equ 11       ; its rows at most
 LBL_MASK   equ LBL_ROW * LBL_H_MOST
