@@ -835,7 +835,7 @@ elf's figure, with its own switch: see
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts as a [Wasteland Seer](KITS.md#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
-| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: a spell slot more at each spell level and two preserver spells a turn in a fight |
+| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Wanderer**: with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
 Gerakis's, K'ratchek's and Cilla's features are their own: no character made
@@ -1009,7 +1009,7 @@ With **A backstab multiplies the weapon's dice only** (on unless unticked, in
 the same Options group) a backstab multiplies the weapon's dice and adds STR,
 the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
 backstab (the dice 5 x3 = 15)` is 27 (the 5 rolled and the 10 more that x3 adds) where the game made it 51. The multiplier is x2
-at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13. Only the round's
+at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13 (an [Assassin](KITS.md#thief-kits)'s one more, x3 to x6). Only the round's
 first attack is a backstab: the game multiplies the first two, so a second
 swing (an off-hand one after a miss) was multiplied too.
 

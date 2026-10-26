@@ -609,7 +609,7 @@ so keep it off the front line.
 - [Hiding in shadows](#hiding-in-shadows) in a fight to backstab, halved in
   daylight. *Without the mod:* backstabs only when the target faces someone
   else. A backstab does ×2 damage at levels 1-4, ×3 at 5-8, ×4 at 9-12 and
-  ×5 at 13.
+  ×5 at 13 (an Assassin's one step more: ×3 to ×6).
 - **Picking pockets** with a thief's Pick Pockets button, from anyone in sight.
 - A worn cloak, boots and belt help hiding, moving silently, picking pockets
   and opening locks.
@@ -629,7 +629,8 @@ never may, even after changing class.
 
 *Assassin.* Knives for hire in the templars' cities, where a noble house pays
 well to see a rival fall. They learn to vanish in the full glare of the sun,
-and leave locks and purses to lesser thieves.
+strike from behind deadlier than any other thief, and leave locks and purses
+to lesser thieves.
 
 *Swashbuckler.* Swaggering rogues of the merchant houses and the elven markets,
 as handy with a blade as any soldier. All that time spent fighting leaves
@@ -708,7 +709,8 @@ can weave two spells while others weave one.
 
 *Scholar.* Keepers of forbidden lore who have spent more time over hidden
 libraries than learning to hold a weapon. Every new level of skill brings
-another spell into their books.
+another spell into their books, and they hold one more spell of each level
+ready than other preservers.
 
 *Battle Mage.* Preservers who learned in the arena or the legions that a spell
 is no use if you are dead before you finish it. They fight in leather with a
@@ -772,8 +774,9 @@ has the most, air and fire the fewest.
 *Healer.* Water priests who answer to the needs of the dying more than to the
 temples. They pray to the cosmos as well as to water, so they have the cures
 and other spells only druids are given, Cure Serious and Critical Wounds and
-Raise Dead among them, but no other element answers them. They keep a free
-hand for the work and won't fill it with a weapon.
+Raise Dead among them, but no other element answers them, not even if they
+take up another calling: a Healer who becomes a druid or ranger serves water.
+They keep a free hand for the work and won't fill it with a weapon.
 
 *Crusader.* Warrior priests who carry their element's anger into battle, as
 deadly with a weapon as any soldier. Their prayers are fewer for it.
@@ -977,11 +980,11 @@ range ahead of armies and caravans: in the open they are at home, under a roof
 less so.
 
 *Wilderness Avenger* (half-elf druid/fighter). Sworn to the land's living
-things, they hunt the undead that profane it, and move through the wild as
-quietly as any ranger.
+things, they hunt whatever profanes it, travel light in leather, and move
+through the wild as quietly as any ranger.
 
 *Rescuer* (half-elf cleric/ranger). They bring the lost back from the wastes
-alive. Under the open sky their healing runs strongest.
+alive: their healing runs strong, and they cover ground quickly in a fight.
 
 *Ghetto Fighter* and *Wayfinder* (dwarf fighter/thief). Ghetto Fighters grew
 up in the cities' poorest quarters, where a dagger in each hand settles most
@@ -994,19 +997,19 @@ weave a little magic into every arrow. The technique is a secret, and the bow
 is all they train with. For each touch spell a Spellarcher knows (Burning
 Hands, Chill Touch, Shocking Grasp or Vampiric Touch) it has an arrow button
 on the USE screen, beside where a priest's Turn Undead goes. Outside a fight,
-a click spends a spell slot of that spell's level to weave it into 5 arrows
-for each preserver level (left at its feet if the backpack is full), each
-casting the spell on what it hits; they fly as +1 arrows too. Only a
-Spellarcher can ready them. They're worth nothing to a merchant and fade at
-the next rest (a pile still on the ground, at the first rest after it's
-picked up).
+with its quiver empty, a click spends a spell slot of that spell's level to
+weave it into 5 arrows for each preserver level, in the quiver, each casting
+the spell on what it hits; they fly as +1 arrows too. They stay in the quiver
+until shot, as a Flame Blade stays in the hand: they can't be taken out, nor
+anything put in their place. They're worth nothing to a merchant and fade at
+the next rest.
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
 
 *Poisoner* (halfling fighter/thief). Hunters from the Forest Ridge whose blades
-carry the jungle's venoms. The first wound in a fight is the one that counts,
-and they've never quite taken to fighting fair.
+carry the jungle's venoms: every wound they deal is poisoned. They train with
+the dagger and the short sword alone, and travel light.
 
 *Spirit Caller* (halfling cleric/psionicist). Shamans of the halfling tribes,
 who speak to the spirits of sky and land. Under the open sky the spirits answer
@@ -1139,7 +1142,8 @@ attacks at the character's full rate.
 - A **backstab** is a thief's attack from behind, in melee, with a weapon no
   heavier than a long sword (see [Equipment](#equipment)): +4 to hit in all,
   and the thief's first attack of the round does **×2** damage at levels 1-4,
-  **×3** at 5-8, **×4** at 9-12 and **×5** at 13, STR's bonus included.
+  **×3** at 5-8, **×4** at 9-12 and **×5** at 13 (an Assassin's one step
+  more), STR's bonus included.
 
 ### Hiding in shadows
 

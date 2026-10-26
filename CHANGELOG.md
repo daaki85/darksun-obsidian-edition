@@ -6,6 +6,35 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Pull request #68 (not merged yet)
+
+**Changed: kit balance**
+- **Arcanist** keeps two preserver spells a turn but loses its spell slot more at each level;
+  the **Scholar** has it now (`kits.slots`, DSCLOG's `PROBE_SLOTS`).
+- **Mind Warrior**: the psionicist's d6, not a d8 (`kits.hit_die`, `PROBE_HIT_DIE`,
+  `PROBE_CR_DIE`); its tenth fewer PSP stays.
+- **Rescuer**: its cures heal 1 more a die anywhere, not only under the open sky, and it has 2
+  more Move in a fight (`KIT_MOVE`).
+- **Wilderness Avenger**: +1 to hit and damage against anything, not only undead (`KIT_EXTRA`);
+  light armour only (`LIGHT_KITS`, `KIT_LIGHT`) in place of a druid slot fewer at each level.
+- **Assassin**: a backstab's multiplier one more, x3 to x6 (`STAB_TIMES`,
+  `kits.backstab_times`).
+- **Poisoner**: every hit poisons, the target's save as before (`PROBE_POISON`; the header's
+  +360, `KIT_POISONED`, kept unused); no −1 to hit; its weapon spec the dagger or the short
+  sword only (`KIT_POISON_KINDS` in `KINDS_ALLOWED`, `kits.POISONER_KINDS`).
+- **Healer**: no cleric, druid or ranger of air, earth or fire, either way of DUAL
+  (`DUAL_BANS`); the sphere menu after DUAL is WATER ONLY for a Healer and its answer water
+  (`DUAL_SPHERES`, `PROBE_SPHERE` at DSUN.EXE 86BC3h, `INT FFh`), as the DUAL window keeps a
+  ranger's row open while the water ranger is allowed.
+- **Spellarcher**: spell arrows only into an empty quiver (else nothing is made, no slot
+  used), and kept there as a Flame Blade is kept in the hand: `PROBE_TAKE` (`INT F7h`, DSUN.EXE
+  6F4B0h, the game's "may this leave its slot" routine) says "Item grafted on", and
+  `QUIVER_KEPT` in `PROBE_CAN_USE` refuses anything put in their place. The drop at the party's
+  feet (`ARROWS_DROP`, `Attempt.drop`) is gone.
+- Checked in the game: the Spellarcher's quiver (all four cases), and the Healer's DUAL both
+  ways; the rest by the emulated tests (`test_assassin_backstab`, `QuiverTests`, the kits'
+  slots, move, to-hit, poison and kinds tests).
+
 ## Pull request #67 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/67))
 
 - **Obsidian Edition 2.10.0**: the version is 2.10.0, with its notes in `release-notes/v2.10.0.md`,
