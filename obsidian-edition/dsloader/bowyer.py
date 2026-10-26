@@ -82,7 +82,7 @@ def describe(roll: int, dex: int, target: int, bowyer: Optional[int], given: boo
 # bows' counts) a jump to code added at the script's end, which counts Dunesong as PHRAIN (the
 # count of Phrain's Bow) does into var 5 (set again before the roll's own use of it), adds the four
 # and jumps back to SUM_NEXT: nothing in the script moves (POSITION stays where it is).
-DUNESONG = 2594  # its object
+DUNESONG, PHRAIN_BOW = 2594, 30007  # their objects
 PHRAIN, SUM, SUM_NEXT = 0x3FA, 0x40D, 0x41A
 PHRAIN_COUNT = bytes.fromhex("168c3389254d5048049175375355048f028203")  # var 3 = Phrain's Bows in hand
 SET, GOTO = 0x16, 0x64
@@ -99,21 +99,32 @@ def with_dunesong(script: bytes) -> bytes:
     (or has it already)."""
     if script[PHRAIN:SUM] != PHRAIN_COUNT or script[SUM:SUM_NEXT] != SUM_THREE:
         return script
-    count = PHRAIN_COUNT[:9] + bytes.fromhex("91") + DUNESONG.to_bytes(2, "big") + PHRAIN_COUNT[12:-1] + bytes((5,))
+    # Phrain's Bow's count with Dunesong's object (91h: a negative word, high byte first) into var 5
+    count = PHRAIN_COUNT.replace(_object(PHRAIN_BOW), _object(DUNESONG))[:-1] + bytes((5,))
     four = gpl.encode_op((SET, [("expr", [("var", 130, 1), "+", "(", ("var", 130, 2), "+", "(", ("var", 130, 3), "+",
                                           ("var", 130, 5), ")", ")"]), ("var", 2, 4)]))
     added = count + four + gpl.encode_op((GOTO, [("n", SUM_NEXT)]))
     jump = gpl.encode_op((GOTO, [("n", len(script))])) + FILLER
     if len(jump) != SUM_NEXT - SUM:
         return script
+    from .pensasks import LONGEST  # (the longest script the Loader writes)
+    if len(script) + len(added) > LONGEST:
+        return script
     out = bytearray(script)
     out[SUM:SUM_NEXT] = jump
     return bytes(out) + added
 
 
-def script_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
+def _object(obj: int) -> bytes:
+    """An object's number as the scripts write it negated (91h, then the word high byte first)."""
+    return b"\x91" + obj.to_bytes(2, "big")
+
+
+def script_chunks(chunks, out: Optional[Dict[Tuple[str, int], bytes]] = None) -> Dict[Tuple[str, int], bytes]:
+    """Script 178 with Dunesong counted, from OUT (the Loader's changes so far) or else CHUNKS."""
     key = ("GPL ", SCRIPT)
-    if key not in chunks:
+    code = (out or {}).get(key, chunks.get(key))
+    if code is None:
         return {}
-    changed = with_dunesong(chunks[key])
-    return {key: changed} if changed != chunks[key] else {}
+    changed = with_dunesong(code)
+    return {key: changed} if changed != code else {}

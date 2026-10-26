@@ -626,7 +626,7 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
         from . import haystash
         out.update(haystash.script_chunks(chunks, field_types))
     from . import bowyer  # the Bowyer's archery target counts Dunesong among the bows (bowyer.py): always
-    out.update(bowyer.script_chunks(chunks))
+    out.update(bowyer.script_chunks(chunks, out))
     from . import manualcheck  # no manual check (the dragon's question): always
     out.update(manualcheck.script_chunks(chunks, field_types))
     from . import scriptfixes  # the game's own script bugs mended (scriptfixes.py): always
