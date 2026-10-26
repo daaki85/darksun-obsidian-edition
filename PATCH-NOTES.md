@@ -6,7 +6,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
-*These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
+*These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums. They follow the repository, so a change made since the current version is here before its release; the [changelog](CHANGELOG.md) says which pull request brought it.*
 
 ## Contents
 
@@ -186,7 +186,7 @@ A few of them:
 | **Thornwall** | a bone polearm +1 |
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
-| **Dunesong** | a bow +1, sold in a shop |
+| **Dunesong** | a bow +1, sold by the Bowyer, whose archery target counts it as it does the game's own bows |
 | **Windlash** | a staff sling +1, the game's first magic staff sling, sold in a shop |
 | **Skycutter** | a chatkcha +2 |
 

@@ -7,12 +7,18 @@ DEX - distance / 2 (2 if DEX is under the distance); 10 or more under it is the 
 ring under 5, the inner one under 10. The centre from more than 13 squares, with the Bowyer
 within 25 of the archer, has him give 6 Arrows +2, once (flag 642).
 
+The script counts the archer's bows in hand by their objects, the game's three (the bow, the Bow +2
+and Phrain's Bow); the Loader's copy counts Dunesong (the Loader's bow +1, which the Bowyer sells)
+with them (with_dunesong).
+
 DSCLOG records the roll as any script's random command (PROBE_SCRIPT_RAND), its position past the
 command (POSITION, in script 178 only); the distances are worked out as the game does (DISTANCE)
 from the map's things where they stand.
 """
 
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
+
+from . import gpl
 
 SCRIPT = 178
 POSITION = 0x57F  # the random command's (57Ch) position past it, as DSCLOG records it
@@ -70,3 +76,55 @@ def describe(roll: int, dex: int, target: int, bowyer: Optional[int], given: boo
     if bowyer is None or bowyer >= BOWYER_NEAR:
         return [f"{head} -> the centre, no reward: the Bowyer {BOWYER_NEAR} squares or more away"]
     return [f"{head} -> the centre: the Bowyer's reward, 6 Arrows +2"]
+
+
+# Dunesong among the bows the script counts: at SUM (var 4 = var 1 + (var 2 + var 3), the three
+# bows' counts) a jump to code added at the script's end, which counts Dunesong as PHRAIN (the
+# count of Phrain's Bow) does into var 5 (set again before the roll's own use of it), adds the four
+# and jumps back to SUM_NEXT: nothing in the script moves (POSITION stays where it is).
+DUNESONG, PHRAIN_BOW = 2594, 30007  # their objects
+PHRAIN, SUM, SUM_NEXT = 0x3FA, 0x40D, 0x41A
+PHRAIN_COUNT = bytes.fromhex("168c3389254d5048049175375355048f028203")  # var 3 = Phrain's Bows in hand
+SET, GOTO = 0x16, 0x64
+
+
+# (never run, after the jump: a command, so the script still reads command by command)
+FILLER = gpl.encode_op((SET, [("expr", ["(", ("var", 130, 6), ")", "+", ("n", 0)]), ("var", 2, 6)]))
+SUM_THREE = gpl.encode_op((SET, [("expr", [("var", 130, 1), "+", "(", ("var", 130, 2), "+", ("var", 130, 3), ")"]),
+                                 ("var", 2, 4)]))
+
+
+def with_dunesong(script: bytes) -> bytes:
+    """Script 178 (the game's) counting Dunesong among the bows; unchanged if it isn't as expected
+    (or has it already)."""
+    if script[PHRAIN:SUM] != PHRAIN_COUNT or script[SUM:SUM_NEXT] != SUM_THREE:
+        return script
+    # Phrain's Bow's count with Dunesong's object (91h: a negative word, high byte first) into var 5
+    count = PHRAIN_COUNT.replace(_object(PHRAIN_BOW), _object(DUNESONG))[:-1] + bytes((5,))
+    four = gpl.encode_op((SET, [("expr", [("var", 130, 1), "+", "(", ("var", 130, 2), "+", "(", ("var", 130, 3), "+",
+                                          ("var", 130, 5), ")", ")"]), ("var", 2, 4)]))
+    added = count + four + gpl.encode_op((GOTO, [("n", SUM_NEXT)]))
+    jump = gpl.encode_op((GOTO, [("n", len(script))])) + FILLER
+    if len(jump) != SUM_NEXT - SUM:
+        return script
+    from .pensasks import LONGEST  # (the longest script the Loader writes)
+    if len(script) + len(added) > LONGEST:
+        return script
+    out = bytearray(script)
+    out[SUM:SUM_NEXT] = jump
+    return bytes(out) + added
+
+
+def _object(obj: int) -> bytes:
+    """An object's number as the scripts write it negated (91h, then the word high byte first)."""
+    return b"\x91" + obj.to_bytes(2, "big")
+
+
+def script_chunks(chunks, out: Optional[Dict[Tuple[str, int], bytes]] = None) -> Dict[Tuple[str, int], bytes]:
+    """Script 178 with Dunesong counted, from OUT (the Loader's changes so far) or else CHUNKS."""
+    key = ("GPL ", SCRIPT)
+    code = (out or {}).get(key, chunks.get(key))
+    if code is None:
+        return {}
+    changed = with_dunesong(code)
+    return {key: changed} if changed != code else {}

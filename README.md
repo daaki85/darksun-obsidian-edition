@@ -8,7 +8,7 @@ with your options and keeps the full dice log while you play. (The Loader was
 called Templar's Ledger up to 2.2.1, and up to 1.2.0 that was the whole mod's
 name.)
 
-![The arena in round 10 of a fight: Cermak's turn, with the combat log over the map's lower right showing a Slig's hits on Gerakis and the new round](obsidian-edition/docs/combat-log.png)
+![The arena in round 7 of a fight: K'ratchek's turn, with the combat log over the map's lower right showing a Slig's hits on Cermak and his hit points after each](obsidian-edition/docs/combat-log.png)
 
 ## Documentation
 
@@ -68,15 +68,7 @@ double-click, with the options as last set.)
 Armor, Mirror Image and the other spells that last a number of uses show what's
 left, in the dice log, floating over the figures and on the Effects screen; M
 opens the overhead map; a Shinobi learns from scrolls it can read; and a
-scroll's answer shows on the inventory screen. 2.8.0 ([release
-notes](release-notes/v2.8.0.md)) made the party's magic gear glow on their
-figures and the pointer work in the game's scenes, and 2.7.0 ([release
-notes](release-notes/v2.7.0.md)) brought nine 6th-level priest spells (Heal,
-Blade Barrier, Whirlwind...) with pictures of their own; levels capped by XP
-instead of at 9th, so priests reach 11th and 12th; backstabs as AD&D has them;
-spell names floating over their casters; the Spellarcher's spell arrows; three
-new magic items; and more of the original game's bugs fixed, three script bugs
-among them.
+scroll's answer shows on the inventory screen.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
