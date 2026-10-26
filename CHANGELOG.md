@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request
+## Pull request #64
 
 **New**
 - **The scripts' own ability checks in the dice log.** 13 conditions compare the scripts' random
