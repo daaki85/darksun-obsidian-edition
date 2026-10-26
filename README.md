@@ -64,18 +64,19 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.8.0** is out ([release notes](release-notes/v2.8.0.md)):
-the party's magic gear glows on their figures in its icon's colour; the
-pointer shows in the game's scenes (a click skips one), starts in the middle
-and moves like your desktop's, and pauses less in the inventory; thief skills
-stop at 95 as in AD&D; the game has more memory to spare; and big fights keep
-their shadows. 2.7.2 ([release notes](release-notes/v2.7.2.md)) fixed the
-6th-level priest spells, and 2.7.0 ([release notes](release-notes/v2.7.0.md))
-brought nine 6th-level priest spells (Heal, Blade Barrier, Whirlwind...) with
-pictures of their own; levels capped by XP instead of at 9th, so priests reach
-11th and 12th; backstabs as AD&D has them; spell names floating over their casters; the
-Spellarcher's spell arrows; three new magic items; and more of the original
-game's bugs fixed, three script bugs among them.
+**Obsidian Edition 2.9.0** is out ([release notes](release-notes/v2.9.0.md)):
+Armor, Mirror Image and the other spells that last a number of uses show what's
+left, in the dice log, floating over the figures and on the Effects screen; M
+opens the overhead map; a Shinobi learns from scrolls it can read; and a
+scroll's answer shows on the inventory screen. 2.8.0 ([release
+notes](release-notes/v2.8.0.md)) made the party's magic gear glow on their
+figures and the pointer work in the game's scenes, and 2.7.0 ([release
+notes](release-notes/v2.7.0.md)) brought nine 6th-level priest spells (Heal,
+Blade Barrier, Whirlwind...) with pictures of their own; levels capped by XP
+instead of at 9th, so priests reach 11th and 12th; backstabs as AD&D has them;
+spell names floating over their casters; the Spellarcher's spell arrows; three
+new magic items; and more of the original game's bugs fixed, three script bugs
+among them.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
