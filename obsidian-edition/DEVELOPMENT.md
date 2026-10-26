@@ -2617,7 +2617,16 @@ the first time the pith is delivered (flag 625), and Merzol's haystack (script
 137: `haystash.py`) leaves Hayneedle (object 2590, an item object of its own)
 beside his sack of ceramic pieces (25h at the searcher's place, as the sack's),
 the first search only (flag 502). The Lava Rift's Hermit (object 81) has
-Nightsliver in place of his stone dagger. The tome (`dsloader/tome.py`) is a
+Nightsliver in place of his stone dagger. An object can only have so many
+records: the routine that reads them (DSUN.EXE 68000h) keeps a 6-byte entry for
+each in a table on its stack, 80 of them, and gives up on an object with 80 or
+more; the code that makes a region's people (244D3h) then frees the person's
+map entry, and the person is never made. The game's largest has 74 (Jark's); an
+item adds 3 (the item, its type and its name), so the Weapon Merchant's 11 new
+weapons made 89, and Jark's 7 made 95. `records_*` in `dsloader/gamepatch.py`
+make the table room for 120 (the routine's stack frame 0F0h bytes larger: the
+game's stack has some 20 KB it never reaches), and `test_records_fit` keeps the
+Loader's gifts under it. The tome (`dsloader/tome.py`) is a
 scroll of the game's kind: object 1446, among the game's scrolls' numbers
 (1400-1499: its object record the first scroll's, as only a scroll's kind of
 object has its box's icon clicked; the picture that number had, the icon of two

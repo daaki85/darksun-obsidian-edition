@@ -18,6 +18,15 @@ notes](PATCH-NOTES.md).
 - **The Chameleon Gloves shine** in their icon (`icons.SHINE`: every other pixel of their lighter
   blue-greys in the water's cycling blues), as the Parting Staff's gem does.
 
+**Fixed**
+- **The Weapon Merchant was missing from Teaquetzl's market** (since 1.2.0), and Jark from Tyr's.
+  The routine that reads an object's records (RDFF, DSUN.EXE 68000h) keeps them in a table of 80
+  on its stack and gives up on an object with more (-2), and the code making a region's people
+  (244D3h) then frees the person's map entry: the merchant had 89 records with the Loader's 11
+  weapons, Jark 95 (the game's largest, 74). `records_*` (gamepatch) make the table room for 120
+  (the frame 0F0h bytes larger), and `test_records_fit` keeps every object the Loader adds to
+  under it. A save already in the village stays without him.
+
 ## Pull request #63
 
 - **Obsidian Edition 2.9.0**: the version is 2.9.0, with its notes in `release-notes/v2.9.0.md`,

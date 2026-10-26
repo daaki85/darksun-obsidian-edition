@@ -388,6 +388,18 @@ class DataTests(unittest.TestCase):
         self.assertEqual(len(set(clones)), len(clones))
         self.assertEqual(worldgear.regions(worldgear.GIFTS + worldgear.MAGIC), [0x06, 0x08, 0x1C, 0x1E, 0x28, 0x29])
 
+    def test_records_fit(self):
+        """No object gets more records than the game's object routine takes (gamepatch
+        RECORDS_MOST, made larger from 80): the game's largest has 74 (Jark's), each item adds 3
+        (the item, its type and its name)."""
+        from collections import Counter
+        from dsloader import gamepatch
+        added = Counter()
+        for g in worldgear.GIFTS + worldgear.MAGIC:
+            for obj in g.objects:
+                added[obj] += len(g.items)
+        self.assertLess(74 + 3 * max(added.values()), gamepatch.RECORDS_MOST)
+
     def test_regions_opened(self):
         """Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
         (its D:\ copy named in its table of copies): else the game reads its own."""

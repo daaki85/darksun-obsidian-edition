@@ -204,6 +204,13 @@ _OKAY_TEST = bytes.fromhex("26807f1c01")  # cmp byte es:[bx+1Ch],1
 _OKAY_JUMPS = {0x74: 0x76, 0x75: 0x77}  # jz -> jbe, jnz -> ja
 
 
+# The object records routine's "lea dx/ax,[bp-1F8h]" (96h dx, 86h ax), its table's start, and
+# the most records an object can have with the table made larger (gamepatch "records_most")
+RECORDS_TABLE = ((0x680FA, 0x96), (0x6813B, 0x96), (0x6814D, 0x86), (0x68198, 0x96), (0x681AA, 0x86),
+                 (0x6820C, 0x96), (0x6821E, 0x86))
+RECORDS_MOST = 120
+
+
 def _new_as_okay(offset: int, jump: int) -> "Patch":
     return Patch(f"new_okay_{offset:x}", offset, _OKAY_TEST + bytes((jump,)), _OKAY_TEST + bytes((_OKAY_JUMPS[jump],)))
 
@@ -842,6 +849,15 @@ PATCHES = (
                         "268b07eb17"  # mov ax,es:[bx]; jmp .done
                         "268b47028946fe6bc03ac41e651601c3268b4706"  # .party: as the game's
                         "909090")),  # .done (54B23h)
+    # The routine that reads an object's records (RDFF, DSUN.EXE 68000h) keeps a 6-byte entry
+    # for each in a table on its stack, 80 of them ([bp-1F8h]), and gives up on an object with
+    # 80 or more (-2): the person is then not made, their map entry freed. The game's largest has
+    # 74; the Weapon Merchant with the Loader's weapons has 89, Jark 95. The table made room for
+    # 120 (the frame 0F0h bytes larger; the game's stack has some 20 KB it never reaches).
+    Patch("records_frame", 0x68003, bytes.fromhex("81ecf801"), bytes.fromhex("81ece802")),
+    *(Patch(f"records_table_{at:x}", at, bytes.fromhex(f"8d{reg:02x}08fe"), bytes.fromhex(f"8d{reg:02x}18fd"))
+      for at, reg in RECORDS_TABLE),
+    Patch("records_most", 0x68294, bytes.fromhex("837eee50"), bytes.fromhex(f"837eee{RECORDS_MOST:02x}")),
     # (not changed: DSCLOG reads the segment this "mov dx,<segment>" loads, the pointer's items')
     Patch("use_item_seg", 0x73A14, bytes.fromhex("ba8003"), bytes.fromhex("ba8003")),
     # The data path is argv[0] cut after its last \ or :, kept at DS:4B81h. The
