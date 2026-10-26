@@ -989,6 +989,23 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.attack(3, self.AXE, **glad)[1:3], (15, 3))
         self.assertEqual(self.attack(2, self.BOW, missile=True, **glad)[1:3], (15, 3))
 
+    def test_kit_shot(self):
+        """PROBE_ATTACKS marks a party member's shot or throw in the header's +360 (KIT_SHOT: bit N
+        for member N, set for a missile, cleared for melee) for PROBE_POISON; a monster's nothing."""
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        try:
+            self.mu.mem_write(hdr + 360, bytes((0x09,)))
+            self.attack(2, self.BOW, missile=True, me=2)
+            self.assertEqual(self.mu.mem_read(hdr + 360, 1)[0], 0x0D)
+            self.attack(3, self.AXE, me=2)
+            self.assertEqual(self.mu.mem_read(hdr + 360, 1)[0], 0x09)
+            self.attack(3, self.AXE, me=0)
+            self.assertEqual(self.mu.mem_read(hdr + 360, 1)[0], 0x08)
+            self.attack(2, self.BOW, missile=True, me=5)
+            self.assertEqual(self.mu.mem_read(hdr + 360, 1)[0], 0x08)
+        finally:
+            self.mu.mem_write(hdr + 360, bytes(1))
+
     def test_wild_fury(self):
         """Wild Fighting for a Wild Fury (a mul druid/fighter, party member 2; the header's +355,
         KIT_WILD, the Loader's): its check passed (bit 6), 1 more attack a round in melee and 3 more
@@ -5018,7 +5035,8 @@ class KitTests(unittest.TestCase):
             self.mu.mem_write(hdr + 350, bytes(1))
 
     def test_poisoner(self):
-        """PROBE_POISON: each weapon hit of a Poisoner's (halfling fighter/thief; the routine's
+        """PROBE_POISON: each melee weapon hit of a Poisoner's (halfling fighter/thief; not a shot or
+        a throw, the header's +360 bit clear; the routine's
         [BP+12h] -1, no spell or power behind the damage: not the poison's own, which would chain)
         queues the monsters' poison (power 176) on the target through the game's routine (790D2h: target, attacker,
         power, level; the level from 508:2Ah's far call); then on to the routine's end. KIT_TO_HIT:
@@ -5065,6 +5083,11 @@ class KitTests(unittest.TestCase):
             self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 17, 6), kits.POISONER)
             self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))
             self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))  # (every hit)
+            mu.mem_write(hdr + 360, bytes((0x04,)))  # (KIT_SHOT: its last attack a shot or a throw)
+            self.assertEqual(hit(2), ([], 4))
+            mu.mem_write(hdr + 360, bytes((0x0B,)))  # (the others' shots)
+            self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0x0B))
+            mu.mem_write(hdr + 360, bytes(1))
             self.assertEqual(hit(2, kits.POISON_POWER), ([], 0))  # (the poison's own damage: not again)
             self.assertEqual(hit(2, 72), ([], 0))  # (a spell's)
             self.assertEqual(hit(5), ([], 0))  # (not a party member)

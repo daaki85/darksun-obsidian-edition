@@ -376,8 +376,9 @@ tick_off   dw ticks             ; +356 offset of TICKS: where the game was as it
                                 ;      Loader's freeze report
 tick_seq   dw 0                 ; +358 records taken, counted: the newest in slot (TICK_SEQ - 1)
                                 ;      mod TICK_SLOTS
-kit_poisoned db 0               ; +360 not used (up to 2.10.0 a Poisoner's poison once a fight;
-                                ;      kept so the bytes after it stay where they are)
+kit_shot   db 0                 ; +360 bit N: party member N's last weapon attack a shot or a throw
+                                ;      (PROBE_ATTACKS), so PROBE_POISON leaves it be (up to 2.10.0
+                                ;      a Poisoner's poison once a fight)
 lv_creating db 0                ; +361 1 while CR_WEAPONS has the weapon window up for a character
                                 ;      being made: the Loader leaves its weapon specs till it is down
 read_lang  times 4 db 0         ; +362 the Loader's: each party member's chance to read languages (%),
@@ -2087,7 +2088,8 @@ ticks   times TICK_SLOTS * TICK_SIZE db 0
 ; PROBE_POISON: INT VEC_POISON replaces "jmp 7A7C5h" (3 bytes: INT + NOP; DSUN.EXE 7A6DDh) in the
 ; routine giving a hit's special effects (DI the attacker's combatant, SI the target's; the
 ; attacker's creature at its [BP-6]), where a person who isn't a thri-kreen has none and goes on to
-; the end. Each weapon hit of a Poisoner's (the routine's [BP+12h], the spell or power behind
+; the end. Each melee weapon hit of a Poisoner's (not a shot or a throw: KIT_SHOT, from
+; PROBE_ATTACKS; the routine's [BP+12h], the spell or power behind
 ; the damage, -1: not the poison's own damage, power 176, which comes back through here with the
 ; Poisoner as its attacker and would poison again and again) queues the monsters' poison on the
 ; target as a monster's poisoned hit does (the routine at 790D2h: the target, the attacker, power
@@ -2108,6 +2110,8 @@ probe_poison:
         mov ax, [ss:bx - 6]     ; (the attacker's creature)
         cmp ax, 3
         ja .out                 ; (not a party member)
+        bt word [cs:kit_shot], ax
+        jc .out                 ; (a shot or a throw: melee only)
         call cr_is
         db KIT_POISONER
         jne .out
@@ -2947,6 +2951,7 @@ SPEC_GRAND equ 5
 probe_attacks:
         cbw
         push ax
+        call note_shot          ; (a shot or a throw: no poison from it)
         call kit_to_hit         ; (a Ravager's, a Brute's, an Arena Champion's)
         sub [bp + 0x0A], ax
         call kit_extra          ; (a Battle Dancer's dance, a Wilderness Avenger's against undead)
@@ -3267,6 +3272,20 @@ war_kit_halves:
         jae .no
         mov dl, ah
 .no:    pop ax
+        ret
+
+; NOTE_SHOT: KIT_SHOT's bit for the attacker ([BP+0Eh]), a party member: set for a missile ([BP+16h]
+; above 1: a shot or a throw), else clear. All registers kept.
+note_shot:
+        push ax
+        mov ax, [bp + 0x0E]
+        cmp ax, 3
+        ja .out
+        btr word [cs:kit_shot], ax
+        cmp word [bp + 0x16], 1
+        jle .out
+        bts word [cs:kit_shot], ax
+.out:   pop ax
         ret
 
 probe_spec_damage:

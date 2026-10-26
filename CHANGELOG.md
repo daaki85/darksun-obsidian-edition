@@ -29,10 +29,11 @@ notes](PATCH-NOTES.md).
   from `HARM_SITE`, by `CAST_SITE`'s caster; the dice log's `_harm_bonus`).
 - **Assassin**: a backstab's multiplier one more, x3 to x6 (`STAB_TIMES`,
   `kits.backstab_times`).
-- **Poisoner**: every weapon hit poisons, the target's save as before (`PROBE_POISON`, only
+- **Poisoner**: every melee weapon hit poisons, not a shot or a throw, the target's save as before
+  (`KIT_SHOT`, the header's +360, marked by `PROBE_ATTACKS`; `PROBE_POISON`, only
   with no spell or power behind the damage, `[BP+12h]` -1: the poison's own damage comes back
-  through the same routine, and once a fight no longer stopped it poisoning again and again; the header's
-  +360, `KIT_POISONED`, kept unused); no −1 to hit; its weapon spec the dagger or the short
+  through the same routine, and once a fight no longer stopped it poisoning again and again);
+  no −1 to hit; its weapon spec the dagger or the short
   sword only (`KIT_POISON_KINDS` in `KINDS_ALLOWED`, `kits.POISONER_KINDS`).
 - **Healer**: no ranger of air, earth or fire, either way of DUAL (`DUAL_BANS`; the game
   already bars a cleric from becoming a cleric or druid, and a druid a cleric); the sphere menu after DUAL is WATER ONLY for a Healer and its answer water

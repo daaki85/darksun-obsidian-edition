@@ -1010,7 +1010,7 @@ the next rest.
 inward, to their own great bodies; other minds remain a puzzle to them.
 
 *Poisoner* (halfling fighter/thief). Hunters from the Forest Ridge whose blades
-carry the jungle's venoms: every wound they deal is poisoned. They train with
+carry the jungle's venoms: every wound they deal up close is poisoned. They train with
 the dagger and the short sword alone, and travel light.
 
 *Spirit Caller* (halfling cleric/psionicist). Shamans of the halfling tribes,
