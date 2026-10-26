@@ -6,7 +6,12 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Pull request #68 (not merged yet)
+## Pull request #69 (not merged yet)
+
+- **Obsidian Edition 2.11.0**: the version is 2.11.0, with its notes in `release-notes/v2.11.0.md`,
+  for #68.
+
+## Pull request #68 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/68))
 
 **Changed: kit balance**
 - **Arcanist** keeps two preserver spells a turn but loses its spell slot more at each level;
