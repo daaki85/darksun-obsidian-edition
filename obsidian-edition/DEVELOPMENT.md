@@ -699,7 +699,10 @@ the game's own message said.
 
 Shooting at the target in Teaquetzl runs script 178 (with a bow in hand: the
 script counts objects 1017, 1039 and 30007, the bow, the Bow +2 and Phrain's
-Bow, not the Loader's Dunesong): its distance command (80h)
+Bow, into variables 1 to 3, added up at 40Dh; the Loader's copy jumps from
+there to code added at the script's end, which counts Dunesong, 2594, into
+variable 5, adds the four and jumps back to 41Ah, so nothing in the script
+moves: `bowyer.with_dunesong`): its distance command (80h)
 gives the archer's distance from the target (object 1314) in squares, as the
 game's distance routine (DSUN.EXE DD8Ch) counts them: the least n, from its
 estimate, with n * n + n at least dx * dx + dy * dy (map squares, the map

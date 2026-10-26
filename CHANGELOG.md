@@ -6,6 +6,17 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request
+
+**Fixed**
+- **Dunesong counts at the Bowyer's archery target** (script 178 counts the bows in hand by their
+  objects: the game's three). `bowyer.with_dunesong`: at 40Dh, where the three counts are added,
+  a jump to code at the script's end that counts Dunesong (2594) as Phrain's Bow is counted (its
+  bytes, the object and the variable changed), adds the four and jumps back to 41Ah; the rest of
+  the jumped-over command a filler command, so the script still reads command by command. Nothing
+  moves: the roll is still at 57Fh for the dice log. Checked live: a centre shot with Dunesong
+  from 15 squares, and the Bowyer's arrows.
+
 ## Pull request #64
 
 **New**

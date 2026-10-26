@@ -237,6 +237,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
 - **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
 - **[New]** Scar's henchmen carry bone axes, which they drop when they fall.
+- **[New]** The Bowyer's archery target counts Dunesong, the bow he sells, as it does the game's own bows.
 
 ## Graphics
 

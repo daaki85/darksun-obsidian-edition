@@ -433,8 +433,8 @@ target, and the archer's DEX does the rest:
   the archer, has him give **6 Arrows +2**, once a game. From 13 squares or
   closer, the centre is only "the bull's eye".
 - The archer must have a bow in hand, one of the three the script names: the
-  plain bow, the Bow +2 or Phrain's Bow. With anything else (Dunesong, the
-  mod's bow, among them) the Bowyer only tells you off.
+  plain bow, the Bow +2 or Phrain's Bow (the mod adds its Dunesong, which the
+  Bowyer sells). With anything else the Bowyer only tells you off.
 
 So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
 less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
