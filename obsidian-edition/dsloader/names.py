@@ -22,7 +22,7 @@ EXTRA = 46  # how many DSCLOG adds (its NAMES_EXTRA)
 KEPT = 16  # the bytes of each in DSCLOG's EXTRA_NAMES (NAME_KEPT; padded to 25 in the game's table)
 RING, TOOLS = ring.NAME_ENTRY, tools.NAME_ENTRY  # 0x142, 0x143
 NAMES = {RING: ring.NAME, TOOLS: tools.NAME, **npcitems.NAMES, **arms.NAMES,
-         worldgear.BRACERS_NAME: b"Bracers/Defense", **worldgear.NAMES, **tome.NAMES, **robes.NAMES,
+         worldgear.BRACERS_NAME: b"Bracers/Defns", **worldgear.NAMES, **tome.NAMES, **robes.NAMES,
          **spellarrows.NAMES}  # as DSCLOG's EXTRA_NAMES has them
 TSR_NAMES_OFF, TSR_NAMES_COUNT, TSR_NAMES_PTR = 196, 198, 200  # in DSCLOG's header
 # the entries earlier versions borrowed: what the game has there, and what they wrote over it

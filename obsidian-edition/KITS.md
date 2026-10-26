@@ -133,7 +133,7 @@ Loader works that out about once a second.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); no shield; over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets; **no shield**; light armour only | its classes' gear, without the shield | |
 | **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; hiding in shadows not halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands; with the stealth rule its hiding gives an attack from behind, not a backstab |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | **1 fewer druid spell slot at each spell level** (none below 0) | its classes' gear | its hiding counts for backstabs as a ranger's does |
@@ -297,13 +297,15 @@ Each kit sleeps and wakes with its own class.
 ![The KIT menu after DUAL: a Battle Mage turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
 
 The Effects screen lists the kits, oldest first, a line each (the longer names
-shortened as on the KIT page, `(ASLEEP)` after one that sleeps), then the
-weapon specs. Its lower panel has room for five lines: when there are more,
+shortened as on the KIT page, `(ASLEEP)` after one that sleeps; a Shinobi's
+with its read languages under it, `READ LANG. 40%`), then the weapon specs. Its lower panel has room for five lines: when there are more,
 it shows four and **MORE: CLICK HERE** under them, and a click on the panel
 shows the next page (a weapon spec's heading again at the top of a page that
 goes on with its weapons), the first again after the last:
 
 ![The Effects screen, a page at a time: a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
+
+![The Effects screen for Xan, a Shinobi: "KIT: SHINOBI" and under it "READ LANG. 35%", the chance to read a scroll](docs/effects-shinobi.png)
 
 With **Weapon specialization** ticked, a human who becomes a fighter,
 gladiator or ranger (or a Battle Mage) then picks the weapon types it is due

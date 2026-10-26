@@ -1,7 +1,7 @@
 """The combat log's panel in the game (DSCLOG's PANEL), drawn and kept up by the Loader.
 
 The Loader draws the panel, a picture of PANEL_W x PANEL_H palette indices (render), and puts it (planar)
-in the memory block DSCLOG keeps for it (TSR_PANEL_SEG); DSCLOG puts the picture over the map,
+in the memory DSCLOG keeps for it (TSR_PANEL_SEG, TSR_PANEL_OFF: its far block); DSCLOG puts the picture over the map,
 bottom right, from the game's main loop and after each rectangle of the view the game draws again
 (the map is drawn straight into the screen on show, a rectangle at a time). The Loader turns it on
 in a fight (TSR_PANEL_ON) and off after, when DSCLOG has the view drawn again without it.
@@ -30,6 +30,7 @@ from . import palette
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_DAC = 238  # ... the offset of DAC, the palette as DSCLOG last read it (768 values, 0-63)
 TSR_PANEL_ON, TSR_PANEL_SEG, TSR_PANEL_NEW = 326, 328, 330  # ... the panel shown; its picture; a new one
+TSR_PANEL_OFF = 140  # the picture's offset in TSR_PANEL_SEG's segment (DSCLOG's far block)
 PANEL_W, PANEL_H = 180, 78  # (DSCLOG's PANEL_W, PANEL_H)
 PANEL_X0, PANEL_Y0 = 136, 120  # (DSCLOG's: where on the screen)
 FIRST, LAST = 16, 223  # the palette's colours the game doesn't animate (DSCLOG's DARK_FIRST, DARK_LAST)
@@ -820,7 +821,8 @@ class Panel:
                     top = lines[-1].text if lines else top
                 picture = draw(self._backgrounds[size], self.font, self._ink, top, lines, names, self.first,
                                max(0, self._rows - self._back_rows), g, self.level, self.filter)
-                guest.write(seg * 16, planar(picture, g.width))
+                off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_PANEL_OFF, 2))
+                guest.write(seg * 16 + off, planar(picture, g.width))
                 guest.write(tsr_hdr + TSR_PANEL_TOP, struct.pack("<HH", g.top, g.height))
                 guest.write(tsr_hdr + TSR_PANEL_NEW, struct.pack("<H", 1))
                 self._shown = now[:5] + (self.first,) + now[6:]

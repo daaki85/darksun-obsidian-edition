@@ -142,6 +142,21 @@ class CopyTests(unittest.TestCase):
         ids = [k for k in new if k[0] == "BMP "]
         self.assertEqual(len(ids), len(set(ids)))  # no icon numbered as another's map picture
 
+    def test_game_items_made_to_shine(self):
+        """The Parting Staff (object 30044): its icon, in place, with its blue gem (158-161) in the
+        water's colours the game cycles; the rest of it as it was."""
+        staff = [[158 if y < 3 else 64 if x == y else None for x in range(5)] for y in range(8)]
+        chunks = {("OJFF", 30044): bytes(12) + struct.pack("<H", 2157) + b"rest",
+                  ("BMP ", 2157): icons.encode(staff)}
+        for _, number, _, _, _ in icons.ICONS:
+            chunks[("OJFF", 0x10000 - number)] = bytes(12) + struct.pack("<H", 40) + b"rest"
+        chunks[("BMP ", 40)] = icons.encode([[0x3A if x == y else None for x in range(16)] for y in range(16)])
+        new = icons.new_chunks(chunks)
+        self.assertNotIn(("OJFF", 30044), new)  # (the object as it was: its icon's number the same)
+        rows = icons.decode(new[("BMP ", 2157)])
+        self.assertTrue(all(p in icons.WATER for r in rows[:3] for p in r))
+        self.assertEqual(rows[3:], staff[3:])
+
     def test_no_map_picture(self):
         """A plain item with no map picture of its own number (the game's necklaces): its icon still
         made, the object copied as it is, no map picture added (and nothing else lost)."""

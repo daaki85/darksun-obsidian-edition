@@ -65,6 +65,7 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Choosing an enemy: Tab, Enter and the
     rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
+  - [The overhead map: M](#the-overhead-map-m)
   - [The view in fights](#the-view-in-fights)
   - [The pointer in scenes, and where it
     starts](#the-pointer-in-scenes-and-where-it-starts)
@@ -1000,14 +1001,16 @@ Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) ->
   Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
 Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
     THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
-  Tezral hits Slig for 9: 1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice x2)
+  Tezral hits Slig for 9: 1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice 1 x2 = 2)
 ```
 
 With **A backstab multiplies the weapon's dice only** (on unless unticked, in
 the same Options group) a backstab multiplies the weapon's dice and adds STR,
 the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
-backstab (the dice x3)` is 27 where the game made it 51. The multiplier is x2
-at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13.
+backstab (the dice 5 x3 = 15)` is 27 (the 5 rolled and the 10 more that x3 adds) where the game made it 51. The multiplier is x2
+at thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13. Only the round's
+first attack is a backstab: the game multiplies the first two, so a second
+swing (an off-hand one after a miss) was multiplied too.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for an
 Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are under
@@ -1404,7 +1407,7 @@ or a helm (bone, leather or metal, magical or not). A shield, rings and cloaks
 of protection, and the mod's circlet and crown (worn on the head, but not
 armour) go with them. They aren't armour to anything else: a preserver casts in
 them, a thief wears them, and a ring or cloak of protection still counts. In the
-game they are **BRACERS/DEFENSE** with their plus (Bracers/Defense +4 is AC 6),
+game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
 priced 5,000 a point of AC.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#bracers-of-defense).
@@ -1714,7 +1717,8 @@ How it works:
 
 ## Controls
 
-Each has a switch in the Options tab's **Controls** section.
+Each has a switch in the Options tab's **Controls** section, but M, which is
+always on.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
@@ -1744,6 +1748,13 @@ fight.
 
 The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+
+### The overhead map: M
+
+**M** on the map opens the overhead map, as the game's own **O** does, and **M**
+again closes it.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 

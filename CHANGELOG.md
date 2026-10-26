@@ -6,6 +6,88 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request
+
+**New**
+- **Charges left, in the dice log and on the Effects screen.** Each charge used says how many are
+  left (`Improved AC on Slig: one charge used, 7 left`, "none left: it ends" for the last): the
+  effect's record (+8) read at the poll, the poll's later charges added back (`count_charges`).
+  The charge routine's 2d4 behind an overlay trap (INT 3Fh in place of its return) is told by its
+  arguments, a creature and an effect it has charges of (`_overlay_charge`); it was a bare
+  "Dice: 2d4" line. On the Effects screen the name under the pointer says them too, for any effect
+  with charges: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2
+  CHARGES). `EF_CHARGES` in `NS_ENTRY`, at 7ED37h only, points the effect's entry at
+  `REFLECT_ENTRY` with its name and the charges (`EF_TEXT`); not for a permanent effect (its
+  spell's time `PERMANENT_TIME`, +8 a stray 15, as Charmed). Reflected Image's own use of that
+  entry writes it again first (`ns_reflect_entry`).
+- **A charge used floats over its creature**, as "Miss" does: "Armor: 7 left", "Reflected Image:
+  2 left", "Armor ends" (`labels.CHARGE_INK`, light blue), from each charge line of the dice log;
+  the spell's name from the effect's record, kept for the last charge, which removes the record
+  (`_charge_spells`). The image-lost line says what is left too. These stay 3 seconds
+  (`CHARGE_FOR`) and a "Miss" or spell's name doesn't take their slot (`priority`).
+- **Up to four floating labels at once** (were two): `LBL_SLOTS` and `labels.SLOTS` 4.
+- **M opens the overhead map**, and M again closes it: DSCLOG's `MAP_KEY` turns M into the game's O
+  on the map and into Escape while the overhead map is up (`OVERHEAD`, cleared by `PANEL_TICK`).
+- **A Shinobi's read languages on the Effects screen**, under its kit: `READ LANG. 40%`
+  (`RL_LINE_OF`, from the Loader's `READ_LANG`).
+- **Scar's henchmen carry bone axes** (`worldgear.GIFTS`, object 229), dropped when they die.
+- **The Parting Staff shines** as the game's magic weapons do: its gem's blues (158-161) in the
+  water's cycling colours (`icons.SHINE`, its own icon, picture 2157, changed in place).
+- **A Battle Dancer can't use a shield** (`KIT_FORBIDS`, `kits.forbids`), as it already fought
+  with long swords and bows only.
+- **A scroll's answer on the inventory screen.** What the item box's handler says (4D0:2Ah: YOU
+  LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI
+  SPELL, CANNOT LEARN FROM THIS ITEM, the tome's) was never seen on the inventory screen: the
+  game writes it to the line under the paper doll while the box's handler runs, and nothing
+  written then reaches the screen. `BOX_SAID` (8B815h) keeps the text, and for 5 seconds
+  `LINE_SAID` and `LINE_CLEARED` put it on that line (580h:5Ch, window `DS:11A4h`) each time the
+  pointer's handler writes or clears it. 2 ticks after the message, `BOX_NUDGE` (from the
+  timer's `PROBE_TICK`) tells the game's mouse handler the pointer moved, with the driver's buttons
+  and place: the line shows the message with the mouse still. As the game's own messages there,
+  it stays till the pointer is on something else.
+
+**Changed**
+- **A backstab's dice log line shows the sum:** `+2 backstab (the dice 1 x3 = 3)`, not `(the dice
+  x3)`. The die's 1 is already in the line, so the backstab adds 2 more.
+- **The helper's big buffers moved to the HMA** (memory pass): the dice log's ring, the combat
+  log panel's picture, the shadows' cache, the text buffer, the shadows' spans and the dust's
+  last places (57,800 bytes) are DSCLOG's far block (`FAR_INIT`, `FAR_SEG`, header +142), at FFFFh:0010h
+  with A20 on (DOSBox 0.74's XMS leaves the HMA unused; the game never touches A20), else a
+  block of its own. Upper memory: about 57.8 KB free in one piece, from 0.5 KB; the helper's
+  own 64 KB segment: 7.1 KB spare, from 2 KB (resident part 56,496 bytes). The Loader reads the
+  text buffer's and the panel's place from the header (`textlog.TBUF_SEG`,
+  `combatlog.TSR_PANEL_OFF`). Seen in DOSBox: the dice log, the text log, the panel, shadows,
+  dust and the arena's fight (40 shadows cached), with and without `UMBPLUS.COM`.
+
+**Fixed**
+- **A Shinobi couldn't learn from a scroll**: clicking the spell's picture in the scroll's box did
+  nothing. The game makes the picture a button only for a class the item type allows (the class
+  mask test at 6D3B9h, kept in `DS:9CF6h`), and the scroll type allows wizards only. `SCROLL_USE`
+  passes a scroll for a Shinobi.
+- **Spells cast by weapons were at caster level 6** whoever struck: the attack routine pushes 6
+  for every weapon spell (58BE6h). A Spellarcher's spell arrows now go at the archer's preserver
+  level (`ARROW_LEVEL`); a weapon's own spell stays at 6. A 2nd-level archer's Shocking Grasp did
+  1d8+6.
+- **A backstab multiplied the round's second attack too** (an off-hand one after a miss): the game
+  multiplies while fewer than two attacks are made. With the dice-only rule, only the first.
+- **Immunity in the dice log.** The HP line matched hits to the HP lost from the first; a hit the
+  creature was immune to (a slime and a club) was counted and the next one dropped. The hits that
+  sum to the loss are taken (`_hits_matching`), and each passed-over hit gets "takes none of the
+  N damage: <reason>".
+- **"Bracers/Defense+4" ran past the item box**: the name is `Bracers/Defns` (15 characters with
+  the plus).
+- **A preserver's scroll line in the dice log showed a read-languages roll** (the last Shinobi's,
+  left in the header: `INT_LEARN` never cleared `LEARN_READ`), as `Daaki reads the scroll of Color
+  Spray: read languages d100 = 48, needs 100 or less -> read; ...`. It clears it now.
+- **The cooked vulture used on a party member** no longer says it is tough and bland
+  (`vulture.use` removed; eating it is the game's, with the meal's rest from the Loader as before).
+
+**Docs**
+- **The Loader README's In the game** has a section for the Effects screen (kits, a Shinobi's read
+  languages, charges under the pointer, the click fix) with `effects-charges.png`, and Names over
+  figures a picture of a charge label beside a "Miss" (`floating-charges.png`). FEATURES gives M
+  its own Controls section; the player guide's screens table gains the scroll's answer.
+
 ## Pull request #61
 
 - **Obsidian Edition 2.8.0**: the version is 2.8.0, with its notes in `release-notes/v2.8.0.md`,

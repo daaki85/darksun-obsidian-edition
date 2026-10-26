@@ -154,7 +154,7 @@ TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
 NENT    equ 63          ; entries in the ring (63: the helper and it fit in upper memory)
 ESIZE   equ 192         ; bytes per entry (see ENTRY LAYOUT)
-LBL_SLOTS  equ 2        ; names floating over figures at once (LABELS)
+LBL_SLOTS  equ 4        ; names floating over figures at once (LABELS)
 LBL_ROW    equ 16       ; bytes a row of a label's mask: LBL_ROW * 8 pixels wide at most
 LBL_H_MOST equ 11       ; its rows at most
 LBL_MASK   equ LBL_ROW * LBL_H_MOST
@@ -188,7 +188,7 @@ seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
 esize    dw ESIZE               ; +14
-ring_off dw 0                   ; +16  offset of the ring in RING_SEG's segment
+ring_off dw FAR_RING            ; +16  offset of the ring in RING_SEG's segment (the far block's)
 stub_off dw stub                ; +18  offset of STUB in this segment
 hdr_off  dw hdr                 ; +20  offset of this header in this segment
 seed_off dw 0x4122              ; +22  DS offset of the game's 32-bit rand seed
@@ -218,12 +218,15 @@ int_rand_off dw int_rand        ; +118 offset of INT_RAND (VEC_RAND's handler) i
 gpl_hook_off dw gpl_hook        ; +120 offset of GPL_HOOK in this segment
 gpl_chain dd 0                  ; +122 the game's own hook, which GPL_HOOK passes on to
 tpos     dw 0                   ; +126 bytes written to the text buffer so far (wraps at 65536)
-tbuf_off dw tbuf                ; +128 offset of the text buffer in this segment
+tbuf_off dw FAR_TBUF            ; +128 offset of the text buffer in TBUF_SEG's segment
 tsize    dw TSIZE               ; +130 its size (a power of two)
 probe_text_off dw probe_text    ; +132 offset of PROBE_TEXT in this segment
 probe_msg_off dw probe_msg      ; +134 offset of PROBE_MSG in this segment
 probe_char_off dw probe_char    ; +136 offset of PROBE_CHAR in this segment
-          times 4 dw 0          ; +138 (unused: the turn summaries' pop-up, gone for the combat log)
+tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block's (FAR_SEG)
+panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in PANEL_SEG's segment
+far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
+          dw 0                  ; +144 (unused)
 ended     dw 0                  ; +146 the combatant whose turn just ended
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one per party
                                 ;      member, lines separated by "|", NUL-terminated (the Loader
@@ -316,9 +319,9 @@ skills_on  dw 0                 ; +266 the Loader sets SKILLS_STEALTH to have an
                                 ;      (PROBE_ITEM_BOX), SKILLS_BELT for a worn belt's to picking
                                 ;      pockets and opening locks (PROBE_BELT, and its box's line),
                                 ;      SKILLS_ELVEN the Cloak and Boots of Elvenkind's chances
-ring_seg   dw 0                 ; +268 the ring's segment: a memory block of its own (upper memory
-                                ;      if any has room, else conventional), so the ring takes none
-                                ;      of the helper's 64 KB (set when installed; RING_OFF its offset)
+ring_seg   dw 0                 ; +268 the ring's segment: the far block's (FAR_SEG), so the ring
+                                ;      takes none of the helper's 64 KB (set when installed; RING_OFF
+                                ;      its offset)
 rules_hi   dw 0                 ; +270 more rule changes the Loader turns on (RULE_HI_KITS)
 learn_seq  dw 0                 ; +272 a preserver's try at a scroll's spell (INT_LEARN), counted ...
 learn_who  db 0                 ; +274 ... the party member ...
@@ -340,8 +343,8 @@ panel_on   dw 0                 ; +326 the Loader sets 1 to have the combat log'
                                 ;      over the map (PANEL), 0 to have it gone (the view drawn again)
 panel_seg  dw 0                 ; +328 the panel's picture: PANEL_W x PANEL_H palette indices, row
                                 ;      by row, each row its four planes' bytes in turn (PANEL_BLIT),
-                                ;      the Loader's to draw (combatlog.py); its own
-                                ;      memory block (0: none could be had, no panel)
+                                ;      the Loader's to draw (combatlog.py); the far block's
+                                ;      (FAR_SEG, at PANEL_OFF)
 panel_new  dw 0                 ; +330 the Loader sets 1 once it has put a new picture there;
                                 ;      DSCLOG draws it and sets it back to 0
 panel_mx   dw 0                 ; +332 the pointer, as the mouse driver last said (game pixels): x,
@@ -525,6 +528,7 @@ record:
         mov es, [cs:ring_seg]
         mov di, [cs:widx]
         imul di, di, ESIZE
+        add di, FAR_RING
         mov word [es:di], 0xFFFF
         mov cx, [cs:kind]
         mov [es:di+184], cx
@@ -2040,6 +2044,10 @@ probe_tick:
         mov ds, [bp + 4]        ; the handler's CS
         inc word [4]            ; the replaced instruction
         inc word [cs:tick_count]
+        cmp byte [cs:box_nudge], 0
+        je .nonudge
+        call box_nudge_now
+.nonudge:
         cmp byte [cs:cine_shown], 0
         je .plain
         call cp_follow
@@ -2188,6 +2196,7 @@ ARROW_NAME  equ NAMES_OWN + 42
 arrow_hit:
         push ax
         push si
+        mov byte [cs:arrow_cast], 0
         mov al, [es:bx + 0x0F]
         cmp word [bp + 0x16], 1
         jle .set
@@ -2204,6 +2213,7 @@ arrow_hit:
         je .set                 ; (not shot by a Spellarcher: no spell)
         mov al, [cs:si + arrow_spells]
         inc al
+        mov byte [cs:arrow_cast], 1
 .set:   mov [cs:hit_spell], al
         cmp byte [cs:hit_spell], 0
         pushf
@@ -2221,6 +2231,66 @@ arrow_spell:
         mov cl, [cs:hit_spell]
         iret
 hit_spell    db 0
+arrow_cast   db 0               ; (1 when the hit's spell is a spell arrow's: ARROW_LEVEL)
+
+; ARROW_LEVEL: "push 6 / mov al,cl / mov ah,0 / push ax" (58BE6h; 7 bytes: the INT, the site's
+; number and 4 NOPs), the level and the spell (CL) pushed for the cast of a weapon's spell on the
+; target hit (598:89h): the game casts every weapon's spell at level 6. A spell arrow's (ARROW_HIT's
+; ARROW_CAST) at the archer's preserver level instead (the attacker's, combatant DI; at least 1).
+; Both words go under the INT's frame, as the pushes would have left them; AX the spell, as
+; theirs did.
+arrow_level:
+        push bp
+        mov bp, sp
+        push ax
+        push bx
+        push es
+        mov ax, 6
+        cmp byte [cs:arrow_cast], 0
+        je .put
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, di, 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        call creature_sheet
+        xor ax, ax
+        cmp byte [es:bx + 0x21], PRESERVER_CLASS
+        jne .c2
+        mov al, [es:bx + 0x24]
+.c2:    cmp byte [es:bx + 0x22], PRESERVER_CLASS
+        jne .c3
+        mov al, [es:bx + 0x25]
+.c3:    cmp byte [es:bx + 0x23], PRESERVER_CLASS
+        jne .least
+        mov al, [es:bx + 0x26]
+.least: cmp ax, 1
+        jge .put
+        mov ax, 1
+.put:   mov [cs:arrow_lvl], ax
+        pop es
+        pop bx
+        pop ax
+        pop bp
+        sub sp, 4               ; the INT's frame 4 bytes down: the level and the spell under it
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax        ; (IP)
+        mov ax, [bp + 8]
+        mov [bp + 4], ax        ; (CS)
+        mov ax, [bp + 10]
+        mov [bp + 6], ax        ; (flags)
+        mov ax, [cs:arrow_lvl]
+        mov [bp + 10], ax
+        movzx ax, cl
+        mov [bp + 8], ax
+        pop ax
+        pop bp
+        movzx ax, cl
+        iret
+arrow_lvl    dw 0
 arrow_spells db 1, 3, 10, 39    ; Burning Hands, Chill Touch, Shocking Grasp, Vampiric Touch
 
 ; PROBE_UNLOOK: INT VEC_UNLOOK replaces "mov word [0844h],270Fh" (6 bytes: INT + 4 NOPs) at the
@@ -3516,8 +3586,8 @@ arrows_forbid:
 ; that isn't light (leather, or of no material); an Assassin, Shinobi, Shadowblade, Poisoner or
 ; Spellarcher the same, asleep too (KIT_LIGHT); a Grove Warden a metal weapon; a Lifebinder a
 ; weapon of a kind not blunt (KIT_BLUNT); a Shinobi a shield, armour that isn't light, and a
-; weapon not of its kinds (KIT_SHINOBI); a Seeker a weapon its sphere doesn't allow (as a
-; cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
+; weapon not of its kinds (KIT_SHINOBI); a Battle Dancer a shield, and a weapon not of its kinds
+; (kit_dancer); a Seeker a weapon its sphere doesn't allow (as a cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
 ; SPEC_SLOTS, while they count: SPECS_AWAKE; but choosing one, KF_SPEC) none, but for the off
 ; hand's. DS the game's; all registers kept.
 KT_MELEE   equ 0x01             ; (the item type's +0 flags, +0Fh kind flags)
@@ -3744,9 +3814,13 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
 .blunt: mov si, kit_blunt
         cmp cl, KIT_LIFEBINDER
         je .kind
-        mov si, kit_dancer      ; a Battle Dancer: the long sword and the bow only
+        mov si, kit_dancer      ; a Battle Dancer: no shield, the long sword and the bow only
         cmp cl, KIT_BATTLE_DANCER
-        je .kind
+        jne .shinobi
+        test al, KT_SHIELD
+        jnz .no
+        jmp .kind
+.shinobi:
         cmp cl, KIT_SHINOBI
         jne .ok
         test al, KT_SHIELD      ; a Shinobi: no shield, light armour, its own weapons
@@ -5418,6 +5492,7 @@ probe_ef_rows:
 ; time, EF_LINES - 1 of them and EF_MORE under them; a click on the panel (PROBE_EF_CLICK) shows the
 ; next page, after the last the first again.
 ef_draw:
+        mov [cs:ef_member], ax
         les bx, [LV_SHEETS]
         mov dx, ax
         imul ax, ax, 0x47
@@ -5468,6 +5543,10 @@ ef_lines_of:
         jnc .line
         call kit_line_asleep
 .line:  call ef_line
+        cmp al, KIT_SHINOBI             ; (a Shinobi: its read languages too, READ_LANG's, which
+        jne .kit_next                   ;   it reads a scroll with)
+        call rl_line_of
+        call ef_line
 .kit_next:
         dec di
         jns .kit
@@ -5538,6 +5617,47 @@ ef_lines_of:
         cmp di, SPEC_COUNT
         jbe .slot
 .ret:   ret
+
+; RL_LINE_OF: CS:SI the line of party member EF_MEMBER's read languages ("READ LANG. 45%",
+; READ_LANG's chance, as the Loader keeps it). Others kept.
+rl_line_of:
+        push ax
+        push bx
+        push dx
+        mov bx, [cs:ef_member]
+        xor ax, ax
+        cmp bx, 3
+        ja .num
+        mov al, [cs:read_lang + bx]
+.num:   mov si, rl_line + RL_DIGITS
+        mov bl, 10
+        cmp al, 100
+        jb .two
+        mov byte [cs:si], '1'           ; (100: certain)
+        inc si
+        sub al, 100
+        mov byte [cs:si], '0'
+        inc si
+        jmp .last
+.two:   cmp al, 10
+        jb .last
+        xor ah, ah
+        div bl
+        add al, '0'
+        mov [cs:si], al
+        inc si
+        mov al, ah
+.last:  add al, '0'
+        mov [cs:si], al
+        mov word [cs:si + 1], '%'       ; (and the 0 after it)
+        mov si, rl_line
+        pop dx
+        pop bx
+        pop ax
+        ret
+RL_DIGITS    equ 11
+rl_line      db 'READ LANG. ', 0, 0, 0, 0, 0
+ef_member    dw 0
 
 ; KIT_OF_SHEET: CS:SI the line naming kit AL (KIT_AT's, not 0: "KIT: RAVAGER", in KIT_LINE), a long
 ; name shorter (KIT_SHORT). KIT_LINE_ASLEEP: " (ASLEEP)" after it. Others kept.
@@ -8292,6 +8412,8 @@ int_learn:
         mov ax, si
         mov [cs:learn_who], al
         mov [cs:learn_spell], dl
+        mov byte [cs:learn_read], 0     ; (no read roll: a Shinobi's last one isn't this try's)
+        mov byte [cs:learn_read_chance], 0
         call int_row                    ; (BX the INT's row, AL the INT)
         mov [cs:learn_int], al
         mov al, [cs:int_chance + bx]
@@ -8528,7 +8650,7 @@ d100_hundred dw 100
 learn_failed_text db 'YOU FAIL TO LEARN THE SPELL', 0
 learn_full_text   db 'TOO MANY SPELLS OF THAT LEVEL', 0
 learn_unread_text db 'YOU CAN NOT READ THE SCROLL', 0
-learn_not_its_text db 'A SHINOBI CAN NOT LEARN THAT SPELL', 0
+learn_not_its_text db 'THAT IS NOT A SHINOBI SPELL', 0
 lm_ip dw 0
 lm_cs dw 0
 lm_fl dw 0
@@ -12218,7 +12340,8 @@ burn_pass:
 ; attack (AX the damage just rolled, [BP-12h] what it added to the dice): the dice's sum kept, then
 ; the compare made, its flags returned. STAB_TIMES: "push ax / mov ax,[bp-4] / pop dx / imul dx /
 ; mov [bp-4],ax" (58A80h; 10 bytes, AX the multiplier): with the rule, the dice's sum added again
-; for each time past the first; else the game's.
+; for each time past the first, and only on the round's first attack (the game's test, 58A71h, lets
+; the first two through: the round's attacks so far, [BP-14h], at most 1); else the game's.
 stab_dice  dw 0
 stab_known db 0                 ; (1 from STAB_ROLL to STAB_TIMES: a hit's dice kept)
 stab_roll:
@@ -12240,6 +12363,11 @@ stab_roll:
 stab_times:
         test word [cs:rules_hi], RULE_HI_BACKSTAB
         jz .whole
+        cmp word [bp - 0x14], 0
+        je .first
+        mov ax, 1                       ; (the round's second attack: no backstab, as in AD&D)
+        jmp .whole
+.first:
         cmp byte [cs:stab_known], 0
         je .whole
         cmp word [bp - 4], 0
@@ -14313,9 +14441,7 @@ ns_setup:
         jz .flights
         test byte [cs:ns_state], NS_MOVED
         jz .flights
-        mov word [es:REFLECT_ENTRY], ns_name_reflect
-        mov [es:REFLECT_ENTRY + 2], cs
-        mov word [es:REFLECT_ENTRY + 4], NS_ICON + REFLECT_SPELL
+        call ns_reflect_entry
 .flights:
         mov ax, ds              ; flight 15: Fogbolt's grey bolt, as fast as Magic Missile's; else the game's
         sub ax, SPELLS_FROM_DS
@@ -14753,6 +14879,11 @@ WANDER_DMG equ NS_IMAGE + 24     ; 7B56Fh: a spell's damage, the kinds a creatur
 REQ_SITE  equ NS_IMAGE + 25      ; 7FF42h: a script's REQUEST, its number read
 AIM_SITE  equ NS_IMAGE + 26      ; 8455Bh: a spell cast with a click, the aim check's answer
 AMULET_SITE equ NS_IMAGE + 27    ; 7A4FDh: a creature's magic resistance against a spell
+ARROW_LEVEL equ NS_IMAGE + 47    ; 58BE6h: a weapon's spell cast at level 6 (ARROW_LEVEL)
+SCROLL_USE equ NS_IMAGE + 49     ; 6D3B9h: an item's box, its class mask tested (SCROLL_USE)
+BOX_SAID  equ NS_IMAGE + 50     ; 8B815h: an item's box, its message just given (BOX_SAID)
+LINE_SAID equ NS_IMAGE + 51     ; 891A4h...: the inventory's line written by the game (BOX_SAID)
+LINE_CLEARED equ NS_IMAGE + 52  ; 6C9BFh...: ... and cleared (BOX_SAID)
 ARROW_HIT_SITE equ NS_IMAGE + 28 ; 58B63h: a weapon's hit asks for its spell (ARROW_HIT)
 ARROW_SPELL_SITE equ NS_IMAGE + 29 ; 58B78h: ... and takes it
 CAST_SITE equ NS_IMAGE + 30     ; 772AAh: a spell cast, its caster read
@@ -14839,6 +14970,16 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je arrow_hit
         cmp byte [cs:rl_site], ARROW_SPELL_SITE
         je arrow_spell
+        cmp byte [cs:rl_site], ARROW_LEVEL
+        je arrow_level
+        cmp byte [cs:rl_site], SCROLL_USE
+        je scroll_use
+        cmp byte [cs:rl_site], BOX_SAID
+        je box_said
+        cmp byte [cs:rl_site], LINE_SAID
+        je line_said
+        cmp byte [cs:rl_site], LINE_CLEARED
+        je line_cleared
         cmp byte [cs:rl_site], CAST_SITE
         je cast_site
         cmp byte [cs:rl_site], REST_SITE
@@ -15202,6 +15343,203 @@ ns_blow:
         iret
 
 blow_chance dw 0
+
+; BOX_SAID: "add sp,4" (8B815h; 3 bytes: the INT and the site's number) just after the item box's
+; handler gave its message (4D0:2Ah, the far pointer to its text still on the stack): what a scroll
+; teaches (YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, PROBE_LEARN_SAID's and
+; PROBE_LEARN_REFUSED's), CANNOT LEARN FROM THIS ITEM, the tome's. On the inventory screen the
+; game writes those to its line under the paper doll, but nothing written there while the box's
+; handler runs reaches the screen. So the text is kept (BOX_TEXT, from the BIOS tick BOX_AT) and
+; put on that line (580h:5Ch with its window, DS:11A4h, as 6E111h puts CANNOT USE THIS ITEM there)
+; for BOX_TICKS, once the pointer's code runs (BOX_NUDGE makes it run at once): by LINE_SAID, "add sp,0Ah" after each of the inventory's own writes to that line (6E125h,
+; 891A4h, 89222h, 89552h, 8968Bh, 8A940h: an item's name, or nothing, as the pointer moves), and
+; LINE_CLEARED, "add sp,6" after each time it clears the line (528h:2Ah: 6C9BFh, 701C2h, 89595h).
+; (580h, 528h: overlay code's selectors; their stubs' segments are DSUN.EXE's 4272h, ...) Each in
+; a frame the overlay manager can fix up (as PROBE_USE_ITEM's), then the stack as the "add sp"
+; leaves it.
+BOX_TEXT_SIZE equ 96
+BOX_TICKS   equ 91              ; (5 seconds)
+BOX_LINE_SEG equ 0x4272         ; (the inventory line's routine, 580h:5Ch in overlay code: its stub
+                                ;   segment in DSUN.EXE, less the load segment)
+BOX_LINE_OFF equ 0x5C
+BOX_WIN     equ 0x11A4          ; DS: the inventory line's window (far)
+BOX_LINE_ARG equ 0x2C06         ; (the word 6E111h passes it)
+box_text times BOX_TEXT_SIZE db 0
+box_at   dw 0
+box_nudge db 0
+box_line dd 0
+box_said:
+        sti
+        pushad
+        push es
+        mov bx, sp              ; (the INT's frame at BX+34: IP, CS, flags; the text at BX+40)
+        push ds
+        lds si, [ss:bx + 40]
+        push cs
+        pop es
+        mov di, box_text
+        mov cx, BOX_TEXT_SIZE - 1
+        cld
+.copy:  lodsb
+        or al, al
+        jz .end
+        stosb
+        loop .copy
+.end:   mov byte [es:di], 0
+        pop ds
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov [cs:box_at], ax
+        mov byte [cs:box_nudge], 1      ; (the pointer's handler told of a move: BOX_NUDGE)
+        pop es
+        popad
+        jmp box_pop4
+line_said:
+        sti
+        pushad
+        push es
+        mov bx, sp
+        call box_put
+        pop es
+        popad
+        jmp box_pop10
+line_cleared:
+        sti
+        pushad
+        push es
+        mov bx, sp
+        call box_put
+        pop es
+        popad
+        jmp box_pop6
+
+; BOX_NUDGE (from PROBE_TICK, interrupts off): BOX_NUDGE_TICKS after BOX_SAID, the game's mouse
+; handler is told the pointer moved, where it is (MOUSE_EVENT, as the driver would): the
+; inventory's pointer code writes or clears its line, and LINE_SAID / LINE_CLEARED put the message
+; there, the pointer never moved. (What is written while the box's handler runs never reaches the
+; screen.) As the game's own messages there, it stays till the pointer is on something else (its
+; code writes the line only then; BOX_TICKS after BOX_SAID it is no longer put back). DS, ES and
+; the registers kept.
+BOX_NUDGE_TICKS equ 2
+box_nudge_now:
+        pusha
+        push ds
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:box_at]
+        cmp ax, BOX_NUDGE_TICKS
+        jb .wait
+        mov byte [cs:box_nudge], 0
+        cmp dword [cs:game_handler], 0
+        je .wait
+        mov ax, 3                       ; (the buttons held and where, from the driver)
+        pushf
+        call far [cs:old33]
+        mov ax, 1                       ; (moved)
+        push cs
+        call mouse_event
+.wait:  pop es
+        pop ds
+        popa
+        ret
+
+; BOX_PUT: BOX_TEXT on the inventory's line while it is fresh (BOX_TICKS; then forgotten), the
+; INT's frame at SS:BX+34; DS the game's. AX, CX, DX, SI, DI, ES not kept.
+box_put:
+        cmp byte [cs:box_text], 0
+        je .ret
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:box_at]
+        cmp ax, BOX_TICKS
+        jb .fresh
+        mov byte [cs:box_text], 0
+        ret
+.fresh: cmp dword [BOX_WIN], 0
+        je .ret
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        sub ax, DGROUP_SEG - BOX_LINE_SEG
+        mov [cs:box_line + 2], ax
+        mov word [cs:box_line], BOX_LINE_OFF
+        push cs
+        push word box_text
+        push word BOX_LINE_ARG
+        push dword [BOX_WIN]
+        call far [cs:box_line]
+        add sp, 10
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp              ; (BX the caller's again: past BOX_PUT's own way back)
+        add bx, 2
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.ret:   ret
+
+; BOX_POP4, BOX_POP6, BOX_POP10: "add sp,4" / 6 / "0Ah" (all registers as the INT had them): the INT's
+; frame moved up over the bytes under it, then IRET.
+%macro box_pop_n 1
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 6 + %1], ax
+        mov ax, [bp + 4]
+        mov [bp + 4 + %1], ax
+        mov ax, [bp + 2]
+        mov [bp + 2 + %1], ax
+        pop ax
+        pop bp
+        add sp, %1
+        iret
+%endmacro
+box_pop4:
+        box_pop_n 4
+box_pop10:
+        box_pop_n 10
+box_pop6:
+        box_pop_n 6
+
+; SCROLL_USE: "test [es:bx+10h],ax" (6D3B9h; 4 bytes: the INT, the site's number and a NOP) as the
+; inventory opens an item's box: ES:BX its type, AX the member's class mask, SI its sheet (in the
+; sheets' segment). The box's spell picture is a button only for a class the type allows (its
+; DS:9CF6h), so a Shinobi, a thief to the game, could never click a scroll to learn its spell
+; (PROBE_SCROLL_LEARN, SHINOBI_READ). The test made; a scroll (type SCROLL_TYPE) passes for a
+; Shinobi too. Its flags into the INT's frame.
+SCROLL_TYPE equ 0x60
+scroll_use:
+        pushad
+        push es
+        mov di, sp
+        test [es:bx + 0x10], ax
+        jnz .flags              ; (allowed: ZF clear)
+        sub bx, [ITEM_TYPES]
+        cmp bx, SCROLL_TYPE * 0x14
+        jne .zero
+        les bx, [LV_SHEETS]     ; (the sheets' segment)
+        mov bx, si
+        call kit_is_b
+        db KIT_SHINOBI
+        jne .zero
+        or al, 1                ; (ZF clear)
+        jmp .flags
+.zero:  xor ax, ax              ; (ZF set)
+.flags: pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+ARMOR_EFFECT equ 2             ; (the game's Armor, Improved AC)
 
 ; NS_HOLD: "or al,al / je +22h" (7A333h; 4 bytes) in the checks of what a spell (SI) can't do to
 ; thing DI (7A1BFh), just after the game's test whether DI is undead (7BE20h: AL). Undead: on as
@@ -16313,6 +16651,11 @@ ns_entry:
         sub ax, EF_SHOWN_FROM_DS
         mov es, ax
         mov ax, [es:EF_SHOWN]
+        mov cl, [ss:di + bx]
+        call ef_charges         ; (the line under the pointer: the effect's name with its charges)
+        jnc .thing
+        mov word [ss:di + bx], REFLECT_ENTRY + 6
+        jmp .out
 .thing: mov dx, [ss:di + bx]    ; (DX the effect)
         cmp dx, MIRROR_EFFECT
         jne .times
@@ -16325,6 +16668,12 @@ ns_entry:
         call ns_effect_spell
         cmp ax, REFLECT_SPELL
         jne .times
+        push es
+        mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        call ns_reflect_entry   ; (EF_CHARGES may have lent it to Armor's line)
+        pop es
         mov word [ss:di + bx], REFLECT_ENTRY + 6
         jmp .out
 .times: imul dx, dx, 6
@@ -16430,6 +16779,136 @@ sell_keep:
         pop bx
         pop ax
         iret
+
+; NS_REFLECT_ENTRY: Reflected Image's entry past the spell rows (ES the effects' table's segment):
+; its name and icon. All registers kept.
+ns_reflect_entry:
+        mov word [es:REFLECT_ENTRY], ns_name_reflect
+        mov [es:REFLECT_ENTRY + 2], cs
+        mov word [es:REFLECT_ENTRY + 4], NS_ICON + REFLECT_SPELL
+        ret
+
+; EF_CHARGES: CF set when the Effects screen asks for an effect's name (NS_ENTRY, frame at SS:DI; CL
+; the effect) for the line under the pointer (7ED37h, the cell's name to 580:5Ch: there the way
+; back's third byte on is "mov bx,ax", 8Bh; the icons' and the cells' sites have "mov bx,0FFFAh")
+; and thing AX's effect has charges left (+8 of its record: Armor's hits, Mirror Image's images,
+; Stoneskin's blows...; not a permanent effect's, whose spell's time is PERMANENT_TIME and +8 a stray
+; 15): REFLECT_ENTRY then names it, its name with them, "IMPROVED AC (3 CHARGES)", in EF_TEXT
+; (580:5Ch keeps that name's address, not the entry, so Reflected Image's use of the entry after it
+; changes nothing). Mirror Images from Reflected Image take its name and icon. Only with the room
+; past the spell rows (SEG_MOVE). DS the game's; all registers kept.
+EF_NAME_MAX equ 22
+ef_charges:
+        pusha
+        push es
+        cmp byte [cs:seg_moved], 0
+        je .no
+        les si, [ss:di + 34]            ; (the way back)
+        cmp byte [es:si + 3], 0x8B
+        jne .no
+        call ns_charges                 ; (AL the charges, DX the spell)
+        or al, al
+        jz .no
+        mov bl, al                      ; (BL the charges)
+        cmp dx, 0xFF
+        ja .timed                       ; (no spell record to look at)
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov es, ax
+        mov si, dx
+        shl si, 5
+        cmp word [es:si + SPELL_RECS + 7], PERMANENT_TIME
+        je .no
+.timed: mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        movzx si, cl
+        dec si
+        imul si, si, 6                  ; (the effect's entry)
+        cmp cl, MIRROR_EFFECT
+        jne .entry
+        cmp dx, REFLECT_SPELL
+        jne .entry
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .entry
+        mov ax, NS_ICON + REFLECT_SPELL
+        push ax
+        push ds
+        push cs
+        pop ds
+        mov si, ns_name_reflect
+        jmp .copy
+.entry: push word [es:si + 4]           ; (its icon)
+        push ds
+        lds si, [es:si]                 ; (its name)
+.copy:  mov di, ef_text
+        mov cx, EF_NAME_MAX
+.name:  lodsb
+        or al, al
+        jz .named
+        mov [cs:di], al
+        inc di
+        loop .name
+.named: pop ds
+        mov word [cs:di], ' ('
+        add di, 2
+        mov al, bl
+        call c_itoa
+        mov si, ef_charge_word
+.word:  mov al, [cs:si]
+        mov [cs:di], al
+        inc si
+        inc di
+        or al, al
+        jnz .word
+        dec di
+        cmp bl, 1
+        je .shut
+        mov byte [cs:di], 'S'
+        inc di
+.shut:  mov word [cs:di], ')'
+        pop ax                          ; (the icon)
+        mov word [es:REFLECT_ENTRY], ef_text
+        mov [es:REFLECT_ENTRY + 2], cs
+        mov [es:REFLECT_ENTRY + 4], ax
+        pop es
+        popa
+        stc
+        ret
+.no:    pop es
+        popa
+        clc
+        ret
+ef_charge_word db ' CHARGE', 0
+ef_text times EF_NAME_MAX + 16 db 0
+
+; NS_CHARGES: AL the charges left (+8) on effect CL of thing AX (the game's table of active
+; effects), 0 if none, and DX the spell that made it (+4). DS the game's; others kept.
+ns_charges:
+        push bx
+        push es
+        mov dx, ds
+        sub dx, EFFECTS_FROM_DS
+        mov es, dx
+        mov dx, [EFFECTS_COUNT]
+        mov bx, EFFECTS_OFF
+.each:  or dx, dx
+        jz .none
+        cmp [es:bx], ax
+        jne .next
+        cmp [es:bx + 6], cl
+        jne .next
+        mov al, [es:bx + 8]
+        mov dx, [es:bx + 4]
+        jmp .out
+.next:  add bx, 10
+        dec dx
+        jmp .each
+.none:  xor al, al
+        mov dx, 0xFFFF
+.out:   pop es
+        pop bx
+        ret
 
 ; NS_EFFECT_SPELL: AX the spell that put effect CL on thing AX (the game's table of active effects:
 ; the spell at +4), FFFFh if none. DS the game's; others kept.
@@ -16844,8 +17323,8 @@ extra_names:
         times NAME_KEPT - 12 db 0
         db "Kreenfang"                  ; (the arena's Bone Gythka made +1)
         times NAME_KEPT - 9 db 0
-        db "Bracers/Defense"            ; (bracers of defense: BRACERS, dsloader/worldgear.py)
-        times NAME_KEPT - 15 db 0
+        db "Bracers/Defns"              ; (bracers of defense, short enough for their plus: BRACERS,
+        times NAME_KEPT - 13 db 0       ;   dsloader/worldgear.py)
         db "Gutterknot"                 ; (the magic weapons of dsloader/worldgear.py: a club +1,
         times NAME_KEPT - 10 db 0
         db "Deepbiter"                  ; a stone pick +1,
@@ -17056,8 +17535,11 @@ slots_text times 4 * SLOTS_SIZE db 0
 
 tput:                           ; AL -> text buffer at position BX
         push bx
+        push es
         and bx, TSIZE - 1
-        mov [cs:tbuf+bx], al
+        mov es, [cs:far_seg]
+        mov [es:FAR_TBUF + bx], al
+        pop es
         pop bx
         inc bx
         ret
@@ -17749,7 +18231,7 @@ shadow_of:
         loop .crun
         jmp .drawn
 
-; SHADOW CACHE (SC_SEG, KEEP's block in upper memory, if there was room: UMBPLUS.COM): in a big
+; SHADOW CACHE (SC_SEG, the far block's, at FAR_SC): in a big
 ; fight the game lets go of pictures it isn't drawing just then, so a figure's could be out of its
 ; cache as the floor is drawn, its shadow gone (SHADOW_OF draws only from pictures in memory). So
 ; each frame's shadow is kept as it is drawn from its picture: SC_SLOTS slots of SC_SLOT bytes, the
@@ -17774,7 +18256,7 @@ sc_find:
         je .none
         mov es, [cs:sc_seg]
         mov ebx, [cs:sc_key]
-        xor di, di
+        mov di, FAR_SC
         mov dx, 0xFFFF
         mov cx, SC_SLOTS
 .slot:  cmp byte [es:di + 7], 0
@@ -17811,6 +18293,7 @@ sc_start:
         mov ax, [cs:sc_next]
         mov bx, SC_SLOT
         mul bx
+        add ax, FAR_SC
         mov di, ax
         mov eax, [cs:sc_key]
         mov [es:di], eax
@@ -17937,15 +18420,20 @@ darken: cmp bx, [cs:clip_y0]
         pop dx
         mov bx, [cs:n_spans]
         imul bx, bx, 6
-        mov [cs:spans + bx], ax
-        mov [cs:spans + bx + 2], dx
-        mov [cs:spans + bx + 4], di
+        push fs
+        mov fs, [cs:far_seg]
+        mov [fs:FAR_SPANS + bx], ax
+        mov [fs:FAR_SPANS + bx + 2], dx
+        mov [fs:FAR_SPANS + bx + 4], di
+        pop fs
         inc word [cs:n_spans]
 .out:   ret
 
 spans_flush:                            ; the noted runs darkened, a plane at a time
         cmp word [cs:n_spans], 0
         je .ret
+        push fs
+        mov fs, [cs:far_seg]
         mov es, [cs:v_seg]
         xor cx, cx                      ; the plane
 .plane: mov dx, 0x3C4                   ; write to this plane, read from it
@@ -17959,16 +18447,16 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
         out dx, ax
         xor si, si
 .span:  mov ax, cx
-        sub ax, [cs:spans + si + 2]
+        sub ax, [fs:FAR_SPANS + si + 2]
         and ax, 3
-        add ax, [cs:spans + si + 2]     ; the first x on this plane
-        mov dx, [cs:spans + si + 4]
+        add ax, [fs:FAR_SPANS + si + 2] ; the first x on this plane
+        mov dx, [fs:FAR_SPANS + si + 4]
         sub dx, ax
         jl .nspan
         shr dx, 2
         inc dx                          ; DX: how many
         shr ax, 2
-        add ax, [cs:spans + si]
+        add ax, [fs:FAR_SPANS + si]
         mov di, ax
         xor bh, bh
 .pix:   mov bl, [es:di]
@@ -17986,10 +18474,11 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
         cmp cx, 4
         jb .plane
         mov word [cs:n_spans], 0
+        pop fs
 .ret:   ret
 
-n_spans dw 0
-spans   times SPANS_MOST * 6 db 0       ; (row's place in the page, first x, last x)
+n_spans dw 0                    ; (the spans in the far block, FAR_SPANS: 6 bytes each, the row's
+                                ;   place in the page, first x, last x)
 
 ; the VGA's registers the shadows change, kept and put back
 vga_save:
@@ -18443,14 +18932,17 @@ dust_tick:                      ; DS = the game's
         mov dx, [es:di + 2]
         mov [cs:t_y], dx
         shl bx, 1
-        sub ax, [cs:last_x + bx]
+        push fs
+        mov fs, [cs:far_seg]
+        sub ax, [fs:FAR_LAST_X + bx]
         mov [cs:t_dx], ax
-        sub dx, [cs:last_y + bx]
+        sub dx, [fs:FAR_LAST_Y + bx]
         mov [cs:t_dy], dx
         mov ax, [cs:t_x]
-        mov [cs:last_x + bx], ax
+        mov [fs:FAR_LAST_X + bx], ax
         mov ax, [cs:t_y]
-        mov [cs:last_y + bx], ax
+        mov [fs:FAR_LAST_Y + bx], ax
+        pop fs
         mov ax, [cs:t_dx]               ; walked a little (not a jump: an area loaded, someone placed)
         call abs16
         cmp ax, JUMP_MOST
@@ -18973,12 +19465,13 @@ panel_page  dw 0                ;   was last drawn (PANEL_DRAW), and its top the
 panel_drawn dw PANEL_Y0
 
 panel_tick:
-        push es                         ; (the map's main loop ran: L_ON_MAP)
+        push es                         ; (the map's main loop ran: L_ON_MAP; no overhead map up)
         xor ax, ax
         mov es, ax
         mov ax, [es:0x46C]
         pop es
         mov [cs:map_tick], ax
+        mov byte [cs:overhead], 0
         cmp word [cs:panel_on], 0
         je .off
         push es                         ; (the Loader gone: off, as if it had said so)
@@ -19359,6 +19852,7 @@ panel_blit:
         mov ax, [cs:pb_w4]              ; ... and this plane's bytes of it (each of the picture's
         mul bx                          ;   rows its four planes' bytes in turn: combatlog.py
         mov si, ax                      ;   PLANAR), copied whole
+        add si, FAR_PANEL
         mov dx, [cs:pb_rows]
         mov bp, [cs:pb_top]             ; (BP: the row on screen)
 .row:   mov cx, [cs:pb_w4]
@@ -19780,8 +20274,8 @@ t_dy       dw 0
 t_sx       dw 0
 t_sy       dw 0
 puffs      times PUFFS * PUFF_SIZE db 0
-last_x     times MAP_COUNT dw 0
-last_y     times MAP_COUNT dw 0
+                                ; (each thing's place as last seen: the far block's FAR_LAST_X and
+                                ;   FAR_LAST_Y, a word each)
 walked     times MAP_COUNT db 0
 light      times 256 db 0
 
@@ -19924,13 +20418,6 @@ EVENT_LEFT_LEAVE equ 4
 LEFT        equ 1
 
 int16:
-        cmp word [cs:target_on], 0
-        jne .on
-        cmp byte [cs:panel_shown], 0    ; (L for the combat log's panel)
-        jne .on
-        cmp word [cs:panel_seg], 0      ; (... or to open it, over the map)
-        je .chain
-.on:
         cmp ah, 0x00
         je .read
         cmp ah, 0x10
@@ -19944,6 +20431,7 @@ int16:
         pushf
         call far [cs:old16]
         jz .none
+        call map_key
         call our_key
         jc .took
         add sp, 2                       ; (not ours: as the BIOS said)
@@ -19970,6 +20458,7 @@ int16:
         push ax
         pushf
         call far [cs:old16]
+        call map_key
         call our_key
         jc .again
         add sp, 2
@@ -20003,6 +20492,41 @@ l_on_map:
         pop ax
         ret
 map_tick   dw 0
+
+; MAP_KEY: M on the map (its main loop run within the last tick or two, the map the screen on
+; show) made O, the game's key for its overhead map, and set OVERHEAD; M with OVERHEAD set and
+; the map's loop not run since (the overhead map up; PANEL_TICK clears OVERHEAD) made Escape,
+; the key that closes it: AX the key, changed or kept; others kept. (A peek and the read after
+; it both find the map fresh, so both see O.)
+KEY_M       equ 0x326D
+KEY_SHIFT_M equ 0x324D
+KEY_O       equ 0x186F
+KEY_ESCAPE  equ 0x011B
+map_key:
+        cmp ax, KEY_M
+        je .m
+        cmp ax, KEY_SHIFT_M
+        jne .ret
+.m:     push ax
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        sub ax, [cs:map_tick]
+        pop es
+        cmp ax, L_FRESH
+        pop ax
+        ja .up
+        call on_map
+        jne .ret
+        mov byte [cs:overhead], 1
+        mov ax, KEY_O
+        ret
+.up:    cmp byte [cs:overhead], 0
+        je .ret
+        mov ax, KEY_ESCAPE
+.ret:   ret
+overhead db 0
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         cmp ax, KEY_L
@@ -20539,7 +21063,6 @@ shadow_tab times (MAP_COUNT + 7) / 8 db 0
 dark       times 256 db 0
 dac        times 768 db 0
 
-tbuf:   times TSIZE db 0
 
 ; UMB_ALLOC: BX paragraphs in upper memory (the upper blocks linked in, high only, last fit: the
 ; top of it, so the space left over stays in one piece for the overlay buffer, OVR_RESERVE), AX
@@ -20768,18 +21291,11 @@ hp_fl     dw 0
 pool_seg  dw 0                  ; (KEEP's block for the music buffer, 0 if none)
 pool_used db 0
 
-; KEEP: the last of installing, from here, as the ring is where the install code was: clear the
-; ring and stay resident, the ring with the image (DX the paragraphs). The stack goes to the PSP's
-; command tail first, out of the ring's way.
+; KEEP: the last of installing, from here, as the install code is let go of: stay resident (DX
+; the paragraphs). The stack goes to the PSP's command tail first, out of the install code's way.
 keep:   mov ax, [cs:psp]
         mov ss, ax
         mov sp, 0x100
-        mov es, [cs:ring_seg]
-        xor di, di
-        xor ax, ax
-        mov cx, RING_BYTES / 2
-        cld
-        rep stosw
         push dx                         ; our block cut down to what stays, the install code's
         mov es, [cs:psp]                ;  memory given back: then the overlay buffer's block
         mov bx, dx                      ;  (OVR_RESERVE) where it was, in upper memory, the rest
@@ -20797,17 +21313,6 @@ keep:   mov ax, [cs:psp]
         mov es, ax
         mov word [es:0], POOL_PARAS
 .no_pool:
-        mov bx, SC_PARAS
-        call umb_alloc
-        jc .no_sc
-        mov [cs:sc_seg], ax
-        mov es, ax
-        xor di, di
-        xor ax, ax
-        mov cx, SC_PARAS * 8
-        cld
-        rep stosw
-.no_sc:
         pop dx
         mov ax, 3100h
         int 21h
@@ -20815,18 +21320,32 @@ keep:   mov ax, [cs:psp]
 align 16
 seg_space times SEG_BYTES db 0   ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
 area_space times (AREA_BYTES + 15) & ~15 db 0 ; (... and the pictures' table)
-resident_end:                   ; (the ring follows, in a segment of its own)
+resident_end:                   ; (the ring and the other big buffers: the far block, FAR_INIT)
 RING_BYTES equ NENT * ESIZE
+
+; THE FAR BLOCK (FAR_SEG, from FAR_RING to FAR_END): the buffers kept out of the helper's 64 KB
+; and out of upper memory, at fixed offsets: the HMA where it is free (FAR_SEG FFFFh), else a block
+; of their own (FAR_INIT).
+FAR_RING   equ 0x10
+FAR_PANEL  equ FAR_RING + RING_BYTES            ; the panel's picture (PANEL_BLIT)
+FAR_SC     equ FAR_PANEL + PANEL_BYTES          ; the shadows' cache (SC_FIND)
+FAR_TBUF   equ FAR_SC + SC_SLOTS * SC_SLOT      ; the text buffer (TPUT)
+FAR_SPANS  equ FAR_TBUF + TSIZE                 ; the shadows' spans (SPANS_FLUSH)
+FAR_LAST_X equ FAR_SPANS + SPANS_MOST * 6       ; each thing's place as last seen (dust)
+FAR_LAST_Y equ FAR_LAST_X + MAP_COUNT * 2
+FAR_END    equ FAR_LAST_Y + MAP_COUNT * 2
+FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
+        times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
 
 ; UPPER MEMORY: DOSBox (umb=true, ems=false, as the launcher's config has it) gives one block,
 ; D000h-EFFFh, its first 10 paragraphs a free scrap ahead of the helper's MCB: UMB_ROOM paragraphs
-; from the helper's MCB on. In it: the helper (PSP and resident image), the overlay buffer
-; (OVR_RESERVE), the panel's picture and the ring, each with its MCB. The build fails if they
+; from the helper's MCB on. In it: the helper (PSP and the image as loaded, its install code and
+; stack too) and the overlay buffer (OVR_RESERVE), each with its MCB. The build fails if they
 ; outgrow it: the overlay buffer would go back into the game's heap (33 KB less for the game).
 ; (UMBPLUS.COM, run first, moves the block's start down to C900h where it can, 28 KB more; the
 ; helper still has to fit without it.)
 UMB_ROOM equ 0xF000 - 0xD00A
-UMB_NEED equ (1 + 0x10 + (resident_end - hdr) / 16) + (1 + OVR_RESERVE) + (1 + (PANEL_BYTES + 15) / 16) + (1 + (RING_BYTES + 15) / 16)
+UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
 
 POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
@@ -21287,31 +21806,90 @@ install:                        ; DS = ES = PSP, CS = the image
         mov dx, msg
         mov ah, 9
         int 21h
-        mov bx, (RING_BYTES + 15) / 16  ; the ring, in a block of its own: upper memory, else any
-        call umb_alloc
-        jnc .ring
-        mov ah, 48h
-        mov bx, (RING_BYTES + 15) / 16
+        call far_init                   ; the far block: the HMA, else a block of its own
+        jnc .far
+        mov dx, no_far
+        mov ah, 9
         int 21h
-        jnc .ring
-        mov ax, cs                      ; (none: the paragraphs after the resident image, which
-        add ax, (resident_end - hdr) / 16   ;  the load's size leaves room for)
+        mov ax, 4C01h
+        int 21h
+.far:   mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
-        mov bx, (PANEL_BYTES + 15) / 16
-        call umb_alloc
-        jc .nopan1
         mov [cs:panel_seg], ax
-.nopan1:
-        mov dx, 0x10 + (resident_end - hdr) / 16 + RING_BYTES / 16  ; PSP, image and ring, in paragraphs
-        jmp keep
-.ring:  mov [cs:ring_seg], ax
-        mov bx, (PANEL_BYTES + 15) / 16 ; the combat log's picture: upper memory only (else no panel)
-        call umb_alloc
-        jc .nopan2
-        mov [cs:panel_seg], ax
-.nopan2:
+        mov [cs:sc_seg], ax
+        mov [cs:tbuf_seg], ax
         mov dx, 0x10 + (resident_end - hdr) / 16    ; PSP and image, in paragraphs
         jmp keep
+
+; FAR_INIT: FAR_SEG set, its FAR_RING to FAR_END cleared; CF if there was no room. The HMA
+; (FFFFh:0010h on, A20 on) when it is ours: given by XMS (function 01h), or, where XMS says
+; there is none (DOSBox 0.74: its XMS blocks start at 1 MB + 64 KB, XMS_START), unused (all
+; zero). Else a block of upper memory, else of conventional memory, FAR_SEG a paragraph below
+; it (so its first byte is FAR_SEG:0010h, as in the HMA).
+far_init:
+        mov ax, 4300h
+        int 2Fh
+        cmp al, 80h
+        jne .block
+        mov ax, 4310h
+        int 2Fh
+        mov [cs:xms], bx
+        mov [cs:xms + 2], es
+        mov ah, 1                       ; the HMA, all of it
+        mov dx, 0xFFFF
+        call far [cs:xms]
+        mov [cs:hma_given], al
+        or ax, ax
+        jnz .a20
+        cmp bl, 90h                     ; (none, as XMS has it: unused if all zero)
+        jne .block
+.a20:   mov ah, 3                       ; A20 on, for good
+        call far [cs:xms]
+        or ax, ax
+        jz .block
+        push ds
+        xor ax, ax                      ; FFFFh:0010h no longer 0000h:0000h
+        mov ds, ax
+        mov ax, 0xFFFF
+        mov es, ax
+        cli
+        mov ax, [ds:0]
+        not word [es:0x10]
+        cmp ax, [ds:0]
+        not word [es:0x10]
+        sti
+        pop ds
+        jne .block
+        cmp byte [cs:hma_given], 0
+        jne .hma
+        mov di, FAR_RING
+        mov cx, (FAR_END - FAR_RING) / 2
+        xor ax, ax
+        cld
+        repe scasw
+        jne .block
+.hma:   mov word [cs:far_seg], 0xFFFF
+        jmp .clear
+.block: mov bx, FAR_PARAS
+        call umb_alloc
+        jnc .got
+        mov ah, 48h
+        mov bx, FAR_PARAS
+        int 21h
+        jc .ret
+.got:   dec ax
+        mov [cs:far_seg], ax
+.clear: mov es, [cs:far_seg]
+        mov di, FAR_RING
+        mov cx, (FAR_END - FAR_RING) / 2
+        xor ax, ax
+        cld
+        rep stosw
+        clc
+.ret:   ret
+xms       dd 0
+hma_given db 0
+no_far  db 'DSCLOG: no memory for its buffers (57 KB). Not loaded.', 13, 10, '$'
 
 
 msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
@@ -21325,7 +21903,5 @@ all_vectors_end:
         align 16, db 0
 image_len equ $ - $$
 file_len  equ image_len + 32
-; the memory past the image to load in: up to the ring's end (the ring follows the resident part,
-; over the install code), and the install's stack beyond it (resident_end + RING_BYTES is the
-; larger: the install code and its stack are smaller than the ring)
-LOAD_EXTRA equ (resident_end - hdr + RING_BYTES - image_len + STACK + 15) / 16
+; the memory past the image to load in: the install's stack
+LOAD_EXTRA equ (STACK + 15) / 16

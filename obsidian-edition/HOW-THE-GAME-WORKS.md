@@ -557,11 +557,12 @@ From the game's code:
 - A **backstab** is an attack from behind by a thief, in melee, with a weapon
   that isn't too heavy (the game's weight value at most 40, a metal long
   sword's). It gets another +2 to hit (+4 in all), and on the thief's first
-  attack of the round the damage, STR bonus included, is multiplied: x2 at
-  thief levels 1-4, x3 at 5-8, x4 at 9-12 and x5 from 13 (AD&D's table). With
-  **A backstab multiplies the weapon's dice only** ticked, only the dice are
-  multiplied and STR, the weapon's plus and any other bonus are added once, as
-  in AD&D (DSCLOG's `STAB_TIMES`).
+  two attacks of the round (an off-hand one too) the damage, STR bonus
+  included, is multiplied: x2 at thief levels 1-4, x3 at 5-8, x4 at 9-12 and
+  x5 from 13 (AD&D's table). With **A backstab multiplies the weapon's dice
+  only** ticked, only the round's first attack is multiplied, and only its
+  dice: STR, the weapon's plus and any other bonus are added once, as in AD&D
+  (DSCLOG's `STAB_TIMES`).
 
 Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items)
 (magic ones included). Weight belongs to the weapon's type and material, in the

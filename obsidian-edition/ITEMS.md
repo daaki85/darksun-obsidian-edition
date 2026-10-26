@@ -208,7 +208,7 @@ one.
 | ![](docs/items/bone-mace.png) | mace | bone | Jark, Weapon Merchant | Wyvern Master, Krikor, Templar, a chest, a chest in Dagolar's tunnels |  |
 | ![](docs/items/metal-mace.png) | mace | metal | — | Templar | **new**: the game's mace, in metal |
 | ![](docs/items/obsidian-mace.png) | mace | obsidian | Jark, Weapon Merchant | Tari | **new**: the game's Mace (1d6+1), in obsidian (its only obsidian mace is Blackmace) |
-| ![](docs/items/bone-axe.png) | axe | bone | Jark, Weapon Merchant | Wild Mul | **new**: 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs) |
+| ![](docs/items/bone-axe.png) | axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchman | **new**: 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs) |
 | ![](docs/items/metal-axe.png) | axe | metal | — | Slaver Guard, Uzoma, a weapon rack in the Lower Castle, a weapon rack, a weapon rack in the slave pens |  |
 | ![](docs/items/obsidian-axe.png) | axe | obsidian | Weapon Merchant | Merzol | **new**: 1d8; 30, as the bone axe |
 | ![](docs/items/bone-great-axe.png) | great axe | bone | Jark, Weapon Merchant | Wild Mul | **new**: 1d10, two-handed; lighter than metal (and breaks as bone does); a warrior's starting great axe |

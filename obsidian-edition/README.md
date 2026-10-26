@@ -43,6 +43,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
+  - [The Effects screen](#the-effects-screen)
+  - [What a scroll says](#what-a-scroll-says)
   - [No manual check](#no-manual-check)
 - [The Loader's window](#the-loaders-window)
   - [The Characters tab](#the-characters-tab)
@@ -56,10 +58,10 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **Shows what the game keeps hidden.** Every roll is logged as it happens:
   attacks, damage, saving throws, thief skills, initiative, even the dice at
   character creation, each with what it needed and where every bonus came from
-  ([the dice log](#the-dice-log)). **L** shows a combat log over the map, a
-  spell's name floats over its caster, the game's own screens gain THAC0,
-  saves, thief skills and spell slots, and the Look box tells you what can
-  hurt a monster ([In the game](#in-the-game)).
+  ([the dice log](#the-dice-log)). **L** shows a combat log over the map,
+  spells' names and charges used float over the figures, the game's own
+  screens gain THAC0, saves, thief skills, spell slots and charges left, and
+  the Look box tells you what can hurt a monster ([In the game](#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
   (experience, priests' THAC0, spell slots), INT's limits on learning spells,
   saving throws and multiclass hit points as the books have them, and scores
@@ -85,8 +87,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and armour, figures cast shadows and kick up dust, and elves and half-elves
   have a look of their own ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
-  a view that stays put in fights, dragging the map with the mouse wheel held
-  down, a pointer in the intro and scenes that a click skips
+  M for the overhead map, a view that stays put in fights, dragging the map
+  with the mouse wheel held down, a pointer in the intro and scenes that a click skips
   ([Controls](FEATURES.md#controls)); 40 saves, each also kept under its name,
   and 29 saved characters
   ([More saves and characters](FEATURES.md#more-saves-and-characters)); a
@@ -409,9 +411,16 @@ attack misses, in the game's lettering with a dark edge. They work in and out
 of fights, for the party and the monsters alike, and a weapon's spell on a hit
 shows too. A name stays with its figure; near the top of the screen it goes
 under the figure's feet, clear of the game's boxes. Long names are shortened
-("Lesser Water Elem."), and at most two show at once.
+("Lesser Water Elem."), and up to four show at once.
 
 ![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
+
+The same switch floats a spell's charge being used over whoever has it, in
+light blue: "Armor: 7 left" for a hit Armor took, "Reflected Image: 2 left" for
+a lost image, "Armor ends" for the last. These stay three seconds, twice as
+long, and a "Miss" or a spell's name never pushes one out.
+
+![An arena fight: "Armor: 8 left" in light blue over a Slig the party's gladiator has just hit, and "Miss" beside it](docs/floating-charges.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
 
@@ -438,7 +447,8 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   backstab](FEATURES.md#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
   `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
   boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
-  script check) and read languages (none) are left out for want of room. A
+  script check) and read languages (a Shinobi's, for a scroll: on its
+  [Effects screen](#the-effects-screen)) are left out for want of room. A
   ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
   places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
@@ -575,6 +585,38 @@ boots' or belt's box shows what it adds to thief skills (with
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#charges-in-item-boxes).
+
+### The Effects screen
+
+The Effects screen (Current Spell Effects) shows more
+in its lower panel and under the pointer:
+
+- **Kits and weapon specs:** each kit (`KIT: RAVAGER`), with a Shinobi's chance
+  to read a scroll under it (`READ LANG. 35%`), then the weapon specs, a page
+  at a time when there are more than fit ([Changing
+  class](KITS.md#changing-class) has pictures).
+- **Charges left:** with the pointer on the icon of a spell that lasts a number
+  of uses, the name under the icons says how many are left: IMPROVED AC (4
+  CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
+  Effects that last until removed (Charmed) show none.
+- **A click on a spell's icon leaves it on** (the game ended it); a psionic
+  power's icon still ends the power, as that is how one is stopped ([Spells on
+  the Effects screen](FEATURES.md#spells-on-the-effects-screen)).
+
+![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
+
+### What a scroll says
+
+Clicking a scroll's spell icon in its item box gives the result on the line
+under the paper doll: YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU FAIL
+TO LEARN THE SPELL, TOO MANY SPELLS OF THAT LEVEL, or a Shinobi's YOU CAN NOT
+READ THE SCROLL and THAT IS NOT A SHINOBI SPELL. The game wrote these there too,
+but they never reached the screen. Like the game's own messages on that line, it
+stays until the pointer is on something else. Always on.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
 
 ### No manual check
 
@@ -726,7 +768,7 @@ text, with the replies offered numbered underneath (and the list's title,
 such as "Answer Yes or No", above them), and then the one you picked:
 `You chose: No`.
 
-![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show](docs/dialogue.png)
+![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena](docs/dialogue.png)
 
 **Who's speaking.** The game's dialogue window gets only a portrait number,
 never a name. But when the game runs a script on someone (you click them, or
@@ -759,7 +801,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log of the Defiler's Magic Missile on the Rampager and the Rampager's acid killing the Defiler](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log with Find showing the first of 24 lines naming the Rampager: the party's kit lines, the first round's initiative, Gerakis's Wild Fighting roll and the Defiler's Fireball](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
@@ -792,7 +834,7 @@ with the log's background (WCAG 2.0 AA, as AODA asks).
 | `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice: the d20, the roll this attacker needed against this target (THAC0 − target AC) and the chance of it, the lowest AC the roll hits, and the target's AC as the game used it. More below the table. |
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](FEATURES.md#two-weapons)), and the difficulty setting for monsters. |
 | `  X hits Y for 14: 1d8 = [6] +8 STR 20` | The damage of that hit: the dice, the weapon's bonus, and the STR bonus the game adds for melee. Damage is at least 1. |
-| `  X hits Y for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice x3)` / `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the weapon's dice, the rest added once; with that option off, the whole damage, STR bonus included. |
+| `  X hits Y for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)` / `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the weapon's dice, the rest added once; with that option off, the whole damage, STR bonus included. |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](KITS.md#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)). |
 
@@ -813,7 +855,7 @@ hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `  Slig takes 15 from Shocking Grasp, now 3/18 HP` / `  Cilla takes 9 from Fireball (halved: Prot Fire)` | What the spell really did to each creature, after its save, resistances and protections (or the healing it gave). A protection that halved it is named: Resist Fire or Cold, Protection from Fire or Lightning, Fire Shield, a Wanderer's own. A creature that is Out Cold gets no save and takes the most the dice can do (the game's damage code does that), marked `(Out Cold: the most the dice can do)`. |
 | `    Blur lasts 23 rounds (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 3d1)` | How long a spell's effect lasts, and how the game worked it out. A round is 60 game seconds. The game often "rolls" dice with one side, which are fixed numbers. |
 | `    Stoneskin has 23 charges (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 1d4 = [3])` | Effects that last a number of uses rather than a time (Stoneskin's blows, Mirror Image's images, Invisibility's one attack, Poison's rounds): the game stores them as charges, worked out like a duration. |
-| `    Acid on Slig: 2d4 = [3 + 1] = 4 acid damage` / `    Sunstroke's heat on Scar: 1d4 = 3 fire damage` / `    Ironskin on Cilla: one charge used` | Acid Arrow's damage each round while the acid lasts; Sunstroke's heat each round while it holds; and an effect with charges using one up (Stoneskin or Ironskin stopping a blow, Mirror Image losing an image...). |
+| `    Acid on Slig: 2d4 = [3 + 1] = 4 acid damage` / `    Sunstroke's heat on Scar: 1d4 = 3 fire damage` / `    Improved AC on Slig: one charge used, 7 left` | Acid Arrow's damage each round while the acid lasts; Sunstroke's heat each round while it holds; and an effect with charges using one up, with how many are left (Armor or Ironskin taking a hit, Mirror Image losing an image...). |
 | `Harm: all the target's hit points but 1d4 (...)` / `  Wall of Thorns' wall instead: 8 + AC 3 = 11` / `    Slig is swept off its feet: loses its next turn` | The [6th-level priest spells](FEATURES.md#6th-level-priest-spells)' own lines: Harm leaving 1d4 hit points (the dice the game rolls go unused), Wall of Thorns' damage by the creature's AC in place of the dice rolled, and a creature that fails its save against Whirlwind losing its next turn. |
 | `Strength: 1d6 = 5 -> Cilla's STR +5 while it lasts (at most 24)` | The amount Strength (or Adrenalin Control) adds. |
 | `Y magic resistance 30% vs Fireball: d100 = 71 -> not resisted` | The magic resistance roll (only shown for targets that have some), counting Mind Bar and Lower Resistance. |
@@ -884,6 +926,7 @@ creatures save again as they stay in them; those lines have no "from".
 |---|---|
 | `Message: Long Sword is broken !` | The game's own message boxes: broken or corroded weapons and armour, level-ups, "NO PATH FROM HERE" and so on. |
 | `Dinos cooks the vulture and the party eats with him: ... restored as after a full rest (HP, PSP and spell slots); the game gives each 100 XP` | Dinos asked about the cooked vulture (see [The cooked vulture](FEATURES.md#the-cooked-vulture)); the XP itself is on the `XP:` line after it. |
+| `Dreamwalker reads the scroll of Magic Missile: d100 = 37, needs 60 or less (INT 14) -> learnt` / `Xan reads the scroll of Shield: read languages d100 = 70, needs 35 or less -> can't read it (the scroll is used up)` / `Xan can't learn Armor from the scroll: not one of a Shinobi's spells (the scroll is kept)` | A try at a scroll's spell (see [Preservers' INT](FEATURES.md#preservers-int)): a preserver's d100 against INT's chance; a Shinobi's d100 against its read languages first, then INT's. A spell already known gives no line. |
 | `Daaki makes 20 burning arrows (5 a preserver level, 4): a 1st-level slot used; ...` | A Spellarcher's arrow button (see [Multiclass kits](KITS.md#multiclass-kits)); `no room in the backpack: left on the ground` when they went at the party's feet. |
 | `Dice: 1d8 = [3] = 3` | Dice the log couldn't tie to anything (for example a spell with no saving throw). |
 | `(The Loader stopped one of its own writes over the game's memory: ...)` | A safety net: the Loader never writes over the start of memory (the interrupt vectors, the BIOS's and DOS's data) or the first bytes of the game's data, which its C runtime checks ("Null pointer assignment"). Such a write could only come from a pointer the game has left empty for a moment; the line says where in the Loader it came from. Please report it. |

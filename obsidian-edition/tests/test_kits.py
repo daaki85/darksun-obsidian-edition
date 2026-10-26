@@ -66,6 +66,10 @@ class KitEffectTests(unittest.TestCase):
         self.assertTrue(kits.forbids(R, typ(0, kits.ARMOUR, kits.METAL), None, False))
         self.assertFalse(kits.forbids(R, typ(0, kits.ARMOUR, kits.LEATHER), None, False))
         self.assertFalse(kits.forbids(R, typ(kits.MELEE, kits.TWO_HANDED, kits.METAL), 6, False))
+        D = kits.BATTLE_DANCER  # no shield, the long sword and the bow only
+        self.assertTrue(kits.forbids(D, typ(kits.SHIELD, kits.ARMOUR), None, False))
+        self.assertFalse(kits.forbids(D, typ(0, kits.ARMOUR, kits.METAL), None, False))
+        self.assertTrue(all(not kits.forbids(D, typ(kits.MELEE), k, False) for k in kits.DANCER_KINDS))
 
 
 if __name__ == "__main__":

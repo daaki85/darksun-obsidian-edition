@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import dicelog, game, pickpocket, tools, vulture
-from test_dicelog import CREATURES, DS, HDR, ITEMS, LOAD_SEG, SHEETS, STALKER, set_clock
+from test_dicelog import CREATURES, DS, HDR, ITEMS, LOAD_SEG, SHEETS, set_clock
 from test_slots import set_character, with_tables
 
 DINOS, ITEM = 6, 70
@@ -52,15 +52,8 @@ class VultureTests(unittest.TestCase):
     def item(self):
         return bytes(self.m[ITEMS + ITEM * game.ITEM_SIZE:ITEMS + (ITEM + 1) * game.ITEM_SIZE])
 
-    def use(self, target, fighting=False):
-        return vulture.use(self.gd, self.item(), target, fighting)
-
     def xp(self):
         return [struct.unpack_from("<I", self.m, SHEETS + member * game.SHEET_SIZE)[0] for member in range(3)]
-
-    def test_kinds(self):
-        self.assertTrue(vulture.is_vulture(self.item()))
-        self.assertFalse(vulture.is_vulture(bytes(game.ITEM_SIZE)))
 
     def test_meal(self):
         """Dinos's script has set MEAL: XP and a full rest for each, once."""
@@ -101,23 +94,9 @@ class VultureTests(unittest.TestCase):
         self.flags.add(vulture.MEAL)
         self.assertNotIn("Dag", vulture.meal(self.gd)[0])
 
-    def test_bland(self):
-        """Eaten by the party themselves: no use."""
-        used = self.use(0)
-        self.assertIn("tough and bland", used.text)
-        self.assertFalse(used.used_up)
-
-    def test_others(self):
-        """On anyone else (Dinos too: he is asked about it in his talk), or not the vulture: the
-        game's own doing."""
-        self.assertIsNone(self.use(STALKER))
-        self.assertIsNone(self.use(DINOS))
-        self.put(bytes(game.ITEM_SIZE))
-        self.assertIsNone(self.use(DINOS))
-
-    def test_in_the_log(self):
-        """Used on a party member, as DSCLOG asks (the cooked vulture, item 70, on object 0x30):
-        no use, and it stays on the pointer."""
+    def test_eaten_by_the_party(self):
+        """Used on a party member (the cooked vulture, item 70, on object 0x30, as DSCLOG asks):
+        the Loader leaves it to the game, with no message of its own."""
         log = self.log
         table = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
         struct.pack_into("<Bh", self.m, table + 0x30 * 3, 2, 1)
@@ -128,8 +107,8 @@ class VultureTests(unittest.TestCase):
         struct.pack_into("<H", self.m, HDR + dicelog.TSR_PICK_OFF, 0x600)
         set_clock(log, 5000)
         log._answer_use()
-        self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_USE_TAKEN)[0], 1)
-        self.assertIn(b"tough and bland", bytes(self.m[HDR + 0x600:HDR + 0x700]))
+        self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_USE_TAKEN)[0], 0)
+        self.assertEqual(bytes(self.m[HDR + 0x600:HDR + 0x700]), bytes(0x100))
 
     def ask(self, item, rec):
         """DSCLOG asks about ITEM (REC; None: not an item) used on object 0x30, Dinos: the lines,

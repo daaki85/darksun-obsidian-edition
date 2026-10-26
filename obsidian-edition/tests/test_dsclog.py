@@ -34,7 +34,7 @@ except ImportError:  # optional dependency
 EXE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")
 TSR, GAME_DS, SS, CALLER, PARENT, RAND = 0x1000, 0x3000, 0x4000, 0x5000, 0x6000, 0x7000
 SEG_MOVED = 306  # the header's: SEG_MOVE has made the new spells' records' room
-RING_SEG = 0xC000  # where the tests put the ring (DSCLOG's install puts it past its image)
+RING_SEG = 0xC000  # where the tests put the far block, the ring in it (DSCLOG's install: the HMA)
 IF = 0x200  # the interrupt flag
 # CHOOSE A SPELL as the tests' stand-in (at its stub, DS + 430Ah - 4356h : 5Ch): the call counted at
 # DS:F000h, the spell levels on offer (preserver level 9, through PROBE_PICK_LEVEL) kept from DS:F002h,
@@ -54,7 +54,9 @@ def load_image():
     with open(EXE, "rb") as f:
         exe = f.read()
     image = bytearray(exe[struct.unpack_from("<H", exe, 8)[0] * 16:])
-    image[268:270] = struct.pack("<H", RING_SEG)  # (the ring's segment, as DSCLOG's install sets it)
+    image[268:270] = struct.pack("<H", RING_SEG)  # (the ring's segment, as DSCLOG's install sets it,
+    image[138:140] = struct.pack("<H", RING_SEG)  # and the far block's: the text buffer's and the
+    image[142:144] = struct.pack("<H", RING_SEG)  # other buffers', FAR_SEG)
     return bytes(image)
 
 
@@ -105,8 +107,8 @@ class HeaderTests(unittest.TestCase):
         self.assertEqual(tuple(image[hdr + 112:hdr + 117]), (VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG))
 
     def test_fits_upper_memory(self):
-        """What the helper puts in upper memory (UMB_NEED, the header's +372: itself, the overlay
-        buffer, the panel's picture and the ring, with their MCBs) fits the room DOSBox gives it from
+        """What the helper puts in upper memory (UMB_NEED, the header's +372: itself as loaded and
+        the overlay buffer, with their MCBs) fits the room DOSBox gives it from
         its MCB at D00Ah to F000h, or the game's overlay buffer goes back into its heap."""
         from dsloader import heapcheck
         image = load_image()
@@ -3052,8 +3054,9 @@ class NewSpellTests(RuleTests):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
             mu.emu_start(start, start + len(code))
             return mu.reg_read(r.UC_X86_REG_EFLAGS)
-        def stab(rules_hi, rolled, bonus, damage, times, mode=1):
+        def stab(rules_hi, rolled, bonus, damage, times, mode=1, made=0):
             self.rules_hi(rules_hi)
+            mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<h", made))  # (the round's attacks so far)
             mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
             mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", mode))
             flags = run("stab_roll", rolled)
@@ -3064,6 +3067,8 @@ class NewSpellTests(RuleTests):
         self.assertEqual(stab(128, 4, -1, 16, 3)[0], 26)  # (5 x 3 - 1 + 12)
         self.assertEqual(stab(0, 4, -1, 16, 3)[0], 48)
         self.assertEqual(stab(128, 4, -1, 0, 3)[0], 0)
+        self.assertEqual(stab(128, 4, -1, 16, 3, made=1)[0], 16)  # (the round's second attack: AD&D's one)
+        self.assertEqual(stab(0, 4, -1, 16, 3, made=1)[0], 48)  # (the game's: its first two)
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=1)[1] & 0x40, 0x40)  # (melee: ZF)
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=2)[1] & 0x40, 0)
 
@@ -4727,7 +4732,7 @@ class KitTests(unittest.TestCase):
         mu.mem_write(self.DS * 16 + 0x4979, struct.pack("<H", 7))  # (thing 7's turn: creature 2)
 
         def hit(name, weapon_type=1, mode=2, own=0, archer=True):
-            self.creature(9, 1, index=2, second=11 if archer else 17, race=4)  # (a Spellarcher, or a Shadowblade)
+            self.creature(9, 1, index=2, level=3, second=11 if archer else 17, race=4)  # (a Spellarcher, or a Shadowblade)
             ammo = bytearray(0x15)
             struct.pack_into("<H", ammo, 0x12, name)
             mu.mem_write(self.ITEMS * 16 + 4 * 0x15, bytes(ammo))
@@ -4741,9 +4746,20 @@ class KitTests(unittest.TestCase):
                        0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.ARROW_SPELL_SITE, 0x90)), 0x640,
                 es=self.ITEMS, ebx=5 * 0x15, ecx=0)
             return mu.reg_read(r.UC_X86_REG_CL), not mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40
+
+        def cast_level(spell):  # (ARROW_LEVEL, after a hit: the level and spell pushed for the cast)
+            mu.mem_write(self.DS * 16 + 0x494A, struct.pack("<H", 8))  # (the target: thing 8, not the archer)
+            run(bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.ARROW_LEVEL, 0x90, 0x90, 0x90, 0x90)), 0x680,
+                ecx=spell, edi=7)  # (the attacker: thing 7)
+            sp = mu.reg_read(r.UC_X86_REG_SP)
+            self.assertEqual((sp, mu.reg_read(r.UC_X86_REG_AX)), (0x7F0 - 4, spell))
+            return struct.unpack("<HH", mu.mem_read(SS * 16 + sp, 4))
         for arrow in spellarrows.ARROWS:
             with self.subTest(arrow=arrow.spell_name):
                 self.assertEqual(hit(arrow.name), (arrow.spell + 1, True))
+                self.assertEqual(cast_level(arrow.spell), (arrow.spell, 3))  # (the preserver level, not 6)
+        hit(0x36, own=0x28)
+        self.assertEqual(cast_level(0x27), (0x27, 6))  # (a bow's own spell: the game's level 6)
         chill = spellarrows.ARROWS[1].name
         self.assertEqual(hit(0x36), (0, False))  # (plain arrows: the bow's, none)
         self.assertEqual(hit(0x36, own=0x28), (0x28, True))  # (Phrain's Bow's own)
@@ -6131,9 +6147,11 @@ class KitTests(unittest.TestCase):
                 self.assertEqual(self.mu.mem_read(known_at + 8, 1)[0], 1)
             results.add(result)
         self.assertEqual(results, {intlearn.LEARNT, intlearn.FAILED})
-        # INT 19 and more: no most, 95%
+        # INT 19 and more: no most, 95%; no read roll told (a Shinobi's last one cleared)
         self.int_setup(who, 19, first[:10])
+        self.mu.mem_write(hdr + 366, bytes((48, 100)))
         self.assertEqual(learn(11)[1][:4], [who, 11, 19, 95])
+        self.assertEqual(list(self.mu.mem_read(hdr + 366, 2)), [0, 0])
         # the game's own: the rule off, a priest spell, or a spell it knows (AX 0 already)
         self.int_setup(who, 9, first[:6])
         self.rules(0)
@@ -6178,7 +6196,7 @@ class KitTests(unittest.TestCase):
         # not its spell: refused, whatever it reads
         ax, told, read = learn(8, 100, both)
         self.assertEqual((ax, told[:2], told[5], read), (0, [who, 8], intlearn.NOT_ITS, [0, 0]))
-        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x680)[2], b"A SHINOBI CAN NOT LEARN THAT SPELL")
+        self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x680)[2], b"THAT IS NOT A SHINOBI SPELL")
         self.assertEqual(self.said(VEC_LEARN_REFUSED, 0x690)[:2], (self.DS, 0x3405))  # (once only)
         # Shield (9), its own, unread at 0%: taught by the game, then taken back
         ax, told, read = learn(9, 0, both)

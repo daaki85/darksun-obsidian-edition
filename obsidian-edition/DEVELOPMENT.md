@@ -416,14 +416,27 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 ## Room in the helper
 
 DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-The dice log's ring buffer (`NENT` 63 entries of `ESIZE` 192 bytes) follows
-the resident part in memory, in a segment of its own: the install code sets
-`ring_seg` (the header's +268, read by `dicelog.py`) to the paragraphs after
-the resident image, and its last step (`KEEP`, in the resident part, as the
-ring lies over the install code) clears the ring and stays resident with it.
-The text buffer (`TSIZE`) is 2 KB; the Loader reads its size from the header
-and drains it every 20 ms (at most 251 bytes came in between two reads in the
-opening show, the busiest stretch measured).
+Its big buffers are kept apart, in its **far block** (`FAR_SEG`, the header's
++142), at fixed offsets from `FAR_RING` (10h) to `FAR_END`: the dice log's ring
+(`NENT` 63 entries of `ESIZE` 192 bytes), the panel's picture, the shadows'
+cache, the text buffer, the shadows' spans and each thing's place as last seen
+(for the dust), 57,800 bytes. `FAR_INIT` (install code) puts it in the **HMA**
+(FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there
+is none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
+`XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
+and checked (FFFFh:0010h no longer 0000h:0000h). The game never calls XMS's
+A20 or HMA functions (its XMS calls are 08h-0Dh), and no file DOSBox runs is
+EXEPACKed (the unpacker fails with A20 on below 64 KB). Without the HMA the
+block is a memory block of its own (upper memory, else conventional),
+`FAR_SEG` a paragraph below it so that its offsets are the same. The header
+gives the Loader each buffer's segment and offset: the ring's `ring_seg`
+(+268) and `ring_off` (+16), the text buffer's `tbuf_seg` (+138) and
+`tbuf_off` (+128), the panel's `panel_seg` (+328) and `panel_off` (+140). The
+helper reaches the internal ones through FS, pushed and set around each use
+(the game never sees it changed). The text buffer (`TSIZE`) is 2 KB; the
+Loader reads its size from the header and drains it every 20 ms (at most 251
+bytes came in between two reads in the opening show, the busiest stretch
+measured).
 
 The helper has to load into upper memory, or the game loses 62 KB of
 conventional memory (570 KB free rather than 632 KB).
@@ -436,9 +449,9 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the panel's picture 23 KB, the shadows' cache 16 KB, the ring 12 KB, the game's music buffer 12 KB, 0.5 KB free |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 55 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 57.8 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA: unused (DOSBox's XMS says there is none; reached only with A20 on) |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 56 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places), 7.5 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 DOSBox makes its upper memory block at D000h, but C800h-CFFFh is RAM too, and
@@ -487,8 +500,8 @@ launcher's config turns EMS off (`launch.DOS_LINES`: the game uses XMS instead),
 which leaves the helper a second 64 KB block (65 KB free with it loaded; see
 [the combat log](#what-the-game-allows)). The helper's own segment is still at
 most 64 KB (everything through CS), so the second block is room for data kept
-apart from it, as the ring is. The helper asks for its resident part and the
-ring (`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few
+apart from it. The helper asks for its image and the install's stack
+(`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few
 KB of upper memory left. A change that adds much code should check that again:
 the ring is 63 entries, not 128 (96 until the new spells' code, when the game no
 longer started for lack of memory; 88 until STORE and RECALL; 84 until spells
@@ -506,9 +519,8 @@ the heap it was the largest block the 640 KB never got back. The patch
 `overlay_umb` makes that call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands
 over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
 own block down to what stays, then takes the buffer's block in the memory the
-install code had, while the ring and the panel's picture were taken at the
-top of upper memory (`umb_alloc`: last fit), so the room is in one piece:
-62 KB of the helper, the buffer, what is left free, the panel and the ring.
+install code had, so the room is in one piece: the helper, the buffer and what
+is left free.
 The header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. With
 the map open this left 86 KB free in conventional memory (85 KB measured again
@@ -518,17 +530,18 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. 74 paragraphs (1.2 KB) are spare in it
-now, after the right button's scrolling, the rings under every enemy and the
-strip below the map were taken out (it was one).
-The shadow table becoming a bit for each thing and the added item names 16
-bytes each (padded to the game's 25 as they are copied) once left 3.8 KB; the
-6th-level spells, the names over figures, Whirlwind's funnel, Wall of Thorns'
-armour and the pointer in scenes (with the freeze report cut from 32 records
-to 16) have used it. So new helper code needs room found first: each of the
-ring's entries is 12 paragraphs (`NENT`), and the helper's own segment still
-has about 4.6 KB (its resident part 60,912 bytes of 65,536): that, not upper
-memory, is now the tighter limit for new code. Text the game reads from RESOURCE.GFF belongs in the Loader's
+and so does `test_fits_upper_memory`. Since the far block went to the HMA,
+2,447 paragraphs (38 KB) are spare in it, and with `UMBPLUS.COM` about 57.8 KB
+are free in one piece (measured in DOSBox: the helper at C90Ah, then the overlay
+buffer, the free block, the music buffer). The helper's own segment is the limit
+for new code: its image with the install code is 58,704 bytes (`image_len`;
+the resident part ends at `resident_end`, DB10h), so about 6.7 KB of its 64 KB
+are spare; the HMA has 7,720 bytes left for more buffers. (Before this pass the segment had about 2 KB and upper
+memory 0.5 KB: the right button's scrolling, the rings under every enemy and
+the strip below the map had been taken out, and the freeze report cut to 16
+records, to make room.) The game's sound-effects buffer (24,001 bytes, kept
+for good like the music's) could go to upper memory next for the game's 640
+KB, but the sound driver may play it by DMA, which can't cross a 64 KB page. Text the game reads from RESOURCE.GFF belongs in the Loader's
 copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
 freed 1.6 KB), and so does data read from the player's game (the pointer's
 picture, `POINTER.BIN`). If the buffer still ends up in the heap (another
@@ -867,12 +880,13 @@ dice log running:
   its ink with a dark edge a pixel round it (the colours nearest gold or
   light grey and near black in the palette DSCLOG last read), as two one-bit
   masks of 16 bytes a row (128 pixels; longer names shortened word by word,
-  then cut) and 11 rows. They go into one of two slots in the header (`+374`,
+  then cut) and 11 rows. They go into one of four slots in the header (`+374`,
   `LBL_SIZE` 360 bytes each: the label's number, width, height, how far above
   the feet, the two colours, the map thing, the masks), the number written
   0 first and last of all, so DSCLOG never takes a half-written one. A label
-  stays 1.5 seconds; a new one takes the slot of one over the same figure,
-  else a free one, else the oldest.
+  stays 1.5 seconds, a charge used 3 (`CHARGE_FOR`); a new one takes the slot
+  of one over the same figure, else a free one, else the oldest, but a "Miss"
+  or spell's name never takes a charge's (its priority).
 - **DSCLOG's side** (`LABEL_*`). The map is drawn straight into the screen on
   show, and figures are drawn again as they move, swing and take damage, by
   routines that weren't all hooked in the first trial (a label over melee was
@@ -895,8 +909,9 @@ dice log running:
   has scrolled, the game's scrolling has copied any label with it, so all are
   taken off and the view drawn again whole (`VIEW_AGAIN`); the timer doesn't
   put labels while the view isn't where the main loop last saw it.
-- **Memory.** The two slots and the code cost about 1.5 KB of the helper's
-  upper memory; the ring went from 74 entries to 66 for it.
+- **Memory.** The first two slots and the code cost about 1.5 KB of the helper's
+  upper memory (the ring went from 74 entries to 66 for it); the other two,
+  720 bytes, fit in the room left.
 - **Measured** in DOSBox, a fight in the slave pens with every attack made to
   miss, a slot watcher grabbing the screen as each label came: "Miss" was in
   every one of nine grabs half a second in, through swings and damage
@@ -1240,8 +1255,8 @@ isn't full.
 
 A Shinobi (kits): the same check whether the character on show may learn its
 spell (8B6D3h, `or ax,ax` before the jump to CANNOT LEARN FROM THIS ITEM) goes
-to `SHINOBI_READ` (from `PROBE_SCROLL_LEARN`): not one of its spells, no (`A
-SHINOBI CAN NOT LEARN THAT SPELL`, the scroll kept); else a d100 against its
+to `SHINOBI_READ` (from `PROBE_SCROLL_LEARN`): not one of its spells, no (`THAT IS
+NOT A SHINOBI SPELL`, the scroll kept); else a d100 against its
 read languages, which the Loader keeps for each party member in the header
 (`+362`, with STATS: `game.thief_skills_now`'s skill 7, armour and effects
 counted), and above it the game teaches the spell and uses the scroll up, and
@@ -1249,6 +1264,31 @@ counted), and above it the game teaches the spell and uses the scroll up, and
 `INT_LEARN`'s d100 against INT's chance with the rule for INT (no most a
 level). The try goes to the Loader as a preserver's (`+272`), with the read
 roll and chance at `+366` (`intlearn.line`).
+
+The box's spell icon is a button only for a character whose class the item type
+allows: as the inventory opens the box, the game tests the type's class mask
+(`+10h`) against the sheet's (`+12h`, 6D3B9h) and passes the answer on to
+`DS:9CF6h`, and with it 0 the icon (button 3BC9h, 8B1A7h) is made inactive. The
+scroll type (60h) allows wizards only, so a Shinobi, a thief to the game, could
+never click it. `SCROLL_USE` (`INT 98h` and its site number, in place of `test
+[es:bx+10h],ax`) makes the test and passes the scroll type for a Shinobi too.
+
+What the box's handler says (4D0:2Ah, 8B810h: YOU LEARN THE SPELL, a Shinobi's
+answers, the tome's) is written, on the inventory screen, to its line under
+the paper doll, but nothing written there while the handler runs reaches the
+screen: the game's own messages were never seen. `BOX_SAID` (`INT 98h` and its site number in
+place of the `add sp,4` after it, 8B815h) keeps the text, and for 5 seconds
+`LINE_SAID` (after the inventory's writes to its line, 580h:5Ch: 6E125h,
+891A4h, 89222h, 89552h, 8968Bh, 8A940h) and `LINE_CLEARED` (after its clears,
+528h:2Ah: 6C9BFh, 701C2h, 89595h) write it there again (580h:5Ch on the window
+at `DS:11A4h`, through its stub segment 4272h, in a frame the overlay manager
+can fix up). Those run as the pointer moves, so 2 ticks after the message
+`BOX_NUDGE` (from the timer's `PROBE_TICK`) tells the game's mouse handler
+(`MOUSE_EVENT`, as the driver would) that the pointer moved, with the driver's
+buttons and place (INT 33h, 03h): the line shows the message with the mouse
+still. As the game's own messages there, it stays till the pointer is on
+something else. Not redrawing the window (118h:618h) afterwards matters: that
+draws it blank.
 
 ### AD&D's class tables
 
@@ -1534,7 +1574,9 @@ The Effects screen's lower panel (`PROBE_EF_ROWS`) has the kit's line first,
 The lower panel has room for five lines (`EF_LINES`); three kits and a
 gladiator's four weapon specs make eight. `EF_DRAW` goes over the lines twice
 (`EF_LINES_OF`, each through `EF_LINE`): first counting them (`EF_COUNT`), then
-putting those of the page on the panel (`EF_PUT`). With more than five, a page
+putting those of the page on the panel (`EF_PUT`). A Shinobi's kit line is followed
+by its read languages (`RL_LINE_OF`: `READ LANG. 40%` from `READ_LANG`, the Loader's,
+for the member `EF_DRAW` keeps in `EF_MEMBER`). With more than five, a page
 has four and `MORE: CLICK HERE` in the fifth row; a page that starts with a
 weapon type has its skill's heading again over it (`EF_HEAD`), and a heading
 that would be a page's last row goes to the next. `PROBE_EF_CLICK` (`INT 97h`,
@@ -1639,7 +1681,7 @@ emulated tests hold the helper to it:
 | shields | Shadowblade, Ghetto Fighter | `KIT_FORBIDS` (`kits.forbids`) |
 | hiding, moving silently | Stalker, Assassin and Military Scout (not halved in daylight: `kits.not_halved_by_sun`), Wilderness Avenger (a ranger's, 5 a level of its best class), Shadowblade (hides with an enemy beside it) | the stealth rule's rolls (`stealth.py`, `GameData.ranger_skill_parts`) |
 | the two-weapon penalty | Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier (in any armour); Ghetto Fighter (2 less in each hand) | `PROBE_TWO`; `RG_TWO` |
-| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (`kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
+| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (no shield; `kit_dancer`: long sword and bow kinds), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
 | skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
 | weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior |
 | attacks a round | Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons)) |
@@ -1932,6 +1974,12 @@ is from behind and a backstab (`INT EAh`), makes the hidden thief's next one
 so, by the game's own conditions for a backstab (a thief, in melee, a weapon
 of weight 40 or less).
 
+How many attacks: the attack routine multiplies when both backstab flags are set
+and the round's count of attacks so far (`[BP-14h]`) is 1 or less (58A71h), so
+the first two swings of the round, an off-hand one too. `STAB_TIMES` (with
+`RULE_HI_BACKSTAB`) multiplies only when the count is 0; the dice log
+(`dicelog`'s backstab line, `parent_local(-0x14)`) says the same.
+
 ### Spell arrows
 
 ([The Spellarcher](KITS.md#multiclass-kits); `spellarrows.py`.)
@@ -1976,8 +2024,12 @@ the ground's: such arrows fade at the first rest after they are picked up).
 
 **The hit.** The weapon attack routine (5883Ah) casts only the weapon's own
 spell on a hit (its item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with
-the attacker as the caster, so at the attacker's caster level for the spell: a
-Spellarcher's preserver level). `PROBE_ARROW` (58D27h, where the ammunition
+the attacker as the caster and level 6 pushed for every weapon's spell, at 58BE6h:
+`push 6 / mov al,cl / mov ah,0 / push ax`). `ARROW_LEVEL` (`NS_IMAGE+47`, over
+those 7 bytes) keeps 6 for a weapon's own spell and gives a spell arrow's (`ARROW_HIT`
+sets `ARROW_CAST`) the archer's preserver level (DI the attacker: class 11 among the
+sheet's +21h-23h, its level from +24h-26h, at least 1), moving the INT's frame down
+4 bytes to put the two words under it. `PROBE_ARROW` (58D27h, where the ammunition
 routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
 (`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h]
 above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
@@ -2119,7 +2171,20 @@ after the `ns_list_` patches):
 - **Armor** (effect 2): the spell-landing routine (7A539h) used a charge when
   any spell or blow landed on a target with Armor (7A557h, `je` past it
   unless effect 2 is on), and the damage routine (79A3Eh) used another for the
-  damage. `armor_charge` makes the first jump always taken.
+  damage. `armor_charge` makes the first jump always taken, leaving one charge
+  for each damaging hit: a weapon's damage, a shot's as a blow's, goes through
+  the damage routine too (the attack routine's one damage call, 5B8:20h at
+  58B1Fh, with spell FFFFh), so the helper needs no site for blows. Seen in the
+  arena: a hit takes Armor from 9 charges to 8. (Site `NS_IMAGE+48` is free.)
+- **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
+  under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
+  the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8
+  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Not for a permanent
+  effect: its spell record's time (+7) is `PERMANENT_TIME`, and +8 holds a
+  meaningless 15 (Charmed). Mirror Images from Reflected Image take its name
+  and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
+  Image, whose entry that is, writes it again before its own use
+  (`ns_reflect_entry`).
 - **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
   removed each record of the power cast by DI with 598:48h (owner, handle), but
   passed DI as the owner, so a receiver's record stayed (and a record of the
@@ -3018,6 +3083,13 @@ the game centre its view where the drag puts it, with the game's own routine
 keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
+
+**M for the overhead map.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both
+reads and peeks, turns M into O (the game's key for its overhead map) while the
+map's main loop has run within the last tick or two (`MAP_TICK`, set in
+`PANEL_TICK`) and sets `OVERHEAD`; M again, the loop not run since (the overhead
+map pauses it), turns into Escape, which closes it. `PANEL_TICK` clears
+`OVERHEAD` when the map runs again.
 
 **The view in a fight.** The game writes the view's place (`DS:1178h`,
 `117Ah`) in two routines that centre it (on a figure, `191F:01FFh`, and on a

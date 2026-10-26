@@ -168,6 +168,9 @@ def describe(d: Defences) -> List[str]:
     return out
 
 
+HALF_REASON = "non-magical weapons do half"
+
+
 def weapon_reason(d: Defences) -> Optional[str]:
     """Why a weapon's hit may do less than its dice, if the monster's defences say (else None)."""
     if d.weapon_plus == 4:
@@ -177,7 +180,7 @@ def weapon_reason(d: Defences) -> Optional[str]:
     if d.weapons_immune:
         return f"{' and '.join(d.weapons_immune)} weapons can't hurt it"
     if d.weapons_half:
-        return "non-magical weapons do half"
+        return HALF_REASON
     return None
 
 

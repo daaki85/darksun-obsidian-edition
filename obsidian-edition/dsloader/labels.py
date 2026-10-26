@@ -1,11 +1,13 @@
 """Names floating over figures on the map (DSCLOG's LABELS): a spell's name over its caster as it
-is cast (DSCLOG's CAST_SITE, the dice log's KIND_CAST), "Miss" over whom an attack missed.
+is cast (DSCLOG's CAST_SITE, the dice log's KIND_CAST), "Miss" over whom an attack missed, and
+"Armor: 7 left" over a creature whose spell has used a charge (the dice log's charge lines).
 
 The Loader draws each in the game's font, its ink with a dark edge round it, as two one-bit masks
 (ROW bytes a row, bit 0 of the first byte the leftmost pixel) into one of DSCLOG's SLOTS in its
 header (TSR_LABELS); DSCLOG places it over the figure's feet and puts it on the screen again as
 the game draws there. A label stays SHOW_FOR seconds; a new one takes the slot of one over the same
-figure, else a free one, else the oldest. A slot is written with its number 0 first, so DSCLOG
+figure, else a free one, else the oldest; but a charge used (PRIORITY, CHARGE_FOR seconds) is
+never replaced by a "Miss" or a spell's name while it shows. A slot is written with its number 0 first, so DSCLOG
 never puts a half-written one, then a new number for the new label.
 """
 
@@ -15,16 +17,18 @@ from typing import List, Optional, Tuple
 from . import combatlog
 
 TSR_LABELS = 374        # DSCLOG's header: LBL_SLOTS
-SLOTS = 2               # (DSCLOG's LBL_SLOTS)
+SLOTS = 4               # (DSCLOG's LBL_SLOTS)
 ROW = 16                # (LBL_ROW) bytes a mask's row
 WIDTH_MOST = ROW * 8
 HEIGHT_MOST = 11        # (LBL_H_MOST)
 MASK = ROW * HEIGHT_MOST
 SIZE = 8 + 2 * MASK     # (LBL_SIZE)
 SHOW_FOR = 1.5          # seconds a label stays
+CHARGE_FOR = 3.0        # ... a charge used ("Armor: 7 left"), which no "Miss" or spell's name replaces
 UP = 34                 # its bottom row this far above the figure's feet: over a man's head
 SPELL_INK = (255, 220, 90)
 MISS_INK = (225, 225, 225)
+CHARGE_INK = (150, 200, 255)  # (an effect's charge used: "Armor: 7 left")
 EDGE = (12, 8, 4)
 MISS = "Miss"
 # (words shortened, in turn, until a spell's name fits WIDTH_MOST)
@@ -88,19 +92,29 @@ class Labels:
         self.on = True
         self.font = None
         self._number = 0
-        self._slots: List[Optional[Tuple[float, int, str]]] = [None] * SLOTS  # (until, thing, text)
+        # (until, thing, text, priority)
+        self._slots: List[Optional[Tuple[float, int, str, int]]] = [None] * SLOTS
 
-    def show(self, guest, tsr_hdr: Optional[int], thing: Optional[int], text: str, colour, now: float) -> None:
-        """TEXT over map thing THING (a combatant) for SHOW_FOR seconds, in COLOUR (0-255 a channel)."""
+    def show(self, guest, tsr_hdr: Optional[int], thing: Optional[int], text: str, colour, now: float,
+             priority: int = 0) -> None:
+        """TEXT over map thing THING (a combatant) for SHOW_FOR seconds (CHARGE_FOR with PRIORITY 1),
+        in COLOUR (0-255 a channel). A label of lower priority than one showing over the same figure,
+        or than both shown when no slot is free, is left out."""
         if not self.on or self.font is None or tsr_hdr is None or thing is None or thing < 0 or not text:
             return
+        hold = CHARGE_FOR if priority else SHOW_FOR
         same = next((n for n, s in enumerate(self._slots) if s and s[1] == thing), None)
         if same is not None and self._slots[same][2] == text:
-            self._slots[same] = (now + SHOW_FOR, thing, text)  # (shown already: kept longer)
+            self._slots[same] = (now + hold, thing, text, priority)  # (shown already: kept longer)
             return
+        if same is not None and self._slots[same][3] > priority:
+            return  # (a charge used still showing over this figure)
         free = next((n for n, s in enumerate(self._slots) if s is None), None)
-        n = same if same is not None else free if free is not None else \
-            min(range(SLOTS), key=lambda k: self._slots[k][0])
+        if same is None and free is None:
+            n = min(range(SLOTS), key=lambda k: (self._slots[k][3], self._slots[k][0]))
+            if self._slots[n][3] > priority:
+                return
+        n = same if same is not None else free if free is not None else n
         dac = _dac(guest, tsr_hdr)
         self._number = self._number % 255 + 1
         at = tsr_hdr + TSR_LABELS + n * SIZE
@@ -109,7 +123,7 @@ class Labels:
                           combatlog.nearest(dac, EDGE))
         guest.write(at + 1, data[1:])
         guest.write(at, data[:1])
-        self._slots[n] = (now + SHOW_FOR, thing, text)
+        self._slots[n] = (now + hold, thing, text, priority)
 
     def tick(self, guest, tsr_hdr: Optional[int], now: float) -> None:
         """Labels whose time is up taken off (all of them, switched off)."""

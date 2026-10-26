@@ -69,15 +69,39 @@ class LabelTests(unittest.TestCase):
         lab.show(guest, HDR, 0x25, "Miss", labels.MISS_INK, 11.0)  # (kept longer, not written again)
         self.assertEqual(slot(guest, 0)[0], 1)
         lab.show(guest, HDR, 2, "Enlarge", labels.SPELL_INK, 11.2)
-        lab.show(guest, HDR, 3, "Friends", labels.SPELL_INK, 11.4)  # (the oldest's slot: the miss's)
-        self.assertEqual([struct.unpack_from("<H", slot(guest, n), 6)[0] for n in range(2)], [3, 2])
+        lab.show(guest, HDR, 3, "Friends", labels.SPELL_INK, 11.4)
+        lab.show(guest, HDR, 4, "Bless", labels.SPELL_INK, 11.5)
+        lab.show(guest, HDR, 5, "Haste", labels.SPELL_INK, 11.6)  # (the oldest's slot: the miss's)
+        things = [struct.unpack_from("<H", slot(guest, n), 6)[0] for n in range(labels.SLOTS)]
+        self.assertEqual(things, [5, 2, 3, 4])
         lab.tick(guest, HDR, 11.2 + labels.SHOW_FOR)
-        self.assertEqual([slot(guest, n)[0] for n in range(2)], [3, 0])
+        self.assertEqual([slot(guest, n)[0] for n in range(labels.SLOTS)], [5, 0, 3, 4])
         lab.on = False
         lab.tick(guest, HDR, 11.3)
         self.assertEqual(slot(guest, 0)[0], 0)
         lab.show(guest, HDR, 2, "Enlarge", labels.SPELL_INK, 12.0)  # (switched off: none)
         self.assertEqual([slot(guest, n)[0] for n in range(2)], [0, 0])
+
+    def test_charge_first(self):
+        """A charge used stays CHARGE_FOR seconds and no "Miss" or spell's name replaces it, over its
+        figure or as the oldest of a full set; a newer charge over the same figure does."""
+        guest, lab = Guest(), labels.Labels()
+        lab.font = Font()
+        thing = lambda n: struct.unpack_from("<H", slot(guest, n), 6)[0]
+        text_ink = lambda n: slot(guest, n)[4]
+        lab.show(guest, HDR, 0x25, "Armor: 7 left", labels.CHARGE_INK, 10.0, priority=1)
+        lab.show(guest, HDR, 0x25, "Miss", labels.MISS_INK, 10.5)  # (left out: the charge shows)
+        self.assertEqual(text_ink(0), combatlog.nearest(guest.read(DAC, 768), labels.CHARGE_INK))
+        lab.show(guest, HDR, 2, "Miss", labels.MISS_INK, 10.6)
+        lab.show(guest, HDR, 3, "Miss", labels.MISS_INK, 10.7)
+        lab.show(guest, HDR, 4, "Miss", labels.MISS_INK, 10.8)
+        lab.show(guest, HDR, 5, "Miss", labels.MISS_INK, 10.9)  # (the oldest miss's slot, not the charge's)
+        self.assertEqual([thing(n) for n in range(labels.SLOTS)], [0x25, 5, 3, 4])
+        lab.show(guest, HDR, 0x25, "Armor: 6 left", labels.CHARGE_INK, 11.0, priority=1)
+        lab.tick(guest, HDR, 11.0 + labels.SHOW_FOR)
+        self.assertEqual([slot(guest, n)[0] != 0 for n in range(2)], [True, False])
+        lab.tick(guest, HDR, 11.0 + labels.CHARGE_FOR)
+        self.assertEqual(slot(guest, 0)[0], 0)
 
 
 if __name__ == "__main__":

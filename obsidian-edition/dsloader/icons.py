@@ -462,6 +462,13 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
 )
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
+# the game's own magic items whose icons have nothing in the colours it cycles, so they don't shine
+# as its others do: (name, its object, the icon made from its own, which takes its place; the
+# object's icon is its alone). The Parting Staff: its blue gem in the water's blues.
+SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows]], ...] = (
+    ("Parting Staff", 30044, lambda r: glow(r, lambda p, x, y: 158 <= p <= 161, WATER)),
+)
+
 
 def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
     """The objects and pictures to add to the game's SEGOBJEX.GFF."""
@@ -482,6 +489,11 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
             out[("BMP ", number)] = chunks[("BMP ", base)]  # have one; a necklace has none: kept so)
         rows = smaller.get(old_icon) or decode(chunks[("BMP ", old_icon)])
         out[("BMP ", icon)] = encode(make(rows))
+    for _, obj, make in SHINE:
+        if ("OJFF", obj) in chunks:
+            icon, = struct.unpack_from("<H", chunks[("OJFF", obj)], OJFF_ICON)
+            if ("BMP ", icon) in chunks:
+                out[("BMP ", icon)] = encode(make(decode(chunks[("BMP ", icon)])))
     return out
 
 

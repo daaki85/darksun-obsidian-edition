@@ -431,25 +431,34 @@ class BackstabTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 69: ((1d8 = [5] +12 STR 24) x140% Enlarge "
                                            "(level 4)) x3 backstab"])
 
-    def backstab(self, level, rules):
+    def backstab(self, level, rules, made=0):
         log = make_game()
         log.rules = rules
         sheet = SHEETS + 0 * game.SHEET_SIZE
         log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, level
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
         e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=made))
         return log.describe(e)
+
+    def test_the_rounds_second_attack(self):
+        """The game multiplies the round's first two attacks ([BP-14h] at most 1); with RULE_BACKSTAB
+        only the first, as in AD&D (DSCLOG's STAB_TIMES); none from the third."""
+        self.assertEqual(self.backstab(6, 0, made=1),
+                         ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
+        self.assertEqual(self.backstab(6, game.RULE_BACKSTAB, made=1),
+                         ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+        self.assertEqual(self.backstab(6, 0, made=2), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
 
     def test_dice_only(self):
         """RULE_BACKSTAB (DSCLOG's STAB_TIMES): the dice multiplied, STR added once."""
         self.assertEqual(self.backstab(6, game.RULE_BACKSTAB),
-                         ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice x3)"])
+                         ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)"])
 
     def test_times_by_level(self):
         """x4 at thief levels 9 to 12, x5 from 13 (the game's 595C4h, as AD&D's table)."""
-        self.assertIn("+15 backstab (the dice x4)", self.backstab(12, game.RULE_BACKSTAB)[0])
-        self.assertIn("+20 backstab (the dice x5)", self.backstab(13, game.RULE_BACKSTAB)[0])
+        self.assertIn("+15 backstab (the dice 5 x4 = 20)", self.backstab(12, game.RULE_BACKSTAB)[0])
+        self.assertIn("+20 backstab (the dice 5 x5 = 25)", self.backstab(13, game.RULE_BACKSTAB)[0])
         self.assertIn("x5 backstab", self.backstab(14, 0)[0])
 
 
@@ -794,7 +803,44 @@ class SaveTests(unittest.TestCase):
         # the same routine for any other effect using a charge (Ironskin stopping a blow)
         e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 53),
                    parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
-        self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Ironskin on Mountain Stalker: one charge used"])
+        self.assertEqual(log.describe(e[0]) + log.describe(e[1]),
+                         ["    Ironskin on Mountain Stalker: one charge used, none left: it ends"])
+
+    def test_charges_left(self):
+        """Each charge used says how many are left: the record's count once the poll's charges
+        are all used, with those still to be told of in the same poll added back."""
+        log = make_game()
+        set_effects(log, [(0x29, 0x29, 2)])  # Armor (effect 2) on combatant 29h, 3 charges left
+        log.guest.mem[(LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF + 8] = 3
+        e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 2),
+                   parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1, 2, 2)]
+        log.count_charges(e)
+        lines = [line for x in e for line in log.describe(x)]
+        self.assertEqual(lines, ["    Improved AC on Mountain Stalker: one charge used, 4 left",
+                                 "    Improved AC on Mountain Stalker: one charge used, 3 left"])
+        # each floats over the creature, the spell's name and what is left (labels.py)
+        shown = []
+        log._float = lambda thing, text, colour, now, priority=0: shown.append((thing, text))
+        log._charge_spells[(0x29, 2)] = 0  # (Armor, spell 0)
+        log.count_charges(e[:2])
+        log.describe(e[0]); log.describe(e[1])
+        self.assertEqual(shown, [(0x29, f"{log.game.spell_name(0)}: 3 left")])  # (the spell's name: Armor)
+
+    def test_charge_behind_overlay_trap(self):
+        """The charge routine's 2d4 whose return the overlay manager made an INT 3Fh stub is still
+        a charge when its (creature, effect) has charges; a duration roll's (spell, level) isn't."""
+        log = make_game()
+        set_effects(log, [(0x29, 0x29, 2)])
+        log.guest.mem[(LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF + 8] = 5
+        trap = dicelog.OVERLAY_TRAP + bytes(8)
+        e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 2), parent_code=trap)
+             for f in (3, 1)]
+        log.count_charges(e)
+        self.assertEqual(log.describe(e[0]) + log.describe(e[1]),
+                         ["    Improved AC on Mountain Stalker: one charge used, 5 left"])
+        other = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 7), parent_code=trap)
+                 for f in (3, 1)]
+        self.assertFalse(log._overlay_charge(other[0], 2, 4))
 
     def test_acid_rounds(self):
         """An Acid's time (Acid Arrow's: 20 seconds a level) is rounds of burning (DSCLOG's
@@ -874,7 +920,8 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(blow(76, 75)), [head + "76, 75 or less strikes an image -> the blow gets through"])
         e = [entry(raw_for(f, 4), dicelog.DICE_SITE, words(0, 0, 2, 4), words(0, 0, 0x29, 25),
                    parent_code=dicelog.CHARGE_USED_RETURN) for f in (3, 1)]
-        self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Mirror Images on Mountain Stalker: an image vanishes"])
+        self.assertEqual(log.describe(e[0]) + log.describe(e[1]), ["    Mirror Images on Mountain Stalker: an image vanishes, "
+                                                                   "none left: it ends"])
 
     def test_strength_roll(self):
         log = make_game()
@@ -967,6 +1014,25 @@ class SaveTests(unittest.TestCase):
         log._hit(STALKER, 4, 9.0)
         self.assertEqual(log.unhurt(6.1, force=True),
                          ["  Mountain Stalker takes none of the 4 damage: a protection or resistance took it"])
+
+    def test_a_hit_passed_over(self):
+        """Hits on a creature immune to the first weapon, its HP falling by the second's only: the
+        first took none (said, with the reason), the second all of it, the third still to come."""
+        log = make_game()
+        m = log.guest.mem
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 25)
+        log.hp_changes(0.5)
+        log._weapon_reason = lambda index: "crushing and pointed weapons can't hurt it"
+        for damage in (19, 22, 19):
+            log._hit(STALKER, damage, 1.0)
+        struct.pack_into("<h", m, stalker, 3)
+        self.assertEqual(log.hp_changes(1.2),
+                         ["  Mountain Stalker takes none of the 19 damage: crushing and pointed weapons can't hurt it",
+                          "  Mountain Stalker now 3 HP (-22)"])
+        struct.pack_into("<h", m, stalker, -16)
+        self.assertEqual(log.hp_changes(1.3), ["  Mountain Stalker now -16 HP (-19)"])
+        self.assertEqual(log.unhurt(1.3 + dicelog.HIT_WAIT, force=True), [])
 
     def test_reduced_hits_seen_together(self):
         """Two hits on a creature that halves weapons, seen as one fall of HP: both of them, and

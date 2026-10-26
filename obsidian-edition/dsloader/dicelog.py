@@ -16,6 +16,7 @@ Everything game-specific here was taken from the GOG release of Shattered
 Lands (DSUN.EXE, 611408 bytes).
 """
 
+import itertools
 import random
 import re
 import struct
@@ -268,6 +269,7 @@ LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when ef
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
+HITS_MATCHED = 8  # weapon hits waiting on one target at most, for matching an HP fall to them
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
@@ -534,6 +536,10 @@ class DiceLog:
         self._hp: Dict[int, int] = {}  # creature index -> HP at the last look
         self._spell_until = 0.0  # HP changes before this are a spell's doing
         self._acid_burn = False  # an Acid burn's line just given (its damage's duration roll follows)
+        self._charges_ahead: Dict[Tuple[int, int], float] = {}  # charges this poll still to tell of
+        self._charged: set = set()  # (combatant, effect) with charges, at this poll and the last
+        self._charge_spells: Dict[Tuple[int, int], int] = {}  # ... and the spell each came from
+        self._charged_before: set = set()
         self._sun_burn = False  # a Sunstroke heat line just given (the same)
         self._spell_name = ""
         self._spell_id: Optional[int] = None
@@ -672,8 +678,8 @@ class DiceLog:
 
     def _answer_use(self) -> List[str]:
         """An item was used on something on the map, or a thief's Pick Pockets button chose someone
-        (PICKED_BY): try their pockets with that thief's hand; for the cooked vulture, see what
-        comes of it (vulture.py); and have DSCLOG show what came of it instead of the game's doing."""
+        (PICKED_BY): try their pockets with that thief's hand; and have DSCLOG show what came of
+        it instead of the game's doing."""
         if self.tsr_hdr is None:
             return []
         seq = self.guest.read(self.tsr_hdr + TSR_USE_SEQ, 2)
@@ -684,14 +690,8 @@ class DiceLog:
             item, thing = struct.unpack("<HH", self.guest.read(self.tsr_hdr + TSR_USE_ITEM, 2) +
                                         self.guest.read(self.tsr_hdr + TSR_USE_WHO, 2))
             it = ring.Items(self.game)
-            rec = it.item(item) if item < game.NO_ITEM else b""
             kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
-            meal = vulture.use(self.game, rec, index, self._fighting()) if rec and kind == 2 and self.vulture_on else None
-            if meal is not None:
-                taken = 2 if meal.used_up else True
-                result = pickpocket.Attempt(meal.text, meal.log)
-                self._rest_due = self._rest_due or meal.used_up  # (a full rest)
-            elif spellarrows.ARROWS_BY <= item < PICKED_BY:
+            if spellarrows.ARROWS_BY <= item < PICKED_BY:
                 taken = True
                 if self._fighting():
                     result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
@@ -1103,7 +1103,9 @@ class DiceLog:
     def _lines(self, show_all: bool, now: Optional[float]) -> List[str]:
         now = time.monotonic() if now is None else now
         out: List[str] = []
-        for e in self.poll():
+        entries = self.poll()
+        self.count_charges(entries)
+        for e in entries:
             out += self.describe(e, show_all, now)
         self._forget_undone_picks()
         self._kit_tick(now)
@@ -1527,7 +1529,10 @@ class DiceLog:
             sheet = g.sheet(index)
             most = struct.unpack_from("<h", sheet, game.SHEET_MAX_HP)[0] if len(sheet) >= game.SHEET_SIZE else None
             left = f"now {hp}/{most} HP" if most and most > 0 else f"now {hp} HP"
-            hit, resisted = self._hits_seen(index, max(before - hp, 0), hp)
+            hit, resisted, unhurt = self._hits_seen(index, max(before - hp, 0), hp)
+            for rolled in unhurt:
+                reason = self._weapon_reason(index) or "a protection or resistance took it"
+                out.append(f"  {who} takes none of the {rolled} damage: {reason}")
             if now <= self._spell_until and before - hp > hit:
                 # the game's damage code gives a creature that was Out Cold the most the dice can do
                 out_cold = " (Out Cold: the most the dice can do)" if was_out_cold else ""
@@ -1555,16 +1560,31 @@ class DiceLog:
         entry["hits"].append(damage)
         entry["at"] = now
 
-    def _hits_seen(self, index: int, lost: int, hp: int) -> Tuple[int, str]:
+    def _hits_seen(self, index: int, lost: int, hp: int) -> Tuple[int, str, List[int]]:
         """The weapon hits a fall of LOST HP (to HP) took in, in the order they landed: (their
-        damage, and a note when one did less than its roll: resisted)."""
+        damage, a note when one did less than its roll: resisted, and the hits before them that
+        took none: immune, when the fall is just the later ones')."""
         entry = self._hits.get(index)
         if not entry:
-            return 0, ""
+            return 0, "", []
         hits, taken, note = entry["hits"], 0, ""
         if hp <= 0:  # (down: whatever was rolled, its HP ran out)
             del self._hits[index]
-            return min(sum(hits), lost), ""
+            return min(sum(hits), lost), "", []
+        unhurt = []
+        if lost and len(hits) <= HITS_MATCHED and not self._hits_prefix(hits, lost) \
+                and self._weapon_reason(index) != monsters.HALF_REASON:  # (halved hits match nothing whole)
+            match = self._hits_matching(hits, lost)
+            if match is not None:  # (the fall is these hits exactly: the ones passed over took none)
+                last = max(match)
+                unhurt = [hits[i] for i in range(last) if i not in match]
+                taken = lost
+                del hits[:last + 1]
+                if not hits:
+                    del self._hits[index]
+                else:
+                    entry["hp"] = hp
+                return taken, note, unhurt
         while hits and lost - taken >= hits[0]:
             taken += hits.pop(0)
         if hits and not taken and lost:  # (less than the hit)
@@ -1579,7 +1599,28 @@ class DiceLog:
             entry["hp"] = hp
         else:
             del self._hits[index]
-        return taken, note
+        return taken, note, unhurt
+
+    @staticmethod
+    def _hits_prefix(hits: List[int], lost: int) -> bool:
+        """Whether the first hits, in order, add up to LOST exactly."""
+        total = 0
+        for damage in hits:
+            total += damage
+            if total == lost:
+                return True
+        return False
+
+    @staticmethod
+    def _hits_matching(hits: List[int], lost: int) -> Optional[Tuple[int, ...]]:
+        """The places of hits adding up to LOST exactly, the set ending soonest (fewest hits
+        passed over), or None."""
+        best = None
+        for size in range(1, len(hits) + 1):
+            for places in itertools.combinations(range(len(hits)), size):
+                if sum(hits[i] for i in places) == lost and (best is None or max(places) < max(best)):
+                    best = places
+        return best
 
     def unhurt(self, now: float, force: bool = False) -> List[str]:
         """Weapon hits that took no HP (HIT_WAIT seconds on, or FORCE: a new round): the target
@@ -1692,6 +1733,43 @@ class DiceLog:
         return False
 
     # ---- effects (spells and powers on creatures) ------------------------------
+
+    def count_charges(self, entries: Sequence[Entry]) -> None:
+        """The charges these entries use, by (combatant, effect): by the time they are read, the
+        effects' records show them all used, so each charge's line adds back those still to come."""
+        self._charges_ahead = {}
+        if self.game is not None:  # (and the effects with charges now, for _overlay_charge)
+            held = {(effect.owner, effect.id) for effect, charges, _ in self.game.effects_left() if charges}
+            self._charged, self._charged_before = held, self._charged
+            for effect, spell in self.game.effect_spells():  # (kept: the last charge takes the record)
+                if (effect.owner, effect.id) in held:
+                    self._charge_spells[(effect.owner, effect.id)] = spell
+        for e in entries:
+            charge = (e.parent_code.startswith(CHARGE_USED_RETURN)
+                      or self._overlay_charge(e, e.arg(6) or 0, e.arg(8) or 0))
+            if (charge and e.parent_arg(6) is not None
+                    and e.parent_arg(8) not in (None, ACID) and (e.arg(6) or 0) > 0):
+                key = (e.parent_arg(6), e.parent_arg(8))  # (each charge's 2d4: one entry a die)
+                self._charges_ahead[key] = self._charges_ahead.get(key, 0) + 1 / e.arg(6)
+
+    def _overlay_charge(self, e: Entry, count: int, sides: int) -> bool:
+        """The charge routine's 2d4 when the overlay manager has swapped its return address for an
+        INT 3Fh stub (so CHARGE_USED_RETURN can't be matched): its arguments are still (creature,
+        effect), an effect that creature has charges of, or had at the last poll (the last charge
+        removes it). A spell's duration roll behind the same stub has (spell, level) there."""
+        if not e.parent_code.startswith(OVERLAY_TRAP) or (count, sides) != (2, 4):
+            return False
+        key = (e.parent_arg(6), e.parent_arg(8))
+        return key in self._charged or key in self._charged_before
+
+    def _charges_after(self, owner: int, eid: int) -> int:
+        """The charges on OWNER's effect EID once this charge is used. The record shows every
+        charge used up to the poll, so the ones still to be told of in this poll's entries are
+        added back."""
+        key = (owner, eid)
+        ahead = max(round(self._charges_ahead.get(key, 1)) - 1, 0)
+        self._charges_ahead[key] = ahead
+        return (self.game.charges_left(owner, eid) if self.game is not None else 0) + ahead
 
     def _name(self, combatant: int) -> str:
         """A combatant's name, remembered for when the fight is over."""
@@ -2031,7 +2109,7 @@ class DiceLog:
             steps.append(f"(at most {game.THIEF_MOST})")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
 
-    def _float(self, thing: Optional[int], text: str, colour, now: float) -> None:
+    def _float(self, thing: Optional[int], text: str, colour, now: float, priority: int = 0) -> None:
         """TEXT floating over combatant THING for a moment (labels.py), with the switch on."""
         if not self.floating_names or self.tsr_hdr is None:
             return
@@ -2039,7 +2117,7 @@ class DiceLog:
             self._labels_font_tried = True
             self._labels.font = _game_font(self.game_dir)
         try:
-            self._labels.show(self.game.guest, self.tsr_hdr, thing, text, colour, now)
+            self._labels.show(self.game.guest, self.tsr_hdr, thing, text, colour, now, priority)
         except (struct.error, IndexError, ValueError):
             pass
 
@@ -2236,7 +2314,7 @@ class DiceLog:
                 return self._abjure(e, faces[0])
             if count == 1 and e.parent_code.startswith(SUMMON_ROLL_RETURN):
                 return [f"    Summoning: 1d{sides} = {faces[0]} picks which of its {sides} creatures comes"]
-            if e.parent_code.startswith(CHARGE_USED_RETURN):
+            if e.parent_code.startswith(CHARGE_USED_RETURN) or self._overlay_charge(e, count, sides):
                 who, eid = self._name(e.parent_arg(6)), e.parent_arg(8)
                 if eid == ACID and count == 1:  # (DSCLOG's BURN_PASS: Sunstroke's heat; its line KIND_HEAT's)
                     return []
@@ -2245,10 +2323,16 @@ class DiceLog:
                     return self.flush(now, force=True) + [
                         f"    {EFFECT_NAMES[ACID]} on {who}: {count}d{sides} = {faces_text} = {sum(faces)} acid damage"]
                 # the 2d4 means nothing here: a Stoneskin, Ironskin, Mirror Image... used a charge
+                owner = e.parent_arg(6)
+                left = self._charges_after(owner, eid)
+                spell = self._charge_spells.get((owner, eid))
+                said = self.game.spell_name(spell) if spell is not None else EFFECT_NAMES.get(eid, f"effect {eid}")
+                self._float(owner, f"{said}: {left} left" if left else f"{said} ends", labels.CHARGE_INK, now, priority=1)
+                tail = f"{left} left" if left else "none left: it ends"
                 if eid == game.MIRROR_EFFECT:
-                    return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes"]
+                    return [f"    {EFFECT_NAMES[eid]} on {who}: an image vanishes, {tail}"]
                 name = EFFECT_NAMES.get(eid, f"effect {eid}")
-                return [f"    {name} on {who}: one charge used"]
+                return [f"    {name} on {who}: one charge used, {tail}"]
             handler = next((bonus for code, bonus in SPELL_HANDLER_RETURNS if e.parent_code.startswith(code)), None)
             if handler is not None and e.parent_arg(0x0E) is not None:
                 spell = e.parent_arg(0x0E)
@@ -2313,19 +2397,21 @@ class DiceLog:
                 total = total * percent // 100
                 steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
-        # that on the attacker's first attack of the round: x2, x3 from thief level 5, x4 from 9,
-        # x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once (DSCLOG's
-        # STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h] from behind, [BP-0Ah] the
-        # attacks already made this round
-        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x0A)
-        if backstab and rear and made is not None and made <= 1:
+        # that on the attacker's first two attacks of the round: x2, x3 from thief level 5, x4 from
+        # 9, x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once, and on the
+        # first attack only (DSCLOG's STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h]
+        # from behind, [BP-14h] the attacks already made this round
+        backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x14)
+        most = 0 if self.rules & game.RULE_BACKSTAB else 1
+        if backstab and rear and made is not None and made <= most:
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
             if self.rules & game.RULE_BACKSTAB:
-                more = (times - 1) * sum(faces)
+                dice = sum(faces)
+                more = (times - 1) * dice
                 total += more
-                steps += f" +{more} backstab (the dice x{times})"
+                steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
             else:
                 total *= times
                 steps = f"({steps}) x{times} backstab"

@@ -1018,6 +1018,18 @@ class GameData:
         return [(Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]),
                  struct.unpack_from("<h", data, i * 10 + 4)[0]) for i in range(count)]
 
+    def charges_left(self, owner: int, effect: int) -> int:
+        """The charges left on combatant OWNER's effect EFFECT (+8 of its record), 0 if it has none
+        or is gone (the game removes it as the last is used)."""
+        count = self._word(EFFECT_COUNT)
+        if not 0 <= count <= 400:
+            return 0
+        data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
+        for i in range(count):
+            if struct.unpack_from("<h", data, i * 10)[0] == owner and data[i * 10 + 6] == effect:
+                return data[i * 10 + 8]
+        return 0
+
     def reply_chosen(self) -> Optional[Tuple[int, str]]:
         """The reply the player has just clicked (its place in the list, and its text), while
         the game flashes it; None the rest of the time."""

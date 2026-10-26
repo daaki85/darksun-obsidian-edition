@@ -93,12 +93,13 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 | Change | What it does |
 |---|---|
 | **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. In the slave pens and the arena, between fights, its top line counts the party's arena fights. |
-| **Names over figures** | A spell's name floats over its caster as it's cast, and "Miss" over anyone an attack misses. |
+| **Names over figures** | A spell's name floats over its caster as it's cast, "Miss" over anyone an attack misses, and "Armor: 7 left" (or "Mirror Image: 2 left", "Armor ends") when a spell that lasts a number of uses loses one. |
 | **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
-| **The Effects screen** | Names each kit and weapon spec, a page at a time when there are many. |
+| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). |
+| **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
 | **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
 
 **Controls:**
@@ -107,6 +108,7 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 |---|---|
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
 | **Scrolling with the mouse** | Press the wheel and drag the map. |
+| **M for the overhead map** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
 | **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
@@ -636,6 +638,10 @@ little for the quieter arts.
 *Shinobi.* Spies trained in secret by the Veiled Alliance, who carry a few
 spells beside their knives. Their masters teach them only what they need, so
 a scroll is theirs only if they can make out its script, and they travel light.
+The Effects screen (Current Spell Effects) shows a Shinobi's chance to read a
+scroll under its kit:
+
+![The Effects screen for Xan, a Shinobi: "KIT: SHINOBI" and under it "READ LANG. 35%"](docs/effects-shinobi.png)
 
 Each kit's gains, costs and starting gear: [Thief kits](KITS.md#thief-kits),
 and the Shinobi's slots by level in
@@ -1329,8 +1335,9 @@ fewer. The game's USE screen shows what is left of each level.
 ### Learning preserver spells
 
 A preserver chooses a spell at each level up, and can learn more from scrolls
-(right-click the scroll in the inventory, then click its icon), of a level it
-can cast. INT sets two limits:
+(right-click the scroll in the inventory, then click its icon; the result
+shows on the line under the paper doll), of a level it can cast. INT sets two
+limits:
 
 | INT | Chance to learn from a scroll | Most spells of each level |
 |---|---|---|
@@ -1348,14 +1355,14 @@ can cast. INT sets two limits:
 | 20-23 | 96-99% | all |
 | 24-25 | 100% | all |
 
+- **A failed roll uses the scroll up.**
+- **A full spell level** learns no more: the scroll is kept.
+- The level-up choice leaves out levels already full.
 - **A Shinobi** learns only its own spells from scrolls, and first has to read
   the scroll: a roll against its read languages, then INT's chance.
 - **Defilers sometimes carry scrolls:** each defiler in a fight has a 1 in 20
   chance of carrying a scroll of a random preserver spell, found on its body
   when it dies.
-- **A failed roll uses the scroll up.**
-- **A full spell level** learns no more: the scroll is kept.
-- The level-up choice leaves out levels already full.
 
 *Without the mod:* every scroll is learnt, and there is no limit.
 
@@ -1761,7 +1768,7 @@ AD&D's tables:
 | In the game | a combat log in the game (L shows and hides it) | on |
 | | how much it says: at the least, in short or in detail | in short |
 | | describe monsters when you Look at them in a fight | on |
-| | float a spell's name over its caster, and "Miss" over whoever an attack missed | on |
+| | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
 | Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
 | More character customization | weapon specialization; kits; the XP level cap; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
