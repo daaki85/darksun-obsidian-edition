@@ -56,7 +56,6 @@ TSR_SKILLS_ON = 266  # bits: item boxes name a cloak's and boots' bonus to hidin
 SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and opening locks (and its box says)
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
-TSR_POISONED = 360  # bit N: party member N, a Poisoner, has used its poison this fight (DSCLOG's PROBE_POISON)
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
@@ -710,11 +709,7 @@ class DiceLog:
             return []  # (the game changing its item lists: answered in a later pass)
         except (struct.error, IndexError, ValueError):
             result, taken = None, False
-        if result is not None and result.drop is not None:
-            self._write_pick_bytes(result.drop)  # (an item record, not a text: DSCLOG's ARROWS_DROP)
-            taken = spellarrows.ARROWS_DROP
-        else:
-            self._write_pick_text(result.text if result else "")
+        self._write_pick_text(result.text if result else "")
         self._write_xp(result)
         self.guest.write(self.tsr_hdr + TSR_USE_TAKEN, struct.pack("<H", int(taken)))
         self.guest.write(self.tsr_hdr + TSR_USE_REPLY, seq)
@@ -1023,7 +1018,7 @@ class DiceLog:
 
     def _kit_tick(self, now: float) -> None:
         """Once a second: DSCLOG's KIT_OUTDOORS, the party members under the open sky (a Military
-        Scout's skills, a Rescuer's cures), and the dances ended with the fight."""
+        Scout's skills, a Spirit Caller's casting), and the dances ended with the fight."""
         if self.game is None or self.tsr_hdr is None or now < self._kit_check:
             return
         self._kit_check = now + 1.0
@@ -1057,28 +1052,21 @@ class DiceLog:
                     target: Optional[int] = None) -> Tuple[str, int, int]:
         """(the kits' names, to hit, damage) the attacker's kits add to a weapon attack, as DSCLOG's
         KIT_TO_HIT, KIT_ATTACK_DAMAGE and KIT_EXTRA: a Ravager's, a Brute's, a Ghetto Fighter's (in
-        melee), an Arena Champion's; a Battle Dancer's dance, a Wilderness Avenger's against undead
-        (TARGET the target's combatant); and Wild Fighting, a Wild Fury's or Gerakis's (WILD_*)."""
+        melee), an Arena Champion's; a Battle Dancer's dance, a Wilderness Avenger's; and Wild Fighting, a Wild Fury's or Gerakis's (WILD_*)."""
         g = self.game
         names, to_hit, damage = [], 0, 0
         melee = mode is not None and mode <= 1
         kind = specialize.kind_of(item_type) if item_type is not None else None
-        creature = g.combatant_creature(target) if target is not None else None
-        undead = creature is not None and len(g.sheet(creature)) >= game.SHEET_SIZE \
-            and g.sheet(creature)[game.SHEET_RACE] == kits.UNDEAD_RACE
         for kid in (g.kit_ids(attacker) if attacker is not None else []):
             weapon = kits.melee(kid, g.two_handed_type(item_type), kind) if melee and not g.missile_type(item_type) else 0
             hit, dam = kits.champion(kid, g.holds_shield(attacker), melee)
-            more = kits.extra(kid, g.dance.get(attacker, 0), undead)
+            more = kits.extra(kid, g.dance.get(attacker, 0))
             if mode is not None and mode > 1 and attacker is not None and attacker < game.PARTY_SIZE:  # (DSCLOG's KIT_TO_HIT)
                 hit += kits.missile_to_hit(kid, kind, g.outdoors(attacker))
-            if kid == kits.POISONER and mode is not None:
-                hit += kits.POISONER_TO_HIT
             if mode is not None:  # (DSCLOG's KIT_TO_HIT: anything but a dagger, unarmed too)
                 hit += kits.ghetto_to_hit(kid, kind)
             if weapon or hit or dam or more:
-                names.append(kits.name(kid) + (" against undead" if kid == kits.AVENGER else "")
-                             + (" under the open sky" if kid == kits.SCOUT else ""))
+                names.append(kits.name(kid) + (" under the open sky" if kid == kits.SCOUT else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
         if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
             names.append("Wild Fighting")
@@ -1995,8 +1983,6 @@ class DiceLog:
             self._fight_seen, self._out_of_fight = False, None
         danced = self._dances.round(g, self.tsr_hdr, number, start=start)
         danced += self._wild.round(g, self.tsr_hdr, number, start=start)
-        if start and self.tsr_hdr is not None:  # (a new fight: each Poisoner's poison ready again)
-            self.guest.write(self.tsr_hdr + TSR_POISONED, b"\0")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief
@@ -2346,8 +2332,7 @@ class DiceLog:
                             or kits.cure_die(k, spell)), 0) if caster is not None else 0
                 if kits.cure_bonus(kid, spell, outdoors):  # (DSCLOG's PROBE_CURE)
                     total += kits.cure_bonus(kid, spell, outdoors)
-                    sky = ", under the open sky" if kid == kits.RESCUER else ""
-                    kit = f" {signed(kits.cure_bonus(kid, spell, outdoors))} {kits.name(kid)}{sky}"
+                    kit = f" {signed(kits.cure_bonus(kid, spell, outdoors))} {kits.name(kid)}"
                 elif kits.cure_die(kid, spell):
                     kit = f" + 1d{kits.cure_die(kid, spell)} {kits.name(kid)} (the helper's roll)"
                 return self.flush(now, force=True) + [
@@ -2408,6 +2393,8 @@ class DiceLog:
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
+            if attacker < game.PARTY_SIZE:  # (an Assassin's one more: DSCLOG's STAB_TIMES)
+                times = max(kits.backstab_times(k, times) for k in g.kit_ids(attacker) or [0])
             if self.rules & game.RULE_BACKSTAB:
                 dice = sum(faces)
                 more = (times - 1) * dice

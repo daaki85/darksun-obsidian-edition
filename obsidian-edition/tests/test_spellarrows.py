@@ -21,6 +21,12 @@ class FakeGame:
     def creature_name(self, member):
         return "Daaki"
 
+    def _worn(self, member):  # (what's in the quiver: QUIVER, or nothing)
+        if getattr(self, "quiver", None) is not None:
+            rec = bytearray(game.ITEM_SIZE)
+            rec[game.ITEM_SLOT] = weaponchoice.AMMO_SLOT
+            yield 9, bytes(rec), b""
+
 
 class SpellArrowsTests(unittest.TestCase):
     def test_arrows_item(self):
@@ -42,41 +48,41 @@ class SpellArrowsTests(unittest.TestCase):
 
     def test_make(self):
         """A Spellarcher's button: a slot of the spell's level used, 5 arrows a preserver level in
-        the backpack; as often as slots are left; none for a spell it doesn't know or without a slot."""
+        its quiver (then the bow put ahead of them); as often as slots are left; none for a spell it
+        doesn't know or without a slot."""
         gd = FakeGame()
         known = {1, 3, 39}
         arrows = spellarrows.SpellArrows()
         with mock.patch.object(spellarrows, "is_spellarcher", lambda gd, m: m == 0), \
                 mock.patch.object(spellarrows, "knows", lambda gd, m, s: s in known), \
+                mock.patch.object(spellarrows.weaponchoice, "bow_ahead") as ahead, \
                 mock.patch.object(spellarrows.npcitems, "add_to", return_value=True) as add:
             done = arrows.make(gd, 0, 1)
             self.assertEqual(done.text, "")  # (no window)
             self.assertIn("20 chill arrows", done.log[0])
             rec = add.call_args[0][2]
             self.assertEqual(struct.unpack_from("<HH", rec, 0)[1], 20)
+            self.assertEqual(add.call_args[0][3], weaponchoice.AMMO_SLOT)  # (in the quiver)
+            ahead.assert_called_with(gd, 0)
             self.assertEqual(gd.written[-1][1], bytes((1,)))  # (a 1st-level slot used: 2 to 1)
             self.assertIn("20 burning arrows", arrows.make(gd, 0, 0).log[0])  # (again: a slot left)
             self.assertIn("can't weave Shocking Grasp", arrows.make(gd, 0, 2).text)  # (not known)
             self.assertIn("no 3rd-level spell left", arrows.make(gd, 0, 3).text)
             self.assertIn("can't weave", arrows.make(gd, 1, 1).text)  # (not a Spellarcher)
             self.assertEqual(add.call_count, 2)
-            self.assertIsNone(done.drop)
 
-    def test_make_backpack_full(self):
-        """No room in the backpack: the slot still used, the arrows' record handed to DSCLOG to
-        leave on the ground, and no window."""
+    def test_make_quiver_full(self):
+        """Anything in the quiver: no arrows, and the slot kept."""
         gd = FakeGame()
+        gd.quiver = True
         arrows = spellarrows.SpellArrows()
         with mock.patch.object(spellarrows, "is_spellarcher", return_value=True), \
                 mock.patch.object(spellarrows, "knows", return_value=True), \
-                mock.patch.object(spellarrows.npcitems, "add_to", return_value=False):
+                mock.patch.object(spellarrows.npcitems, "add_to", return_value=True) as add:
             done = arrows.make(gd, 0, 1)
-        self.assertEqual(done.text, "")
-        self.assertIn("left on the ground", done.log[0])
-        self.assertEqual(len(done.drop), 0x15)
-        self.assertEqual(struct.unpack_from("<HH", done.drop, 0)[1], 20)
-        self.assertEqual(gd.written[-1][1], bytes((1,)))
-
+        self.assertIn("quiver must be empty", done.text)
+        self.assertEqual(add.call_count, 0)
+        self.assertEqual(gd.written, [])
 
 if __name__ == "__main__":
     unittest.main()

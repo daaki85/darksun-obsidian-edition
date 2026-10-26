@@ -1884,7 +1884,6 @@ class GameData:
                     + (kits.melee(kid, bool(typ[0x0F] & 0x40), kind) if not missile and not typ[0] & 2 else 0) \
                     + kits.extra(kid, self.dance.get(creature, 0)) \
                     + (kits.missile_to_hit(kid, kind, self.outdoors(creature)) if missile else 0) \
-                    + (kits.POISONER_TO_HIT if kid == kits.POISONER else 0) \
                     + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
@@ -1924,7 +1923,7 @@ class GameData:
             if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in ids:
                 parts.append((EFFECT_NAMES[CLAW_EFFECT], 1))  # (DSCLOG's NS_FIST)
             for kid in kids:  # (DSCLOG's KIT_TO_HIT and WILD_TO_HIT, unarmed too)
-                kit = (kits.POISONER_TO_HIT if kid == kits.POISONER else 0) + kits.ghetto_to_hit(kid, None)
+                kit = kits.ghetto_to_hit(kid, None)
                 if kit:
                     parts.append((kits.name(kid), kit))
             if self.wild.get(creature) is False:

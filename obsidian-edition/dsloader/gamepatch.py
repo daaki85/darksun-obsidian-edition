@@ -89,6 +89,7 @@ VEC_ARROW = 0x85
 VEC_OVR_BUF = 0x84
 VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
+VEC_TAKE = 0xF7
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -700,7 +701,7 @@ PATCHES = (
     # ranger's whole (its spell levels count it 7 less), 7 less with the rule, a Seeker's 5 and a
     # Justifier's 9 (kits.spell_class_level)
     Patch("ranger_level", 0x5E3B8, bytes.fromhex("268a4724"), _interrupt(VEC_RANGER_LEVEL, 4)),
-    # A kit's hit die (the Battle Mage's d6, the Mind Warrior's d8) where a level's die is taken from
+    # A kit's hit die (the Battle Mage's d6, the Arcanist's d3) where a level's die is taken from
     # the class's group, and the Mind Warrior's a tenth fewer PSP where a level up sets them; at
     # creation, the die for the most hit points a new character can have, and the end of the
     # routine working out its PSP
@@ -773,11 +774,15 @@ PATCHES = (
     # it, and notes now and then where the game was, for the Loader's freeze report)
     Patch("tick", 0x3925C, bytes.fromhex("2eff060400"), _interrupt(VEC_TICK, 5)),
     # the routine giving a hit's special effects, where a person who isn't a thri-kreen has none:
-    # jmp to its end (DSCLOG queues a Poisoner's poison on its first hit in a fight, then jumps)
+    # jmp to its end (DSCLOG queues a Poisoner's poison on each hit, then jumps)
     Patch("poison", 0x7A6DD, bytes.fromhex("e9e500"), _interrupt(VEC_POISON, 3)),
     # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
     # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
     Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
+    # the routine saying whether an item may be taken from an inventory slot, where it found none
+    # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
+    # spell arrows in the quiver as those spells keep their weapons)
+    Patch("take", 0x6F4B0, bytes.fromhex("7424"), _interrupt(VEC_TAKE, 2)),
     # the overlay manager's buffer (twice the largest overlay, 32,992 bytes, the game's for good):
     # call far farmalloc becomes "int / test ax,imm16", the call's segment, which DOS relocates,
     # the test's word (DSCLOG gives a block it has kept in upper memory, else calls farmalloc): the
