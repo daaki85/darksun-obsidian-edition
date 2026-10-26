@@ -695,6 +695,37 @@ play: a haystack search in the slave pens logged
 `0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)`, as
 the game's own message said.
 
+### The Bowyer's archery target
+
+Shooting at the target in Teaquetzl runs script 178 (with a bow in hand: the
+script counts objects 1017, 1039 and 30007, the bow, the Bow +2 and Phrain's
+Bow, not the Loader's Dunesong): its distance command (80h)
+gives the archer's distance from the target (object 1314) in squares, as the
+game's distance routine (DSUN.EXE DD8Ch) counts them: the least n, from its
+estimate, with n * n + n at least dx * dx + dy * dy (map squares, the map
+things' 16ths of a square at DS:669Dh shifted by 4). Under 5 is a bull's eye
+with no roll; otherwise a random 0-20 under DEX - distance / 2 (2 if DEX is under
+the distance) hits, under by 10 or more is the centre, which from more than 13
+squares with the Bowyer (object 283) within 25 gives 6 Arrows +2, once (flag
+642). `dsloader/bowyer.py` writes the shot's line from the random command
+PROBE_SCRIPT_RAND records (position 57Fh, script 178's alone), the archer the one
+whose turn it is, the distances worked out the same way from where they stand.
+
+### Ability checks in the scripts' conditions
+
+Some scripts test an ability without the ability check command: a condition
+compares the random command with a field of the character acting (fields 23 to
+28, STR to CHA), as Chahl's `random(19) <= CHA` when asked about his scars
+(script 181), the chains a strong character breaks (76) or a secret door an
+intelligent one spots (69, `INT - 10`). `dsloader/scriptchecks.py` finds every
+such condition in the Loader's copy of GPLDATA.GFF (13 of them) by the position
+DSCLOG records past its random command (as the searches are told apart; a
+position two scripts share is left out), and the dice log evaluates the
+condition with the roll and the score of whoever's turn it is (outside a fight
+the leader, the character acting): `Daaki CHA check: 0-19 = 15, always made
+(CHA 20) -> success`. Which way the condition goes is the one the ability
+favours (the score 25 with the lowest roll). Tested in play with Chahl.
+
 ### The combat log in the game
 
 ([In the README](README.md#the-combat-log-in-the-game).)
@@ -2602,7 +2633,16 @@ the first time the pith is delivered (flag 625), and Merzol's haystack (script
 137: `haystash.py`) leaves Hayneedle (object 2590, an item object of its own)
 beside his sack of ceramic pieces (25h at the searcher's place, as the sack's),
 the first search only (flag 502). The Lava Rift's Hermit (object 81) has
-Nightsliver in place of his stone dagger. The tome (`dsloader/tome.py`) is a
+Nightsliver in place of his stone dagger. An object can only have so many
+records: the routine that reads them (DSUN.EXE 68000h) keeps a 6-byte entry for
+each in a table on its stack, 80 of them, and gives up on an object with 80 or
+more; the code that makes a region's people (244D3h) then frees the person's
+map entry, and the person is never made. The game's largest has 74 (Jark's); an
+item adds 3 (the item, its type and its name), so the Weapon Merchant's 11 new
+weapons made 89, and Jark's 7 made 95. `records_*` in `dsloader/gamepatch.py`
+make the table room for 120 (the routine's stack frame 0F0h bytes larger: the
+game's stack has some 20 KB it never reaches), and `test_records_fit` keeps the
+Loader's gifts under it. The tome (`dsloader/tome.py`) is a
 scroll of the game's kind: object 1446, among the game's scrolls' numbers
 (1400-1499: its object record the first scroll's, as only a scroll's kind of
 object has its box's icon clicked; the picture that number had, the icon of two
@@ -2630,7 +2670,15 @@ the item type's material before the name when it shows one); and the icons are
 objects in the Loader's copy of `SEGOBJEX.GFF` (`dsloader/icons.py`), which the
 helper has the game open instead of its own (its `INT 21h` hook). The copy also
 has the game's Polearm picture made 22 pixels tall (`icons.fit_box`): at its own
-36, the item box's lines, which start below the picture, ran out of the box. An
+36, the item box's lines, which start below the picture, ran out of the box. Its icons of the game's
+own magic items that stood still (`icons.SHINE`: the Parting Staff, the
+Chameleon Gloves, the Hornblade... 19 of them) have every other pixel of their
+metal, gems or leather in the colours the game cycles in the inventory (water
+11-15, fire 240-248; the Silk Armor's and the Living Cloak's greens in a leaf's
+shades), as its other magic items' icons do. Three share their picture with a
+plain item (Cahulaks +1 with the cahulaks, Light of Dawn and El's Ring with the
+plain ring), so theirs is a new picture (BMP 2653-2655, their OJFF's +0Ch
+pointed to it), and the plain ones keep the still one. An
 item on the ground is drawn with its object's icon (the thing's map record,
 +0Fh), so the Loader's items, dropped from the inventory or left by the dead,
 lie on the ground as their own icons (checked: the Short Sword, the Ashen Robe,

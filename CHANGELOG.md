@@ -6,6 +6,43 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Pull request #64
+
+**New**
+- **The scripts' own ability checks in the dice log.** 13 conditions compare the scripts' random
+  command with an ability of the character acting (fields 23-28) instead of using the ability
+  check command: Chahl's CHA (181), the chains' STR (76), secret doors' INT - 10 (69)...
+  `scriptchecks.py` finds them in the Loader's GPLDATA.GFF by the position PROBE_SCRIPT_RAND
+  records, and `_script_check` evaluates the condition with the roll and the score of whoever's
+  turn it is: `Daaki CHA check: 0-19 = 15, always made (CHA 20) -> success`.
+- **Nineteen of the game's magic items shine** in their icons (`icons.SHINE`), as the Parting
+  Staff's gem does: the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the Terror
+  Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arms and legs, the
+  Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of
+  Knowledge: their metal, gems or leather in the water's or the fire's cycling colours, every other
+  pixel (greens a leaf's shades for the silk and the cloak). Cahulaks +1, Light of Dawn and El's
+  Ring share their icon with plain items, so they get pictures of their own (BMP 2653-2655, their
+  OJFF +0Ch pointed to them).
+- **The Bowyer's archery target in the dice log** (script 178): each shot's roll, what it needed
+  (DEX - distance / 2), the distances from the target and the Bowyer (the game's distance command
+  ported: `bowyer.distance`, from the map things' squares, `GameData.thing_square`/`things_of`)
+  and the result: a miss, a ring, the centre, and whether it earns the arrows (`bowyer.py`; its
+  random command known by its position, 57Fh, in script 178 alone).
+- **Documentation review.** FEATURES has a section on the magic items' icons (and its Graphics
+  intro and contents say so), DEVELOPMENT how `icons.SHINE` works and its three own pictures,
+  HOW-THE-GAME-WORKS the Bowyer's archery target (the three bows its script names: not the
+  Loader's Dunesong, as ITEMS now says), the Loader README's summary the gear's glint and the
+  icons' shine; the patch notes' long dice-log line is three.
+
+**Fixed**
+- **The Weapon Merchant was missing from Teaquetzl's market** (since 1.2.0), and Jark from Tyr's.
+  The routine that reads an object's records (RDFF, DSUN.EXE 68000h) keeps them in a table of 80
+  on its stack and gives up on an object with more (-2), and the code making a region's people
+  (244D3h) then frees the person's map entry: the merchant had 89 records with the Loader's 11
+  weapons, Jark 95 (the game's largest, 74). `records_*` (gamepatch) make the table room for 120
+  (the frame 0F0h bytes larger), and `test_records_fit` keeps every object the Loader adds to
+  under it. A save already in the village stays without him.
+
 ## Pull request #63
 
 - **Obsidian Edition 2.9.0**: the version is 2.9.0, with its notes in `release-notes/v2.9.0.md`,

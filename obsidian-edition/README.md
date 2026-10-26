@@ -84,8 +84,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   Whirlwind...), Kalzith (a defiler who sells scrolls), defilers who drop
   scrolls, more of Semyon's story, and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
-  and armour, figures cast shadows and kick up dust, and elves and half-elves
-  have a look of their own ([Graphics](FEATURES.md#graphics)).
+  and armour (its magic gear glinting), figures cast shadows and kick up dust,
+  and elves and half-elves have a look of their own; and the game's magic items
+  whose icons stood still shine as the rest do ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
   M for the overhead map, a view that stays put in fights, dragging the map
   with the mouse wheel held down, a pointer in the intro and scenes that a click skips
@@ -888,6 +889,8 @@ creatures save again as they stay in them; those lines have no "from".
 | Line | Meaning |
 |---|---|
 | `X DEX check: d20 = 9, needs 16 or less (DEX 16) -> success` | An ability check. A natural 20 always fails. |
+| `Daaki CHA check: 0-19 = 15, needs 16 or less (CHA 20 - 4) -> success` / `Cilla INT check: d20 = 3, needs 4 or less (INT 14 - 10) -> success` | An ability check a script makes with a roll of its own rather than the game's check, against the character acting (the leader outside a fight): talking Chahl round, breaking chains, spotting a secret door. The roll is shown as the script makes it (0 to 19, say), with what it needed. |
+| `Daaki shoots at the archery target (15 squares from the target, 8 from the Bowyer): 0-20 = 2, needs under 14 (DEX 21 - 15 / 2), the centre 4 or less -> the centre: the Bowyer's reward, 6 Arrows +2` | A shot at the Bowyer's archery target in Teaquetzl: the roll, what it needed, how far the archer is from the target and from the Bowyer, and why a centre shot did or didn't earn his arrows (more than 13 squares from the target, the Bowyer within 25, once a game). |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), and what its chance is made of. |
 | `Zulak uses Graft Weapon: power check d20 = 14, needs 11 or less -> it fails` / `    power score 11 = 16 CON - 5 Graft Weapon` | A psionic power's check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)): a d20 at or under the power's score, the ability it uses plus the power's adjustment. A failure is the game's `psionic power check fails`, and costs half the PSP. A line `... within X's Synaptic Static: ...` comes first when someone else keeps Synaptic Static up. |
 | `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20) -> resisted` | A psionic attack mode (Ego Whip, Id Insinuation, Psychic Crush, Psionic Blast) resisted or not: its target rolls 1 to its defence twice, each needing more than the attacker's power check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)). |

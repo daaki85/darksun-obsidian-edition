@@ -60,6 +60,7 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [What the party wears](#what-the-party-wears)
   - [Shadows](#shadows)
   - [Dust](#dust)
+  - [Magic items' icons](#magic-items-icons)
   - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
   - [Choosing an enemy: Tab, Enter and the
@@ -1620,9 +1621,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#defilers-scrolls).
 
 ## Graphics
 
-What the mod draws on the game's map. The elves' and half-elves' looks,
-the party's gear, shadows and dust each have a switch in the Options tab's
-**Graphics** section.
+What the mod draws on the game's map, and the magic items' icons. The elves'
+and half-elves' looks, the party's gear, shadows and dust each have a switch in
+the Options tab's **Graphics** section.
 
 ### Elves and half-elves
 
@@ -1700,6 +1701,21 @@ stand in front of them, as with the shadows. Switch it off on the Options tab.
 ![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
+
+### Magic items' icons
+
+The game makes most of its magic items' icons shine in the inventory, a shop
+and on the ground: their colours turn, as the water's and the fire's do. Some
+it left still. The Loader gives 19 of them the shine of the others: the Parting
+Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the
+Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and
+Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn,
+El's Ring and the Orb of Knowledge. Cahulaks +1, Light of Dawn and El's Ring
+share their picture with a plain item in the game, so they get one of their own
+and the plain cahulaks and ring stay still. The Loader's own magic items shine
+in their icons too. There's no switch: only the pictures change.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
 
 ### Spells on the ground
 

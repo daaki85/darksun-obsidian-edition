@@ -305,6 +305,8 @@ IN_COMBAT = 0x1168
 FIGHT_STATE_FROM_DS, FIGHT_STATE_ON = 0x4356 - 0x377E, 0x19
 REGION = 0x117C  # DS word: the region the party is in
 POSITIONS = 0x669D  # DS: each map object's x, y (in 16ths of a square), 32 bytes apart; the party's leader is object 0
+THING_OBJECT = 0x6694 + 0x1A  # DS: each map object's object number, in the same 32-byte records
+MAP_THINGS = 0x140  # the map objects the game's distance command looks through
 # The party's money, in ceramic pieces (the inventory screen's bottom bar): a dword the game's
 # script command for giving money (0Ch) adds to
 MONEY_SEG, MONEY = 0x3781, 0x357
@@ -967,6 +969,16 @@ class GameData:
     def party_position(self) -> Tuple[int, int]:
         """Where the party's leader (object 0) stands on the map: x, y in 16ths of a square."""
         return struct.unpack("<HH", self.guest.read(self.ds * 16 + POSITIONS, 4))
+
+    def thing_square(self, thing: int) -> Tuple[int, int]:
+        """The square a map object (THINGS) stands on."""
+        x, y = struct.unpack("<HH", self.guest.read(self.ds * 16 + POSITIONS + thing * 32, 4))
+        return x >> 4, y >> 4
+
+    def things_of(self, obj: int) -> List[int]:
+        """The map objects of object OBJ, as the game's distance command finds them."""
+        data = self.guest.read(self.ds * 16 + THING_OBJECT, MAP_THINGS * 32)
+        return [i for i in range(MAP_THINGS) if struct.unpack_from("<h", data, i * 32)[0] == obj]
 
     def item_type_record(self, item: bytes) -> bytes:
         types = far_pointer(self.guest, self.ds, ITEM_TYPES_PTR)
