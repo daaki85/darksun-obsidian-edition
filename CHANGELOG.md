@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request
+## Pull request #62 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/62))
 
 **New**
 - **Charges left, in the dice log and on the Effects screen.** Each charge used says how many are
