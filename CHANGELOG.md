@@ -6,6 +6,59 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Pull request #68 (not merged yet)
+
+**Changed: kit balance**
+- **Arcanist** keeps two preserver spells a turn but loses its spell slot more at each level;
+  the **Scholar** has it now (`kits.slots`, DSCLOG's `PROBE_SLOTS`).
+- **Mind Warrior**: the psionicist's d6, not a d8 (`kits.hit_die`, `PROBE_HIT_DIE`,
+  `PROBE_CR_DIE`); its tenth fewer PSP stays.
+- **Rescuer**: its cures heal 1 more a die anywhere, not only under the open sky, and it has 2
+  more Move in a fight (`KIT_MOVE`); it may no longer hold a shield (`KIT_FORBIDS`, `kits.forbids`;
+  a new one's starting shield is left behind).
+- **Wilderness Avenger**: +1 to hit and damage against anything, not only undead (`KIT_EXTRA`).
+  Its cost, a druid slot fewer at each level, became light armour only for a while, which cost
+  a druid nothing (no armour anyway; dropped from `LIGHT_KITS` and `KIT_LIGHT`), and is now **no
+  healing spells**: Cure Light, Serious and Critical Wounds, Blood Flow, Heal and Water of Life
+  (`AV_HEAL`) are kept from it as it is made (`AV_KNOW` in `PROBE_EL_KNOW`; a level up marks no
+  priest spells), in the routine giving a priest its spheres' spells (`AV_GRANT`, DSUN.EXE 5E499h:
+  no caller found, guarded as `PROBE_EL_GRANT` guards it) and for the 6th-level two
+  (`NS_PRIEST_KNOWS`); one in an
+  older save loses them when it is loaded (`kits.avenger_heals`). In return its Cause Light,
+  Serious and Critical Wounds do 1 more a die (`AV_CAUSE`, from `AREA_DMG` at DSUN.EXE 754ECh and
+  from `HARM_SITE`, by `CAST_SITE`'s caster; the dice log's `_harm_bonus`).
+- **Assassin**: a backstab's multiplier one more, x3 to x6 (`STAB_TIMES`,
+  `kits.backstab_times`).
+- **Poisoner**: every melee weapon hit poisons, not a shot or a throw, the target's save as before
+  (`KIT_SHOT`, the header's +360, marked by `PROBE_ATTACKS`; `PROBE_POISON`, only
+  with no spell or power behind the damage, `[BP+12h]` -1: the poison's own damage comes back
+  through the same routine, and once a fight no longer stopped it poisoning again and again);
+  no −1 to hit; its weapon spec the dagger or the short
+  sword only (`KIT_POISON_KINDS` in `KINDS_ALLOWED`, `kits.POISONER_KINDS`).
+- **Healer**: no ranger of air, earth or fire, either way of DUAL (`DUAL_BANS`; the game
+  already bars a cleric from becoming a cleric or druid, and a druid a cleric); the sphere menu
+  after DUAL is WATER ONLY for a Healer and its answer water (`DUAL_SPHERES`, `PROBE_SPHERE` at
+  DSUN.EXE 86BC3h, `INT FFh`), as the DUAL window keeps a ranger's row open while the water
+  ranger is allowed.
+- **Spellarcher**: spell arrows only into an empty quiver (else nothing is made, no slot
+  used), and kept there as a Flame Blade is kept in the hand: `PROBE_TAKE` (`INT F7h`, DSUN.EXE
+  6F4B0h, the game's "may this leave its slot" routine) says "Item grafted on", and
+  `QUIVER_KEPT` in `PROBE_CAN_USE` refuses anything put in their place. The drop at the party's
+  feet (`ARROWS_DROP`, `Attempt.drop`) is gone.
+- Checked in the game: the Spellarcher's quiver (all four cases); the Healer's DUAL both ways,
+  and which classes the game itself bars on DUAL; a new Avenger (no cures known, the causes
+  known), one through a level up (no cures given) and its Cause Wounds' extra die; a Poisoner's
+  hits (one save each); an Assassin's backstab (x5 at 9th level). The rest by the emulated tests
+  (`QuiverTests`, the kits' slots, move, to-hit, poison and kinds tests; the Rescuer's shield).
+
+**Docs**
+- Doc review: the dice log's hit-die line names the Battle Mage and Arcanist (the Mind Warrior has
+  the psionicist's die now), and the guide's hit points list them; the item report's example
+  names Inixhide as the log does; the guide's Spellarcher entry is flavour and a link, as the
+  other kits' are; the patch notes' new spells by level, and Kalzith's scrolls said once; a
+  repeated clause gone from the Military Scout's row; long lines wrapped. Screenshots checked:
+  none out of date.
+
 ## Pull request #67 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/67))
 
 - **Obsidian Edition 2.10.0**: the version is 2.10.0, with its notes in `release-notes/v2.10.0.md`,

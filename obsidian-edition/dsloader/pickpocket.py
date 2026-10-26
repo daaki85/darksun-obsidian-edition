@@ -57,7 +57,6 @@ class Attempt:
     key: Optional[str] = None  # the person's pockets, now out of reach (the thief was caught)
     xp_to: Optional[int] = None  # a party member given XP for what was lifted (the game's routine)
     xp: int = 0
-    drop: Optional[bytes] = None  # an item record for DSCLOG to leave on the ground at the party's feet
 
 
 def _seen(data: bytes) -> Optional[str]:

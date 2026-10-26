@@ -67,8 +67,8 @@ armour.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear; with fuller starting gear, a cloak | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
-| **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric or druid |
-| **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric or druid |
+| **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric |
+| **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric |
 
 ## Thief kits
 
@@ -76,7 +76,7 @@ A thief starts with a bone long sword, sling, leather chest armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Assassin** | hiding in shadows not halved in daylight | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear; with fuller starting gear, a cloak | |
+| **Assassin** | hiding in shadows not halved in daylight; a backstab one step deadlier: **×3 at 1st-4th level, ×4 at 5th-8th, ×5 at 9th-12th, ×6 from 13th** (a thief's ×2 to ×5) | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear; with fuller starting gear, a cloak | |
 | **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
 | **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 ([the list](#kits-spell-slots)); one of its own learnt from a scroll too, if it first reads it (a d100 against its **read languages**) and then, with the rule for INT on, learns it (INT's chance): a failed roll uses the scroll up | no spell but its own from a scroll; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (after changing class too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
 
@@ -87,8 +87,8 @@ spells.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Arcanist** | a spell slot more at each spell level it has slots at, from 1st level (2 at 1st where a preserver has 1); in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
-| **Scholar** | a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
+| **Arcanist** | in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
+| **Scholar** | a spell slot more at each spell level it has slots at, from 1st level (2 at 1st where a preserver has 1); a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
 | **Battle Mage** | a warrior's THAC0 (21 less its level); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon window after DONE (the long sword for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 
 ## Cleric kits
@@ -98,7 +98,7 @@ backpack.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Healer** | the **sphere of the cosmos**: the spells every druid casts and no cleric, known from the start and cast at its cleric level (4th level: Abjure, Cloak of Bravery, Cloak of Fear, Cure and Cause Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius; 5th: Cure and Cause Critical Wounds, Dispel Evil, Raise Dead, Slay Living); Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | **the water sphere only**; no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit)); after DUAL, offered to a water cleric only; can't go with the Twin-blade |
+| **Healer** | the **sphere of the cosmos**: the spells every druid casts and no cleric, known from the start and cast at its cleric level (4th level: Abjure, Cloak of Bravery, Cloak of Fear, Cure and Cause Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius; 5th: Cure and Cause Critical Wounds, Dispel Evil, Raise Dead, Slay Living); Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | **the water sphere only**; no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit)); after DUAL, offered to a water cleric only, and not to one who was a ranger of air, earth or fire; a Healer who changes class to a ranger is a water one (the sphere menu says WATER ONLY); can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use) at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | its weapon spec is chosen on the weapon window after DONE (the long sword, or its sphere's first, for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
@@ -118,7 +118,7 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Mind Warrior** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use) at **3/2 attacks a round, 2 from 7th level**; a d8 hit die | a tenth fewer PSP (rounded down) | the psionicist's gear | its weapon spec is chosen on the weapon window after DONE (the club for an EXIT); its PSP stay a tenth fewer even with the kit asleep after a change of class; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Battle Mage |
+| **Mind Warrior** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use) at **3/2 attacks a round, 2 from 7th level** | a tenth fewer PSP (rounded down) | the psionicist's gear | its weapon spec is chosen on the weapon window after DONE (the club for an EXIT); its PSP stay a tenth fewer even with the kit asleep after a change of class; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Battle Mage |
 | **Mind Bender** | telepathy powers (the defence modes too) cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear | the 2 counts both to use a power and to keep it up each round, never below 1 (a power with no upkeep still has none) |
 | **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | the psionicist's gear | as the Mind Bender's, the other way round |
 
@@ -135,14 +135,14 @@ Loader works that out about once a second.
 |---|---|---|---|---|---|
 | **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); no shield; over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets; **no shield**; light armour only | its classes' gear, without the shield | |
-| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; hiding in shadows not halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands; with the stealth rule its hiding gives an attack from behind, not a backstab |
-| **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against undead, melee or missile; hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | **1 fewer druid spell slot at each spell level** (none below 0) | its classes' gear | its hiding counts for backstabs as a ranger's does |
-| **Rescuer** | half-elf cleric/ranger | under the open sky, Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | attacking from behind gives **+1 to hit, not +2** | its classes' gear | the dice log says ", under the open sky", and "from behind (Rescuer)" |
+| **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; hiding in shadows not halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands |
+| **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against anything, melee or missile; Cause Light, Serious and Critical Wounds do 1 more a die (+1, +2, +3); hides in shadows and moves silently as a ranger does: 5 a level of its best class, with its race's and DEX's adjustments | **no healing spells**: never knows Cure Light, Serious or Critical Wounds, Blood Flow, Heal or Water of Life | its classes' gear | with the stealth rule, its hiding gives an attack from behind (+2 to hit), never a backstab, as a ranger's does |
+| **Rescuer** | half-elf cleric/ranger | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3); +2 movement in a fight | attacking from behind gives **+1 to hit, not +2**; **no shield** | its classes' gear, without the shield | the dice log says "from behind (Rescuer)" |
 | **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield, with a dagger in its hand (whatever its weapon spec) | its weapon spec is the dagger if none is picked; DEX's adjustment still applies to the two-weapons penalty |
 | **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative and +1 Move in a fight | −10 pick pockets; **while it's down** (stunned, out cold, dying, dead, animated or petrified) and no other Wayfinder is up, every party member has **−1 initiative and −1 Move** in a fight | its classes' gear | the dice log's initiative lines say "Wayfinder's Path-finder" or "Wayfinder down" |
-| **Spellarcher** | half-elf fighter/preserver | arrows it shoots from a bow are **1 better and at least +1** (a plain arrow +1, an Arrows +1 +2...), so they hurt what only magic weapons hurt and do 1 more damage. **Spell arrows:** a button on the USE screen (in the row where Turn Undead and Pick Pockets go) for each touch spell it knows: Burning Hands, Chill Touch, Shocking Grasp (1st level), Vampiric Touch (3rd). Outside a fight, a click uses a slot of that level for **5 arrows a preserver level** in the backpack (at its feet if the backpack is full), each casting the spell on what it hits at its preserver level. Slots are the only limit; only a Spellarcher can ready them; they're worth nothing and fade at the next rest (a pile still on the ground, at the first rest after it's picked up) | its weapon spec is the bow, and only the bow (the weapon window offers nothing else); light armour only | a bow and arrows | sling stones and other missiles as they are |
+| **Spellarcher** | half-elf fighter/preserver | arrows it shoots from a bow are **1 better and at least +1** (a plain arrow +1, an Arrows +1 +2...), so they hurt what only magic weapons hurt and do 1 more damage. **Spell arrows:** a button on the USE screen (in the row where Turn Undead and Pick Pockets go) for each touch spell it knows: Burning Hands, Chill Touch, Shocking Grasp (1st level), Vampiric Touch (3rd). Outside a fight, with its **quiver empty**, a click uses a slot of that level for **5 arrows a preserver level** in the quiver, each casting the spell on what it hits at its preserver level (with anything in the quiver, nothing is made and no slot used). They **stay in the quiver** until shot or faded, as a Flame Blade stays in the hand: no taking them out ("Item grafted on") and nothing put in their place. Slots are the only limit; they're worth nothing and fade at the next rest | its weapon spec is the bow, and only the bow (the weapon window offers nothing else); light armour only | a bow and arrows | sling stones and other missiles as they are |
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | its classes' gear | as the Mind Bender's: to use a power and to keep it up, never below 1 |
-| **Poisoner** | halfling fighter/thief | its **first hit in each fight poisons**: the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | −1 to hit with everything, melee or missile; light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind) | its weapon spec is the dagger if none is picked; the dice log shows the save as "vs Poison (10 damage)" |
+| **Poisoner** | halfling fighter/thief | **every melee weapon hit poisons** (not a shot or a throw): the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | its weapon spec the dagger or the short sword only (the weapon window offers no other); light armour only | its classes' gear, with a dagger in each hand (its long sword made one, its shield left behind) | its weapon spec is the dagger if none is picked; the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | the spells it may cast and its slots are its own level's |
 | **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | as the Spirit Caller's |
 | **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON − 4 (the proficiency's check at −4; a natural 20 always fails); at CON − 4 or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight, checked anew in each fight (each of the arena's waves too) | over it, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
@@ -192,8 +192,9 @@ specialization it has no weapon spec, only a preserver's weapons.
 
 The game rolls a new character's hit points and works out its PSP when a
 class is clicked, before a kit can be chosen, so choosing or taking back a
-kit with a die of its own (Battle Mage, Mind Warrior, Arcanist) rolls the hit
-points and works out the PSP again, and the screen shows the new numbers.
+kit with a die or PSP of its own (Battle Mage, Arcanist; Mind Warrior) rolls
+the hit points and works out the PSP again, and the screen shows the new
+numbers.
 
 ## Starting gear
 
@@ -212,16 +213,16 @@ more on top.
   Ravager's to-hit and damage (`+1 Ravager`), a Sentinel's initiative and
   saves, a Stalker's hiding, the THAC0 for each weapon. A kit's hit die is
   named on the hit point lines (`Preserver d6 per level`).
-- **Hit dice.** The Battle Mage's, Mind Warrior's and Arcanist's are rolled
-  on the creation screen and at every level up.
+- **Hit dice.** The Battle Mage's and Arcanist's are rolled on the creation
+  screen and at every level up.
 - **A warrior's THAC0** is the game's own for a fighter, where it is better
   than the class's. It and the Scholar's −1 are in the THAC0 the game keeps
   for the character (View Character's, the attack's), worked out when the
   character is made and at each level up.
 - **Spell slots** are the game's own wherever it counts them (resting, the
   spell lists, the Loader's Spells tab). WIS's bonus slots count for the
-  Arcanist, Crusader and Elementalist as for their classes, not for the
-  Seeker's and Justifier's own tables.
+  Crusader and Elementalist as for a cleric (a preserver, Scholar or not, has
+  none), not for the Seeker's and Justifier's own tables.
 - **Casting level.** A kit's casting level is the one a spell's duration and
   damage take, and half of it (rounded up) is the highest spell level it may
   cast (the Seeker's, Justifier's and Shinobi's are in their tables above; a
@@ -235,7 +236,7 @@ more on top.
 The kits that change spell slots, by the level of the kit's class (spells of
 1st to 5th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on:
 
-| Level | Preserver | Arcanist | Battle Mage | Cleric | Crusader | Elementalist | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
+| Level | Preserver | Scholar | Battle Mage | Cleric | Crusader | Elementalist | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | 1 | 2 | — | 1 | — | — | | | |
 | 2 | 2 | 3 | 1 | 2 | 1 | 1 | | | |
@@ -250,8 +251,6 @@ The kits that change spell slots, by the level of the kit's class (spells of
 
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
-- A **Wilderness Avenger** has a druid's slots by its druid level, WIS's
-  bonus slots included, less one at each spell level (none below 0).
 - A **Seeker** and a **Justifier** have these in place of a ranger's own
   slots, with no bonus slots for WIS.
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own
@@ -298,10 +297,11 @@ Each kit sleeps and wakes with its own class.
 
 The Effects screen lists the kits, oldest first, a line each (the longer names
 shortened as on the KIT page, `(ASLEEP)` after one that sleeps; a Shinobi's
-with its read languages under it, `READ LANG. 40%`), then the weapon specs. Its lower panel has room for five lines: when there are more,
-it shows four and **MORE: CLICK HERE** under them, and a click on the panel
-shows the next page (a weapon spec's heading again at the top of a page that
-goes on with its weapons), the first again after the last:
+with its read languages under it, `READ LANG. 40%`), then the weapon specs.
+Its lower panel has room for five lines: when there are more, it shows four and
+**MORE: CLICK HERE** under them, and a click on the panel shows the next page
+(a weapon spec's heading again at the top of a page that goes on with its
+weapons), the first again after the last:
 
 ![The Effects screen, a page at a time: a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
 
@@ -316,17 +316,20 @@ has already.
 
 Some kits keep a human from some classes, both ways: greyed on the DUAL
 window for a human who has the kit (as the game greys the classes it already
-bars), and left off the KIT menu for a human who has had the class:
+bars), and left off the KIT menu for a human who has had the class. Only
+classes the game would allow are listed: it never lets a cleric or druid
+become the other, and a druid must be true neutral, a ranger good.
 
 | Kit | Can't dual to | Why |
 |---|---|---|
-| Seeker, Justifier | cleric, druid | their own priest slot tables would take the new class's slots' place |
+| Seeker, Justifier | cleric | their own priest slot tables would take the new class's slots' place |
 | Shinobi | preserver | its own wizard slot table would take the new class's slots' place |
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
 | Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
 | Brute | psionicist, air cleric | it needs a two-handed melee weapon, which those classes can't use |
 | Stalker | thief | its +15 to hiding would add to a thief's own skills |
 | Grove Warden | gladiator | its AC would add to a gladiator's own, which betters with level too |
+| Healer | ranger of air, earth or fire | its sphere is water's only (after DUAL to a ranger, the sphere menu offers WATER ONLY) |
 
 And some kits can't go together, whichever came first (a human has one kit for
 each of its classes, and the game never lets a human change from one warrior

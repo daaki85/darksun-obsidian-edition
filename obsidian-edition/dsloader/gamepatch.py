@@ -89,6 +89,8 @@ VEC_ARROW = 0x85
 VEC_OVR_BUF = 0x84
 VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
+VEC_TAKE = 0xF7
+VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
 RL_SCORE, RL_HP, RL_ROLL, RL_SUM, RL_CON, RL_TRY = 1, 2, 3, 4, 5, 6  # (sites sharing VEC_CR_SPELLS, as in dsclog.asm)
@@ -160,6 +162,8 @@ CINE_STEP, CINE_END = NS_IMAGE + 43, NS_IMAGE + 44  # (scenes: the pointer shown
 MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in the middle, as fast up as across)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
+AREA_DMG = NS_IMAGE + 54  # (a spell's damage to the creatures it reaches: a Wilderness Avenger's Cause Wounds, kits.harm_bonus)
+AV_GRANT = NS_IMAGE + 53  # (a priest given its spheres' spells: a Wilderness Avenger's healing ones not: kits.AVENGER_NO_HEAL)
 BOX_SAID, LINE_SAID, LINE_CLEARED = range(NS_IMAGE + 50, NS_IMAGE + 53)  # (an item's box: its message, never seen on the
 #   inventory, put on the inventory's line for 5 s each time the pointer's handler writes or clears it)
 HEAT_SITE = NS_IMAGE + 41  # (a spell's damage on a creature: Sunstroke's heat named and made fire, DSCLOG's HEAT_SITE)
@@ -438,6 +442,10 @@ PATCHES = (
     # a one-target spell's rolled damage stored (76175h: SI the target, DI the spell): Harm's all the
     # target's hit points but 1d4; Wall of Thorns' 8 + AC (DSCLOG's HARM_SITE)
     Patch("harm_damage", 0x761A9, bytes.fromhex("8946fa"), _site(HARM_SITE, 3)),
+    # ... and where the routine dealing a spell's damage to the creatures it reaches (7511Bh: DI the
+    # spell; a touch spell's too) has rolled it: a Wilderness Avenger's Cause Wounds 1 more a die
+    # (DSCLOG's AREA_DMG and HARM_SITE's AV_CAUSE)
+    Patch("area_damage", 0x754EC, bytes.fromhex("8946ee"), _site(AREA_DMG, 3)),
     # the game's own code reading a ground picture's entry from its table, "mov ax,3C81h / mov es,ax
     # / mov al,es:[bx+2]": "cmp ax,3C81h" (the segment's word kept, as DOS fixes it up) and the
     # site, AX and ES the table's segment where DSCLOG has moved it (with an entry each for Blade
@@ -700,7 +708,7 @@ PATCHES = (
     # ranger's whole (its spell levels count it 7 less), 7 less with the rule, a Seeker's 5 and a
     # Justifier's 9 (kits.spell_class_level)
     Patch("ranger_level", 0x5E3B8, bytes.fromhex("268a4724"), _interrupt(VEC_RANGER_LEVEL, 4)),
-    # A kit's hit die (the Battle Mage's d6, the Mind Warrior's d8) where a level's die is taken from
+    # A kit's hit die (the Battle Mage's d6, the Arcanist's d3) where a level's die is taken from
     # the class's group, and the Mind Warrior's a tenth fewer PSP where a level up sets them; at
     # creation, the die for the most hit points a new character can have, and the end of the
     # routine working out its PSP
@@ -717,6 +725,10 @@ PATCHES = (
     Patch("el_level", 0x5E375, bytes.fromhex("66268b9f9d01"), _interrupt(VEC_EL_LEVEL, 6)),
     Patch("el_know_new", 0x66FC9, bytes.fromhex("662685879d01"), _interrupt(VEC_EL_KNOW, 6)),
     Patch("el_know_level", 0x86E56, bytes.fromhex("662685879d01"), _interrupt(VEC_EL_KNOW, 6)),
+    # ... and a Wilderness Avenger's healing spells not given where the game gives a priest its
+    # spheres' spells (no caller found, as for el_grant), a spell's mask tested (DSCLOG's AV_GRANT;
+    # at creation, PROBE_EL_KNOW's AV_KNOW)
+    Patch("av_grant", 0x5E499, bytes.fromhex("662685979d01"), _site(AV_GRANT, 6)),
     # The classes a kit bars a human from changing to (kits.dual_banned), greyed on the DUAL window
     Patch("dual_ban", 0x866FF, bytes.fromhex("0bc0"), _interrupt(VEC_DUAL_BAN, 2)),
     # A preserver picks its two spells on CHOOSE A SPELL on changing class, as at a level up (the
@@ -773,11 +785,18 @@ PATCHES = (
     # it, and notes now and then where the game was, for the Loader's freeze report)
     Patch("tick", 0x3925C, bytes.fromhex("2eff060400"), _interrupt(VEC_TICK, 5)),
     # the routine giving a hit's special effects, where a person who isn't a thri-kreen has none:
-    # jmp to its end (DSCLOG queues a Poisoner's poison on its first hit in a fight, then jumps)
+    # jmp to its end (DSCLOG queues a Poisoner's poison on each hit, then jumps)
     Patch("poison", 0x7A6DD, bytes.fromhex("e9e500"), _interrupt(VEC_POISON, 3)),
     # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
     # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
     Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
+    # the routine saying whether an item may be taken from an inventory slot, where it found none
+    # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
+    # spell arrows in the quiver as those spells keep their weapons)
+    Patch("take", 0x6F4B0, bytes.fromhex("7424"), _interrupt(VEC_TAKE, 2)),
+    # the sphere menu after DUAL to a cleric, druid or ranger, its answer compared: cmp ax,1 (DSCLOG
+    # makes it WATER ONLY for a Healer, when the DUAL window opens, and its answer water)
+    Patch("sphere", 0x86BC3, bytes.fromhex("3d0100"), _interrupt(VEC_SPHERE, 3)),
     # the overlay manager's buffer (twice the largest overlay, 32,992 bytes, the game's for good):
     # call far farmalloc becomes "int / test ax,imm16", the call's segment, which DOS relocates,
     # the test's word (DSCLOG gives a block it has kept in upper memory, else calls farmalloc): the

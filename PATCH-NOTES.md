@@ -114,14 +114,15 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 A few of them:
 
-- **Arcanist:** one more spell slot at each level, and two preserver spells per turn in a fight, for a d3 hit die.
+- **Arcanist:** two preserver spells per turn in a fight, for a d3 hit die.
+- **Scholar:** one more spell slot at each spell level, and one more spell learnt at each level, for 1 worse to hit.
 - **Healer:** a water cleric only, given the sphere of the cosmos: the spells only druids had, Cure Serious and Critical Wounds, Raise Dead and Neutralize Poison among them, each cure healing 1 more a die.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, and learns its own from a scroll only if it can read it (its read languages).
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
-- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level, each casting its spell on what it hits.
+- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver, each casting its spell on what it hits. They stay in the quiver until shot, as a Flame Blade stays in the hand.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
 - **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
 
@@ -133,12 +134,12 @@ A few of them:
 
 | Spell | Level | What it does |
 |---|---|---|
-| **Cat's Grace** | 2nd | DEX +1d6, for an hour of game time a caster level |
 | **Erdlu Claw** | 1st | unarmed attacks become talons: +1 to hit, 1d6+1, as a +1 magical edged weapon (Body Weaponry's and Animal Affinity's dice gain +1) |
 | **Fogbolt** | 1st | a dark grey bolt: the creature has −3 to its attacks and is hit at +2, for 2d4 rounds |
 | **Reflected Image** | 1st | one image of the caster, struck instead of it half the time |
 | **Spook** | 1st | a creature flees for 3 rounds unless it saves |
 | **Friends** | 1st | CHA +2d4 for a short while, for better prices |
+| **Cat's Grace** | 2nd | DEX +1d6, for an hour of game time a caster level |
 
 - **[New]** Nine 6th-level priest spells for clerics and druids of 11th level and up, with a 6th-level slot at 11th and two at 12th:
 
@@ -230,7 +231,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## World
 
-- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night (six spells the game has no scroll of) and sells them to anyone who treats him with respect.
+- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.

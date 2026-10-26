@@ -5,6 +5,7 @@ import struct
 import sys
 import time
 import unittest
+from unittest import mock
 from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -565,6 +566,22 @@ class SaveTests(unittest.TestCase):
                       parent_code=dicelog.SPELL_DAMAGE_RETURN) for f in (3, 5)]
         lines = sum((log.describe(d) for d in dice), [])
         self.assertEqual(lines, ["Fireball damage: 2d8 = [3 + 5] +1 = 9"])
+
+    def test_avenger_cause_wounds(self):
+        """A Wilderness Avenger's Cause Serious Wounds (it cast it last: KIND_CAST): 1 more a die,
+        +2 (DSCLOG's AV_CAUSE), named; cast by another, the game's."""
+        from dsloader import kits
+        log = make_game()
+        self.damage_formula(log, kits.CAUSE_SERIOUS, 0x01, 0x17, 0x08)
+        name = log.game.spell_name(kits.CAUSE_SERIOUS)
+        for kid, want in ((kits.AVENGER, f"{name} damage: 2d8 = [3 + 5] +1 +2 Wilderness Avenger = 11"),
+                          (kits.HEALER, f"{name} damage: 2d8 = [3 + 5] +1 = 9")):
+            with mock.patch.object(log.game, "combatant_creature", lambda c: 0 if c == 2 else None), \
+                    mock.patch.object(log.game, "kit_ids", lambda m, kid=kid: [kid] if m == 0 else []):
+                log.describe(entry(kits.CAUSE_SERIOUS, frame=words(0, 0, 2, 0x29, kits.CAUSE_SERIOUS), kind=dicelog.KIND_CAST))
+                dice = [entry(raw_for(f, 8), dicelog.DICE_SITE, words(0, 0, 2, 8), words(0, 0, kits.CAUSE_SERIOUS, 9),
+                              parent_code=dicelog.SPELL_DAMAGE_RETURN) for f in (3, 5)]
+                self.assertEqual(sum((log.describe(d) for d in dice), []), [want])
 
     def test_missile_damage(self):
         """Flame Arrow, Minute Meteors, Magic Missile: rolled behind the overlay manager, with

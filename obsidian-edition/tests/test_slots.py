@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     def test_kits(self):
         """The kits' slots (kits.slots, kits.slot_level), as DSCLOG's PROBE_SLOTS and
-        PROBE_SLOT_LEVEL: an Arcanist's 1 more, a Crusader's 1 fewer, an Elementalist's a level
+        PROBE_SLOT_LEVEL: a Scholar's 1 more, a Crusader's 1 fewer, an Elementalist's a level
         behind, a Seeker's own table; and only with the rule."""
         log = with_tables()
         g = game.GameData(log.guest, DS, rules=game.RULE_KITS)
@@ -105,8 +105,10 @@ if __name__ == "__main__":
         kit = lambda k: log.guest.mem.__setitem__(sheet + 0x43, k)
         set_character(log, 0, (PRESERVER, 0, 0), (5, 0, 0), 10)
         plain = [g.max_spell_slots(0, 1, n) for n in range(1, 5)]
-        kit(3)  # an Arcanist
+        kit(1)  # a Scholar
         self.assertEqual([g.max_spell_slots(0, 1, n) for n in range(1, 5)], [n + 1 if n else 0 for n in plain])
+        kit(3)  # an Arcanist: as it is
+        self.assertEqual([g.max_spell_slots(0, 1, n) for n in range(1, 5)], plain)
         set_character(log, 0, (1, 0, 0), (7, 0, 0), 18)
         kit(0)
         cleric = [g.max_spell_slots(0, 2, n) for n in range(1, 6)]

@@ -7,7 +7,7 @@ that number, 0 for none (the rule off, more than one class, none chosen).
 import struct
 from typing import List, Optional, Tuple
 
-from .game import FOG_SPELL, FRIENDS_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL
+from .game import FOG_SPELL, FRIENDS_SPELL, HEAL_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL, WATER_LIFE_SPELL
 from .kitpages import KIT_IDS, KITS
 
 RAVAGER, SENTINEL, STALKER = KIT_IDS["Ravager"], KIT_IDS["Sentinel"], KIT_IDS["Stalker"]
@@ -30,6 +30,13 @@ HEALER_SPHERE_CLASS = 4  # the Healer is a water cleric's (the cleric of water, 
 # the healing spells' dice (DSCLOG's CURE_SPELLS): Cure Light, Serious and Critical Wounds, Blood Flow
 CURE_LIGHT, CURE_SERIOUS, CURE_CRITICAL, BLOOD_FLOW = 71, 112, 127, 108
 CURE_DICE = {CURE_LIGHT: (1, 8), CURE_SERIOUS: (2, 8), CURE_CRITICAL: (3, 8), BLOOD_FLOW: (2, 6)}
+# the healing spells a Wilderness Avenger never knows (DSCLOG's AV_HEAL; Heal and Water of Life,
+# the 6th-level ones, NS_PRIEST_KNOWS's)
+AVENGER_NO_HEAL = frozenset((CURE_LIGHT, BLOOD_FLOW, CURE_SERIOUS, CURE_CRITICAL, HEAL_SPELL, WATER_LIFE_SPELL))
+# Cause Light, Serious and Critical Wounds, and their dice: a Wilderness Avenger's 1 more a die
+# (DSCLOG's AV_CAUSE)
+CAUSE_LIGHT, CAUSE_SERIOUS, CAUSE_CRITICAL = 72, 113, 128
+CAUSE_DICE = {CAUSE_LIGHT: 1, CAUSE_SERIOUS: 2, CAUSE_CRITICAL: 3}
 # the kits with a warrior's THAC0 (PROBE_THAC0)
 WARRIOR_THAC0 = frozenset((SWASHBUCKLER, CRUSADER, BATTLE_MAGE, MIND_WARRIOR))
 TWIN_BLADE, BRUTE = KIT_IDS["Twin-blade"], KIT_IDS["Brute"]
@@ -55,6 +62,8 @@ BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # melee one its class lets it use (not the chatkcha, bow, sling or staff sling: kinds 12-15)
 WAR_KIT_EXPERT = (CRUSADER, MIND_WARRIOR)
 MELEE_KINDS = frozenset(range(12))
+# a Poisoner's weapon specs to choose from (DSCLOG's KIT_POISON_KINDS): the dagger and short sword
+POISONER_KINDS = frozenset((2, 3))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
 # level up from thief level SHINOBI_FIRST, and its own from scrolls once read (read languages); it casts at its thief level less 5.
 # Fogbolt, Reflected Image, Spook and Friends, new spells, only with the new spells on (their known bits: NS_KNOWS)
@@ -93,7 +102,6 @@ SCOUT_SKILLS, SCOUT_OUT, SCOUT_IN = frozenset((2, 3, 4, 6)), 10, -5
 # (DANCE_CHECK), +1 to hit, to damage and on AC for that less the roll in rounds (at least 1);
 # failed, -1 for 1d8 rounds
 DANCE_FAIL_DIE = 8
-UNDEAD_RACE = 9  # (a Wilderness Avenger's +1 to hit and damage against them)
 AVENGER_STEALTH = 5  # (its hiding and moving silently: 5 a level of its best class, as a ranger's)
 
 
@@ -128,12 +136,12 @@ def melee(kid: int, two_handed: bool, kind: Optional[int] = None) -> int:
     return 2 if kid == BRUTE and two_handed else 0
 
 
-def extra(kid: int, dance: int = 0, undead: bool = False) -> int:
+def extra(kid: int, dance: int = 0) -> int:
     """Added to hit and to damage with any weapon, melee or missile (KIT_EXTRA): a Battle Dancer's
-    DANCE (+1 or -1, while it lasts), a Wilderness Avenger's 1 against undead (UNDEAD)."""
+    DANCE (+1 or -1, while it lasts), a Wilderness Avenger's 1."""
     if kid == BATTLE_DANCER:
         return dance
-    return int(kid == AVENGER and undead)
+    return int(kid == AVENGER)
 
 
 # The game's own party (defaultparty.py), three of them given features of their own, which no
@@ -244,14 +252,13 @@ def slot_level(kid: int, level: int) -> int:
 
 def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
-    giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): an Arcanist's wizard slots 1 more
-    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's and a Wilderness
-    Avenger's priest slots 1 fewer; a
+    giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): a Scholar's wizard slots 1 more
+    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer; a
     Seeker's and a Justifier's priest slots their own tables' (SEEKER_SLOTS), WIS's left out, and a
     Shinobi's wizard slots the Seeker's by its thief level."""
-    if kid == ARCANIST and magic == WIZARD:
+    if kid == SCHOLAR and magic == WIZARD:
         return game_slots + 1 if game_slots else 0
-    if (kid == BATTLE_MAGE and magic == WIZARD) or (kid in (CRUSADER, AVENGER) and magic == PRIEST):
+    if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
         return max(0, game_slots - 1)
     if kid == SHINOBI and magic == WIZARD:
         kid = SEEKER
@@ -287,10 +294,22 @@ def psp_cost(kid: int, power: int, cost: int) -> int:
 
 def cure_bonus(kid: int, spell: int, outdoors: bool = False) -> int:
     """Added to the healing of SPELL cast by a character of kit KID (PROBE_CURE): a Healer's 1 a
-    die of Cure Light, Serious and Critical Wounds; a Rescuer's too, under the open sky (OUTDOORS)."""
-    if (kid == HEALER or kid == RESCUER and outdoors) and spell in CURE_DICE and spell != BLOOD_FLOW:
+    die of Cure Light, Serious and Critical Wounds; a Rescuer's too (OUTDOORS no matter)."""
+    if kid in (HEALER, RESCUER) and spell in CURE_DICE and spell != BLOOD_FLOW:
         return CURE_DICE[spell][0]
     return 0
+
+
+def harm_bonus(kid: int, spell: int) -> int:
+    """Added to the damage of SPELL cast by a character of kit KID (DSCLOG's AV_CAUSE): a
+    Wilderness Avenger's 1 a die of Cause Light, Serious and Critical Wounds."""
+    return CAUSE_DICE.get(spell, 0) if kid == AVENGER else 0
+
+
+def knows_heal(kid: int, spell: int) -> bool:
+    """Whether a character of kit KID may know healing spell SPELL (a Wilderness Avenger never
+    knows AVENGER_NO_HEAL's)."""
+    return not (kid == AVENGER and spell in AVENGER_NO_HEAL)
 
 
 def cure_die(kid: int, spell: int) -> int:
@@ -356,8 +375,8 @@ def spell_class_level(kid: int, cls: int, level: int, ranger_rule: bool) -> int:
 
 def hit_die(kid: int, sides: int) -> int:
     """A level's hit die, SIDES the class's (PROBE_HIT_DIE, PROBE_CR_DIE): a Battle Mage's a d6,
-    a Mind Warrior's a d8, an Arcanist's a d3."""
-    return {BATTLE_MAGE: 6, MIND_WARRIOR: 8, ARCANIST: 3}.get(kid, sides)
+    an Arcanist's a d3."""
+    return {BATTLE_MAGE: 6, ARCANIST: 3}.get(kid, sides)
 
 
 def max_psp(kid: int, psp: int) -> int:
@@ -383,8 +402,8 @@ def pick_list(kid: int, known, most: int, new_spells: bool = True):
 
 
 def move(kid: int) -> int:
-    """Added to Move in a fight (KIT_MOVE): a Stalker's 2."""
-    return 2 if kid == STALKER else 0
+    """Added to Move in a fight (KIT_MOVE): a Stalker's or a Rescuer's 2."""
+    return 2 if kid in (STALKER, RESCUER) else 0
 
 
 MYRMIDON_INITIATIVE = -2  # (the drilled soldier waits for the order to strike: PROBE_INIT)
@@ -414,6 +433,12 @@ def rear_to_hit(kid: int) -> int:
     return RESCUER_REAR if kid == RESCUER else REAR
 
 
+def backstab_times(kid: int, times: int) -> int:
+    """A backstab's multiplier, TIMES the game's by thief level (x2 to x5), for a character of kit
+    KID (DSCLOG's STAB_TIMES): an Assassin's one more (x3 to x6)."""
+    return times + 1 if kid == ASSASSIN else times
+
+
 def backstabs(kid: int) -> bool:
     """Whether a character of kit KID can backstab (KIT_REAR: a Military Scout can't)."""
     return kid != SCOUT
@@ -435,8 +460,7 @@ def arrow_plus(kid: int, plus: int) -> int:
     return max(plus, 0) + 1 if kid == SPELLARCHER else plus
 
 
-POISONER_TO_HIT = -1  # (every attack, melee or missile: KIT_TO_HIT)
-POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's first hit in a fight (PROBE_POISON)
+POISON_POWER = 176  # the monsters' "poison (10 damage)", each hit of a Poisoner's (PROBE_POISON)
 
 
 # a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
@@ -515,11 +539,15 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 # wizard ones); a warrior's THAC0 is a warrior class's already (Swashbuckler, Crusader, Battle
 # Mage, Mind Warrior); it needs a shield the class can't hold (Arena Champion, Sentinel), or a
 # two-handed melee weapon the class can't use (Brute: a psionicist's, an air cleric's); a Stalker's
-# hiding would add to a thief's own (the thief); a Grove Warden's AC to a gladiator's own (the gladiator).
+# hiding would add to a thief's own (the thief); a Grove Warden's AC to a gladiator's own (the
+# gladiator); a Healer's sphere is water's only (the rangers of air, earth and fire). The game itself
+# keeps a priest from the other priest class and a ranger (good) from the druid (true neutral), so the
+# priests in _PRIEST and _NOT_WATER only stand guard.
+_NOT_WATER = frozenset((1, 2, 3, 5, 6, 7, 13, 14, 15))
 DUAL_BANS = {SEEKER: _PRIEST, JUSTIFIER: _PRIEST, SHINOBI: frozenset((11,)),
              **{k: _WARRIOR for k in WARRIOR_THAC0},
              CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((12, 1)),
-             STALKER: frozenset((17,)), GROVE_WARDEN: frozenset((10,))}
+             STALKER: frozenset((17,)), GROVE_WARDEN: frozenset((10,)), HEALER: _NOT_WATER}
 
 
 def dual_banned(kid: int, cls: int) -> bool:
@@ -600,6 +628,27 @@ def cosmos_spells(gd, member: int) -> List[str]:
     return [f"{gd.creature_name(member)}, a Healer, knows the sphere of the cosmos's spells: {', '.join(learnt)}"]
 
 
+def avenger_heals(gd, member: int) -> List[str]:
+    """A Wilderness Avenger in the party knows no healing spell (AVENGER_NO_HEAL), as DSCLOG's
+    AV_KNOW keeps them from it when it is made (a level up marks no priest spells): one made
+    before (2.10.0 or earlier) has them marked not known, as the game marks a priest's (the low
+    four bits 0). Lines for the log, the spells taken away."""
+    from . import game
+    rec = gd.creature(member)
+    if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or AVENGER not in gd.kit_ids(member):
+        return []
+    known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
+    known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
+    gone = []
+    for spell in sorted(s for s in AVENGER_NO_HEAL if s < len(known)):
+        if known[spell] & 0x0F:
+            gd.guest.write(known_at + spell, bytes((known[spell] & 0xF0,)))
+            gone.append(gd.spell_name(spell))
+    if not gone:
+        return []
+    return [f"{gd.creature_name(member)}, a Wilderness Avenger, knows no healing spells: {', '.join(gone)} taken away"]
+
+
 def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], specialize: bool) -> bool:
     """Whether the kit lets a character use an item type whatever its classes' lists and
     restrictions (TYP its record, KIND its weapon kind or None), as DSCLOG's KIT_ALLOWS: a Battle
@@ -645,7 +694,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     blunt; a Shinobi a shield, armour that isn't light, a weapon not of SHINOBI_KINDS; a Seeker a
     weapon (of a kind) its SPHERE (0 air to 3 water) doesn't allow, as a cleric's
     (restrict.sphere_allows), but the bow; a Battle Dancer a shield, and a weapon not of
-    DANCER_KINDS; a Shadowblade and a Ghetto Fighter a shield. Going to the off hand (OFF_HAND): nothing for a Battle
+    DANCER_KINDS; a Shadowblade, a Ghetto Fighter and a Rescuer a shield. Going to the off hand (OFF_HAND): nothing for a Battle
     Mage, no weapon for a Healer."""
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
     weapon = bool(flags & (MELEE | MISSILE))
@@ -679,6 +728,6 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         return kind is not None and kind not in SHINOBI_KINDS
     if kid == BATTLE_DANCER:
         return bool(flags & SHIELD) or kind is not None and kind not in DANCER_KINDS
-    if kid in (SHADOWBLADE, GHETTO):
+    if kid in (SHADOWBLADE, GHETTO, RESCUER):
         return bool(flags & SHIELD)
     return False
