@@ -242,7 +242,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.
 - **[New]** Magic gear glows on the party's figures, as Kreenfang and the Flame Blade do: a weapon's bright edge (Shadowseeker's too), a shield's boss and rim, and sparks on armour, bracers, cloaks, helms, boots and belts shimmer in the animated colour nearest the item's icon: fire, green, violet or blue. Boots of Elvenkind now show on the feet, in soft green.
-- **[New]** The Parting Staff's gem and the Chameleon Gloves shimmer in their icons, as the game's other magic items do.
+- **[New]** Twenty of the game's magic items that sat still in their icons now shimmer, as its other magic items do: the Parting Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Leather Helm +1, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge. A plain item sharing an icon with one of them (plain cahulaks, a plain ring) keeps the still one.
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.

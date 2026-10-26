@@ -15,8 +15,14 @@ notes](PATCH-NOTES.md).
   `scriptchecks.py` finds them in the Loader's GPLDATA.GFF by the position PROBE_SCRIPT_RAND
   records, and `_script_check` evaluates the condition with the roll and the score of whoever's
   turn it is: `Daaki CHA check: 0-19 = 15, always made (CHA 20) -> success`.
-- **The Chameleon Gloves shine** in their icon (`icons.SHINE`: every other pixel of their lighter
-  blue-greys in the water's cycling blues), as the Parting Staff's gem does.
+- **Twenty of the game's magic items shine** in their icons (`icons.SHINE`), as the Parting
+  Staff's gem does: the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the Terror
+  Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arms and legs, the
+  Leather Helm +1, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of
+  Knowledge: their metal, gems or leather in the water's or the fire's cycling colours, every other
+  pixel (greens a leaf's shades for the silk and the cloak). Cahulaks +1, Light of Dawn and El's
+  Ring share their icon with plain items, so they get pictures of their own (BMP 2653-2655, their
+  OJFF +0Ch pointed to them).
 
 **Fixed**
 - **The Weapon Merchant was missing from Teaquetzl's market** (since 1.2.0), and Jark from Tyr's.

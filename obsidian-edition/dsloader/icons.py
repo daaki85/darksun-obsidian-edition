@@ -463,12 +463,39 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
 PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in ICONS}  # an item's +0
 
 # the game's own magic items whose icons have nothing in the colours it cycles, so they don't shine
-# as its others do: (name, its object, the icon made from its own, which takes its place; the
-# object's icon is its alone). The Parting Staff: its blue gem in the water's blues; the
-# Chameleon Gloves: every other pixel of their lighter blue-greys.
-SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows]], ...] = (
-    ("Parting Staff", 30044, lambda r: glow(r, lambda p, x, y: 158 <= p <= 161, WATER)),
-    ("Chameleon Gloves", 30020, lambda r: glow(r, lambda p, x, y: 24 <= p <= 30 and (x + y) % 2 == 0, WATER)),
+# as its others do: (name, its object, the icon made from its own, a picture number of its own or
+# None). With None the object's icon is its alone and changes in place; with a number the icon is
+# shared (the Cahulaks +1's with the plain Cahulaks, the two rings' with each other and the plain
+# Ring), and the object is given a picture of its own, the shining one. Weapons shine in the fire
+# colours, as the game's own magic weapons and the Loader's do; the rest every other pixel in the
+# water's (the leather helm's and the Drake Armor's in the fire's), tinted with their own colour
+# where it is green (`shining`).
+LEAF_GREEN = (53, 54, 55, 56, 55, 54)  # (the Silk Armor's and the Living Cloak's greens, which no region changes)
+BLADE_METAL = range(208, 217)  # (the metal and obsidian greys of a blade or a head)
+SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
+    ("Parting Staff", 30044, lambda r: glow(r, lambda p, x, y: 158 <= p <= 161, WATER), None),
+    ("Chameleon Gloves", 30020, lambda r: glow(r, lambda p, x, y: 24 <= p <= 30 and (x + y) % 2 == 0, WATER), None),
+    # weapons: every other pixel of the blade or head in the fire colours
+    ("Hornblade", 2270, lambda r: glow(r, lambda p, x, y: (60 <= p <= 65 or p in (194, 195)) and (x + y) % 2 == 0, FIRE), None),
+    ("Cahulaks +1", 30003, lambda r: glow(r, lambda p, x, y: 210 <= p <= 213 and (x + y) % 2 == 0, FIRE), 2653),
+    ("Dag's Dagger", 30005, lambda r: glow(r, lambda p, x, y: p in BLADE_METAL and (x + y) % 2 == 0, FIRE), None),
+    ("Terror Blade", 2041, lambda r: glow(r, lambda p, x, y: 208 <= p <= 210 and (x + y) % 2 == 0, FIRE), None),
+    ("Blackmace", 30006, lambda r: glow(r, lambda p, x, y: p in BLADE_METAL and (x + y) % 2 == 0, FIRE), None),
+    # armour and worn things: every other pixel of their brightest shades in the water's
+    ("Shimmer Armor", 30014, lambda r: glow(r, lambda p, x, y: 134 <= p <= 138 and (x + y) % 2 == 0, WATER), None),
+    ("Drake Armor", 30013, lambda r: glow(r, lambda p, x, y: 134 <= p <= 138 and (x + y) % 2 == 0, FIRE), None),
+    ("Silk Armor", 2008, lambda r: shining(r, lambda p, x, y: 51 <= p <= 56 and (x + y) % 2 == 0, LEAF_GREEN), None),
+    ("Tanelyv's Arm Armor", 1362, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
+    ("Tanelyv's Leg Armor", 1363, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
+    ("Grey's Scale Arms", 2531, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
+    ("Grey's Scale Legs", 2518, lambda r: glow(r, lambda p, x, y: 209 <= p <= 213 and (x + y) % 2 == 0, WATER), None),
+    ("Leather Helm +1", 1021, lambda r: glow(r, lambda p, x, y: 134 <= p <= 137 and (x + y) % 2 == 0, FIRE), None),
+    ("Living Cloak", 30022, lambda r: shining(r, lambda p, x, y: 69 <= p <= 73 and (x + y) % 2 == 0, LEAF_GREEN), None),
+    # jewellery and the orb: the gold or the gem
+    ("Golden Torque", 30052, lambda r: glow(r, lambda p, x, y: 179 <= p <= 187 and (x + y) % 2 == 0, FIRE), None),
+    ("Light of Dawn", 30008, lambda r: glow(r, lambda p, x, y: p in (58, 66, 200) and (x + y) % 2 == 0, FIRE), 2654),
+    ("El's Ring", 30012, lambda r: glow(r, lambda p, x, y: p in (58, 66, 200) and (x + y) % 2 == 0, WATER), 2655),
+    ("Orb of Knowledge", 31014, lambda r: glow(r, lambda p, x, y: 208 <= p <= 211, WATER), None),
 )
 
 
@@ -491,11 +518,15 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
             out[("BMP ", number)] = chunks[("BMP ", base)]  # have one; a necklace has none: kept so)
         rows = smaller.get(old_icon) or decode(chunks[("BMP ", old_icon)])
         out[("BMP ", icon)] = encode(make(rows))
-    for _, obj, make in SHINE:
+    for _, obj, make, own in SHINE:
         if ("OJFF", obj) in chunks:
             icon, = struct.unpack_from("<H", chunks[("OJFF", obj)], OJFF_ICON)
             if ("BMP ", icon) in chunks:
-                out[("BMP ", icon)] = encode(make(decode(chunks[("BMP ", icon)])))
+                out[("BMP ", own or icon)] = encode(make(decode(chunks[("BMP ", icon)])))
+                if own:  # (the object pointed at its own picture)
+                    record = bytearray(chunks[("OJFF", obj)])
+                    struct.pack_into("<H", record, OJFF_ICON, own)
+                    out[("OJFF", obj)] = bytes(record)
     return out
 
 
