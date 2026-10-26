@@ -6,7 +6,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
-*These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.*
+*These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums. They follow the repository, so a change made since the current version is here before its release; the [changelog](CHANGELOG.md) says which pull request brought it.*
 
 ## Contents
 

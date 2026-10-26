@@ -21,8 +21,14 @@ notes](PATCH-NOTES.md).
 - Documentation review: Dunesong's line in the patch notes is its row in the Items table (no second
   bullet under World), and FEATURES' New items says it counts at the Bowyer's target, linking to
   the target's rules.
+- From a review of the docs: the front page's first caption describes its picture (round 7,
+  K'ratchek's turn, a Slig's hits on Cermak); DEVELOPMENT says "a few hundred" of the game's
+  changes, not a count that goes stale; #64, #63 and #61 have their merge dates; the patch notes
+  say they follow the repository (a change since the current version is in them before its
+  release); the front page's "What's new" has the latest release only; and the tests workflow
+  runs when only `CHANGELOG.md` or `release-notes/` change, as the link tests read them.
 
-## Pull request #64
+## Pull request #64 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/64))
 
 **New**
 - **The scripts' own ability checks in the dice log.** 13 conditions compare the scripts' random
@@ -59,7 +65,7 @@ notes](PATCH-NOTES.md).
   (the frame 0F0h bytes larger), and `test_records_fit` keeps every object the Loader adds to
   under it. A save already in the village stays without him.
 
-## Pull request #63
+## Pull request #63 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/63))
 
 - **Obsidian Edition 2.9.0**: the version is 2.9.0, with its notes in `release-notes/v2.9.0.md`,
   for this pull request and #62.
@@ -146,7 +152,7 @@ notes](PATCH-NOTES.md).
   figures a picture of a charge label beside a "Miss" (`floating-charges.png`). FEATURES gives M
   its own Controls section; the player guide's screens table gains the scroll's answer.
 
-## Pull request #61
+## Pull request #61 ([merged 2026-10-25](https://github.com/daaki85/darksun-obsidian-edition/pull/61))
 
 - **Obsidian Edition 2.8.0**: the version is 2.8.0, with its notes in `release-notes/v2.8.0.md`,
   for this pull request and #60.

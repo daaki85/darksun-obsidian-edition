@@ -232,8 +232,8 @@ python -m dsloader next decreased                # also: changed, unchanged, inc
 Every roll in the game goes through one function, Borland C++'s `rand()`.
 
 1. When you start the game with the dice log, the launcher writes
-   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with some 320 small
-   changes, listed in `PATCHES` in `dsloader/gamepatch.py`. Most replace a few
+   `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with a few hundred
+   small changes, listed in `PATCHES` in `dsloader/gamepatch.py`. Most replace a few
    bytes of the game's code with an `INT` (60h to 65h, and 8Ch to FEh; all of
    them are taken, so later sites share one, a site number after the `INT`, as
    in [Scores and hit points as rolled](#scores-and-hit-points-as-rolled)) that
