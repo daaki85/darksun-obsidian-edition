@@ -27,7 +27,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -413,6 +413,7 @@ class DiceLog:
     def __init__(self, guest: GuestMemory, record_everything: bool = False):
         self.guest = guest
         self.record_everything = record_everything  # also rand() calls that aren't rolls (noisy)
+        self.script_file = scriptchecks.default_path()  # the scripts the game runs (scriptchecks.py)
         self.tsr_hdr: Optional[int] = None
         self.rand_addr: Optional[int] = None
         self.last_seq: Optional[int] = None
@@ -2554,9 +2555,25 @@ class DiceLog:
         result, most = e.raw & 0xFF, e.raw >> 8 & 0xFF
         counts = tuple(e.arg(at) for at in searches.COUNTS_AT)
         lines = searches.describe(result, most, e.extra, counts)
+        if not lines:
+            lines = self._script_check(result, most, e.extra)
         if not lines and show_all:
             lines = [f"Script roll: 0-{most} = {result} (script position {e.extra})"]
         return lines
+
+    def _script_check(self, result: int, most: int, position: int) -> List[str]:
+        """A random command a script compares with an ability of the character acting
+        (scriptchecks.py): Chahl's CHA, the chains' STR... The character acting is the one whose
+        turn it is (outside a fight, the party's leader)."""
+        check = scriptchecks.load(self.script_file).get(position)
+        if check is None or check.most != most:
+            return []
+        turn = self.game.whose_turn()
+        index = self.game.combatant_creature(turn) if turn is not None else None
+        if index is None:
+            return []
+        score = self.game.creature(index)[CREATURE_ABILITIES + check.ability]
+        return scriptchecks.describe(check, result, score, self.game.creature_name(index))
 
     def _request(self, e: Entry, show_all: bool) -> List[str]:
         """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with "Show

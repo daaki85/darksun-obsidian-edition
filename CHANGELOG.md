@@ -6,6 +6,18 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request
+
+**New**
+- **The scripts' own ability checks in the dice log.** 13 conditions compare the scripts' random
+  command with an ability of the character acting (fields 23-28) instead of using the ability
+  check command: Chahl's CHA (181), the chains' STR (76), secret doors' INT - 10 (69)...
+  `scriptchecks.py` finds them in the Loader's GPLDATA.GFF by the position PROBE_SCRIPT_RAND
+  records, and `_script_check` evaluates the condition with the roll and the score of whoever's
+  turn it is: `Daaki CHA check: 0-19 = 15, always made (CHA 20) -> success`.
+- **The Chameleon Gloves shine** in their icon (`icons.SHINE`: every other pixel of their lighter
+  blue-greys in the water's cycling blues), as the Parting Staff's gem does.
+
 ## Pull request #63
 
 - **Obsidian Edition 2.9.0**: the version is 2.9.0, with its notes in `release-notes/v2.9.0.md`,

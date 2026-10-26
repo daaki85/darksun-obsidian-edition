@@ -695,6 +695,21 @@ play: a haystack search in the slave pens logged
 `0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)`, as
 the game's own message said.
 
+### Ability checks in the scripts' conditions
+
+Some scripts test an ability without the ability check command: a condition
+compares the random command with a field of the character acting (fields 23 to
+28, STR to CHA), as Chahl's `random(19) <= CHA` when asked about his scars
+(script 181), the chains a strong character breaks (76) or a secret door an
+intelligent one spots (69, `INT - 10`). `dsloader/scriptchecks.py` finds every
+such condition in the Loader's copy of GPLDATA.GFF (13 of them) by the position
+DSCLOG records past its random command (as the searches are told apart; a
+position two scripts share is left out), and the dice log evaluates the
+condition with the roll and the score of whoever's turn it is (outside a fight
+the leader, the character acting): `Daaki CHA check: 0-19 = 15, always made
+(CHA 20) -> success`. Which way the condition goes is the one the ability
+favours (the score 25 with the lowest roll). Tested in play with Chahl.
+
 ### The combat log in the game
 
 ([In the README](README.md#the-combat-log-in-the-game).)

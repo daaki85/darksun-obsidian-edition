@@ -464,9 +464,11 @@ PICTURES: Dict[str, int] = {name: 0x10000 - number for name, _, number, _, _ in 
 
 # the game's own magic items whose icons have nothing in the colours it cycles, so they don't shine
 # as its others do: (name, its object, the icon made from its own, which takes its place; the
-# object's icon is its alone). The Parting Staff: its blue gem in the water's blues.
+# object's icon is its alone). The Parting Staff: its blue gem in the water's blues; the
+# Chameleon Gloves: every other pixel of their lighter blue-greys.
 SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows]], ...] = (
     ("Parting Staff", 30044, lambda r: glow(r, lambda p, x, y: 158 <= p <= 161, WATER)),
+    ("Chameleon Gloves", 30020, lambda r: glow(r, lambda p, x, y: 24 <= p <= 30 and (x + y) % 2 == 0, WATER)),
 )
 
 
