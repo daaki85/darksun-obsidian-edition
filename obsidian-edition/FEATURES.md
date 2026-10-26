@@ -751,7 +751,7 @@ scores and what the die's total allows (the `SUM:` line), the hit points and
 the PSP. So a good roll can be stored and the die tried again; if nothing
 better comes, RECALL puts the stored one back, AC and damage with it.
 
-![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:99/99, 28/28 hit points](docs/creation-store-recall.png)
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:92/92, 25/25 hit points; KITS below the psionic disciplines](docs/creation-store-recall.png)
 
 Changing the race, sex, classes or kit forgets the stored roll (its hit
 points were rolled for those), even if they are changed back: RECALL then

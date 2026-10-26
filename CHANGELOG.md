@@ -27,6 +27,8 @@ notes](PATCH-NOTES.md).
   say they follow the repository (a change since the current version is in them before its
   release); the front page's "What's new" has the latest release only; and the tests workflow
   runs when only `CHANGELOG.md` or `release-notes/` change, as the link tests read them.
+- `creation-store-recall.png` retaken: the creation screen as it is now, KITS where it showed the
+  WEAPON SPEC label the mod no longer draws (the spec is picked after DONE).
 
 ## Pull request #64 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/64))
 
