@@ -136,9 +136,9 @@ setting (suggestions, not tested limits):
 
 | Game speed | Processor (one core's speed) | Memory |
 |---|---|---|
-| GOG's own | anything that runs GOG's release | 2 GB |
+| GOG's own (7,000 cycles) | anything that runs GOG's release | 2 GB |
 | Faster (20,000 cycles, the default) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
-| Fastest (35,000 cycles: every frame drawn in time, the smoothest) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
+| Fastest (35,000 cycles: nearly every frame drawn in time, the smoothest) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
 
 The Loader itself (Python and its window) needs about 100 MB of memory and
 little processor time. A screen of 1920×1080 or more shows the game's window
@@ -264,10 +264,10 @@ start it the GOG way and load a save from before the mod.
   the trouble is the Loader's window.
 - **The game runs slowly, or the sound stutters:** choose a lower
   [game speed](FEATURES.md#game-speed).
-- **Walking looks jerky with the whole party in view:** that is steady pace
-  skipping pictures so no one slows down. **Fastest** game speed, on a quick
-  enough computer, draws every picture in time; or untick steady pace for
-  every picture at the game's slower walk ([game speed](FEATURES.md#game-speed)).
+- **Walking looks jerky with the whole party in view:** steady pace is
+  skipping pictures so no one slows down. **Fastest** game speed on a quick
+  computer skips almost none; untick steady pace to see every picture at the
+  game's slower walk ([game speed](FEATURES.md#game-speed)).
 - **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
   takes the mouse at the first click in its window (that click does nothing
   in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
@@ -676,16 +676,21 @@ Everything there applies in games started from the Loader; a switch that says
   the next time the game is started (what a saved game already has stays in it).
 - **Graphics** ([Graphics](FEATURES.md#graphics)): the elves' and half-elves'
   looks, Cilla drawn as an elf, what the party wears, shadows and dust.
-- **Controls** ([Controls](FEATURES.md#controls)) and **Game speed**
-  ([Game speed](FEATURES.md#game-speed)).
+- **Controls** ([Controls](FEATURES.md#controls)): Tab and Enter, the red
+  ring, dragging the map, the view in fights, the pointer in scenes and where
+  it starts, the whole party in view after a start, load or fight, and a click
+  on the Effects screen leaving a spell on.
+- **Game speed** ([Game speed](FEATURES.md#game-speed)): GOG's own, Faster
+  (the default) or Fastest, and **steady pace**.
 - **Wake of the Ravager (optional)**: whether the Loader found it, for the
   6th-level priest spells' icons and pictures, and **Choose its folder...**
   ([Requirements](#requirements)).
 - **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)):
   the folder of saves kept under their names, and putting one back in a slot.
 
-All are on by default and are remembered for next time. **Restore
-defaults**, at the bottom of the tab, sets them all back (after asking). In a
+All are on by default (the red ring under the chosen enemy, the game speed
+Faster) and are remembered for next time. **Restore defaults**, at the bottom
+of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 

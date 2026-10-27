@@ -1926,9 +1926,10 @@ frame kept. On the right the party reaches each spot sooner, in bigger steps.*
 
 The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
-**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there every
-frame is drawn in time even with the whole party in view, the smoothest, but it
-needs a faster computer. It applies the next time the game is started. The
+**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there nearly
+every frame is drawn in time even with the whole party in view, the smoothest,
+but it needs a faster computer (measured, frames stop being skipped from about
+30,000). It applies the next time the game is started. The
 Loader's two speeds run on DOSBox's dynamic core (GOG's settings run this game
 on the slower normal core): the same cycles do more, and cost the computer
 about a third less.

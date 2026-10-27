@@ -540,7 +540,7 @@ class Viewer:
                                                  else launch.DEFAULT_SPEED))
         for value, text in ((launch.GOG_SPEED, "GOG's own (walking can be choppy with shadows and dust)"),
                             ("20000", "Faster: smooth walking with shadows and dust (the default)"),
-                            ("35000", "Fastest: the whole party in view walks smoothly, with every picture "
+                            ("35000", "Fastest: the whole party in view walks smoothly, nearly every picture "
                                       "shown (needs a faster PC)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
@@ -659,7 +659,7 @@ class Viewer:
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
                     self.steady_pace, self.party_spread):
             var.set(True)
-        self.combat_log.set(False)
+        self.combat_log.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
