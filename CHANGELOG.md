@@ -8,6 +8,17 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Docs**
+- ITEMS' **Every mundane armour piece** gives each piece's AC: how many points it takes off AC 10,
+  read from the game's item types (+12h of the IT1R record, the byte that gives plate's 3, 2 and 2
+  and the shields' 1); helms 0, or 1 with Helms give AC 1.
+- Small pass after the review: the guide's "Making a party" points to KITS' Choosing a kit instead
+  of repeating it; its Starting gear links KITS' for the kits' weapons; the Shinobi's Effects
+  screen picture is in KITS only; each class's dual-class line links the kits that rule a change
+  out. KITS: a shorter introduction, no quoted Loader strings in The kits in play and Changing class.
+
+## Pull request #71 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/71))
+
 **Fixed**
 - **Effects screen: no "(15 CHARGES)" on a magic item's power** (Shadowseeker's Detect Invisibility). The game adds an item's power, as it does a permanent effect, for -9999 (until
   taken away): its add-effect routine (76442h) then stores the time's low byte negated, F1h to 0Fh, in
