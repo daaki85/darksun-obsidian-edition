@@ -523,6 +523,10 @@ class Viewer:
                         "down as across, and in a window as fast as the desktop's pointer (the game's: at the "
                         "right edge, half as far, three times as fast); from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.party_spread = tk.BooleanVar(value=settings.get("party_spread", True) is not False)
+        ttk.Checkbutton(controls, text="The whole party in view as a game starts or loads and after each fight, as 5 "
+                        "does (the game's: often only the leader; 6 still gathers it); from the next start",
+                        variable=self.party_spread, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
                         "ends it; psionic powers can still be stopped); from the next start",
@@ -536,7 +540,7 @@ class Viewer:
                                                  else launch.DEFAULT_SPEED))
         for value, text in ((launch.GOG_SPEED, "GOG's own (walking can be choppy with shadows and dust)"),
                             ("20000", "Faster: smooth walking with shadows and dust (the default)"),
-                            ("35000", "Fastest: the whole party in view walks smoothly, with every picture "
+                            ("35000", "Fastest: the whole party in view walks smoothly, nearly every picture "
                                       "shown (needs a faster PC)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
@@ -653,9 +657,9 @@ class Viewer:
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
-                    self.steady_pace):
+                    self.steady_pace, self.party_spread):
             var.set(True)
-        self.combat_log.set(False)
+        self.combat_log.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
@@ -1140,6 +1144,7 @@ class Viewer:
         settings["scene_pointer"] = self.scene_pointer.get()
         settings["mouse_start"] = self.mouse_start.get()
         settings["steady_pace"] = self.steady_pace.get()
+        settings["party_spread"] = self.party_spread.get()
         for key, var in self.rule_vars.items():
             settings[key] = var.get()
         launch.save_settings(settings)

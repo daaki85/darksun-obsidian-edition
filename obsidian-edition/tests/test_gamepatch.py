@@ -132,6 +132,19 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(set(gamepatch.SCENE_POINTER) | set(gamepatch.MOUSE_START),
                          {"cine_step", "cine_end", "mouse_set", "mouse_init"})
 
+    def test_party_spread(self):
+        """The whole party in view: the loading routine's "mov word [1168h],0" DSCLOG's SPREAD_LOAD,
+        and the gathering routine's (after a fight) SPREAD_GATHER, one switch (PARTY_SPREAD)."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        for name, offset, number in (("party_spread", 0x692CE, gamepatch.SPREAD_SITE),
+                                     ("party_gather", 0x1DFE8, gamepatch.GATHER_SITE)):
+            p = by[name]
+            self.assertEqual((p.offset, p.original), (offset, bytes.fromhex("c70668110000")))
+            self.assertEqual(p.replacement, bytes((0xCD, gamepatch.VEC_CR_SPELLS, number)) + b"\x90" * 3)
+        self.assertEqual(gamepatch.PARTY_SPREAD, ("party_spread", "party_gather"))
+        self.assertEqual(len({gamepatch.SPREAD_SITE, gamepatch.GATHER_SITE, gamepatch.MOUSE_SET, gamepatch.MOUSE_INIT,
+                              gamepatch.CINE_STEP, gamepatch.CINE_END, gamepatch.DRAW_SITE, gamepatch.AREA_DMG}), 8)
+
     def test_enter_out_of_the_save_windows_keys(self):
         """The save/load window's key table (Esc, Enter, Up, Down) without Enter, which PROBE_SAVE_PAGE
         then takes."""

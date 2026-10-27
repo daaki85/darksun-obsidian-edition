@@ -117,6 +117,10 @@ A few of them:
 - **Arcanist:** two preserver spells per turn in a fight, for a d3 hit die.
 - **Scholar:** one more spell slot at each spell level, and one more spell learnt at each level, for 1 worse to hit.
 - **Healer:** a water cleric only, given the sphere of the cosmos: the spells only druids had, Cure Serious and Critical Wounds, Raise Dead and Neutralize Poison among them, each cure healing 1 more a die.
+- **Assassin:** a backstab one step deadlier (×3 at 1st level up to ×6 from 13th), for −15 to picking pockets and locks.
+- **Wilderness Avenger:** +1 to hit and damage against anything, and Cause Wounds spells doing 1 more a die, for no healing spells at all.
+- **Rescuer:** cures heal 1 more a die and +2 movement in a fight, for no shield and only +1 from behind.
+- **Poisoner:** every melee hit poisons (a save or 10 damage), for a dagger or short sword spec only.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, and learns its own from a scroll only if it can read it (its read languages).
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
@@ -253,14 +257,14 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen.
 - **[New]** Press the mouse wheel and drag to scroll the map.
-- **[New]** **M** opens the overhead map, and **M** again closes it.
+- **[New]** **M** opens the overhead map, and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again.
+- **[Changed]** A game starts and loads with the whole party on the map, and it stays in view after a fight, as **5** does (an Options switch, on); **6** still gathers it into the leader *(was the leader alone, often, until 5)*.
 - **[New]** The game's pointer in the intro, its logos and its other scenes, and a click skips a scene as a key does *(was no pointer, and only a key)*.
 - **[Changed]** The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer *(was at the screen's right edge, half as far up and down, and in a window three times as fast, so placing items in the inventory was fiddly)*.
 - **[Changed]** The pointer stands still for less time after you pick up or put down an item in the inventory, so it jumps less far when it moves again *(was up to a tenth of a second)*.
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was following each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
-- **[Changed]** The game runs faster than with GOG's settings: DOSBox is given more of the computer's time, and a **Game speed** setting chooses how much (GOG's own, faster or fastest).
-- **[Changed]** The whole party walks at full speed on the map with shadows and dust on: when the screen can't keep up, a picture is skipped rather than everyone slowing down *(was half speed with the whole party in view)*. An Options switch, on.
+- **[Changed]** The game runs faster than with GOG's settings: DOSBox is given more of the computer's time, and a **Game speed** setting chooses how much (GOG's own, faster or fastest). On the map the whole party walks at full speed with shadows and dust on: when the screen can't keep up, a picture is skipped rather than everyone slowing down *(was half speed with the whole party in view)*. Steady pace is an Options switch under Game speed, on.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message and how much memory it had left; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** A warning when memory runs low: the dice log tells you to save and restart before the game runs out (a fresh start has all of it back).
 - **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.

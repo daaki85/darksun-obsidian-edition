@@ -66,7 +66,8 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Choosing an enemy: Tab, Enter and the
     rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
-  - [The overhead map: M](#the-overhead-map-m)
+  - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
+  - [The whole party in view](#the-whole-party-in-view)
   - [The view in fights](#the-view-in-fights)
   - [The pointer in scenes, and where it
     starts](#the-pointer-in-scenes-and-where-it-starts)
@@ -1246,6 +1247,10 @@ and druids of that sphere (an Elementalist's second sphere counts). They come
 with the **New wizard spells** switch (it covers these too), and with
 **AD&D's class tables** for the slots.
 
+A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
+earlier) is given its cosmos spells when the game is loaded, and the dice log
+says so.
+
 | Spell | Who | Cast on | Does |
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
@@ -1727,7 +1732,7 @@ have pictures of their own: Blade Barrier a ring of circling blades and Wall of
 Thorns a tangle of thorns (Wake of the Ravager's, from your copy; the game's
 fire wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
 funnel of dust in the middle of its area that turns as you watch, its ring of
-dust at the edge.
+dust at the edge (two Whirlwinds at once each turn).
 
 ![Whirlwind in the Scar fight: a tall grey funnel of dust turning over the party and Scar's henchmen](docs/whirlwind.gif)
 
@@ -1736,8 +1741,8 @@ How it works:
 
 ## Controls
 
-Each has a switch in the Options tab's **Controls** section, but M, which is
-always on.
+Each has a switch in the Options tab's **Controls** section, but M, U and I,
+which are always on.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
@@ -1770,12 +1775,30 @@ with the view's size built into its drawing code and its video memory pages.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 
-### The overhead map: M
+### M, U and I: open a screen, close it again
 
-**M** on the map opens the overhead map, as the game's own **O** does, and **M**
-again closes it.
+**M** on the map opens the overhead map, as the game's **O** does, and **M**
+again closes it. **U** and **I** open the USE and inventory screens and close
+them when pressed a second time. **U** on the inventory, or **I** on USE,
+switches to the other screen, as in the game. After a click on a screen's
+buttons or another key, the next **U** or **I** works as in the game.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its
+paragraph on M, U and I).
+
+### The whole party in view
+
+The game shows the party on the map as one figure, the leader, until you
+press **5**, and gathers it back into the leader after every fight and in
+saves made that way. With the mod, a game starts and loads with the whole
+party in view, and the party stays in view after a fight, as if you had
+pressed **5**. **6** still gathers the party into the leader, and it stays so
+until the next fight or load. On by default: **The whole party in view as a
+game starts or loads and after each fight** on the Options tab, from the next
+start.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its
+paragraph on the whole party in view).
 
 ### The view in fights
 
@@ -1907,9 +1930,10 @@ frame kept. On the right the party reaches each spot sooner, in bigger steps.*
 
 The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
-**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there every
-frame is drawn in time even with the whole party in view, the smoothest, but it
-needs a faster computer. It applies the next time the game is started. The
+**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there nearly
+every frame is drawn in time even with the whole party in view, the smoothest,
+but it needs a faster computer (measured, frames stop being skipped from about
+30,000). It applies the next time the game is started. The
 Loader's two speeds run on DOSBox's dynamic core (GOG's settings run this game
 on the slower normal core): the same cycles do more, and cost the computer
 about a third less.
@@ -1991,6 +2015,11 @@ Loader a click leaves a spell on; a psionic power's effect still ends, as that
 is how a power is stopped. It has a switch in the Options tab's **Controls**
 section (**A click on a spell's icon on the Effects screen leaves it on**,
 from the next start).
+
+With the pointer on the icon of a spell that lasts a number of uses, the
+Effects screen names the uses left: IMPROVED AC (10 CHARGES). A magic item's
+power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no
+charges.
 
 ### Rules the game got wrong
 

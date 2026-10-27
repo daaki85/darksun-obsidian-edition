@@ -161,6 +161,8 @@ STAB_SITE, TIMES_SITE = NS_IMAGE + 39, NS_IMAGE + 40  # (a backstab: the weapon'
 DRAW_SITE = NS_IMAGE + 42  # (a thing on the map about to be drawn: Whirlwind's funnel once, DSCLOG's DRAW_SITE)
 CINE_STEP, CINE_END = NS_IMAGE + 43, NS_IMAGE + 44  # (scenes: the pointer shown, a click ends one)
 MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in the middle, as fast up as across)
+SPREAD_SITE = NS_IMAGE + 48  # (a game loaded with the party in one figure: spread out on the map)
+GATHER_SITE = NS_IMAGE + 55  # (the party put in one figure: after a fight, spread out again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
 AREA_DMG = NS_IMAGE + 54  # (a spell's damage to the creatures it reaches: a Wilderness Avenger's Cause Wounds, kits.harm_bonus)
@@ -477,6 +479,12 @@ PATCHES = (
     # down as across, from the game's start (DSCLOG's MOUSE_SET, MOUSE_INIT)
     Patch("mouse_set", 0x2A912, bytes.fromhex("c7062da10000"), _site(MOUSE_SET, 6)),
     Patch("mouse_init", 0x356F5, bytes.fromhex("0bc0750b"), _site(MOUSE_INIT, 4)),
+    # a game loaded with the party in one figure: "mov word [1168h],0" in the loading routine, and
+    # the whole party put in view on the map as 5 does (DSCLOG's SPREAD_LOAD)
+    Patch("party_spread", 0x692CE, bytes.fromhex("c70668110000"), _site(SPREAD_SITE, 6)),
+    # ... and the end of the routine putting it in one figure, after a fight too (not after 6:
+    # DSCLOG's SPREAD_GATHER)
+    Patch("party_gather", 0x1DFE8, bytes.fromhex("c70668110000"), _site(GATHER_SITE, 6)),
     # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
     Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),
@@ -908,6 +916,7 @@ CAMERA = ("camera_still",)  # the view in a fight following a figure only off th
 SCENE_POINTER = ("cine_step", "cine_end")  # a pointer in the scenes, a click ending one
 MOUSE_START = ("mouse_set", "mouse_init")  # the pointer starting in the middle, as fast up and down as across
 STEADY_PACE = ("pace_pass", "pace_draw")  # walking at full speed on the map, a late frame's next left undrawn
+PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 
 
 def relocated(data: bytes) -> set:

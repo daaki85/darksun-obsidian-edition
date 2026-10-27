@@ -8,6 +8,69 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Fixed**
+- **Effects screen: no "(15 CHARGES)" on a magic item's power** (Shadowseeker's Detect Invisibility). The game adds an item's power, as it does a permanent effect, for -9999 (until
+  taken away): its add-effect routine (76442h) then stores the time's low byte negated, F1h to 0Fh, in
+  the record's charges byte (+8) and queues no timer. `EF_CHARGES` showed charges unless the spell's own
+  time was -9999, which an item's spell's isn't. Now charges show only for a spell lasting a number of
+  uses (its record's time from -1 down to -9998) or a timed effect (an event of kind 7 in the queue,
+  DS:2FBEh, for its owner and handle; `NS_CHARGES` returns the handle in AH), as Armor's. The same rule
+  in `game.effects_left` (the dice log's and the Characters tab's effects). Tests:
+  `test_item_power_has_no_charges`; `test_time_and_charges` gives Stoneskin's record its time of -1.
+
+- **Two Whirlwinds on the map both turn.** DSCLOG kept one funnel (`WT_THING`): with two, each one
+  drawn replaced the other, and `WHIRL_TICK` turned only the last drawn. Each Whirlwind now has its
+  own entry in `WT_TABLE` (up to four: its thing, the middle of its copies and the copy nearest it;
+  `WHIRL_PICK` fills one, `WHIRL_TICK` turns them all, `WHIRL_CLEAR` empties them at each round's
+  start and each cast). Checked in the game: two Whirlwinds in Scar's fight (the test save's Xan, and
+  Gerrard made an air druid), both funnels changing in each of 9 frames in a row.
+
+**New**
+- **U and I close their screens again**, as M does the overhead map: `MAP_KEY` lets U and I through on
+  the map and keeps the letter in `OVERHEAD`; the same key again, the map's loop not run since, is
+  Escape. U on the inventory or I on USE still switches screens (the game's), the other key then
+  closing it; any other key clears `OVERHEAD`. The game reads a key in its keyboard interrupt with a
+  peek and then the read, so `OVERHEAD` now changes only on the read (`MK_READ`): with it changing on
+  the peek, I on USE switched and was then read as Escape.
+- **The whole party in view** as a game starts or loads and after each fight, as the game's 5 does;
+  6 still gathers it. `SPREAD_LOAD` (site `NS_IMAGE+48` at 692CEh, the load's `mov word [1168h],0`)
+  and `SPREAD_GATHER` (`NS_IMAGE+55` at 1DFE8h, the gathering routine's, only from a fight's end:
+  its way back 1D51h or 3490h, not 6's 0CE2h) set `SPREAD_DUE`; `SPREAD_TICK` (in `PANEL_TICK`)
+  calls the game's own spreading routine (1587h:3109h) on the map out of a fight. A 5 put in the
+  BIOS's keyboard buffer was tried first and never read: the game reads keys only in its keyboard
+  interrupt. Options switch `party_spread` (on; `gamepatch.PARTY_SPREAD`: `party_spread`,
+  `party_gather`). Tests: `test_party_spread`.
+- Checked in the game: U, I and M each opening and closing their screens, U and I switching between
+  USE and the inventory; the "Kalzith test" save loading with the whole party in view; a new game's
+  opening fight ending with the party in view; 6 gathering it, and it staying gathered.
+
+**Docs**
+- FEATURES (Controls: M, U and I; The whole party in view), the player's guide's Controls and Effects
+  screen rows, PATCH-NOTES, the Loader README's summary and Effects screen, DEVELOPMENT (M, U and I;
+  The whole party in view; Charges on the Effects screen; Whirlwind's funnels; the helper's room:
+  image 61,040 bytes, `resident_end` E790h, about 4.4 KB spare).
+- **Full documentation review** (with reviewers per document group). PATCH-NOTES: a stray
+  parenthesis, the two game-speed lines merged, the party-in-view line's switch, four more kit
+  changes. Root README: name history dropped, a note on what is new since 2.11.0. Loader README: Fastest
+  "nearly every frame", GOG's 7,000 cycles, the jerky-walking text, the Controls and Game speed
+  summaries, the defaults sentence. FEATURES: M, U and I simpler, Whirlwind's two funnels, item powers'
+  charges, the old Healer's cosmos spells (moved from KITS). DEVELOPMENT: stale names (`PP_EXTRA_DRAW`,
+  no `WP_TWO`), history trimmed, two missing contents entries. Player's guide: the whole party in view
+  in the Options table, psionicist weapons as the game's lists allow, Gythka +2 and Kreenfang marked
+  as the mod's, no place name in the Poisoner's text, multiclass kits in the Kits intro, Magic's
+  "Effects" renamed "Status effects". KITS: the Loader's once-a-second check and version history out.
+  No helm has Gaze Reflection: the item-power example is Shadowseeker's alone. Screenshots checked:
+  `options.png` opens only sections that have not changed.
+- **Restore defaults keeps the combat log on** (the Loader set it off).
+- **Doc review, part 3.** Player's guide: Quality of life's running-the-game table and Loader-window
+  list cut to two paragraphs linking the README; the New items weapon table loses its "who can wield
+  it" column (each class's list says that); the Spellarcher's arrows added to Other magic items;
+  casting when hit explained once, under Initiative, and linked from the preserver, Worth knowing
+  and KITS. ITEMS: **Every mundane armour piece**, a new table of plain armour and shields with who
+  sells and carries each (read from the game's data, as the weapon table).
+
+## Pull request #70 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/70))
+
 **New: steady pace**
 - **The whole party walks at full speed on the map**, shadows and dust on, at the default 20,000
   cycles (in the slave pens: 249 to 278 pixels a second, where it was 152 to 175; the leader alone

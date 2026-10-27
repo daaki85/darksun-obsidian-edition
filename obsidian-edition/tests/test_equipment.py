@@ -116,8 +116,24 @@ class EffectsLeftTests(unittest.TestCase):
         m[DS * 16 + game.EVENT_QUEUE:DS * 16 + game.EVENT_QUEUE + 4] = struct.pack("<HH", queue & 0xF, queue >> 4)
         struct.pack_into("<h", m, DS * 16 + game.EVENT_COUNT, 1)
         struct.pack_into("<iBhB", m, queue, 1772, game.EVENT_EFFECT_ENDS, 0, 0)
+        records = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10
+        struct.pack_into("<h", m, records + 52 * game.SPELL_SIZE + 7, -1)  # (Stoneskin: lasts a number of blows)
         got = [game.effect_text(*x) for x in game.GameData(log.guest, DS).effects_left()]
         self.assertEqual(got, ["Blur (23 rounds)", "Stoneskin (5 charges)"])
+
+    def test_item_power_has_no_charges(self):
+        """An item's power (a helm's Gaze Reflection, Shadowseeker's Detect Invisibility), cast for
+        -9999 while it is readied: no timer, its spell neither permanent nor counted in uses, and a
+        stray 15 (9999's low byte) at +8, not charges."""
+        log = make_game()
+        m = log.guest.mem
+        struct.pack_into("<h", m, DS * 16 + game.EFFECT_COUNT, 1)
+        effects = (LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF
+        m[effects:effects + 10] = struct.pack("<hhhBBBB", 0, 0, 12, 55, 1, 15, 0)
+        records = (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10
+        struct.pack_into("<h", m, records + 12 * game.SPELL_SIZE + 7, 60)  # (timed when cast)
+        (effect, charges, seconds), = game.GameData(log.guest, DS).effects_left()
+        self.assertEqual((charges, seconds), (None, None))
 
 
 if __name__ == "__main__":

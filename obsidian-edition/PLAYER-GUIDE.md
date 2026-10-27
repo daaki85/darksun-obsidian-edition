@@ -49,7 +49,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
   - [Learning preserver spells](#learning-preserver-spells)
   - [How spells work](#how-spells-work)
   - [Spell lists](#spell-lists)
-  - [Effects](#effects)
+  - [Status effects](#status-effects)
 - [Psionics](#psionics)
 - [Equipment](#equipment)
   - [New items](#new-items)
@@ -98,7 +98,7 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
-| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). |
+| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
 | **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
 | **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
 
@@ -108,7 +108,8 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 |---|---|
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
 | **Scrolling with the mouse** | Press the wheel and drag the map. |
-| **M for the overhead map** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. |
+| **M, U and I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). |
+| **The whole party in view** | A game starts and loads with every party member on the map, and they stay in view after a fight, as the game's **5** does. **6** still gathers them into the leader. *Without the mod:* often only the leader, until you press 5. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
 | **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
@@ -122,34 +123,19 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 | **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
 | **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
 
-**Running the game:**
+**Running the game.** On the map, figures show what they wear, cast shadows
+and raise dust, and elves have pointed ears. DOSBox runs the game faster than
+GOG's settings and skips a picture rather than slowing the party down. The game
+window can be two to four times its size, or full screen. The manual check
+never comes. If the game crashes or freezes, or an item vanishes for no
+ordinary reason, the Loader saves a report to send. The README has the details:
+[running it](README.md#running-it-windows) and [reports](README.md#crash-freeze-and-item-reports).
 
-| Change | What it does |
-|---|---|
-| **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
-| **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), and the whole party walks at full speed with shadows and dust: when the screen can't keep up, a picture is skipped rather than everyone slowing down. |
-| **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
-| **No copy protection** | The question from the manual never comes. |
-| **Crash and freeze reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send, with the game's own error message in it; if the game freezes, **Freeze report** on the Loader saves what it was doing. |
-| **Item reports** | If an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report to send, as for a crash. |
-
-**In the Loader's window:**
-
-- **The dice log:** every roll as it happens, with what it needed and where
-  each bonus came from; **Save...** keeps it as a text file.
-- **Characters:** each character's sheet as the game's View Character lays it
-  out, with THAC0 by weapon, saves, attacks a round, what they wear, spell
-  slots and thief skills.
-- **Dialogue:** everything said, with the speaker and the replies offered.
-- **Spells:** every spell's and psionic power's dice, saves, effects and
-  duration, and each party member's caster level for it.
-- **Saves under their names:** a copy of every save in the **Named saves**
-  folder, named as you named it in the game; the Options tab's **Saves**
-  section opens the folder and puts a copy back in a slot to load.
-- **Text size** (**A+** and **A-**, or Ctrl + and Ctrl −) and keyboard access to
-  everything.
-- **`Play Dark Sun (in-game rolls).bat`** plays with all of the above in the
-  game but no Loader window; **`Show Save.bat`** shows the party in a save file.
+**In the Loader's window**, the dice log shows every roll with what it needed
+and where each bonus came from. Other tabs show each character's sheet, the
+dialogue, and every spell's dice, saves and duration. Every save is also
+copied under the name you gave it in the game. The README has
+[the Loader's window](README.md#the-loaders-window) in full.
 
 ## Making a party
 
@@ -372,7 +358,7 @@ the strictest winning:
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
-| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (as the game's lists allow) |
+| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, bone and obsidian short swords, clubs, chatkchas, bows |
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones; with another class, only if that class allows shields | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any |
@@ -678,7 +664,7 @@ slings, Windlash\* and the chatkchas.
 
 **How it plays.** The strongest magic and the weakest body: no armour, few
 weapons, a d4 hit die. Keep it back, act before the enemy reaches it (a
-character hit in a round can't cast), and choose its spells well.
+character hit in a round [can't cast](#initiative)), and choose its spells well.
 
 **What the mod changes.**
 
@@ -946,8 +932,8 @@ Stillwater with water).
 
 ## Kits
 
-A character of one class takes one of three kits for its class when it is
-made, or none, on the creation panel's **KIT** page; a human who changes class
+A character of one class takes one of three kits for its class (or one of its
+race's multiclass kits) when it is made, or none, on the creation panel's **KIT** page; a human who changes class
 can take one for its new class. A few races' pairs of classes have kits of
 their own ([Multiclass kits](#multiclass-kits)). Each gives something and
 costs something. [The Kits page](KITS.md) has each kit's numbers and
@@ -1005,7 +991,7 @@ the spell on what it hits, until the next rest
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
 
-*Poisoner* (halfling fighter/thief). Hunters from the Forest Ridge whose blades
+*Poisoner* (halfling fighter/thief). Halfling hunters whose blades
 carry the jungle's venoms: every wound they deal up close is poisoned. They
 train with the dagger and the short sword alone, and travel light.
 
@@ -1093,8 +1079,9 @@ makes no difference. **Wait** drops a character to act later.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Adjustment | −6 | −4 | −3 | −2 | −1 | 0 | +1 | +2 | +3 | +4 | +5 |
 
-A character hit in a round can't cast a spell until the next round (the Battle
-Mage can).
+A character hit in a round can't cast a spell until the next round: the game
+won't let it choose a spell, and drops one chosen before the hit. The Battle
+Mage isn't stopped.
 
 ### Hitting
 
@@ -1485,7 +1472,7 @@ AD&D's class tables and the **New wizard spells** switch on):
   swept off its feet and loses its next turn. Nothing can be shot or cast
   through it.
 
-### Effects
+### Status effects
 
 | Effect | Does |
 |---|---|
@@ -1602,8 +1589,7 @@ skills.
 
 The mod adds items the game never had, or never placed: here is what each
 is, not where it is ([Items](ITEMS.md) lists that, with spoilers, for those
-who want it). The mod's magic weapons are also marked \* in each class's
-list.
+who want it). The mod's magic weapons are marked \* in each class's list.
 
 **Mundane:**
 
@@ -1621,29 +1607,29 @@ list.
 New characters with weapon specialization start with a plain weapon of their
 chosen type, often one of these.
 
-**Magic weapons:**
+**Magic weapons** (each class's list in [The classes](#the-classes) says who can wield them):
 
-| Item | What it is | Who can wield it |
-|---|---|---|
-| Flame Blade | obsidian long sword +1 whose blade burns what it hits: 2d6 fire damage, a save for half | warriors, thieves, druids, earth and fire clerics |
-| Greenbright | metal short sword +2 | warriors, thieves, druids, earth clerics |
-| Shadowseeker | metal short sword +1: its wielder sees the invisible | warriors, thieves, druids, earth clerics |
-| Mindshard | obsidian short sword +1 | warriors, thieves, druids, psionicists, earth and fire clerics |
-| Stillwater | bone short sword +1 | warriors, thieves, druids, psionicists, water clerics |
-| Galefang | metal dagger +2 | warriors, thieves, druids, preservers, psionicists, air and earth clerics |
-| Nightsliver | obsidian dagger +2 | warriors, thieves, druids, preservers, psionicists, air, earth and fire clerics |
-| Hayneedle | bone dagger +1 | warriors, thieves, druids, preservers, psionicists, air and water clerics |
-| Glasshewer | obsidian axe +2 | warriors, thieves, druids, earth and fire clerics |
-| Drakejaw | bone axe +1 | warriors, thieves, druids, water clerics |
-| Headsman | metal great axe +2 | warriors, thieves, earth clerics |
-| Gythka +2, Kreenfang (+1) | gythkas, two-handed | warriors, thieves, druids, water clerics |
-| Linebreaker | metal polearm +2 | warriors, thieves, druids, earth clerics |
-| Thornwall | bone polearm +1 | warriors, thieves, druids, water clerics |
-| Gutterknot | club +1 (the game has no magic club) | warriors, thieves, druids, psionicists, earth and water clerics |
-| Deepbiter | stone pick +1 | warriors, thieves, druids, earth clerics |
-| Windlash | staff sling +1 | warriors, thieves, druids, preservers, air clerics |
-| Dunesong | bow +1 | warriors, thieves, druids, psionicists, air, earth and water clerics |
-| Skycutter | chatkcha +2 | warriors, thieves, druids, psionicists, air, earth and fire clerics |
+| Item | What it is |
+|---|---|
+| Flame Blade | obsidian long sword +1 whose blade burns what it hits: 2d6 fire damage, a save for half |
+| Greenbright | metal short sword +2 |
+| Shadowseeker | metal short sword +1: its wielder sees the invisible |
+| Mindshard | obsidian short sword +1 |
+| Stillwater | bone short sword +1 |
+| Galefang | metal dagger +2 |
+| Nightsliver | obsidian dagger +2 |
+| Hayneedle | bone dagger +1 |
+| Glasshewer | obsidian axe +2 |
+| Drakejaw | bone axe +1 |
+| Headsman | metal great axe +2 |
+| Gythka +2, Kreenfang (+1) | gythkas, two-handed |
+| Linebreaker | metal polearm +2 |
+| Thornwall | bone polearm +1 |
+| Gutterknot | club +1 (the game has no magic club) |
+| Deepbiter | stone pick +1 |
+| Windlash | staff sling +1 |
+| Dunesong | bow +1 |
+| Skycutter | chatkcha +2 |
 
 **Other magic items:**
 
@@ -1665,6 +1651,7 @@ chosen type, often one of these.
 | Cloak of Elvenkind, Boots of Elvenkind | help a thief or ranger [hide and move silently](#hiding-in-shadows); thieves and rangers only |
 | Tome of Understanding | read from the inventory as a scroll: +1 WIS for good (at most 25) |
 | Six scrolls | spells the game has no scroll of |
+| Burning, Chill, Shocking and Vampiric Arrows | made only by a [Spellarcher](#multiclass-kits) from its own spells; they fade when the party rests |
 
 The game's own Grey's Scale arm and leg armour is AC 3 each with the mod (2
 without).
@@ -1721,8 +1708,7 @@ AD&D's tables:
   out of a fight dies.
 - **Area spells catch the caster and the party.** Aim fireballs and clouds
   away from your own.
-- **Act before you are hit if you mean to cast.** A character hit earlier in
-  the round can't cast (a Battle Mage can).
+- **Act before you are hit if you mean to cast** ([why](#initiative)).
 - **Someone Out Cold takes the most a spell's dice can do,** with no save.
 - **Two weapons cost to-hit** unless your DEX is high or you are a ranger or
   Twin-blade in light armour, and the off hand attacks only once a round.
@@ -1778,7 +1764,7 @@ AD&D's tables:
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and nine 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | all on |
-| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; spells kept on a click on the Effects screen | all on |
+| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |
 | | the party walking at full speed whatever is drawn (steady pace) | on |

@@ -25,6 +25,9 @@ of the game's data, the tools for mapping it, and how each part of the
 - [How each part works](#how-each-part-works)
   - [The Dialogue tab](#the-dialogue-tab)
   - [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
+  - [The Bowyer's archery target](#the-bowyers-archery-target)
+  - [Ability checks in the scripts'
+    conditions](#ability-checks-in-the-scripts-conditions)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [Names over figures](#names-over-figures)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
@@ -535,8 +538,8 @@ and so does `test_fits_upper_memory`. Since the far block went to the HMA,
 are free in one piece (57.8 KB measured in DOSBox with a smaller helper, less
 what it has grown since: the helper at C90Ah, then the overlay buffer, the
 free block, the music buffer). The helper's own segment is the limit for new
-code: its image with the install code is 60,528 bytes (`image_len`; the
-resident part ends at `resident_end`, E590h), so about 4.9 KB of its 64 KB are
+code: its image with the install code is 61,040 bytes (`image_len`; the
+resident part ends at `resident_end`, E790h), so about 4.4 KB of its 64 KB are
 spare; the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
@@ -1722,7 +1725,7 @@ emulated tests hold the helper to it:
 | the two-weapon penalty | Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier (in any armour); Ghetto Fighter (2 less in each hand) | `PROBE_TWO`; `RG_TWO` |
 | gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (no shield; `kit_dancer`: long sword and bow kinds), Shadowblade, Ghetto Fighter and Rescuer (no shield), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
 | skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
-| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or short sword only: `KIT_POISON_KINDS`) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior |
+| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or short sword only: `KIT_POISON_KINDS`) | `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior |
 | attacks a round | Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons)) |
 | gear the kit allows | Battle Mage (its chosen weapon type's weapons, with weapon specialization; light armour); Battle Dancer (long swords and bows, `kit_dancer`, whatever its cleric's sphere) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
 | hit die | Battle Mage (d6), Arcanist (d3) | a level's die: `PROBE_HIT_DIE` (`INT A5h`, new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]` the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die` |
@@ -2135,7 +2138,7 @@ keeps Turn Undead; a pick put away by a right click leaves the next talk a
 talk.
 
 A cleric/thief (a priest's element and thief levels) keeps Turn Undead on its
-button and has the purse beside it (`PP_SECOND_DRAW`), outside fights: the
+button and has the purse beside it (`PP_EXTRA_DRAW`), outside fights: the
 panel's empty slot APFM 2BE7h (index 1Ah of the spells' 2BCDh), given Turn
 Undead's handler (530h:43h, through the stub segments), its frame and the
 purse drawn as the game draws Turn Undead's (630h:4Dh, 896BCh) with an icon
@@ -2222,13 +2225,16 @@ after the `ns_list_` patches):
   for each damaging hit: a weapon's damage, a shot's as a blow's, goes through
   the damage routine too (the attack routine's one damage call, 5B8:20h at
   58B1Fh, with spell FFFFh), so the helper needs no site for blows. Seen in the
-  arena: a hit takes Armor from 9 charges to 8. (Site `NS_IMAGE+48` is free.)
+  arena: a hit takes Armor from 9 charges to 8.
 - **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
   under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
   the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8
-  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Not for a permanent
-  effect: its spell record's time (+7) is `PERMANENT_TIME`, and +8 holds a
-  meaningless 15 (Charmed). Mirror Images from Reflected Image take its name
+  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Only for a spell
+  lasting a number of uses (its record's time, +7, from -1 down to -9998) or
+  for a timed effect (an entry of kind 7 in the event queue, DS:2FBEh, with its
+  owner and handle, as Armor's). A permanent effect (time `PERMANENT_TIME`,
+  Charmed) and an item's power (Shadowseeker's Detect Invisibility: the game casts it for -9999 while it is readied, with no
+  timer) hold a meaningless 15 at +8, 9999's low byte. Mirror Images from Reflected Image take its name
   and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
   Image, whose entry that is, writes it again before its own use
   (`ns_reflect_entry`).
@@ -2484,15 +2490,16 @@ drawing: in the routine that draws the walls and things standing on the map
 (1DBD:0002), just before it draws an entry (232D4h, the call at 23308h), a copy
 of Whirlwind's funnel is passed over (its way back moved past the call,
 `WD_SKIP`) unless it is the one nearest the copies' middle, which is drawn at
-the middle (`WHIRL_PICK`: one thing at a time, worked out again at each round's
+the middle (`WHIRL_PICK`: each Whirlwind's thing, its middle and nearest copy kept
+in `WT_TABLE`, up to four at once, emptied by `WHIRL_CLEAR` at each round's
 start and each cast, when a thing's number may be used again). Whirlwind's entry
 gets 10h (`AREA_SIGHT`), so it blocks sight as Wall of Fog's does. The funnel
 turns: `WHIRL_TICK`, from the main loop's scroll probe after `DUST_TICK`, steps
-the picked thing's frame (+11h) through its 4 frames every 3 timer ticks (about
-6 a second) and puts the funnel's rectangle into the dust's redraw rectangle
+each kept thing's frame (+11h) through its 4 frames every 3 timer ticks (about
+6 a second) and puts each funnel's rectangle into the dust's redraw rectangle
 (`d_x0`..`d_y1`), so the game redraws just that part of the map (`DUST_NUDGE`
-when the view is still). It stops when the thing's object is no longer
-Whirlwind's (the area gone).
+when the view is still). A thing whose object is no longer Whirlwind's (the area
+gone) is let go.
 
 **Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the
 one-target damage roll, 761A9h, DI its spell) is 8 + the creature's AC, at least
@@ -3148,12 +3155,33 @@ keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
 
-**M for the overhead map.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both
-reads and peeks, turns M into O (the game's key for its overhead map) while the
-map's main loop has run within the last tick or two (`MAP_TICK`, set in
-`PANEL_TICK`) and sets `OVERHEAD`; M again, the loop not run since (the overhead
-map pauses it), turns into Escape, which closes it. `PANEL_TICK` clears
-`OVERHEAD` when the map runs again.
+**M, U and I.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both reads and
+peeks, turns M into O (the game's key for its overhead map) while the map's
+main loop has run within the last tick or two (`MAP_TICK`, set in
+`PANEL_TICK`), and lets U and I (USE, inventory) through; `OVERHEAD` then holds
+the key's letter. The same key again, the loop not run since (the screen pauses
+it), turns into Escape, which closes the screen. U on the inventory or I on USE
+goes through (the game switches screens) and moves `OVERHEAD` to it; any other
+key there clears it. The game reads a key in its keyboard interrupt (35600h:
+a peek, `AH=1`, then the read, `AH=0`), so `OVERHEAD` changes only on the read
+(`MK_READ`), and both give the same key. `PANEL_TICK` clears `OVERHEAD` when the
+map runs again.
+
+**The whole party in view.** The map's party is one figure while `DS:1168h`
+(`game.IN_COMBAT`: not 0 in a fight and while the party is spread out) is 0
+(each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
+leader's figure). The game's key table on the map (1587h:0FEBh, its handlers 34h
+on) has 5 call 1587h:3109h (argument 1: the view drawn again), which spreads the
+members round the leader and sets it, and 6 call 1587h:32E2h, which gathers
+them; a fight's end calls that too (from 1D51h and 3490h, unless `DS:496Ah`).
+Loading a game (69218h, reading `DARKRUN.GFF`) sets it from the members' 80h.
+`SPREAD_LOAD` (site `NS_IMAGE+48`, over the load's `mov word [1168h],0`, 692CEh)
+and `SPREAD_GATHER` (`NS_IMAGE+55`, over the gathering's, 1DFE8h, only when its
+way back is a fight's end, not 6's 0CE2h) set `SPREAD_DUE`; `SPREAD_TICK`, in
+`PANEL_TICK`, then calls 3109h itself on the map out of a fight, if the party is
+still one figure. (A 5 put in the BIOS's buffer waits there: the game reads
+keys only in its keyboard interrupt.) Switch: `gamepatch.PARTY_SPREAD`
+(`party_spread`, on).
 
 **The view in a fight.** The game writes the view's place (`DS:1178h`,
 `117Ah`) in two routines that centre it (on a figure, `191F:01FFh`, and on a

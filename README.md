@@ -4,9 +4,7 @@ Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
 in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
 party's gear drawn on the map, and every roll shown as it happens. You start
 the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
-with your options and keeps the full dice log while you play. (The Loader was
-called Templar's Ledger up to 2.2.1, and up to 1.2.0 that was the whole mod's
-name.)
+with your options and keeps the full dice log while you play.
 
 ![The arena in round 7 of a fight: K'ratchek's turn, with the combat log over the map's lower right showing a Slig's hits on Cermak and his hit points after each](obsidian-edition/docs/combat-log.png)
 
@@ -69,6 +67,10 @@ a rebalance of eight kits. The Wilderness Avenger gives up healing for deadlier
 wounding spells, the Assassin's backstab is a step deadlier, the Poisoner
 poisons every melee hit, the Rescuer moves faster and heals anywhere, and the
 Scholar takes the Arcanist's extra spell slots.
+
+Since 2.11.0, not yet released: the whole party walks at full speed on the
+map (steady pace), U and I close their screens again as M does, and the party
+is put in view after a load and after each fight.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
