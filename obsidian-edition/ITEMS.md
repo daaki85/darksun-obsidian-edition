@@ -229,29 +229,30 @@ one.
 
 Every plain piece of armour and every plain shield in a game with the new
 items, as the weapons above: who sells it and who carries it. Ring, brigandine
-and scale armour are bone on Athas; the item box gives each piece's AC.
+and scale armour are bone on Athas. **AC better by** is what each piece takes
+off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 
-| Worn on | Material | Item | Sold by | Carried by, or found in | The mod's |
-|---|---|---|---|---|---|
-| Chest | leather | Leather Chest Armor | Jark, Armor Merchant | Warren Chief, Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Tari, Skull Guardian, Worshipper, Low Warren Thug, Arant's Guard, Scar, Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Drajian Guard, Council Member, Notaku, Renegade, Wild Mul, Village Hero, Kalinin |  |
-| Chest | bone | Ring Chest Armor | Armor Merchant | Mikquetzl, Uzoma |  |
-| Chest | bone | Brigandine Chest Armor | Jark, Armor Merchant | Arant, Keldar, Templar, Chaya, Caravan Master, Chahl, Father Garyn, Elven Leader |  |
-| Chest | bone | Scale Chest Armor | Jark | Templar, Uskuye, Elite Guard, a chest in the slave pens |  |
-| Chest | metal | Chain Chest Armor | — | Shadow King, Army Commander, a skeleton in the Undermountain |  |
-| Arms | leather | Leather Arm Armor | Armor Merchant | Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Arant's Guard, Scar, Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Notaku, Village Hero, Kalinin |  |
-| Arms | bone | Ring Arm Armor | Armor Merchant | Wyvern Master, Mikquetzl |  |
-| Arms | bone | Brigandine Arm Armor | Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader, Gladiator, Uzoma |  |
-| Arms | bone | Scale Arm Armor | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
-| Arms | metal | Chain Arm Armor | — | Templar, Army Commander, a chest in the Undermountain |  |
-| Legs | leather | Leather Leg Armor | Armor Merchant | Warren Chief, Churrr, Ranger, Skull Guardian, Worshipper, Mayor of Gedron, Council Member, Notaku, Village Hero, a chest in the Upper Castle |  |
-| Legs | bone | Ring Leg Armor | Jark, Armor Merchant | Mikquetzl |  |
-| Legs | bone | Brigandine Leg Armor | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
-| Legs | bone | Scale Leg Armor | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
-| Legs | metal | Chain Leg Armor | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
-| Head | leather | Helm | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens |  |
-| Head | bone | Bone Helm | — | a chest in the slave pens | **new**: the bone scale set's helm |
-| Hand | wood | Shield | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
-| Hand | leather | Shield | — | Keldar, Templar, Caravan Master, Gladiator |  |
+| Worn on | Material | Item | AC better by | Sold by | Carried by, or found in | The mod's |
+|---|---|---|---|---|---|---|
+| Chest | leather | Leather Chest Armor | 1 | Jark, Armor Merchant | Warren Chief, Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Tari, Skull Guardian, Worshipper, Low Warren Thug, Arant's Guard, Scar, Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Drajian Guard, Council Member, Notaku, Renegade, Wild Mul, Village Hero, Kalinin |  |
+| Chest | bone | Ring Chest Armor | 1 | Armor Merchant | Mikquetzl, Uzoma |  |
+| Chest | bone | Brigandine Chest Armor | 2 | Jark, Armor Merchant | Arant, Keldar, Templar, Chaya, Caravan Master, Chahl, Father Garyn, Elven Leader |  |
+| Chest | bone | Scale Chest Armor | 2 | Jark | Templar, Uskuye, Elite Guard, a chest in the slave pens |  |
+| Chest | metal | Chain Chest Armor | 2 | — | Shadow King, Army Commander, a skeleton in the Undermountain |  |
+| Arms | leather | Leather Arm Armor | 1 | Armor Merchant | Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Arant's Guard, Scar, Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Notaku, Village Hero, Kalinin |  |
+| Arms | bone | Ring Arm Armor | 1 | Armor Merchant | Wyvern Master, Mikquetzl |  |
+| Arms | bone | Brigandine Arm Armor | 1 | Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader, Gladiator, Uzoma |  |
+| Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
+| Arms | metal | Chain Arm Armor | 2 | — | Templar, Army Commander, a chest in the Undermountain |  |
+| Legs | leather | Leather Leg Armor | 1 | Armor Merchant | Warren Chief, Churrr, Ranger, Skull Guardian, Worshipper, Mayor of Gedron, Council Member, Notaku, Village Hero, a chest in the Upper Castle |  |
+| Legs | bone | Ring Leg Armor | 1 | Jark, Armor Merchant | Mikquetzl |  |
+| Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
+| Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
+| Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
+| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens |  |
+| Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | — | a chest in the slave pens | **new**: the bone scale set's helm |
+| Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
+| Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator |  |
 
 ## Items against acid
 
