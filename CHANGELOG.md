@@ -47,6 +47,21 @@ notes](PATCH-NOTES.md).
   posting it. FEATURES' Kalzith caption no longer claims a quarter off at CHA 20 (15%). KITS: the
   Spellarcher weaves no arrows in armour.
 
+- **Documentation review** (the audit's remaining documentation findings, each checked against the
+  code): the front page and the Loader README say the patched game writes page 1's saves and every
+  character too, and that a save with the new items wants the Loader; "nearly every" rule change
+  has a switch (the patch notes: not the keys or the game's fixed bugs); the Loader README lists
+  `dosbox_dicelog.conf`, and the Memory tools' layout and search files; FEATURES says its bold
+  switch names are short forms of the Options tab's sentences, lists all five thieving switches,
+  gives the thief table's cap (95) beside its 99s (the guide too), says which items Alagorn has no
+  story for, and when a defiler is rolled for; the guide's Options table gains Wake of the Ravager
+  and says kits and starting gear go to new characters; KITS: a Twin-blade can't use a bow or the
+  staff sling; DEVELOPMENT: `--window-scale` 1 to 4, and a line on each module the sections don't
+  come back to; the combat log's HANDOFF no longer points at a section that's gone; the README's
+  level-cap range and Linux line made exact (Windows only for the `.bat` files and Start the game;
+  no macOS). Reports now list the combat log's level with the other switches
+  (`launch.SWITCH_DEFAULTS`). Screenshots checked: none shows anything changed since.
+
 - **Obsidian Edition 2.12.1**: the version is 2.12.1, with its notes in `release-notes/v2.12.1.md`.
 
 ## Pull request #73 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/73))

@@ -109,6 +109,15 @@ of the game's data, the tools for mapping it, and how each part of the
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
 
+Each module of `dsloader` opens with what it does. Those the sections below
+don't come back to: `gff.py` and `gpl.py` read the game's GFF files and its
+scripts; `guestmem.py` finds DOSBox's guest memory; `savefile.py` reads a
+save's party (`Show Save.bat`); `tracker.py` notes kills, XP and level-ups;
+`textlog.py` reads the dialogue and message boxes DSCLOG copies; `partyview.py`
+and `spellbook.py` draw the Characters and Spells tabs, `theme.py` the window's
+look; `bonescale.py` puts the bone scale set together in its chest;
+`stuckwalk.py` sets people walking again whose scripted walk stopped.
+
 ### Tests
 
 ```
@@ -179,7 +188,7 @@ python -m dsloader save C:\path\to\SAVE01.SAV   # the party stored in a save
 python -m dsloader processes                     # is DOSBox found?
 ```
 
-After `launch` or `play`, `--window-scale 2` to `4`, `--fullscreen` or
+After `launch` or `play`, `--window-scale 1` to `4`, `--fullscreen` or
 `--windowed` choose the game's window as **Game window** does. If more than
 one DOSBox is running, add `--pid <number>` (from `processes`).
 

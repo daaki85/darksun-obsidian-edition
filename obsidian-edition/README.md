@@ -68,7 +68,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels
-  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a
+  past 9th up to a cap by XP (10th to 13th for one class, lower for two or
+  three), STORE and RECALL for a
   creation roll, fuller starting gear, and features of their own for the
   game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
@@ -119,8 +120,10 @@ files](#updating-backups-and-the-loaders-files).
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
-- **Linux** works too if you can read other processes' memory (root, or
-  `kernel.yama.ptrace_scope=0`).
+- **Linux**: the dice log and the Loader's window can follow a DOSBox you
+  start yourself, if you can read other processes' memory (root, or
+  `kernel.yama.ptrace_scope=0`); the `.bat` files, **Start the game** and the
+  Python install are Windows only. macOS isn't supported.
 - **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
   and pictures, read from your copy as the game starts; without it they have
@@ -245,12 +248,14 @@ start it the GOG way and load a save from before the mod.
 
 | File or folder | What it holds |
 |---|---|
-| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names) ; if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
+| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
 | `crash-logs` | crash, freeze and item reports |
 | `Named saves` | a copy of each save under the name you gave it |
+| `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
-| the game folder | your saves (pages 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and characters 20 to 29 in `CHARSAVE.GFF` |
+| `layouts`, `.dsloader-search.json` | only from the Memory tools: a layout you save there, and a memory search's results |
+| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
 
 ## When something goes wrong
 

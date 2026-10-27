@@ -31,12 +31,14 @@ with your options and keeps the full dice log while you play.
 
 The full list is in [What it does](obsidian-edition/README.md#what-it-does),
 and every change from the original game in the [patch notes](PATCH-NOTES.md).
-Every rule change and addition has a switch on the Loader's Options tab.
+Nearly every rule change and addition has a switch on the Loader's Options tab.
 
 The game's own files are never modified: the Loader runs a patched copy of the
-game from its own folder. It writes to the game folder only your saves (pages
-2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and your characters (20 to 29 in the
-game's own `CHARSAVE.GFF`).
+game from its own folder. It writes to the game folder only your saves (page 1
+in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`
+files) and your characters (in the game's own `CHARSAVE.GFF`, up to 29). A save
+made with the new items can hold items the original game doesn't have: load it
+with the Loader.
 
 ## Getting started
 
