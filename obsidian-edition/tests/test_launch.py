@@ -105,6 +105,31 @@ class LaunchTests(unittest.TestCase):
             finally:
                 launch.SETTINGS = saved_path
 
+    def test_settings_saved_whole_and_never_over_an_unreadable_file(self):
+        """A save goes through settings.json.tmp, so no half-written file is left; an unreadable
+        settings.json is kept aside as settings.json.bad, so a save after it can't lose what it
+        held; update_settings changes only what it's given."""
+        import json
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                launch.save_settings({"game_dir": "C:\\GOG", "dust": False})
+                self.assertFalse(os.path.exists(launch.SETTINGS + ".tmp"))
+                launch.update_settings({"combat_log_level": "short"})
+                self.assertEqual(launch.load_settings()["game_dir"], "C:\\GOG")
+                self.assertEqual(launch.load_settings()["combat_log_level"], "short")
+                with open(launch.SETTINGS, "w") as f:
+                    f.write('{"game_dir": "C:\\\\GOG", "du')  # (cut off)
+                self.assertEqual(launch.load_settings(), {})
+                with open(launch.SETTINGS + ".bad") as f:
+                    self.assertIn("game_dir", f.read())
+                launch.update_settings({"dust": True})
+                with open(launch.SETTINGS) as f:
+                    self.assertEqual(json.load(f)["dust"], True)
+            finally:
+                launch.SETTINGS = saved_path
+
     def test_game_message(self):
         """DSCLOG's GAMEMSG.BIN: the text the game wrote as it quit, and far returns on its stack
         as places in DSUN.EXE."""

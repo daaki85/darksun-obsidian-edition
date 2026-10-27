@@ -243,9 +243,7 @@ def _remember(values: dict) -> None:
     """Settings the game itself changed (the combat log panel's level and size), saved."""
     from . import launch
     try:
-        settings = launch.load_settings()
-        settings.update(values)
-        launch.save_settings(settings)
+        launch.update_settings(values)
     except OSError:
         pass
 
@@ -993,8 +991,12 @@ class DiceLog:
         self.rand_addr = None
 
     def close(self) -> None:
-        """Done with: the stats thread stops (answer_stats_in_background)."""
+        """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
+        hook comes off."""
         self._stats_stop.set()
+        if self._wheel is not None:
+            self._wheel.stop()
+            self._wheel = None
 
     # ---- reading ----------------------------------------------------------------
 

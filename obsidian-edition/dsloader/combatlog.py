@@ -92,7 +92,7 @@ def line_kind(line: str) -> str:
 
 # The dice log's lines, as they are
 ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: with .+?)?: d20 = (?P<d20>\d+)(?: \(natural \d+\))?, "
-                    r"(?:needs (?P<need>-?\d+)\+|only a 20 hits)(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
+                    r"(?:needs (?P<need>-?\d+)\+|only a 20 hits|(?P<any>hits on anything but a 1))(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
 HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>[0-9d+\-]+)")
 SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?)(?: from .+?)?: d20 = (?P<d20>\d+)"
                   r"(?: \(natural \d+\))?(?:, needs (?P<need>-?\d+))?(?: \([^)]*\))? -> (?P<result>\w+)")
@@ -120,7 +120,7 @@ def shorten(line: str, level: str) -> Optional[str]:
         return f"ROUND {m.group('n')}"
     m = ATTACK.match(text)
     if m:
-        need = m.group("need") or "20"
+        need = m.group("need") or ("2" if m.group("any") else "20")
         if level == MINIMAL:
             return f"{m.group('who')} {'hits' if m.group('result') == 'HIT' else 'misses'} {m.group('target')}"
         return f"{m.group('who')} attacks {m.group('target')}: {m.group('d20')} vs {need}+ {m.group('result')}"

@@ -588,7 +588,7 @@ class Viewer:
             messagebox.showerror("Wake of the Ravager", f"{folder} has no Wake of the Ravager RESOURCE.GFF.",
                                  parent=self.root)
             return
-        launch.save_settings(dict(launch.load_settings(), **{wotrart.SETTING: folder}))
+        launch.update_settings({wotrart.SETTING: folder})
         self.wotr_status.set(self._wotr_status() + " (From the next start of the game.)")
 
     def _saves_game_dir(self) -> Optional[str]:
@@ -669,9 +669,7 @@ class Viewer:
 
     def _sections_changed(self) -> None:
         """Remember which of the Options tab's sections are open."""
-        settings = launch.load_settings()
-        settings["options_open"] = [key for key, part in self.sections.items() if part.is_open]
-        launch.save_settings(settings)
+        launch.update_settings({"options_open": [key for key, part in self.sections.items() if part.is_open]})
 
     def _slot_box(self, parent) -> ttk.Combobox:
         box = ttk.Combobox(parent, width=3, state="readonly")
@@ -760,9 +758,19 @@ class Viewer:
             self.dice.close()
         self.dice = None
 
+    def _drop_guest(self) -> None:
+        """Let go of DOSBox's memory: its process handle closed."""
+        if self.guest is not None:
+            try:
+                self.guest.proc.close()
+            except Exception:
+                pass
+        self.guest = None
+
     def reconnect(self, quiet: bool = False) -> None:
         self.ds = None
         self._drop_dice()
+        self._drop_guest()
         try:
             self.guest = self.connect()
         except Exception as e:  # shown to the user, who can fix it and retry
@@ -789,7 +797,7 @@ class Viewer:
                 messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
                                      "pick the GOG install folder of Shattered Lands.")
                 return
-            launch.save_settings(dict(launch.load_settings(), game_dir=game_dir))
+            launch.update_settings({"game_dir": game_dir})
             self.art = art.GameArt(game_dir)
         try:
             self._game_dir, self._started = game_dir, time.time()
@@ -930,8 +938,8 @@ class Viewer:
     def _disconnected(self, err: Exception) -> None:
         if self.guest is not None:
             self._refused = list(self.guest.refused)  # (for a crash report)
-        self.guest = None
         self._drop_dice()
+        self._drop_guest()
         self.ds = None
         self.status.set(f"Disconnected ({err}). Waiting for DOSBox...")
         self.dice_status.set("Waiting for the game...")
@@ -951,15 +959,19 @@ class Viewer:
         if not self.guest and time.monotonic() >= self.next_try:
             self.reconnect(quiet=True)
         self._start_state()
-        if self.guest:
-            try:
-                self._auto_locate()
-                self._refresh_table()
-                self._refresh_hex()
-            except ProcessError as e:
-                self._disconnected(e)
-        self._sync_saves()
-        self.root.after(REFRESH_MS, self._tick)
+        try:
+            if self.guest:
+                try:
+                    self._auto_locate()
+                    self._refresh_table()
+                    self._refresh_hex()
+                except ProcessError as e:
+                    self._disconnected(e)
+            self._sync_saves()
+        except Exception as e:  # (anything else: said once, and the loop goes on)
+            self._loop_error("the party table", e)
+        finally:
+            self.root.after(REFRESH_MS, self._tick)
 
     def _sync_saves(self) -> None:
         """Every few seconds, the game's saves copied under their names (namedsaves.py)."""
@@ -998,12 +1010,32 @@ class Viewer:
     # ---- dice log ---------------------------------------------------------------
 
     def _dice_tick(self) -> None:
-        self._dosbox_closed()
         try:
-            self._dice_step()
-        except ProcessError as e:
-            self._disconnected(e)
-        self.root.after(DICE_MS, self._dice_tick)
+            self._dosbox_closed()
+            try:
+                self._dice_step()
+            except ProcessError as e:
+                self._disconnected(e)
+        except Exception as e:  # (anything else: said once, and the loop goes on)
+            self._loop_error("the dice log", e)
+        finally:
+            self.root.after(DICE_MS, self._dice_tick)
+
+    def _loop_error(self, what: str, err: Exception) -> None:
+        """An error a refresh loop didn't expect: written to the dice log once for each kind (with
+        where it came from, for a report), and the loop goes on."""
+        import traceback
+        key = (what, type(err).__name__, str(err))
+        seen = self.__dict__.setdefault("_loop_errors", set())
+        if key in seen:
+            return
+        seen.add(key)
+        where = traceback.extract_tb(err.__traceback__)[-1]
+        try:
+            self._append_dice([f"Loader error in {what}: {type(err).__name__}: {err} "
+                               f"({os.path.basename(where.filename)}:{where.lineno}); it carries on"])
+        except Exception:
+            pass
 
     def _dice_step(self) -> None:
         if not self.guest:
@@ -1098,56 +1130,50 @@ class Viewer:
     def _window_chosen(self, _event=None) -> None:
         """Remember the game window's size; it applies the next time the game is started."""
         scale = WINDOW_CHOICES[self.window_choice.get()]
-        settings = launch.load_settings()
-        if scale is None:
-            settings["fullscreen"] = True
-        else:
-            settings["fullscreen"] = False
-            settings["window_scale"] = scale
-        launch.save_settings(settings)
+        launch.update_settings({"fullscreen": True} if scale is None else
+                               {"fullscreen": False, "window_scale": scale})
         self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
                         "(Alt+Enter switches full screen while playing).")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
         value = self.game_speed.get()
-        settings = launch.load_settings()
-        settings["cycles"] = value if value == launch.GOG_SPEED else int(value)
-        launch.save_settings(settings)
+        launch.update_settings({"cycles": value if value == launch.GOG_SPEED else int(value)})
         self.status.set("Game speed: from the next time you start the game.")
 
     def _options_changed(self) -> None:
         """A switch on the Options tab changed: all of them saved, and the log told."""
-        settings = launch.load_settings()
-        for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
-            settings.pop(old, None)
-        settings["monster_info"] = self.monster_info.get()
-        settings["floating_names"] = self.floating_names.get()
-        settings["combat_log"] = self.combat_log.get()
-        settings["combat_log_level"] = self.combat_log_level.get()
-        settings["pickpockets"] = self.pickpockets.get()
-        settings["show_gear"] = self.show_gear.get()
-        settings["starting_gear"] = self.starting_gear.get()
-        settings["shadows"] = self.show_shadows.get()
-        settings["dust"] = self.show_dust.get()
-        settings["elf_looks"] = self.elf_looks.get()
-        settings["cilla_elf"] = self.cilla_elf.get()
-        settings["rings"] = self.ring_mode.get()
-        settings["targeting"] = self.use_targeting.get()
-        settings["scroll_map"] = self.scroll_map.get()
-        for key, var in self.content_vars.items():
-            settings[key] = var.get()
-        settings["effects_kept"] = self.effects_kept.get()
-        settings["stealth_gear"] = self.stealth_gear.get()
-        settings["roll_store"] = self.roll_store.get()
-        settings["camera_still"] = self.camera_still.get()
-        settings["scene_pointer"] = self.scene_pointer.get()
-        settings["mouse_start"] = self.mouse_start.get()
-        settings["steady_pace"] = self.steady_pace.get()
-        settings["party_spread"] = self.party_spread.get()
-        for key, var in self.rule_vars.items():
-            settings[key] = var.get()
-        launch.save_settings(settings)
+        with launch.SETTINGS_LOCK:  # (read and written as one step)
+            settings = launch.load_settings()
+            for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
+                settings.pop(old, None)
+            settings["monster_info"] = self.monster_info.get()
+            settings["floating_names"] = self.floating_names.get()
+            settings["combat_log"] = self.combat_log.get()
+            settings["combat_log_level"] = self.combat_log_level.get()
+            settings["pickpockets"] = self.pickpockets.get()
+            settings["show_gear"] = self.show_gear.get()
+            settings["starting_gear"] = self.starting_gear.get()
+            settings["shadows"] = self.show_shadows.get()
+            settings["dust"] = self.show_dust.get()
+            settings["elf_looks"] = self.elf_looks.get()
+            settings["cilla_elf"] = self.cilla_elf.get()
+            settings["rings"] = self.ring_mode.get()
+            settings["targeting"] = self.use_targeting.get()
+            settings["scroll_map"] = self.scroll_map.get()
+            for key, var in self.content_vars.items():
+                settings[key] = var.get()
+            settings["effects_kept"] = self.effects_kept.get()
+            settings["stealth_gear"] = self.stealth_gear.get()
+            settings["roll_store"] = self.roll_store.get()
+            settings["camera_still"] = self.camera_still.get()
+            settings["scene_pointer"] = self.scene_pointer.get()
+            settings["mouse_start"] = self.mouse_start.get()
+            settings["steady_pace"] = self.steady_pace.get()
+            settings["party_spread"] = self.party_spread.get()
+            for key, var in self.rule_vars.items():
+                settings[key] = var.get()
+            launch.save_settings(settings)
         if self.dice is not None:
             self.dice.set_monster_info(self.monster_info.get())
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()

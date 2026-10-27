@@ -175,9 +175,10 @@ in its own folder (what that Unblock box does, and nothing outside the
 folder), so the other `.bat` files start without asking.
 
 Nothing in the download is a packaged program to trust: the `.bat` files and
-the Python code in `dsloader` are plain text, and so is the source of the one
-built file, the small DOS program DOSBox loads (`dos\dsclog.asm`, which builds
-`dos\DSCLOG.EXE`).
+the Python code in `dsloader` are plain text, and so is the source of the
+three built files, small DOS programs DOSBox loads (`dos\dsclog.asm` builds
+`dos\DSCLOG.EXE`; `gameend.asm` and `umbplus.asm` the two `.COM` files beside
+them).
 
 ### Every time you play
 
@@ -244,7 +245,7 @@ start it the GOG way and load a save from before the mod.
 
 | File or folder | What it holds |
 |---|---|
-| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names) |
+| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names) ; if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
 | `crash-logs` | crash, freeze and item reports |
 | `Named saves` | a copy of each save under the name you gave it |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
@@ -294,9 +295,11 @@ in the dice log (or, with `Play Dark Sun (in-game rolls).bat`, in a message
 box). Send it along with what you were doing just before (see
 [Reporting a problem](#reporting-a-problem)). Reports need the game started
 from the Loader or one of its `.bat` files: from GOG's own shortcut the Loader
-can't see how the game closed. Every report holds the Loader's switches (not
-where the game is installed, nor the party's names), the last 300 lines of the
-dice log and the last 80 of the dialogue, and besides:
+can't see how the game closed. Every report holds the Loader's switches, the
+last 300 lines of the dice log and the last 80 of the dialogue (which name your
+characters), and the table says what else. DOSBox's own messages in a crash
+report can name the folders the game is in, so read a report before you post
+it anywhere public.
 
 | Report | When | What else it holds |
 |---|---|---|

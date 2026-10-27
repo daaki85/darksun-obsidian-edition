@@ -14,6 +14,7 @@ import os
 import string
 import struct
 import subprocess
+import threading
 import time
 from typing import Dict, List, Optional, Tuple
 
@@ -77,24 +78,61 @@ def upgrade_settings(settings: dict) -> bool:
     return True
 
 
+# One read-modify-write of settings.json at a time (the window, and the thread reading the game,
+# both change it: update_settings)
+SETTINGS_LOCK = threading.RLock()
+
+
 def load_settings() -> dict:
-    try:
-        with open(SETTINGS, encoding="utf-8") as f:
-            settings = json.load(f)
-    except (OSError, ValueError):
-        return {}
-    if upgrade_settings(settings):
+    with SETTINGS_LOCK:
         try:
-            save_settings(settings)
+            with open(SETTINGS, encoding="utf-8") as f:
+                settings = json.load(f)
         except OSError:
-            pass  # (upgraded again next time)
-    return settings
+            return {}
+        except ValueError:
+            # (unreadable: kept aside as settings.json.bad, so the next save can't lose what it held)
+            try:
+                os.replace(SETTINGS, SETTINGS + ".bad")
+            except OSError:
+                pass
+            return {}
+        if not isinstance(settings, dict):
+            return {}
+        if upgrade_settings(settings):
+            try:
+                save_settings(settings)
+            except OSError:
+                pass  # (upgraded again next time)
+        return settings
 
 
 def save_settings(settings: dict) -> None:
+    """Written whole or not at all: into settings.json.tmp, then put in settings.json's place."""
     settings["settings_version"] = SETTINGS_VERSION
-    with open(SETTINGS, "w", encoding="utf-8") as f:
-        json.dump(settings, f, indent=2)
+    with SETTINGS_LOCK:
+        tmp = SETTINGS + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        for attempt in range(5):
+            try:
+                os.replace(tmp, SETTINGS)
+                return
+            except PermissionError:  # (Windows: the file open elsewhere for a moment)
+                if attempt == 4:
+                    raise
+                time.sleep(0.05)
+
+
+def update_settings(changes: dict) -> dict:
+    """settings.json with CHANGES made, read and written as one step; the settings as saved."""
+    with SETTINGS_LOCK:
+        settings = load_settings()
+        settings.update(changes)
+        save_settings(settings)
+        return settings
 
 
 def speaker_names() -> Dict[int, str]:
@@ -105,6 +143,11 @@ def speaker_names() -> Dict[int, str]:
 
 def set_speaker_name(portrait: int, name: str) -> None:
     """Remember a name for a portrait (an empty name forgets it)."""
+    with SETTINGS_LOCK:
+        _set_speaker_name(portrait, name)
+
+
+def _set_speaker_name(portrait: int, name: str) -> None:
     settings = load_settings()
     names = settings.setdefault("speakers", {})
     if name:
@@ -126,16 +169,15 @@ def pickpocketed() -> List[str]:
 
 
 def set_pickpocketed(entries: List[str]) -> None:
-    settings = load_settings()
-    settings["pickpocketed"] = list(entries)
-    save_settings(settings)
+    update_settings({"pickpocketed": list(entries)})
 
 
 
 def add_learned_speakers(learned: Dict[int, str]) -> None:
-    settings = load_settings()
-    settings.setdefault("speakers_learned", {}).update({str(k): v for k, v in learned.items()})
-    save_settings(settings)
+    with SETTINGS_LOCK:
+        settings = load_settings()
+        settings.setdefault("speakers_learned", {}).update({str(k): v for k, v in learned.items()})
+        save_settings(settings)
 
 
 def find_game_dir(given: Optional[str] = None) -> Optional[str]:

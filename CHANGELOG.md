@@ -8,6 +8,41 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Fixed** (from an outside audit of 2.12.0)
+- **Settings never lost.** `save_settings` writes `settings.json.tmp` and puts it in place
+  (`os.replace`, retried a moment on Windows), so a read never sees a half-written file; one that
+  can't be read is set aside as `settings.json.bad` instead of being saved over with only the keys a
+  caller had (the combat log panel's level, say, wiping every option and the game folder). The
+  window and the thread reading the game no longer lose each other's changes: `SETTINGS_LOCK` and
+  `update_settings` make each read-modify-write one step (the panel's level, speakers, pockets, the
+  window size, game speed, the Options tab, the game folder). Test:
+  `test_settings_saved_whole_and_never_over_an_unreadable_file`.
+- **The party table and the dice log keep going** after an error they didn't expect: both refresh
+  loops (`_tick`, `_dice_tick`) schedule the next pass whatever happens, and say an unexpected
+  error once in the dice log (`Loader error in ...`, with the file and line) instead of stopping for
+  the rest of the session.
+- **DOSBox never left paused**: the item gate resumes it if the look after pausing fails.
+- **No leaked handles or hooks**: DOSBox's process handle is closed on a disconnect, a reconnect and
+  a failed connection try (`_located`, `_drop_guest`); the mouse wheel's hook comes off when its
+  dice log closes (`WheelHook.stop`), where each reconnect or restart used to add another.
+- **The combat log's short attack line** for an attack that hits on anything but a 1 (it showed the
+  long line). Test: `test_attack_that_hits_on_anything_but_a_1`.
+- **Dispel Magic's caster level** for the 6th-level priest spells (202-210): `effect_caster_level`
+  reads their spheres from `PRIEST6_MASKS` (it gave none).
+- **No spell arrows in armour**: a Spellarcher in armour casts nothing (`restrict.no_spells`), and
+  now weaves no arrows either. Test: `test_make_in_armour`.
+
+**Docs**
+- The player's guide's psionicist row is back to what the code allows a psionicist of several
+  classes (maces and slings too; #71's review took them out), with the single-class case beside it.
+- The Loader README: three built files, not one; what a report holds, and to read one before
+  posting it. FEATURES' Kalzith caption no longer claims a quarter off at CHA 20 (15%). KITS: the
+  Spellarcher weaves no arrows in armour.
+
+- **Obsidian Edition 2.12.1**: the version is 2.12.1, with its notes in `release-notes/v2.12.1.md`.
+
+## Pull request #73 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/73))
+
 - **Obsidian Edition 2.12.0**: the version is 2.12.0, with its notes in `release-notes/v2.12.0.md`,
   for #70 to #72.
 

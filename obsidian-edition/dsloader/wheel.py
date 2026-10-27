@@ -20,6 +20,8 @@ class WheelHook:
         self._notches = 0
         self._lock = threading.Lock()
         self._thread: Optional[threading.Thread] = None
+        self._thread_id = 0  # (the hook thread's, for stop() to end its message loop)
+        self._stopping = threading.Event()
         if sys.platform == "win32":
             self._thread = threading.Thread(target=self._run, name="wheel hook", daemon=True)
             self._thread.start()
@@ -29,6 +31,16 @@ class WheelHook:
         with self._lock:
             n, self._notches = self._notches, 0
         return n
+
+    def stop(self) -> None:
+        """The hook taken off: its thread's message loop ends, and with it the hook (a dice log
+        closed, as at a reconnect or a new game, leaves no hook behind)."""
+        self._stopping.set()
+        if self._thread is None or not self._thread_id:
+            return  # (not hooked yet: the thread sees _stopping and doesn't wait)
+        import ctypes
+        WM_QUIT = 0x0012
+        ctypes.windll.user32.PostThreadMessageW(self._thread_id, WM_QUIT, 0, 0)
 
     def _add(self, notches: int) -> None:
         with self._lock:
@@ -80,6 +92,11 @@ class WheelHook:
         hook = user32.SetWindowsHookExW(WH_MOUSE_LL, self._proc, kernel32.GetModuleHandleW(None), 0)
         if not hook:
             return
+        user32.UnhookWindowsHookEx.argtypes = [wintypes.HHOOK]
+        self._thread_id = kernel32.GetCurrentThreadId()
         msg = wintypes.MSG()
-        while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
-            pass
+        try:
+            while not self._stopping.is_set() and user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:  # (stop()'s WM_QUIT ends it)
+                pass
+        finally:
+            user32.UnhookWindowsHookEx(hook)

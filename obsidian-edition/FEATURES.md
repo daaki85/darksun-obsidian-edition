@@ -1454,7 +1454,7 @@ pen of his own in the middle column the rest of the time. He has the arena
 Defiler's figure and a face of his own: the game's portrait 61 with a slave's
 brand on the brow, so the Dialogue tab never mistakes him for anyone else.
 
-![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic, here a quarter off with a CHA 20 leader](docs/kalzith.png)
+![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic, here with the party leader's CHA discount](docs/kalzith.png)
 
 Talk to him as to anyone (click him with the look pointer, then the Look box's
 Talk button). His conversation is the game's kind, just him speaking:

@@ -356,7 +356,7 @@ the strictest winning:
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
-| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, bone and obsidian short swords, clubs, chatkchas, bows |
+| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (a psionicist of one class: what the game's lists allow, no maces, slings or metal short swords) |
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones; with another class, only if that class allows shields | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any |

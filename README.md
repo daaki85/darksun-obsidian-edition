@@ -62,11 +62,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.12.0** is out ([release notes](release-notes/v2.12.0.md)):
-the whole party walks at full speed on the map (steady pace), every party
-member is in view after a load and after each fight, U and I close their
-screens again as M does, and the Effects screen no longer shows stray charges
-on a magic item's power.
+**Obsidian Edition 2.12.1** is out ([release notes](release-notes/v2.12.1.md)):
+a fix release for 2.12.0. The Loader never loses its settings and keeps running
+when something goes wrong. 2.12.0 had the whole party walk at full speed on the
+map (steady pace), put every party member in view after a load and after each
+fight, and let U and I close their screens again as M does.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one

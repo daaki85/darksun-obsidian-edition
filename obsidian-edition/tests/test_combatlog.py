@@ -121,6 +121,12 @@ class LinesTests(unittest.TestCase):
                 "from behind (a backstab with a weapon that can)")
         self.assertEqual(c.shorten(line, c.SHORT), "Cilla moves silently: 1 vs 57 or less, unheard")
 
+    def test_attack_that_hits_on_anything_but_a_1(self):
+        line = ("Gerakis attacks Slig with Bone Axe (1d8): d20 = 7, hits on anything but a 1 (95%), hits AC -3, "
+                "target AC 7 -> HIT")
+        self.assertEqual(c.shorten(line, c.SHORT), "Gerakis attacks Slig: 7 vs 2+ HIT")
+        self.assertEqual(c.shorten(line, c.MINIMAL), "Gerakis hits Slig")
+
     def test_damage_without_its_attack_keeps_its_own_line(self):
         log = c.Log()
         log.add(["  Rampager hits Defiler for 4: 2d6 = [1 + 3]"])
