@@ -140,13 +140,11 @@ copied under the name you gave it in the game. The README has
 ## Making a party
 
 On the main menu choose **CREATE CHARACTERS**, right-click an empty slot and
-choose **NEW**. Click the portrait for race and sex, mark one to three classes,
-choose a cleric's or ranger's sphere and an alignment, click the die to roll,
-and press **DONE**. The panel under the classes has the mod's **KITS** page
-([kits](#kits)). After DONE a warrior picks its weapon specs in a window of
-weapon pictures ([weapon specialization](#weapon-specialization-and-attacks)),
-as a preserver picks its spells. A party has one to four characters, all good
-or neutral.
+choose **NEW**, then set race, classes, sphere and alignment, roll, and press
+**DONE**. [Choosing a kit](KITS.md#choosing-a-kit) walks through the panel,
+the mod's **KITS** page among it. After DONE a warrior picks its weapon specs
+([weapon specialization](#weapon-specialization-and-attacks)), as a preserver
+picks its spells. A party has one to four characters, all good or neutral.
 
 ### Ability scores
 
@@ -343,7 +341,7 @@ its classes can't use. The mod then adds plain gear, as each section says: a
 weapon in hand it can use (a thief/psionicist, which can't use the long sword,
 gets a bone short sword), a sling if it has no bow or sling, leather armour
 where it may wear it, and a cloak for a Stalker, an Assassin or a Shinobi
-(some kits get weapons of their own: see [Kits](#kits)). A thri-kreen gets
+(kits' own weapons: [Starting gear](KITS.md#starting-gear)). A thri-kreen gets
 nothing more than the game's own starting gear: its claws serve it better than
 another weapon, and it wears none of the rest; its weapon spec is the chatkcha
 if none is picked. A multiclass preserver starts with no armour, so it can
@@ -446,7 +444,8 @@ starting gear, also a sling.
 - *Dual class:* with STR 15, a human fighter can become a cleric, druid,
   preserver, psionicist or thief, never a gladiator or ranger. Its weapon
   specs sleep with the class; once awake, its specialized weapon specs stay
-  usable whatever the new class allows.
+  usable whatever the new class allows. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one: Dragonsbane +4, Swiftbite +2, El's Drinker +2,
 Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, Flame Blade\* +1;
@@ -504,7 +503,8 @@ leg armour and a sling.
 
 - *Multiclass:* none.
 - *Dual class:* with STR 15, a human gladiator can become a cleric, druid,
-  preserver, psionicist or thief.
+  preserver, psionicist or thief. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A
 **Twin-blade** none of the two-handed ones (great axes, gythkas, polearms,
@@ -571,7 +571,8 @@ Stalker a cloak too).
   psionicist/ranger/thief (elf, half-elf, halfling).
 - *Dual class:* with WIS 15, a human ranger can become a cleric, preserver,
   psionicist or thief (a druid must be neutral, a ranger good). A human of
-  another class with WIS 17 and a good alignment can become a ranger.
+  another class with WIS 17 and a good alignment can become a ranger. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
 only its sphere's, and every bow: air, the daggers, bows, slings, Windlash\*,
@@ -626,9 +627,7 @@ little for the quieter arts.
 spells beside their knives. Their masters teach them only what they need, so
 a scroll is theirs only if they can make out its script, and they travel light.
 The Effects screen (Current Spell Effects) shows a Shinobi's chance to read a
-scroll under its kit:
-
-![The Effects screen for Xan, a Shinobi: "KIT: SHINOBI" and under it "READ LANG. 35%"](docs/effects-shinobi.png)
+scroll under its kit ([as here](KITS.md#changing-class)).
 
 Each kit's gains, costs and starting gear: [Thief kits](KITS.md#thief-kits),
 and the Shinobi's slots by level in
@@ -651,7 +650,8 @@ too).
   preserver/ranger/thief (elf, half-elf); druid/preserver/thief,
   druid/psionicist/thief (half-elf).
 - *Dual class:* with DEX 15, a human thief can become a cleric, druid,
-  fighter, gladiator, preserver, psionicist or ranger.
+  fighter, gladiator, preserver, psionicist or ranger. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Shinobi**
 only Greenbright\*, Shadowseeker\*, Mindshard\*, Stillwater\*, Dag's Dagger,
@@ -720,7 +720,8 @@ Each kit's gains, costs and starting gear:
   (half-elf).
 - *Dual class:* with INT 15, a human preserver can become a cleric, druid,
   fighter, gladiator, psionicist, ranger or thief. A human who becomes a
-  preserver chooses its first two spells.
+  preserver chooses its first two spells. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Hornblade +1 (a bone long sword the game lets preservers
 use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2,
@@ -792,7 +793,8 @@ and fire a chatkcha; water none).
   cleric/preserver/thief, cleric/psionicist/thief, cleric/ranger/thief (elf,
   half-elf).
 - *Dual class:* with WIS 15, a human cleric can become a fighter, gladiator,
-  preserver, psionicist, ranger (if good) or thief; never a druid.
+  preserver, psionicist, ranger (if good) or thief; never a druid. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons**, by sphere:
 
@@ -861,7 +863,8 @@ Each kit's gains, costs and starting gear:
   (half-elf).
 - *Dual class:* with WIS 15, a human druid can become a fighter, gladiator,
   preserver, psionicist or thief; never a cleric, nor a ranger (who must be
-  good). A human of another class becomes a druid only if true neutral.
+  good). A human of another class becomes a druid only if true neutral. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one but Great Axe +3 and Headsman\*. A **Grove
 Warden** none of the metal ones (Dragonsbane, El's Drinker, Greenbright\*,
@@ -922,7 +925,8 @@ starting gear, also leather arm and leg armour.
   preserver/psionicist/ranger, preserver/psionicist/thief (elf, half-elf);
   druid/preserver/psionicist, druid/psionicist/thief (half-elf).
 - *Dual class:* with WIS 15, a human psionicist can become a cleric, druid,
-  fighter, gladiator, preserver, ranger or thief.
+  fighter, gladiator, preserver, ranger or thief. Some kits rule out a change of class
+  ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror
 Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1,

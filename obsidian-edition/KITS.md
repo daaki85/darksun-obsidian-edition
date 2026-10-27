@@ -10,13 +10,13 @@ taken at once by one race have kits of their own ([Multiclass
 kits](#multiclass-kits)). Each gives something and costs something. The game's
 own party gets features of its own ([The game's own
 party](FEATURES.md#the-games-own-party)). A human who changes class may take a
-kit for the new class too ([Changing class](#changing-class)). Each class's
-three kits have a table of their own below: what the kit gives (with the level
-each part comes at), what it costs, what a new character with it starts with
-([Starting gear](#starting-gear)), and what else to know, such as the classes
-and kits it rules out ([Kits that rule out classes and each
-other](#kits-that-rule-out-classes-and-each-other)). Levels are the kit's own
-class's.
+kit for the new class too ([Changing class](#changing-class)).
+
+Each class has a table of its three kits: what each gives and costs, what a
+new character starts with ([Starting gear](#starting-gear)), and what else to
+know ([Kits that rule out classes and each
+other](#kits-that-rule-out-classes-and-each-other)). Levels in the tables are
+the kit's own class's.
 
 ## Contents
 
@@ -206,9 +206,8 @@ more on top.
 ## The kits in play
 
 - **Shown everywhere.** The dice log and the Loader show each kit's part: a
-  Ravager's to-hit and damage (`+1 Ravager`), a Sentinel's initiative and
-  saves, a Stalker's hiding, the THAC0 for each weapon. A kit's hit die is
-  named on the hit point lines (`Preserver d6 per level`).
+  Ravager's to-hit and damage, a Sentinel's initiative and saves, a Stalker's
+  hiding, the THAC0 for each weapon, a kit's hit die on the hit point lines.
 - **Hit dice.** The Battle Mage's and Arcanist's are rolled on the creation
   screen and at every level up.
 - **A warrior's THAC0** is the game's own for a fighter, where it is better
@@ -261,8 +260,8 @@ A kit belongs to the class it was chosen with. A human who changes class
 (**DUAL** on the menu a right-click on a portrait opens, for a human of 2nd
 level or more) keeps it, but it sleeps as that class does: gifts and costs
 alike count again once the new class's level passes the old one's. The Effects
-screen shows `KIT: BATTLMAGE (ASLEEP)` until then; the Loader's Characters tab
-says so too (`Battle Mage, dormant until the fighter level passes 3`). Once
+screen shows `KIT: BATTLMAGE (ASLEEP)` until then, and the Loader's Characters
+tab says so too. Once
 awake, the kit goes by its own class's level (a Ravager's AC, a Seeker's
 slots, a Battle Mage's expertise from 7th preserver level), its hit die only
 ever counts for its own class (the new class rolls its own), and a Mind
