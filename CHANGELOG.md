@@ -62,6 +62,12 @@ notes](PATCH-NOTES.md).
   No helm has Gaze Reflection: the item-power example is Shadowseeker's alone. Screenshots checked:
   `options.png` opens only sections that have not changed.
 - **Restore defaults keeps the combat log on** (the Loader set it off).
+- **Doc review, part 3.** Player's guide: Quality of life's running-the-game table and Loader-window
+  list cut to two paragraphs linking the README; the New items weapon table loses its "who can wield
+  it" column (each class's list says that); the Spellarcher's arrows added to Other magic items;
+  casting when hit explained once, under Initiative, and linked from the preserver, Worth knowing
+  and KITS. ITEMS: **Every mundane armour piece**, a new table of plain armour and shields with who
+  sells and carries each (read from the game's data, as the weapon table).
 
 ## Pull request #70 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/70))
 

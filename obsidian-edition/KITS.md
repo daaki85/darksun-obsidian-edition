@@ -223,9 +223,8 @@ more on top.
   damage take, and half of it (rounded up) is the highest spell level it may
   cast (the Seeker's, Justifier's and Shinobi's are in their tables above; a
   plain ranger's: [Rangers' casting level](FEATURES.md#rangers-casting-level)).
-- **Casting when hit.** A character hit in a fight can't cast until the next
-  round: the game won't let it choose a spell, and drops one chosen before
-  the hit. The Battle Mage isn't stopped.
+- **Casting when hit.** The Battle Mage alone still casts after being hit in
+  the round ([the rule](PLAYER-GUIDE.md#initiative)).
 
 ## Kits' spell slots
 
