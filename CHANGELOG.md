@@ -33,8 +33,16 @@ notes](PATCH-NOTES.md).
   now weaves no arrows either. Test: `test_make_in_armour`.
 
 **Docs**
-- The player's guide's psionicist row is back to what the code allows a psionicist of several
-  classes (maces and slings too; #71's review took them out), with the single-class case beside it.
+- Psionicist weapons and shields, and thief shields, checked against the game's item lists and
+  `restrict.allowed` for each mix of classes (and a save's class flags: a human's hold only its
+  present class, so the game's own check sees that one). A psionicist alone: daggers, bone and
+  obsidian short swords, clubs, chatkchas and bows, and no shield (the game's lists give it none;
+  the rule takes away the axes, picks, gythka and long swords they allow); with another class, also
+  the maces, metal short sword and slings that class's lists allow, and a leather shield with a
+  fighter, gladiator, ranger or cleric class. A thief of any kind: leather shields only, and a
+  multiclass one only with a fighter, gladiator, ranger or cleric class. The guide's and FEATURES'
+  tables and the guide's psionicist section say so (#71's review had taken maces and slings out
+  for every psionicist, and both tables gave a psionicist alone a leather shield).
 - The Loader README: three built files, not one; what a report holds, and to read one before
   posting it. FEATURES' Kalzith caption no longer claims a quarter off at CHA 20 (15%). KITS: the
   Spellarcher weaves no arrows in armour.

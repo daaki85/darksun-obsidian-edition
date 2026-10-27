@@ -356,8 +356,8 @@ the strictest winning:
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
-| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (a psionicist of one class: what the game's lists allow, no maces, slings or metal short swords) |
-| Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones; with another class, only if that class allows shields | as its classes allow |
+| Psionicist, whatever its other classes | light only (leather, hide, silk) | none alone; leather with a fighter, gladiator, ranger or cleric class | daggers, bone and obsidian short swords, clubs, chatkchas, bows; with another class, also the maces, metal short sword and slings its lists allow |
+| Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones only; with another class, only if that class is fighter, gladiator, ranger or cleric | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any |
 | Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
@@ -889,7 +889,10 @@ other character has one discipline and uses it as a 1st-level psionicist.
 
 **Weapons and armour.** Light armour, a leather shield, or one of the mod's
 robes. Daggers, bone and obsidian short swords, clubs, chatkchas and bows (the
-game's lists leave out its maces, slings and the metal short sword).
+game's lists leave out its maces, slings and the metal short sword). With
+another class, also the maces, metal short sword and slings that class's lists
+allow. No shield alone; a leather one with a fighter, gladiator, ranger or
+cleric class.
 
 **Kits.**
 
