@@ -3180,7 +3180,8 @@ a peek, `AH=1`, then the read, `AH=0`), so `OVERHEAD` changes only on the read
 map runs again.
 
 **The whole party in view.** The map's party is one figure while `DS:1168h`
-(`game.IN_COMBAT`: not 0 in a fight and while the party is spread out) is 0
+(`game.IN_COMBAT`: not 0 in a fight and while the party is spread out, so the
+Loader's `in_combat` also asks the fight state's +19h) is 0
 (each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
 leader's figure). The game's key table on the map (1587h:0FEBh, its handlers 34h
 on) has 5 call 1587h:3109h (argument 1: the view drawn again), which spreads the
@@ -3208,8 +3209,8 @@ over the first byte of each routine in a test build of DSCLOG, which kept its
 callers' return addresses: in a fight the centring routine was never called,
 and every move of the view came from that call (returning to `1CA37h`), for
 party members walking as well as monsters. The patch (`camera_still`, a
-switch, `CAMERA`) rewrites that call's 54 bytes of set-up: in a fight
-(`IN_COMBAT`, `DS:1168h`), the game's own on-screen test first, skipping the
+switch, `CAMERA`) rewrites that call's 54 bytes of set-up: while `IN_COMBAT`
+(`DS:1168h`) is set (a fight, or the party spread out), the game's own on-screen test first, skipping the
 step while the figure is on the screen; the figure's spot pushed straight from
 its record (one `push dword`). The game's `mov ax,377Eh` stays at `CA15h`: DOS
 adds the load segment to that word as the game loads (the EXE's relocation

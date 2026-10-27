@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request (not opened yet)
+## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 
 **Fixed** (from an outside audit of 2.12.0)
 - **Settings never lost.** `save_settings` writes `settings.json.tmp` and puts it in place
@@ -81,6 +81,11 @@ notes](PATCH-NOTES.md).
 - **Defilers' scrolls in every fight.** The rolls were kept for the session by area, slot and name,
   so a later fight's defiler in the same place under the same name (the arena's) got none until a
   game was loaded; they are now forgotten as each fight ends. Test: `test_again_in_the_next_fight`.
+
+- **Docs review.** DEVELOPMENT's party-in-view and camera notes say `IN_COMBAT` is also set while
+  the party is spread out; the patch notes put the half-giant and thri-kreen lines under a Races
+  heading of their own; the 2.12.1 notes and the front page lead with the fight fix; the Loader
+  README says the panel's round once. Screenshots checked: none shows anything changed.
 
 - **Obsidian Edition 2.12.1**: the version is 2.12.1, with its notes in `release-notes/v2.12.1.md`.
 

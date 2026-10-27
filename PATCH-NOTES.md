@@ -63,6 +63,9 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Helms give AC 1 *(was 0)*.
 - **[Changed]** Rings and cloaks of protection follow AD&D: two rings don't stack, a ring gives no AC with magical armour, and a cloak does nothing with magical or metal armour or a shield.
 - **[Changed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
+
+**Races**
+
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
 - **[Changed]** A thri-kreen in the party fights with edged claws, so creatures that crushing weapons can't hurt are no longer safe from it *(was crushing, as every unarmed attack)*.
 

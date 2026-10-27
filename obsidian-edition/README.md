@@ -403,9 +403,9 @@ there; **-** makes it smaller.
   fights: 4`, or `?` until the game has shown it to the Loader): the game's
   own count, one a trip into the arena however many waves come (see [the
   arena's count of
-  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). In a fight it says
-  the round, and once the party has escaped Draj it's gone. (Not when the panel
-  is collapsed to one line: that line stays the newest.)
+  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). Once the party
+  has escaped Draj it's gone. (Not when the panel is collapsed to one line:
+  that line stays the newest.)
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
