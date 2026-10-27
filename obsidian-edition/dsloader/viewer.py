@@ -536,10 +536,14 @@ class Viewer:
                                                  else launch.DEFAULT_SPEED))
         for value, text in ((launch.GOG_SPEED, "GOG's own (walking can be choppy with shadows and dust)"),
                             ("20000", "Faster: smooth walking with shadows and dust (the default)"),
-                            ("35000", "Fastest: the whole party in view walks as fast as the leader alone "
-                                      "(needs a faster PC)")):
+                            ("35000", "Fastest: the whole party in view walks smoothly, with every picture "
+                                      "shown (needs a faster PC)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
+        self.steady_pace = tk.BooleanVar(value=settings.get("steady_pace", True) is not False)
+        ttk.Checkbutton(pace, text="Walking at full speed on the map whatever is drawn: when a picture takes too "
+                        "long, the next is skipped rather than the party slowing down", variable=self.steady_pace,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
         ravager = section("ravager", "Wake of the Ravager (optional)")
         self.wotr_status = tk.StringVar(value=self._wotr_status())
@@ -648,7 +652,8 @@ class Viewer:
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
-                    self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start):
+                    self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
+                    self.steady_pace):
             var.set(True)
         self.combat_log.set(False)
         self.combat_log_level.set(dicelog.combat_log_level({}))
@@ -1134,6 +1139,7 @@ class Viewer:
         settings["camera_still"] = self.camera_still.get()
         settings["scene_pointer"] = self.scene_pointer.get()
         settings["mouse_start"] = self.mouse_start.get()
+        settings["steady_pace"] = self.steady_pace.get()
         for key, var in self.rule_vars.items():
             settings[key] = var.get()
         launch.save_settings(settings)

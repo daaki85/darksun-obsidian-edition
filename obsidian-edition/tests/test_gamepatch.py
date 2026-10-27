@@ -96,6 +96,23 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(r[0x23:0x26], bytes.fromhex("b87e37"))  # (mov ax,377Eh where the game has it)
         self.assertIn(bytes.fromhex("833e681100"), r)  # (in a fight only: IN_COMBAT, DS:1168h)
 
+    def test_steady_pace(self):
+        """The map's frame's two far calls, everything a step (1DF3:26DCh, from 1E901h) and what moved
+        drawn with the flip (1DF3:15EAh, from 1E946h): their first 3 bytes an INT to DSCLOG's STEADY
+        PACE and A9h ("test ax,<segment>": the segments after them, relocated, left as they are); a
+        switch (STEADY_PACE), off leaving the calls the game's."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        for name, offset, call, vector in (("pace_pass", 0x1E901, "9adc26", gamepatch.VEC_PACE_PASS),
+                                           ("pace_draw", 0x1E946, "9aea15", gamepatch.VEC_PACE_DRAW)):
+            p = by[name]
+            self.assertEqual((p.offset, p.original), (offset, bytes.fromhex(call)))
+            self.assertEqual(p.replacement, bytes((0xCD, vector, 0xA9)))
+        self.assertEqual(gamepatch.STEADY_PACE, ("pace_pass", "pace_draw"))
+        original = fake_dsun()
+        off = gamepatch.patched(bytes(original), frozenset(gamepatch.STEADY_PACE))
+        self.assertEqual(off[0x1E901:0x1E904], original[0x1E901:0x1E904])
+        self.assertEqual(off[0x1E946:0x1E949], original[0x1E946:0x1E949])
+
     def test_mouse_sites(self):
         """The scenes' pointer (SCENE_POINTER: the step's "or dx,dx / jz", the scenes' routine's
         "or si,si / jz" at its end) and the pointer's start (MOUSE_START: the ranges' "mov word

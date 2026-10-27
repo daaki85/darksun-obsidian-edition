@@ -127,7 +127,7 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 | Change | What it does |
 |---|---|
 | **On the map** | The party's figures show what they wear, everyone casts a shadow, and walkers raise dust (each can be switched off). Elves have pointed ears, and half-elves a look of their own instead of the humans' (also switchable). |
-| **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), so the party walks smoothly with shadows and dust. |
+| **Game speed** | DOSBox runs the game faster than GOG's settings (choose GOG's own, faster or fastest), and the whole party walks at full speed with shadows and dust: when the screen can't keep up, a picture is skipped rather than everyone slowing down. |
 | **Game window** | Double, triple or quadruple size, or full screen, chosen at the top of the Loader. |
 | **No copy protection** | The question from the manual never comes. |
 | **Crash and freeze reports** | If the game or DOSBox stops with an error, the message stays on screen and the Loader writes a report to send, with the game's own error message in it; if the game freezes, **Freeze report** on the Loader saves what it was doing. |
@@ -308,7 +308,7 @@ classes a human could change to ([kits](#kits)).
   higher CON adds nothing unless they are below the new least.
 - Half-giants roll double. A roll counts at least 2 with CON 20, 3 with CON
   21-22 and 4 with CON 23 or more.
-- Two kits change the die: a **Battle Mage** rolls a d6, an **Arcanist** a d3.
+- Two [kits](#kits) change the die: a **Battle Mage** rolls a d6, an **Arcanist** a d3.
 - **CON's bonus** comes with every level: for a fighter, gladiator or ranger
   +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
   24-25 (−1 at 4-6); for anyone else at most +2.
@@ -317,7 +317,6 @@ classes a human could change to ([kits](#kits)).
   total is divided by the number of classes. *Without the mod:* the dice are
   added and the total divided, and CON's bonus counts once a level of the
   highest class.
-- Three [kits](#kits) have a die of their own.
 - At 0 hit points a character is Out Cold; at −10, dead.
 
 ### THAC0 by level
@@ -488,7 +487,7 @@ single class** (a human may still change class).
 - [Weapon specialization](#weapon-specialization-and-attacks) in **two** weapon
   types at 1st level, a third at 6th and a fourth at 9th: +1 to hit, +2 damage
   and 3/2 attacks with each. *Without the mod:* 3/2 attacks with any weapon.
-- AC 1 better from 5th level and 2 better at 10th, with or without armour.
+- AC 2 better at 10th level, with the [XP cap](#experience-and-levels) letting it get there (the game's own AC 1 better from 5th, with or without armour).
 - AD&D's experience table. *Without the mod:* the fighter's.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
@@ -1140,9 +1139,11 @@ attacks at the character's full rate.
   shield.
 - A **backstab** is a thief's attack from behind, in melee, with a weapon no
   heavier than a long sword (see [Equipment](#equipment)): +4 to hit in all,
-  and the thief's first attack of the round does **×2** damage at levels 1-4,
-  **×3** at 5-8, **×4** at 9-12 and **×5** at 13 (an Assassin's one step
-  more), STR's bonus included.
+  and the thief's first attack of the round multiplies the **weapon's dice**
+  **×2** at levels 1-4, **×3** at 5-8, **×4** at 9-12 and **×5** at 13 (an
+  Assassin's one step more); STR's bonus and the weapon's plus are added once
+  after. *Without the mod:* the whole damage, STR included, is multiplied, on
+  the round's first two attacks.
 
 ### Hiding in shadows
 
@@ -1780,6 +1781,7 @@ AD&D's tables:
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; spells kept on a click on the Effects screen | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |
+| | the party walking at full speed whatever is drawn (steady pace) | on |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
 Rule changes, customization, expanded features and the new spells count at

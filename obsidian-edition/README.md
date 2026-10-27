@@ -93,7 +93,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   ([Controls](FEATURES.md#controls)); 40 saves, each also kept under its name,
   and 29 saved characters
   ([More saves and characters](FEATURES.md#more-saves-and-characters)); a
-  [game speed](FEATURES.md#game-speed) setting; crash, freeze and item
+  [game speed](FEATURES.md#game-speed) setting, and the whole party walking
+  at full speed with shadows and dust on; crash, freeze and item
   reports; and no dragon asking for a word from the manual
   ([No manual check](#no-manual-check)).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
@@ -136,7 +137,7 @@ setting (suggestions, not tested limits):
 |---|---|---|
 | GOG's own | anything that runs GOG's release | 2 GB |
 | Faster (20,000 cycles, the default) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
-| Fastest (35,000 cycles) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
+| Fastest (35,000 cycles: every frame drawn in time, the smoothest) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
 
 The Loader itself (Python and its window) needs about 100 MB of memory and
 little processor time. A screen of 1920×1080 or more shows the game's window
@@ -262,6 +263,10 @@ start it the GOG way and load a save from before the mod.
   the trouble is the Loader's window.
 - **The game runs slowly, or the sound stutters:** choose a lower
   [game speed](FEATURES.md#game-speed).
+- **Walking looks jerky with the whole party in view:** that is steady pace
+  skipping pictures so no one slows down. **Fastest** game speed, on a quick
+  enough computer, draws every picture in time; or untick steady pace for
+  every picture at the game's slower walk ([game speed](FEATURES.md#game-speed)).
 - **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
   takes the mouse at the first click in its window (that click does nothing
   in the game). **Ctrl+F10** lets it go; a click in the window takes it again.

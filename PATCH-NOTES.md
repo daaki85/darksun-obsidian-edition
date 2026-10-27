@@ -122,7 +122,7 @@ A few of them:
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
-- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver, each casting its spell on what it hits. They stay in the quiver until shot, as a Flame Blade stays in the hand.
+- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver, each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
 - **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
 
@@ -259,7 +259,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** The pointer stands still for less time after you pick up or put down an item in the inventory, so it jumps less far when it moves again *(was up to a tenth of a second)*.
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was following each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
-- **[New]** A game speed setting, so the whole party walks as smoothly as one.
+- **[Changed]** The game runs faster than with GOG's settings: DOSBox is given more of the computer's time, and a **Game speed** setting chooses how much (GOG's own, faster or fastest).
+- **[Changed]** The whole party walks at full speed on the map with shadows and dust on: when the screen can't keep up, a picture is skipped rather than everyone slowing down *(was half speed with the whole party in view)*. An Options switch, on.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message and how much memory it had left; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** A warning when memory runs low: the dice log tells you to save and restart before the game runs out (a fresh start has all of it back).
 - **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
@@ -287,7 +288,6 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
 - **[Fixed]** **Armor** used up two charges for each hit, and one for any spell cast on its wearer, even a friend's Bless. Now one charge for each damaging hit, a weapon's or a spell's.
-- **[Fixed]** A weapon's spell was cast at 6th level whoever struck. A Spellarcher's spell arrows now cast at the archer's preserver level (a magic weapon's own spell is still 6th, as the game has it).
 - **[Fixed]** **Share Strength** left its strength on the one who got it after the power ended. Now it ends on them too.
 - **[Fixed]** The preserver's **Dispel Magic** also stopped everyone it caught from casting spells, your own party included. Now it only dispels.
 - **[Fixed]** **Cause Serious and Critical Wounds** did 2d9 and 3d9 damage. Now 2d8+1 and 3d8+3, as AD&D has them and as the Cure spells heal.
@@ -307,10 +307,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** In a long session the game could stop with **"Out of memory in OEOpenGraph"**: each time the map comes back (after the USE screen, a talk, a menu) it needs 60,000 bytes in one piece, and little was left over. Part of the game's code and its music now live in upper memory, which leaves about 97 KB to spare with the map up (the original game: 57 KB).
 - **[Fixed]** When the game rolls a thief skill for the **whole party** (a trap going off, listening in by a wagon), the first party member always rolled, however poor at it. Now the member with the best chance does.
 - **[Fixed]** **Random monsters** came in numbers worked out from the wrong monster, and in some areas could crash the game ("Divide error"). Now the count fits the monster that comes, and the crash can't happen.
-- **[Fixed]** Characters disappearing from the screen and then the game freezing, in long sessions: a likely cause is gone (the shadows had the game load a figure's picture in the middle of drawing, which could spoil another one).
-- **[Fixed]** In a big fight (the arena's), most figures lost their **shadows**: the game lets go of pictures it isn't drawing just then. Each figure's shadow is now kept as it is drawn, and cast from that copy while its picture is away (a creature not yet seen with its picture in memory still has none until it is).
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
-- **[Fixed]** The **Weapon Merchant** in Teaquetzl's market and **Jark** in Tyr's were missing (since 1.2.0): with the weapons the mod gives them, they had more items than the game could read, and it left them out. They're back, in a save already there too.
 - **[Fixed]** The game's Sling +1 had no icon.
 - **[Fixed]** An archer's pointer showed "can't shoot" after a shot that killed, with shots left (a click still shot). Now it shows "can't" only once every shot of the round is made.
 - **[Fixed]** **Slay Living**'s description said a creature that saves takes 3 to 17; the game does 2 to 16 (half of 4d8). It says so now.

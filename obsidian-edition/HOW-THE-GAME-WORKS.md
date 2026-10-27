@@ -29,6 +29,7 @@ the game, and checked here in the game's own code.
 - [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
 - [The game's saving throws](#the-games-saving-throws)
 - [The arena's count of fights](#the-arenas-count-of-fights)
+- [How fast the party walks](#how-fast-the-party-walks)
 
 ## Initiative
 
@@ -715,3 +716,23 @@ Checked in play: the count going up once a trip, Scar's challenge on the fifth,
 and, with the count set to 5000, the 5000th trip's speech, the party sent back
 with no fight, and the final battle marked won. The 1000th trip is as its
 script reads; it wasn't played.
+
+## How fast the party walks
+
+Walking has no speed of its own in the game's code: a walking figure takes one
+step for each picture the game draws of the map. The game draws the view, then
+shows it at the screen's next refresh, 70 times a second, and waits for that
+refresh. A picture that takes a moment longer to draw than a refresh misses it
+and waits for the next one, so it shows twice as late, and every walker moves
+at half speed until the pictures are quick again. Everything on the screen
+adds to the drawing: four figures rather than the leader alone (the manual's
+advice to collapse the party "speeds up the game" is this), the mod's gear,
+shadows and dust, and how fast the computer runs DOSBox.
+
+Measured in the slave pens at 20,000 cycles, with the mod's gear, shadows and
+dust on: the leader alone walked about 220 to 260 pixels a second of the
+game's time, the whole party in view 152 to 175, and the game showed about 37
+pictures a second while they walked, not 70. [Steady
+pace](FEATURES.md#game-speed) keeps everyone at full speed by leaving out the
+pictures that would be late, rather than waiting for them.
+

@@ -6,7 +6,47 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Pull request #69 (not merged yet)
+## Next pull request (not opened yet)
+
+**New: steady pace**
+- **The whole party walks at full speed on the map**, shadows and dust on, at the default 20,000
+  cycles (in the slave pens: 249 to 278 pixels a second, where it was 152 to 175; the leader alone
+  about 220 to 260). When a frame would be drawn late, the next one isn't drawn: the game's step
+  for everything still runs, and the frame after draws what moved in both. DSCLOG's STEADY PACE
+  (`PROBE_PACE_PASS`, `PROBE_PACE_DRAW`, vectors 83h and 82h) in place of the map's frame's two
+  far calls (DSUN.EXE 1E901h, 1E946h: `gamepatch.STEADY_PACE`, `pace_pass` and `pace_draw`): a
+  schedule of 70 frames a second on the game's clock, the list of what moved (DS:57D0h) kept in
+  the far block (`FAR_PACE`, 64 entries) for the next frame drawn; fights (the fight state's +19h)
+  draw every frame. An Options switch under Game speed (`steady_pace`, on; from the next start),
+  off leaving the game's calls as they are. An earlier try that caught up figures' animation
+  steps alone did nothing: the "think" that starts a figure on its next square runs once a frame.
+- Tests: `SteadyPaceTests` (on schedule, behind, a fight, a kept list drawn alone, a pause, the
+  most kept) and `test_steady_pace`. Checked in the game: walking, two arena fights (no frame
+  skipped in a fight), the view scrolling with frames skipped (the arena, and the pens at 6,700
+  cycles) and the arena-to-pens area change, each followed by a full redraw compared with the
+  screen (only the braziers and figures in mid-step differed).
+
+**Docs**
+- FEATURES' and DEVELOPMENT's Game speed, the requirements table's Fastest, the player's guide's
+  Game speed and Options rows, the patch notes.
+- FEATURES' Game speed: `steady-pace.gif`, the whole party walking in the slave pens with steady
+  pace off and on side by side (recorded at 70 frames a second, shown at half speed).
+- FEATURES' Game speed: the pictures shown a second, measured by counting the game's page flips
+  (the word at CS:118Eh the flip routine, DSUN.EXE 14414h, toggles) while the whole party walks in
+  the slave pens: about 37 with steady pace off, about 27 with it on (it said about 40).
+- Doc review: the patch notes' two game speed lines made one (the old one gave the party's walking
+  to the cycles setting), and four "fixes" of the mod's own bugs taken out of them (shadows lost in
+  big fights, figures vanishing, the Weapon Merchant and Jark, the spell arrows' level: the
+  Spellarcher's line says it); FEATURES' bug table gains "Out of memory in OEOpenGraph" and Slay
+  Living's description; the player's guide's backstab (it said STR's bonus is multiplied, the
+  game's own rule) and its hit-die kits (two, not three); the gladiator's AC line as the game's
+  own; HOW-THE-GAME-WORKS gains "How fast the party walks", FEATURES' Game speed linking to it;
+  DEVELOPMENT's room in the helper and memory map brought up to date (the image 60,528 bytes, 4.9
+  KB spare; the HMA 7,080 bytes free; upper memory about 55.5 KB) and how to count the pictures
+  shown; ITEMS' acid table without Dunesong (bows never are at risk); the README's feature list
+  and troubleshooting mention steady pace; Jark is in Kel's caravan (#64's entry said Tyr).
+
+## Pull request #69 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/69))
 
 - **Obsidian Edition 2.11.0**: the version is 2.11.0, with its notes in `release-notes/v2.11.0.md`,
   for #68.
@@ -128,7 +168,7 @@ notes](PATCH-NOTES.md).
   icons' shine; the patch notes' long dice-log line is three.
 
 **Fixed**
-- **The Weapon Merchant was missing from Teaquetzl's market** (since 1.2.0), and Jark from Tyr's.
+- **The Weapon Merchant was missing from Teaquetzl's market** (since 1.2.0), and Jark from Kel's caravan.
   The routine that reads an object's records (RDFF, DSUN.EXE 68000h) keeps them in a table of 80
   on its stack and gives up on an object with more (-2), and the code making a region's people
   (244D3h) then frees the person's map entry: the merchant had 89 records with the Loader's 11
