@@ -535,8 +535,8 @@ and so does `test_fits_upper_memory`. Since the far block went to the HMA,
 are free in one piece (57.8 KB measured in DOSBox with a smaller helper, less
 what it has grown since: the helper at C90Ah, then the overlay buffer, the
 free block, the music buffer). The helper's own segment is the limit for new
-code: its image with the install code is 60,528 bytes (`image_len`; the
-resident part ends at `resident_end`, E590h), so about 4.9 KB of its 64 KB are
+code: its image with the install code is 60,816 bytes (`image_len`; the
+resident part ends at `resident_end`, E6B0h), so about 4.6 KB of its 64 KB are
 spare; the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
@@ -2226,9 +2226,13 @@ after the `ns_list_` patches):
 - **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
   under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
   the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8
-  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Not for a permanent
-  effect: its spell record's time (+7) is `PERMANENT_TIME`, and +8 holds a
-  meaningless 15 (Charmed). Mirror Images from Reflected Image take its name
+  of the record, `NS_CHARGES`): IMPROVED AC (10 CHARGES). Only for a spell
+  lasting a number of uses (its record's time, +7, from -1 down to -9998) or
+  for a timed effect (an entry of kind 7 in the event queue, DS:2FBEh, with its
+  owner and handle, as Armor's). A permanent effect (time `PERMANENT_TIME`,
+  Charmed) and an item's power (a helm's Gaze Reflection, Shadowseeker's
+  Detect Invisibility: the game casts it for -9999 while it is readied, with no
+  timer) hold a meaningless 15 at +8, 9999's low byte. Mirror Images from Reflected Image take its name
   and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
   Image, whose entry that is, writes it again before its own use
   (`ns_reflect_entry`).
@@ -3148,12 +3152,32 @@ keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
 
-**M for the overhead map.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both
-reads and peeks, turns M into O (the game's key for its overhead map) while the
-map's main loop has run within the last tick or two (`MAP_TICK`, set in
-`PANEL_TICK`) and sets `OVERHEAD`; M again, the loop not run since (the overhead
-map pauses it), turns into Escape, which closes it. `PANEL_TICK` clears
-`OVERHEAD` when the map runs again.
+**M, U and I.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both reads and
+peeks, turns M into O (the game's key for its overhead map) while the map's
+main loop has run within the last tick or two (`MAP_TICK`, set in
+`PANEL_TICK`), and lets U and I (USE, inventory) through; `OVERHEAD` then holds
+the key's letter. The same key again, the loop not run since (the screen pauses
+it), turns into Escape, which closes the screen. U on the inventory or I on USE
+goes through (the game switches screens) and moves `OVERHEAD` to it; any other
+key there clears it. The game reads a key in its keyboard interrupt (35600h:
+a peek, `AH=1`, then the read, `AH=0`), so `OVERHEAD` changes only on the read
+(`MK_READ`), and both give the same key. `PANEL_TICK` clears `OVERHEAD` when the
+map runs again.
+
+**The whole party in view.** The map's party is one figure while `DS:1168h` is
+0 (each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
+leader's figure). The game's key table on the map (1587h:0FEBh, its handlers 34h
+on) has 5 call 1587h:3109h (argument 1: the view drawn again), which spreads the
+members round the leader and sets it, and 6 call 1587h:32E2h, which gathers
+them; a fight's end calls that too (from 1D51h and 3490h, unless `DS:496Ah`).
+Loading a game (69218h, reading `DARKRUN.GFF`) sets it from the members' 80h.
+`SPREAD_LOAD` (site `NS_IMAGE+48`, over the load's `mov word [1168h],0`, 692CEh)
+and `SPREAD_GATHER` (`NS_IMAGE+55`, over the gathering's, 1DFE8h, only when its
+way back is a fight's end, not 6's 0CE2h) set `SPREAD_DUE`; `SPREAD_TICK`, in
+`PANEL_TICK`, then calls 3109h itself on the map out of a fight, if the party is
+still one figure. (A 5 put in the BIOS's buffer waits there: the game reads
+keys only in its keyboard interrupt.) Switch: `gamepatch.PARTY_SPREAD`
+(`party_spread`, on).
 
 **The view in a fight.** The game writes the view's place (`DS:1178h`,
 `117Ah`) in two routines that centre it (on a figure, `191F:01FFh`, and on a

@@ -1016,8 +1016,11 @@ class GameData:
             charges = rec[8] or None
             spell, = struct.unpack_from("<h", rec, 4)
             spell_rec = self.spell_record(spell) if 0 < spell < 256 else b""
-            if len(spell_rec) >= SPELL_SIZE and struct.unpack_from("<h", spell_rec, 7)[0] == PERMANENT:
-                charges = None  # a permanent effect keeps a meaningless 15 there
+            if (len(spell_rec) >= SPELL_SIZE and not PERMANENT < struct.unpack_from("<h", spell_rec, 7)[0] < 0
+                    and at is None):
+                # neither a spell lasting a number of uses nor timed: a permanent effect, or an
+                # item's power (cast for -9999 while readied), keeps a meaningless 15 (9999's low byte)
+                charges = None
             out.append((effect, charges, max(at - now, 0) if at is not None and now is not None else None))
         return out
 

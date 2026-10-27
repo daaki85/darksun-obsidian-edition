@@ -12299,6 +12299,63 @@ mouse_init:
         popa
 .none:  iret
 
+; SPREAD_LOAD: "mov word [1168h],0" (692CEh; 6 bytes) in the routine loading a game (69218h, from
+; DARKRUN.GFF): there a party member in the leader's figure (its map record's +0, 80h) has the party
+; in one figure (DS:1168h 0). Made, and SPREAD_TICK has the party spread out on the map.
+spread_load:
+        mov word [0x1168], 0
+        mov byte [cs:spread_due], 1
+        iret
+
+; SPREAD_GATHER: "mov word [1168h],0" (1DFE8h; 6 bytes) at the end of the routine putting the party
+; in one figure (1587h:32E2h, BP its frame): the game's 6 key's (its way back 0CE2h), and a fight's
+; end (from 1D51h and 3490h), which SPREAD_TICK then undoes as after a load.
+GATHER_FROM_FIGHT  equ 0x1D51
+GATHER_FROM_FIGHT2 equ 0x3490
+spread_gather:
+        mov word [0x1168], 0
+        cmp word [bp + 2], GATHER_FROM_FIGHT
+        je .fight
+        cmp word [bp + 2], GATHER_FROM_FIGHT2
+        jne .out
+.fight: mov byte [cs:spread_due], 1
+.out:   iret
+
+; SPREAD_TICK (the map's main loop run, DS the game's): after SPREAD_LOAD, the first time, on the map
+; out of a fight with the party still in one figure (DS:1168h 0), the routine the game's 5 key runs
+; for the whole party in view (1587h:3109h, its argument 1: the view drawn again) called. (A key put
+; in the BIOS's buffer waits: the game reads keys only in its own keyboard interrupt.) All registers
+; kept.
+SPREAD_FROM_DS equ 0x4356 - 0x1587
+spread_tick:
+        cmp byte [cs:spread_due], 0
+        je .ret
+        call on_map
+        jne .ret
+        mov byte [cs:spread_due], 0
+        cmp word [0x1168], 0
+        jne .ret
+        pusha
+        push ds
+        push es
+        mov ax, ds
+        sub ax, FIGHT_FROM_DS
+        mov es, ax
+        cmp word [es:0x19], 0
+        jne .out
+        mov ax, ds
+        sub ax, SPREAD_FROM_DS
+        mov [cs:spread_far + 2], ax
+        push word 1
+        call far [cs:spread_far]
+        add sp, 2
+.out:   pop es
+        pop ds
+        popa
+.ret:   ret
+spread_due db 0
+spread_far dw 0x3109, 0
+
 ; MOUSE_SET: "mov word [0A12Dh],0" (2A912h; 6 bytes) just after the game gives the mouse its
 ; ranges (the screen's 320 by 200), as its screens start. A video mode set leaves the driver's
 ; pointer in the middle of its 640 across, which these ranges put at the right edge (318, 100):
@@ -14371,6 +14428,10 @@ SLAY_LIVING  equ 136
 HOLD_PERSON  equ 86
 STINKING_CLOUD equ 22
 PERMANENT_TIME equ 0xD8F1      ; (-9999: a record's time unit for an effect until it is taken away)
+EVENT_QUEUE equ 0x2FBE          ; (DS: the game's timed events, a far pointer; their count at 2FC6h)
+EVENT_COUNT equ 0x2FC6
+EVENT_SIZE equ 0x11             ; (+0 when, a dword; +4 the kind; +5 the owner; +7 the handle)
+EVENT_EFFECT_ENDS equ 7
 LEND_HEALTH  equ 156            ; (the psionic power whose handler moves hit points: Water of Life's)
 STRENGTH_SPELL equ 23
 ENLARGE_SPELL equ 5
@@ -15231,6 +15292,8 @@ CINE_STEP equ NS_IMAGE + 43     ; 92A28h: a scene's step, an event taken (CINE_S
 CINE_END  equ NS_IMAGE + 44     ; 56BBEh: the scenes' routine at its end (CINE_END)
 MOUSE_SET equ NS_IMAGE + 45     ; 2A912h: the mouse given its ranges (MOUSE_SET)
 MOUSE_INIT equ NS_IMAGE + 46    ; 356F5h: the mouse driver reset, at the game's start (MOUSE_INIT)
+SPREAD_SITE equ NS_IMAGE + 48   ; 692CEh: a game loaded, the party in one figure (SPREAD_LOAD)
+GATHER_SITE equ NS_IMAGE + 55   ; 1DFE8h: the party put in one figure, at a fight's end too (SPREAD_GATHER)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -15346,6 +15409,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je mouse_set
         cmp byte [cs:rl_site], MOUSE_INIT
         je mouse_init
+        cmp byte [cs:rl_site], SPREAD_SITE
+        je spread_load
+        cmp byte [cs:rl_site], GATHER_SITE
+        je spread_gather
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -17043,8 +17110,9 @@ ns_reflect_entry:
 ; the effect) for the line under the pointer (7ED37h, the cell's name to 580:5Ch: there the way
 ; back's third byte on is "mov bx,ax", 8Bh; the icons' and the cells' sites have "mov bx,0FFFAh")
 ; and thing AX's effect has charges left (+8 of its record: Armor's hits, Mirror Image's images,
-; Stoneskin's blows...; not a permanent effect's, whose spell's time is PERMANENT_TIME and +8 a stray
-; 15): REFLECT_ENTRY then names it, its name with them, "IMPROVED AC (3 CHARGES)", in EF_TEXT
+; Stoneskin's blows...: a spell lasting a number of uses, or a timed effect, Armor's; not a permanent
+; effect's, nor an item's power, cast for PERMANENT_TIME (-9999) with no timer and +8 a stray 15, 9999's
+; low byte): REFLECT_ENTRY then names it, its name with them, "IMPROVED AC (3 CHARGES)", in EF_TEXT
 ; (580:5Ch keeps that name's address, not the entry, so Reflected Image's use of the entry after it
 ; changes nothing). Mirror Images from Reflected Image take its name and icon. Only with the room
 ; past the spell rows (SEG_MOVE). DS the game's; all registers kept.
@@ -17057,10 +17125,11 @@ ef_charges:
         les si, [ss:di + 34]            ; (the way back)
         cmp byte [es:si + 3], 0x8B
         jne .no
-        call ns_charges                 ; (AL the charges, DX the spell)
+        mov bp, ax                      ; (the thing)
+        call ns_charges                 ; (AL the charges, AH the handle, DX the spell)
         or al, al
         jz .no
-        mov bl, al                      ; (BL the charges)
+        mov bx, ax                      ; (BL the charges, BH the handle)
         cmp dx, 0xFF
         ja .timed                       ; (no spell record to look at)
         mov ax, ds
@@ -17068,8 +17137,24 @@ ef_charges:
         mov es, ax
         mov si, dx
         shl si, 5
-        cmp word [es:si + SPELL_RECS + 7], PERMANENT_TIME
-        je .no
+        mov ax, [es:si + SPELL_RECS + 7]
+        cmp ax, PERMANENT_TIME
+        jle .event
+        or ax, ax
+        js .timed                       ; (a spell that lasts a number of uses)
+.event: les si, [EVENT_QUEUE]           ; (else counted only if timed: an item's power, cast for
+        mov ax, [EVENT_COUNT]           ; -9999, and a permanent effect have none and a stray 15)
+.each:  or ax, ax
+        jz .no
+        cmp byte [es:si + 4], EVENT_EFFECT_ENDS
+        jne .next
+        cmp [es:si + 5], bp
+        jne .next
+        cmp [es:si + 7], bh
+        je .timed
+.next:  add si, EVENT_SIZE
+        dec ax
+        jmp .each
 .timed: mov ax, ds
         sub ax, EFFECT_TABLE_FROM_DS
         mov es, ax
@@ -17134,7 +17219,7 @@ ef_charge_word db ' CHARGE', 0
 ef_text times EF_NAME_MAX + 16 db 0
 
 ; NS_CHARGES: AL the charges left (+8) on effect CL of thing AX (the game's table of active
-; effects), 0 if none, and DX the spell that made it (+4). DS the game's; others kept.
+; effects), 0 if none, AH its handle (+7), and DX the spell that made it (+4). DS the game's; others kept.
 ns_charges:
         push bx
         push es
@@ -17149,7 +17234,8 @@ ns_charges:
         jne .next
         cmp [es:bx + 6], cl
         jne .next
-        mov al, [es:bx + 8]
+        mov ax, [es:bx + 7]
+        xchg al, ah
         mov dx, [es:bx + 4]
         jmp .out
 .next:  add bx, 10
@@ -19716,13 +19802,14 @@ panel_page  dw 0                ;   was last drawn (PANEL_DRAW), and its top the
 panel_drawn dw PANEL_Y0
 
 panel_tick:
-        push es                         ; (the map's main loop ran: L_ON_MAP; no overhead map up)
+        push es                         ; (the map's main loop ran: L_ON_MAP; no screen of MAP_KEY's up)
         xor ax, ax
         mov es, ax
         mov ax, [es:0x46C]
         pop es
         mov [cs:map_tick], ax
         mov byte [cs:overhead], 0
+        call spread_tick
         cmp word [cs:panel_on], 0
         je .off
         push es                         ; (the Loader gone: off, as if it had said so)
@@ -20682,6 +20769,7 @@ int16:
         pushf
         call far [cs:old16]
         jz .none
+        mov byte [cs:mk_read], 0
         call map_key
         call our_key
         jc .took
@@ -20709,6 +20797,7 @@ int16:
         push ax
         pushf
         call far [cs:old16]
+        mov byte [cs:mk_read], 1
         call map_key
         call our_key
         jc .again
@@ -20745,20 +20834,45 @@ l_on_map:
 map_tick   dw 0
 
 ; MAP_KEY: M on the map (its main loop run within the last tick or two, the map the screen on
-; show) made O, the game's key for its overhead map, and set OVERHEAD; M with OVERHEAD set and
-; the map's loop not run since (the overhead map up; PANEL_TICK clears OVERHEAD) made Escape,
-; the key that closes it: AX the key, changed or kept; others kept. (A peek and the read after
-; it both find the map fresh, so both see O.)
+; show) made O, the game's key for its overhead map; U and I there left as they are, the game's keys
+; for the USE and inventory screens (each switches to the other on its own too); OVERHEAD then the
+; key's letter. The same key again with the map's loop not run since (that screen up; PANEL_TICK
+; clears OVERHEAD) made Escape, the key that closes it; U or I on the other screen of the two, left
+; as it is, moves OVERHEAD to it, and any other key there clears it (V's screen, typing...): AX the
+; key, changed or kept; others kept. (A peek and the read after it give the same: OVERHEAD changes
+; only on the read, MK_READ 1.)
 KEY_M       equ 0x326D
 KEY_SHIFT_M equ 0x324D
+KEY_U       equ 0x1675
+KEY_SHIFT_U equ 0x1655
+KEY_I       equ 0x1769
+KEY_SHIFT_I equ 0x1749
 KEY_O       equ 0x186F
 KEY_ESCAPE  equ 0x011B
 map_key:
+        push bx
+        mov bl, 'm'
         cmp ax, KEY_M
-        je .m
+        je .key
         cmp ax, KEY_SHIFT_M
-        jne .ret
-.m:     push ax
+        je .key
+        mov bl, 'u'
+        cmp ax, KEY_U
+        je .key
+        cmp ax, KEY_SHIFT_U
+        je .key
+        mov bl, 'i'
+        cmp ax, KEY_I
+        je .key
+        cmp ax, KEY_SHIFT_I
+        je .key
+        cmp byte [cs:overhead], 'm'     ; another key: the overhead map's are its own
+        je .ret
+        cmp byte [cs:mk_read], 0
+        je .ret
+        mov byte [cs:overhead], 0
+        jmp .ret
+.key:   push ax
         push es
         xor ax, ax
         mov es, ax
@@ -20770,14 +20884,30 @@ map_key:
         ja .up
         call on_map
         jne .ret
-        mov byte [cs:overhead], 1
+        cmp byte [cs:mk_read], 0
+        je .fresh
+        mov [cs:overhead], bl
+.fresh: cmp bl, 'm'
+        jne .ret
         mov ax, KEY_O
-        ret
-.up:    cmp byte [cs:overhead], 0
-        je .ret
+        jmp .ret
+.up:    cmp [cs:overhead], bl
+        jne .other
         mov ax, KEY_ESCAPE
-.ret:   ret
-overhead db 0
+        jmp .ret
+.other: cmp bl, 'm'
+        je .ret
+        cmp byte [cs:overhead], 'u'     ; (U on the inventory, I on USE: the game switches)
+        je .move
+        cmp byte [cs:overhead], 'i'
+        jne .ret
+.move:  cmp byte [cs:mk_read], 0
+        je .ret
+        mov [cs:overhead], bl
+.ret:   pop bx
+        ret
+mk_read db 0                    ; (1 when MAP_KEY's key is being read, 0 when peeked at)
+overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0 none)
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         cmp ax, KEY_L

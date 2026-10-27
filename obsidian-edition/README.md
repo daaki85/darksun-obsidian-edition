@@ -88,7 +88,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and elves and half-elves have a look of their own; and the game's magic items
   whose icons stood still shine as the rest do ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** choosing an enemy with Tab and attacking it with Enter,
-  M for the overhead map, a view that stays put in fights, dragging the map
+  M, U and I that close their screens again, the whole party in view on the map,
+  a view that stays put in fights, dragging the map
   with the mouse wheel held down, a pointer in the intro and scenes that a click skips
   ([Controls](FEATURES.md#controls)); 40 saves, each also kept under its name,
   and 29 saved characters
@@ -604,7 +605,9 @@ in its lower panel and under the pointer:
 - **Charges left:** with the pointer on the icon of a spell that lasts a number
   of uses, the name under the icons says how many are left: IMPROVED AC (4
   CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
-  Effects that last until removed (Charmed) show none.
+  Effects that last until removed (Charmed) and a magic item's power while
+  it is readied (a helm's Gaze Reflection, Shadowseeker's Detect
+  Invisibility) show none.
 - **A click on a spell's icon leaves it on** (the game ended it); a psionic
   power's icon still ends the power, as that is how one is stopped ([Spells on
   the Effects screen](FEATURES.md#spells-on-the-effects-screen)).

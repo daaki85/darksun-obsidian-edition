@@ -6,6 +6,44 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Fixed**
+- **Effects screen: no "(15 CHARGES)" on a magic item's power** (a helm's Gaze Reflection, Shadowseeker's
+  Detect Invisibility). The game adds an item's power, as it does a permanent effect, for -9999 (until
+  taken away): its add-effect routine (76442h) then stores the time's low byte negated, F1h to 0Fh, in
+  the record's charges byte (+8) and queues no timer. `EF_CHARGES` showed charges unless the spell's own
+  time was -9999, which an item's spell's isn't. Now charges show only for a spell lasting a number of
+  uses (its record's time from -1 down to -9998) or a timed effect (an event of kind 7 in the queue,
+  DS:2FBEh, for its owner and handle; `NS_CHARGES` returns the handle in AH), as Armor's. The same rule
+  in `game.effects_left` (the dice log's and the Characters tab's effects). Tests:
+  `test_item_power_has_no_charges`; `test_time_and_charges` gives Stoneskin's record its time of -1.
+
+**New**
+- **U and I close their screens again**, as M does the overhead map: `MAP_KEY` lets U and I through on
+  the map and keeps the letter in `OVERHEAD`; the same key again, the map's loop not run since, is
+  Escape. U on the inventory or I on USE still switches screens (the game's), the other key then
+  closing it; any other key clears `OVERHEAD`. The game reads a key in its keyboard interrupt with a
+  peek and then the read, so `OVERHEAD` now changes only on the read (`MK_READ`): with it changing on
+  the peek, I on USE switched and was then read as Escape.
+- **The whole party in view** as a game starts or loads and after each fight, as the game's 5 does;
+  6 still gathers it. `SPREAD_LOAD` (site `NS_IMAGE+48` at 692CEh, the load's `mov word [1168h],0`)
+  and `SPREAD_GATHER` (`NS_IMAGE+55` at 1DFE8h, the gathering routine's, only from a fight's end:
+  its way back 1D51h or 3490h, not 6's 0CE2h) set `SPREAD_DUE`; `SPREAD_TICK` (in `PANEL_TICK`)
+  calls the game's own spreading routine (1587h:3109h) on the map out of a fight. A 5 put in the
+  BIOS's keyboard buffer was tried first and never read: the game reads keys only in its keyboard
+  interrupt. Options switch `party_spread` (on; `gamepatch.PARTY_SPREAD`: `party_spread`,
+  `party_gather`). Tests: `test_party_spread`.
+- Checked in the game: U, I and M each opening and closing their screens, U and I switching between
+  USE and the inventory; the "Kalzith test" save loading with the whole party in view; a new game's
+  opening fight ending with the party in view; 6 gathering it, and it staying gathered.
+
+**Docs**
+- FEATURES (Controls: M, U and I; The whole party in view), the player's guide's Controls and Effects
+  screen rows, PATCH-NOTES, the Loader README's summary and Effects screen, DEVELOPMENT (M, U and I;
+  The whole party in view; Charges on the Effects screen; the helper's room: image 60,816 bytes,
+  `resident_end` E6B0h, about 4.6 KB spare).
+
 ## Pull request #70 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/70))
 
 **New: steady pace**

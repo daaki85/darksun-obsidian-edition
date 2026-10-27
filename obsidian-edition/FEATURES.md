@@ -66,7 +66,8 @@ each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Choosing an enemy: Tab, Enter and the
     rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
-  - [The overhead map: M](#the-overhead-map-m)
+  - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
+  - [The whole party in view](#the-whole-party-in-view)
   - [The view in fights](#the-view-in-fights)
   - [The pointer in scenes, and where it
     starts](#the-pointer-in-scenes-and-where-it-starts)
@@ -1770,10 +1771,28 @@ with the view's size built into its drawing code and its video memory pages.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 
-### The overhead map: M
+### M, U and I: open a screen, close it again
 
 **M** on the map opens the overhead map, as the game's own **O** does, and **M**
-again closes it.
+again closes it. **U** and **I**, the game's keys for the USE and inventory
+screens, close them too when pressed again: **U** opens USE and **U** again
+closes it, and the same for **I**. **U** on the inventory screen, or **I** on
+USE, still switches to the other screen, as in the game, and that key then
+closes it. (After a click on a screen's buttons, or any other key, the next
+**U** or **I** does what the game's does.)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+
+### The whole party in view
+
+The game shows the party on the map as one figure, the leader, until you
+press **5**, and gathers it back into the leader after every fight and in
+saves made that way. With the mod, a game starts and loads with the whole
+party in view, and the party stays in view after a fight, as if you had
+pressed **5**. **6** still gathers the party into the leader, and it stays so
+until the next fight or load. On by default: **The whole party in view as a
+game starts or loads and after each fight** on the Options tab, from the next
+start.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 

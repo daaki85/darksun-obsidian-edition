@@ -34,7 +34,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
-- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left.
+- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left (a magic item's power, such as a helm's Gaze Reflection, has none).
 - **[New]** Reading a scroll on the inventory screen tells you what happened (YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI SPELL...) on the line under the paper doll. The game showed nothing there.
 
 ## Combat
@@ -253,7 +253,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen.
 - **[New]** Press the mouse wheel and drag to scroll the map.
-- **[New]** **M** opens the overhead map, and **M** again closes it.
+- **[New]** **M** opens the overhead map, and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again.
+- **[Changed]** A game starts and loads with the whole party on the map, and it stays in view after a fight, as **5** does; **6** still gathers it into the leader *(was the leader alone, often, until 5)*.
 - **[New]** The game's pointer in the intro, its logos and its other scenes, and a click skips a scene as a key does *(was no pointer, and only a key)*.
 - **[Changed]** The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer *(was at the screen's right edge, half as far up and down, and in a window three times as fast, so placing items in the inventory was fiddly)*.
 - **[Changed]** The pointer stands still for less time after you pick up or put down an item in the inventory, so it jumps less far when it moves again *(was up to a tenth of a second)*.
