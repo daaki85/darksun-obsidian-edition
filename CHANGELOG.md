@@ -28,6 +28,9 @@ notes](PATCH-NOTES.md).
   Game speed and Options rows, the patch notes.
 - FEATURES' Game speed: `steady-pace.gif`, the whole party walking in the slave pens with steady
   pace off and on side by side (recorded at 70 frames a second, shown at half speed).
+- FEATURES' Game speed: the pictures shown a second, measured by counting the game's page flips
+  (the word at CS:118Eh the flip routine, DSUN.EXE 14414h, toggles) while the whole party walks in
+  the slave pens: about 37 with steady pace off, about 27 with it on (it said about 40).
 
 ## Pull request #69 ([merged 2026-10-26](https://github.com/daaki85/darksun-obsidian-edition/pull/69))
 

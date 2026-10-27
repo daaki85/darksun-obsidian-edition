@@ -1895,9 +1895,11 @@ the whole party in view, shadows and dust on, it went at about half speed.
 from the next start): on the map the party walks at its full speed whatever is
 drawn. When a frame is late, the next one isn't drawn: the game still moves
 everyone a step, and the frame after shows all that moved in both. On a busy
-screen you see fewer pictures (about 40 a second rather than 70), walkers
-moving two steps between some of them, but no one slows down. Fights draw every
-frame, as the game does.
+screen you see fewer pictures: with the whole party walking in the slave pens,
+about 27 a second, where the game shows about 37 without steady pace (and 70
+when no frame is late; counted by the game's page flips). So walkers move two
+or three steps between pictures rather than one, but no one slows down. Fights
+draw every frame, as the game does.
 
 ![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
 
