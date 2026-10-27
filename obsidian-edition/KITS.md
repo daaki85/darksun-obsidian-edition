@@ -128,8 +128,7 @@ A character of two classes taken at once may take a kit if its race and pair
 of classes have one, and only that race may: a dwarf fighter/thief has the
 Ghetto Fighter and Wayfinder, a half-elf fighter/thief the Shadowblade and
 Military Scout, a halfling fighter/thief the Poisoner. "Under the open sky"
-means an outdoor map, or open ground outside the buildings on a city map; the
-Loader works that out about once a second.
+means an outdoor map, or open ground outside the buildings on a city map.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|---|
@@ -171,9 +170,6 @@ Characters tab.
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER
 back afterwards takes the Healer back with it, as choosing another class does.
-A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
-earlier) is given its spells by the Loader when the game is loaded, whatever
-its sphere, and the dice log says so.
 
 The Elementalist chooses its second sphere on the creation panel's
 **CLERICAL SPHERE** list: once the kit is taken (KITS, then ELEMENTAL), its

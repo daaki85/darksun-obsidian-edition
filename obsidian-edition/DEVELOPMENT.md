@@ -25,6 +25,9 @@ of the game's data, the tools for mapping it, and how each part of the
 - [How each part works](#how-each-part-works)
   - [The Dialogue tab](#the-dialogue-tab)
   - [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
+  - [The Bowyer's archery target](#the-bowyers-archery-target)
+  - [Ability checks in the scripts'
+    conditions](#ability-checks-in-the-scripts-conditions)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [Names over figures](#names-over-figures)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
@@ -1722,7 +1725,7 @@ emulated tests hold the helper to it:
 | the two-weapon penalty | Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier (in any armour); Ghetto Fighter (2 less in each hand) | `PROBE_TWO`; `RG_TWO` |
 | gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer (no shield; `kit_dancer`: long sword and bow kinds), Shadowblade, Ghetto Fighter and Rescuer (no shield), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set from the item type, its sphere the ranger class less 13; the bow kept) | `PROBE_CAN_USE` and `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`); `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand |
 | skill with a weapon | Justifier (expertise, the bow's and its chosen weapon type's, becomes specialization) | `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier; `specialize.skill` |
-| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or short sword only: `KIT_POISON_KINDS`) | `WP_TWO`, `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior |
+| weapon specs | Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or short sword only: `KIT_POISON_KINDS`) | `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior |
 | attacks a round | Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons)) |
 | gear the kit allows | Battle Mage (its chosen weapon type's weapons, with weapon specialization; light armour); Battle Dancer (long swords and bows, `kit_dancer`, whatever its cleric's sphere) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
 | hit die | Battle Mage (d6), Arcanist (d3) | a level's die: `PROBE_HIT_DIE` (`INT A5h`, new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]` the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die` |
@@ -2135,7 +2138,7 @@ keeps Turn Undead; a pick put away by a right click leaves the next talk a
 talk.
 
 A cleric/thief (a priest's element and thief levels) keeps Turn Undead on its
-button and has the purse beside it (`PP_SECOND_DRAW`), outside fights: the
+button and has the purse beside it (`PP_EXTRA_DRAW`), outside fights: the
 panel's empty slot APFM 2BE7h (index 1Ah of the spells' 2BCDh), given Turn
 Undead's handler (530h:43h, through the stub segments), its frame and the
 purse drawn as the game draws Turn Undead's (630h:4Dh, 896BCh) with an icon
@@ -2222,7 +2225,7 @@ after the `ns_list_` patches):
   for each damaging hit: a weapon's damage, a shot's as a blow's, goes through
   the damage routine too (the attack routine's one damage call, 5B8:20h at
   58B1Fh, with spell FFFFh), so the helper needs no site for blows. Seen in the
-  arena: a hit takes Armor from 9 charges to 8. (Site `NS_IMAGE+48` is free.)
+  arena: a hit takes Armor from 9 charges to 8.
 - **Charges on the Effects screen**: `EF_CHARGES` (in `NS_ENTRY`, for the line
   under the pointer, 7ED37h, the way back's third byte on "mov bx,ax") points
   the effect's entry at `REFLECT_ENTRY` with its name and the charges left (+8
@@ -2230,8 +2233,7 @@ after the `ns_list_` patches):
   lasting a number of uses (its record's time, +7, from -1 down to -9998) or
   for a timed effect (an entry of kind 7 in the event queue, DS:2FBEh, with its
   owner and handle, as Armor's). A permanent effect (time `PERMANENT_TIME`,
-  Charmed) and an item's power (a helm's Gaze Reflection, Shadowseeker's
-  Detect Invisibility: the game casts it for -9999 while it is readied, with no
+  Charmed) and an item's power (Shadowseeker's Detect Invisibility: the game casts it for -9999 while it is readied, with no
   timer) hold a meaningless 15 at +8, 9999's low byte. Mirror Images from Reflected Image take its name
   and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
   Image, whose entry that is, writes it again before its own use
@@ -2497,8 +2499,7 @@ each kept thing's frame (+11h) through its 4 frames every 3 timer ticks (about
 6 a second) and puts each funnel's rectangle into the dust's redraw rectangle
 (`d_x0`..`d_y1`), so the game redraws just that part of the map (`DUST_NUDGE`
 when the view is still). A thing whose object is no longer Whirlwind's (the area
-gone) is let go. (With one thing kept, two Whirlwinds took turns as the one
-looked at, and only the last drawn turned.)
+gone) is let go.
 
 **Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the
 one-target damage roll, 761A9h, DI its spell) is 8 + the creature's AC, at least
@@ -3166,8 +3167,9 @@ a peek, `AH=1`, then the read, `AH=0`), so `OVERHEAD` changes only on the read
 (`MK_READ`), and both give the same key. `PANEL_TICK` clears `OVERHEAD` when the
 map runs again.
 
-**The whole party in view.** The map's party is one figure while `DS:1168h` is
-0 (each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
+**The whole party in view.** The map's party is one figure while `DS:1168h`
+(`game.IN_COMBAT`: not 0 in a fight and while the party is spread out) is 0
+(each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
 leader's figure). The game's key table on the map (1587h:0FEBh, its handlers 34h
 on) has 5 call 1587h:3109h (argument 1: the view drawn again), which spreads the
 members round the leader and sets it, and 6 call 1587h:32E2h, which gathers

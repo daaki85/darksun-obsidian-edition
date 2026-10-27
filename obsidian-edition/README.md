@@ -606,8 +606,7 @@ in its lower panel and under the pointer:
   of uses, the name under the icons says how many are left: IMPROVED AC (4
   CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
   Effects that last until removed (Charmed) and a magic item's power while
-  it is readied (a helm's Gaze Reflection, Shadowseeker's Detect
-  Invisibility) show none.
+  it is readied (Shadowseeker's Detect Invisibility) show none.
 - **A click on a spell's icon leaves it on** (the game ended it); a psionic
   power's icon still ends the power, as that is how one is stopped ([Spells on
   the Effects screen](FEATURES.md#spells-on-the-effects-screen)).

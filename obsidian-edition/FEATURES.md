@@ -1247,6 +1247,10 @@ and druids of that sphere (an Elementalist's second sphere counts). They come
 with the **New wizard spells** switch (it covers these too), and with
 **AD&D's class tables** for the slots.
 
+A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
+earlier) is given its cosmos spells when the game is loaded, and the dice log
+says so.
+
 | Spell | Who | Cast on | Does |
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
@@ -1728,7 +1732,7 @@ have pictures of their own: Blade Barrier a ring of circling blades and Wall of
 Thorns a tangle of thorns (Wake of the Ravager's, from your copy; the game's
 fire wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
 funnel of dust in the middle of its area that turns as you watch, its ring of
-dust at the edge.
+dust at the edge (two Whirlwinds at once each turn).
 
 ![Whirlwind in the Scar fight: a tall grey funnel of dust turning over the party and Scar's henchmen](docs/whirlwind.gif)
 
@@ -1737,8 +1741,8 @@ How it works:
 
 ## Controls
 
-Each has a switch in the Options tab's **Controls** section, but M, which is
-always on.
+Each has a switch in the Options tab's **Controls** section, but M, U and I,
+which are always on.
 
 ### Choosing an enemy: Tab, Enter and the rings
 
@@ -1773,15 +1777,14 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
 
 ### M, U and I: open a screen, close it again
 
-**M** on the map opens the overhead map, as the game's own **O** does, and **M**
-again closes it. **U** and **I**, the game's keys for the USE and inventory
-screens, close them too when pressed again: **U** opens USE and **U** again
-closes it, and the same for **I**. **U** on the inventory screen, or **I** on
-USE, still switches to the other screen, as in the game, and that key then
-closes it. (After a click on a screen's buttons, or any other key, the next
-**U** or **I** does what the game's does.)
+**M** on the map opens the overhead map, as the game's **O** does, and **M**
+again closes it. **U** and **I** open the USE and inventory screens and close
+them when pressed a second time. **U** on the inventory, or **I** on USE,
+switches to the other screen, as in the game. After a click on a screen's
+buttons or another key, the next **U** or **I** works as in the game.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its
+paragraph on M, U and I).
 
 ### The whole party in view
 
@@ -1794,7 +1797,8 @@ until the next fight or load. On by default: **The whole party in view as a
 game starts or loads and after each fight** on the Options tab, from the next
 start.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its
+paragraph on the whole party in view).
 
 ### The view in fights
 
@@ -2011,6 +2015,11 @@ Loader a click leaves a spell on; a psionic power's effect still ends, as that
 is how a power is stopped. It has a switch in the Options tab's **Controls**
 section (**A click on a spell's icon on the Effects screen leaves it on**,
 from the next start).
+
+With the pointer on the icon of a spell that lasts a number of uses, the
+Effects screen names the uses left: IMPROVED AC (10 CHARGES). A magic item's
+power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no
+charges.
 
 ### Rules the game got wrong
 

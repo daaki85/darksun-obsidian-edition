@@ -9,8 +9,7 @@ notes](PATCH-NOTES.md).
 ## Next pull request (not opened yet)
 
 **Fixed**
-- **Effects screen: no "(15 CHARGES)" on a magic item's power** (a helm's Gaze Reflection, Shadowseeker's
-  Detect Invisibility). The game adds an item's power, as it does a permanent effect, for -9999 (until
+- **Effects screen: no "(15 CHARGES)" on a magic item's power** (Shadowseeker's Detect Invisibility). The game adds an item's power, as it does a permanent effect, for -9999 (until
   taken away): its add-effect routine (76442h) then stores the time's low byte negated, F1h to 0Fh, in
   the record's charges byte (+8) and queues no timer. `EF_CHARGES` showed charges unless the spell's own
   time was -9999, which an item's spell's isn't. Now charges show only for a spell lasting a number of
@@ -50,6 +49,19 @@ notes](PATCH-NOTES.md).
   screen rows, PATCH-NOTES, the Loader README's summary and Effects screen, DEVELOPMENT (M, U and I;
   The whole party in view; Charges on the Effects screen; Whirlwind's funnels; the helper's room:
   image 61,040 bytes, `resident_end` E790h, about 4.4 KB spare).
+- **Full documentation review** (with reviewers per document group). PATCH-NOTES: a stray
+  parenthesis, the two game-speed lines merged, the party-in-view line's switch, four more kit
+  changes. Root README: name history dropped, a note on what is new since 2.11.0. Loader README: Fastest
+  "nearly every frame", GOG's 7,000 cycles, the jerky-walking text, the Controls and Game speed
+  summaries, the defaults sentence. FEATURES: M, U and I simpler, Whirlwind's two funnels, item powers'
+  charges, the old Healer's cosmos spells (moved from KITS). DEVELOPMENT: stale names (`PP_EXTRA_DRAW`,
+  no `WP_TWO`), history trimmed, two missing contents entries. Player's guide: the whole party in view
+  in the Options table, psionicist weapons as the game's lists allow, Gythka +2 and Kreenfang marked
+  as the mod's, no place name in the Poisoner's text, multiclass kits in the Kits intro, Magic's
+  "Effects" renamed "Status effects". KITS: the Loader's once-a-second check and version history out.
+  No helm has Gaze Reflection: the item-power example is Shadowseeker's alone. Screenshots checked:
+  `options.png` opens only sections that have not changed.
+- **Restore defaults keeps the combat log on** (the Loader set it off).
 
 ## Pull request #70 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/70))
 

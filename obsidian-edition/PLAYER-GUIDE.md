@@ -49,7 +49,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
   - [Learning preserver spells](#learning-preserver-spells)
   - [How spells work](#how-spells-work)
   - [Spell lists](#spell-lists)
-  - [Effects](#effects)
+  - [Status effects](#status-effects)
 - [Psionics](#psionics)
 - [Equipment](#equipment)
   - [New items](#new-items)
@@ -98,7 +98,7 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
-| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (a helm's Gaze Reflection, Shadowseeker's Detect Invisibility) lasts while the item is readied and has no charges. |
+| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
 | **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
 | **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
 
@@ -373,7 +373,7 @@ the strictest winning:
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
-| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (as the game's lists allow) |
+| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, bone and obsidian short swords, clubs, chatkchas, bows |
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones; with another class, only if that class allows shields | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any |
@@ -947,8 +947,8 @@ Stillwater with water).
 
 ## Kits
 
-A character of one class takes one of three kits for its class when it is
-made, or none, on the creation panel's **KIT** page; a human who changes class
+A character of one class takes one of three kits for its class (or one of its
+race's multiclass kits) when it is made, or none, on the creation panel's **KIT** page; a human who changes class
 can take one for its new class. A few races' pairs of classes have kits of
 their own ([Multiclass kits](#multiclass-kits)). Each gives something and
 costs something. [The Kits page](KITS.md) has each kit's numbers and
@@ -1006,7 +1006,7 @@ the spell on what it hits, until the next rest
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
 
-*Poisoner* (halfling fighter/thief). Hunters from the Forest Ridge whose blades
+*Poisoner* (halfling fighter/thief). Halfling hunters whose blades
 carry the jungle's venoms: every wound they deal up close is poisoned. They
 train with the dagger and the short sword alone, and travel light.
 
@@ -1486,7 +1486,7 @@ AD&D's class tables and the **New wizard spells** switch on):
   swept off its feet and loses its next turn. Nothing can be shot or cast
   through it.
 
-### Effects
+### Status effects
 
 | Effect | Does |
 |---|---|
@@ -1637,7 +1637,7 @@ chosen type, often one of these.
 | Glasshewer | obsidian axe +2 | warriors, thieves, druids, earth and fire clerics |
 | Drakejaw | bone axe +1 | warriors, thieves, druids, water clerics |
 | Headsman | metal great axe +2 | warriors, thieves, earth clerics |
-| Gythka +2, Kreenfang (+1) | gythkas, two-handed | warriors, thieves, druids, water clerics |
+| Gythka +2\*, Kreenfang\* (+1) | gythkas, two-handed | warriors, thieves, druids, water clerics |
 | Linebreaker | metal polearm +2 | warriors, thieves, druids, earth clerics |
 | Thornwall | bone polearm +1 | warriors, thieves, druids, water clerics |
 | Gutterknot | club +1 (the game has no magic club) | warriors, thieves, druids, psionicists, earth and water clerics |
@@ -1779,7 +1779,7 @@ AD&D's tables:
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and nine 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | all on |
-| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; spells kept on a click on the Effects screen | all on |
+| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |
 | | the party walking at full speed whatever is drawn (steady pace) | on |
