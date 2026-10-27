@@ -535,8 +535,8 @@ and so does `test_fits_upper_memory`. Since the far block went to the HMA,
 are free in one piece (57.8 KB measured in DOSBox with a smaller helper, less
 what it has grown since: the helper at C90Ah, then the overlay buffer, the
 free block, the music buffer). The helper's own segment is the limit for new
-code: its image with the install code is 60,816 bytes (`image_len`; the
-resident part ends at `resident_end`, E6B0h), so about 4.6 KB of its 64 KB are
+code: its image with the install code is 61,040 bytes (`image_len`; the
+resident part ends at `resident_end`, E790h), so about 4.4 KB of its 64 KB are
 spare; the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
@@ -2488,15 +2488,17 @@ drawing: in the routine that draws the walls and things standing on the map
 (1DBD:0002), just before it draws an entry (232D4h, the call at 23308h), a copy
 of Whirlwind's funnel is passed over (its way back moved past the call,
 `WD_SKIP`) unless it is the one nearest the copies' middle, which is drawn at
-the middle (`WHIRL_PICK`: one thing at a time, worked out again at each round's
+the middle (`WHIRL_PICK`: each Whirlwind's thing, its middle and nearest copy kept
+in `WT_TABLE`, up to four at once, emptied by `WHIRL_CLEAR` at each round's
 start and each cast, when a thing's number may be used again). Whirlwind's entry
 gets 10h (`AREA_SIGHT`), so it blocks sight as Wall of Fog's does. The funnel
 turns: `WHIRL_TICK`, from the main loop's scroll probe after `DUST_TICK`, steps
-the picked thing's frame (+11h) through its 4 frames every 3 timer ticks (about
-6 a second) and puts the funnel's rectangle into the dust's redraw rectangle
+each kept thing's frame (+11h) through its 4 frames every 3 timer ticks (about
+6 a second) and puts each funnel's rectangle into the dust's redraw rectangle
 (`d_x0`..`d_y1`), so the game redraws just that part of the map (`DUST_NUDGE`
-when the view is still). It stops when the thing's object is no longer
-Whirlwind's (the area gone).
+when the view is still). A thing whose object is no longer Whirlwind's (the area
+gone) is let go. (With one thing kept, two Whirlwinds took turns as the one
+looked at, and only the last drawn turned.)
 
 **Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the
 one-target damage roll, 761A9h, DI its spell) is 8 + the creature's AC, at least

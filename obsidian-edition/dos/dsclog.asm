@@ -11430,7 +11430,7 @@ req_site:
 ; then the move done.
 KIND_CAST equ 8
 cast_site:
-        mov word [cs:wt_thing], 0xFFFF
+        call whirl_clear
         push si
         push ax
         mov si, sp
@@ -11859,10 +11859,15 @@ heat_site:
 ; entry's 20h: 18 to 46 of them scattered over the area), which the game's damage, and the tiles
 ; blocking sight (the area's 10h), go by. Whirlwind's (the funnel, WHIRL_OBJECT) is drawn once:
 ; its copies stay as they are, but only the one nearest their middle is drawn, and at the middle
-; (WHIRL_PICK); the rest are passed over (the way back moved past the draw call, WD_SKIP).
+; (WHIRL_PICK); the rest are passed over (the way back moved past the draw call, WD_SKIP). Each
+; Whirlwind on the map has its own entry in WT_TABLE, so two or more are each drawn and turned.
 WD_SKIP      equ 0x23313 - (0x232D4 + 3)
-wt_thing dw 0xFFFF              ; (WHIRL_PICK's: the thing last looked at, the middle of its copies,
-wt_x     dw 0                   ;   the copy nearest it)
+WT_MAX       equ 4              ; (Whirlwinds kept track of at once; a fifth takes an entry in turn)
+WT_SIZE      equ 10             ; (an entry: its thing, FFFFh none; the middle of its copies, x, y;
+wt_table times WT_MAX * WT_SIZE db 0xFF ;   the copy nearest it, x, y)
+wt_next  db 0
+wt_entry dw wt_table           ; (WHIRL_PICK's entry being worked out)
+wt_x     dw 0                   ; (WHIRL_PICK's answer, for DRAW_SITE: the entry's middle and copy)
 wt_y     dw 0
 wt_kx    dw 0
 wt_ky    dw 0
@@ -12386,17 +12391,24 @@ mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels 
         int 0x33
         ret
 
-; WHIRL_TICK: from the main loop (PROBE_SCROLL; DS the game's): the funnel last drawn (WT_THING)
+; WHIRL_TICK: from the main loop (PROBE_SCROLL; DS the game's): each funnel drawn (WT_TABLE)
 ; turns, its thing's frame (+11h, every copy's) one on each WHIRL_TICKS of the BIOS clock, and its
 ; picture is to be drawn again, as the dust's puffs are (D_DIRTY's rectangle: DUST_UNION has the
 ; game's redrawing of what moved take it in, DUST_NUDGE draws the view again when nothing moves).
+; An entry whose thing is no longer a Whirlwind (its area gone) is let go.
 WHIRL_TICKS  equ 3              ; (6 turns a second)
 WHIRL_FRAMES equ 4              ; (whirlart.FRAMES)
 wt_turned dw 0
 whirl_tick:
-        cmp word [cs:wt_thing], 0xFFFF
-        je .ret
-        push es
+        push di
+        mov di, wt_table
+        mov cx, WT_MAX
+.any:   cmp word [cs:di], 0xFFFF
+        jne .some
+        add di, WT_SIZE
+        loop .any
+        jmp .ret
+.some:  push es
         xor ax, ax
         mov es, ax
         mov ax, [es:BIOS_TICKS]
@@ -12407,13 +12419,16 @@ whirl_tick:
         cmp dx, WHIRL_TICKS
         jb .ret
         mov [cs:wt_turned], ax
-        mov bx, [cs:wt_thing]
+        mov di, wt_table
+.each:  mov bx, [cs:di]
+        cmp bx, 0xFFFF
+        je .next
         shl bx, 5
         add bx, MAP_THINGS
         cmp word [bx + 0x1A], WHIRL_OBJECT
         je .turn
-        mov word [cs:wt_thing], 0xFFFF  ; (its area gone, the thing another's)
-.ret:   ret
+        mov word [cs:di], 0xFFFF        ; (its area gone, the thing another's)
+        jmp .next
 .turn:  mov al, [bx + 0x11]
         inc ax
         cmp al, WHIRL_FRAMES
@@ -12421,16 +12436,16 @@ whirl_tick:
         xor al, al
 .frame: mov [bx + 0x11], al
         movzx dx, byte [bx + 7]         ; its picture's rectangle on the map
-        mov ax, [cs:wt_x]
+        mov ax, [cs:di + 2]
         sub ax, dx
         movzx dx, byte [bx + 8]
-        mov cx, [cs:wt_y]
+        mov cx, [cs:di + 4]
         sub cx, dx
         movzx dx, byte [bx + 0x12]
         add dx, ax
         movzx si, byte [bx + 0x13]
         add si, cx
-        cmp byte [cs:d_dirty], 0        ; (with the puffs', if any)
+        cmp byte [cs:d_dirty], 0        ; (with the puffs' and the others', if any)
         je .set
         cmp ax, [cs:d_x0]
         jge .x1
@@ -12442,29 +12457,64 @@ whirl_tick:
         jge .y1
         mov [cs:d_y0], cx
 .y1:    cmp si, [cs:d_y1]
-        jle .nudge
+        jle .next
         mov [cs:d_y1], si
-        jmp short .nudge
+        jmp short .next
 .set:   mov [cs:d_x0], ax
         mov [cs:d_x1], dx
         mov [cs:d_y0], cx
         mov [cs:d_y1], si
         mov byte [cs:d_dirty], 1
-.nudge: jmp dust_nudge
+.next:  add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .each
+        pop di
+        jmp dust_nudge
+.ret:   pop di
+        ret
+
+; WHIRL_CLEAR: WT_TABLE emptied (each round's start, each cast: a thing's number is used again
+; once its area is gone, and its copies are found again). All registers and flags kept.
+whirl_clear:
+        pushf
+        push di
+        mov di, wt_table
+.each:  mov word [cs:di], 0xFFFF
+        add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .each
+        pop di
+        popf
+        ret
 
 ; WHIRL_PICK: WT_X, WT_Y the middle of thing BX's copies in the draw list (OBJ_LIST: the entries
-; of the thing with 20h), WT_KX, WT_KY the copy nearest it; worked out again for another thing
-; (WT_THING) or when cleared (each round's start, each cast: a thing's number is used again once
-; its area is gone). CF set if the thing has no copies.
+; of the thing with 20h), WT_KX, WT_KY the copy nearest it: from its entry in WT_TABLE, else worked
+; out and kept in a free entry (none free: one in turn, WT_NEXT). CF set if the thing has no copies.
 whirl_pick:
         pushad
         push es
         mov ax, bx
         sub ax, MAP_THINGS
         shr ax, 5
-        cmp ax, [cs:wt_thing]
-        je .done
-        mov [cs:wt_thing], ax
+        mov di, wt_table
+.find:  cmp [cs:di], ax
+        je .found
+        add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .find
+        mov di, wt_table
+.free:  cmp word [cs:di], 0xFFFF
+        je .take
+        add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .free
+        movzx di, byte [cs:wt_next]
+        inc byte [cs:wt_next]
+        and byte [cs:wt_next], WT_MAX - 1
+        imul di, di, WT_SIZE
+        add di, wt_table
+.take:  mov [cs:wt_entry], di
+        mov [cs:di], ax
         xor ebx, ebx                    ; (the sums of x and y, and the count)
         xor ebp, ebp
         xor esi, esi
@@ -12481,13 +12531,33 @@ whirl_pick:
         mov [cs:wt_y], ax
         mov si, 0xFFFF                  ; (SI: now the nearest; BP the least |dx| + |dy| so far)
         mov bp, si
-        mov ax, [cs:wt_thing]
+        mov di, [cs:wt_entry]
+        mov ax, [cs:di]
         call .scan
+        mov di, [cs:wt_entry]           ; (kept in the entry)
+        mov ax, [cs:wt_x]
+        mov [cs:di + 2], ax
+        mov ax, [cs:wt_y]
+        mov [cs:di + 4], ax
+        mov ax, [cs:wt_kx]
+        mov [cs:di + 6], ax
+        mov ax, [cs:wt_ky]
+        mov [cs:di + 8], ax
+        jmp short .done
+.found: mov ax, [cs:di + 2]             ; (from the entry)
+        mov [cs:wt_x], ax
+        mov ax, [cs:di + 4]
+        mov [cs:wt_y], ax
+        mov ax, [cs:di + 6]
+        mov [cs:wt_kx], ax
+        mov ax, [cs:di + 8]
+        mov [cs:wt_ky], ax
 .done:  pop es
         popad
         clc
         ret
-.none:  mov word [cs:wt_thing], 0xFFFF
+.none:  mov di, [cs:wt_entry]
+        mov word [cs:di], 0xFFFF
         pop es
         popad
         stc
@@ -12599,7 +12669,7 @@ acid_use:
 ; number (the table changes as entries go); then the compare made, its flags returned. DS the
 ; game's; all registers kept.
 acid_round:
-        mov word [cs:wt_thing], 0xFFFF  ; (DRAW_SITE: each Whirlwind's middle found again)
+        call whirl_clear                ; (DRAW_SITE: each Whirlwind's middle found again)
         pushad
         push es
         sti

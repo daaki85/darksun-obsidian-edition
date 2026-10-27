@@ -19,6 +19,13 @@ notes](PATCH-NOTES.md).
   in `game.effects_left` (the dice log's and the Characters tab's effects). Tests:
   `test_item_power_has_no_charges`; `test_time_and_charges` gives Stoneskin's record its time of -1.
 
+- **Two Whirlwinds on the map both turn.** DSCLOG kept one funnel (`WT_THING`): with two, each one
+  drawn replaced the other, and `WHIRL_TICK` turned only the last drawn. Each Whirlwind now has its
+  own entry in `WT_TABLE` (up to four: its thing, the middle of its copies and the copy nearest it;
+  `WHIRL_PICK` fills one, `WHIRL_TICK` turns them all, `WHIRL_CLEAR` empties them at each round's
+  start and each cast). Checked in the game: two Whirlwinds in Scar's fight (the test save's Xan, and
+  Gerrard made an air druid), both funnels changing in each of 9 frames in a row.
+
 **New**
 - **U and I close their screens again**, as M does the overhead map: `MAP_KEY` lets U and I through on
   the map and keeps the letter in `OVERHEAD`; the same key again, the map's loop not run since, is
@@ -41,8 +48,8 @@ notes](PATCH-NOTES.md).
 **Docs**
 - FEATURES (Controls: M, U and I; The whole party in view), the player's guide's Controls and Effects
   screen rows, PATCH-NOTES, the Loader README's summary and Effects screen, DEVELOPMENT (M, U and I;
-  The whole party in view; Charges on the Effects screen; the helper's room: image 60,816 bytes,
-  `resident_end` E6B0h, about 4.6 KB spare).
+  The whole party in view; Charges on the Effects screen; Whirlwind's funnels; the helper's room:
+  image 61,040 bytes, `resident_end` E790h, about 4.4 KB spare).
 
 ## Pull request #70 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/70))
 
