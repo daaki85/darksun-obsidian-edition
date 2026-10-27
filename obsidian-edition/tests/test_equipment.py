@@ -136,5 +136,21 @@ class EffectsLeftTests(unittest.TestCase):
         self.assertEqual((charges, seconds), (None, None))
 
 
+
+class InCombatTests(unittest.TestCase):
+    def test_spread_out_isnt_a_fight(self):
+        """The party walking spread out (IN_COMBAT up, as after a load or fight with the whole party
+        in view) is no fight; a fight is IN_COMBAT and the game's own fight flag (fight_on)."""
+        log = make_game()
+        g = game.GameData(log.guest, DS)
+        fight = (DS - game.FIGHT_STATE_FROM_DS) * 16 + game.FIGHT_STATE_ON
+        struct.pack_into("<H", log.guest.mem, DS * 16 + game.IN_COMBAT, 1)
+        struct.pack_into("<H", log.guest.mem, fight, 0)
+        self.assertFalse(g.in_combat())
+        struct.pack_into("<H", log.guest.mem, fight, 1)
+        self.assertTrue(g.in_combat())
+        struct.pack_into("<H", log.guest.mem, DS * 16 + game.IN_COMBAT, 0)
+        self.assertFalse(g.in_combat())
+
 if __name__ == "__main__":
     unittest.main()

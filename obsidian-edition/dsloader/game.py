@@ -1056,8 +1056,10 @@ class GameData:
         return n, text.split(b"\0", 1)[0].decode("cp437", "replace").strip()
 
     def in_combat(self) -> bool:
-        """The party is in a fight (the game's own flag, IN_COMBAT)."""
-        return self._word(IN_COMBAT) != 0
+        """The party is in a fight: the game's IN_COMBAT flag, and its own test for a fight
+        (fight_on). IN_COMBAT alone stays up while the party walks spread out with no one to fight,
+        as it does after every load and fight with the whole party in view (SPREAD_TICK)."""
+        return self._word(IN_COMBAT) != 0 and self.fight_on()
 
     def fight_on(self) -> bool:
         """A fight is on, as the game's rest and USE screen tell (FIGHT_STATE_ON), not merely the

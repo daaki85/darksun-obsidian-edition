@@ -62,6 +62,18 @@ notes](PATCH-NOTES.md).
   no macOS). Reports now list the combat log's level with the other switches
   (`launch.SWITCH_DEFAULTS`). Screenshots checked: none shows anything changed since.
 
+- **"In a fight" means a fight again.** `GameData.in_combat` read only the game's `IN_COMBAT`
+  (`DS:1168h`), which stays up while the party walks spread out; since 2.12.0 spreads the party
+  after every load and fight, the Loader took much of ordinary walking for a fight: no setting
+  stuck walkers going again (`stuckwalk`), the Battle Dancer's dances and Wild Fighting not ended
+  with the fight, defilers rolled for scrolls outside fights, the combat log's fight state and Tab
+  targeting's enemies looked for, and an item report's "In a fight". It now also asks the game's own
+  fight test (`fight_on`, the fight state's +19h, as stealth already did). Test:
+  `InCombatTests.test_spread_out_isnt_a_fight`.
+- **Defilers' scrolls in every fight.** The rolls were kept for the session by area, slot and name,
+  so a later fight's defiler in the same place under the same name (the arena's) got none until a
+  game was loaded; they are now forgotten as each fight ends. Test: `test_again_in_the_next_fight`.
+
 - **Obsidian Edition 2.12.1**: the version is 2.12.1, with its notes in `release-notes/v2.12.1.md`.
 
 ## Pull request #73 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/73))

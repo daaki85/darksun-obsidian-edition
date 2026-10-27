@@ -2939,11 +2939,14 @@ what it carried in a container on the ground (an item whose `+08h` names a
 list), in the same step: in the arena's opening fight the Defiler's lists were
 empty, and its things in the container (object 306's item), before the Loader
 looked again, a quarter of a second later. A scroll can't be put on the body at
-the death itself, so `defilerscrolls.py` gives it earlier: while the game's
-fight flag (`IN_COMBAT`) is set, each living creature after the party of one of
+the death itself, so `defilerscrolls.py` gives it earlier: in a fight
+(`game.in_combat`: `IN_COMBAT`, and the fight state's +19h, as `IN_COMBAT` alone
+stays up while the party walks spread out), each living creature after the party of one of
 the game's defiler objects (`DEFILER_OBJECTS`: those whose SEGOBJEX record has
 class 18, the defilers', at `+6Fh`; a creature record's `+06h` is its object,
-negated) is rolled for once (d100, 5 or less; Kalzith left out), and a scroll
+negated) is rolled for once in the fight (d100, 5 or less; Kalzith left out; the rolls
+forgotten as it ends, so a later fight's defiler in the same place under the
+same name, as the arena's, is rolled for too), and a scroll
 put in its pack (`npcitems.add_to`, a list of its own if it has none), which the
 game then drops with the rest. Checked in the game: the arena Defiler given a
 scroll of Haste as it came on, the scroll in its container after the Rampager

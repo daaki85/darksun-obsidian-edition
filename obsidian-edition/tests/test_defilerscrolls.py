@@ -111,6 +111,17 @@ class DefilerScrollTests(unittest.TestCase):
         w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)
         self.assertEqual([index for index, _ in self.given], [4, 8])
 
+    def test_again_in_the_next_fight(self):
+        """A fight over and another begun (the arena's next, its Defiler in the same place under the
+        same name): rolled for again; one carrying a scroll already gets no second."""
+        w = Watch()
+        w.watch(self.gd, False, roll=lambda: 50)  # (no scroll)
+        self.gd.fighting = False
+        w.watch(self.gd, False)
+        self.gd.fighting = True
+        w.watch(self.gd, False, roll=lambda: 1, choose=lambda pool: 9)
+        self.assertEqual(w.given, [("Defiler", "Shield"), ("Dark Spider", "Shield")])
+
     def test_not_out_of_a_fight(self):
         self.gd.fighting = False
         self.assertEqual(Watch().watch(self.gd, False, roll=lambda: 1), [])

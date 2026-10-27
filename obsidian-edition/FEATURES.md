@@ -1627,8 +1627,8 @@ scroll (right-click it, then click its spell's icon), and it sells for 3,000
 ceramic pieces a spell level. The dice log doesn't show the roll, so whether a
 defiler had a scroll is found out on its body.
 
-Each defiler is rolled for once, in the first fight it is seen in, until a game
-is loaded: a fight played again from a save is a new chance; a game saved mid-fight keeps the scroll a defiler was given.
+Each defiler is rolled for once in each fight, the arena's later defilers too.
+A fight played again from a save is a new chance; a game saved mid-fight keeps the scroll a defiler was given.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#defilers-scrolls).
 
