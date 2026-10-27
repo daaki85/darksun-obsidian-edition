@@ -8,6 +8,11 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+- **Obsidian Edition 2.12.0**: the version is 2.12.0, with its notes in `release-notes/v2.12.0.md`,
+  for #70 to #72.
+
+## Pull request #72 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/72))
+
 **Docs**
 - ITEMS' **Every mundane armour piece** gives each piece's AC: how many points it takes off AC 10,
   read from the game's item types (+12h of the IT1R record, the byte that gives plate's 3, 2 and 2

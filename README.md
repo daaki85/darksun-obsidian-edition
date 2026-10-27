@@ -62,15 +62,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.11.0** is out ([release notes](release-notes/v2.11.0.md)):
-a rebalance of eight kits. The Wilderness Avenger gives up healing for deadlier
-wounding spells, the Assassin's backstab is a step deadlier, the Poisoner
-poisons every melee hit, the Rescuer moves faster and heals anywhere, and the
-Scholar takes the Arcanist's extra spell slots.
-
-Since 2.11.0, not yet released: the whole party walks at full speed on the
-map (steady pace), U and I close their screens again as M does, and the party
-is put in view after a load and after each fight.
+**Obsidian Edition 2.12.0** is out ([release notes](release-notes/v2.12.0.md)):
+the whole party walks at full speed on the map (steady pace), every party
+member is in view after a load and after each fight, U and I close their
+screens again as M does, and the Effects screen no longer shows stray charges
+on a magic item's power.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
