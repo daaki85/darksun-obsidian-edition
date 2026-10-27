@@ -1883,13 +1883,11 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-characters).
 
 ## Game speed
 
-The game draws the view a frame at a time and shows each at the screen's next
-refresh (70 a second), and a walking figure takes a step a frame. A frame that
-takes a moment longer than a refresh waits for the next one, so it shows
-twice as late. Everything drawn adds up: four figures rather than the leader
-alone (the game's manual says collapsing the party "speeds up the game"), the
-gear on them, the shadows, the dust. In the game walking slows with it: with
-the whole party in view, shadows and dust on, it went at about half speed.
+In the game a walking figure takes a step for each frame drawn, and a frame
+drawn a moment too late waits for the screen's next refresh (70 a second), so
+with the whole party in view, shadows and dust on, everyone walked at about
+half speed ([how fast the party
+walks](HOW-THE-GAME-WORKS.md#how-fast-the-party-walks)).
 
 **Steady pace** (under Game speed on the Options tab, on unless switched off;
 from the next start): on the map the party walks at its full speed whatever is
@@ -1962,6 +1960,8 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
 | The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
 | **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
+| **"Out of memory in OEOpenGraph"** in a long session | The map needs 60,000 bytes in one piece each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had about 57 KB to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory: about 97 KB to spare with the map up, and a warning in the dice log if it runs low ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
+| **Slay Living**'s description | Said a creature that saves takes 3 to 17 | Says 2 to 16 (half of 4d8), what the game does |
 | An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf

@@ -279,5 +279,5 @@ no magical power is lost at once in the game (0%); one with a power never is
 | Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
 | Glasshewer, Nightsliver, Skycutter (obsidian, +2) | 75% | 90% (needs 3) |
 | Deepbiter (stone, +1) | 70% | 85% (needs 4) |
-| Gutterknot, Dunesong (wood, +1) | 70% | 70% (the game's: needs 7) |
+| Gutterknot (wood, +1) | 70% | 70% (the game's: needs 7) |
 | Greenbright, Galefang, Headsman, Linebreaker (metal, +2) | 75% | 75% (the game's: needs 6) |

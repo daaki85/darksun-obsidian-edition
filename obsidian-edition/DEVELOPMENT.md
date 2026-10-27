@@ -449,9 +449,9 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 55 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 57.8 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 55.5 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 56 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places), 7.5 KB free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 DOSBox makes its upper memory block at D000h, but C800h-CFFFh is RAM too, and
@@ -531,12 +531,14 @@ each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
 and so does `test_fits_upper_memory`. Since the far block went to the HMA,
-2,447 paragraphs (38 KB) are spare in it, and with `UMBPLUS.COM` about 57.8 KB
-are free in one piece (measured in DOSBox: the helper at C90Ah, then the overlay
-buffer, the free block, the music buffer). The helper's own segment is the limit
-for new code: its image with the install code is 58,704 bytes (`image_len`;
-the resident part ends at `resident_end`, DB10h), so about 6.7 KB of its 64 KB
-are spare; the HMA has 7,720 bytes left for more buffers. (Before this pass the segment had about 2 KB and upper
+2,303 paragraphs (36 KB) are spare in it, and with `UMBPLUS.COM` about 55.5 KB
+are free in one piece (57.8 KB measured in DOSBox with a smaller helper, less
+what it has grown since: the helper at C90Ah, then the overlay buffer, the
+free block, the music buffer). The helper's own segment is the limit for new
+code: its image with the install code is 60,528 bytes (`image_len`; the
+resident part ends at `resident_end`, E590h), so about 4.9 KB of its 64 KB are
+spare; the HMA has 7,080 bytes left for more buffers (the far block ends at
+`FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
 records, to make room.) The game's sound-effects buffer (24,001 bytes, kept
@@ -3310,6 +3312,12 @@ in the skipped frame are drawn over too. PROBE_PACE_PASS sets "something
 moved" after the step when a kept list has waited 2 ticks, so a frame is drawn
 for it though nothing has moved since. A pause of 8 ticks (a load, a talk)
 starts the schedule afresh; at most 4 frames are owed.
+
+To count the pictures the game shows, watch the word at offset 118Eh of the
+flip routine's own code segment (the routine at DSUN.EXE 14414h toggles it at
+each flip): with the whole party walking in the slave pens it changed about 37
+times a second without steady pace and 27 with it, the step a picture going
+from one to two or three.
 
 The Loader's drawing is as cheap as it can be without looking any different:
 a shadow is darkened a plane of the video memory at a time (the graphics
