@@ -385,8 +385,9 @@ class StatesTests(unittest.TestCase):
         self.assertFalse(hasattr(self.panel, "arena"))
 
     def test_arena_count_in_the_header(self):
-        """Given a count (between fights in the slave pens and the arena), the header says it, docked
-        or expanded; collapsed keeps the newest line, and without a count the header is the round."""
+        """Between fights in the slave pens and the arena, the header says the count, docked or
+        expanded ('?' when not known yet); collapsed keeps the newest line, and outside them the
+        header is the round."""
         g = self.game.guest
         g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
         g.mem[HDR + c.TSR_HDR_OFF:HDR + c.TSR_HDR_OFF + 2] = c.struct.pack("<H", 0)
@@ -394,13 +395,15 @@ class StatesTests(unittest.TestCase):
         self.panel.log.add(FIGHT)
         for size in (c.DOCKED, c.EXPANDED):
             self.panel.resize(size)
-            self.panel.update(self.game, HDR, True, 1, "", NAMES, 2)
+            self.panel.update(self.game, HDR, True, 1, "", NAMES, 2, True)
             self.assertEqual(self.panel._shown[1], "Arena fights: 2")
+        self.panel.update(self.game, HDR, True, 1, "", NAMES, None, True)
+        self.assertEqual(self.panel._shown[1], "Arena fights: ?")
         self.panel.resize(c.COLLAPSED)
-        self.panel.update(self.game, HDR, True, 1, "", NAMES, 2)
+        self.panel.update(self.game, HDR, True, 1, "", NAMES, 2, True)
         self.assertNotEqual(self.panel._shown[1], "Arena fights: 2")
         self.panel.resize(c.DOCKED)
-        self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES)
+        self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES, 2)
         self.assertEqual(self.panel._shown[1], "Round 1")
         self.assertEqual(c.arena_line(None), "Arena fights: ?")
         self.assertEqual(c.ARENA_REGIONS, (0x29, 0x2A))

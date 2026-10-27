@@ -400,8 +400,9 @@ there; **-** makes it smaller.
   its own: the party doesn't walk there.
 - **The arena's count of fights.** Between fights in the slave pens and the
   arena, the top line says how many arena fights the party has had (`Arena
-  fights: 4`): the game's own count, one a trip into the arena however many
-  waves come (see [the arena's count of
+  fights: 4`, or `?` until the game has shown it to the Loader): the game's
+  own count, one a trip into the arena however many waves come (see [the
+  arena's count of
   fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). In a fight it says
   the round, and once the party has escaped Draj it's gone. (Not when the panel
   is collapsed to one line: that line stays the newest.)

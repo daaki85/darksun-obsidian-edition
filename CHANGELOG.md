@@ -70,6 +70,14 @@ notes](PATCH-NOTES.md).
   targeting's enemies looked for, and an item report's "In a fight". It now also asks the game's own
   fight test (`fight_on`, the fight state's +19h, as stealth already did). Test:
   `InCombatTests.test_spread_out_isnt_a_fight`.
+
+- **The combat log's header shows the arena count between fights again.** In the slave pens and the
+  arena it had shown the round (the fight state above), and where the game's numbers weren't in
+  memory (`NUMBERS_PTR` null: most of the time outside a script's run) it showed nothing. The Loader
+  now keeps the count it last read, and says `Arena fights: ?` until it has read one
+  (`combatlog.Panel.update`'s `in_arena`). Checked in DOSBox (`Arena fights: 1` in the pens, the
+  party spread out). Tests: `test_arena_count_in_the_header`,
+  `test_arena_count_remembered_for_the_header`.
 - **Defilers' scrolls in every fight.** The rolls were kept for the session by area, slot and name,
   so a later fight's defiler in the same place under the same name (the arena's) got none until a
   game was loaded; they are now forgotten as each fight ends. Test: `test_again_in_the_next_fight`.
