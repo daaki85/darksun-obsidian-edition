@@ -21,6 +21,9 @@ class FakeGame:
     def creature_name(self, member):
         return "Daaki"
 
+    def no_spells(self, member):  # (in armour: ARMOURED)
+        return getattr(self, "armoured", False)
+
     def _worn(self, member):  # (what's in the quiver: QUIVER, or nothing)
         if getattr(self, "quiver", None) is not None:
             rec = bytearray(game.ITEM_SIZE)
@@ -83,6 +86,21 @@ class SpellArrowsTests(unittest.TestCase):
         self.assertIn("quiver must be empty", done.text)
         self.assertEqual(add.call_count, 0)
         self.assertEqual(gd.written, [])
+
+    def test_make_in_armour(self):
+        """In armour a Spellarcher casts nothing (restrict.no_spells), so it weaves no arrows: the
+        slot kept."""
+        gd = FakeGame()
+        gd.armoured = True
+        arrows = spellarrows.SpellArrows()
+        with mock.patch.object(spellarrows, "is_spellarcher", return_value=True), \
+                mock.patch.object(spellarrows, "knows", return_value=True), \
+                mock.patch.object(spellarrows.npcitems, "add_to", return_value=True) as add:
+            done = arrows.make(gd, 0, 1)
+        self.assertIn("in armour", done.text)
+        self.assertEqual(add.call_count, 0)
+        self.assertEqual(gd.written, [])
+
 
 if __name__ == "__main__":
     unittest.main()

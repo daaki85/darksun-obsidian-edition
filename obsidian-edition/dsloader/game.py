@@ -1056,8 +1056,10 @@ class GameData:
         return n, text.split(b"\0", 1)[0].decode("cp437", "replace").strip()
 
     def in_combat(self) -> bool:
-        """The party is in a fight (the game's own flag, IN_COMBAT)."""
-        return self._word(IN_COMBAT) != 0
+        """The party is in a fight: the game's IN_COMBAT flag, and its own test for a fight
+        (fight_on). IN_COMBAT alone stays up while the party walks spread out with no one to fight,
+        as it does after every load and fight with the whole party in view (SPREAD_TICK)."""
+        return self._word(IN_COMBAT) != 0 and self.fight_on()
 
     def fight_on(self) -> bool:
         """A fight is on, as the game's rest and USE screen tell (FIGHT_STATE_ON), not merely the
@@ -1511,10 +1513,13 @@ class GameData:
         spell, rangers 7 levels less (a Seeker 5, a Justifier 9: kits.ranger_cast_drop), a Shinobi's
         wizard spells its thief level less 5 (kits.cast_level). None for
         psionic powers and monsters' own powers."""
-        if not 0 < spell < PSIONIC_FIRST and spell not in NEW_SPELLS:
+        if spell in PRIEST6_MASKS:  # (the 6th-level priest spells: their rows' masks, DSCLOG's)
+            spheres = PRIEST6_MASKS[spell]
+        elif not 0 < spell < PSIONIC_FIRST and spell not in NEW_SPELLS:
             return None
-        spheres, = struct.unpack("<I", self.guest.read(
-            (self.load_seg + SPELL_SPHERES_SEG) * 16 + SPELL_SPHERES_OFF + spell * SPELL_SPHERES_SIZE, 4))
+        else:
+            spheres, = struct.unpack("<I", self.guest.read(
+                (self.load_seg + SPELL_SPHERES_SEG) * 16 + SPELL_SPHERES_OFF + spell * SPELL_SPHERES_SIZE, 4))
         classes = self.guest.read((self.load_seg + CLASS_MAGIC_SEG) * 16 + CLASS_MAGIC_OFF, 4 * 20)
         from . import kitpages, kits
         kids = self.kit_ids(creature)

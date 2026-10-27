@@ -97,7 +97,13 @@ class ItemGate:
             self.sleep(left)
         proc = getattr(self.gd.guest, "proc", None)
         paused = _pause(proc)
-        if self._read_heads() != self._heads:
+        try:
+            heads = self._read_heads()
+        except BaseException:  # (DOSBox never left paused behind a failed look)
+            if paused:
+                _resume(proc)
+            raise
+        if heads != self._heads:
             if paused:
                 _resume(proc)
             self._state = "refused"

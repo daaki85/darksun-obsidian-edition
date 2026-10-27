@@ -68,7 +68,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels
-  past 9th up to a cap by XP (10th to 13th, by class), STORE and RECALL for a
+  past 9th up to a cap by XP (10th to 13th for one class, lower for two or
+  three), STORE and RECALL for a
   creation roll, fuller starting gear, and features of their own for the
   game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
@@ -119,8 +120,10 @@ files](#updating-backups-and-the-loaders-files).
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
-- **Linux** works too if you can read other processes' memory (root, or
-  `kernel.yama.ptrace_scope=0`).
+- **Linux**: the dice log and the Loader's window can follow a DOSBox you
+  start yourself, if you can read other processes' memory (root, or
+  `kernel.yama.ptrace_scope=0`); the `.bat` files, **Start the game** and the
+  Python install are Windows only. macOS isn't supported.
 - **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
   and pictures, read from your copy as the game starts; without it they have
@@ -175,9 +178,10 @@ in its own folder (what that Unblock box does, and nothing outside the
 folder), so the other `.bat` files start without asking.
 
 Nothing in the download is a packaged program to trust: the `.bat` files and
-the Python code in `dsloader` are plain text, and so is the source of the one
-built file, the small DOS program DOSBox loads (`dos\dsclog.asm`, which builds
-`dos\DSCLOG.EXE`).
+the Python code in `dsloader` are plain text, and so is the source of the
+three built files, small DOS programs DOSBox loads (`dos\dsclog.asm` builds
+`dos\DSCLOG.EXE`; `gameend.asm` and `umbplus.asm` the two `.COM` files beside
+them).
 
 ### Every time you play
 
@@ -244,12 +248,14 @@ start it the GOG way and load a save from before the mod.
 
 | File or folder | What it holds |
 |---|---|
-| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names) |
+| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
 | `crash-logs` | crash, freeze and item reports |
 | `Named saves` | a copy of each save under the name you gave it |
+| `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
-| the game folder | your saves (pages 2 to 4 as `SAVB`, `SAVC` and `SAVD` files) and characters 20 to 29 in `CHARSAVE.GFF` |
+| `layouts`, `.dsloader-search.json` | only from the Memory tools: a layout you save there, and a memory search's results |
+| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
 
 ## When something goes wrong
 
@@ -294,9 +300,11 @@ in the dice log (or, with `Play Dark Sun (in-game rolls).bat`, in a message
 box). Send it along with what you were doing just before (see
 [Reporting a problem](#reporting-a-problem)). Reports need the game started
 from the Loader or one of its `.bat` files: from GOG's own shortcut the Loader
-can't see how the game closed. Every report holds the Loader's switches (not
-where the game is installed, nor the party's names), the last 300 lines of the
-dice log and the last 80 of the dialogue, and besides:
+can't see how the game closed. Every report holds the Loader's switches, the
+last 300 lines of the dice log and the last 80 of the dialogue (which name your
+characters), and the table says what else. DOSBox's own messages in a crash
+report can name the folders the game is in, so read a report before you post
+it anywhere public.
 
 | Report | When | What else it holds |
 |---|---|---|
@@ -392,11 +400,12 @@ there; **-** makes it smaller.
   its own: the party doesn't walk there.
 - **The arena's count of fights.** Between fights in the slave pens and the
   arena, the top line says how many arena fights the party has had (`Arena
-  fights: 4`): the game's own count, one a trip into the arena however many
-  waves come (see [the arena's count of
-  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). In a fight it says
-  the round, and once the party has escaped Draj it's gone. (Not when the panel
-  is collapsed to one line: that line stays the newest.)
+  fights: 4`, or `?` until the game has shown it to the Loader): the game's
+  own count, one a trip into the arena however many waves come (see [the
+  arena's count of
+  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). Once the party
+  has escaped Draj it's gone. (Not when the panel is collapsed to one line:
+  that line stays the newest.)
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or

@@ -4,12 +4,13 @@ The game puts all a creature carries in a pile where it falls, in the same step 
 reach 0 (seen in the arena's opening fight: the Defiler's lists emptied and its things on the
 ground before the Loader's next look), so a scroll can't be added at the death itself. Instead,
 each defiler (a creature of one of the game's objects whose record has the defiler's class, 18:
-DEFILER_OBJECTS) is rolled for once in each fight it is seen in,
+DEFILER_OBJECTS) is rolled for once in each fight it is seen in (the rolls are forgotten as each
+fight ends),
 alive: d100, CHANCE or less and it carries a scroll of a random preserver spell, which the game
 drops with the rest of its things when it dies. Kalzith keeps his own loot (kalzith.loot).
 
-The roll is remembered for the session (by area, creature and name) and forgotten when a game is
-loaded: a fight played again from a save is rolled again, as the death is a new one. A defiler
+The roll is remembered for the fight (by area, creature and name) and forgotten when it ends or a
+game is loaded: a fight played again from a save is rolled again, as the death is a new one. A defiler
 already carrying such a scroll (a save made mid-fight) gets no second. The dice log doesn't show
 the roll: what a defiler carries is for the party to find on its body.
 
@@ -93,6 +94,10 @@ class DefilerScrolls:
         scroll of a spell (CHOOSE among spells()) put in its pack (noted in GIVEN). No lines for the
         log: the roll would tell the player what the body holds before the fight is won."""
         if not gd.in_combat():
+            # (the fight over: its rolls forgotten, so the next fight's defilers are rolled for,
+            # a new one in the same place under the same name too, as the arena's)
+            self.rolled.clear()
+            self.defilers.clear()
             return []
         roll = roll or (lambda: random.randint(1, 100))
         choose = choose or random.choice

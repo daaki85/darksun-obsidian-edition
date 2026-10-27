@@ -109,6 +109,15 @@ of the game's data, the tools for mapping it, and how each part of the
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
 
+Each module of `dsloader` opens with what it does. Those the sections below
+don't come back to: `gff.py` and `gpl.py` read the game's GFF files and its
+scripts; `guestmem.py` finds DOSBox's guest memory; `savefile.py` reads a
+save's party (`Show Save.bat`); `tracker.py` notes kills, XP and level-ups;
+`textlog.py` reads the dialogue and message boxes DSCLOG copies; `partyview.py`
+and `spellbook.py` draw the Characters and Spells tabs, `theme.py` the window's
+look; `bonescale.py` puts the bone scale set together in its chest;
+`stuckwalk.py` sets people walking again whose scripted walk stopped.
+
 ### Tests
 
 ```
@@ -179,7 +188,7 @@ python -m dsloader save C:\path\to\SAVE01.SAV   # the party stored in a save
 python -m dsloader processes                     # is DOSBox found?
 ```
 
-After `launch` or `play`, `--window-scale 2` to `4`, `--fullscreen` or
+After `launch` or `play`, `--window-scale 1` to `4`, `--fullscreen` or
 `--windowed` choose the game's window as **Game window** does. If more than
 one DOSBox is running, add `--pid <number>` (from `processes`).
 
@@ -2930,11 +2939,14 @@ what it carried in a container on the ground (an item whose `+08h` names a
 list), in the same step: in the arena's opening fight the Defiler's lists were
 empty, and its things in the container (object 306's item), before the Loader
 looked again, a quarter of a second later. A scroll can't be put on the body at
-the death itself, so `defilerscrolls.py` gives it earlier: while the game's
-fight flag (`IN_COMBAT`) is set, each living creature after the party of one of
+the death itself, so `defilerscrolls.py` gives it earlier: in a fight
+(`game.in_combat`: `IN_COMBAT`, and the fight state's +19h, as `IN_COMBAT` alone
+stays up while the party walks spread out), each living creature after the party of one of
 the game's defiler objects (`DEFILER_OBJECTS`: those whose SEGOBJEX record has
 class 18, the defilers', at `+6Fh`; a creature record's `+06h` is its object,
-negated) is rolled for once (d100, 5 or less; Kalzith left out), and a scroll
+negated) is rolled for once in the fight (d100, 5 or less; Kalzith left out; the rolls
+forgotten as it ends, so a later fight's defiler in the same place under the
+same name, as the arena's, is rolled for too), and a scroll
 put in its pack (`npcitems.add_to`, a list of its own if it has none), which the
 game then drops with the rest. Checked in the game: the arena Defiler given a
 scroll of Haste as it came on, the scroll in its container after the Rampager
@@ -3168,7 +3180,8 @@ a peek, `AH=1`, then the read, `AH=0`), so `OVERHEAD` changes only on the read
 map runs again.
 
 **The whole party in view.** The map's party is one figure while `DS:1168h`
-(`game.IN_COMBAT`: not 0 in a fight and while the party is spread out) is 0
+(`game.IN_COMBAT`: not 0 in a fight and while the party is spread out, so the
+Loader's `in_combat` also asks the fight state's +19h) is 0
 (each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
 leader's figure). The game's key table on the map (1587h:0FEBh, its handlers 34h
 on) has 5 call 1587h:3109h (argument 1: the view drawn again), which spreads the
@@ -3196,8 +3209,8 @@ over the first byte of each routine in a test build of DSCLOG, which kept its
 callers' return addresses: in a fight the centring routine was never called,
 and every move of the view came from that call (returning to `1CA37h`), for
 party members walking as well as monsters. The patch (`camera_still`, a
-switch, `CAMERA`) rewrites that call's 54 bytes of set-up: in a fight
-(`IN_COMBAT`, `DS:1168h`), the game's own on-screen test first, skipping the
+switch, `CAMERA`) rewrites that call's 54 bytes of set-up: while `IN_COMBAT`
+(`DS:1168h`) is set (a fight, or the party spread out), the game's own on-screen test first, skipping the
 step while the figure is on the screen; the figure's spot pushed straight from
 its record (one `push dword`). The game's `mov ax,377Eh` stays at `CA15h`: DOS
 adds the load segment to that word as the game loads (the EXE's relocation

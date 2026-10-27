@@ -356,8 +356,8 @@ the strictest winning:
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
-| Psionicist, whatever its other classes | light only (leather, hide, silk) | leather only | daggers, bone and obsidian short swords, clubs, chatkchas, bows |
-| Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones; with another class, only if that class allows shields | as its classes allow |
+| Psionicist, whatever its other classes | light only (leather, hide, silk) | none alone; leather with a fighter, gladiator, ranger or cleric class | daggers, bone and obsidian short swords, clubs, chatkchas, bows; with another class, also the maces, metal short sword and slings its lists allow |
+| Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones only; with another class, only if that class is fighter, gladiator, ranger or cleric | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any |
 | Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
@@ -889,7 +889,10 @@ other character has one discipline and uses it as a 1st-level psionicist.
 
 **Weapons and armour.** Light armour, a leather shield, or one of the mod's
 robes. Daggers, bone and obsidian short swords, clubs, chatkchas and bows (the
-game's lists leave out its maces, slings and the metal short sword).
+game's lists leave out its maces, slings and the metal short sword). With
+another class, also the maces, metal short sword and slings that class's lists
+allow. No shield alone; a leather one with a fighter, gladiator, ranger or
+cleric class.
 
 **Kits.**
 
@@ -1206,7 +1209,7 @@ A thief's skills come from the table by thief level, plus the race's and
 DEX's adjustments. A thief who isn't Okay, or is Blind, Afraid, Confused,
 Berserk or Paralyzed, can't use them. Nothing worn stands in the way, but
 for a thief with another class in armour heavier than leather, hide or silk
-(all 0).
+(all 0). No skill goes above 95, whatever the table says.
 
 | Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -1772,10 +1775,12 @@ AD&D's tables:
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |
 | | the party walking at full speed whatever is drawn (steady pace) | on |
+| Wake of the Ravager (optional) | where Wake of the Ravager is installed, for the new priest spells' icons and pictures (found by itself when it can be) | (a folder) |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
 Rule changes, customization, expanded features and the new spells count at
 once in a game started from the Loader; the new people, quest and items, and
 any switch that says "from the next start", come the next time the game is
-started (a saved game keeps what it has). **Restore defaults**, at the bottom
+started (a saved game keeps what it has). Kits, weapon specs and fuller starting
+gear go to characters made from then on. **Restore defaults**, at the bottom
 of the tab, sets every switch back.

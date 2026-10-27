@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.12.0 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.12.1 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -63,6 +63,9 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Helms give AC 1 *(was 0)*.
 - **[Changed]** Rings and cloaks of protection follow AD&D: two rings don't stack, a ring gives no AC with magical armour, and a cloak does nothing with magical or metal armour or a shield.
 - **[Changed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
+
+**Races**
+
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
 - **[Changed]** A thri-kreen in the party fights with edged claws, so creatures that crushing weapons can't hurt are no longer safe from it *(was crushing, as every unarmed attack)*.
 
@@ -283,7 +286,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** More of the game's own choices in the dice log: why it **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **ability checks scripts make** with a roll of their own (a CHA to talk someone round, STR to break chains); and a party member's **ability score** changing.
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
-- **[New]** **Options:** every rule change and addition in these notes has its own switch, nearly all on by default, and **Restore defaults** sets them all back.
+- **[New]** **Options:** nearly every rule change and addition in these notes has its own switch (not the keys and the game's fixed bugs), nearly all on by default, and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*

@@ -6,7 +6,90 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request (not opened yet)
+## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
+
+**Fixed** (from an outside audit of 2.12.0)
+- **Settings never lost.** `save_settings` writes `settings.json.tmp` and puts it in place
+  (`os.replace`, retried a moment on Windows), so a read never sees a half-written file; one that
+  can't be read is set aside as `settings.json.bad` instead of being saved over with only the keys a
+  caller had (the combat log panel's level, say, wiping every option and the game folder). The
+  window and the thread reading the game no longer lose each other's changes: `SETTINGS_LOCK` and
+  `update_settings` make each read-modify-write one step (the panel's level, speakers, pockets, the
+  window size, game speed, the Options tab, the game folder). Test:
+  `test_settings_saved_whole_and_never_over_an_unreadable_file`.
+- **The party table and the dice log keep going** after an error they didn't expect: both refresh
+  loops (`_tick`, `_dice_tick`) schedule the next pass whatever happens, and say an unexpected
+  error once in the dice log (`Loader error in ...`, with the file and line) instead of stopping for
+  the rest of the session.
+- **DOSBox never left paused**: the item gate resumes it if the look after pausing fails.
+- **No leaked handles or hooks**: DOSBox's process handle is closed on a disconnect, a reconnect and
+  a failed connection try (`_located`, `_drop_guest`); the mouse wheel's hook comes off when its
+  dice log closes (`WheelHook.stop`), where each reconnect or restart used to add another.
+- **The combat log's short attack line** for an attack that hits on anything but a 1 (it showed the
+  long line). Test: `test_attack_that_hits_on_anything_but_a_1`.
+- **Dispel Magic's caster level** for the 6th-level priest spells (202-210): `effect_caster_level`
+  reads their spheres from `PRIEST6_MASKS` (it gave none).
+- **No spell arrows in armour**: a Spellarcher in armour casts nothing (`restrict.no_spells`), and
+  now weaves no arrows either. Test: `test_make_in_armour`.
+
+**Docs**
+- Psionicist weapons and shields, and thief shields, checked against the game's item lists and
+  `restrict.allowed` for each mix of classes (and a save's class flags: a human's hold only its
+  present class, so the game's own check sees that one). A psionicist alone: daggers, bone and
+  obsidian short swords, clubs, chatkchas and bows, and no shield (the game's lists give it none;
+  the rule takes away the axes, picks, gythka and long swords they allow); with another class, also
+  the maces, metal short sword and slings that class's lists allow, and a leather shield with a
+  fighter, gladiator, ranger or cleric class. A thief of any kind: leather shields only, and a
+  multiclass one only with a fighter, gladiator, ranger or cleric class. The guide's and FEATURES'
+  tables and the guide's psionicist section say so (#71's review had taken maces and slings out
+  for every psionicist, and both tables gave a psionicist alone a leather shield).
+- The Loader README: three built files, not one; what a report holds, and to read one before
+  posting it. FEATURES' Kalzith caption no longer claims a quarter off at CHA 20 (15%). KITS: the
+  Spellarcher weaves no arrows in armour.
+
+- **Documentation review** (the audit's remaining documentation findings, each checked against the
+  code): the front page and the Loader README say the patched game writes page 1's saves and every
+  character too, and that a save with the new items wants the Loader; "nearly every" rule change
+  has a switch (the patch notes: not the keys or the game's fixed bugs); the Loader README lists
+  `dosbox_dicelog.conf`, and the Memory tools' layout and search files; FEATURES says its bold
+  switch names are short forms of the Options tab's sentences, lists all five thieving switches,
+  gives the thief table's cap (95) beside its 99s (the guide too), says which items Alagorn has no
+  story for, and when a defiler is rolled for; the guide's Options table gains Wake of the Ravager
+  and says kits and starting gear go to new characters; KITS: a Twin-blade can't use a bow or the
+  staff sling; DEVELOPMENT: `--window-scale` 1 to 4, and a line on each module the sections don't
+  come back to; the combat log's HANDOFF no longer points at a section that's gone; the README's
+  level-cap range and Linux line made exact (Windows only for the `.bat` files and Start the game;
+  no macOS). Reports now list the combat log's level with the other switches
+  (`launch.SWITCH_DEFAULTS`). Screenshots checked: none shows anything changed since.
+
+- **"In a fight" means a fight again.** `GameData.in_combat` read only the game's `IN_COMBAT`
+  (`DS:1168h`), which stays up while the party walks spread out; since 2.12.0 spreads the party
+  after every load and fight, the Loader took much of ordinary walking for a fight: no setting
+  stuck walkers going again (`stuckwalk`), the Battle Dancer's dances and Wild Fighting not ended
+  with the fight, defilers rolled for scrolls outside fights, the combat log's fight state and Tab
+  targeting's enemies looked for, and an item report's "In a fight". It now also asks the game's own
+  fight test (`fight_on`, the fight state's +19h, as stealth already did). Test:
+  `InCombatTests.test_spread_out_isnt_a_fight`.
+
+- **The combat log's header shows the arena count between fights again.** In the slave pens and the
+  arena it had shown the round (the fight state above), and where the game's numbers weren't in
+  memory (`NUMBERS_PTR` null: most of the time outside a script's run) it showed nothing. The Loader
+  now keeps the count it last read, and says `Arena fights: ?` until it has read one
+  (`combatlog.Panel.update`'s `in_arena`). Checked in DOSBox (`Arena fights: 1` in the pens, the
+  party spread out). Tests: `test_arena_count_in_the_header`,
+  `test_arena_count_remembered_for_the_header`.
+- **Defilers' scrolls in every fight.** The rolls were kept for the session by area, slot and name,
+  so a later fight's defiler in the same place under the same name (the arena's) got none until a
+  game was loaded; they are now forgotten as each fight ends. Test: `test_again_in_the_next_fight`.
+
+- **Docs review.** DEVELOPMENT's party-in-view and camera notes say `IN_COMBAT` is also set while
+  the party is spread out; the patch notes put the half-giant and thri-kreen lines under a Races
+  heading of their own; the 2.12.1 notes and the front page lead with the fight fix; the Loader
+  README says the panel's round once. Screenshots checked: none shows anything changed.
+
+- **Obsidian Edition 2.12.1**: the version is 2.12.1, with its notes in `release-notes/v2.12.1.md`.
+
+## Pull request #73 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/73))
 
 - **Obsidian Edition 2.12.0**: the version is 2.12.0, with its notes in `release-notes/v2.12.0.md`,
   for #70 to #72.

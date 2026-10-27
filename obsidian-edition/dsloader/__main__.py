@@ -32,7 +32,17 @@ def connect(args) -> GuestMemory:
             raise CliError(f"Several DOSBox processes are running: {listing}. Pick one with --pid.")
         pid = found[0][0]
     host_base = None if args.host_base is None else values.parse_int(args.host_base)
-    return locate(ProcessMemory(pid), host_base)
+    return _located(pid, host_base)
+
+
+def _located(pid: int, host_base=None) -> GuestMemory:
+    """DOSBox's guest memory in process PID; the process handle closed again if it isn't found."""
+    proc = ProcessMemory(pid)
+    try:
+        return locate(proc, host_base)
+    except BaseException:
+        proc.close()
+        raise
 
 
 def hexdump(data: bytes, start: int) -> str:
@@ -50,8 +60,9 @@ def cmd_processes(args) -> None:
         print("No DOSBox processes found.")
     for pid, name in found:
         try:
-            guest = locate(ProcessMemory(pid))
+            guest = _located(pid)
             print(f"{pid:>7}  {name}  guest RAM: {guest.size // (1024 * 1024)} MB at host {guest.base:#x}")
+            guest.proc.close()
         except Exception as e:
             print(f"{pid:>7}  {name}  ({e})")
 
@@ -212,14 +223,15 @@ def _game_dir(args) -> str:
             raise CliError("No game folder chosen.")
         if not launch.is_game_dir(game_dir):
             raise CliError(f"{game_dir} has no DSUN.EXE and DOSBOX folder; pick the GOG install folder.")
-    settings = launch.load_settings()
-    changed = dict(settings, game_dir=game_dir)
-    if getattr(args, "window_scale", None):
-        changed["window_scale"] = args.window_scale
-    if getattr(args, "fullscreen", None) is not None:
-        changed["fullscreen"] = args.fullscreen
-    if changed != settings:
-        launch.save_settings(changed)
+    with launch.SETTINGS_LOCK:
+        settings = launch.load_settings()
+        changed = dict(settings, game_dir=game_dir)
+        if getattr(args, "window_scale", None):
+            changed["window_scale"] = args.window_scale
+        if getattr(args, "fullscreen", None) is not None:
+            changed["fullscreen"] = args.fullscreen
+        if changed != settings:
+            launch.save_settings(changed)
     return game_dir
 
 

@@ -90,6 +90,8 @@ class SpellArrows:
         who = gd.creature_name(member)
         if not is_spellarcher(gd, member) or not knows(gd, member, arrow.spell):
             return pickpocket.Attempt(f"{who} can't weave {arrow.spell_name} into arrows.", [])
+        if gd.no_spells(member):  # (a multiclass preserver in armour casts nothing: restrict.no_spells)
+            return pickpocket.Attempt(f"{who} can't weave spell arrows in armour.", [])
         if slots_left(gd, member, arrow.level) <= 0:
             return pickpocket.Attempt(f"{who} has no {_nth(arrow.level)}-level spell left for "
                                       f"{arrow.spell_name}'s arrows.", [])

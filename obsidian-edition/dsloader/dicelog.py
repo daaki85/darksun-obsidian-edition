@@ -243,9 +243,7 @@ def _remember(values: dict) -> None:
     """Settings the game itself changed (the combat log panel's level and size), saved."""
     from . import launch
     try:
-        settings = launch.load_settings()
-        settings.update(values)
-        launch.save_settings(settings)
+        launch.update_settings(values)
     except OSError:
         pass
 
@@ -458,6 +456,7 @@ class DiceLog:
         self.combat_log_level = combatlog.SHORT  # ... its lines in short, in detail or the results only
         self._fight_at: Optional[float] = None  # ... when a fight was last seen (its last lines go in too)
         self._fight_monsters: set = set()  # ... the monsters' names in it (their colour)
+        self._arena_count: Optional[int] = None  # the arena fights, as last read (game.ARENA_FIGHTS)
         self._font_tried = False  # ... the game's font looked for (none: the panel without lines)
         self.game_dir: Optional[str] = None  # the game's folder (its font)
         self._wheel: Optional[wheel.WheelHook] = None  # ... the mouse wheel over it (Windows)
@@ -578,6 +577,7 @@ class DiceLog:
         self._dust = dust.Dust()
         self._rings = rings.Rings()
         self._targeting.forget()
+        self._arena_count = None
         self.tracker = PartyTracker(self.game)
         self.defilers = defilerscrolls.DefilerScrolls()
         self.walkers.forget()
@@ -993,8 +993,12 @@ class DiceLog:
         self.rand_addr = None
 
     def close(self) -> None:
-        """Done with: the stats thread stops (answer_stats_in_background)."""
+        """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
+        hook comes off."""
         self._stats_stop.set()
+        if self._wheel is not None:
+            self._wheel.stop()
+            self._wheel = None
 
     # ---- reading ----------------------------------------------------------------
 
@@ -1328,14 +1332,17 @@ class DiceLog:
                     self._fight_monsters.add(name)
             top = combatlog.header(self.round_status())
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
-        arena = None  # (between fights in the slave pens and the arena: their count in the header)
+        in_arena = False  # (between fights in the slave pens and the arena: their count in the header)
         if on and not fighting:
             try:
-                if self.game.region() in combatlog.ARENA_REGIONS:
-                    arena = self.game.number(game.ARENA_FIGHTS)
+                in_arena = self.game.region() in combatlog.ARENA_REGIONS
+                count = self.game.number(game.ARENA_FIGHTS) if in_arena else None
+                if count is not None:  # (the numbers are in memory only now and then: the last one read)
+                    self._arena_count = count
             except (struct.error, IndexError, ValueError):
                 pass
-        self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names, arena)
+        self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names,
+                           self._arena_count, in_arena)
 
     def _learn_lines(self) -> List[str]:
         """A preserver's tries at a scroll's spell since the last look (the rule for INT's chance:

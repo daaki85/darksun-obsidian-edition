@@ -4,8 +4,10 @@
 [player's guide](PLAYER-GUIDE.md) tells the same without the detail.*
 
 Everything the mod changes and adds in the game, in the order of the Loader's
-Options tab, each with its switch there; the game's bugs fixed come last. How
-each is done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
+Options tab, each with its switch there; the game's bugs fixed come last. A
+switch's name here in bold (**Rangers' casting level**) is the short form of the
+sentence the Options tab gives it, in the same section and order. How each is
+done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
 
 ## Contents
 
@@ -116,8 +118,8 @@ own "Cannot use this item":
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
-| **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only | daggers, short swords, maces, clubs, chatkchas, bows and slings (the game's own lists still leave out its maces, slings and metal short sword) |
-| **Thief** | light only; a multiclass thief, or a human thief once a warrior or cleric, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields | as its classes allow |
+| **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only, and only with a fighter, gladiator, ranger or cleric class (the game's lists give a psionicist none, and a psionicist/thief none either) | daggers, short swords, maces, clubs, chatkchas, bows and slings, of those its classes' lists allow: alone, daggers, bone and obsidian short swords, clubs, chatkchas and bows (the game's lists leave out maces, slings and the metal short sword, and the rule takes away the axes, picks, gythka and long swords they allow) |
+| **Thief** | light only; a multiclass thief, or a human thief once a warrior or cleric, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields (a fighter, gladiator, ranger or cleric) | as its classes allow |
 | **Preserver**, one class | none (a human preserver once a warrior: as the warrior could, but no spells in armour) | none | as the game has it |
 | **Druid** | none | none | any |
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
@@ -870,7 +872,9 @@ effect at once; untick one and the game is as it was.
 | [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25; shops pay 60% |
 | [Buying back magical items](#buying-back-magical-items) | a magical item sold stays in the merchant's stock, to buy back |
 | [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
-| [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind; a worn cloak, boots and belt help |
+| [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind |
+| ... [a worn cloak, boots and belt](#hiding-in-shadows-to-backstab) | the box under it: +10 hiding, +10 moving silently, +5 picking pockets and opening locks |
+| [A backstab multiplies the weapon's dice only](#hiding-in-shadows-to-backstab) | STR and magic added after, on the round's first attack only, as in AD&D |
 | [Picking pockets](#picking-pockets) | a thief's Pick Pockets button, then anyone in sight, until caught |
 
 ### The leader's CHA at shops
@@ -921,8 +925,8 @@ formula gives move silently and hide in shadows less than Dark Sun's table at
 high DEX, and some other skills more. With **Thief skills from AD&D's table**
 ticked, a skill is:
 
-- AD&D's average for the thief level (the Player's Handbook's table, up to
-  10th level),
+- AD&D's average for the thief level (the Player's Handbook's table, carried on
+  past 10th level),
 - plus the race's adjustment, the game's own (already the Dark Sun rules'
   numbers),
 - plus DEX's: AD&D's table up to 19, the Dark Sun rules' exceptional DEX
@@ -932,7 +936,7 @@ ticked, a skill is:
   situation's bonus, a hard lock, say, still counts after it). A ranger's
   hiding and moving silently stop at 95 as well.
 
-AD&D's averages, by thief level:
+AD&D's averages, by thief level (before the cap of 95):
 
 | Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -1396,7 +1400,8 @@ first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
 ![Shadowseeker's item box in the game: 22000, Detect Invisibility's icon, "Metal +1 Shadowseeker", 1D6+1](docs/shadowseeker-box.png)
 
 **Alagorn**, the wizard of the Painted Badlands who identifies magic items,
-tells the story of every magic item in the table but the plain Gythka +2 when
+tells the story of every magic item in the table but the plain Gythka +2, the
+two girdles and the Amulet of Magic Resistance when
 the party carries it, in the menu the game would put it in (swords, weapons,
 rings, armor, shields, clothes or other items), before "Nothing". As with the
 game's own, one story for each kind: the four pairs of bracers share one, and
@@ -1454,7 +1459,7 @@ pen of his own in the middle column the rest of the time. He has the arena
 Defiler's figure and a face of his own: the game's portrait 61 with a slave's
 brand on the brow, so the Dialogue tab never mistakes him for anyone else.
 
-![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic, here a quarter off with a CHA 20 leader](docs/kalzith.png)
+![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic, here with the party leader's CHA discount](docs/kalzith.png)
 
 Talk to him as to anyone (click him with the look pointer, then the Look box's
 Talk button). His conversation is the game's kind, just him speaking:
@@ -1622,8 +1627,8 @@ scroll (right-click it, then click its spell's icon), and it sells for 3,000
 ceramic pieces a spell level. The dice log doesn't show the roll, so whether a
 defiler had a scroll is found out on its body.
 
-Each defiler is rolled for once in each fight. A fight played again from a save
-is a new chance; a game saved mid-fight keeps the scroll a defiler was given.
+Each defiler is rolled for once in each fight, the arena's later defilers too.
+A fight played again from a save is a new chance; a game saved mid-fight keeps the scroll a defiler was given.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#defilers-scrolls).
 

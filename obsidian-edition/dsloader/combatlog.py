@@ -92,7 +92,7 @@ def line_kind(line: str) -> str:
 
 # The dice log's lines, as they are
 ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: with .+?)?: d20 = (?P<d20>\d+)(?: \(natural \d+\))?, "
-                    r"(?:needs (?P<need>-?\d+)\+|only a 20 hits)(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
+                    r"(?:needs (?P<need>-?\d+)\+|only a 20 hits|(?P<any>hits on anything but a 1))(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
 HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>[0-9d+\-]+)")
 SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?)(?: from .+?)?: d20 = (?P<d20>\d+)"
                   r"(?: \(natural \d+\))?(?:, needs (?P<need>-?\d+))?(?: \([^)]*\))? -> (?P<result>\w+)")
@@ -120,7 +120,7 @@ def shorten(line: str, level: str) -> Optional[str]:
         return f"ROUND {m.group('n')}"
     m = ATTACK.match(text)
     if m:
-        need = m.group("need") or "20"
+        need = m.group("need") or ("2" if m.group("any") else "20")
         if level == MINIMAL:
             return f"{m.group('who')} {'hits' if m.group('result') == 'HIT' else 'misses'} {m.group('target')}"
         return f"{m.group('who')} attacks {m.group('target')}: {m.group('d20')} vs {need}+ {m.group('result')}"
@@ -783,11 +783,13 @@ class Panel:
                 self._scroll(round(max(0, min(room, pos)) * (self._rows - visible(0, g)) / room))
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, top: str = "",
-               names: Optional[Dict[str, str]] = None, arena_count: Optional[int] = None) -> None:
+               names: Optional[Dict[str, str]] = None, arena_count: Optional[int] = None,
+               in_arena: bool = False) -> None:
         """ON: the panel shown (once it is drawn in a palette DSCLOG has read: PALETTES counts the
-        reads), with the header TOP and the log's lines, NAMES their colours' keys. ARENA_COUNT (the
-        caller gives one between fights in the slave pens and the arena): the header the count of
-        arena fights instead, while the panel has a header of its own (not collapsed)."""
+        reads), with the header TOP and the log's lines, NAMES their colours' keys. IN_ARENA (between
+        fights in the slave pens and the arena): the header the count of arena fights instead,
+        ARENA_COUNT (None: not known yet, '?'), while the panel has a header of its own (not
+        collapsed)."""
         guest = gd.guest
         seg, = struct.unpack("<H", guest.read(tsr_hdr + TSR_PANEL_SEG, 2))
         if not seg:  # (no memory for it: no panel)
@@ -804,7 +806,7 @@ class Panel:
         if not on:
             self.first, self._grab = None, None  # (the next fight: its newest lines)
         if on and self._ink is not None:
-            arena = arena_count is not None and self.size != COLLAPSED
+            arena = in_arena and self.size != COLLAPSED
             if arena:
                 top = arena_line(arena_count)
             now = (self._palettes, top, self.log.version, self.level, tuple(sorted(names.items())), self.first,

@@ -2,6 +2,8 @@ __pycache__/
 .dsloader-search.json
 FAKEPTY.COM
 settings.json
+settings.json.tmp
+settings.json.bad
 dosbox_dicelog.conf
 DSUNLOG.EXE
 play.log
