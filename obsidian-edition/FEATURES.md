@@ -1741,7 +1741,7 @@ fire wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
 funnel of dust in the middle of its area that turns as you watch, its ring of
 dust at the edge (two Whirlwinds at once each turn).
 
-![Whirlwind in the arena: a tall grey funnel of dust turning over three sligs and a screamer beetle, with the damage it does them each round](docs/whirlwind.gif)
+![Whirlwind in the arena: a tall grey funnel of dust turning over the sligs as the party fights beside it, the damage it does each round](docs/whirlwind.gif)
 
 How it works:
 [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).

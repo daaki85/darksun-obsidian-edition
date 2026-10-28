@@ -24,11 +24,12 @@ notes](PATCH-NOTES.md).
 - **Three animated pictures, recorded in DOSBox:** `docs/combat-log-live.gif` (the in-game combat
   log filling in as an arena fight is played with Tab and Enter: Wild Fighting, attacks, a kill and
   its XP, hiding in shadows) in place of the still shot in the Loader README; `docs/whirlwind.gif`
-  made anew (Whirlwind's funnel turning over three sligs and a screamer beetle, the damage each
-  round, 4x; the frames with the game's GUARDS banners left out) in place of the 8-frame loop in
-  FEATURES; and `docs/magic-glint.gif` (Gerakis in magic gear: sparks on the armour, a weapon's
-  edge glinting) under What the party wears. Pixels scaled whole (2x, 4x), so the game's own stay
-  sharp. The combat log one was recorded again with the flicker fixed.
+  made anew (Whirlwind's funnel turning over the sligs as the party fights beside it, the damage
+  each round, 3x) in place of the 8-frame loop in FEATURES; and `docs/magic-glint.gif` (Gerakis in
+  magic gear: sparks on the armour, a weapon's edge glinting) under What the party wears. The
+  combat log and Whirlwind ones grabbed at about 48 frames a second and played at 25, as smooth as
+  the game's own animation (a first take, 7 a second, looked choppy); the combat log's recorded
+  with the flicker fixed. Pixels scaled whole (2x, 3x, 4x), so the game's own stay sharp.
 
 ## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 
