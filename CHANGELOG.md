@@ -6,6 +6,17 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Documentation**
+- **Three animated pictures, recorded in DOSBox:** `docs/combat-log-live.gif` (the in-game combat
+  log filling in as an arena fight is played with Tab and Enter: Wild Fighting, attacks, a kill and
+  its XP, hiding in shadows) in place of the still shot in the Loader README; `docs/whirlwind.gif`
+  made anew (Whirlwind's funnel turning over three sligs and a screamer beetle, the damage each
+  round, 4x) in place of the 8-frame loop in FEATURES; and `docs/magic-glint.gif` (magic gear on
+  Gerakis and K'ratchek: sparks on the armour, the weapons' edges glinting) under What the party
+  wears. Pixels scaled whole (2x, 4x), so the game's own stay sharp.
+
 ## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 
 **Fixed** (from an outside audit of 2.12.0)

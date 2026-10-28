@@ -1690,6 +1690,8 @@ second is moved to pictures of their own.
 
 ![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
 
+![Gerakis and K'ratchek standing in the arena with magic gear: sparks shimmer over Gerakis's armour and along the edges of his long sword and gythka](docs/magic-glint.gif)
+
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
 
 ### Shadows
@@ -1739,7 +1741,7 @@ fire wall recoloured without it), Fire Seeds a fireball, and Whirlwind one tall
 funnel of dust in the middle of its area that turns as you watch, its ring of
 dust at the edge (two Whirlwinds at once each turn).
 
-![Whirlwind in the Scar fight: a tall grey funnel of dust turning over the party and Scar's henchmen](docs/whirlwind.gif)
+![Whirlwind in the arena: a tall grey funnel of dust turning over three sligs and a screamer beetle, with the damage it does them each round](docs/whirlwind.gif)
 
 How it works:
 [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).

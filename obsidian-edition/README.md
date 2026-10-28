@@ -385,7 +385,7 @@ the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
 target's AC; a natural 20 always hits, a 1 always misses). It never waits for
 a click.
 
-![The combat log in the arena, in short](docs/combat-log.png)
+![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
 
 **The panel** sits over the map's lower right. A window the game opens over
 the map (a character's menu, a question) hides it until it closes. Expanded, it
