@@ -59,6 +59,8 @@ class WornTests(unittest.TestCase):
         self.assertEqual(gear["right"], (sword, 1, sg.MAGIC, sg.FIRE_GLOW))  # (no objects file: the fire's)
         gear, _ = sprites.worn(Worn([item(sword, 0, right)]), 0)
         self.assertEqual(gear["right"], (sword, 1))
+        gear, _ = sprites.worn(Worn([item(28, 0, right)]), 0)  # (Shillelagh, no plus: a spell's)
+        self.assertEqual(gear["right"][2], sg.MAGIC)
         chest = game.EQUIP_SLOTS.index("chest")
         _, armour = sprites.worn(Worn([item(57, 1, chest)]), 0)  # (chain mail +1: glints)
         self.assertEqual(armour, (57 | sg.MAGIC_ARMOUR,))

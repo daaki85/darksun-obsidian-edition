@@ -16,6 +16,12 @@ notes](PATCH-NOTES.md).
   (`KIT_KREEN_KINDS`). Test: `KindsAllowedTests` (a thri-kreen and a human Mind Warrior).
 
 **Fixed**
+- **Shillelagh and Spiritual Hammer now shimmer on the party's figures, as the Flame Blade does.**
+  Only a weapon with a plus or a power glinted, and only along its edge: Shillelagh has no plus,
+  and Spiritual Hammer's +1 glinted on a mace's few bright cells. Both are now drawn whole in the
+  colours the game animates, as their icons glow: Shillelagh in the fire's, Spiritual Hammer's
+  head in the water blue (`spritegear.SPELL_WEAPONS`; `sprites.worn` counts them magic). Checked
+  in DOSBox on Gerakis. Tests: `test_spell_weapons`, `test_named_weapons`.
 - **A new Poisoner with the short sword as its weapon spec starts with a short sword in each
   hand,** not two daggers: its starting blades are of its weapon spec (the dagger if none is
   picked). One made before, still New with two daggers, has both made short swords. Tests:
