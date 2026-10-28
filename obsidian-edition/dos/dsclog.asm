@@ -18046,7 +18046,11 @@ probe_redraw:
         mov dx, [bp+0x12]
         call clip_check
         jnc .whole
-        mov ax, [bp+6]
+        cmp word [bp+0x14], 0           ; (into the screen not on show, to flip to it: drawn whole,
+        je .parts                       ;   as the panel is put on it at the flip, FLIP_SITE; in
+        cmp word [bp+0x0A], 1           ;   parts, each part flipped: REDRAW_PARTS)
+        je .whole
+.parts: mov ax, [bp+6]
         mov [cs:rp_camx], ax
         mov ax, [bp+8]
         mov [cs:rp_camy], ax
@@ -18264,7 +18268,11 @@ probe_redraw_all:
         mov dx, [bp-0x0E]
         call clip_check
         jnc .whole
-        mov ax, [bp+6]
+        cmp word [bp+0x0E], 0           ; (to flip to it: drawn whole, as in PROBE_REDRAW)
+        je .parts
+        cmp word [bp+0x0A], 1
+        je .whole
+.parts: mov ax, [bp+6]
         mov [cs:rp_camx], ax
         mov ax, [bp+8]
         mov [cs:rp_camy], ax

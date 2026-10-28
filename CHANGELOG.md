@@ -19,6 +19,14 @@ notes](PATCH-NOTES.md).
   panel but under a game window (and the frame or two after one closes), against 19 runs of them
   before; a message, a figure's menu, EXIT GAME, the game menu, USE and the inventory are not
   drawn over. Test: `test_panel_flip`.
+- **A fight runs as fast with the in-game combat log up as without it.** A rectangle the game
+  drew over the panel, to be flipped to, was drawn as its parts round the panel, and each part
+  was a flip of its own, waiting for the monitor: a monster's turn with the panel up flipped
+  about 25 times instead of 15 and took a sixth longer (1.03 seconds on average against 0.89).
+  Such a rectangle is now drawn whole, as the flip puts the panel on the screen it shows. Checked
+  in DOSBox, the panel shown and hidden by turns in the arena fight: a monster's turn 0.95 seconds
+  against 0.83 (within how much turns vary), the animation's flips 38 ms apart against 36; with
+  a Whirlwind turning, 42 ms against 41.
 
 **Documentation**
 - **Three animated pictures, recorded in DOSBox:** `docs/combat-log-live.gif` (the in-game combat

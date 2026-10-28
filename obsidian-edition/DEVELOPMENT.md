@@ -844,6 +844,19 @@ dice log running:
   message closes (the view drawn again without the panel; back at the next pass). A game window
   is never drawn over: on the map with one up (a message, a figure's menu, EXIT GAME, the game
   menu) `SCREEN_IS` is 2, and the panel waits, as before, until it closes.
+  With `FLIP_SITE`, a rectangle over the panel that is to be flipped to (the flag, into page 1,
+  the screen not on show) is drawn whole, not in parts: the panel is put on that screen at the
+  flip, before it shows, and the routine's copy to the other screen takes it along. In parts each
+  part was drawn with the flag, so each was a flip of its own (the pointer taken off and put back,
+  and a wait for the monitor's refresh, `PROBE_FLIP`): a monster's turn with the panel up flipped
+  about 25 times instead of 15 and took 1.03 seconds on average against 0.89 without it. Drawing
+  the parts but the last without the flag, and then again into the other screen, flipped once but
+  drew the map and figures twice, and was slower still (1.29 seconds). Drawn whole, measured the
+  same way (playing the arena fight for three minutes, the panel shown and hidden by turns of a
+  minute): 0.95 seconds against 0.83 (turns vary by a third of a second either way: no difference
+  to be told), the screens flipped as often either way, and the animation's flips 38 ms apart
+  against 36 (the panel put at each). With K'ratchek's Whirlwind turning (by turns of 20
+  seconds): 42 ms against 41, a monster's turn 1.01 seconds against 1.00.
 - **The pointer.** The game draws its pointer into the screen on show itself:
   28D1:093D keeps what is under it (from page `[A05Dh]`, the map without the
   panel) and draws it; 28D1:0B7F puts what it kept back, so taking the pointer
