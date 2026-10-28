@@ -488,8 +488,9 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
 def _poisoner_daggers(gd, member: int, sheet: bytes, read, chosen: List[int]) -> List[str]:
     """A Poisoner's two blades of its weapon spec (the dagger or the short sword; the dagger if none
     is picked), one in each hand: the right hand's weapon made a plain one (of a material it can
-    use), and a second in the left hand, in place of its shield: lines for the log. Made once: not
-    while it holds one of that kind in the left hand."""
+    use), and a second in the left hand, in place of its shield (or of the other blade, given before
+    its spec was changed): lines for the log. Made once: not while it holds one of that kind in the
+    left hand."""
     from . import kits, npcitems, ring
     right, left = game.WEAPON_HANDS
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
@@ -512,6 +513,11 @@ def _poisoner_daggers(gd, member: int, sheet: bytes, read, chosen: List[int]) ->
         out.append(f"{who} starts with a plain {material}{blade} in place of the {name(hand[1])}: a "
                    f"Poisoner fights with two of its weapon spec")
     dagger = next(item for _, item, _ in gd._worn(member) if item[game.ITEM_SLOT] == right)
+    for item_index, item, _ in gd._worn(member):  # (the other blade, given before its spec was changed)
+        if item[game.ITEM_SLOT] == left and kind_of(item) in kits.POISONER_KINDS:
+            gd.guest.write(items + item_index * game.ITEM_SIZE, plain_weapon(item, *new)[0])
+            return out + [f"{who} starts with a plain {material}{blade} in the left hand in place of the "
+                          f"{name(item)}: a Poisoner fights with two of its weapon spec"]
     shield = None
     for item_index, item, _ in list(gd._worn(member)):  # (its shield left behind)
         if item[game.ITEM_SLOT] == left and read(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])[0] & kits.SHIELD \

@@ -520,6 +520,23 @@ class KitGearTests(FinishNewTests):
                 self.setUp()
                 self.poisoner(chosen, kind)
 
+    def test_poisoner_spec_changed(self):
+        """A Poisoner given two daggers whose spec is now the short sword (still New): both made
+        short swords."""
+        from dsloader import weaponchoice
+        right, left = self.character(9, 1, ("short sword",))
+        s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
+        s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 6, 17
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        dagger = weaponchoice.PLAIN[specialize.KINDS.index("dagger")]
+        self.give(dagger[0], dagger[1], right)
+        self.give(dagger[0], dagger[1], left)
+        out = weaponchoice.kit_gear(self.gd)
+        sword = weaponchoice.PLAIN[specialize.KINDS.index("short sword")][0]
+        self.assertEqual((self.item(0), self.item(1)), ((sword, right), (sword, left)))
+        self.assertEqual(len(out), 2)
+        self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+
     def poisoner(self, chosen, kind):
         from dsloader import weaponchoice
         right, left = self.character(9, 1, chosen)
