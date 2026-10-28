@@ -1690,7 +1690,7 @@ second is moved to pictures of their own.
 
 ![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
 
-![Gerakis and K'ratchek standing in the arena with magic gear: sparks shimmer over Gerakis's armour and along the edges of his long sword and gythka](docs/magic-glint.gif)
+![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
 

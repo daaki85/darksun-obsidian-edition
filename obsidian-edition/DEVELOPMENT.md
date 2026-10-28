@@ -829,6 +829,21 @@ dice log running:
   and which the parts come through) is kept on the stack while the parts are
   drawn: overwritten, the game went on from the wrong place and wrote over its
   own memory until it quit.
+- **Flips.** Much of what the game draws in a fight (a step of an attack, a spell's effect, the
+  view drawn whole) goes into the screen not on show, and then the screens are flipped
+  (0980:5814, DSUN.EXE 14414h). The panel is drawn into the screen on show, so each such flip
+  showed the map without it until `PANEL_TICK`'s next pass: a frame or two, longer in a monster's
+  turn (the main loop doesn't run while the game shows an attack or a spell). Measured in the
+  arena's fight, frames grabbed at about 43 a second for 40 seconds, the frames with no game
+  window up but no panel either: 19 runs before (up to half a second); with `FLIP_PANEL` in the
+  rectangle routines' probes (a rectangle away from the panel, with the flag to flip: the panel
+  put on the other screen first, as `REDRAW_PARTS` does for one over it) 10; with `FLIP_SITE` as
+  well (`INT 98h` and its site number over "mov ax,0A000h / cmp word [118Eh],0" in the flip,
+  14444h, where the screen to show is set and the VGA not yet told: the panel put on it if it is
+  on the screen shown now, and that counted as its page) none but the frame or two after a
+  message closes (the view drawn again without the panel; back at the next pass). A game window
+  is never drawn over: on the map with one up (a message, a figure's menu, EXIT GAME, the game
+  menu) `SCREEN_IS` is 2, and the panel waits, as before, until it closes.
 - **The pointer.** The game draws its pointer into the screen on show itself:
   28D1:093D keeps what is under it (from page `[A05Dh]`, the map without the
   panel) and draws it; 28D1:0B7F puts what it kept back, so taking the pointer

@@ -145,6 +145,18 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(len({gamepatch.SPREAD_SITE, gamepatch.GATHER_SITE, gamepatch.MOUSE_SET, gamepatch.MOUSE_INIT,
                               gamepatch.CINE_STEP, gamepatch.CINE_END, gamepatch.DRAW_SITE, gamepatch.AREA_DMG}), 8)
 
+    def test_panel_flip(self):
+        """The game's flip of its two screens: "mov ax,0A000h / cmp word [118Eh],0" (14444h, in the
+        flip at 14414h, after the screen to show is set and before the VGA is told) DSCLOG's
+        FLIP_SITE, which puts the combat log's panel on that screen first; a site of its own, apart
+        from the flip's wait (flip_wait, 1445Fh), always on."""
+        p = next(p for p in gamepatch.PATCHES if p.name == "panel_flip")
+        self.assertEqual((p.offset, p.original), (0x14444, bytes.fromhex("b800a0833e8e1100")))
+        self.assertEqual(p.replacement, bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.FLIP_SITE)) + b"\x90" * 5)
+        self.assertEqual(gamepatch.FLIP_SITE, gamepatch.GATHER_SITE + 1)
+        wait = next(p for p in gamepatch.PATCHES if p.name == "flip_wait")
+        self.assertGreaterEqual(wait.offset, p.offset + len(p.original))
+
     def test_enter_out_of_the_save_windows_keys(self):
         """The save/load window's key table (Esc, Enter, Up, Down) without Enter, which PROBE_SAVE_PAGE
         then takes."""

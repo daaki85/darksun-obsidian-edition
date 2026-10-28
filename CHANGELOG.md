@@ -8,14 +8,27 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Fixed**
+- **The in-game combat log no longer flickers in a fight.** Many of the game's drawings (a step of
+  an attack, a spell's effect) go into its second screen and are then shown by a flip, and the
+  panel was only on the first: it vanished for a moment at each, and for up to half a second in a
+  monster's turn. DSCLOG now puts the panel on the screen about to be shown: in the two routines
+  drawing rectangles of the view when they are to flip (`FLIP_PANEL`), and in the game's flip
+  itself (`FLIP_SITE`, a new site of `INT 98h` at 14444h, `gamepatch` `panel_flip`). Checked in
+  DOSBox: in 40 seconds of an arena fight grabbed at about 43 frames a second, no frame without the
+  panel but under a game window (and the frame or two after one closes), against 19 runs of them
+  before; a message, a figure's menu, EXIT GAME, the game menu, USE and the inventory are not
+  drawn over. Test: `test_panel_flip`.
+
 **Documentation**
 - **Three animated pictures, recorded in DOSBox:** `docs/combat-log-live.gif` (the in-game combat
   log filling in as an arena fight is played with Tab and Enter: Wild Fighting, attacks, a kill and
   its XP, hiding in shadows) in place of the still shot in the Loader README; `docs/whirlwind.gif`
   made anew (Whirlwind's funnel turning over three sligs and a screamer beetle, the damage each
-  round, 4x) in place of the 8-frame loop in FEATURES; and `docs/magic-glint.gif` (magic gear on
-  Gerakis and K'ratchek: sparks on the armour, the weapons' edges glinting) under What the party
-  wears. Pixels scaled whole (2x, 4x), so the game's own stay sharp.
+  round, 4x; the frames with the game's GUARDS banners left out) in place of the 8-frame loop in
+  FEATURES; and `docs/magic-glint.gif` (Gerakis in magic gear: sparks on the armour, a weapon's
+  edge glinting) under What the party wears. Pixels scaled whole (2x, 4x), so the game's own stay
+  sharp. The combat log one was recorded again with the flicker fixed.
 
 ## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 
