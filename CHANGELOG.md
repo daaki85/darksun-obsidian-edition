@@ -9,6 +9,9 @@ notes](PATCH-NOTES.md).
 ## Next pull request (not opened yet)
 
 **Fixed**
+- **A new Poisoner with the short sword as its weapon spec starts with a short sword in each
+  hand,** not two daggers: its starting blades are of its weapon spec (the dagger if none is
+  picked). Test: `test_poisoner_daggers`.
 - **The in-game combat log no longer flickers in a fight.** Many of the game's drawings (a step of
   an attack, a spell's effect) go into its second screen and are then shown by a flip, and the
   panel was only on the first: it vanished for a moment at each, and for up to half a second in a
