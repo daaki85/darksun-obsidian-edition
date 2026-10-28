@@ -64,15 +64,42 @@ def is_game_dir(folder: str) -> bool:
 
 
 # Dark Sun Recompiled (github.com/daaki85/darksun-recompiled): the game translated into a program
-# of its own, with the mod's patched game and its helper built in. With its path in SETTINGS
-# ("recompiled"; `dsloader launch --recompiled <path>` remembers it, `--dosbox` goes back), the
-# Loader starts that program instead of DOSBox: with the game's folder (its data files; the game
-# is recognised by its DSUN.EXE), and the mod's dos folder as drive D (DSUNLOG.EXE and the data
-# files the helper replaces). The program finds its memory image (build/ds1mod) beside itself.
+# of its own, with the mod's patched game and its helper built in. The Loader starts that program
+# instead of DOSBox when it finds it: unzipped into this folder (a "recompiled" subfolder, or its
+# files here), or beside this folder ("darksun-recompiled..." next to it), or named in SETTINGS
+# ("recompiled"; `dsloader launch --recompiled <path>` remembers a path, `--dosbox` turns the
+# program off until `--recompiled` again). It is started with the game's folder (its data files;
+# the game is recognised by its DSUN.EXE) and the mod's dos folder as drive D (DSUNLOG.EXE and
+# the data files the helper replaces); it keeps its memory images (build/ds1o) beside itself.
+RECOMPILED_EXE = "dsun.exe" if os.name == "nt" else "dsun"
+
+
+def found_recompiled_program(here: str = HERE) -> Optional[str]:
+    """Dark Sun Recompiled's program where a player would put it: in this folder, in a folder
+    named after it, or beside this folder; None when there is none."""
+    import glob as _glob
+    parent = os.path.dirname(here)
+    candidates = [os.path.join(here, "recompiled", RECOMPILED_EXE), os.path.join(here, RECOMPILED_EXE),
+                  os.path.join(parent, RECOMPILED_EXE)]
+    candidates += sorted(_glob.glob(os.path.join(here, "darksun-recompiled*", RECOMPILED_EXE)))
+    candidates += sorted(_glob.glob(os.path.join(parent, "darksun-recompiled*", RECOMPILED_EXE)))
+    candidates += sorted(_glob.glob(os.path.join(parent, "darksun-recompiled*", "windows", RECOMPILED_EXE)))
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return None
+
+
 def recompiled_program(settings: Optional[dict] = None) -> Optional[str]:
-    """The path of the recompiled program to start instead of DOSBox, if set and there."""
+    """The path of the recompiled program to start instead of DOSBox: the one named in the
+    settings when it is there, else the one found beside the mod; None when the settings say
+    DOSBox (--dosbox) or there is none."""
     path = (load_settings() if settings is None else settings).get("recompiled")
-    return path if isinstance(path, str) and path and os.path.isfile(path) else None
+    if path is False:
+        return None
+    if isinstance(path, str) and path and os.path.isfile(path):
+        return path
+    return found_recompiled_program()
 
 
 def recompiled_command(program: str, game_dir: str) -> List[str]:

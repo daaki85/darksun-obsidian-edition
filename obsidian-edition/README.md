@@ -229,20 +229,27 @@ If anything goes wrong it says so in a message box and writes the details to
 
 **With Dark Sun Recompiled instead of DOSBox:** the game translated into a
 program of its own ([daaki85/darksun-recompiled](https://github.com/daaki85/darksun-recompiled)),
-built with the mod's patched game and helper in it. Tell the Loader where
-that program is once, and it starts it instead of DOSBox from then on, the
-dice log and the Loader's window attached as usual:
+with the mod's patched game and helper built in. Unzip its
+`darksun-recompiled-windows-x64.zip` into this folder (so that
+`recompiled\dsun.exe` is here, or `dsun.exe` itself) or next to this
+folder, and the Loader starts that program instead of DOSBox from then on,
+the dice log and the Loader's window attached as usual. A program
+elsewhere is named once:
 
 ```
 dsloader launch --recompiled "C:\path\to\dsun.exe"
 dsloader launch --dosbox
 ```
 
-The second line goes back to DOSBox. The program reads the game's data files
-from the GOG folder and the mod's `dos` folder as it would in DOSBox, and
-keeps its memory image (`build\ds1mod`) next to itself. DOSBox's own settings
-(the window's size, full screen, the CPU speed, `UMBPLUS.COM`) don't apply to
-it.
+The second line goes back to DOSBox (and stays there until `--recompiled`
+again). The program reads the game's data files from the GOG folder and
+the mod's `dos` folder as it would in DOSBox, and keeps its memory images
+(`build\ds1o`) next to itself. DOSBox's own settings (the window's size,
+full screen, the CPU speed, `UMBPLUS.COM`) don't apply to it. The program
+started on its own (double-clicked) finds this folder too, when it is in or
+beside it, and offers "Shattered Lands with the Obsidian Edition" among
+its choices, once the Loader has prepared the `dos` folder (the first
+start through the Loader does that).
 
 ### Updating, backups and the Loader's files
 

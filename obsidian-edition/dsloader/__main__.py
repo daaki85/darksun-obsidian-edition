@@ -218,9 +218,7 @@ def _game_dir(args) -> str:
             raise CliError(f"{program} is not there; give the path of Dark Sun Recompiled's program (dsun.exe).")
         launch.save_settings(dict(launch.load_settings(), recompiled=program))
     elif getattr(args, "dosbox", False):
-        settings = launch.load_settings()
-        if settings.pop("recompiled", None) is not None:
-            launch.save_settings(settings)
+        launch.save_settings(dict(launch.load_settings(), recompiled=False))   # (also not the one found beside the mod)
     game_dir = launch.find_game_dir(args.game_dir)
     if game_dir is None:
         import tkinter
@@ -376,7 +374,8 @@ def main(argv=None) -> int:
                    help="start DOSBox full screen, as GOG does (remembered; --windowed undoes it)")
     s.add_argument("--windowed", dest="fullscreen", action="store_false")
     s.add_argument("--recompiled", metavar="PROGRAM",
-                   help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; --dosbox undoes it)")
+                   help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; "
+                        "one unzipped into or beside this folder is found by itself; --dosbox undoes it)")
     s.add_argument("--dosbox", action="store_true", help="back to starting the game in DOSBox")
     s.set_defaults(func=cmd_launch)
 
@@ -389,7 +388,8 @@ def main(argv=None) -> int:
                    help="start DOSBox full screen, as GOG does (remembered; --windowed undoes it)")
     s.add_argument("--windowed", dest="fullscreen", action="store_false")
     s.add_argument("--recompiled", metavar="PROGRAM",
-                   help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; --dosbox undoes it)")
+                   help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; "
+                        "one unzipped into or beside this folder is found by itself; --dosbox undoes it)")
     s.add_argument("--dosbox", action="store_true", help="back to starting the game in DOSBox")
     s.set_defaults(func=cmd_play)
 

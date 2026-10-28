@@ -29,8 +29,21 @@ class LaunchTests(unittest.TestCase):
             open(os.path.join(game, "DSUN.EXE"), "w").close()      # the data files, no DOSBox
             settings = {"recompiled": program}
             self.assertEqual(launch.recompiled_program(settings), program)
-            self.assertIsNone(launch.recompiled_program({"recompiled": os.path.join(d, "gone.exe")}))
-            self.assertIsNone(launch.recompiled_program({}))
+            self.assertIsNone(launch.recompiled_program({"recompiled": False}))     # --dosbox
+            self.assertEqual(launch.recompiled_program({"recompiled": os.path.join(d, "gone.exe")}),
+                             launch.found_recompiled_program())                       # a bad path: whatever is beside the mod
+            # the program found where a player would unzip it: in the mod's folder (recompiled\),
+            # or beside the mod's folder
+            mod = os.path.join(d, "mod")
+            os.makedirs(os.path.join(mod, "recompiled"))
+            self.assertIsNone(launch.found_recompiled_program(mod))
+            open(os.path.join(mod, "recompiled", launch.RECOMPILED_EXE), "w").close()
+            self.assertEqual(launch.found_recompiled_program(mod), os.path.join(mod, "recompiled", launch.RECOMPILED_EXE))
+            os.remove(os.path.join(mod, "recompiled", launch.RECOMPILED_EXE))
+            os.makedirs(os.path.join(d, "darksun-recompiled-windows-x64", "windows"))
+            beside = os.path.join(d, "darksun-recompiled-windows-x64", "windows", launch.RECOMPILED_EXE)
+            open(beside, "w").close()
+            self.assertEqual(launch.found_recompiled_program(mod), beside)
             self.assertEqual(launch.recompiled_command(program, game),
                              [program, "--game", game, "--cd", launch.DOS_DIR])
             saved = launch.SETTINGS
