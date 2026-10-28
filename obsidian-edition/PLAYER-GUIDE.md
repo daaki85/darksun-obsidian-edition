@@ -947,8 +947,8 @@ costs something. [The Kits page](KITS.md) has each kit's numbers and
 starting gear; the class sections above say who takes each kit on Athas.
 
 - The **Myrmidon** chooses its second weapon spec, and the **Battle Mage**,
-  **Crusader** and **Mind Warrior** their one, in the weapon window after
-  DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
+  **Crusader** and **Mind Warrior** their one (a melee weapon; a thri-kreen
+  Mind Warrior may take the chatkcha), in the weapon window after DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
   list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old.

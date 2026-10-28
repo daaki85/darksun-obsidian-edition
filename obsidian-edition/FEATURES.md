@@ -532,7 +532,7 @@ fighter, gladiator and ranger levels; a warrior class goes no higher than
 |---|---|---|---|---|---|---|---|
 | none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
 | not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits): its chosen weapon spec (melee only; by its own class's level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits): its chosen weapon spec (melee only, but a thri-kreen Mind Warrior's chatkcha; by its own class's level, a chatkcha by its warrior level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |

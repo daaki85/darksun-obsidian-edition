@@ -42,7 +42,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Weapon specialization**
 
 - **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
-- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one weapon spec of their choice (3/2 attacks a round, 2 from 7th level).
+- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level); a thri-kreen Mind Warrior may take the chatkcha.
 - **[Changed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
 - **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
 

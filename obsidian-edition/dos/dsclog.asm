@@ -5011,7 +5011,9 @@ wp_rules:
 ; ranger (its class flags, +12h: 200h), who has expertise with it already; a Battle Mage the
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
 ; the bow only; a Poisoner the dagger and short sword (KIT_POISON_KINDS); a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
-; a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS). DS = the game's. Others kept.
+; a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS), and a thri-kreen Mind Warrior the
+; chatkcha as well (KIT_KREEN_KINDS). DS = the game's. Others kept.
+KIT_KREEN_KINDS equ 0x1000      ; (the chatkcha)
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
 KIT_MELEE_KINDS equ 0x0FFF      ; (not the chatkcha, bow, sling or staff sling)
 KIT_POISON_KINDS equ 0x000C     ; a Poisoner's: dagger, short sword
@@ -5067,9 +5069,17 @@ kinds_allowed:
 .no:    inc dx
         cmp dx, KIND_TYPES
         jb .type
-        call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds)
-        jne .ranger
+        call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds; a
+        jne .ranger             ;   thri-kreen Mind Warrior's chatkcha too)
+        mov ax, di
         and di, KIT_MELEE_KINDS
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
+        jne .ranger
+        call kit_is_b
+        db KIT_MIND_WARRIOR
+        jne .ranger
+        and ax, KIT_KREEN_KINDS
+        or di, ax
 .ranger:
         test word [es:bx + 0x12], 0x200
         jz .all                 ; (a ranger)

@@ -8,6 +8,13 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Changed**
+- **A thri-kreen Mind Warrior may take the chatkcha as its weapon spec,** the thri-kreen's own
+  weapon, as well as its class's melee ones (a Crusader's and other Mind Warriors' stay melee
+  only). Its expertise with it gives 3/2 throws a round, 2 from a warrior class's 7th level, as a
+  ranger's. In the Loader (`restrict.allowed_kinds`) and DSCLOG's `KINDS_ALLOWED`
+  (`KIT_KREEN_KINDS`). Test: `KindsAllowedTests` (a thri-kreen and a human Mind Warrior).
+
 **Fixed**
 - **A new Poisoner with the short sword as its weapon spec starts with a short sword in each
   hand,** not two daggers: its starting blades are of its weapon spec (the dagger if none is
