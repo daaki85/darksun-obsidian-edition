@@ -5011,7 +5011,9 @@ wp_rules:
 ; ranger (its class flags, +12h: 200h), who has expertise with it already; a Battle Mage the
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
 ; the bow only; a Poisoner the dagger and short sword (KIT_POISON_KINDS); a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
-; a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS). DS = the game's. Others kept.
+; a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS), and a thri-kreen Mind Warrior the
+; chatkcha as well (KIT_KREEN_KINDS). DS = the game's. Others kept.
+KIT_KREEN_KINDS equ 0x1000      ; (the chatkcha)
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
 KIT_MELEE_KINDS equ 0x0FFF      ; (not the chatkcha, bow, sling or staff sling)
 KIT_POISON_KINDS equ 0x000C     ; a Poisoner's: dagger, short sword
@@ -5067,9 +5069,17 @@ kinds_allowed:
 .no:    inc dx
         cmp dx, KIND_TYPES
         jb .type
-        call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds)
-        jne .ranger
+        call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds; a
+        jne .ranger             ;   thri-kreen Mind Warrior's chatkcha too)
+        mov ax, di
         and di, KIT_MELEE_KINDS
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
+        jne .ranger
+        call kit_is_b
+        db KIT_MIND_WARRIOR
+        jne .ranger
+        and ax, KIT_KREEN_KINDS
+        or di, ax
 .ranger:
         test word [es:bx + 0x12], 0x200
         jz .all                 ; (a ranger)
@@ -15364,6 +15374,7 @@ MOUSE_SET equ NS_IMAGE + 45     ; 2A912h: the mouse given its ranges (MOUSE_SET)
 MOUSE_INIT equ NS_IMAGE + 46    ; 356F5h: the mouse driver reset, at the game's start (MOUSE_INIT)
 SPREAD_SITE equ NS_IMAGE + 48   ; 692CEh: a game loaded, the party in one figure (SPREAD_LOAD)
 GATHER_SITE equ NS_IMAGE + 55   ; 1DFE8h: the party put in one figure, at a fight's end too (SPREAD_GATHER)
+FLIP_SITE equ NS_IMAGE + 56     ; 14444h: the game's flip of its two screens, the new one about to show (FLIP_SITE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -15483,6 +15494,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je spread_load
         cmp byte [cs:rl_site], GATHER_SITE
         je spread_gather
+        cmp byte [cs:rl_site], FLIP_SITE
+        je flip_site
         cmp byte [cs:rl_site], NS_ENTRY_EF
         jb .cmp
         cmp byte [cs:rl_site], NS_ENTRY_STATUS
@@ -18043,7 +18056,11 @@ probe_redraw:
         mov dx, [bp+0x12]
         call clip_check
         jnc .whole
-        mov ax, [bp+6]
+        cmp word [bp+0x14], 0           ; (into the screen not on show, to flip to it: drawn whole,
+        je .parts                       ;   as the panel is put on it at the flip, FLIP_SITE; in
+        cmp word [bp+0x0A], 1           ;   parts, each part flipped: REDRAW_PARTS)
+        je .whole
+.parts: mov ax, [bp+6]
         mov [cs:rp_camx], ax
         mov ax, [bp+8]
         mov [cs:rp_camy], ax
@@ -18059,7 +18076,10 @@ probe_redraw:
         mov ax, 1                       ; (drawn, as the routine says)
         pop bp
         retf                            ; (to the caller, which takes its arguments off)
-.whole: pop dx
+.whole: cmp word [bp+0x14], 0           ; (to be shown by a flip: the panel on that screen first,
+        je .wpop                        ;   or the flip shows a screen without it: FLIP_PANEL)
+        call flip_panel
+.wpop:  pop dx
         pop cx
         pop bx
         pop ax
@@ -18258,7 +18278,11 @@ probe_redraw_all:
         mov dx, [bp-0x0E]
         call clip_check
         jnc .whole
-        mov ax, [bp+6]
+        cmp word [bp+0x0E], 0           ; (to flip to it: drawn whole, as in PROBE_REDRAW)
+        je .parts
+        cmp word [bp+0x0A], 1
+        je .whole
+.parts: mov ax, [bp+6]
         mov [cs:rp_camx], ax
         mov ax, [bp+8]
         mov [cs:rp_camy], ax
@@ -18282,7 +18306,10 @@ probe_redraw_all:
         push word [cs:resume + 2]
         push word [cs:resume]
         iret
-.whole: pop dx
+.whole: cmp word [bp+0x0E], 0           ; (to be shown by a flip: FLIP_PANEL, as PROBE_REDRAW)
+        je .wpop
+        call flip_panel
+.wpop:  pop dx
         pop cx
         pop bx
         pop ax
@@ -20192,6 +20219,68 @@ pointer_over:
 .no:    cmp sp, 0                       ; (ZF clear)
         pop ax
         ret
+
+; FLIP_PANEL: in PROBE_REDRAW and PROBE_REDRAW_ALL, a rectangle away from the panel to be drawn into
+; the screen not on show and then shown by a flip of the screens (the game's figures in a fight, a
+; step at a time): the panel put on that screen first (PANEL_DRAW_OTHER), if it is on screen now. It
+; was put only on the screen on show, so each such flip showed the map without it until PANEL_TICK
+; put it again, a few frames later and longer in a monster's turn (the panel flickered). DS the
+; game's; registers kept.
+flip_panel:
+        call panel_live
+        jne .ret
+        call panel_draw_other
+.ret:   ret
+
+; FLIP_SITE: "mov ax,0A000h / cmp word [118Eh],0" (14444h; 8 bytes: the site's number and 5 NOPs
+; after the INT) in the game's flip of its two screens (0980:5814, 14414h), where the screen to be
+; shown is set ([118Eh], DS the routine's segment) and the VGA not yet told. Many of the game's
+; drawings (a spell's effect, an attack, the view drawn whole) go into the screen not on show and
+; then flip to it: without the panel there, it went from the screen for a moment, or until the
+; main loop's next pass (PANEL_TICK; longer in a monster's turn). If the panel is on the screen on
+; show now (shown, on the map, drawn into it), it is put on the new one first (FLIP_PUT) and that
+; counted as its page. Then the two replaced: AX 0A000h, ZF from the compare (its "jz" kept).
+flip_site:
+        push bp
+        mov bp, sp
+        pushad
+        push es
+        push ds
+        cld
+        call flip_put
+        pop ds
+        pop es
+        popad
+        mov ax, 0xA000
+        and word [bp + 6], ~0x40        ; (the INT's flags: ZF as the compare gives it)
+        cmp word [SHOWN_PAGE], 0
+        jne .nz
+        or word [bp + 6], 0x40
+.nz:    pop bp
+        iret
+
+; FLIP_PUT: in FLIP_SITE (DS the page routines' segment; AX to DI, DS, ES not kept)
+flip_put:
+        cmp word [cs:panel_seg], 0
+        je .ret
+        cmp byte [cs:panel_shown], 0
+        je .ret
+        call on_map
+        jne .ret
+        mov ax, [SHOWN_PAGE]            ; (the screen about to show; the panel was on the other)
+        mov bx, ax
+        xor bx, 1
+        cmp bx, [cs:panel_page]
+        jne .ret
+        mov [cs:panel_page], ax
+        mov cx, 0xA000
+        or ax, ax
+        jz .seg
+        mov cx, 0xA400
+.seg:   mov ax, cx
+        mov byte [cs:pb_skip], 0
+        call panel_blit
+.ret:   ret
 
 ; PANEL_DRAW_OTHER: the picture into the screen not on show (a redraw about to flip to it: the
 ; game's map on both); registers kept

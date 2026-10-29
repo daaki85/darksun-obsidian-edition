@@ -163,6 +163,7 @@ CINE_STEP, CINE_END = NS_IMAGE + 43, NS_IMAGE + 44  # (scenes: the pointer shown
 MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in the middle, as fast up as across)
 SPREAD_SITE = NS_IMAGE + 48  # (a game loaded with the party in one figure: spread out on the map)
 GATHER_SITE = NS_IMAGE + 55  # (the party put in one figure: after a fight, spread out again)
+FLIP_SITE = NS_IMAGE + 56  # (the game's flip of its screens: the combat log's panel put on the new one first)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
 AREA_DMG = NS_IMAGE + 54  # (a spell's damage to the creatures it reaches: a Wilderness Avenger's Cause Wounds, kits.harm_bonus)
@@ -485,6 +486,10 @@ PATCHES = (
     # ... and the end of the routine putting it in one figure, after a fight too (not after 6:
     # DSCLOG's SPREAD_GATHER)
     Patch("party_gather", 0x1DFE8, bytes.fromhex("c70668110000"), _site(GATHER_SITE, 6)),
+    # the game's flip of its two screens (0980:5814): "mov ax,0A000h / cmp word [118Eh],0", where the
+    # screen to show is set and the VGA not yet told; the combat log's panel put on it first, if it
+    # is on the screen shown now (DSCLOG's FLIP_SITE: else the panel went from the screen at a flip)
+    Patch("panel_flip", 0x14444, bytes.fromhex("b800a0833e8e1100"), _site(FLIP_SITE, 8)),
     # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
     Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),

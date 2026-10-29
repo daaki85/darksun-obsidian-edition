@@ -269,7 +269,7 @@ def worn(gd: GameData, member: int, chunks=None) -> Tuple[Dict[str, Tuple[int, .
         name = game.EQUIP_SLOTS[slot]
         kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
         material = typ[0x08] & 0x0F if len(typ) == game.ITEM_TYPE_SIZE else 4
-        magic = _magic(item)
+        magic = _magic(item) or kind in sg.SPELL_WEAPONS  # (Shillelagh's no plus, but a spell's)
         glow = item_glow(chunks, item) if magic and chunks is not None else sg.FIRE_GLOW
         if name in ARMOUR_SLOTS:
             armour.append(kind | (sg.MAGIC_ARMOUR | glow << sg.GLOW_SHIFT if magic else 0))

@@ -64,12 +64,12 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.12.1** is out ([release notes](release-notes/v2.12.1.md)):
-a fix release for 2.12.0. Walking with the whole party in view is no longer
-taken for a fight, and the Loader never loses its settings and keeps running
-when something goes wrong. 2.12.0 had the whole party walk at full speed on the
-map (steady pace), put every party member in view after a load and after each
-fight, and let U and I close their screens again as M does.
+**Obsidian Edition 2.12.2** is out ([release notes](release-notes/v2.12.2.md)):
+the combat log in the game no longer flickers in a fight or slows it down, a
+Poisoner starts with two blades of the weapon spec it picked, a thri-kreen Mind
+Warrior may take the chatkcha, and Shillelagh and Spiritual Hammer glow on the
+party's figures. 2.12.1 stopped walking with the whole party in view from being
+taken for a fight, and made the Loader keep its settings whatever happens.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one

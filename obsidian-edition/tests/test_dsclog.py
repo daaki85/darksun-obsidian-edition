@@ -2099,6 +2099,21 @@ class KindsAllowedTests(unittest.TestCase):
                 s[0x43] = 1
                 self.assertTrue(war and set(war) <= kits.MELEE_KINDS)
                 self.assertGreater(set(restrict.allowed_kinds(bytes(s), self.record)) - kits.MELEE_KINDS, set())
+            chatkcha = specialize.KINDS.index("chatkcha")
+            for race in (8, 1):  # a thri-kreen Mind Warrior: the chatkcha as well; another race's not
+                s = bytearray(sheet(12))
+                s[0x18], s[0x43] = race, 2
+                with self.subTest(mind_warrior_race=race):
+                    mu.mem_write(SS * 16 + 0x500, bytes(s))
+                    mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+                    for name, value in dict(cs=TSR, ds=GAME_DS, es=SS, ebx=0x500, ss=SS, esp=0x7FC).items():
+                        mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                    mu.emu_start(TSR * 16 + start, TSR * 16 + 0xFFF0)
+                    got = mu.reg_read(r.UC_X86_REG_AX)
+                    want = restrict.allowed_kinds(bytes(s), self.record)
+                    self.assertEqual([k for k in range(16) if got >> k & 1], want)
+                    self.assertEqual(chatkcha in want, race == 8)
+                    self.assertTrue(set(want) - {chatkcha} <= kits.MELEE_KINDS)
             s = bytearray(sheet(9, 11))  # a half-elf fighter/preserver Spellarcher: the bow only
             s[0x18], s[0x43] = 4, 1
             mu.mem_write(SS * 16 + 0x500, bytes(s))

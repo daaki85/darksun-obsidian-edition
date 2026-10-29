@@ -947,8 +947,8 @@ costs something. [The Kits page](KITS.md) has each kit's numbers and
 starting gear; the class sections above say who takes each kit on Athas.
 
 - The **Myrmidon** chooses its second weapon spec, and the **Battle Mage**,
-  **Crusader** and **Mind Warrior** their one, in the weapon window after
-  DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
+  **Crusader** and **Mind Warrior** their one (a melee weapon; a thri-kreen
+  Mind Warrior may take the chatkcha), in the weapon window after DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
   list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old.
@@ -1062,6 +1062,7 @@ ranger level). 3/2 means one attack one round and two the next.
 | a chosen weapon spec (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
 | a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), its chosen weapon spec | 3/2 | 2 | | | | |
+| a thri-kreen **Mind Warrior**, the chatkcha as its chosen weapon spec (by its fighter, gladiator or ranger level, if any) | | | | | 3/2 | 2 |
 | a **Crusader** or **Mind Warrior**, any other weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
 | a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |

@@ -86,6 +86,17 @@ class WeaponTests(unittest.TestCase):
         self.assertTrue(set(named.values()) & set(sg.MATERIAL_COLOURS[BONE]))
         self.assertEqual(set(plain), set(named))  # (the same shape)
 
+    def test_spell_weapons(self):
+        """Shillelagh drawn whole in the fire colours the game cycles, as the Flame Blade, and
+        Spiritual Hammer in the blue (their icons'), whatever their material."""
+        before = rows()
+        for item_type, glow in ((28, sg.FIRE_GLOW), (30, sg.BLUE_GLOW), (29, sg.FIRE_GLOW)):
+            with self.subTest(item_type=item_type):
+                new = drawn(before, sg.armed(before, 2095, 0, True, {"right": (item_type, WOOD, sg.MAGIC, glow)}, PAD))
+                lit = [q for q in new.values() if q in sg.GLOWS[glow]]
+                self.assertGreater(len(lit), len(new) // 2)  # (a mace's handle stays wood)
+        self.assertEqual(sg.SPELL_WEAPONS, {28: sg.FIRE_GLOW, 30: sg.BLUE_GLOW})
+
     def test_side_shield_past_the_chest(self):
         """Walking from the side, the shield on the far arm shows past the front of the chest."""
         body = [[None] * 12 for _ in range(20)]

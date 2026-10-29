@@ -514,9 +514,32 @@ class KitGearTests(FinishNewTests):
 
     def test_poisoner_daggers(self):
         """A Poisoner (a halfling fighter/thief): a dagger in each hand, its long sword made one and
-        its shield left behind; once."""
+        its shield left behind; once. With the short sword its weapon spec, a short sword in each."""
+        for chosen, kind in (((), "dagger"), (("dagger",), "dagger"), (("short sword",), "short sword")):
+            with self.subTest(chosen=chosen):
+                self.setUp()
+                self.poisoner(chosen, kind)
+
+    def test_poisoner_spec_changed(self):
+        """A Poisoner given two daggers whose spec is now the short sword (still New): both made
+        short swords."""
         from dsloader import weaponchoice
-        right, left = self.character(9, 1)
+        right, left = self.character(9, 1, ("short sword",))
+        s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
+        s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 6, 17
+        self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
+        dagger = weaponchoice.PLAIN[specialize.KINDS.index("dagger")]
+        self.give(dagger[0], dagger[1], right)
+        self.give(dagger[0], dagger[1], left)
+        out = weaponchoice.kit_gear(self.gd)
+        sword = weaponchoice.PLAIN[specialize.KINDS.index("short sword")][0]
+        self.assertEqual((self.item(0), self.item(1)), ((sword, right), (sword, left)))
+        self.assertEqual(len(out), 2)
+        self.assertEqual(weaponchoice.kit_gear(self.gd), [])
+
+    def poisoner(self, chosen, kind):
+        from dsloader import weaponchoice
+        right, left = self.character(9, 1, chosen)
         s = bytearray(self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE])
         s[game.SHEET_RACE], s[game.SHEET_CLASSES + 1] = 6, 17
         self.mem[self.SHEETS:self.SHEETS + game.SHEET_SIZE] = s
@@ -540,11 +563,11 @@ class KitGearTests(FinishNewTests):
         with mock.patch("dsloader.ring.unlink", unlink), mock.patch("dsloader.npcitems.add_to", add_to):
             out = weaponchoice.kit_gear(self.gd)
             self.assertEqual(weaponchoice.kit_gear(self.gd), [])
-        dagger = weaponchoice.PLAIN[specialize.KINDS.index("dagger")][0]
-        self.assertEqual(self.item(0), (dagger, right))
+        blade = weaponchoice.PLAIN[specialize.KINDS.index(kind)][0]
+        self.assertEqual(self.item(0), (blade, right))
         self.assertEqual(taken, [1])
-        self.assertEqual(self.item(2), (dagger, left))
-        self.assertIn("in place of the", out[0])
+        self.assertEqual(self.item(2), (blade, left))
+        self.assertIn(f"{kind} in place of the", out[0])
         self.assertIn("second", out[1])
 
     def test_shadowblade_packed_shield(self):
