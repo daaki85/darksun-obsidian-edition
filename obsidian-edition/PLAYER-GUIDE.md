@@ -385,6 +385,12 @@ Each class's section lists the magic weapons it can wield, the mod's new ones
 marked \*. A plain weapon of each type and material is listed as "bone short
 sword" and the like.
 
+**Weaker materials.** Athas is short of metal, and the game makes a plain
+weapon of anything else worse: wood −3 to hit and −2 damage, bone −1 and −1,
+stone and obsidian −2 and −1. A weapon with a plus has no penalty, nor do clubs
+and staves, which are meant to be wooden. The inventory, View Character and the
+dice log all count it.
+
 ### Fighter
 
 *d10 · STR · any race · XP for 2nd level 2,000, for 10th 500,000*

@@ -68,7 +68,9 @@ class Viewer:
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         # the game's portraits and font, from the player's own install (if it can be found)
         self.art = art.GameArt(launch.find_game_dir())
-        self._images: List[tk.PhotoImage] = []  # Tk shows an image only while it's referenced
+        # (Tk shows an image only while it's referenced: one for each portrait at each size, shared
+        # by every line it is shown on)
+        self._images: Dict[Tuple[int, int], tk.PhotoImage] = {}
 
         root.title(f"{theme.NAME} {__version__} - {layout.game or 'party viewer'}")
         root.geometry("1320x780")
@@ -1144,37 +1146,41 @@ class Viewer:
 
     def _options_changed(self) -> None:
         """A switch on the Options tab changed: all of them saved, and the log told."""
-        with launch.SETTINGS_LOCK:  # (read and written as one step)
-            settings = launch.load_settings()
-            for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
-                settings.pop(old, None)
-            settings["monster_info"] = self.monster_info.get()
-            settings["floating_names"] = self.floating_names.get()
-            settings["combat_log"] = self.combat_log.get()
-            settings["combat_log_level"] = self.combat_log_level.get()
-            settings["pickpockets"] = self.pickpockets.get()
-            settings["show_gear"] = self.show_gear.get()
-            settings["starting_gear"] = self.starting_gear.get()
-            settings["shadows"] = self.show_shadows.get()
-            settings["dust"] = self.show_dust.get()
-            settings["elf_looks"] = self.elf_looks.get()
-            settings["cilla_elf"] = self.cilla_elf.get()
-            settings["rings"] = self.ring_mode.get()
-            settings["targeting"] = self.use_targeting.get()
-            settings["scroll_map"] = self.scroll_map.get()
-            for key, var in self.content_vars.items():
-                settings[key] = var.get()
-            settings["effects_kept"] = self.effects_kept.get()
-            settings["stealth_gear"] = self.stealth_gear.get()
-            settings["roll_store"] = self.roll_store.get()
-            settings["camera_still"] = self.camera_still.get()
-            settings["scene_pointer"] = self.scene_pointer.get()
-            settings["mouse_start"] = self.mouse_start.get()
-            settings["steady_pace"] = self.steady_pace.get()
-            settings["party_spread"] = self.party_spread.get()
-            for key, var in self.rule_vars.items():
-                settings[key] = var.get()
-            launch.save_settings(settings)
+        try:
+            with launch.SETTINGS_LOCK:  # (read and written as one step)
+                settings = launch.load_settings(strict=True)
+                for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
+                    settings.pop(old, None)
+                settings["monster_info"] = self.monster_info.get()
+                settings["floating_names"] = self.floating_names.get()
+                settings["combat_log"] = self.combat_log.get()
+                settings["combat_log_level"] = self.combat_log_level.get()
+                settings["pickpockets"] = self.pickpockets.get()
+                settings["show_gear"] = self.show_gear.get()
+                settings["starting_gear"] = self.starting_gear.get()
+                settings["shadows"] = self.show_shadows.get()
+                settings["dust"] = self.show_dust.get()
+                settings["elf_looks"] = self.elf_looks.get()
+                settings["cilla_elf"] = self.cilla_elf.get()
+                settings["rings"] = self.ring_mode.get()
+                settings["targeting"] = self.use_targeting.get()
+                settings["scroll_map"] = self.scroll_map.get()
+                for key, var in self.content_vars.items():
+                    settings[key] = var.get()
+                settings["effects_kept"] = self.effects_kept.get()
+                settings["stealth_gear"] = self.stealth_gear.get()
+                settings["roll_store"] = self.roll_store.get()
+                settings["camera_still"] = self.camera_still.get()
+                settings["scene_pointer"] = self.scene_pointer.get()
+                settings["mouse_start"] = self.mouse_start.get()
+                settings["steady_pace"] = self.steady_pace.get()
+                settings["party_spread"] = self.party_spread.get()
+                for key, var in self.rule_vars.items():
+                    settings[key] = var.get()
+                launch.save_settings(settings)
+        except OSError as e:  # (settings.json held elsewhere: kept as it was, not saved over)
+            self.status.set(f"The options could not be saved just now ({e}); change one again to retry.")
+            return
         if self.dice is not None:
             self.dice.set_monster_info(self.monster_info.get())
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
@@ -1266,8 +1272,10 @@ class Viewer:
                 continue
             face = self.art.portrait(entry.portrait) if entry.portrait else None
             if face:  # the game's portrait, twice its size (more at larger text sizes)
-                image = art.photo(self.root, face, max(2, round(2 * theme.scale())), background=theme.DEEP)
-                self._images.append(image)
+                size = max(2, round(2 * theme.scale()))
+                image = self._images.get((entry.portrait, size))
+                if image is None:
+                    image = self._images[(entry.portrait, size)] = art.photo(self.root, face, size, background=theme.DEEP)
                 self.talk_text.image_create("end", image=image, padx=2, pady=4, align="center")
                 self.talk_text.insert("end", " ")
             tags = ("speaker", f"portrait {entry.portrait}") if entry.portrait else ("speaker",)
@@ -1282,6 +1290,9 @@ class Viewer:
             for n, reply in enumerate(entry.replies, 1):
                 self.talk_text.insert("end", f"  {n}. {reply}\n", "reply")
             self.talk_text.insert("end", "\n")
+        excess = int(self.talk_text.index("end-1c").split(".")[0]) - MAX_LOG_LINES
+        if excess > 0:  # (kept to the last MAX_LOG_LINES lines, as the dice log)
+            self.talk_text.delete("1.0", f"{excess + 1}.0")
         if self._following.get(self.talk_text, True):
             self.talk_text.see("end")
 

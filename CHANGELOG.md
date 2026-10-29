@@ -31,8 +31,83 @@ notes](PATCH-NOTES.md).
   - The search for the game's memory reads its 4 MB chunks overlapping by the longest mark (18
     bytes, `DARKSUN-RECOMPILED`), not the BIOS date's 8, so the mark is found across two chunks;
     its error names Dark Sun Recompiled too.
+  - `--recompiled` and `--dosbox` save with `launch.update_settings`, as the rest of the Loader
+    has since 2.12.3, so a settings file locked for a moment is never saved over with only that
+    change.
   - Tests: `test_the_games_dos_program_is_not_it`, `test_started_and_closed_lines`,
     `test_recompiled_mark_across_two_chunks`; the stand-in programs written as Windows programs.
+
+## Pull request #76 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/76))
+
+Obsidian Edition 2.12.3 ([release notes](release-notes/v2.12.3.md)).
+
+**Fixed** (from a code audit, and Haste and Slow)
+- **Haste and Slow show in the attacks a round.** A fight's attack doubles a hasted character's
+  attacks and halves a slowed one's (rounded down; DSUN.EXE 5883Ah, from effects 22 and 47, after
+  every other step), but neither the game's DAM lines nor the Loader's Characters tab did. Checked
+  in DOSBox: hasted, Gerakis 5 attacks a turn (2.5 a round: his sword's 3/2 and the gythka's one,
+  each doubled), K'ratchek 10, Cermak and Cilla 2; Haste turned to Bless, Gerakis back to 3, 2, 3,
+  2. Now `GameData.weapon_hits` doubles or halves each weapon's rate last, and DSCLOG's
+  `PROBE_DAM_LINE`, `PROBE_MISSILE_LINE` and `PROBE_VIEW_DAM` do the same (`SPEED_HALVES`,
+  `FRAME_SPEED`; whatever the rules, as the game's attack). The inventory's line had no count for
+  one half-attack (`cmp dx,2 / jng` at 72AC0h) and showed it as one a round: made `je` (`gamepatch`
+  `dam_half`), so a slowed character's reads `0.5x1D8+6`. Tests: `test_hasted_and_slowed`,
+  `test_dam_half`.
+- **View Character's damage matches the fight's.** A non-magical weapon in a weaker material does
+  2 less in wood and 1 less in bone, stone or obsidian (no plus; a power alone doesn't spare it;
+  types marked 80h, the clubs and staves, never), which the attack and the inventory's line take
+  off and View Character's didn't: Cilla's bone long sword read `1x1D8+7` there and `1D8+6` in the
+  inventory. Found in DOSBox by giving the sword each type in turn. DSCLOG's `VIEW_MATERIAL` takes
+  it off in `PROBE_VIEW_DAM`, whatever the rules (`game.MATERIAL_DAMAGE`); the dice log's damage
+  line names it (`-1 bone`, not `-1 weapon`). Tests: `test_view_dam_weak_material`,
+  `test_weapon_damage_weak_material`.
+- **The arena's Ring +1 shimmers as soon as it is found.** It was given with the plain ring's
+  picture and given its own a pass later (`icons.repaint`, every 3 seconds, put off while the game
+  holds its item lists); an inventory opened in between drew the plain ring and kept it until the
+  ring was clicked. Every item the Loader makes (`npcitems.add_to`, `pickpocket._link`: the ring, a
+  new character's Short Sword, a Kalzith scroll) now gets its own picture as it is made
+  (`icons.fit`, while the game has the copy of the objects open, `icons.COPY_OPEN`). Items in the
+  game's data had theirs long before they could be seen. Test: `test_its_own_icon_at_once`.
+- **K'ratchek's second chatkcha throw a round shows with weapon specialization on.**
+  `weapon_hits` put the item type where the weapon kind was, so the thri-kreen's own throw was
+  never counted on the Characters tab (the game always threw it). Test:
+  `test_kratcheks_chatkcha_with_specialization`.
+- **The no-window Play mode carries on after an error,** as the window has since 2.12.1: any error
+  in a pass stopped the dice log, the in-game combat log and the item checks for the session, and
+  DOSBox closing mid-read (`ProcessError`, not an `OSError`) skipped its crash report. Now a read of
+  a closed DOSBox counts as a disconnect, and other errors are written to `play.log` once each.
+- **settings.json is never replaced by a single change.** A read that failed for any reason (a
+  Windows lock from an antivirus or a backup) gave empty settings, and `update_settings` then saved
+  just its change, losing every option. Reads made to change and save the file (`load_settings(
+  strict=True)`) now retry and then raise; only a missing file is empty settings. The Options tab
+  says so if a save can't be made. Test: `test_a_locked_settings_file_is_never_saved_over`.
+- **A roll half seen no longer spoils the next.** The dice of an NdS roll, and a save's natural
+  d20, collected so far stayed under their place in the game when the rest was missed (the ring
+  overran) or the Loader attached mid-roll, and the next roll from there took a stale die. They are
+  dropped then (`_forget_partial_rolls`). Test: `test_half_seen_rolls_dropped_when_rolls_are_missed`.
+- **An error after a pass's rolls keeps those rolls.** Everything after the rolls' lines (hit
+  points, effects, turns, the party's items) is in `_after_rolls`; what fails there is one line in
+  the dice log, once a kind, and the rolls already read are returned with it (and the panel's
+  drawing likewise). The item lists' gate is released whatever happens. Test:
+  `test_rolls_kept_when_a_later_step_fails`.
+- **The arena's Ring +1 never loses an item record.** `give_ring` took a record off the free list
+  before knowing the member's backpack list could be had; it checks first now, as
+  `npcitems.add_to` does. Test: `test_no_list_keeps_the_record_free`.
+- **The dialogue pane stays at 3,000 lines** as the dice log does, and a portrait shown many times
+  is one image, not one per line (memory grew through a long session).
+- **The game folder is kept as a full path:** a relative `--game-dir` at a command prompt gave
+  DOSBox a settings path from the wrong folder.
+
+**Documentation**
+- **A review of the pages for 2.12.3:** the player's guide gains weaker materials' penalties (to
+  hit and, newly found, to damage), the features page Haste and Slow under the attacks a round,
+  and the backstab example's damage line its `-1 bone`. `docs/dicelog.png` taken anew in DOSBox
+  (the arena's opening show, Find on the Rampager): K'ratchek's card shows her chatkcha at 5/2 a
+  round, which the old one showed at 3/2 (the bug fixed above). Links, anchors and pictures
+  checked: none broken, none unused.
+- **A thri-kreen Mind Warrior who presses EXIT on the weapon window gets the chatkcha,** as other
+  thri-kreen do, now it may take it (2.12.2); KITS.md said the club. KITS.md says so now. Test:
+  `test_mind_warrior_exit`.
 
 ## Pull request #75 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/75))
 

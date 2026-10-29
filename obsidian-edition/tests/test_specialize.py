@@ -8,7 +8,7 @@ from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, restrict, specialize
+from dsloader import game, kits, restrict, specialize
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import test_restrict  # noqa: E402
 
@@ -192,6 +192,22 @@ class NewCharacterTests(unittest.TestCase):
         self.assertEqual(weaponchoice.kinds_for(s, psi_kinds), [2, 0, 0, 0])
         s = sheet((2,), classes=(9, 12, 0))  # (the dagger: allowed)
         self.assertEqual(weaponchoice.kinds_for(s, psi_kinds), [3, 0, 0, 0])
+
+    def test_mind_warrior_exit(self):
+        """A Mind Warrior who picks nothing (EXIT): a thri-kreen the chatkcha, as other thri-kreen
+        (it may take it: restrict.allowed_kinds), another race the club, its first melee kind."""
+        from dsloader import weaponchoice
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = game.RULE_KITS | game.RULE_SPECIALIZE
+            melee = sorted(k for k in restrict.PSIONICIST_KINDS if k in kits.MELEE_KINDS)
+            for race, allowed, want in ((8, melee + [kits.CHATKCHA], kits.CHATKCHA), (1, melee, 1)):
+                s = bytearray(sheet((), classes=(12, 0, 0)))
+                s[game.SHEET_RACE], s[0x43] = race, 2
+                with self.subTest(race=race):
+                    self.assertEqual(weaponchoice.kinds_for(bytes(s), allowed), [want + 1, 0, 0, 0])
+        finally:
+            game.RULES_IN_FORCE = old
 
     def test_myrmidon_keeps_its_second(self):
         """A Myrmidon (kits on) keeps a second kind marked; another fighter doesn't."""

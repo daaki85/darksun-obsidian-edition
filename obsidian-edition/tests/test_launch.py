@@ -210,6 +210,36 @@ class LaunchTests(unittest.TestCase):
             finally:
                 launch.SETTINGS = saved_path
 
+    def test_a_locked_settings_file_is_never_saved_over(self):
+        """settings.json there but not readable for now (Windows: held by an antivirus or a
+        backup): a plain read gives no settings, but a read to change and save raises after a few
+        tries, so the file is never replaced by the change alone; a missing file is no settings."""
+        import builtins
+        import json
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                launch.update_settings({"combat_log_level": "short"})  # (no file yet: made)
+                launch.save_settings({"game_dir": "C:\\GOG", "dust": False})
+                real_open = builtins.open
+
+                def locked(path, *args, **kwargs):
+                    if path == launch.SETTINGS and (not args or "r" in args[0]):
+                        raise PermissionError(13, "in use", path)
+                    return real_open(path, *args, **kwargs)
+                with mock.patch("builtins.open", locked), mock.patch("time.sleep"):
+                    self.assertEqual(launch.load_settings(), {})
+                    with self.assertRaises(OSError):
+                        launch.update_settings({"pickpocketed": ["x@1"]})
+                    with self.assertRaises(OSError):
+                        launch.add_learned_speakers({5: "Tarkon"})
+                with open(launch.SETTINGS) as f:
+                    self.assertEqual(json.load(f)["game_dir"], "C:\\GOG")
+            finally:
+                launch.SETTINGS = saved_path
+
     def test_game_message(self):
         """DSCLOG's GAMEMSG.BIN: the text the game wrote as it quit, and far returns on its stack
         as places in DSUN.EXE."""

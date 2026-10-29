@@ -149,20 +149,32 @@ def upgrade_settings(settings: dict) -> bool:
 SETTINGS_LOCK = threading.RLock()
 
 
-def load_settings() -> dict:
+def load_settings(strict: bool = False) -> dict:
+    """settings.json as a dict ({} if there is none). STRICT, for a read that is changed and saved
+    again: a file that is there but can't be read now (Windows: open elsewhere for a moment, an
+    antivirus or a backup) is tried again, and then raises OSError rather than read as empty, so
+    the save after it can't put just the change in place of everything."""
     with SETTINGS_LOCK:
-        try:
-            with open(SETTINGS, encoding="utf-8") as f:
-                settings = json.load(f)
-        except OSError:
-            return {}
-        except ValueError:
-            # (unreadable: kept aside as settings.json.bad, so the next save can't lose what it held)
+        for attempt in range(5):
             try:
-                os.replace(SETTINGS, SETTINGS + ".bad")
+                with open(SETTINGS, encoding="utf-8") as f:
+                    settings = json.load(f)
+                break
+            except FileNotFoundError:
+                return {}
             except OSError:
-                pass
-            return {}
+                if not strict:
+                    return {}
+                if attempt == 4:
+                    raise
+                time.sleep(0.05)
+            except ValueError:
+                # (unreadable: kept aside as settings.json.bad, so the next save can't lose what it held)
+                try:
+                    os.replace(SETTINGS, SETTINGS + ".bad")
+                except OSError:
+                    pass
+                return {}
         if not isinstance(settings, dict):
             return {}
         if upgrade_settings(settings):
@@ -195,7 +207,7 @@ def save_settings(settings: dict) -> None:
 def update_settings(changes: dict) -> dict:
     """settings.json with CHANGES made, read and written as one step; the settings as saved."""
     with SETTINGS_LOCK:
-        settings = load_settings()
+        settings = load_settings(strict=True)
         settings.update(changes)
         save_settings(settings)
         return settings
@@ -214,7 +226,7 @@ def set_speaker_name(portrait: int, name: str) -> None:
 
 
 def _set_speaker_name(portrait: int, name: str) -> None:
-    settings = load_settings()
+    settings = load_settings(strict=True)
     names = settings.setdefault("speakers", {})
     if name:
         names[str(portrait)] = name
@@ -241,16 +253,17 @@ def set_pickpocketed(entries: List[str]) -> None:
 
 def add_learned_speakers(learned: Dict[int, str]) -> None:
     with SETTINGS_LOCK:
-        settings = load_settings()
+        settings = load_settings(strict=True)
         settings.setdefault("speakers_learned", {}).update({str(k): v for k, v in learned.items()})
         save_settings(settings)
 
 
 def find_game_dir(given: Optional[str] = None) -> Optional[str]:
-    """The game folder: `given`, the one remembered from last time, or a usual GOG location."""
+    """The game folder, as a full path (DOSBox runs in its DOSBOX folder, so a relative one would
+    point elsewhere): `given`, the one remembered from last time, or a usual GOG location."""
     for folder in [given, load_settings().get("game_dir")] + candidate_dirs():
         if folder and is_game_dir(folder):
-            return folder
+            return os.path.abspath(folder)
     return None
 
 
@@ -625,6 +638,7 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
     """Start the game. Returns DOSBox's process (or the recompiled program's) and, if the dice log
     can't run, why."""
     global STARTED
+    game_dir = os.path.abspath(game_dir)  # (DOSBox runs in its own folder: a relative path would miss)
     program = recompiled_program()
     if program is not None:
         if not _find_file(game_dir, "DSUN.EXE"):
