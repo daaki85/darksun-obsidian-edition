@@ -17,6 +17,7 @@ Lands (DSUN.EXE, 611408 bytes).
 """
 
 import itertools
+import os
 import random
 import re
 import struct
@@ -512,6 +513,7 @@ class DiceLog:
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
         self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
         self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
+        self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
@@ -591,7 +593,18 @@ class DiceLog:
         self._swap_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SWAP_SEQ, 2))[0]
         self.last_seq = struct.unpack("<H", self.guest.read(hdr + 8, 2))[0]
         self._effects = None
+        self._forget_partial_rolls()
         return "Dice log attached."
+
+    def _forget_partial_rolls(self) -> None:
+        """Rolls half seen dropped: an NdS roll's dice collected so far, and the natural d20s kept
+        for a save, a Static contest or a psionic defence. Each is keyed by where in the game it
+        was rolled, so one whose rest was missed (the ring overran) or that began before an attach
+        would be finished by the next roll from the same place, a stale die in its total."""
+        self._dice.clear()
+        self._save_rolls.clear()
+        self._static_rolls.clear()
+        self._defence_rolls.clear()
 
     def set_record_everything(self, record_everything: bool) -> None:
         """Record every rand() call, or (the default) only the ones shaped like rolls."""
@@ -1097,10 +1110,35 @@ class DiceLog:
     def _lines(self, show_all: bool, now: Optional[float]) -> List[str]:
         now = time.monotonic() if now is None else now
         out: List[str] = []
+        missed = self.missed
         entries = self.poll()
+        if self.missed > missed:  # (rolls lost from the ring: none half seen may be finished by others)
+            self._forget_partial_rolls()
         self.count_charges(entries)
         for e in entries:
             out += self.describe(e, show_all, now)
+        try:  # (what fails after this is said once; the rolls already read are never lost with it)
+            out += self._after_rolls(show_all, now)
+        except Exception as e:
+            out += self._error_once(e)
+        return self._lines_end(out, now)
+
+    def _error_once(self, err: Exception) -> List[str]:
+        """A line for an error the dice log's pass didn't expect, once for each kind (with where it
+        came from, for a report); the pass's other lines are kept and the next pass goes on."""
+        import traceback
+        key = (type(err).__name__, str(err))
+        if key in self._errors_said:
+            return []
+        self._errors_said.add(key)
+        where = traceback.extract_tb(err.__traceback__)[-1]
+        return [f"Loader error in the dice log: {type(err).__name__}: {err} "
+                f"({os.path.basename(where.filename)}:{where.lineno}); it carries on"]
+
+    def _after_rolls(self, show_all: bool, now: float) -> List[str]:
+        """The pass's lines after the rolls: answers to the game, hit points and effects, the
+        party's items, initiative and turns, the creation screen."""
+        out: List[str] = []
         self._forget_undone_picks()
         self._kit_tick(now)
         self._answer_stats()
@@ -1133,7 +1171,8 @@ class DiceLog:
                         out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
                 except itemgate.ItemsBusy:
                     pass
-                itemgate.release(self.game)
+                finally:
+                    itemgate.release(self.game)
                 out += self._arena_ring(now)
                 out += self._drawn(now)
                 self._kalzith_sold_out()
@@ -1149,6 +1188,10 @@ class DiceLog:
                 and now - self._creation_hp_at >= CREATION_HP_WAIT:
             out += self.creation_lines()
         out += self.flush(now)
+        return out
+
+    def _lines_end(self, out: List[str], now: float) -> List[str]:
+        """The pass's last lines (writes refused, rolls missed), the panel told, and the lines."""
         refused = getattr(self.guest, "refused", None)
         if refused:
             out += [f"(The Loader stopped one of its own writes over the game's memory: {r}. "
@@ -1159,10 +1202,13 @@ class DiceLog:
             if now - self._tries_at > CREATION_TUMBLE:
                 out.append(f"({self.missed} rolls came too fast to record)")
             self.missed = 0
-        if self.combat_log and out:
-            self._panel_lines(out, now)
-        if self.combat_log:
-            self._panel_input(now)
+        try:
+            if self.combat_log and out:
+                self._panel_lines(out, now)
+            if self.combat_log:
+                self._panel_input(now)
+        except Exception as e:
+            out += self._error_once(e)
         self.itemwatch.remember(out)  # (the context an item report carries)
         return out
 

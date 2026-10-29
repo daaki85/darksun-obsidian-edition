@@ -1840,3 +1840,42 @@ class CreationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PassTests(unittest.TestCase):
+    """A pass of the dice log (DiceLog.lines) keeps what it has read whatever fails after it."""
+
+    def test_rolls_kept_when_a_later_step_fails(self):
+        """An error after the rolls are described (hit points, effects, turns): the rolls' lines
+        are returned all the same, with one line saying so; the same error again is not said
+        again."""
+        from unittest import mock
+        log = make_game()
+        log.combat_log = False
+        with mock.patch.object(log, "poll", return_value=["e"]), \
+                mock.patch.object(log, "count_charges"), \
+                mock.patch.object(log, "describe", return_value=["Dag attacks: HIT"]), \
+                mock.patch.object(log, "_after_rolls", side_effect=KeyError("gone")):
+            first = log.lines(now=1.0)
+            second = log.lines(now=2.0)
+        self.assertEqual(first[0], "Dag attacks: HIT")
+        self.assertTrue(first[1].startswith("Loader error in the dice log: KeyError"))
+        self.assertEqual(second, ["Dag attacks: HIT"])
+
+    def test_half_seen_rolls_dropped_when_rolls_are_missed(self):
+        """Dice of an NdS roll collected so far, and a save's natural d20, dropped when the ring
+        overran (rolls missed): the next roll from that place starts afresh."""
+        from unittest import mock
+        log = make_game()
+        log.combat_log = False
+        log._dice[(1, 2, 3, 4)] = [5]
+        log._save_rolls[(1, 2)] = 17
+
+        def missed():
+            log.missed += 3
+            return []
+        with mock.patch.object(log, "poll", side_effect=missed), \
+                mock.patch.object(log, "_after_rolls", return_value=[]):
+            out = log.lines(now=100.0)
+        self.assertEqual((log._dice, log._save_rolls), ({}, {}))
+        self.assertIn("(3 rolls came too fast to record)", out)

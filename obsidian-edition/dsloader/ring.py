@@ -160,6 +160,12 @@ def give_ring(gd: GameData) -> Optional[str]:
         item = it.word(FREE_ITEMS)
         if cell is None or item >= game.NO_ITEM:
             continue
+        if pickpocket.party_list(gd, it, member, cell) is None:
+            continue  # (no backpack list to be had: the record left free, not lost, as npcitems.add_to)
+        it = Items(gd)  # (read again: the list may be new)
+        item = it.word(FREE_ITEMS)
+        if item >= game.NO_ITEM:
+            continue
         gd.guest.write(gd.ds * 16 + FREE_ITEMS, it.item(item)[game.ITEM_NEXT:game.ITEM_NEXT + 2])
         took(item, "the Ring +1")
         gd.guest.write(it.items + item * game.ITEM_SIZE, RING)

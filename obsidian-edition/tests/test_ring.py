@@ -50,6 +50,16 @@ class SearchTests(unittest.TestCase):
         self.assertEqual(bytes(m[ITEMS + 60 * game.ITEM_SIZE:ITEMS + 61 * game.ITEM_SIZE]), bytes(rec))
         self.assertFalse(ring.ring_needed(log.game))
 
+    def test_no_list_keeps_the_record_free(self):
+        """No backpack list to be had (no free object to make one): no ring given, and the item
+        record stays first on the free list, not taken and lost."""
+        log = arena()
+        m = log.guest.mem
+        struct.pack_into("<H", m, DS * 16 + ring.FREE_THINGS, ring.THING_COUNT)  # (no free object)
+        self.assertIsNone(ring.give_ring(log.game))
+        self.assertEqual(word(m, DS * 16 + ring.FREE_ITEMS), 60)
+        self.assertEqual(struct.unpack_from("<h", m, ITEMS + 60 * game.ITEM_SIZE + game.ITEM_NEXT)[0], 61)
+
     def test_party_has_it(self):
         """Dag carries a Ring +1 already (his list starting at object 401)."""
         log = arena()
