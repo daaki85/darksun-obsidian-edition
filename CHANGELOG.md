@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request (not opened yet)
+## Pull request #79 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/79))
 
 Obsidian Edition 2.12.4 ([release notes](release-notes/v2.12.4.md)): Dark Sun Recompiled, from pull
 request #78, in a release.
