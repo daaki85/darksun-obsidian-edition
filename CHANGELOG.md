@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request (not opened yet)
+## Pull request #78 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/78))
 
 **Dark Sun Recompiled**
 - The Loader also reads the game when it runs as
@@ -36,6 +36,10 @@ notes](PATCH-NOTES.md).
     change.
   - Tests: `test_the_games_dos_program_is_not_it`, `test_started_and_closed_lines`,
     `test_recompiled_mark_across_two_chunks`; the stand-in programs written as Windows programs.
+
+## Pull request #77 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/77))
+
+- The changelog names pull request #76.
 
 ## Pull request #76 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/76))
 
