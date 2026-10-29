@@ -24,6 +24,7 @@ BIOS_DATE = b"01/01/92"
 # memory and leaves its name at F000:FFC0; DSCLOG's ring sits over the date there.
 RECOMPILED_ADDR = 0xFFFC0
 RECOMPILED_MARK = b"DARKSUN-RECOMPILED"
+_OVERLAP = max(len(BIOS_DATE), len(RECOMPILED_MARK))  # (a mark across two chunks found in the first)
 MIN_GUEST_SIZE = 0x100000  # 1 MB: the date string alone lives just below this
 _CHUNK = 4 * 1024 * 1024
 
@@ -109,7 +110,7 @@ def locate(proc: ProcessMemory, base: Optional[int] = None) -> GuestMemory:
         for offset in range(0, region.size, _CHUNK):
             start = region.start + offset
             try:
-                chunk = proc.read(start, min(_CHUNK + len(BIOS_DATE), region.end - start))
+                chunk = proc.read(start, min(_CHUNK + _OVERLAP, region.end - start))
             except ProcessError:
                 continue
             for mark, at in ((BIOS_DATE, BIOS_DATE_ADDR), (RECOMPILED_MARK, RECOMPILED_ADDR)):
@@ -125,4 +126,4 @@ def locate(proc: ProcessMemory, base: Optional[int] = None) -> GuestMemory:
                         return GuestMemory(proc, candidate, region.end - candidate)
     raise GuestMemoryError(
         "Could not find DOSBox guest RAM (no BIOS signature found). "
-        "Is this DOSBox, and has it finished starting?")
+        "Is this DOSBox (or Dark Sun Recompiled), and has it finished starting?")

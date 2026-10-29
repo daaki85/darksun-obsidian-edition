@@ -808,7 +808,8 @@ class Viewer:
         if problem:
             self.status.set(f"Starting the game without the dice log: it can't run with this copy ({problem}).")
         else:
-            self.status.set(f"Starting Shattered Lands from {game_dir}...")
+            self.status.set(launch.started_line(game_dir))
+        self._append_dice([launch.started_line(game_dir)])  # (DOSBox or Dark Sun Recompiled: which runs)
         self.next_try = time.monotonic() + RETRY_SECONDS
         self._start_state()
 

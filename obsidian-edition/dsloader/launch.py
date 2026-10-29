@@ -74,9 +74,27 @@ def is_game_dir(folder: str) -> bool:
 RECOMPILED_EXE = "dsun.exe" if os.name == "nt" else "dsun"
 
 
+def native_program(path: str) -> bool:
+    """Whether PATH is a program of the computer's own (a Windows PE, or an ELF): not the game's DOS
+    DSUN.EXE, which Windows, with no case in its file names, also finds as dsun.exe (a mod unzipped
+    in the game's folder has it beside it)."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(64)
+            if head[:4] == b"\x7fELF":
+                return True
+            if head[:2] != b"MZ" or len(head) < 64:
+                return False
+            f.seek(int.from_bytes(head[0x3C:0x40], "little"))
+            return f.read(4) == b"PE\0\0"
+    except (OSError, ValueError):
+        return False
+
+
 def found_recompiled_program(here: str = HERE) -> Optional[str]:
     """Dark Sun Recompiled's program where a player would put it: in this folder, in a folder
-    named after it, or beside this folder; None when there is none."""
+    named after it, or beside this folder; None when there is none (a file of its name that is no
+    program of the computer's own, the game's DOS DSUN.EXE above all, isn't it: native_program)."""
     import glob as _glob
     parent = os.path.dirname(here)
     candidates = [os.path.join(here, "recompiled", RECOMPILED_EXE), os.path.join(here, RECOMPILED_EXE),
@@ -85,7 +103,7 @@ def found_recompiled_program(here: str = HERE) -> Optional[str]:
     candidates += sorted(_glob.glob(os.path.join(parent, "darksun-recompiled*", RECOMPILED_EXE)))
     candidates += sorted(_glob.glob(os.path.join(parent, "darksun-recompiled*", "windows", RECOMPILED_EXE)))
     for c in candidates:
-        if os.path.isfile(c):
+        if os.path.isfile(c) and native_program(c):
             return c
     return None
 
@@ -97,7 +115,7 @@ def recompiled_program(settings: Optional[dict] = None) -> Optional[str]:
     path = (load_settings() if settings is None else settings).get("recompiled")
     if path is False:
         return None
-    if isinstance(path, str) and path and os.path.isfile(path):
+    if isinstance(path, str) and path and os.path.isfile(path) and native_program(path):
         return path
     return found_recompiled_program()
 
@@ -431,17 +449,30 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
 CRASH_CODES = {0xC0000005: "an access violation", 0xC00000FD: "a stack overflow", 0xC0000409: "a stack buffer overrun"}
 
 
+# what launch() last started: the recompiled program's path, or None for DOSBox (closed_line,
+# started_line: by what was started, not by what the settings say now)
+STARTED: Optional[str] = None
+
+
+def started_line(game_dir: str) -> str:
+    """The log's line for the game started from GAME_DIR: in DOSBox, or as Dark Sun Recompiled
+    (which program), so a player sees which one runs."""
+    if STARTED:
+        return f"Starting Shattered Lands from {game_dir} as Dark Sun Recompiled ({STARTED})."
+    return f"Starting Shattered Lands from {game_dir} in DOSBox."
+
+
 def closed_line(code: int) -> str:
-    """The log's line for DOSBox (or the recompiled program) closing with exit code CODE."""
-    if recompiled_program() is not None:
-        return "The game closed." if code == 0 else f"The game closed with exit code {code}."
+    """The log's line for DOSBox (or the recompiled program, if that was started) closing with exit
+    code CODE."""
+    name = "Dark Sun Recompiled" if STARTED else "DOSBox"
     if code == 0:
-        return "DOSBox closed."
+        return f"{name} closed."
     known = CRASH_CODES.get(code & 0xFFFFFFFF)
     if known:
-        return (f"DOSBox closed: it crashed ({known}, code {code & 0xFFFFFFFF:08X}h). That is DOSBox "
+        return (f"{name} closed: it crashed ({known}, code {code & 0xFFFFFFFF:08X}h). That is {name} "
                 "itself failing, not the game stopping with an error.")
-    return f"DOSBox closed with exit code {code}."
+    return f"{name} closed with exit code {code}."
 
 
 # GAMEEND.COM, run after the game, notes in GAMEEND.TXT (in DOS_DIR) how the game stopped with an
@@ -593,6 +624,7 @@ def write_crash_report(text: str, now: float, folder: str = CRASH_DIR, kind: str
 def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
     """Start the game. Returns DOSBox's process (or the recompiled program's) and, if the dice log
     can't run, why."""
+    global STARTED
     program = recompiled_program()
     if program is not None:
         if not _find_file(game_dir, "DSUN.EXE"):
@@ -605,7 +637,10 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
                 os.remove(old)
             except OSError:
                 pass
-        return subprocess.Popen(recompiled_command(program, game_dir), cwd=os.path.dirname(os.path.abspath(program))), None
+        proc = subprocess.Popen(recompiled_command(program, game_dir), cwd=os.path.dirname(os.path.abspath(program)))
+        STARTED = program
+        return proc, None
+    STARTED = None
     dosbox_dir = _find_file(game_dir, "DOSBOX")
     settings_conf = _find_file(game_dir, "dosbox_darksun.conf") or _find_file(
         os.path.join(game_dir, "__support", "app"), "dosbox_darksun.conf")

@@ -246,8 +246,8 @@ def _game_dir(args) -> str:
 def cmd_launch(args) -> None:
     from . import launch
     game_dir = _game_dir(args)
-    print(f"Starting Shattered Lands from {game_dir}")
     dosbox, problem = launch.launch(game_dir)
+    print(launch.started_line(game_dir))
     if problem:
         print(f"The dice log can't run with this copy of the game ({problem}); starting the game without it.")
     from .viewer import run
@@ -288,7 +288,7 @@ def cmd_play(args) -> None:
             tell(f"The in-game additions can't run with this copy of the game ({problem}). "
                  "The game starts without them.")
             return
-        note(f"Started Shattered Lands from {game_dir}")
+        note(launch.started_line(game_dir))
         settings = launch.load_settings()
         guest = None
         while guest is None and dosbox.poll() is None:  # DOSBox takes a moment to start
