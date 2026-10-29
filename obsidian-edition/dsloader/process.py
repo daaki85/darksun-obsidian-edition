@@ -29,7 +29,8 @@ class Region(NamedTuple):
 
 def find_dosbox_processes() -> List[Tuple[int, str]]:
     """(pid, executable name) for every running process that looks like DOSBox."""
-    return [(pid, name) for pid, name in list_processes() if "dosbox" in name.lower()]
+    return [(pid, name) for pid, name in list_processes()
+            if "dosbox" in name.lower() or name.lower().startswith("dsun")]  # (dsun: Dark Sun Recompiled)
 
 
 if sys.platform == "win32":

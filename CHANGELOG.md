@@ -6,6 +6,37 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Dark Sun Recompiled**
+- The Loader also reads the game when it runs as
+  [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled) (a
+  `dsun` process; its memory found by the BIOS date, or by the mark
+  `DARKSUN-RECOMPILED` at F000:FFC0 where a helper's ring covers the date).
+- The Loader can start that program instead of DOSBox: `dsloader launch
+  --recompiled <path to dsun.exe>` remembers it (`--dosbox` goes back), and
+  `launch`, `play` and the window's **Start the game** then run it with the
+  game's folder and the mod's `dos` folder (README, "Other ways to start").
+- **Fixes from a review** (after main, with 2.12.2, was merged in):
+  - The game's own DOS `DSUN.EXE` is never taken for the program: Windows, with no case in its
+    file names, found it as the `dsun.exe` beside the mod's folder when the mod was unzipped in
+    the game's, and the Loader then started it in place of DOSBox and failed. A program found or
+    named must be one of the computer's own (a Windows PE or an ELF: `launch.native_program`).
+  - Which one runs is said as the game starts, in the dice log (and `launch`'s and `play`'s output):
+    `Starting Shattered Lands from ... in DOSBox` or `... as Dark Sun Recompiled (its path)`
+    (`launch.started_line`).
+  - The closing line goes by what was started (`launch.STARTED`), not by the settings at the
+    time, and names Dark Sun Recompiled with Windows' crash codes as DOSBox's are; it no longer
+    looks for the program at all.
+  - The search for the game's memory reads its 4 MB chunks overlapping by the longest mark (18
+    bytes, `DARKSUN-RECOMPILED`), not the BIOS date's 8, so the mark is found across two chunks;
+    its error names Dark Sun Recompiled too.
+  - `--recompiled` and `--dosbox` save with `launch.update_settings`, as the rest of the Loader
+    has since 2.12.3, so a settings file locked for a moment is never saved over with only that
+    change.
+  - Tests: `test_the_games_dos_program_is_not_it`, `test_started_and_closed_lines`,
+    `test_recompiled_mark_across_two_chunks`; the stand-in programs written as Windows programs.
+
 ## Pull request #76 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/76))
 
 Obsidian Edition 2.12.3 ([release notes](release-notes/v2.12.3.md)).

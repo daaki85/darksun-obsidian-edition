@@ -211,6 +211,14 @@ def cmd_dicelog(args) -> None:
 def _game_dir(args) -> str:
     """The game folder: remembered, found, or asked for (and then remembered)."""
     from . import launch
+    # (the recompiled program first: with it the game folder needs no DOSBox)
+    if getattr(args, "recompiled", None):
+        program = os.path.abspath(args.recompiled)
+        if not os.path.isfile(program):
+            raise CliError(f"{program} is not there; give the path of Dark Sun Recompiled's program (dsun.exe).")
+        launch.update_settings({"recompiled": program})
+    elif getattr(args, "dosbox", False):
+        launch.update_settings({"recompiled": False})   # (also not the one found beside the mod)
     game_dir = launch.find_game_dir(args.game_dir)
     if game_dir is None:
         import tkinter
@@ -238,8 +246,8 @@ def _game_dir(args) -> str:
 def cmd_launch(args) -> None:
     from . import launch
     game_dir = _game_dir(args)
-    print(f"Starting Shattered Lands from {game_dir}")
     dosbox, problem = launch.launch(game_dir)
+    print(launch.started_line(game_dir))
     if problem:
         print(f"The dice log can't run with this copy of the game ({problem}); starting the game without it.")
     from .viewer import run
@@ -281,7 +289,7 @@ def cmd_play(args) -> None:
             tell(f"The in-game additions can't run with this copy of the game ({problem}). "
                  "The game starts without them.")
             return
-        note(f"Started Shattered Lands from {game_dir}")
+        note(launch.started_line(game_dir))
         settings = launch.load_settings()
         guest = None
         while guest is None and dosbox.poll() is None:  # DOSBox takes a moment to start
@@ -378,6 +386,10 @@ def main(argv=None) -> int:
     s.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=None,
                    help="start DOSBox full screen, as GOG does (remembered; --windowed undoes it)")
     s.add_argument("--windowed", dest="fullscreen", action="store_false")
+    s.add_argument("--recompiled", metavar="PROGRAM",
+                   help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; "
+                        "one unzipped into or beside this folder is found by itself; --dosbox undoes it)")
+    s.add_argument("--dosbox", action="store_true", help="back to starting the game in DOSBox")
     s.set_defaults(func=cmd_launch)
 
     s = sub.add_parser("play", help="start the game with the in-game rolls and stats, no window of our own")
@@ -388,6 +400,10 @@ def main(argv=None) -> int:
     s.add_argument("--fullscreen", dest="fullscreen", action="store_true", default=None,
                    help="start DOSBox full screen, as GOG does (remembered; --windowed undoes it)")
     s.add_argument("--windowed", dest="fullscreen", action="store_false")
+    s.add_argument("--recompiled", metavar="PROGRAM",
+                   help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; "
+                        "one unzipped into or beside this folder is found by itself; --dosbox undoes it)")
+    s.add_argument("--dosbox", action="store_true", help="back to starting the game in DOSBox")
     s.set_defaults(func=cmd_play)
 
     s = sub.add_parser("dicelog", parents=[common], help="print the game's dice rolls as they happen")

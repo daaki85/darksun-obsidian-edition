@@ -18,7 +18,87 @@ def make_game(root: str, cloud_saves: bool) -> str:
     return game
 
 
+def native(path: str) -> None:
+    """A stand-in for a Windows program: an MZ header pointing at a PE signature."""
+    head = bytearray(0x48)
+    head[:2], head[0x3C:0x40], head[0x40:0x44] = b"MZ", (0x40).to_bytes(4, "little"), b"PE\0\0"
+    with open(path, "wb") as f:
+        f.write(head)
+
+
 class LaunchTests(unittest.TestCase):
+    def test_the_games_dos_program_is_not_it(self):
+        """The game's own DSUN.EXE (DOS: an MZ header, no PE) beside the mod's folder, as when the
+        mod is unzipped in the game's folder (Windows finds it as dsun.exe), is not the recompiled
+        program; a Windows program of that name is; and a named path that is no program is passed
+        over."""
+        with tempfile.TemporaryDirectory() as d:
+            mod = os.path.join(d, "mod")
+            os.mkdir(mod)
+            beside = os.path.join(d, launch.RECOMPILED_EXE)
+            with open(beside, "wb") as f:
+                f.write(b"MZ" + bytes(0x3A) + (0x40).to_bytes(4, "little") + b"\x0e\x1f\xba\x0e")
+            self.assertFalse(launch.native_program(beside))
+            self.assertIsNone(launch.found_recompiled_program(mod))
+            native(beside)
+            self.assertTrue(launch.native_program(beside))
+            self.assertEqual(launch.found_recompiled_program(mod), beside)
+            dos = os.path.join(d, "DSUN.EXE")
+            with open(dos, "wb") as f:
+                f.write(b"MZ" + bytes(0x60))
+            self.assertNotEqual(launch.recompiled_program({"recompiled": dos}), dos)
+
+    def test_started_and_closed_lines(self):
+        """The log says which runs, and names it when it closes, by what was started."""
+        saved = launch.STARTED
+        try:
+            launch.STARTED = None
+            self.assertIn("in DOSBox", launch.started_line("G"))
+            self.assertEqual(launch.closed_line(0), "DOSBox closed.")
+            launch.STARTED = "C:/dsr/dsun.exe"
+            self.assertIn("as Dark Sun Recompiled (C:/dsr/dsun.exe)", launch.started_line("G"))
+            self.assertEqual(launch.closed_line(0), "Dark Sun Recompiled closed.")
+            self.assertEqual(launch.closed_line(3), "Dark Sun Recompiled closed with exit code 3.")
+            self.assertIn("Dark Sun Recompiled closed: it crashed (an access violation", launch.closed_line(0xC0000005))
+        finally:
+            launch.STARTED = saved
+
+    def test_the_recompiled_program_instead_of_dosbox(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, "recompiled"))
+            program = os.path.join(d, "recompiled", "dsun.exe")   # (not DSUN.EXE: the game's own)
+            native(program)
+            game = os.path.join(d, "game")
+            os.mkdir(game)
+            open(os.path.join(game, "DSUN.EXE"), "w").close()      # the data files, no DOSBox
+            settings = {"recompiled": program}
+            self.assertEqual(launch.recompiled_program(settings), program)
+            self.assertIsNone(launch.recompiled_program({"recompiled": False}))     # --dosbox
+            self.assertEqual(launch.recompiled_program({"recompiled": os.path.join(d, "gone.exe")}),
+                             launch.found_recompiled_program())                       # a bad path: whatever is beside the mod
+            # the program found where a player would unzip it: in the mod's folder (recompiled\),
+            # or beside the mod's folder
+            mod = os.path.join(d, "mod")
+            os.makedirs(os.path.join(mod, "recompiled"))
+            self.assertIsNone(launch.found_recompiled_program(mod))
+            native(os.path.join(mod, "recompiled", launch.RECOMPILED_EXE))
+            self.assertEqual(launch.found_recompiled_program(mod), os.path.join(mod, "recompiled", launch.RECOMPILED_EXE))
+            os.remove(os.path.join(mod, "recompiled", launch.RECOMPILED_EXE))
+            os.makedirs(os.path.join(d, "darksun-recompiled-windows-x64", "windows"))
+            beside = os.path.join(d, "darksun-recompiled-windows-x64", "windows", launch.RECOMPILED_EXE)
+            native(beside)
+            self.assertEqual(launch.found_recompiled_program(mod), beside)
+            self.assertEqual(launch.recompiled_command(program, game),
+                             [program, "--game", game, "--cd", launch.DOS_DIR])
+            saved = launch.SETTINGS
+            try:
+                launch.SETTINGS = os.path.join(d, "settings.json")
+                launch.save_settings(dict(settings))
+                self.assertTrue(launch.is_game_dir(game))       # DSUN.EXE is enough with the program
+                self.assertFalse(launch.is_game_dir(d))
+            finally:
+                launch.SETTINGS = saved
+
     def test_recognises_the_game_folder(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)
