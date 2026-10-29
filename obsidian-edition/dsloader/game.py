@@ -385,6 +385,9 @@ MATERIALS = ("Wooden", "Bone", "Stone", "Obsidian", "Metal", "Leather")
 NO_MATERIAL = 0x40  # in the type's material byte, with material 0: things with none (rings, bodies)
 # Dark Sun's to-hit penalty for non-magical weapons of weaker materials (from the game's code)
 MATERIAL_TO_HIT = {0: -3, 1: -1, 2: -2, 3: -2}
+# ... and to damage (the game's attack and inventory line; checked in DOSBox: a wooden weapon 2 less,
+# bone, stone and obsidian 1 less), for a weapon with no plus whose type isn't marked 80h
+MATERIAL_DAMAGE = {0: -2, 1: -1, 2: -1, 3: -1}
 # The character sheet's saving throws, in order (the game's own grouping: Fireball, for
 # one, is saved against with petrification/polymorph)
 SAVE_NAMES = {1: "paralysis/poison/death", 2: "rod/staff/wand", 3: "petrification/polymorph",

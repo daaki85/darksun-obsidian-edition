@@ -313,6 +313,21 @@ class AttackTests(unittest.TestCase):
         self.assertEqual(log.describe(dice[1]),
                          ["  Dag hits Mountain Stalker for 20: 2d8 = [2 + 5] +1 weapon +12 STR 24"])
 
+    def test_weapon_damage_weak_material(self):
+        """A non-magical bone weapon does 1 less (game.MATERIAL_DAMAGE): its damage line names it,
+        not as the weapon's own; with a plus, none."""
+        log = make_game()
+        m = log.guest.mem
+        typ = ITEM_TYPES + 7 * game.ITEM_TYPE_SIZE
+        m[typ + 8], m[typ + 0x0C], m[typ + 0x0D] = 1, 8, 1  # (bone, 1d8)
+        m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_PLUS] = 0
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1)  # (item 5 of type 7 at [BP+12h], [BP+14h])
+        die = lambda bonus: entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, bonus), parent,
+                                  (0x29, 0, 0, 0), parent_code=dicelog.WEAPON_DAMAGE_RETURN)
+        self.assertEqual(log.describe(die(-1)), ["  Dag hits Mountain Stalker for 16: 1d8 = [5] -1 bone +12 STR 24"])
+        m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_PLUS] = 1
+        self.assertEqual(log.describe(die(1)), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
+
     def test_look_box_describes_the_monster(self):
         log = make_game()
         m = log.guest.mem

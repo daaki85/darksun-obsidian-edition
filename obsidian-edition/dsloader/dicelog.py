@@ -30,7 +30,7 @@ from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, 
 
 from . import bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
-                   EFFECT_RULES, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
+                   EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
 from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
@@ -594,6 +594,7 @@ class DiceLog:
         self.last_seq = struct.unpack("<H", self.guest.read(hdr + 8, 2))[0]
         self._effects = None
         self._forget_partial_rolls()
+        icons.COPY_OPEN = False  # (a game started anew: its copy not open until DSCLOG says so)
         return "Dice log attached."
 
     def _forget_partial_rolls(self) -> None:
@@ -1275,7 +1276,8 @@ class DiceLog:
             out += [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)]
             out += heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr)  # (the game's memory: a crash report's, and a word when it runs low)
             out += self._ring_search()
-            icons.repaint(self.game, icons.ready(self.game, self.tsr_hdr))  # the items' own icons
+            icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)
+            icons.repaint(self.game, icons.COPY_OPEN)  # the items' own icons
         except (struct.error, IndexError, ValueError):  # (itemgate.ItemsBusy too: tried in a later pass)
             return out
         finally:
@@ -1488,6 +1490,7 @@ class DiceLog:
             itemgate.hold(self.game)  # (ItemsBusy: the search is answered in a later pass)
         self._swap_seq = seq
         if needed and fired:
+            icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)  # (its own icon from the start: icons.fit)
             given = ring.give_ring(self.game)
             itemgate.release(self.game)
             out.append(given or "No one in the party has room for the ring: make room and look at the body again.")
@@ -2417,7 +2420,13 @@ class DiceLog:
         skill = self.weapon_skill(attacker, e.parent_arg(0x14))
         extra = specialize.damage(skill)
         kit_name, _, kit = self._kit_attack(attacker, e.parent_arg(0x14), mode, e.glob[0])
-        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(bonus - extra - kit)} weapon" if bonus - extra - kit else "") \
+        # (a weak material's: game.MATERIAL_DAMAGE, for a real weapon with no plus)
+        weapon = g.weapon(e.parent_arg(0x12), e.parent_arg(0x14)) if e.parent_arg(0x12) is not None else None
+        material = MATERIAL_DAMAGE.get(weapon.material, 0) if weapon and weapon.sides and not weapon.plus \
+            and not weapon.nonmagical_flag else 0
+        own = bonus - extra - kit - material
+        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(own)} weapon" if own else "") \
+            + (f" {signed(material)} {MATERIALS[weapon.material].lower()}" if material else "") \
             + (f" {signed(extra)} {specialize.SKILL_NAMES[skill]}" if extra else "") \
             + (f" {signed(kit)} {kit_name}" if kit else "")
         if skill == specialize.GRAND:
