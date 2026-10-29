@@ -157,6 +157,14 @@ class GamePatchTests(unittest.TestCase):
         wait = next(p for p in gamepatch.PATCHES if p.name == "flip_wait")
         self.assertGreaterEqual(wait.offset, p.offset + len(p.original))
 
+    def test_dam_half(self):
+        """The inventory's "DAM:" line written with its count for one half-attack (a slowed
+        character's "0.5x"): its formatter's no-count test (72AC0h) for 2 halves alone, not 2 or
+        fewer; the jump's target kept."""
+        p = next(p for p in gamepatch.PATCHES if p.name == "dam_half")
+        self.assertEqual((p.offset, p.original, p.replacement),
+                         (0x72AC0, bytes.fromhex("83fa027e55"), bytes.fromhex("83fa027455")))
+
     def test_enter_out_of_the_save_windows_keys(self):
         """The save/load window's key table (Esc, Enter, Up, Down) without Enter, which PROBE_SAVE_PAGE
         then takes."""

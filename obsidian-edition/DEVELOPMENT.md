@@ -1428,6 +1428,21 @@ Character's `[BP-0Ah]`) no more than 2 halves, after every other change to
 the rate (specialization, the kits), so the extra attacks stay with the main
 hand. `GameData.weapon_hits` gives the party view the same.
 
+Haste and Slow come last, in the game itself: after `[BP-8]` is set (and
+`PROBE_ATTACKS` has worked on it), the attack routine (5883Ah) asks a routine
+for the attacker's speed, which reads its effects: 4 for Hasted (effect 22)
+doubles the halves, 1 for Slowed (47) halves them, rounded down; then the
+round's attacks are the halves plus the round's parity, over 2. Checked in
+DOSBox by turning a Hasted effect into Bless (the attacks went back) and one
+into Slowed. The game's DAM lines never did it: `SPEED_HALVES` (`NS_HAS` on
+the two effects) does, last, in `PROBE_DAM_LINE` and `PROBE_MISSILE_LINE`
+(`FRAME_SPEED`: the creature from the routine's `[BP-6]`, its record, over
+3Ah from the creatures' `[1665h]`) and `PROBE_VIEW_DAM` (the character on
+show), whatever the rules; `weapon_hits` does it for the Characters tab. The
+inventory's formatter (72AB1h) wrote no count for 2 halves or fewer, so a
+slowed character's 1 read as one a round: `dam_half` makes its `jng` a `je`
+(72AC3h), and 1 half is `0.5x`. View Character's always has its count.
+
 Rangers and Twin-blades in light armour: the game asks whether the attacker
 is a ranger (the sheet's `+12h`, 200h) before it calls for the DEX
 adjustment, and gives a ranger none (DSUN.EXE 5961Fh). With the rule that

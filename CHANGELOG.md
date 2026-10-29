@@ -8,6 +8,48 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Fixed** (from a code audit, and Haste and Slow)
+- **Haste and Slow show in the attacks a round.** A fight's attack doubles a hasted character's
+  attacks and halves a slowed one's (rounded down; DSUN.EXE 5883Ah, from effects 22 and 47, after
+  every other step), but neither the game's DAM lines nor the Loader's Characters tab did. Checked
+  in DOSBox: hasted, Gerakis 5 attacks a turn (2.5 a round: his sword's 3/2 and the gythka's one,
+  each doubled), K'ratchek 10, Cermak and Cilla 2; Haste turned to Bless, Gerakis back to 3, 2, 3,
+  2. Now `GameData.weapon_hits` doubles or halves each weapon's rate last, and DSCLOG's
+  `PROBE_DAM_LINE`, `PROBE_MISSILE_LINE` and `PROBE_VIEW_DAM` do the same (`SPEED_HALVES`,
+  `FRAME_SPEED`; whatever the rules, as the game's attack). The inventory's line had no count for
+  one half-attack (`cmp dx,2 / jng` at 72AC0h) and showed it as one a round: made `je` (`gamepatch`
+  `dam_half`), so a slowed character's reads `0.5x1D8+6`. Tests: `test_hasted_and_slowed`,
+  `test_dam_half`.
+- **K'ratchek's second chatkcha throw a round shows with weapon specialization on.**
+  `weapon_hits` put the item type where the weapon kind was, so the thri-kreen's own throw was
+  never counted on the Characters tab (the game always threw it). Test:
+  `test_kratcheks_chatkcha_with_specialization`.
+- **The no-window Play mode carries on after an error,** as the window has since 2.12.1: any error
+  in a pass stopped the dice log, the in-game combat log and the item checks for the session, and
+  DOSBox closing mid-read (`ProcessError`, not an `OSError`) skipped its crash report. Now a read of
+  a closed DOSBox counts as a disconnect, and other errors are written to `play.log` once each.
+- **settings.json is never replaced by a single change.** A read that failed for any reason (a
+  Windows lock from an antivirus or a backup) gave empty settings, and `update_settings` then saved
+  just its change, losing every option. Reads made to change and save the file (`load_settings(
+  strict=True)`) now retry and then raise; only a missing file is empty settings. The Options tab
+  says so if a save can't be made. Test: `test_a_locked_settings_file_is_never_saved_over`.
+- **A roll half seen no longer spoils the next.** The dice of an NdS roll, and a save's natural
+  d20, collected so far stayed under their place in the game when the rest was missed (the ring
+  overran) or the Loader attached mid-roll, and the next roll from there took a stale die. They are
+  dropped then (`_forget_partial_rolls`). Test: `test_half_seen_rolls_dropped_when_rolls_are_missed`.
+- **An error after a pass's rolls keeps those rolls.** Everything after the rolls' lines (hit
+  points, effects, turns, the party's items) is in `_after_rolls`; what fails there is one line in
+  the dice log, once a kind, and the rolls already read are returned with it (and the panel's
+  drawing likewise). The item lists' gate is released whatever happens. Test:
+  `test_rolls_kept_when_a_later_step_fails`.
+- **The arena's Ring +1 never loses an item record.** `give_ring` took a record off the free list
+  before knowing the member's backpack list could be had; it checks first now, as
+  `npcitems.add_to` does. Test: `test_no_list_keeps_the_record_free`.
+- **The dialogue pane stays at 3,000 lines** as the dice log does, and a portrait shown many times
+  is one image, not one per line (memory grew through a long session).
+- **The game folder is kept as a full path:** a relative `--game-dir` at a command prompt gave
+  DOSBox a settings path from the wrong folder.
+
 **Documentation**
 - **A thri-kreen Mind Warrior who presses EXIT on the weapon window gets the chatkcha,** as other
   thri-kreen do, now it may take it (2.12.2); KITS.md said the club. KITS.md says so now. Test:

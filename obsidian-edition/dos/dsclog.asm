@@ -3373,6 +3373,7 @@ probe_dam_line:
         mov bx, di
         call off_hand_halves
         pop bx
+        call frame_speed        ; (Hasted twice, Slowed half: the game's attack's last step)
         mov ah, ch
         pop cx
         iret
@@ -3426,7 +3427,8 @@ probe_missile_line:
         cmp byte [cs:si + kind_of_type], MISSILE_KIND
         jne .out
         add ax, OWN_THROWS_MORE
-.out:   pop es
+.out:   call frame_speed        ; (Hasted twice, Slowed half: the game's attack's last step)
+        pop es
         pop dx
         pop bx
         pop di
@@ -3527,7 +3529,71 @@ probe_view_dam:
         pop dx
         pop bx
         pop ax
-.done:  iret
+.done:  push ax                 ; (Hasted twice, Slowed half, as the game's attack: whatever the
+        push bx                 ;   rules, a missile weapon too)
+        push dx
+        push es
+        mov bx, sp
+        mov ax, [ss:bx + 8]     ; (the INT's return, past the four pushes)
+        mov es, [ss:bx + 10]
+        mov bx, ax
+        mov es, [es:bx - VIEW_DAM_WHO]
+        mov dx, [es:0x25B]      ; the character on show
+        mov ax, [bp - 6]
+        call speed_halves
+        mov [bp - 6], ax
+        pop es
+        pop dx
+        pop bx
+        pop ax
+        iret
+
+; SPEED_HALVES: AX the attacks a round (halves) of creature DX as its attack has them for its speed:
+; Hasted twice, Slowed half, rounded down (5883Ah, after the rest: the routine it calls for the
+; speed reads these effects; each ends the other). DS the game's; others kept.
+HASTED_EFFECT equ 22
+SLOWED_EFFECT equ 47
+speed_halves:
+        push cx
+        push ax
+        mov ax, dx
+        mov cl, HASTED_EFFECT
+        call ns_has
+        pop ax
+        jne .slow
+        shl ax, 1
+        jmp .out
+.slow:  push ax
+        mov ax, dx
+        mov cl, SLOWED_EFFECT
+        call ns_has
+        pop ax
+        jne .out
+        shr ax, 1
+.out:   pop cx
+        ret
+
+; FRAME_SPEED: in PROBE_DAM_LINE and PROBE_MISSILE_LINE, AX the attacks a round (halves) for the
+; creature the routine's [BP-6] points at (its record, far; 0 for none) as SPEED_HALVES gives them.
+; DS the game's; others kept.
+FS_CREATURES equ 0x1665         ; DS: the creatures (far, 3Ah bytes each)
+frame_speed:
+        cmp dword [bp - 6], 0
+        je .ret
+        push bx
+        push dx
+        push ax
+        mov ax, [bp - 6]
+        sub ax, [FS_CREATURES]
+        xor dx, dx
+        mov bx, 0x3A
+        div bx
+        mov dx, ax              ; the creature
+        pop ax
+        call speed_halves
+        pop dx
+        pop bx
+.ret:   ret
 
 ; PROBE_CAN_USE: INT VEC_CAN_USE replaces "and ax,[es:bx+12h]" (4 bytes: INT + 2 NOPs; DSUN.EXE
 ; 6EF34h) in the routine that says whether a character may equip an item (its "Cannot use this

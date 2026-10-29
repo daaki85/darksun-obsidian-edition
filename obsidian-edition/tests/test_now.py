@@ -51,6 +51,40 @@ class HitTests(unittest.TestCase):
         set_effects(log, [(0, 0, 7), (0, 0, 12)])  # +1, -1
         self.assertEqual(log.game.weapon_hits(0)[0].thac0, 9)
 
+    def test_hasted_and_slowed(self):
+        """Hasted: each weapon's attacks a round twice; Slowed: half, rounded down (the game's
+        attack, after the rest: 5883Ah). Dag's long sword 3/2 (the sheet's), his bow 1 (its own)."""
+        log = dag()
+        g = log.game
+        log.guest.mem[SHEETS + game.SHEET_ATTACKS] = 3
+        log.guest.mem[ITEM_TYPES + 11 * game.ITEM_TYPE_SIZE + 0x0B] = 2
+        self.assertEqual([h.halves for h in g.weapon_hits(0)], [None, 2])
+        set_effects(log, [(0, 0, game.HASTED_EFFECT)])
+        self.assertEqual([h.halves for h in g.weapon_hits(0)], [6, 4])
+        set_effects(log, [(0, 0, game.SLOWED_EFFECT)])
+        self.assertEqual([h.halves for h in g.weapon_hits(0)], [1, 1])
+        set_effects(log, [(1, 1, game.HASTED_EFFECT)])  # (someone else's)
+        self.assertEqual([h.halves for h in g.weapon_hits(0)], [None, 2])
+
+    def test_kratcheks_chatkcha_with_specialization(self):
+        """K'ratchek (the game's own thri-kreen) throws her chatkcha once more a round, weapon
+        specialization on or off (its item type is not the weapon's kind)."""
+        from dsloader import kits
+        log = dag()
+        g = log.game
+        m = log.guest.mem
+        struct.pack_into("<H", m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_TYPE, 48)  # (a chatkcha)
+        chatkcha = ITEM_TYPES + 48 * game.ITEM_TYPE_SIZE
+        m[chatkcha + 0x0B], m[chatkcha], m[chatkcha + 0x0C], m[chatkcha + 0x0D] = 2, 2, 6, 1  # (1d6)
+        m[SHEETS + game.SHEET_RACE] = kits.THRI_KREEN
+        for rules in (game.RULE_KITS, game.RULE_KITS | game.RULE_SPECIALIZE):
+            with self.subTest(rules=rules):
+                g.rules = rules
+                m[SHEETS + 0x43] = 0
+                plain = g.weapon_hits(0)[-1].halves
+                m[SHEETS + 0x43] = kits.OWN_BIT
+                self.assertEqual(g.weapon_hits(0)[-1].halves, (plain or 2) + kits.OWN_THROWS_MORE)
+
     def test_two_weapon_rule_needs_two_weapons(self):
         """Dag's long sword and his bow (the missile slot): one melee weapon, so no penalty with
         the AD&D rule on; a second melee weapon in the left hand brings -2 and -4; a ranger never."""
