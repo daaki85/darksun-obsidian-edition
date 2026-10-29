@@ -166,6 +166,8 @@ def _link(gd: GameData, it: ring.Items, member: int, item: int, slot: int) -> bo
     gd.guest.write(at + game.ITEM_SLOT, bytes((slot,)))
     gd.guest.write(at + game.ITEM_NEXT, struct.pack("<h", it.thing(thing)[1]))
     gd.guest.write(it.things + thing * 3 + 1, struct.pack("<h", item))
+    from . import icons
+    icons.fit(gd, item)  # (the Loader's own icon at once: the arena's ring)
     return True
 
 

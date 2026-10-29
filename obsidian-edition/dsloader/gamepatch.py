@@ -661,6 +661,11 @@ PATCHES = (
     Patch("missile_line", 0x729FF, bytes.fromhex("268a470b"), _interrupt(VEC_MISSILE_LINE, 4)),
     # ... and on View Character's: "mov [bp-0Eh],dx", the damage bonus it stores
     Patch("view_dam", 0x64EB6, bytes.fromhex("8956f2"), _interrupt(VEC_VIEW_DAM, 3)),
+    # ... and the inventory's line written with its count for one attack every other round (a
+    # slowed character's 1 half: "0.5x1D8"), not as if one a round: its formatter's "cmp dx,2 /
+    # jng" (no count for 2 halves or fewer) made "je" (no count for 2 alone; View Character's has one
+    # always)
+    Patch("dam_half", 0x72AC0, bytes.fromhex("83fa027e55"), bytes.fromhex("83fa027455")),
     Patch("can_use", 0x6EF34, bytes.fromhex("26234712"), _interrupt(VEC_CAN_USE, 4)),
     Patch("no_cast", 0x89B84, bytes.fromhex("83c404"), _interrupt(VEC_NO_CAST, 3)),
     Patch("mc_con", 0x87523, bytes.fromhex("03f8"), _interrupt(VEC_MC_CON, 2)),

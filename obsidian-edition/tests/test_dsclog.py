@@ -1469,9 +1469,9 @@ class SpecializeTests(unittest.TestCase):
     ITEMS, TYPES, WHO = 0x8800, 0x9000, 0x9800
 
     def view_dam(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False,
-                 kit=0):
+                 kit=0, material=4, plus=0):
         """(attacks, bonus, sides) for View Character's DAM line (PROBE_VIEW_DAM): DX the bonus 4,
-        1d8, character 2 on show, its weapon item 1."""
+        1d8, character 2 on show, its weapon item 1 (of MATERIAL, metal unless said, with PLUS)."""
         mu = self.mu
         at = load_image().find(bytes.fromhex("8956f2e8"))
         self.assertGreater(at, 0)
@@ -1488,6 +1488,8 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(self.DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
         mu.mem_write(self.ITEMS * 16 + 0x15 + 0x0A, struct.pack("<H", weapon))
         mu.mem_write(self.TYPES * 16 + weapon * 0x14, bytes((2 if missile else 1,)))
+        mu.mem_write(self.TYPES * 16 + weapon * 0x14 + 8, bytes((material,)))
+        mu.mem_write(self.ITEMS * 16 + 0x15 + 0x14, struct.pack("b", plus))
         mu.mem_write(self.WHO * 16 + 0x25B, struct.pack("<H", 2))
         mu.mem_write(CALLER * 16 + 0x602 - 0x84, struct.pack("<H", self.WHO))
         mu.mem_write(SS * 16 + BP - 0x0E, struct.pack("<HHHHHHH", 0, 0, 1, 0, halves, 8, 1))  # bonus .. count
@@ -1515,6 +1517,14 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.view_dam(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0), rules=4096 | kits, kit=3),
                          (3, 7, 8))
         self.assertEqual(self.view_dam(3, 1, rules=kits, kit=3, missile=True), (3, 4, 8))
+
+    def test_view_dam_weak_material(self):
+        """View Character's DAM line with a weak material's damage, as the game's attack and the
+        inventory have it: wood 2 less, bone, stone and obsidian 1; none with a plus, for a type
+        marked 80h (a club), or in metal; whatever the rules."""
+        for material, plus, want in ((0, 0, 2), (1, 0, 3), (2, 0, 3), (3, 0, 3), (4, 0, 4), (1, 1, 4), (0x80, 0, 4)):
+            with self.subTest(material=material, plus=plus):
+                self.assertEqual(self.view_dam(3, self.AXE, rules=0, material=material, plus=plus)[1], want)
 
 
 

@@ -1177,6 +1177,25 @@ def picture(name: str, on: bool) -> int:
     return PICTURES[name] if on else PLAIN[name]
 
 
+# whether the running game has the Loader's copy of the objects open (ready), as the dice log last
+# saw it (each pass; not on a new attach): an item the Loader makes takes its own icon at once (fit)
+COPY_OPEN = False
+
+
+def fit(gd, item: int) -> None:
+    """An item the Loader has just made (npcitems.add_to, pickpocket.give: the arena's Ring +1, a
+    Kalzith scroll, a new character's weapon) given its own icon as it is made, as repaint does a
+    pass later: the inventory, opened in between, drew the plain one and kept it until the item was
+    clicked. The plain one while the game hasn't the copy (COPY_OPEN), whose objects these are."""
+    from . import game, ring
+    at = ring.Items(gd).items + item * game.ITEM_SIZE
+    rec = gd.guest.read(at, game.ITEM_SIZE)
+    name = which(rec)
+    if name is not None and struct.unpack_from("<H", rec, 0)[0] != picture(name, COPY_OPEN):
+        gd.guest.write(at, struct.pack("<H", picture(name, COPY_OPEN)))
+        gd.guest.write(at + PICTURE_CACHE, bytes(2))
+
+
 def repaint(gd, on: bool) -> int:
     """The Loader's items anywhere in the region (carried, in a container, on the ground) with
     their own icons (ON: the game has the copy), or back to the plain ones (so a game without the

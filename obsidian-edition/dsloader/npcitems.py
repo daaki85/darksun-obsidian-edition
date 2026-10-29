@@ -187,4 +187,6 @@ def add_to(gd: GameData, creature: int, rec: bytes, slot: Optional[int] = None) 
     rec[game.ITEM_SLOT] = cell
     gd.guest.write(it.items + item * game.ITEM_SIZE, bytes(rec))
     gd.guest.write(it.things + thing * 3, struct.pack("<Bh", game.THING_ITEM, item))
+    from . import icons
+    icons.fit(gd, item)  # (the Loader's own icon at once, not a pass later)
     return True

@@ -385,6 +385,9 @@ MATERIALS = ("Wooden", "Bone", "Stone", "Obsidian", "Metal", "Leather")
 NO_MATERIAL = 0x40  # in the type's material byte, with material 0: things with none (rings, bodies)
 # Dark Sun's to-hit penalty for non-magical weapons of weaker materials (from the game's code)
 MATERIAL_TO_HIT = {0: -3, 1: -1, 2: -2, 3: -2}
+# ... and to damage (the game's attack and inventory line; checked in DOSBox: a wooden weapon 2 less,
+# bone, stone and obsidian 1 less), for a weapon with no plus whose type isn't marked 80h
+MATERIAL_DAMAGE = {0: -2, 1: -1, 2: -1, 3: -1}
 # The character sheet's saving throws, in order (the game's own grouping: Fireball, for
 # one, is saved against with petrification/polymorph)
 SAVE_NAMES = {1: "paralysis/poison/death", 2: "rod/staff/wand", 3: "petrification/polymorph",
@@ -568,6 +571,7 @@ def party_records(guest: GuestMemory, ds: int) -> List[Tuple[Optional[int], Opti
 
 # Effects that change initiative (effect id -> adjustment), from the game's code
 INITIATIVE_EFFECTS = {8: -2, 22: 2, 47: -2}  # Blind, Hasted, Slowed
+HASTED_EFFECT, SLOWED_EFFECT = 22, 47  # (twice the attacks a round, and half: weapon_hits)
 
 
 # A saving throw's modifiers, as the game's routine (79D3Ch in DSUN.EXE) adds them to the d20:
@@ -1898,11 +1902,11 @@ class GameData:
                 parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
                 from . import specialize
-                kind = struct.unpack_from("<H", item, ITEM_TYPE)[0]
-                skill = specialize.skill(self.sheet(creature), kind)
+                item_type = struct.unpack_from("<H", item, ITEM_TYPE)[0]  # (KIND stays the weapon kind)
+                skill = specialize.skill(self.sheet(creature), item_type)
                 parts.append((specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)))
                 if missile:
-                    halves = specialize.missile_attacks(halves, skill, kind, self.sheet(creature))
+                    halves = specialize.missile_attacks(halves, skill, item_type, self.sheet(creature))
                 elif skill == specialize.EXPERT and self.sheet(creature)[SHEET_ATTACKS] <= 2:
                     # (a Battle Mage's expertise: DSCLOG's EXPERT_HALVES)
                     halves = specialize.expert_attacks(self.sheet(creature)[SHEET_ATTACKS], skill, self.sheet(creature))
@@ -1922,6 +1926,11 @@ class GameData:
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
                 if have > 2:
                     halves = 2
+            if HASTED_EFFECT in ids or SLOWED_EFFECT in ids:
+                # (the game's attack, after all the rest: Hasted twice the attacks, Slowed half,
+                # rounded down, at 5883Ah; its speed from these effects)
+                have = (typ[0x0B] if missile else self.sheet(creature)[SHEET_ATTACKS]) if halves is None else halves
+                halves = have * 2 if HASTED_EFFECT in ids else have // 2
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(index, slot, self.item_label(item, typ), base - sum(n for _, n in parts), parts,
                                  skill, halves))

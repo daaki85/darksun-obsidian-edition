@@ -224,15 +224,15 @@ def _game_dir(args) -> str:
         if not launch.is_game_dir(game_dir):
             raise CliError(f"{game_dir} has no DSUN.EXE and DOSBOX folder; pick the GOG install folder.")
     with launch.SETTINGS_LOCK:
-        settings = launch.load_settings()
-        changed = dict(settings, game_dir=game_dir)
+        settings = launch.load_settings(strict=True)
+        changed = dict(settings, game_dir=os.path.abspath(game_dir))
         if getattr(args, "window_scale", None):
             changed["window_scale"] = args.window_scale
         if getattr(args, "fullscreen", None) is not None:
             changed["fullscreen"] = args.fullscreen
         if changed != settings:
             launch.save_settings(changed)
-    return game_dir
+    return os.path.abspath(game_dir)
 
 
 def cmd_launch(args) -> None:
@@ -255,6 +255,7 @@ def cmd_play(args) -> None:
     from . import launch
     from .dicelog import DiceLog, DiceLogError
     from .guestmem import GuestMemoryError
+    from .process import ProcessError
     log_path = os.path.join(launch.HERE, "play.log")
 
     def note(text: str) -> None:
@@ -286,7 +287,7 @@ def cmd_play(args) -> None:
         while guest is None and dosbox.poll() is None:  # DOSBox takes a moment to start
             try:
                 guest = connect(argparse.Namespace(pid=dosbox.pid, host_base=None))
-            except (CliError, GuestMemoryError, OSError):
+            except (CliError, GuestMemoryError, ProcessError, OSError):
                 time.sleep(1)
         if guest is None:
             return
@@ -299,27 +300,39 @@ def cmd_play(args) -> None:
         said = collections.deque(maxlen=300)  # the dice log's and dialogue's last lines, for a crash report
         talk = collections.deque(maxlen=80)
         attached = False
+        errors = set()  # (each kind of error written to play.log once)
         while dosbox.poll() is None:
-            if not attached:
-                try:
-                    log.attach()
-                    attached = True
-                except (DiceLogError, GuestMemoryError, OSError):
-                    time.sleep(1)
+            try:
+                if not attached:
+                    try:
+                        log.attach()
+                        attached = True
+                    except (DiceLogError, GuestMemoryError, ProcessError, OSError):
+                        time.sleep(1)
+                        continue
+                elif not log.still_patched():
+                    log.detach()
+                    attached = False
                     continue
-            elif not log.still_patched():
-                log.detach()
+                said.extend(log.lines())
+                for entry in log.take_dialogue():
+                    talk.extend(line for line in (entry.text, *entry.replies, entry.chosen and "You chose: " + entry.chosen) if line)
+                learned = log.take_speakers()
+                if learned:
+                    launch.add_learned_speakers(learned)
+                picked = log.take_picked()
+                if picked is not None:
+                    launch.set_pickpocketed(picked)
+            except ProcessError:
+                # (DOSBox closing, or gone: the loop's test says which; if it runs on, attached again)
                 attached = False
+                time.sleep(0.2)
                 continue
-            said.extend(log.lines())
-            for entry in log.take_dialogue():
-                talk.extend(line for line in (entry.text, *entry.replies, entry.chosen and "You chose: " + entry.chosen) if line)
-            learned = log.take_speakers()
-            if learned:
-                launch.add_learned_speakers(learned)
-            picked = log.take_picked()
-            if picked is not None:
-                launch.set_pickpocketed(picked)
+            except Exception as e:  # (anything else: written once, and the dice log carries on, as the window's)
+                key = (type(e).__name__, str(e))
+                if key not in errors:
+                    errors.add(key)
+                    note("The dice log carries on after: " + traceback.format_exc())
             time.sleep(0.02)
         crash = launch.game_end_note()
         if dosbox.returncode != 0 or crash:

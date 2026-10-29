@@ -50,6 +50,32 @@ class SearchTests(unittest.TestCase):
         self.assertEqual(bytes(m[ITEMS + 60 * game.ITEM_SIZE:ITEMS + 61 * game.ITEM_SIZE]), bytes(rec))
         self.assertFalse(ring.ring_needed(log.game))
 
+    def test_its_own_icon_at_once(self):
+        """With the game's copy of the objects open, the ring is given with its own icon (the
+        fire-coloured one) and an empty picture cache, not the plain ring's until a later pass
+        (the inventory drew the plain one and kept it until the ring was clicked); without the
+        copy, the plain one."""
+        from dsloader import icons
+        for open_, want in ((True, icons.picture("Ring of Protection +1", True)), (False, ring.RING_PICTURE)):
+            with self.subTest(copy_open=open_):
+                log = arena()
+                icons.COPY_OPEN = open_
+                try:
+                    ring.give_ring(log.game)
+                finally:
+                    icons.COPY_OPEN = False
+                self.assertEqual(word(log.guest.mem, ITEMS + 60 * game.ITEM_SIZE), want)
+
+    def test_no_list_keeps_the_record_free(self):
+        """No backpack list to be had (no free object to make one): no ring given, and the item
+        record stays first on the free list, not taken and lost."""
+        log = arena()
+        m = log.guest.mem
+        struct.pack_into("<H", m, DS * 16 + ring.FREE_THINGS, ring.THING_COUNT)  # (no free object)
+        self.assertIsNone(ring.give_ring(log.game))
+        self.assertEqual(word(m, DS * 16 + ring.FREE_ITEMS), 60)
+        self.assertEqual(struct.unpack_from("<h", m, ITEMS + 60 * game.ITEM_SIZE + game.ITEM_NEXT)[0], 61)
+
     def test_party_has_it(self):
         """Dag carries a Ring +1 already (his list starting at object 401)."""
         log = arena()
