@@ -6,6 +6,13 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Documentation**
+- **A thri-kreen Mind Warrior who presses EXIT on the weapon window gets the chatkcha,** as other
+  thri-kreen do, now it may take it (2.12.2); KITS.md said the club. KITS.md says so now. Test:
+  `test_mind_warrior_exit`.
+
 ## Pull request #75 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/75))
 
 Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
