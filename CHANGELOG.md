@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Branch `recompiled` (not yet a pull request)
+## Next pull request (not opened yet)
 
 **Dark Sun Recompiled**
 - The Loader also reads the game when it runs as
