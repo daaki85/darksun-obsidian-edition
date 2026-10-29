@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.12.3 ([release notes](release-notes/v2.12.3.md)).
+
 **Fixed** (from a code audit, and Haste and Slow)
 - **Haste and Slow show in the attacks a round.** A fight's attack doubles a hasted character's
   attacks and halves a slowed one's (rounded down; DSUN.EXE 5883Ah, from effects 22 and 47, after
@@ -66,6 +68,12 @@ notes](PATCH-NOTES.md).
   DOSBox a settings path from the wrong folder.
 
 **Documentation**
+- **A review of the pages for 2.12.3:** the player's guide gains weaker materials' penalties (to
+  hit and, newly found, to damage), the features page Haste and Slow under the attacks a round,
+  and the backstab example's damage line its `-1 bone`. `docs/dicelog.png` taken anew in DOSBox
+  (the arena's opening show, Find on the Rampager): K'ratchek's card shows her chatkcha at 5/2 a
+  round, which the old one showed at 3/2 (the bug fixed above). Links, anchors and pictures
+  checked: none broken, none unused.
 - **A thri-kreen Mind Warrior who presses EXIT on the weapon window gets the chatkcha,** as other
   thri-kreen do, now it may take it (2.12.2); KITS.md said the club. KITS.md says so now. Test:
   `test_mind_warrior_exit`.

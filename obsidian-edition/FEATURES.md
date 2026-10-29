@@ -537,6 +537,10 @@ fighter, gladiator and ranger levels; a warrior class goes no higher than
 | mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
 
+In a fight Haste doubles all of these and Slow halves them, rounded down (and a
+slowed character loses every other turn); the game's DAM lines and the
+Characters tab show them so.
+
 The sixteen weapon specs take in the game's weapons of every material and its
 named ones (Bloodwrath, Swiftbite and the like are long swords); gloves are
 none. The weapons spells make count for specialization as their AD&D weapon: the
@@ -1007,7 +1011,7 @@ Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) ->
   Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
 Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55%), hits AC 2, target AC 3 -> HIT
     THAC0 19, +2 from behind, +2 backstab, +3 STR, -1 bone = 13
-  Tezral hits Slig for 9: 1d8 = [1] -1 weapon (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice 1 x2 = 2)
+  Tezral hits Slig for 9: 1d8 = [1] -1 bone (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice 1 x2 = 2)
 ```
 
 With **A backstab multiplies the weapon's dice only** (on unless unticked, in

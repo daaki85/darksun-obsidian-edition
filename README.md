@@ -64,12 +64,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.12.2** is out ([release notes](release-notes/v2.12.2.md)):
-the combat log in the game no longer flickers in a fight or slows it down, a
-Poisoner starts with two blades of the weapon spec it picked, a thri-kreen Mind
-Warrior may take the chatkcha, and Shillelagh and Spiritual Hammer glow on the
-party's figures. 2.12.1 stopped walking with the whole party in view from being
-taken for a fight, and made the Loader keep its settings whatever happens.
+**Obsidian Edition 2.12.3** is out ([release notes](release-notes/v2.12.3.md)):
+Haste and Slow now show in the attacks a round, View Character's damage matches
+the fight's, the arena's Ring +1 shimmers as soon as it is found, and the Loader
+keeps going through errors and never loses its settings to a locked file. 2.12.2
+stopped the combat log in the game flickering or slowing fights.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one

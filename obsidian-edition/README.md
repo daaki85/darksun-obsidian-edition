@@ -823,7 +823,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party, and the dice log with Find showing the first of 24 lines naming the Rampager: the party's kit lines, the first round's initiative, Gerakis's Wild Fighting roll and the Defiler's Fireball](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted), and the dice log with Find showing the first of 10 lines naming the Rampager: the first round's initiative, Gerakis's Wild Fighting roll, the Defiler's Ice Storm and the Rampager's attacks](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
