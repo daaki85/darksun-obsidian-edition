@@ -22,7 +22,7 @@ notes](PATCH-NOTES.md).
     file names, found it as the `dsun.exe` beside the mod's folder when the mod was unzipped in
     the game's, and the Loader then started it in place of DOSBox and failed. A program found or
     named must be one of the computer's own (a Windows PE or an ELF: `launch.native_program`).
-  - Which one runs is said: the dice log's first line (and `launch`'s and `play`'s output) is
+  - Which one runs is said as the game starts, in the dice log (and `launch`'s and `play`'s output):
     `Starting Shattered Lands from ... in DOSBox` or `... as Dark Sun Recompiled (its path)`
     (`launch.started_line`).
   - The closing line goes by what was started (`launch.STARTED`), not by the settings at the

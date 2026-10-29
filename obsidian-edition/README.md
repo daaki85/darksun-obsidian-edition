@@ -233,8 +233,8 @@ with the mod's patched game and helper built in. Unzip its
 `darksun-recompiled-windows-x64.zip` into this folder (so that
 `recompiled\dsun.exe` is here, or `dsun.exe` itself) or next to this
 folder, and the Loader starts that program instead of DOSBox from then on,
-the dice log and the Loader's window attached as usual. The dice log's first
-line says which one started (`... in DOSBox` or `... as Dark Sun Recompiled`
+the dice log and the Loader's window attached as usual. As the game starts,
+the dice log says which one runs (`... in DOSBox` or `... as Dark Sun Recompiled`
 and where it is). The game's own `DSUN.EXE` is never taken for it, even with
 this folder in the game's. A program elsewhere is named once:
 
