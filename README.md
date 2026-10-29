@@ -64,11 +64,10 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.12.3** is out ([release notes](release-notes/v2.12.3.md)):
-Haste and Slow now show in the attacks a round, View Character's damage matches
-the fight's, the arena's Ring +1 shimmers as soon as it is found, and the Loader
-keeps going through errors and never loses its settings to a locked file. 2.12.2
-stopped the combat log in the game flickering or slowing fights.
+**Obsidian Edition 2.12.4** is out ([release notes](release-notes/v2.12.4.md)):
+the Loader can run the game as [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled),
+the game translated into a program of its own, instead of in DOSBox. 2.12.3 showed
+Haste and Slow in the attacks a round and made View Character's damage match the fight's.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
