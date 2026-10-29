@@ -1443,6 +1443,16 @@ inventory's formatter (72AB1h) wrote no count for 2 halves or fewer, so a
 slowed character's 1 read as one a round: `dam_half` makes its `jng` a `je`
 (72AC3h), and 1 half is `0.5x`. View Character's always has its count.
 
+A weak material's damage: the attack (and the inventory's line, through the
+same overlay routine, 508:52h) takes 2 off for wood and 1 for bone, stone and
+obsidian, from a weapon with no plus (a power alone doesn't spare it) whose
+type isn't marked 80h (the clubs and staves), as Dark Sun's rules have it
+(`game.MATERIAL_DAMAGE`, beside `MATERIAL_TO_HIT`); found in DOSBox by giving
+Cilla's long sword each type and reading the line. View Character's line
+(64E33h) adds only the type's bonus and the plus, so it read one or two more:
+`VIEW_MATERIAL` takes it off in `PROBE_VIEW_DAM`, whatever the rules. The dice
+log's damage line names it (`-1 bone`) where it said `-1 weapon`.
+
 Rangers and Twin-blades in light armour: the game asks whether the attacker
 is a ranger (the sheet's `+12h`, 200h) before it calls for the DEX
 adjustment, and gives a ranger none (DSUN.EXE 5961Fh). With the rule that
@@ -2757,7 +2767,14 @@ pointed to it), and the plain ones keep the still one. An
 item on the ground is drawn with its object's icon (the thing's map record,
 +0Fh), so the Loader's items, dropped from the inventory or left by the dead,
 lie on the ground as their own icons (checked: the Short Sword, the Ashen Robe,
-the spell arrows). Where the game adds up AC and saving throws, the helper
+the spell arrows). The items' own pictures are only given while the game has
+the copy open (`icons.ready`, DSCLOG's `objects_on`; the dice log's
+`icons.COPY_OPEN`, reset on attach): `icons.repaint` sets them each 3-second
+pass, and an item the Loader makes (`npcitems.add_to`, `pickpocket._link`: the
+arena's Ring +1, a new character's Short Sword) gets its own at once
+(`icons.fit`), since the inventory, opened before the pass, drew the plain
+picture, cached it in the item's `+0Ch`, and kept it until the item was
+clicked. Where the game adds up AC and saving throws, the helper
 counts the rings and the cloak (`INT F8h` and the save probes). Shadowseeker's
 sight is the game's own way with a magic item's spell: readied, it puts Detect
 Invisibility on its wielder. In the original game the rings are plain rings

@@ -20,6 +20,21 @@ notes](PATCH-NOTES.md).
   one half-attack (`cmp dx,2 / jng` at 72AC0h) and showed it as one a round: made `je` (`gamepatch`
   `dam_half`), so a slowed character's reads `0.5x1D8+6`. Tests: `test_hasted_and_slowed`,
   `test_dam_half`.
+- **View Character's damage matches the fight's.** A non-magical weapon in a weaker material does
+  2 less in wood and 1 less in bone, stone or obsidian (no plus; a power alone doesn't spare it;
+  types marked 80h, the clubs and staves, never), which the attack and the inventory's line take
+  off and View Character's didn't: Cilla's bone long sword read `1x1D8+7` there and `1D8+6` in the
+  inventory. Found in DOSBox by giving the sword each type in turn. DSCLOG's `VIEW_MATERIAL` takes
+  it off in `PROBE_VIEW_DAM`, whatever the rules (`game.MATERIAL_DAMAGE`); the dice log's damage
+  line names it (`-1 bone`, not `-1 weapon`). Tests: `test_view_dam_weak_material`,
+  `test_weapon_damage_weak_material`.
+- **The arena's Ring +1 shimmers as soon as it is found.** It was given with the plain ring's
+  picture and given its own a pass later (`icons.repaint`, every 3 seconds, put off while the game
+  holds its item lists); an inventory opened in between drew the plain ring and kept it until the
+  ring was clicked. Every item the Loader makes (`npcitems.add_to`, `pickpocket._link`: the ring, a
+  new character's Short Sword, a Kalzith scroll) now gets its own picture as it is made
+  (`icons.fit`, while the game has the copy of the objects open, `icons.COPY_OPEN`). Items in the
+  game's data had theirs long before they could be seen. Test: `test_its_own_icon_at_once`.
 - **K'ratchek's second chatkcha throw a round shows with weapon specialization on.**
   `weapon_hits` put the item type where the weapon kind was, so the thri-kreen's own throw was
   never counted on the Characters tab (the game always threw it). Test:
