@@ -1062,6 +1062,7 @@ ranger level). 3/2 means one attack one round and two the next.
 | a chosen weapon spec (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
 | a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), its chosen weapon spec | 3/2 | 2 | | | | |
+| a thri-kreen **Mind Warrior**, the chatkcha as its chosen weapon spec (by its fighter, gladiator or ranger level, if any) | | | | | 3/2 | 2 |
 | a **Crusader** or **Mind Warrior**, any other weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
 | a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |

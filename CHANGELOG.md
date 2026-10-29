@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
+
 **Changed**
 - **A thri-kreen Mind Warrior may take the chatkcha as its weapon spec,** the thri-kreen's own
   weapon, as well as its class's melee ones (a Crusader's and other Mind Warriors' stay melee
@@ -55,6 +57,10 @@ notes](PATCH-NOTES.md).
   combat log and Whirlwind ones grabbed at about 48 frames a second and played at 25, as smooth as
   the game's own animation (a first take, 7 a second, looked choppy); the combat log's recorded
   with the flicker fixed. Pixels scaled whole (2x, 3x, 4x), so the game's own stay sharp.
+- **A review of the pages for 2.12.2:** the patch notes' line on magic gear's glow made plainer
+  (the spells' weapons glow whole); the player's guide's attacks-a-round table gains a thri-kreen
+  Mind Warrior's chatkcha. Links, anchors and pictures checked: none broken, none unused, none
+  outdated.
 
 ## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 

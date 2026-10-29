@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.12.1 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.12.2 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -249,7 +249,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 ## Graphics
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.
-- **[New]** Magic gear glows on the party's figures, as Kreenfang and the Flame Blade do (and Shillelagh, all fire, and Spiritual Hammer, blue): a weapon's bright edge (Shadowseeker's too), a shield's boss and rim, and sparks on armour, bracers, cloaks, helms, boots and belts shimmer in the animated colour nearest the item's icon: fire, green, violet or blue. Boots of Elvenkind now show on the feet, in soft green.
+- **[New]** Magic gear glows on the party's figures: a weapon's bright edge, a shield's boss and rim, and sparks on armour, bracers, cloaks, helms, boots and belts shimmer in the animated colour nearest the item's icon: fire, green, violet or blue. The weapons spells make glow whole, the Flame Blade and Shillelagh in fire and Spiritual Hammer in blue, as do Kreenfang's blades. Boots of Elvenkind now show on the feet, in soft green.
 - **[New]** Nineteen of the game's magic items that sat still in their icons now shimmer, as its other magic items do: the Parting Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge. A plain item sharing an icon with one of them (plain cahulaks, a plain ring) keeps the still one.
 - **[New]** Elves have pointed ears.
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
