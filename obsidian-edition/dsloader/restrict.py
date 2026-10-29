@@ -289,7 +289,8 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     say, only the psionicist's). TYPE_RECORD(type) gives an item type's record. DSCLOG's
     KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already. A Battle Mage
     (kits.py) its own, whatever its class; a Spellarcher the bow only; a Poisoner the dagger and
-    short sword; a Crusader or Mind Warrior its class's melee ones."""
+    short sword; a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
+    chatkcha too)."""
     from . import kitpages, kits
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.BATTLE_MAGE in kitpages.kit_ids(sheet):
         return sorted(kits.BATTLE_MAGE_KINDS)
@@ -298,8 +299,10 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.POISONER in kitpages.kit_ids(sheet):
         return sorted(kits.POISONER_KINDS)
     ranger = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & 0x200
-    melee_only = specialize.war_kit(sheet) is not None
+    war = specialize.war_kit(sheet)
+    melee = kits.MELEE_KINDS | (kits.KREEN_WARRIOR_KINDS if war == kits.MIND_WARRIOR
+                                and sheet[game.SHEET_RACE] == kits.THRI_KREEN else frozenset())
     return [kind for kind, name in enumerate(specialize.KINDS)
-            if not (ranger and name == "bow") and not (melee_only and kind not in kits.MELEE_KINDS)
+            if not (ranger and name == "bow") and not (war is not None and kind not in melee)
             and any(usable(sheet, t, type_record(t)) and not kit_forbids(sheet, t, type_record(t), spec=True)
                     for t in specialize._TYPES[name])]

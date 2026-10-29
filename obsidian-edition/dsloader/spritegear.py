@@ -49,6 +49,9 @@ FIRE_GLOW, GREEN_GLOW, VIOLET_GLOW, BLUE_GLOW = range(4)
 GLOWS = (GLINT, (1, 2, 3, 4, 5), (6, 7, 8, 9, 10), (11, 12, 13, 14, 15))
 MAGIC_ARMOUR = 0x10000  # (with an armour's item type in armed's ARMOUR: it is magic, and glints)
 GLOW_SHIFT = 17  # (... in the colours GLOWS[type >> GLOW_SHIFT])
+# The other weapons spells make: drawn whole in the colours the game cycles, as the Flame Blade in
+# the fire's, in those their icons glow in: Shillelagh (28) the fire's, Spiritual Hammer (30) the blue
+SPELL_WEAPONS = {28: FIRE_GLOW, 30: BLUE_GLOW}
 
 
 def _magic(item: Tuple) -> bool:
@@ -136,6 +139,12 @@ WEAPON_SHAPES: Dict[int, str] = {
     game.METAL_PICK_TYPE: POLEARM, game.METAL_POLEARM_TYPE: POLEARM,
 }
 FLAME_BLADE = 29
+
+
+def _whole(glow: int) -> Tuple[int, int, int]:
+    """A spell weapon's colours (outline, body, light) from a run of cycled ones (GLOWS[GLOW])."""
+    shine = GLOWS[glow]
+    return FLAME if shine == GLINT else (shine[0], shine[len(shine) // 2], shine[-1])
 # Which steps of a shape (_shape) are its blade
 BLADE_STEPS = {GYTHKA: lambda step: abs(step) >= 6, SWORD: lambda step: step >= 1, DAGGER: lambda step: step >= 1}
 TWO_HANDED = frozenset((GREAT_AXE, POLEARM, GYTHKA, STAFF, BOW))
@@ -943,7 +952,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             g = g or (0, False)  # (placed by fight_shield, whichever hand was found)
         if shape is None or g is None or shape in (SLING, BOW, CHATKCHA):
             continue
-        colours = FLAME if item_type == FLAME_BLADE else MATERIAL_COLOURS.get(material, MATERIAL_COLOURS[4])
+        colours = FLAME if item_type == FLAME_BLADE else _whole(SPELL_WEAPONS[item_type]) if item_type in SPELL_WEAPONS \
+            else MATERIAL_COLOURS.get(material, MATERIAL_COLOURS[4])
         hx, hy = hands.get(hand, (0, 0))
         scale = MODEL_SCALE.get(model, 1.0)
         if shape in TWO_HANDED and not combat and hand == "right":
@@ -973,7 +983,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             draw_shield(out, body, (hx + pad, hy + pad), parts.facing, colours, behind, MODEL_SCALE.get(model, 1.0), glint, shine)
         else:
             draw_weapon(out, body, (hx + pad, hy + pad), g[0], shape, colours, g[1], scale, blade,
-                        glint and blade != FLAME and colours != FLAME, shine)
+                        glint and blade != FLAME and colours != FLAME and item_type not in SPELL_WEAPONS, shine)
     return out
 
 

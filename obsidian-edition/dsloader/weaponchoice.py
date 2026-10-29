@@ -412,7 +412,7 @@ def kit_gear(gd) -> List[str]:
         owned = list(gd._worn(member))
         out += _kit_second_weapon(gd, member, sheet, kid, chosen, owned, read)
         if kid == kits.POISONER:
-            out += _poisoner_daggers(gd, member, sheet, read)
+            out += _poisoner_daggers(gd, member, sheet, read, chosen)
         if kid == kits.GHETTO:
             out += _ghetto_dagger(gd, member, sheet, read)
         if kid == kits.BATTLE_MAGE and chosen and gd.rules & game.RULE_SPECIALIZE \
@@ -485,31 +485,39 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
     return []
 
 
-def _poisoner_daggers(gd, member: int, sheet: bytes, read) -> List[str]:
-    """A Poisoner's two daggers, one in each hand: the right hand's weapon made a plain dagger (of a
-    material it can use), and a second in the left hand, in place of its shield: lines for the
-    log. Made once: not while it holds a dagger in the left hand."""
+def _poisoner_daggers(gd, member: int, sheet: bytes, read, chosen: List[int]) -> List[str]:
+    """A Poisoner's two blades of its weapon spec (the dagger or the short sword; the dagger if none
+    is picked), one in each hand: the right hand's weapon made a plain one (of a material it can
+    use), and a second in the left hand, in place of its shield (or of the other blade, given before
+    its spec was changed): lines for the log. Made once: not while it holds one of that kind in the
+    left hand."""
     from . import kits, npcitems, ring
     right, left = game.WEAPON_HANDS
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     kind_of = lambda item: specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])
     name = lambda item: gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
     owned = list(gd._worn(member))
-    if any(item[game.ITEM_SLOT] == left and kind_of(item) == kits.DAGGER for _, item, _ in owned):
+    kind = chosen[0] if chosen and chosen[0] in kits.POISONER_KINDS else kits.DAGGER
+    if any(item[game.ITEM_SLOT] == left and kind_of(item) == kind for _, item, _ in owned):
         return []
-    new = start_weapon(sheet, [kits.DAGGER + 1], read)
-    if new is None or new[0] != kits.DAGGER:
+    new = start_weapon(sheet, [kind + 1], read)
+    if new is None or new[0] != kind:
         return []
-    who, out = gd.creature_name(member), []
+    who, out, blade = gd.creature_name(member), [], specialize.KINDS[kind]
     material = MATERIALS.get(read(new[1][0])[8] & 0x4F, "")
     hand = next(((i, item) for i, item, _ in owned if item[game.ITEM_SLOT] == right), None)
     if hand is None:
         return []  # (no weapon to make a dagger of: the starting gear's fill gives one)
-    if kind_of(hand[1]) != kits.DAGGER:
+    if kind_of(hand[1]) != kind:
         gd.guest.write(items + hand[0] * game.ITEM_SIZE, plain_weapon(hand[1], *new)[0])
-        out.append(f"{who} starts with a plain {material}dagger in place of the {name(hand[1])}: a "
-                   f"Poisoner fights with two daggers")
+        out.append(f"{who} starts with a plain {material}{blade} in place of the {name(hand[1])}: a "
+                   f"Poisoner fights with two of its weapon spec")
     dagger = next(item for _, item, _ in gd._worn(member) if item[game.ITEM_SLOT] == right)
+    for item_index, item, _ in gd._worn(member):  # (the other blade, given before its spec was changed)
+        if item[game.ITEM_SLOT] == left and kind_of(item) in kits.POISONER_KINDS:
+            gd.guest.write(items + item_index * game.ITEM_SIZE, plain_weapon(item, *new)[0])
+            return out + [f"{who} starts with a plain {material}{blade} in the left hand in place of the "
+                          f"{name(item)}: a Poisoner fights with two of its weapon spec"]
     shield = None
     for item_index, item, _ in list(gd._worn(member)):  # (its shield left behind)
         if item[game.ITEM_SLOT] == left and read(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])[0] & kits.SHIELD \
@@ -520,7 +528,7 @@ def _poisoner_daggers(gd, member: int, sheet: bytes, read) -> List[str]:
         return out
     instead = f", in place of the {shield}" if shield else ""
     return out + [f"{who} starts with a second {name(dagger)} in the left hand{instead}: a Poisoner fights "
-                  f"with two daggers"]
+                  f"with two of its weapon spec"]
 
 
 def _ghetto_dagger(gd, member: int, sheet: bytes, read) -> List[str]:

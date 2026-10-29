@@ -62,6 +62,8 @@ BATTLE_MAGE_KINDS = frozenset((0, 1, 2, 3, 4, 5, 7))
 # melee one its class lets it use (not the chatkcha, bow, sling or staff sling: kinds 12-15)
 WAR_KIT_EXPERT = (CRUSADER, MIND_WARRIOR)
 MELEE_KINDS = frozenset(range(12))
+# ... and a thri-kreen Mind Warrior's the chatkcha as well (DSCLOG's KIT_KREEN_KINDS)
+KREEN_WARRIOR_KINDS = frozenset((12,))
 # a Poisoner's weapon specs to choose from (DSCLOG's KIT_POISON_KINDS): the dagger and short sword
 POISONER_KINDS = frozenset((2, 3))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each

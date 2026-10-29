@@ -18,6 +18,62 @@ notes](PATCH-NOTES.md).
   `launch`, `play` and the window's **Start the game** then run it with the
   game's folder and the mod's `dos` folder (README, "Other ways to start").
 
+## Pull request #75 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/75))
+
+Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
+
+**Changed**
+- **A thri-kreen Mind Warrior may take the chatkcha as its weapon spec,** the thri-kreen's own
+  weapon, as well as its class's melee ones (a Crusader's and other Mind Warriors' stay melee
+  only). Its expertise with it gives 3/2 throws a round, 2 from a warrior class's 7th level, as a
+  ranger's. In the Loader (`restrict.allowed_kinds`) and DSCLOG's `KINDS_ALLOWED`
+  (`KIT_KREEN_KINDS`). Test: `KindsAllowedTests` (a thri-kreen and a human Mind Warrior).
+
+**Fixed**
+- **Shillelagh and Spiritual Hammer now shimmer on the party's figures, as the Flame Blade does.**
+  Only a weapon with a plus or a power glinted, and only along its edge: Shillelagh has no plus,
+  and Spiritual Hammer's +1 glinted on a mace's few bright cells. Both are now drawn whole in the
+  colours the game animates, as their icons glow: Shillelagh in the fire's, Spiritual Hammer's
+  head in the water blue (`spritegear.SPELL_WEAPONS`; `sprites.worn` counts them magic). Checked
+  in DOSBox on Gerakis. Tests: `test_spell_weapons`, `test_named_weapons`.
+- **A new Poisoner with the short sword as its weapon spec starts with a short sword in each
+  hand,** not two daggers: its starting blades are of its weapon spec (the dagger if none is
+  picked). One made before, still New with two daggers, has both made short swords. Tests:
+  `test_poisoner_daggers`, `test_poisoner_spec_changed`.
+- **The in-game combat log no longer flickers in a fight.** Many of the game's drawings (a step of
+  an attack, a spell's effect) go into its second screen and are then shown by a flip, and the
+  panel was only on the first: it vanished for a moment at each, and for up to half a second in a
+  monster's turn. DSCLOG now puts the panel on the screen about to be shown: in the two routines
+  drawing rectangles of the view when they are to flip (`FLIP_PANEL`), and in the game's flip
+  itself (`FLIP_SITE`, a new site of `INT 98h` at 14444h, `gamepatch` `panel_flip`). Checked in
+  DOSBox: in 40 seconds of an arena fight grabbed at about 43 frames a second, no frame without the
+  panel but under a game window (and the frame or two after one closes), against 19 runs of them
+  before; a message, a figure's menu, EXIT GAME, the game menu, USE and the inventory are not
+  drawn over. Test: `test_panel_flip`.
+- **A fight runs as fast with the in-game combat log up as without it.** A rectangle the game
+  drew over the panel, to be flipped to, was drawn as its parts round the panel, and each part
+  was a flip of its own, waiting for the monitor: a monster's turn with the panel up flipped
+  about 25 times instead of 15 and took a sixth longer (1.03 seconds on average against 0.89).
+  Such a rectangle is now drawn whole, as the flip puts the panel on the screen it shows. Checked
+  in DOSBox, the panel shown and hidden by turns in the arena fight: a monster's turn 0.95 seconds
+  against 0.83 (within how much turns vary), the animation's flips 38 ms apart against 36; with
+  a Whirlwind turning, 42 ms against 41.
+
+**Documentation**
+- **Three animated pictures, recorded in DOSBox:** `docs/combat-log-live.gif` (the in-game combat
+  log filling in as an arena fight is played with Tab and Enter: Wild Fighting, attacks, a kill and
+  its XP, hiding in shadows) in place of the still shot in the Loader README; `docs/whirlwind.gif`
+  made anew (Whirlwind's funnel turning over the sligs as the party fights beside it, the damage
+  each round, 3x) in place of the 8-frame loop in FEATURES; and `docs/magic-glint.gif` (Gerakis in
+  magic gear: sparks on the armour, a weapon's edge glinting) under What the party wears. The
+  combat log and Whirlwind ones grabbed at about 48 frames a second and played at 25, as smooth as
+  the game's own animation (a first take, 7 a second, looked choppy); the combat log's recorded
+  with the flicker fixed. Pixels scaled whole (2x, 3x, 4x), so the game's own stay sharp.
+- **A review of the pages for 2.12.2:** the patch notes' line on magic gear's glow made plainer
+  (the spells' weapons glow whole); the player's guide's attacks-a-round table gains a thri-kreen
+  Mind Warrior's chatkcha. Links, anchors and pictures checked: none broken, none unused, none
+  outdated.
+
 ## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 
 **Fixed** (from an outside audit of 2.12.0)
