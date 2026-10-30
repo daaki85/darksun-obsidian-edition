@@ -66,11 +66,13 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.13.0** is out ([release notes](release-notes/v2.13.0.md)):
-characters have ages, Haste costs a year and a system shock roll, Restore Youth
-is a new 6th-level priest spell, and two more rule changes put Enlarge and CON
-as AD&D has them. 2.12.5 made Whirlwind strike once a round; 2.12.4 let the
-Loader run the game as [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled).
+**Obsidian Edition 2.13.1** is out ([release notes](release-notes/v2.13.1.md)):
+characters grow a year older each 365 days of game time and grey on the map as
+they age, the creation screen shows a new character's age, the combat log panel
+shows how long you've played, Kurzak notices when Legcrusher is gone, and RECALL
+on the creation screen no longer stops the game. 2.13.0 gave characters ages,
+Haste's cost and Restore Youth; 2.12.4 let the Loader run the game as
+[Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled).
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one

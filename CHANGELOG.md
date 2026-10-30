@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.1 ([release notes](release-notes/v2.13.1.md)).
+
 **New**
 - **Grey hair on the party's map figures** (with Ages and magical aging, and What the party
   wears): iron grey streaks when middle-aged, grey when old, white when venerable, in each
