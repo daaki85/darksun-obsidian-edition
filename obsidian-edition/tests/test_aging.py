@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import aging, game  # noqa: E402
-from test_dicelog import CREATURES, SHEETS  # noqa: E402
+from test_dicelog import CREATURES, SHEETS, set_effects  # noqa: E402
 from test_now import dag  # noqa: E402
 
 HUMAN, DWARF, MUL, THRI_KREEN = 1, 2, 7, 8
@@ -115,6 +115,62 @@ class PartyTests(unittest.TestCase):
         self.log.rules &= ~game.RULE_AGING
         self.assertEqual(self.log.stats_entry(0)[28:34], bytes(6))
         self.assertEqual(aging.describe(self.g.sheet(0)), "45, middle-aged; old at 53")
+
+
+class Fixed(random.Random):
+    """A d100 that comes up ROLL."""
+
+    def __init__(self, roll):
+        super().__init__(0)
+        self.roll = roll
+
+    def randint(self, a, b):
+        return self.roll
+
+
+class HasteTests(unittest.TestCase):
+    def setUp(self):
+        self.log = dag()
+        self.g = self.log.game
+        self.m = self.log.guest.mem
+        self.m[SHEETS + game.SHEET_RACE] = HUMAN
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 39))
+        self.m[CREATURES + game.CREATURE_ABILITIES:CREATURES + game.CREATURE_ABILITIES + 6] = bytes((18, 15, 13, 12, 11, 10))
+        self.m[SHEETS + game.SHEET_ABILITIES:SHEETS + game.SHEET_ABILITIES + 6] = bytes((18, 15, 13, 12, 11, 10))
+        struct.pack_into("<h", self.m, CREATURES, 30)
+        self.log.rules |= game.RULE_AGING
+
+    def test_system_shock_table(self):
+        self.assertEqual([aging.system_shock(c) for c in (1, 13, 14, 18, 24, 25, 30)], [25, 85, 88, 99, 99, 100, 100])
+
+    def test_survives_and_ages(self):
+        """A roll at or under the chance (CON 13: 85): a year older, the categories' changes."""
+        lines = aging.hasted(self.g, 0, Fixed(85))
+        self.assertEqual(lines, ["Dag's system shock (Haste's aging): d100 = 85, needs 85 or less (CON 13) -> survives",
+                                 "  Dag ages 1 year (Haste): now 40, middle-aged: STR -1, CON -1, INT +1, WIS +1."])
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 40)
+
+    def test_fails_and_dies(self):
+        lines = aging.hasted(self.g, 0, Fixed(86))
+        self.assertEqual(lines, ["Dag's system shock (Haste's aging): d100 = 86, needs 85 or less (CON 13) -> fails: Dag dies"])
+        self.assertEqual(self.m[CREATURES + game.CREATURE_STATUS], 5)
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 39)
+        self.assertEqual(aging.hasted(self.g, 0, Fixed(1)), [])  # (dead: nothing more)
+
+    def test_in_the_dice_log(self):
+        """A new Haste on Dag, once: its line, then his system shock and his year; none again for
+        the same Haste, nor with the rule off."""
+        self.assertEqual(self.log.effect_changes(10.0), [])
+        set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
+        lines = self.log.effect_changes(20.0)
+        self.assertTrue(lines[0].startswith("Hasted on Dag"))
+        self.assertTrue(lines[1].startswith("Dag's system shock (Haste's aging): d100 = "))
+        self.assertEqual(self.log.effect_changes(30.0), [])
+        set_effects(self.log, [])
+        self.log.effect_changes(40.0)
+        self.log.rules &= ~game.RULE_AGING
+        set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
+        self.assertEqual(len(self.log.effect_changes(50.0)), 1)
 
 
 if __name__ == "__main__":

@@ -17,6 +17,10 @@ notes](PATCH-NOTES.md).
   (`AGE 23`), first in the Effects panel (`AGE 23` / `MIDDLE-AGED AT 40`: DSCLOG's `AGE_TEXT`,
   `AGE_LINES`, from the age in STATS' new +28h on) and on the Characters tab. Checked in DOSBox.
   Tests: `test_aging`; `test_effects_specs` with an age.
+- **Haste ages (the same rule).** Each creature Haste speeds rolls system shock by its CON (the
+  PHB's table) or dies, and a party member who survives is a year older (`aging.hasted`, from the
+  dice log's `effect_changes` as a Hasted effect starts). Checked in DOSBox: a failure kills as the
+  game kills (no turns, no XP, "Dead"), a success ages. Tests: `test_aging`'s HasteTests.
 
 **Changed**
 - **The weapon specs are packed, making room for a character's age.** The sheet's +14h to +17h

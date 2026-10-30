@@ -180,12 +180,45 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
     return [out[0] + "."]
 
 
-def kill(gd: "game.GameData", member: int) -> None:
-    """MEMBER dead (old age, a failed system shock): no hit points, the game's dead status."""
+def kill(gd: "game.GameData", creature: int) -> None:
+    """CREATURE dead (old age, a failed system shock): no hit points, the game's dead status."""
     from . import kalzith
-    creature = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + member * game.CREATURE_SIZE
-    gd.guest.write(creature, struct.pack("<h", 0))
-    gd.guest.write(creature + game.CREATURE_STATUS, bytes([kalzith.DEAD_STATUS[1]]))
+    at = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + creature * game.CREATURE_SIZE
+    gd.guest.write(at, struct.pack("<h", 0))
+    gd.guest.write(at + game.CREATURE_STATUS, bytes([kalzith.DEAD_STATUS[1]]))
+
+
+# System shock (the Player's Handbook's CON table): the chance, by CON 1 to 25, to survive magic
+# that ages or reshapes the body
+SYSTEM_SHOCK = (0, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 88, 90, 95, 97, 99, 99, 99, 99, 99,
+                99, 99, 100)
+
+
+def system_shock(con: int) -> int:
+    return SYSTEM_SHOCK[max(1, min(25, con))]
+
+
+def hasted(gd: "game.GameData", creature: int, rng: Optional[random.Random] = None) -> List[str]:
+    """Haste's magical aging on CREATURE (the AD&D spell ages its target a year): a system shock
+    roll by its CON, death if it fails; a party member then a year older (age_by). Lines for the
+    dice log."""
+    from . import kalzith
+    rng = rng or random.Random()
+    rec = gd.creature(creature)
+    if len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in kalzith.DEAD_STATUS:
+        return []
+    con = rec[game.CREATURE_ABILITIES + 2]
+    chance, roll = system_shock(con), rng.randint(1, 100)
+    name = gd.creature_name(creature)
+    line = (f"{name}'s system shock (Haste's aging): d100 = {roll}, needs {chance} or less (CON {con}) -> "
+            + ("survives" if roll <= chance else f"fails: {name} dies"))
+    if roll > chance:
+        kill(gd, creature)
+        return [line]
+    out = [line]
+    if creature < game.PARTY_SIZE:
+        out += ["  " + text for text in age_by(gd, creature, 1, "Haste")]
+    return out
 
 
 def describe(sheet: bytes) -> Optional[str]:

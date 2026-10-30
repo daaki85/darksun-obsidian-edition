@@ -108,7 +108,7 @@ and the game's own rule is back at once.
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
-| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives |
+| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; Haste ages its target a year, after a system shock roll to survive |
 
 ### Class restrictions
 
@@ -506,6 +506,22 @@ age −1 STR and CON, +1 INT and WIS; old age −2 STR and DEX, −1 CON, +1 WIS
 venerable −1 STR, DEX and CON, +1 INT and WIS. A thri-kreen has only a
 venerable age, and loses 1 STR and 1 DEX there. Reaching the most its race
 lives (its own roll, kept secret) the character dies of old age.
+
+**Haste** speeds the body up and ages it, as the AD&D spell does: each
+creature it hastes must survive a **system shock** roll (the CON table: 85% at
+CON 13, 90% at 15, 95% at 16, 97% at 17, 99% from 18, 100% at 25) or die, and
+a party member who survives is a year older, its age categories counting as
+above. Monsters have no ages: for them it is the system shock alone. The dice
+log shows both:
+
+```
+Cermak gives Hasted to K'ratchek: double movement and attacks; ends Slow
+K'ratchek's system shock (Haste's aging): d100 = 89, needs 99 or less (CON 19) -> survives
+  K'ratchek ages 1 year (Haste): now 7.
+```
+
+A thri-kreen, venerable at 25, feels it most: every Haste is a year of a short
+life. A dwarf hardly notices.
 
 The age shows under the saves on the View Character screen (`AGE 23`), first
 in the Effects screen's lower panel with the next age to come (`AGE 23` /

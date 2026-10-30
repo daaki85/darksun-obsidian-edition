@@ -1529,6 +1529,15 @@ panel's lines (`EF_LINES_OF`). Checked in DOSBox: the game's own party given
 ages in a new game, View Character, the Effects screen (its weapon specs then
 on its second page) and the Characters tab.
 
+Haste's aging: the dice log's `effect_changes`, as a Hasted effect (22) starts
+on a combatant (not one a game just loaded has), calls `aging.hasted`: a system
+shock roll by the creature's CON (`SYSTEM_SHOCK`, the Player's Handbook's
+table), death on a failure (`kill`: HP 0 and the dead status, which the game
+takes as dead: no more turns, no share of the XP, "Dead" under the portrait),
+else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
+Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
+K'ratchek at CON 19 (89 against 99: 7 years old).
+
 ### Weapon specialization
 
 ([In the features page](FEATURES.md#weapon-specialization).)

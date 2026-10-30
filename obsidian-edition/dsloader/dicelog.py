@@ -1864,6 +1864,11 @@ class DiceLog:
                 out.append(f"{name} on {targets}{rule}")
             else:
                 out.append(f"{self._name(caster)} gives {name} to {targets}{rule}")
+            if eid == game.HASTED_EFFECT and self.rules & game.RULE_AGING:  # (Haste's magical aging)
+                for owner in owners:
+                    creature = self.game.combatant_creature(owner)
+                    if creature is not None:
+                        out += aging.hasted(self.game, creature)
         by_end: Dict[int, List[int]] = {}
         for eff in ended.elements():
             by_end.setdefault(eff.id, []).append(eff.owner)
