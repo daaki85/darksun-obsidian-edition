@@ -150,6 +150,10 @@ RULE_BACKSTAB = 8388608
 # ages from Dark Sun's tables, their categories' changes to the scores and death at the most a race
 # lives (aging.py), and Haste's magical aging: a system shock roll and a year (DSCLOG's RULE_HI_AGING)
 RULE_AGING = 16777216
+# Enlarge multiplies the weapon's dice only, rounded up, STR and the rest added after (the PHB's
+# Enlarge makes the weapon bigger; DSCLOG's RULE_HI_ENLARGE, ENL_SITE); else the game's, the whole
+# melee damage multiplied
+RULE_ENLARGE = 33554432
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
 # each (0 none). Up to 2.12, a byte each; now packed (SPEC_PACKED, +16h's top bit), 5 bits each in
@@ -213,7 +217,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
                  ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
-                 ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING))
+                 ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
+                 ("enlarge_dice", RULE_ENLARGE))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows

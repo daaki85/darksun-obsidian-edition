@@ -2459,6 +2459,7 @@ class DiceLog:
             steps += f" (d{sides} for d{sides - 2}: grand mastery)"
         if sum(faces) + bonus < 1:
             steps += " (raised to the minimum of 1)"
+        dice = sum(faces)  # (the weapon's dice: Enlarge's and a backstab's with their rules)
         if mode is not None and mode <= 1:  # melee: the game adds the attacker's STR bonus
             strength = g.creature(attacker)[CREATURE_ABILITIES]
             str_bonus = g.str_damage(strength)
@@ -2466,12 +2467,19 @@ class DiceLog:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
             # Enlarge (DSUN 7C211h, with the STR bonus): +10% a level of the spell, the levels of
-            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down
+            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down; with
+            # RULE_ENLARGE only the weapon's dice, rounded up, the rest added once (DSCLOG's ENL_SITE)
             level = self._enlarge_level(e.parent_arg(0x18))
             if level:
                 percent = 100 + 10 * level
-                total = total * percent // 100
-                steps = f"({steps}) x{percent}% Enlarge (level {level})"
+                if self.rules & game.RULE_ENLARGE and dice > 0:
+                    enlarged = -(-dice * percent // 100)
+                    total += enlarged - dice
+                    steps += f" +{enlarged - dice} Enlarge (the dice {dice} x{percent}% = {enlarged}, level {level})"
+                    dice = enlarged
+                else:
+                    total = total * percent // 100
+                    steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
         # that on the attacker's first two attacks of the round: x2, x3 from thief level 5, x4 from
         # 9, x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once, and on the
@@ -2486,7 +2494,6 @@ class DiceLog:
             if attacker < game.PARTY_SIZE:  # (an Assassin's one more: DSCLOG's STAB_TIMES)
                 times = max(kits.backstab_times(k, times) for k in g.kit_ids(attacker) or [0])
             if self.rules & game.RULE_BACKSTAB:
-                dice = sum(faces)
                 more = (times - 1) * dice
                 total += more
                 steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"

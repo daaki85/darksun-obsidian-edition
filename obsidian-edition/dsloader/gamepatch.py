@@ -165,6 +165,7 @@ SPREAD_SITE = NS_IMAGE + 48  # (a game loaded with the party in one figure: spre
 GATHER_SITE = NS_IMAGE + 55  # (the party put in one figure: after a fight, spread out again)
 FLIP_SITE = NS_IMAGE + 56  # (the game's flip of its screens: the combat log's panel put on the new one first)
 WW_SITE = NS_IMAGE + 57  # (a one-target spell's damage starting: Whirlwind's once a round, DSCLOG's WW_GATE)
+ENL_SITE = NS_IMAGE + 58  # (a melee hit's damage made bigger by Enlarge: the weapon's dice only, RULE_ENLARGE)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
 AREA_DMG = NS_IMAGE + 54  # (a spell's damage to the creatures it reaches: a Wilderness Avenger's Cause Wounds, kits.harm_bonus)
@@ -498,6 +499,10 @@ PATCHES = (
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
     Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),
     Patch("stab_times", 0x58A80, bytes.fromhex("508b46fc5af7ea8946fc"), _site(TIMES_SITE, 10)),
+    # Enlarge on a melee hit (7C211h, after STR's bonus): the damage x (100 + 10 a level)%, only the
+    # weapon's dice with RULE_ENLARGE (DSCLOG's ENL_SITE)
+    Patch("enlarge_dice", 0x7C246, bytes.fromhex("6bc00a660fbfc06683c064660fbfd6660fafc266bb640000006699"
+                                                 "66f7fb8bf0"), _site(ENL_SITE, 32)),
     *(Patch(f"area_table_{n}", offset, bytes.fromhex("b8813c8ec0268a870200"),
             bytes.fromhex("3d813c") + _site(AREA_SITE, 7))
       for n, offset in enumerate((0x23D32, 0x23D65, 0x23EBD, 0x23EF0, 0x28092, 0x280C6))),

@@ -413,6 +413,8 @@ class Viewer:
                           "scores changing at middle, old and venerable age, and dies at the most its race "
                           "lives; Haste ages each it speeds a year, and each must survive a system shock roll "
                           "(by CON), as in AD&D"),
+                ("enlarge_dice", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
+                                 "as in AD&D (the game multiplies the whole melee damage, STR included)"),
                 ("weapon_specialization", "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
                                           "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                           "rangers have expertise, every ranger with the bow; specialists and "

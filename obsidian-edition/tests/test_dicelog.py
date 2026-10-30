@@ -447,6 +447,30 @@ class BackstabTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 69: ((1d8 = [5] +12 STR 24) x140% Enlarge "
                                            "(level 4)) x3 backstab"])
 
+    def test_enlarge_dice_only(self):
+        """RULE_ENLARGE (DSCLOG's ENL_SITE): the dice x140%, rounded up, STR added once; with
+        RULE_BACKSTAB too, the backstab multiplies the enlarged dice."""
+        def hit(rules):
+            log = make_game()
+            log.rules = rules
+            sheet = SHEETS + 0 * game.SHEET_SIZE
+            log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
+            log.game.effect_spells = lambda: [(game.Effect(0, 5, game.ENLARGE_EFFECT), 30)]
+            creature_of = log.game.combatant_creature
+            log.game.combatant_creature = lambda c: c if c == 5 else creature_of(c)
+            log.game.effect_caster_level = lambda creature, spell: 4
+            parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
+            e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
+                      parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
+            return log.describe(e)
+        # 5 x 140% = 7, + 12 STR = 19; x3 backstab the game's way (19 x 3 = 57)
+        self.assertEqual(hit(game.RULE_ENLARGE), ["  Dag hits Mountain Stalker for 57: (1d8 = [5] +12 STR 24 "
+                                                  "+2 Enlarge (the dice 5 x140% = 7, level 4)) x3 backstab"])
+        # the enlarged 7 x3 = 21, + 12 STR = 33
+        self.assertEqual(hit(game.RULE_ENLARGE | game.RULE_BACKSTAB),
+                         ["  Dag hits Mountain Stalker for 33: 1d8 = [5] +12 STR 24 +2 Enlarge (the dice 5 x140% = 7, "
+                          "level 4) +14 backstab (the dice 7 x3 = 21)"])
+
     def backstab(self, level, rules, made=0):
         log = make_game()
         log.rules = rules

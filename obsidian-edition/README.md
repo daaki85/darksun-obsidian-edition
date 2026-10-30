@@ -650,9 +650,11 @@ in its lower panel and under the pointer:
   it is readied (Shadowseeker's Detect Invisibility) show none.
 - **Enlarge's damage:** with the pointer on its icon, how much more melee
   damage it gives, 10% a level of its caster: ENLARGED (+90% DAMAGE) from a
-  9th-level preserver. The inventory's and View Character's damage don't
-  count it (no room); each hit's line in the dice log does
-  (`x190% Enlarge (level 9)`). A second Enlarge on someone already enlarged
+  9th-level preserver, or ENLARGED (+90% DICE) with
+  [the weapon's dice only](FEATURES.md#enlarge-multiplies-the-weapons-dice-only)
+  on. The inventory's and View Character's damage don't count it (no room);
+  each hit's line in the dice log does (`+4 Enlarge (the dice 5 x190% = 10,
+  level 9)`, or `x190% Enlarge (level 9)` with the rule off). A second Enlarge on someone already enlarged
   uses up the spell and adds nothing.
 - **The armour spells' AC:** with the pointer on Barkskin's, Flesh Armor's or
   Magical Vestments' icon, the armour AC it gives by its caster's level:

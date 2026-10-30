@@ -1539,6 +1539,25 @@ else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
 Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
 K'ratchek at CON 19 (89 against 99: 7 years old).
 
+### Enlarge's dice
+
+([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)
+
+The game's Enlarge is 7C211h, called by the attack (58A33h) for a melee hit:
+it adds STR's bonus (508:5Ch), then, with the Enlarged flag, multiplies the
+lot by 100 + 10 × the levels of the Enlarges on the attacker (598:52h), 32-bit,
+rounded down. DSCLOG's `ENL_SITE` replaces that multiplying (7C246h, 32
+bytes): with `RULE_HI_ENLARGE` (`game.RULE_ENLARGE`) it takes the hit's dice
+from `STAB_ROLL` (58A29h: the roll less what the weapon added, kept for the
+backstab rule; `ENL_KNOWN` so they are used once, never a stale hit's),
+multiplies only those, rounded up, adds the difference, and makes the kept
+dice the enlarged ones, so a backstab with its rule multiplies those. Without
+the rule, or with no dice kept, it does the game's sum. The dice log's hit
+line does the same (`RULE_ENLARGE`), and the Effects screen's line says DICE
+rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Checked in DOSBox:
+Gerakis Enlarged at level 1 hitting a Screamer Beetle for 21, 22 and 25, its
+hit points down by the same (the game's way: 22, 23 and 26).
+
 Restore Youth (211, a cosmos spell: `COSMOS_MASK` in DSCLOG's `P6_MASKS`) is
 Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
 handler, so the game casts it as a touch spell that heals nothing. The dice

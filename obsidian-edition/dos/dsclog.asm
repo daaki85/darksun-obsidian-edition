@@ -13351,6 +13351,7 @@ stab_roll:
         sub ax, [bp - 0x12]
         mov [cs:stab_dice], ax
         mov byte [cs:stab_known], 1
+        mov byte [cs:enl_known], 1
         cmp word [bp + 0x16], 1
         pushf
         pop ax
@@ -13389,6 +13390,48 @@ stab_times:
 .whole: imul word [bp - 4]
 .put:   mov [bp - 4], ax
         mov byte [cs:stab_known], 0
+        iret
+
+; ENLARGE DICE (RULE_HI_ENLARGE): the game's Enlarge (7C211h, after STR's bonus: SI the damage, AX
+; the levels of the Enlarges on the attacker, 598:52h) multiplies the whole of a melee hit's damage
+; by 100 + 10 a level percent, rounded down; AD&D's enlarges the weapon, so only its dice. ENL_SITE:
+; "imul ax,ax,0Ah ... idiv ebx / mov si,ax" (7C246h; 32 bytes): with the rule and the hit's dice
+; known (STAB_ROLL's, once: ENL_KNOWN), the dice multiplied, rounded up, the rest added once, and
+; the dice kept made the enlarged ones (a backstab multiplies those); else the game's.
+enl_known db 0
+enl_site:
+        push ebx
+        push edx
+        imul ax, ax, 10
+        movsx eax, ax
+        add eax, 100                    ; (the percent)
+        test word [cs:rules_hi], RULE_HI_ENLARGE
+        jz .whole
+        cmp byte [cs:enl_known], 0
+        je .whole
+        movsx ebx, word [cs:stab_dice]
+        or ebx, ebx
+        jle .whole
+        imul eax, ebx
+        add eax, 99
+        cdq
+        push ebx
+        mov ebx, 100
+        idiv ebx                        ; (the dice enlarged, rounded up)
+        pop ebx
+        sub ax, bx
+        add si, ax
+        add [cs:stab_dice], ax
+        jmp .done
+.whole: movsx edx, si
+        imul eax, edx
+        mov ebx, 100
+        cdq
+        idiv ebx
+        mov si, ax
+.done:  mov byte [cs:enl_known], 0
+        pop edx
+        pop ebx
         iret
 
 REQ_REST equ 0
@@ -13693,6 +13736,7 @@ RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and da
 RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
 RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
 RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging (aging.py)
+RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -15935,6 +15979,7 @@ SPREAD_SITE equ NS_IMAGE + 48   ; 692CEh: a game loaded, the party in one figure
 GATHER_SITE equ NS_IMAGE + 55   ; 1DFE8h: the party put in one figure, at a fight's end too (SPREAD_GATHER)
 FLIP_SITE equ NS_IMAGE + 56     ; 14444h: the game's flip of its two screens, the new one about to show (FLIP_SITE)
 WW_SITE   equ NS_IMAGE + 57     ; 7617Dh: a one-target spell's damage starting (WW_GATE)
+ENL_SITE  equ NS_IMAGE + 58     ; 7C246h: a melee hit's damage made bigger by Enlarge (ENL_SITE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -16024,6 +16069,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je harm_site
         cmp byte [cs:rl_site], WW_SITE
         je ww_gate
+        cmp byte [cs:rl_site], ENL_SITE
+        je enl_site
         cmp byte [cs:rl_site], AREA_SITE
         je area_site
         cmp byte [cs:rl_site], ACID_SITE
@@ -17760,7 +17807,8 @@ ns_reflect_entry:
 ; low byte): REFLECT_ENTRY then names it, its name with them, "IMPROVED AC (3 CHARGES)", in EF_TEXT
 ; (580:5Ch keeps that name's address, not the entry, so Reflected Image's use of the entry after it
 ; changes nothing). Mirror Images from Reflected Image take its name and icon. A party member's
-; Enlarge is named with its melee damage instead, "ENLARGED (+90% DAMAGE)", from the level the
+; Enlarge is named with its melee damage instead, "ENLARGED (+90% DAMAGE)" ("+90% DICE" with
+; RULE_HI_ENLARGE), from the level the
 ; Loader puts in their STATS (the game allows one Enlarge on a creature), and Barkskin, Flesh
 ; Armor and Magical Vestments with the AC they give, "BARKSKIN (AC 4)" (STATS_ARMOUR). Only with
 ; the room past the spell rows (SEG_MOVE). DS the game's; all registers kept.
@@ -17885,6 +17933,9 @@ ef_charges:
         mov al, dl
         call c_itoa                     ; (the level, then a 0: 10% a level)
         mov si, ef_enlarge_word
+        test word [cs:rules_hi], RULE_HI_ENLARGE
+        jz .tail
+        mov si, ef_enlarge_dice         ; (the weapon's dice only: ENL_SITE)
         jmp .tail
 .armour:
         mov bx, ax
@@ -17915,6 +17966,7 @@ ef_charges:
         ret
 ef_charge_word db ' CHARGE', 0
 ef_enlarge_word db '0% DAMAGE)', 0
+ef_enlarge_dice db '0% DICE)', 0
 ef_shut_word db ')', 0
 
 ; EF_NAMED: (EF_CHARGES) effect CL's name copied into EF_TEXT: DI its end there, AX its icon, ES the

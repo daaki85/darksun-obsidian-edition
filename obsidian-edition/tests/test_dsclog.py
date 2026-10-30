@@ -3269,6 +3269,42 @@ class NewSpellTests(RuleTests):
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=2)[1] & 0x40, 0)
         self.assertEqual([kits.backstab_times(k, 5) for k in (kits.ASSASSIN, kits.SWASHBUCKLER, 0)], [6, 5, 5])
 
+    def test_enlarge_dice(self):
+        """ENL_SITE (7C246h, AX the Enlarges' levels, SI the damage after STR): the game's (100 + 10
+        a level)% of it all, rounded down; with RULE_HI_ENLARGE (512) and STAB_ROLL's dice, only the
+        dice, rounded up, the rest added once, and the kept dice made the enlarged ones (a backstab
+        then multiplies those); the dice used once."""
+        from dsloader import gamepatch
+        mu = self.mu
+        patches = {p.name: p for p in gamepatch.PATCHES}
+        def run(name, regs):
+            self.at += 0x200
+            start = CALLER * 16 + self.at
+            code = patches[name].replacement
+            mu.mem_write(start, code)
+            for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+            mu.emu_start(start, start + len(code))
+        def enlarge(rules_hi, levels, damage, rolled=None, bonus=-1, times=3):
+            self.rules_hi(rules_hi)
+            if rolled is not None:  # (the hit's roll: STAB_ROLL keeps its dice)
+                mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
+                mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", 1))
+                run("stab_roll", dict(eax=rolled))
+            run("enlarge_dice", dict(eax=levels, esi=damage))
+            si = mu.reg_read(r.UC_X86_REG_SI)
+            mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<h", 0))
+            mu.mem_write(SS * 16 + BP - 4, struct.pack("<h", si))
+            mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", 9))  # (not a party member)
+            run("stab_times", dict(eax=times))
+            return si, struct.unpack("<h", mu.mem_read(SS * 16 + BP - 4, 2))[0]
+        # 1d8 rolled 5, -1 bone: 4; +12 STR: 16; Enlarge level 4 (x140%)
+        self.assertEqual(enlarge(0, 4, 16, rolled=4)[0], 22)  # (16 x 1.4 = 22.4: the game's)
+        self.assertEqual(enlarge(512, 4, 16, rolled=4)[0], 18)  # (5 x 1.4 = 7: +2)
+        self.assertEqual(enlarge(512, 3, 16, rolled=4)[0], 18)  # (5 x 1.3 = 6.5, up to 7)
+        self.assertEqual(enlarge(512, 4, 16)[0], 22)  # (no dice since the last: the game's)
+        self.assertEqual(enlarge(512 | 128, 4, 16, rolled=4), (18, 32))  # (backstab: 7 x 3 - 1 + 12)
+
     def test_wall_damage(self):
         """HARM_SITE for Wall of Thorns' damage (761A9h; DI the spell, keyed in its own ground
         picture's entry; each creature on its own, SI): 8 + the creature's AC (its sheet's, at

@@ -100,6 +100,9 @@ Other things the game does its own way:
 - Strength adds 1d6 to STR while it lasts, up to 24. The same goes for the
   psionic Adrenalin Control, and Weakened or lending strength takes it away
   (never below 3).
+- Enlarge adds 10% a level of its caster to the whole of a melee hit's
+  damage, STR's bonus and the weapon's plus included, rounded down (with the
+  Loader: [only the weapon's dice](FEATURES.md#enlarge-multiplies-the-weapons-dice-only)).
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand: with a
   weapon ready the game says "Failed, weapon in hand" and nothing happens.
 - Death spells (Slay Living, Dismissal) do the target's HP + 10 on a failed

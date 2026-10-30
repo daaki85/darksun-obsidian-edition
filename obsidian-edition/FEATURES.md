@@ -85,7 +85,7 @@ done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
 
 ## Rule changes
 
-Fifteen changes that bring the game's own rules closer to AD&D, each with its
+Sixteen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section. All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set). Untick one
@@ -109,6 +109,7 @@ and the game's own rule is back at once.
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
 | [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; Haste ages its target a year, after a system shock roll to survive |
+| [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
 
 ### Class restrictions
 
@@ -530,6 +531,23 @@ in the Effects screen's lower panel with the next age to come (`AGE 23` /
 (`Age: 45, middle-aged; old at 53`).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
+
+### Enlarge multiplies the weapon's dice only
+
+The game's Enlarge adds 10% a level of its caster to the whole of a melee
+hit's damage: STR's bonus, the weapon's plus and a specialist's bonus grow
+with it, rounded down. AD&D's Enlarge makes the creature and what it carries
+bigger, so with **Enlarge multiplies the weapon's dice only** ticked only the
+weapon's dice grow, rounded up, and the rest is added after. The dice log
+shows it:
+
+```
+Gerakis hits Screamer Beetle for 21: 1d8 = [4] -1 bone +2 specialized +3 Wild Fighting +12 STR 24 +1 Enlarge (the dice 4 x110% = 5, level 1)
+```
+
+where the game made it 22 (20 × 110%). A backstab then multiplies the
+enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
+(+90% DAMAGE).
 
 ## More character customization
 
@@ -2096,7 +2114,8 @@ from the next start).
 
 With the pointer on the icon of a spell that lasts a number of uses, the
 Effects screen names the uses left: IMPROVED AC (10 CHARGES). Enlarge's icon
-names the melee damage it adds, 10% a level of its caster: ENLARGED (+90% DAMAGE).
+names the melee damage it adds, 10% a level of its caster: ENLARGED (+90% DAMAGE),
+or ENLARGED (+90% DICE) with [the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only).
 Barkskin's, Flesh Armor's and Magical Vestments' name the armour AC they give,
 by their caster's level (BARKSKIN (AC 3)): Barkskin 6 less a quarter of the
 level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1 better

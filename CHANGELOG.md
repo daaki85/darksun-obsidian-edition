@@ -30,6 +30,13 @@ notes](PATCH-NOTES.md).
   by Haste. Tests: `test_aging`'s RestoreYouthTests, `test_grace`, `test_dsclog`.
 
 **Changed**
+- **Enlarge multiplies the weapon's dice only (a rule change, on unless unticked).** The game's
+  Enlarge (7C211h) multiplies the whole melee damage, STR's bonus included; with
+  `RULE_ENLARGE` (DSCLOG's `RULE_HI_ENLARGE`, `ENL_SITE` at 7C246h) only the dice `STAB_ROLL`
+  kept, rounded up, the rest added once, and a backstab then multiplies the enlarged dice. The
+  dice log's hit line and the Effects screen's ENLARGED (+90% DICE) follow it. Checked in DOSBox:
+  three hits by an Enlarged gladiator, the dice log's damage the game's. Tests:
+  `test_enlarge_dice`, `test_enlarge_dice_only`.
 - **The weapon specs are packed, making room for a character's age.** The sheet's +14h to +17h
   (which the game never uses) held the four weapon specs a byte each; now they are 5 bits each
   in +14h to +16h, +16h's top bit marking the layout (`SPEC_PACKED`), and +17h is free for the

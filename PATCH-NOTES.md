@@ -138,6 +138,7 @@ A few of them:
 
 ## Magic and Psionics
 
+- **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[New]** Six new wizard spells, each with its own icon and description:
 
 | Spell | Level | What it does |
