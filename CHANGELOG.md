@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.0 ([release notes](release-notes/v2.13.0.md)).
+
 **New**
 - **Ages (the rule change Ages and magical aging, on unless unticked).** Each party member has an
   age from Dark Sun's Table 7, rolled the first time the Loader sees it (`aging.give_ages`, in the
@@ -56,6 +58,37 @@ notes](PATCH-NOTES.md).
   older saves and roster characters need no conversion step. Checked in DOSBox: four specs a byte
   each and packed read alike on the Effects screen and in a fight, and come through a save and
   load. Tests: `test_specslots`, `test_spec_layouts`, `test_specs_packed`.
+
+**Fixed** (from a code audit of this pull request and the Loader)
+- **A new character could keep the last one's age.** Character creation's DONE (`CR_WEAPONS`)
+  cleared the specs but kept +17h, so a member made in a slot an earlier character had held took
+  its age; it now clears the whole dword (packed, no specs, no age). `SPEC_CLEAR`, then unused,
+  is gone. Test: `test_spec_layouts`.
+- **Haste rolled again after a reload.** The same party loaded again (its clock gone back) now
+  counts as a load (`_party_check`), so a Haste already on doesn't roll system shock and age anew.
+- **Enlarge's dice** are kept for a melee hit only (`STAB_ROLL` sets `ENL_KNOWN` for a melee roll,
+  `STAB_TIMES` clears it), so no other call can use a stale hit's.
+- **Ages:** a score past 25 is no longer cut by a +1 (nor one under 3 by a −1); a thri-kreen made
+  young again is "no longer venerable"; a creature with no scores rolls no system shock.
+- **Saves:** a CON past 25 reads no table (`save_modifiers`, as `saves_now`); the game's
+  whole-damage Enlarge rounds toward 0 in the dice log, as its `idiv`.
+- **The patch notes' page** no longer hangs on a "> " line that isn't a developer's note.
+- **settings.json with a byte-order mark** (Notepad's) is read rather than put aside as `.bad`.
+- **The recompiled program's ordinary exit** isn't "cut off" (it has no GAMEEND.COM to write
+  GAMEOK.TXT), and the last game's GAMEOK.TXT is cleared before it starts.
+- More errors caught: a short GFF (`IndexError`) in the objects' and regions' copies, the
+  Characters tab's age, the named saves' folder, Restore Youth's icon without stable colours.
+- Tests: `test_settings_with_a_bom`, `test_recompiled_exit_is_not_cut_off`,
+  `test_a_plain_quote_is_text`, `test_scores_never_cut_the_wrong_way`,
+  `test_every_rule_has_its_box` (each rule a box on the Options tab, each its own bit).
+
+**Documentation**
+- A review of every document for the new rules: the patch notes (Ages under Magic and Psionics,
+  Haste's shock that kills, saves made with 2.13.0 not for earlier versions), FEATURES (contents,
+  the whole system shock table), the player guide (ages, Haste, CON's regeneration, the seventeen
+  rules), the README (ten 6th-level spells, the Characters tab's age) and DEVELOPMENT's memory
+  figures. Screenshots taken again: the ten priest spells, the inventory panels with the age, the
+  default party's inventory, the Options tab.
 
 ## Pull request #80 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/80))
 

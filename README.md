@@ -64,10 +64,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.12.5** is out ([release notes](release-notes/v2.12.5.md)):
-Whirlwind strikes once a round and its swept lose their next turn, and the Effects
-screen names Enlarge's damage and the armour spells' AC. 2.12.4 let the Loader run
-the game as [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled).
+**Obsidian Edition 2.13.0** is out ([release notes](release-notes/v2.13.0.md)):
+characters have ages, Haste costs a year and a system shock roll, Restore Youth
+is a new 6th-level priest spell, and two more rule changes put Enlarge and CON
+as AD&D has them. 2.12.5 made Whirlwind strike once a round; 2.12.4 let the
+Loader run the game as [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled).
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
