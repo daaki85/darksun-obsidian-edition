@@ -29,6 +29,8 @@ done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
   - [Helms](#helms)
   - [Ages and magical aging](#ages-and-magical-aging)
+  - [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only)
+  - [CON as in AD&D](#con-as-in-add)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
@@ -511,7 +513,8 @@ lives (its own roll, kept secret) the character dies of old age.
 
 **Haste** speeds the body up and ages it, as the AD&D spell does: each
 creature it hastes must survive a **system shock** roll (the CON table: 85% at
-CON 13, 90% at 15, 95% at 16, 97% at 17, 99% from 18, 100% at 25) or die, and
+CON 13, 88% at 14, 90% at 15, 95% at 16, 97% at 17, 99% at 18 to 24, 100% at
+25) or die, and
 a party member who survives is a year older, its age categories counting as
 above. Monsters have no ages: for them it is the system shock alone. The dice
 log shows both:
@@ -1343,8 +1346,8 @@ How it works:
 
 Ten 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
 202-211). A cleric or druid gets them at 11th level, with AD&D's spell slots:
-one 6th-level slot at 11th and two at 12th (a druid reaches 12th under the XP
-cap, a cleric 11th). Like the 4th and 5th-level common spells, the cosmos
+one 6th-level slot at 11th and two at 12th. Under the XP cap a druid can reach
+12th, a cleric only 11th, so only a druid gets the second slot. Like the 4th and 5th-level common spells, the cosmos
 ones are for druids and a Healer cleric; each element's are for the clerics
 and druids of that sphere (an Elementalist's second sphere counts). They come
 with the **New wizard spells** switch (it covers these too), and with
@@ -1367,7 +1370,7 @@ says so.
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
 | **Whirlwind** | air | an area, a round a caster level | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
-![The 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds and Water of Life](docs/new-priest-spells.png)
+![The ten 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds, Water of Life and Restore Youth with its fountain icon](docs/new-priest-spells.png)
 
 How they're made, and where they differ from the books:
 
@@ -1429,7 +1432,8 @@ unused, and Wall of Thorns' gives the AC its damage came from
 sweeps off its feet has a line of its own. Their icons are Wake of the
 Ravager's, read from your copy (GOG sells it with Shattered Lands); without it
 they have icons of their own (the game's, recoloured). Restore Youth, which
-Wake of the Ravager hasn't, has the mod's own: a fountain on light blue water.
+Wake of the Ravager hasn't, has the mod's own: a fountain on light blue water,
+and is cast with Cure Disease's sound.
 
 How it works:
 [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
@@ -2140,8 +2144,9 @@ from the next start).
 
 With the pointer on the icon of a spell that lasts a number of uses, the
 Effects screen names the uses left: IMPROVED AC (10 CHARGES). Enlarge's icon
-names the melee damage it adds, 10% a level of its caster: ENLARGED (+90% DAMAGE),
-or ENLARGED (+90% DICE) with [the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only).
+names what it adds, 10% a level of its caster: ENLARGED (+90% DICE) with
+[the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) (on unless
+unticked), or ENLARGED (+90% DAMAGE), the whole melee damage, with it off.
 Barkskin's, Flesh Armor's and Magical Vestments' name the armour AC they give,
 by their caster's level (BARKSKIN (AC 3)): Barkskin 6 less a quarter of the
 level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1 better

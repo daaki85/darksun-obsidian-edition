@@ -29,13 +29,12 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** The combat log is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
 - **[New]** In the slave pens and the arena, between fights, the combat log panel's top line shows how many arena fights the party has had (the game's own count, one a trip into the arena).
-- **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, and a thief's skills, in the game's own lettering.
+- **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
-- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores; a character dies at the most its race lives. **Haste** ages each creature it speeds a year, after a system shock roll (by CON) that it must survive, as in AD&D.
-- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left, for Enlarge how much more melee damage it gives (ENLARGED (+90% DAMAGE)), and for Barkskin, Flesh Armor and Magical Vestments the armour AC they give (BARKSKIN (AC 3)).
+- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left, for Enlarge how much more it gives (ENLARGED (+90% DICE), or DAMAGE with its rule off), and for Barkskin, Flesh Armor and Magical Vestments the armour AC they give (BARKSKIN (AC 3)).
 - **[New]** Reading a scroll on the inventory screen tells you what happened (YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI SPELL...) on the line under the paper doll. The game showed nothing there.
 
 ## Combat
@@ -138,6 +137,7 @@ A few of them:
 
 ## Magic and Psionics
 
+- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; only magic ages anyone. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (6th-level priest, below) takes magical years back.
 - **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
 - **[New]** Six new wizard spells, each with its own icon and description:
@@ -327,7 +327,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); and thief skills (Improved Thieving).
+Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); Enlarge's dice, CON's regeneration and poison saves, and Haste's aging (Magic and Psionics); and thief skills (Improved Thieving).
 
 ## Your Saved Games
 
@@ -338,6 +338,8 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 - Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
 - A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
+- With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
+- **A save made with 2.13.0 is not for earlier versions.** It keeps the weapon specs packed with the age beside them, which an older Loader reads as other specs. Older saves load in 2.13.0 as they are.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

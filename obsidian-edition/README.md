@@ -64,8 +64,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   the Look box tells you what can hurt a monster ([In the game](#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
   (experience, priests' THAC0, spell slots), INT's limits on learning spells,
-  saving throws and multiclass hit points as the books have them, and scores
-  and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
+  saving throws and multiclass hit points as the books have them, scores and
+  hit points kept as rolled, ages (Haste costs a year), Enlarge's weapon dice
+  and CON's regeneration ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels
   past 9th up to a cap by XP (10th to 13th for one class, lower for two or
@@ -80,9 +81,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **More of Athas:** new weapons in every material, magic items with stories of
   their own (robes and bracers among them, for those who wear no armour), six
   wizard spells ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and
-  Friends](FEATURES.md#new-wizard-spells)) and nine [6th-level priest
+  Friends](FEATURES.md#new-wizard-spells)) and ten [6th-level priest
   spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
-  Whirlwind...), Kalzith (a defiler who sells scrolls), defilers who drop
+  Whirlwind, Restore Youth...), Kalzith (a defiler who sells scrolls), defilers who drop
   scrolls, more of Semyon's story, and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
   and armour (its magic gear glinting), figures cast shadows and kick up dust,
@@ -469,12 +470,12 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
 ### THAC0, saves and thief skills
 
 Started from the Loader, the game's own inventory screen (the one with the
-character's figure and their equipment) shows five more things in its
+character's figure and their equipment) shows six more things in its
 right-hand panel, drawn by the game's text routine so they look like the rest:
 
-![The inventory screen's panel in the game: THAC0 and the saves at the top, Daaki's thief skills (move silently and hide in shadows among them) beside the abilities, his DEX reaction and defensive adjustments, and a club in each hand: 1.5 attacks a round with the right, one with the off hand](docs/inventory.png)
+![The inventory screen's panel in the game: THAC0 and the saves at the top, then Cilla's age; her thief skills (move silently and hide in shadows among them) beside the abilities, her DEX reaction and defensive adjustments, a sling and a long sword](docs/inventory.png)
 
-![A ranger's panel: Dream's move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
+![A ranger's panel: move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
 
 - above STR, **THAC0** and the five **saving throws**, with the usual AD&D
   short labels: `PPD` paralysis/poison/death, `RSW` rod/staff/wand, `PP`
@@ -644,11 +645,11 @@ in its lower panel and under the pointer:
   CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
   Effects that last until removed (Charmed) and a magic item's power while
   it is readied (Shadowseeker's Detect Invisibility) show none.
-- **Enlarge's damage:** with the pointer on its icon, how much more melee
-  damage it gives, 10% a level of its caster: ENLARGED (+90% DAMAGE) from a
-  9th-level preserver, or ENLARGED (+90% DICE) with
-  [the weapon's dice only](FEATURES.md#enlarge-multiplies-the-weapons-dice-only)
-  on. The inventory's and View Character's damage don't count it (no room);
+- **Enlarge's damage:** with the pointer on its icon, how much more it gives,
+  10% a level of its caster: ENLARGED (+90% DICE) from a 9th-level preserver,
+  the weapon's dice made bigger
+  ([the rule](FEATURES.md#enlarge-multiplies-the-weapons-dice-only), on unless
+  unticked), or ENLARGED (+90% DAMAGE) with it off, the whole melee damage. The inventory's and View Character's damage don't count it (no room);
   each hit's line in the dice log does (`+5 Enlarge (the dice 5 x190% = 10,
   level 9)`, or `x190% Enlarge (level 9)` with the rule off). A second Enlarge on someone already enlarged
   uses up the spell and adds nothing.
@@ -743,7 +744,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with In the game, More character customization, Expanded features (Improved thieving among them) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (all seventeen, ages, Enlarge's dice and CON as in AD&D last) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -761,7 +762,9 @@ and use the arrow and Page keys):
   beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
   with Wooden Bow (base 19)`), the saves as the d20 needed now (see
   [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
-  a fight: Stalker)`) and attacks;
+  a fight: Stalker)`) and attacks; with [ages](FEATURES.md#ages-and-magical-aging)
+  on, their age, its category and the next to come (`Age: 45, middle-aged;
+  old at 53`);
 - what they wear and hold, by the game's own slot names ("Right hand: Bone
   Long Sword"; "Carried" for the backpack), with each item's material and
   plus;

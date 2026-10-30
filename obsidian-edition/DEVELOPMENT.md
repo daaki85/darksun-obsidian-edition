@@ -2569,9 +2569,9 @@ the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
 200h bytes from 3E3Fh to `seg_space` in its own resident image and points the
 two selectors there (`seg_moved`, the header's +306). The records then run to
-212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h), so
-another new spell needs room made first (Negative Plane Protection's save
-record moved elsewhere, say). The stack had been written over records 196-198's room all along; with it
+212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h),
+which Negative Plane Protection's save record (`NPP_SAVE`) fills; another new
+spell needs room made first (that record moved elsewhere, say). The stack had been written over records 196-198's room all along; with it
 moved, nothing writes there but the helper. Spells 199-201 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
 `monsters.py` reads the kinds table's segment from the selector. The spell

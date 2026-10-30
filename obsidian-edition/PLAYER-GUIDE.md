@@ -218,6 +218,14 @@ With each score rolled 8 to 20 before the adjustment, a race's scores run from
 INT at 15 and its WIS and CHA at 17, with smaller adjustments; the game gets
 the same caps from these larger ones.)
 
+**Ages.** With [Ages and magical aging](FEATURES.md#ages-and-magical-aging)
+on, each character has an age from the Dark Sun rules (on the inventory
+panel, under the saves). Middle, old and venerable age change the scores, and
+a character dies at the most its race lives; only magic ages them. **Haste**
+costs a year, after a system shock roll by CON that a character can fail and
+die (85% to survive at CON 13, 99% from 18); **Restore Youth** gives magical
+years back. *Without the mod:* no ages, and Haste costs nothing.
+
 **Classes by race** (the creation screen greys the rest):
 
 | Race | Cleric | Druid | Fighter | Gladiator | Preserver | Psionicist | Ranger | Thief |
@@ -292,6 +300,10 @@ classes a human could change to ([kits](#kits)).
   higher CON adds nothing unless they are below the new least.
 - Half-giants roll double. A roll counts at least 2 with CON 20, 3 with CON
   21-22 and 4 with CON 23 or more.
+- CON 20 or more gives hit points back by themselves, a party member's one an
+  hour at CON 20, 50 minutes at 21, 40 at 22, 30 at 23, 20 at 24 and 10 at
+  25 ([CON as in AD&D](FEATURES.md#con-as-in-add)). *Without the mod:* one
+  every 5 minutes at any of them.
 - Two [kits](#kits) change the die: a **Battle Mage** rolls a d6, an **Arcanist** a d3.
 - **CON's bonus** comes with every level: for a fighter, gladiator or ranger
   +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
@@ -1495,7 +1507,7 @@ AD&D's class tables and the **New wizard spells** switch on):
 | Effect | Does |
 |---|---|
 | Blessed / Cursed | +1 / −1 to hit (Bless also +1 on saves); they cancel each other |
-| Hasted / Slowed | Hasted: double movement and attacks, +2 initiative. Slowed: half, loses every other turn, −4 to hit, AC 4 worse, −2 initiative |
+| Hasted / Slowed | Hasted: double movement and attacks, +2 initiative; with ages on, a system shock roll and a year older. Slowed: half, loses every other turn, −4 to hit, AC 4 worse, −2 initiative |
 | Paralyzed | no turns; fails every save |
 | Stuck (Grease, Web, Entangle and the like) | can't move; Free Action stops it |
 | Afraid | runs; can't attack or cast |
@@ -1777,7 +1789,7 @@ AD&D's tables:
 | | how much it says: at the least, in short or in detail | in short |
 | | describe monsters when you Look at them in a fight | on |
 | | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
-| Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1 | all on |
+| Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1; ages and magical aging; Enlarge multiplying the weapon's dice only; CON as in AD&D | all on |
 | More character customization | weapon specialization; kits; the XP level cap; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |

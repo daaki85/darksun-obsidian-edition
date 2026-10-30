@@ -52,7 +52,7 @@ notes](PATCH-NOTES.md).
   in +14h to +16h, +16h's top bit marking the layout (`SPEC_PACKED`), and +17h is free for the
   character's age (`SHEET_AGE`). A sheet keeps the old layout until something writes its specs,
   and every reader takes both (DSCLOG's `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`, `SPEC_SET`,
-  `SPEC_CLEAR`, `SPEC_PACK`; the Loader's `game.spec_kinds`, `packed_specs`, `with_specs`), so
+  `SPEC_PACK`; the Loader's `game.spec_kinds`, `packed_specs`, `with_specs`), so
   older saves and roster characters need no conversion step. Checked in DOSBox: four specs a byte
   each and packed read alike on the Effects screen and in a fight, and come through a save and
   load. Tests: `test_specslots`, `test_spec_layouts`, `test_specs_packed`.
