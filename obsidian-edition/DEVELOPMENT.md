@@ -461,7 +461,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 55.5 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.5 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 54.8 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -542,14 +542,16 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. Since the far block went to the HMA,
-2,303 paragraphs (36 KB) are spare in it, and with `UMBPLUS.COM` about 55.5 KB
-are free in one piece (57.8 KB measured in DOSBox with a smaller helper, less
-what it has grown since: the helper at C90Ah, then the overlay buffer, the
-free block, the music buffer). The helper's own segment is the limit for new
-code: its image with the install code is 61,040 bytes (`image_len`; the
-resident part ends at `resident_end`, E790h), so about 4.4 KB of its 64 KB are
-spare; the HMA has 7,080 bytes left for more buffers (the far block ends at
+and so does `test_fits_upper_memory`. It needs 6,018 of the room's 8,182
+paragraphs (2.13.0), so 2,164 (33.8 KB) are spare, and with `UMBPLUS.COM`
+about 54.8 KB are free in one piece (57.8 KB measured in DOSBox with a smaller
+helper, less what it has grown since: the helper at C90Ah, then the overlay
+buffer, the free block, the music buffer). The helper's own segment is the
+limit for new code: its image with the install code is 62,752 bytes
+(`image_len`; the resident part ends at `resident_end`, EE40h), so about
+2.7 KB of its 64 KB are spare (2.12.5's 62,016 bytes left 3.4 KB; 2.13.0's
+ages, Haste's aging, Restore Youth and the Enlarge and CON rules took 736
+bytes); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -2567,7 +2569,9 @@ the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
 200h bytes from 3E3Fh to `seg_space` in its own resident image and points the
 two selectors there (`seg_moved`, the header's +306). The records then run to
-212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h). The stack had been written over records 196-198's room all along; with it
+212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h), so
+another new spell needs room made first (Negative Plane Protection's save
+record moved elsewhere, say). The stack had been written over records 196-198's room all along; with it
 moved, nothing writes there but the helper. Spells 199-201 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
 `monsters.py` reads the kinds table's segment from the selector. The spell
