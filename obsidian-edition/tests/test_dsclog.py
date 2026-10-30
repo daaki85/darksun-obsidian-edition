@@ -4309,7 +4309,6 @@ class LevelPickTests(unittest.TestCase):
     PLAIN_TYPES = (81, 18, 17, 115, 20, 22, 2, 112, 3, 19, 44, 21, 48, 1, 64, 0)
 
     def setUp(self):
-        import re
         from dsloader.gamepatch import VEC_LV_PICK
         self.image = image = load_image()
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
@@ -5102,7 +5101,7 @@ class KitTests(unittest.TestCase):
         """WANDER_DMG (7B56Fh, "test [bp+0Ch],di" in the routine giving a spell's damage share,
         [BP-4] the creature): fire and cold (6) added to the kinds DI guards from for a Wanderer,
         the test's flags returned and DI left so (a spell all those kinds then does half)."""
-        from dsloader import gamepatch, kitpages
+        from dsloader import gamepatch
         image = load_image()
         at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
         self.assertGreater(at, 0)
@@ -6823,7 +6822,7 @@ class KitTests(unittest.TestCase):
     def test_kit_is(self):
         """KIT_IS and KIT_HAS: whether the sheet has kit AL, awake (kitpages.kit_ids) or at all, its
         class's place in KIT_WHERE (KIT_LEVEL's), AL kept."""
-        from dsloader import kitpages, kits
+        from dsloader import kitpages
         self.rules(game.RULE_KITS)
         import re
         at = re.search(rb"\x56\xbe\x01\x00\xeb", self.image, re.S).start()  # (KIT_IS; KIT_HAS after it)

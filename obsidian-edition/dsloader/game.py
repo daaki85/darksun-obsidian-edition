@@ -1266,13 +1266,6 @@ class GameData:
                 changed += 1
         return changed
 
-    def new_spells_known(self, member: int) -> List[int]:
-        """The new spells (NEW_SPELLS) party member MEMBER knows: its sheet's bits (NEW_KNOWN)."""
-        sheet = self.sheet(member)
-        if len(sheet) <= NEW_KNOWN_SHEET:
-            return []
-        return [spell for spell in NEW_SPELLS if knows_new_spell(sheet, spell)]
-
     def spell_level(self, spell: int) -> int:
         """The spell's level (the game's table of spells, 7 bytes each: SPELL_LEVELS)."""
         if not 0 <= spell < 256:
@@ -2196,14 +2189,6 @@ class GameData:
         from . import kits
         return kits.own_race(self.sheet(creature))
 
-    def own_features(self, creature: int) -> List[str]:
-        """The names of those features (kits.OWN_FEATURES), as the Effects screen lists them."""
-        from . import kits
-        return list(kits.OWN_FEATURES.get(self.own_race(creature), ()))
-
-    def has_kit(self, creature: int, kid: int) -> bool:
-        return kid in self.kit_ids(creature)
-
     def path_lost(self) -> bool:
         """No party member up is a Wayfinder, and one down (stunned to petrified; not Gone) is:
         Path-finder lost, the party's 1 less (DSCLOG's PATH_DOWN)."""
@@ -2359,12 +2344,6 @@ class GameData:
         bonus = self.level_hp_con_bonus(con)
         warrior = any(self.level_hp_group(c) == WARRIOR_GROUP for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c)
         return bonus if warrior else min(bonus, 2)
-
-    def multiclass_con(self, sheet: bytes, con: int) -> Optional[int]:
-        """con_share for SHEET and CON, from the game's hit point table (None: one class)."""
-        groups = {c: self.level_hp_group(c) for c in sheet[SHEET_CLASSES:SHEET_CLASSES + 3] if c}
-        last_die = {g: self.level_hp_rule(c).dice_levels for c, g in groups.items() if g is not None}
-        return con_share(sheet, self.level_hp_con_bonus(con), groups, last_die)
 
     def sheet_at(self, index: int) -> bytes:
         """Character sheet number `index`."""

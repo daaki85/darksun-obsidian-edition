@@ -28,11 +28,6 @@ MEAL_TEXT = ("A vulture! Give it here. A pinch of salt, some agafari leaf, slow 
              "Sit down and eat with me. A meal like this puts the strength back in you.")
 
 
-def _sheet_at(gd: GameData, member: int) -> int:
-    index, = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)
-    return game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
-
-
 def _party(gd: GameData) -> List[int]:
     """The party members there are, alive."""
     out = []

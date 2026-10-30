@@ -697,7 +697,7 @@ thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
 creation screen: DONE has made the character by then.
 
-![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT](docs/creation-weapons.png)
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec in
 place of the bone long sword the game gives warriors, in a material it may use,
@@ -869,7 +869,7 @@ scores and what the die's total allows (the `SUM:` line), the hit points and
 the PSP. So a good roll can be stored and the die tried again; if nothing
 better comes, RECALL puts the stored one back, AC and damage with it.
 
-![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:92/92, 25/25 hit points; KITS below the psionic disciplines](docs/creation-store-recall.png)
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:94/94, 32/32 hit points, AGE: 20 above RECALL; KITS below the psionic disciplines](docs/creation-store-recall.png)
 
 Changing the race, sex, classes or kit forgets the stored roll (its hit
 points were rolled for those), even if they are changed back: RECALL then

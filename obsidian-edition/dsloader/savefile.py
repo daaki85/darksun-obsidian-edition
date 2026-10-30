@@ -53,6 +53,8 @@ def load_party(path: str, layout: Layout) -> SaveMemory:
         if name and name not in ("?", "-"):
             creature.slots[slot] = base
             if sheet is not None:  # the game's own link: the creature's sheet number
+                if len(creatures) < base + creature.stride:
+                    raise GffError("the save's creatures are cut short")
                 index = struct.unpack_from("<H", creatures, base + game.CREATURE_SHEET_INDEX)[0]
                 sheet.slots[slot] = len(creatures) + index * game.SHEET_SIZE
             layout.link_slot(slot, mem.data)

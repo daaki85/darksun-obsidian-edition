@@ -834,7 +834,7 @@ text, with the replies offered numbered underneath (and the list's title,
 such as "Answer Yes or No", above them), and then the one you picked:
 `You chose: No`.
 
-![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena](docs/dialogue.png)
+![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages](docs/dialogue.png)
 
 **Who's speaking.** The game's dialogue window gets only a portrait number,
 never a name. But when the game runs a script on someone (you click them, or
@@ -867,7 +867,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted), and the dice log with Find showing the first of 10 lines naming the Rampager: the first round's initiative, Gerakis's Wild Fighting roll, the Defiler's Ice Storm and the Rampager's attacks](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted; Gerakis's age), and the dice log with Find showing the first of 8 lines naming the Rampager: the first round's initiative, Gerakis's Wild Fighting roll, and the Rampager's attacks on the Defiler, who fails his save against its acid and is killed](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,

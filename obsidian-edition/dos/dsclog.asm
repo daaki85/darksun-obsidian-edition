@@ -11545,7 +11545,8 @@ class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 
 ; are shown again (the screen's routine for it, WP_STUB's entry RS_SCORES, which RL_SUM follows
 ; with the totals), then the rest as the die shows a roll: its routine from where it has rolled
 ; the hit points (RS_TAIL, with its frame and DI 1), which shows them and the PSP (worked out
-; again from the same scores: no dice), then the AC and damage.
+; again from the same scores: no dice), then the AC and damage; each call with the way back in a
+; frame the overlay manager can fix up (RS_FRAMED).
 RS_STORE  equ 0x8B0
 RS_RECALL equ 0x8B1
 RS_DONE   equ 0x66377 - 0x6625F    ; (the routine's way on for another button, less the INT's return)
@@ -11581,12 +11582,14 @@ probe_rs_click:
         mov ax, ds
         add ax, WP_STUB
         mov [cs:wp_far + 2], ax
-        call far [cs:wp_far]
-        mov si, sp
-        mov ax, [ss:si + 36]                ; (the overlay's segment: the INT's return)
-        mov [cs:rs_tail + 2], ax
+        call rs_framed                      ; (the scores' routine: another overlay's)
+        mov word [cs:wp_far], .tail
+        mov [cs:wp_far + 2], cs
+        call rs_framed                      ; (the die's routine from where it rolled the hit points)
+        jmp .done
+.tail:  mov [cs:rs_tail + 2], dx            ; (DX: the overlay's segment, the INT's way back)
         push cs
-        push word .done
+        push word .back
         push bp                             ; (the die's frame, as its routine makes it)
         mov bp, sp
         sub sp, 2
@@ -11594,11 +11597,34 @@ probe_rs_click:
         push di
         mov di, 1
         jmp far [cs:rs_tail]
+.back:  retf
 .stored:
         mov byte [cs:rs_have], 1
 .done:  pop es
         popad
 .out:   iret
+
+; RS_FRAMED: a far call to WP_FAR with the INT's way back (PROBE_RS_CLICK's, past ES and PUSHAD:
+; SP+2 on entry, +36 and +38) in a frame the overlay manager can fix up, as PROBE_USE_ITEM's: the
+; call may load another overlay over the creation screen's or move it, which leaves the way back
+; where the manager has put it (DX its segment, for RS_TAIL). Keeps BX, SI, DI.
+rs_framed:
+        push bx
+        mov bx, sp
+        push word [ss:bx + 40]
+        push word [ss:bx + 38]
+        push bp
+        mov bp, sp
+        mov dx, [ss:bx + 40]
+        call far [cs:wp_far]
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 38], ax
+        mov [ss:bx + 40], dx
+        pop bx
+        ret
 
 ; RS_SAME: ZF set if the sheet being made (DS:[119Ch]) has the stored roll's race, sex, classes
 ; and kit (RS_BUF's first RS_KEY bytes, in RS_FIELDS' order). DS the game's; keeps all but flags.

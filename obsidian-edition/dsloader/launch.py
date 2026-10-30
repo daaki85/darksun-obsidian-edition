@@ -576,7 +576,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
                    "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
                    "targeting": True, "scroll_map": True, "cycles": DEFAULT_SPEED,
-                   "combat_log_level": "short"}  # (combatlog.SHORT, the panel's level unless chosen)
+                   "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:
@@ -666,7 +666,10 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
             os.remove(old)
         except OSError:
             pass
+    exe = _find_file(dosbox_dir, "DOSBox.exe")
+    if exe is None:
+        raise LaunchError(f"No DOSBox.exe in {dosbox_dir}")
     conf = write_conf(game_dir, dice_log=problem is None)
     return subprocess.Popen(
-        [_find_file(dosbox_dir, "DOSBox.exe"), "-conf", settings_conf, "-conf", conf, "-noconsole"],
+        [exe, "-conf", settings_conf, "-conf", conf, "-noconsole"],
         cwd=dosbox_dir), problem

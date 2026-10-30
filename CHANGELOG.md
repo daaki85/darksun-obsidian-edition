@@ -33,14 +33,26 @@ notes](PATCH-NOTES.md).
   `test_natural_years`, `test_restore_counts_the_games_years`, `test_the_log_counts_each_year_once`.
 
 **Fixed** (the second audit, with seven agents: code, memory, documents, pictures)
+- **RECALL on the creation screen stopped DOSBox** ("DynrecCore: illegal option"), from 2.8.0 on:
+  its redraw calls the scores' routine, another overlay's, whose loading could move or drop the
+  creation screen's, and RECALL then jumped to where the die's routine had been. Both calls are
+  now made with the way back in a frame the overlay manager fixes up (`RS_FRAMED`). Found by
+  re-shooting the creation screen; narrowed down release by release (2.7.2 fine, 2.8.0 not) and
+  with a progress byte read from DOSBox's memory. Checked in DOSBox: STORE, the die, RECALL twice.
+- The Loader: the game window box shows Single (320x240) for a window at its own size (it said
+  Triple); a save whose creatures are cut short is reported as such; `find-text` and `checks`
+  cope with any text and a lower-case GPLDATA.GFF; a missing DOSBox.exe is a launch error, not a
+  crash; a named save renamed only in case is no longer deleted on Windows; the stats thread is
+  waited for before the game's memory is let go; defilers' scrolls and new items in crash
+  reports; dead code and unused imports gone.
 - `age_by` kept within the age byte's range, and no "grows younger 0 years" line at the race's
   base age; the race's article written in one place (`aging._a`).
 - DSCLOG: the creation screen's text buffer 12 bytes (PSP's longest, `65535/65535`); no far call
   through an overlay operand not yet fixed up; a build guard for the helper's 64 KB segment
   (`image_len` + the install's stack); a duplicate `EXPERT IN` and an unused word gone; `AGE:`
   in the comments.
-- DEVELOPMENT: the memory figures as built (63,312-byte image, 1,968 bytes spare in the segment,
-  6,053 of 8,182 paragraphs of upper memory, about 51.5 KB free in one piece with `UMBPLUS.COM`,
+- DEVELOPMENT: the memory figures as built (63,360-byte image, 1,920 bytes spare in the segment,
+  6,056 of 8,182 paragraphs of upper memory, about 51.4 KB free in one piece with `UMBPLUS.COM`,
   the far block 58,440 bytes); the Ages section in parts, with Enlarge's dice and CON as in AD&D,
   in the contents.
 - Documents: natural aging, grey hair and the creation screen's age in the guide, the README, the
@@ -48,6 +60,9 @@ notes](PATCH-NOTES.md).
   notes; defilers' scrolls counted at once (the README had them from the next start); Enlarge's
   rule and CON as in AD&D's poison saves in the guide; a spoiler note on the game's bugs fixed;
   history players don't need trimmed.
+- Pictures taken anew for the age: the inventory panels (`inventory.png`, `inventory-ranger.png`,
+  `default-party-gerakis.png`), the creation screen (`creation-store-recall.png`,
+  `creation-weapons.png`) and the Loader (`dialogue.png`, `dicelog.png`: the Characters tab's ages).
 
 ## Pull request #81 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/81))
 

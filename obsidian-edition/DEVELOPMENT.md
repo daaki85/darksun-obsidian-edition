@@ -469,7 +469,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.4 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.5 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.3 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.4 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -550,17 +550,17 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,053 of the room's 8,182
-paragraphs (2.13.1), so 2,129 (33.3 KB) are spare, and with `UMBPLUS.COM`
-about 51.5 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,294
+and so does `test_fits_upper_memory`. It needs 6,056 of the room's 8,182
+paragraphs (2.13.1), so 2,126 (33.2 KB) are spare, and with `UMBPLUS.COM`
+about 51.4 KB are free in one piece (worked out from C90Ah to F000h less the
+helper, the overlay buffer and the music buffer, each with its MCB: 3,291
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 63,312 bytes
-(`image_len`; the resident part ends at `resident_end`, F070h), so with the
-install's 256-byte stack 1,968 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 63,360 bytes
+(`image_len`; the resident part ends at `resident_end`, F0A0h), so with the
+install's 256-byte stack 1,920 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
-creation screen 560); the HMA has 7,080 bytes left for more buffers (the far block ends at
+creation screen 560, RECALL's frames 48); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -2076,7 +2076,14 @@ creation overlay's stub, entry BBh, which a score's click calls; `RL_SUM` adds
 the totals), and the rest by running the die's routine from where it has
 rolled the hit points (659D0h, with its stack frame and DI 1): the hit points
 shown, the PSP worked out again (65B39h, which rolls nothing) and shown, then
-the AC and damage. The overlay's segment is the INT's return.
+the AC and damage. The overlay's segment is the INT's return, and both calls
+are made with it in a frame the overlay manager can fix up (`RS_FRAMED`, as
+`PROBE_USE_ITEM`'s): the scores' redraw is another overlay's, and loading it
+can move or drop the creation screen's, which the manager then puts back and
+the frame follows. Without it (2.8.0 to 2.13.0, once the overlay buffer was
+filled differently) RECALL jumped into what was no longer the die's routine
+and DOSBox stopped ("DynrecCore: illegal option"). Checked in DOSBox: STORE,
+the die, RECALL twice, the scores, hit points, PSP and age put back each time.
 
 ### Fuller starting gear
 

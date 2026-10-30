@@ -48,7 +48,7 @@ def _query_bytes(text: str) -> bytes:
 
 
 # the game window's sizes (DOSBox scales the game's 320x200, with the aspect corrected)
-WINDOW_CHOICES = {"Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
+WINDOW_CHOICES = {"Single (320x240)": 1, "Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
 
 class Viewer:
     def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory]):
@@ -962,7 +962,7 @@ class Viewer:
         self.next_try = time.monotonic() + RETRY_SECONDS
 
     def close(self) -> None:
-        """Put the game's rand() back before closing, so the game keeps working."""
+        """Done with the dice log before closing: it lets go of the game (detach) and stops its thread."""
         try:
             if self.dice:
                 self.dice.detach()

@@ -70,7 +70,7 @@ def cmd_processes(args) -> None:
 def cmd_find_text(args) -> None:
     guest = connect(args)
     data = guest.snapshot()
-    hits = guest.find(args.text.encode("cp437"), ignore_case=not args.case_sensitive, data=data)
+    hits = guest.find(args.text.encode("cp437", errors="replace"), ignore_case=not args.case_sensitive, data=data)
     print(f"{len(hits)} match(es) for {args.text!r}")
     for addr in hits[:args.limit]:
         print(f"\n== {addr:#x}")
@@ -134,7 +134,10 @@ def cmd_checks(args) -> None:
     game_dir = launch.find_game_dir(args.game_dir)
     if game_dir is None:
         raise CliError("Can't find the game folder; pass --game-dir.")
-    with open(os.path.join(game_dir, "GPLDATA.GFF"), "rb") as f:
+    path = launch._find_file(game_dir, "GPLDATA.GFF")
+    if path is None:
+        raise CliError(f"No GPLDATA.GFF in {game_dir}.")
+    with open(path, "rb") as f:
         scripts, field_types = gpl.load_scripts(f.read())
     for c in gpl.checks(scripts, field_types):
         bonus = "" if c.bonus is None else f", bonus {c.bonus:+d}"
@@ -145,7 +148,6 @@ def cmd_checks(args) -> None:
 
 def cmd_dicelog(args) -> None:
     import time
-    from . import dicelog
     from .dicelog import DiceLog
     from .dicelog import DiceLogError
     from .guestmem import GuestMemoryError

@@ -327,9 +327,6 @@ class Entry:
         """Signed word at [BP+bp_offset] for bp_offset in -10h..-2, or None."""
         return self._word(self.locals, bp_offset + 0x10)
 
-    def local_byte(self, bp_offset: int) -> int:
-        return self.locals[bp_offset + 0x10]
-
     def parent_local(self, bp_offset: int) -> Optional[int]:
         """Signed word at [parentBP+bp_offset] for bp_offset in -28h..-2, or None."""
         return self._word(self.parent_locals, bp_offset + 0x28)
@@ -1028,6 +1025,8 @@ class DiceLog:
         """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
         hook comes off."""
         self._stats_stop.set()
+        if self._stats_thread is not None:  # (out of the guest's memory before its handle closes)
+            self._stats_thread.join(0.2)
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
