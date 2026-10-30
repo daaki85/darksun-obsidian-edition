@@ -18,7 +18,7 @@ from typing import Callable, List, Optional
 
 MARK = ":Zone.Identifier"
 FOLDER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # the Loader's own folder
-SKIP = {"__pycache__", ".git"}
+SKIP = {"__pycache__", ".git", "Named saves", "crash-logs"}  # (the last two: the Loader's own writing, never marked)
 
 
 def unblock(folder: str = FOLDER, remove: Optional[Callable[[str], None]] = None,

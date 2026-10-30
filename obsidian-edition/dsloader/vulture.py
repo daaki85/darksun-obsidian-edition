@@ -17,7 +17,6 @@ from .game import GameData
 
 COOKED = 0xA4C  # (its object, as the campfire's script makes it)
 MEAL, EATEN = 780, 781  # (the Loader's flags) set by Dinos's script; the reward given
-OWN_NAME = 0x101  # the game's "Vulture"
 XP_REWARD = 100
 PENS, DINOS = 0x29, "Dinos"  # where he is (RGN29), and his name
 SHEET_MAX_PSP = 0x0C

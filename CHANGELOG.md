@@ -85,6 +85,14 @@ notes](PATCH-NOTES.md).
   one helper that says so on the status line when settings.json is held elsewhere, rather than
   losing the choice unseen. Tests: `test_drives_searched_once_and_only_when_needed`,
   `test_kept_for_the_run`.
+- **Small Loader fixes:** the mouse wheel's hook thread makes its message queue before `stop()` can
+  post to it (a quit could be lost and the hook left on); Windows' millisecond timer asked for once
+  a run and given back at its end; refused memory writes kept to the newest 200; the game's art
+  read once a run (`GameArt.of`), not three times; the game window's and speed's confirmations
+  only when saved; a settings.json that is JSON but not an object kept aside as an unreadable one
+  is; the party's figures tried again every 30 seconds when the game's files couldn't be read;
+  no armour drawn on a thri-kreen (the game never lets one wear it); the Named saves and crash
+  logs folders left out of the download mark's removal; unused names gone.
 - **Documents reorganised:** the dice log's line-by-line reference (every kind of line and what it
   means, 108 lines) moved from the README to a page of its own, `DICE-LOG.md`, linked from both
   READMEs and the guide; the README's Options sections cut to one list of links, the guide's

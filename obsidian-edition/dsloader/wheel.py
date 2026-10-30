@@ -93,8 +93,10 @@ class WheelHook:
         if not hook:
             return
         user32.UnhookWindowsHookEx.argtypes = [wintypes.HHOOK]
-        self._thread_id = kernel32.GetCurrentThreadId()
         msg = wintypes.MSG()
+        PM_NOREMOVE = 0
+        user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, PM_NOREMOVE)  # (the thread's message queue made
+        self._thread_id = kernel32.GetCurrentThreadId()  # before stop() can post to it: else its WM_QUIT is lost)
         try:
             while not self._stopping.is_set() and user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:  # (stop()'s WM_QUIT ends it)
                 pass

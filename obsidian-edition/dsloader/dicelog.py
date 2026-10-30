@@ -253,7 +253,7 @@ def _game_font(game_dir: Optional[str]):
     """The game's font (art.Font) from its folder, or None."""
     from . import art, launch
     folder = launch.find_game_dir(game_dir)
-    return art.GameArt(folder).font if folder else None
+    return art.GameArt.of(folder).font if folder else None
 
 
 THIEF = 17  # class number
@@ -264,6 +264,7 @@ STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG'
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
+DRESSER_RETRY = 30.0  # seconds before the party's figures are tried again when the game's files couldn't be read
 NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock may be a load's: aging waits a look
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
@@ -276,6 +277,24 @@ FIGHT_GAP = 120  # game seconds without a new round after which the fight is ove
 # still clear as round 1's initiative is rolled, before it was ever up: that doesn't count)
 FIGHT_OVER = 2.0
 
+
+
+_TIMER: List[bool] = []  # (_fine_timer's: asked for already)
+
+
+def _fine_timer() -> None:
+    """Windows' timer at a millisecond, once a run and given back at its end: it ticks every
+    15.6 ms unless asked, and the stats thread's millisecond waits would last that long."""
+    if sys.platform != "win32" or _TIMER:
+        return
+    _TIMER.append(True)
+    try:
+        import atexit
+        import ctypes
+        if ctypes.windll.winmm.timeBeginPeriod(1) == 0:  # (TIMERR_NOERROR)
+            atexit.register(ctypes.windll.winmm.timeEndPeriod, 1)
+    except (AttributeError, OSError):
+        pass
 
 class DiceLogError(Exception):
     pass
@@ -472,7 +491,7 @@ class DiceLog:
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._scrolling = scrolling.Scrolling()
         self._dresser: Optional[sprites.Dresser] = None
-        self._dresser_tried = False
+        self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
         self.picked: set = set()  # the pockets tried already (each person gets one try)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
@@ -948,12 +967,7 @@ class DiceLog:
         (20-40 ms, more with the Ledger's window) held the pointer still, then made it jump."""
         if self._stats_thread is not None:
             return
-        if sys.platform == "win32":  # (Windows' timer ticks every 15.6 ms unless asked: the thread's
-            try:                     #   millisecond waits would last that long)
-                import ctypes
-                ctypes.windll.winmm.timeBeginPeriod(1)
-            except (AttributeError, OSError):
-                pass
+        _fine_timer()
         def run() -> None:
             step = STATS_ANSWER_STEP
             while not self._stats_stop.wait(step):
@@ -1484,9 +1498,9 @@ class DiceLog:
         party pictures the Loader keeps dressed); as the game's own when switched off."""
         if not icons.ready(self.game, self.tsr_hdr):
             return
-        if self._dresser is None and not self._dresser_tried:
+        if self._dresser is None and now >= self._dresser_at:
             from . import launch
-            self._dresser_tried = True
+            self._dresser_at = now + DRESSER_RETRY  # (tried again later if it can't be made now)
             import os
             copy = os.path.join(launch.DOS_DIR, icons.OBJECTS_FILE)
             self._dresser = sprites.Dresser.for_game(self.game, launch.find_game_dir(),

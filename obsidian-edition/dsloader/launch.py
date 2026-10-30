@@ -22,7 +22,6 @@ from . import gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
-HELPER = "DSCLOG.EXE"
 SETTINGS = os.path.join(HERE, "settings.json")
 CONF = os.path.join(HERE, "dosbox_dicelog.conf")
 PATCHED_EXE = "DSUNLOG.EXE"
@@ -188,7 +187,11 @@ def load_settings(strict: bool = False) -> dict:
                 except OSError:
                     pass
                 return {}
-        if not isinstance(settings, dict):
+        if not isinstance(settings, dict):  # (JSON, but not the Loader's: kept aside too)
+            try:
+                os.replace(SETTINGS, SETTINGS + ".bad")
+            except OSError:
+                pass
             return {}
         if upgrade_settings(settings):
             try:

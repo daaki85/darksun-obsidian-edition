@@ -12,7 +12,6 @@ from typing import Dict, List, NamedTuple, Optional, Tuple
 from . import game
 from .game import CLASS_NAMES, GameData, ordinal
 
-MAX_COMBATANTS = 256
 XP_SETTLE = 0.5  # seconds to wait for every party member's XP to change
 KILL_WINDOW = 5.0  # seconds before an XP award in which kills count towards it
 # Going from one area to another, the game takes the party's XP away and gives it back a moment

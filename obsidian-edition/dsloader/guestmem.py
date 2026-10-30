@@ -13,7 +13,8 @@ To find the block we look for two things DOSBox always sets up:
 
 import os
 import re
-from typing import List, Optional
+from collections import deque
+from typing import Deque, List, Optional
 
 from . import values
 from .process import ProcessError, ProcessMemory
@@ -27,6 +28,9 @@ RECOMPILED_MARK = b"DARKSUN-RECOMPILED"
 _OVERLAP = max(len(BIOS_DATE), len(RECOMPILED_MARK))  # (a mark across two chunks found in the first)
 MIN_GUEST_SIZE = 0x100000  # 1 MB: the date string alone lives just below this
 _CHUNK = 4 * 1024 * 1024
+
+
+REFUSED_KEPT = 200  # (the refused writes noted: the newest, for a crash report's last 50)
 
 
 class GuestMemoryError(Exception):
@@ -45,7 +49,7 @@ class GuestMemory:
         # segment's first bytes are added once it is known (GameData). A write there could only
         # come from a pointer read while the game has it empty (0:offset): refused and noted
         self.guarded = {"low memory": (0, LOW_MEMORY)}
-        self.refused: List[str] = []
+        self.refused: Deque[str] = deque(maxlen=REFUSED_KEPT)
         # the gate a write to the game's item lists goes through (itemgate.py; GameData sets it)
         self.item_gate = None
 

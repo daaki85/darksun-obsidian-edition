@@ -57,14 +57,12 @@ WELL = (4, 15, PANEL_W - 5, PANEL_H - 5)  # x0, y0, x1, y1 (inclusive), in the p
 GRAIN_HI_N, GRAIN_LO_N = 32, 32  # (of 256: the stone's pixels speckled lighter, darker)
 LINE_H = 9  # the font's height, its shadow in it
 ROWS = 6  # lines in the well
-TEXT_X = WELL[0] + 7  # where the lines start (after the pip) ...
-TEXT_RIGHT = WELL[2] - 9  # ... and end (before the scrollbar)
+TEXT_X = WELL[0] + 7  # where the lines start (after the pip)
 INDENT = 8  # a wrapped line's rows after its first, and each level of a detail line
 HEADER_X, HEADER_Y = 4, 2
 TSR_MOUSE = 332  # DSCLOG's header: the pointer (x, y), the left button held after a press on the
 #   panel, the presses on it counted and where the last was (x, y): six words, game pixels
 TRACK = (WELL[2] - 6, WELL[1] + 1, WELL[2] - 1, WELL[3] - 1)  # the scrollbar: x0, y0, x1, y1
-HANDLE_X0, HANDLE_X1 = TRACK[0] + 1, TRACK[2] - 1
 TRACK_H = TRACK[3] - TRACK[1] - 1  # (the handle's room, a pixel in from each end)
 HANDLE_MIN = 8
 WHEEL_ROWS = 3  # rows a notch of the mouse wheel scrolls
@@ -665,7 +663,6 @@ class Panel:
         self.font = None  # art.Font: no font, no lines
         self.level = SHORT
         self.size = DOCKED
-        self._open_size = DOCKED  # the size L opens a collapsed panel to
         self.filter = "all"
         self.first: Optional[int] = None  # the top row shown when scrolled back (None: the newest)
         self._back_rows = 0  # ... the rows there were then (the chip's "new")
@@ -697,8 +694,6 @@ class Panel:
     def resize(self, size: str) -> None:
         if size != self.size:
             self.size = size
-            if size != COLLAPSED:
-                self._open_size = size
             if size != EXPANDED:
                 self.filter = "all"
             self.first, self._grab = None, None

@@ -123,6 +123,9 @@ class Font:
         return rows
 
 
+_ART: Dict[str, "GameArt"] = {}  # (GameArt.of's: each install's, once)
+
+
 class GameArt:
     """Portraits and the font from a Shattered Lands install (each piece is None if missing)."""
 
@@ -143,6 +146,15 @@ class GameArt:
                     load(read_gff(f.read()))
             except (OSError, GffError, struct.error, IndexError):
                 pass  # an odd install: do without
+
+    @classmethod
+    def of(cls, game_dir: Optional[str]) -> "GameArt":
+        """The art of GAME_DIR, read once a run (the window, the combat log panel's font and the
+        floating names' each asked for it; the files are the game's, never changed)."""
+        key = os.path.abspath(game_dir) if game_dir else ""
+        if key not in _ART:
+            _ART[key] = cls(game_dir)
+        return _ART[key]
 
     def _load_gpl(self, chunks) -> None:
         self.portraits = {cid: data for (kind, cid), data in chunks.items() if kind == "PORT"}

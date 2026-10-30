@@ -67,7 +67,7 @@ class Viewer:
         self.dosbox = None  # the game, when started from here (Start the game)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         # the game's portraits and font, from the player's own install (if it can be found)
-        self.art = art.GameArt(launch.find_game_dir())
+        self.art = art.GameArt.of(launch.find_game_dir())
         # (Tk shows an image only while it's referenced: one for each portrait at each size, shared
         # by every line it is shown on)
         self._images: Dict[Tuple[int, int], tk.PhotoImage] = {}
@@ -813,7 +813,7 @@ class Viewer:
                                      "pick the GOG install folder of Shattered Lands.")
                 return
             self._save_settings({"game_dir": game_dir})
-            self.art = art.GameArt(game_dir)
+            self.art = art.GameArt.of(game_dir)
         try:
             self._game_dir, self._started = game_dir, time.time()
             self.dosbox, problem = launch.launch(game_dir)
@@ -1156,10 +1156,10 @@ class Viewer:
     def _window_chosen(self, _event=None) -> None:
         """Remember the game window's size; it applies the next time the game is started."""
         scale = WINDOW_CHOICES[self.window_choice.get()]
-        self._save_settings({"fullscreen": True} if scale is None else
-                            {"fullscreen": False, "window_scale": scale})
-        self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
-                        "(Alt+Enter switches full screen while playing).")
+        if self._save_settings({"fullscreen": True} if scale is None else
+                               {"fullscreen": False, "window_scale": scale}):
+            self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
+                            "(Alt+Enter switches full screen while playing).")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
