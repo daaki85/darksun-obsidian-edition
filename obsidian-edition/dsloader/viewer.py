@@ -409,6 +409,10 @@ class Viewer:
                 ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
                                      "weapon in the other; two heavy weapons still can't be held)"),
                 ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
+                ("aging", "Ages and magical aging: each character has an age from Dark Sun's tables, its "
+                          "scores changing at middle, old and venerable age, and dies at the most its race "
+                          "lives; Haste ages each it speeds a year, and each must survive a system shock roll "
+                          "(by CON), as in AD&D"),
                 ("weapon_specialization", "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
                                           "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                           "rangers have expertise, every ranger with the bow; specialists and "
@@ -1599,9 +1603,13 @@ class Viewer:
                         move_why.append("Path-finder" if path > 0 else "Wayfinder down")
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
+            age = None
+            if known and index < game.PARTY_SIZE and self.rule_vars["aging"].get():
+                from . import aging
+                age = aging.describe(gd.sheet(index))
             card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,
                       skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move,
-                      move_why=", ".join(move_why))
+                      move_why=", ".join(move_why), age=age)
 
     def _hex_base(self) -> Optional[int]:
         record = self.layout.records.get(self.hex_record.get())

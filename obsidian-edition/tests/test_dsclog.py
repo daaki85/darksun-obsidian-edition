@@ -4749,6 +4749,18 @@ class KitTests(unittest.TestCase):
                     del lines[:]
                     self.call(rb"\x2e\xc6\x06..\xff\x2e\xc7\x06..\x00\x00\xe8", es=self.SHEET, ebx=0)
                     self.assertEqual(lines, want)
+            # with an age in each member's STATS (aging.py): its lines first, then the rest as before
+            hdr = TSR * 16 + self.image.find(HDR_SIG)
+            stats = TSR * 16 + struct.unpack("<H", bytes(self.mu.mem_read(hdr + 162, 2)))[0]
+            entry = bytearray(34)
+            entry[0] = 1
+            struct.pack_into("<HBBH", entry, 28, 23, 0, 1, 40)
+            for member in range(4):
+                self.mu.mem_write(stats + member * 34, bytes(entry))
+            del lines[:]
+            self.call(rb"\x2e\xc6\x06..\xff\x2e\xc7\x06..\x00\x00\xe8", es=self.SHEET, ebx=0)
+            self.assertEqual(lines, ["AGE 23", "MIDDLE-AGED AT 40", "SPECIALIZED IN", "LONG SWORD"])
+            self.mu.mem_write(stats, bytes(34 * 4))
         finally:
             self.mu.hook_del(hook)
 

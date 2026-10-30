@@ -510,7 +510,8 @@ The **View Character** screen gets them too: the five saves under the item
 icons, each with its label as above (`PPD 11  RSW 9` / `PP 10  BW 13` /
 `SP 10`), and in the lower panel, right of HP and PSI as DAM is right of AC,
 the character's **MOVE** (its movement in a fight, before boots or a spell
-change it) and **THAC0**.
+change it) and **THAC0**. With [ages](FEATURES.md#ages-and-magical-aging) on,
+the character's **AGE** is under the saves.
 
 ![The View Character screen: the saves labelled under the item icons, and MOVE and THAC0 beside HP and PSI](docs/view-character.png)
 
@@ -633,6 +634,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#charges-in-item-boxes).
 The Effects screen (Current Spell Effects) shows more
 in its lower panel and under the pointer:
 
+- **Age:** with [ages](FEATURES.md#ages-and-magical-aging) on, first the
+  character's age, and its category once middle-aged (`AGE 45, MIDDLE-AGED`),
+  then the next age to come (`OLD AT 53`).
 - **Kits and weapon specs:** each kit (`KIT: RAVAGER`), with a Shinobi's chance
   to read a scroll under it (`READ LANG. 35%`), then the weapon specs, a page
   at a time when there are more than fit ([Changing

@@ -28,6 +28,7 @@ done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
   - [Helms](#helms)
+  - [Ages and magical aging](#ages-and-magical-aging)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
@@ -84,7 +85,7 @@ done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
 
 ## Rule changes
 
-Fourteen changes that bring the game's own rules closer to AD&D, each with its
+Fifteen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section. All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set). Untick one
@@ -107,6 +108,7 @@ and the game's own rule is back at once.
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
+| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives |
 
 ### Class restrictions
 
@@ -478,6 +480,39 @@ The helms keep the game's own names (earlier versions called the plain one
 **Helm (AC 1)**; the Loader names it back).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
+
+### Ages and magical aging
+
+The game keeps no ages. With **Ages and magical aging** ticked, each party
+member has one, from the Dark Sun rules' tables: a starting age rolled the
+first time the Loader sees the character (a new one, the game's own party, one
+from an earlier version), which the dice log shows
+(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`). Only magic
+changes it: game time is too short to count.
+
+| Race | Starting age | Middle age | Old age | Venerable | Most it lives |
+|---|---|---|---|---|---|
+| Human | 15 + 1d8 | 40 | 53 | 80 | 80 + 2d20 |
+| Dwarf | 25 + 4d6 | 100 | 133 | 200 | 200 + 3d20 |
+| Elf | 15 + 3d4 | 50 | 67 | 100 | 100 + 2d20 |
+| Half-elf | 15 + 2d4 | 45 | 60 | 90 | 90 + 2d20 |
+| Half-giant | 20 + 5d4 | 60 | 80 | 120 | 120 + 1d100 |
+| Halfling | 25 + 3d6 | 45 | 60 | 90 | 90 + 4d12 |
+| Mul | 15 + 1d6 | 40 | 53 | 80 | 80 + 1d10 |
+| Thri-kreen | 6 | | | 25 | 25 + 1d10 |
+
+On reaching each age the scores change, once and for good, adding up: middle
+age −1 STR and CON, +1 INT and WIS; old age −2 STR and DEX, −1 CON, +1 WIS;
+venerable −1 STR, DEX and CON, +1 INT and WIS. A thri-kreen has only a
+venerable age, and loses 1 STR and 1 DEX there. Reaching the most its race
+lives (its own roll, kept secret) the character dies of old age.
+
+The age shows under the saves on the View Character screen (`AGE 23`), first
+in the Effects screen's lower panel with the next age to come (`AGE 23` /
+`MIDDLE-AGED AT 40`), and on the Loader's Characters tab
+(`Age: 45, middle-aged; old at 53`).
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
 
 ## More character customization
 

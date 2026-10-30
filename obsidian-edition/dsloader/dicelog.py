@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -46,7 +46,7 @@ SLOT_KEY = 0x80  # a line's first byte: SLOT_KEY | the list << 4 | the spell lev
 TSR_LOOK_SEQ, TSR_LOOK_REPLY, TSR_LOOK_WHO, TSR_LOOK_OFF, TSR_LOOK_FULL_OFF, TSR_LOOK_ON = 150, 152, 154, 156, 158, 160
 LOOK_SIZE, LOOK_FULL_SIZE = 80, 700
 # ... and the party's THAC0 and saves as they stand now, for the game's screens (see STATS)
-TSR_STATS_OFF, TSR_STATS_STAMP, TSR_STATS_REQ, TSR_STATS_REPLY, STATS_SIZE = 162, 164, 166, 168, 28
+TSR_STATS_OFF, TSR_STATS_STAMP, TSR_STATS_REQ, TSR_STATS_REPLY, STATS_SIZE = 162, 164, 166, 168, 34
 STATS_RANGER = 2  # a STATS entry's +17 for a ranger: only move silently and hide in shadows count
 BIOS_TIMER = 0x46C
 # ... and the rule changes it makes to the game (the Options tab)
@@ -885,7 +885,8 @@ class DiceLog:
         """A party member's STATS entry for DSCLOG: THAC0 with the main weapon, the five saves as
         the d20 needed now, THAC0 with each weapon ready, a thief's skills as they stand, the level
         Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE)), and the AC
-        Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without)."""
+        Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without), and their
+        age with the rule (AGE 23, MIDDLE-AGED / OLD AT 53: their category and the next's age)."""
         g = self.game
         rec = g.creature(member)
         if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
@@ -910,6 +911,13 @@ class DiceLog:
         armour = g.armour_spells_ac(member)
         out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else -128
                                     for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
+        age = aging.age_of(g.sheet(member)) if self.rules & game.RULE_AGING else None
+        if age is None:
+            out += bytes(6)
+        else:
+            race = g.sheet(member)[game.SHEET_RACE]
+            nxt = aging.next_category(race, age) or (0, 0)
+            out += struct.pack("<HBBH", age, aging.category(race, age), *nxt)
         return out.ljust(STATS_SIZE, b"\0")
 
     def read_languages(self, member: int) -> int:
@@ -1258,6 +1266,8 @@ class DiceLog:
                 if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                     out += startgear.fill(self.game)
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
+                if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
+                    out += aging.give_ages(self.game)
                 if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                     out += pickpocket.mend_lists(self.game)
                 itemgate.release(self.game)

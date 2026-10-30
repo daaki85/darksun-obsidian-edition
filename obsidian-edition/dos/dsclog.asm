@@ -1009,7 +1009,15 @@ probe_view:
         inc si
         cmp si, 5
         jb .save
-        push word V_LOW_Y       ; right of HP and PSI in the lower panel, as DAM is right of AC
+        mov bx, [cs:c_who]      ; the age alone (AGE_TEXT's AGE_SHORT), under the saves
+        call age_text
+        jc .low
+        push word V_AGE_Y
+        push word V_SAVE_X
+        push cs
+        push word age_short
+        call c_draw_line
+.low:   push word V_LOW_Y       ; right of HP and PSI in the lower panel, as DAM is right of AC
         push word V_LOW_X
         push cs
         push word v_move
@@ -1052,6 +1060,8 @@ v_move_val db 0
 V_SAVE_X   equ 0xCD
 V_SAVE_GAP equ 36
 V_LOW_X    equ 0xD8             ; (clear of HP's value, 7 letters from the game's place for it)
+V_AGE_Y    equ 0x4F             ; (the row under SP's save, over the game's sex and race line, which
+                                ;   starts left of the saves: no room there for the category too)
 V_LOW_Y    equ 0x7F             ; (HP's line; PSI's 7 below)
 v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 .ppd     db 'PPD 00 ', 0
@@ -2338,8 +2348,12 @@ probe_unlook:
 ; thief (2 for a ranger: of the six, only move silently and hide in shadows count), +18 the six
 ; thief skills the panel shows, as they stand (equipment and effects too), +24 the level Enlarge
 ; counts at on them (its melee damage +10% a level; 0 without it), +25 three bytes: the AC
-; Barkskin, Flesh Armor and Magical Vestments give them (signed; -128 without: EF_CHARGES)
-STATS_SIZE  equ 28
+; Barkskin, Flesh Armor and Magical Vestments give them (signed; -128 without: EF_CHARGES), +28
+; a word: their age (0 none: the rule off, or none given yet), +30 its category (0 young, 1
+; middle-aged, 2 old, 3 venerable), +31 the next one (0 none) and +32 a word, the age it comes at
+; (AGE_TEXT: View Character and the Effects screen; dsloader/aging.py)
+STATS_SIZE  equ 34
+STATS_AGE   equ 28
 STATS_ENLARGE equ 24
 STATS_ARMOUR equ 25
 STATS_NONE  equ -128
@@ -5893,6 +5907,7 @@ ef_draw:
 ef_lines_of:
         mov byte [cs:ef_last], 0xFF
         mov word [cs:ef_head], 0
+        call age_lines          ; (the age first: AGE 23, MIDDLE-AGED / OLD AT 53)
         call kit_place          ; (a line for each kit, the oldest class's first; a human's kit
         jc .specs               ; asleep until its class is passed, as the game's classes are)
 .kit:   call kit_at
@@ -9267,6 +9282,117 @@ path_down:
         pop bx
         pop ax
         ret
+
+; AGE_LINES: (EF_LINES_OF) EF_MEMBER's age and the next category's, through EF_LINE, when the
+; Loader keeps it (AGE_TEXT). All registers kept.
+age_lines:
+        push bx
+        push si
+        mov bx, [cs:ef_member]
+        call age_text
+        jc .out
+        mov byte [cs:ef_is_head], 0
+        mov si, age_line1
+        call ef_line
+        cmp byte [cs:age_line2], 0
+        je .out
+        mov si, age_line2
+        call ef_line
+.out:   pop si
+        pop bx
+        ret
+
+; AGE_TEXT: CF set when party member BX has no age in its STATS (the Loader not keeping them, the
+; rule off, none given); else AGE_LINE1 "AGE 23, MIDDLE-AGED" (or "AGE 19"), AGE_SHORT "AGE 23"
+; and AGE_LINE2 "OLD AT 53" (empty once venerable). All registers kept.
+age_text:
+        pusha
+        call stats_for
+        jc .none
+        mov ax, [cs:bx + STATS_AGE]
+        or ax, ax
+        jz .none
+        mov di, age_short
+        mov si, age_word
+        call age_copy
+        call w_itoa
+        mov di, age_line1
+        mov si, age_word
+        call age_copy
+        call w_itoa
+        movzx si, byte [cs:bx + STATS_AGE + 2]
+        or si, si
+        jz .next
+        mov word [cs:di], ', '
+        add di, 2
+        shl si, 1
+        mov si, [cs:si + age_names]
+        call age_copy
+.next:  mov di, age_line2
+        mov byte [cs:di], 0
+        movzx si, byte [cs:bx + STATS_AGE + 3]
+        or si, si
+        jz .done
+        shl si, 1
+        mov si, [cs:si + age_names]
+        call age_copy
+        mov si, age_at
+        call age_copy
+        mov ax, [cs:bx + STATS_AGE + 4]
+        call w_itoa
+.done:  popa
+        clc
+        ret
+.none:  popa
+        stc
+        ret
+
+age_copy:                       ; CS:SI's text to CS:DI, DI left at its NUL; SI past it
+        push ax
+.each:  mov al, [cs:si]
+        mov [cs:di], al
+        or al, al
+        jz .out
+        inc si
+        inc di
+        jmp .each
+.out:   pop ax
+        ret
+
+w_itoa:                         ; AX (unsigned) -> decimal at CS:DI, DI left at its NUL; keeps the rest
+        push ax
+        push bx
+        push cx
+        push dx
+        mov bx, 10
+        xor cx, cx
+.div:   xor dx, dx
+        div bx
+        push dx
+        inc cx
+        or ax, ax
+        jnz .div
+.put:   pop ax
+        add al, '0'
+        mov [cs:di], al
+        inc di
+        loop .put
+        mov byte [cs:di], 0
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        ret
+
+age_word  db 'AGE ', 0
+age_at    db ' AT ', 0
+age_names dw 0, .middle, .old, .venerable
+.middle   db 'MIDDLE-AGED', 0
+.old      db 'OLD', 0
+.venerable db 'VENERABLE', 0
+age_line1 times 28 db 0
+age_short times 12 db 0
+age_line2 times 28 db 0
 
 ; EF_LINE: CS:SI EF_DRAW's next line: counted (EF_INDEX), and put on the panel (EF_PUT) if drawing
 ; and on the page shown. All registers kept.
@@ -13557,6 +13683,7 @@ RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's sp
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
 RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
 RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
+RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging (aging.py)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a

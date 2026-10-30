@@ -8,6 +8,16 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**New**
+- **Ages (the rule change Ages and magical aging, on unless unticked).** Each party member has an
+  age from Dark Sun's Table 7, rolled the first time the Loader sees it (`aging.give_ages`, in the
+  dice log), kept in the sheet's +17h; middle, old and venerable age (Table 8) change the scores
+  once and for good, and the most a race lives (its secret roll, seeded by the character) kills
+  (`aging.age_by`, for Haste and Restore Youth to come). Shown on View Character under the saves
+  (`AGE 23`), first in the Effects panel (`AGE 23` / `MIDDLE-AGED AT 40`: DSCLOG's `AGE_TEXT`,
+  `AGE_LINES`, from the age in STATS' new +28h on) and on the Characters tab. Checked in DOSBox.
+  Tests: `test_aging`; `test_effects_specs` with an age.
+
 **Changed**
 - **The weapon specs are packed, making room for a character's age.** The sheet's +14h to +17h
   (which the game never uses) held the four weapon specs a byte each; now they are 5 bits each

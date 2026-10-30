@@ -1506,6 +1506,29 @@ BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An
 earlier rule gave boots a move in a fight; it is gone, and the boots' names it
 changed go back to the game's.)
 
+### Ages
+
+([In the features page](FEATURES.md#ages-and-magical-aging).)
+
+How: the Loader (`aging.py`, with `RULE_AGING`, RULES_HI's 256) keeps each
+party member's age in the sheet's +17h (`SHEET_AGE`: the age less the race's
+base starting age, plus 1; 0 none yet, a thri-kreen's 6 being its base), the
+byte the packed weapon specs leave free (Weapon specialization, below). A member
+with none gets its starting age (`give_ages`, in the dice log's item pass, not
+while DSCLOG's weapon window is up: its trial puts the four bytes back as they
+were). `age_by` moves an age (Haste, Restore Youth): the categories reached or
+left change the sheet's scores and the creature's (`changes`, Table 8, the
+scores kept within 3 to 25), and the maximum (`most_age`: the race's base and
+dice, seeded with the character's name and race, so always the same) kills
+(`kill`: no hit points, the game's dead status). The Loader puts the age, its
+category, the next and its age in each member's STATS (+28h on: `STATS_AGE`),
+and DSCLOG's `AGE_TEXT` writes them: View Character's `AGE 23` under the saves
+(`V_AGE_Y`: there is no free row in the left column, CHR's line and the sex and
+race line being 3 pixels apart), and `AGE_LINES`, the first of the Effects
+panel's lines (`EF_LINES_OF`). Checked in DOSBox: the game's own party given
+ages in a new game, View Character, the Effects screen (its weapon specs then
+on its second page) and the Characters tab.
+
 ### Weapon specialization
 
 ([In the features page](FEATURES.md#weapon-specialization).)
@@ -1516,7 +1539,7 @@ saved-characters roster keep them. Up to 2.12 they were a byte each (the kind +
 1, 0 none); now they are packed, 5 bits each in +14h to +16h (room for 31
 kinds), +16h's top bit (`SPEC_PACKED`) marking it, and +17h is the
 character's age (`SHEET_AGE`, years past its race's base starting age: see
-Ages below). A sheet keeps the old layout until something writes to it, and
+Ages above). A sheet keeps the old layout until something writes to it, and
 everything reads both: DSCLOG through `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`
 (and writes through `SPEC_SET`, `SPEC_CLEAR`, which pack an old sheet first,
 `SPEC_PACK`: its +17h, an old 4th spec, becomes 0, no age yet), the Loader
