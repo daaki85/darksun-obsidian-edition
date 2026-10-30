@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.2 ([release notes](release-notes/v2.13.2.md)).
+
 **Changed**
 - **Table 7's dice on the creation screen:** the age above RECALL is rolled for real with each
   roll of the die, a choice or the screen opening (DSCLOG's `age_dice`, `age_rand`: an LCG xored
