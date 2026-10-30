@@ -15030,7 +15030,7 @@ copies:
 ; better than its own (NS_CLAW). Fogbolt puts its (27)
 ; on a creature that fails its save: -3 to hit, and +2 to hit it (NS_HIT).
 NS_FIRST     equ 0xC4
-NS_COUNT     equ 15
+NS_COUNT     equ 16
 PRIEST6      equ 6              ; (the new spells' places from here: the 6th-level priest spells)
 NS_LAST      equ NS_FIRST + NS_COUNT - 1
 GRACE_SPELL  equ NS_FIRST
@@ -15048,6 +15048,7 @@ SEEDS_SPELL  equ HEAL_SPELL + 5
 HEARTSEEKER_SPELL equ HEAL_SPELL + 6
 WATER_LIFE_SPELL equ HEAL_SPELL + 7
 WHIRLWIND_SPELL equ HEAL_SPELL + 8
+RESTORE_SPELL equ HEAL_SPELL + 9 ; (Restore Youth: the Loader's, as it is cast, aging.restore)
 CURE_CRITICAL equ 127
 CAUSE_CRITICAL equ 128
 PRIEST_WALL_FIRE equ 137
@@ -15205,18 +15206,18 @@ probe_grace_ability:
 ; has them now (see NEW SPELLS), and flight 15 Fogbolt's grey bolt once the game has the objects'
 ; copy open (FLIGHTS). DS the game's; all registers kept.
 ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up (0FFh: not yet)
-ns_levels    db 2, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 ; each one's spell level ...
+ns_levels    db 2, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 ; each one's spell level ...
 ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL, MIRROR_SPELL, CHARM_SPELL, STRENGTH_SPELL
              db CURE_CRITICAL, CAUSE_CRITICAL, PRIEST_WALL_FIRE, PRIEST_WALL_FIRE, HOLD_PERSON
-             db FLAME_STRIKE, SLAY_LIVING, CURE_CRITICAL, STINKING_CLOUD
+             db FLAME_STRIKE, SLAY_LIVING, CURE_CRITICAL, STINKING_CLOUD, CURE_CRITICAL
                                 ; ... the spell whose record it takes ...
 ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT, MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT
              times NS_COUNT - PRIEST6 db 0
                                 ; ... its effect ...
-ns_effect_how db 2, 1, 1, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... put in the record and named by the helper (1), put in
+ns_effect_how db 2, 1, 1, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... put in the record and named by the helper (1), put in
                                 ;   the record, the game's own (3), the template's (0), or by the
                                 ;   handler (PROBE_GRACE_EFFECT) and named by the helper (2) ...
-ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
+ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
                                 ;   Grasp's, Fog Cloud's (0: the template's) ...
 ns_known_at  db NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, KIT_BYTE ; ... and the sheet's
 ns_known_bit db 0x10, 0x20, 0x40, 0x08, 0x80, 0x80 ;   byte and bit that say a member knows it
@@ -15230,7 +15231,8 @@ EARTH_MASK   equ 0x0010808A
 AIR_MASK     equ 0x00104046
 P6_MASKS:    dd COSMOS_MASK, COSMOS_MASK, AIR_MASK, EARTH_MASK, FIRE_MASK ; (Heal, Harm; Blade Barrier,
              dd FIRE_MASK, 0x001282AA, 0x00120222, AIR_MASK ; Wall of Thorns, Sunstroke; Fire Seeds;
-                                ;   Heartseeker, earth and water's; Water of Life, water's; Whirlwind)
+             dd COSMOS_MASK     ;   Heartseeker, earth and water's; Water of Life, water's; Whirlwind;
+                                ;   Restore Youth, the cosmos's)
 ; NS_PATCHES: the records' changes from their templates': the new spell (0 to NS_COUNT - 1), the
 ; place, 1 (a byte) or 2 (a word), the value; 0FFh ends them.
 %macro NS_PATCH 4
@@ -15289,10 +15291,13 @@ ns_patches:
         NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x11
         NS_PATCH WHIRLWIND_SPELL, 0x1E, 1, 8
         NS_PATCH WHIRLWIND_SPELL, 0x17, 1, AREA_COUNT + 3 ; (its own picture: the sand storm)
+        NS_PATCH RESTORE_SPELL, 0x1C, 1, 0      ; Restore Youth: Cure Critical Wounds' touch, healing nothing
+        NS_PATCH RESTORE_SPELL, 0x1D, 1, 0      ;   (no handler of its own: its years and system shock
+        NS_PATCH RESTORE_SPELL, 0x1E, 1, 0      ;   are the Loader's, as it is cast: CAST_SITE's record)
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
              dw ns_name_heal, ns_name_harm, ns_name_blade, ns_name_thorns, ns_name_sun, ns_name_seeds
-             dw ns_name_heart, ns_name_water, ns_name_whirl
+             dw ns_name_heart, ns_name_water, ns_name_whirl, ns_name_restore
 ns_name_heal db "HEAL", 0
 ns_name_harm db "HARM", 0
 ns_name_blade db "BLADE BARRIER", 0
@@ -15302,6 +15307,7 @@ ns_name_seeds db "FIRE SEEDS", 0
 ns_name_heart db "HEARTSEEKER", 0
 ns_name_water db "WATER OF LIFE", 0
 ns_name_whirl db "WHIRLWIND", 0
+ns_name_restore db "RESTORE YOUTH", 0
 ns_name_grace db "CAT'S GRACE", 0
 ns_name_claw db "ERDLU CLAW", 0
 ns_name_fog  db "FOGBOLT", 0

@@ -2929,9 +2929,9 @@ class NewSpellTests(RuleTests):
         self.moved(1)
         for spell in (199, 200, 201):
             self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
-        for spell in range(202, 211):  # (the 6th-level priest spells: as a priest's, below it too)
+        for spell in range(202, 212):  # (the 6th-level priest spells: as a priest's, below it too)
             self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
-        self.assertEqual(self.site(site, edx=211) & (CF | ZF), 0)
+        self.assertEqual(self.site(site, edx=212) & (CF | ZF), 0)
         priest = gamepatch.NS_CMP + 1  # (55865h, "cmp si,45h": a wizard's spell below it, a priest's not)
         self.assertEqual(gamepatch.NS_CMP_SITES[1], (0x55865, "83fe45"))
         self.assertEqual(self.site(priest, esi=200) & (CF | ZF), CF)
@@ -3059,7 +3059,7 @@ class NewSpellTests(RuleTests):
         records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
         touch = bytes(range(0x1F)) + bytes((0xA0,))
         mu.mem_write(records + 0x27 * 0x20, touch)
-        mu.mem_write(records + 0xD3 * 0x20, bytes(0x20))
+        mu.mem_write(records + 0xD4 * 0x20, bytes(0x20))
         def save():
             self.at += 0x20
             start = CALLER * 16 + self.at
@@ -3072,10 +3072,10 @@ class NewSpellTests(RuleTests):
             return struct.unpack("<HH", bytes(mu.mem_read(SS * 16 + 0x7FC, 4)))
         self.moved(0)
         self.assertEqual(save(), (0x27, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xD3 * 0x20, 0x20)), bytes(0x20))
+        self.assertEqual(bytes(mu.mem_read(records + 0xD4 * 0x20, 0x20)), bytes(0x20))
         self.moved(1)
-        self.assertEqual(save(), (0xD3, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xD3 * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
+        self.assertEqual(save(), (0xD4, 6))
+        self.assertEqual(bytes(mu.mem_read(records + 0xD4 * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
         self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
 
     def test_script_request(self):

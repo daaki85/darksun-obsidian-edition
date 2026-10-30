@@ -6,7 +6,7 @@ from typing import List, NamedTuple, Optional
 
 from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
                    PRIEST6_LEVEL, PRIEST6_SPELLS, HEAL_SPELL, HARM_SPELL, THORNS_SPELL, SUNSTROKE_SPELL,
-                   HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL,
+                   HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL, RESTORE_YOUTH_SPELL,
                    PERMANENT, PSIONIC_COUNT, PSIONIC_FIRST, RULE_NEW_SPELLS, SAVE_NAMES,
                    SPELL_COUNT, SPELL_FIRST, SPELL_INFO_OFF, SPELL_INFO_SIZE, SPELL_LEVEL_CAP, SPELL_SIZE, GameData, kind_to_save,
                    ordinal)
@@ -38,6 +38,10 @@ OWN_LINES = {
     WHIRLWIND_SPELL: {"damage": "2d8 [crushing] each round to each creature in it",
                       "effect": "one that fails its save is swept off its feet and loses its next turn (no "
                                 "move, no action); nothing can be shot or cast through it"},
+    RESTORE_YOUTH_SPELL: {"damage": "", "save": "none",
+                          "effect": "a year of magical aging (Haste's) taken back for each caster level, never "
+                                    "below the creature's true age, after a system shock roll it must survive "
+                                    "(with ages on)"},
 }
 
 

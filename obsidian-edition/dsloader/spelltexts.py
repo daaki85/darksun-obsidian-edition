@@ -1,5 +1,5 @@
 """Descriptions the game reads from RESOURCE.GFF (SPIN chunks) for what the mod adds: the new
-spells' (SPIN the spell's number + 1, as the game's own: 197-202 the wizard spells', 203-211 the
+spells' (SPIN the spell's number + 1, as the game's own: 197-202 the wizard spells', 203-212 the
 6th-level priest spells') and, in Turn Undead's box (SPIN 1000),
 the purse's and the spell arrows' (1001-1005: DSCLOG's PROBE_CHUNK_ID asks for 999 + TU_INFO in
 1000's place), and Slay Living's (137) put right. They were DSCLOG's own text once; in the Loader's copy of RESOURCE.GFF they take
@@ -41,6 +41,8 @@ TEXTS: Dict[int, str] = {
          "least 5 hit points.",
     211: "WHIRLWIND:  Inflicts 2 to 16 pts of damage a round on creatures in it, half on a save; "
          "those failing lose a turn. Lasts 1 round per level. Blocks missiles.",
+    212: "RESTORE YOUTH:  Takes back 1 year of magical aging per level of caster, never below "
+         "the target's true age. The target must survive a system shock.",
     PICK_SPIN: "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
                "If it fails, the thief tries to slip away unseen. Not in a fight.",
     PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows per level in the empty quiver, for a 1st-level slot. "

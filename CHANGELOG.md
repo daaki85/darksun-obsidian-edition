@@ -13,7 +13,7 @@ notes](PATCH-NOTES.md).
   age from Dark Sun's Table 7, rolled the first time the Loader sees it (`aging.give_ages`, in the
   dice log), kept in the sheet's +17h; middle, old and venerable age (Table 8) change the scores
   once and for good, and the most a race lives (its secret roll, seeded by the character) kills
-  (`aging.age_by`, for Haste and Restore Youth to come). Shown on the inventory panel between PSI and AC, on View Character under the saves
+  (`aging.age_by`, for Haste and Restore Youth). Shown on the inventory panel between PSI and AC, on View Character under the saves
   (`AGE 23`), first in the Effects panel (`AGE 23` / `MIDDLE-AGED AT 40`: DSCLOG's `AGE_TEXT`,
   `AGE_LINES`, from the age in STATS' new +28h on) and on the Characters tab. Checked in DOSBox.
   Tests: `test_aging`; `test_effects_specs` with an age.
@@ -21,6 +21,13 @@ notes](PATCH-NOTES.md).
   PHB's table) or dies, and a party member who survives is a year older (`aging.hasted`, from the
   dice log's `effect_changes` as a Hasted effect starts). Checked in DOSBox: a failure kills as the
   game kills (no turns, no XP, "Dead"), a success ages. Tests: `test_aging`'s HasteTests.
+- **Restore Youth, a 6th-level cosmos priest spell (211).** Takes back a year of magical aging a
+  caster level, never below the target's true age (`aging.natural_start`), after a system shock
+  roll (`aging.restore`, from the dice log's cast line); Cure Critical Wounds' record with no dice
+  and no handler. Negative Plane Protection's save record moves to 212, the record room's last
+  (`NPP_SAVE`), and the game's spell lists end at 212 (`gamepatch.NS_END`). Checked in DOSBox: the
+  spell and its description on a 12th-level druid's 6th-level page, and cast on a character aged
+  by Haste. Tests: `test_aging`'s RestoreYouthTests, `test_grace`, `test_dsclog`.
 
 **Changed**
 - **The weapon specs are packed, making room for a character's age.** The sheet's +14h to +17h

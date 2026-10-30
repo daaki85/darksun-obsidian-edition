@@ -232,24 +232,26 @@ NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "
               REFLECT_SPELL: "Reflected Image", SPOOK_SPELL: "Spook", FRIENDS_SPELL: "Friends"}
 NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
                     FRIENDS_SPELL: 1}
-# ... and nine 6th-level priest spells after them (DSCLOG's PRIEST6 on): Wake of the Ravager's eight
-# and Whirlwind, the air's. A priest casts those of its spheres, as the game's own: their rows' masks
+# ... and ten 6th-level priest spells after them (DSCLOG's PRIEST6 on): Wake of the Ravager's eight,
+# Whirlwind (the air's) and Restore Youth (the cosmos's). A priest casts those of its spheres, as the game's own: their rows' masks
 # (PRIEST6_MASKS: the cosmos's as its 4th- and 5th-level spells', the druids'; the elements' as
 # theirs), meeting its priest classes' (DSCLOG's NS_PRIEST_KNOWS; the sheet holds no bit for them)
 HEAL_SPELL, HARM_SPELL, BLADE_SPELL, THORNS_SPELL, SUNSTROKE_SPELL = range(202, 207)
-SEEDS_SPELL, HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL = range(207, 211)
+SEEDS_SPELL, HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL, RESTORE_YOUTH_SPELL = range(207, 212)
 PRIEST6_SPELLS = {HEAL_SPELL: "Heal", HARM_SPELL: "Harm", BLADE_SPELL: "Blade Barrier",
                   THORNS_SPELL: "Wall of Thorns", SUNSTROKE_SPELL: "Sunstroke", SEEDS_SPELL: "Fire Seeds",
-                  HEARTSEEKER_SPELL: "Heartseeker", WATER_LIFE_SPELL: "Water of Life", WHIRLWIND_SPELL: "Whirlwind"}
+                  HEARTSEEKER_SPELL: "Heartseeker", WATER_LIFE_SPELL: "Water of Life", WHIRLWIND_SPELL: "Whirlwind",
+                  RESTORE_YOUTH_SPELL: "Restore Youth"}
 COSMOS_MASK, FIRE_MASK, EARTH_MASK, AIR_MASK = 0x001003C2, 0x00110112, 0x0010808A, 0x00104046
 PRIEST6_MASKS = {HEAL_SPELL: COSMOS_MASK, HARM_SPELL: COSMOS_MASK, BLADE_SPELL: AIR_MASK,
                  THORNS_SPELL: EARTH_MASK, SUNSTROKE_SPELL: FIRE_MASK, SEEDS_SPELL: FIRE_MASK,
-                 HEARTSEEKER_SPELL: 0x001282AA, WATER_LIFE_SPELL: 0x00120222, WHIRLWIND_SPELL: AIR_MASK}
+                 HEARTSEEKER_SPELL: 0x001282AA, WATER_LIFE_SPELL: 0x00120222, WHIRLWIND_SPELL: AIR_MASK,
+                 RESTORE_YOUTH_SPELL: COSMOS_MASK}
 PRIEST6_LEVEL = 6
-NEW_SPELLS_END = 211  # (past the last)
+NEW_SPELLS_END = 212  # (past the last)
 # Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
 # record copied to the records' room past the new spells, a save against death allowed
-NPP_SAVE_RECORD = 211
+NPP_SAVE_RECORD = 212
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16

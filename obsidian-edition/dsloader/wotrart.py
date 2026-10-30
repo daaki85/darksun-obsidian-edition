@@ -33,6 +33,7 @@ FALLBACKS: Dict[str, Tuple[int, Tuple[int, int, int]]] = {
     "Sunstroke": (21131, (255, 210, 0)), "Fire Seeds": (21120, (255, 90, 0)),  # Flame Strike's, Produce Fire's
     "Heartseeker": (21136, (90, 140, 40)), "Water of Life": (21127, (40, 110, 255)),  # Slay Living's, Cure Critical's
     "Whirlwind": (21083, (215, 215, 230)),  # Dust Devil's
+    "Restore Youth": (21096, (200, 170, 255)),  # Cure Disease's
 }
 HEAL_SPIN = (211, b"HEAL:")  # (how a RESOURCE.GFF is told for Wake of the Ravager's)
 PALETTE = ("PAL ", 1000)

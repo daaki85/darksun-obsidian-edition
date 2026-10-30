@@ -149,12 +149,13 @@ A few of them:
 | **Friends** | 1st | CHA +2d4 for a short while, for better prices |
 | **Cat's Grace** | 2nd | DEX +1d6, for an hour of game time a caster level |
 
-- **[New]** Nine 6th-level priest spells for clerics and druids of 11th level and up, with a 6th-level slot at 11th and two at 12th:
+- **[New]** Ten 6th-level priest spells for clerics and druids of 11th level and up, with a 6th-level slot at 11th and two at 12th:
 
 | Spell | Who | What it does |
 |---|---|---|
 | **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
 | **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, no save |
+| **Restore Youth** | druids, Healer clerics | takes back a year of magical aging (Haste's) a caster level, after a system shock roll |
 | **Blade Barrier** | air | a wall: 8d8 to each creature in it, a save for none |
 | **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
 | **Sunstroke** | fire | one creature that fails its save collapses, helpless, and burns for 1d4 fire each round |

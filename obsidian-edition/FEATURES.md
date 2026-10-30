@@ -1298,8 +1298,8 @@ How it works:
 
 ### 6th-level priest spells
 
-Nine 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
-202-210). A cleric or druid gets them at 11th level, with AD&D's spell slots:
+Ten 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
+202-211). A cleric or druid gets them at 11th level, with AD&D's spell slots:
 one 6th-level slot at 11th and two at 12th (a druid reaches 12th under the XP
 cap, a cleric 11th). Like the 4th and 5th-level common spells, the cosmos
 ones are for druids and a Healer cleric; each element's are for the clerics
@@ -1315,6 +1315,7 @@ says so.
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
 | **Harm** | cosmos | touch | the creature is left 1d4 hit points; no save |
+| **Restore Youth** | cosmos | touch | takes back a year of magical aging (Haste's) a caster level, never below the creature's true age; it must survive a system shock ([Ages](#ages-and-magical-aging)) |
 | **Blade Barrier** | air | a wall | 8d8 to each creature in it or passing through; a save for none |
 | **Wall of Thorns** | earth | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
 | **Sunstroke** | fire | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
@@ -1323,15 +1324,16 @@ says so.
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
 | **Whirlwind** | air | an area, a round a caster level | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
-![The nine 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds and Water of Life](docs/new-priest-spells.png)
+![The 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds and Water of Life](docs/new-priest-spells.png)
 
 How they're made, and where they differ from the books:
 
 - Each is built on a spell the game already has, so the game's own code casts
   it: Heal on Cure Critical Wounds, Harm on Cause Critical Wounds, the walls
   on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds on Flame
-  Strike, Whirlwind on Stinking Cloud, Heartseeker on Slay Living and Water of
-  Life on Lend Health.
+  Strike, Whirlwind on Stinking Cloud, Heartseeker on Slay Living, Water of
+  Life on Lend Health and Restore Youth on Cure Critical Wounds (healing
+  nothing).
 - **Blade Barrier and Wall of Thorns are walls of their own**, made as the
   game makes its fire walls but each with its own damage and its own picture:
   a ring of circling blades and a tangle of thorns, Wake of the Ravager's (the
@@ -1370,6 +1372,13 @@ How they're made, and where they differ from the books:
   as in AD&D, which here only keeps a STR lowered by something else from coming
   back ([Cause
   Disease](HOW-THE-GAME-WORKS.md#each-cleric-spell-against-the-manual)).
+- **Restore Youth** is the mod's, the reverse of AD&D's Age Creature, and
+  needs the **Ages and magical aging** rule: it takes back only the years
+  magic added, as many as the caster's level, down to the age the character
+  would be without them. The target rolls system shock first, as for Haste,
+  and dies if it fails; one with no magical years rolls nothing. With the rule
+  off, or on a monster, it does nothing. The dice log shows both:
+  `Gerakis grows younger 10 years (Restore Youth): now 27.`
 
 The dice log names each one: Harm's line says the game's own roll goes
 unused, and Wall of Thorns' gives the AC its damage came from

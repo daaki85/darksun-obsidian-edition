@@ -97,6 +97,13 @@ def changes(race: int, before: int, after: int) -> Dict[int, int]:
     return {a: n for a, n in out.items() if n}
 
 
+def natural_start(name: str, race: int) -> Tuple[int, List[int]]:
+    """The character's starting age, its true age: its race's base and dice, rolled with the
+    character's name and race for the seed (as most_age), so the same each time: Restore Youth
+    takes back the years past it, never below it."""
+    return roll_start(race, random.Random(f"{name}|{race}|start"))
+
+
 def roll_start(race: int, rng: random.Random) -> Tuple[int, List[int]]:
     """A starting age for RACE and the dice rolled."""
     ages = RACES[race]
@@ -123,9 +130,8 @@ def sheet_address(gd: "game.GameData", member: int) -> int:
     return game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
 
 
-def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[str]:
-    """A starting age for each party member who has none: its lines for the dice log."""
-    rng = rng or random.Random()
+def give_ages(gd: "game.GameData") -> List[str]:
+    """A starting age for each party member who has none (natural_start): lines for the dice log."""
     out = []
     for member in range(game.PARTY_SIZE):
         rec, sheet = gd.creature(member), gd.sheet(member)
@@ -134,7 +140,7 @@ def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[
         race = sheet[game.SHEET_RACE]
         if race not in RACES or age_of(sheet) is not None:
             continue
-        age, faces = roll_start(race, rng)
+        age, faces = natural_start(gd.creature_name(member), race)
         specs = game.packed_specs(game.spec_kinds(sheet), stored(race, age))
         gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs)
         ages = RACES[race]
@@ -230,3 +236,31 @@ def describe(sheet: bytes) -> Optional[str]:
     now = CATEGORY_NAMES[category(race, age)]
     nxt = next_category(race, age)
     return f"{age}" + (f", {now}" if now else "") + (f"; {CATEGORY_NAMES[nxt[0]]} at {nxt[1]}" if nxt else "")
+
+
+def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random.Random] = None) -> List[str]:
+    """Restore Youth on CREATURE, cast at LEVEL: a year of its magical aging (its years past its
+    true age, natural_start's) taken back a level, after a system shock roll by its CON that a
+    failure ends in death; nothing to take back, no roll. Lines for the dice log."""
+    from . import kalzith
+    rng = rng or random.Random()
+    rec = gd.creature(creature)
+    if creature >= game.PARTY_SIZE or len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in kalzith.DEAD_STATUS:
+        return []
+    sheet = gd.sheet(creature)
+    age = age_of(sheet)
+    if age is None:
+        return []
+    name = gd.creature_name(creature)
+    true_age = natural_start(name, sheet[game.SHEET_RACE])[0]
+    if age <= true_age:
+        return [f"Restore Youth: {name} has no magical years to take back ({age}, {name}'s true age)."]
+    con = rec[game.CREATURE_ABILITIES + 2]
+    chance, roll = system_shock(con), rng.randint(1, 100)
+    line = (f"{name}'s system shock (Restore Youth): d100 = {roll}, needs {chance} or less (CON {con}) -> "
+            + ("survives" if roll <= chance else f"fails: {name} dies"))
+    if roll > chance:
+        kill(gd, creature)
+        return [line]
+    years = min(max(1, level), age - true_age)
+    return [line] + ["  " + text for text in age_by(gd, creature, -years, "Restore Youth")]

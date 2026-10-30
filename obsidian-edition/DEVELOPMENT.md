@@ -1539,6 +1539,15 @@ else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
 Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
 K'ratchek at CON 19 (89 against 99: 7 years old).
 
+Restore Youth (211, a cosmos spell: `COSMOS_MASK` in DSCLOG's `P6_MASKS`) is
+Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
+handler, so the game casts it as a touch spell that heals nothing. The dice
+log's `KIND_CAST` line for it calls `aging.restore` with the target and the
+caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
+by the level, never below the character's true age (`natural_start`, the
+seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
+level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
+
 ### Weapon specialization
 
 ([In the features page](FEATURES.md#weapon-specialization).)
@@ -2420,7 +2429,7 @@ after the `ns_list_` patches):
   no save (+1Fh bit 0), so it never stopped anything. DSCLOG's `NS_NPP`
   (replacing "add sp,4 / push 6 / push 27h" at 7A7E9h) makes the charge's two
   arguments, still on the stack, the save's: 6 and, once the records have room
-  (SEG_MOVED), record 211 (`NPP_SAVE`, past the new spells), Vampiric Touch's
+  (SEG_MOVED), record 212 (`NPP_SAVE`, past the new spells), Vampiric Touch's
   copied with a save against paralysis, poison and death allowed (21h). Saved,
   the game stops the touch and gives the undead 2d6.
 - **Acid** (effect 1, Acid Arrow's): the game spends an effect's charges
@@ -2500,7 +2509,7 @@ after the `ns_list_` patches):
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the load
 segment + 3E3Fh) has 96 bytes after 195, room for 196-198, then the monster
 kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198, Reflected
-Image 199, Spook 200, Friends 201, and the 6th-level priest spells 202-210.
+Image 199, Spook 200, Friends 201, and the 6th-level priest spells 202-211.
 The game names none of the monsters' powers:
 the log names one by its record's effect (+19h, `game.POWER_EFFECT_NAMES`), else
 its damage's kind, else its number; a roll before a save against one that puts
@@ -2516,7 +2525,7 @@ the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
 200h bytes from 3E3Fh to `seg_space` in its own resident image and points the
 two selectors there (`seg_moved`, the header's +306). The records then run to
-211. The stack had been written over records 196-198's room all along; with it
+212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h). The stack had been written over records 196-198's room all along; with it
 moved, nothing writes there but the helper. Spells 199-201 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
 `monsters.py` reads the kinds table's segment from the selector. The spell
@@ -2547,7 +2556,7 @@ scroll used...). Each such compare is `INT 98h` and a site number
 (`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's `ns_cmp_sites`);
 the helper makes a new spell compare as a wizard's spell does, and hands back
 the flags. The name routine (500:61h, `NS_NAME` at 5E560h) gives their names;
-their descriptions (SPIN 197-202, and 203-211 for the 6th-level priest spells:
+their descriptions (SPIN 197-202, and 203-212 for the 6th-level priest spells:
 the spell + 1 as the game's own) and icons (21196-21201) are chunks of the
 launcher's copy of RESOURCE.GFF (`spelltexts.py`, `icons.py`), so they take no
 room in the helper. A description follows the game's own: the name in capitals,

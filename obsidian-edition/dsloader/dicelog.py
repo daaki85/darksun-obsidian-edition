@@ -2095,6 +2095,11 @@ class DiceLog:
         if e.kind == KIND_CAST:
             self._cast = (e.arg(6), e.raw)  # (who cast what, for a kit's damage: DSCLOG's CAST_WHO)
             self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
+            if e.raw == game.RESTORE_YOUTH_SPELL and self.rules & game.RULE_AGING:  # (its years: aging.restore)
+                caster, target = self.game.combatant_creature(e.arg(6)), self.game.combatant_creature(e.arg(8))
+                if caster is not None and target is not None:
+                    level = self.game.effect_caster_level(caster, e.raw) or 1
+                    return aging.restore(self.game, target, level)
             return []
         code = e.code
         if code.startswith(ATTACK_SITE):
