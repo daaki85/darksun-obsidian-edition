@@ -35,6 +35,12 @@ notes](PATCH-NOTES.md).
   Loader, each waiting for the next steady look instead. Checked in DOSBox. Tests:
   `test_natural_years`, `test_restore_counts_the_games_years`, `test_the_log_counts_each_year_once`.
 
+- **The game's time on the combat log panel:** out of a fight its top line says how long the game
+  has run, `Day 47, 14:20` (`combatlog.clock_line`, from the game's clock: day 1 at 00:00; the game
+  has no time of day); in the arena it says the count of arena fights instead, as before, now
+  there only (the slave pens have the time). Checked in DOSBox: `Day 1, 00:00`, then `Day 3,
+  05:21` with the clock moved on, and `Arena fights: ?` in the arena. Tests: `test_clock_line`.
+
 **Fixed**
 - **Kurzak notices Legcrusher is gone** (`kurzak.py`, always): once the party has killed
   Legcrusher (at the fountain, with no alarm), Kurzak's call to the arena and his greeting no

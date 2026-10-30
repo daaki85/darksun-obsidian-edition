@@ -385,7 +385,7 @@ class StatesTests(unittest.TestCase):
         self.assertFalse(hasattr(self.panel, "arena"))
 
     def test_arena_count_in_the_header(self):
-        """Between fights in the slave pens and the arena, the header says the count, docked or
+        """Between fights in the arena, the header says the count, docked or
         expanded ('?' when not known yet); collapsed keeps the newest line, and outside them the
         header is the round."""
         g = self.game.guest
@@ -406,7 +406,14 @@ class StatesTests(unittest.TestCase):
         self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES, 2)
         self.assertEqual(self.panel._shown[1], "Round 1")
         self.assertEqual(c.arena_line(None), "Arena fights: ?")
-        self.assertEqual(c.ARENA_REGIONS, (0x29, 0x2A))
+        self.assertEqual((c.ARENA_REGIONS, c.ARENA_REGION), ((0x29, 0x2A), 0x2A))
+
+    def test_clock_line(self):
+        """Out of a fight, but in the arena: the game's time from day 1 at 00:00."""
+        self.assertEqual(c.clock_line(0), "Day 1, 00:00")
+        self.assertEqual(c.clock_line(33), "Day 1, 00:00")
+        self.assertEqual(c.clock_line(46 * 86400 + 14 * 3600 + 20 * 60 + 59), "Day 47, 14:20")
+        self.assertEqual(c.clock_line(365 * 86400), "Day 366, 00:00")
 
     def test_update_writes_the_size(self):
         g = self.game.guest

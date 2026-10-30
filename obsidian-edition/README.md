@@ -420,9 +420,13 @@ there; **-** makes it smaller.
   is as new lines come, and a **Latest** chip at its foot says how many have;
   click it (or scroll to the end) to follow again. Clicks on the panel are
   its own: the party doesn't walk there.
-- **The arena's count of fights.** Between fights in the slave pens and the
-  arena, the top line says how many arena fights the party has had (`Arena
-  fights: 4`, or `?` until the game has shown it to the Loader): the game's
+- **How long you've played.** Out of a fight, the top line says how long the
+  game has run, `Day 47, 14:20`: from day 1 at 00:00, the game's own clock (it
+  has no time of day, so 14:20 is the hours into that day; a rest moves it on 8
+  hours). Saves keep it.
+- **The arena's count of fights.** Between fights in the arena, the top line
+  says instead how many arena fights the party has had (`Arena fights: 4`, or
+  `?` until the game has shown it to the Loader): the game's
   own count, one a trip into the arena however many waves come (see [the
   arena's count of
   fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). Once the party

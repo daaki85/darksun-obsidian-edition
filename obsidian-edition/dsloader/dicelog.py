@@ -1415,13 +1415,17 @@ class DiceLog:
                     self._fight_monsters.add(name)
             top = combatlog.header(self.round_status())
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
-        in_arena = False  # (between fights in the slave pens and the arena: their count in the header)
+        in_arena = False  # (between fights in the arena: its count in the header; elsewhere the time)
         if on and not fighting:
             try:
-                in_arena = self.game.region() in combatlog.ARENA_REGIONS
-                count = self.game.number(game.ARENA_FIGHTS) if in_arena else None
+                region = self.game.region()
+                in_arena = region == combatlog.ARENA_REGION
+                count = self.game.number(game.ARENA_FIGHTS) if region in combatlog.ARENA_REGIONS else None
                 if count is not None:  # (the numbers are in memory only now and then: the last one read)
                     self._arena_count = count
+                clock = None if in_arena else self.game.game_time()
+                if clock is not None:
+                    top = combatlog.clock_line(clock)
             except (struct.error, IndexError, ValueError):
                 pass
         self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names,

@@ -552,11 +552,19 @@ def key_rect(font, g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
     return x1 - BUTTON_W, HEADER_Y0, x1, HEADER_Y1
 
 
-ARENA_REGIONS = (0x29, 0x2A)  # the slave pens and the arena: the header's count of fights there
+ARENA_REGIONS = (0x29, 0x2A)  # the slave pens and the arena: where the count of arena fights is read
+ARENA_REGION = 0x2A  # the arena: where the header says it (anywhere else out of a fight, the game's time)
+
+
+def clock_line(seconds: int) -> str:
+    """The header out of a fight, but in the arena: how long the game has run, "Day 47, 14:20" (from
+    day 1 at 00:00; the game has no time of day, so this is the hours into that day)."""
+    days, rest = divmod(max(0, seconds), 24 * 60 * 60)
+    return f"Day {days + 1}, {rest // 3600:02d}:{rest % 3600 // 60:02d}"
 
 
 def arena_line(count: Optional[int]) -> str:
-    """The header between fights in the slave pens and the arena: the party's arena fights, as the
+    """The header between fights in the arena: the party's arena fights, as the
     game counts them (one a trip into the arena, however many waves; game.ARENA_FIGHTS)."""
     return "Arena fights: ?" if count is None else f"Arena fights: {count}"
 
@@ -782,7 +790,7 @@ class Panel:
                in_arena: bool = False) -> None:
         """ON: the panel shown (once it is drawn in a palette DSCLOG has read: PALETTES counts the
         reads), with the header TOP and the log's lines, NAMES their colours' keys. IN_ARENA (between
-        fights in the slave pens and the arena): the header the count of arena fights instead,
+        fights in the arena): the header the count of arena fights instead,
         ARENA_COUNT (None: not known yet, '?'), while the panel has a header of its own (not
         collapsed)."""
         guest = gd.guest

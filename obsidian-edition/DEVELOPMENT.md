@@ -938,9 +938,10 @@ dice log running:
   (`combatlog.key_rect`) with it shown hides it, in a fight or out of one. Out
   of fights the log takes the lines with a roll in them
   (`Log.add(rolls_only=True)`). The level and size are saved in the settings
-  (`combat_log_level`, `combat_log_size`). Between fights in the slave pens and
-  the arena (regions 29h and 2Ah, `combatlog.ARENA_REGIONS`) the header says the
-  arena's count of fights (`arena_line`, docked or expanded; it once had a
+  (`combat_log_level`, `combat_log_size`). Out of a fight the header says the
+  game's time (`clock_line`: `Day 47, 14:20` from `GameData.game_time`, day 1 at
+  00:00), but in the arena (region 2Ah, `combatlog.ARENA_REGION`) the
+  arena's count of fights, read there and in the slave pens (29h, `ARENA_REGIONS`) (`arena_line`, docked or expanded; it once had a
   button, A, dropped as the game's A key turns animations on and off):
   the game's global number 12 (`GameData.number(ARENA_FIGHTS)`, a word at the
   far pointer `NUMBERS_PTR`, DS:1356h; scripts' 07h/87h variables), which
