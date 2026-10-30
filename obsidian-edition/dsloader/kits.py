@@ -255,13 +255,16 @@ def slot_level(kid: int, level: int) -> int:
 def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
     giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): a Scholar's wizard slots 1 more
-    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer; a
+    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer, an
+    Elementalist's (slot_level: a level behind) at least 1 at a spell level its LEVEL reaches; a
     Seeker's and a Justifier's priest slots their own tables' (SEEKER_SLOTS), WIS's left out, and a
     Shinobi's wizard slots the Seeker's by its thief level."""
     if kid == SCHOLAR and magic == WIZARD:
         return game_slots + 1 if game_slots else 0
     if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
         return max(0, game_slots - 1)
+    if kid == ELEMENTALIST and magic == PRIEST and not game_slots and level >= 2 * spell_level - 1:
+        return 1  # (its slots a level behind, but 1 at a spell level its own level reaches)
     if kid == SHINOBI and magic == WIZARD:
         kid = SEEKER
     elif kid in (SEEKER, JUSTIFIER) and magic != PRIEST:

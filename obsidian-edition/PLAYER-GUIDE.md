@@ -1026,7 +1026,7 @@ train with the dagger and the short sword alone, and travel light.
 who speak to the spirits of sky and land. Under the open sky the spirits answer
 loudly; behind walls, hardly at all.
 
-*Wasteland Seer* (thri-kreen druid/fighter). Thri-kreen who read the wastes as
+*Wasteland Seer* (thri-kreen druid/fighter/psionicist). Thri-kreen who read the wastes as
 others read books. The open land lends their spells its strength.
 
 *Wild Fury* (mul druid/fighter). Muls who broke out of the fighting pits for

@@ -5182,8 +5182,8 @@ kit_class:
         ret
 
 ; MULTI_GROUP: AL the multiclass group (9-13, kitpages.MULTI) of sheet ES:BX, its classes 1-17
-; (KIT_CLASS_OF); MULTI_GROUP_CR the same for the sheet being made, its classes 1-8: two classes at
-; once (none at +23h), not a human's, its race and their pair one of MULTI_TABLE's; 0 for none.
+; (KIT_CLASS_OF); MULTI_GROUP_CR the same for the sheet being made, its classes 1-8: two or three
+; classes at once, not a human's, its race and their classes one of MULTI_TABLE's; 0 for none.
 ; Others kept.
 multi_group:
         push si
@@ -5197,14 +5197,15 @@ multi_find:
         push dx
         push di
         xor al, al
-        xor dx, dx              ; DX the pair's bits (1 shl the creation class)
+        xor dx, dx              ; DX the classes' bits (1 shl the creation class)
         cmp byte [es:bx + 0x18], 1
         je .out
-        cmp byte [es:bx + 0x23], 0
-        jne .out
         mov di, 0x21
 .class: movzx cx, byte [es:bx + di]
-        dec cx
+        cmp di, 0x23
+        jne .any
+        jcxz .classes           ; (two classes: no third)
+.any:   dec cx
         cmp cx, 16
         ja .out                 ; (none: one class)
         push si
@@ -5215,8 +5216,9 @@ multi_find:
         jz .out
         bts dx, cx
         inc di
-        cmp di, 0x23
+        cmp di, 0x24
         jb .class
+.classes:
         mov ch, [es:bx + 0x18]
         mov si, multi_table
         mov al, MULTI_FIRST
@@ -5235,7 +5237,7 @@ multi_find:
         pop cx
         pop si
         ret
-; (race, the pair's bits) by group from 9; then each group's kits, how many
+; (race, the classes' bits: two, or three) by group from 9; then each group's kits, how many
 multi_table db 3
             dw (1 << 1) | (1 << 3)      ; elf cleric/fighter: Battle Dancer
             db 4
@@ -5255,7 +5257,7 @@ multi_table db 3
             db 6
             dw (1 << 1) | (1 << 6)      ; halfling cleric/psionicist: Spirit Caller
             db 8
-            dw (1 << 2) | (1 << 3)      ; thri-kreen druid/fighter: Wasteland Seer
+            dw (1 << 2) | (1 << 3) | (1 << 6)   ; thri-kreen druid/fighter/psionicist: Wasteland Seer
             db 7
             dw (1 << 2) | (1 << 3)      ; mul druid/fighter: Wild Fury
             db 0
@@ -6787,7 +6789,8 @@ probe_thac0:
 ; and wherever the most is wanted: [BP+6] the combatant, [BP+8] the kind of magic, 1 wizard and 2
 ; priest, [BP+0Ah] the spell level; [BP-2] the slots its classes give): AX the slots, with the
 ; kit's (kits.slots): a Scholar's wizard slots 1 more at each spell level it has any, a Battle
-; Mage's 1 fewer, a Crusader's priest slots 1 fewer; a Seeker's and a Justifier's priest slots
+; Mage's 1 fewer, a Crusader's priest slots 1 fewer; an Elementalist's (a level behind:
+; PROBE_SLOT_LEVEL) at least 1 at a spell level its cleric level reaches; a Seeker's and a Justifier's priest slots
 ; their own tables' (SEEKER_SLOTS), by ranger level; a Shinobi's wizard slots the Seeker's, by
 ; thief level.
 SLOT_WIZARD  equ 1
@@ -6821,11 +6824,29 @@ probe_slots:
 .crusader:
         call kit_is_b           ; (a Crusader's priest slots 1 fewer)
         db KIT_CRUSADER
+        jne .elemental
+        cmp byte [bp + 8], SLOT_PRIEST
+        jne .elemental
+        jcxz .elemental
+        dec cx
+.elemental:
+        call kit_is_b           ; (an Elementalist: none from the level behind, but 1 at a spell
+        db KIT_ELEMENTALIST     ; level its own cleric level reaches, 2 x the spell level - 1)
         jne .tables
         cmp byte [bp + 8], SLOT_PRIEST
         jne .tables
-        jcxz .tables
-        dec cx
+        or cx, cx
+        jnz .tables
+        call kit_level
+        movzx ax, al
+        push bx
+        movzx bx, byte [bp + 0x0A]
+        add bx, bx
+        dec bx
+        cmp ax, bx
+        pop bx
+        jb .tables
+        inc cx
 .tables:
         push dx
         mov dl, KIT_SEEKER      ; (a Shinobi's wizard slots: the Seeker's table, by thief level)

@@ -100,7 +100,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Druid | Grove Warden, Wanderer, Lifebinder |
 | Psionicist | Mind Warrior, Mind Bender, Kineticist |
 
-- **[New]** Thirteen kits for two classes taken at once, each for one race only:
+- **[New]** Thirteen kits for two (or, for one, three) classes taken at once, each for one race only:
 
 | Race and classes | Kits |
 |---|---|
@@ -113,7 +113,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Half-giant fighter/psionicist | Titan Mind |
 | Halfling fighter/thief | Poisoner |
 | Halfling cleric/psionicist | Spirit Caller |
-| Thri-kreen druid/fighter | Wasteland Seer |
+| Thri-kreen druid/fighter/psionicist | Wasteland Seer |
 | Mul druid/fighter | Wild Fury |
 
 A few of them:
@@ -345,6 +345,7 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
 - **A save made with 2.13.0 is not for earlier versions.** It keeps the weapon specs packed with the age beside them, which an older Loader reads as other specs. Older saves load in 2.13.0 as they are.
 - **A save made with this version is not for 2.13.1 or earlier.** It keeps each character's starting roll beside the weapon specs (so Restore Youth can take back any number of magical years), which an older Loader reads as other specs. A character from an older save keeps its age, and its roll is put on its sheet when the game is loaded. From 2.13.1 a character's true age (how young Restore Youth can make them) is worked out a new way, the same as the creation screen shows; an age already given stays as it is.
+- A thri-kreen **druid/fighter** Wasteland Seer from an earlier version has no kit now: the Wasteland Seer is for a thri-kreen druid/fighter/psionicist.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

@@ -550,18 +550,18 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,076 of the room's 8,182
-paragraphs, so 2,106 (32.9 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,078 of the room's 8,182
+paragraphs, so 2,104 (32.9 KB) are spare, and with `UMBPLUS.COM`
 about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,271
+helper, the overlay buffer and the music buffer, each with its MCB: 3,273
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 63,680 bytes
-(`image_len`; the resident part ends at `resident_end`, F1C0h), so with the
-install's 256-byte stack 1,600 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 63,712 bytes
+(`image_len`; the resident part ends at `resident_end`, F1E0h), so with the
+install's 256-byte stack 1,568 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
-specs base 17 320); the HMA has 7,080 bytes left for more buffers (the far block ends at
+specs base 17 320, three-class kits and the Elementalist's least slot 32); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -1929,13 +1929,15 @@ window again for the class put in.
 
 #### Multiclass kits
 
-A few pairs of classes taken at once by one race have kits of their own
-(`kitpages.MULTI`): groups numbered on from the classes, 9 elf cleric/fighter,
+A few pairs of classes taken at once by one race, and one set of three, have
+kits of their own (`kitpages.MULTI`): groups numbered on from the classes, 9 elf cleric/fighter,
 10 half-elf fighter/thief, 11 half-elf druid/fighter, 12 half-elf
 cleric/ranger, 13 dwarf fighter/thief, 14 half-elf fighter/preserver, 15
 half-giant fighter/psionicist, 16 halfling fighter/thief, 17 halfling
-cleric/psionicist, 18 thri-kreen druid/fighter, 19 mul druid/fighter.
-`MULTI_GROUP` (`multi_table`) finds a sheet's group from its race and classes;
+cleric/psionicist, 18 thri-kreen druid/fighter/psionicist (all three: a
+druid/fighter has none), 19 mul druid/fighter. `MULTI_GROUP` (`multi_table`, a
+word of class bits a group: `MULTI_FIND` takes in the third class when there is
+one) finds a sheet's group from its race and classes;
 `KIT_PLACE` gives such a sheet place 0, so its kit is the kit byte's low two
 bits (1-2, a group having one or two kits), and its number is group × 4 + kit,
 as a class's. The KIT page has a window for each group (`KIT_WINDOW` + group −
@@ -1983,7 +1985,7 @@ emulated tests hold the helper to it:
 | to hit | Ravager, Brute, Ghetto Fighter (and 1 worse with anything but a dagger), Arena Champion, Battle Dancer, Wilderness Avenger, Wild Fury (Wild Fighting failed: −3, `WILD_TO_HIT` by `KIT_WILD`) | `PROBE_ATTACKS` (`KIT_TO_HIT`: `KIT_CHAMPION`, `KIT_EXTRA`, and `KIT_MELEE` in melee) |
 | AC | Ravager (`RAVAGER_AC` by level against the sheet's base AC, `+27h`), Wanderer, Sentinel and Arena Champion (a shield in a hand: `PROT_SCAN`), Grove Warden, Battle Dancer (its dance: `KIT_DANCE`), Wild Fury (Wild Fighting failed: 3 worse, no worse than 10, `KIT_WILD`) | `PROBE_AC` (`INT 62h`, the end of the AC routine: `KIT_AC`) |
 | movement | Stalker, Rescuer (2 more) | `PROBE_MOVE` (`KIT_MOVE`) |
-| spell slots | Scholar (+1 wizard), Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's), Elementalist (a level behind) | `PROBE_SLOTS` (`INT B6h`, new: the end of the game's slot routine, `mov ax,[bp-2]` at DSUN.EXE 5E255h) and `PROBE_SLOT_LEVEL` (`INT B5h`, new: where it takes a class's level, `mov al,es:[bx+24h]` at 5E1F6h); `GameData.max_spell_slots` with `kits.slots` and `kits.slot_level` |
+| spell slots | Scholar (+1 wizard), Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's), Elementalist (a level behind, `PROBE_SLOT_LEVEL`; but at least 1 at a spell level its own cleric level reaches, 2 × the spell level − 1, `PROBE_SLOTS`) | `PROBE_SLOTS` (`INT B6h`, new: the end of the game's slot routine, `mov ax,[bp-2]` at DSUN.EXE 5E255h) and `PROBE_SLOT_LEVEL` (`INT B5h`, new: where it takes a class's level, `mov al,es:[bx+24h]` at 5E1F6h); `GameData.max_spell_slots` with `kits.slots` and `kits.slot_level` |
 | a power's PSP | Mind Bender, Kineticist, Titan Mind (psychometabolism 2 less, telepathy 2 more) (by discipline: powers 0-5 psychokinesis, 6-19 psychometabolism, 20-33 telepathy, the defence modes among them; never below 1) | the powers' table (8 bytes a power, at the load segment + 3FB9h: `+1` the cost to use, `+2` to keep up, 63h for none; `+5` FEh for a defence mode). `PROBE_PSP_USE` (`INT B4h`, new: where the routine using a power has its cost in DI, its table's or worked out for Enhanced Strength and Domination, DSUN.EXE 5CBE7h), `PROBE_PSP_TABLE` (`INT B3h`, new: the table's cost read in the check whether a power can be used, 5CAA3h, and for the half a failed power costs, 5CCA2h), `PROBE_PSP_DEFENCE` (`INT B2h`, new: a defence mode's cost taken off, 5D820h); `kits.psp_cost`. Monsters' powers (5A773h) are left alone |
 | a cure's healing | Healer (+1 a die of Cure Light, Serious, Critical Wounds: spells 71, 112, 127), Lifebinder (a die more: a d8, Blood Flow's, 108, a d6, rolled from the game's rand() seed by `GAME_DIE`), Rescuer (as the Healer) | `PROBE_CURE` (`INT B1h`, new: "nop / push cs" at DSUN.EXE 79619h in the handler for spells with rules of their own, where the healing, pushed with the target, goes to the routine that heals; the caster its `[BP+8]`, the spell `[BP+0Eh]`; the probe pushes CS itself). The Cell Adjustment's jump into 79618h is clear of it |
 | a spell's damage | Wilderness Avenger (+1 a die of Cause Light, Serious, Critical Wounds: spells 72, 113, 128) | `AV_CAUSE`, from `AREA_DMG` (754ECh, "mov [bp-12h],ax" where the routine dealing a spell's damage to the creatures it reaches, 7511Bh, the Cause spells' way too, has rolled it, DI the spell; a helpless target's at `[BP-14h]`) and `HARM_SITE` (761A9h, the one-target routine's, `[BP-8]`): when `CAST_SITE` last saw that spell cast by an Avenger (`CAST_WHO`, `CAST_SPELL`), the bonus on the damage and on a helpless target's; the dice log's `_harm_bonus`, by the last `KIND_CAST` |

@@ -100,7 +100,7 @@ backpack.
 |---|---|---|---|---|
 | **Healer** | the **sphere of the cosmos**: the spells every druid casts and no cleric, known from the start and cast at its cleric level (4th level: Abjure, Cloak of Bravery, Cloak of Fear, Cure and Cause Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius; 5th: Cure and Cause Critical Wounds, Dispel Evil, Raise Dead, Slay Living); Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3) | **the water sphere only**; no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit)); after DUAL, offered to a water cleric only, and not to one who was a ranger of air, earth or fire; a Healer who changes class to a ranger is a water one (the sphere menu says WATER ONLY); can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use) at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | its weapon spec is chosen on the weapon window after DONE (the long sword, or its sphere's first, for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
-| **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's; none at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
+| **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's), but at least 1 at each spell level a cleric of its level casts (1 at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
 
 ## Druid kits
 
@@ -124,10 +124,11 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 
 ## Multiclass kits
 
-A character of two classes taken at once may take a kit if its race and pair
-of classes have one, and only that race may: a dwarf fighter/thief has the
+A character of two or three classes taken at once may take a kit if its race
+and classes have one, and only that race may: a dwarf fighter/thief has the
 Ghetto Fighter and Wayfinder, a half-elf fighter/thief the Shadowblade and
-Military Scout, a halfling fighter/thief the Poisoner. "Under the open sky"
+Military Scout, a halfling fighter/thief the Poisoner, a thri-kreen
+druid/fighter/psionicist (all three) the Wasteland Seer. "Under the open sky"
 means an outdoor map, or open ground outside the buildings on a city map.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
@@ -143,7 +144,7 @@ means an outdoor map, or open ground outside the buildings on a city map.
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | its classes' gear | as the Mind Bender's: to use a power and to keep it up, never below 1 |
 | **Poisoner** | halfling fighter/thief | **every melee weapon hit poisons** (not a shot or a throw): the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | its weapon spec the dagger or the short sword only (the weapon window offers no other); light armour only | its classes' gear, with one of its weapon spec (a dagger, or a short sword if that is picked) in each hand (its long sword made one, its shield left behind) | its weapon spec is the dagger if none is picked; the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | the spells it may cast and its slots are its own level's |
-| **Wasteland Seer** | thri-kreen druid/fighter | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | as the Spirit Caller's |
+| **Wasteland Seer** | thri-kreen druid/fighter/psionicist | under the open sky, its druid spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | as the Spirit Caller's |
 | **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON − 4 (the proficiency's check at −4; a natural 20 always fails); at CON − 4 or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight, checked anew in each fight (each of the arena's waves too) | over it, **−3 to hit and AC 3 worse** (no worse than 10) for the fight | its classes' gear | the dice log shows the check |
 
 A thief skill a kit lowers never goes below 0. The kits start with their
@@ -236,26 +237,28 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
 
 | Level | Preserver | Scholar | Battle Mage | Cleric | Crusader | Elementalist | Druid | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 1 | 2 | — | 1 | — | — | 1 | | | |
+| 1 | 1 | 2 | — | 1 | — | 1 | 1 | | | |
 | 2 | 2 | 3 | 1 | 2 | 1 | 1 | 2 | | | |
-| 3 | 2 1 | 3 2 | 1 | 2 1 | 1 | 2 | 2 1 | | | |
+| 3 | 2 1 | 3 2 | 1 | 2 1 | 1 | 2 1 | 2 1 | | | |
 | 4 | 3 2 | 4 3 | 2 1 | 3 2 | 2 1 | 2 1 | 3 2 | | | |
-| 5 | 4 2 1 | 5 3 2 | 3 1 | 3 3 1 | 2 2 | 3 2 | 3 3 1 | | | |
+| 5 | 4 2 1 | 5 3 2 | 3 1 | 3 3 1 | 2 2 | 3 2 1 | 3 3 1 | | | |
 | 6 | 4 2 2 | 5 3 3 | 3 1 1 | 3 3 2 | 2 2 1 | 3 3 1 | 3 3 2 | 1 | | 1 |
-| 7 | 4 3 2 1 | 5 4 3 2 | 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 | 3 3 2 1 | 2 | | 2 |
+| 7 | 4 3 2 1 | 5 4 3 2 | 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 1 | 3 3 2 1 | 2 | | 2 |
 | 8 | 4 3 3 2 | 5 4 4 3 | 3 2 2 1 | 3 3 3 2 | 2 2 2 1 | 3 3 2 1 | 3 3 3 2 | 2 1 | | 2 1 |
-| 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 2 1 | 3 3 3 2 | 4 4 3 2 1 | 2 2 | | 2 2 |
+| 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 2 1 | 3 3 3 2 1 | 4 4 3 2 1 | 2 2 | | 2 2 |
 | 10 | 4 4 3 2 2 | 5 5 4 3 3 | 3 3 2 1 1 | 4 4 3 3 2 | 3 3 2 2 1 | 4 4 3 2 1 | 4 4 3 3 2 | 2 2 1 | 1 | 2 2 1 |
-| 11 | 4 4 4 3 3 | 5 5 5 4 4 | 3 3 3 2 2 | 5 4 4 3 2 1 | 4 3 3 2 1 | 4 4 3 3 2 | 5 4 4 3 2 1 | | | 2 2 1 |
+| 11 | 4 4 4 3 3 | 5 5 5 4 4 | 3 3 3 2 2 | 5 4 4 3 2 1 | 4 3 3 2 1 | 4 4 3 3 2 1 | 5 4 4 3 2 1 | | | 2 2 1 |
 | 12 | | | | | | | 6 5 5 3 2 2 | | | 2 2 1 |
 | 13 | | | | | | | | | | 2 2 1 |
 
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
+- An **Elementalist**'s slots are a level behind, but never none at a spell
+  level a cleric of its own level casts: 1 there (1st-level spells at 1st, 2nd
+  at 3rd, 3rd at 5th, 4th at 7th, 5th at 9th, 6th at 11th).
 - A cleric's 11th level brings a **6th-level slot**
   ([6th-level priest spells](FEATURES.md#6th-level-priest-spells)); a
-  Crusader's one fewer leaves it none, and an Elementalist, a level behind,
-  has none yet. A preserver has no 6th-level spells to cast.
+  Crusader's one fewer leaves it none, and an Elementalist has 1 there (below). A preserver has no 6th-level spells to cast.
 - A **Seeker** and a **Justifier** have these in place of a ranger's own
   slots, with no bonus slots for WIS.
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own

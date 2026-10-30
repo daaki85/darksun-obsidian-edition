@@ -777,7 +777,7 @@ starting gear and rules, are on a page of their own, [Kits](KITS.md):
 | Cleric | [Healer, Crusader, Elementalist](KITS.md#cleric-kits) |
 | Druid | [Grove Warden, Wanderer, Lifebinder](KITS.md#druid-kits) |
 | Psionicist | [Mind Warrior, Mind Bender, Kineticist](KITS.md#psionicist-kits) |
-| Two classes at once, one race each | [Battle Dancer, Shadowblade, Military Scout, Wilderness Avenger, Rescuer, Ghetto Fighter, Wayfinder, Spellarcher, Titan Mind, Poisoner, Spirit Caller, Wasteland Seer, Wild Fury](KITS.md#multiclass-kits) |
+| Two or three classes at once, one race each | [Battle Dancer, Shadowblade, Military Scout, Wilderness Avenger, Rescuer, Ghetto Fighter, Wayfinder, Spellarcher, Titan Mind, Poisoner, Spirit Caller, Wasteland Seer, Wild Fury](KITS.md#multiclass-kits) |
 
 The game's own party gets features of its own
 ([The game's own party](#the-games-own-party)).

@@ -5011,7 +5011,7 @@ class KitTests(unittest.TestCase):
                   ebp=BP)
         return struct.unpack("<h", struct.pack("<H", self.mu.reg_read(r.UC_X86_REG_AX)))[0]
 
-    def creature(self, cls, kit, index=5, level=1, base=10, shield=False, second=0, race=0):
+    def creature(self, cls, kit, index=5, level=1, base=10, shield=False, second=0, race=0, third=0):
         """Creature INDEX (its sheet the same number) of class CLS with kit KIT, its base AC BASE,
         a shield in its left hand or not (SHIELD); the things table's thing 7 is it, thing 8 the
         shield's item list."""
@@ -5034,6 +5034,7 @@ class KitTests(unittest.TestCase):
         sheet = bytearray(game.SHEET_SIZE)
         sheet[0x21], sheet[0x24], sheet[kitpages.KIT_BYTE] = cls, level, kit
         sheet[0x22], sheet[0x25], sheet[0x18] = second, level if second else 0, race  # (two classes at once)
+        sheet[0x23], sheet[0x26] = third, level if third else 0  # (or three)
         sheet[0x27] = base & 0xFF
         mu.mem_write(self.SHEET * 16 + index * 0x47, bytes(sheet))
         things = ((self.DS + 0x3972 - 0x4356) & 0xFFFF) * 16 + 0xC36
@@ -5541,11 +5542,11 @@ class KitTests(unittest.TestCase):
 
     KIT_CASES = ((11, 3), (11, 2), (11, 1), (1, 3), (1, 1), (13, 3), (13, 2), (13, 1), (17, 1), (9, 0))
 
-    def kit_of(self, cls, kit, rules=game.RULE_KITS, second=0, race=0):
+    def kit_of(self, cls, kit, rules=game.RULE_KITS, second=0, race=0, third=0):
         from dsloader import kitpages
         sheet = bytearray(game.SHEET_SIZE)
         sheet[0x21], sheet[kitpages.KIT_BYTE] = cls, kit
-        sheet[0x22], sheet[0x18] = second, race
+        sheet[0x22], sheet[0x23], sheet[0x18] = second, third, race
         return first_kit(bytes(sheet)) if rules & game.RULE_KITS else 0
 
     def test_slots(self):
@@ -5584,6 +5585,11 @@ class KitTests(unittest.TestCase):
                          [0, 0, 1, 0, 2, 0, 2, 1, 2, 1])
         self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 3])
         self.assertEqual(kits.slots(kits.ARCANIST, kits.WIZARD, 5, 1, 2), 2)
+        # an Elementalist: a level behind, but 1 at each spell level its own level reaches (2 x - 1)
+        self.assertEqual([kits.slots(kits.ELEMENTALIST, kits.PRIEST, lv, sl, 0) for lv, sl in (
+            (1, 1), (2, 2), (3, 2), (8, 5), (9, 5), (10, 6), (11, 6))], [1, 0, 1, 0, 1, 0, 1])
+        self.assertEqual(kits.slots(kits.ELEMENTALIST, kits.PRIEST, 9, 4, 2), 2)
+        self.assertEqual(kits.slots(kits.ELEMENTALIST, kits.WIZARD, 9, 5, 0), 0)
         # a Wilderness Avenger (a half-elf druid/fighter): its priest slots 1 fewer, none below 0
         self.rules(game.RULE_KITS)
         self.creature(6, 1, level=5, second=9, race=4)
@@ -5945,7 +5951,7 @@ class KitTests(unittest.TestCase):
 
     def test_sky_level(self):
         """PROBE_SPELL_LEVEL: a Spirit Caller's (halfling cleric/psionicist) or Wasteland Seer's
-        (thri-kreen druid/fighter) priest spells 2 levels more under the open sky (its KIT_OUTDOORS
+        (thri-kreen druid/fighter/psionicist) priest spells 2 levels more under the open sky (its KIT_OUTDOORS
         bit), 1 less under a roof, no less than 1 (kits.sky_level); wizard spells, and others, as
         they are."""
         from dsloader import kits
@@ -5953,10 +5959,10 @@ class KitTests(unittest.TestCase):
         hdr = TSR * 16 + self.image.find(HDR_SIG)
         self.rules(game.RULE_KITS)
         try:
-            for cls, second, race, kid in ((1, 12, 6, kits.SPIRIT_CALLER), (5, 9, 8, kits.WASTE_SEER),
-                                           (1, 12, 4, 0)):
-                self.creature(cls, 1, index=2, second=second, race=race, level=5)
-                self.assertEqual(self.kit_of(cls, 1, game.RULE_KITS, second, race), kid)
+            for cls, second, third, race, kid in ((1, 12, 0, 6, kits.SPIRIT_CALLER), (5, 9, 12, 8, kits.WASTE_SEER),
+                                                  (5, 9, 0, 8, 0), (1, 12, 0, 4, 0)):
+                self.creature(cls, 1, index=2, second=second, race=race, level=5, third=third)
+                self.assertEqual(self.kit_of(cls, 1, game.RULE_KITS, second, race, third), kid)
                 for outdoors in (False, True):
                     self.mu.mem_write(hdr + 350, bytes((4 if outdoors else 0,)))
                     for spell in (30, 69, 100, 137, 138):
@@ -6836,7 +6842,8 @@ class KitTests(unittest.TestCase):
         # two classes at once: the multiclass groups' (kitpages.MULTI), and pairs and races with none
         cases += [(classes, (2, 2, 0), kit, race) for classes, race in (
             ((9, 17, 0), 4), ((17, 9, 0), 2), ((3, 9, 0), 3), ((9, 6, 0), 4), ((14, 2, 0), 4), ((9, 17, 0), 3),
-            ((9, 17, 0), 1), ((9, 17, 12), 4), ((9, 11, 0), 4)) for kit in (0, 1, 2, 3, 0xFF)]
+            ((9, 17, 0), 1), ((9, 17, 12), 4), ((9, 11, 0), 4), ((5, 9, 12), 8), ((12, 9, 5), 8), ((5, 9, 0), 8))
+            for kit in (0, 1, 2, 3, 0xFF)]
         for classes, levels, kit, race in cases:
             for place in range(3):
                 with self.subTest(classes=classes, kit=kit, place=place):

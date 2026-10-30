@@ -8,6 +8,17 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Changed**
+- **The Wasteland Seer is a thri-kreen druid/fighter/psionicist's**, all three classes; a
+  druid/fighter has no kit now. Multiclass kit groups may be three classes (`kitpages.MULTI`,
+  `multi_group`; DSCLOG's `MULTI_FIND` takes in a third class, `multi_table` group 18's word
+  three bits). A thri-kreen druid/fighter Wasteland Seer from an earlier version keeps its kit
+  byte but has no kit. Tests: `test_multiclass_kits`, `test_kit_at`, `test_sky_level`.
+- **An Elementalist has at least 1 spell slot at each spell level a cleric of its level casts**
+  (2 × the spell level − 1: 1st-level spells at 1st, 6th at 11th), its slots otherwise a level
+  behind as before (`kits.slots`; DSCLOG's `PROBE_SLOTS`). `KITS.md`'s table and notes follow.
+  Tests: `test_slots`. DSCLOG's image 63,712 bytes (+32).
+
 **Docs**
 - `KITS.md`'s spell slot table goes on to the highest level each class reaches under the XP cap
   (a preserver's and a cleric's 11th, with the cleric's 6th-level slot; the Shinobi's thief to
