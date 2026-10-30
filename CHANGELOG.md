@@ -37,6 +37,14 @@ notes](PATCH-NOTES.md).
   Tests: `test_slots`. DSCLOG's image 63,712 bytes (+32).
 
 **Docs**
+- A review after the slot table's gap, checked against the code: every name and test the docs
+  cite, every link and anchor, the tables by level (spell slots, XP, THAC0, thief skills, the XP
+  cap's highest levels), the kits' numbers and DICE-LOG's lines. Fixed: hit points past 10th (a
+  preserver +1 a level, a thief +2, from the game's own records) in the guide's table and
+  FEATURES; EDIT's kit, age and weapon specs in KITS and the Ages section; the one three-class
+  kit where the docs said "pairs"; the Swashbuckler's THAC0 to 13th; K'ratchek "is" a Wasteland
+  Seer, and her feature's name on the Characters tab (`kits.OWN_FEATURES`: "Open sky spells and
+  psionics").
 - `KITS.md`'s spell slot table goes on to the highest level each class reaches under the XP cap
   (a preserver's and a cleric's 11th, with the cleric's 6th-level slot; the Shinobi's thief to
   13th), with a druid column beside the cleric's (to 12th, its second 6th-level slot), from the code's own tables (`tables.slots`, `kits.slots`); the Grove Warden's AC steps

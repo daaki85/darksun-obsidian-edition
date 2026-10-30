@@ -69,7 +69,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   hit points kept as rolled, ages (a year each 365 days of game time, and Haste's cost), Enlarge's weapon dice
   and CON's regeneration ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and thirteen for races' pairs of classes), levels
+  (three for each class, and thirteen for races' classes taken together:
+  pairs, and one set of three), levels
   past 9th up to a cap by XP (10th to 13th for one class, lower for two or
   three), STORE and RECALL for a
   creation roll, fuller starting gear, and features of their own for the

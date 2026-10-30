@@ -536,8 +536,9 @@ life. A dwarf hardly notices.
 
 The age shows on the creation screen, above RECALL (`AGE: 23`: the age the
 character will start at, Table 7's dice rolled again with each roll of the die
-and each choice of race, sex or class; a click on a score keeps it, and STORE
-and RECALL keep it with the roll), on the inventory screen's panel, between the saving throws and STR
+and each choice of race, sex or class; a click on a score keeps it, STORE
+and RECALL keep it with the roll, and EDIT on a party member shows its own
+until the die is rolled), on the inventory screen's panel, between the saving throws and STR
 (`AGE: 23`), and on the Loader's Characters tab with the category and the next
 age to come (`Age: 45, middle-aged; old at 53`).
 
@@ -606,7 +607,7 @@ fitted to these choices, come with them.
 | Box on the Options tab | What it adds |
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
-| [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes have kits of their own |
+| [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own |
 | [Level cap by XP](#level-cap-by-xp) | classes go up to a cap of 749,999 XP, shared between a character's classes (the game stops at 9th level) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 | [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
@@ -825,7 +826,8 @@ with a table of their own, not the cleric's), and THAC0, saves, spell slots
 and thief skills are worked out from the level. So past 9th:
 
 - **Hit points** follow AD&D: preservers roll their d4 to 10th and thieves
-  their d6 to 10th (CON's bonus counting too), then gain a fixed amount; the
+  their d6 to 10th (CON's bonus counting too), then gain a fixed amount (+1 a
+  level for preservers, +2 for thieves); the
   others gain a fixed amount from 10th (+3 for fighters, gladiators and
   rangers, +2 for clerics, druids and psionicists). The game's own table has
   the fixed gain for thieves at 10th too, as it keeps thieves and psionicists
@@ -952,7 +954,7 @@ elf's figure, with its own switch: see
 | Character | With weapon specialization | With class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts as a [Wasteland Seer](KITS.md#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | is a [Wasteland Seer](KITS.md#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Wanderer**: with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 

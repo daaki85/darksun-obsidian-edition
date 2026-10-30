@@ -288,13 +288,13 @@ classes a human could change to ([kits](#kits)).
 
 ### Hit points
 
-| Class | Hit die | At 10th level |
-|---|---|---|
-| Fighter, gladiator, ranger | d10 | +3 |
-| Cleric, druid | d8 | +2 |
-| Psionicist | d6 | +2 |
-| Thief | d6 | d6 |
-| Preserver | d4 | d4 |
+| Class | Hit die | At 10th level | Past 10th |
+|---|---|---|---|
+| Fighter, gladiator, ranger | d10 | +3 | +3 |
+| Cleric, druid | d8 | +2 | +2 |
+| Psionicist | d6 | +2 | +2 |
+| Thief | d6 | d6 | +2 |
+| Preserver | d4 | d4 | +1 |
 
 - **Every hit die is rolled twice and the better kept,** at creation (one die
   for every starting level) and at every level up. *Without the mod:* one roll.

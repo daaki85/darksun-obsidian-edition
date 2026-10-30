@@ -6,7 +6,7 @@
 
 With **Kits** ticked, a character of one class may take one of three kits for
 its class when it is made, or none (the class as it is). A few pairs of classes
-taken at once by one race have kits of their own ([Multiclass
+(and one set of three) taken at once by one race have kits of their own ([Multiclass
 kits](#multiclass-kits)). Each gives something and costs something. The game's
 own party gets features of its own ([The game's own
 party](FEATURES.md#the-games-own-party)). A human who changes class may take a
@@ -77,7 +77,7 @@ A thief starts with a bone long sword, sling, leather chest armour.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Assassin** | hiding in shadows not halved in daylight; a backstab one step deadlier: **×3 at 1st-4th level, ×4 at 5th-8th, ×5 at 9th-12th, ×6 from 13th** (a thief's ×2 to ×5) | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear; with fuller starting gear, a cloak | |
-| **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
+| **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th, 8 at 13th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
 | **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the thief level less 5 (1st at 6th, 5th at 10th), in light armour too; one spell learnt at each level up from 6th, from its own 18 ([the list](#kits-spell-slots)); one of its own learnt from a scroll too, if it first reads it (a d100 against its **read languages**) and then, with the rule for INT on, learns it (INT's chance): a failed roll uses the scroll up | no spell but its own from a scroll; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (after changing class too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
 
 ## Preserver kits
@@ -167,6 +167,12 @@ clerical spheres if one class has them, else under the psionic disciplines.
 Choosing another class puts the kit back to none; a new roll of the die keeps
 it. The Effects screen names the kit (`KIT: RAVAGER`), as does the Loader's
 Characters tab.
+
+**EDIT** on a party member (its portrait's menu) opens the screen with its
+kit, and while its classes and kit stay the same, DONE keeps its weapon specs
+without asking again (a new name, a new roll of the die); choosing another
+class takes the kit back, and DONE then asks for the weapon specs as for a new
+character, as it does after another kit is chosen.
 
 The Healer is a water cleric's: its row is greyed unless WATER is the sphere
 marked (take back the game's AIR and mark WATER, then open KITS). Taking WATER

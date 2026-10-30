@@ -154,7 +154,7 @@ def extra(kid: int, dance: int = 0) -> int:
 # (OWN_THROWS); Cilla (an elf) the Elven Wanderer's hiding, never halved in daylight (stealth.py).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
 HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
-OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells", "Chatkcha 2 a round"),
+OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics", "Chatkcha 2 a round"),
                 ELF: ("Elven Wanderer",)}
 CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
 
