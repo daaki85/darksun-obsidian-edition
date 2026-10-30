@@ -129,7 +129,7 @@ def set_kinds(gd: GameData, member: int, name: str) -> List[str]:
         return []
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
     sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
-    gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS, game.packed_specs(want, game.sheet_age(sheet)))
+    gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS, game.respecced(sheet, want))
     kinds = " and the ".join(PARTY[name].kinds)
     return [f"{name} specializes in the {kinds}."]
 

@@ -4716,34 +4716,25 @@ class KitTests(unittest.TestCase):
         self.assertEqual(run(2, 15), 15)
         self.assertEqual(run(200, 15, rules=0), 15)
 
-    def test_creation_age(self):
-        """AGE_ROLL (CR_AGE's: the age shown on the creation panel) gives each name and race the
-        starting age aging.natural_start gives it, the one the character will have."""
+    def test_age_dice(self):
+        """AGE_DICE (the creation screen's roll of Table 7's dice, CR_AGE's): AL each race's dice
+        less their count, within 0 to their most, every value of a human's d8 coming up in time;
+        a thri-kreen's none."""
+        import re
+        at = re.search(rb"\x53\x51\x52[\x30\x32]\xdb\x2e\x0f\xb6\x8c", self.image, re.S).start()
         from dsloader import aging
-        name_at = 0xA000 * 16 + 0x28
-        self.mu.mem_write(self.DS * 16 + 0x11A0, struct.pack("<HH", 0, 0xA000))
-        for name in ("Killer", "Dag", "Gerakis", "Cilla", "A", "Fifteen letters!"[:15], ""):
-            self.mu.mem_write(name_at, name.encode("cp437")[:15].ljust(16, b"\0"))
-            for race in range(1, 9):
-                with self.subTest(name=name, race=race):
-                    self.call(rb"\x53\x51\x52\x57\x06\x89\xf0\xb1\x03\xf6\xf1", esi=(race - 1) * 3)
-                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), aging.natural_start(name, race)[0])
-
-    def test_creation_age_any_name(self):
-        """As test_creation_age, for 300 random names: any byte but 0 (the game's letters past 7Fh
-        too, read as the Loader reads a name: cp437), 0 to 16 of them (past 15 not counted)."""
-        import random
-        from dsloader import aging
-        rng = random.Random(4719)
-        name_at = 0xA000 * 16 + 0x28
-        self.mu.mem_write(self.DS * 16 + 0x11A0, struct.pack("<HH", 0, 0xA000))
-        for _ in range(300):
-            raw = bytes(rng.randint(1, 255) for _ in range(rng.randint(0, 16)))
-            race = rng.randint(1, 8)
-            self.mu.mem_write(name_at, raw.ljust(17, b"\0"))
-            self.call(rb"\x53\x51\x52\x57\x06\x89\xf0\xb1\x03\xf6\xf1", esi=(race - 1) * 3)
-            with self.subTest(name=raw, race=race):
-                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), aging.natural_start(raw.decode("cp437"), race)[0])
+        for race, ages in aging.RACES.items():
+            count, sides = ages.start_dice
+            seen = set()
+            for _ in range(300):
+                self.call(re.escape(self.image[at:at + 10]), esi=(race - 1) * 3)
+                seen.add(self.mu.reg_read(r.UC_X86_REG_AL))
+            with self.subTest(race=race):
+                self.assertTrue(seen <= set(range(count * (sides - 1) + 1)), seen)
+                if race == 1:
+                    self.assertEqual(seen, set(range(8)))
+                if count == 0:
+                    self.assertEqual(seen, {0})
 
     def call(self, pattern, **regs):
         import re
@@ -4810,20 +4801,20 @@ class KitTests(unittest.TestCase):
             game.RULES_IN_FORCE = old
 
     SPEC_GET = rb"\x26\xf6\x47\x16\x80\x75\x06\x26\x0f\xb6\x40\x14\xc3"
-    SPEC_SET = rb"\xe8..\x66\x50\x66\x51\x66\x52"
+    SPEC_SET = rb"\xe8..\xe8..\x2e\x88\x84..\xe8..\xc3"
     # (a new member's sheet at creation's DONE, CR_WEAPONS: no specs and no age, packed)
-    CR_CLEAR = rb"\x26\x66\xc7\x47\x14\x00\x00\x80\x00"
+    AGE_PUT = rb"\x66\x50\x66\x52\x56\x26\x0f\xb6\x77\x18"
 
     def test_spec_layouts(self):
-        """SPEC_GET reads both layouts alike (a gladiator's four kinds, a byte each up to 2.12, or
-        packed); SPEC_SET on the old layout packs it first, the age 0 (none yet). A new member's
-        sheet (CR_WEAPONS) starts packed with no specs and no age, whatever its slot held. As
-        game.spec_kinds and game.packed_specs."""
+        """SPEC_GET reads the three layouts alike (a gladiator's four kinds: a byte each up to 2.12,
+        5 bits each in 2.13, base 17 now); SPEC_SET puts any in the new one first, 2.13's age kept
+        and no roll known, a roll kept as it was. As game.spec_kinds and game.packed_specs."""
         import re
-        for pattern in (self.SPEC_GET, self.SPEC_SET, self.CR_CLEAR):
+        for pattern in (self.SPEC_GET, self.SPEC_SET, self.AGE_PUT):
             self.assertEqual(len(re.findall(pattern, self.image, re.S)), 1)
         kinds = (1, 16, 9, 2)
         at = self.SHEET * 16
+        five = (sum(k << 5 * i for i, k in enumerate(kinds)) | 0x800000).to_bytes(3, "little") + bytes((30,))
 
         def slots():
             out = []
@@ -4832,19 +4823,41 @@ class KitTests(unittest.TestCase):
                 out.append(self.mu.reg_read(r.UC_X86_REG_AX))
             return tuple(out)
 
-        for sheet in (bytes(0x14) + bytes(kinds) + bytes(0x2F), bytes(0x14) + game.packed_specs(kinds, 30) + bytes(0x2F)):
-            with self.subTest(packed=bool(sheet[0x16] & 0x80)):
+        for name, layout in (("bytes", bytes(kinds)), ("2.13", five), ("base 17", game.packed_specs(kinds, 30, 7))):
+            with self.subTest(layout=name):
+                sheet = bytes(0x14) + layout + bytes(0x2F)
                 self.mu.mem_write(at, sheet)
                 self.assertEqual(slots(), kinds)
                 self.assertEqual(tuple(game.spec_kinds(sheet)), kinds)
-        self.mu.mem_write(at, bytes(0x14) + bytes(kinds) + bytes(0x2F))
-        self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=3, eax=7)
-        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 16, 9, 7), 0))
-        self.assertEqual(slots(), (1, 16, 9, 7))
-        self.mu.mem_write(at, bytes(0x14) + game.packed_specs(kinds, 30) + bytes(0x2F))
-        self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=1, eax=0)
-        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 0, 9, 2), 30))
-        self.assertEqual(game.packed_specs((), 0), bytes((0, 0, 0x80, 0)))  # (CR_CLEAR's dword)
+        for layout, age, roll in ((bytes(kinds), 0, None), (five, 30, None), (game.packed_specs(kinds, 30, 7), 30, 7)):
+            with self.subTest(set_on=layout.hex()):
+                self.mu.mem_write(at, bytes(0x14) + layout + bytes(0x2F))
+                self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=3, eax=7)
+                self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 16, 9, 7), age, roll))
+                self.assertEqual(slots(), (1, 16, 9, 7))
+
+    def test_age_put(self):
+        """DONE's AGE_PUT: the new member's +14h..+17h no specs, a roll of its race's dice (0 to the
+        dice less their count's most) and the age it gives; no race: no roll, no age."""
+        at = self.SHEET * 16
+        for race, (count, sides) in ((1, (1, 8)), (2, (4, 6)), (8, (0, 1))):
+            for _ in range(20):
+                sheet = bytearray(0x47)
+                sheet[0x14:0x18] = b"\xff\xff\xff\xff"  # (the slot's last character's)
+                sheet[0x18] = race
+                self.mu.mem_write(at, bytes(sheet))
+                self.call(self.AGE_PUT, es=self.SHEET, ebx=0, esi=0x1234)
+                got = bytes(self.mu.mem_read(at, 0x47))
+                roll = game.sheet_roll(got)
+                self.assertEqual(game.spec_kinds(got), bytes(4))
+                self.assertTrue(0 <= roll <= count * (sides - 1), (race, roll))
+                self.assertEqual(game.sheet_age(got), count + roll + 1)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SI), 0x1234)
+        sheet = bytearray(0x47)
+        self.mu.mem_write(at, bytes(sheet))
+        self.call(self.AGE_PUT, es=self.SHEET, ebx=0)
+        got = bytes(self.mu.mem_read(at, 0x47))
+        self.assertEqual((game.sheet_roll(got), game.sheet_age(got), game.spec_kinds(got)), (None, 0, bytes(4)))
 
     def test_effects_specs(self):
         """EF_LINES_OF: the Effects screen's weapon lines, the chosen kinds' and then a ranger's bow,
@@ -7144,7 +7157,7 @@ class RolledTests(AdndTablesTests):
         box's background put back by the far call whose operand is read from the overlay's code
         as loaded (CR_RESTORE_AT, back from the way back), with the two words of the segment read
         there too (CR_SEG340_AT's "mov ax,340h"); then PSP drawn again, centred on its box, and the
-        age with the new name. An operand not fixed up (0): no call and nothing drawn. Ages off:
+        age (the creation screen's roll, a human's). An operand not fixed up (0): no call and nothing drawn. Ages off:
         only the "add sp"."""
         from dsloader import aging
         from dsloader.gamepatch import CR_NAME_SITE
@@ -7162,7 +7175,6 @@ class RolledTests(AdndTablesTests):
         self.mu.mem_write(self.SHEET * 16 + 0x18, bytes([1]))
         self.mu.mem_write(self.CREATURE * 16 + 0x28, b"Gerakis\0")
         self.mu.mem_write(self.LOG * 16, struct.pack("<H", 2))
-        age = aging.natural_start("Gerakis", 1)[0]
         for on, operand in ((True, struct.pack("<HH", 0x100, CALLER)), (True, bytes(4)), (False, struct.pack("<HH", 0x100, CALLER))):
             with self.subTest(on=on, operand=operand):
                 self.mu.mem_write(self.hdr + self.RULES_HI, struct.pack("<H", 256 if on else 0))
@@ -7174,7 +7186,9 @@ class RolledTests(AdndTablesTests):
                 drawn = self.drawn()
                 if on and any(operand):
                     self.assertEqual(called, (0x5678, 0x1234))  # (pushed 3F2h's word, then 406h's)
-                    self.assertEqual(drawn, [(86 + 0x15 - 3 * 5, 177, "28/28"), (146, 177, f"AGE: {age}")])
+                    self.assertEqual(drawn[0], (86 + 0x15 - 3 * 5, 177, "28/28"))
+                    self.assertEqual(drawn[1][:2], (146, 177))
+                    self.assertIn(drawn[1][2], [f"AGE: {a}" for a in range(16, 24)])  # (a human: 15 + 1d8)
                 else:
                     self.assertEqual((called, drawn), ((0, 0), []))
 

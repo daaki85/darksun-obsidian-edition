@@ -79,15 +79,35 @@ class PartyTests(unittest.TestCase):
             list(self.m[CREATURES + game.CREATURE_ABILITIES:CREATURES + game.CREATURE_ABILITIES + 6])
 
     def test_give_ages_once(self):
-        """A starting age for the member with none (its true age, the same each time for the same
-        character: natural_start), its roll in the line; then none again."""
-        lines = aging.give_ages(self.g)
+        """A starting age for the member with none, Table 7's dice rolled, the roll kept on the sheet
+        (its true age: start_age) and in the line; then none again."""
+        lines = aging.give_ages(self.g, random.Random(5))
         self.assertEqual(len(lines), 1)
         age = aging.age_of(self.g.sheet(0))
-        self.assertEqual(age, aging.natural_start("Dag", HUMAN)[0])
         self.assertTrue(16 <= age <= 23)
+        self.assertEqual((game.sheet_roll(self.g.sheet(0)), aging.start_age(self.g.sheet(0), "Dag")), (age - 16, age))
         self.assertIn(f"Dag is {age} (a human: 15 + 1d8 = [{age - 15}]); middle-aged at 40.", lines)
         self.assertEqual(aging.give_ages(self.g), [])
+
+    def test_an_age_from_before_keeps_its_start(self):
+        """A member given an age before the roll was kept (2.13's layout): its age as it is, its
+        roll put in from the name's (natural_start), silently; the true age the same as before."""
+        start = aging.natural_start("Dag", HUMAN)[0]
+        five = (1 | 0x800000).to_bytes(3, "little") + bytes((aging.stored(HUMAN, start + 4),))
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = five
+        self.assertEqual(aging.start_age(self.g.sheet(0), "Dag"), start)
+        self.assertEqual(aging.give_ages(self.g), [])
+        sheet = self.g.sheet(0)
+        self.assertEqual((aging.age_of(sheet), game.sheet_roll(sheet), aging.start_age(sheet, "Dag"), game.spec_kinds(sheet)),
+                         (start + 4, start - 16, start, bytes((1, 0, 0, 0))))
+
+    def test_true_age_from_the_roll(self):
+        """Restore Youth's floor from the roll on the sheet, however many years magic added."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 61), 2)
+        self.m[CREATURES + game.CREATURE_ABILITIES + 2] = 18
+        self.assertEqual(aging.start_age(self.g.sheet(0), "Dag"), 18)
+        lines = aging.restore(self.g, 0, 50, random.Random(1))
+        self.assertIn("now 18", lines[-1])
 
     def test_age_by_changes_the_scores(self):
         """Aged past middle age: the sheet's scores and the creature's both change; younger again,

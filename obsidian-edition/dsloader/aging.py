@@ -1,15 +1,16 @@
 """Ages (the Options' rule, game.RULE_AGING): each party member's age, from Dark Sun's tables.
 
-A character's age is rolled once, the first time the Loader sees it without one (a new character,
-the game's own party, one from an earlier version): its race's starting age (Table 7: a base and
-dice). It grows a year each time the game's clock passes another 365 days, and magic changes it
+A character's starting age is its race's (Table 7: a base and dice), the dice rolled on the creation
+screen (DSCLOG's CR_AGE, each roll of the die; DONE puts it in the sheet), or the first time the
+Loader sees one without an age (the game's own party, one from before ages: give_ages). It grows a year each time the game's clock passes another 365 days, and magic changes it
 (Haste: a year; Restore Youth: back). On reaching
 middle, old and venerable age (Table 8) its scores change, once and for good, the changes adding
 up; on reaching its race's maximum age (a base and dice, its own roll kept secret: the same each
 time for the same character) it dies of old age. Thri-kreen have only a venerable age.
 
 Kept in the sheet's +17h (game.SHEET_AGE): the age less the race's base starting age, plus 1, so 0
-is "none yet" (a thri-kreen starts at its base, 6). Shown on the inventory panel (DSCLOG, from the
+is "none yet" (a thri-kreen starts at its base, 6); and the starting roll beside the weapon specs
+(game.sheet_roll), so Restore Youth knows the true age however many years magic has added. Shown on the inventory panel (DSCLOG, from the
 Loader's STATS: dicelog.stats_entry), on the Characters tab and in the dice log.
 """
 
@@ -99,11 +100,11 @@ def changes(race: int, before: int, after: int) -> Dict[int, int]:
 
 
 def natural_start(name: str, race: int) -> Tuple[int, List[int]]:
-    """The character's starting age, its true age: its race's base and dice, rolled from the
-    character's name and race, so the same each time: Restore Youth takes back the years past it,
-    never below it. 16-bit, as DSCLOG's AGE_ROLL works it out to show it on the creation screen
-    (CR_AGE): the name's bytes hashed (h = h * 31 + byte, from race * 257), then each die from
-    h = h * 25173 + 13849, its high byte mod the sides, plus 1."""
+    """The starting age 2.13.0 and 2.13.1 gave a character from its name and race (the creation
+    screen showed it, DSCLOG's AGE_ROLL then): its race's base and dice, the name's bytes hashed
+    (h = h * 31 + byte, from race * 257), then each die from h = h * 25173 + 13849, its high byte mod
+    the sides, plus 1. Now only for one of those, whose roll isn't on its sheet (give_ages puts it
+    in from this: start_age)."""
     ages = RACES[race]
     count, sides = ages.start_dice
     h = race * 257 & 0xFFFF
@@ -142,18 +143,41 @@ def sheet_address(gd: "game.GameData", member: int) -> int:
     return game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
 
 
-def give_ages(gd: "game.GameData") -> List[str]:
-    """A starting age for each party member who has none (natural_start): lines for the dice log."""
+def start_age(sheet: bytes, name: str) -> Optional[int]:
+    """The character's starting age, its true age: its race's base and the roll kept on its sheet
+    (game.sheet_roll: Table 7's dice, rolled on the creation screen or by give_ages); for one from
+    before the roll was kept, natural_start's (its name and race)."""
+    race = sheet[game.SHEET_RACE] if len(sheet) > game.SHEET_RACE else 0
+    if race not in RACES:
+        return None
+    roll = game.sheet_roll(sheet)
+    if roll is None:
+        return natural_start(name, race)[0]
+    return RACES[race].start + RACES[race].start_dice[0] + roll
+
+
+def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[str]:
+    """A starting age for each party member who has none, Table 7's dice rolled (the game's own
+    party; one from before ages): lines for the dice log. One with an age but no roll kept (made
+    before 2.13.2) has its roll put in from natural_start, the start its age was given from."""
+    rng = rng or random.Random()
     out = []
     for member in range(game.PARTY_SIZE):
         rec, sheet = gd.creature(member), gd.sheet(member)
         if len(rec) < game.CREATURE_SIZE or len(sheet) < game.SHEET_SIZE or not rec[game.CREATURE_NAME]:
             continue
         race = sheet[game.SHEET_RACE]
-        if race not in RACES or age_of(sheet) is not None:
+        if race not in RACES:
             continue
-        age, faces = natural_start(gd.creature_name(member), race)
-        specs = game.packed_specs(game.spec_kinds(sheet), stored(race, age))
+        count = RACES[race].start_dice[0]
+        if age_of(sheet) is not None:
+            if game.sheet_roll(sheet) is None:  # (kept: its age's start, the name's roll)
+                faces = natural_start(gd.creature_name(member), race)[1]
+                gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS,
+                               game.packed_specs(game.spec_kinds(sheet), game.sheet_age(sheet), sum(faces) - count))
+            continue
+        age, faces = roll_start(race, rng)
+        specs = game.packed_specs(game.spec_kinds(sheet), stored(race, age), sum(faces) - count)
         gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs)
         ages = RACES[race]
         roll = f": {ages.start} + {dice_text(*ages.start_dice, faces)}" if faces else ""
@@ -340,7 +364,7 @@ def describe(sheet: bytes) -> Optional[str]:
 
 def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random.Random] = None) -> List[str]:
     """Restore Youth on CREATURE, cast at LEVEL: a year of its magical aging (its years past its
-    true age: natural_start's and the game's years) taken back a level, after a system shock roll by its CON that a
+    true age: start_age's and the game's years) taken back a level, after a system shock roll by its CON that a
     failure ends in death; nothing to take back, no roll. Lines for the dice log."""
     from . import kalzith
     rng = rng or random.Random()
@@ -354,7 +378,7 @@ def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random
     name = gd.creature_name(creature)
     # (its true age: its starting age and the game's years, only magic's taken back; one who joined
     # late counts years it hasn't lived, so gets fewer back, never more)
-    true_age = natural_start(name, sheet[game.SHEET_RACE])[0] + natural_years(gd)
+    true_age = (start_age(sheet, name) or 0) + natural_years(gd)
     if age <= true_age:
         return [f"Restore Youth: {name} has no magical years to take back ({age}, {name}'s true age)."]
     con = rec[game.CREATURE_ABILITIES + 2]
