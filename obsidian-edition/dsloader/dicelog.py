@@ -1419,10 +1419,11 @@ class DiceLog:
         if on and not fighting:
             try:
                 region = self.game.region()
-                in_arena = region == combatlog.ARENA_REGION
                 count = self.game.number(game.ARENA_FIGHTS) if region in combatlog.ARENA_REGIONS else None
                 if count is not None:  # (the numbers are in memory only now and then: the last one read)
                     self._arena_count = count
+                # (the count only once known: until then the time, as elsewhere)
+                in_arena = region == combatlog.ARENA_REGION and self._arena_count is not None
                 clock = None if in_arena else self.game.game_time()
                 if clock is not None:
                     top = combatlog.clock_line(clock)

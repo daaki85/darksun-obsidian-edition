@@ -425,8 +425,8 @@ there; **-** makes it smaller.
   has no time of day, so 14:20 is the hours into that day; a rest moves it on 8
   hours). Saves keep it.
 - **The arena's count of fights.** Between fights in the arena, the top line
-  says instead how many arena fights the party has had (`Arena fights: 4`, or
-  `?` until the game has shown it to the Loader): the game's
+  says instead how many arena fights the party has had (`Arena fights: 4`; the
+  time until the game has shown the count to the Loader): the game's
   own count, one a trip into the arena however many waves come (see [the
   arena's count of
   fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). Once the party

@@ -431,3 +431,27 @@ class StatesTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ArenaHeaderTests(unittest.TestCase):
+    def test_arena_count_only_once_known(self):
+        """The dice log's header out of a fight: in the arena the count of arena fights once the
+        game has shown it (kept from the slave pens too), until then the time, as everywhere else."""
+        from test_now import dag
+        log = dag()
+        log.combat_log, log._panel.open, log._font_tried = True, True, True
+        g = log.game
+        region, number = [0x2A], [None]
+        g.in_combat, g.region, g.number = (lambda: False), (lambda: region[0]), (lambda n: number[0])
+        g.game_time = lambda: 3600
+        seen = []
+        log._panel.update = lambda gd, hdr, on, palettes, top="", names=None, count=None, in_arena=False: \
+            seen.append((top, count, in_arena))
+        log._update_panel(0.0)
+        self.assertEqual(seen[-1], ("Day 1, 01:00", None, False))
+        region[0], number[0] = 0x29, 3  # (the pens: read there, the time shown)
+        log._update_panel(0.0)
+        self.assertEqual(seen[-1], ("Day 1, 01:00", 3, False))
+        region[0], number[0] = 0x2A, None  # (the arena: the count as last read)
+        log._update_panel(0.0)
+        self.assertEqual(seen[-1][1:], (3, True))
