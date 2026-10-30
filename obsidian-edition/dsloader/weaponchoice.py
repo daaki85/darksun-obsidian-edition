@@ -238,7 +238,7 @@ def finish_new(gd) -> List[str]:
             sheet, lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)))
         if bytes(kinds) != game.spec_kinds(sheet):
             gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS,
-                           game.packed_specs(kinds, game.sheet_age(sheet)))
+                           game.respecced(sheet, kinds))
         read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
         start = start_weapon(sheet, kinds, read) if kinds[0] else None
         if start is None or start[1][0] == START_TYPE:

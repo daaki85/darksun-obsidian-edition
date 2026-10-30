@@ -2959,13 +2959,19 @@ prot_scan:
 ; the damage dice one size larger (2 more sides: d8 to d10, 2d4 to 2d6).
 SPEC_SLOTS equ 0x14
 SPEC_COUNT equ 4
-SPEC_PACKED equ 0x80            ; (+16h's top bit: the specs packed, 5 bits each, +17h the age)
+SPEC_PACKED equ 0x80            ; (+16h's top bit: the specs packed, +17h the age)
+SPEC_V2 equ 0x40                ; (+16h's next: the specs base 17, and the starting roll kept)
+SPEC_KINDS_MASK equ 0x1FFFF     ; (the four specs, base 17, in the packed bits' 0-16)
+ROLL_SHIFT equ 17               ; (the starting roll in bits 17-21: Table 7's dice less their count)
+ROLL_UNKNOWN equ 31             ; (no roll kept: a character from before; the Loader puts it in)
 
-; The sheet's +14h..+17h (the game never reads or writes them), in one of two layouts: up to 2.12
-; a byte for each of the four specs; now (SPEC_PACKED in +16h) the four packed 5 bits each in
-; +14h..+16h, and +17h the character's age (dsloader/aging.py). A sheet keeps the old layout
-; until something is written to it (SPEC_SET: SPEC_PACK first), so both are read. A new member's
-; starts packed with no specs and no age (CR_WEAPONS).
+; The sheet's +14h..+17h (the game never reads or writes them), in one of three layouts: up to 2.12
+; a byte for each of the four specs; in 2.13 (SPEC_PACKED in +16h) the four packed 5 bits each in
+; +14h..+16h, and +17h the character's age (dsloader/aging.py); now (SPEC_V2 too) the four a number
+; base 17 in bits 0-16 (each kind + 1, 0 none: 17 values, so four fit in 17 bits, not 20), the
+; starting roll in bits 17-21 (ROLL_UNKNOWN: none kept), and +17h the age. A sheet keeps its layout
+; until something is written to it (SPEC_SET: SPEC_PACK first), so all three are read. A new
+; member's starts with no specs, the creation screen's roll and its age (CR_WEAPONS: AGE_PUT).
 ; Each takes the sheet at ES:BX and keeps the rest.
 ; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none).
 spec_get:
@@ -2974,7 +2980,12 @@ spec_get:
         movzx ax, byte [es:bx + si + SPEC_SLOTS]
         ret
 .packed:
-        push ecx
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
+        jz .five
+        call spec_unpack
+        movzx ax, byte [cs:si + spec_digits]
+        ret
+.five:  push ecx
         push edx
         mov edx, [es:bx + SPEC_SLOTS]
         imul cx, si, 5
@@ -2984,6 +2995,50 @@ spec_get:
         pop edx
         pop ecx
         ret
+
+; SPEC_UNPACK: SPEC_DIGITS the four specs of a SPEC_V2 sheet. SPEC_REPACK: put back. Keep all.
+spec_unpack:
+        push eax
+        push ecx
+        push edx
+        push si
+        mov eax, [es:bx + SPEC_SLOTS]
+        and eax, SPEC_KINDS_MASK
+        mov ecx, 17
+        xor si, si
+.digit: xor edx, edx
+        div ecx
+        mov [cs:si + spec_digits], dl
+        inc si
+        cmp si, SPEC_COUNT
+        jb .digit
+        pop si
+        pop edx
+        pop ecx
+        pop eax
+        ret
+spec_repack:
+        push eax
+        push ecx
+        push edx
+        push si
+        xor eax, eax
+        mov si, SPEC_COUNT - 1
+.digit: imul eax, eax, 17
+        movzx ecx, byte [cs:si + spec_digits]
+        add eax, ecx
+        dec si
+        jns .digit
+        mov edx, [es:bx + SPEC_SLOTS]
+        and edx, ~SPEC_KINDS_MASK
+        or edx, eax
+        mov [es:bx + SPEC_SLOTS], edx
+        pop si
+        pop edx
+        pop ecx
+        pop eax
+        ret
+spec_digits times SPEC_COUNT db 0
 
 ; SPEC_FIND: ZF set when kind + 1 AL is in one of the four slots.
 spec_find:
@@ -3010,28 +3065,41 @@ spec_any:
         mov eax, [es:bx + SPEC_SLOTS]
         test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
         jz .test                        ; (the old layout: any of the four bytes)
-        and eax, 0x000FFFFF
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
+        jz .five
+        and eax, SPEC_KINDS_MASK
+        jmp .test
+.five:  and eax, 0x000FFFFF
 .test:  test eax, eax
         pop eax
         ret
 
-; SPEC_PACK: the sheet in the packed layout (the old one's four bytes packed, +17h 0: no age yet).
+; SPEC_PACK: the sheet in the SPEC_V2 layout (the specs as they were; 2.13's age kept, the old
+; layout's +17h, a 4th spec, none; no roll kept: ROLL_UNKNOWN).
 spec_pack:
-        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_V2
         jnz .ret
         push eax
         push edx
         push si
-        xor edx, edx
-        mov si, SPEC_COUNT - 1
-.each:  shl edx, 5
-        movzx eax, byte [es:bx + si + SPEC_SLOTS]
-        and al, 0x1F
-        or edx, eax
-        dec si
-        jns .each
-        or edx, SPEC_PACKED << 16
-        mov [es:bx + SPEC_SLOTS], edx
+        xor dl, dl
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jz .read
+        mov dl, [es:bx + SPEC_SLOTS + 3]        ; (2.13's age)
+.read:  xor si, si
+.each:  call spec_get
+        cmp al, 16
+        jbe .keep
+        xor al, al                      ; (no such kind: none)
+.keep:  mov [cs:si + spec_digits], al
+        inc si
+        cmp si, SPEC_COUNT
+        jb .each
+        movzx eax, dl
+        shl eax, 24
+        or eax, (SPEC_PACKED | SPEC_V2) << 16 | ROLL_UNKNOWN << ROLL_SHIFT
+        mov [es:bx + SPEC_SLOTS], eax
+        call spec_repack
         pop si
         pop edx
         pop eax
@@ -3040,21 +3108,9 @@ spec_pack:
 ; SPEC_SET: AL (kind + 1, 0 none) into slot SI.
 spec_set:
         call spec_pack
-        push eax
-        push ecx
-        push edx
-        imul cx, si, 5
-        mov edx, 0x1F
-        shl edx, cl
-        not edx
-        and [es:bx + SPEC_SLOTS], edx
-        movzx edx, al
-        and dl, 0x1F
-        shl edx, cl
-        or [es:bx + SPEC_SLOTS], edx
-        pop edx
-        pop ecx
-        pop eax
+        call spec_unpack
+        mov [cs:si + spec_digits], al
+        call spec_repack
         ret
 
 FIGHTER_CLASS equ 9
@@ -8440,19 +8496,35 @@ rl_label db 'SUM:', 0
 ; CR_AGE (RULE_HI_AGING): the creation panel's "AGE: 23", right of PSP's line, above RECALL, where
 ; nothing is drawn (the PSP box's saved background widened to cover it: gamepatch.py's
 ; "cr_age_box", so each redraw of the box clears it). It replaces "add sp,10h" (3 bytes) after
-; PSP's value is drawn: 65A89h (a race, sex or class chosen, the die, the screen opening) and
-; 63A13h (a click on CON). The age is the one the character will have (aging.natural_start: the
-; name, from the creature's +28h, hashed with the race, then its dice), from its race's base
-; (AGE_RACES: base, dice, sides, by race 1-8).
+; PSP's value is drawn: 65A89h (a race, sex or class chosen, the die, the screen opening: a new roll
+; of Table 7's dice, but after RECALL, CR_KEEP, the stored one) and 63A13h (a click on CON:
+; CR_AGE_CON, the roll kept). The age is the one the character will have: its race's base and the
+; roll (AGE_RACES: base, dice, sides, by race 1-8; CR_ROLL the dice less their count, rolled for
+; race CR_RACE, again whenever the race isn't that one). DONE puts it in the sheet (AGE_PUT).
 CR_AGE_X equ 146                ; (RECALL's left edge)
 cr_age_text times 12 db 0   ; (PSP's "65535/65535" at the most, or "AGE: 255")
 AGE_RACES db 15, 1, 8,  25, 4, 6,  15, 3, 4,  15, 2, 4,  20, 5, 4,  25, 3, 6,  15, 1, 6,  6, 0, 1
+cr_roll  db 0                   ; (the roll and its race: next to each other, as STORE keeps them)
+cr_race  db 0                   ; (0: none yet)
+cr_keep  db 0                   ; (RECALL's: the stored roll put back, not rolled again)
+cr_new   db 0
+age_seed dw 0x5A17
+cr_age_con:
+        mov byte [cs:cr_new], 0
+        jmp cr_ages
 cr_age:
+        mov byte [cs:cr_new], 1
+cr_ages:
         pop word [cs:cr_ip]
         pop word [cs:cr_cs]
         pop word [cs:cr_fl]
         add sp, 0x10            ; the replaced instruction
-        test word [cs:rules_hi], RULE_HI_AGING
+        cmp byte [cs:cr_new], 0
+        je .drawn
+        cmp byte [cs:cr_keep], 0
+        jne .drawn              ; (RECALL's roll)
+        mov byte [cs:cr_race], 0        ; (a new roll: at the drawing, or at DONE)
+.drawn: test word [cs:rules_hi], RULE_HI_AGING
         jz .back
         sti
         pushad
@@ -8578,7 +8650,9 @@ cr_age_draw:
         cmp si, 8
         jae .done               ; (no race yet)
         imul si, si, 3
-        call age_roll
+        call cr_rolled
+        add al, [cs:si + AGE_RACES]
+        add al, [cs:si + AGE_RACES + 1] ; (the age: the base, the dice's count and the roll)
         mov di, cr_age_text
         mov si, age_word
         call age_copy           ; ("AGE: ", then the age)
@@ -8593,53 +8667,83 @@ cr_age_draw:
         call c_draw_line
 .done:  ret
 
-; AGE_ROLL: AL the starting age of the creature being made (DS:[11A0h]'s name), AGE_RACES' entry
-; at SI: h from the race (SI / 3 + 1) * 257, h = h * 31 + each of the name's bytes (to 15), then
-; for each die h = h * 25173 + 13849, its high byte mod the sides, plus 1 (aging.natural_start).
-age_roll:
+; CR_ROLLED: AL the creation screen's roll for the sheet at ES:BX (its race's AGE_RACES entry at
+; SI): CR_ROLL, rolled now (AGE_DICE) unless it was for this race.
+cr_rolled:
+        mov al, [es:bx + 0x18]
+        cmp al, [cs:cr_race]
+        je .have
+        mov [cs:cr_race], al
+        call age_dice
+        mov [cs:cr_roll], al
+.have:  mov al, [cs:cr_roll]
+        ret
+
+; AGE_DICE: AL Table 7's dice for AGE_RACES' entry at SI, less their count (each die 0 to sides - 1:
+; 0 to 20 for a dwarf's 4d6). Keeps the rest.
+age_dice:
         push bx
         push cx
         push dx
-        push di
-        push es
-        mov ax, si
-        mov cl, 3
-        div cl                  ; (AL the race less 1)
-        movzx di, al
-        inc di
-        imul di, di, 257        ; (h)
-        les bx, [0x11A0]
-        add bx, 0x28            ; (the name)
-        mov cx, 15
-.name:  movzx ax, byte [es:bx]
-        or ax, ax
-        jz .rolled
-        imul di, di, 31
-        add di, ax
-        inc bx
-        loop .name
-.rolled:
-        movzx cx, byte [cs:si + AGE_RACES + 1]  ; (the dice)
-        movzx bx, byte [cs:si + AGE_RACES]       ; (the age so far: the base)
+        xor bl, bl
+        movzx cx, byte [cs:si + AGE_RACES + 1]
         jcxz .out
-.die:   imul di, di, 25173
-        add di, 13849
-        mov ax, di
+.die:   call age_rand
         shr ax, 8
         xor dx, dx
         push cx
         movzx cx, byte [cs:si + AGE_RACES + 2]
         div cx
         pop cx
-        inc dx
-        add bx, dx
+        add bl, dl
         loop .die
-.out:   mov ax, bx
-        pop es
-        pop di
+.out:   mov al, bl
         pop dx
         pop cx
         pop bx
+        ret
+
+; AGE_RAND: AX a random word (AGE_SEED, h * 25173 + 13849, mixed with the BIOS's tick count).
+age_rand:
+        push es
+        push word 0x40
+        pop es
+        mov ax, [es:0x6C]
+        pop es
+        xor ax, [cs:age_seed]
+        imul ax, ax, 25173
+        add ax, 13849
+        mov [cs:age_seed], ax
+        ret
+
+; AGE_PUT (DONE's, CR_WEAPONS): the new member's sheet at ES:BX, +14h..+17h: no specs, the creation
+; screen's roll (for its race: rolled now if it wasn't) and the age it gives (+17h: the age less the
+; race's base, plus 1), in the SPEC_V2 layout; no race, no roll (ROLL_UNKNOWN) and no age. Keeps all.
+age_put:
+        push eax
+        push edx
+        push si
+        movzx si, byte [es:bx + 0x18]
+        dec si
+        cmp si, 8
+        jae .none
+        imul si, si, 3
+        call cr_rolled
+        movzx edx, al
+        add dl, [cs:si + AGE_RACES + 1]
+        inc dl
+        shl edx, 24
+        movzx eax, al
+        shl eax, ROLL_SHIFT
+        or eax, edx
+        or eax, (SPEC_PACKED | SPEC_V2) << 16
+        jmp .put
+.none:  mov eax, (SPEC_PACKED | SPEC_V2) << 16 | ROLL_UNKNOWN << ROLL_SHIFT
+.put:   mov [es:bx + SPEC_SLOTS], eax
+        mov byte [cs:cr_race], 0        ; (the next character a roll of its own)
+        pop si
+        pop edx
+        pop eax
         ret
 rl_text  db '000/000', 0
 
@@ -11588,7 +11692,9 @@ probe_rs_click:
         call rs_framed                      ; (the scores' routine: another overlay's)
         mov word [cs:wp_far], .tail
         mov [cs:wp_far + 2], cs
+        mov byte [cs:cr_keep], 1            ; (its PSP drawn: the roll put back, not rolled again)
         call rs_framed                      ; (the die's routine from where it rolled the hit points)
+        mov byte [cs:cr_keep], 0
         jmp .done
 .tail:  mov [cs:rs_tail + 2], dx            ; (DX: the overlay's segment, the INT's way back)
         push cs
@@ -11684,6 +11790,9 @@ rs_xfer:
         mov bx, rl_pool
         mov cx, 2
         call rs_bytes
+        mov bx, cr_roll                 ; (the starting age's roll and its race: CR_AGE's)
+        mov cx, 2
+        call rs_bytes
         pop es
         ret
 rs_bytes:                       ; CX bytes ES:BX <-> CS:DI (DL 0: into CS:DI)
@@ -11699,7 +11808,7 @@ rs_bytes:                       ; CX bytes ES:BX <-> CS:DI (DL 0: into CS:DI)
         ret
 rs_fields db 0, 0x18, 1, 0, 0x19, 1, 0, 0x21, 3, 0, 0x43, 1   ; (RS_KEY: race, sex, classes, kit)
           db 0, 0x08, 6, 1, 0x00, 4, 1, 0x22, 6, 0xFF
-rs_buf    times 6 + 6 + 4 + 6 + 4 + 2 db 0
+rs_buf    times 6 + 6 + 4 + 6 + 4 + 2 + 2 db 0
 rs_have   db 0
 rs_tail   dw RS_TAIL, 0
 
@@ -16225,11 +16334,12 @@ WW_SITE   equ NS_IMAGE + 57     ; 7617Dh: a one-target spell's damage starting (
 ENL_SITE  equ NS_IMAGE + 58     ; 7C246h: a melee hit's damage made bigger by Enlarge (ENL_SITE)
 REGEN_SITE equ NS_IMAGE + 59    ; 228BFh: a member with CON 20 or more regenerating (REGEN_SITE)
 CON_SITE  equ NS_IMAGE + 60     ; 5EAA1h: CON's adjustment to the paralysis/poison/death save (CON_SAVE)
-CR_AGE_SITE equ NS_IMAGE + 61   ; 65A89h, 63A13h: the creation panel's PSP drawn (CR_AGE)
+CR_AGE_SITE equ NS_IMAGE + 61   ; 65A89h: the creation panel's PSP drawn, a new roll (CR_AGE)
 CR_NAME_SITE equ NS_IMAGE + 62  ; 66045h: a name the game gave copied to the creature (CR_NAME)
 CR_NAME2_SITE equ NS_IMAGE + 63 ; 6349Fh: the same, a figure clicked (CR_NAME)
 CR_NAME3_SITE equ NS_IMAGE + 64 ; 63AE8h: a name typed (CR_NAME)
 CR_NAME4_SITE equ NS_IMAGE + 65 ; 63B2Dh: none typed, the game's put back (CR_NAME)
+CR_AGE_CON_SITE equ NS_IMAGE + 66 ; 63A13h: PSP drawn after a click on CON, the roll kept (CR_AGE_CON)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -16327,6 +16437,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je con_save
         cmp byte [cs:rl_site], CR_AGE_SITE
         je cr_age
+        cmp byte [cs:rl_site], CR_AGE_CON_SITE
+        je cr_age_con
         cmp byte [cs:rl_site], CR_NAME_SITE
         je cr_name
         cmp byte [cs:rl_site], CR_NAME2_SITE
@@ -17536,8 +17648,8 @@ cr_weapons:
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
-        mov dword [es:bx + SPEC_SLOTS], SPEC_PACKED << 16 ; (no specs and no age: a new member,
-        mov ax, ds                      ;   whatever the slot's last character left)
+        call age_put                    ; (no specs, and the creation screen's roll and age: a new
+        mov ax, ds                      ;   member, whatever the slot's last character left)
         add ax, PICK_STUB
         mov word [cs:lv_psi], DK_PSI
         mov [cs:lv_psi + 2], ax

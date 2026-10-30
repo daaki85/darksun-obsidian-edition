@@ -160,11 +160,14 @@ RULE_ENLARGE = 33554432
 RULE_CON = 67108864
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
-# each (0 none). Up to 2.12, a byte each; now packed (SPEC_PACKED, +16h's top bit), 5 bits each in
-# +14h to +16h, and +17h the character's age (SHEET_AGE: years past its race's base starting age, 0
-# not yet given; aging.py). A sheet keeps the old layout until something is written to it (both
-# read alike: spec_kinds; DSCLOG's SPEC_GET).
-SPEC_PACKED, SPEC_BITS, SHEET_AGE = 0x80, 5, 0x17
+# each (0 none). Up to 2.12, a byte each; in 2.13 packed (SPEC_PACKED, +16h's top bit), 5 bits each
+# in +14h to +16h, and +17h the character's age (SHEET_AGE: years past its race's base starting age,
+# plus 1; 0 not yet given; aging.py); now (SPEC_V2 too) the four a number base 17 in bits 0-16 (17
+# values each: four in 17 bits, not 20), the starting age's roll in bits 17-21 (Table 7's dice less
+# their count; ROLL_UNKNOWN: none kept, a character from before), +17h the age. A sheet keeps its
+# layout until something is written to it (all read alike: spec_kinds; DSCLOG's SPEC_GET).
+SPEC_PACKED, SPEC_V2, SPEC_BITS, SHEET_AGE = 0x80, 0x40, 5, 0x17
+SPEC_KINDS_MASK, ROLL_SHIFT, ROLL_UNKNOWN = 0x1FFFF, 17, 31
 
 
 def spec_packed(sheet: bytes) -> bool:
@@ -172,30 +175,53 @@ def spec_packed(sheet: bytes) -> bool:
     return len(sheet) > SPEC_SLOTS + 2 and bool(sheet[SPEC_SLOTS + 2] & SPEC_PACKED)
 
 
+def spec_v2(sheet: bytes) -> bool:
+    """The packed specs base 17, with the starting roll beside them (SPEC_V2)."""
+    return spec_packed(sheet) and bool(sheet[SPEC_SLOTS + 2] & SPEC_V2)
+
+
 def spec_kinds(sheet: bytes) -> bytes:
-    """The four weapon specs chosen, kind + 1 each (0 none), from either layout."""
+    """The four weapon specs chosen, kind + 1 each (0 none), from any layout."""
     raw = bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])
     if not spec_packed(sheet):
         return raw
     value = int.from_bytes(raw[:3], "little")
+    if spec_v2(sheet):
+        value &= SPEC_KINDS_MASK
+        return bytes(value // 17 ** i % 17 for i in range(SPEC_COUNT))
     return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT))
 
 
 def sheet_age(sheet: bytes) -> int:
-    """+17h of a packed sheet: years past the race's base starting age (0: none given yet)."""
+    """+17h of a packed sheet: years past the race's base starting age, plus 1 (0: none given yet)."""
     return sheet[SHEET_AGE] if len(sheet) > SHEET_AGE and spec_packed(sheet) else 0
 
 
-def packed_specs(kinds: Sequence[int], age: int = 0) -> bytes:
-    """+14h to +17h in the packed layout: KINDS (kind + 1 each, up to four) and AGE."""
+def sheet_roll(sheet: bytes) -> Optional[int]:
+    """The starting age's roll kept on the sheet (Table 7's dice less their count), None if none."""
+    if not spec_v2(sheet):
+        return None
+    roll = int.from_bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + 3], "little") >> ROLL_SHIFT & 0x1F
+    return None if roll == ROLL_UNKNOWN else roll
+
+
+def packed_specs(kinds: Sequence[int], age: int = 0, roll: Optional[int] = None) -> bytes:
+    """+14h to +17h in the SPEC_V2 layout: KINDS (kind + 1 each, up to four, 0 to 16), AGE (the
+    +17h byte) and ROLL (None: not known)."""
     kinds = list(kinds) + [0] * (SPEC_COUNT - len(kinds))
-    value = sum((k & 0x1F) << SPEC_BITS * i for i, k in enumerate(kinds)) | SPEC_PACKED << 16
+    value = sum(min(max(k, 0), 16) * 17 ** i for i, k in enumerate(kinds[:SPEC_COUNT]))
+    value |= (ROLL_UNKNOWN if roll is None else roll & 0x1F) << ROLL_SHIFT | (SPEC_PACKED | SPEC_V2) << 16
     return value.to_bytes(3, "little") + bytes([age & 0xFF])
 
 
 def with_specs(sheet: bytes, kinds: Sequence[int]) -> bytes:
-    """SHEET with its weapon specs KINDS, packed, its age kept."""
-    return bytes(sheet[:SPEC_SLOTS]) + packed_specs(kinds, sheet_age(sheet)) + bytes(sheet[SPEC_SLOTS + SPEC_COUNT:])
+    """SHEET with its weapon specs KINDS, packed, its age and roll kept."""
+    return bytes(sheet[:SPEC_SLOTS]) + respecced(sheet, kinds) + bytes(sheet[SPEC_SLOTS + SPEC_COUNT:])
+
+
+def respecced(sheet: bytes, kinds: Sequence[int]) -> bytes:
+    """+14h to +17h for SHEET with weapon specs KINDS, its age and starting roll as they are."""
+    return packed_specs(kinds, sheet_age(sheet), sheet_roll(sheet))
 # AD&D's item saving throws against acid (the DMG's table), by the game's materials: wood
 # (thick), bone, stone and obsidian (glass's), metal, leather; and cloth for no material
 ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 5), 4: ("metal", 13),

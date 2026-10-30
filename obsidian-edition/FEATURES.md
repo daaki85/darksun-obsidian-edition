@@ -487,11 +487,12 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 ### Ages and magical aging
 
 The game keeps no ages. With **Ages and magical aging** ticked, each party
-member has one, from the Dark Sun rules' tables: a starting age rolled the
-first time the Loader sees the character (a new one, the game's own party, one
-from an earlier version), which the dice log shows
-(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`), rolled from the
-character's name and race, so always the same for them. Each **365 days of
+member has one, from the Dark Sun rules' tables: a starting age, the race's
+base and Table 7's dice. A new character's dice are rolled on the creation
+screen, again with each roll of the die (below), and kept with the character
+at DONE; the game's own party, or a character from before ages, gets its roll
+the first time the Loader sees it, which the dice log shows
+(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`). Each **365 days of
 game time** (the game's own clock, from the start of the game) everyone is a
 year older, and the dice log says so (`A year has passed: Cermak is 23.`),
 the age categories counting as below. It is flavour: a party that rests
@@ -534,8 +535,9 @@ A thri-kreen, venerable at 25, feels it most: every Haste is a year of a short
 life. A dwarf hardly notices.
 
 The age shows on the creation screen, above RECALL (`AGE: 23`: the age the
-character will start at, from its name and race, so a new name or race gives
-another), on the inventory screen's panel, between the saving throws and STR
+character will start at, Table 7's dice rolled again with each roll of the die
+and each choice of race, sex or class; a click on a score keeps it, and STORE
+and RECALL keep it with the roll), on the inventory screen's panel, between the saving throws and STR
 (`AGE: 23`), and on the Loader's Characters tab with the category and the next
 age to come (`Age: 45, middle-aged; old at 53`).
 
@@ -864,7 +866,7 @@ The creation screen has two more buttons under the hit points, as Baldur's
 Gate has them: **STORE** keeps the roll on screen, and **RECALL** brings it
 back, however many times the die has been rolled since. A roll is the six
 scores and what the die's total allows (the `SUM:` line), the hit points and
-the PSP. So a good roll can be stored and the die tried again; if nothing
+the PSP, and the age (with [Ages](#ages-and-magical-aging) on). So a good roll can be stored and the die tried again; if nothing
 better comes, RECALL puts the stored one back, AC and damage with it.
 
 ![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:94/94, 32/32 hit points, AGE: 20 above RECALL; KITS below the psionic disciplines](docs/creation-store-recall.png)
@@ -1430,7 +1432,8 @@ How they're made, and where they differ from the books:
 - **Restore Youth** is the mod's, the reverse of AD&D's Age Creature, and
   needs the **Ages and magical aging** rule: it takes back only the years
   magic added, as many as the caster's level, down to the age the character
-  would be without them. The target rolls system shock first, as for Haste,
+  would be without them (its starting age, kept with the character, and the
+  game's years), however many magic has added. The target rolls system shock first, as for Haste,
   and dies if it fails; one with no magical years rolls nothing. With the rule
   off, or on a monster, it does nothing. The dice log shows both:
   `Gerakis grows younger 10 years (Restore Youth): now 27.`

@@ -6,6 +6,27 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Changed**
+- **Table 7's dice on the creation screen:** the age above RECALL is rolled for real with each
+  roll of the die, a choice or the screen opening (DSCLOG's `age_dice`, `age_rand`: an LCG xored
+  with the BIOS tick count), not from the name and race; a click on CON keeps it (`CR_AGE_CON`,
+  63A13h), STORE and RECALL keep it with the roll (`rs_xfer`: `CR_ROLL`, `CR_RACE`; `CR_KEEP`),
+  and DONE puts it on the sheet (`AGE_PUT`, in `CR_WEAPONS`). The game's own party, and a
+  character from before ages, get real rolls from the Loader (`give_ages`). Checked in DOSBox:
+  ages 23, 20, 18, 20 on four rolls; STORE, a roll, RECALL back to 20; CON down and up, 20; DONE,
+  the sheet's roll 4 and age 20. Tests: `test_age_dice`, `test_age_put`, `test_give_ages_once`.
+- **The weapon specs base 17, the starting roll kept beside them** (the sheet's +14h dword, v2,
+  `SPEC_V2`): the four kinds in bits 0-16, Table 7's roll less the dice count in 17-21 (31 none
+  kept), so Restore Youth's floor is the character's own start (`aging.start_age`) and the
+  magical years it can take back have no cap. 2.12 and 2.13 sheets still read, and become v2 when
+  written (`SPEC_PACK`, `SPEC_REPACK`; `game.respecced`); a character aged before keeps its age
+  and gets its old name-and-race roll put on its sheet. A save made with this is not for 2.13.1
+  or earlier. DSCLOG's image 63,680 bytes (+320). Tests: `test_packing`, `test_rolls`,
+  `test_older_layouts_read`, `test_spec_layouts`, `test_an_age_from_before_keeps_its_start`,
+  `test_true_age_from_the_roll`.
+
 ## Pull request #82 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/82))
 
 Obsidian Edition 2.13.1 ([release notes](release-notes/v2.13.1.md)).

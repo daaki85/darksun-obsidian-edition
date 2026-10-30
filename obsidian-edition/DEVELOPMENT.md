@@ -469,7 +469,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.3 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.4 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.6 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.1 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -550,17 +550,18 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,056 of the room's 8,182
-paragraphs (2.13.1), so 2,126 (33.2 KB) are spare, and with `UMBPLUS.COM`
-about 51.4 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,291
+and so does `test_fits_upper_memory`. It needs 6,076 of the room's 8,182
+paragraphs, so 2,106 (32.9 KB) are spare, and with `UMBPLUS.COM`
+about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
+helper, the overlay buffer and the music buffer, each with its MCB: 3,271
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 63,360 bytes
-(`image_len`; the resident part ends at `resident_end`, F0A0h), so with the
-install's 256-byte stack 1,920 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 63,680 bytes
+(`image_len`; the resident part ends at `resident_end`, F1C0h), so with the
+install's 256-byte stack 1,600 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
-creation screen 560, RECALL's frames 48); the HMA has 7,080 bytes left for more buffers (the far block ends at
+creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
+specs base 17 320); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -1544,7 +1545,8 @@ How: the Loader (`aging.py`, with `RULE_AGING`, RULES_HI's 256) keeps each
 party member's age in the sheet's +17h (`SHEET_AGE`: the age less the race's
 base starting age, plus 1; 0 none yet, a thri-kreen's 6 being its base), the
 byte the packed weapon specs leave free (Weapon specialization, below). A member
-with none gets its starting age (`give_ages`, in the dice log's item pass, not
+with none gets its starting age (`give_ages`, Table 7's dice rolled: the game's own party, one
+from before ages; in the dice log's item pass, not
 while DSCLOG's weapon window is up: its trial puts the four bytes back as they
 were). `age_by` moves an age (Haste, Restore Youth): the categories reached or
 left change the sheet's scores and the creature's (`changes`, Table 8, the
@@ -1578,8 +1580,9 @@ Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
 handler, so the game casts it as a touch spell that heals nothing. The dice
 log's `KIND_CAST` line for it calls `aging.restore` with the target and the
 caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
-by the level, never below the character's true age (`natural_start`, the
-seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
+by the level, never below the character's true age (`start_age`: the race's
+base and the roll kept on the sheet, `game.sheet_roll`, with the game's years;
+no cap on the years magic adds). Checked in DOSBox: K'ratchek at 12th
 level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
 
 #### Natural aging
@@ -1604,7 +1607,7 @@ as `age_by`), death at the most the race lives. Nothing is counted twice or
 lost: a load brings its own count, and a year that passed in a long jump, in
 the arena, or while the game ran without the Loader is counted at the next
 steady look. A game whose count hasn't begun (a new one; one saved before
-2.13.1) begins it at the clock's years, aging no one for those before. Restore Youth's floor, the true age, is `natural_start` plus
+2.13.1) begins it at the clock's years, aging no one for those before. Restore Youth's floor, the true age, is `start_age` plus
 the clock's years (one who joined late gets fewer years back, never more).
 Checked in DOSBox: the clock put a few minutes short of a year, then past it:
 a line for each of the four, once, and `AGE: 35` on Gerakis's panel.
@@ -1614,28 +1617,38 @@ Tests: `test_natural_years`, `test_restore_counts_the_games_years`,
 
 #### The age on the creation screen
 
-`CR_AGE`: the age the character will start at, from
-its name and race (`aging.natural_start`, a 16-bit hash of the name's bytes from
-the race, then each die from `h * 25173 + 13849`, its high byte mod the sides,
-as DSCLOG's `AGE_ROLL` works it out alike: `test_creation_age`), drawn above
-RECALL, in the PSP box's row: nothing of the game's is drawn there, and the
-PSP box (the screen's 8th, `DS:0F62h` on) is widened to x 200
-(`cr_age_box`), so its saved background, put back each time PSP is drawn,
-clears it. It is drawn after PSP (65A89h: the die, a choice, the screen
-opening; 63A13h: a click on CON) and, as a name changes after those (the
-game's own, 66045h and 6349Fh, a figure clicked; one typed, 63AE8h, or the
-game's put back when none is, 63B2Dh), again then: the PSP box put back
-(`0A0h:30C3h`, the operand read from the overlay's code as loaded: its
-selectors fixed up there), PSP drawn again as the game draws it (centred on
-its x, 6 pixels a character: its own routine, 538h:43h, is an overlay stub,
-not for calling from an interrupt) and the age (`CR_NAME`). Before 2.13.1 the
-roll was Python's, seeded by the name and race: a character given an age then
-keeps it, but its true age (Restore Youth's floor) is this roll's now. `CR_AGE` and
-`CR_NAME` keep their way back in their own words (`cr_ip`, `cr_cs`, `cr_fl`), apart from
-`RL_SUM`'s, as they call the game's code before going back. Tests: `test_creation_age`,
-`test_creation_age_any_name` (300 random names, any byte), `test_name_redraws_psp_and_age`
-(the operands read from the overlay's code, PSP centred, the age; none called for an
-operand not fixed up).
+`CR_AGE`: the age the character will start at, Table 7's dice rolled for real
+(`age_dice`: its race's dice from `AGE_RACES`, each die from `age_rand`, an LCG
+`x * 25173 + 13849` xored with the BIOS tick count at 0040:006Ch, its high byte
+mod the sides), kept as the roll less the dice count (`CR_ROLL`, 0 to 20) and
+the race it was rolled for (`CR_RACE`; `cr_rolled` rolls again whenever the race
+isn't that one), drawn above RECALL, in the PSP box's row: nothing of the
+game's is drawn there, and the PSP box (the screen's 8th, `DS:0F62h` on) is
+widened to x 200 (`cr_age_box`), so its saved background, put back each time
+PSP is drawn, clears it. It is drawn after PSP: at 65A89h (the die, a choice,
+the screen opening: a new roll, `CR_RACE` cleared, except while RECALL puts a
+stored roll back, `CR_KEEP`) and at 63A13h (a click on CON: `CR_AGE_CON`, the
+roll kept); and, as a name changes after those (the game's own, 66045h and
+6349Fh, a figure clicked; one typed, 63AE8h, or the game's put back when none
+is, 63B2Dh), again then: the PSP box put back (`0A0h:30C3h`, the operand read
+from the overlay's code as loaded: its selectors fixed up there), PSP drawn
+again as the game draws it (centred on its x, 6 pixels a character: its own
+routine, 538h:43h, is an overlay stub, not for calling from an interrupt) and
+the age (`CR_NAME`). STORE and RECALL keep `CR_ROLL` and `CR_RACE` with the rest
+(`rs_xfer`). DONE puts the roll and the age in the new member's sheet
+(`AGE_PUT`, in `CR_WEAPONS`: the v2 layout, Weapon specialization below; no race
+known, `ROLL_UNKNOWN` and no age), so the Loader's `give_ages` leaves it be.
+Before 2.13.2 the age was rolled from the name and race (`natural_start`, a
+16-bit hash, DSCLOG's `AGE_ROLL` then); a character given one keeps it, and
+`give_ages` puts that roll on its sheet, silently. `CR_AGE` and `CR_NAME` keep
+their way back in their own words (`cr_ip`, `cr_cs`, `cr_fl`), apart from
+`RL_SUM`'s, as they call the game's code before going back. Checked in DOSBox:
+four rolls of the die gave 23, 20, 18, 20; STORE at 20, a roll to 17, RECALL
+back to 20; CON lowered and raised, 20 both times; DONE and a weapon picked,
+the sheet's roll 4 and age byte 6 (15 + 1 + 4 = 20). Tests: `test_age_dice`
+(each race's rolls in range, a human's all 0 to 7), `test_age_put`,
+`test_name_redraws_psp_and_age` (the operands read from the overlay's code, PSP
+centred, the age; none called for an operand not fixed up).
 
 #### Grey hair on the map
 
@@ -1705,14 +1718,21 @@ dwarf or halfling.
 How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the
 saved-characters roster keep them. Up to 2.12 they were a byte each (the kind +
-1, 0 none); now they are packed, 5 bits each in +14h to +16h (room for 31
-kinds), +16h's top bit (`SPEC_PACKED`) marking it, and +17h is the
-character's age (`SHEET_AGE`, years past its race's base starting age: see
-Ages above). A sheet keeps the old layout until something writes to it, and
-everything reads both: DSCLOG through `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`
-(and writes through `SPEC_SET`, which packs an old sheet first,
-`SPEC_PACK`: its +17h, an old 4th spec, becomes 0, no age yet), the Loader
-through `game.spec_kinds`, `packed_specs` and `with_specs`. The weapon
+1, 0 none); 2.13.0 and 2.13.1 packed them 5 bits each in +14h to +16h,
++16h's top bit (`SPEC_PACKED`) marking it; now (v2, +16h's bit 6 too,
+`SPEC_V2`) the dword's bits 0-16 are the four as a base-17 number (each digit
+the kind + 1, 0 none: `SPEC_KINDS_MASK`, room for 16 kinds), bits 17-21 the
+starting roll (Table 7's dice less their count, 0 to 20; 31, `ROLL_UNKNOWN`,
+none kept: `game.sheet_roll`), and +17h is the character's age (`SHEET_AGE`,
+years past its race's base starting age, plus 1: see Ages above). A sheet keeps
+its layout until something writes to it, and everything reads all three: DSCLOG
+through `SPEC_GET` (v2 through `SPEC_UNPACK` into `spec_digits`), `SPEC_FIND`,
+`SPEC_ANY` (and writes through `SPEC_SET`, which makes an older sheet v2 first,
+`SPEC_PACK`: a 2.12 sheet's +17h, an old 4th spec, becomes 0, no age yet, a
+2.13 sheet's age kept; the roll `ROLL_UNKNOWN`; then `SPEC_REPACK`), the Loader
+through `game.spec_kinds`, `packed_specs` and `with_specs` (`respecced`, the age
+and roll kept). Tests: `test_packing`, `test_rolls`, `test_older_layouts_read`,
+`test_with_specs_keeps_the_age`, `test_spec_layouts`. The weapon
 window's trial of a kind pointed at (`PK_WORD`) puts the four bytes back as
 they were. Checked in DOSBox: Gerakis with four kinds a byte each and then
 packed with an age of 30 lists the same four on the Effects screen, his long
