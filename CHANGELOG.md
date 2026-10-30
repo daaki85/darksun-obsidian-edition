@@ -42,7 +42,8 @@ notes](PATCH-NOTES.md).
   Tests: `test_kurzak`. Not yet seen in play.
 
 **Fixed** (the second audit, with seven agents: code, memory, documents, pictures)
-- **RECALL on the creation screen stopped DOSBox** ("DynrecCore: illegal option"), from 2.8.0 on:
+- **RECALL on the creation screen stopped DOSBox** ("DynrecCore: illegal option"), from 2.8.0 on,
+  when pressed before the die had been rolled on that visit to the screen (STORE, then RECALL):
   its redraw calls the scores' routine, another overlay's, whose loading could move or drop the
   creation screen's, and RECALL then jumped to where the die's routine had been. Both calls are
   now made with the way back in a frame the overlay manager fixes up (`RS_FRAMED`). Found by
@@ -69,6 +70,12 @@ notes](PATCH-NOTES.md).
   notes; defilers' scrolls counted at once (the README had them from the next start); Enlarge's
   rule and CON as in AD&D's poison saves in the guide; a spoiler note on the game's bugs fixed;
   history players don't need trimmed.
+- **Documents reorganised:** the dice log's line-by-line reference (every kind of line and what it
+  means, 108 lines) moved from the README to a page of its own, `DICE-LOG.md`, linked from both
+  READMEs and the guide; the README's Options sections cut to one list of links, the guide's
+  Options tab at a glance being the one list of switches, defaults and timing; the Kits page the
+  one description of who may take which kit (the features page and the guide point to it);
+  the README's quality of life bullet shortened. Links and anchors checked: none broken.
 - Pictures taken anew for the age: the inventory panels (`inventory.png`, `inventory-ranger.png`,
   `default-party-gerakis.png`), the creation screen (`creation-store-recall.png`,
   `creation-weapons.png`) and the Loader (`dialogue.png`, `dicelog.png`: the Characters tab's ages).

@@ -760,12 +760,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
 
 ### Kits
 
-With **Kits** ticked, a character of one class may take one of three kits for
-its class when it is made, on the creation panel's **KIT** page, or none; a
-few races' pairs of classes taken at once have kits of their own, and a human
-who changes class may take one for the new class too. Each gives something and
-costs something. Every kit's gains, costs, starting gear and rules are on a
-page of their own, [Kits](KITS.md):
+With **Kits** ticked, a character may take a kit when it is made, on the
+creation panel's **KIT** page. Who may take which, and every kit's gains, costs,
+starting gear and rules, are on a page of their own, [Kits](KITS.md):
 
 | Class | Kits |
 |---|---|

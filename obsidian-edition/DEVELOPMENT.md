@@ -2099,7 +2099,8 @@ are made with it in a frame the overlay manager can fix up (`RS_FRAMED`, as
 `PROBE_USE_ITEM`'s): the scores' redraw is another overlay's, and loading it
 can move or drop the creation screen's, which the manager then puts back and
 the frame follows. Without it (2.8.0 to 2.13.0, once the overlay buffer was
-filled differently) RECALL jumped into what was no longer the die's routine
+filled differently; and only for a RECALL before the die was rolled on that visit
+to the screen: after a roll it never stopped, in 2.13.0 either) RECALL jumped into what was no longer the die's routine
 and DOSBox stopped ("DynrecCore: illegal option"). Checked in DOSBox: STORE,
 the die, RECALL twice, the scores, hit points, PSP and age put back each time.
 

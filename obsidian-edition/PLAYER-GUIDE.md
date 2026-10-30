@@ -135,7 +135,8 @@ ordinary reason, the Loader saves a report to send. The README has the details:
 and where each bonus came from. Other tabs show each character's sheet, the
 dialogue, and every spell's dice, saves and duration. Every save is also
 copied under the name you gave it in the game. The README has
-[the Loader's window](README.md#the-loaders-window) in full.
+[the Loader's window](README.md#the-loaders-window) in full, and [the dice log, line by
+line](DICE-LOG.md) what each of its lines means.
 
 ## Making a party
 
@@ -960,12 +961,10 @@ Stillwater with water).
 
 ## Kits
 
-A character of one class takes one of three kits for its class (or one of its
-race's multiclass kits) when it is made, or none, on the creation panel's **KIT** page; a human who changes class
-can take one for its new class. A few races' pairs of classes have kits of
-their own ([Multiclass kits](#multiclass-kits)). Each gives something and
-costs something. [The Kits page](KITS.md) has each kit's numbers and
-starting gear; the class sections above say who takes each kit on Athas.
+A character takes a kit, or none, when it is made, on the creation panel's
+**KIT** page. [The Kits page](KITS.md) has who may take which, and each kit's
+numbers and starting gear; the class sections above, and the multiclass kits
+below, say who takes each kit on Athas.
 
 - The **Myrmidon** chooses its second weapon spec, and the **Battle Mage**,
   **Crusader** and **Mind Warrior** their one (a melee weapon; a thri-kreen

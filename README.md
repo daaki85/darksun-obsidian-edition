@@ -18,6 +18,8 @@ with your options and keeps the full dice log while you play.
 - [Features and rules](obsidian-edition/FEATURES.md): every rule change and
   addition in detail, with its switch
 - [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
+- [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
+  the Loader's dice log writes, and what it means
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one
   page to share
 - [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with
