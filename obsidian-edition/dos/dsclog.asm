@@ -11552,6 +11552,10 @@ cast_site:
         sub si, 2                       ; (SS:SI+6: the INT's return address)
         mov ax, [bp + 0x0A]
         mov [cs:cast_spell], ax
+        cmp ax, WHIRLWIND_SPELL
+        jne .cast
+        mov byte [cs:ww_cast], 1        ; (its hits as it is cast: WW_GATE)
+.cast:
         push word [bp + 6]
         pop word [cs:cast_who]
         mov word [cs:kind], KIND_CAST
@@ -12713,8 +12717,10 @@ whirl_pick:
         jmp short .next
 .end:   ret
 
-; SWEPT_MARK: for ACID_ONCE, Whirlwind's damage on combatant [BP+6] after a failed save: marked
-; (SWEPT), for PROBE_MOVE to take its next turn; recorded (KIND_SWEPT: the combatant). All kept.
+; SWEPT_MARK: for ACID_ONCE, Whirlwind's damage on combatant [BP+6] after a failed save: its next
+; turn taken. One yet to act this round (SWEPT_NOW) loses this round's at once; else it is marked
+; (SWEPT) for PROBE_MOVE to take next round's (WW_PASS's sweeps, before the round's initiative,
+; are this round's). Recorded (KIND_SWEPT: the combatant). All kept.
 KIND_SWEPT  equ 11
 SWEPT_MAX   equ 64
 swept   times SWEPT_MAX db 0
@@ -12724,8 +12730,10 @@ swept_mark:
         mov bx, [bp + 6]
         cmp bx, SWEPT_MAX
         jae .out
+        call swept_now
+        jc .rec
         mov byte [cs:swept + bx], 1
-        mov ax, bx
+.rec:   mov ax, bx
         mov si, sp
         add si, 28 + 2 + 4              ; (SS:SI+6: the INT's return address, past this call and
         mov word [cs:kind], KIND_SWEPT  ;   ACID_ONCE's AX and DI)
@@ -12733,6 +12741,184 @@ swept_mark:
 .out:   pop es
         popad
         ret
+
+; SWEPT_NOW: CF set when combatant BX, swept in a fight outside WW_PASS, has yet to act this round:
+; not the one whose turn it is, its initiative not -1 (the game's mark for one that has acted, or
+; won't). Its turn is then taken at once, as PROBE_MOVE takes a swept one's: no movement, and
+; initiative -1. DS the game's; all kept.
+INIT_FROM_DS equ 0x4356 - 0x37BD ; (the creatures' initiative, +0D9h, 4 bytes each: its number, -1
+INIT_OFF     equ 0xD9           ;   once it has acted, and the tie-break; their movement for the
+                                ;   turn, +22Bh, 2 bytes each)
+MOVE_OFF     equ 0x22B
+swept_now:
+        pushad
+        push es
+        cmp byte [cs:ww_mine], 0
+        jne .no
+        call pp_fighting
+        jz .no
+        mov ax, bx
+        call combatant_creature         ; (AX its creature, CF set if none)
+        jc .no
+        mov di, ax
+        mov ax, [WHOSE_TURN]
+        call combatant_creature
+        jc .no
+        cmp ax, di
+        je .no                          ; (its own turn: it acts now, and loses next round's)
+        mov ax, ds
+        sub ax, INIT_FROM_DS
+        mov es, ax
+        shl di, 2
+        cmp word [es:di + INIT_OFF], -1
+        je .no                          ; (it has acted: next round's)
+        mov word [es:di + INIT_OFF], -1
+        shr di, 1
+        mov word [es:di + MOVE_OFF], 0
+        pop es
+        popad
+        stc
+        ret
+.no:    pop es
+        popad
+        clc
+        ret
+
+; COMBATANT_CREATURE: AX a combatant: AX its creature, CF clear; CF set if it is none. DS the
+; game's; others kept.
+combatant_creature:
+        push bx
+        push es
+        cmp ax, MAP_COUNT
+        jae .none
+        imul bx, ax, 3
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        cmp byte [es:bx + COMBATANT_CREATURE - 1], 2
+        jne .none
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        pop es
+        pop bx
+        clc
+        ret
+.none:  pop es
+        pop bx
+        stc
+        ret
+
+; WW_GATE: "mov si,[bp+6]" (7617Dh; 3 bytes: the INT and the site's number) at the start of the
+; one-target spell damage (76175h: [BP+6] the creature, [BP+8] the spell), which lasting areas
+; deal to each creature in them, at the start of its turn (and as it walks in): Whirlwind's
+; (NEW SPELLS) only from WW_PASS, once a round to each creature in it before the round's turns,
+; and from its cast, during its caster's turn (WW_CAST); else the routine returns at once (its
+; way back moved to its end, 761FCh, which pops what it has pushed). Else the move done.
+WW_SKIP equ 0x761FC - (0x7617D + 3)
+ww_mine db 0                    ; (1 during WW_PASS's calls)
+ww_cast db 0                    ; (1 from a Whirlwind's cast to the next round's start)
+ww_level db 0                   ; (WW_PASS: the Whirlwind's byte +14h of its thing on the map)
+ww_gate:
+        mov si, [bp + 6]
+        cmp word [bp + 8], WHIRLWIND_SPELL
+        jne .go
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .go
+        cmp byte [cs:ww_mine], 0
+        jne .go
+        cmp byte [cs:ww_cast], 0
+        je .skip
+        push ax
+        mov ax, [WHOSE_TURN]
+        cmp ax, [cs:cast_who]
+        pop ax
+        je .go
+.skip:  push bp
+        mov bp, sp
+        add word [bp + 2], WW_SKIP
+        pop bp
+.go:    iret
+
+; WW_PASS: for ACID_ROUND (SS:BX+34 the INT's way back), before the round's initiative: Whirlwind's
+; damage (NEW SPELLS), through 76175h (its stub, as BURN_PASS calls), to each creature the game
+; lists in a lasting area (the active effects' segment, +0Ah, 3 bytes each: the combatant and its
+; area's entry; DS:1E26h of them) whose entry is Whirlwind's, in order of their numbers, at the
+; level of the first Whirlwind on the map (its thing's +0Eh the entry + 1; +14h: the level in the
+; low 5 bits, the rest the routine's last argument, as the game's own call passes them). Those
+; whose saves fail lose this round's turn (SWEPT_MARK, then PROBE_MOVE). DS the game's.
+AREAS_IN     equ 0x0A           ; (the creatures in lasting areas, in the active effects' segment)
+AREAS_IN_COUNT equ 0x1E26
+WHIRL_ENTRY  equ AREA_WHIRL / AREA_SIZE
+DAMAGE_STUB  equ USE_STUB       ; (76175h's stub segment, less DS's: 76803h's)
+DAMAGE_ENTRY equ 0xF2
+ww_pass:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .done
+        cmp byte [cs:seg_moved], 0
+        je .done
+        mov si, MAP_THINGS
+        mov cx, MAP_COUNT
+.find:  cmp byte [si + 0x0E], WHIRL_ENTRY + 1
+        je .level
+        add si, 32
+        loop .find
+        jmp .done                       ; (no Whirlwind on the map)
+.level: mov al, [si + 0x14]
+        mov [cs:ww_level], al
+        mov dx, -1                      ; (DX the last creature done)
+.next:  mov ax, ds
+        sub ax, EFFECTS_FROM_DS
+        mov es, ax
+        mov di, 0xFFFF                  ; (DI the least creature past DX in a Whirlwind)
+        xor cx, cx
+.scan:  cmp cx, [AREAS_IN_COUNT]
+        jae .found
+        imul si, cx, 3
+        inc cx
+        cmp byte [es:si + AREAS_IN + 2], WHIRL_ENTRY
+        jne .scan
+        mov ax, [es:si + AREAS_IN]
+        cmp dx, -1
+        je .first
+        cmp ax, dx
+        jbe .scan
+.first: cmp ax, di
+        jae .scan
+        mov di, ax
+        jmp .scan
+.found: cmp di, 0xFFFF
+        je .done
+        mov dx, di
+        push bx
+        push dx
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, DAMAGE_STUB
+        mov [cs:acid_far + 2], ax
+        mov word [cs:acid_far], DAMAGE_ENTRY
+        mov byte [cs:ww_mine], 1
+        mov al, [cs:ww_level]
+        shr al, 5
+        push ax                         ; (the routine's last argument)
+        mov al, [cs:ww_level]
+        and al, 0x1F
+        push ax                         ; (the level)
+        push word WHIRLWIND_SPELL
+        push di
+        call far [cs:acid_far]
+        add sp, 8
+        mov byte [cs:ww_mine], 0
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop dx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        jmp .next
+.done:  ret
 
 ; ACID_ONCE: "cmp word [bp-1Eh],0" (78DEFh; 4 bytes: the INT, the site's number and a NOP) where a
 ; spell's damage (78C19h) puts the record's effect ([BP-1Eh]) on the target it hurt: during an Acid
@@ -12807,6 +12993,8 @@ acid_round:
         call burn_pass                  ; each creature's Acid
         mov byte [cs:sun_pass], 1
         call burn_pass                  ; each creature Sunstroke holds: its heat
+        mov byte [cs:ww_cast], 0
+        call ww_pass                    ; each creature in a Whirlwind: its damage, and its save
         mov di, sp
         cmp word [0x55A], 0
         pushf
@@ -15481,6 +15669,7 @@ MOUSE_INIT equ NS_IMAGE + 46    ; 356F5h: the mouse driver reset, at the game's 
 SPREAD_SITE equ NS_IMAGE + 48   ; 692CEh: a game loaded, the party in one figure (SPREAD_LOAD)
 GATHER_SITE equ NS_IMAGE + 55   ; 1DFE8h: the party put in one figure, at a fight's end too (SPREAD_GATHER)
 FLIP_SITE equ NS_IMAGE + 56     ; 14444h: the game's flip of its two screens, the new one about to show (FLIP_SITE)
+WW_SITE   equ NS_IMAGE + 57     ; 7617Dh: a one-target spell's damage starting (WW_GATE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -15568,6 +15757,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je rest_site
         cmp byte [cs:rl_site], HARM_SITE
         je harm_site
+        cmp byte [cs:rl_site], WW_SITE
+        je ww_gate
         cmp byte [cs:rl_site], AREA_SITE
         je area_site
         cmp byte [cs:rl_site], ACID_SITE

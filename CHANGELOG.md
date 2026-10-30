@@ -19,6 +19,17 @@ notes](PATCH-NOTES.md).
   nothing. Checked in DOSBox: Cermak's Enlarge (9th level) on Gerakis, `ENLARGED (+90% DAMAGE)`.
   Test: `test_enlarge_level`.
 
+**Fixed**
+- **Whirlwind's swept creatures lose their next turn, and it strikes once a round.** A creature
+  swept off its feet still took the turn that swept it (the game strikes those in a lasting area
+  at the start of each one's turn), then lost the next round's, and a turn lost was a round of
+  2d8 spared. Now Whirlwind strikes everyone in it at the start of each round, before anyone acts
+  (`WW_PASS`, from `ACID_ROUND`, through 76175h's stub), those who fail their save losing that
+  round's turn, and its hits at turns and as creatures walk in are sent back (`WW_GATE`, a new
+  site at 7617Dh, `gamepatch` `ww_gate`). As it is cast it strikes at once: one swept that has yet
+  to act loses that round's turn there and then (`SWEPT_NOW`), one that has acted the next. Found
+  and checked in DOSBox: K'ratchek's Whirlwind on the arena's sligs, three rounds each way.
+
 **Tests**
 - `test_to_hit_effects`: THAC0 with each effect the game's attack counts (Blessed, Cursed, both,
   Slowed, Graft Weapon, Fogbolt, Prayer from each side) and none from another creature's.

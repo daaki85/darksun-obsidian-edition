@@ -2570,6 +2570,30 @@ each kept thing's frame (+11h) through its 4 frames every 3 timer ticks (about
 when the view is still). A thing whose object is no longer Whirlwind's (the area
 gone) is let go.
 
+**Whirlwind once a round.** A lasting area deals its spell's damage through the
+one-target spell damage (76175h, the overlay at 750E0h, its stub DS-0C7h's
+entry F2h: creature, spell, the level and a 3-bit number from its map thing's
++14h) whenever the game applies the areas on a creature: as it is cast, at the
+start of each creature's turn and as it walks in. So a creature swept by
+Whirlwind still took the turn that hit it, lost the next round's, and took no
+damage that round. With NEW SPELLS, `WW_GATE` (7617Dh, the routine's start)
+sends Whirlwind's back at once (its way back moved to the routine's end,
+761FCh) except from the cast, during its caster's turn (`WW_CAST`, set at
+`CAST_SITE`, cleared at the round's start), and from `WW_PASS`: at each round's
+start (`ACID_ROUND`, after the burns, before the initiative), it calls 76175h
+through the stub for each creature the game lists in a lasting area whose entry
+is Whirlwind's (the active effects' segment +0Ah, 3 bytes each: the combatant
+and its area's entry, DS:1E26h of them; the game keeps the list as it applies
+the areas, so the creatures stay listed while the hits are sent back), at the
+first Whirlwind thing's level. A save failed there marks the creature
+(`SWEPT_MARK`), and `PROBE_MOVE` takes that round's turn. A save failed as it is
+cast takes the creature's turn at once if it has yet to act (`SWEPT_NOW`: not
+the one whose turn it is, its initiative not the -1 the game gives one that has
+acted; its initiative -1 and movement 0, as `PROBE_MOVE` does), else marks it
+for the next round. Checked in DOSBox over three rounds of the arena (sligs,
+beetle and party in it): one wave of hits at each round's start, none at the
+turns, the swept ones skipped and the rest acting.
+
 **Closer to the books.** Wall of Thorns' damage (`THORNS_DAMAGE`, in the
 one-target damage roll, 761A9h, DI its spell) is 8 + the creature's AC, at least
 1 (`THORNS_AC`), with no save (+1Fh A0h). The game keeps no AC: its AC routine

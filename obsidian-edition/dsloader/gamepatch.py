@@ -164,6 +164,7 @@ MOUSE_SET, MOUSE_INIT = NS_IMAGE + 45, NS_IMAGE + 46  # (the pointer starting in
 SPREAD_SITE = NS_IMAGE + 48  # (a game loaded with the party in one figure: spread out on the map)
 GATHER_SITE = NS_IMAGE + 55  # (the party put in one figure: after a fight, spread out again)
 FLIP_SITE = NS_IMAGE + 56  # (the game's flip of its screens: the combat log's panel put on the new one first)
+WW_SITE = NS_IMAGE + 57  # (a one-target spell's damage starting: Whirlwind's once a round, DSCLOG's WW_GATE)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
 AREA_DMG = NS_IMAGE + 54  # (a spell's damage to the creatures it reaches: a Wilderness Avenger's Cause Wounds, kits.harm_bonus)
@@ -446,6 +447,9 @@ PATCHES = (
     # a one-target spell's rolled damage stored (76175h: SI the target, DI the spell): Harm's all the
     # target's hit points but 1d4; Wall of Thorns' 8 + AC (DSCLOG's HARM_SITE)
     Patch("harm_damage", 0x761A9, bytes.fromhex("8946fa"), _site(HARM_SITE, 3)),
+    # the start of the one-target spell damage, which lasting areas deal at each creature's turn:
+    # mov si,[bp+6] (DSCLOG's WW_GATE: Whirlwind's only once a round, at its start, and as cast)
+    Patch("ww_gate", 0x7617D, bytes.fromhex("8b7606"), _site(WW_SITE, 3)),
     # ... and where the routine dealing a spell's damage to the creatures it reaches (7511Bh: DI the
     # spell; a touch spell's too) has rolled it: a Wilderness Avenger's Cause Wounds 1 more a die
     # (DSCLOG's AREA_DMG and HARM_SITE's AV_CAUSE)
