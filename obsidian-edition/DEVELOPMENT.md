@@ -2307,6 +2307,16 @@ after the `ns_list_` patches):
   DSCLOG would mean calling 598:52h, the game's sum of a creature's Enlarge
   levels, from the Effects screen's overlay. The game lets only one Enlarge on
   a creature (seen in DOSBox: a second cast uses up the spell, nothing added).
+  Barkskin (57), Flesh Armor (59) and Magical Vestments (60) are named with the
+  armour AC they give, BARKSKIN (AC 3) (`STATS_ARMOUR`, bytes 25-27, -128 for
+  none, from `GameData.armour_spells_ac`), as the effects' part of the AC
+  routine (7C557h) works it out: at most 6 - L/4, at most 10 - L, and 5 less
+  (L - 5)/3 above 5th, L the effect's level as 7678Ch sums it, each such effect
+  at its caster's level by 81B16h: a spell's as Dispel Magic weighs it, a psionic
+  power's (138-171) the psionicist level, spell 190's the best of classes 1-4,
+  anything else's the best of the sheet's three (`GameData.effect_level`).
+  Checked in DOSBox: a 12th-level Barkskin on Cermak (no armour, DEX -4) made
+  his AC -1.
 - **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
   removed each record of the power cast by DI with 598:48h (owner, handle), but
   passed DI as the owner, so a receiver's record stayed (and a record of the

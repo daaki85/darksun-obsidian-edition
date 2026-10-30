@@ -2337,9 +2337,12 @@ probe_unlook:
 ; item numbers of the weapons ready, +14 three bytes: the THAC0 with each (signed), +17 1 for a
 ; thief (2 for a ranger: of the six, only move silently and hide in shadows count), +18 the six
 ; thief skills the panel shows, as they stand (equipment and effects too), +24 the level Enlarge
-; counts at on them (its melee damage +10% a level; 0 without it: EF_CHARGES)
-STATS_SIZE  equ 25
+; counts at on them (its melee damage +10% a level; 0 without it), +25 three bytes: the AC
+; Barkskin, Flesh Armor and Magical Vestments give them (signed; -128 without: EF_CHARGES)
+STATS_SIZE  equ 28
 STATS_ENLARGE equ 24
+STATS_ARMOUR equ 25
+STATS_NONE  equ -128
 STATS_RANGER equ 2
 STATS_FRESH equ 91              ; timer ticks (5 seconds)
 STATS_WAIT  equ 9               ; ... (half a second): the longest a screen waits for fresh STATS
@@ -14815,6 +14818,9 @@ CLAW_EFFECT  equ 6
 FOG_EFFECT   equ 27
 MIRROR_EFFECT equ 25            ; (the game's Mirror Images: Reflected Image's too)
 ENLARGE_EFFECT equ 16           ; (the game's Enlarged)
+BARKSKIN_EFFECT equ 57          ; (the armour spells, in STATS_ARMOUR's order)
+FLESH_ARMOR_EFFECT equ 59
+VESTMENTS_EFFECT equ 60
 AFRAID_EFFECT equ 17            ; (the game's Afraid: Spook's)
 FRIENDS_EFFECT equ 74           ; (unused by the game, as 6, 27 and 54)
 FRIENDS_MOST equ 25
@@ -17496,8 +17502,9 @@ ns_reflect_entry:
 ; (580:5Ch keeps that name's address, not the entry, so Reflected Image's use of the entry after it
 ; changes nothing). Mirror Images from Reflected Image take its name and icon. A party member's
 ; Enlarge is named with its melee damage instead, "ENLARGED (+90% DAMAGE)", from the level the
-; Loader puts in their STATS (the game allows one Enlarge on a creature). Only with the room
-; past the spell rows (SEG_MOVE). DS the game's; all registers kept.
+; Loader puts in their STATS (the game allows one Enlarge on a creature), and Barkskin, Flesh
+; Armor and Magical Vestments with the AC they give, "BARKSKIN (AC 4)" (STATS_ARMOUR). Only with
+; the room past the spell rows (SEG_MOVE). DS the game's; all registers kept.
 EF_NAME_MAX equ 22
 ef_charges:
         pusha
@@ -17509,6 +17516,15 @@ ef_charges:
         jne .no
         cmp cl, ENLARGE_EFFECT
         je .enlarge
+        mov dx, STATS_ARMOUR
+        cmp cl, BARKSKIN_EFFECT
+        je .armour
+        inc dx
+        cmp cl, FLESH_ARMOR_EFFECT
+        je .armour
+        inc dx
+        cmp cl, VESTMENTS_EFFECT
+        je .armour
         mov bp, ax                      ; (the thing)
         call ns_charges                 ; (AL the charges, AH the handle, DX the spell)
         or al, al
@@ -17602,35 +17618,37 @@ ef_charges:
         mov dl, [cs:bx + STATS_ENLARGE]
         or dl, dl
         jz .no
-        mov ax, ds
-        sub ax, EFFECT_TABLE_FROM_DS
-        mov es, ax
-        mov si, (ENLARGE_EFFECT - 1) * 6  ; (its entry)
-        push word [es:si + 4]           ; (its icon)
-        push ds
-        lds si, [es:si]                 ; (its name)
-        mov di, ef_text
-        mov cx, EF_NAME_MAX
-.ename: lodsb
-        or al, al
-        jz .enamed
-        mov [cs:di], al
-        inc di
-        loop .ename
-.enamed:
-        pop ds
+        call ef_named
+        push ax                         ; (its icon)
         mov word [cs:di], ' ('
         mov byte [cs:di + 2], '+'
         add di, 3
         mov al, dl
         call c_itoa                     ; (the level, then a 0: 10% a level)
         mov si, ef_enlarge_word
-.eword: mov al, [cs:si]
+        jmp .tail
+.armour:
+        mov bx, ax
+        call stats_for
+        jc .no
+        add bx, dx
+        mov dl, [cs:bx]                 ; (the AC it gives)
+        cmp dl, STATS_NONE
+        je .no
+        call ef_named
+        push ax
+        mov dword [cs:di], ' (AC'
+        mov byte [cs:di + 4], ' '
+        add di, 5
+        mov al, dl
+        call c_itoa_s
+        mov si, ef_shut_word
+.tail:  mov al, [cs:si]
         mov [cs:di], al
         inc si
         inc di
         or al, al
-        jnz .eword
+        jnz .tail
         jmp .set
 .no:    pop es
         popa
@@ -17638,6 +17656,35 @@ ef_charges:
         ret
 ef_charge_word db ' CHARGE', 0
 ef_enlarge_word db '0% DAMAGE)', 0
+ef_shut_word db ')', 0
+
+; EF_NAMED: (EF_CHARGES) effect CL's name copied into EF_TEXT: DI its end there, AX its icon, ES the
+; effects' table's segment. DS the game's; others kept.
+ef_named:
+        push si
+        push cx
+        mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        movzx si, cl
+        dec si
+        imul si, si, 6                  ; (its entry)
+        push word [es:si + 4]           ; (its icon)
+        push ds
+        lds si, [es:si]                 ; (its name)
+        mov di, ef_text
+        mov cx, EF_NAME_MAX
+.name:  lodsb
+        or al, al
+        jz .named
+        mov [cs:di], al
+        inc di
+        loop .name
+.named: pop ds
+        pop ax
+        pop cx
+        pop si
+        ret
 ef_text times EF_NAME_MAX + 18 db 0  ; (the name, then " (+2550% DAMAGE)" at most)
 
 ; NS_CHARGES: AL the charges left (+8) on effect CL of thing AX (the game's table of active

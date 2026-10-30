@@ -18,6 +18,12 @@ notes](PATCH-NOTES.md).
   DOSBox: the game lets only one Enlarge on a creature; a second cast uses up the spell and adds
   nothing. Checked in DOSBox: Cermak's Enlarge (9th level) on Gerakis, `ENLARGED (+90% DAMAGE)`.
   Test: `test_enlarge_level`.
+- **The Effects screen names the armour spells' AC:** BARKSKIN (AC 3), FLESH ARMOR (AC 8),
+  MAGICAL VESTMENTS (AC 3), as the game's AC routine (7C557h) has it from the effect's level
+  (`GameData.armour_spells_ac`, `STATS_ARMOUR`, three more STATS bytes). An effect's level is
+  the game's (81B16h, `GameData.effect_level`): a psionic power's the psionicist level, which
+  `effect_caster_level` leaves out. Checked in DOSBox on K'ratchek (a 12th-level druid, 2nd-level
+  psionicist) and Cermak (AC 6 to -1 under a 12th-level Barkskin). Test: `test_armour_spells_ac`.
 
 **Fixed**
 - **Whirlwind's swept creatures lose their next turn, and it strikes once a round.** A creature

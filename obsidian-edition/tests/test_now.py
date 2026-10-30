@@ -393,6 +393,27 @@ class StatsTests(unittest.TestCase):
         g.effect_spells = lambda: [(game.Effect(1, 5, game.ENLARGE_EFFECT), 5)]
         self.assertEqual(log.stats_entry(0)[24], 0)
 
+    def test_armour_spells_ac(self):
+        """The Effects screen's BARKSKIN (AC 4): the AC each armour spell on a member gives, as the
+        game's AC routine (7C557h) has it from the effect's level (81B16h's: a spell's caster level,
+        a psionic power's psionicist level), in bytes 25-27 (DSCLOG's STATS_ARMOUR; -128 none)."""
+        log = dag()
+        g = log.game
+        self.assertEqual(struct.unpack_from("<3b", log.stats_entry(0), 25), (-128, -128, -128))
+        g.effect_spells = lambda: [(game.Effect(0, 5, game.EFFECT_BARKSKIN), 81),
+                                   (game.Effect(0, 5, game.EFFECT_FLESH_ARMOR), 154),
+                                   (game.Effect(0, 5, game.EFFECT_VESTMENTS), 99)]
+        creature_of = g.combatant_creature
+        g.combatant_creature = lambda combatant: 2 if combatant == 5 else creature_of(combatant)
+        g.effect_caster_level = lambda creature, spell: {81: 9, 99: 11}.get(spell)  # (None: a power)
+        g.class_level = lambda creature, cls: 7 if cls == game.PSIONICIST else 0
+        self.assertEqual(g.armour_spells_ac(0), {game.EFFECT_BARKSKIN: 4,  # 6 - 9 // 4
+                                                 game.EFFECT_FLESH_ARMOR: 3,  # 10 - 7
+                                                 game.EFFECT_VESTMENTS: 3})  # 5 - (11 - 5) // 3
+        self.assertEqual(struct.unpack_from("<3b", log.stats_entry(0), 25), (4, 3, 3))
+        g.effect_caster_level = lambda creature, spell: 4
+        self.assertEqual(g.armour_spells_ac(0)[game.EFFECT_VESTMENTS], 5)  # (none better below 6th)
+
 
 if __name__ == "__main__":
     unittest.main()
