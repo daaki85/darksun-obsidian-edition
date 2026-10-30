@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.12.5 ([release notes](release-notes/v2.12.5.md)).
+
 **New**
 - **The Effects screen names Enlarge's damage:** with the pointer on its icon, ENLARGED (+90%
   DAMAGE), 10% a level of its caster (DSUN 7C211h). The Loader puts the level in a member's
@@ -35,6 +37,12 @@ notes](PATCH-NOTES.md).
   site at 7617Dh, `gamepatch` `ww_gate`). As it is cast it strikes at once: one swept that has yet
   to act loses that round's turn there and then (`SWEPT_NOW`), one that has acted the next. Found
   and checked in DOSBox: K'ratchek's Whirlwind on the arena's sligs, three rounds each way.
+
+**Documentation**
+- A review of the pages for 2.12.5: Whirlwind's timing (FEATURES, the player's guide,
+  DEVELOPMENT), the Effects screen's Enlarge and armour lines (README, FEATURES, the patch
+  notes). Links, anchors and pictures checked: none broken, none unused; `whirlwind.gif` shows
+  only the funnel and the damage over the creatures, so the change leaves it right.
 
 **Tests**
 - `test_to_hit_effects`: THAC0 with each effect the game's attack counts (Blessed, Cursed, both,

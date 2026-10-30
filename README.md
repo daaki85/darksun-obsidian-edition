@@ -64,10 +64,10 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.12.4** is out ([release notes](release-notes/v2.12.4.md)):
-the Loader can run the game as [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled),
-the game translated into a program of its own, instead of in DOSBox. 2.12.3 showed
-Haste and Slow in the attacks a round and made View Character's damage match the fight's.
+**Obsidian Edition 2.12.5** is out ([release notes](release-notes/v2.12.5.md)):
+Whirlwind strikes once a round and its swept lose their next turn, and the Effects
+screen names Enlarge's damage and the armour spells' AC. 2.12.4 let the Loader run
+the game as [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled).
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
