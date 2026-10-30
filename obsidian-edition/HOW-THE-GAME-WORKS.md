@@ -100,6 +100,10 @@ Other things the game does its own way:
 - Strength adds 1d6 to STR while it lasts, up to 24. The same goes for the
   psionic Adrenalin Control, and Weakened or lending strength takes it away
   (never below 3).
+- CON 20 or more gives a hit point back every 5 minutes of game time, at any
+  such CON (AD&D: one an hour at 20 to one every 10 minutes at 25; with the
+  Loader: [CON as in AD&D](FEATURES.md#con-as-in-add)). Every party member
+  gets a psionic strength point back every 5 minutes.
 - Enlarge adds 10% a level of its caster to the whole of a melee hit's
   damage, STR's bonus and the weapon's plus included, rounded down (with the
   Loader: [only the weapon's dice](FEATURES.md#enlarge-multiplies-the-weapons-dice-only)).
@@ -667,7 +671,8 @@ Class, race and abilities:
   and +4 at 18 and up.
 - CON, on paralysis/poison/death saves: −2 at CON 1, −1 at 2, +1 at 19-20, +2
   at 21-22, +3 at 23-24 and +4 at 25. Dwarves and halflings also add CON x 2 /
-  7 (+1 for every 3.5 points).
+  7 (+1 for every 3.5 points); in AD&D that bonus replaces the adjustment
+  (with the Loader: [CON as in AD&D](FEATURES.md#con-as-in-add)).
 - Druids +2 against fire and electricity; psionicists +2 against
   mind-affecting spells and charms.
 - Some spells carry a modifier of their own (a monster's poison at −4).

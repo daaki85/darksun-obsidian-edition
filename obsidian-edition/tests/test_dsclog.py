@@ -3305,6 +3305,67 @@ class NewSpellTests(RuleTests):
         self.assertEqual(enlarge(512, 4, 16)[0], 22)  # (no dice since the last: the game's)
         self.assertEqual(enlarge(512 | 128, 4, 16, rolled=4), (18, 32))  # (backstab: 7 x 3 - 1 + 12)
 
+    def test_regeneration(self):
+        """REGEN_SITE (228BFh, after the game's "div ebx" by 300: EAX the 300s, EDX the rest, CX the
+        member): AX the hit points, the game's 1 a 300 seconds; with RULE_HI_CON (1024) (26 - CON) x
+        600 seconds a hit point, the rest kept for the member's next; DX the member x 3Ah, as the
+        game's own two instructions left it."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "regen_rate")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x228BF, gamepatch.REGEN_SITE))
+        mu = self.mu
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        def regen(rules_hi, member, con, seconds):
+            self.rules_hi(rules_hi)
+            mu.mem_write(0x9000 * 16 + member * 0x3A + 0x24, bytes((con,)))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    eax=(seconds // 300) & 0xFFFFFFFF, edx=seconds % 300, ecx=member,
+                                    ebx=300).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + len(patch.replacement))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_DX), member * 0x3A)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_EBX), 300)
+            return mu.reg_read(r.UC_X86_REG_AX)
+        self.assertEqual(regen(0, 0, 20, 3599), 11)  # (the game's: 1 a 300 seconds)
+        self.assertEqual(regen(1024, 0, 20, 3599), 0)  # (an hour a hit point at CON 20)
+        self.assertEqual(regen(1024, 0, 20, 301), 1)  # (the 3599 kept: 3900 seconds)
+        self.assertEqual(regen(1024, 0, 20, 3300), 1)  # (300 + 3300)
+        self.assertEqual(regen(1024, 1, 25, 1800), 3)  # (10 minutes at CON 25; each member its own)
+        self.assertEqual(regen(1024, 2, 22, 8 * 3600), 12)  # (a night's rest: 40 minutes at 22)
+        self.assertEqual(regen(1024, 3, 23, (-600) & 0xFFFFFFFF), 0)  # (the clock gone back)
+
+    def test_dwarves_poison_saves(self):
+        """CON_SAVE (5EAA1h, AX the CON, [BP+6] the creature's thing): CON's adjustment from the game's
+        table (DS:810h); with RULE_HI_CON none for a dwarf or a halfling (only its racial bonus)."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "con_save")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x5EAA1, gamepatch.CON_SITE))
+        mu = self.mu
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, 0xA000))
+        mu.mem_write(0x9000 * 16 + 7 * 0x3A + 4, struct.pack("<H", 3))  # (creature 7: sheet 3)
+        mu.mem_write(GAME_DS * 16 + 0x810 + 21, bytes((2,)))
+        def adjust(rules_hi, race):
+            self.rules_hi(rules_hi)
+            mu.mem_write(0xA000 * 16 + 3 * 0x47 + 0x18, bytes((race,)))
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 40))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=21,
+                                    es=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + len(patch.replacement))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_ES), 0x4444)
+            return mu.reg_read(r.UC_X86_REG_AL)
+        self.assertEqual([adjust(0, race) for race in (1, 2, 6)], [2, 2, 2])
+        self.assertEqual([adjust(1024, race) for race in (1, 2, 6, 7)], [2, 0, 0, 2])
+
     def test_wall_damage(self):
         """HARM_SITE for Wall of Thorns' damage (761A9h; DI the spell, keyed in its own ground
         picture's entry; each creature on its own, SI): 8 + the creature's AC (its sheet's, at

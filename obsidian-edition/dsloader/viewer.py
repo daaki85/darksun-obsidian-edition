@@ -415,6 +415,9 @@ class Viewer:
                           "(by CON), as in AD&D"),
                 ("enlarge_dice", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                  "as in AD&D (the game multiplies the whole melee damage, STR included)"),
+                ("con_adnd", "CON as in AD&D: from CON 20 a hit point back an hour, to one every 10 minutes at 25 "
+                             "(the game's every 5 minutes at any); dwarves and halflings add only their racial "
+                             "bonus to poison saves, not CON's adjustment too"),
                 ("weapon_specialization", "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
                                           "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                           "rangers have expertise, every ranger with the bow; specialists and "

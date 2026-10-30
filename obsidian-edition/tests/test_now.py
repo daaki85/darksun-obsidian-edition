@@ -356,7 +356,7 @@ class SettingsTests(unittest.TestCase):
                           | game.RULE_SPECIALIZE | game.RULE_RESTRICT | game.RULE_MULTI_HP | game.RULE_HP_BEST
                           | game.RULE_KITS | game.RULE_RANGER_CAST | game.RULE_INT_LEARN | game.RULE_ADND_TABLES | game.RULE_CHA_PRICES
                           | game.RULE_ROLLED | game.RULE_BUYBACK | game.RULE_BACKSTAB | game.RULE_AGING
-                          | game.RULE_ENLARGE, False, True))
+                          | game.RULE_ENLARGE | game.RULE_CON, False, True))
 
 
 class SpeakerTests(unittest.TestCase):

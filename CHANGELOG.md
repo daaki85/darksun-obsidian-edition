@@ -37,6 +37,14 @@ notes](PATCH-NOTES.md).
   dice log's hit line and the Effects screen's ENLARGED (+90% DICE) follow it. Checked in DOSBox:
   three hits by an Enlarged gladiator, the dice log's damage the game's. Tests:
   `test_enlarge_dice`, `test_enlarge_dice_only`.
+- **CON as in AD&D (a rule change, on unless unticked).** The game's regeneration (227E5h) gives
+  a party member with CON 20 or more a hit point every 300 seconds of game time at any CON; with
+  `RULE_CON` (DSCLOG's `RULE_HI_CON`, `REGEN_SITE` at 228BFh) the Player's Handbook's rate,
+  (26 − CON) × 600 seconds a hit point, the remainder kept for each member (`REGEN_SECS`). And a
+  dwarf's or a halfling's paralysis/poison/death save gets no CON adjustment on top of its racial
+  bonus (`CON_SAVE` at 5EAA1h; `GameData.save_modifiers`, `saves_now`). Checked in DOSBox:
+  Gerakis at CON 22, 1 hit point an hour on, the rest counted towards the next. Tests:
+  `test_regeneration`, `test_dwarves_poison_saves`, `test_modifiers_by_damage_kind_and_con`.
 - **The weapon specs are packed, making room for a character's age.** The sheet's +14h to +17h
   (which the game never uses) held the four weapon specs a byte each; now they are 5 bits each
   in +14h to +16h, +16h's top bit marking the layout (`SPEC_PACKED`), and +17h is free for the

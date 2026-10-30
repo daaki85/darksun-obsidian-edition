@@ -1137,6 +1137,9 @@ class SaveTests(unittest.TestCase):
         m[DS * 16 + game.SAVE_CON + 19] = 1
         self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
                          [(1, "Blessed"), (5, "dwarf CON 19"), (1, "CON 19")])
+        log.game.rules |= game.RULE_CON  # (AD&D's: the racial bonus only)
+        self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
+                         [(1, "Blessed"), (5, "dwarf CON 19")])
 
     def test_natural_20_needs_no_probe(self):
         log = make_game()

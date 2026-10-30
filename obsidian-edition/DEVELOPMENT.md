@@ -1539,6 +1539,15 @@ else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
 Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
 K'ratchek at CON 19 (89 against 99: 7 years old).
 
+Restore Youth (211, a cosmos spell: `COSMOS_MASK` in DSCLOG's `P6_MASKS`) is
+Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
+handler, so the game casts it as a touch spell that heals nothing. The dice
+log's `KIND_CAST` line for it calls `aging.restore` with the target and the
+caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
+by the level, never below the character's true age (`natural_start`, the
+seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
+level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
+
 ### Enlarge's dice
 
 ([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)
@@ -1558,14 +1567,29 @@ rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Checked in DOSBox:
 Gerakis Enlarged at level 1 hitting a Screamer Beetle for 21, 22 and 25, its
 hit points down by the same (the game's way: 22, 23 and 26).
 
-Restore Youth (211, a cosmos spell: `COSMOS_MASK` in DSCLOG's `P6_MASKS`) is
-Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
-handler, so the game casts it as a touch spell that heals nothing. The dice
-log's `KIND_CAST` line for it calls `aging.restore` with the target and the
-caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
-by the level, never below the character's true age (`natural_start`, the
-seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
-level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
+### CON as in AD&D
+
+([In the features page](FEATURES.md#con-as-in-add).)
+
+Regeneration: the game's routine (227E5h, called often; it acts once more than
+300 seconds of game time, the clock at 3781:35Bh, have passed since the last,
+DS:1654h) gives each party member a psionic strength point for each 300
+seconds and, with CON 20 or more, a hit point for each 300 too, at any CON,
+dropping what is left over. DSCLOG's `REGEN_SITE` (228BFh, after its
+`div ebx`) with `RULE_HI_CON` (`game.RULE_CON`) adds the seconds to the
+member's own count (`REGEN_SECS`, the remainder kept) and gives a hit point
+for each (26 − CON) × 600 seconds: AD&D's one an hour at 20 to one every 10
+minutes at 25. The psionic points are left as they are.
+
+Poison saves: the saving throw's CON adjustment (5EA91h, the table at DS:810h
+by CON) is added to the paralysis/poison/death save, and for a dwarf or a
+halfling its CON × 2 / 7 as well. DSCLOG's `CON_SAVE` (5EAA1h) makes the
+adjustment 0 for a dwarf or a halfling with the rule, so only the racial bonus
+counts; the Loader's saves (`GameData.save_modifiers`, `saves_now`) do the
+same. Checked in DOSBox: Gerakis at CON 22 an hour on, 1 hit point (the game's
+way 12), and the 1330 seconds left over counted towards the next. The saves
+are checked by the emulator (`test_dwarves_poison_saves`): the party has no
+dwarf or halfling.
 
 ### Weapon specialization
 

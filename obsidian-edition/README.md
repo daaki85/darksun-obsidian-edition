@@ -653,7 +653,7 @@ in its lower panel and under the pointer:
   9th-level preserver, or ENLARGED (+90% DICE) with
   [the weapon's dice only](FEATURES.md#enlarge-multiplies-the-weapons-dice-only)
   on. The inventory's and View Character's damage don't count it (no room);
-  each hit's line in the dice log does (`+4 Enlarge (the dice 5 x190% = 10,
+  each hit's line in the dice log does (`+5 Enlarge (the dice 5 x190% = 10,
   level 9)`, or `x190% Enlarge (level 9)` with the rule off). A second Enlarge on someone already enlarged
   uses up the spell and adds nothing.
 - **The armour spells' AC:** with the pointer on Barkskin's, Flesh Armor's or
@@ -972,7 +972,7 @@ creatures save again as they stay in them; those lines have no "from".
 | Line | Meaning |
 |---|---|
 | `  Slig now 8/18 HP (-10)` / `  Gerakis now 51/54 HP (+1)` | Any combatant's hit points going down or up, with what's left out of their most. The game never shows a monster's HP; this does. The line comes just after the damage that caused it (sometimes after the next roll, when the game is quick). |
-| `  Gerrard regenerates 1 HP (CON 22), now 16/35 HP` | A hit point back by itself: the game gives one now and then to anyone with CON 20 or more (in the game, CON 20 regenerates and 18 or 19 don't). |
+| `  Gerrard regenerates 1 HP (CON 22), now 16/35 HP` | A hit point back by itself, to a party member with CON 20 or more: every 5 minutes of game time in the game, or at AD&D's rate by CON with [CON as in AD&D](FEATURES.md#con-as-in-add) (an hour at 20 to 10 minutes at 25). |
 | `  Rampager now 69/72 HP (-3: 3 of the 7 rolled, non-magical weapons do half)` / `  Mastyrial takes none of the 6 damage: crushing weapons can't hurt it` | A weapon hit that took less than its roll, or none at all (no HP lost three seconds on, or by the next round), with the reason when the monster's own defences give one (what weapons hurt it); otherwise "a protection or resistance took it" (Stoneskin, say). |
 | `Slig is killed` | A creature dying. What it's worth comes on the XP line below, only if the party gains it (the opening fight in the arena gives none, whoever dies). |
 | `XP: Gerakis +67, K'ratchek +22, ... (for Slig 270)` | Experience the party got, and for which kills, with each one's XP from its character sheet. The game gives it right after the kill: an equal share to each character, split again between a multiclass character's classes (the sheet counts XP per class, so a three-class thri-kreen shows a third of the share). |

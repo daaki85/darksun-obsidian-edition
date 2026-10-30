@@ -13434,6 +13434,82 @@ enl_site:
         pop ebx
         iret
 
+; REGENERATION (RULE_HI_CON): the game's (227E5h, once more than 300 seconds of game time have
+; passed since the last, DS:1654h) gives each party member with CON 20 or more a hit point for
+; each 300 seconds, at any CON, and drops what is left over. AD&D's: one an hour at CON 20, then
+; every 50, 40, 30, 20 and 10 minutes to CON 25 ((26 - CON) x 600 seconds). REGEN_SITE: "mov dx,cx /
+; imul dx,dx,3Ah" (228BFh; 5 bytes) after its "div ebx" (EAX the 300s, EDX the rest; CX the
+; member): with the rule, the seconds added to the member's own (REGEN_SECS, the remainder kept for
+; next time) and AX the hit points from them, at most 1000; a clock gone back (a game loaded) none.
+regen_secs dd 0, 0, 0, 0
+regen_site:
+        test word [cs:rules_hi], RULE_HI_CON
+        jz .game
+        push ebx
+        push si
+        push es
+        imul eax, eax, 300
+        add eax, edx                    ; (the seconds since the last)
+        mov si, cx
+        shl si, 2
+        add eax, [cs:regen_secs + si]
+        js .back
+        les bx, [0x1665]
+        imul dx, cx, 0x3A
+        add bx, dx
+        movzx ebx, byte [es:bx + 0x24]  ; (CON)
+        cmp bl, 25
+        jbe .con
+        mov bl, 25
+.con:   neg ebx
+        add ebx, 26
+        imul ebx, ebx, 600              ; (the seconds a hit point)
+        xor edx, edx
+        div ebx
+        mov [cs:regen_secs + si], edx
+        cmp eax, 1000
+        jbe .out
+        mov eax, 1000
+        jmp .out
+.back:  xor eax, eax
+        mov [cs:regen_secs + si], eax
+.out:   pop es
+        pop si
+        pop ebx
+.game:  mov dx, cx
+        imul dx, dx, 0x3A
+        iret
+
+; DWARVES' AND HALFLINGS' POISON SAVES (RULE_HI_CON): the game's saving throw adds CON's
+; adjustment (5EA91h: DS:810h by CON, +1 at 19 to +4 at 25) to the paralysis/poison/death save,
+; and for a dwarf or a halfling its CON x 2 / 7 too; AD&D's gives those two only the racial
+; bonus. CON_SAVE: "mov bx,ax / mov al,[bx+810h]" (5EAA1h; 6 bytes, AX the CON, [BP+6] the
+; creature's thing): with the rule, 0 for a dwarf or a halfling; else the table's.
+DWARF_RACE equ 2
+HALFLING_RACE equ 6
+con_save:
+        push es
+        mov bx, ax
+        mov al, [bx + 0x810]
+        test word [cs:rules_hi], RULE_HI_CON
+        jz .done
+        push ax
+        mov ax, [bp + 6]
+        call combatant_creature
+        jc .keep
+        call creature_sheet
+        mov bl, [es:bx + 0x18]          ; (the race)
+        pop ax
+        cmp bl, DWARF_RACE
+        je .none
+        cmp bl, HALFLING_RACE
+        jne .done
+.none:  xor al, al
+        jmp .done
+.keep:  pop ax
+.done:  pop es
+        iret
+
 REQ_REST equ 0
 rest_site:
         push si
@@ -13737,6 +13813,7 @@ RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant ke
 RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
 RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging (aging.py)
 RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
+RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rates, dwarves' poison saves (REGEN_SITE, CON_SAVE)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -15980,6 +16057,8 @@ GATHER_SITE equ NS_IMAGE + 55   ; 1DFE8h: the party put in one figure, at a figh
 FLIP_SITE equ NS_IMAGE + 56     ; 14444h: the game's flip of its two screens, the new one about to show (FLIP_SITE)
 WW_SITE   equ NS_IMAGE + 57     ; 7617Dh: a one-target spell's damage starting (WW_GATE)
 ENL_SITE  equ NS_IMAGE + 58     ; 7C246h: a melee hit's damage made bigger by Enlarge (ENL_SITE)
+REGEN_SITE equ NS_IMAGE + 59    ; 228BFh: a member with CON 20 or more regenerating (REGEN_SITE)
+CON_SITE  equ NS_IMAGE + 60     ; 5EAA1h: CON's adjustment to the paralysis/poison/death save (CON_SAVE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -16071,6 +16150,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je ww_gate
         cmp byte [cs:rl_site], ENL_SITE
         je enl_site
+        cmp byte [cs:rl_site], REGEN_SITE
+        je regen_site
+        cmp byte [cs:rl_site], CON_SITE
+        je con_save
         cmp byte [cs:rl_site], AREA_SITE
         je area_site
         cmp byte [cs:rl_site], ACID_SITE

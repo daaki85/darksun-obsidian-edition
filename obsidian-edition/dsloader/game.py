@@ -154,6 +154,10 @@ RULE_AGING = 16777216
 # Enlarge makes the weapon bigger; DSCLOG's RULE_HI_ENLARGE, ENL_SITE); else the game's, the whole
 # melee damage multiplied
 RULE_ENLARGE = 33554432
+# CON as in AD&D: regeneration from CON 20 at the PHB's rates (one hit point an hour at 20 to one
+# every 10 minutes at 25; the game's every 5 minutes at any), and no CON adjustment to a dwarf's or
+# a halfling's paralysis/poison/death save, only its racial bonus (DSCLOG's RULE_HI_CON)
+RULE_CON = 67108864
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
 # each (0 none). Up to 2.12, a byte each; now packed (SPEC_PACKED, +16h's top bit), 5 bits each in
@@ -218,7 +222,7 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
                  ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
-                 ("enlarge_dice", RULE_ENLARGE))
+                 ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
@@ -1447,6 +1451,8 @@ class GameData:
             if sheet[SHEET_RACE] in (DWARF, HALFLING):
                 out.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
             adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0]
+            if self.rules & RULE_CON and sheet[SHEET_RACE] in (DWARF, HALFLING):
+                adjust = 0  # (only the racial bonus: DSCLOG's CON_SAVE)
             if adjust:
                 out.append((adjust, f"CON {con}"))
         return [(amount, why) for amount, why in out if amount]
@@ -1932,6 +1938,8 @@ class GameData:
                 if sheet[SHEET_RACE] in (DWARF, HALFLING):
                     parts.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
                 adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
+                if self.rules & RULE_CON and sheet[SHEET_RACE] in (DWARF, HALFLING):
+                    adjust = 0
                 if adjust:
                     parts.append((adjust, f"CON {con}"))
             parts = [(n, why) for n, why in parts if n]

@@ -85,7 +85,7 @@ done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
 
 ## Rule changes
 
-Sixteen changes that bring the game's own rules closer to AD&D, each with its
+Seventeen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section. All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set). Untick one
@@ -110,6 +110,7 @@ and the game's own rule is back at once.
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
 | [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; Haste ages its target a year, after a system shock roll to survive |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
+| [CON as in AD&D](#con-as-in-add) | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
 
 ### Class restrictions
 
@@ -548,6 +549,32 @@ Gerakis hits Screamer Beetle for 21: 1d8 = [4] -1 bone +2 specialized +3 Wild Fi
 where the game made it 22 (20 × 110%). A backstab then multiplies the
 enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
 (+90% DAMAGE).
+
+### CON as in AD&D
+
+A party member with CON 20 or more gets hit points back by itself. The game
+gives one every 5 minutes of game time at any such CON, 12 an hour. With **CON as in AD&D** ticked it is
+the Player's Handbook's rate:
+
+| CON | A hit point every |
+|---|---|
+| 20 | hour |
+| 21 | 50 minutes |
+| 22 | 40 minutes |
+| 23 | 30 minutes |
+| 24 | 20 minutes |
+| 25 | 10 minutes |
+
+Minutes short of the next hit point count towards it later. The dice log
+shows each: `Gerakis regenerates 1 HP (CON 22), now 12/54 HP`.
+
+The same box takes CON's adjustment off a dwarf's or a halfling's
+paralysis/poison/death save. The game adds both their racial bonus (CON × 2 /
+7, +1 for every 3.5 points) and the adjustment everyone with CON 19 or more
+gets (+1 to +4); in AD&D the racial bonus takes its place. A dwarf with CON 19
+saves at +5, not +6.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#con-as-in-add).
 
 ## More character customization
 
