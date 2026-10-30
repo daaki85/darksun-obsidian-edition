@@ -2808,7 +2808,9 @@ Erdlu Claw are cast only on a party member's portrait on the USE screen, where
 the game shows its own star over the portrait whatever the spell and, by its
 code (90:A6Fh with `+16h` alone on that path, 751C9h), plays the landing
 sound: Haste's 96 for Cat's Grace, Shocking Grasp's 77 for Erdlu Claw
-(`NS_LANDING`).
+(`NS_LANDING`). Restore Youth has Cure Disease's 78 with its cast glow
+(`RESTORE_CAST_SOUND`), not the 81 of Cure Critical Wounds, its template, which
+Heal and Water of Life keep; nearly every healing spell lands with 98.
 
 The sites share one interrupt with the creation panel's (`INT 98h`, then the
 site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).

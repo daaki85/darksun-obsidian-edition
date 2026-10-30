@@ -15149,6 +15149,7 @@ FOG_FLIGHT   equ 15             ;   which no record names, Fogbolt's (object FOG
 FLIGHT15_OBJECT equ 8116        ;   companion's copy of SEGOBJEX.GFF: icons.py), else the game's
 FLIGHT15_BYTE equ 16
 FOG_BOLT     equ 8118
+RESTORE_CAST_SOUND equ 78       ; Restore Youth's with its cast glow: Cure Disease's, not Cure Critical Wounds' 81
 FOG_CAST_SOUND equ 82           ; a record's +0Fh: the sound with its cast glow (+0Dh), +13h as
 FOG_HIT_SOUND equ 98            ;   it flies, +16h as it lands (BVOC chunks of RESOURCE.GFF)
 NS_OBJECTS   equ 0x80           ; NS_STATE's bits: the copy open (OBJECTS_ON), and the records'
@@ -15353,6 +15354,7 @@ ns_patches:
         NS_PATCH RESTORE_SPELL, 0x1C, 1, 0      ; Restore Youth: Cure Critical Wounds' touch, healing nothing
         NS_PATCH RESTORE_SPELL, 0x1D, 1, 0      ;   (no handler of its own: its years and system shock
         NS_PATCH RESTORE_SPELL, 0x1E, 1, 0      ;   are the Loader's, as it is cast: CAST_SITE's record)
+        NS_PATCH RESTORE_SPELL, 0x0F, 1, RESTORE_CAST_SOUND ; (Cure Disease's sound with its cast glow)
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
              dw ns_name_heal, ns_name_harm, ns_name_blade, ns_name_thorns, ns_name_sun, ns_name_seeds
