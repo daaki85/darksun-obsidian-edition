@@ -4859,6 +4859,46 @@ class KitTests(unittest.TestCase):
         got = bytes(self.mu.mem_read(at, 0x47))
         self.assertEqual((game.sheet_roll(got), game.sheet_age(got), game.spec_kinds(got)), (None, 0, bytes(4)))
 
+    ED_KEEP = rb"\x66\x50\x66\x52\x2e\x66\x8b\x16(..)\x66\xf7\xc2\x00\x00\x40\x00"
+
+    def test_edit_keeps_its_specs(self):
+        """DONE after EDIT (CR_OPEN's ED_*): ED_SAME only for the member's own classes and kit, and
+        ED_KEEP its weapon specs as they were, with the creation screen's roll and the age it gives
+        (an older sheet's dword as it was)."""
+        import re
+        specs = struct.unpack("<H", re.search(self.ED_KEEP, self.image, re.S).group(1))[0]
+        ed_on, ed_classes, ed_kit = specs - 10, specs - 8, specs + 4
+        same = rb"\x2e\x80\x3e" + re.escape(struct.pack("<H", ed_on)) + rb"\x00\x74.\x66\x50"
+        at = self.SHEET * 16
+        kept = game.packed_specs(b"\x01\x04", 3, 2)
+        for on, classes, kit, want in ((1, (9, 0, 0), 2, True), (1, (9, 0, 0), 1, False),
+                                      (1, (10, 0, 0), 2, False), (0, (9, 0, 0), 2, False)):
+            with self.subTest(on=on, classes=classes, kit=kit):
+                self.mu.mem_write(TSR * 16 + ed_on, bytes((on,)))
+                self.mu.mem_write(TSR * 16 + ed_classes, bytes((9, 0, 0, 0)))
+                self.mu.mem_write(TSR * 16 + ed_kit, bytes((2,)))
+                sheet = bytearray(0x47)
+                sheet[0x21:0x24], sheet[0x43], sheet[0x18] = bytes(classes), kit, 1
+                self.mu.mem_write(at, bytes(sheet))
+                self.call(same, es=self.SHEET, ebx=0)
+                self.assertEqual(not self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 1, want)
+        for before in (kept, bytes((2, 0, 0, 0))):  # (v2; a 2.12 sheet's bytes)
+            with self.subTest(before=before.hex()):
+                self.mu.mem_write(TSR * 16 + specs, before)
+                sheet = bytearray(0x47)
+                sheet[0x14:0x18], sheet[0x18] = b"\xff\xff\xff\xff", 1
+                self.mu.mem_write(at, bytes(sheet))
+                self.call(self.ED_KEEP, es=self.SHEET, ebx=0, esi=0x1234)
+                got = bytes(self.mu.mem_read(at, 0x47))
+                self.assertEqual(game.spec_kinds(got), game.spec_kinds(bytes(0x14) + before + bytes(0x2F)))
+                if before is kept:
+                    roll = game.sheet_roll(got)
+                    self.assertTrue(0 <= roll <= 7)
+                    self.assertEqual(game.sheet_age(got), roll + 2)
+                else:
+                    self.assertEqual(got[0x14:0x18], before)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SI), 0x1234)
+
     def test_effects_specs(self):
         """EF_LINES_OF: the Effects screen's weapon lines, the chosen kinds' and then a ranger's bow,
         chosen or not (as GameData.specializations): a cleric/ranger's long sword and bow."""

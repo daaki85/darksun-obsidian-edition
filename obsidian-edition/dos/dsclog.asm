@@ -5104,12 +5104,24 @@ probe_wp_disc_win:
         call wp_ids
         mov [bp + 8], ax
         pop dx
-        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit)
-        jne .keep
+        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit;
+        jne .keep                   ;   EDIT with the member's own classes: its kit, CR_OPEN)
         push es
         push bx
+        push eax
         les bx, [WP_CREATION]
         mov byte [es:bx + KIT_BYTE], 0
+        cmp byte [cs:ed_on], 0
+        je .cleared
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        cmp eax, [cs:ed_cr_classes]
+        jne .cleared
+        mov [cs:wp_classes_seen], eax
+        mov al, [cs:ed_kit]
+        mov [es:bx + KIT_BYTE], al
+.cleared:
+        pop eax
         pop bx
         pop es
 .keep:  mov byte [cs:kit_keep], 0
@@ -8552,6 +8564,95 @@ cr_race  db 0                   ; (0: none yet)
 cr_keep  db 0                   ; (RECALL's: the stored roll put back, not rolled again)
 cr_new   db 0
 age_seed dw 0x5A17
+; CR_OPEN: "mov byte [1A58h],0FFh" (65C68h; 5 bytes) where the creation screen opens (65C3Fh, the
+; member in its [BP+6]), just before the game tells a new member (DS:0E9Ch -1: the sheet made
+; ready, 65C77h) from EDIT on a party member (DS:0E9Ch its number: the sheet being made its copy).
+; For EDIT the member's classes, race, kit and weapon specs' dword are kept (ED_*): while the classes
+; are those, the panel's opening gives the kit back (PROBE_WP_DISC_WIN), the age is the member's
+; own roll until the die rolls (ED_AGE: until its six scores aren't those it had, ED_SCORES; the
+; hit point die's probe runs at the opening too), and DONE keeps the weapon specs,
+; asking for none (CR_WEAPONS). DS the game's; all registers kept.
+CR_EDITING equ 0x0E9C           ; DS: -1 for a new member, else the party member being edited
+CREATURE_SCORES equ 0x22        ; (a creature's six scores, STR to CHR)
+ed_on      db 0                 ; (EDIT on a party member)
+ed_age     db 0                 ; (its own roll shown, the die not rolled yet)
+ed_classes dd 0                 ; (its classes, +21h to +23h, 1-17)
+ed_cr_classes dd 0              ; (the same as the creation screen numbers them, 1-8: KIT_CLASS_OF)
+ed_specs   dd 0                 ; (its +14h dword: the weapon specs, the roll and the age)
+ed_kit     db 0
+ed_scores  times 6 db 0         ; (its six scores, the creature being made's +22h on)
+cr_open:
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
+        mov byte [0x1A58], 0xFF ; the replaced instruction
+        push eax
+        push bx
+        push es
+        mov byte [cs:ed_on], 0
+        mov byte [cs:ed_age], 0
+        mov bx, [CR_EDITING]
+        cmp bx, LV_PARTY
+        jae .out                ; (-1: a new member)
+        imul bx, bx, 0x47
+        mov ax, bx
+        les bx, [LV_SHEETS]
+        add bx, ax
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        mov [cs:ed_classes], eax
+        mov eax, [es:bx + SPEC_SLOTS]
+        mov [cs:ed_specs], eax
+        mov al, [es:bx + KIT_BYTE]
+        mov [cs:ed_kit], al
+        mov byte [cs:ed_on], 1
+        push si
+        push di
+        xor eax, eax            ; (its classes as the creation screen numbers them)
+        mov di, 0x23
+.cr:    shl eax, 8
+        movzx si, byte [es:bx + di]
+        dec si
+        cmp si, 16
+        ja .next
+        mov al, [cs:si + kit_class_of]
+.next:  dec di
+        cmp di, 0x21
+        jae .cr
+        mov [cs:ed_cr_classes], eax
+        mov [cs:wp_classes_seen], eax   ; (the kit's, PROBE_WP_CLASS's and KIT_STALE's)
+        pop di
+        pop si
+        mov al, [cs:ed_kit]
+        push es                 ; (the sheet being made: its kit)
+        push bx
+        les bx, [WP_CREATION]
+        mov [es:bx + KIT_BYTE], al
+        pop bx
+        pop es
+        mov eax, [cs:ed_specs]  ; (its roll, if kept: the age shown its own)
+        test eax, SPEC_V2 << 16
+        jz .out
+        shr eax, ROLL_SHIFT
+        and al, 0x1F
+        cmp al, ROLL_UNKNOWN
+        je .out
+        mov [cs:cr_roll], al
+        mov al, [es:bx + 0x18]
+        mov [cs:cr_race], al
+        mov byte [cs:ed_age], 1
+        les bx, [CR_CREATURE]   ; (its scores: the die rolled when they change)
+        mov eax, [es:bx + CREATURE_SCORES]
+        mov [cs:ed_scores], eax
+        mov ax, [es:bx + CREATURE_SCORES + 4]
+        mov [cs:ed_scores + 4], ax
+.out:   pop es
+        pop bx
+        pop eax
+        push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
+        iret
 cr_age_con:
         mov byte [cs:cr_new], 0
         jmp cr_ages
@@ -8566,6 +8667,8 @@ cr_ages:
         je .drawn
         cmp byte [cs:cr_keep], 0
         jne .drawn              ; (RECALL's roll)
+        call ed_rolled
+        jnc .drawn              ; (EDIT: the member's own, till the die rolls)
         mov byte [cs:cr_race], 0        ; (a new roll: at the drawing, or at DONE)
 .drawn: test word [cs:rules_hi], RULE_HI_AGING
         jz .back
@@ -16383,6 +16486,7 @@ CR_NAME2_SITE equ NS_IMAGE + 63 ; 6349Fh: the same, a figure clicked (CR_NAME)
 CR_NAME3_SITE equ NS_IMAGE + 64 ; 63AE8h: a name typed (CR_NAME)
 CR_NAME4_SITE equ NS_IMAGE + 65 ; 63B2Dh: none typed, the game's put back (CR_NAME)
 CR_AGE_CON_SITE equ NS_IMAGE + 66 ; 63A13h: PSP drawn after a click on CON, the roll kept (CR_AGE_CON)
+CR_OPEN_SITE equ NS_IMAGE + 67  ; 65C68h: the creation screen opening, for a new member or EDIT (CR_OPEN)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -16482,6 +16586,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je cr_age
         cmp byte [cs:rl_site], CR_AGE_CON_SITE
         je cr_age_con
+        cmp byte [cs:rl_site], CR_OPEN_SITE
+        je cr_open
         cmp byte [cs:rl_site], CR_NAME_SITE
         je cr_name
         cmp byte [cs:rl_site], CR_NAME2_SITE
@@ -17691,7 +17797,11 @@ cr_weapons:
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
-        call age_put                    ; (no specs, and the creation screen's roll and age: a new
+        call ed_same
+        jc .new
+        call ed_keep            ; (EDIT, the same classes and kit: its weapon specs, none asked)
+        jmp .done
+.new:   call age_put                    ; (no specs, and the creation screen's roll and age: a new
         mov ax, ds                      ;   member, whatever the slot's last character left)
         add ax, PICK_STUB
         mov word [cs:lv_psi], DK_PSI
@@ -17699,6 +17809,7 @@ cr_weapons:
         mov byte [cs:lv_creating], 1
         call lv_check
         mov byte [cs:lv_creating], 0
+.done:  mov byte [cs:ed_on], 0
         pop bp
         pop ax                  ; the way back, as the overlay manager has left it
         pop dx
@@ -17708,6 +17819,68 @@ cr_weapons:
         pop es
         popad
 .iret:  iret
+
+; ED_ROLLED: CF set unless an EDIT's own roll is still shown (ED_AGE): it is until the creature
+; being made's six scores aren't those it had (ED_SCORES: the die rolled), ED_AGE cleared then. DS
+; the game's; all registers kept.
+ed_rolled:
+        cmp byte [cs:ed_age], 0
+        je .new
+        push eax
+        push bx
+        push es
+        les bx, [CR_CREATURE]
+        mov eax, [es:bx + CREATURE_SCORES]
+        cmp eax, [cs:ed_scores]
+        jne .pop
+        mov ax, [es:bx + CREATURE_SCORES + 4]
+        cmp ax, [cs:ed_scores + 4]
+.pop:   pop es
+        pop bx
+        pop eax
+        je .own
+        mov byte [cs:ed_age], 0
+.new:   stc
+        ret
+.own:   clc
+        ret
+
+; ED_SAME: CF clear if sheet ES:BX, made at DONE, is an EDIT's (CR_OPEN) with the member's own
+; classes and kit still. All registers kept.
+ed_same:
+        cmp byte [cs:ed_on], 0
+        je .no
+        push eax
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        cmp eax, [cs:ed_classes]
+        jne .pop
+        mov al, [es:bx + KIT_BYTE]
+        cmp al, [cs:ed_kit]
+.pop:   pop eax
+        jne .no
+        clc
+        ret
+.no:    stc
+        ret
+; ED_KEEP: sheet ES:BX, an EDIT's (ED_SAME), its weapon specs' dword as they were (ED_SPECS); a
+; kept roll (v2) with the creation screen's roll and age in it (AGE_PUT: the die rolled again since,
+; or as it was). All registers kept.
+ed_keep:
+        push eax
+        push edx
+        mov edx, [cs:ed_specs]
+        test edx, SPEC_V2 << 16
+        jz .put                 ; (an older sheet's: as it was, the Loader's to age)
+        call age_put
+        mov eax, [es:bx + SPEC_SLOTS]
+        and eax, ~SPEC_KINDS_MASK
+        and edx, SPEC_KINDS_MASK
+        or edx, eax
+.put:   mov [es:bx + SPEC_SLOTS], edx
+        pop edx
+        pop eax
+        ret
 
 ; CR_LABELS: "mov bx,si / shl bx,2" (65125h; 5 bytes) in the routine drawing the ability labels
 ; (STR: to CHR:, 6511Fh) in the text colour the last screen left (DS:326Eh, TEXT_INK). The

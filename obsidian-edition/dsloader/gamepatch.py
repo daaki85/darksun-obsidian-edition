@@ -169,6 +169,7 @@ ENL_SITE = NS_IMAGE + 58  # (a melee hit's damage made bigger by Enlarge: the we
 REGEN_SITE, CON_SITE = NS_IMAGE + 59, NS_IMAGE + 60  # (CON as in AD&D: regeneration's rates, dwarves' poison saves)
 CR_AGE_SITE = NS_IMAGE + 61  # (the creation panel's PSP drawn: the age above RECALL, a new roll, DSCLOG's CR_AGE)
 CR_AGE_CON_SITE = NS_IMAGE + 66  # (the same after a click on CON: the roll kept, DSCLOG's CR_AGE_CON)
+CR_OPEN_SITE = NS_IMAGE + 67  # (the creation screen opening, a new member or EDIT: DSCLOG's CR_OPEN)
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -889,6 +890,8 @@ PATCHES = (
     # to RECALL's right, so its saved background clears what was drawn there
     Patch("cr_age", 0x65A89, bytes.fromhex("83c410"), _site(CR_AGE_SITE, 3)),
     Patch("cr_age_con", 0x63A13, bytes.fromhex("83c410"), _site(CR_AGE_CON_SITE, 3)),
+    # the creation screen opening: EDIT on a party member keeps its kit, age and weapon specs
+    Patch("cr_open", 0x65C68, bytes.fromhex("c606581aff"), _site(CR_OPEN_SITE, 5)),
     Patch("cr_age_name", 0x66045, bytes.fromhex("83c40e"), _site(CR_NAME_SITE, 3)),
     Patch("cr_age_figure", 0x6349F, bytes.fromhex("83c40e"), _site(CR_NAME2_SITE, 3)),
     Patch("cr_age_typed", 0x63AE8, bytes.fromhex("83c40e"), _site(CR_NAME3_SITE, 3)),

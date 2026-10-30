@@ -8,6 +8,14 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Fixed**
+- **EDIT on a party member** (to change a name, say) took its kit away, rolled a new age and
+  asked for its weapon specs again at DONE. DSCLOG's `CR_OPEN` (a site at the creation
+  screen's opening, 65C68h) tells EDIT from a new member as the game does (DS:0E9Ch) and keeps
+  the member's kit, age (until the die rolls) and, while its classes and kit are unchanged,
+  its weapon specs with nothing asked (`ED_SAME`, `ED_KEEP`). Checked in DOSBox. Tests:
+  `test_edit_keeps_its_specs`. DSCLOG's image 64,256 bytes (+496).
+
 **Changed**
 - **The Wasteland Seer is a thri-kreen druid/fighter/psionicist's**, all three classes; a
   druid/fighter has no kit now. Multiclass kit groups may be three classes (`kitpages.MULTI`,

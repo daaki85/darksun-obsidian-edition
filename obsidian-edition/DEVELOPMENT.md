@@ -550,18 +550,18 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,081 of the room's 8,182
-paragraphs, so 2,101 (32.8 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,112 of the room's 8,182
+paragraphs, so 2,070 (32.3 KB) are spare, and with `UMBPLUS.COM`
 about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,276
+helper, the overlay buffer and the music buffer, each with its MCB: 3,307
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 63,760 bytes
-(`image_len`; the resident part ends at `resident_end`, F210h), so with the
-install's 256-byte stack 1,520 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 64,256 bytes
+(`image_len`; the resident part ends at `resident_end`, F400h), so with the
+install's 256-byte stack 1,024 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
-specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48); the HMA has 7,080 bytes left for more buffers (the far block ends at
+specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -1638,6 +1638,23 @@ the age (`CR_NAME`). STORE and RECALL keep `CR_ROLL` and `CR_RACE` with the rest
 (`rs_xfer`). DONE puts the roll and the age in the new member's sheet
 (`AGE_PUT`, in `CR_WEAPONS`: the v2 layout, Weapon specialization below; no race
 known, `ROLL_UNKNOWN` and no age), so the Loader's `give_ages` leaves it be.
+EDIT on a party member (the portrait's menu) opens the same screen on a copy of
+its sheet, which the game tells from a new member by DS:0E9Ch (-1 new, else the
+member: 65C6Dh). `CR_OPEN` (a site at 65C68h, `mov byte [1A58h],0FFh`, just
+before that test) keeps the member's classes (as the sheet numbers them, and as
+the screen does, `KIT_CLASS_OF`), kit, `+14h` dword and six scores (`ED_*`), puts
+its kit on the copy (which the game's copy leaves out) and its classes in
+`wp_classes_seen` (else `KIT_STALE` takes the kit off both sheets), and its
+roll in `CR_ROLL`: the age shown is its own (`ED_AGE`) until the scores change
+(`ED_ROLLED`: the die; the hit point die's probe runs at the opening too). The
+panel's opening gives the kit back while the classes are the member's. At DONE,
+`CR_WEAPONS` asks for no weapon specs while the classes and kit are the
+member's (`ED_SAME`), keeping its specs with the screen's roll and age
+(`ED_KEEP`; an older sheet's dword as it was). Before this, EDIT took the kit
+away, rolled a new age and asked for the weapon specs again. Checked in DOSBox:
+a Sentinel fighter edited, renamed and DONE kept the kit, its long sword and
+its age; with the die rolled during EDIT, a new age and the same kit and spec.
+Tests: `test_edit_keeps_its_specs`.
 Before 2.13.2 the age was rolled from the name and race (`natural_start`, a
 16-bit hash, DSCLOG's `AGE_ROLL` then); a character given one keeps it, and
 `give_ages` puts that roll on its sheet, silently. `CR_AGE` and `CR_NAME` keep
