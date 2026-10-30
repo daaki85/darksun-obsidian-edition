@@ -535,7 +535,7 @@ class DiceLog:
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
         self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
-        self._aging_at: Optional[Tuple[bytes, int]] = None  # (natural aging: the last look's party and clock)
+        self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
         self._initiative_roll: Optional[int] = None
@@ -1809,16 +1809,17 @@ class DiceLog:
         """Each party member a year older for each year of the game's clock (aging.YEAR) not yet
         counted in the game's own flags (aging.counted_years: a save keeps them, so a load is as
         old as it was and nothing is counted twice or lost). Only on a steady look: the same
-        party as the last, the clock on by no more than NATURAL_JUMP (a game being loaded may
-        have its clock before its sheets and flags); any other waits for the next."""
+        party as the last, the clock on by no more than NATURAL_JUMP, and the count and the
+        clock's years as the last look found them (a game being loaded may have its flags before
+        its clock, or its clock before its sheets, for a moment); any other waits for the next."""
         clock = self.game.game_time()
-        if clock is None:
+        if clock is None or not self.game.flags_ready():
             return []
-        party = self.game.party_signature()
-        last, self._aging_at = self._aging_at, (party, clock)
-        if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP:
+        party, due = self.game.party_signature(), (aging.counted_years(self.game), clock // aging.YEAR)
+        last, self._aging_at = self._aging_at, (party, clock, due)
+        if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP or last[2] != due:
             return []
-        return aging.natural_years_due(self.game, clock // aging.YEAR)
+        return aging.natural_years_due(self.game, due[1])
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""

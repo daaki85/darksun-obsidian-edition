@@ -150,18 +150,20 @@ class PartyTests(unittest.TestCase):
 
     def test_the_log_counts_each_year_once(self):
         """The dice log's look: a year passed, each a year older once, the count kept in the game's
-        flags; a game saved before the count begins it there; nothing while the flags have no place."""
+        flags; a game saved before the count begins it there; nothing while the flags have no place;
+        each step only once two looks agree on it."""
         self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 20))
         clock = [aging.YEAR - 3600]
         self.g.game_time = lambda: clock[0]
-        self.assertEqual(self.log._natural_aging(), [])  # (the first look: steady only from the next)
         self.assertEqual(self.log._natural_aging(), [])  # (no flags in memory: waits)
         self.flags()
-        self.assertEqual(self.log._natural_aging(), [])  # (the count begun: 0 years)
+        self.assertEqual(self.log._natural_aging(), [])  # (the first look with them: seen once)
+        self.assertIsNone(aging.counted_years(self.g))
+        self.assertEqual(self.log._natural_aging(), [])  # (seen twice: the count begun, 0 years)
         self.assertEqual(aging.counted_years(self.g), 0)
         clock[0] = aging.YEAR + 60
-        self.assertEqual(self.log._natural_aging(), ["A year has passed: Dag is 21."])
-        self.assertEqual(self.log._natural_aging(), [])
+        self.assertEqual([self.log._natural_aging() for _ in range(4)],
+                         [[], ["A year has passed: Dag is 21."], [], []])
         self.assertEqual(aging.counted_years(self.g), 1)
 
     def test_a_long_jump_waits_and_loses_nothing(self):
@@ -171,13 +173,30 @@ class PartyTests(unittest.TestCase):
         self.flags()
         clock = [aging.YEAR - 3600]
         self.g.game_time = lambda: clock[0]
-        self.log._natural_aging()
-        self.log._natural_aging()
+        for _ in range(3):  # (the count begun)
+            self.log._natural_aging()
         clock[0] = aging.YEAR * 2 + 60
         self.assertEqual(self.log._natural_aging(), [])
         clock[0] += 60
         self.assertEqual(self.log._natural_aging(), ["A year has passed: Dag is 22."])
         self.assertEqual(aging.age_of(self.g.sheet(0)), 22)
+
+    def test_a_load_caught_halfway_ages_no_one(self):
+        """A save from a year before loaded, the look catching its flags (its lower count) with the
+        old clock still there: not acted on, as the next look finds the clock moved too; the
+        save's own count and clock then agree, and no one is older."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 23))
+        self.flags()
+        aging.set_counted(self.g, 3)
+        clock = [aging.YEAR * 3 + 100]
+        self.g.game_time = lambda: clock[0]
+        for _ in range(2):
+            self.assertEqual(self.log._natural_aging(), [])
+        aging.set_counted(self.g, 1)  # (the save's flags in, its clock not yet)
+        self.assertEqual(self.log._natural_aging(), [])
+        clock[0] = aging.YEAR + 50  # (its clock)
+        self.assertEqual([self.log._natural_aging() for _ in range(3)], [[], [], []])
+        self.assertEqual((aging.counted_years(self.g), aging.age_of(self.g.sheet(0))), (1, 23))
 
     def test_a_save_is_as_old_as_its_count(self):
         """A save loaded: its flags hold its own count, so its years are neither counted again nor

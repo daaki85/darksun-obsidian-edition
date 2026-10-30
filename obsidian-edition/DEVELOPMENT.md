@@ -1592,8 +1592,10 @@ far are in the game's own flags, so a save keeps them too (`counted_years`,
 the game's flags run to 755, the Loader's people 760-783, Alagorn's menus at
 most 784-797, and a save keeps 808). The dice log's `_natural_aging`, after
 `give_ages`, looks only when the look is steady (the same party as the last,
-the clock on by no more than 2 days, `NATURAL_JUMP`: a game being loaded may
-have its clock before its sheets and flags) and the flags have a place in
+the clock on by no more than 2 days, `NATURAL_JUMP`, and the count and the
+clock's years as the last look found them: a game being loaded may have its
+flags before its clock, or its clock before its sheets, for a moment) and the
+flags have a place in
 memory (`flags_ready`: not in the arena outside a script's run), and otherwise
 waits for the next; then `natural_years_due` counts each year of the clock not
 yet counted (`natural_tick`): for each living member, the stored age on, a line
@@ -1608,7 +1610,7 @@ Checked in DOSBox: the clock put a few minutes short of a year, then past it:
 a line for each of the four, once, and `AGE: 35` on Gerakis's panel.
 Tests: `test_natural_years`, `test_restore_counts_the_games_years`,
 `test_the_log_counts_each_year_once`, `test_a_long_jump_waits_and_loses_nothing`,
-`test_a_save_is_as_old_as_its_count`.
+`test_a_save_is_as_old_as_its_count`, `test_a_load_caught_halfway_ages_no_one`.
 
 #### The age on the creation screen
 
