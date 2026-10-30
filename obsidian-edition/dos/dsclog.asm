@@ -8448,9 +8448,9 @@ CR_AGE_X equ 146                ; (RECALL's left edge)
 cr_age_text times 12 db 0   ; (PSP's "65535/65535" at the most, or "AGE: 255")
 AGE_RACES db 15, 1, 8,  25, 4, 6,  15, 3, 4,  15, 2, 4,  20, 5, 4,  25, 3, 6,  15, 1, 6,  6, 0, 1
 cr_age:
-        pop word [cs:rl_ip]
-        pop word [cs:rl_cs]
-        pop word [cs:rl_fl]
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
         add sp, 0x10            ; the replaced instruction
         test word [cs:rules_hi], RULE_HI_AGING
         jz .back
@@ -8460,9 +8460,9 @@ cr_age:
         call cr_age_draw
         pop es
         popad
-.back:  push word [cs:rl_fl]
-        push word [cs:rl_cs]
-        push word [cs:rl_ip]
+.back:  push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
         iret
 
 ; CR_NAME: the game's own name for the character copied to the creature ("add sp,0Eh" after
@@ -8487,23 +8487,23 @@ cr_name:
         mov word [cs:cr_restore], (CR_RESTORE_AT - CR_NAME_PAST) & 0xFFFF
         mov word [cs:cr_seg340], (CR_SEG340_AT - CR_NAME_PAST) & 0xFFFF
 cr_names:
-        pop word [cs:rl_ip]
-        pop word [cs:rl_cs]
-        pop word [cs:rl_fl]
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
         add sp, 0x0E            ; the replaced instruction
         test word [cs:rules_hi], RULE_HI_AGING
         jz .back
         sti
         pushad
         push es
-        mov es, [cs:rl_cs]      ; (the overlay's own code, fixed up as loaded: its selectors' segments)
-        mov bx, [cs:rl_ip]
+        mov es, [cs:cr_cs]      ; (the overlay's own code, fixed up as loaded: its selectors' segments)
+        mov bx, [cs:cr_ip]
         add bx, [cs:cr_restore]
         mov eax, [es:bx]
         test eax, eax           ; (not fixed up: nothing to call)
         jz .none
         mov [cs:cra_far], eax
-        mov bx, [cs:rl_ip]
+        mov bx, [cs:cr_ip]
         add bx, [cs:cr_seg340]
         mov ax, [es:bx]
         mov es, ax
@@ -8515,9 +8515,9 @@ cr_names:
         call cr_age_draw
 .none:  pop es
         popad
-.back:  push word [cs:rl_fl]
-        push word [cs:rl_cs]
-        push word [cs:rl_ip]
+.back:  push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
         iret
 CR_NAME_PAST equ 0x66048        ; (DSUN.EXE: the ways back from CR_NAME's sites; in each one's own
 CR_RESTORE_AT equ 0x65A60       ;   overlay: "call 0A0h:30C3h"'s operand, the box's background put
@@ -8528,6 +8528,9 @@ CR_SEG340_2_AT equ 0x639D6
 CR_TYPED_PAST equ 0x63AEB
 CR_TYPED2_PAST equ 0x63B30
 cr_restore dw 0
+cr_ip    dw 0                   ; (CR_AGE's and CR_NAME's way back: their own, apart from RL_SUM's, as
+cr_cs    dw 0                   ;   they call the game's code before going back)
+cr_fl    dw 0
 cr_seg340 dw 0
 cra_far dd 0
 

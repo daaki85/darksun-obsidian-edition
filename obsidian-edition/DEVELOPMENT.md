@@ -1627,7 +1627,12 @@ selectors fixed up there), PSP drawn again as the game draws it (centred on
 its x, 6 pixels a character: its own routine, 538h:43h, is an overlay stub,
 not for calling from an interrupt) and the age (`CR_NAME`). Before 2.13.1 the
 roll was Python's, seeded by the name and race: a character given an age then
-keeps it, but its true age (Restore Youth's floor) is this roll's now.
+keeps it, but its true age (Restore Youth's floor) is this roll's now. `CR_AGE` and
+`CR_NAME` keep their way back in their own words (`cr_ip`, `cr_cs`, `cr_fl`), apart from
+`RL_SUM`'s, as they call the game's code before going back. Tests: `test_creation_age`,
+`test_creation_age_any_name` (300 random names, any byte), `test_name_redraws_psp_and_age`
+(the operands read from the overlay's code, PSP centred, the age; none called for an
+operand not fixed up).
 
 #### Grey hair on the map
 

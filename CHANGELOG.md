@@ -64,6 +64,9 @@ notes](PATCH-NOTES.md).
   through an overlay operand not yet fixed up; a build guard for the helper's 64 KB segment
   (`image_len` + the install's stack); a duplicate `EXPERT IN` and an unused word gone; `AGE:`
   in the comments.
+- DSCLOG: the creation screen's age handlers keep their way back apart from `RL_SUM`'s
+  (`cr_ip`, `cr_cs`, `cr_fl`), as they call the game's code. Tests for the creation age with 300
+  random names and for the redraw when the name changes.
 - DEVELOPMENT: the memory figures as built (63,360-byte image, 1,920 bytes spare in the segment,
   6,056 of 8,182 paragraphs of upper memory, about 51.4 KB free in one piece with `UMBPLUS.COM`,
   the far block 58,440 bytes); the Ages section in parts, with Enlarge's dice and CON as in AD&D,
