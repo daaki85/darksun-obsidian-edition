@@ -12,13 +12,11 @@ from dsloader import greyhair  # noqa: E402
 class DataTests(unittest.TestCase):
     def test_every_haired_look_has_its_greys(self):
         """Each figure with hair (spriteparts' hair colours, or greyhair's own), the half-elves'
-        own figures and the thri-kreen's antennae have all three categories (the thri-kreen only
-        venerable); dwarves and muls (hairless on Athas) none."""
+        own figures have all three categories; dwarves, muls (hairless on Athas) and thri-kreen
+        none."""
         from dsloader import halfelf, spriteparts as sp
         for model, (_, _, colours) in sp.MODELS.items():
-            if model == sp.KREEN:
-                self.assertEqual(set(greyhair.MAPS[model]), {greyhair.VENERABLE})
-            elif colours or model in greyhair.COLOURS:
+            if colours or model in greyhair.COLOURS:
                 self.assertEqual(set(greyhair.MAPS[model]), {1, 2, 3}, model)
             else:
                 self.assertNotIn(model, greyhair.MAPS)

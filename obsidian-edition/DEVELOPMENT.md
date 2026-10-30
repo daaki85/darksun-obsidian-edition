@@ -1561,9 +1561,9 @@ found frame by frame by an agent each (`COLOURS`, the hair's missing shades;
 `HEADS`, the bow frames, whose bow tip was taken for the crown; the
 half-giants' face masks and the halfling man's `FACE_FROM` and short hair; the
 elves' skin-brown shading, `BROWNS`; a half-elf's own figure's hair grown to
-its golden pixels, `own_hair`; a thri-kreen's antennae, `_antennae`). Dwarves
-and muls have none. Checked in DOSBox: Gerakis old, Cilla and K'ratchek
-venerable, their figures redrawn as their ages were set.
+its golden pixels, `own_hair`). Dwarves, muls and thri-kreen have none (a
+thri-kreen's antennae greyed were tried and left out). Checked in DOSBox:
+Gerakis old and Cilla venerable, their figures redrawn as their ages were set.
 
 ### Enlarge's dice
 

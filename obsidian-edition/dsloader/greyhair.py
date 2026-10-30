@@ -9,7 +9,7 @@ MAPS: for each look (a model, or a half-elf's own figure: halfelf.MAN or halfelf
 age category, the hair's colours and the colour each becomes. SPECKLE: where a category greys only
 some of the hair (streaks), which pixels: (period, count) by the pixel's place in the figure's own
 frame, a pixel greyed where (x + 2 * y) % period < count. Races with no hair (Athasian dwarves and
-muls are hairless; a thri-kreen has a carapace) have none."""
+muls are hairless; a thri-kreen has a carapace) keep their looks."""
 
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -71,9 +71,6 @@ MAPS: Dict[int, Dict[int, Dict[int, int]]] = {
         2: {128: 209, 179: 210, 180: 211, 181: 213, 182: 214, 183: 215, 184: 216, 200: 213, 201: 212},
         3: {128: 211, 179: 212, 180: 213, 181: 215, 182: 216, 183: 217, 184: 46, 200: 215, 201: 214},
     },
-    2097: {  # thri-kreen (its antennae; venerable only)
-        3: {128: 211, 129: 211, 133: 212, 134: 212, 135: 212, 136: 213, 137: 213, 138: 214, 139: 215, 140: 215, 141: 216, 142: 216, 143: 217, 148: 216, 179: 212, 180: 213, 181: 214, 182: 215, 183: 216, 184: 216, 185: 217, 186: 217, 201: 214, 203: 211},
-    },
 }
 SPECKLE: Dict[int, Dict[int, Tuple[int, int]]] = {2095: {1: (7, 3)}, 2061: {1: (5, 2)}, 2059: {1: (5, 2)}, 2072: {1: (6, 2)}, 2074: {1: (6, 2)}}
 
@@ -125,9 +122,6 @@ INNER_MIN = 5
 BROWNS: Dict[int, Tuple[frozenset, frozenset]] = {
     m: (frozenset((128, 135, 136, 138, 140)), frozenset((135, 136, 137, 138, 139, 140))) for m in (2059, 2061)}
 LONG_BACK = frozenset((2059,))
-# a thri-kreen: no hair, but antennae (above the eyes, thin), greyed when venerable; not in the
-# fights' frames where a raised claw reaches up among them
-KREEN_SKIP = frozenset((0, 8, 12))
 
 
 def look(model: int, figure: int) -> int:
@@ -191,33 +185,9 @@ def _clusters(rows: Rows, colours: frozenset, within: Optional[Set[Point]], stri
     return groups
 
 
-def _antennae(rows: Rows) -> Set[Point]:
-    """A thri-kreen's antennae: thin strands above its eyes, reaching down to the head."""
-    eyes = [(x, y) for y, r in enumerate(rows) for x, p in enumerate(r) if p in sp.KREEN_EYES]
-    if not eyes:
-        return set()
-    lim = min(y for _, y in eyes) - 2
-    ex = [x for x, _ in eyes]
-    zone = {(x, y) for y in range(max(0, lim)) for x, p in enumerate(rows[y]) if p is not None}
-    bands = sp.MODELS[sp.KREEN][1]
-    out: Set[Point] = set()
-    for group in _clusters(rows, frozenset(range(256)), zone, True):
-        if any(rows[y][x] in bands for x, y in group) or max(y for _, y in group) < lim - 1:
-            continue
-        across: Dict[int, int] = {}
-        for _, y in group:
-            across[y] = across.get(y, 0) + 1
-        group = [(x, y) for x, y in group if across[y] <= 2]  # (not a crown's row)
-        if group and not (min(x for x, _ in group) > max(ex) + 6 or max(x for x, _ in group) < min(ex) - 6):
-            out.update(group)
-    return out
-
-
 def hair(rows: Rows, model: int, frame: int, combat: bool) -> Set[Point]:
     """The hair to grey in one frame of MODEL (the game's own frames; spriteparts.find's way, with
     the corrections above)."""
-    if model == sp.KREEN:
-        return set() if combat and frame in KREEN_SKIP else _antennae(rows)
     colours = COLOURS.get(model, sp.MODELS[model][2])
     if not colours or (combat and frame == sp.DEAD_FRAME):
         return set()

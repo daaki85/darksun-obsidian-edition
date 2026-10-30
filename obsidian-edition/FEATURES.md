@@ -536,8 +536,8 @@ It shows on the map too: a party member's hair turns as they age, iron grey
 streaks when middle-aged, grey when old, white when venerable, shade for shade
 in the figure's own pictures, walking and fighting (with
 [What the party wears](#what-the-party-wears) on). A helm or cloak over the
-hair is left as it is. Dwarves and muls are hairless on Athas, so they keep
-their looks; a venerable thri-kreen's antennae go silver.
+hair is left as it is. Dwarves and muls are hairless on Athas, and thri-kreen
+have no hair, so they keep their looks.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
 
