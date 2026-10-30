@@ -53,6 +53,14 @@ of the game's data, the tools for mapping it, and how each part of the
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
   - [Helms](#helms)
+  - [Ages](#ages)
+    - [Haste's aging](#hastes-aging)
+    - [Restore Youth](#restore-youth)
+    - [Natural aging](#natural-aging)
+    - [The age on the creation screen](#the-age-on-the-creation-screen)
+    - [Grey hair on the map](#grey-hair-on-the-map)
+  - [Enlarge's dice](#enlarges-dice)
+  - [CON as in AD&D](#con-as-in-add)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits)
   - [Level cap by XP](#level-cap-by-xp)
@@ -432,7 +440,7 @@ Its big buffers are kept apart, in its **far block** (`FAR_SEG`, the header's
 +142), at fixed offsets from `FAR_RING` (10h) to `FAR_END`: the dice log's ring
 (`NENT` 63 entries of `ESIZE` 192 bytes), the panel's picture, the shadows'
 cache, the text buffer, the shadows' spans and each thing's place as last seen
-(for the dust), 57,800 bytes. `FAR_INIT` (install code) puts it in the **HMA**
+(for the dust) and the frames steady pace holds back, 58,440 bytes. `FAR_INIT` (install code) puts it in the **HMA**
 (FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there
 is none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
 `XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
@@ -461,7 +469,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.5 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 54.8 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.3 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.4 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -542,16 +550,17 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,018 of the room's 8,182
-paragraphs (2.13.0), so 2,164 (33.8 KB) are spare, and with `UMBPLUS.COM`
-about 54.8 KB are free in one piece (57.8 KB measured in DOSBox with a smaller
-helper, less what it has grown since: the helper at C90Ah, then the overlay
-buffer, the free block, the music buffer). The helper's own segment is the
-limit for new code: its image with the install code is 62,752 bytes
-(`image_len`; the resident part ends at `resident_end`, EE40h), so about
-2.7 KB of its 64 KB are spare (2.12.5's 62,016 bytes left 3.4 KB; 2.13.0's
-ages, Haste's aging, Restore Youth and the Enlarge and CON rules took 736
-bytes); the HMA has 7,080 bytes left for more buffers (the far block ends at
+and so does `test_fits_upper_memory`. It needs 6,056 of the room's 8,182
+paragraphs (2.13.1), so 2,126 (33.2 KB) are spare, and with `UMBPLUS.COM`
+about 51.4 KB are free in one piece (worked out from C90Ah to F000h less the
+helper, the overlay buffer and the music buffer, each with its MCB: 3,291
+paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
+limit for new code: its image with the install code is 63,360 bytes
+(`image_len`; the resident part ends at `resident_end`, F0A0h), so with the
+install's 256-byte stack 1,920 bytes of its 64 KB are spare, and the build
+fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
+Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
+creation screen 560, RECALL's frames 48); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -929,9 +938,10 @@ dice log running:
   (`combatlog.key_rect`) with it shown hides it, in a fight or out of one. Out
   of fights the log takes the lines with a roll in them
   (`Log.add(rolls_only=True)`). The level and size are saved in the settings
-  (`combat_log_level`, `combat_log_size`). Between fights in the slave pens and
-  the arena (regions 29h and 2Ah, `combatlog.ARENA_REGIONS`) the header says the
-  arena's count of fights (`arena_line`, docked or expanded; it once had a
+  (`combat_log_level`, `combat_log_size`). Out of a fight the header says the
+  game's time (`clock_line`: `Day 47, 14:20` from `GameData.game_time`, day 1 at
+  00:00), but in the arena (region 2Ah, `combatlog.ARENA_REGION`), once it has
+  been read, the arena's count of fights, read there and in the slave pens (29h, `ARENA_REGIONS`) (`arena_line`, docked or expanded; it once had a
   button, A, dropped as the game's A key turns animations on and off):
   the game's global number 12 (`GameData.number(ARENA_FIGHTS)`, a word at the
   far pointer `NUMBERS_PTR`, DS:1356h; scripts' 07h/87h variables), which
@@ -1138,6 +1148,24 @@ file: a repair is made only where its script holds the expected bytes. The
 fourth OpenDS repair, starting the final battle's stages without their pause,
 is left out (yuan-ti keeps it off too: with the game's clock running the stage
 gate waits its window out). Not seen in play yet: all are past the slave pens.
+
+**Kurzak and Legcrusher** (`dsloader/kurzak.py`, always): Kurzak's call to the
+arena (script 136 at 130h, "Legcrusher! Get gladiators!") and his talk's cases 2
+and 3 as the party comes (script 141 at 6B4h and 70Bh: "I thought I was going to
+have to send out Legcrusher", "I had to send Legcrusher after you"), case 4 (766h,
+"I'm glad you listened to Legcrusher": he found them, then died) and his answer to
+"Who is the half-giant?" (F29h), and Dinos's warning (script 139 at 218h, "before he
+sends out Legcrusher") ask first
+whether Legcrusher (object 326) is on the map: `80h` from Kurzak (29) to him
+under 999, as the game's own scripts ask whether someone has died or gone
+(Dinos of Gilal, script 139). There, the game's lines; gone, Kurzak's own. The
+first line of each becomes a jump (64h, the rest 67h filler never reached) to
+code after the script's end that says one or the other and jumps back past the
+game's lines, as `pensasks.py` does; the scripts do the rest as the game has
+them. Dinos's script is `pensasks.py`'s copy by then, whose own jumps leave bytes that don't
+read on: the places come from the game's script, and a line is changed only where the copy
+still has the game's bytes. Tests: `test_kurzak`. Not yet seen in play: it needs Legcrusher killed at
+the fountain and the party late for a fight.
 
 ### Class restrictions
 
@@ -1524,14 +1552,17 @@ scores kept within 3 to 25), and the maximum (`most_age`: the race's base and
 dice, seeded with the character's name and race, so always the same) kills
 (`kill`: no hit points, the game's dead status). The Loader puts the age, its
 category, the next and its age in each member's STATS (+28h on: `STATS_AGE`),
-and DSCLOG's `AGE_TEXT` writes the age, `AGE 23`, in the inventory panel's
+and DSCLOG's `AGE_TEXT` writes the age, `AGE: 23`, in the inventory panel's
 free row between the saves and STR (`PROBE_INV`, `AGE_INV_Y`; the THAC0 and
 save rows 3 pixels higher than before to make room). The category and the
-next are for the Characters tab; the game's screens show only the age.
+next are for the Characters tab; the game's screens show only the age (the
+inventory panel and the creation screen, below).
 Checked in DOSBox: the game's own party given ages in a new game, the
 inventory panel and the Characters tab.
 
-Haste's aging: the dice log's `effect_changes`, as a Hasted effect (22) starts
+#### Haste's aging
+
+The dice log's `effect_changes`, as a Hasted effect (22) starts
 on a combatant (not one a game just loaded has), calls `aging.hasted`: a system
 shock roll by the creature's CON (`SYSTEM_SHOCK`, the Player's Handbook's
 table), death on a failure (`kill`: HP 0 and the dead status, which the game
@@ -1539,6 +1570,8 @@ takes as dead: no more turns, no share of the XP, "Dead" under the portrait),
 else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
 Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
 K'ratchek at CON 19 (89 against 99: 7 years old).
+
+#### Restore Youth
 
 Restore Youth (211, a cosmos spell: `COSMOS_MASK` in DSCLOG's `P6_MASKS`) is
 Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
@@ -1548,6 +1581,79 @@ caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
 by the level, never below the character's true age (`natural_start`, the
 seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
 level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
+
+#### Natural aging
+
+A year each time the game's clock passes another 365 days (`natural_years`:
+the game time in seconds over `YEAR`), put in the stored age as it happens, so
+a save holds the age and the scores' changes together. The years counted so
+far are in the game's own flags, so a save keeps them too (`counted_years`,
+`set_counted`: flag 798 set once the count has begun, 799 to 806 the number;
+the game's flags run to 755, the Loader's people 760-783, Alagorn's menus at
+most 784-797, and a save keeps 808). The dice log's `_natural_aging`, after
+`give_ages`, looks only when the look is steady (the same party as the last,
+the clock on by no more than 2 days, `NATURAL_JUMP`, and the count and the
+clock's years as the last look found them: a game being loaded may have its
+flags before its clock, or its clock before its sheets, for a moment) and the
+flags have a place in
+memory (`flags_ready`: not in the arena outside a script's run), and otherwise
+waits for the next; then `natural_years_due` counts each year of the clock not
+yet counted (`natural_tick`): for each living member, the stored age on, a line
+(`A year has passed: Gerakis is 35.`) and the categories reached (`_changed`,
+as `age_by`), death at the most the race lives. Nothing is counted twice or
+lost: a load brings its own count, and a year that passed in a long jump, in
+the arena, or while the game ran without the Loader is counted at the next
+steady look. A game whose count hasn't begun (a new one; one saved before
+2.13.1) begins it at the clock's years, aging no one for those before. Restore Youth's floor, the true age, is `natural_start` plus
+the clock's years (one who joined late gets fewer years back, never more).
+Checked in DOSBox: the clock put a few minutes short of a year, then past it:
+a line for each of the four, once, and `AGE: 35` on Gerakis's panel.
+Tests: `test_natural_years`, `test_restore_counts_the_games_years`,
+`test_the_log_counts_each_year_once`, `test_a_long_jump_waits_and_loses_nothing`,
+`test_a_save_is_as_old_as_its_count`, `test_a_load_caught_halfway_ages_no_one`.
+
+#### The age on the creation screen
+
+`CR_AGE`: the age the character will start at, from
+its name and race (`aging.natural_start`, a 16-bit hash of the name's bytes from
+the race, then each die from `h * 25173 + 13849`, its high byte mod the sides,
+as DSCLOG's `AGE_ROLL` works it out alike: `test_creation_age`), drawn above
+RECALL, in the PSP box's row: nothing of the game's is drawn there, and the
+PSP box (the screen's 8th, `DS:0F62h` on) is widened to x 200
+(`cr_age_box`), so its saved background, put back each time PSP is drawn,
+clears it. It is drawn after PSP (65A89h: the die, a choice, the screen
+opening; 63A13h: a click on CON) and, as a name changes after those (the
+game's own, 66045h and 6349Fh, a figure clicked; one typed, 63AE8h, or the
+game's put back when none is, 63B2Dh), again then: the PSP box put back
+(`0A0h:30C3h`, the operand read from the overlay's code as loaded: its
+selectors fixed up there), PSP drawn again as the game draws it (centred on
+its x, 6 pixels a character: its own routine, 538h:43h, is an overlay stub,
+not for calling from an interrupt) and the age (`CR_NAME`). Before 2.13.1 the
+roll was Python's, seeded by the name and race: a character given an age then
+keeps it, but its true age (Restore Youth's floor) is this roll's now. `CR_AGE` and
+`CR_NAME` keep their way back in their own words (`cr_ip`, `cr_cs`, `cr_fl`), apart from
+`RL_SUM`'s, as they call the game's code before going back. Tests: `test_creation_age`,
+`test_creation_age_any_name` (300 random names, any byte), `test_name_redraws_psp_and_age`
+(the operands read from the overlay's code, PSP centred, the age; none called for an
+operand not fixed up).
+
+#### Grey hair on the map
+
+`greyhair.py`: as the Loader dresses a member's
+pictures (`sprites.Pictures.build`), after their gear, the hair is recoloured
+by their age category (`stage_of`; the redraw keys on it, so a category reached
+redraws them), only on pixels still in the hair's own colours, by `MAPS` (each
+look's colours to the stable greys 208-217 and white 46; `SPECKLE` streaks a
+category). The hair to grey is found apart from the gear's (`greyhair.hair`, so
+helms and cloaks don't move): spriteparts' way, with each race's corrections
+found frame by frame for each race (`COLOURS`, the hair's missing shades;
+`STRICT`, the search kept in the hair's zone where the face has its colours;
+`HEADS`, the bow frames, whose bow tip was taken for the crown; the
+half-giants' face masks and the halfling man's `FACE_FROM` and short hair; the
+elves' skin-brown shading, `BROWNS`; a half-elf's own figure's hair grown to
+its golden pixels, `own_hair`). Dwarves, muls and thri-kreen have none (a
+thri-kreen's antennae greyed were tried and left out). Checked in DOSBox:
+Gerakis old and Cilla venerable, their figures redrawn as their ages were set.
 
 ### Enlarge's dice
 
@@ -2005,7 +2111,15 @@ creation overlay's stub, entry BBh, which a score's click calls; `RL_SUM` adds
 the totals), and the rest by running the die's routine from where it has
 rolled the hit points (659D0h, with its stack frame and DI 1): the hit points
 shown, the PSP worked out again (65B39h, which rolls nothing) and shown, then
-the AC and damage. The overlay's segment is the INT's return.
+the AC and damage. The overlay's segment is the INT's return, and both calls
+are made with it in a frame the overlay manager can fix up (`RS_FRAMED`, as
+`PROBE_USE_ITEM`'s): the scores' redraw is another overlay's, and loading it
+can move or drop the creation screen's, which the manager then puts back and
+the frame follows. Without it (2.8.0 to 2.13.0, once the overlay buffer was
+filled differently; and only for a RECALL before the die was rolled on that visit
+to the screen: after a roll it never stopped, in 2.13.0 either) RECALL jumped into what was no longer the die's routine
+and DOSBox stopped ("DynrecCore: illegal option"). Checked in DOSBox: STORE,
+the die, RECALL twice, the scores, hit points, PSP and age put back each time.
 
 ### Fuller starting gear
 
@@ -2617,7 +2731,12 @@ repository: the folder chosen on the Options tab (`wotr_dir` in the settings),
 else any folder beside Shattered Lands' (those named Ravager, Wake or Dark Sun
 first: GOG Galaxy's are `Dark Sun` and `Dark Sun 2`), else GOG's usual folders
 on any drive, each or a folder inside it holding a RESOURCE.GFF whose Heal
-description is Wake of the Ravager's (`find_resources`). Its icons are a kind of
+description is Wake of the Ravager's (`find_resources`; its answer kept for the
+run, as the Options tab asks each time it is built, and the drives looked at one at
+a time from C:, as `launch.drives` does for Shattered Lands' own folder:
+`find_game_dir` tries the folder given and the one saved first, and searches the
+drives once a run, an empty floppy drive or a sleeping network drive being slow
+to answer). Its icons are a kind of
 picture Shattered Lands hasn't: the frame header as usual, then `0FFh "PLNR"`,
 the bits a pixel (4 or 5), a colour map of that many bits' worth of palette
 numbers, and codes of those bits, the highest first, where 0 0 is colour 0 and 0

@@ -38,7 +38,6 @@ SCROLL_TYPE = 96
 NAME = 0x157  # a name entry DSCLOG adds
 NAMES = {NAME: b"Tome/Understand"}  # (the game's 15 letters: "Tome of Understanding" on the Loader's screens)
 VALUE = 43500  # AD&D's 43,500 gp
-WIS_MOST = 25
 COVER = {74: 18, 75: 20, 76: 22, 77: 24, 78: 27}  # the book's reds to night steel, light for light
 EMBLEM = (182, 45)  # its golds
 

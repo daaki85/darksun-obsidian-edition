@@ -14,9 +14,9 @@ from tkinter import font as tkfont
 from tkinter import ttk
 from typing import Tuple
 
-from .palette import (AMBER, BUTTON, BUTTON_LIT, DARK, DEEP, EDGE_LIT, FOCUS, GREEN, LOG_COLOURS, MONSTER_COLOUR,
-                      NAME, PALE, PARTY_COLOURS,  # noqa: F401
-                      PANEL, PSI_BLUE, ROCK, SAND, SHADOW, STONE, SUBTITLE, YELLOW)
+from .palette import (AMBER, BUTTON, BUTTON_LIT, DARK, DEEP, EDGE_LIT, FOCUS, GREEN, LOG_COLOURS,  # noqa: F401
+                      MONSTER_COLOUR, NAME, PALE, PARTY_COLOURS, PANEL, PSI_BLUE, ROCK, SAND, SHADOW, STONE,
+                      SUBTITLE, YELLOW)  # (GREEN and the colours for the logs: the viewer's, from here)
 
 # Named fonts, so Ctrl + / Ctrl - can enlarge all text at once
 BASE_SIZES = {"TkDefaultFont": 10, "TkTextFont": 10, "TkFixedFont": 10, "TkHeadingFont": 10,

@@ -7,7 +7,9 @@ Everything the mod changes and adds in the game, in the order of the Loader's
 Options tab, each with its switch there; the game's bugs fixed come last. A
 switch's name here in bold (**Rangers' casting level**) is the short form of the
 sentence the Options tab gives it, in the same section and order. How each is
-done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
+done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). The tab's
+first section, **In the game** (the combat log, the Look box, names over
+figures), is in the [README](README.md#in-the-game).
 
 ## Contents
 
@@ -110,7 +112,7 @@ and the game's own rule is back at once.
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
-| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; Haste ages its target a year, after a system shock roll to survive |
+| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; a year older each 365 days of game time; Haste ages its target a year, after a system shock roll to survive |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
 | [CON as in AD&D](#con-as-in-add) | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
 
@@ -477,11 +479,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
 
 The game's helms count as armour but give AC 0. With **Helms give AC 1**
 ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
-Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
-the game's tables). It shows on the View Character and inventory screens like
+Contemplation and the Helm of Might. It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
-The helms keep the game's own names (earlier versions called the plain one
-**Helm (AC 1)**; the Loader names it back).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 
@@ -491,8 +490,14 @@ The game keeps no ages. With **Ages and magical aging** ticked, each party
 member has one, from the Dark Sun rules' tables: a starting age rolled the
 first time the Loader sees the character (a new one, the game's own party, one
 from an earlier version), which the dice log shows
-(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`). Only magic
-changes it: game time is too short to count.
+(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`), rolled from the
+character's name and race, so always the same for them. Each **365 days of
+game time** (the game's own clock, from the start of the game) everyone is a
+year older, and the dice log says so (`A year has passed: Cermak is 23.`),
+the age categories counting as below. It is flavour: a party that rests
+5000 times is only about 5 to 9 years older. The years counted are kept in the
+save, so loading one shows the ages as they were then, and no year is counted twice
+or missed (one that passes in the arena is counted as the party leaves it).
 
 | Race | Starting age | Middle age | Old age | Venerable | Most it lives |
 |---|---|---|---|---|---|
@@ -528,9 +533,18 @@ K'ratchek's system shock (Haste's aging): d100 = 89, needs 99 or less (CON 19) -
 A thri-kreen, venerable at 25, feels it most: every Haste is a year of a short
 life. A dwarf hardly notices.
 
-The age shows on the inventory screen's panel, between the saving throws and
-STR (`AGE 23`), and on the Loader's Characters tab with the category and the
-next age to come (`Age: 45, middle-aged; old at 53`).
+The age shows on the creation screen, above RECALL (`AGE: 23`: the age the
+character will start at, from its name and race, so a new name or race gives
+another), on the inventory screen's panel, between the saving throws and STR
+(`AGE: 23`), and on the Loader's Characters tab with the category and the next
+age to come (`Age: 45, middle-aged; old at 53`).
+
+It shows on the map too: a party member's hair turns as they age, iron grey
+streaks when middle-aged, grey when old, white when venerable, shade for shade
+in the figure's own pictures, walking and fighting (with
+[What the party wears](#what-the-party-wears) on). A helm or cloak over the
+hair is left as it is. Dwarves and muls are hairless on Athas, and thri-kreen
+have no hair, so they keep their looks.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
 
@@ -684,7 +698,7 @@ thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
 creation screen: DONE has made the character by then.
 
-![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT](docs/creation-weapons.png)
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec in
 place of the bone long sword the game gives warriors, in a material it may use,
@@ -747,12 +761,9 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
 
 ### Kits
 
-With **Kits** ticked, a character of one class may take one of three kits for
-its class when it is made, on the creation panel's **KIT** page, or none; a
-few races' pairs of classes taken at once have kits of their own, and a human
-who changes class may take one for the new class too. Each gives something and
-costs something. Every kit's gains, costs, starting gear and rules are on a
-page of their own, [Kits](KITS.md):
+With **Kits** ticked, a character may take a kit when it is made, on the
+creation panel's **KIT** page. Who may take which, and every kit's gains, costs,
+starting gear and rules, are on a page of their own, [Kits](KITS.md):
 
 | Class | Kits |
 |---|---|
@@ -856,7 +867,7 @@ scores and what the die's total allows (the `SUM:` line), the hit points and
 the PSP. So a good roll can be stored and the die tried again; if nothing
 better comes, RECALL puts the stored one back, AC and damage with it.
 
-![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:92/92, 25/25 hit points; KITS below the psionic disciplines](docs/creation-store-recall.png)
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:94/94, 32/32 hit points, AGE: 20 above RECALL; KITS below the psionic disciplines](docs/creation-store-recall.png)
 
 Changing the race, sex, classes or kit forgets the stored roll (its hit
 points were rolled for those), even if they are changed back: RECALL then
@@ -1204,9 +1215,7 @@ can't try ("Daaki's backpack is full."): nothing is rolled, and it doesn't
 count as a try. Not in a fight: there's no time for it then, and the button
 isn't there.
 
-(Earlier versions had a thief use **Thieves' Tools** for this, from Mirlon or
-Kel. No one has them now; a set already in a game keeps its name and does
-nothing.)
+(Thieves' Tools from an earlier version, in a save, do nothing.)
 
 The Loader rolls the thief's pick pockets chance as it stands now (effects and
 a worn belt's 5 counted, as in the thief rows):
@@ -1445,7 +1454,7 @@ Loader hands over itself, while it runs) are written into the game's own data
 each time the Loader starts the game, so the game makes them with their people
 and chests and then keeps and saves them like its own. A changed switch takes
 effect in regions the party hasn't visited yet; start a new game to have them
-all. The log doesn't say where they are: they're there to be found.
+all. The dice log doesn't say where they are; [Items](ITEMS.md) does, with spoilers.
 
 **New items, magical and mundane** on the Options tab places them all, the
 arena's ring too. A thief can [lift](#picking-pockets) Pehtucl's ring,
@@ -1799,6 +1808,7 @@ walking and fighting:
 | **Helms** | a circlet at the brow blended into the hair: a feather on leather, a dark stone on iron, low spikes on bone |
 | **Cloaks** | the cloak the game draws on the human woman (its folds and swing as she walks and fights), fitted to the wearer, under the hair, in the cloak's colours; a half-elf woman's own purple cloak takes the worn one's colours |
 | **Boots and belts** | the feet and the waist recoloured (Boots of Elvenkind in soft green) |
+| **Age** | with [ages](#ages-and-magical-aging) on, the hair greys: streaks when middle-aged, grey when old, white when venerable |
 
 The colours are muted ones no region's palette changes. A thri-kreen shows
 only weapons and shields (all it can use). Two party members of the same race
@@ -2078,6 +2088,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#game-speed).
 
 ## The game's bugs, fixed
 
+*Spoilers: some of these name places and people from later in the game.*
+
 The patched game mends these whatever the Options tab says (the rules the game
 got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 
@@ -2107,6 +2119,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | **View Character's DAM line** with a wooden, bone, stone or obsidian weapon | One or two more than the attack does: it left out the weaker material's damage (2 for wood, 1 for the others, on a weapon with no plus), which the inventory's line and the attack take off | The same as the inventory's and the attack's |
 | The **DAM lines** of a **hasted** or **slowed** character (the inventory screen, View Character) | The attacks a round as if neither: a fight's attack doubles them for Haste and halves them for Slow, but the lines never did, and the inventory's showed half an attack a round (Slow's) as one | Twice, or half, as the attack has them (`3x1D8+13` hasted, `0.5x1D8+6` slowed), as on the Loader's Characters tab |
+| **Kurzak** calling for **Legcrusher** once the party has killed him (he sends him when they're slow to come to a fight; at the fountain they can kill him with no alarm) | Kurzak went on shouting "Legcrusher! Get gladiators!" at every call after, and greeted them with "I had to send Legcrusher after you", or "I'm glad you listened to Legcrusher", and called him good with monsters when asked who the half-giant is; Dinos warned that he'd send out Legcrusher | He notices: "Legcrusher! ... Legcrusher? Where has that lump got to? Gladiators! Get up here yourselves!", when they come, "I sent Legcrusher after you, and he never came back. You wouldn't know anything about that, would you?", after Legcrusher had found them, "So Legcrusher found you. Then where's he got to?", and asked who the half-giant is, "That was Legcrusher, the monster trainer. He's gone missing." Dinos no longer warns them that Kurzak will send out Legcrusher, but that he'll come down himself |
 | **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
 | The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
 | **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |

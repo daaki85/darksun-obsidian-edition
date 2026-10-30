@@ -16,13 +16,12 @@ import struct
 import subprocess
 import threading
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
-HELPER = "DSCLOG.EXE"
 SETTINGS = os.path.join(HERE, "settings.json")
 CONF = os.path.join(HERE, "dosbox_dicelog.conf")
 PATCHED_EXE = "DSUNLOG.EXE"
@@ -125,9 +124,22 @@ def recompiled_command(program: str, game_dir: str) -> List[str]:
     return [program, "--game", game_dir, "--cd", DOS_DIR]
 
 
-def candidate_dirs() -> List[str]:
-    drives = [f"{d}:\\" for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")] if os.name == "nt" else []
-    return [os.path.join(drive, sub) for drive in drives for sub in GOG_SUBDIRS]
+def drives() -> Iterator[str]:
+    """Windows' drives from C: on, each looked at only when the one before has been searched: an
+    empty floppy drive or a sleeping network drive can take seconds to answer (A: and B:, the
+    floppies, never)."""
+    if os.name != "nt":
+        return
+    for letter in string.ascii_uppercase[2:]:
+        root = f"{letter}:\\"
+        if os.path.exists(root):
+            yield root
+
+
+def candidate_dirs() -> Iterator[str]:
+    for drive in drives():
+        for sub in GOG_SUBDIRS:
+            yield os.path.join(drive, sub)
 
 
 # Settings saved before version 2 had the combat log off by default (and saved it so): version 2
@@ -175,7 +187,11 @@ def load_settings(strict: bool = False) -> dict:
                 except OSError:
                     pass
                 return {}
-        if not isinstance(settings, dict):
+        if not isinstance(settings, dict):  # (JSON, but not the Loader's: kept aside too)
+            try:
+                os.replace(SETTINGS, SETTINGS + ".bad")
+            except OSError:
+                pass
             return {}
         if upgrade_settings(settings):
             try:
@@ -260,11 +276,17 @@ def add_learned_speakers(learned: Dict[int, str]) -> None:
 
 def find_game_dir(given: Optional[str] = None) -> Optional[str]:
     """The game folder, as a full path (DOSBox runs in its DOSBOX folder, so a relative one would
-    point elsewhere): `given`, the one remembered from last time, or a usual GOG location."""
-    for folder in [given, load_settings().get("game_dir")] + candidate_dirs():
+    point elsewhere): `given`, the one remembered from last time, or a usual GOG location (the
+    drives searched once a run: _SEARCHED)."""
+    for folder in (given, load_settings().get("game_dir")):
         if folder and is_game_dir(folder):
             return os.path.abspath(folder)
-    return None
+    if "found" not in _SEARCHED:
+        _SEARCHED["found"] = next((os.path.abspath(f) for f in candidate_dirs() if is_game_dir(f)), None)
+    return _SEARCHED["found"]
+
+
+_SEARCHED: Dict[str, Optional[str]] = {}  # (find_game_dir's search of the drives, kept for the run)
 
 
 SCALERS = {2: "normal2x", 3: "normal3x"}
@@ -576,7 +598,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
                    "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
                    "targeting": True, "scroll_map": True, "cycles": DEFAULT_SPEED,
-                   "combat_log_level": "short"}  # (combatlog.SHORT, the panel's level unless chosen)
+                   "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:
@@ -666,7 +688,10 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
             os.remove(old)
         except OSError:
             pass
+    exe = _find_file(dosbox_dir, "DOSBox.exe")
+    if exe is None:
+        raise LaunchError(f"No DOSBox.exe in {dosbox_dir}")
     conf = write_conf(game_dir, dice_log=problem is None)
     return subprocess.Popen(
-        [_find_file(dosbox_dir, "DOSBox.exe"), "-conf", settings_conf, "-conf", conf, "-noconsole"],
+        [exe, "-conf", settings_conf, "-conf", conf, "-noconsole"],
         cwd=dosbox_dir), problem

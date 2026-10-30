@@ -9,8 +9,10 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, game  # noqa: E402
-from test_dicelog import CREATURES, SHEETS, set_effects  # noqa: E402
+from dsloader import aging, game, kalzith  # noqa: E402
+from test_dicelog import CREATURES, DS, SHEETS, set_effects  # noqa: E402
+
+FLAGS_AT = 0x58000  # (the fake game's flags: a place nothing else uses)
 from test_now import dag  # noqa: E402
 
 HUMAN, DWARF, MUL, THRI_KREEN = 1, 2, 7, 8
@@ -112,6 +114,100 @@ class PartyTests(unittest.TestCase):
         self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(THRI_KREEN, 25))
         lines = aging.age_by(self.g, 0, -3, "Restore Youth")
         self.assertIn("no longer venerable: STR +1, DEX +1", lines[0])
+
+    def test_natural_years(self):
+        """A year of age for each 365 days of the game's clock, put in the stored age as it passes;
+        a year across middle age changes the scores as Haste's would; the dead don't age."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 39))
+        self.g.game_time = lambda: aging.YEAR * 2 - 1
+        self.assertEqual(aging.natural_years(self.g), 1)
+        before = self.scores()
+        lines = aging.natural_tick(self.g, 1)
+        self.assertEqual(lines, ["A year has passed: Dag is 40, middle-aged: STR -1, CON -1, INT +1, WIS +1."])
+        self.assertEqual(self.scores()[0][0], before[0][0] - 1)
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 40)  # (in the save with the scores)
+        self.m[CREATURES + game.CREATURE_STATUS] = kalzith.DEAD_STATUS[1]
+        self.assertEqual(aging.natural_tick(self.g, 1), [])
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 40)
+
+    def test_restore_counts_the_games_years(self):
+        """Restore Youth takes back magic's years only: the game's years are part of the true age;
+        at it, nothing to take back and no line of 0 years."""
+        start = aging.natural_start("Dag", HUMAN)[0]
+        self.g.game_time = lambda: aging.YEAR * 3
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, start + 5))
+        self.m[CREATURES + game.CREATURE_ABILITIES + 2] = 18
+        lines = aging.restore(self.g, 0, 12, random.Random(1))
+        self.assertIn(f"now {start + 3}", lines[-1])
+        self.assertIn("no magical years", aging.restore(self.g, 0, 12, random.Random(1))[0])
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 15))
+        self.assertEqual(aging.age_by(self.g, 0, -1, "Restore Youth"), [])  # (the race's base: no "0 years")
+
+    def flags(self):
+        """The game's flags at FLAGS_AT, as a save keeps them (game.FLAGS_PTR)."""
+        self.m[DS * 16 + game.FLAGS_PTR:DS * 16 + game.FLAGS_PTR + 4] = struct.pack("<HH", FLAGS_AT & 0xF, FLAGS_AT >> 4)
+        return FLAGS_AT
+
+    def test_the_log_counts_each_year_once(self):
+        """The dice log's look: a year passed, each a year older once, the count kept in the game's
+        flags; a game saved before the count begins it there; nothing while the flags have no place;
+        each step only once two looks agree on it."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 20))
+        clock = [aging.YEAR - 3600]
+        self.g.game_time = lambda: clock[0]
+        self.assertEqual(self.log._natural_aging(), [])  # (no flags in memory: waits)
+        self.flags()
+        self.assertEqual(self.log._natural_aging(), [])  # (the first look with them: seen once)
+        self.assertIsNone(aging.counted_years(self.g))
+        self.assertEqual(self.log._natural_aging(), [])  # (seen twice: the count begun, 0 years)
+        self.assertEqual(aging.counted_years(self.g), 0)
+        clock[0] = aging.YEAR + 60
+        self.assertEqual([self.log._natural_aging() for _ in range(4)],
+                         [[], ["A year has passed: Dag is 21."], [], []])
+        self.assertEqual(aging.counted_years(self.g), 1)
+
+    def test_a_long_jump_waits_and_loses_nothing(self):
+        """Two years passed in one jump of the clock (more than NATURAL_JUMP: maybe a game being
+        loaded): nothing on that look, both years on the next steady one."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 20))
+        self.flags()
+        clock = [aging.YEAR - 3600]
+        self.g.game_time = lambda: clock[0]
+        for _ in range(3):  # (the count begun)
+            self.log._natural_aging()
+        clock[0] = aging.YEAR * 2 + 60
+        self.assertEqual(self.log._natural_aging(), [])
+        clock[0] += 60
+        self.assertEqual(self.log._natural_aging(), ["A year has passed: Dag is 22."])
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 22)
+
+    def test_a_load_caught_halfway_ages_no_one(self):
+        """A save from a year before loaded, the look catching its flags (its lower count) with the
+        old clock still there: not acted on, as the next look finds the clock moved too; the
+        save's own count and clock then agree, and no one is older."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 23))
+        self.flags()
+        aging.set_counted(self.g, 3)
+        clock = [aging.YEAR * 3 + 100]
+        self.g.game_time = lambda: clock[0]
+        for _ in range(2):
+            self.assertEqual(self.log._natural_aging(), [])
+        aging.set_counted(self.g, 1)  # (the save's flags in, its clock not yet)
+        self.assertEqual(self.log._natural_aging(), [])
+        clock[0] = aging.YEAR + 50  # (its clock)
+        self.assertEqual([self.log._natural_aging() for _ in range(3)], [[], [], []])
+        self.assertEqual((aging.counted_years(self.g), aging.age_of(self.g.sheet(0))), (1, 23))
+
+    def test_a_save_is_as_old_as_its_count(self):
+        """A save loaded: its flags hold its own count, so its years are neither counted again nor
+        lost; one whose count is past its clock (an edited save) is mended, aging no one."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 23))
+        self.flags()
+        aging.set_counted(self.g, 3)
+        self.assertEqual(aging.natural_years_due(self.g, 3), [])
+        self.assertEqual(aging.natural_years_due(self.g, 1), [])
+        self.assertEqual(aging.counted_years(self.g), 1)
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 23)
 
     def test_death_at_the_most(self):
         """Reaching the most its race lives, the member dies: no hit points, dead."""

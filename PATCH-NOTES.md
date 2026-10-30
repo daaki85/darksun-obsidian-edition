@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.13.0 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.13.1 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -28,8 +28,9 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** A combat log in the game: **L** on the map shows every roll, in the game's own lettering and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points).
 - **[New]** The combat log is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
-- **[New]** In the slave pens and the arena, between fights, the combat log panel's top line shows how many arena fights the party has had (the game's own count, one a trip into the arena).
+- **[New]** Out of a fight, the combat log panel's top line shows how long the game has run, `Day 47, 14:20`; in the arena, once the game has shown the count, how many arena fights the party has had instead (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
+- **[New]** With ages on, the creation screen shows the age a new character will start at, above RECALL.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
@@ -137,7 +138,7 @@ A few of them:
 
 ## Magic and Psionics
 
-- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; only magic ages anyone. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (6th-level priest, below) takes magical years back.
+- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (6th-level priest, below) takes magical years back.
 - **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
 - **[New]** Six new wizard spells, each with its own icon and description:
@@ -256,6 +257,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Magic gear glows on the party's figures: a weapon's bright edge, a shield's boss and rim, and sparks on armour, bracers, cloaks, helms, boots and belts shimmer in the animated colour nearest the item's icon: fire, green, violet or blue. The weapons spells make glow whole, the Flame Blade and Shillelagh in fire and Spiritual Hammer in blue, as do Kreenfang's blades. Boots of Elvenkind now show on the feet, in soft green.
 - **[New]** Nineteen of the game's magic items that sat still in their icons now shimmer, as its other magic items do: the Parting Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge. A plain item sharing an icon with one of them (plain cahulaks, a plain ring) keeps the still one.
 - **[New]** Elves have pointed ears.
+- **[New]** With ages on, a party member's hair greys on the map as they age: streaks when middle-aged, grey when old, white when venerable (with what the party wears shown).
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
 - **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades, Wall of Thorns' tangle of thorns, Fire Seeds' fireball and Whirlwind's tall, turning funnel of dust. The blades and thorns are Wake of the Ravager's, read from your copy (GOG sells it with Shattered Lands); without it they are the fire wall, recoloured.
@@ -290,6 +292,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** More of the game's own choices in the dice log: why it **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **ability checks scripts make** with a roll of their own (a CHA to talk someone round, STR to break chains); and a party member's **ability score** changing.
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
+- **[New]** The Loader can run the game as **Dark Sun Recompiled**, the game translated into a program of its own, instead of in DOSBox, where it is installed.
 - **[New]** **Options:** nearly every rule change and addition in these notes has its own switch (not the keys and the game's fixed bugs), nearly all on by default, and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
@@ -314,8 +317,9 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
+- **[Fixed]** Once the party has killed **Legcrusher**, **Kurzak** no longer calls for him when they're late for a fight, nor greets them as if he'd brought them, nor speaks of him as still about when asked (Dinos neither): he wonders where his monster trainer has got to.
 - **[Fixed]** The **Trustee** in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to; and a save made while he was walking no longer leaves him standing still when it's loaded (the same for anyone else who walks rounds of their own).
-- **[Fixed]** In a long session the game could stop with **"Out of memory in OEOpenGraph"**: each time the map comes back (after the USE screen, a talk, a menu) it needs 60,000 bytes in one piece, and little was left over. Part of the game's code and its music now live in upper memory, which leaves about 97 KB to spare with the map up (the original game: 57 KB).
+- **[Fixed]** In a long session the game could stop with **"Out of memory in OEOpenGraph"**: each time the map comes back (after the USE screen, a talk, a menu) it needs a large block of free memory, and little was left over. Part of the game's code and its music now live in upper memory, which leaves about 97 KB to spare with the map up (the original game: 57 KB).
 - **[Fixed]** When the game rolls a thief skill for the **whole party** (a trap going off, listening in by a wagon), the first party member always rolled, however poor at it. Now the member with the best chance does.
 - **[Fixed]** **Random monsters** came in numbers worked out from the wrong monster, and in some areas could crash the game ("Divide error"). Now the count fits the monster that comes, and the crash can't happen.
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
@@ -339,7 +343,7 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
 - A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
 - With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
-- **A save made with 2.13.0 is not for earlier versions.** It keeps the weapon specs packed with the age beside them, which an older Loader reads as other specs. Older saves load in 2.13.0 as they are.
+- **A save made with 2.13.0 is not for earlier versions.** It keeps the weapon specs packed with the age beside them, which an older Loader reads as other specs. Older saves load in 2.13.0 as they are. From 2.13.1 a character's true age (how young Restore Youth can make them) is worked out a new way, the same as the creation screen shows; an age already given stays as it is.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

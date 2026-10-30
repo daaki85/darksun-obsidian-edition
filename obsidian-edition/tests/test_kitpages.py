@@ -168,7 +168,6 @@ class DormantKitTests(unittest.TestCase):
     def test_multiclass_kits(self):
         """A race's pair of classes with a group (kitpages.MULTI): its kit in KIT_BYTE, place 0; the
         pair the other way round too; only the group's own kits."""
-        from dsloader import kits
         for classes, race, kit, name in (((9, 17), 4, 1, "Shadowblade"), ((17, 9), 4, 2, "Military Scout"),
                                          ((9, 17), 2, 2, "Wayfinder"), ((3, 9), 3, 1, "Battle Dancer"),
                                          ((6, 9), 4, 1, "Wilderness Avenger"), ((2, 14), 4, 1, "Rescuer")):

@@ -854,7 +854,7 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
     frames (the game draws the bow). OWN: a figure of its own made from MODEL's frame (Own)."""
     out = padded(rows, pad)
     parts = own.parts if own is not None else sp.parts(rows, model, frame, combat)
-    if parts.facing is not None:
+    if parts.facing is not None and model != sp.KREEN:  # (no armour on a thri-kreen: sp.KREEN_KINDS)
         for item_type in armour:
             kind = item_type & (MAGIC_ARMOUR - 1)
             if kind in ARMOUR:

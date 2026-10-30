@@ -2,7 +2,6 @@
 them (the sheet's bits), and the rule's setting under its earlier name."""
 
 import os
-import struct
 import sys
 import unittest
 

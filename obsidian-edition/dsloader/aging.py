@@ -2,7 +2,8 @@
 
 A character's age is rolled once, the first time the Loader sees it without one (a new character,
 the game's own party, one from an earlier version): its race's starting age (Table 7: a base and
-dice). It stays there unless magic changes it (Haste: a year; Restore Youth: back). On reaching
+dice). It grows a year each time the game's clock passes another 365 days, and magic changes it
+(Haste: a year; Restore Youth: back). On reaching
 middle, old and venerable age (Table 8) its scores change, once and for good, the changes adding
 up; on reaching its race's maximum age (a base and dice, its own roll kept secret: the same each
 time for the same character) it dies of old age. Thri-kreen have only a venerable age.
@@ -98,10 +99,21 @@ def changes(race: int, before: int, after: int) -> Dict[int, int]:
 
 
 def natural_start(name: str, race: int) -> Tuple[int, List[int]]:
-    """The character's starting age, its true age: its race's base and dice, rolled with the
-    character's name and race for the seed (as most_age), so the same each time: Restore Youth
-    takes back the years past it, never below it."""
-    return roll_start(race, random.Random(f"{name}|{race}|start"))
+    """The character's starting age, its true age: its race's base and dice, rolled from the
+    character's name and race, so the same each time: Restore Youth takes back the years past it,
+    never below it. 16-bit, as DSCLOG's AGE_ROLL works it out to show it on the creation screen
+    (CR_AGE): the name's bytes hashed (h = h * 31 + byte, from race * 257), then each die from
+    h = h * 25173 + 13849, its high byte mod the sides, plus 1."""
+    ages = RACES[race]
+    count, sides = ages.start_dice
+    h = race * 257 & 0xFFFF
+    for byte in name.encode("cp437", "replace")[:15]:
+        h = (h * 31 + byte) & 0xFFFF
+    faces = []
+    for _ in range(count):
+        h = (h * 25173 + 13849) & 0xFFFF
+        faces.append((h >> 8) % sides + 1)
+    return ages.start + sum(faces), faces
 
 
 def roll_start(race: int, rng: random.Random) -> Tuple[int, List[int]]:
@@ -147,10 +159,26 @@ def give_ages(gd: "game.GameData") -> List[str]:
         roll = f": {ages.start} + {dice_text(*ages.start_dice, faces)}" if faces else ""
         nxt = next_category(race, age)
         later = f"; {CATEGORY_NAMES[nxt[0]]} at {nxt[1]}" if nxt else ""
-        race_name = game.RACE_NAMES[race]
-        article = "an" if race_name[0] in "aeiou" else "a"
-        out.append(f"{gd.creature_name(member)} is {age} ({article} {race_name}{roll}){later}.")
+        out.append(f"{gd.creature_name(member)} is {age} ({_a(race)}{roll}){later}.")
     return out
+
+
+def _a(race: int) -> str:
+    """"a human", "an elf"."""
+    name = game.RACE_NAMES[race]
+    return f"{'an' if name[0] in 'aeiou' else 'a'} {name}"
+
+
+# Natural aging (flavour): a year of age each time the game's clock (game time, in seconds since
+# the game began) passes another 365 days, put in the stored age with its score changes as it
+# happens (natural_tick, from the dice log's look), so a save keeps both
+YEAR = 365 * 24 * 60 * 60
+
+
+def natural_years(gd: "game.GameData") -> int:
+    """The years the game's clock has run (0 without one)."""
+    seconds = gd.game_time()
+    return max(0, seconds // YEAR) if seconds else 0
 
 
 def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
@@ -159,15 +187,82 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
     Lines for the dice log."""
     sheet = gd.sheet(member)
     before = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
-    if before is None or not years:
+    if before is None:
         return []
     race = sheet[game.SHEET_RACE]
-    after = max(RACES[race].start, before + years)
-    at = sheet_address(gd, member)
-    gd.guest.write(at + game.SHEET_AGE, bytes([stored(race, after)]))
-    name = gd.creature_name(member)
+    after = max(RACES[race].start, min(before + years, RACES[race].start + 254))  # (the byte's range)
+    if after == before:
+        return []
+    gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, bytes([stored(race, after)]))
     word = "ages" if after > before else "grows younger"
-    out = [f"{name} {word} {abs(after - before)} year{'s' if abs(after - before) != 1 else ''} ({why}): now {after}"]
+    years = abs(after - before)
+    return _changed(gd, member, race, before, after,
+                    f"{gd.creature_name(member)} {word} {years} year{'s' if years != 1 else ''} ({why}): now {after}")
+
+
+# The years counted so far, in the game's own flags so a save keeps them: COUNTING set once the
+# count has begun, then COUNT_BITS flags holding the number (the Loader's flags: the game's run
+# to 755, the Loader's people 760-783, Alagorn's menus at most 784-797, a save keeps 808)
+COUNTING = 798
+COUNT_FIRST, COUNT_BITS = 799, 8
+
+
+def counted_years(gd: "game.GameData") -> Optional[int]:
+    """The years of the game's clock already counted, None before the count has begun."""
+    if not gd.flag(COUNTING):
+        return None
+    return sum(1 << i for i in range(COUNT_BITS) if gd.flag(COUNT_FIRST + i))
+
+
+def set_counted(gd: "game.GameData", years: int) -> None:
+    years = max(0, min(years, (1 << COUNT_BITS) - 1))
+    for i in range(COUNT_BITS):
+        gd.set_flag(COUNT_FIRST + i, bool(years >> i & 1))
+    gd.set_flag(COUNTING)
+
+
+def natural_years_due(gd: "game.GameData", years: int) -> List[str]:
+    """The game's clock at YEARS years: each year not yet counted, counted (natural_tick). A game
+    whose count hasn't begun (a new game; one saved before the count was kept) begins it at
+    YEARS, aging no one for the years before. Nothing while the flags have no place in memory."""
+    if not gd.flags_ready():
+        return []
+    counted = counted_years(gd)
+    if counted is None or years < counted:
+        set_counted(gd, years)  # (begun; or a count past its clock, from a save of the game's own: mended)
+        return []
+    if years == counted:
+        return []
+    set_counted(gd, years)
+    return natural_tick(gd, years - counted)
+
+
+def natural_tick(gd: "game.GameData", years: int) -> List[str]:
+    """The game's clock past another year (YEARS of them): each living party member with an age
+    that much older (its scores at the categories reached, its death at its maximum)."""
+    from . import kalzith
+    out = []
+    for member in range(game.PARTY_SIZE):
+        sheet = gd.sheet(member)
+        rec = gd.creature(member)
+        before = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
+        if before is None or len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in kalzith.DEAD_STATUS:
+            continue
+        race = sheet[game.SHEET_RACE]
+        after = min(before + years, RACES[race].start + 254)
+        if after == before:
+            continue
+        gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, bytes([stored(race, after)]))
+        out += _changed(gd, member, race, before, after, f"A year has passed: {gd.creature_name(member)} is {after}")
+    return out
+
+
+def _changed(gd: "game.GameData", member: int, race: int, before: int, after: int, line: str) -> List[str]:
+    """LINE, with the score changes of the categories reached or left from BEFORE to AFTER (made
+    on the sheet and the creature) and death at the most the race lives."""
+    at = sheet_address(gd, member)
+    name = gd.creature_name(member)
+    out = [line]
     delta = changes(race, before, after)
     if delta:
         creature = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + member * game.CREATURE_SIZE
@@ -183,8 +278,7 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
         reached = CATEGORY_NAMES[category(race, after)] or f"no longer {left}"
         out[0] += f", {reached}: {', '.join(parts)}"
     if after >= most_age(name, race) and after > before:
-        race_name = game.RACE_NAMES[race]
-        out[0] += f"; that is the most {'an' if race_name[0] in 'aeiou' else 'a'} {race_name} lives: {name} dies of old age"
+        out[0] += f"; that is the most {_a(race)} lives: {name} dies of old age"
         kill(gd, member)
     return [out[0] + "."]
 
@@ -246,7 +340,7 @@ def describe(sheet: bytes) -> Optional[str]:
 
 def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random.Random] = None) -> List[str]:
     """Restore Youth on CREATURE, cast at LEVEL: a year of its magical aging (its years past its
-    true age, natural_start's) taken back a level, after a system shock roll by its CON that a
+    true age: natural_start's and the game's years) taken back a level, after a system shock roll by its CON that a
     failure ends in death; nothing to take back, no roll. Lines for the dice log."""
     from . import kalzith
     rng = rng or random.Random()
@@ -258,7 +352,9 @@ def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random
     if age is None:
         return []
     name = gd.creature_name(creature)
-    true_age = natural_start(name, sheet[game.SHEET_RACE])[0]
+    # (its true age: its starting age and the game's years, only magic's taken back; one who joined
+    # late counts years it hasn't lived, so gets fewer back, never more)
+    true_age = natural_start(name, sheet[game.SHEET_RACE])[0] + natural_years(gd)
     if age <= true_age:
         return [f"Restore Youth: {name} has no magical years to take back ({age}, {name}'s true age)."]
     con = rec[game.CREATURE_ABILITIES + 2]

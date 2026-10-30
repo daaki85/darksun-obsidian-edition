@@ -107,7 +107,7 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
                 os.utime(tmp, (stamp, stamp))
                 os.replace(tmp, os.path.join(folder, target))
                 for old in existing:
-                    if old != target:
+                    if os.path.normcase(old) != os.path.normcase(target):
                         os.remove(os.path.join(folder, old))
             except OSError:
                 continue

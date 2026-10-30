@@ -48,7 +48,7 @@ def _query_bytes(text: str) -> bytes:
 
 
 # the game window's sizes (DOSBox scales the game's 320x200, with the aspect corrected)
-WINDOW_CHOICES = {"Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
+WINDOW_CHOICES = {"Single (320x240)": 1, "Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
 
 class Viewer:
     def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory]):
@@ -67,7 +67,7 @@ class Viewer:
         self.dosbox = None  # the game, when started from here (Start the game)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         # the game's portraits and font, from the player's own install (if it can be found)
-        self.art = art.GameArt(launch.find_game_dir())
+        self.art = art.GameArt.of(launch.find_game_dir())
         # (Tk shows an image only while it's referenced: one for each portrait at each size, shared
         # by every line it is shown on)
         self._images: Dict[Tuple[int, int], tk.PhotoImage] = {}
@@ -411,8 +411,8 @@ class Viewer:
                 ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
                 ("aging", "Ages and magical aging: each character has an age from Dark Sun's tables, its "
                           "scores changing at middle, old and venerable age, and dies at the most its race "
-                          "lives; Haste ages each it speeds a year, and each must survive a system shock roll "
-                          "(by CON), as in AD&D"),
+                          "lives; a year older each 365 days of game time; Haste ages each it speeds a year, "
+                          "and each must survive a system shock roll (by CON), as in AD&D"),
                 ("enlarge_dice", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                  "as in AD&D (the game multiplies the whole melee damage, STR included)"),
                 ("con_adnd", "CON as in AD&D: from CON 20 a hit point back an hour, to one every 10 minutes at 25 "
@@ -599,7 +599,7 @@ class Viewer:
             messagebox.showerror("Wake of the Ravager", f"{folder} has no Wake of the Ravager RESOURCE.GFF.",
                                  parent=self.root)
             return
-        launch.update_settings({wotrart.SETTING: folder})
+        self._save_settings({wotrart.SETTING: folder})
         self.wotr_status.set(self._wotr_status() + " (From the next start of the game.)")
 
     def _saves_game_dir(self) -> Optional[str]:
@@ -684,7 +684,7 @@ class Viewer:
 
     def _sections_changed(self) -> None:
         """Remember which of the Options tab's sections are open."""
-        launch.update_settings({"options_open": [key for key, part in self.sections.items() if part.is_open]})
+        self._save_settings({"options_open": [key for key, part in self.sections.items() if part.is_open]})
 
     def _slot_box(self, parent) -> ttk.Combobox:
         box = ttk.Combobox(parent, width=3, state="readonly")
@@ -812,8 +812,8 @@ class Viewer:
                 messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
                                      "pick the GOG install folder of Shattered Lands.")
                 return
-            launch.update_settings({"game_dir": game_dir})
-            self.art = art.GameArt(game_dir)
+            self._save_settings({"game_dir": game_dir})
+            self.art = art.GameArt.of(game_dir)
         try:
             self._game_dir, self._started = game_dir, time.time()
             self.dosbox, problem = launch.launch(game_dir)
@@ -961,8 +961,18 @@ class Viewer:
         self.dice_status.set("Waiting for the game...")
         self.next_try = time.monotonic() + RETRY_SECONDS
 
+    def _save_settings(self, changes: dict) -> bool:
+        """CHANGES saved in settings.json; when it is held elsewhere (an antivirus, a backup), the
+        status line says so rather than the choice being lost unseen. True if saved."""
+        try:
+            launch.update_settings(changes)
+            return True
+        except OSError as e:
+            self.status.set(f"The Loader's settings could not be saved just now ({e}); choose again to retry.")
+            return False
+
     def close(self) -> None:
-        """Put the game's rand() back before closing, so the game keeps working."""
+        """Done with the dice log before closing: it lets go of the game (detach) and stops its thread."""
         try:
             if self.dice:
                 self.dice.detach()
@@ -1146,16 +1156,16 @@ class Viewer:
     def _window_chosen(self, _event=None) -> None:
         """Remember the game window's size; it applies the next time the game is started."""
         scale = WINDOW_CHOICES[self.window_choice.get()]
-        launch.update_settings({"fullscreen": True} if scale is None else
-                               {"fullscreen": False, "window_scale": scale})
-        self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
-                        "(Alt+Enter switches full screen while playing).")
+        if self._save_settings({"fullscreen": True} if scale is None else
+                               {"fullscreen": False, "window_scale": scale}):
+            self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
+                            "(Alt+Enter switches full screen while playing).")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
         value = self.game_speed.get()
-        launch.update_settings({"cycles": value if value == launch.GOG_SPEED else int(value)})
-        self.status.set("Game speed: from the next time you start the game.")
+        if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
+            self.status.set("Game speed: from the next time you start the game.")
 
     def _options_changed(self) -> None:
         """A switch on the Options tab changed: all of them saved, and the log told."""

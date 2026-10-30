@@ -1,7 +1,7 @@
 import struct
 import unittest
 
-from dsloader import game, rings, targeting
+from dsloader import rings, targeting
 
 HDR, BASE = 0x9000, 0x8000
 DS = 0x2000

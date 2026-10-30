@@ -106,6 +106,45 @@ class LaunchTests(unittest.TestCase):
             self.assertFalse(launch.is_game_dir(d))
             self.assertEqual(launch.find_game_dir(game), game)
 
+    def test_settings_not_the_loaders_kept_aside(self):
+        """A settings.json that is JSON but not an object (a list, a number) is read as none and
+        kept aside as settings.json.bad, as an unreadable one is, so the next save loses nothing."""
+        saved = launch.SETTINGS
+        with tempfile.TemporaryDirectory() as d:
+            try:
+                launch.SETTINGS = os.path.join(d, "settings.json")
+                with open(launch.SETTINGS, "w") as f:
+                    f.write("[1, 2]")
+                self.assertEqual(launch.load_settings(), {})
+                self.assertTrue(os.path.exists(launch.SETTINGS + ".bad"))
+                self.assertFalse(os.path.exists(launch.SETTINGS))
+            finally:
+                launch.SETTINGS = saved
+
+    def test_drives_searched_once_and_only_when_needed(self):
+        """The saved folder is tried before any drive; the drives' search (each drive only as far
+        as needed: candidate_dirs is a generator) is made once a run, its answer kept."""
+        searched = []
+        def candidates():
+            searched.append(1)
+            yield from ()
+        saved = launch.SETTINGS, launch.candidate_dirs
+        launch._SEARCHED.clear()
+        with tempfile.TemporaryDirectory() as d:
+            try:
+                launch.SETTINGS, launch.candidate_dirs = os.path.join(d, "settings.json"), candidates
+                game = make_game(d, cloud_saves=False)
+                launch.save_settings({"game_dir": game})
+                self.assertEqual(launch.find_game_dir(), game)
+                self.assertEqual(searched, [])
+                launch.save_settings({})
+                self.assertIsNone(launch.find_game_dir())
+                self.assertIsNone(launch.find_game_dir())
+                self.assertEqual(searched, [1])
+            finally:
+                launch.SETTINGS, launch.candidate_dirs = saved
+                launch._SEARCHED.clear()
+
     def test_conf_loads_the_helper_before_the_game(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=True)

@@ -253,7 +253,7 @@ def _game_font(game_dir: Optional[str]):
     """The game's font (art.Font) from its folder, or None."""
     from . import art, launch
     folder = launch.find_game_dir(game_dir)
-    return art.GameArt(folder).font if folder else None
+    return art.GameArt.of(folder).font if folder else None
 
 
 THIEF = 17  # class number
@@ -264,6 +264,8 @@ STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG'
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
+DRESSER_RETRY = 30.0  # seconds before the party's figures are tried again when the game's files couldn't be read
+NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock may be a load's: aging waits a look
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
@@ -275,6 +277,24 @@ FIGHT_GAP = 120  # game seconds without a new round after which the fight is ove
 # still clear as round 1's initiative is rolled, before it was ever up: that doesn't count)
 FIGHT_OVER = 2.0
 
+
+
+_TIMER: List[bool] = []  # (_fine_timer's: asked for already)
+
+
+def _fine_timer() -> None:
+    """Windows' timer at a millisecond, once a run and given back at its end: it ticks every
+    15.6 ms unless asked, and the stats thread's millisecond waits would last that long."""
+    if sys.platform != "win32" or _TIMER:
+        return
+    _TIMER.append(True)
+    try:
+        import atexit
+        import ctypes
+        if ctypes.windll.winmm.timeBeginPeriod(1) == 0:  # (TIMERR_NOERROR)
+            atexit.register(ctypes.windll.winmm.timeEndPeriod, 1)
+    except (AttributeError, OSError):
+        pass
 
 class DiceLogError(Exception):
     pass
@@ -325,9 +345,6 @@ class Entry:
     def local(self, bp_offset: int) -> Optional[int]:
         """Signed word at [BP+bp_offset] for bp_offset in -10h..-2, or None."""
         return self._word(self.locals, bp_offset + 0x10)
-
-    def local_byte(self, bp_offset: int) -> int:
-        return self.locals[bp_offset + 0x10]
 
     def parent_local(self, bp_offset: int) -> Optional[int]:
         """Signed word at [parentBP+bp_offset] for bp_offset in -28h..-2, or None."""
@@ -474,7 +491,7 @@ class DiceLog:
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._scrolling = scrolling.Scrolling()
         self._dresser: Optional[sprites.Dresser] = None
-        self._dresser_tried = False
+        self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
         self.picked: set = set()  # the pockets tried already (each person gets one try)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
@@ -518,6 +535,7 @@ class DiceLog:
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
         self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
+        self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
         self._initiative_roll: Optional[int] = None
@@ -887,7 +905,7 @@ class DiceLog:
         the d20 needed now, THAC0 with each weapon ready, a thief's skills as they stand, the level
         Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE), or DICE), and the AC
         Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without), and their
-        age with the rule (the inventory panel's AGE 23), its category and the next's age (which
+        age with the rule (the inventory panel's AGE: 23), its category and the next's age (which
         DSCLOG doesn't read now: kept for the layout)."""
         g = self.game
         rec = g.creature(member)
@@ -949,12 +967,7 @@ class DiceLog:
         (20-40 ms, more with the Ledger's window) held the pointer still, then made it jump."""
         if self._stats_thread is not None:
             return
-        if sys.platform == "win32":  # (Windows' timer ticks every 15.6 ms unless asked: the thread's
-            try:                     #   millisecond waits would last that long)
-                import ctypes
-                ctypes.windll.winmm.timeBeginPeriod(1)
-            except (AttributeError, OSError):
-                pass
+        _fine_timer()
         def run() -> None:
             step = STATS_ANSWER_STEP
             while not self._stats_stop.wait(step):
@@ -1026,6 +1039,8 @@ class DiceLog:
         """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
         hook comes off."""
         self._stats_stop.set()
+        if self._stats_thread is not None:  # (out of the guest's memory before its handle closes)
+            self._stats_thread.join(0.2)
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
@@ -1270,6 +1285,8 @@ class DiceLog:
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
                 if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
                     out += aging.give_ages(self.game)
+                if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
+                    out += self._natural_aging()
                 if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                     out += pickpocket.mend_lists(self.game)
                 itemgate.release(self.game)
@@ -1398,13 +1415,18 @@ class DiceLog:
                     self._fight_monsters.add(name)
             top = combatlog.header(self.round_status())
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
-        in_arena = False  # (between fights in the slave pens and the arena: their count in the header)
+        in_arena = False  # (between fights in the arena: its count in the header; elsewhere the time)
         if on and not fighting:
             try:
-                in_arena = self.game.region() in combatlog.ARENA_REGIONS
-                count = self.game.number(game.ARENA_FIGHTS) if in_arena else None
+                region = self.game.region()
+                count = self.game.number(game.ARENA_FIGHTS) if region in combatlog.ARENA_REGIONS else None
                 if count is not None:  # (the numbers are in memory only now and then: the last one read)
                     self._arena_count = count
+                # (the count only once known: until then the time, as elsewhere)
+                in_arena = region == combatlog.ARENA_REGION and self._arena_count is not None
+                clock = None if in_arena else self.game.game_time()
+                if clock is not None:
+                    top = combatlog.clock_line(clock)
             except (struct.error, IndexError, ValueError):
                 pass
         self._panel.update(self.game, self.tsr_hdr, on, self._shadows.palettes, top, names,
@@ -1481,9 +1503,9 @@ class DiceLog:
         party pictures the Loader keeps dressed); as the game's own when switched off."""
         if not icons.ready(self.game, self.tsr_hdr):
             return
-        if self._dresser is None and not self._dresser_tried:
+        if self._dresser is None and now >= self._dresser_at:
             from . import launch
-            self._dresser_tried = True
+            self._dresser_at = now + DRESSER_RETRY  # (tried again later if it can't be made now)
             import os
             copy = os.path.join(launch.DOS_DIR, icons.OBJECTS_FILE)
             self._dresser = sprites.Dresser.for_game(self.game, launch.find_game_dir(),
@@ -1782,6 +1804,22 @@ class DiceLog:
         out, self._dialogue = self._dialogue, []
         self.itemwatch.remember_talk(out)
         return out
+
+    def _natural_aging(self) -> List[str]:
+        """Each party member a year older for each year of the game's clock (aging.YEAR) not yet
+        counted in the game's own flags (aging.counted_years: a save keeps them, so a load is as
+        old as it was and nothing is counted twice or lost). Only on a steady look: the same
+        party as the last, the clock on by no more than NATURAL_JUMP, and the count and the
+        clock's years as the last look found them (a game being loaded may have its flags before
+        its clock, or its clock before its sheets, for a moment); any other waits for the next."""
+        clock = self.game.game_time()
+        if clock is None or not self.game.flags_ready():
+            return []
+        party, due = self.game.party_signature(), (aging.counted_years(self.game), clock // aging.YEAR)
+        last, self._aging_at = self._aging_at, (party, clock, due)
+        if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP or last[2] != due:
+            return []
+        return aging.natural_years_due(self.game, due[1])
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""

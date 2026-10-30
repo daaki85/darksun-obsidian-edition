@@ -92,7 +92,7 @@ AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
 
 | Change | What it does |
 |---|---|
-| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. In the slave pens and the arena, between fights, its top line counts the party's arena fights. |
+| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Out of a fight its top line says how long the game has run (`Day 47, 14:20`), and in the arena how many arena fights the party has had. |
 | **Names over figures** | A spell's name floats over its caster as it's cast, "Miss" over anyone an attack misses, and "Armor: 7 left" (or "Mirror Image: 2 left", "Armor ends") when a spell that lasts a number of uses loses one. |
 | **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
@@ -135,7 +135,8 @@ ordinary reason, the Loader saves a report to send. The README has the details:
 and where each bonus came from. Other tabs show each character's sheet, the
 dialogue, and every spell's dice, saves and duration. Every save is also
 copied under the name you gave it in the game. The README has
-[the Loader's window](README.md#the-loaders-window) in full.
+[the Loader's window](README.md#the-loaders-window) in full, and [the dice log, line by
+line](DICE-LOG.md) what each of its lines means.
 
 ## Making a party
 
@@ -221,7 +222,10 @@ the same caps from these larger ones.)
 **Ages.** With [Ages and magical aging](FEATURES.md#ages-and-magical-aging)
 on, each character has an age from the Dark Sun rules (on the inventory
 panel, under the saves). Middle, old and venerable age change the scores, and
-a character dies at the most its race lives; only magic ages them. **Haste**
+a character dies at the most its race lives. Each 365 days of game time adds
+a year, and their hair greys on the map as they age (with what the party wears
+on); the creation screen shows the age a new character starts at. Magic ages
+them faster: **Haste**
 costs a year, after a system shock roll by CON that a character can fail and
 die (85% to survive at CON 13, 99% from 18); **Restore Youth** gives magical
 years back. *Without the mod:* no ages, and Haste costs nothing.
@@ -300,7 +304,7 @@ classes a human could change to ([kits](#kits)).
   higher CON adds nothing unless they are below the new least.
 - Half-giants roll double. A roll counts at least 2 with CON 20, 3 with CON
   21-22 and 4 with CON 23 or more.
-- CON 20 or more gives hit points back by themselves, a party member's one an
+- CON 20 or more gives a party member hit points back by themselves, one an
   hour at CON 20, 50 minutes at 21, 40 at 22, 30 at 23, 20 at 24 and 10 at
   25 ([CON as in AD&D](FEATURES.md#con-as-in-add)). *Without the mod:* one
   every 5 minutes at any of them.
@@ -957,12 +961,10 @@ Stillwater with water).
 
 ## Kits
 
-A character of one class takes one of three kits for its class (or one of its
-race's multiclass kits) when it is made, or none, on the creation panel's **KIT** page; a human who changes class
-can take one for its new class. A few races' pairs of classes have kits of
-their own ([Multiclass kits](#multiclass-kits)). Each gives something and
-costs something. [The Kits page](KITS.md) has each kit's numbers and
-starting gear; the class sections above say who takes each kit on Athas.
+A character takes a kit, or none, when it is made, on the creation panel's
+**KIT** page. [The Kits page](KITS.md) has who may take which, and each kit's
+numbers and starting gear; the class sections above, and the multiclass kits
+below, say who takes each kit on Athas.
 
 - The **Myrmidon** chooses its second weapon spec, and the **Battle Mage**,
   **Crusader** and **Mind Warrior** their one (a melee weapon; a thri-kreen
@@ -1201,7 +1203,7 @@ Other modifiers:
 | Modifier | On |
 |---|---|
 | WIS: −6 at 1, −4 at 2, −3 at 3, −2 at 4, −1 at 5-7, +1 at 15, +2 at 16, +3 at 17, +4 at 18 or more | mind-affecting spells, charms, holds, fear and illusions |
-| CON: −2 at 1, −1 at 2, +1 at 19-20, +2 at 21-22, +3 at 23-24, +4 at 25; dwarves and halflings +1 more for every 3.5 points of CON | paralysis, poison and death |
+| CON: −2 at 1, −1 at 2, +1 at 19-20, +2 at 21-22, +3 at 23-24, +4 at 25; dwarves and halflings +1 more for every 3.5 points of CON (against poison, with [CON as in AD&D](FEATURES.md#con-as-in-add), in place of CON's own) | paralysis, poison and death |
 | Druids +2 | fire and electricity |
 | Psionicists +2 | mind-affecting spells and charms |
 | Bless +1, Barkskin +1, Spirit Armor +3 (not PPD), Prayer ±1, a ring or cloak of protection +1 | every save |
@@ -1415,6 +1417,9 @@ limits:
   psionicist STR too.
 - **Cause Serious and Critical Wounds** do 2d8+1 and 3d8+3, as the Cure spells
   heal (Light: 1d8 both ways). *Without the mod:* 2d9 and 3d9.
+- **Enlarge** adds 10% a caster level to the weapon's dice only, rounded up;
+  STR and magic are added after. *Without the mod:* to the whole melee damage,
+  STR included.
 - Shillelagh, Flame Blade and Spiritual Hammer need an empty hand. With weapon
   specialization on, a spec counts with them as with a club, a long sword and a
   mace.
@@ -1482,7 +1487,8 @@ AD&D's class tables and the **New wizard spells** switch on):
 - **Heal** (touch): every wound healed, disease and blindness cured.
 - **Harm** (touch): the creature is left 1d4 hit points; no save.
 - **Restore Youth** (touch): takes back a year of magical aging (from Haste)
-  a caster level, never below the creature's true age. It must survive a
+  a caster level, never below the creature's true age (its age without magic's
+  years). It must survive a
   system shock first.
 - **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades, a
   save for none) or 8 plus the creature's AC (thorns, no save: the less
@@ -1801,8 +1807,9 @@ AD&D's tables:
 | Wake of the Ravager (optional) | where Wake of the Ravager is installed, for the new priest spells' icons and pictures (found by itself when it can be) | (a folder) |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
-Rule changes, customization, expanded features and the new spells count at
-once in a game started from the Loader; the new people, quest and items, and
+Rule changes, customization, expanded features, the new spells and defilers'
+scrolls count at once in a game started from the Loader; the new people, quest,
+vulture and items, and
 any switch that says "from the next start", come the next time the game is
 started (a saved game keeps what it has). Kits, weapon specs and fuller starting
 gear go to characters made from then on. **Restore defaults**, at the bottom

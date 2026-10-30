@@ -8436,6 +8436,211 @@ rl_ip    dw 0
 rl_cs    dw 0
 rl_fl    dw 0
 rl_label db 'SUM:', 0
+
+; CR_AGE (RULE_HI_AGING): the creation panel's "AGE: 23", right of PSP's line, above RECALL, where
+; nothing is drawn (the PSP box's saved background widened to cover it: gamepatch.py's
+; "cr_age_box", so each redraw of the box clears it). It replaces "add sp,10h" (3 bytes) after
+; PSP's value is drawn: 65A89h (a race, sex or class chosen, the die, the screen opening) and
+; 63A13h (a click on CON). The age is the one the character will have (aging.natural_start: the
+; name, from the creature's +28h, hashed with the race, then its dice), from its race's base
+; (AGE_RACES: base, dice, sides, by race 1-8).
+CR_AGE_X equ 146                ; (RECALL's left edge)
+cr_age_text times 12 db 0   ; (PSP's "65535/65535" at the most, or "AGE: 255")
+AGE_RACES db 15, 1, 8,  25, 4, 6,  15, 3, 4,  15, 2, 4,  20, 5, 4,  25, 3, 6,  15, 1, 6,  6, 0, 1
+cr_age:
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
+        add sp, 0x10            ; the replaced instruction
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .back
+        sti
+        pushad
+        push es
+        call cr_age_draw
+        pop es
+        popad
+.back:  push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
+        iret
+
+; CR_NAME: the game's own name for the character copied to the creature ("add sp,0Eh" after
+; 178:A4h, 66045h; 6349Fh, a figure clicked), after PSP and the age were drawn with the name before it: the PSP box put
+; back (its saved background, 0A0:30C3h, as the game does), PSP drawn again as 538:43h draws it
+; (CR_PSP_DRAW: that routine's an overlay's, not for calling from here) and the age with the new
+; name. The calls' and the segment's operands are read from the
+; overlay's code as loaded (its selectors fixed up then), at their places from the way back.
+cr_name3:
+        mov word [cs:cr_restore], (CR_RESTORE2_AT - CR_TYPED_PAST) & 0xFFFF
+        mov word [cs:cr_seg340], (CR_SEG340_2_AT - CR_TYPED_PAST) & 0xFFFF
+        jmp cr_names
+cr_name4:
+        mov word [cs:cr_restore], (CR_RESTORE2_AT - CR_TYPED2_PAST) & 0xFFFF
+        mov word [cs:cr_seg340], (CR_SEG340_2_AT - CR_TYPED2_PAST) & 0xFFFF
+        jmp cr_names
+cr_name2:
+        mov word [cs:cr_restore], (CR_RESTORE2_AT - CR_NAME2_PAST) & 0xFFFF
+        mov word [cs:cr_seg340], (CR_SEG340_2_AT - CR_NAME2_PAST) & 0xFFFF
+        jmp cr_names
+cr_name:
+        mov word [cs:cr_restore], (CR_RESTORE_AT - CR_NAME_PAST) & 0xFFFF
+        mov word [cs:cr_seg340], (CR_SEG340_AT - CR_NAME_PAST) & 0xFFFF
+cr_names:
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
+        add sp, 0x0E            ; the replaced instruction
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .back
+        sti
+        pushad
+        push es
+        mov es, [cs:cr_cs]      ; (the overlay's own code, fixed up as loaded: its selectors' segments)
+        mov bx, [cs:cr_ip]
+        add bx, [cs:cr_restore]
+        mov eax, [es:bx]
+        test eax, eax           ; (not fixed up: nothing to call)
+        jz .none
+        mov [cs:cra_far], eax
+        mov bx, [cs:cr_ip]
+        add bx, [cs:cr_seg340]
+        mov ax, [es:bx]
+        mov es, ax
+        push word [es:0x3F2]
+        push word [es:0x406]
+        call far [cs:cra_far]   ; (the PSP box's background put back)
+        add sp, 4
+        call cr_psp_draw        ; (PSP drawn again: the game's routine for it is an overlay's)
+        call cr_age_draw
+.none:  pop es
+        popad
+.back:  push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
+        iret
+CR_NAME_PAST equ 0x66048        ; (DSUN.EXE: the ways back from CR_NAME's sites; in each one's own
+CR_RESTORE_AT equ 0x65A60       ;   overlay: "call 0A0h:30C3h"'s operand, the box's background put
+CR_SEG340_AT equ 0x65A4C        ;   back, and "mov ax,340h"'s, the saved backgrounds' segment)
+CR_NAME2_PAST equ 0x634A2
+CR_RESTORE2_AT equ 0x639EA
+CR_SEG340_2_AT equ 0x639D6
+CR_TYPED_PAST equ 0x63AEB
+CR_TYPED2_PAST equ 0x63B30
+cr_restore dw 0
+cr_ip    dw 0                   ; (CR_AGE's and CR_NAME's way back: their own, apart from RL_SUM's, as
+cr_cs    dw 0                   ;   they call the game's code before going back)
+cr_fl    dw 0
+cr_seg340 dw 0
+cra_far dd 0
+
+; CR_PSP_DRAW: the creation panel's PSP as the game has it, "28/28" (the creature's +2 of the
+; sheet's +0Ch), centred at the PSP box's place as the game centres it (DS the game's).
+cr_psp_draw:
+        call cr_text_routine
+        les bx, [0x11A0]
+        mov ax, [es:bx + 2]
+        mov di, cr_age_text
+        call w_itoa
+        mov byte [cs:di], '/'
+        inc di
+        les bx, [0x119C]
+        mov ax, [es:bx + 0x0C]
+        call w_itoa
+        mov ax, [0xF9C]
+        sub ax, 2
+        push ax
+        sub di, cr_age_text     ; (centred on the game's x, as it draws it: 6 pixels a character)
+        imul di, di, 3
+        mov ax, [0xF9A]
+        add ax, 0x15
+        sub ax, di
+        push ax
+        push cs
+        push word cr_age_text
+        call c_draw_line
+        ret
+
+cr_text_routine:                ; (c_draw_line: the game's text routine, the screen's window)
+        mov ax, ds
+        add ax, USE_TEXT_SEG
+        mov [cs:c_draw + 2], ax
+        mov word [cs:c_draw], USE_TEXT_OFF
+        mov eax, [0x11A4]
+        mov [cs:c_winptr], eax
+        ret
+
+; CR_AGE_DRAW: the creation panel's age, for CR_AGE and CR_NAME (DS the game's).
+cr_age_draw:
+        les bx, [0x119C]        ; (the sheet being made)
+        movzx si, byte [es:bx + 0x18]
+        dec si
+        cmp si, 8
+        jae .done               ; (no race yet)
+        imul si, si, 3
+        call age_roll
+        mov di, cr_age_text
+        mov si, age_word
+        call age_copy           ; ("AGE: ", then the age)
+        call c_itoa
+        call cr_text_routine
+        mov ax, [0xF9C]         ; (the PSP box's top: PSP's own line)
+        sub ax, 2
+        push ax
+        push word CR_AGE_X
+        push cs
+        push word cr_age_text
+        call c_draw_line
+.done:  ret
+
+; AGE_ROLL: AL the starting age of the creature being made (DS:[11A0h]'s name), AGE_RACES' entry
+; at SI: h from the race (SI / 3 + 1) * 257, h = h * 31 + each of the name's bytes (to 15), then
+; for each die h = h * 25173 + 13849, its high byte mod the sides, plus 1 (aging.natural_start).
+age_roll:
+        push bx
+        push cx
+        push dx
+        push di
+        push es
+        mov ax, si
+        mov cl, 3
+        div cl                  ; (AL the race less 1)
+        movzx di, al
+        inc di
+        imul di, di, 257        ; (h)
+        les bx, [0x11A0]
+        add bx, 0x28            ; (the name)
+        mov cx, 15
+.name:  movzx ax, byte [es:bx]
+        or ax, ax
+        jz .rolled
+        imul di, di, 31
+        add di, ax
+        inc bx
+        loop .name
+.rolled:
+        movzx cx, byte [cs:si + AGE_RACES + 1]  ; (the dice)
+        movzx bx, byte [cs:si + AGE_RACES]       ; (the age so far: the base)
+        jcxz .out
+.die:   imul di, di, 25173
+        add di, 13849
+        mov ax, di
+        shr ax, 8
+        xor dx, dx
+        push cx
+        movzx cx, byte [cs:si + AGE_RACES + 2]
+        div cx
+        pop cx
+        inc dx
+        add bx, dx
+        loop .die
+.out:   mov ax, bx
+        pop es
+        pop di
+        pop dx
+        pop cx
+        pop bx
+        ret
 rl_text  db '000/000', 0
 
 ; PROBE_EF_CLICK: INT VEC_EF_CLICK replaces "mov si,[bp+8]" (3 bytes: INT + NOP; DSUN.EXE 7EC9Eh) in the
@@ -9276,7 +9481,7 @@ path_down:
         ret
 
 ; AGE_TEXT: CF set when party member BX has no age in its STATS (the Loader not keeping them, the
-; rule off, none given); else AGE_SHORT "AGE 23", for the inventory panel. All registers kept.
+; rule off, none given); else AGE_SHORT "AGE: 23", for the inventory panel. All registers kept.
 age_text:
         pusha
         call stats_for
@@ -9332,7 +9537,7 @@ w_itoa:                         ; AX (unsigned) -> decimal at CS:DI, DI left at 
         pop ax
         ret
 
-age_word  db 'AGE ', 0
+age_word  db 'AGE: ', 0
 age_short times 12 db 0
 
 ; EF_LINE: CS:SI EF_DRAW's next line: counted (EF_INDEX), and put on the panel (EF_PUT) if drawing
@@ -9452,11 +9657,10 @@ kit_line     db 'KIT: '
 ef_y         dw 0
 ef_kind      dw 0
 ef_last      db 0
-ef_skills    dw .s0, .s1, .s2, .s3
+ef_skills    dw .s0, .s1, .s2, lv_expert
 .s0     db 'SPECIALIZED IN', 0
 .s1     db 'MASTER OF', 0
 .s2     db 'GRAND MASTER OF', 0
-.s3     db 'EXPERT IN', 0
 ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k12, .k13, .k14, .k15
 .k0     db '  LONG SWORD', 0
 .k1     db '  CLUB', 0
@@ -11344,7 +11548,8 @@ class_letters db 0, 0, 'C', 0, 'D', 0, 'F', 0, 'G', 0, 'P', 'r', 'P', 's', 'R', 
 ; are shown again (the screen's routine for it, WP_STUB's entry RS_SCORES, which RL_SUM follows
 ; with the totals), then the rest as the die shows a roll: its routine from where it has rolled
 ; the hit points (RS_TAIL, with its frame and DI 1), which shows them and the PSP (worked out
-; again from the same scores: no dice), then the AC and damage.
+; again from the same scores: no dice), then the AC and damage; each call with the way back in a
+; frame the overlay manager can fix up (RS_FRAMED).
 RS_STORE  equ 0x8B0
 RS_RECALL equ 0x8B1
 RS_DONE   equ 0x66377 - 0x6625F    ; (the routine's way on for another button, less the INT's return)
@@ -11380,12 +11585,14 @@ probe_rs_click:
         mov ax, ds
         add ax, WP_STUB
         mov [cs:wp_far + 2], ax
-        call far [cs:wp_far]
-        mov si, sp
-        mov ax, [ss:si + 36]                ; (the overlay's segment: the INT's return)
-        mov [cs:rs_tail + 2], ax
+        call rs_framed                      ; (the scores' routine: another overlay's)
+        mov word [cs:wp_far], .tail
+        mov [cs:wp_far + 2], cs
+        call rs_framed                      ; (the die's routine from where it rolled the hit points)
+        jmp .done
+.tail:  mov [cs:rs_tail + 2], dx            ; (DX: the overlay's segment, the INT's way back)
         push cs
-        push word .done
+        push word .back
         push bp                             ; (the die's frame, as its routine makes it)
         mov bp, sp
         sub sp, 2
@@ -11393,11 +11600,34 @@ probe_rs_click:
         push di
         mov di, 1
         jmp far [cs:rs_tail]
+.back:  retf
 .stored:
         mov byte [cs:rs_have], 1
 .done:  pop es
         popad
 .out:   iret
+
+; RS_FRAMED: a far call to WP_FAR with the INT's way back (PROBE_RS_CLICK's, past ES and PUSHAD:
+; SP+2 on entry, +36 and +38) in a frame the overlay manager can fix up, as PROBE_USE_ITEM's: the
+; call may load another overlay over the creation screen's or move it, which leaves the way back
+; where the manager has put it (DX its segment, for RS_TAIL). Keeps BX, SI, DI.
+rs_framed:
+        push bx
+        mov bx, sp
+        push word [ss:bx + 40]
+        push word [ss:bx + 38]
+        push bp
+        mov bp, sp
+        mov dx, [ss:bx + 40]
+        call far [cs:wp_far]
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 38], ax
+        mov [ss:bx + 40], dx
+        pop bx
+        ret
 
 ; RS_SAME: ZF set if the sheet being made (DS:[119Ch]) has the stored roll's race, sex, classes
 ; and kit (RS_BUF's first RS_KEY bytes, in RS_FIELDS' order). DS the game's; keeps all but flags.
@@ -15995,6 +16225,11 @@ WW_SITE   equ NS_IMAGE + 57     ; 7617Dh: a one-target spell's damage starting (
 ENL_SITE  equ NS_IMAGE + 58     ; 7C246h: a melee hit's damage made bigger by Enlarge (ENL_SITE)
 REGEN_SITE equ NS_IMAGE + 59    ; 228BFh: a member with CON 20 or more regenerating (REGEN_SITE)
 CON_SITE  equ NS_IMAGE + 60     ; 5EAA1h: CON's adjustment to the paralysis/poison/death save (CON_SAVE)
+CR_AGE_SITE equ NS_IMAGE + 61   ; 65A89h, 63A13h: the creation panel's PSP drawn (CR_AGE)
+CR_NAME_SITE equ NS_IMAGE + 62  ; 66045h: a name the game gave copied to the creature (CR_NAME)
+CR_NAME2_SITE equ NS_IMAGE + 63 ; 6349Fh: the same, a figure clicked (CR_NAME)
+CR_NAME3_SITE equ NS_IMAGE + 64 ; 63AE8h: a name typed (CR_NAME)
+CR_NAME4_SITE equ NS_IMAGE + 65 ; 63B2Dh: none typed, the game's put back (CR_NAME)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -16090,6 +16325,16 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je regen_site
         cmp byte [cs:rl_site], CON_SITE
         je con_save
+        cmp byte [cs:rl_site], CR_AGE_SITE
+        je cr_age
+        cmp byte [cs:rl_site], CR_NAME_SITE
+        je cr_name
+        cmp byte [cs:rl_site], CR_NAME2_SITE
+        je cr_name2
+        cmp byte [cs:rl_site], CR_NAME3_SITE
+        je cr_name3
+        cmp byte [cs:rl_site], CR_NAME4_SITE
+        je cr_name4
         cmp byte [cs:rl_site], AREA_SITE
         je area_site
         cmp byte [cs:rl_site], ACID_SITE
@@ -21465,7 +21710,6 @@ d_wx       dw 0
 d_wy       dw 0
 d_seed     dw 0
 d_yy       dw 0
-d_xx       dw 0
 d_wrow     dw 0
 d_ey       dw 0
 d_sx       dw 0
@@ -23332,5 +23576,6 @@ all_vectors_end:
         align 16, db 0
 image_len equ $ - $$
 file_len  equ image_len + 32
+        times -(image_len + STACK > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
 ; the memory past the image to load in: the install's stack
 LOAD_EXTRA equ (STACK + 15) / 16

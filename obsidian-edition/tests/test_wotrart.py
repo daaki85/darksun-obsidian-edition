@@ -150,6 +150,7 @@ class FindTests(unittest.TestCase):
         os.makedirs(self.sl)
         self.chosen, self.own = None, wotrart._chosen
         wotrart._chosen = lambda: self.chosen  # (not the Loader's own settings)
+        wotrart._FOUND.clear()  # (each test's folders searched afresh)
 
     def tearDown(self):
         wotrart._chosen = self.own
@@ -165,7 +166,21 @@ class FindTests(unittest.TestCase):
     def test_beside_by_either_name(self):
         self.assertIsNone(wotrart.find_resources(self.sl))
         path = self.install("Dark Sun 2 Wake")
+        wotrart._FOUND.clear()
         self.assertEqual(wotrart.find_resources(self.sl), path)
+
+    def test_kept_for_the_run(self):
+        """A search's answer is kept (the Options tab asks each time it is built): a game installed
+        later is found from the next run, or at once once chosen; one found and then gone is
+        searched for again."""
+        self.assertIsNone(wotrart.find_resources(self.sl))
+        path = self.install("Dark Sun 2 Wake")
+        self.assertIsNone(wotrart.find_resources(self.sl))
+        self.assertEqual(wotrart.find_resources(self.sl, os.path.dirname(path)), path)
+        wotrart._FOUND.clear()
+        self.assertEqual(wotrart.find_resources(self.sl), path)
+        os.remove(path)
+        self.assertIsNone(wotrart.find_resources(self.sl))
 
     def test_gog_galaxy_name(self):
         """GOG Galaxy installs it as "Dark Sun 2", beside "Dark Sun" (Shattered Lands)."""

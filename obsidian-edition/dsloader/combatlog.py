@@ -57,14 +57,12 @@ WELL = (4, 15, PANEL_W - 5, PANEL_H - 5)  # x0, y0, x1, y1 (inclusive), in the p
 GRAIN_HI_N, GRAIN_LO_N = 32, 32  # (of 256: the stone's pixels speckled lighter, darker)
 LINE_H = 9  # the font's height, its shadow in it
 ROWS = 6  # lines in the well
-TEXT_X = WELL[0] + 7  # where the lines start (after the pip) ...
-TEXT_RIGHT = WELL[2] - 9  # ... and end (before the scrollbar)
+TEXT_X = WELL[0] + 7  # where the lines start (after the pip)
 INDENT = 8  # a wrapped line's rows after its first, and each level of a detail line
 HEADER_X, HEADER_Y = 4, 2
 TSR_MOUSE = 332  # DSCLOG's header: the pointer (x, y), the left button held after a press on the
 #   panel, the presses on it counted and where the last was (x, y): six words, game pixels
 TRACK = (WELL[2] - 6, WELL[1] + 1, WELL[2] - 1, WELL[3] - 1)  # the scrollbar: x0, y0, x1, y1
-HANDLE_X0, HANDLE_X1 = TRACK[0] + 1, TRACK[2] - 1
 TRACK_H = TRACK[3] - TRACK[1] - 1  # (the handle's room, a pixel in from each end)
 HANDLE_MIN = 8
 WHEEL_ROWS = 3  # rows a notch of the mouse wheel scrolls
@@ -554,11 +552,19 @@ def key_rect(font, g: Geometry = SIZES[DOCKED]) -> Tuple[int, int, int, int]:
     return x1 - BUTTON_W, HEADER_Y0, x1, HEADER_Y1
 
 
-ARENA_REGIONS = (0x29, 0x2A)  # the slave pens and the arena: the header's count of fights there
+ARENA_REGIONS = (0x29, 0x2A)  # the slave pens and the arena: where the count of arena fights is read
+ARENA_REGION = 0x2A  # the arena: where the header says it (anywhere else out of a fight, the game's time)
+
+
+def clock_line(seconds: int) -> str:
+    """The header out of a fight, but in the arena: how long the game has run, "Day 47, 14:20" (from
+    day 1 at 00:00; the game has no time of day, so this is the hours into that day)."""
+    days, rest = divmod(max(0, seconds), 24 * 60 * 60)
+    return f"Day {days + 1}, {rest // 3600:02d}:{rest % 3600 // 60:02d}"
 
 
 def arena_line(count: Optional[int]) -> str:
-    """The header between fights in the slave pens and the arena: the party's arena fights, as the
+    """The header between fights in the arena: the party's arena fights, as the
     game counts them (one a trip into the arena, however many waves; game.ARENA_FIGHTS)."""
     return "Arena fights: ?" if count is None else f"Arena fights: {count}"
 
@@ -665,7 +671,6 @@ class Panel:
         self.font = None  # art.Font: no font, no lines
         self.level = SHORT
         self.size = DOCKED
-        self._open_size = DOCKED  # the size L opens a collapsed panel to
         self.filter = "all"
         self.first: Optional[int] = None  # the top row shown when scrolled back (None: the newest)
         self._back_rows = 0  # ... the rows there were then (the chip's "new")
@@ -697,8 +702,6 @@ class Panel:
     def resize(self, size: str) -> None:
         if size != self.size:
             self.size = size
-            if size != COLLAPSED:
-                self._open_size = size
             if size != EXPANDED:
                 self.filter = "all"
             self.first, self._grab = None, None
@@ -787,7 +790,7 @@ class Panel:
                in_arena: bool = False) -> None:
         """ON: the panel shown (once it is drawn in a palette DSCLOG has read: PALETTES counts the
         reads), with the header TOP and the log's lines, NAMES their colours' keys. IN_ARENA (between
-        fights in the slave pens and the arena): the header the count of arena fights instead,
+        fights in the arena): the header the count of arena fights instead,
         ARENA_COUNT (None: not known yet, '?'), while the panel has a header of its own (not
         collapsed)."""
         guest = gd.guest

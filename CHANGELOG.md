@@ -8,6 +8,112 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.1 ([release notes](release-notes/v2.13.1.md)).
+
+**New**
+- **Grey hair on the party's map figures** (with Ages and magical aging, and What the party
+  wears): iron grey streaks when middle-aged, grey when old, white when venerable, in each
+  figure's own shades (`greyhair.py`: `MAPS`, `SPECKLE`); dwarves and muls, hairless on Athas,
+  and thri-kreen unchanged. The hair to grey is found apart from
+  the gear's (`greyhair.hair`), with corrections for each race (missing hair shades, faces kept
+  out, the bow frames' heads, the elves' brown shading, the half-elves' bun and temples), so
+  helms and cloaks don't move. The live redraw keys on the age category. Checked in DOSBox.
+  Tests: `test_greyhair`.
+
+- **The age on the creation screen**, above RECALL (`AGE: 23`), the age the character will start
+  at, from a 16-bit hash of the name and race that the Loader and DSCLOG work out alike
+  (`aging.natural_start`, `AGE_ROLL`), redrawn as the name changes. The inventory's line is
+  `AGE: 23` too. Characters already
+  given an age keep it; their true age (Restore Youth's floor) is the new roll's. Checked in
+  DOSBox: six figures and three typed names, each age the Loader's. Tests: `test_creation_age`.
+
+- **Natural aging**, as flavour: a year each time the game's clock passes another 365 days, put
+  in the stored age with its score changes as it happens (`aging.natural_tick`, from the dice
+  log's `_natural_aging`), so a save keeps both; the dice log says `A year has passed: Gerakis
+  is 35.`, once (a load, a new party or the clock going back only takes a new baseline). Restore
+  Youth's floor counts the clock's years. The Options label says so. The years counted are kept
+  in the game's own flags (798-806), so a save keeps them: none counted twice on a load, and none
+  lost to a long jump of the clock, the arena (no flags in memory there) or play without the
+  Loader, each waiting for the next steady look instead. Checked in DOSBox. Tests:
+  `test_natural_years`, `test_restore_counts_the_games_years`, `test_the_log_counts_each_year_once`.
+
+- **The game's time on the combat log panel:** out of a fight its top line says how long the game
+  has run, `Day 47, 14:20` (`combatlog.clock_line`, from the game's clock: day 1 at 00:00; the game
+  has no time of day); in the arena it says the count of arena fights instead, as before, now
+  there only (the slave pens have the time), and only once the game has shown the count to the
+  Loader (until then the time, not `?`). Checked in DOSBox: `Day 1, 00:00`, then `Day 3, 05:21`
+  with the clock moved on. Tests: `test_clock_line`, `test_arena_count_only_once_known`.
+
+**Fixed**
+- **Kurzak notices Legcrusher is gone** (`kurzak.py`, always): once the party has killed
+  Legcrusher (at the fountain, with no alarm), Kurzak's call to the arena and his greeting no
+  longer name him as if he were about: his call, his talk's three greetings, his answer to "Who is
+  the half-giant?" and Dinos's warning that he'll send out Legcrusher ask first
+  whether Legcrusher is on the map (80h from Kurzak, under 999), and say the game's words or his
+  own. Each first line becomes a jump to code after the script's end, as `pensasks.py` does.
+  Tests: `test_kurzak`. Not yet seen in play.
+
+**Fixed** (the second audit, with seven agents: code, memory, documents, pictures)
+- **RECALL on the creation screen stopped DOSBox** ("DynrecCore: illegal option"), from 2.8.0 on,
+  when pressed before the die had been rolled on that visit to the screen (STORE, then RECALL):
+  its redraw calls the scores' routine, another overlay's, whose loading could move or drop the
+  creation screen's, and RECALL then jumped to where the die's routine had been. Both calls are
+  now made with the way back in a frame the overlay manager fixes up (`RS_FRAMED`). Found by
+  re-shooting the creation screen; narrowed down release by release (2.7.2 fine, 2.8.0 not) and
+  with a progress byte read from DOSBox's memory. Checked in DOSBox: STORE, the die, RECALL twice.
+- The Loader: the game window box shows Single (320x240) for a window at its own size (it said
+  Triple); a save whose creatures are cut short is reported as such; `find-text` and `checks`
+  cope with any text and a lower-case GPLDATA.GFF; a missing DOSBox.exe is a launch error, not a
+  crash; a named save renamed only in case is no longer deleted on Windows; the stats thread is
+  waited for before the game's memory is let go; defilers' scrolls and new items in crash
+  reports; dead code and unused imports gone.
+- `age_by` kept within the age byte's range, and no "grows younger 0 years" line at the race's
+  base age; the race's article written in one place (`aging._a`).
+- DSCLOG: the creation screen's text buffer 12 bytes (PSP's longest, `65535/65535`); no far call
+  through an overlay operand not yet fixed up; a build guard for the helper's 64 KB segment
+  (`image_len` + the install's stack); a duplicate `EXPERT IN` and an unused word gone; `AGE:`
+  in the comments.
+- DSCLOG: the creation screen's age handlers keep their way back apart from `RL_SUM`'s
+  (`cr_ip`, `cr_cs`, `cr_fl`), as they call the game's code. Tests for the creation age with 300
+  random names and for the redraw when the name changes.
+- DEVELOPMENT: the memory figures as built (63,360-byte image, 1,920 bytes spare in the segment,
+  6,056 of 8,182 paragraphs of upper memory, about 51.4 KB free in one piece with `UMBPLUS.COM`,
+  the far block 58,440 bytes); the Ages section in parts, with Enlarge's dice and CON as in AD&D,
+  in the contents.
+- Documents: natural aging, grey hair and the creation screen's age in the guide, the README, the
+  rule table and the patch notes (the Ages bullet split up); Dark Sun Recompiled in the patch
+  notes; defilers' scrolls counted at once (the README had them from the next start); Enlarge's
+  rule and CON as in AD&D's poison saves in the guide; a spoiler note on the game's bugs fixed;
+  history players don't need trimmed.
+- **The Loader's searches and settings:** the game folder is looked for in the folder given and
+  the one saved before any drive, the drives from C: on one at a time and only once a run
+  (`launch.drives`, `find_game_dir`'s `_SEARCHED`), as is Wake of the Ravager's (`wotrart`'s
+  `_FOUND`): an empty floppy drive or a sleeping network drive no longer holds the window up each
+  time the Options tab is built or the game started. The Loader's own settings (Wake of the
+  Ravager's folder, the open sections, the game folder, the window, the speed) are saved through
+  one helper that says so on the status line when settings.json is held elsewhere, rather than
+  losing the choice unseen. Tests: `test_drives_searched_once_and_only_when_needed`,
+  `test_kept_for_the_run`.
+- **Small Loader fixes:** the mouse wheel's hook thread makes its message queue before `stop()` can
+  post to it (a quit could be lost and the hook left on); Windows' millisecond timer asked for once
+  a run and given back at its end; refused memory writes kept to the newest 200; the game's art
+  read once a run (`GameArt.of`), not three times; the game window's and speed's confirmations
+  only when saved; a settings.json that is JSON but not an object kept aside as an unreadable one
+  is; the party's figures tried again every 30 seconds when the game's files couldn't be read;
+  no armour drawn on a thri-kreen (the game never lets one wear it); the Named saves and crash
+  logs folders left out of the download mark's removal; unused names gone.
+- **Documents reorganised:** the dice log's line-by-line reference (every kind of line and what it
+  means, 108 lines) moved from the README to a page of its own, `DICE-LOG.md`, linked from both
+  READMEs and the guide; the README's Options sections cut to one list of links, the guide's
+  Options tab at a glance being the one list of switches, defaults and timing; the Kits page the
+  one description of who may take which kit (the features page and the guide point to it);
+  the README's quality of life bullet shortened. Links and anchors checked: none broken.
+- Pictures taken anew for the age: the inventory panels (`inventory.png`, `inventory-ranger.png`,
+  `default-party-gerakis.png`), the creation screen (`creation-store-recall.png`,
+  `creation-weapons.png`) and the Loader (`dialogue.png`, `dicelog.png`: the Characters tab's ages).
+
+## Pull request #81 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/81))
+
 Obsidian Edition 2.13.0 ([release notes](release-notes/v2.13.0.md)).
 
 **New**

@@ -17,6 +17,7 @@ the Ravager (or for an icon it can't give), FALLBACKS: a Shattered Lands icon (i
 the nearest in kind) tinted halfway toward the spell's colour, in the same stable colours. DRAWN:
 the mod's own, for a spell Wake of the Ravager hasn't (Restore Youth's fountain)."""
 
+import itertools
 import os
 import struct
 from typing import Dict, Iterator, List, Optional, Sequence, Tuple
@@ -123,9 +124,13 @@ GOG_PARENTS = (r"GOG Games", r"Program Files (x86)\GOG Galaxy\Games", r"Program 
 SETTING = "wotr_dir"  # (the Loader's settings: the folder the player chose, if any)
 
 
-def _gog_folders() -> List[str]:
-    drives = [f"{d}:\\" for d in "CDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")] if os.name == "nt" else []
-    return [os.path.join(drive, parent, name) for drive in drives for parent in GOG_PARENTS for name in GOG_NAMES]
+def _gog_folders() -> Iterator[str]:
+    """GOG's usual places on each drive, a drive looked at only when needed (launch.drives)."""
+    from . import launch  # (here, so the import stays one way)
+    for drive in launch.drives():
+        for parent in GOG_PARENTS:
+            for name in GOG_NAMES:
+                yield os.path.join(drive, parent, name)
 
 
 def _beside(sl_dir: Optional[str]) -> List[str]:
@@ -156,9 +161,21 @@ def find_resources(sl_dir: Optional[str], given: Optional[str] = None) -> Option
     """Wake of the Ravager's RESOURCE.GFF: in GIVEN (a folder; else the one chosen on the Loader's
     Options tab), else in a folder beside Shattered Lands' SL_DIR (whatever its name: GOG Galaxy's
     is "Dark Sun 2"), else in GOG's usual places; in each, or in a folder inside it. None if none is
-    found."""
+    found. A search's answer is kept for the run (_FOUND), while the file is still there: the
+    Options tab asks each time it is built, and the folders beside the game's can be many."""
     first = given or _chosen()
-    for folder in ([first] if first else []) + _beside(sl_dir) + _gog_folders():
+    key = (sl_dir, first)
+    if key in _FOUND and (_FOUND[key] is None or os.path.isfile(_FOUND[key])):
+        return _FOUND[key]
+    _FOUND[key] = _search(sl_dir, first)
+    return _FOUND[key]
+
+
+_FOUND: Dict[Tuple[Optional[str], Optional[str]], Optional[str]] = {}
+
+
+def _search(sl_dir: Optional[str], first: Optional[str]) -> Optional[str]:
+    for folder in itertools.chain([first] if first else [], _beside(sl_dir), _gog_folders()):
         if not folder or not os.path.isdir(folder):
             continue
         inner = []

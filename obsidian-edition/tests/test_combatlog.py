@@ -385,7 +385,7 @@ class StatesTests(unittest.TestCase):
         self.assertFalse(hasattr(self.panel, "arena"))
 
     def test_arena_count_in_the_header(self):
-        """Between fights in the slave pens and the arena, the header says the count, docked or
+        """Between fights in the arena, the header says the count, docked or
         expanded ('?' when not known yet); collapsed keeps the newest line, and outside them the
         header is the round."""
         g = self.game.guest
@@ -406,7 +406,14 @@ class StatesTests(unittest.TestCase):
         self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES, 2)
         self.assertEqual(self.panel._shown[1], "Round 1")
         self.assertEqual(c.arena_line(None), "Arena fights: ?")
-        self.assertEqual(c.ARENA_REGIONS, (0x29, 0x2A))
+        self.assertEqual((c.ARENA_REGIONS, c.ARENA_REGION), ((0x29, 0x2A), 0x2A))
+
+    def test_clock_line(self):
+        """Out of a fight, but in the arena: the game's time from day 1 at 00:00."""
+        self.assertEqual(c.clock_line(0), "Day 1, 00:00")
+        self.assertEqual(c.clock_line(33), "Day 1, 00:00")
+        self.assertEqual(c.clock_line(46 * 86400 + 14 * 3600 + 20 * 60 + 59), "Day 47, 14:20")
+        self.assertEqual(c.clock_line(365 * 86400), "Day 366, 00:00")
 
     def test_update_writes_the_size(self):
         g = self.game.guest
@@ -424,3 +431,27 @@ class StatesTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ArenaHeaderTests(unittest.TestCase):
+    def test_arena_count_only_once_known(self):
+        """The dice log's header out of a fight: in the arena the count of arena fights once the
+        game has shown it (kept from the slave pens too), until then the time, as everywhere else."""
+        from test_now import dag
+        log = dag()
+        log.combat_log, log._panel.open, log._font_tried = True, True, True
+        g = log.game
+        region, number = [0x2A], [None]
+        g.in_combat, g.region, g.number = (lambda: False), (lambda: region[0]), (lambda n: number[0])
+        g.game_time = lambda: 3600
+        seen = []
+        log._panel.update = lambda gd, hdr, on, palettes, top="", names=None, count=None, in_arena=False: \
+            seen.append((top, count, in_arena))
+        log._update_panel(0.0)
+        self.assertEqual(seen[-1], ("Day 1, 01:00", None, False))
+        region[0], number[0] = 0x29, 3  # (the pens: read there, the time shown)
+        log._update_panel(0.0)
+        self.assertEqual(seen[-1], ("Day 1, 01:00", 3, False))
+        region[0], number[0] = 0x2A, None  # (the arena: the count as last read)
+        log._update_panel(0.0)
+        self.assertEqual(seen[-1][1:], (3, True))

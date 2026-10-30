@@ -6,14 +6,13 @@ import sys
 import time
 import unittest
 from unittest import mock
-from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import tracker as tracker_module
 from dsloader import dicelog, game, names
 from dsloader.dicelog import AcDetail, DiceLog, Entry, KIND_AC, KIND_ROLL, KIND_SAVE
-from dsloader.textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, DialogueEntry, TextBuffer
+from dsloader.textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, TextBuffer
 from dsloader.tracker import PartyTracker
 
 LOAD_SEG = 0x1A2
