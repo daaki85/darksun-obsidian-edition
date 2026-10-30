@@ -409,6 +409,15 @@ class Viewer:
                 ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
                                      "weapon in the other; two heavy weapons still can't be held)"),
                 ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
+                ("aging", "Ages and magical aging: each character has an age from Dark Sun's tables, its "
+                          "scores changing at middle, old and venerable age, and dies at the most its race "
+                          "lives; Haste ages each it speeds a year, and each must survive a system shock roll "
+                          "(by CON), as in AD&D"),
+                ("enlarge_dice", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
+                                 "as in AD&D (the game multiplies the whole melee damage, STR included)"),
+                ("con_adnd", "CON as in AD&D: from CON 20 a hit point back an hour, to one every 10 minutes at 25 "
+                             "(the game's every 5 minutes at any); dwarves and halflings add only their racial "
+                             "bonus to poison saves, not CON's adjustment too"),
                 ("weapon_specialization", "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
                                           "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                           "rangers have expertise, every ranger with the bow; specialists and "
@@ -435,7 +444,7 @@ class Viewer:
                                   "included, on the first two)"),
                 ("new_spells", "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
                                "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends; "
-                               "and nine 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
+                               "and ten 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
             self.rule_vars[key] = tk.BooleanVar(
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = where.get(key, rules)
@@ -604,8 +613,12 @@ class Viewer:
         game_dir = self._saves_game_dir()
         if game_dir is None:
             return
-        namedsaves.sync(game_dir)
-        os.makedirs(namedsaves.NAMED, exist_ok=True)
+        try:
+            namedsaves.sync(game_dir)
+            os.makedirs(namedsaves.NAMED, exist_ok=True)
+        except OSError as err:
+            self.status.set(f"Couldn't open the named saves: {err}")
+            return
         try:
             if sys.platform == "win32":
                 os.startfile(namedsaves.NAMED)  # type: ignore[attr-defined]
@@ -1599,9 +1612,16 @@ class Viewer:
                         move_why.append("Path-finder" if path > 0 else "Wayfinder down")
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
+            age = None
+            if known and index < game.PARTY_SIZE and self.rule_vars["aging"].get():
+                from . import aging
+                try:
+                    age = aging.describe(gd.sheet(index))
+                except (struct.error, IndexError, ValueError):
+                    age = None
             card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,
                       skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move,
-                      move_why=", ".join(move_why))
+                      move_why=", ".join(move_why), age=age)
 
     def _hex_base(self) -> Optional[int]:
         record = self.layout.records.get(self.hex_record.get())

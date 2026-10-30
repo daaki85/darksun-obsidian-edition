@@ -12,7 +12,7 @@ numbers; the real ones are given here.
 import re
 import string
 import struct
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from .guestmem import GuestMemory
 
@@ -123,7 +123,7 @@ RULE_PROTECTION = 1024
 # its material (ACID_SAVES), less its plus and 1 more for a magical power
 RULE_ITEM_SAVES = 2048
 # Weapon specialization (specialize.py; DSCLOG's PROBE_ATTACKS): the kinds a warrior chose, kind + 1
-# each in the sheet's SPEC_SLOTS bytes (four the game never uses), set the attacks a round
+# each in the sheet's SPEC_SLOTS bytes (spec_kinds), set the attacks a round
 RULE_SPECIALIZE = 4096
 RULE_RESTRICT = 8192  # class restrictions on armour, shields and weapons (restrict.py)
 RULE_MULTI_HP = 16384  # multiclass hit points as in AD&D: each level's die and CON's bonus shared
@@ -147,7 +147,55 @@ RULE_BUYBACK = 4194304
 # a backstab multiplies the weapon's dice only, STR and the rest added after (the PHB; DSCLOG's
 # RULE_HI_BACKSTAB, STAB_TIMES); else the game's, the whole damage multiplied
 RULE_BACKSTAB = 8388608
+# ages from Dark Sun's tables, their categories' changes to the scores and death at the most a race
+# lives (aging.py), and Haste's magical aging: a system shock roll and a year (DSCLOG's RULE_HI_AGING)
+RULE_AGING = 16777216
+# Enlarge multiplies the weapon's dice only, rounded up, STR and the rest added after (the PHB's
+# Enlarge makes the weapon bigger; DSCLOG's RULE_HI_ENLARGE, ENL_SITE); else the game's, the whole
+# melee damage multiplied
+RULE_ENLARGE = 33554432
+# CON as in AD&D: regeneration from CON 20 at the PHB's rates (one hit point an hour at 20 to one
+# every 10 minutes at 25; the game's every 5 minutes at any), and no CON adjustment to a dwarf's or
+# a halfling's paralysis/poison/death save, only its racial bonus (DSCLOG's RULE_HI_CON)
+RULE_CON = 67108864
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
+# The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
+# each (0 none). Up to 2.12, a byte each; now packed (SPEC_PACKED, +16h's top bit), 5 bits each in
+# +14h to +16h, and +17h the character's age (SHEET_AGE: years past its race's base starting age, 0
+# not yet given; aging.py). A sheet keeps the old layout until something is written to it (both
+# read alike: spec_kinds; DSCLOG's SPEC_GET).
+SPEC_PACKED, SPEC_BITS, SHEET_AGE = 0x80, 5, 0x17
+
+
+def spec_packed(sheet: bytes) -> bool:
+    """The sheet's weapon specs packed (+16h's top bit), +17h its age."""
+    return len(sheet) > SPEC_SLOTS + 2 and bool(sheet[SPEC_SLOTS + 2] & SPEC_PACKED)
+
+
+def spec_kinds(sheet: bytes) -> bytes:
+    """The four weapon specs chosen, kind + 1 each (0 none), from either layout."""
+    raw = bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])
+    if not spec_packed(sheet):
+        return raw
+    value = int.from_bytes(raw[:3], "little")
+    return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT))
+
+
+def sheet_age(sheet: bytes) -> int:
+    """+17h of a packed sheet: years past the race's base starting age (0: none given yet)."""
+    return sheet[SHEET_AGE] if len(sheet) > SHEET_AGE and spec_packed(sheet) else 0
+
+
+def packed_specs(kinds: Sequence[int], age: int = 0) -> bytes:
+    """+14h to +17h in the packed layout: KINDS (kind + 1 each, up to four) and AGE."""
+    kinds = list(kinds) + [0] * (SPEC_COUNT - len(kinds))
+    value = sum((k & 0x1F) << SPEC_BITS * i for i, k in enumerate(kinds)) | SPEC_PACKED << 16
+    return value.to_bytes(3, "little") + bytes([age & 0xFF])
+
+
+def with_specs(sheet: bytes, kinds: Sequence[int]) -> bytes:
+    """SHEET with its weapon specs KINDS, packed, its age kept."""
+    return bytes(sheet[:SPEC_SLOTS]) + packed_specs(kinds, sheet_age(sheet)) + bytes(sheet[SPEC_SLOTS + SPEC_COUNT:])
 # AD&D's item saving throws against acid (the DMG's table), by the game's materials: wood
 # (thick), bone, stone and obsidian (glass's), metal, leather; and cloth for no material
 ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 5), 4: ("metal", 13),
@@ -173,7 +221,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
                  ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
-                 ("backstab_dice", RULE_BACKSTAB))
+                 ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
+                 ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
@@ -192,24 +241,26 @@ NEW_SPELLS = {GRACE_SPELL: "Cat's Grace", CLAW_SPELL: "Erdlu Claw", FOG_SPELL: "
               REFLECT_SPELL: "Reflected Image", SPOOK_SPELL: "Spook", FRIENDS_SPELL: "Friends"}
 NEW_SPELL_LEVELS = {GRACE_SPELL: 2, CLAW_SPELL: 1, FOG_SPELL: 1, REFLECT_SPELL: 1, SPOOK_SPELL: 1,
                     FRIENDS_SPELL: 1}
-# ... and nine 6th-level priest spells after them (DSCLOG's PRIEST6 on): Wake of the Ravager's eight
-# and Whirlwind, the air's. A priest casts those of its spheres, as the game's own: their rows' masks
+# ... and ten 6th-level priest spells after them (DSCLOG's PRIEST6 on): Wake of the Ravager's eight,
+# Whirlwind (the air's) and Restore Youth (the cosmos's). A priest casts those of its spheres, as the game's own: their rows' masks
 # (PRIEST6_MASKS: the cosmos's as its 4th- and 5th-level spells', the druids'; the elements' as
 # theirs), meeting its priest classes' (DSCLOG's NS_PRIEST_KNOWS; the sheet holds no bit for them)
 HEAL_SPELL, HARM_SPELL, BLADE_SPELL, THORNS_SPELL, SUNSTROKE_SPELL = range(202, 207)
-SEEDS_SPELL, HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL = range(207, 211)
+SEEDS_SPELL, HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL, RESTORE_YOUTH_SPELL = range(207, 212)
 PRIEST6_SPELLS = {HEAL_SPELL: "Heal", HARM_SPELL: "Harm", BLADE_SPELL: "Blade Barrier",
                   THORNS_SPELL: "Wall of Thorns", SUNSTROKE_SPELL: "Sunstroke", SEEDS_SPELL: "Fire Seeds",
-                  HEARTSEEKER_SPELL: "Heartseeker", WATER_LIFE_SPELL: "Water of Life", WHIRLWIND_SPELL: "Whirlwind"}
+                  HEARTSEEKER_SPELL: "Heartseeker", WATER_LIFE_SPELL: "Water of Life", WHIRLWIND_SPELL: "Whirlwind",
+                  RESTORE_YOUTH_SPELL: "Restore Youth"}
 COSMOS_MASK, FIRE_MASK, EARTH_MASK, AIR_MASK = 0x001003C2, 0x00110112, 0x0010808A, 0x00104046
 PRIEST6_MASKS = {HEAL_SPELL: COSMOS_MASK, HARM_SPELL: COSMOS_MASK, BLADE_SPELL: AIR_MASK,
                  THORNS_SPELL: EARTH_MASK, SUNSTROKE_SPELL: FIRE_MASK, SEEDS_SPELL: FIRE_MASK,
-                 HEARTSEEKER_SPELL: 0x001282AA, WATER_LIFE_SPELL: 0x00120222, WHIRLWIND_SPELL: AIR_MASK}
+                 HEARTSEEKER_SPELL: 0x001282AA, WATER_LIFE_SPELL: 0x00120222, WHIRLWIND_SPELL: AIR_MASK,
+                 RESTORE_YOUTH_SPELL: COSMOS_MASK}
 PRIEST6_LEVEL = 6
-NEW_SPELLS_END = 211  # (past the last)
+NEW_SPELLS_END = 212  # (past the last)
 # Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
 # record copied to the records' room past the new spells, a save against death allowed
-NPP_SAVE_RECORD = 211
+NPP_SAVE_RECORD = 212
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16
@@ -1399,7 +1450,9 @@ class GameData:
             con = abilities[2]
             if sheet[SHEET_RACE] in (DWARF, HALFLING):
                 out.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
-            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0]
+            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
+            if self.rules & RULE_CON and sheet[SHEET_RACE] in (DWARF, HALFLING):
+                adjust = 0  # (only the racial bonus: DSCLOG's CON_SAVE)
             if adjust:
                 out.append((adjust, f"CON {con}"))
         return [(amount, why) for amount, why in out if amount]
@@ -1885,6 +1938,8 @@ class GameData:
                 if sheet[SHEET_RACE] in (DWARF, HALFLING):
                     parts.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
                 adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
+                if self.rules & RULE_CON and sheet[SHEET_RACE] in (DWARF, HALFLING):
+                    adjust = 0
                 if adjust:
                     parts.append((adjust, f"CON {con}"))
             parts = [(n, why) for n, why in parts if n]
@@ -2206,12 +2261,12 @@ class GameData:
             return []
         names = {**specialize.SKILL_NAMES, specialize.EXPERT: "expertise", specialize.PLAIN: "not yet"}
         out = []
-        for k in sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT]:
+        for k in spec_kinds(sheet):
             if 0 < k <= len(specialize.KINDS):
                 skill = specialize.skill(sheet, weaponchoice.PLAIN[k - 1][0])
                 out.append((specialize.KINDS[k - 1], names.get(skill, "")))
         bow = specialize.KINDS.index("bow")
-        if bow + 1 not in sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT]:
+        if bow + 1 not in spec_kinds(sheet):
             skill = specialize.skill(sheet, weaponchoice.PLAIN[bow][0])
             if skill not in (specialize.NONE, specialize.PLAIN):  # (a ranger's expertise)
                 out.append(("bow", names.get(skill, "")))

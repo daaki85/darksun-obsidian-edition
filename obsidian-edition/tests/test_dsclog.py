@@ -1038,7 +1038,7 @@ class SpecializeTests(unittest.TestCase):
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
 
     def attack(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False, race=0,
-               kit=0, shield=False, me=5, target_race=None):
+               kit=0, shield=False, me=5, target_race=None, packed=False):
         """(attacks in halves, THAC0, damage bonus, sides) after both probes, with THAC0 15, a
         damage bonus of 1 before the STR bonus of 2 is added, 1d8; the attacker (thing 7,
         creature 5) with a shield in its left hand or none (SHIELD)."""
@@ -1050,6 +1050,8 @@ class SpecializeTests(unittest.TestCase):
         sheet[0x43] = kit
         for i, k in enumerate(chosen):
             sheet[0x14 + i] = k + 1
+        if packed:  # (the specs packed, an age with them: game.packed_specs)
+            sheet[0x14:0x18] = game.packed_specs([k + 1 for k in chosen], 30)
         sheet[0x21:0x24], sheet[0x24:0x27] = bytes(classes), bytes(levels)
         sheet[0x18] = race
         mu.mem_write(self.SHEETS * 16 + 3 * 0x47, bytes(sheet))  # (sheet 3)
@@ -1184,6 +1186,19 @@ class SpecializeTests(unittest.TestCase):
 
     def test_specialization(self):
         self.assertEqual(self.attack(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0)), (3, 14, 5, 8))
+
+    def test_specs_packed(self):
+        """The same attacks with the specs packed (and an age beside them) as with a byte each."""
+        kits = 4096 | game.RULE_KITS
+        for packed in (False, True):
+            with self.subTest(packed=packed):
+                self.assertEqual(self.attack(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0), packed=packed),
+                                 (3, 14, 5, 8))
+                self.assertEqual(self.attack(3, self.AXE, chosen=(0,), packed=packed), (2, 15, 3, 8))
+                self.assertEqual(self.attack(4, self.AXE, chosen=(0, 5), levels=(9, 0, 0), rules=kits, kit=1,
+                                             packed=packed), (6, 12, 6, 10))
+                self.assertEqual(self.attack(3, self.AXE, chosen=(0, 5), levels=(5, 0, 0), rules=kits, kit=2,
+                                             packed=packed), (3, 14, 5, 8))
 
     def test_conjured_weapons(self):
         """The weapons spells make count as their AD&D kind for specialization (SPEC_KIND): the
@@ -2914,9 +2929,9 @@ class NewSpellTests(RuleTests):
         self.moved(1)
         for spell in (199, 200, 201):
             self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
-        for spell in range(202, 211):  # (the 6th-level priest spells: as a priest's, below it too)
+        for spell in range(202, 212):  # (the 6th-level priest spells: as a priest's, below it too)
             self.assertEqual(self.site(site, edx=spell) & (CF | ZF), CF)
-        self.assertEqual(self.site(site, edx=211) & (CF | ZF), 0)
+        self.assertEqual(self.site(site, edx=212) & (CF | ZF), 0)
         priest = gamepatch.NS_CMP + 1  # (55865h, "cmp si,45h": a wizard's spell below it, a priest's not)
         self.assertEqual(gamepatch.NS_CMP_SITES[1], (0x55865, "83fe45"))
         self.assertEqual(self.site(priest, esi=200) & (CF | ZF), CF)
@@ -3044,7 +3059,7 @@ class NewSpellTests(RuleTests):
         records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
         touch = bytes(range(0x1F)) + bytes((0xA0,))
         mu.mem_write(records + 0x27 * 0x20, touch)
-        mu.mem_write(records + 0xD3 * 0x20, bytes(0x20))
+        mu.mem_write(records + 0xD4 * 0x20, bytes(0x20))
         def save():
             self.at += 0x20
             start = CALLER * 16 + self.at
@@ -3057,10 +3072,10 @@ class NewSpellTests(RuleTests):
             return struct.unpack("<HH", bytes(mu.mem_read(SS * 16 + 0x7FC, 4)))
         self.moved(0)
         self.assertEqual(save(), (0x27, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xD3 * 0x20, 0x20)), bytes(0x20))
+        self.assertEqual(bytes(mu.mem_read(records + 0xD4 * 0x20, 0x20)), bytes(0x20))
         self.moved(1)
-        self.assertEqual(save(), (0xD3, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xD3 * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
+        self.assertEqual(save(), (0xD4, 6))
+        self.assertEqual(bytes(mu.mem_read(records + 0xD4 * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
         self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
 
     def test_script_request(self):
@@ -3253,6 +3268,103 @@ class NewSpellTests(RuleTests):
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=1)[1] & 0x40, 0x40)  # (melee: ZF)
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=2)[1] & 0x40, 0)
         self.assertEqual([kits.backstab_times(k, 5) for k in (kits.ASSASSIN, kits.SWASHBUCKLER, 0)], [6, 5, 5])
+
+    def test_enlarge_dice(self):
+        """ENL_SITE (7C246h, AX the Enlarges' levels, SI the damage after STR): the game's (100 + 10
+        a level)% of it all, rounded down; with RULE_HI_ENLARGE (512) and STAB_ROLL's dice, only the
+        dice, rounded up, the rest added once, and the kept dice made the enlarged ones (a backstab
+        then multiplies those); the dice used once."""
+        from dsloader import gamepatch
+        mu = self.mu
+        patches = {p.name: p for p in gamepatch.PATCHES}
+        def run(name, regs):
+            self.at += 0x200
+            start = CALLER * 16 + self.at
+            code = patches[name].replacement
+            mu.mem_write(start, code)
+            for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+            mu.emu_start(start, start + len(code))
+        def enlarge(rules_hi, levels, damage, rolled=None, bonus=-1, times=3):
+            self.rules_hi(rules_hi)
+            if rolled is not None:  # (the hit's roll: STAB_ROLL keeps its dice)
+                mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
+                mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", 1))
+                run("stab_roll", dict(eax=rolled))
+            run("enlarge_dice", dict(eax=levels, esi=damage))
+            si = mu.reg_read(r.UC_X86_REG_SI)
+            mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<h", 0))
+            mu.mem_write(SS * 16 + BP - 4, struct.pack("<h", si))
+            mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", 9))  # (not a party member)
+            run("stab_times", dict(eax=times))
+            return si, struct.unpack("<h", mu.mem_read(SS * 16 + BP - 4, 2))[0]
+        # 1d8 rolled 5, -1 bone: 4; +12 STR: 16; Enlarge level 4 (x140%)
+        self.assertEqual(enlarge(0, 4, 16, rolled=4)[0], 22)  # (16 x 1.4 = 22.4: the game's)
+        self.assertEqual(enlarge(512, 4, 16, rolled=4)[0], 18)  # (5 x 1.4 = 7: +2)
+        self.assertEqual(enlarge(512, 3, 16, rolled=4)[0], 18)  # (5 x 1.3 = 6.5, up to 7)
+        self.assertEqual(enlarge(512, 4, 16)[0], 22)  # (no dice since the last: the game's)
+        self.assertEqual(enlarge(512 | 128, 4, 16, rolled=4), (18, 32))  # (backstab: 7 x 3 - 1 + 12)
+
+    def test_regeneration(self):
+        """REGEN_SITE (228BFh, after the game's "div ebx" by 300: EAX the 300s, EDX the rest, CX the
+        member): AX the hit points, the game's 1 a 300 seconds; with RULE_HI_CON (1024) (26 - CON) x
+        600 seconds a hit point, the rest kept for the member's next; DX the member x 3Ah, as the
+        game's own two instructions left it."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "regen_rate")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x228BF, gamepatch.REGEN_SITE))
+        mu = self.mu
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        def regen(rules_hi, member, con, seconds):
+            self.rules_hi(rules_hi)
+            mu.mem_write(0x9000 * 16 + member * 0x3A + 0x24, bytes((con,)))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                    eax=(seconds // 300) & 0xFFFFFFFF, edx=seconds % 300, ecx=member,
+                                    ebx=300).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + len(patch.replacement))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_DX), member * 0x3A)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_EBX), 300)
+            return mu.reg_read(r.UC_X86_REG_AX)
+        self.assertEqual(regen(0, 0, 20, 3599), 11)  # (the game's: 1 a 300 seconds)
+        self.assertEqual(regen(1024, 0, 20, 3599), 0)  # (an hour a hit point at CON 20)
+        self.assertEqual(regen(1024, 0, 20, 301), 1)  # (the 3599 kept: 3900 seconds)
+        self.assertEqual(regen(1024, 0, 20, 3300), 1)  # (300 + 3300)
+        self.assertEqual(regen(1024, 1, 25, 1800), 3)  # (10 minutes at CON 25; each member its own)
+        self.assertEqual(regen(1024, 2, 22, 8 * 3600), 12)  # (a night's rest: 40 minutes at 22)
+        self.assertEqual(regen(1024, 3, 23, (-600) & 0xFFFFFFFF), 0)  # (the clock gone back)
+
+    def test_dwarves_poison_saves(self):
+        """CON_SAVE (5EAA1h, AX the CON, [BP+6] the creature's thing): CON's adjustment from the game's
+        table (DS:810h); with RULE_HI_CON none for a dwarf or a halfling (only its racial bonus)."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "con_save")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x5EAA1, gamepatch.CON_SITE))
+        mu = self.mu
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, 0xA000))
+        mu.mem_write(0x9000 * 16 + 7 * 0x3A + 4, struct.pack("<H", 3))  # (creature 7: sheet 3)
+        mu.mem_write(GAME_DS * 16 + 0x810 + 21, bytes((2,)))
+        def adjust(rules_hi, race):
+            self.rules_hi(rules_hi)
+            mu.mem_write(0xA000 * 16 + 3 * 0x47 + 0x18, bytes((race,)))
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 40))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=21,
+                                    es=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + len(patch.replacement))
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_ES), 0x4444)
+            return mu.reg_read(r.UC_X86_REG_AL)
+        self.assertEqual([adjust(0, race) for race in (1, 2, 6)], [2, 2, 2])
+        self.assertEqual([adjust(1024, race) for race in (1, 2, 6, 7)], [2, 0, 0, 2])
 
     def test_wall_damage(self):
         """HARM_SITE for Wall of Thorns' damage (761A9h; DI the spell, keyed in its own ground
@@ -4669,6 +4781,43 @@ class KitTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    SPEC_GET = rb"\x26\xf6\x47\x16\x80\x75\x06\x26\x0f\xb6\x40\x14\xc3"
+    SPEC_SET = rb"\xe8..\x66\x50\x66\x51\x66\x52"
+    # (a new member's sheet at creation's DONE, CR_WEAPONS: no specs and no age, packed)
+    CR_CLEAR = rb"\x26\x66\xc7\x47\x14\x00\x00\x80\x00"
+
+    def test_spec_layouts(self):
+        """SPEC_GET reads both layouts alike (a gladiator's four kinds, a byte each up to 2.12, or
+        packed); SPEC_SET on the old layout packs it first, the age 0 (none yet). A new member's
+        sheet (CR_WEAPONS) starts packed with no specs and no age, whatever its slot held. As
+        game.spec_kinds and game.packed_specs."""
+        import re
+        for pattern in (self.SPEC_GET, self.SPEC_SET, self.CR_CLEAR):
+            self.assertEqual(len(re.findall(pattern, self.image, re.S)), 1)
+        kinds = (1, 16, 9, 2)
+        at = self.SHEET * 16
+
+        def slots():
+            out = []
+            for i in range(4):
+                self.call(self.SPEC_GET, es=self.SHEET, ebx=0, esi=i)
+                out.append(self.mu.reg_read(r.UC_X86_REG_AX))
+            return tuple(out)
+
+        for sheet in (bytes(0x14) + bytes(kinds) + bytes(0x2F), bytes(0x14) + game.packed_specs(kinds, 30) + bytes(0x2F)):
+            with self.subTest(packed=bool(sheet[0x16] & 0x80)):
+                self.mu.mem_write(at, sheet)
+                self.assertEqual(slots(), kinds)
+                self.assertEqual(tuple(game.spec_kinds(sheet)), kinds)
+        self.mu.mem_write(at, bytes(0x14) + bytes(kinds) + bytes(0x2F))
+        self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=3, eax=7)
+        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 16, 9, 7), 0))
+        self.assertEqual(slots(), (1, 16, 9, 7))
+        self.mu.mem_write(at, bytes(0x14) + game.packed_specs(kinds, 30) + bytes(0x2F))
+        self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=1, eax=0)
+        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 0, 9, 2), 30))
+        self.assertEqual(game.packed_specs((), 0), bytes((0, 0, 0x80, 0)))  # (CR_CLEAR's dword)
+
     def test_effects_specs(self):
         """EF_LINES_OF: the Effects screen's weapon lines, the chosen kinds' and then a ranger's bow,
         chosen or not (as GameData.specializations): a cleric/ranger's long sword and bow."""
@@ -4698,6 +4847,18 @@ class KitTests(unittest.TestCase):
                     del lines[:]
                     self.call(rb"\x2e\xc6\x06..\xff\x2e\xc7\x06..\x00\x00\xe8", es=self.SHEET, ebx=0)
                     self.assertEqual(lines, want)
+            # an age in each member's STATS (aging.py) adds no lines: it is on the inventory panel
+            hdr = TSR * 16 + self.image.find(HDR_SIG)
+            stats = TSR * 16 + struct.unpack("<H", bytes(self.mu.mem_read(hdr + 162, 2)))[0]
+            entry = bytearray(34)
+            entry[0] = 1
+            struct.pack_into("<HBBH", entry, 28, 23, 0, 1, 40)
+            for member in range(4):
+                self.mu.mem_write(stats + member * 34, bytes(entry))
+            del lines[:]
+            self.call(rb"\x2e\xc6\x06..\xff\x2e\xc7\x06..\x00\x00\xe8", es=self.SHEET, ebx=0)
+            self.assertEqual(lines, ["SPECIALIZED IN", "LONG SWORD"])
+            self.mu.mem_write(stats, bytes(34 * 4))
         finally:
             self.mu.hook_del(hook)
 

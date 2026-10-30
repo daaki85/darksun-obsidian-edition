@@ -125,11 +125,11 @@ def _type_record(gd: GameData, type_: int) -> bytes:
 def set_kinds(gd: GameData, member: int, name: str) -> List[str]:
     sheet = gd.sheet(member)
     want = kinds_bytes(PARTY[name])
-    if not PARTY[name].kinds or any(sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]):
+    if not PARTY[name].kinds or any(game.spec_kinds(sheet)):
         return []
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
     sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
-    gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS, want)
+    gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS, game.packed_specs(want, game.sheet_age(sheet)))
     kinds = " and the ".join(PARTY[name].kinds)
     return [f"{name} specializes in the {kinds}."]
 

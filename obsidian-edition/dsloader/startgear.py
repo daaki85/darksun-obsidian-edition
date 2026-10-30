@@ -148,7 +148,7 @@ def fill_member(gd, member: int) -> List[str]:
             out.append(f"{who} takes the {name(spare[1])} from the backpack in hand")
         else:
             cleric = any(c in restrict.CLERICS for c in classes)
-            chosen = [k - 1 for k in sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]
+            chosen = [k - 1 for k in game.spec_kinds(sheet)
                       if k and k - 1 not in weaponchoice.MISSILE_KINDS]
             for kind in chosen + list(CLERIC_HAND_ORDER if cleric else HAND_ORDER):
                 new = _weapon(gd, sheet, kind, read)

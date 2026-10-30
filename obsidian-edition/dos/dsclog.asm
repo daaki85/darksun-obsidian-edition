@@ -895,7 +895,15 @@ probe_char:
         jmp .react
 .thief: mov al, [es:si + bx + 3]  ; the thief level (levels follow the classes)
         call c_thief
-.react: mov al, [cs:c_react]      ; right of SP in the saves: "REAC +4"
+.react: mov bx, [cs:c_who]        ; the age (AGE_TEXT's AGE_SHORT) in the free row between the
+        call age_text                   ;   saves and STR
+        jc .reac
+        push word AGE_INV_Y
+        push word 0xEC
+        push cs
+        push word age_short
+        call c_draw_line
+.reac:  mov al, [cs:c_react]      ; right of SP in the saves: "REAC +4"
         cmp al, NO_REACT
         je .done
         mov di, c_num
@@ -1227,10 +1235,10 @@ c_itoa:                         ; AL (unsigned) -> decimal at CS:DI, NUL-termina
 ; cells: x, y, label, value's x (window coordinates: the stats' labels are at x 0ECh, their
 ; values at 104h, STR at y 35h, lines 7 apart)
 c_cells_top:
-        dw 0xEC, 0x10, l_thac0, 0x111
-        dw 0xEC, 0x17, l_ppd, 0x103,  0x113, 0x17, l_rsw, 0x12A
-        dw 0xEC, 0x1E, l_pp, 0x103,   0x113, 0x1E, l_bw, 0x12A
-        dw 0xEC, 0x25, l_sp, 0x103
+        dw 0xEC, 0x0D, l_thac0, 0x111
+        dw 0xEC, 0x14, l_ppd, 0x103,  0x113, 0x14, l_rsw, 0x12A
+        dw 0xEC, 0x1B, l_pp, 0x103,   0x113, 0x1B, l_bw, 0x12A
+        dw 0xEC, 0x22, l_sp, 0x103
 c_cells_thief:                  ; right of the abilities (whose values end by 10Eh), in the
         dw 0x113, 0x35, l_pick, 0x12D  ; saves' second column, level with STR..CHA
         dw 0x113, 0x3C, l_lock, 0x12D
@@ -1256,10 +1264,11 @@ c_react db 0
 c_defence db 0
 DEX_DEFENCE equ 0x07F6          ; DS: the DEX defensive adjustment (bytes, by score: on AC)
 DEF_Y   equ 0x72                ; the AC line's y
+AGE_INV_Y equ 0x2B              ; (the free row between the saves' last, SP's at 22h, and STR's at 35h)
 DEF_VALUE_X equ 0x12D           ; (under the thief skills' values, as REAC's)
 NO_REACT equ 0x80
 DEX_REACTION equ 0x07DC         ; DS: the DEX reaction adjustment (bytes, by score)
-REACT_Y equ 0x25                ; the saves' last row, right of SP (where BW and RSW are above)
+REACT_Y equ 0x22                ; the saves' last row, right of SP (where BW and RSW are above)
 REACT_VALUE_X equ 0x130         ; (a little right of the thief skills' values: REAC is the longer label)
 c_vals  times 8 db 0
 c_num   db 0, 0, 0, 0
@@ -2338,8 +2347,12 @@ probe_unlook:
 ; thief (2 for a ranger: of the six, only move silently and hide in shadows count), +18 the six
 ; thief skills the panel shows, as they stand (equipment and effects too), +24 the level Enlarge
 ; counts at on them (its melee damage +10% a level; 0 without it), +25 three bytes: the AC
-; Barkskin, Flesh Armor and Magical Vestments give them (signed; -128 without: EF_CHARGES)
-STATS_SIZE  equ 28
+; Barkskin, Flesh Armor and Magical Vestments give them (signed; -128 without: EF_CHARGES), +28
+; a word: their age (0 none: the rule off, or none given yet; AGE_TEXT, the inventory panel's),
+; +30 its category (0 young, 1 middle-aged, 2 old, 3 venerable), +31 the next one (0 none) and +32
+; a word, the age it comes at (the Loader's; nothing here reads +30 to +33 now; dsloader/aging.py)
+STATS_SIZE  equ 34
+STATS_AGE   equ 28
 STATS_ENLARGE equ 24
 STATS_ARMOUR equ 25
 STATS_NONE  equ -128
@@ -2928,7 +2941,8 @@ prot_scan:
         ret
 
 ; Weapon specialization (RULE_SPECIALIZE; dsloader/specialize.py). A character's chosen weapon
-; kinds are in its sheet's +14h..+17h (SPEC_SLOTS: the kind + 1 each, 0 none); a character with
+; kinds are in its sheet's +14h..+17h (SPEC_SLOTS: the kind + 1 each, 0 none; read and written
+; only through SPEC_GET and the rest below, for their two layouts); a character with
 ; none there (monsters, and those who have not chosen) fights as the game has it. Two probes in
 ; the routine that makes a weapon attack (its [BP+0Ah] the THAC0 the d20 is held against, [BP+10h]
 ; the attacker's sheet, [BP+14h] the weapon's item type, [BP+16h] above 1 for a missile; its
@@ -2945,6 +2959,104 @@ prot_scan:
 ; the damage dice one size larger (2 more sides: d8 to d10, 2d4 to 2d6).
 SPEC_SLOTS equ 0x14
 SPEC_COUNT equ 4
+SPEC_PACKED equ 0x80            ; (+16h's top bit: the specs packed, 5 bits each, +17h the age)
+
+; The sheet's +14h..+17h (the game never reads or writes them), in one of two layouts: up to 2.12
+; a byte for each of the four specs; now (SPEC_PACKED in +16h) the four packed 5 bits each in
+; +14h..+16h, and +17h the character's age (dsloader/aging.py). A sheet keeps the old layout
+; until something is written to it (SPEC_SET: SPEC_PACK first), so both are read. A new member's
+; starts packed with no specs and no age (CR_WEAPONS).
+; Each takes the sheet at ES:BX and keeps the rest.
+; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none).
+spec_get:
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jnz .packed
+        movzx ax, byte [es:bx + si + SPEC_SLOTS]
+        ret
+.packed:
+        push ecx
+        push edx
+        mov edx, [es:bx + SPEC_SLOTS]
+        imul cx, si, 5
+        shr edx, cl
+        movzx ax, dl
+        and al, 0x1F
+        pop edx
+        pop ecx
+        ret
+
+; SPEC_FIND: ZF set when kind + 1 AL is in one of the four slots.
+spec_find:
+        push ax
+        push cx
+        push si
+        mov cl, al
+        xor si, si
+.each:  call spec_get
+        cmp al, cl
+        je .out
+        inc si
+        cmp si, SPEC_COUNT
+        jb .each
+        or si, si                       ; (ZF clear)
+.out:   pop si
+        pop cx
+        pop ax
+        ret
+
+; SPEC_ANY: ZF clear when a spec is chosen.
+spec_any:
+        push eax
+        mov eax, [es:bx + SPEC_SLOTS]
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jz .test                        ; (the old layout: any of the four bytes)
+        and eax, 0x000FFFFF
+.test:  test eax, eax
+        pop eax
+        ret
+
+; SPEC_PACK: the sheet in the packed layout (the old one's four bytes packed, +17h 0: no age yet).
+spec_pack:
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jnz .ret
+        push eax
+        push edx
+        push si
+        xor edx, edx
+        mov si, SPEC_COUNT - 1
+.each:  shl edx, 5
+        movzx eax, byte [es:bx + si + SPEC_SLOTS]
+        and al, 0x1F
+        or edx, eax
+        dec si
+        jns .each
+        or edx, SPEC_PACKED << 16
+        mov [es:bx + SPEC_SLOTS], edx
+        pop si
+        pop edx
+        pop eax
+.ret:   ret
+
+; SPEC_SET: AL (kind + 1, 0 none) into slot SI.
+spec_set:
+        call spec_pack
+        push eax
+        push ecx
+        push edx
+        imul cx, si, 5
+        mov edx, 0x1F
+        shl edx, cl
+        not edx
+        and [es:bx + SPEC_SLOTS], edx
+        movzx edx, al
+        and dl, 0x1F
+        shl edx, cl
+        or [es:bx + SPEC_SLOTS], edx
+        pop edx
+        pop ecx
+        pop eax
+        ret
+
 FIGHTER_CLASS equ 9
 GLADIATOR_CLASS equ 10
 MASTERY equ 5                   ; (the fighter levels)
@@ -3927,13 +4039,7 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         pop si
         or al, al
         jz .forbids
-        cmp [es:bx + SPEC_SLOTS], al
-        je .chosen
-        cmp [es:bx + SPEC_SLOTS + 1], al
-        je .chosen
-        cmp [es:bx + SPEC_SLOTS + 2], al
-        je .chosen
-        cmp [es:bx + SPEC_SLOTS + 3], al
+        call spec_find
         jne .forbids
 .chosen:
         mov byte [cs:kf_chosen], 1
@@ -4129,7 +4235,11 @@ kit_allows:
 .mage:  call kit_is_b
         db KIT_BATTLE_MAGE
         jne .no
-        mov cl, [es:bx + SPEC_SLOTS]
+        push si
+        xor si, si
+        call spec_get
+        mov cl, al
+        pop si
         les bx, [ITEM_TYPES]
         imul ax, dx, 0x14
         add bx, ax
@@ -4350,13 +4460,7 @@ specialized_back:
 .spec:  cmp byte [es:bx + 0x18], 1
         jne .no
         inc al
-        cmp [es:bx + SPEC_SLOTS], al
-        je .kind
-        cmp [es:bx + SPEC_SLOTS + 1], al
-        je .kind
-        cmp [es:bx + SPEC_SLOTS + 2], al
-        je .kind
-        cmp [es:bx + SPEC_SLOTS + 3], al
+        call spec_find
         jne .no
 .kind:  mov si, 1
 .class: mov al, [es:bx + si + 0x21]
@@ -5275,7 +5379,7 @@ lv_check:
         mov di, SPEC_COUNT
         push si
         mov si, SPEC_COUNT - 1
-.have:  movzx ax, byte [es:bx + si + SPEC_SLOTS]
+.have:  call spec_get
         or ax, ax
         jnz .has
         mov di, si
@@ -5294,7 +5398,10 @@ lv_check:
         call kinds_allowed
         push si
         xor si, si              ; less those it has
-.mine:  movzx cx, byte [es:bx + si + SPEC_SLOTS]
+.mine:  push ax
+        call spec_get
+        mov cx, ax
+        pop ax
         jcxz .mine_next
         dec cx
         btr ax, cx
@@ -5644,7 +5751,8 @@ pk_take:
         imul ax, [cs:lv_member], 0x47
         add bx, ax
         xor si, si
-.slot:  cmp byte [es:bx + si + SPEC_SLOTS], 0
+.slot:  call spec_get
+        or ax, ax
         je .put
         inc si
         cmp si, SPEC_COUNT
@@ -5652,7 +5760,7 @@ pk_take:
         jmp .shown
 .put:   mov al, dl
         inc al
-        mov [es:bx + si + SPEC_SLOTS], al
+        call spec_set
 .shown: push word 1
         push word 0
         add dx, PICK_FIRST
@@ -5831,7 +5939,11 @@ ef_lines_of:
         mov si, BOW_KIND                ; (then the bow, a ranger's whether chosen or not, unless
         push di                         ;   it is among the chosen: SPEC_OF_SHEET's skill with it)
         xor di, di
-.bow:   cmp byte [es:bx + di + SPEC_SLOTS], BOW_KIND
+.bow:   push si
+        mov si, di
+        call spec_get
+        pop si
+        cmp al, BOW_KIND
         je .bow_had
         inc di
         cmp di, SPEC_COUNT
@@ -5842,7 +5954,9 @@ ef_lines_of:
         pop di
         jmp .ret
 .chosen:
-        movzx si, byte [es:bx + di + SPEC_SLOTS]
+        mov si, di
+        call spec_get
+        mov si, ax
 .kind_of:
         or si, si
         jz .next
@@ -8128,15 +8242,19 @@ pk_word:
         add bx, ax
         pop ax
         xor si, si
-.slot:  cmp byte [es:bx + si + SPEC_SLOTS], 0
+.slot:  push ax
+        call spec_get
+        or ax, ax
+        pop ax
         je .put
         inc si
         cmp si, SPEC_COUNT
         jb .slot
         jmp .ret
-.put:   push si
+.put:   push dword [es:bx + SPEC_SLOTS]  ; (put back after: a kind pointed at changes nothing)
+        push si
         inc al
-        mov [es:bx + si + SPEC_SLOTS], al
+        call spec_set
         dec al
         mov si, ax
         shl si, 1
@@ -8146,7 +8264,7 @@ pk_word:
         mov al, dl
         pop dx
         pop si
-        mov byte [es:bx + si + SPEC_SLOTS], 0
+        pop dword [es:bx + SPEC_SLOTS]
         cmp al, SPEC_EXPERT
         jne .ret
         mov dx, lv_expert
@@ -9156,6 +9274,66 @@ path_down:
         pop bx
         pop ax
         ret
+
+; AGE_TEXT: CF set when party member BX has no age in its STATS (the Loader not keeping them, the
+; rule off, none given); else AGE_SHORT "AGE 23", for the inventory panel. All registers kept.
+age_text:
+        pusha
+        call stats_for
+        jc .none
+        mov ax, [cs:bx + STATS_AGE]
+        or ax, ax
+        jz .none
+        mov di, age_short
+        mov si, age_word
+        call age_copy
+        call w_itoa
+.done:  popa
+        clc
+        ret
+.none:  popa
+        stc
+        ret
+
+age_copy:                       ; CS:SI's text to CS:DI, DI left at its NUL; SI past it
+        push ax
+.each:  mov al, [cs:si]
+        mov [cs:di], al
+        or al, al
+        jz .out
+        inc si
+        inc di
+        jmp .each
+.out:   pop ax
+        ret
+
+w_itoa:                         ; AX (unsigned) -> decimal at CS:DI, DI left at its NUL; keeps the rest
+        push ax
+        push bx
+        push cx
+        push dx
+        mov bx, 10
+        xor cx, cx
+.div:   xor dx, dx
+        div bx
+        push dx
+        inc cx
+        or ax, ax
+        jnz .div
+.put:   pop ax
+        add al, '0'
+        mov [cs:di], al
+        inc di
+        loop .put
+        mov byte [cs:di], 0
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        ret
+
+age_word  db 'AGE ', 0
+age_short times 12 db 0
 
 ; EF_LINE: CS:SI EF_DRAW's next line: counted (EF_INDEX), and put on the panel (EF_PUT) if drawing
 ; and on the page shown. All registers kept.
@@ -10629,10 +10807,7 @@ spec_of_sheet:
         push cx
         push si
         mov dl, SPEC_NONE
-        mov al, [es:bx + SPEC_SLOTS]
-        or al, [es:bx + SPEC_SLOTS + 1]
-        or al, [es:bx + SPEC_SLOTS + 2]
-        or al, [es:bx + SPEC_SLOTS + 3]
+        call spec_any
         jz .ret
         mov al, KIT_BATTLE_MAGE ; (a Battle Mage who has changed class: its weapon spec the kit's
         call kit_has            ; alone, nothing while it sleeps, expertise when awake)
@@ -10644,7 +10819,13 @@ spec_of_sheet:
         jne .out
         mov dl, SPEC_PLAIN
         call spec_kind
-        cmp cl, [es:bx + SPEC_SLOTS]
+        push ax
+        push si
+        xor si, si
+        call spec_get
+        cmp cl, al
+        pop si
+        pop ax
         jne .out
         mov dl, SPEC_EXPERT
         jmp .out
@@ -10653,7 +10834,10 @@ spec_of_sheet:
         or cl, cl
         jz .ret
         xor si, si
-.slot:  cmp [es:bx + si + SPEC_SLOTS], cl
+.slot:  push ax
+        call spec_get
+        cmp al, cl
+        pop ax
         je .found
         inc si
         cmp si, SPEC_COUNT
@@ -13101,6 +13285,7 @@ stab_roll:
         mov byte [cs:stab_known], 1
         cmp word [bp + 0x16], 1
         pushf
+        setle byte [cs:enl_known]       ; (melee only: ENL_SITE comes next for it, a missile's never)
         pop ax
         mov di, sp
         sub di, 30                      ; (SS:DI+38: the INT's flags, past AX and DI)
@@ -13137,6 +13322,125 @@ stab_times:
 .whole: imul word [bp - 4]
 .put:   mov [bp - 4], ax
         mov byte [cs:stab_known], 0
+        mov byte [cs:enl_known], 0
+        iret
+
+; ENLARGE DICE (RULE_HI_ENLARGE): the game's Enlarge (7C211h, after STR's bonus: SI the damage, AX
+; the levels of the Enlarges on the attacker, 598:52h) multiplies the whole of a melee hit's damage
+; by 100 + 10 a level percent, rounded down; AD&D's enlarges the weapon, so only its dice. ENL_SITE:
+; "imul ax,ax,0Ah ... idiv ebx / mov si,ax" (7C246h; 32 bytes): with the rule and the hit's dice
+; known (STAB_ROLL's, once: ENL_KNOWN), the dice multiplied, rounded up, the rest added once, and
+; the dice kept made the enlarged ones (a backstab multiplies those); else the game's.
+enl_known db 0
+enl_site:
+        push ebx
+        push edx
+        imul ax, ax, 10
+        movsx eax, ax
+        add eax, 100                    ; (the percent)
+        test word [cs:rules_hi], RULE_HI_ENLARGE
+        jz .whole
+        cmp byte [cs:enl_known], 0
+        je .whole
+        movsx ebx, word [cs:stab_dice]
+        or ebx, ebx
+        jle .whole
+        imul eax, ebx
+        add eax, 99
+        cdq
+        push ebx
+        mov ebx, 100
+        idiv ebx                        ; (the dice enlarged, rounded up)
+        pop ebx
+        sub ax, bx
+        add si, ax
+        add [cs:stab_dice], ax
+        jmp .done
+.whole: movsx edx, si
+        imul eax, edx
+        mov ebx, 100
+        cdq
+        idiv ebx
+        mov si, ax
+.done:  mov byte [cs:enl_known], 0
+        pop edx
+        pop ebx
+        iret
+
+; REGENERATION (RULE_HI_CON): the game's (227E5h, once more than 300 seconds of game time have
+; passed since the last, DS:1654h) gives each party member with CON 20 or more a hit point for
+; each 300 seconds, at any CON, and drops what is left over. AD&D's: one an hour at CON 20, then
+; every 50, 40, 30, 20 and 10 minutes to CON 25 ((26 - CON) x 600 seconds). REGEN_SITE: "mov dx,cx /
+; imul dx,dx,3Ah" (228BFh; 5 bytes) after its "div ebx" (EAX the 300s, EDX the rest; CX the
+; member): with the rule, the seconds added to the member's own (REGEN_SECS, the remainder kept for
+; next time) and AX the hit points from them, at most 1000; a clock gone back (a game loaded) none.
+regen_secs dd 0, 0, 0, 0
+regen_site:
+        test word [cs:rules_hi], RULE_HI_CON
+        jz .game
+        push ebx
+        push si
+        push es
+        imul eax, eax, 300
+        add eax, edx                    ; (the seconds since the last)
+        mov si, cx
+        shl si, 2
+        add eax, [cs:regen_secs + si]
+        js .back
+        les bx, [0x1665]
+        imul dx, cx, 0x3A
+        add bx, dx
+        movzx ebx, byte [es:bx + 0x24]  ; (CON)
+        cmp bl, 25
+        jbe .con
+        mov bl, 25
+.con:   neg ebx
+        add ebx, 26
+        imul ebx, ebx, 600              ; (the seconds a hit point)
+        xor edx, edx
+        div ebx
+        mov [cs:regen_secs + si], edx
+        cmp eax, 1000
+        jbe .out
+        mov eax, 1000
+        jmp .out
+.back:  xor eax, eax
+        mov [cs:regen_secs + si], eax
+.out:   pop es
+        pop si
+        pop ebx
+.game:  mov dx, cx
+        imul dx, dx, 0x3A
+        iret
+
+; DWARVES' AND HALFLINGS' POISON SAVES (RULE_HI_CON): the game's saving throw adds CON's
+; adjustment (5EA91h: DS:810h by CON, +1 at 19 to +4 at 25) to the paralysis/poison/death save,
+; and for a dwarf or a halfling its CON x 2 / 7 too; AD&D's gives those two only the racial
+; bonus. CON_SAVE: "mov bx,ax / mov al,[bx+810h]" (5EAA1h; 6 bytes, AX the CON, [BP+6] the
+; creature's thing): with the rule, 0 for a dwarf or a halfling; else the table's.
+DWARF_RACE equ 2
+HALFLING_RACE equ 6
+con_save:
+        push es
+        mov bx, ax
+        mov al, [bx + 0x810]
+        test word [cs:rules_hi], RULE_HI_CON
+        jz .done
+        push ax
+        mov ax, [bp + 6]
+        call combatant_creature
+        jc .keep
+        call creature_sheet
+        mov bl, [es:bx + 0x18]          ; (the race)
+        pop ax
+        cmp bl, DWARF_RACE
+        je .none
+        cmp bl, HALFLING_RACE
+        jne .done
+.none:  xor al, al
+        jmp .done
+.keep:  pop ax
+.done:  pop es
         iret
 
 REQ_REST equ 0
@@ -13440,6 +13744,10 @@ RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's sp
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
 RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
 RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
+RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging: the Loader's (aging.py; no
+                                ;   STATS age without it, so AGE_TEXT needs no test of its own)
+RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
+RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rates, dwarves' poison saves (REGEN_SITE, CON_SAVE)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -14777,7 +15085,7 @@ copies:
 ; better than its own (NS_CLAW). Fogbolt puts its (27)
 ; on a creature that fails its save: -3 to hit, and +2 to hit it (NS_HIT).
 NS_FIRST     equ 0xC4
-NS_COUNT     equ 15
+NS_COUNT     equ 16
 PRIEST6      equ 6              ; (the new spells' places from here: the 6th-level priest spells)
 NS_LAST      equ NS_FIRST + NS_COUNT - 1
 GRACE_SPELL  equ NS_FIRST
@@ -14795,6 +15103,7 @@ SEEDS_SPELL  equ HEAL_SPELL + 5
 HEARTSEEKER_SPELL equ HEAL_SPELL + 6
 WATER_LIFE_SPELL equ HEAL_SPELL + 7
 WHIRLWIND_SPELL equ HEAL_SPELL + 8
+RESTORE_SPELL equ HEAL_SPELL + 9 ; (Restore Youth: the Loader's, as it is cast, aging.restore)
 CURE_CRITICAL equ 127
 CAUSE_CRITICAL equ 128
 PRIEST_WALL_FIRE equ 137
@@ -14836,6 +15145,7 @@ FOG_FLIGHT   equ 15             ;   which no record names, Fogbolt's (object FOG
 FLIGHT15_OBJECT equ 8116        ;   companion's copy of SEGOBJEX.GFF: icons.py), else the game's
 FLIGHT15_BYTE equ 16
 FOG_BOLT     equ 8118
+RESTORE_CAST_SOUND equ 78       ; Restore Youth's with its cast glow: Cure Disease's, not Cure Critical Wounds' 81
 FOG_CAST_SOUND equ 82           ; a record's +0Fh: the sound with its cast glow (+0Dh), +13h as
 FOG_HIT_SOUND equ 98            ;   it flies, +16h as it lands (BVOC chunks of RESOURCE.GFF)
 NS_OBJECTS   equ 0x80           ; NS_STATE's bits: the copy open (OBJECTS_ON), and the records'
@@ -14952,18 +15262,18 @@ probe_grace_ability:
 ; has them now (see NEW SPELLS), and flight 15 Fogbolt's grey bolt once the game has the objects'
 ; copy open (FLIGHTS). DS the game's; all registers kept.
 ns_state     db 0xFF            ; RULE_NEW_SPELLS and NS_OBJECTS as last set up (0FFh: not yet)
-ns_levels    db 2, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 ; each one's spell level ...
+ns_levels    db 2, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 ; each one's spell level ...
 ns_templates db STRENGTH_SPELL, ENLARGE_SPELL, CHARM_SPELL, MIRROR_SPELL, CHARM_SPELL, STRENGTH_SPELL
              db CURE_CRITICAL, CAUSE_CRITICAL, PRIEST_WALL_FIRE, PRIEST_WALL_FIRE, HOLD_PERSON
-             db FLAME_STRIKE, SLAY_LIVING, CURE_CRITICAL, STINKING_CLOUD
+             db FLAME_STRIKE, SLAY_LIVING, CURE_CRITICAL, STINKING_CLOUD, CURE_CRITICAL
                                 ; ... the spell whose record it takes ...
 ns_effects   db GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT, MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT
              times NS_COUNT - PRIEST6 db 0
                                 ; ... its effect ...
-ns_effect_how db 2, 1, 1, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... put in the record and named by the helper (1), put in
+ns_effect_how db 2, 1, 1, 0, 3, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... put in the record and named by the helper (1), put in
                                 ;   the record, the game's own (3), the template's (0), or by the
                                 ;   handler (PROBE_GRACE_EFFECT) and named by the helper (2) ...
-ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
+ns_landing   db 96, 77, FOG_HIT_SOUND, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; ... the sound as it lands (+16h): Haste's, Shocking
                                 ;   Grasp's, Fog Cloud's (0: the template's) ...
 ns_known_at  db NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, NS_SHEET, KIT_BYTE ; ... and the sheet's
 ns_known_bit db 0x10, 0x20, 0x40, 0x08, 0x80, 0x80 ;   byte and bit that say a member knows it
@@ -14977,7 +15287,8 @@ EARTH_MASK   equ 0x0010808A
 AIR_MASK     equ 0x00104046
 P6_MASKS:    dd COSMOS_MASK, COSMOS_MASK, AIR_MASK, EARTH_MASK, FIRE_MASK ; (Heal, Harm; Blade Barrier,
              dd FIRE_MASK, 0x001282AA, 0x00120222, AIR_MASK ; Wall of Thorns, Sunstroke; Fire Seeds;
-                                ;   Heartseeker, earth and water's; Water of Life, water's; Whirlwind)
+             dd COSMOS_MASK     ;   Heartseeker, earth and water's; Water of Life, water's; Whirlwind;
+                                ;   Restore Youth, the cosmos's)
 ; NS_PATCHES: the records' changes from their templates': the new spell (0 to NS_COUNT - 1), the
 ; place, 1 (a byte) or 2 (a word), the value; 0FFh ends them.
 %macro NS_PATCH 4
@@ -15036,10 +15347,14 @@ ns_patches:
         NS_PATCH WHIRLWIND_SPELL, 0x1D, 1, 0x11
         NS_PATCH WHIRLWIND_SPELL, 0x1E, 1, 8
         NS_PATCH WHIRLWIND_SPELL, 0x17, 1, AREA_COUNT + 3 ; (its own picture: the sand storm)
+        NS_PATCH RESTORE_SPELL, 0x1C, 1, 0      ; Restore Youth: Cure Critical Wounds' touch, healing nothing
+        NS_PATCH RESTORE_SPELL, 0x1D, 1, 0      ;   (no handler of its own: its years and system shock
+        NS_PATCH RESTORE_SPELL, 0x1E, 1, 0      ;   are the Loader's, as it is cast: CAST_SITE's record)
+        NS_PATCH RESTORE_SPELL, 0x0F, 1, RESTORE_CAST_SOUND ; (Cure Disease's sound with its cast glow)
         db 0xFF
 ns_name_at   dw ns_name_grace, ns_name_claw, ns_name_fog, ns_name_reflect, ns_name_spook, ns_name_friends
              dw ns_name_heal, ns_name_harm, ns_name_blade, ns_name_thorns, ns_name_sun, ns_name_seeds
-             dw ns_name_heart, ns_name_water, ns_name_whirl
+             dw ns_name_heart, ns_name_water, ns_name_whirl, ns_name_restore
 ns_name_heal db "HEAL", 0
 ns_name_harm db "HARM", 0
 ns_name_blade db "BLADE BARRIER", 0
@@ -15049,6 +15364,7 @@ ns_name_seeds db "FIRE SEEDS", 0
 ns_name_heart db "HEARTSEEKER", 0
 ns_name_water db "WATER OF LIFE", 0
 ns_name_whirl db "WHIRLWIND", 0
+ns_name_restore db "RESTORE YOUTH", 0
 ns_name_grace db "CAT'S GRACE", 0
 ns_name_claw db "ERDLU CLAW", 0
 ns_name_fog  db "FOGBOLT", 0
@@ -15676,6 +15992,9 @@ SPREAD_SITE equ NS_IMAGE + 48   ; 692CEh: a game loaded, the party in one figure
 GATHER_SITE equ NS_IMAGE + 55   ; 1DFE8h: the party put in one figure, at a fight's end too (SPREAD_GATHER)
 FLIP_SITE equ NS_IMAGE + 56     ; 14444h: the game's flip of its two screens, the new one about to show (FLIP_SITE)
 WW_SITE   equ NS_IMAGE + 57     ; 7617Dh: a one-target spell's damage starting (WW_GATE)
+ENL_SITE  equ NS_IMAGE + 58     ; 7C246h: a melee hit's damage made bigger by Enlarge (ENL_SITE)
+REGEN_SITE equ NS_IMAGE + 59    ; 228BFh: a member with CON 20 or more regenerating (REGEN_SITE)
+CON_SITE  equ NS_IMAGE + 60     ; 5EAA1h: CON's adjustment to the paralysis/poison/death save (CON_SAVE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -15765,6 +16084,12 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je harm_site
         cmp byte [cs:rl_site], WW_SITE
         je ww_gate
+        cmp byte [cs:rl_site], ENL_SITE
+        je enl_site
+        cmp byte [cs:rl_site], REGEN_SITE
+        je regen_site
+        cmp byte [cs:rl_site], CON_SITE
+        je con_save
         cmp byte [cs:rl_site], AREA_SITE
         je area_site
         cmp byte [cs:rl_site], ACID_SITE
@@ -16966,8 +17291,8 @@ cr_weapons:
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
-        mov dword [es:bx + SPEC_SLOTS], 0
-        mov ax, ds
+        mov dword [es:bx + SPEC_SLOTS], SPEC_PACKED << 16 ; (no specs and no age: a new member,
+        mov ax, ds                      ;   whatever the slot's last character left)
         add ax, PICK_STUB
         mov word [cs:lv_psi], DK_PSI
         mov [cs:lv_psi + 2], ax
@@ -17501,7 +17826,8 @@ ns_reflect_entry:
 ; low byte): REFLECT_ENTRY then names it, its name with them, "IMPROVED AC (3 CHARGES)", in EF_TEXT
 ; (580:5Ch keeps that name's address, not the entry, so Reflected Image's use of the entry after it
 ; changes nothing). Mirror Images from Reflected Image take its name and icon. A party member's
-; Enlarge is named with its melee damage instead, "ENLARGED (+90% DAMAGE)", from the level the
+; Enlarge is named with its melee damage instead, "ENLARGED (+90% DAMAGE)" ("+90% DICE" with
+; RULE_HI_ENLARGE), from the level the
 ; Loader puts in their STATS (the game allows one Enlarge on a creature), and Barkskin, Flesh
 ; Armor and Magical Vestments with the AC they give, "BARKSKIN (AC 4)" (STATS_ARMOUR). Only with
 ; the room past the spell rows (SEG_MOVE). DS the game's; all registers kept.
@@ -17626,6 +17952,9 @@ ef_charges:
         mov al, dl
         call c_itoa                     ; (the level, then a 0: 10% a level)
         mov si, ef_enlarge_word
+        test word [cs:rules_hi], RULE_HI_ENLARGE
+        jz .tail
+        mov si, ef_enlarge_dice         ; (the weapon's dice only: ENL_SITE)
         jmp .tail
 .armour:
         mov bx, ax
@@ -17656,6 +17985,7 @@ ef_charges:
         ret
 ef_charge_word db ' CHARGE', 0
 ef_enlarge_word db '0% DAMAGE)', 0
+ef_enlarge_dice db '0% DICE)', 0
 ef_shut_word db ')', 0
 
 ; EF_NAMED: (EF_CHARGES) effect CL's name copied into EF_TEXT: DI its end there, AX its icon, ES the

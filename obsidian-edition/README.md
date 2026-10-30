@@ -64,8 +64,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   the Look box tells you what can hurt a monster ([In the game](#in-the-game)).
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
   (experience, priests' THAC0, spell slots), INT's limits on learning spells,
-  saving throws and multiclass hit points as the books have them, and scores
-  and hit points kept as rolled ([Rule changes](FEATURES.md#rule-changes)).
+  saving throws and multiclass hit points as the books have them, scores and
+  hit points kept as rolled, ages (Haste costs a year), Enlarge's weapon dice
+  and CON's regeneration ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels
   past 9th up to a cap by XP (10th to 13th for one class, lower for two or
@@ -80,9 +81,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **More of Athas:** new weapons in every material, magic items with stories of
   their own (robes and bracers among them, for those who wear no armour), six
   wizard spells ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and
-  Friends](FEATURES.md#new-wizard-spells)) and nine [6th-level priest
+  Friends](FEATURES.md#new-wizard-spells)) and ten [6th-level priest
   spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
-  Whirlwind...), Kalzith (a defiler who sells scrolls), defilers who drop
+  Whirlwind, Restore Youth...), Kalzith (a defiler who sells scrolls), defilers who drop
   scrolls, more of Semyon's story, and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
   and armour (its magic gear glinting), figures cast shadows and kick up dust,
@@ -469,12 +470,12 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
 ### THAC0, saves and thief skills
 
 Started from the Loader, the game's own inventory screen (the one with the
-character's figure and their equipment) shows five more things in its
+character's figure and their equipment) shows six more things in its
 right-hand panel, drawn by the game's text routine so they look like the rest:
 
-![The inventory screen's panel in the game: THAC0 and the saves at the top, Daaki's thief skills (move silently and hide in shadows among them) beside the abilities, his DEX reaction and defensive adjustments, and a club in each hand: 1.5 attacks a round with the right, one with the off hand](docs/inventory.png)
+![The inventory screen's panel in the game: THAC0 and the saves at the top, then Cilla's age; her thief skills (move silently and hide in shadows among them) beside the abilities, her DEX reaction and defensive adjustments, a sling and a long sword](docs/inventory.png)
 
-![A ranger's panel: Dream's move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
+![A ranger's panel: move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
 
 - above STR, **THAC0** and the five **saving throws**, with the usual AD&D
   short labels: `PPD` paralysis/poison/death, `RSW` rod/staff/wand, `PP`
@@ -499,6 +500,8 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   and the one initiative uses. It is worked out from the character's DEX each
   time the panel is drawn, so it follows any change (Cat's Grace's, while it
   lasts);
+- with [ages](FEATURES.md#ages-and-magical-aging) on, the character's **AGE**
+  between the saving throws and STR;
 - right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as AD&D's
   table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5 at 21-23).
   The game counts it in AC already; on saving throws against what can be dodged
@@ -642,11 +645,13 @@ in its lower panel and under the pointer:
   CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
   Effects that last until removed (Charmed) and a magic item's power while
   it is readied (Shadowseeker's Detect Invisibility) show none.
-- **Enlarge's damage:** with the pointer on its icon, how much more melee
-  damage it gives, 10% a level of its caster: ENLARGED (+90% DAMAGE) from a
-  9th-level preserver. The inventory's and View Character's damage don't
-  count it (no room); each hit's line in the dice log does
-  (`x190% Enlarge (level 9)`). A second Enlarge on someone already enlarged
+- **Enlarge's damage:** with the pointer on its icon, how much more it gives,
+  10% a level of its caster: ENLARGED (+90% DICE) from a 9th-level preserver,
+  the weapon's dice made bigger
+  ([the rule](FEATURES.md#enlarge-multiplies-the-weapons-dice-only), on unless
+  unticked), or ENLARGED (+90% DAMAGE) with it off, the whole melee damage. The inventory's and View Character's damage don't count it (no room);
+  each hit's line in the dice log does (`+5 Enlarge (the dice 5 x190% = 10,
+  level 9)`, or `x190% Enlarge (level 9)` with the rule off). A second Enlarge on someone already enlarged
   uses up the spell and adds nothing.
 - **The armour spells' AC:** with the pointer on Barkskin's, Flesh Armor's or
   Magical Vestments' icon, the armour AC it gives by its caster's level:
@@ -739,7 +744,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with In the game, More character customization, Expanded features (Improved thieving among them) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (all seventeen, ages, Enlarge's dice and CON as in AD&D last) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -757,7 +762,9 @@ and use the arrow and Page keys):
   beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
   with Wooden Bow (base 19)`), the saves as the d20 needed now (see
   [In the game](#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
-  a fight: Stalker)`) and attacks;
+  a fight: Stalker)`) and attacks; with [ages](FEATURES.md#ages-and-magical-aging)
+  on, their age, its category and the next to come (`Age: 45, middle-aged;
+  old at 53`);
 - what they wear and hold, by the game's own slot names ("Right hand: Bone
   Long Sword"; "Carried" for the backpack), with each item's material and
   plus;
@@ -964,7 +971,7 @@ creatures save again as they stay in them; those lines have no "from".
 | Line | Meaning |
 |---|---|
 | `  Slig now 8/18 HP (-10)` / `  Gerakis now 51/54 HP (+1)` | Any combatant's hit points going down or up, with what's left out of their most. The game never shows a monster's HP; this does. The line comes just after the damage that caused it (sometimes after the next roll, when the game is quick). |
-| `  Gerrard regenerates 1 HP (CON 22), now 16/35 HP` | A hit point back by itself: the game gives one now and then to anyone with CON 20 or more (in the game, CON 20 regenerates and 18 or 19 don't). |
+| `  Gerrard regenerates 1 HP (CON 22), now 16/35 HP` | A hit point back by itself, to a party member with CON 20 or more: every 5 minutes of game time in the game, or at AD&D's rate by CON with [CON as in AD&D](FEATURES.md#con-as-in-add) (an hour at 20 to 10 minutes at 25). |
 | `  Rampager now 69/72 HP (-3: 3 of the 7 rolled, non-magical weapons do half)` / `  Mastyrial takes none of the 6 damage: crushing weapons can't hurt it` | A weapon hit that took less than its roll, or none at all (no HP lost three seconds on, or by the next round), with the reason when the monster's own defences give one (what weapons hurt it); otherwise "a protection or resistance took it" (Stoneskin, say). |
 | `Slig is killed` | A creature dying. What it's worth comes on the XP line below, only if the party gains it (the opening fight in the arena gives none, whoever dies). |
 | `XP: Gerakis +67, K'ratchek +22, ... (for Slig 270)` | Experience the party got, and for which kills, with each one's XP from its character sheet. The game gives it right after the kill: an equal share to each character, split again between a multiclass character's classes (the sheet counts XP per class, so a three-class thri-kreen shows a third of the share). |

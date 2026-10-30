@@ -157,7 +157,7 @@ def load_settings(strict: bool = False) -> dict:
     with SETTINGS_LOCK:
         for attempt in range(5):
             try:
-                with open(SETTINGS, encoding="utf-8") as f:
+                with open(SETTINGS, encoding="utf-8-sig") as f:  # (a BOM from Notepad too)
                     settings = json.load(f)
                 break
             except FileNotFoundError:
@@ -391,7 +391,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         objects = _find_file(game_dir, icons.OBJECTS_FILE)
         if objects:
             objects_ok, new_objects = icons.write_objects(objects, os.path.join(DOS_DIR, icons.OBJECTS_FILE), on)
-    except (gff.GffError, OSError, KeyError, struct.error, ValueError):
+    except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
         pass  # no icons of our own: the game's plain ones
     # the regions with a person given an object of their own for a new item (worldgear.py): only
     # with that object in the objects copy (a region naming an object that isn't there would stop
@@ -411,7 +411,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
                 worldgear.write_region(source, dest, region, mine)
             elif os.path.exists(dest):
                 os.remove(dest)
-        except (gff.GffError, OSError, KeyError, struct.error, ValueError):
+        except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError):
             try:
                 os.remove(dest)
             except OSError:
@@ -552,8 +552,8 @@ def game_end_note() -> Optional[str]:
             notes.append(message)
     except OSError:
         pass
-    if not notes and not os.path.exists(GAME_OK):
-        notes.append(CUT_OFF)
+    if not notes and STARTED is None and not os.path.exists(GAME_OK):  # (DOSBox's GAMEEND.COM writes it;
+        notes.append(CUT_OFF)                                           #   the recompiled program has none)
     return "\n\n".join(notes) or None
 
 
@@ -646,7 +646,7 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
         problem = prepare_patched_game(game_dir)
         if problem:
             raise LaunchError(f"The recompiled program runs the game with the helper, which needs the patched game ({problem}).")
-        for old in (GAME_END, GAME_MESSAGE):
+        for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
             try:
                 os.remove(old)
             except OSError:

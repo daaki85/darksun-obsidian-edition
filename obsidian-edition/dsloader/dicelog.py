@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -46,7 +46,7 @@ SLOT_KEY = 0x80  # a line's first byte: SLOT_KEY | the list << 4 | the spell lev
 TSR_LOOK_SEQ, TSR_LOOK_REPLY, TSR_LOOK_WHO, TSR_LOOK_OFF, TSR_LOOK_FULL_OFF, TSR_LOOK_ON = 150, 152, 154, 156, 158, 160
 LOOK_SIZE, LOOK_FULL_SIZE = 80, 700
 # ... and the party's THAC0 and saves as they stand now, for the game's screens (see STATS)
-TSR_STATS_OFF, TSR_STATS_STAMP, TSR_STATS_REQ, TSR_STATS_REPLY, STATS_SIZE = 162, 164, 166, 168, 28
+TSR_STATS_OFF, TSR_STATS_STAMP, TSR_STATS_REQ, TSR_STATS_REPLY, STATS_SIZE = 162, 164, 166, 168, 34
 STATS_RANGER = 2  # a STATS entry's +17 for a ranger: only move silently and hide in shadows count
 BIOS_TIMER = 0x46C
 # ... and the rule changes it makes to the game (the Options tab)
@@ -517,6 +517,7 @@ class DiceLog:
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
+        self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
         self._initiative_roll: Optional[int] = None
@@ -884,8 +885,10 @@ class DiceLog:
     def stats_entry(self, member: int) -> bytes:
         """A party member's STATS entry for DSCLOG: THAC0 with the main weapon, the five saves as
         the d20 needed now, THAC0 with each weapon ready, a thief's skills as they stand, the level
-        Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE)), and the AC
-        Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without)."""
+        Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE), or DICE), and the AC
+        Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without), and their
+        age with the rule (the inventory panel's AGE 23), its category and the next's age (which
+        DSCLOG doesn't read now: kept for the layout)."""
         g = self.game
         rec = g.creature(member)
         if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
@@ -910,6 +913,13 @@ class DiceLog:
         armour = g.armour_spells_ac(member)
         out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else -128
                                     for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
+        age = aging.age_of(g.sheet(member)) if self.rules & game.RULE_AGING else None
+        if age is None:
+            out += bytes(6)
+        else:
+            race = g.sheet(member)[game.SHEET_RACE]
+            nxt = aging.next_category(race, age) or (0, 0)
+            out += struct.pack("<HBBH", age, aging.category(race, age), *nxt)
         return out.ljust(STATS_SIZE, b"\0")
 
     def read_languages(self, member: int) -> int:
@@ -1258,6 +1268,8 @@ class DiceLog:
                 if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                     out += startgear.fill(self.game)
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
+                if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
+                    out += aging.give_ages(self.game)
                 if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                     out += pickpocket.mend_lists(self.game)
                 itemgate.release(self.game)
@@ -1773,8 +1785,11 @@ class DiceLog:
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""
-        party = self.game.party_signature()
-        if party != self._party:
+        party, clock = self.game.party_signature(), self.game.game_time()
+        back = clock is not None and self._clock is not None and clock < self._clock
+        if clock is not None:
+            self._clock = clock
+        if party != self._party or back:  # (the same party loaded again: its clock goes back)
             self._party, self._party_changed_at = party, now
         if now - self._party_changed_at < LOAD_SETTLE:
             if self.tracker:
@@ -1854,6 +1869,11 @@ class DiceLog:
                 out.append(f"{name} on {targets}{rule}")
             else:
                 out.append(f"{self._name(caster)} gives {name} to {targets}{rule}")
+            if eid == game.HASTED_EFFECT and self.rules & game.RULE_AGING:  # (Haste's magical aging)
+                for owner in owners:
+                    creature = self.game.combatant_creature(owner)
+                    if creature is not None:
+                        out += aging.hasted(self.game, creature)
         by_end: Dict[int, List[int]] = {}
         for eff in ended.elements():
             by_end.setdefault(eff.id, []).append(eff.owner)
@@ -2080,6 +2100,11 @@ class DiceLog:
         if e.kind == KIND_CAST:
             self._cast = (e.arg(6), e.raw)  # (who cast what, for a kit's damage: DSCLOG's CAST_WHO)
             self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
+            if e.raw == game.RESTORE_YOUTH_SPELL and self.rules & game.RULE_AGING:  # (its years: aging.restore)
+                caster, target = self.game.combatant_creature(e.arg(6)), self.game.combatant_creature(e.arg(8))
+                if caster is not None and target is not None:
+                    level = self.game.effect_caster_level(caster, e.raw) or 1
+                    return aging.restore(self.game, target, level)
             return []
         code = e.code
         if code.startswith(ATTACK_SITE):
@@ -2439,6 +2464,7 @@ class DiceLog:
             steps += f" (d{sides} for d{sides - 2}: grand mastery)"
         if sum(faces) + bonus < 1:
             steps += " (raised to the minimum of 1)"
+        dice = sum(faces)  # (the weapon's dice: Enlarge's and a backstab's with their rules)
         if mode is not None and mode <= 1:  # melee: the game adds the attacker's STR bonus
             strength = g.creature(attacker)[CREATURE_ABILITIES]
             str_bonus = g.str_damage(strength)
@@ -2446,12 +2472,19 @@ class DiceLog:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
             # Enlarge (DSUN 7C211h, with the STR bonus): +10% a level of the spell, the levels of
-            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down
+            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down; with
+            # RULE_ENLARGE only the weapon's dice, rounded up, the rest added once (DSCLOG's ENL_SITE)
             level = self._enlarge_level(e.parent_arg(0x18))
             if level:
                 percent = 100 + 10 * level
-                total = total * percent // 100
-                steps = f"({steps}) x{percent}% Enlarge (level {level})"
+                if self.rules & game.RULE_ENLARGE and dice > 0:
+                    enlarged = -(-dice * percent // 100)
+                    total += enlarged - dice
+                    steps += f" +{enlarged - dice} Enlarge (the dice {dice} x{percent}% = {enlarged}, level {level})"
+                    dice = enlarged
+                else:  # (32-bit idiv: toward 0)
+                    total = int(total * percent / 100)
+                    steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
         # that on the attacker's first two attacks of the round: x2, x3 from thief level 5, x4 from
         # 9, x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once, and on the
@@ -2466,7 +2499,6 @@ class DiceLog:
             if attacker < game.PARTY_SIZE:  # (an Assassin's one more: DSCLOG's STAB_TIMES)
                 times = max(kits.backstab_times(k, times) for k in g.kit_ids(attacker) or [0])
             if self.rules & game.RULE_BACKSTAB:
-                dice = sum(faces)
                 more = (times - 1) * dice
                 total += more
                 steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"

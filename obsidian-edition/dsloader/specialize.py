@@ -104,7 +104,7 @@ def justifier(sheet: bytes) -> bool:
 
 def _skill(sheet: bytes, item_type: Optional[int]) -> int:
     from . import kitpages, kits
-    chosen = sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]
+    chosen = game.spec_kinds(sheet)
     if not any(chosen):
         return NONE
     kind = spec_kind_of(item_type) if item_type is not None else None

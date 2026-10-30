@@ -8,6 +8,90 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.0 ([release notes](release-notes/v2.13.0.md)).
+
+**New**
+- **Ages (the rule change Ages and magical aging, on unless unticked).** Each party member has an
+  age from Dark Sun's Table 7, rolled the first time the Loader sees it (`aging.give_ages`, in the
+  dice log), kept in the sheet's +17h; middle, old and venerable age (Table 8) change the scores
+  once and for good, and the most a race lives (its secret roll, seeded by the character) kills
+  (`aging.age_by`, for Haste and Restore Youth). Shown on the inventory panel between the saves and STR
+  (`AGE 23`: DSCLOG's `AGE_TEXT`, from the age in STATS' new +28h on; THAC0 and the saves moved 3
+  pixels up for it) and on the Characters tab. Checked in DOSBox. Tests: `test_aging`;
+  `test_effects_specs` (an age adds no Effects lines).
+- **Haste ages (the same rule).** Each creature Haste speeds rolls system shock by its CON (the
+  PHB's table) or dies, and a party member who survives is a year older (`aging.hasted`, from the
+  dice log's `effect_changes` as a Hasted effect starts). Checked in DOSBox: a failure kills as the
+  game kills (no turns, no XP, "Dead"), a success ages. Tests: `test_aging`'s HasteTests.
+- **Restore Youth, a 6th-level cosmos priest spell (211).** Takes back a year of magical aging a
+  caster level, never below the target's true age (`aging.natural_start`), after a system shock
+  roll (`aging.restore`, from the dice log's cast line); Cure Critical Wounds' record with no dice
+  and no handler. Negative Plane Protection's save record moves to 212, the record room's last
+  (`NPP_SAVE`), and the game's spell lists end at 212 (`gamepatch.NS_END`). Checked in DOSBox: the
+  spell and its description on a 12th-level druid's 6th-level page, and cast on a character aged
+  by Haste. Its icon is the mod's own, a fountain of youth on light blue water (`wotrart.DRAWN`), and
+  it is cast with Cure Disease's sound (`RESTORE_CAST_SOUND`).
+  Tests: `test_aging`'s RestoreYouthTests, `test_grace`, `test_dsclog`, `test_wotrart`.
+
+**Changed**
+- **Enlarge multiplies the weapon's dice only (a rule change, on unless unticked).** The game's
+  Enlarge (7C211h) multiplies the whole melee damage, STR's bonus included; with
+  `RULE_ENLARGE` (DSCLOG's `RULE_HI_ENLARGE`, `ENL_SITE` at 7C246h) only the dice `STAB_ROLL`
+  kept, rounded up, the rest added once, and a backstab then multiplies the enlarged dice. The
+  dice log's hit line and the Effects screen's ENLARGED (+90% DICE) follow it. Checked in DOSBox:
+  three hits by an Enlarged gladiator, the dice log's damage the game's. Tests:
+  `test_enlarge_dice`, `test_enlarge_dice_only`.
+- **CON as in AD&D (a rule change, on unless unticked).** The game's regeneration (227E5h) gives
+  a party member with CON 20 or more a hit point every 300 seconds of game time at any CON; with
+  `RULE_CON` (DSCLOG's `RULE_HI_CON`, `REGEN_SITE` at 228BFh) the Player's Handbook's rate,
+  (26 − CON) × 600 seconds a hit point, the remainder kept for each member (`REGEN_SECS`). And a
+  dwarf's or a halfling's paralysis/poison/death save gets no CON adjustment on top of its racial
+  bonus (`CON_SAVE` at 5EAA1h; `GameData.save_modifiers`, `saves_now`). Checked in DOSBox:
+  Gerakis at CON 22, 1 hit point an hour on, the rest counted towards the next. Tests:
+  `test_regeneration`, `test_dwarves_poison_saves`, `test_modifiers_by_damage_kind_and_con`.
+- **The weapon specs are packed, making room for a character's age.** The sheet's +14h to +17h
+  (which the game never uses) held the four weapon specs a byte each; now they are 5 bits each
+  in +14h to +16h, +16h's top bit marking the layout (`SPEC_PACKED`), and +17h is free for the
+  character's age (`SHEET_AGE`). A sheet keeps the old layout until something writes its specs,
+  and every reader takes both (DSCLOG's `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`, `SPEC_SET`,
+  `SPEC_PACK`; the Loader's `game.spec_kinds`, `packed_specs`, `with_specs`), so
+  older saves and roster characters need no conversion step. Checked in DOSBox: four specs a byte
+  each and packed read alike on the Effects screen and in a fight, and come through a save and
+  load. Tests: `test_specslots`, `test_spec_layouts`, `test_specs_packed`.
+
+**Fixed** (from a code audit of this pull request and the Loader)
+- **A new character could keep the last one's age.** Character creation's DONE (`CR_WEAPONS`)
+  cleared the specs but kept +17h, so a member made in a slot an earlier character had held took
+  its age; it now clears the whole dword (packed, no specs, no age). `SPEC_CLEAR`, then unused,
+  is gone. Test: `test_spec_layouts`.
+- **Haste rolled again after a reload.** The same party loaded again (its clock gone back) now
+  counts as a load (`_party_check`), so a Haste already on doesn't roll system shock and age anew.
+- **Enlarge's dice** are kept for a melee hit only (`STAB_ROLL` sets `ENL_KNOWN` for a melee roll,
+  `STAB_TIMES` clears it), so no other call can use a stale hit's.
+- **Ages:** a score past 25 is no longer cut by a +1 (nor one under 3 by a −1); a thri-kreen made
+  young again is "no longer venerable"; a creature with no scores rolls no system shock.
+- **Saves:** a CON past 25 reads no table (`save_modifiers`, as `saves_now`); the game's
+  whole-damage Enlarge rounds toward 0 in the dice log, as its `idiv`.
+- **The patch notes' page** no longer hangs on a "> " line that isn't a developer's note.
+- **settings.json with a byte-order mark** (Notepad's) is read rather than put aside as `.bad`.
+- **The recompiled program's ordinary exit** isn't "cut off" (it has no GAMEEND.COM to write
+  GAMEOK.TXT), and the last game's GAMEOK.TXT is cleared before it starts.
+- More errors caught: a short GFF (`IndexError`) in the objects' and regions' copies, the
+  Characters tab's age, the named saves' folder, Restore Youth's icon without stable colours.
+- Tests: `test_settings_with_a_bom`, `test_recompiled_exit_is_not_cut_off`,
+  `test_a_plain_quote_is_text`, `test_scores_never_cut_the_wrong_way`,
+  `test_every_rule_has_its_box` (each rule a box on the Options tab, each its own bit).
+
+**Documentation**
+- A review of every document for the new rules: the patch notes (Ages under Magic and Psionics,
+  Haste's shock that kills, saves made with 2.13.0 not for earlier versions), FEATURES (contents,
+  the whole system shock table), the player guide (ages, Haste, CON's regeneration, the seventeen
+  rules), the README (ten 6th-level spells, the Characters tab's age) and DEVELOPMENT's memory
+  figures. Screenshots taken again: the ten priest spells, the inventory panels with the age, the
+  default party's inventory, the Options tab.
+
+## Pull request #80 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/80))
+
 Obsidian Edition 2.12.5 ([release notes](release-notes/v2.12.5.md)).
 
 **New**

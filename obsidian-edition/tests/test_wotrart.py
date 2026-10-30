@@ -61,6 +61,21 @@ class PlnrTests(unittest.TestCase):
         self.assertEqual(len(set(wotrart.ICONS.values())), 9)
         self.assertIn("Whirlwind", wotrart.ICONS)
 
+    def test_every_priest6_spell_has_one(self):
+        """Each 6th-level priest spell: Wake of the Ravager's, a tinted fallback, or drawn."""
+        from dsloader import game
+        for name in game.PRIEST6_SPELLS.values():
+            self.assertTrue(name in wotrart.ICONS or name in wotrart.FALLBACKS or name in wotrart.DRAWN, name)
+
+    def test_drawn_fountain(self):
+        """Restore Youth's fountain: 16 by 16, each letter a colour, made the nearest stable one."""
+        art = wotrart.DRAWN["Restore Youth"]
+        self.assertEqual((len(art), {len(row) for row in art}), (16, {16}))
+        self.assertLessEqual(set("".join(art)), set(wotrart.DRAWN_COLOURS))
+        stable = [(7, (16, 28, 137)), (8, (157, 198, 255)), (9, (255, 255, 255)), (10, (140, 140, 140))]
+        rows = wotrart.drawn("Restore Youth", stable)
+        self.assertEqual((rows[15][0], rows[1][1], rows[1][7]), (7, 8, 9))
+
 
 def palette(colours):
     """A VGA palette chunk (6 bits a channel) with COLOURS {index: (r, g, b)}, black elsewhere."""

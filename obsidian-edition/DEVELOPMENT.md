@@ -461,7 +461,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 55.5 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.5 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 54.8 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -542,14 +542,16 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. Since the far block went to the HMA,
-2,303 paragraphs (36 KB) are spare in it, and with `UMBPLUS.COM` about 55.5 KB
-are free in one piece (57.8 KB measured in DOSBox with a smaller helper, less
-what it has grown since: the helper at C90Ah, then the overlay buffer, the
-free block, the music buffer). The helper's own segment is the limit for new
-code: its image with the install code is 61,040 bytes (`image_len`; the
-resident part ends at `resident_end`, E790h), so about 4.4 KB of its 64 KB are
-spare; the HMA has 7,080 bytes left for more buffers (the far block ends at
+and so does `test_fits_upper_memory`. It needs 6,018 of the room's 8,182
+paragraphs (2.13.0), so 2,164 (33.8 KB) are spare, and with `UMBPLUS.COM`
+about 54.8 KB are free in one piece (57.8 KB measured in DOSBox with a smaller
+helper, less what it has grown since: the helper at C90Ah, then the overlay
+buffer, the free block, the music buffer). The helper's own segment is the
+limit for new code: its image with the install code is 62,752 bytes
+(`image_len`; the resident part ends at `resident_end`, EE40h), so about
+2.7 KB of its 64 KB are spare (2.12.5's 62,016 bytes left 3.4 KB; 2.13.0's
+ages, Haste's aging, Restore Youth and the Enlarge and CON rules took 736
+bytes); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -1506,13 +1508,110 @@ BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An
 earlier rule gave boots a move in a fight; it is gone, and the boots' names it
 changed go back to the game's.)
 
+### Ages
+
+([In the features page](FEATURES.md#ages-and-magical-aging).)
+
+How: the Loader (`aging.py`, with `RULE_AGING`, RULES_HI's 256) keeps each
+party member's age in the sheet's +17h (`SHEET_AGE`: the age less the race's
+base starting age, plus 1; 0 none yet, a thri-kreen's 6 being its base), the
+byte the packed weapon specs leave free (Weapon specialization, below). A member
+with none gets its starting age (`give_ages`, in the dice log's item pass, not
+while DSCLOG's weapon window is up: its trial puts the four bytes back as they
+were). `age_by` moves an age (Haste, Restore Youth): the categories reached or
+left change the sheet's scores and the creature's (`changes`, Table 8, the
+scores kept within 3 to 25), and the maximum (`most_age`: the race's base and
+dice, seeded with the character's name and race, so always the same) kills
+(`kill`: no hit points, the game's dead status). The Loader puts the age, its
+category, the next and its age in each member's STATS (+28h on: `STATS_AGE`),
+and DSCLOG's `AGE_TEXT` writes the age, `AGE 23`, in the inventory panel's
+free row between the saves and STR (`PROBE_INV`, `AGE_INV_Y`; the THAC0 and
+save rows 3 pixels higher than before to make room). The category and the
+next are for the Characters tab; the game's screens show only the age.
+Checked in DOSBox: the game's own party given ages in a new game, the
+inventory panel and the Characters tab.
+
+Haste's aging: the dice log's `effect_changes`, as a Hasted effect (22) starts
+on a combatant (not one a game just loaded has), calls `aging.hasted`: a system
+shock roll by the creature's CON (`SYSTEM_SHOCK`, the Player's Handbook's
+table), death on a failure (`kill`: HP 0 and the dead status, which the game
+takes as dead: no more turns, no share of the XP, "Dead" under the portrait),
+else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
+Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
+K'ratchek at CON 19 (89 against 99: 7 years old).
+
+Restore Youth (211, a cosmos spell: `COSMOS_MASK` in DSCLOG's `P6_MASKS`) is
+Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
+handler, so the game casts it as a touch spell that heals nothing. The dice
+log's `KIND_CAST` line for it calls `aging.restore` with the target and the
+caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
+by the level, never below the character's true age (`natural_start`, the
+seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
+level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
+
+### Enlarge's dice
+
+([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)
+
+The game's Enlarge is 7C211h, called by the attack (58A33h) for a melee hit:
+it adds STR's bonus (508:5Ch), then, with the Enlarged flag, multiplies the
+lot by 100 + 10 × the levels of the Enlarges on the attacker (598:52h), 32-bit,
+rounded down. DSCLOG's `ENL_SITE` replaces that multiplying (7C246h, 32
+bytes): with `RULE_HI_ENLARGE` (`game.RULE_ENLARGE`) it takes the hit's dice
+from `STAB_ROLL` (58A29h: the roll less what the weapon added, kept for the
+backstab rule; `ENL_KNOWN` so they are used once, never a stale hit's),
+multiplies only those, rounded up, adds the difference, and makes the kept
+dice the enlarged ones, so a backstab with its rule multiplies those. Without
+the rule, or with no dice kept, it does the game's sum. The dice log's hit
+line does the same (`RULE_ENLARGE`), and the Effects screen's line says DICE
+rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Checked in DOSBox:
+Gerakis Enlarged at level 1 hitting a Screamer Beetle for 21, 22 and 25, its
+hit points down by the same (the game's way: 22, 23 and 26).
+
+### CON as in AD&D
+
+([In the features page](FEATURES.md#con-as-in-add).)
+
+Regeneration: the game's routine (227E5h, called often; it acts once more than
+300 seconds of game time, the clock at 3781:35Bh, have passed since the last,
+DS:1654h) gives each party member a psionic strength point for each 300
+seconds and, with CON 20 or more, a hit point for each 300 too, at any CON,
+dropping what is left over. DSCLOG's `REGEN_SITE` (228BFh, after its
+`div ebx`) with `RULE_HI_CON` (`game.RULE_CON`) adds the seconds to the
+member's own count (`REGEN_SECS`, the remainder kept) and gives a hit point
+for each (26 − CON) × 600 seconds: AD&D's one an hour at 20 to one every 10
+minutes at 25. The psionic points are left as they are.
+
+Poison saves: the saving throw's CON adjustment (5EA91h, the table at DS:810h
+by CON) is added to the paralysis/poison/death save, and for a dwarf or a
+halfling its CON × 2 / 7 as well. DSCLOG's `CON_SAVE` (5EAA1h) makes the
+adjustment 0 for a dwarf or a halfling with the rule, so only the racial bonus
+counts; the Loader's saves (`GameData.save_modifiers`, `saves_now`) do the
+same. Checked in DOSBox: Gerakis at CON 22 an hour on, 1 hit point (the game's
+way 12), and the 1330 seconds left over counted towards the next. The saves
+are checked by the emulator (`test_dwarves_poison_saves`): the party has no
+dwarf or halfling.
+
 ### Weapon specialization
 
 ([In the features page](FEATURES.md#weapon-specialization).)
 
 How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the
-saved-characters roster keep them. The helper adds the bonuses and attacks
+saved-characters roster keep them. Up to 2.12 they were a byte each (the kind +
+1, 0 none); now they are packed, 5 bits each in +14h to +16h (room for 31
+kinds), +16h's top bit (`SPEC_PACKED`) marking it, and +17h is the
+character's age (`SHEET_AGE`, years past its race's base starting age: see
+Ages above). A sheet keeps the old layout until something writes to it, and
+everything reads both: DSCLOG through `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`
+(and writes through `SPEC_SET`, which packs an old sheet first,
+`SPEC_PACK`: its +17h, an old 4th spec, becomes 0, no age yet), the Loader
+through `game.spec_kinds`, `packed_specs` and `with_specs`. The weapon
+window's trial of a kind pointed at (`PK_WORD`) puts the four bytes back as
+they were. Checked in DOSBox: Gerakis with four kinds a byte each and then
+packed with an age of 30 lists the same four on the Effects screen, his long
+sword's spec counts in the fight, and the packed bytes come back unchanged
+through a save (SAVE01.SAV's sheets) and its load. The helper adds the bonuses and attacks
 where the game makes a weapon attack (`INT D1h`, `INT D0h`), on the DAM lines
 (`INT CFh`, `INT CEh`), calls the game's psionic pop-up in weapon mode after
 the creation screen's DONE (`CR_WEAPONS`, below) and at a level gained
@@ -2374,7 +2473,7 @@ after the `ns_list_` patches):
   no save (+1Fh bit 0), so it never stopped anything. DSCLOG's `NS_NPP`
   (replacing "add sp,4 / push 6 / push 27h" at 7A7E9h) makes the charge's two
   arguments, still on the stack, the save's: 6 and, once the records have room
-  (SEG_MOVED), record 211 (`NPP_SAVE`, past the new spells), Vampiric Touch's
+  (SEG_MOVED), record 212 (`NPP_SAVE`, past the new spells), Vampiric Touch's
   copied with a save against paralysis, poison and death allowed (21h). Saved,
   the game stops the touch and gives the undead 2d6.
 - **Acid** (effect 1, Acid Arrow's): the game spends an effect's charges
@@ -2454,7 +2553,7 @@ after the `ns_list_` patches):
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the load
 segment + 3E3Fh) has 96 bytes after 195, room for 196-198, then the monster
 kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198, Reflected
-Image 199, Spook 200, Friends 201, and the 6th-level priest spells 202-210.
+Image 199, Spook 200, Friends 201, and the 6th-level priest spells 202-211.
 The game names none of the monsters' powers:
 the log names one by its record's effect (+19h, `game.POWER_EFFECT_NAMES`), else
 its damage's kind, else its number; a roll before a save against one that puts
@@ -2470,7 +2569,9 @@ the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
 200h bytes from 3E3Fh to `seg_space` in its own resident image and points the
 two selectors there (`seg_moved`, the header's +306). The records then run to
-211. The stack had been written over records 196-198's room all along; with it
+212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h),
+which Negative Plane Protection's save record (`NPP_SAVE`) fills; another new
+spell needs room made first (that record moved elsewhere, say). The stack had been written over records 196-198's room all along; with it
 moved, nothing writes there but the helper. Spells 199-201 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
 `monsters.py` reads the kinds table's segment from the selector. The spell
@@ -2501,7 +2602,7 @@ scroll used...). Each such compare is `INT 98h` and a site number
 (`NS_CMP_SITES` in `gamepatch.py`, the same order as DSCLOG's `ns_cmp_sites`);
 the helper makes a new spell compare as a wizard's spell does, and hands back
 the flags. The name routine (500:61h, `NS_NAME` at 5E560h) gives their names;
-their descriptions (SPIN 197-202, and 203-211 for the 6th-level priest spells:
+their descriptions (SPIN 197-202, and 203-212 for the 6th-level priest spells:
 the spell + 1 as the game's own) and icons (21196-21201) are chunks of the
 launcher's copy of RESOURCE.GFF (`spelltexts.py`, `icons.py`), so they take no
 room in the helper. A description follows the game's own: the name in capitals,
@@ -2524,6 +2625,9 @@ k the last pixel k + 2 more times (worked out on the 101 spells both games have;
 38 match Shattered Lands' pixel for pixel). Its palette isn't Shattered Lands',
 so each colour becomes the nearest Shattered Lands colour no region changes.
 Checked in the game: the Heal icon in a known spell's place on the USE screen.
+Restore Youth's icon, a fountain, is drawn in `wotrart.DRAWN` (a letter a
+colour, `DRAWN_COLOURS`, each made the nearest stable colour), with or without
+Wake of the Ravager.
 
 **Pictures on the ground.** A spell's record names the picture it leaves on the
 ground by its +17h (FFh none): an entry of a table of 45 just before the flights
@@ -2708,7 +2812,9 @@ Erdlu Claw are cast only on a party member's portrait on the USE screen, where
 the game shows its own star over the portrait whatever the spell and, by its
 code (90:A6Fh with `+16h` alone on that path, 751C9h), plays the landing
 sound: Haste's 96 for Cat's Grace, Shocking Grasp's 77 for Erdlu Claw
-(`NS_LANDING`).
+(`NS_LANDING`). Restore Youth has Cure Disease's 78 with its cast glow
+(`RESTORE_CAST_SOUND`), not the 81 of Cure Critical Wounds, its template, which
+Heal and Water of Life keep; nearly every healing spell lands with 98.
 
 The sites share one interrupt with the creation panel's (`INT 98h`, then the
 site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).

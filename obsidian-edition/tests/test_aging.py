@@ -1,0 +1,231 @@
+"""Ages from Dark Sun's tables (aging.py): the starting roll, the categories' changes, old age."""
+
+import os
+import random
+import struct
+import sys
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from dsloader import aging, game  # noqa: E402
+from test_dicelog import CREATURES, SHEETS, set_effects  # noqa: E402
+from test_now import dag  # noqa: E402
+
+HUMAN, DWARF, MUL, THRI_KREEN = 1, 2, 7, 8
+
+
+class TableTests(unittest.TestCase):
+    def test_categories(self):
+        """Table 8: a human middle-aged at 40, old at 53, venerable at 80; a thri-kreen only
+        venerable, at 25."""
+        self.assertEqual([aging.category(HUMAN, a) for a in (39, 40, 52, 53, 79, 80)],
+                         [aging.YOUNG, aging.MIDDLE, aging.MIDDLE, aging.OLD, aging.OLD, aging.VENERABLE])
+        self.assertEqual([aging.category(THRI_KREEN, a) for a in (6, 24, 25)],
+                         [aging.YOUNG, aging.YOUNG, aging.VENERABLE])
+        self.assertEqual(aging.next_category(HUMAN, 20), (aging.MIDDLE, 40))
+        self.assertEqual(aging.next_category(THRI_KREEN, 14), (aging.VENERABLE, 25))
+        self.assertIsNone(aging.next_category(HUMAN, 80))
+
+    def test_changes_add_up(self):
+        """Each category reached once: middle -1 STR and CON, +1 INT and WIS; old -2 STR and DEX,
+        -1 CON, +1 WIS; venerable -1 STR, DEX and CON, +1 INT and WIS. Younger again undoes them;
+        a thri-kreen's venerable age only -1 STR and DEX."""
+        S, D, C, I, W = aging.STR, aging.DEX, aging.CON, aging.INT, aging.WIS
+        self.assertEqual(aging.changes(HUMAN, 39, 40), {S: -1, C: -1, I: 1, W: 1})
+        self.assertEqual(aging.changes(HUMAN, 30, 80), {S: -4, D: -3, C: -3, I: 2, W: 3})
+        self.assertEqual(aging.changes(HUMAN, 80, 30), {S: 4, D: 3, C: 3, I: -2, W: -3})
+        self.assertEqual(aging.changes(HUMAN, 41, 52), {})
+        self.assertEqual(aging.changes(THRI_KREEN, 24, 25), {S: -1, D: -1})
+
+    def test_start_and_most(self):
+        """Table 7's starting ages (a thri-kreen always 6), and a maximum age the same each time
+        for the same character, within its race's range."""
+        rng = random.Random(1)
+        for _ in range(200):
+            self.assertTrue(16 <= aging.roll_start(HUMAN, rng)[0] <= 23)
+            self.assertTrue(29 <= aging.roll_start(DWARF, rng)[0] <= 49)
+        self.assertEqual(aging.roll_start(THRI_KREEN, rng), (6, []))
+        most = aging.most_age("K'ratchek", THRI_KREEN)
+        self.assertTrue(26 <= most <= 35)
+        self.assertEqual(aging.most_age("K'ratchek", THRI_KREEN), most)
+
+    def test_stored(self):
+        """+17h: the age less the race's base, plus 1 (0 none); a dwarf's most fits."""
+        self.assertEqual(aging.stored(THRI_KREEN, 6), 1)
+        self.assertEqual(aging.stored(DWARF, 260), 236)
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[game.SHEET_RACE] = MUL
+        self.assertIsNone(aging.age_of(bytes(sheet)))
+        sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(MUL, 19))
+        self.assertEqual(aging.age_of(bytes(sheet)), 19)
+
+
+class PartyTests(unittest.TestCase):
+    def setUp(self):
+        self.log = dag()
+        self.g = self.log.game
+        self.m = self.log.guest.mem
+        self.m[SHEETS + game.SHEET_RACE] = HUMAN
+        self.m[SHEETS + game.SHEET_ABILITIES:SHEETS + game.SHEET_ABILITIES + 6] = bytes((17, 15, 16, 12, 11, 10))
+        self.m[CREATURES + game.CREATURE_ABILITIES:CREATURES + game.CREATURE_ABILITIES + 6] = bytes((18, 15, 16, 12, 11, 10))
+        self.log.rules |= game.RULE_AGING
+
+    def scores(self):
+        return list(self.m[SHEETS + game.SHEET_ABILITIES:SHEETS + game.SHEET_ABILITIES + 6]), \
+            list(self.m[CREATURES + game.CREATURE_ABILITIES:CREATURES + game.CREATURE_ABILITIES + 6])
+
+    def test_give_ages_once(self):
+        """A starting age for the member with none (its true age, the same each time for the same
+        character: natural_start), its roll in the line; then none again."""
+        lines = aging.give_ages(self.g)
+        self.assertEqual(len(lines), 1)
+        age = aging.age_of(self.g.sheet(0))
+        self.assertEqual(age, aging.natural_start("Dag", HUMAN)[0])
+        self.assertTrue(16 <= age <= 23)
+        self.assertIn(f"Dag is {age} (a human: 15 + 1d8 = [{age - 15}]); middle-aged at 40.", lines)
+        self.assertEqual(aging.give_ages(self.g), [])
+
+    def test_age_by_changes_the_scores(self):
+        """Aged past middle age: the sheet's scores and the creature's both change; younger again,
+        back as they were."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 38))
+        before = self.scores()
+        lines = aging.age_by(self.g, 0, 3, "Haste")
+        self.assertEqual(lines, ["Dag ages 3 years (Haste): now 41, middle-aged: STR -1, CON -1, INT +1, WIS +1."])
+        sheet, creature = self.scores()
+        self.assertEqual(sheet[0], before[0][0] - 1)
+        self.assertEqual(creature[2], before[1][2] - 1)
+        aging.age_by(self.g, 0, -3, "Restore Youth")
+        self.assertEqual(self.scores(), before)
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 38)
+
+    def test_scores_never_cut_the_wrong_way(self):
+        """A score past 25 (magic) keeps it when middle age adds 1; a thri-kreen made young again
+        is no longer venerable (it has no middle age)."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 39))
+        self.m[CREATURES + game.CREATURE_ABILITIES + 3] = 26
+        aging.age_by(self.g, 0, 1, "Haste")
+        self.assertEqual(self.m[CREATURES + game.CREATURE_ABILITIES + 3], 26)
+        self.m[SHEETS + game.SHEET_RACE] = THRI_KREEN
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(THRI_KREEN, 25))
+        lines = aging.age_by(self.g, 0, -3, "Restore Youth")
+        self.assertIn("no longer venerable: STR +1, DEX +1", lines[0])
+
+    def test_death_at_the_most(self):
+        """Reaching the most its race lives, the member dies: no hit points, dead."""
+        most = aging.most_age("Dag", HUMAN)
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, most - 1))
+        lines = aging.age_by(self.g, 0, 1, "Haste")
+        self.assertIn("Dag dies of old age", lines[0])
+        self.assertEqual(struct.unpack_from("<h", self.m, CREATURES)[0], 0)
+        self.assertEqual(self.m[CREATURES + game.CREATURE_STATUS], 5)
+
+    def test_in_stats(self):
+        """STATS' age bytes (DSCLOG's AGE_TEXT): the age, its category, the next and its age."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 45))
+        self.assertEqual(struct.unpack_from("<HBBH", self.log.stats_entry(0), 28), (45, aging.MIDDLE, aging.OLD, 53))
+        self.log.rules &= ~game.RULE_AGING
+        self.assertEqual(self.log.stats_entry(0)[28:34], bytes(6))
+        self.assertEqual(aging.describe(self.g.sheet(0)), "45, middle-aged; old at 53")
+
+
+class Fixed(random.Random):
+    """A d100 that comes up ROLL."""
+
+    def __init__(self, roll):
+        super().__init__(0)
+        self.roll = roll
+
+    def randint(self, a, b):
+        return self.roll
+
+
+class HasteTests(unittest.TestCase):
+    def setUp(self):
+        self.log = dag()
+        self.g = self.log.game
+        self.m = self.log.guest.mem
+        self.m[SHEETS + game.SHEET_RACE] = HUMAN
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 39))
+        self.m[CREATURES + game.CREATURE_ABILITIES:CREATURES + game.CREATURE_ABILITIES + 6] = bytes((18, 15, 13, 12, 11, 10))
+        self.m[SHEETS + game.SHEET_ABILITIES:SHEETS + game.SHEET_ABILITIES + 6] = bytes((18, 15, 13, 12, 11, 10))
+        struct.pack_into("<h", self.m, CREATURES, 30)
+        self.log.rules |= game.RULE_AGING
+
+    def test_system_shock_table(self):
+        self.assertEqual([aging.system_shock(c) for c in (1, 13, 14, 18, 24, 25, 30)], [25, 85, 88, 99, 99, 100, 100])
+
+    def test_survives_and_ages(self):
+        """A roll at or under the chance (CON 13: 85): a year older, the categories' changes."""
+        lines = aging.hasted(self.g, 0, Fixed(85))
+        self.assertEqual(lines, ["Dag's system shock (Haste's aging): d100 = 85, needs 85 or less (CON 13) -> survives",
+                                 "  Dag ages 1 year (Haste): now 40, middle-aged: STR -1, CON -1, INT +1, WIS +1."])
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 40)
+
+    def test_fails_and_dies(self):
+        lines = aging.hasted(self.g, 0, Fixed(86))
+        self.assertEqual(lines, ["Dag's system shock (Haste's aging): d100 = 86, needs 85 or less (CON 13) -> fails: Dag dies"])
+        self.assertEqual(self.m[CREATURES + game.CREATURE_STATUS], 5)
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 39)
+        self.assertEqual(aging.hasted(self.g, 0, Fixed(1)), [])  # (dead: nothing more)
+
+    def test_in_the_dice_log(self):
+        """A new Haste on Dag, once: its line, then his system shock and his year; none again for
+        the same Haste, nor with the rule off."""
+        self.assertEqual(self.log.effect_changes(10.0), [])
+        set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
+        lines = self.log.effect_changes(20.0)
+        self.assertTrue(lines[0].startswith("Hasted on Dag"))
+        self.assertTrue(lines[1].startswith("Dag's system shock (Haste's aging): d100 = "))
+        self.assertEqual(self.log.effect_changes(30.0), [])
+        set_effects(self.log, [])
+        self.log.effect_changes(40.0)
+        self.log.rules &= ~game.RULE_AGING
+        set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
+        self.assertEqual(len(self.log.effect_changes(50.0)), 1)
+
+
+class RestoreYouthTests(unittest.TestCase):
+    def setUp(self):
+        self.log = dag()
+        self.g = self.log.game
+        self.m = self.log.guest.mem
+        self.m[SHEETS + game.SHEET_RACE] = HUMAN
+        self.true = aging.natural_start("Dag", HUMAN)[0]
+        self.m[CREATURES + game.CREATURE_ABILITIES:CREATURES + game.CREATURE_ABILITIES + 6] = bytes((18, 15, 13, 12, 11, 10))
+        struct.pack_into("<h", self.m, CREATURES, 30)
+
+    def aged(self, years):
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, self.true + years))
+
+    def test_takes_back_a_year_a_level(self):
+        self.aged(12)
+        lines = aging.restore(self.g, 0, 9, Fixed(1))
+        self.assertTrue(lines[0].startswith("Dag's system shock (Restore Youth): d100 = 1, needs 85 or less (CON 13) -> survives"))
+        self.assertEqual(lines[1], f"  Dag grows younger 9 years (Restore Youth): now {self.true + 3}.")
+        self.assertEqual(aging.age_of(self.g.sheet(0)), self.true + 3)
+
+    def test_never_below_the_true_age(self):
+        self.aged(2)
+        aging.restore(self.g, 0, 9, Fixed(1))
+        self.assertEqual(aging.age_of(self.g.sheet(0)), self.true)
+        self.assertEqual(aging.restore(self.g, 0, 9, Fixed(1)),
+                         [f"Restore Youth: Dag has no magical years to take back ({self.true}, Dag's true age)."])
+
+    def test_system_shock_kills(self):
+        self.aged(5)
+        lines = aging.restore(self.g, 0, 9, Fixed(86))
+        self.assertTrue(lines[0].endswith("-> fails: Dag dies"))
+        self.assertEqual(self.m[CREATURES + game.CREATURE_STATUS], 5)
+
+    def test_spell(self):
+        """Restore Youth is the 6th-level priest spells' tenth (211), the cosmos's."""
+        self.assertEqual(game.PRIEST6_SPELLS[game.RESTORE_YOUTH_SPELL], "Restore Youth")
+        self.assertEqual(game.RESTORE_YOUTH_SPELL, 211)
+        self.assertEqual(game.PRIEST6_MASKS[game.RESTORE_YOUTH_SPELL], game.COSMOS_MASK)
+
+
+if __name__ == "__main__":
+    unittest.main()

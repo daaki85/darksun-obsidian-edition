@@ -28,6 +28,9 @@ done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
   - [Helms](#helms)
+  - [Ages and magical aging](#ages-and-magical-aging)
+  - [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only)
+  - [CON as in AD&D](#con-as-in-add)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
@@ -84,7 +87,7 @@ done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
 
 ## Rule changes
 
-Fourteen changes that bring the game's own rules closer to AD&D, each with its
+Seventeen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section. All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set). Untick one
@@ -107,6 +110,9 @@ and the game's own rule is back at once.
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
+| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; Haste ages its target a year, after a system shock roll to survive |
+| [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
+| [CON as in AD&D](#con-as-in-add) | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
 
 ### Class restrictions
 
@@ -478,6 +484,98 @@ The helms keep the game's own names (earlier versions called the plain one
 **Helm (AC 1)**; the Loader names it back).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
+
+### Ages and magical aging
+
+The game keeps no ages. With **Ages and magical aging** ticked, each party
+member has one, from the Dark Sun rules' tables: a starting age rolled the
+first time the Loader sees the character (a new one, the game's own party, one
+from an earlier version), which the dice log shows
+(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`). Only magic
+changes it: game time is too short to count.
+
+| Race | Starting age | Middle age | Old age | Venerable | Most it lives |
+|---|---|---|---|---|---|
+| Human | 15 + 1d8 | 40 | 53 | 80 | 80 + 2d20 |
+| Dwarf | 25 + 4d6 | 100 | 133 | 200 | 200 + 3d20 |
+| Elf | 15 + 3d4 | 50 | 67 | 100 | 100 + 2d20 |
+| Half-elf | 15 + 2d4 | 45 | 60 | 90 | 90 + 2d20 |
+| Half-giant | 20 + 5d4 | 60 | 80 | 120 | 120 + 1d100 |
+| Halfling | 25 + 3d6 | 45 | 60 | 90 | 90 + 4d12 |
+| Mul | 15 + 1d6 | 40 | 53 | 80 | 80 + 1d10 |
+| Thri-kreen | 6 | | | 25 | 25 + 1d10 |
+
+On reaching each age the scores change, once and for good, adding up: middle
+age −1 STR and CON, +1 INT and WIS; old age −2 STR and DEX, −1 CON, +1 WIS;
+venerable −1 STR, DEX and CON, +1 INT and WIS. A thri-kreen has only a
+venerable age, and loses 1 STR and 1 DEX there. Reaching the most its race
+lives (its own roll, kept secret) the character dies of old age.
+
+**Haste** speeds the body up and ages it, as the AD&D spell does: each
+creature it hastes must survive a **system shock** roll (the CON table: 85% at
+CON 13, 88% at 14, 90% at 15, 95% at 16, 97% at 17, 99% at 18 to 24, 100% at
+25) or die, and
+a party member who survives is a year older, its age categories counting as
+above. Monsters have no ages: for them it is the system shock alone. The dice
+log shows both:
+
+```
+Cermak gives Hasted to K'ratchek: double movement and attacks; ends Slow
+K'ratchek's system shock (Haste's aging): d100 = 89, needs 99 or less (CON 19) -> survives
+  K'ratchek ages 1 year (Haste): now 7.
+```
+
+A thri-kreen, venerable at 25, feels it most: every Haste is a year of a short
+life. A dwarf hardly notices.
+
+The age shows on the inventory screen's panel, between the saving throws and
+STR (`AGE 23`), and on the Loader's Characters tab with the category and the
+next age to come (`Age: 45, middle-aged; old at 53`).
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
+
+### Enlarge multiplies the weapon's dice only
+
+The game's Enlarge adds 10% a level of its caster to the whole of a melee
+hit's damage: STR's bonus, the weapon's plus and a specialist's bonus grow
+with it, rounded down. AD&D's Enlarge makes the creature and what it carries
+bigger, so with **Enlarge multiplies the weapon's dice only** ticked only the
+weapon's dice grow, rounded up, and the rest is added after. The dice log
+shows it:
+
+```
+Gerakis hits Screamer Beetle for 21: 1d8 = [4] -1 bone +2 specialized +3 Wild Fighting +12 STR 24 +1 Enlarge (the dice 4 x110% = 5, level 1)
+```
+
+where the game made it 22 (20 × 110%). A backstab then multiplies the
+enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
+(+90% DAMAGE).
+
+### CON as in AD&D
+
+A party member with CON 20 or more gets hit points back by itself. The game
+gives one every 5 minutes of game time at any such CON, 12 an hour. With **CON as in AD&D** ticked it is
+the Player's Handbook's rate:
+
+| CON | A hit point every |
+|---|---|
+| 20 | hour |
+| 21 | 50 minutes |
+| 22 | 40 minutes |
+| 23 | 30 minutes |
+| 24 | 20 minutes |
+| 25 | 10 minutes |
+
+Minutes short of the next hit point count towards it later. The dice log
+shows each: `Gerakis regenerates 1 HP (CON 22), now 12/54 HP`.
+
+The same box takes CON's adjustment off a dwarf's or a halfling's
+paralysis/poison/death save. The game adds both their racial bonus (CON × 2 /
+7, +1 for every 3.5 points) and the adjustment everyone with CON 19 or more
+gets (+1 to +4); in AD&D the racial bonus takes its place. A dwarf with CON 19
+saves at +5, not +6.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#con-as-in-add).
 
 ## More character customization
 
@@ -1246,10 +1344,10 @@ How it works:
 
 ### 6th-level priest spells
 
-Nine 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
-202-210). A cleric or druid gets them at 11th level, with AD&D's spell slots:
-one 6th-level slot at 11th and two at 12th (a druid reaches 12th under the XP
-cap, a cleric 11th). Like the 4th and 5th-level common spells, the cosmos
+Ten 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
+202-211). A cleric or druid gets them at 11th level, with AD&D's spell slots:
+one 6th-level slot at 11th and two at 12th. Under the XP cap a druid can reach
+12th, a cleric only 11th, so only a druid gets the second slot. Like the 4th and 5th-level common spells, the cosmos
 ones are for druids and a Healer cleric; each element's are for the clerics
 and druids of that sphere (an Elementalist's second sphere counts). They come
 with the **New wizard spells** switch (it covers these too), and with
@@ -1263,6 +1361,7 @@ says so.
 |---|---|---|---|
 | **Heal** | cosmos | touch | every wound healed, disease and blindness cured |
 | **Harm** | cosmos | touch | the creature is left 1d4 hit points; no save |
+| **Restore Youth** | cosmos | touch | takes back a year of magical aging (Haste's) a caster level, never below the creature's true age; it must survive a system shock ([Ages](#ages-and-magical-aging)) |
 | **Blade Barrier** | air | a wall | 8d8 to each creature in it or passing through; a save for none |
 | **Wall of Thorns** | earth | a wall | 8 plus the creature's AC to each creature in it or pushing through (at least 1) |
 | **Sunstroke** | fire | one creature | if it fails its save it collapses, helpless, for 2 rounds a level, taking 1d4 fire at the start of each round |
@@ -1271,15 +1370,16 @@ says so.
 | **Water of Life** | water | touch | the creature's wounds healed by taking them onto the caster, who keeps at least 5 hit points |
 | **Whirlwind** | air | an area, a round a caster level | 2d8 crushing each round to each creature in it, a save for half; one that fails is swept off its feet and loses its next turn |
 
-![The nine 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds and Water of Life](docs/new-priest-spells.png)
+![The ten 6th-level priest spells' descriptions on the USE screen: Heal, Harm, Blade Barrier, Whirlwind, Wall of Thorns, Heartseeker, Sunstroke, Fire Seeds, Water of Life and Restore Youth with its fountain icon](docs/new-priest-spells.png)
 
 How they're made, and where they differ from the books:
 
 - Each is built on a spell the game already has, so the game's own code casts
   it: Heal on Cure Critical Wounds, Harm on Cause Critical Wounds, the walls
   on the priest's Wall of Fire, Sunstroke on Hold Person, Fire Seeds on Flame
-  Strike, Whirlwind on Stinking Cloud, Heartseeker on Slay Living and Water of
-  Life on Lend Health.
+  Strike, Whirlwind on Stinking Cloud, Heartseeker on Slay Living, Water of
+  Life on Lend Health and Restore Youth on Cure Critical Wounds (healing
+  nothing).
 - **Blade Barrier and Wall of Thorns are walls of their own**, made as the
   game makes its fire walls but each with its own damage and its own picture:
   a ring of circling blades and a tangle of thorns, Wake of the Ravager's (the
@@ -1318,13 +1418,22 @@ How they're made, and where they differ from the books:
   as in AD&D, which here only keeps a STR lowered by something else from coming
   back ([Cause
   Disease](HOW-THE-GAME-WORKS.md#each-cleric-spell-against-the-manual)).
+- **Restore Youth** is the mod's, the reverse of AD&D's Age Creature, and
+  needs the **Ages and magical aging** rule: it takes back only the years
+  magic added, as many as the caster's level, down to the age the character
+  would be without them. The target rolls system shock first, as for Haste,
+  and dies if it fails; one with no magical years rolls nothing. With the rule
+  off, or on a monster, it does nothing. The dice log shows both:
+  `Gerakis grows younger 10 years (Restore Youth): now 27.`
 
 The dice log names each one: Harm's line says the game's own roll goes
 unused, and Wall of Thorns' gives the AC its damage came from
 (`Wall of Thorns' wall instead: 8 + AC 10 = 18`), and a creature Whirlwind
 sweeps off its feet has a line of its own. Their icons are Wake of the
 Ravager's, read from your copy (GOG sells it with Shattered Lands); without it
-they have icons of their own (the game's, recoloured).
+they have icons of their own (the game's, recoloured). Restore Youth, which
+Wake of the Ravager hasn't, has the mod's own: a fountain on light blue water,
+and is cast with Cure Disease's sound.
 
 How it works:
 [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
@@ -2035,7 +2144,9 @@ from the next start).
 
 With the pointer on the icon of a spell that lasts a number of uses, the
 Effects screen names the uses left: IMPROVED AC (10 CHARGES). Enlarge's icon
-names the melee damage it adds, 10% a level of its caster: ENLARGED (+90% DAMAGE).
+names what it adds, 10% a level of its caster: ENLARGED (+90% DICE) with
+[the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) (on unless
+unticked), or ENLARGED (+90% DAMAGE), the whole melee damage, with it off.
 Barkskin's, Flesh Armor's and Magical Vestments' name the armour AC they give,
 by their caster's level (BARKSKIN (AC 3)): Barkskin 6 less a quarter of the
 level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1 better

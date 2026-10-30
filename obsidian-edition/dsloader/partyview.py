@@ -69,7 +69,7 @@ class Card(ttk.Frame):
             var = self.vars[score] = tk.StringVar()
             ttk.Label(sheet, textvariable=var, style="CardStat.TLabel").grid(row=i, column=1, sticky="w",
                                                                            padx=(4, 16))
-        right = ("who", "alignment", "classes", "kit", "xp", "ac", "thac0", "saves", "move", "attacks", "weapons",
+        right = ("who", "alignment", "age", "classes", "kit", "xp", "ac", "thac0", "saves", "move", "attacks", "weapons",
                  "equipment", "slots", "thief")
         labels = []
         self.rows: Dict[str, ttk.Label] = {}  # (an empty one is hidden, leaving no blank line)
@@ -95,13 +95,13 @@ class Card(ttk.Frame):
     def show(self, name: str, fields: Dict[str, str], status: str, current_ac: Optional[int],
              game_art: Optional["art.GameArt"], slots=(), thief=(), equipment=(), hits=(), saves=(), skills_label: str = "Thief skills now",
              weapons=(), no_spells: bool = False, kit: Optional[str] = None, kit_move: int = 0,
-             move_why: str = "") -> None:
+             move_why: str = "", age: Optional[str] = None) -> None:
         """`slots`: [(kind, [(spell level, left, most), ...]), ...], as GameData.spell_slots gives;
         `thief`: [(skill, percent), ...], as GameData.thief_skills gives; `hits` and `saves`,
         THAC0 with each weapon and the saves as they stand now (GameData.weapon_hits, saves_now);
         `weapons`, the kinds chosen with weapon specialization (GameData.specializations);
         `no_spells`, a multiclass preserver in armour (GameData.no_spells); `kit`, the kit taken
-        (GameData.kit), and what it adds to Move in a fight (kits.move)."""
+        (GameData.kit), and what it adds to Move in a fight (kits.move); `age`, aging.describe's."""
         get = fields.get
         self.vars["name"].set(name.upper() if name else f"SLOT {self.index + 1}")
         pair = lambda cur, top: f"{get(cur, '')}/{get(top, '')}" if get(cur) else ""
@@ -113,6 +113,7 @@ class Card(ttk.Frame):
         sex, race = plain(get("Gender", "")), plain(get("Race", ""))
         self.vars["who"].set(f"{sex} {race}".strip())
         self.vars["alignment"].set(plain(get("Alignment", "")))
+        self.vars["age"].set(f"Age: {age}" if age else "")
         self.vars["classes"].set(classes_text(fields))
         self.vars["kit"].set(f"Kit: {kit}" if kit else "")
         self.vars["xp"].set(f"EXP: {get('XP', '')}")

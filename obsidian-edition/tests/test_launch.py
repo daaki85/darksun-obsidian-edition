@@ -210,6 +210,33 @@ class LaunchTests(unittest.TestCase):
             finally:
                 launch.SETTINGS = saved_path
 
+    def test_settings_with_a_bom(self):
+        """A settings.json saved by Notepad with a byte-order mark is read, not put aside as bad."""
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                with open(launch.SETTINGS, "w", encoding="utf-8-sig") as f:
+                    f.write('{"game_dir": "C:\\\\GOG"}')
+                self.assertEqual(launch.load_settings()["game_dir"], "C:\\GOG")
+                self.assertFalse(os.path.exists(launch.SETTINGS + ".bad"))
+            finally:
+                launch.SETTINGS = saved_path
+
+    def test_recompiled_exit_is_not_cut_off(self):
+        """No marker files: under DOSBox the game was cut off (GAMEEND.COM writes GAMEOK.TXT as it
+        ends), under the recompiled program, which has no GAMEEND.COM, it ended as usual."""
+        with tempfile.TemporaryDirectory() as d:
+            saved = launch.GAME_END, launch.GAME_MESSAGE, launch.GAME_OK, launch.STARTED
+            launch.GAME_END, launch.GAME_MESSAGE, launch.GAME_OK = (os.path.join(d, n) for n in ("E", "M", "OK"))
+            try:
+                launch.STARTED = None
+                self.assertEqual(launch.game_end_note(), launch.CUT_OFF)
+                launch.STARTED = "game.exe"
+                self.assertIsNone(launch.game_end_note())
+            finally:
+                launch.GAME_END, launch.GAME_MESSAGE, launch.GAME_OK, launch.STARTED = saved
+
     def test_a_locked_settings_file_is_never_saved_over(self):
         """settings.json there but not readable for now (Windows: held by an antivirus or a
         backup): a plain read gives no settings, but a read to change and save raises after a few

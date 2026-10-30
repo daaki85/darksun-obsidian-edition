@@ -346,6 +346,17 @@ class ThiefTests(unittest.TestCase):
 
 
 class SettingsTests(unittest.TestCase):
+
+    def test_every_rule_has_its_box(self):
+        """Each of game.RULE_SETTINGS has a box with its text on the Options tab (viewer.py's
+        list, read without Tk), and each its own bit."""
+        import re
+        with open(os.path.join(os.path.dirname(game.__file__), "viewer.py"), encoding="utf-8") as f:
+            source = f.read()
+        for key, _ in game.RULE_SETTINGS:
+            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*"', key)
+        bits = [bit for _, bit in game.RULE_SETTINGS]
+        self.assertEqual(len(set(bits)), len(bits))
     def test_saved_options(self):
         log = dag()
         log.use_settings({"helm_ac": False, "new_items": False, "arena_ring": True, "no_doubled_save": False})
@@ -355,7 +366,8 @@ class SettingsTests(unittest.TestCase):
                           | game.RULE_HALF_GIANT | game.RULE_PROTECTION | game.RULE_ITEM_SAVES
                           | game.RULE_SPECIALIZE | game.RULE_RESTRICT | game.RULE_MULTI_HP | game.RULE_HP_BEST
                           | game.RULE_KITS | game.RULE_RANGER_CAST | game.RULE_INT_LEARN | game.RULE_ADND_TABLES | game.RULE_CHA_PRICES
-                          | game.RULE_ROLLED | game.RULE_BUYBACK | game.RULE_BACKSTAB, False, True))
+                          | game.RULE_ROLLED | game.RULE_BUYBACK | game.RULE_BACKSTAB | game.RULE_AGING
+                          | game.RULE_ENLARGE | game.RULE_CON, False, True))
 
 
 class SpeakerTests(unittest.TestCase):
