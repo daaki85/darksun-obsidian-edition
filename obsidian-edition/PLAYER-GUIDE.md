@@ -1041,8 +1041,8 @@ Each kit's gains, costs and starting gear:
 
 **The game's own party** (START GAME with no party made), with kits on: Cermak
 is an Arcanist, and the other three have something no character you make can
-have. Gerakis fights wild as a Wild Fury does; K'ratchek casts as a Wasteland
-Seer, and her chatkcha comes back as if she had several (one more throw a
+have. Gerakis fights wild as a Wild Fury does; K'ratchek is a Wasteland Seer
+(her spells and psionics stronger under the open sky), and her chatkcha comes back as if she had several (one more throw a
 round); Cilla is an Elven Wanderer, whose hiding is never halved in daylight.
 
 ### Kits' spell slots

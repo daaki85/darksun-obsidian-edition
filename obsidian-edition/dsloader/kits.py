@@ -150,7 +150,7 @@ def extra(kid: int, dance: int = 0) -> int:
 # character made on the creation screen can have: the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
 # classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
 # race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
-# thri-kreen) a Wasteland Seer's casting (SKY_LEVEL) and one more chatkcha throw a round
+# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT) and one more chatkcha throw a round
 # (OWN_THROWS); Cilla (an elf) the Elven Wanderer's hiding, never halved in daylight (stealth.py).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
 HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8

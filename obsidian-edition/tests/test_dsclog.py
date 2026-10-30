@@ -5798,6 +5798,16 @@ class KitTests(unittest.TestCase):
                             self.run_int(VEC_PSP_DEFENCE, "535189c18b46fa", 4, eax=cost, es=self.CREATURES,
                                          ebx=2 * 0x3A, ecx=0x3333)
                             self.assertEqual(struct.unpack("<h", self.mu.mem_read(rec + 2, 2))[0], 50 - want)
+            # K'ratchek (kits.OWN_BIT, no kit) as a Wasteland Seer; a thri-kreen without the bit as she is
+            for own, seer in ((kits.OWN_BIT, True), (0, False)):
+                self.creature(9, own, index=2, second=7, race=8, level=5)
+                for outdoors in (False, True):
+                    self.mu.mem_write(hdr + 350, bytes((4 if outdoors else 0,)))
+                    with self.subTest(own=own, outdoors=outdoors):
+                        self.mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<H", 20))
+                        self.run_int(VEC_PSP_USE, "505389f88b5e0a", 6, esi=7, edi=9, eax=0x1111, ebx=0x2222)
+                        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DI),
+                                         kits.psp_cost(kits.WASTE_SEER, 20, 9, outdoors) if seer else 9)
         finally:
             self.mu.mem_write(hdr + 350, b"\0")
         self.assertEqual(kits.psp_cost(kits.WASTE_SEER, 20, 9), 9)  # (not a party member: as it is)

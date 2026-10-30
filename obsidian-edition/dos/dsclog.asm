@@ -6983,8 +6983,8 @@ kit_psp:
         pop cx
         ret
 ; PSI_KIT: AL the psionicist kit of creature AX that changes costs (KIT_MIND_BENDER, KIT_KINETICIST,
-; KIT_TITAN_MIND; KIT_WASTE_SEER for a party member's under the open sky, its KIT_OUTDOORS bit, and
-; KIT_SEER_ROOF under a roof), awake, or 0. DS the game's; others but AH kept.
+; KIT_TITAN_MIND; KIT_WASTE_SEER for a party member's, or K'ratchek's (OWN_RACE_B), under the open
+; sky, its KIT_OUTDOORS bit, and KIT_SEER_ROOF under a roof), awake, or 0. DS the game's; others but AH kept.
 KIT_SEER_ROOF equ 0xFE
 psi_kit:
         call cr_is
@@ -6996,12 +6996,17 @@ psi_kit:
         call cr_is
         db KIT_KINETICIST
         je .kinetic
-        call cr_is              ; (a Wasteland Seer, a party member: by where it stands)
-        db KIT_WASTE_SEER
-        jne .none
         cmp ax, 3
-        ja .none
-        bt word [cs:kit_outdoors], ax
+        ja .none                ; (a Wasteland Seer, a party member: by where it stands)
+        call cr_is
+        db KIT_WASTE_SEER
+        je .seer
+        push ax                 ; (K'ratchek, as a Wasteland Seer: OWN_RACE_B)
+        call cr_own_race
+        cmp al, THRI_KREEN_RACE
+        pop ax
+        jne .none
+.seer:  bt word [cs:kit_outdoors], ax
         mov al, KIT_WASTE_SEER
         jc .ret
         mov al, KIT_SEER_ROOF

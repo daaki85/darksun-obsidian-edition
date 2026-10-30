@@ -2231,7 +2231,7 @@ known; every reader of a kit masks its own two bits), and which feature by the
 race (`OWN_RACE_B`, `kits.own_race`; with `RULE_HI_KITS` only). Gerakis (the
 half-giant): Wild Fighting, `wild.py` rolling for him as for a Wild Fury
 (`kits.wild_fighter`), DSCLOG's effects going by the `KIT_WILD` bits alone.
-K'ratchek (the thri-kreen): `SKY_LEVEL` as a Wasteland Seer's (`CR_OWN_RACE`),
+K'ratchek (the thri-kreen): `SKY_LEVEL` and `PSI_KIT` as a Wasteland Seer's (`CR_OWN_RACE`),
 and `OWN_THROWS` in `PROBE_ATTACKS` (and the inventory's `PROBE_MISSILE_LINE`)
 2 more halves a round with a chatkcha, whatever the specialization rule
 (`GameData.weapon_hits` the same). Cilla (the elf): `stealth.py`'s hiding not

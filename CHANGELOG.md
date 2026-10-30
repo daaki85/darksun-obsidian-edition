@@ -28,8 +28,9 @@ notes](PATCH-NOTES.md).
   byte but has no kit. Tests: `test_multiclass_kits`, `test_kit_at`, `test_sky_level`.
 - **The Wasteland Seer's psionics follow the sky too:** every power costs 2 PSP less under the
   open sky and 1 more under a roof, to use and to keep up, never below 1 (`kits.psp_cost`'s
-  `outdoors`; DSCLOG's `PSI_KIT`, `KIT_PSP_OF`, `KIT_SEER_ROOF`). K'ratchek's own feature is its
-  casting alone, as before. Tests: `test_psp_wasteland_seer`. DSCLOG's image 63,760 bytes (+48).
+  `outdoors`; DSCLOG's `PSI_KIT`, `KIT_PSP_OF`, `KIT_SEER_ROOF`). K'ratchek, a Wasteland Seer by
+  her own feature, has it too (`PSI_KIT`'s `CR_OWN_RACE`, as `SKY_LEVEL`). Tests:
+  `test_psp_wasteland_seer`. DSCLOG's image 63,760 bytes (+48).
 - **An Elementalist has at least 1 spell slot at each spell level a cleric of its level casts**
   (2 × the spell level − 1: 1st-level spells at 1st, 6th at 11th), its slots otherwise a level
   behind as before (`kits.slots`; DSCLOG's `PROBE_SLOTS`). `KITS.md`'s table and notes follow.

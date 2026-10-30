@@ -132,7 +132,7 @@ A few of them:
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
 - **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
-- **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
+- **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek is a Wasteland Seer (spells and psionics) and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 
