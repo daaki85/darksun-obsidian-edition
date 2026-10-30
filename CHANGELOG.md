@@ -32,6 +32,14 @@ notes](PATCH-NOTES.md).
   Youth's floor counts the clock's years. The Options label says so. Checked in DOSBox. Tests:
   `test_natural_years`, `test_restore_counts_the_games_years`, `test_the_log_counts_each_year_once`.
 
+**Fixed**
+- **Kurzak notices Legcrusher is gone** (`kurzak.py`, always): once the party has killed
+  Legcrusher (at the fountain, with no alarm), Kurzak's call to the arena and his greeting no
+  longer name him as if he were about: his call and his talk's two lines about him ask first
+  whether Legcrusher is on the map (80h from Kurzak, under 999), and say the game's words or his
+  own. Each first line becomes a jump to code after the script's end, as `pensasks.py` does.
+  Tests: `test_kurzak`. Not yet seen in play.
+
 **Fixed** (the second audit, with seven agents: code, memory, documents, pictures)
 - **RECALL on the creation screen stopped DOSBox** ("DynrecCore: illegal option"), from 2.8.0 on:
   its redraw calls the scores' routine, another overlay's, whose loading could move or drop the
