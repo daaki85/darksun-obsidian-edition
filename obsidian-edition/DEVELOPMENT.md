@@ -2714,7 +2714,12 @@ repository: the folder chosen on the Options tab (`wotr_dir` in the settings),
 else any folder beside Shattered Lands' (those named Ravager, Wake or Dark Sun
 first: GOG Galaxy's are `Dark Sun` and `Dark Sun 2`), else GOG's usual folders
 on any drive, each or a folder inside it holding a RESOURCE.GFF whose Heal
-description is Wake of the Ravager's (`find_resources`). Its icons are a kind of
+description is Wake of the Ravager's (`find_resources`; its answer kept for the
+run, as the Options tab asks each time it is built, and the drives looked at one at
+a time from C:, as `launch.drives` does for Shattered Lands' own folder:
+`find_game_dir` tries the folder given and the one saved first, and searches the
+drives once a run, an empty floppy drive or a sleeping network drive being slow
+to answer). Its icons are a kind of
 picture Shattered Lands hasn't: the frame header as usual, then `0FFh "PLNR"`,
 the bits a pixel (4 or 5), a colour map of that many bits' worth of palette
 numbers, and codes of those bits, the highest first, where 0 0 is colour 0 and 0

@@ -70,6 +70,15 @@ notes](PATCH-NOTES.md).
   notes; defilers' scrolls counted at once (the README had them from the next start); Enlarge's
   rule and CON as in AD&D's poison saves in the guide; a spoiler note on the game's bugs fixed;
   history players don't need trimmed.
+- **The Loader's searches and settings:** the game folder is looked for in the folder given and
+  the one saved before any drive, the drives from C: on one at a time and only once a run
+  (`launch.drives`, `find_game_dir`'s `_SEARCHED`), as is Wake of the Ravager's (`wotrart`'s
+  `_FOUND`): an empty floppy drive or a sleeping network drive no longer holds the window up each
+  time the Options tab is built or the game started. The Loader's own settings (Wake of the
+  Ravager's folder, the open sections, the game folder, the window, the speed) are saved through
+  one helper that says so on the status line when settings.json is held elsewhere, rather than
+  losing the choice unseen. Tests: `test_drives_searched_once_and_only_when_needed`,
+  `test_kept_for_the_run`.
 - **Documents reorganised:** the dice log's line-by-line reference (every kind of line and what it
   means, 108 lines) moved from the README to a page of its own, `DICE-LOG.md`, linked from both
   READMEs and the guide; the README's Options sections cut to one list of links, the guide's

@@ -599,7 +599,7 @@ class Viewer:
             messagebox.showerror("Wake of the Ravager", f"{folder} has no Wake of the Ravager RESOURCE.GFF.",
                                  parent=self.root)
             return
-        launch.update_settings({wotrart.SETTING: folder})
+        self._save_settings({wotrart.SETTING: folder})
         self.wotr_status.set(self._wotr_status() + " (From the next start of the game.)")
 
     def _saves_game_dir(self) -> Optional[str]:
@@ -684,7 +684,7 @@ class Viewer:
 
     def _sections_changed(self) -> None:
         """Remember which of the Options tab's sections are open."""
-        launch.update_settings({"options_open": [key for key, part in self.sections.items() if part.is_open]})
+        self._save_settings({"options_open": [key for key, part in self.sections.items() if part.is_open]})
 
     def _slot_box(self, parent) -> ttk.Combobox:
         box = ttk.Combobox(parent, width=3, state="readonly")
@@ -812,7 +812,7 @@ class Viewer:
                 messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
                                      "pick the GOG install folder of Shattered Lands.")
                 return
-            launch.update_settings({"game_dir": game_dir})
+            self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt(game_dir)
         try:
             self._game_dir, self._started = game_dir, time.time()
@@ -960,6 +960,16 @@ class Viewer:
         self.status.set(f"Disconnected ({err}). Waiting for DOSBox...")
         self.dice_status.set("Waiting for the game...")
         self.next_try = time.monotonic() + RETRY_SECONDS
+
+    def _save_settings(self, changes: dict) -> bool:
+        """CHANGES saved in settings.json; when it is held elsewhere (an antivirus, a backup), the
+        status line says so rather than the choice being lost unseen. True if saved."""
+        try:
+            launch.update_settings(changes)
+            return True
+        except OSError as e:
+            self.status.set(f"The Loader's settings could not be saved just now ({e}); choose again to retry.")
+            return False
 
     def close(self) -> None:
         """Done with the dice log before closing: it lets go of the game (detach) and stops its thread."""
@@ -1146,16 +1156,16 @@ class Viewer:
     def _window_chosen(self, _event=None) -> None:
         """Remember the game window's size; it applies the next time the game is started."""
         scale = WINDOW_CHOICES[self.window_choice.get()]
-        launch.update_settings({"fullscreen": True} if scale is None else
-                               {"fullscreen": False, "window_scale": scale})
+        self._save_settings({"fullscreen": True} if scale is None else
+                            {"fullscreen": False, "window_scale": scale})
         self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
                         "(Alt+Enter switches full screen while playing).")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
         value = self.game_speed.get()
-        launch.update_settings({"cycles": value if value == launch.GOG_SPEED else int(value)})
-        self.status.set("Game speed: from the next time you start the game.")
+        if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
+            self.status.set("Game speed: from the next time you start the game.")
 
     def _options_changed(self) -> None:
         """A switch on the Options tab changed: all of them saved, and the log told."""

@@ -16,7 +16,7 @@ import struct
 import subprocess
 import threading
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
 
@@ -125,9 +125,22 @@ def recompiled_command(program: str, game_dir: str) -> List[str]:
     return [program, "--game", game_dir, "--cd", DOS_DIR]
 
 
-def candidate_dirs() -> List[str]:
-    drives = [f"{d}:\\" for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")] if os.name == "nt" else []
-    return [os.path.join(drive, sub) for drive in drives for sub in GOG_SUBDIRS]
+def drives() -> Iterator[str]:
+    """Windows' drives from C: on, each looked at only when the one before has been searched: an
+    empty floppy drive or a sleeping network drive can take seconds to answer (A: and B:, the
+    floppies, never)."""
+    if os.name != "nt":
+        return
+    for letter in string.ascii_uppercase[2:]:
+        root = f"{letter}:\\"
+        if os.path.exists(root):
+            yield root
+
+
+def candidate_dirs() -> Iterator[str]:
+    for drive in drives():
+        for sub in GOG_SUBDIRS:
+            yield os.path.join(drive, sub)
 
 
 # Settings saved before version 2 had the combat log off by default (and saved it so): version 2
@@ -260,11 +273,17 @@ def add_learned_speakers(learned: Dict[int, str]) -> None:
 
 def find_game_dir(given: Optional[str] = None) -> Optional[str]:
     """The game folder, as a full path (DOSBox runs in its DOSBOX folder, so a relative one would
-    point elsewhere): `given`, the one remembered from last time, or a usual GOG location."""
-    for folder in [given, load_settings().get("game_dir")] + candidate_dirs():
+    point elsewhere): `given`, the one remembered from last time, or a usual GOG location (the
+    drives searched once a run: _SEARCHED)."""
+    for folder in (given, load_settings().get("game_dir")):
         if folder and is_game_dir(folder):
             return os.path.abspath(folder)
-    return None
+    if "found" not in _SEARCHED:
+        _SEARCHED["found"] = next((os.path.abspath(f) for f in candidate_dirs() if is_game_dir(f)), None)
+    return _SEARCHED["found"]
+
+
+_SEARCHED: Dict[str, Optional[str]] = {}  # (find_game_dir's search of the drives, kept for the run)
 
 
 SCALERS = {2: "normal2x", 3: "normal3x"}
