@@ -895,7 +895,15 @@ probe_char:
         jmp .react
 .thief: mov al, [es:si + bx + 3]  ; the thief level (levels follow the classes)
         call c_thief
-.react: mov al, [cs:c_react]      ; right of SP in the saves: "REAC +4"
+.react: mov bx, [cs:c_who]        ; the age (AGE_TEXT's AGE_SHORT) in the free row between PSI
+        call age_text                   ;   and AC
+        jc .reac
+        push word AGE_INV_Y
+        push word 0xEC
+        push cs
+        push word age_short
+        call c_draw_line
+.reac:  mov al, [cs:c_react]      ; right of SP in the saves: "REAC +4"
         cmp al, NO_REACT
         je .done
         mov di, c_num
@@ -1266,6 +1274,7 @@ c_react db 0
 c_defence db 0
 DEX_DEFENCE equ 0x07F6          ; DS: the DEX defensive adjustment (bytes, by score: on AC)
 DEF_Y   equ 0x72                ; the AC line's y
+AGE_INV_Y equ DEF_Y - 8         ; (the free row between PSI's line and AC's)
 DEF_VALUE_X equ 0x12D           ; (under the thief skills' values, as REAC's)
 NO_REACT equ 0x80
 DEX_REACTION equ 0x07DC         ; DS: the DEX reaction adjustment (bytes, by score)

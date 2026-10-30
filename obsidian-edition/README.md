@@ -499,6 +499,8 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   and the one initiative uses. It is worked out from the character's DEX each
   time the panel is drawn, so it follows any change (Cat's Grace's, while it
   lasts);
+- with [ages](FEATURES.md#ages-and-magical-aging) on, the character's **AGE**
+  between the PSI and AC lines;
 - right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as AD&D's
   table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5 at 21-23).
   The game counts it in AC already; on saving throws against what can be dodged

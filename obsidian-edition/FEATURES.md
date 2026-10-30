@@ -523,7 +523,8 @@ K'ratchek's system shock (Haste's aging): d100 = 89, needs 99 or less (CON 19) -
 A thri-kreen, venerable at 25, feels it most: every Haste is a year of a short
 life. A dwarf hardly notices.
 
-The age shows under the saves on the View Character screen (`AGE 23`), first
+The age shows on the inventory screen's panel between PSI and AC and under the
+saves on the View Character screen (`AGE 23`), first
 in the Effects screen's lower panel with the next age to come (`AGE 23` /
 `MIDDLE-AGED AT 40`), and on the Loader's Characters tab
 (`Age: 45, middle-aged; old at 53`).
