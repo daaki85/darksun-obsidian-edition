@@ -108,7 +108,7 @@ A druid starts with a club and sling.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th** | no metal weapons | the druid's gear | can't dual to gladiator, and a gladiator who duals to druid can't take it (its AC would add to a gladiator's own); can't go with the Ravager |
+| **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th, 4 at 12th** | no metal weapons | the druid's gear | can't dual to gladiator, and a gladiator who duals to druid can't take it (its AC would add to a gladiator's own); can't go with the Ravager |
 | **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells, and half the damage of a spell that is all fire or all cold | AC 1 worse | the druid's gear | |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 
@@ -228,7 +228,10 @@ more on top.
 ## Kits' spell slots
 
 The kits that change spell slots, by the level of the kit's class (spells of
-1st to 5th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on:
+1st to 6th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on,
+to the highest level each class reaches under the
+[XP cap](FEATURES.md#level-cap-by-xp) (a preserver and a cleric 11th, a ranger
+10th, a thief 13th; a blank past it):
 
 | Level | Preserver | Scholar | Battle Mage | Cleric | Crusader | Elementalist | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
 |---|---|---|---|---|---|---|---|---|---|
@@ -242,9 +245,16 @@ The kits that change spell slots, by the level of the kit's class (spells of
 | 8 | 4 3 3 2 | 5 4 4 3 | 3 2 2 1 | 3 3 3 2 | 2 2 2 1 | 3 3 2 1 | 2 1 | | 2 1 |
 | 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 2 1 | 3 3 3 2 | 2 2 | | 2 2 |
 | 10 | 4 4 3 2 2 | 5 5 4 3 3 | 3 3 2 1 1 | 4 4 3 3 2 | 3 3 2 2 1 | 4 4 3 2 1 | 2 2 1 | 1 | 2 2 1 |
+| 11 | 4 4 4 3 3 | 5 5 5 4 4 | 3 3 3 2 2 | 5 4 4 3 2 1 | 4 3 3 2 1 | 4 4 3 3 2 | | | 2 2 1 |
+| 12 | | | | | | | | | 2 2 1 |
+| 13 | | | | | | | | | 2 2 1 |
 
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
+- A cleric's 11th level brings a **6th-level slot**
+  ([6th-level priest spells](FEATURES.md#6th-level-priest-spells)); a
+  Crusader's one fewer leaves it none, and an Elementalist, a level behind,
+  has none yet. A preserver has no 6th-level spells to cast.
 - A **Seeker** and a **Justifier** have these in place of a ranger's own
   slots, with no bonus slots for WIS.
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own
