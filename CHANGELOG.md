@@ -17,6 +17,10 @@ notes](PATCH-NOTES.md).
   `test_edit_keeps_its_specs`. DSCLOG's image 64,256 bytes (+496).
 
 **Changed**
+- **A Spellarcher adds to the same spell's arrows:** with Chill Arrows in its quiver, its Chill
+  Touch button adds as many more to them (a slot used, the dice log saying how many are in the
+  quiver now) rather than saying the quiver must be empty; another spell's arrows, or anything
+  else, still stop it (`SpellArrows.make`, `MOST_ARROWS`). Tests: `test_make_more_of_the_same`.
 - **The Wasteland Seer is a thri-kreen druid/fighter/psionicist's**, all three classes; a
   druid/fighter has no kit now. Multiclass kit groups may be three classes (`kitpages.MULTI`,
   `multi_group`; DSCLOG's `MULTI_FIND` takes in a third class, `multi_table` group 18's word

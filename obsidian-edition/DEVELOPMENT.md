@@ -2359,8 +2359,9 @@ which hands the click to the Loader as an item used on the map is (`USE_ITEM`
 answers with no text and nothing is shown; refused (not known, no slot), its
 words (`PICK_TEXT`) are.
 
-**The Loader** (`SpellArrows.make`), with the Spellarcher's quiver empty (else
-it says so and uses nothing), takes a slot of the touch spell's level from the
+**The Loader** (`SpellArrows.make`), with the Spellarcher's quiver empty (with
+the same spell's arrows in it, their count goes up by as many, to `MOST_ARROWS`,
+the item's word; with anything else, it says so and uses nothing), takes a slot of the touch spell's level from the
 wizard slots left (`SLOTS_LEFT`; none left, it says so) and puts a stack of the
 game's Arrows (type 62) in the quiver (`npcitems.add_to` with the ammunition
 slot; `weaponchoice.bow_ahead` then puts the bow ahead of it in the list). The
