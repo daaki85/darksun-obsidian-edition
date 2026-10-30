@@ -411,8 +411,8 @@ class Viewer:
                 ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
                 ("aging", "Ages and magical aging: each character has an age from Dark Sun's tables, its "
                           "scores changing at middle, old and venerable age, and dies at the most its race "
-                          "lives; Haste ages each it speeds a year, and each must survive a system shock roll "
-                          "(by CON), as in AD&D"),
+                          "lives; a year older each 365 days of game time; Haste ages each it speeds a year, "
+                          "and each must survive a system shock roll (by CON), as in AD&D"),
                 ("enlarge_dice", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                  "as in AD&D (the game multiplies the whole melee damage, STR included)"),
                 ("con_adnd", "CON as in AD&D: from CON 20 a hit point back an hour, to one every 10 minutes at 25 "
@@ -1616,7 +1616,7 @@ class Viewer:
             if known and index < game.PARTY_SIZE and self.rule_vars["aging"].get():
                 from . import aging
                 try:
-                    age = aging.describe(gd.sheet(index), aging.natural_years(gd))
+                    age = aging.describe(gd.sheet(index))
                 except (struct.error, IndexError, ValueError):
                     age = None
             card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,

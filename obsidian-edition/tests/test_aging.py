@@ -9,7 +9,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, game  # noqa: E402
+from dsloader import aging, game, kalzith  # noqa: E402
 from test_dicelog import CREATURES, SHEETS, set_effects  # noqa: E402
 from test_now import dag  # noqa: E402
 
@@ -114,16 +114,32 @@ class PartyTests(unittest.TestCase):
         self.assertIn("no longer venerable: STR +1, DEX +1", lines[0])
 
     def test_natural_years(self):
-        """A year of age for each 365 days of the game's clock, on top of the stored age; a year
-        passing across middle age changes the scores as Haste's would."""
-        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 38))
+        """A year of age for each 365 days of the game's clock, put in the stored age as it passes;
+        a year across middle age changes the scores as Haste's would; the dead don't age."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 39))
         self.g.game_time = lambda: aging.YEAR * 2 - 1
-        self.assertEqual((aging.natural_years(self.g), aging.age_now(self.g, 0)), (1, 39))
+        self.assertEqual(aging.natural_years(self.g), 1)
         before = self.scores()
-        lines = aging.natural_tick(self.g, 1, 2)
+        lines = aging.natural_tick(self.g, 1)
         self.assertEqual(lines, ["A year has passed: Dag is 40, middle-aged: STR -1, CON -1, INT +1, WIS +1."])
         self.assertEqual(self.scores()[0][0], before[0][0] - 1)
-        self.assertEqual(aging.age_of(self.g.sheet(0)), 38)  # (the stored age: magic's only)
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 40)  # (in the save with the scores)
+        self.m[CREATURES + game.CREATURE_STATUS] = kalzith.DEAD_STATUS[1]
+        self.assertEqual(aging.natural_tick(self.g, 1), [])
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 40)
+
+    def test_restore_counts_the_games_years(self):
+        """Restore Youth takes back magic's years only: the game's years are part of the true age;
+        at it, nothing to take back and no line of 0 years."""
+        start = aging.natural_start("Dag", HUMAN)[0]
+        self.g.game_time = lambda: aging.YEAR * 3
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, start + 5))
+        self.m[CREATURES + game.CREATURE_ABILITIES + 2] = 18
+        lines = aging.restore(self.g, 0, 12, random.Random(1))
+        self.assertIn(f"now {start + 3}", lines[-1])
+        self.assertIn("no magical years", aging.restore(self.g, 0, 12, random.Random(1))[0])
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 15))
+        self.assertEqual(aging.age_by(self.g, 0, -1, "Restore Youth"), [])  # (the race's base: no "0 years")
 
     def test_the_log_counts_each_year_once(self):
         """The dice log's look: a year passed, each a year older once; a game loaded (the clock back,

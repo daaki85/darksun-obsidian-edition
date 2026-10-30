@@ -2,7 +2,8 @@
 
 A character's age is rolled once, the first time the Loader sees it without one (a new character,
 the game's own party, one from an earlier version): its race's starting age (Table 7: a base and
-dice). It stays there unless magic changes it (Haste: a year; Restore Youth: back). On reaching
+dice). It grows a year each time the game's clock passes another 365 days, and magic changes it
+(Haste: a year; Restore Youth: back). On reaching
 middle, old and venerable age (Table 8) its scores change, once and for good, the changes adding
 up; on reaching its race's maximum age (a base and dice, its own roll kept secret: the same each
 time for the same character) it dies of old age. Thri-kreen have only a venerable age.
@@ -158,15 +159,19 @@ def give_ages(gd: "game.GameData") -> List[str]:
         roll = f": {ages.start} + {dice_text(*ages.start_dice, faces)}" if faces else ""
         nxt = next_category(race, age)
         later = f"; {CATEGORY_NAMES[nxt[0]]} at {nxt[1]}" if nxt else ""
-        race_name = game.RACE_NAMES[race]
-        article = "an" if race_name[0] in "aeiou" else "a"
-        out.append(f"{gd.creature_name(member)} is {age} ({article} {race_name}{roll}){later}.")
+        out.append(f"{gd.creature_name(member)} is {age} ({_a(race)}{roll}){later}.")
     return out
 
 
-# Natural aging (flavour): a year of age for each 365 days of the game's clock (game time, in
-# seconds since the game began), on top of each character's stored age; the clock is in the save,
-# so a game loaded is as old as it was
+def _a(race: int) -> str:
+    """"a human", "an elf"."""
+    name = game.RACE_NAMES[race]
+    return f"{'an' if name[0] in 'aeiou' else 'a'} {name}"
+
+
+# Natural aging (flavour): a year of age each time the game's clock (game time, in seconds since
+# the game began) passes another 365 days, put in the stored age with its score changes as it
+# happens (natural_tick, from the dice log's look), so a save keeps both
 YEAR = 365 * 24 * 60 * 60
 
 
@@ -176,50 +181,43 @@ def natural_years(gd: "game.GameData") -> int:
     return max(0, seconds // YEAR) if seconds else 0
 
 
-def age_now(gd: "game.GameData", member: int) -> Optional[int]:
-    """A party member's age: its stored age (magic's years in it) and the years the game has run."""
-    age = age_of(gd.sheet(member))
-    return age + natural_years(gd) if age is not None else None
-
-
 def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
     """Party member MEMBER aged YEARS (younger for fewer than 0, never below its starting age's
     base): its scores changed by the categories reached or left, its death at its maximum age.
     Lines for the dice log."""
     sheet = gd.sheet(member)
-    stored_age = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
-    if stored_age is None or not years:
+    before = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
+    if before is None:
         return []
     race = sheet[game.SHEET_RACE]
-    natural = natural_years(gd)
-    before = stored_age + natural
-    after = max(RACES[race].start + natural, before + years)
-    gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, bytes([stored(race, after - natural)]))
+    after = max(RACES[race].start, min(before + years, RACES[race].start + 254))  # (the byte's range)
+    if after == before:
+        return []
+    gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, bytes([stored(race, after)]))
     word = "ages" if after > before else "grows younger"
     years = abs(after - before)
     return _changed(gd, member, race, before, after,
                     f"{gd.creature_name(member)} {word} {years} year{'s' if years != 1 else ''} ({why}): now {after}")
 
 
-def natural_tick(gd: "game.GameData", years_before: int, years_after: int) -> List[str]:
-    """The game's clock past another year (YEARS_BEFORE to YEARS_AFTER): each party member with
-    an age a year older (its scores at the categories reached, its death at its maximum)."""
+def natural_tick(gd: "game.GameData", years: int) -> List[str]:
+    """The game's clock past another year (YEARS of them): each living party member with an age
+    that much older (its scores at the categories reached, its death at its maximum)."""
+    from . import kalzith
     out = []
     for member in range(game.PARTY_SIZE):
         sheet = gd.sheet(member)
         rec = gd.creature(member)
-        stored_age = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
-        if stored_age is None or len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in _dead():
+        before = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
+        if before is None or len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in kalzith.DEAD_STATUS:
             continue
-        before, after = stored_age + years_before, stored_age + years_after
-        out += _changed(gd, member, sheet[game.SHEET_RACE], before, after,
-                        f"A year has passed: {gd.creature_name(member)} is {after}")
+        race = sheet[game.SHEET_RACE]
+        after = min(before + years, RACES[race].start + 254)
+        if after == before:
+            continue
+        gd.guest.write(sheet_address(gd, member) + game.SHEET_AGE, bytes([stored(race, after)]))
+        out += _changed(gd, member, race, before, after, f"A year has passed: {gd.creature_name(member)} is {after}")
     return out
-
-
-def _dead() -> Tuple[int, ...]:
-    from . import kalzith
-    return tuple(kalzith.DEAD_STATUS)
 
 
 def _changed(gd: "game.GameData", member: int, race: int, before: int, after: int, line: str) -> List[str]:
@@ -243,8 +241,7 @@ def _changed(gd: "game.GameData", member: int, race: int, before: int, after: in
         reached = CATEGORY_NAMES[category(race, after)] or f"no longer {left}"
         out[0] += f", {reached}: {', '.join(parts)}"
     if after >= most_age(name, race) and after > before:
-        race_name = game.RACE_NAMES[race]
-        out[0] += f"; that is the most {'an' if race_name[0] in 'aeiou' else 'a'} {race_name} lives: {name} dies of old age"
+        out[0] += f"; that is the most {_a(race)} lives: {name} dies of old age"
         kill(gd, member)
     return [out[0] + "."]
 
@@ -293,13 +290,11 @@ def hasted(gd: "game.GameData", creature: int, rng: Optional[random.Random] = No
     return out
 
 
-def describe(sheet: bytes, natural: int = 0) -> Optional[str]:
-    """ "23, middle-aged; old at 53" for the Characters tab (NATURAL, the game's years, added),
-    None without an age."""
+def describe(sheet: bytes) -> Optional[str]:
+    """ "23, middle-aged; old at 53" for the Characters tab, None without an age."""
     age = age_of(sheet)
     if age is None:
         return None
-    age += natural
     race = sheet[game.SHEET_RACE]
     now = CATEGORY_NAMES[category(race, age)]
     nxt = next_category(race, age)
@@ -308,7 +303,7 @@ def describe(sheet: bytes, natural: int = 0) -> Optional[str]:
 
 def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random.Random] = None) -> List[str]:
     """Restore Youth on CREATURE, cast at LEVEL: a year of its magical aging (its years past its
-    true age, natural_start's) taken back a level, after a system shock roll by its CON that a
+    true age: natural_start's and the game's years) taken back a level, after a system shock roll by its CON that a
     failure ends in death; nothing to take back, no roll. Lines for the dice log."""
     from . import kalzith
     rng = rng or random.Random()
@@ -319,10 +314,10 @@ def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random
     age = age_of(sheet)
     if age is None:
         return []
-    natural = natural_years(gd)  # (the game's years count in both: only magic's are taken back)
-    age += natural
     name = gd.creature_name(creature)
-    true_age = natural_start(name, sheet[game.SHEET_RACE])[0] + natural
+    # (its true age: its starting age and the game's years, only magic's taken back; one who joined
+    # late counts years it hasn't lived, so gets fewer back, never more)
+    true_age = natural_start(name, sheet[game.SHEET_RACE])[0] + natural_years(gd)
     if age <= true_age:
         return [f"Restore Youth: {name} has no magical years to take back ({age}, {name}'s true age)."]
     con = rec[game.CREATURE_ABILITIES + 2]

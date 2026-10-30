@@ -15,23 +15,39 @@ notes](PATCH-NOTES.md).
   and thri-kreen unchanged. The hair to grey is found apart from
   the gear's (`greyhair.hair`), with corrections for each race (missing hair shades, faces kept
   out, the bow frames' heads, the elves' brown shading, the half-elves' bun and temples), so
-  helms and cloaks don't move. The live redraw keys on the age category. Each race's colours
-  worked out frame by frame by an agent of its own. Checked in DOSBox. Tests: `test_greyhair`.
+  helms and cloaks don't move. The live redraw keys on the age category. Checked in DOSBox.
+  Tests: `test_greyhair`.
 
 - **The age on the creation screen**, above RECALL (`AGE: 23`), the age the character will start
-  at: the starting age is now rolled from a 16-bit hash of the name and race (`aging.natural_start`)
-  that DSCLOG works out alike (`AGE_ROLL`, `CR_AGE`), drawn after PSP and again when the name
-  changes (`CR_NAME`: the game's names, a figure clicked, one typed), the PSP box widened so
-  its saved background clears it. The inventory's line is `AGE: 23` too. Characters already
+  at, from a 16-bit hash of the name and race that the Loader and DSCLOG work out alike
+  (`aging.natural_start`, `AGE_ROLL`), redrawn as the name changes. The inventory's line is
+  `AGE: 23` too. Characters already
   given an age keep it; their true age (Restore Youth's floor) is the new roll's. Checked in
   DOSBox: six figures and three typed names, each age the Loader's. Tests: `test_creation_age`.
 
-- **Natural aging**, as flavour: a year each 365 days of the game's clock (`aging.natural_years`),
-  added to the stored age wherever one is shown or moved (`age_now`, `age_by`, `restore`,
-  `describe`), the categories and the most a race lives counting as for magic. The dice log
-  says `A year has passed: Gerakis is 35.` (`natural_tick`, from `_natural_aging`), once: a load,
-  a new party or the clock going back only takes a new baseline (`NATURAL_JUMP`). Grey hair
-  follows. Checked in DOSBox. Tests: `test_natural_years`, `test_the_log_counts_each_year_once`.
+- **Natural aging**, as flavour: a year each time the game's clock passes another 365 days, put
+  in the stored age with its score changes as it happens (`aging.natural_tick`, from the dice
+  log's `_natural_aging`), so a save keeps both; the dice log says `A year has passed: Gerakis
+  is 35.`, once (a load, a new party or the clock going back only takes a new baseline). Restore
+  Youth's floor counts the clock's years. The Options label says so. Checked in DOSBox. Tests:
+  `test_natural_years`, `test_restore_counts_the_games_years`, `test_the_log_counts_each_year_once`.
+
+**Fixed** (the second audit, with seven agents: code, memory, documents, pictures)
+- `age_by` kept within the age byte's range, and no "grows younger 0 years" line at the race's
+  base age; the race's article written in one place (`aging._a`).
+- DSCLOG: the creation screen's text buffer 12 bytes (PSP's longest, `65535/65535`); no far call
+  through an overlay operand not yet fixed up; a build guard for the helper's 64 KB segment
+  (`image_len` + the install's stack); a duplicate `EXPERT IN` and an unused word gone; `AGE:`
+  in the comments.
+- DEVELOPMENT: the memory figures as built (63,312-byte image, 1,968 bytes spare in the segment,
+  6,053 of 8,182 paragraphs of upper memory, about 51.5 KB free in one piece with `UMBPLUS.COM`,
+  the far block 58,440 bytes); the Ages section in parts, with Enlarge's dice and CON as in AD&D,
+  in the contents.
+- Documents: natural aging, grey hair and the creation screen's age in the guide, the README, the
+  rule table and the patch notes (the Ages bullet split up); Dark Sun Recompiled in the patch
+  notes; defilers' scrolls counted at once (the README had them from the next start); Enlarge's
+  rule and CON as in AD&D's poison saves in the guide; a spoiler note on the game's bugs fixed;
+  history players don't need trimmed.
 
 ## Pull request #81 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/81))
 

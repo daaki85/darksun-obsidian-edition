@@ -53,6 +53,14 @@ of the game's data, the tools for mapping it, and how each part of the
   - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
   - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
   - [Helms](#helms)
+  - [Ages](#ages)
+    - [Haste's aging](#hastes-aging)
+    - [Restore Youth](#restore-youth)
+    - [Natural aging](#natural-aging)
+    - [The age on the creation screen](#the-age-on-the-creation-screen)
+    - [Grey hair on the map](#grey-hair-on-the-map)
+  - [Enlarge's dice](#enlarges-dice)
+  - [CON as in AD&D](#con-as-in-add)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits)
   - [Level cap by XP](#level-cap-by-xp)
@@ -432,7 +440,7 @@ Its big buffers are kept apart, in its **far block** (`FAR_SEG`, the header's
 +142), at fixed offsets from `FAR_RING` (10h) to `FAR_END`: the dice log's ring
 (`NENT` 63 entries of `ESIZE` 192 bytes), the panel's picture, the shadows'
 cache, the text buffer, the shadows' spans and each thing's place as last seen
-(for the dust), 57,800 bytes. `FAR_INIT` (install code) puts it in the **HMA**
+(for the dust) and the frames steady pace holds back, 58,440 bytes. `FAR_INIT` (install code) puts it in the **HMA**
 (FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there
 is none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
 `XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
@@ -461,7 +469,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.5 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 54.8 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.4 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.5 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -542,16 +550,17 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,018 of the room's 8,182
-paragraphs (2.13.0), so 2,164 (33.8 KB) are spare, and with `UMBPLUS.COM`
-about 54.8 KB are free in one piece (57.8 KB measured in DOSBox with a smaller
-helper, less what it has grown since: the helper at C90Ah, then the overlay
-buffer, the free block, the music buffer). The helper's own segment is the
-limit for new code: its image with the install code is 62,752 bytes
-(`image_len`; the resident part ends at `resident_end`, EE40h), so about
-2.7 KB of its 64 KB are spare (2.12.5's 62,016 bytes left 3.4 KB; 2.13.0's
-ages, Haste's aging, Restore Youth and the Enlarge and CON rules took 736
-bytes); the HMA has 7,080 bytes left for more buffers (the far block ends at
+and so does `test_fits_upper_memory`. It needs 6,053 of the room's 8,182
+paragraphs (2.13.1), so 2,129 (33.3 KB) are spare, and with `UMBPLUS.COM`
+about 51.5 KB are free in one piece (worked out from C90Ah to F000h less the
+helper, the overlay buffer and the music buffer, each with its MCB: 3,294
+paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
+limit for new code: its image with the install code is 63,312 bytes
+(`image_len`; the resident part ends at `resident_end`, F070h), so with the
+install's 256-byte stack 1,968 bytes of its 64 KB are spare, and the build
+fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
+Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
+creation screen 560); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -1527,11 +1536,14 @@ category, the next and its age in each member's STATS (+28h on: `STATS_AGE`),
 and DSCLOG's `AGE_TEXT` writes the age, `AGE: 23`, in the inventory panel's
 free row between the saves and STR (`PROBE_INV`, `AGE_INV_Y`; the THAC0 and
 save rows 3 pixels higher than before to make room). The category and the
-next are for the Characters tab; the game's screens show only the age.
+next are for the Characters tab; the game's screens show only the age (the
+inventory panel and the creation screen, below).
 Checked in DOSBox: the game's own party given ages in a new game, the
 inventory panel and the Characters tab.
 
-Haste's aging: the dice log's `effect_changes`, as a Hasted effect (22) starts
+#### Haste's aging
+
+The dice log's `effect_changes`, as a Hasted effect (22) starts
 on a combatant (not one a game just loaded has), calls `aging.hasted`: a system
 shock roll by the creature's CON (`SYSTEM_SHOCK`, the Player's Handbook's
 table), death on a failure (`kill`: HP 0 and the dead status, which the game
@@ -1539,6 +1551,8 @@ takes as dead: no more turns, no share of the XP, "Dead" under the portrait),
 else a year (`age_by`) for a party member. The rolls are the Loader's, logged.
 Checked in DOSBox: Gerakis at CON 1 hasted by Cermak (90 against 25: dead) and
 K'ratchek at CON 19 (89 against 99: 7 years old).
+
+#### Restore Youth
 
 Restore Youth (211, a cosmos spell: `COSMOS_MASK` in DSCLOG's `P6_MASKS`) is
 Cure Critical Wounds' record with its dice (+1Ch to +1Eh) made 0 and no
@@ -1549,21 +1563,28 @@ by the level, never below the character's true age (`natural_start`, the
 seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
 level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
 
-Natural aging: a year a 365 days of the game's clock (`natural_years`: the
-game time in seconds over `YEAR`), added to the stored age wherever an age is
-shown or moved (`age_now`; `age_by` works on the whole age and stores the age
-less those years, so Haste and Restore Youth count them; `restore` floors at
-the true age plus them; `describe` for View Character). The dice log's
+#### Natural aging
+
+A year each time the game's clock passes another 365 days (`natural_years`:
+the game time in seconds over `YEAR`), put in the stored age as it happens, so
+a save holds the age and the scores' changes together. The dice log's
 `_natural_aging`, after `give_ages`, keeps the party, the clock and its years;
 a new party, the clock going back or jumping more than 2 days
 (`NATURAL_JUMP`: a load) only takes a new baseline, and a year more otherwise
-calls `natural_tick`: a line each (`A year has passed: Gerakis is 35.`) and the
-categories reached (`_changed`, as `age_by`), death at the most the race lives.
+calls `natural_tick`: for each living member, the stored age a year on, a line
+(`A year has passed: Gerakis is 35.`) and the categories reached (`_changed`,
+as `age_by`), death at the most the race lives. A year passed while the
+Loader wasn't looking (the game played without it, a jump of more than 2 days)
+is not counted. Restore Youth's floor, the true age, is `natural_start` plus
+the clock's years (one who joined late gets fewer years back, never more).
 Checked in DOSBox: the clock put a few minutes short of a year, then past it:
 a line for each of the four, once, and `AGE: 35` on Gerakis's panel.
-Tests: `test_natural_years`, `test_the_log_counts_each_year_once`.
+Tests: `test_natural_years`, `test_restore_counts_the_games_years`,
+`test_the_log_counts_each_year_once`.
 
-**On the creation screen** (`CR_AGE`): the age the character will start at, from
+#### The age on the creation screen
+
+`CR_AGE`: the age the character will start at, from
 its name and race (`aging.natural_start`, a 16-bit hash of the name's bytes from
 the race, then each die from `h * 25173 + 13849`, its high byte mod the sides,
 as DSCLOG's `AGE_ROLL` works it out alike: `test_creation_age`), drawn above
@@ -1581,14 +1602,16 @@ not for calling from an interrupt) and the age (`CR_NAME`). Before 2.13.1 the
 roll was Python's, seeded by the name and race: a character given an age then
 keeps it, but its true age (Restore Youth's floor) is this roll's now.
 
-**Grey hair on the map** (`greyhair.py`): as the Loader dresses a member's
+#### Grey hair on the map
+
+`greyhair.py`: as the Loader dresses a member's
 pictures (`sprites.Pictures.build`), after their gear, the hair is recoloured
 by their age category (`stage_of`; the redraw keys on it, so a category reached
 redraws them), only on pixels still in the hair's own colours, by `MAPS` (each
 look's colours to the stable greys 208-217 and white 46; `SPECKLE` streaks a
 category). The hair to grey is found apart from the gear's (`greyhair.hair`, so
 helms and cloaks don't move): spriteparts' way, with each race's corrections
-found frame by frame by an agent each (`COLOURS`, the hair's missing shades;
+found frame by frame for each race (`COLOURS`, the hair's missing shades;
 `STRICT`, the search kept in the hair's zone where the face has its colours;
 `HEADS`, the bow frames, whose bow tip was taken for the crown; the
 half-giants' face masks and the halfling man's `FACE_FROM` and short hair; the

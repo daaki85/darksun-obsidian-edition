@@ -889,7 +889,7 @@ class DiceLog:
         the d20 needed now, THAC0 with each weapon ready, a thief's skills as they stand, the level
         Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE), or DICE), and the AC
         Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without), and their
-        age with the rule (the inventory panel's AGE 23), its category and the next's age (which
+        age with the rule (the inventory panel's AGE: 23), its category and the next's age (which
         DSCLOG doesn't read now: kept for the layout)."""
         g = self.game
         rec = g.creature(member)
@@ -915,7 +915,7 @@ class DiceLog:
         armour = g.armour_spells_ac(member)
         out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else -128
                                     for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
-        age = aging.age_now(g, member) if self.rules & game.RULE_AGING else None
+        age = aging.age_of(g.sheet(member)) if self.rules & game.RULE_AGING else None
         if age is None:
             out += bytes(6)
         else:
@@ -1797,10 +1797,8 @@ class DiceLog:
         party, years = self.game.party_signature(), clock // aging.YEAR
         last, self._aging_at = self._aging_at, (party, clock, years)
         if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP or years <= last[2]:
-            if last is not None and last[0] == party and 0 <= clock - last[1] <= NATURAL_JUMP:
-                self._aging_at = (party, clock, last[2])  # (no year passed yet: kept)
             return []
-        return aging.natural_tick(self.game, last[2], years)
+        return aging.natural_tick(self.game, years - last[2])
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""

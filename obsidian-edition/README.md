@@ -65,7 +65,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
   (experience, priests' THAC0, spell slots), INT's limits on learning spells,
   saving throws and multiclass hit points as the books have them, scores and
-  hit points kept as rolled, ages (Haste costs a year), Enlarge's weapon dice
+  hit points kept as rolled, ages (a year each 365 days of game time, and Haste's cost), Enlarge's weapon dice
   and CON's regeneration ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' pairs of classes), levels
@@ -721,9 +721,9 @@ Everything there applies in games started from the Loader; a switch that says
   the leader's CHA at shops, buying back magical items, and **Improved
   thieving** (AD&D's thief skills, hiding to backstab, the cloak, boots and
   belt, backstabs multiplying the weapon's dice only, and picking pockets).
-- **New content** ([New content](FEATURES.md#new-content)): the new spells, at
-  once; the new people, the vulture, defilers' scrolls and the new items, from
-  the next time the game is started (what a saved game already has stays in it).
+- **New content** ([New content](FEATURES.md#new-content)): the new spells and
+  defilers' scrolls, at once; the new people, the vulture and the new items,
+  from the next time the game is started (what a saved game already has stays in it).
 - **Graphics** ([Graphics](FEATURES.md#graphics)): the elves' and half-elves'
   looks, Cilla drawn as an elf, what the party wears, shadows and dust.
 - **Controls** ([Controls](FEATURES.md#controls)): Tab and Enter, the red

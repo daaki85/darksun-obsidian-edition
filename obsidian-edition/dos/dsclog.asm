@@ -8437,7 +8437,7 @@ rl_cs    dw 0
 rl_fl    dw 0
 rl_label db 'SUM:', 0
 
-; CR_AGE (RULE_HI_AGING): the creation panel's "AGE 23", right of PSP's line, above RECALL, where
+; CR_AGE (RULE_HI_AGING): the creation panel's "AGE: 23", right of PSP's line, above RECALL, where
 ; nothing is drawn (the PSP box's saved background widened to cover it: gamepatch.py's
 ; "cr_age_box", so each redraw of the box clears it). It replaces "add sp,10h" (3 bytes) after
 ; PSP's value is drawn: 65A89h (a race, sex or class chosen, the die, the screen opening) and
@@ -8445,7 +8445,7 @@ rl_label db 'SUM:', 0
 ; name, from the creature's +28h, hashed with the race, then its dice), from its race's base
 ; (AGE_RACES: base, dice, sides, by race 1-8).
 CR_AGE_X equ 146                ; (RECALL's left edge)
-cr_age_text times 10 db 0
+cr_age_text times 12 db 0   ; (PSP's "65535/65535" at the most, or "AGE: 255")
 AGE_RACES db 15, 1, 8,  25, 4, 6,  15, 3, 4,  15, 2, 4,  20, 5, 4,  25, 3, 6,  15, 1, 6,  6, 0, 1
 cr_age:
         pop word [cs:rl_ip]
@@ -8500,6 +8500,8 @@ cr_names:
         mov bx, [cs:rl_ip]
         add bx, [cs:cr_restore]
         mov eax, [es:bx]
+        test eax, eax           ; (not fixed up: nothing to call)
+        jz .none
         mov [cs:cra_far], eax
         mov bx, [cs:rl_ip]
         add bx, [cs:cr_seg340]
@@ -8511,7 +8513,7 @@ cr_names:
         add sp, 4
         call cr_psp_draw        ; (PSP drawn again: the game's routine for it is an overlay's)
         call cr_age_draw
-        pop es
+.none:  pop es
         popad
 .back:  push word [cs:rl_fl]
         push word [cs:rl_cs]
@@ -9476,7 +9478,7 @@ path_down:
         ret
 
 ; AGE_TEXT: CF set when party member BX has no age in its STATS (the Loader not keeping them, the
-; rule off, none given); else AGE_SHORT "AGE 23", for the inventory panel. All registers kept.
+; rule off, none given); else AGE_SHORT "AGE: 23", for the inventory panel. All registers kept.
 age_text:
         pusha
         call stats_for
@@ -9652,11 +9654,10 @@ kit_line     db 'KIT: '
 ef_y         dw 0
 ef_kind      dw 0
 ef_last      db 0
-ef_skills    dw .s0, .s1, .s2, .s3
+ef_skills    dw .s0, .s1, .s2, lv_expert
 .s0     db 'SPECIALIZED IN', 0
 .s1     db 'MASTER OF', 0
 .s2     db 'GRAND MASTER OF', 0
-.s3     db 'EXPERT IN', 0
 ef_kinds     dw .k0, .k1, .k2, .k3, .k4, .k5, .k6, .k7, .k8, .k9, .k10, .k11, .k12, .k13, .k14, .k15
 .k0     db '  LONG SWORD', 0
 .k1     db '  CLUB', 0
@@ -21680,7 +21681,6 @@ d_wx       dw 0
 d_wy       dw 0
 d_seed     dw 0
 d_yy       dw 0
-d_xx       dw 0
 d_wrow     dw 0
 d_ey       dw 0
 d_sx       dw 0
@@ -23547,5 +23547,6 @@ all_vectors_end:
         align 16, db 0
 image_len equ $ - $$
 file_len  equ image_len + 32
+        times -(image_len + STACK > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
 ; the memory past the image to load in: the install's stack
 LOAD_EXTRA equ (STACK + 15) / 16

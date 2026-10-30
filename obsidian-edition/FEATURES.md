@@ -7,7 +7,9 @@ Everything the mod changes and adds in the game, in the order of the Loader's
 Options tab, each with its switch there; the game's bugs fixed come last. A
 switch's name here in bold (**Rangers' casting level**) is the short form of the
 sentence the Options tab gives it, in the same section and order. How each is
-done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works).
+done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). The tab's
+first section, **In the game** (the combat log, the Look box, names over
+figures), is in the [README](README.md#in-the-game).
 
 ## Contents
 
@@ -110,7 +112,7 @@ and the game's own rule is back at once.
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
 | [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
-| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; Haste ages its target a year, after a system shock roll to survive |
+| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; a year older each 365 days of game time; Haste ages its target a year, after a system shock roll to survive |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
 | [CON as in AD&D](#con-as-in-add) | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
 
@@ -477,11 +479,8 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
 
 The game's helms count as armour but give AC 0. With **Helms give AC 1**
 ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
-Contemplation and the Helm of Might (item types 5, 89 and 109, all at AC 0 in
-the game's tables). It shows on the View Character and inventory screens like
+Contemplation and the Helm of Might. It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
-The helms keep the game's own names (earlier versions called the plain one
-**Helm (AC 1)**; the Loader names it back).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
 
@@ -496,7 +495,7 @@ character's name and race, so always the same for them. Each **365 days of
 game time** (the game's own clock, from the start of the game) everyone is a
 year older, and the dice log says so (`A year has passed: Cermak is 23.`),
 the age categories counting as below. It is flavour: a party that rests
-5000 times is only 5 to 9 years older. Loading a save shows the ages as they
+5000 times is only about 5 to 9 years older. Loading a save shows the ages as they
 were then, and no year is logged twice.
 
 | Race | Starting age | Middle age | Old age | Venerable | Most it lives |
@@ -1218,9 +1217,7 @@ can't try ("Daaki's backpack is full."): nothing is rolled, and it doesn't
 count as a try. Not in a fight: there's no time for it then, and the button
 isn't there.
 
-(Earlier versions had a thief use **Thieves' Tools** for this, from Mirlon or
-Kel. No one has them now; a set already in a game keeps its name and does
-nothing.)
+(Thieves' Tools from an earlier version, in a save, do nothing.)
 
 The Loader rolls the thief's pick pockets chance as it stands now (effects and
 a worn belt's 5 counted, as in the thief rows):
@@ -1459,7 +1456,7 @@ Loader hands over itself, while it runs) are written into the game's own data
 each time the Loader starts the game, so the game makes them with their people
 and chests and then keeps and saves them like its own. A changed switch takes
 effect in regions the party hasn't visited yet; start a new game to have them
-all. The log doesn't say where they are: they're there to be found.
+all. The dice log doesn't say where they are; [Items](ITEMS.md) does, with spoilers.
 
 **New items, magical and mundane** on the Options tab places them all, the
 arena's ring too. A thief can [lift](#picking-pockets) Pehtucl's ring,
@@ -1813,6 +1810,7 @@ walking and fighting:
 | **Helms** | a circlet at the brow blended into the hair: a feather on leather, a dark stone on iron, low spikes on bone |
 | **Cloaks** | the cloak the game draws on the human woman (its folds and swing as she walks and fights), fitted to the wearer, under the hair, in the cloak's colours; a half-elf woman's own purple cloak takes the worn one's colours |
 | **Boots and belts** | the feet and the waist recoloured (Boots of Elvenkind in soft green) |
+| **Age** | with [ages](#ages-and-magical-aging) on, the hair greys: streaks when middle-aged, grey when old, white when venerable |
 
 The colours are muted ones no region's palette changes. A thri-kreen shows
 only weapons and shields (all it can use). Two party members of the same race
@@ -2091,6 +2089,8 @@ What each setting asks of the computer:
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#game-speed).
 
 ## The game's bugs, fixed
+
+*Spoilers: some of these name places and people from later in the game.*
 
 The patched game mends these whatever the Options tab says (the rules the game
 got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
