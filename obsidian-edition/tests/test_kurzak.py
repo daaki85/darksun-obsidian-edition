@@ -79,6 +79,19 @@ class KurzakTests(unittest.TestCase):
         self.assertEqual(backs, [game[4].at, game[7].at])  # (case 3's test, the switch's end)
         self.assertEqual(k.with_notice(out, FIELDS, k.TALK_SCRIPT), out)
 
+    def test_the_half_giant_asked_about(self):
+        """"Who is the half-giant?": his answer asks too, then back to the question's clearing."""
+        s = _Script()
+        s.op(0x4F, ("n", 115), ("str", k.LINES[3][1]))
+        s.op(0x4F, ("n", 115), ("str", "He's not too bright, but he's good with monsters. "))
+        s.op(0x16, ("n", 0), ("var", 14, 9))
+        s.op(0x15)
+        script = s.bytes(end=True)
+        out = k.with_notice(script, FIELDS, k.TALK_SCRIPT)
+        added = [o for o in gpl.decode(out, FIELDS) if o.at >= len(script)]
+        self.assertIn("That was Legcrusher, the monster trainer. He's gone missing. ", strings(added))
+        self.assertEqual(added[-1].args, [("n", gpl.decode(script, FIELDS)[2].at)])
+
     def test_left_alone_when_not_the_games(self):
         """Another script, or the lines not there: unchanged."""
         self.assertEqual(k.with_notice(call(), FIELDS, k.TALK_SCRIPT), call())

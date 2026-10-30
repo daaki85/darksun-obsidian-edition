@@ -3,8 +3,10 @@
 When the party is slow to answer his call to the arena, Kurzak sends Legcrusher, the pens'
 half-giant, to fetch them (script 136: "Legcrusher! Get gladiators!"). A party at the fountain can
 kill Legcrusher when he comes, with no alarm; but Kurzak goes on calling for him at every fight
-after, and greets them as if he were still about ("I had to send Legcrusher after you", script
-141). In the Loader's copy of the scripts each of those lines asks first whether Legcrusher is
+after, greets them as if he were still about ("I had to send Legcrusher after you", script
+141), even "I'm glad you listened to Legcrusher" when Legcrusher found them before he died, and
+asked "Who is the half-giant?" says he's the monster trainer, good with monsters. Dinos too warns
+them that Kurzak will send out Legcrusher (script 139). In the Loader's copy of the scripts each of those lines asks first whether Legcrusher is
 on the map (80h: how far he is from Kurzak, 999 once he's dead or gone, as the game's own scripts
 ask it of others: Dinos of Gilal): if he is, the game's words; if not, Kurzak's own about his
 missing monster trainer. Only the words change: what the scripts do next is the game's.
@@ -23,7 +25,7 @@ from .pensasks import FILLER, GOTO, LONGEST
 KURZAK, LEGCRUSHER = 29, 326  # their objects (npcitems.py's)
 WHERE, GONE = 0x80, 999  # (two objects: how far apart, 999 when one isn't on the map)
 SAY = 0x4F
-CALL_SCRIPT, TALK_SCRIPT = 136, 141  # his call to the arena; his talk as the party comes
+CALL_SCRIPT, TALK_SCRIPT, DINOS_SCRIPT = 136, 141, 139  # his call to the arena; his talk; Dinos's
 
 # (script, the first of the game's lines, Kurzak's words without Legcrusher)
 LINES: Tuple[Tuple[int, str, str], ...] = (
@@ -35,6 +37,13 @@ LINES: Tuple[Tuple[int, str, str], ...] = (
     (TALK_SCRIPT, "I had to send Legcrusher after you. It's good that you found me before ",
      "I sent Legcrusher after you, and he never came back. You wouldn't know anything about "
      "that, would you? Never mind."),
+    (TALK_SCRIPT, "Oh, that's the monster trainer. His name is Legcrusher. ",
+     "That was Legcrusher, the monster trainer. He's gone missing. Not too bright, but good with "
+     "monsters. If you see him, send him back."),
+    (TALK_SCRIPT, "I'm glad you listened to Legcrusher. I hate it when we lose gladiators ",
+     "So Legcrusher found you. Then where's he got to? He never came back. Never mind."),
+    (DINOS_SCRIPT, "Kurzak's looking for you. You better go fight before he sends ",
+     "Kurzak's looking for you. You'd better go fight before he comes down here himself."),
 )
 
 # (as the game asks whether someone has died or gone: 80h from one who is there, Kurzak calling)
@@ -52,10 +61,15 @@ def _run(ops: Sequence[gpl.Op], first: str) -> Optional[Tuple[int, int]]:
     return start, end
 
 
-def with_notice(script: bytes, field_types: bytes, number: int) -> bytes:
-    """SCRIPT (the game's NUMBER) with Kurzak's lines about Legcrusher asking whether he is there
-    (unchanged if they aren't as the game has them, or done already)."""
-    ops = gpl.decode(script, field_types)
+def with_notice(script: bytes, field_types: bytes, number: int, original: Optional[bytes] = None) -> bytes:
+    """SCRIPT (the game's NUMBER, or the Loader's copy of it so far) with Kurzak's lines about
+    Legcrusher asking whether he is there (unchanged if they aren't as the game has them, or done
+    already). ORIGINAL: the game's script, whose commands the copy's are where they were (another
+    part's code after its end, and its jumps, may not read on from there)."""
+    try:
+        ops = gpl.decode(original or script, field_types)
+    except gpl.ScriptError:
+        return script
     s, jumps = _Script(), []
     for n, (where, first, words) in enumerate(LINES):
         if where != number or gpl.encode_expr(("str", _lines(words)[0])) in script:
@@ -64,6 +78,8 @@ def with_notice(script: bytes, field_types: bytes, number: int) -> bytes:
         if run is None:
             continue
         start, end = run
+        if script[ops[start].at:ops[end].at] != (original or script)[ops[start].at:ops[end].at]:
+            continue  # (changed already by another part)
         label = f"line {n}"
         jumps.append((ops[start].at, ops[start + 1].at, label))
         s.label(label)
@@ -89,7 +105,7 @@ def script_chunks(chunks, field_types: bytes, out: Dict[Tuple[str, int], bytes])
         script = out.get(key, chunks.get(key))
         if script is None:
             continue
-        new = with_notice(script, field_types, number)
+        new = with_notice(script, field_types, number, chunks.get(key))
         if new != script:
             changed[key] = new
     return changed

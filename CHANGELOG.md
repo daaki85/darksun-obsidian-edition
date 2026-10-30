@@ -35,7 +35,8 @@ notes](PATCH-NOTES.md).
 **Fixed**
 - **Kurzak notices Legcrusher is gone** (`kurzak.py`, always): once the party has killed
   Legcrusher (at the fountain, with no alarm), Kurzak's call to the arena and his greeting no
-  longer name him as if he were about: his call and his talk's two lines about him ask first
+  longer name him as if he were about: his call, his talk's three greetings, his answer to "Who is
+  the half-giant?" and Dinos's warning that he'll send out Legcrusher ask first
   whether Legcrusher is on the map (80h from Kurzak, under 999), and say the game's words or his
   own. Each first line becomes a jump to code after the script's end, as `pensasks.py` does.
   Tests: `test_kurzak`. Not yet seen in play.

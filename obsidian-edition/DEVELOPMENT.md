@@ -1151,14 +1151,19 @@ gate waits its window out). Not seen in play yet: all are past the slave pens.
 **Kurzak and Legcrusher** (`dsloader/kurzak.py`, always): Kurzak's call to the
 arena (script 136 at 130h, "Legcrusher! Get gladiators!") and his talk's cases 2
 and 3 as the party comes (script 141 at 6B4h and 70Bh: "I thought I was going to
-have to send out Legcrusher", "I had to send Legcrusher after you") ask first
+have to send out Legcrusher", "I had to send Legcrusher after you"), case 4 (766h,
+"I'm glad you listened to Legcrusher": he found them, then died) and his answer to
+"Who is the half-giant?" (F29h), and Dinos's warning (script 139 at 218h, "before he
+sends out Legcrusher") ask first
 whether Legcrusher (object 326) is on the map: `80h` from Kurzak (29) to him
 under 999, as the game's own scripts ask whether someone has died or gone
 (Dinos of Gilal, script 139). There, the game's lines; gone, Kurzak's own. The
 first line of each becomes a jump (64h, the rest 67h filler never reached) to
 code after the script's end that says one or the other and jumps back past the
 game's lines, as `pensasks.py` does; the scripts do the rest as the game has
-them. Tests: `test_kurzak`. Not yet seen in play: it needs Legcrusher killed at
+them. Dinos's script is `pensasks.py`'s copy by then, whose own jumps leave bytes that don't
+read on: the places come from the game's script, and a line is changed only where the copy
+still has the game's bytes. Tests: `test_kurzak`. Not yet seen in play: it needs Legcrusher killed at
 the fountain and the party late for a fight.
 
 ### Class restrictions
