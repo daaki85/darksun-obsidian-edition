@@ -532,6 +532,13 @@ The age shows on the inventory screen's panel, between the saving throws and
 STR (`AGE 23`), and on the Loader's Characters tab with the category and the
 next age to come (`Age: 45, middle-aged; old at 53`).
 
+It shows on the map too: a party member's hair turns as they age, iron grey
+streaks when middle-aged, grey when old, white when venerable, shade for shade
+in the figure's own pictures, walking and fighting (with
+[What the party wears](#what-the-party-wears) on). A helm or cloak over the
+hair is left as it is. Dwarves and muls are hairless on Athas, so they keep
+their looks; a venerable thri-kreen's antennae go silver.
+
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
 
 ### Enlarge multiplies the weapon's dice only

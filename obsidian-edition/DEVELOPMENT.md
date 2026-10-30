@@ -1549,6 +1549,22 @@ by the level, never below the character's true age (`natural_start`, the
 seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
 level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
 
+**Grey hair on the map** (`greyhair.py`): as the Loader dresses a member's
+pictures (`sprites.Pictures.build`), after their gear, the hair is recoloured
+by their age category (`stage_of`; the redraw keys on it, so a category reached
+redraws them), only on pixels still in the hair's own colours, by `MAPS` (each
+look's colours to the stable greys 208-217 and white 46; `SPECKLE` streaks a
+category). The hair to grey is found apart from the gear's (`greyhair.hair`, so
+helms and cloaks don't move): spriteparts' way, with each race's corrections
+found frame by frame by an agent each (`COLOURS`, the hair's missing shades;
+`STRICT`, the search kept in the hair's zone where the face has its colours;
+`HEADS`, the bow frames, whose bow tip was taken for the crown; the
+half-giants' face masks and the halfling man's `FACE_FROM` and short hair; the
+elves' skin-brown shading, `BROWNS`; a half-elf's own figure's hair grown to
+its golden pixels, `own_hair`; a thri-kreen's antennae, `_antennae`). Dwarves
+and muls have none. Checked in DOSBox: Gerakis old, Cilla and K'ratchek
+venerable, their figures redrawn as their ages were set.
+
 ### Enlarge's dice
 
 ([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)

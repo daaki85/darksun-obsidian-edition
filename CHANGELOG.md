@@ -6,6 +6,18 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**New**
+- **Grey hair on the party's map figures** (with Ages and magical aging, and What the party
+  wears): iron grey streaks when middle-aged, grey when old, white when venerable, in each
+  figure's own shades (`greyhair.py`: `MAPS`, `SPECKLE`); a venerable thri-kreen's antennae go
+  silver; dwarves and muls, hairless on Athas, unchanged. The hair to grey is found apart from
+  the gear's (`greyhair.hair`), with corrections for each race (missing hair shades, faces kept
+  out, the bow frames' heads, the elves' brown shading, the half-elves' bun and temples), so
+  helms and cloaks don't move. The live redraw keys on the age category. Each race's colours
+  worked out frame by frame by an agent of its own. Checked in DOSBox. Tests: `test_greyhair`.
+
 ## Pull request #81 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/81))
 
 Obsidian Edition 2.13.0 ([release notes](release-notes/v2.13.0.md)).

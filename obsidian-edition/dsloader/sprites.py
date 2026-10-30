@@ -175,8 +175,14 @@ class Pictures:
                 dressed = halfelf.over(dressed, rows, figure, PAD)
             if self.looks and model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):
                 dressed = figures.ears_over(dressed, rows, model, f, combat, PAD)
-            if stage:
-                hair = owns[f].parts.hair if owns[f] is not None else sp.parts(rows, model, f, combat).hair
+            if stage:  # (the hair found for greying, not the gear's: greyhair.hair)
+                if owns[f] is not None:
+                    shoulders = owns[f].parts.shoulders
+                    hair = greyhair.own_hair(owns[f].parts.hair, rows, shoulders[0] if shoulders else None)
+                else:
+                    hair = greyhair.hair(rows, model, f, combat)
+                    if figure == halfelf.WOMAN:  # (the game's woman in her colours: halfelf.recolour's hair)
+                        hair |= halfelf._hair(rows)
                 dressed = greyhair.aged(dressed, hair, greyhair.look(model, figure), stage, PAD)
             out.append(trimmed(dressed, combat))
         return encode_frames(out)
