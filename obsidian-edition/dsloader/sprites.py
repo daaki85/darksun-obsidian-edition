@@ -31,7 +31,7 @@ pictures.
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import art, figures, game, halfelf, spritegear as sg, spriteparts as sp
+from . import art, figures, game, greyhair, halfelf, spritegear as sg, spriteparts as sp
 from .game import GameData
 
 SPRITE_BASE = 2450  # (pairs: object 300's walking picture 2450, its combat one 2451, ...)
@@ -158,10 +158,10 @@ class Pictures:
         return model, frames, [None] * len(frames)
 
     def build(self, obj: int, combat: bool, gear: Dict[str, Tuple[int, ...]], armour: Tuple[int, ...],
-              model: Optional[int] = None, figure: Optional[int] = None) -> bytes:
+              model: Optional[int] = None, figure: Optional[int] = None, stage: int = 0) -> bytes:
         """The object's walking (or COMBAT) picture in this outfit (a spare (SPARES): MODEL's, in
         FIGURE's looks: a half-elf's are their own, figures.py and halfelf.py; an elf has pointed
-        ears)."""
+        ears), the hair greyed for age category STAGE (greyhair.py)."""
         model = self.model(obj) if model is None else model
         figure = obj if figure is None else figure
         model, frames, owns = self.base(model, figure, combat)
@@ -175,6 +175,9 @@ class Pictures:
                 dressed = halfelf.over(dressed, rows, figure, PAD)
             if self.looks and model in figures.ELVES and figure not in (halfelf.MAN, halfelf.WOMAN):
                 dressed = figures.ears_over(dressed, rows, model, f, combat, PAD)
+            if stage:
+                hair = owns[f].parts.hair if owns[f] is not None else sp.parts(rows, model, f, combat).hair
+                dressed = greyhair.aged(dressed, hair, greyhair.look(model, figure), stage, PAD)
             out.append(trimmed(dressed, combat))
         return encode_frames(out)
 
@@ -457,13 +460,16 @@ class Dresser:
         for obj, (member, figure) in self.objects().items():
             outfit = worn(self.gd, member, self.items) if on else ({}, ())
             model = self.pics.model(figure)
-            key = (model, figure, repr(sorted(outfit[0].items())), outfit[1])
+            stage = greyhair.stage_of(self.gd, member) if on else 0
+            key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage)
             fresh = self.shown.get(obj) != key
             if fresh:
                 pictures = {}
                 for combat, picture in zip((False, True), picture_ids(obj)):
-                    chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure)
+                    chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure, stage)
                     if len(chunk) > self.pics.room(obj, combat):  # (more than there is room for: plain)
+                        chunk = self.pics.build(obj, combat, {}, (), model, figure, stage)
+                    if len(chunk) > self.pics.room(obj, combat):
                         chunk = self.pics.build(obj, combat, {}, (), model, figure)
                     pictures[picture] = chunk
                 if not self._write(pictures):
