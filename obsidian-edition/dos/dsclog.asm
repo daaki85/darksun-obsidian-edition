@@ -2348,9 +2348,9 @@ probe_unlook:
 ; thief skills the panel shows, as they stand (equipment and effects too), +24 the level Enlarge
 ; counts at on them (its melee damage +10% a level; 0 without it), +25 three bytes: the AC
 ; Barkskin, Flesh Armor and Magical Vestments give them (signed; -128 without: EF_CHARGES), +28
-; a word: their age (0 none: the rule off, or none given yet), +30 its category (0 young, 1
-; middle-aged, 2 old, 3 venerable), +31 the next one (0 none) and +32 a word, the age it comes at
-; (AGE_TEXT: View Character and the Effects screen; dsloader/aging.py)
+; a word: their age (0 none: the rule off, or none given yet; AGE_TEXT, the inventory panel's),
+; +30 its category (0 young, 1 middle-aged, 2 old, 3 venerable), +31 the next one (0 none) and +32
+; a word, the age it comes at (the Loader's; nothing here reads +30 to +33 now; dsloader/aging.py)
 STATS_SIZE  equ 34
 STATS_AGE   equ 28
 STATS_ENLARGE equ 24
@@ -2960,12 +2960,12 @@ prot_scan:
 SPEC_SLOTS equ 0x14
 SPEC_COUNT equ 4
 SPEC_PACKED equ 0x80            ; (+16h's top bit: the specs packed, 5 bits each, +17h the age)
-SHEET_AGE  equ 0x17
 
 ; The sheet's +14h..+17h (the game never reads or writes them), in one of two layouts: up to 2.12
 ; a byte for each of the four specs; now (SPEC_PACKED in +16h) the four packed 5 bits each in
 ; +14h..+16h, and +17h the character's age (dsloader/aging.py). A sheet keeps the old layout
-; until something is written to it (SPEC_SET, SPEC_CLEAR: SPEC_PACK first), so both are read.
+; until something is written to it (SPEC_SET: SPEC_PACK first), so both are read. A new member's
+; starts packed with no specs and no age (CR_WEAPONS).
 ; Each takes the sheet at ES:BX and keeps the rest.
 ; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none).
 spec_get:
@@ -3057,12 +3057,6 @@ spec_set:
         pop eax
         ret
 
-; SPEC_CLEAR: no specs (the age kept).
-spec_clear:
-        call spec_pack
-        mov word [es:bx + SPEC_SLOTS], 0
-        mov byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
-        ret
 FIGHTER_CLASS equ 9
 GLADIATOR_CLASS equ 10
 MASTERY equ 5                   ; (the fighter levels)
@@ -13289,9 +13283,9 @@ stab_roll:
         sub ax, [bp - 0x12]
         mov [cs:stab_dice], ax
         mov byte [cs:stab_known], 1
-        mov byte [cs:enl_known], 1
         cmp word [bp + 0x16], 1
         pushf
+        setle byte [cs:enl_known]       ; (melee only: ENL_SITE comes next for it, a missile's never)
         pop ax
         mov di, sp
         sub di, 30                      ; (SS:DI+38: the INT's flags, past AX and DI)
@@ -13328,6 +13322,7 @@ stab_times:
 .whole: imul word [bp - 4]
 .put:   mov [bp - 4], ax
         mov byte [cs:stab_known], 0
+        mov byte [cs:enl_known], 0
         iret
 
 ; ENLARGE DICE (RULE_HI_ENLARGE): the game's Enlarge (7C211h, after STR's bonus: SI the damage, AX
@@ -13749,7 +13744,8 @@ RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's sp
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
 RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
 RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
-RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging (aging.py)
+RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging: the Loader's (aging.py; no
+                                ;   STATS age without it, so AGE_TEXT needs no test of its own)
 RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
 RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rates, dwarves' poison saves (REGEN_SITE, CON_SAVE)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
@@ -17295,8 +17291,8 @@ cr_weapons:
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
-        call spec_clear
-        mov ax, ds
+        mov dword [es:bx + SPEC_SLOTS], SPEC_PACKED << 16 ; (no specs and no age: a new member,
+        mov ax, ds                      ;   whatever the slot's last character left)
         add ax, PICK_STUB
         mov word [cs:lv_psi], DK_PSI
         mov [cs:lv_psi + 2], ax

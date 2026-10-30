@@ -517,6 +517,7 @@ class DiceLog:
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
+        self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
         self._initiative_roll: Optional[int] = None
@@ -884,9 +885,10 @@ class DiceLog:
     def stats_entry(self, member: int) -> bytes:
         """A party member's STATS entry for DSCLOG: THAC0 with the main weapon, the five saves as
         the d20 needed now, THAC0 with each weapon ready, a thief's skills as they stand, the level
-        Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE)), and the AC
+        Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE), or DICE), and the AC
         Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without), and their
-        age with the rule (AGE 23, MIDDLE-AGED / OLD AT 53: their category and the next's age)."""
+        age with the rule (the inventory panel's AGE 23), its category and the next's age (which
+        DSCLOG doesn't read now: kept for the layout)."""
         g = self.game
         rec = g.creature(member)
         if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
@@ -1783,8 +1785,11 @@ class DiceLog:
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""
-        party = self.game.party_signature()
-        if party != self._party:
+        party, clock = self.game.party_signature(), self.game.game_time()
+        back = clock is not None and self._clock is not None and clock < self._clock
+        if clock is not None:
+            self._clock = clock
+        if party != self._party or back:  # (the same party loaded again: its clock goes back)
             self._party, self._party_changed_at = party, now
         if now - self._party_changed_at < LOAD_SETTLE:
             if self.tracker:
@@ -2477,8 +2482,8 @@ class DiceLog:
                     total += enlarged - dice
                     steps += f" +{enlarged - dice} Enlarge (the dice {dice} x{percent}% = {enlarged}, level {level})"
                     dice = enlarged
-                else:
-                    total = total * percent // 100
+                else:  # (32-bit idiv: toward 0)
+                    total = int(total * percent / 100)
                     steps = f"({steps}) x{percent}% Enlarge (level {level})"
         # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
         # that on the attacker's first two attacks of the round: x2, x3 from thief level 5, x4 from

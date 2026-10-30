@@ -105,7 +105,8 @@ def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], dict]:
             out.append(f"<h4>{inline(bold.group(1))}</h4>")
             i += 1
             continue
-        para = []
+        para = [lines[i].strip()]  # (at least this line: a "> " line no other branch took is text)
+        i += 1
         while i < len(lines) and lines[i].strip() and not re.match(r"^(#{1,6} |- |\||> )", lines[i]):
             para.append(lines[i].strip())
             i += 1

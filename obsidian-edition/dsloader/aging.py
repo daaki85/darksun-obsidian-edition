@@ -8,8 +8,8 @@ up; on reaching its race's maximum age (a base and dice, its own roll kept secre
 time for the same character) it dies of old age. Thri-kreen have only a venerable age.
 
 Kept in the sheet's +17h (game.SHEET_AGE): the age less the race's base starting age, plus 1, so 0
-is "none yet" (a thri-kreen starts at its base, 6). Shown on View Character and the Effects screen
-(DSCLOG, from the Loader's STATS: dicelog.stats_entry), on the Characters tab and in the dice log.
+is "none yet" (a thri-kreen starts at its base, 6). Shown on the inventory panel (DSCLOG, from the
+Loader's STATS: dicelog.stats_entry), on the Characters tab and in the dice log.
 """
 
 import random
@@ -157,7 +157,7 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
     """Party member MEMBER aged YEARS (younger for fewer than 0, never below its starting age's
     base): its scores changed by the categories reached or left, its death at its maximum age.
     Lines for the dice log."""
-    rec, sheet = gd.creature(member), gd.sheet(member)
+    sheet = gd.sheet(member)
     before = age_of(sheet) if len(sheet) >= game.SHEET_SIZE else None
     if before is None or not years:
         return []
@@ -175,9 +175,12 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
         for ability, n in sorted(delta.items()):
             for base, off in ((at, game.SHEET_ABILITIES), (creature, game.CREATURE_ABILITIES)):
                 score = gd.guest.read(base + off + ability, 1)[0]
-                gd.guest.write(base + off + ability, bytes([max(LOWEST, min(HIGHEST, score + n))]))
+                new = score + n  # (within 3 to 25, but never the wrong way: a 26 from magic not cut)
+                new = min(new, max(score, HIGHEST)) if n > 0 else max(new, min(score, LOWEST))
+                gd.guest.write(base + off + ability, bytes([new]))
             parts.append(f"{ABILITY_NAMES[ability]} {n:+d}")
-        reached = CATEGORY_NAMES[category(race, after)] or "no longer middle-aged"
+        left = CATEGORY_NAMES[category(race, before)]
+        reached = CATEGORY_NAMES[category(race, after)] or f"no longer {left}"
         out[0] += f", {reached}: {', '.join(parts)}"
     if after >= most_age(name, race) and after > before:
         race_name = game.RACE_NAMES[race]
@@ -187,7 +190,8 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
 
 
 def kill(gd: "game.GameData", creature: int) -> None:
-    """CREATURE dead (old age, a failed system shock): no hit points, the game's dead status."""
+    """Creature record CREATURE (its number) dead (old age, a failed system shock): no hit points,
+    the game's dead status."""
     from . import kalzith
     at = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + creature * game.CREATURE_SIZE
     gd.guest.write(at, struct.pack("<h", 0))
@@ -214,6 +218,8 @@ def hasted(gd: "game.GameData", creature: int, rng: Optional[random.Random] = No
     if len(rec) < game.CREATURE_SIZE or rec[game.CREATURE_STATUS] in kalzith.DEAD_STATUS:
         return []
     con = rec[game.CREATURE_ABILITIES + 2]
+    if not con:  # (no scores: nothing to roll against)
+        return []
     chance, roll = system_shock(con), rng.randint(1, 100)
     name = gd.creature_name(creature)
     line = (f"{name}'s system shock (Haste's aging): d100 = {roll}, needs {chance} or less (CON {con}) -> "

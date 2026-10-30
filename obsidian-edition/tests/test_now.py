@@ -346,6 +346,17 @@ class ThiefTests(unittest.TestCase):
 
 
 class SettingsTests(unittest.TestCase):
+
+    def test_every_rule_has_its_box(self):
+        """Each of game.RULE_SETTINGS has a box with its text on the Options tab (viewer.py's
+        list, read without Tk), and each its own bit."""
+        import re
+        with open(os.path.join(os.path.dirname(game.__file__), "viewer.py"), encoding="utf-8") as f:
+            source = f.read()
+        for key, _ in game.RULE_SETTINGS:
+            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*"', key)
+        bits = [bit for _, bit in game.RULE_SETTINGS]
+        self.assertEqual(len(set(bits)), len(bits))
     def test_saved_options(self):
         log = dag()
         log.use_settings({"helm_ac": False, "new_items": False, "arena_ring": True, "no_doubled_save": False})

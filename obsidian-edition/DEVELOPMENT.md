@@ -1604,7 +1604,7 @@ kinds), +16h's top bit (`SPEC_PACKED`) marking it, and +17h is the
 character's age (`SHEET_AGE`, years past its race's base starting age: see
 Ages above). A sheet keeps the old layout until something writes to it, and
 everything reads both: DSCLOG through `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`
-(and writes through `SPEC_SET`, `SPEC_CLEAR`, which pack an old sheet first,
+(and writes through `SPEC_SET`, which packs an old sheet first,
 `SPEC_PACK`: its +17h, an old 4th spec, becomes 0, no age yet), the Loader
 through `game.spec_kinds`, `packed_specs` and `with_specs`. The weapon
 window's trial of a kind pointed at (`PK_WORD`) puts the four bytes back as

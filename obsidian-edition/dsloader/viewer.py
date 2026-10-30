@@ -613,8 +613,12 @@ class Viewer:
         game_dir = self._saves_game_dir()
         if game_dir is None:
             return
-        namedsaves.sync(game_dir)
-        os.makedirs(namedsaves.NAMED, exist_ok=True)
+        try:
+            namedsaves.sync(game_dir)
+            os.makedirs(namedsaves.NAMED, exist_ok=True)
+        except OSError as err:
+            self.status.set(f"Couldn't open the named saves: {err}")
+            return
         try:
             if sys.platform == "win32":
                 os.startfile(namedsaves.NAMED)  # type: ignore[attr-defined]
@@ -1611,7 +1615,10 @@ class Viewer:
             age = None
             if known and index < game.PARTY_SIZE and self.rule_vars["aging"].get():
                 from . import aging
-                age = aging.describe(gd.sheet(index))
+                try:
+                    age = aging.describe(gd.sheet(index))
+                except (struct.error, IndexError, ValueError):
+                    age = None
             card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,
                       skills_label=label, weapons=weapons, no_spells=no_spells, kit=kit, kit_move=kit_move,
                       move_why=", ".join(move_why), age=age)

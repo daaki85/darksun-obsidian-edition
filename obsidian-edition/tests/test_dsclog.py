@@ -4783,14 +4783,16 @@ class KitTests(unittest.TestCase):
 
     SPEC_GET = rb"\x26\xf6\x47\x16\x80\x75\x06\x26\x0f\xb6\x40\x14\xc3"
     SPEC_SET = rb"\xe8..\x66\x50\x66\x51\x66\x52"
-    SPEC_CLEAR = rb"\xe8..\x26\xc7\x47\x14\x00\x00\x26\xc6\x47\x16\x80\xc3"
+    # (a new member's sheet at creation's DONE, CR_WEAPONS: no specs and no age, packed)
+    CR_CLEAR = rb"\x26\x66\xc7\x47\x14\x00\x00\x80\x00"
 
     def test_spec_layouts(self):
         """SPEC_GET reads both layouts alike (a gladiator's four kinds, a byte each up to 2.12, or
-        packed); SPEC_SET on the old layout packs it first, the age 0 (none yet); SPEC_CLEAR keeps
-        the age. As game.spec_kinds and game.packed_specs."""
+        packed); SPEC_SET on the old layout packs it first, the age 0 (none yet). A new member's
+        sheet (CR_WEAPONS) starts packed with no specs and no age, whatever its slot held. As
+        game.spec_kinds and game.packed_specs."""
         import re
-        for pattern in (self.SPEC_GET, self.SPEC_SET, self.SPEC_CLEAR):
+        for pattern in (self.SPEC_GET, self.SPEC_SET, self.CR_CLEAR):
             self.assertEqual(len(re.findall(pattern, self.image, re.S)), 1)
         kinds = (1, 16, 9, 2)
         at = self.SHEET * 16
@@ -4814,8 +4816,7 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(at, bytes(0x14) + game.packed_specs(kinds, 30) + bytes(0x2F))
         self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=1, eax=0)
         self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 0, 9, 2), 30))
-        self.call(self.SPEC_CLEAR, es=self.SHEET, ebx=0)
-        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((), 30))
+        self.assertEqual(game.packed_specs((), 0), bytes((0, 0, 0x80, 0)))  # (CR_CLEAR's dword)
 
     def test_effects_specs(self):
         """EF_LINES_OF: the Effects screen's weapon lines, the chosen kinds' and then a ranger's bow,

@@ -37,7 +37,7 @@ FALLBACKS: Dict[str, Tuple[int, Tuple[int, int, int]]] = {
 }
 # ... and the mod's own, drawn: each letter a colour (DRAWN_COLOURS), made the nearest stable one.
 # Restore Youth: a fountain of youth, its top bowl spilling water into a pool, on light blue water
-# in a bevelled frame (lighter top and left, dark bottom and right, as the game's icons)
+# in a bevelled frame (a mid blue top and left, the darkest blue bottom and right)
 DRAWN_COLOURS: Dict[str, Tuple[int, int, int]] = {
     "B": (16, 28, 137), "w": (97, 133, 214), "b": (157, 198, 255), "W": (250, 250, 255),
     "p": (52, 76, 178), "S": (215, 210, 195), "s": (150, 140, 125), "d": (90, 80, 70)}
@@ -298,7 +298,10 @@ def chunks(wotr_resources: Optional[str], sl_gpldata: str, numbers: Dict[str, in
         return out
     for name, number in numbers.items():
         if name in DRAWN and ("ICON", number) not in out:
-            out[("ICON", number)] = icons.encode(drawn(name, stable))
+            try:
+                out[("ICON", number)] = icons.encode(drawn(name, stable))
+            except ValueError:
+                pass  # (no stable colours: the game draws none)
         if ("ICON", number) in out or name not in FALLBACKS:
             continue
         icon, tint = FALLBACKS[name]

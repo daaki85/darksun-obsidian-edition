@@ -16,6 +16,13 @@ def read(path: str) -> str:
         return f.read()
 
 
+class BodyTests(unittest.TestCase):
+    def test_a_plain_quote_is_text(self):
+        """A "> " line that isn't a developer's note is a paragraph, not a line never taken (a hang)."""
+        html, _, _ = patchnotes.body("# T: x\n\n## S\n\n> quote without colon\n")
+        self.assertIn("quote without colon", html)
+
+
 @unittest.skipUnless(os.path.exists(patchnotes.NOTES), "the patch notes (the repository's root)")
 class PatchNotesTests(unittest.TestCase):
     def test_up_to_date(self):

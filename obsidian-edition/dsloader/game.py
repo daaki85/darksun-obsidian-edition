@@ -183,7 +183,7 @@ def spec_kinds(sheet: bytes) -> bytes:
 
 def sheet_age(sheet: bytes) -> int:
     """+17h of a packed sheet: years past the race's base starting age (0: none given yet)."""
-    return sheet[SHEET_AGE] if spec_packed(sheet) else 0
+    return sheet[SHEET_AGE] if len(sheet) > SHEET_AGE and spec_packed(sheet) else 0
 
 
 def packed_specs(kinds: Sequence[int], age: int = 0) -> bytes:
@@ -1450,7 +1450,7 @@ class GameData:
             con = abilities[2]
             if sheet[SHEET_RACE] in (DWARF, HALFLING):
                 out.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
-            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0]
+            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
             if self.rules & RULE_CON and sheet[SHEET_RACE] in (DWARF, HALFLING):
                 adjust = 0  # (only the racial bonus: DSCLOG's CON_SAVE)
             if adjust:

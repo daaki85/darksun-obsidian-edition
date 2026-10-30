@@ -101,6 +101,18 @@ class PartyTests(unittest.TestCase):
         self.assertEqual(self.scores(), before)
         self.assertEqual(aging.age_of(self.g.sheet(0)), 38)
 
+    def test_scores_never_cut_the_wrong_way(self):
+        """A score past 25 (magic) keeps it when middle age adds 1; a thri-kreen made young again
+        is no longer venerable (it has no middle age)."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 39))
+        self.m[CREATURES + game.CREATURE_ABILITIES + 3] = 26
+        aging.age_by(self.g, 0, 1, "Haste")
+        self.assertEqual(self.m[CREATURES + game.CREATURE_ABILITIES + 3], 26)
+        self.m[SHEETS + game.SHEET_RACE] = THRI_KREEN
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(THRI_KREEN, 25))
+        lines = aging.age_by(self.g, 0, -3, "Restore Youth")
+        self.assertIn("no longer venerable: STR +1, DEX +1", lines[0])
+
     def test_death_at_the_most(self):
         """Reaching the most its race lives, the member dies: no hit points, dead."""
         most = aging.most_age("Dag", HUMAN)
