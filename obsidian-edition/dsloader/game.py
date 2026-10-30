@@ -1804,6 +1804,20 @@ class GameData:
         same = source is not None and self.creature(source)[CREATURE_SIDE] == self.creature(creature)[CREATURE_SIDE]
         return 1 if same else -1
 
+    def enlarge_level(self, creature: int) -> int:
+        """The level Enlarge counts at on a creature, its melee damage +10% a level (DSUN 7C211h):
+        each Enlarge on it at its caster's level (as Dispel Magic weighs it), added up, as the game
+        does, though it lets only one on at a time; 0 without one."""
+        combatants = {c for c, i in self.combatants().items() if i == creature}
+        if creature < PARTY_SIZE:
+            combatants.add(creature)
+        level = 0
+        for effect, spell in self.effect_spells():
+            if effect.owner in combatants and effect.id == ENLARGE_EFFECT:
+                caster = self.combatant_creature(effect.caster)
+                level += (self.effect_caster_level(caster, spell) if caster is not None else None) or 0
+        return level
+
     def saves_now(self, creature: int) -> List[SaveNow]:
         """The five saves as the d20 roll needed now: the sheet's number less the modifiers the
         game's saving throw adds whatever the spell (rings, Blessed, Prayer, Barkskin, Spirit

@@ -34,7 +34,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
-- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left.
+- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left, and for Enlarge how much more melee damage it gives (ENLARGED (+90% DAMAGE)).
 - **[New]** Reading a scroll on the inventory screen tells you what happened (YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI SPELL...) on the line under the paper doll. The game showed nothing there.
 
 ## Combat

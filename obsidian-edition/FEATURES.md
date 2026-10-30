@@ -2030,7 +2030,8 @@ section (**A click on a spell's icon on the Effects screen leaves it on**,
 from the next start).
 
 With the pointer on the icon of a spell that lasts a number of uses, the
-Effects screen names the uses left: IMPROVED AC (10 CHARGES). A magic item's
+Effects screen names the uses left: IMPROVED AC (10 CHARGES). Enlarge's icon
+names the melee damage it adds, 10% a level of its caster: ENLARGED (+90% DAMAGE). A magic item's
 power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no
 charges.
 

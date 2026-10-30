@@ -6,6 +6,23 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**New**
+- **The Effects screen names Enlarge's damage:** with the pointer on its icon, ENLARGED (+90%
+  DAMAGE), 10% a level of its caster (DSUN 7C211h). The Loader puts the level in a member's
+  STATS (`GameData.enlarge_level`, a 25th byte, `STATS_ENLARGE`), and DSCLOG's `EF_CHARGES`
+  names it from there as it names charges. The inventory's and View Character's DAM lines have
+  no room for it: measured in DOSBox, a magic weapon's name fills its line (Two-handed Sword +3
+  is cut off at the panel's edge), and the damage line has a few pixels past its THAC0. Found in
+  DOSBox: the game lets only one Enlarge on a creature; a second cast uses up the spell and adds
+  nothing. Checked in DOSBox: Cermak's Enlarge (9th level) on Gerakis, `ENLARGED (+90% DAMAGE)`.
+  Test: `test_enlarge_level`.
+
+**Tests**
+- `test_to_hit_effects`: THAC0 with each effect the game's attack counts (Blessed, Cursed, both,
+  Slowed, Graft Weapon, Fogbolt, Prayer from each side) and none from another creature's.
+
 ## Pull request #79 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/79))
 
 Obsidian Edition 2.12.4 ([release notes](release-notes/v2.12.4.md)): Dark Sun Recompiled, from pull

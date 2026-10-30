@@ -2300,6 +2300,13 @@ after the `ns_list_` patches):
   and icon. 580:5Ch keeps the name's address, not the entry's, so Reflected
   Image, whose entry that is, writes it again before its own use
   (`ns_reflect_entry`).
+  Enlarge (effect 16) on a party member is named with its damage instead,
+  ENLARGED (+90% DAMAGE): the level is the Loader's (`STATS_ENLARGE`, the 25th
+  byte of the member's STATS, from `GameData.enlarge_level`, the caster's level
+  as Dispel Magic weighs it), printed with a 0 after it. Working it out in
+  DSCLOG would mean calling 598:52h, the game's sum of a creature's Enlarge
+  levels, from the Effects screen's overlay. The game lets only one Enlarge on
+  a creature (seen in DOSBox: a second cast uses up the spell, nothing added).
 - **Share Strength's end** (5CEECh-5CF34h): the loop over the effects records
   removed each record of the power cast by DI with 598:48h (owner, handle), but
   passed DI as the owner, so a receiver's record stayed (and a record of the

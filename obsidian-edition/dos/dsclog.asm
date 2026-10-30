@@ -2336,8 +2336,10 @@ probe_unlook:
 ; with the main weapon (signed), +2 the five saves as the d20 needed now, +8 three words: the
 ; item numbers of the weapons ready, +14 three bytes: the THAC0 with each (signed), +17 1 for a
 ; thief (2 for a ranger: of the six, only move silently and hide in shadows count), +18 the six
-; thief skills the panel shows, as they stand (equipment and effects too)
-STATS_SIZE  equ 24
+; thief skills the panel shows, as they stand (equipment and effects too), +24 the level Enlarge
+; counts at on them (its melee damage +10% a level; 0 without it: EF_CHARGES)
+STATS_SIZE  equ 25
+STATS_ENLARGE equ 24
 STATS_RANGER equ 2
 STATS_FRESH equ 91              ; timer ticks (5 seconds)
 STATS_WAIT  equ 9               ; ... (half a second): the longest a screen waits for fresh STATS
@@ -14624,6 +14626,7 @@ GRACE_EFFECT equ 54
 CLAW_EFFECT  equ 6
 FOG_EFFECT   equ 27
 MIRROR_EFFECT equ 25            ; (the game's Mirror Images: Reflected Image's too)
+ENLARGE_EFFECT equ 16           ; (the game's Enlarged)
 AFRAID_EFFECT equ 17            ; (the game's Afraid: Spook's)
 FRIENDS_EFFECT equ 74           ; (unused by the game, as 6, 27 and 54)
 FRIENDS_MOST equ 25
@@ -17300,7 +17303,9 @@ ns_reflect_entry:
 ; effect's, nor an item's power, cast for PERMANENT_TIME (-9999) with no timer and +8 a stray 15, 9999's
 ; low byte): REFLECT_ENTRY then names it, its name with them, "IMPROVED AC (3 CHARGES)", in EF_TEXT
 ; (580:5Ch keeps that name's address, not the entry, so Reflected Image's use of the entry after it
-; changes nothing). Mirror Images from Reflected Image take its name and icon. Only with the room
+; changes nothing). Mirror Images from Reflected Image take its name and icon. A party member's
+; Enlarge is named with its melee damage instead, "ENLARGED (+90% DAMAGE)", from the level the
+; Loader puts in their STATS (the game allows one Enlarge on a creature). Only with the room
 ; past the spell rows (SEG_MOVE). DS the game's; all registers kept.
 EF_NAME_MAX equ 22
 ef_charges:
@@ -17311,6 +17316,8 @@ ef_charges:
         les si, [ss:di + 34]            ; (the way back)
         cmp byte [es:si + 3], 0x8B
         jne .no
+        cmp cl, ENLARGE_EFFECT
+        je .enlarge
         mov bp, ax                      ; (the thing)
         call ns_charges                 ; (AL the charges, AH the handle, DX the spell)
         or al, al
@@ -17389,7 +17396,7 @@ ef_charges:
         mov byte [cs:di], 'S'
         inc di
 .shut:  mov word [cs:di], ')'
-        pop ax                          ; (the icon)
+.set:   pop ax                          ; (the icon)
         mov word [es:REFLECT_ENTRY], ef_text
         mov [es:REFLECT_ENTRY + 2], cs
         mov [es:REFLECT_ENTRY + 4], ax
@@ -17397,12 +17404,50 @@ ef_charges:
         popa
         stc
         ret
+.enlarge:
+        mov bx, ax
+        call stats_for                  ; (CS:BX the member's STATS, kept current by the Loader)
+        jc .no
+        mov dl, [cs:bx + STATS_ENLARGE]
+        or dl, dl
+        jz .no
+        mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        mov si, (ENLARGE_EFFECT - 1) * 6  ; (its entry)
+        push word [es:si + 4]           ; (its icon)
+        push ds
+        lds si, [es:si]                 ; (its name)
+        mov di, ef_text
+        mov cx, EF_NAME_MAX
+.ename: lodsb
+        or al, al
+        jz .enamed
+        mov [cs:di], al
+        inc di
+        loop .ename
+.enamed:
+        pop ds
+        mov word [cs:di], ' ('
+        mov byte [cs:di + 2], '+'
+        add di, 3
+        mov al, dl
+        call c_itoa                     ; (the level, then a 0: 10% a level)
+        mov si, ef_enlarge_word
+.eword: mov al, [cs:si]
+        mov [cs:di], al
+        inc si
+        inc di
+        or al, al
+        jnz .eword
+        jmp .set
 .no:    pop es
         popa
         clc
         ret
 ef_charge_word db ' CHARGE', 0
-ef_text times EF_NAME_MAX + 16 db 0
+ef_enlarge_word db '0% DAMAGE)', 0
+ef_text times EF_NAME_MAX + 18 db 0  ; (the name, then " (+2550% DAMAGE)" at most)
 
 ; NS_CHARGES: AL the charges left (+8) on effect CL of thing AX (the game's table of active
 ; effects), 0 if none, AH its handle (+7), and DX the spell that made it (+4). DS the game's; others kept.
