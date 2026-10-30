@@ -1512,7 +1512,20 @@ changed go back to the game's.)
 
 How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the
-saved-characters roster keep them. The helper adds the bonuses and attacks
+saved-characters roster keep them. Up to 2.12 they were a byte each (the kind +
+1, 0 none); now they are packed, 5 bits each in +14h to +16h (room for 31
+kinds), +16h's top bit (`SPEC_PACKED`) marking it, and +17h is the
+character's age (`SHEET_AGE`, years past its race's base starting age: see
+Ages below). A sheet keeps the old layout until something writes to it, and
+everything reads both: DSCLOG through `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`
+(and writes through `SPEC_SET`, `SPEC_CLEAR`, which pack an old sheet first,
+`SPEC_PACK`: its +17h, an old 4th spec, becomes 0, no age yet), the Loader
+through `game.spec_kinds`, `packed_specs` and `with_specs`. The weapon
+window's trial of a kind pointed at (`PK_WORD`) puts the four bytes back as
+they were. Checked in DOSBox: Gerakis with four kinds a byte each and then
+packed with an age of 30 lists the same four on the Effects screen, his long
+sword's spec counts in the fight, and the packed bytes come back unchanged
+through a save (SAVE01.SAV's sheets) and its load. The helper adds the bonuses and attacks
 where the game makes a weapon attack (`INT D1h`, `INT D0h`), on the DAM lines
 (`INT CFh`, `INT CEh`), calls the game's psionic pop-up in weapon mode after
 the creation screen's DONE (`CR_WEAPONS`, below) and at a level gained

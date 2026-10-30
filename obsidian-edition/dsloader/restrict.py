@@ -125,7 +125,7 @@ def specialized_back(sheet: bytes, kind: int) -> bool:
     if kind == specialize.KINDS.index("bow") and any(
             c in RANGERS and (not human or i == 0 or levels[i] < levels[0]) for i, c in enumerate(classes)):
         return True
-    if not human or kind + 1 not in sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]:
+    if not human or kind + 1 not in game.spec_kinds(sheet):
         return False
     return any(classes[i] in WARRIORS and levels[i] < levels[0] for i in (1, 2))
 
@@ -154,7 +154,7 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
     if any(kits.light_only(kid, typ) for kid, _, _ in kitpages.kits_of(sheet)):
         return True  # (a thief's or archer's kit, asleep too: light armour only)
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
-    chosen = not spec and kind is not None and kind + 1 in sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT] \
+    chosen = not spec and kind is not None and kind + 1 in game.spec_kinds(sheet) \
         and specs_awake(sheet)
     half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT)
     for kid in kitpages.kit_ids(sheet):
@@ -194,7 +194,8 @@ def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:
     if not game.RULES_IN_FORCE & game.RULE_KITS:
         return False
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
-    chosen = sheet[game.SPEC_SLOTS] - 1 if sheet[game.SPEC_SLOTS] else None
+    first = game.spec_kinds(sheet)[0]
+    chosen = first - 1 if first else None
     return any(kits.allows(kid, typ, kind, chosen, bool(game.RULES_IN_FORCE & game.RULE_SPECIALIZE))
                for kid in kitpages.kit_ids(sheet))
 

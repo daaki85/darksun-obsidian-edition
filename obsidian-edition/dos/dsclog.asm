@@ -2928,7 +2928,8 @@ prot_scan:
         ret
 
 ; Weapon specialization (RULE_SPECIALIZE; dsloader/specialize.py). A character's chosen weapon
-; kinds are in its sheet's +14h..+17h (SPEC_SLOTS: the kind + 1 each, 0 none); a character with
+; kinds are in its sheet's +14h..+17h (SPEC_SLOTS: the kind + 1 each, 0 none; read and written
+; only through SPEC_GET and the rest below, for their two layouts); a character with
 ; none there (monsters, and those who have not chosen) fights as the game has it. Two probes in
 ; the routine that makes a weapon attack (its [BP+0Ah] the THAC0 the d20 is held against, [BP+10h]
 ; the attacker's sheet, [BP+14h] the weapon's item type, [BP+16h] above 1 for a missile; its
@@ -2945,6 +2946,110 @@ prot_scan:
 ; the damage dice one size larger (2 more sides: d8 to d10, 2d4 to 2d6).
 SPEC_SLOTS equ 0x14
 SPEC_COUNT equ 4
+SPEC_PACKED equ 0x80            ; (+16h's top bit: the specs packed, 5 bits each, +17h the age)
+SHEET_AGE  equ 0x17
+
+; The sheet's +14h..+17h (the game never reads or writes them), in one of two layouts: up to 2.12
+; a byte for each of the four specs; now (SPEC_PACKED in +16h) the four packed 5 bits each in
+; +14h..+16h, and +17h the character's age (dsloader/aging.py). A sheet keeps the old layout
+; until something is written to it (SPEC_SET, SPEC_CLEAR: SPEC_PACK first), so both are read.
+; Each takes the sheet at ES:BX and keeps the rest.
+; SPEC_GET: AX the spec in slot SI (kind + 1, 0 none).
+spec_get:
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jnz .packed
+        movzx ax, byte [es:bx + si + SPEC_SLOTS]
+        ret
+.packed:
+        push ecx
+        push edx
+        mov edx, [es:bx + SPEC_SLOTS]
+        imul cx, si, 5
+        shr edx, cl
+        movzx ax, dl
+        and al, 0x1F
+        pop edx
+        pop ecx
+        ret
+
+; SPEC_FIND: ZF set when kind + 1 AL is in one of the four slots.
+spec_find:
+        push ax
+        push cx
+        push si
+        mov cl, al
+        xor si, si
+.each:  call spec_get
+        cmp al, cl
+        je .out
+        inc si
+        cmp si, SPEC_COUNT
+        jb .each
+        or si, si                       ; (ZF clear)
+.out:   pop si
+        pop cx
+        pop ax
+        ret
+
+; SPEC_ANY: ZF clear when a spec is chosen.
+spec_any:
+        push eax
+        mov eax, [es:bx + SPEC_SLOTS]
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jz .test                        ; (the old layout: any of the four bytes)
+        and eax, 0x000FFFFF
+.test:  test eax, eax
+        pop eax
+        ret
+
+; SPEC_PACK: the sheet in the packed layout (the old one's four bytes packed, +17h 0: no age yet).
+spec_pack:
+        test byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        jnz .ret
+        push eax
+        push edx
+        push si
+        xor edx, edx
+        mov si, SPEC_COUNT - 1
+.each:  shl edx, 5
+        movzx eax, byte [es:bx + si + SPEC_SLOTS]
+        and al, 0x1F
+        or edx, eax
+        dec si
+        jns .each
+        or edx, SPEC_PACKED << 16
+        mov [es:bx + SPEC_SLOTS], edx
+        pop si
+        pop edx
+        pop eax
+.ret:   ret
+
+; SPEC_SET: AL (kind + 1, 0 none) into slot SI.
+spec_set:
+        call spec_pack
+        push eax
+        push ecx
+        push edx
+        imul cx, si, 5
+        mov edx, 0x1F
+        shl edx, cl
+        not edx
+        and [es:bx + SPEC_SLOTS], edx
+        movzx edx, al
+        and dl, 0x1F
+        shl edx, cl
+        or [es:bx + SPEC_SLOTS], edx
+        pop edx
+        pop ecx
+        pop eax
+        ret
+
+; SPEC_CLEAR: no specs (the age kept).
+spec_clear:
+        call spec_pack
+        mov word [es:bx + SPEC_SLOTS], 0
+        mov byte [es:bx + SPEC_SLOTS + 2], SPEC_PACKED
+        ret
 FIGHTER_CLASS equ 9
 GLADIATOR_CLASS equ 10
 MASTERY equ 5                   ; (the fighter levels)
@@ -3927,13 +4032,7 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         pop si
         or al, al
         jz .forbids
-        cmp [es:bx + SPEC_SLOTS], al
-        je .chosen
-        cmp [es:bx + SPEC_SLOTS + 1], al
-        je .chosen
-        cmp [es:bx + SPEC_SLOTS + 2], al
-        je .chosen
-        cmp [es:bx + SPEC_SLOTS + 3], al
+        call spec_find
         jne .forbids
 .chosen:
         mov byte [cs:kf_chosen], 1
@@ -4129,7 +4228,11 @@ kit_allows:
 .mage:  call kit_is_b
         db KIT_BATTLE_MAGE
         jne .no
-        mov cl, [es:bx + SPEC_SLOTS]
+        push si
+        xor si, si
+        call spec_get
+        mov cl, al
+        pop si
         les bx, [ITEM_TYPES]
         imul ax, dx, 0x14
         add bx, ax
@@ -4350,13 +4453,7 @@ specialized_back:
 .spec:  cmp byte [es:bx + 0x18], 1
         jne .no
         inc al
-        cmp [es:bx + SPEC_SLOTS], al
-        je .kind
-        cmp [es:bx + SPEC_SLOTS + 1], al
-        je .kind
-        cmp [es:bx + SPEC_SLOTS + 2], al
-        je .kind
-        cmp [es:bx + SPEC_SLOTS + 3], al
+        call spec_find
         jne .no
 .kind:  mov si, 1
 .class: mov al, [es:bx + si + 0x21]
@@ -5275,7 +5372,7 @@ lv_check:
         mov di, SPEC_COUNT
         push si
         mov si, SPEC_COUNT - 1
-.have:  movzx ax, byte [es:bx + si + SPEC_SLOTS]
+.have:  call spec_get
         or ax, ax
         jnz .has
         mov di, si
@@ -5294,7 +5391,10 @@ lv_check:
         call kinds_allowed
         push si
         xor si, si              ; less those it has
-.mine:  movzx cx, byte [es:bx + si + SPEC_SLOTS]
+.mine:  push ax
+        call spec_get
+        mov cx, ax
+        pop ax
         jcxz .mine_next
         dec cx
         btr ax, cx
@@ -5644,7 +5744,8 @@ pk_take:
         imul ax, [cs:lv_member], 0x47
         add bx, ax
         xor si, si
-.slot:  cmp byte [es:bx + si + SPEC_SLOTS], 0
+.slot:  call spec_get
+        or ax, ax
         je .put
         inc si
         cmp si, SPEC_COUNT
@@ -5652,7 +5753,7 @@ pk_take:
         jmp .shown
 .put:   mov al, dl
         inc al
-        mov [es:bx + si + SPEC_SLOTS], al
+        call spec_set
 .shown: push word 1
         push word 0
         add dx, PICK_FIRST
@@ -5831,7 +5932,11 @@ ef_lines_of:
         mov si, BOW_KIND                ; (then the bow, a ranger's whether chosen or not, unless
         push di                         ;   it is among the chosen: SPEC_OF_SHEET's skill with it)
         xor di, di
-.bow:   cmp byte [es:bx + di + SPEC_SLOTS], BOW_KIND
+.bow:   push si
+        mov si, di
+        call spec_get
+        pop si
+        cmp al, BOW_KIND
         je .bow_had
         inc di
         cmp di, SPEC_COUNT
@@ -5842,7 +5947,9 @@ ef_lines_of:
         pop di
         jmp .ret
 .chosen:
-        movzx si, byte [es:bx + di + SPEC_SLOTS]
+        mov si, di
+        call spec_get
+        mov si, ax
 .kind_of:
         or si, si
         jz .next
@@ -8128,15 +8235,19 @@ pk_word:
         add bx, ax
         pop ax
         xor si, si
-.slot:  cmp byte [es:bx + si + SPEC_SLOTS], 0
+.slot:  push ax
+        call spec_get
+        or ax, ax
+        pop ax
         je .put
         inc si
         cmp si, SPEC_COUNT
         jb .slot
         jmp .ret
-.put:   push si
+.put:   push dword [es:bx + SPEC_SLOTS]  ; (put back after: a kind pointed at changes nothing)
+        push si
         inc al
-        mov [es:bx + si + SPEC_SLOTS], al
+        call spec_set
         dec al
         mov si, ax
         shl si, 1
@@ -8146,7 +8257,7 @@ pk_word:
         mov al, dl
         pop dx
         pop si
-        mov byte [es:bx + si + SPEC_SLOTS], 0
+        pop dword [es:bx + SPEC_SLOTS]
         cmp al, SPEC_EXPERT
         jne .ret
         mov dx, lv_expert
@@ -10629,10 +10740,7 @@ spec_of_sheet:
         push cx
         push si
         mov dl, SPEC_NONE
-        mov al, [es:bx + SPEC_SLOTS]
-        or al, [es:bx + SPEC_SLOTS + 1]
-        or al, [es:bx + SPEC_SLOTS + 2]
-        or al, [es:bx + SPEC_SLOTS + 3]
+        call spec_any
         jz .ret
         mov al, KIT_BATTLE_MAGE ; (a Battle Mage who has changed class: its weapon spec the kit's
         call kit_has            ; alone, nothing while it sleeps, expertise when awake)
@@ -10644,7 +10752,13 @@ spec_of_sheet:
         jne .out
         mov dl, SPEC_PLAIN
         call spec_kind
-        cmp cl, [es:bx + SPEC_SLOTS]
+        push ax
+        push si
+        xor si, si
+        call spec_get
+        cmp cl, al
+        pop si
+        pop ax
         jne .out
         mov dl, SPEC_EXPERT
         jmp .out
@@ -10653,7 +10767,10 @@ spec_of_sheet:
         or cl, cl
         jz .ret
         xor si, si
-.slot:  cmp [es:bx + si + SPEC_SLOTS], cl
+.slot:  push ax
+        call spec_get
+        cmp al, cl
+        pop ax
         je .found
         inc si
         cmp si, SPEC_COUNT
@@ -16966,7 +17083,7 @@ cr_weapons:
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
-        mov dword [es:bx + SPEC_SLOTS], 0
+        call spec_clear
         mov ax, ds
         add ax, PICK_STUB
         mov word [cs:lv_psi], DK_PSI

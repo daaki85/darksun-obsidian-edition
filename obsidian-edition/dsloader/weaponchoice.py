@@ -80,12 +80,11 @@ def pick_word(sheet: bytes, kind: int) -> str:
     """The weapon window's first line for a kind pointed at, as DSCLOG's PK_WORD: "EXPERT IN" when
     the character would have expertise with it once picked (into its first empty slot: a ranger,
     a Battle Mage, a fighter's second kind), else "SPECIALIZE IN"."""
-    s = bytearray(sheet)
-    slots = game.SPEC_SLOTS
-    for i in range(slots, slots + game.SPEC_COUNT):
-        if not s[i]:
-            s[i] = kind + 1
-            if specialize.skill(bytes(s), PLAIN[kind][0]) == specialize.EXPERT:
+    kinds = list(game.spec_kinds(sheet))
+    for i in range(game.SPEC_COUNT):
+        if not kinds[i]:
+            kinds[i] = kind + 1
+            if specialize.skill(game.with_specs(sheet, kinds), PLAIN[kind][0]) == specialize.EXPERT:
                 return "EXPERT IN"
             break
     return "SPECIALIZE IN"
@@ -101,7 +100,7 @@ def kinds_for(sheet: bytes, allowed: Optional[List[int]] = None) -> List[int]:
     allowed = list(range(len(PLAIN))) if allowed is None else allowed
     ok = [k + 1 for k in allowed]
     classes = set(sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3])
-    chosen = [k if k in ok else 0 for k in sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]]
+    chosen = [k if k in ok else 0 for k in game.spec_kinds(sheet)]
     if not ok:
         return [0, 0, 0, 0]
     own = [kits.default_kind(kid) for kid in kitpages.kit_ids(sheet)] if game.RULES_IN_FORCE & game.RULE_KITS else []
@@ -237,8 +236,9 @@ def finish_new(gd) -> List[str]:
         types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
         kinds = kinds_for(sheet, restrict.allowed_kinds(
             sheet, lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)))
-        if bytes(kinds) != sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT]:
-            gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS, bytes(kinds))
+        if bytes(kinds) != game.spec_kinds(sheet):
+            gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS,
+                           game.packed_specs(kinds, game.sheet_age(sheet)))
         read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
         start = start_weapon(sheet, kinds, read) if kinds[0] else None
         if start is None or start[1][0] == START_TYPE:
@@ -352,7 +352,7 @@ def kit_gear(gd) -> List[str]:
         if not kid:
             continue
         who, kit = gd.creature_name(member), kitpages.name_of(kid)
-        chosen = [k - 1 for k in sheet[game.SPEC_SLOTS:game.SPEC_SLOTS + game.SPEC_COUNT] if k]
+        chosen = [k - 1 for k in game.spec_kinds(sheet) if k]
         owned = list(gd._worn(member))
         name = lambda item: gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
         for item_index, item, _ in owned:

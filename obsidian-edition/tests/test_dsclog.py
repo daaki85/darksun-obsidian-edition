@@ -1038,7 +1038,7 @@ class SpecializeTests(unittest.TestCase):
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
 
     def attack(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False, race=0,
-               kit=0, shield=False, me=5, target_race=None):
+               kit=0, shield=False, me=5, target_race=None, packed=False):
         """(attacks in halves, THAC0, damage bonus, sides) after both probes, with THAC0 15, a
         damage bonus of 1 before the STR bonus of 2 is added, 1d8; the attacker (thing 7,
         creature 5) with a shield in its left hand or none (SHIELD)."""
@@ -1050,6 +1050,8 @@ class SpecializeTests(unittest.TestCase):
         sheet[0x43] = kit
         for i, k in enumerate(chosen):
             sheet[0x14 + i] = k + 1
+        if packed:  # (the specs packed, an age with them: game.packed_specs)
+            sheet[0x14:0x18] = game.packed_specs([k + 1 for k in chosen], 30)
         sheet[0x21:0x24], sheet[0x24:0x27] = bytes(classes), bytes(levels)
         sheet[0x18] = race
         mu.mem_write(self.SHEETS * 16 + 3 * 0x47, bytes(sheet))  # (sheet 3)
@@ -1184,6 +1186,19 @@ class SpecializeTests(unittest.TestCase):
 
     def test_specialization(self):
         self.assertEqual(self.attack(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0)), (3, 14, 5, 8))
+
+    def test_specs_packed(self):
+        """The same attacks with the specs packed (and an age beside them) as with a byte each."""
+        kits = 4096 | game.RULE_KITS
+        for packed in (False, True):
+            with self.subTest(packed=packed):
+                self.assertEqual(self.attack(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0), packed=packed),
+                                 (3, 14, 5, 8))
+                self.assertEqual(self.attack(3, self.AXE, chosen=(0,), packed=packed), (2, 15, 3, 8))
+                self.assertEqual(self.attack(4, self.AXE, chosen=(0, 5), levels=(9, 0, 0), rules=kits, kit=1,
+                                             packed=packed), (6, 12, 6, 10))
+                self.assertEqual(self.attack(3, self.AXE, chosen=(0, 5), levels=(5, 0, 0), rules=kits, kit=2,
+                                             packed=packed), (3, 14, 5, 8))
 
     def test_conjured_weapons(self):
         """The weapons spells make count as their AD&D kind for specialization (SPEC_KIND): the
@@ -4668,6 +4683,42 @@ class KitTests(unittest.TestCase):
                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX) & 0xFF, kind)
         finally:
             game.RULES_IN_FORCE = old
+
+    SPEC_GET = rb"\x26\xf6\x47\x16\x80\x75\x06\x26\x0f\xb6\x40\x14\xc3"
+    SPEC_SET = rb"\xe8..\x66\x50\x66\x51\x66\x52"
+    SPEC_CLEAR = rb"\xe8..\x26\xc7\x47\x14\x00\x00\x26\xc6\x47\x16\x80\xc3"
+
+    def test_spec_layouts(self):
+        """SPEC_GET reads both layouts alike (a gladiator's four kinds, a byte each up to 2.12, or
+        packed); SPEC_SET on the old layout packs it first, the age 0 (none yet); SPEC_CLEAR keeps
+        the age. As game.spec_kinds and game.packed_specs."""
+        import re
+        for pattern in (self.SPEC_GET, self.SPEC_SET, self.SPEC_CLEAR):
+            self.assertEqual(len(re.findall(pattern, self.image, re.S)), 1)
+        kinds = (1, 16, 9, 2)
+        at = self.SHEET * 16
+
+        def slots():
+            out = []
+            for i in range(4):
+                self.call(self.SPEC_GET, es=self.SHEET, ebx=0, esi=i)
+                out.append(self.mu.reg_read(r.UC_X86_REG_AX))
+            return tuple(out)
+
+        for sheet in (bytes(0x14) + bytes(kinds) + bytes(0x2F), bytes(0x14) + game.packed_specs(kinds, 30) + bytes(0x2F)):
+            with self.subTest(packed=bool(sheet[0x16] & 0x80)):
+                self.mu.mem_write(at, sheet)
+                self.assertEqual(slots(), kinds)
+                self.assertEqual(tuple(game.spec_kinds(sheet)), kinds)
+        self.mu.mem_write(at, bytes(0x14) + bytes(kinds) + bytes(0x2F))
+        self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=3, eax=7)
+        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 16, 9, 7), 0))
+        self.assertEqual(slots(), (1, 16, 9, 7))
+        self.mu.mem_write(at, bytes(0x14) + game.packed_specs(kinds, 30) + bytes(0x2F))
+        self.call(self.SPEC_SET, es=self.SHEET, ebx=0, esi=1, eax=0)
+        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((1, 0, 9, 2), 30))
+        self.call(self.SPEC_CLEAR, es=self.SHEET, ebx=0)
+        self.assertEqual(bytes(self.mu.mem_read(at + 0x14, 4)), game.packed_specs((), 30))
 
     def test_effects_specs(self):
         """EF_LINES_OF: the Effects screen's weapon lines, the chosen kinds' and then a ranger's bow,

@@ -6,6 +6,19 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Changed**
+- **The weapon specs are packed, making room for a character's age.** The sheet's +14h to +17h
+  (which the game never uses) held the four weapon specs a byte each; now they are 5 bits each
+  in +14h to +16h, +16h's top bit marking the layout (`SPEC_PACKED`), and +17h is free for the
+  character's age (`SHEET_AGE`). A sheet keeps the old layout until something writes its specs,
+  and every reader takes both (DSCLOG's `SPEC_GET`, `SPEC_FIND`, `SPEC_ANY`, `SPEC_SET`,
+  `SPEC_CLEAR`, `SPEC_PACK`; the Loader's `game.spec_kinds`, `packed_specs`, `with_specs`), so
+  older saves and roster characters need no conversion step. Checked in DOSBox: four specs a byte
+  each and packed read alike on the Effects screen and in a fight, and come through a save and
+  load. Tests: `test_specslots`, `test_spec_layouts`, `test_specs_packed`.
+
 ## Pull request #80 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/80))
 
 Obsidian Edition 2.12.5 ([release notes](release-notes/v2.12.5.md)).

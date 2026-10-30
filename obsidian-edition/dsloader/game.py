@@ -12,7 +12,7 @@ numbers; the real ones are given here.
 import re
 import string
 import struct
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from .guestmem import GuestMemory
 
@@ -123,7 +123,7 @@ RULE_PROTECTION = 1024
 # its material (ACID_SAVES), less its plus and 1 more for a magical power
 RULE_ITEM_SAVES = 2048
 # Weapon specialization (specialize.py; DSCLOG's PROBE_ATTACKS): the kinds a warrior chose, kind + 1
-# each in the sheet's SPEC_SLOTS bytes (four the game never uses), set the attacks a round
+# each in the sheet's SPEC_SLOTS bytes (spec_kinds), set the attacks a round
 RULE_SPECIALIZE = 4096
 RULE_RESTRICT = 8192  # class restrictions on armour, shields and weapons (restrict.py)
 RULE_MULTI_HP = 16384  # multiclass hit points as in AD&D: each level's die and CON's bonus shared
@@ -148,6 +148,43 @@ RULE_BUYBACK = 4194304
 # RULE_HI_BACKSTAB, STAB_TIMES); else the game's, the whole damage multiplied
 RULE_BACKSTAB = 8388608
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
+# The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
+# each (0 none). Up to 2.12, a byte each; now packed (SPEC_PACKED, +16h's top bit), 5 bits each in
+# +14h to +16h, and +17h the character's age (SHEET_AGE: years past its race's base starting age, 0
+# not yet given; aging.py). A sheet keeps the old layout until something is written to it (both
+# read alike: spec_kinds; DSCLOG's SPEC_GET).
+SPEC_PACKED, SPEC_BITS, SHEET_AGE = 0x80, 5, 0x17
+
+
+def spec_packed(sheet: bytes) -> bool:
+    """The sheet's weapon specs packed (+16h's top bit), +17h its age."""
+    return len(sheet) > SPEC_SLOTS + 2 and bool(sheet[SPEC_SLOTS + 2] & SPEC_PACKED)
+
+
+def spec_kinds(sheet: bytes) -> bytes:
+    """The four weapon specs chosen, kind + 1 each (0 none), from either layout."""
+    raw = bytes(sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT])
+    if not spec_packed(sheet):
+        return raw
+    value = int.from_bytes(raw[:3], "little")
+    return bytes((value >> SPEC_BITS * i) & 0x1F for i in range(SPEC_COUNT))
+
+
+def sheet_age(sheet: bytes) -> int:
+    """+17h of a packed sheet: years past the race's base starting age (0: none given yet)."""
+    return sheet[SHEET_AGE] if spec_packed(sheet) else 0
+
+
+def packed_specs(kinds: Sequence[int], age: int = 0) -> bytes:
+    """+14h to +17h in the packed layout: KINDS (kind + 1 each, up to four) and AGE."""
+    kinds = list(kinds) + [0] * (SPEC_COUNT - len(kinds))
+    value = sum((k & 0x1F) << SPEC_BITS * i for i, k in enumerate(kinds)) | SPEC_PACKED << 16
+    return value.to_bytes(3, "little") + bytes([age & 0xFF])
+
+
+def with_specs(sheet: bytes, kinds: Sequence[int]) -> bytes:
+    """SHEET with its weapon specs KINDS, packed, its age kept."""
+    return bytes(sheet[:SPEC_SLOTS]) + packed_specs(kinds, sheet_age(sheet)) + bytes(sheet[SPEC_SLOTS + SPEC_COUNT:])
 # AD&D's item saving throws against acid (the DMG's table), by the game's materials: wood
 # (thick), bone, stone and obsidian (glass's), metal, leather; and cloth for no material
 ACID_SAVES = {0: ("wood", 8), 1: ("bone", 11), 2: ("stone", 5), 3: ("obsidian", 5), 4: ("metal", 13),
@@ -2206,12 +2243,12 @@ class GameData:
             return []
         names = {**specialize.SKILL_NAMES, specialize.EXPERT: "expertise", specialize.PLAIN: "not yet"}
         out = []
-        for k in sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT]:
+        for k in spec_kinds(sheet):
             if 0 < k <= len(specialize.KINDS):
                 skill = specialize.skill(sheet, weaponchoice.PLAIN[k - 1][0])
                 out.append((specialize.KINDS[k - 1], names.get(skill, "")))
         bow = specialize.KINDS.index("bow")
-        if bow + 1 not in sheet[SPEC_SLOTS:SPEC_SLOTS + SPEC_COUNT]:
+        if bow + 1 not in spec_kinds(sheet):
             skill = specialize.skill(sheet, weaponchoice.PLAIN[bow][0])
             if skill not in (specialize.NONE, specialize.PLAIN):  # (a ranger's expertise)
                 out.append(("bow", names.get(skill, "")))
