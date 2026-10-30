@@ -213,7 +213,7 @@ class FlagsTests(unittest.TestCase):
 
     def test_arena_count_remembered_for_the_header(self):
         """Between fights in the arena, the panel's header gets the count last read: the numbers
-        are in memory only now and then, and before any read it is not known ('?')."""
+        are in memory only now and then, and before any read it is not shown (the time instead)."""
         log = arena()
         m = log.guest.mem
         seen = []
@@ -233,7 +233,7 @@ class FlagsTests(unittest.TestCase):
         log._update_panel(0.0)
         struct.pack_into("<I", m, DS * 16 + game.NUMBERS_PTR, 0)
         log._update_panel(0.0)
-        self.assertEqual(seen, [(None, True), (3, True), (3, True)])
+        self.assertEqual(seen, [(None, False), (3, True), (3, True)])
 
     def test_no_flags_in_memory(self):
         """With the flags' pointer null (the arena outside a script's run): no flag, and nothing
