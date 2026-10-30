@@ -11,7 +11,7 @@ notes](PATCH-NOTES.md).
 **Docs**
 - `KITS.md`'s spell slot table goes on to the highest level each class reaches under the XP cap
   (a preserver's and a cleric's 11th, with the cleric's 6th-level slot; the Shinobi's thief to
-  13th), from the code's own tables (`tables.slots`, `kits.slots`); the Grove Warden's AC steps
+  13th), with a druid column beside the cleric's (to 12th, its second 6th-level slot), from the code's own tables (`tables.slots`, `kits.slots`); the Grove Warden's AC steps
   go on to 4 at 12th.
 
 ## Pull request #83 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/83))
