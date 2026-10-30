@@ -1524,7 +1524,7 @@ scores kept within 3 to 25), and the maximum (`most_age`: the race's base and
 dice, seeded with the character's name and race, so always the same) kills
 (`kill`: no hit points, the game's dead status). The Loader puts the age, its
 category, the next and its age in each member's STATS (+28h on: `STATS_AGE`),
-and DSCLOG's `AGE_TEXT` writes the age, `AGE 23`, in the inventory panel's
+and DSCLOG's `AGE_TEXT` writes the age, `AGE: 23`, in the inventory panel's
 free row between the saves and STR (`PROBE_INV`, `AGE_INV_Y`; the THAC0 and
 save rows 3 pixels higher than before to make room). The category and the
 next are for the Characters tab; the game's screens show only the age.
@@ -1548,6 +1548,24 @@ caster's level (`effect_caster_level`): a system shock roll, then `age_by` back
 by the level, never below the character's true age (`natural_start`, the
 seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
 level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
+
+**On the creation screen** (`CR_AGE`): the age the character will start at, from
+its name and race (`aging.natural_start`, a 16-bit hash of the name's bytes from
+the race, then each die from `h * 25173 + 13849`, its high byte mod the sides,
+as DSCLOG's `AGE_ROLL` works it out alike: `test_creation_age`), drawn above
+RECALL, in the PSP box's row: nothing of the game's is drawn there, and the
+PSP box (the screen's 8th, `DS:0F62h` on) is widened to x 200
+(`cr_age_box`), so its saved background, put back each time PSP is drawn,
+clears it. It is drawn after PSP (65A89h: the die, a choice, the screen
+opening; 63A13h: a click on CON) and, as a name changes after those (the
+game's own, 66045h and 6349Fh, a figure clicked; one typed, 63AE8h, or the
+game's put back when none is, 63B2Dh), again then: the PSP box put back
+(`0A0h:30C3h`, the operand read from the overlay's code as loaded: its
+selectors fixed up there), PSP drawn again as the game draws it (centred on
+its x, 6 pixels a character: its own routine, 538h:43h, is an overlay stub,
+not for calling from an interrupt) and the age (`CR_NAME`). Before 2.13.1 the
+roll was Python's, seeded by the name and race: a character given an age then
+keeps it, but its true age (Restore Youth's floor) is this roll's now.
 
 **Grey hair on the map** (`greyhair.py`): as the Loader dresses a member's
 pictures (`sprites.Pictures.build`), after their gear, the hair is recoloured

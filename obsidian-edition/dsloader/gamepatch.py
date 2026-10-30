@@ -167,6 +167,8 @@ FLIP_SITE = NS_IMAGE + 56  # (the game's flip of its screens: the combat log's p
 WW_SITE = NS_IMAGE + 57  # (a one-target spell's damage starting: Whirlwind's once a round, DSCLOG's WW_GATE)
 ENL_SITE = NS_IMAGE + 58  # (a melee hit's damage made bigger by Enlarge: the weapon's dice only, RULE_ENLARGE)
 REGEN_SITE, CON_SITE = NS_IMAGE + 59, NS_IMAGE + 60  # (CON as in AD&D: regeneration's rates, dwarves' poison saves)
+CR_AGE_SITE = NS_IMAGE + 61  # (the creation panel's PSP drawn: the age above RECALL, DSCLOG's CR_AGE)
+CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
 AREA_DMG = NS_IMAGE + 54  # (a spell's damage to the creatures it reaches: a Wilderness Avenger's Cause Wounds, kits.harm_bonus)
@@ -881,6 +883,16 @@ PATCHES = (
     # x2, y2), its x2 and y2: a line more under CHR, and wide enough for "100/102" and its shadow
     # (the game's x 48, y 178; nothing else is drawn there, the next thing right a bullet at x 80)
     Patch("rl_sum_box", DS_FILE + 0xF66, struct.pack("<hh", 48, 178), struct.pack("<hh", 77, 185)),
+    # the creation panel's age (DSCLOG's CR_AGE, with ages): after PSP's value is drawn, at the
+    # die, a choice or the screen opening, and at a click on CON; and the PSP box (the 8th) wider,
+    # to RECALL's right, so its saved background clears what was drawn there
+    Patch("cr_age", 0x65A89, bytes.fromhex("83c410"), _site(CR_AGE_SITE, 3)),
+    Patch("cr_age_con", 0x63A13, bytes.fromhex("83c410"), _site(CR_AGE_SITE, 3)),
+    Patch("cr_age_name", 0x66045, bytes.fromhex("83c40e"), _site(CR_NAME_SITE, 3)),
+    Patch("cr_age_figure", 0x6349F, bytes.fromhex("83c40e"), _site(CR_NAME2_SITE, 3)),
+    Patch("cr_age_typed", 0x63AE8, bytes.fromhex("83c40e"), _site(CR_NAME3_SITE, 3)),
+    Patch("cr_age_typed_none", 0x63B2D, bytes.fromhex("83c40e"), _site(CR_NAME4_SITE, 3)),
+    Patch("cr_age_box", DS_FILE + 0xF9E, struct.pack("<h", 140), struct.pack("<h", 200)),
     # After DUAL: the new class's kit on the game's three-choice menu (an Elementalist's second sphere
     # too), and a new warrior's weapon kinds
     Patch("dual_kit", 0x86D90, bytes.fromhex("837e080c"), _interrupt(VEC_DUAL_KIT, 4)),

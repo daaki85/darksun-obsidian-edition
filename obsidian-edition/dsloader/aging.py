@@ -98,10 +98,21 @@ def changes(race: int, before: int, after: int) -> Dict[int, int]:
 
 
 def natural_start(name: str, race: int) -> Tuple[int, List[int]]:
-    """The character's starting age, its true age: its race's base and dice, rolled with the
-    character's name and race for the seed (as most_age), so the same each time: Restore Youth
-    takes back the years past it, never below it."""
-    return roll_start(race, random.Random(f"{name}|{race}|start"))
+    """The character's starting age, its true age: its race's base and dice, rolled from the
+    character's name and race, so the same each time: Restore Youth takes back the years past it,
+    never below it. 16-bit, as DSCLOG's AGE_ROLL works it out to show it on the creation screen
+    (CR_AGE): the name's bytes hashed (h = h * 31 + byte, from race * 257), then each die from
+    h = h * 25173 + 13849, its high byte mod the sides, plus 1."""
+    ages = RACES[race]
+    count, sides = ages.start_dice
+    h = race * 257 & 0xFFFF
+    for byte in name.encode("cp437", "replace")[:15]:
+        h = (h * 31 + byte) & 0xFFFF
+    faces = []
+    for _ in range(count):
+        h = (h * 25173 + 13849) & 0xFFFF
+        faces.append((h >> 8) % sides + 1)
+    return ages.start + sum(faces), faces
 
 
 def roll_start(race: int, rng: random.Random) -> Tuple[int, List[int]]:

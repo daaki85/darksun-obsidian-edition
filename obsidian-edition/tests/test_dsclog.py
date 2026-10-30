@@ -4717,6 +4717,19 @@ class KitTests(unittest.TestCase):
         self.assertEqual(run(2, 15), 15)
         self.assertEqual(run(200, 15, rules=0), 15)
 
+    def test_creation_age(self):
+        """AGE_ROLL (CR_AGE's: the age shown on the creation panel) gives each name and race the
+        starting age aging.natural_start gives it, the one the character will have."""
+        from dsloader import aging
+        name_at = 0xA000 * 16 + 0x28
+        self.mu.mem_write(self.DS * 16 + 0x11A0, struct.pack("<HH", 0, 0xA000))
+        for name in ("Killer", "Dag", "Gerakis", "Cilla", "A", "Fifteen letters!"[:15], ""):
+            self.mu.mem_write(name_at, name.encode("cp437")[:15].ljust(16, b"\0"))
+            for race in range(1, 9):
+                with self.subTest(name=name, race=race):
+                    self.call(rb"\x53\x51\x52\x57\x06\x89\xf0\xb1\x03\xf6\xf1", esi=(race - 1) * 3)
+                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), aging.natural_start(name, race)[0])
+
     def call(self, pattern, **regs):
         import re
         at = re.search(pattern, self.image, re.S).start()

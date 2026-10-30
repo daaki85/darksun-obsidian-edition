@@ -491,7 +491,8 @@ The game keeps no ages. With **Ages and magical aging** ticked, each party
 member has one, from the Dark Sun rules' tables: a starting age rolled the
 first time the Loader sees the character (a new one, the game's own party, one
 from an earlier version), which the dice log shows
-(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`). Only magic
+(`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`), rolled from the
+character's name and race, so always the same for them. Only magic
 changes it: game time is too short to count.
 
 | Race | Starting age | Middle age | Old age | Venerable | Most it lives |
@@ -528,9 +529,11 @@ K'ratchek's system shock (Haste's aging): d100 = 89, needs 99 or less (CON 19) -
 A thri-kreen, venerable at 25, feels it most: every Haste is a year of a short
 life. A dwarf hardly notices.
 
-The age shows on the inventory screen's panel, between the saving throws and
-STR (`AGE 23`), and on the Loader's Characters tab with the category and the
-next age to come (`Age: 45, middle-aged; old at 53`).
+The age shows on the creation screen, above RECALL (`AGE: 23`: the age the
+character will start at, from its name and race, so a new name or race gives
+another), on the inventory screen's panel, between the saving throws and STR
+(`AGE: 23`), and on the Loader's Characters tab with the category and the next
+age to come (`Age: 45, middle-aged; old at 53`).
 
 It shows on the map too: a party member's hair turns as they age, iron grey
 streaks when middle-aged, grey when old, white when venerable, shade for shade

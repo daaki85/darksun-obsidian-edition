@@ -18,6 +18,14 @@ notes](PATCH-NOTES.md).
   helms and cloaks don't move. The live redraw keys on the age category. Each race's colours
   worked out frame by frame by an agent of its own. Checked in DOSBox. Tests: `test_greyhair`.
 
+- **The age on the creation screen**, above RECALL (`AGE: 23`), the age the character will start
+  at: the starting age is now rolled from a 16-bit hash of the name and race (`aging.natural_start`)
+  that DSCLOG works out alike (`AGE_ROLL`, `CR_AGE`), drawn after PSP and again when the name
+  changes (`CR_NAME`: the game's names, a figure clicked, one typed), the PSP box widened so
+  its saved background clears it. The inventory's line is `AGE: 23` too. Characters already
+  given an age keep it; their true age (Restore Youth's floor) is the new roll's. Checked in
+  DOSBox: six figures and three typed names, each age the Loader's. Tests: `test_creation_age`.
+
 ## Pull request #81 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/81))
 
 Obsidian Edition 2.13.0 ([release notes](release-notes/v2.13.0.md)).
