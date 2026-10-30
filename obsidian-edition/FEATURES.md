@@ -495,8 +495,9 @@ character's name and race, so always the same for them. Each **365 days of
 game time** (the game's own clock, from the start of the game) everyone is a
 year older, and the dice log says so (`A year has passed: Cermak is 23.`),
 the age categories counting as below. It is flavour: a party that rests
-5000 times is only about 5 to 9 years older. Loading a save shows the ages as they
-were then, and no year is logged twice.
+5000 times is only about 5 to 9 years older. The years counted are kept in the
+save, so loading one shows the ages as they were then, and no year is counted twice
+or missed (one that passes in the arena is counted as the party leaves it).
 
 | Race | Starting age | Middle age | Old age | Venerable | Most it lives |
 |---|---|---|---|---|---|

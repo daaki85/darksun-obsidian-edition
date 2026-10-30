@@ -264,7 +264,7 @@ STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG'
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
-NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock was loaded, not run (a rest is 8 hours)
+NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock may be a load's: aging waits a look
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
@@ -516,7 +516,7 @@ class DiceLog:
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
         self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
-        self._aging_at: Optional[Tuple[bytes, int, int]] = None  # (natural aging: party, clock, years)
+        self._aging_at: Optional[Tuple[bytes, int]] = None  # (natural aging: the last look's party and clock)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
         self._initiative_roll: Optional[int] = None
@@ -1787,17 +1787,19 @@ class DiceLog:
         return out
 
     def _natural_aging(self) -> List[str]:
-        """Each party member a year older as the game's clock passes another year (aging.YEAR),
-        once: a game loaded (another party, the clock gone back, or on by more than NATURAL_JUMP)
-        only starts the count again."""
+        """Each party member a year older for each year of the game's clock (aging.YEAR) not yet
+        counted in the game's own flags (aging.counted_years: a save keeps them, so a load is as
+        old as it was and nothing is counted twice or lost). Only on a steady look: the same
+        party as the last, the clock on by no more than NATURAL_JUMP (a game being loaded may
+        have its clock before its sheets and flags); any other waits for the next."""
         clock = self.game.game_time()
         if clock is None:
             return []
-        party, years = self.game.party_signature(), clock // aging.YEAR
-        last, self._aging_at = self._aging_at, (party, clock, years)
-        if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP or years <= last[2]:
+        party = self.game.party_signature()
+        last, self._aging_at = self._aging_at, (party, clock)
+        if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP:
             return []
-        return aging.natural_tick(self.game, years - last[2])
+        return aging.natural_years_due(self.game, clock // aging.YEAR)
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""

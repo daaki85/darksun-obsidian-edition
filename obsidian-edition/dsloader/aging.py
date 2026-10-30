@@ -200,6 +200,43 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
                     f"{gd.creature_name(member)} {word} {years} year{'s' if years != 1 else ''} ({why}): now {after}")
 
 
+# The years counted so far, in the game's own flags so a save keeps them: COUNTING set once the
+# count has begun, then COUNT_BITS flags holding the number (the Loader's flags: the game's run
+# to 755, the Loader's people 760-783, Alagorn's menus at most 784-797, a save keeps 808)
+COUNTING = 798
+COUNT_FIRST, COUNT_BITS = 799, 8
+
+
+def counted_years(gd: "game.GameData") -> Optional[int]:
+    """The years of the game's clock already counted, None before the count has begun."""
+    if not gd.flag(COUNTING):
+        return None
+    return sum(1 << i for i in range(COUNT_BITS) if gd.flag(COUNT_FIRST + i))
+
+
+def set_counted(gd: "game.GameData", years: int) -> None:
+    years = max(0, min(years, (1 << COUNT_BITS) - 1))
+    for i in range(COUNT_BITS):
+        gd.set_flag(COUNT_FIRST + i, bool(years >> i & 1))
+    gd.set_flag(COUNTING)
+
+
+def natural_years_due(gd: "game.GameData", years: int) -> List[str]:
+    """The game's clock at YEARS years: each year not yet counted, counted (natural_tick). A game
+    whose count hasn't begun (a new game; one saved before the count was kept) begins it at
+    YEARS, aging no one for the years before. Nothing while the flags have no place in memory."""
+    if not gd.flags_ready():
+        return []
+    counted = counted_years(gd)
+    if counted is None or years < counted:
+        set_counted(gd, years)  # (begun; or a count past its clock, from a save of the game's own: mended)
+        return []
+    if years == counted:
+        return []
+    set_counted(gd, years)
+    return natural_tick(gd, years - counted)
+
+
 def natural_tick(gd: "game.GameData", years: int) -> List[str]:
     """The game's clock past another year (YEARS of them): each living party member with an age
     that much older (its scores at the categories reached, its death at its maximum)."""

@@ -4729,6 +4729,22 @@ class KitTests(unittest.TestCase):
                     self.call(rb"\x53\x51\x52\x57\x06\x89\xf0\xb1\x03\xf6\xf1", esi=(race - 1) * 3)
                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), aging.natural_start(name, race)[0])
 
+    def test_creation_age_any_name(self):
+        """As test_creation_age, for 300 random names: any byte but 0 (the game's letters past 7Fh
+        too, read as the Loader reads a name: cp437), 0 to 16 of them (past 15 not counted)."""
+        import random
+        from dsloader import aging
+        rng = random.Random(4719)
+        name_at = 0xA000 * 16 + 0x28
+        self.mu.mem_write(self.DS * 16 + 0x11A0, struct.pack("<HH", 0, 0xA000))
+        for _ in range(300):
+            raw = bytes(rng.randint(1, 255) for _ in range(rng.randint(0, 16)))
+            race = rng.randint(1, 8)
+            self.mu.mem_write(name_at, raw.ljust(17, b"\0"))
+            self.call(rb"\x53\x51\x52\x57\x06\x89\xf0\xb1\x03\xf6\xf1", esi=(race - 1) * 3)
+            with self.subTest(name=raw, race=race):
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), aging.natural_start(raw.decode("cp437"), race)[0])
+
     def call(self, pattern, **regs):
         import re
         at = re.search(pattern, self.image, re.S).start()
@@ -7122,6 +7138,45 @@ class RolledTests(AdndTablesTests):
                 self.assertEqual(self.drawn(), [(10, 177, "SUM:"), (33, 177, "100/102")] if on else [])
 
     SHEET = 0x8800
+
+    def test_name_redraws_psp_and_age(self):
+        """CR_NAME (a name the game gave copied to the creature, 66045h's "add sp,0Eh"): the PSP
+        box's background put back by the far call whose operand is read from the overlay's code
+        as loaded (CR_RESTORE_AT, back from the way back), with the two words of the segment read
+        there too (CR_SEG340_AT's "mov ax,340h"); then PSP drawn again, centred on its box, and the
+        age with the new name. An operand not fixed up (0): no call and nothing drawn. Ages off:
+        only the "add sp"."""
+        from dsloader import aging
+        from dsloader.gamepatch import CR_NAME_SITE
+        ip = 0x600 + CR_NAME_SITE * 0x10 + 3  # (the way back, as run_site lays the site out)
+        restore_at, seg_at = ip + 0x65A60 - 0x66048, ip + 0x65A4C - 0x66048  # (the operands' places)
+        # (the restore routine's stand-in: its two words kept at CALLER:0F0h, F2h)
+        self.mu.mem_write(CALLER * 16 + 0x100, bytes.fromhex("5589e58b46062ea3f0008b46082ea3f2005dcb"))
+        self.mu.mem_write(CALLER * 16 + seg_at, struct.pack("<H", 0x9000))
+        self.mu.mem_write(0x9000 * 16 + 0x3F2, struct.pack("<H", 0x1234))
+        self.mu.mem_write(0x9000 * 16 + 0x406, struct.pack("<H", 0x5678))
+        self.mu.mem_write(self.DS * 16 + 0x119C, struct.pack("<HH", 0, self.SHEET))
+        self.mu.mem_write(self.DS * 16 + 0xF9A, struct.pack("<2h", 86, 179))  # (the PSP box)
+        self.mu.mem_write(self.CREATURE * 16 + 2, struct.pack("<H", 28))
+        self.mu.mem_write(self.SHEET * 16 + 0x0C, struct.pack("<H", 28))
+        self.mu.mem_write(self.SHEET * 16 + 0x18, bytes([1]))
+        self.mu.mem_write(self.CREATURE * 16 + 0x28, b"Gerakis\0")
+        self.mu.mem_write(self.LOG * 16, struct.pack("<H", 2))
+        age = aging.natural_start("Gerakis", 1)[0]
+        for on, operand in ((True, struct.pack("<HH", 0x100, CALLER)), (True, bytes(4)), (False, struct.pack("<HH", 0x100, CALLER))):
+            with self.subTest(on=on, operand=operand):
+                self.mu.mem_write(self.hdr + self.RULES_HI, struct.pack("<H", 256 if on else 0))
+                self.mu.mem_write(CALLER * 16 + restore_at, operand)
+                self.mu.mem_write(CALLER * 16 + 0xF0, bytes(4))
+                self.run_site(CR_NAME_SITE, 3, stack=bytes(14), popped=14, eax=0x1111, esi=0x5555)
+                self.assertEqual((self.mu.reg_read(r.UC_X86_REG_AX), self.mu.reg_read(r.UC_X86_REG_SI)), (0x1111, 0x5555))
+                called = struct.unpack("<HH", self.mu.mem_read(CALLER * 16 + 0xF0, 4))
+                drawn = self.drawn()
+                if on and any(operand):
+                    self.assertEqual(called, (0x5678, 0x1234))  # (pushed 3F2h's word, then 406h's)
+                    self.assertEqual(drawn, [(86 + 0x15 - 3 * 5, 177, "28/28"), (146, 177, f"AGE: {age}")])
+                else:
+                    self.assertEqual((called, drawn), ((0, 0), []))
 
     def test_con(self):
         """RL_CON: after a click on CON (RL_SCORE keeping the most hit points before it), the sheet's

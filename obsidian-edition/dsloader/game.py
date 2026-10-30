@@ -994,6 +994,10 @@ class GameData:
         self.guest.write((self.load_seg + MONEY_SEG) * 16 + MONEY,
                          struct.pack("<I", max(0, self.money() + amount) & 0xFFFFFFFF))
 
+    def flags_ready(self) -> bool:
+        """The flags have a place in memory now (flag, set_flag)."""
+        return bool(far_pointer(self.guest, self.ds, FLAGS_PTR))
+
     def flag(self, n: int) -> bool:
         """Flag N (False while the flags have no place in memory: their pointer is null at times,
         such as in the arena outside a script's run)."""

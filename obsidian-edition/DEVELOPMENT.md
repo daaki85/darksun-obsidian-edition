@@ -1585,20 +1585,29 @@ level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
 
 A year each time the game's clock passes another 365 days (`natural_years`:
 the game time in seconds over `YEAR`), put in the stored age as it happens, so
-a save holds the age and the scores' changes together. The dice log's
-`_natural_aging`, after `give_ages`, keeps the party, the clock and its years;
-a new party, the clock going back or jumping more than 2 days
-(`NATURAL_JUMP`: a load) only takes a new baseline, and a year more otherwise
-calls `natural_tick`: for each living member, the stored age a year on, a line
+a save holds the age and the scores' changes together. The years counted so
+far are in the game's own flags, so a save keeps them too (`counted_years`,
+`set_counted`: flag 798 set once the count has begun, 799 to 806 the number;
+the game's flags run to 755, the Loader's people 760-783, Alagorn's menus at
+most 784-797, and a save keeps 808). The dice log's `_natural_aging`, after
+`give_ages`, looks only when the look is steady (the same party as the last,
+the clock on by no more than 2 days, `NATURAL_JUMP`: a game being loaded may
+have its clock before its sheets and flags) and the flags have a place in
+memory (`flags_ready`: not in the arena outside a script's run), and otherwise
+waits for the next; then `natural_years_due` counts each year of the clock not
+yet counted (`natural_tick`): for each living member, the stored age on, a line
 (`A year has passed: Gerakis is 35.`) and the categories reached (`_changed`,
-as `age_by`), death at the most the race lives. A year passed while the
-Loader wasn't looking (the game played without it, a jump of more than 2 days)
-is not counted. Restore Youth's floor, the true age, is `natural_start` plus
+as `age_by`), death at the most the race lives. Nothing is counted twice or
+lost: a load brings its own count, and a year that passed in a long jump, in
+the arena, or while the game ran without the Loader is counted at the next
+steady look. A game whose count hasn't begun (a new one; one saved before
+2.13.1) begins it at the clock's years, aging no one for those before. Restore Youth's floor, the true age, is `natural_start` plus
 the clock's years (one who joined late gets fewer years back, never more).
 Checked in DOSBox: the clock put a few minutes short of a year, then past it:
 a line for each of the four, once, and `AGE: 35` on Gerakis's panel.
 Tests: `test_natural_years`, `test_restore_counts_the_games_years`,
-`test_the_log_counts_each_year_once`.
+`test_the_log_counts_each_year_once`, `test_a_long_jump_waits_and_loses_nothing`,
+`test_a_save_is_as_old_as_its_count`.
 
 #### The age on the creation screen
 

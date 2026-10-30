@@ -29,7 +29,10 @@ notes](PATCH-NOTES.md).
   in the stored age with its score changes as it happens (`aging.natural_tick`, from the dice
   log's `_natural_aging`), so a save keeps both; the dice log says `A year has passed: Gerakis
   is 35.`, once (a load, a new party or the clock going back only takes a new baseline). Restore
-  Youth's floor counts the clock's years. The Options label says so. Checked in DOSBox. Tests:
+  Youth's floor counts the clock's years. The Options label says so. The years counted are kept
+  in the game's own flags (798-806), so a save keeps them: none counted twice on a load, and none
+  lost to a long jump of the clock, the arena (no flags in memory there) or play without the
+  Loader, each waiting for the next steady look instead. Checked in DOSBox. Tests:
   `test_natural_years`, `test_restore_counts_the_games_years`, `test_the_log_counts_each_year_once`.
 
 **Fixed**
