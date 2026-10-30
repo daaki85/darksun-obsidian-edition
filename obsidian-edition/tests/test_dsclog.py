@@ -5719,6 +5719,49 @@ class KitTests(unittest.TestCase):
         self.assertEqual([kits.psp_cost(kits.TITAN_MIND, p, 2) for p in (0, 6, 19, 20, 33)], [2, 1, 1, 4, 4])
         self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 12, 5), kits.TITAN_MIND)
 
+    def test_psp_wasteland_seer(self):
+        """A Wasteland Seer (thri-kreen druid/fighter/psionicist, a party member): every power 2 PSP
+        less under the open sky (its KIT_OUTDOORS bit), 1 more under a roof, never below 1, a cost of
+        0 as it is: to use, from the table, for a defence and to keep it up (kits.psp_cost)."""
+        from dsloader import kits
+        from dsloader.gamepatch import VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_PSP_KEEP
+        hdr = TSR * 16 + self.image.find(HDR_SIG)
+        table = 0x8500
+        self.rules(game.RULE_KITS)
+        self.creature(5, 1, index=2, second=9, third=12, race=8)
+        self.assertEqual(self.kit_of(5, 1, game.RULE_KITS, 9, 8, 12), kits.WASTE_SEER)
+        try:
+            for outdoors in (False, True):
+                self.mu.mem_write(hdr + 350, bytes((4 if outdoors else 0,)))
+                for power in (0, 6, 20, 33):
+                    for cost in (0, 1, 2, 9):
+                        with self.subTest(outdoors=outdoors, power=power, cost=cost):
+                            want = kits.psp_cost(kits.WASTE_SEER, power, cost, outdoors)
+                            self.assertEqual(want, cost and max(1, cost + (-2 if outdoors else 1)))
+                            self.mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<H", power))
+                            self.run_int(VEC_PSP_USE, "505389f88b5e0a", 6, esi=7, edi=cost, eax=0x1111,
+                                         ebx=0x2222)
+                            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DI), want)
+                            self.mu.mem_write(table * 16 + power * 8 + 1, bytes((cost,)))
+                            self.run_int(VEC_PSP_TABLE, "535188e5260fb64701", 5, esi=7, eax=0x7700, es=table,
+                                         ebx=power * 8)
+                            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x7700 | want)
+                            self.mu.mem_write(table * 16 + power * 8 + 2, bytes((cost,)))
+                            self.run_vector(VEC_PSP_KEEP, 5, eax=0x7700, es=table, ebx=power * 8, esi=7,
+                                            edx=0x4444)
+                            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x7700 | want)
+                            if power != 20:
+                                continue
+                            rec = self.CREATURES * 16 + 2 * 0x3A
+                            self.mu.mem_write(rec + 2, struct.pack("<h", 50))
+                            self.mu.mem_write(SS * 16 + BP - 6, struct.pack("<H", 2))
+                            self.run_int(VEC_PSP_DEFENCE, "535189c18b46fa", 4, eax=cost, es=self.CREATURES,
+                                         ebx=2 * 0x3A, ecx=0x3333)
+                            self.assertEqual(struct.unpack("<h", self.mu.mem_read(rec + 2, 2))[0], 50 - want)
+        finally:
+            self.mu.mem_write(hdr + 350, b"\0")
+        self.assertEqual(kits.psp_cost(kits.WASTE_SEER, 20, 9), 9)  # (not a party member: as it is)
+
     SEED = 0x4122  # (DS: the game's rand() seed, the header's seed_off)
 
     def test_cure(self):

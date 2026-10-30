@@ -1027,7 +1027,8 @@ who speak to the spirits of sky and land. Under the open sky the spirits answer
 loudly; behind walls, hardly at all.
 
 *Wasteland Seer* (thri-kreen druid/fighter/psionicist). Thri-kreen who read the wastes as
-others read books. The open land lends their spells its strength.
+others read books. The open land lends their spells and their minds its strength; walls
+dull both.
 
 *Wild Fury* (mul druid/fighter). Muls who broke out of the fighting pits for
 the wastes, and found the land's own fury waiting there. When the blood starts

@@ -6948,7 +6948,8 @@ probe_slot_level:
 ; KIT_PSP: AX the PSP a power (BX, 0-33: psychokinesis to 5, psychometabolism to 19, telepathy
 ; from 20) costs combatant SI to use, from the game's AX (kits.psp_cost): a Mind Bender's telepathy
 ; 2 less, its psychokinesis 2 more, a Kineticist's the other way about; a Titan Mind's
-; psychometabolism 2 less, its telepathy 2 more; never below 1 (a cost of 0 or less as it was). KIT_PSP_OF: the same for the kit in CL. DS the game's; others kept.
+; psychometabolism 2 less, its telepathy 2 more; a Wasteland Seer's every power 2 less under the
+; open sky, 1 more under a roof; never below 1 (a cost of 0 or less as it was). KIT_PSP_OF: the same for the kit in CL. DS the game's; others kept.
 PSP_PK_LAST  equ 5
 WHOSE_TURN   equ 0x4979         ; DS: the combatant whose turn it is in a fight
 PSP_TP_FIRST equ 20
@@ -6970,7 +6971,9 @@ kit_psp:
         pop cx
         ret
 ; PSI_KIT: AL the psionicist kit of creature AX that changes costs (KIT_MIND_BENDER, KIT_KINETICIST,
-; KIT_TITAN_MIND), awake, or 0. DS the game's; others but AH kept.
+; KIT_TITAN_MIND; KIT_WASTE_SEER for a party member's under the open sky, its KIT_OUTDOORS bit, and
+; KIT_SEER_ROOF under a roof), awake, or 0. DS the game's; others but AH kept.
+KIT_SEER_ROOF equ 0xFE
 psi_kit:
         call cr_is
         db KIT_MIND_BENDER
@@ -6980,9 +6983,21 @@ psi_kit:
         je .titan
         call cr_is
         db KIT_KINETICIST
+        je .kinetic
+        call cr_is              ; (a Wasteland Seer, a party member: by where it stands)
+        db KIT_WASTE_SEER
+        jne .none
+        cmp ax, 3
+        ja .none
+        bt word [cs:kit_outdoors], ax
+        mov al, KIT_WASTE_SEER
+        jc .ret
+        mov al, KIT_SEER_ROOF
+        ret
+.kinetic:
         mov al, KIT_KINETICIST
-        je .ret
-        xor al, al
+        ret
+.none:  xor al, al
 .ret:   ret
 .bender:
         mov al, KIT_MIND_BENDER
@@ -6995,7 +7010,7 @@ kit_psp_of:
         push dx
         xor dx, dx              ; DX what the kit adds to telepathy (psychokinesis the opposite)
         cmp cl, KIT_TITAN_MIND
-        jne .bender
+        jne .seer
         cmp bx, PSP_PK_LAST
         jbe .out                ; (a Titan Mind's psychokinesis: as it was)
         mov dx, -2              ; (its psychometabolism 2 less, its telepathy 2 more)
@@ -7003,6 +7018,13 @@ kit_psp_of:
         jb .add
         mov dx, 2
         jmp .add
+.seer:  mov dx, -2              ; (a Wasteland Seer's every power: 2 less under the open sky,
+        cmp cl, KIT_WASTE_SEER  ; 1 more under a roof)
+        je .add
+        mov dx, 1
+        cmp cl, KIT_SEER_ROOF
+        je .add
+        xor dx, dx
 .bender:
         cmp cl, KIT_MIND_BENDER
         jne .kineticist

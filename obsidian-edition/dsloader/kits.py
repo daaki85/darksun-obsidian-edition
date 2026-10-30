@@ -280,11 +280,15 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -
     return game_slots
 
 
-def psp_cost(kid: int, power: int, cost: int) -> int:
+def psp_cost(kid: int, power: int, cost: int, outdoors: Optional[bool] = None) -> int:
     """The PSP power POWER (0-33) costs a character of kit KID to use, the game asking COST
     (KIT_PSP): a Mind Bender's telepathy 2 less and its psychokinesis 2 more, a Kineticist's the
     other way about (psychometabolism as it is); a Titan Mind's psychometabolism 2 less and its
-    telepathy 2 more (psychokinesis as it is); never below 1, and a cost of 0 as it is."""
+    telepathy 2 more (psychokinesis as it is); a Wasteland Seer's every power 2 less under the open
+    sky (OUTDOORS), 1 more under a roof (None: not a party member, as it is); never below 1, and a
+    cost of 0 as it is."""
+    if cost > 0 and kid == WASTE_SEER and outdoors is not None:
+        return max(1, cost + (-2 if outdoors else 1))
     if cost <= 0 or kid not in (MIND_BENDER, KINETICIST, TITAN_MIND):
         return cost
     if kid == TITAN_MIND:
