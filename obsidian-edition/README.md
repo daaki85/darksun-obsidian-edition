@@ -642,6 +642,17 @@ in its lower panel and under the pointer:
   CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
   Effects that last until removed (Charmed) and a magic item's power while
   it is readied (Shadowseeker's Detect Invisibility) show none.
+- **Enlarge's damage:** with the pointer on its icon, how much more melee
+  damage it gives, 10% a level of its caster: ENLARGED (+90% DAMAGE) from a
+  9th-level preserver. The inventory's and View Character's damage don't
+  count it (no room); each hit's line in the dice log does
+  (`x190% Enlarge (level 9)`). A second Enlarge on someone already enlarged
+  uses up the spell and adds nothing.
+- **The armour spells' AC:** with the pointer on Barkskin's, Flesh Armor's or
+  Magical Vestments' icon, the armour AC it gives by its caster's level:
+  BARKSKIN (AC 3) from a 12th-level druid. DEX and the rest are still added
+  to it, and armour already better is kept, so a spell showing a worse AC
+  than the character's armour does nothing for them.
 - **A click on a spell's icon leaves it on** (the game ended it); a psionic
   power's icon still ends the power, as that is how one is stopped ([Spells on
   the Effects screen](FEATURES.md#spells-on-the-effects-screen)).

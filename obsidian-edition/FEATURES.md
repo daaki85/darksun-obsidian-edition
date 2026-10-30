@@ -1304,11 +1304,15 @@ How they're made, and where they differ from the books:
 - **Whirlwind** stays where it is cast, as Stinking Cloud does, for a round a
   caster level, as AD&D has it: one tall, turning funnel of dust in the middle
   of its area, its ring of dust at the area's edge. Nothing can be shot or cast
-  through it (it blocks sight, as Wall of Fog does). Each round it does 2d8
-  crushing to every creature in it (a save for half), your party included; one
-  that fails its save is swept off its feet and loses its next turn (no
-  movement, no action), without being helpless as a held creature is. It doesn't
-  move.
+  through it (it blocks sight, as Wall of Fog does). At the start of each
+  round, before anyone acts, it does 2d8 crushing to every creature in it (a
+  save for half), your party included, whether or not they get a turn; one that
+  fails its save is swept off its feet and loses that round's turn (no movement,
+  no action), without being helpless as a held creature is. As it is cast it
+  strikes everyone in it at once: one swept then loses its turn that round if it
+  hasn't acted yet, else the next round's. Walking into it does nothing until
+  the next round starts. It doesn't move, and keeps striking those knocked out
+  in it.
 - **Harm** on a helpless creature, which the game hits with the most its dice
   can do, still leaves it 1d4 hit points. It also leaves the creature Diseased,
   as in AD&D, which here only keeps a STR lowered by something else from coming
@@ -2030,7 +2034,13 @@ section (**A click on a spell's icon on the Effects screen leaves it on**,
 from the next start).
 
 With the pointer on the icon of a spell that lasts a number of uses, the
-Effects screen names the uses left: IMPROVED AC (10 CHARGES). A magic item's
+Effects screen names the uses left: IMPROVED AC (10 CHARGES). Enlarge's icon
+names the melee damage it adds, 10% a level of its caster: ENLARGED (+90% DAMAGE).
+Barkskin's, Flesh Armor's and Magical Vestments' name the armour AC they give,
+by their caster's level (BARKSKIN (AC 3)): Barkskin 6 less a quarter of the
+level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1 better
+for each 3 levels above 5. Armour already better is kept, and DEX is added
+after. A magic item's
 power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no
 charges.
 

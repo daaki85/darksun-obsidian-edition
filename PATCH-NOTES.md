@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.12.4 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.12.5 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -34,7 +34,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
 - **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
-- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left.
+- **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left, for Enlarge how much more melee damage it gives (ENLARGED (+90% DAMAGE)), and for Barkskin, Flesh Armor and Magical Vestments the armour AC they give (BARKSKIN (AC 3)).
 - **[New]** Reading a scroll on the inventory screen tells you what happened (YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI SPELL...) on the line under the paper doll. The game showed nothing there.
 
 ## Combat

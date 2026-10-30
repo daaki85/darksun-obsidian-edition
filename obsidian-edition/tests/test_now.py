@@ -66,6 +66,35 @@ class HitTests(unittest.TestCase):
         set_effects(log, [(1, 1, game.HASTED_EFFECT)])  # (someone else's)
         self.assertEqual([h.halves for h in g.weapon_hits(0)], [None, 2])
 
+    def test_to_hit_effects(self):
+        """Dag's THAC0 with his long sword (9: +6 STR, +1 weapon) under each effect the game's
+        attack counts (HIT_EFFECTS, Prayer by its caster's side), named in the breakdown; another
+        creature's effects change nothing."""
+        log = dag()
+        g = log.game
+        for effects, thac0, part in (
+                ([], 9, None),
+                ([(0, 0, 7)], 8, ("Blessed", 1)),
+                ([(0, 0, 12)], 10, ("Cursed", -1)),
+                ([(0, 0, 7), (0, 0, 12)], 9, ("Cursed", -1)),
+                ([(0, 0, game.SLOWED_EFFECT)], 13, ("Slowed", -4)),
+                ([(0, 0, 49)], 8, ("Graft Weapon", 1)),
+                ([(0, 0, game.FOG_EFFECT)], 12, ("Fogbolt", -3)),
+                ([(0, 0, game.EFFECT_PRAYER)], 8, ("Prayer", 1)),  # (his own side's)
+                ([(0, 0x29, game.EFFECT_PRAYER)], 10, ("Prayer", -1)),  # (the Mountain Stalker's)
+                ([(1, 1, 7), (1, 1, 12)], 9, None)):  # (on someone else)
+            with self.subTest(effects=effects):
+                set_effects(log, effects)
+                sword = g.weapon_hits(0)[0]
+                self.assertEqual(sword.thac0, thac0)
+                if part:
+                    self.assertIn(part, sword.parts)
+                else:
+                    self.assertEqual(sword.parts, [("STR", 6), ("weapon", 1)])
+        set_effects(log, [(0, 0, 7)])
+        self.assertEqual([h.thac0 for h in g.weapon_hits(0)], [8, 17])  # (the bow too)
+        self.assertEqual(log.stats_entry(0)[1], 8)  # (the game's screens show it)
+
     def test_kratcheks_chatkcha_with_specialization(self):
         """K'ratchek (the game's own thri-kreen) throws her chatkcha once more a round, weapon
         specialization on or off (its item type is not the weapon's kind)."""
@@ -347,6 +376,43 @@ class StatsTests(unittest.TestCase):
 
     def test_empty_slot(self):
         self.assertEqual(dag().stats_entry(3), bytes(dicelog.STATS_SIZE))
+
+    def test_enlarge_level(self):
+        """The Effects screen's ENLARGED (+90% DAMAGE): the level of the Enlarge on a member, at its
+        caster's level, in the last byte (DSCLOG's STATS_ENLARGE); none on someone else's."""
+        log = dag()
+        g = log.game
+        self.assertEqual(log.stats_entry(0)[24], 0)
+        g.effect_spells = lambda: [(game.Effect(0, 5, game.ENLARGE_EFFECT), 5),
+                                   (game.Effect(1, 5, game.ENLARGE_EFFECT), 5)]
+        creature_of = g.combatant_creature
+        g.combatant_creature = lambda combatant: 2 if combatant == 5 else creature_of(combatant)
+        g.effect_caster_level = lambda creature, spell: {2: 9}[creature]
+        self.assertEqual(g.enlarge_level(0), 9)
+        self.assertEqual(log.stats_entry(0)[24], 9)
+        g.effect_spells = lambda: [(game.Effect(1, 5, game.ENLARGE_EFFECT), 5)]
+        self.assertEqual(log.stats_entry(0)[24], 0)
+
+    def test_armour_spells_ac(self):
+        """The Effects screen's BARKSKIN (AC 4): the AC each armour spell on a member gives, as the
+        game's AC routine (7C557h) has it from the effect's level (81B16h's: a spell's caster level,
+        a psionic power's psionicist level), in bytes 25-27 (DSCLOG's STATS_ARMOUR; -128 none)."""
+        log = dag()
+        g = log.game
+        self.assertEqual(struct.unpack_from("<3b", log.stats_entry(0), 25), (-128, -128, -128))
+        g.effect_spells = lambda: [(game.Effect(0, 5, game.EFFECT_BARKSKIN), 81),
+                                   (game.Effect(0, 5, game.EFFECT_FLESH_ARMOR), 154),
+                                   (game.Effect(0, 5, game.EFFECT_VESTMENTS), 99)]
+        creature_of = g.combatant_creature
+        g.combatant_creature = lambda combatant: 2 if combatant == 5 else creature_of(combatant)
+        g.effect_caster_level = lambda creature, spell: {81: 9, 99: 11}.get(spell)  # (None: a power)
+        g.class_level = lambda creature, cls: 7 if cls == game.PSIONICIST else 0
+        self.assertEqual(g.armour_spells_ac(0), {game.EFFECT_BARKSKIN: 4,  # 6 - 9 // 4
+                                                 game.EFFECT_FLESH_ARMOR: 3,  # 10 - 7
+                                                 game.EFFECT_VESTMENTS: 3})  # 5 - (11 - 5) // 3
+        self.assertEqual(struct.unpack_from("<3b", log.stats_entry(0), 25), (4, 3, 3))
+        g.effect_caster_level = lambda creature, spell: 4
+        self.assertEqual(g.armour_spells_ac(0)[game.EFFECT_VESTMENTS], 5)  # (none better below 6th)
 
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ SLOT_KEY = 0x80  # a line's first byte: SLOT_KEY | the list << 4 | the spell lev
 TSR_LOOK_SEQ, TSR_LOOK_REPLY, TSR_LOOK_WHO, TSR_LOOK_OFF, TSR_LOOK_FULL_OFF, TSR_LOOK_ON = 150, 152, 154, 156, 158, 160
 LOOK_SIZE, LOOK_FULL_SIZE = 80, 700
 # ... and the party's THAC0 and saves as they stand now, for the game's screens (see STATS)
-TSR_STATS_OFF, TSR_STATS_STAMP, TSR_STATS_REQ, TSR_STATS_REPLY, STATS_SIZE = 162, 164, 166, 168, 24
+TSR_STATS_OFF, TSR_STATS_STAMP, TSR_STATS_REQ, TSR_STATS_REPLY, STATS_SIZE = 162, 164, 166, 168, 28
 STATS_RANGER = 2  # a STATS entry's +17 for a ranger: only move silently and hide in shadows count
 BIOS_TIMER = 0x46C
 # ... and the rule changes it makes to the game (the Options tab)
@@ -883,7 +883,9 @@ class DiceLog:
 
     def stats_entry(self, member: int) -> bytes:
         """A party member's STATS entry for DSCLOG: THAC0 with the main weapon, the five saves as
-        the d20 needed now, THAC0 with each weapon ready, and a thief's skills as they stand."""
+        the d20 needed now, THAC0 with each weapon ready, a thief's skills as they stand, the level
+        Enlarge counts at on them (the Effects screen's ENLARGED (+90% DAMAGE)), and the AC
+        Barkskin, Flesh Armor and Magical Vestments give (BARKSKIN (AC 4); -128 without)."""
         g = self.game
         rec = g.creature(member)
         if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
@@ -904,6 +906,10 @@ class DiceLog:
             out += struct.pack("<B6B", STATS_RANGER, 0, 0, 0, *(min(n, 255) for _, n in ranger), 0)
         else:
             out += bytes(7)
+        out += bytes([min(g.enlarge_level(member), 255)])  # (DSCLOG prints the byte and a 0)
+        armour = g.armour_spells_ac(member)
+        out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else -128
+                                    for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
         return out.ljust(STATS_SIZE, b"\0")
 
     def read_languages(self, member: int) -> int:

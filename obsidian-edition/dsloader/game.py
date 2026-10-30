@@ -593,6 +593,7 @@ EFFECT_FIRE_SHIELD = 20
 HALVING_EFFECTS = ((EFFECT_PROT_FIRE, 0x02), (EFFECT_PROT_COLD, 0x04), (EFFECT_PROT_LIGHTNING, 0x80),
                    (EFFECT_FIRE_SHIELD, 0x06))
 EFFECT_SAVE_PENALTY, EFFECT_SPIRIT_ARMOR, EFFECT_BARKSKIN, EFFECT_PRAYER = 45, 56, 57, 73
+EFFECT_FLESH_ARMOR, EFFECT_VESTMENTS = 59, 60
 EFFECT_BRAVE = 9  # (Cloak of Bravery: +4 against a spell flagged FEAR_CATEGORY, a charge used)
 FEAR_CATEGORY = 0x100  # (a record's +11h word: the patched game's fear spells, gamepatch brave_fear_*)
 SHEET_SAVES = 0x37  # the five saves, in SAVE_NAMES order
@@ -1803,6 +1804,52 @@ class GameData:
         source = self.combatant_creature(prayer.caster)
         same = source is not None and self.creature(source)[CREATURE_SIDE] == self.creature(creature)[CREATURE_SIDE]
         return 1 if same else -1
+
+    def effect_level(self, creature: int, effect_id: int) -> Optional[int]:
+        """The level an effect counts at on a creature, as the game's 598:52h sums it for Enlarge's
+        damage and the armour spells' AC: each such effect on it at its caster's level (as Dispel
+        Magic weighs it), added up; None without one."""
+        combatants = {c for c, i in self.combatants().items() if i == creature}
+        if creature < PARTY_SIZE:
+            combatants.add(creature)
+        level = None
+        for effect, spell in self.effect_spells():
+            if effect.owner in combatants and effect.id == effect_id:
+                caster = self.combatant_creature(effect.caster)
+                level = (level or 0) + (self._cast_level(caster, spell) if caster is not None else 0)
+        return level
+
+    def _cast_level(self, creature: int, spell: int) -> int:
+        """The level the game's 81B16h gives an effect of SPELL cast by CREATURE: a spell's as
+        effect_caster_level; a psionic power's (to 171) its psionicist level; spell 190's its best
+        of classes 1-4; anything else's the best of its sheet's three levels."""
+        level = self.effect_caster_level(creature, spell)
+        if level is not None:
+            return level
+        if PSIONIC_FIRST <= spell < 0xAC:
+            return self.class_level(creature, PSIONICIST)
+        if spell == 0xBE:
+            return max(self.class_level(creature, cls) for cls in range(1, 5))
+        sheet = self.sheet(creature)
+        return max(struct.unpack_from("<3b", sheet, SHEET_LEVELS)) if len(sheet) >= SHEET_SIZE else 0
+
+    def enlarge_level(self, creature: int) -> int:
+        """The level Enlarge counts at on a creature, its melee damage +10% a level (DSUN 7C211h),
+        though the game lets only one on at a time; 0 without one."""
+        return self.effect_level(creature, ENLARGE_EFFECT) or 0
+
+    def armour_spells_ac(self, creature: int) -> Dict[int, int]:
+        """The AC each armour spell on a creature gives (effect id -> AC), as the effects' part of
+        the game's AC routine (7C557h) works it out from the effect's level: Barkskin at most
+        6 - level/4, Flesh Armor at most 10 - level, Magical Vestments 5, 1 better for each 3
+        levels above 5. The armour's own is kept where it is better."""
+        out = {}
+        for effect_id, ac in ((EFFECT_BARKSKIN, lambda n: 6 - n // 4), (EFFECT_FLESH_ARMOR, lambda n: 10 - n),
+                              (EFFECT_VESTMENTS, lambda n: 5 - ((n - 5) // 3 if n > 5 else 0))):
+            level = self.effect_level(creature, effect_id)
+            if level is not None:
+                out[effect_id] = ac(level)
+        return out
 
     def saves_now(self, creature: int) -> List[SaveNow]:
         """The five saves as the d20 roll needed now: the sheet's number less the modifiers the

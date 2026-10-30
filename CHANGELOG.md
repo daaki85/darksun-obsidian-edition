@@ -8,6 +8,48 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.12.5 ([release notes](release-notes/v2.12.5.md)).
+
+**New**
+- **The Effects screen names Enlarge's damage:** with the pointer on its icon, ENLARGED (+90%
+  DAMAGE), 10% a level of its caster (DSUN 7C211h). The Loader puts the level in a member's
+  STATS (`GameData.enlarge_level`, a 25th byte, `STATS_ENLARGE`), and DSCLOG's `EF_CHARGES`
+  names it from there as it names charges. The inventory's and View Character's DAM lines have
+  no room for it: measured in DOSBox, a magic weapon's name fills its line (Two-handed Sword +3
+  is cut off at the panel's edge), and the damage line has a few pixels past its THAC0. Found in
+  DOSBox: the game lets only one Enlarge on a creature; a second cast uses up the spell and adds
+  nothing. Checked in DOSBox: Cermak's Enlarge (9th level) on Gerakis, `ENLARGED (+90% DAMAGE)`.
+  Test: `test_enlarge_level`.
+- **The Effects screen names the armour spells' AC:** BARKSKIN (AC 3), FLESH ARMOR (AC 8),
+  MAGICAL VESTMENTS (AC 3), as the game's AC routine (7C557h) has it from the effect's level
+  (`GameData.armour_spells_ac`, `STATS_ARMOUR`, three more STATS bytes). An effect's level is
+  the game's (81B16h, `GameData.effect_level`): a psionic power's the psionicist level, which
+  `effect_caster_level` leaves out. Checked in DOSBox on K'ratchek (a 12th-level druid, 2nd-level
+  psionicist) and Cermak (AC 6 to -1 under a 12th-level Barkskin). Test: `test_armour_spells_ac`.
+
+**Fixed**
+- **Whirlwind's swept creatures lose their next turn, and it strikes once a round.** A creature
+  swept off its feet still took the turn that swept it (the game strikes those in a lasting area
+  at the start of each one's turn), then lost the next round's, and a turn lost was a round of
+  2d8 spared. Now Whirlwind strikes everyone in it at the start of each round, before anyone acts
+  (`WW_PASS`, from `ACID_ROUND`, through 76175h's stub), those who fail their save losing that
+  round's turn, and its hits at turns and as creatures walk in are sent back (`WW_GATE`, a new
+  site at 7617Dh, `gamepatch` `ww_gate`). As it is cast it strikes at once: one swept that has yet
+  to act loses that round's turn there and then (`SWEPT_NOW`), one that has acted the next. Found
+  and checked in DOSBox: K'ratchek's Whirlwind on the arena's sligs, three rounds each way.
+
+**Documentation**
+- A review of the pages for 2.12.5: Whirlwind's timing (FEATURES, the player's guide,
+  DEVELOPMENT), the Effects screen's Enlarge and armour lines (README, FEATURES, the patch
+  notes). Links, anchors and pictures checked: none broken, none unused; `whirlwind.gif` shows
+  only the funnel and the damage over the creatures, so the change leaves it right.
+
+**Tests**
+- `test_to_hit_effects`: THAC0 with each effect the game's attack counts (Blessed, Cursed, both,
+  Slowed, Graft Weapon, Fogbolt, Prayer from each side) and none from another creature's.
+
+## Pull request #79 ([merged 2026-10-29](https://github.com/daaki85/darksun-obsidian-edition/pull/79))
+
 Obsidian Edition 2.12.4 ([release notes](release-notes/v2.12.4.md)): Dark Sun Recompiled, from pull
 request #78, in a release.
 
