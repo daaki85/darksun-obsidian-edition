@@ -1245,10 +1245,10 @@ c_itoa:                         ; AL (unsigned) -> decimal at CS:DI, NUL-termina
 ; cells: x, y, label, value's x (window coordinates: the stats' labels are at x 0ECh, their
 ; values at 104h, STR at y 35h, lines 7 apart)
 c_cells_top:
-        dw 0xEC, 0x10, l_thac0, 0x111
-        dw 0xEC, 0x17, l_ppd, 0x103,  0x113, 0x17, l_rsw, 0x12A
-        dw 0xEC, 0x1E, l_pp, 0x103,   0x113, 0x1E, l_bw, 0x12A
-        dw 0xEC, 0x25, l_sp, 0x103
+        dw 0xEC, 0x0E, l_thac0, 0x111
+        dw 0xEC, 0x15, l_ppd, 0x103,  0x113, 0x15, l_rsw, 0x12A
+        dw 0xEC, 0x1C, l_pp, 0x103,   0x113, 0x1C, l_bw, 0x12A
+        dw 0xEC, 0x23, l_sp, 0x103
 c_cells_thief:                  ; right of the abilities (whose values end by 10Eh), in the
         dw 0x113, 0x35, l_pick, 0x12D  ; saves' second column, level with STR..CHA
         dw 0x113, 0x3C, l_lock, 0x12D
@@ -1274,11 +1274,11 @@ c_react db 0
 c_defence db 0
 DEX_DEFENCE equ 0x07F6          ; DS: the DEX defensive adjustment (bytes, by score: on AC)
 DEF_Y   equ 0x72                ; the AC line's y
-AGE_INV_Y equ 0x2D              ; (the free row between the saves' last, SP's at 25h, and STR's at 35h)
+AGE_INV_Y equ 0x2C              ; (the free row between the saves' last, SP's at 23h, and STR's at 35h)
 DEF_VALUE_X equ 0x12D           ; (under the thief skills' values, as REAC's)
 NO_REACT equ 0x80
 DEX_REACTION equ 0x07DC         ; DS: the DEX reaction adjustment (bytes, by score)
-REACT_Y equ 0x25                ; the saves' last row, right of SP (where BW and RSW are above)
+REACT_Y equ 0x23                ; the saves' last row, right of SP (where BW and RSW are above)
 REACT_VALUE_X equ 0x130         ; (a little right of the thief skills' values: REAC is the longer label)
 c_vals  times 8 db 0
 c_num   db 0, 0, 0, 0
