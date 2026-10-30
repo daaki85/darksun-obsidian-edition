@@ -27,7 +27,8 @@ notes](PATCH-NOTES.md).
   and no handler. Negative Plane Protection's save record moves to 212, the record room's last
   (`NPP_SAVE`), and the game's spell lists end at 212 (`gamepatch.NS_END`). Checked in DOSBox: the
   spell and its description on a 12th-level druid's 6th-level page, and cast on a character aged
-  by Haste. Tests: `test_aging`'s RestoreYouthTests, `test_grace`, `test_dsclog`.
+  by Haste. Its icon is the mod's own, a fountain of youth on light blue water (`wotrart.DRAWN`).
+  Tests: `test_aging`'s RestoreYouthTests, `test_grace`, `test_dsclog`, `test_wotrart`.
 
 **Changed**
 - **Enlarge multiplies the weapon's dice only (a rule change, on unless unticked).** The game's

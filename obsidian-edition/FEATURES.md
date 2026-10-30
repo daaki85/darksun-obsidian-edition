@@ -1428,7 +1428,8 @@ unused, and Wall of Thorns' gives the AC its damage came from
 (`Wall of Thorns' wall instead: 8 + AC 10 = 18`), and a creature Whirlwind
 sweeps off its feet has a line of its own. Their icons are Wake of the
 Ravager's, read from your copy (GOG sells it with Shattered Lands); without it
-they have icons of their own (the game's, recoloured).
+they have icons of their own (the game's, recoloured). Restore Youth, which
+Wake of the Ravager hasn't, has the mod's own: a fountain on light blue water.
 
 How it works:
 [DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).

@@ -2621,6 +2621,9 @@ k the last pixel k + 2 more times (worked out on the 101 spells both games have;
 38 match Shattered Lands' pixel for pixel). Its palette isn't Shattered Lands',
 so each colour becomes the nearest Shattered Lands colour no region changes.
 Checked in the game: the Heal icon in a known spell's place on the USE screen.
+Restore Youth's icon, a fountain, is drawn in `wotrart.DRAWN` (a letter a
+colour, `DRAWN_COLOURS`, each made the nearest stable colour), with or without
+Wake of the Ravager.
 
 **Pictures on the ground.** A spell's record names the picture it leaves on the
 ground by its +17h (FFh none): an entry of a table of 45 just before the flights

@@ -14,7 +14,8 @@ the nearest of Shattered Lands' that no region changes (the same in all its GPLD
 ICONS: the 6th-level priest spells' icons, by name: its number in Wake of the Ravager (Whirlwind,
 which it hasn't, takes its Sand Storm's, "a very large version of a dust devil"). Without Wake of
 the Ravager (or for an icon it can't give), FALLBACKS: a Shattered Lands icon (its template's, or
-the nearest in kind) tinted halfway toward the spell's colour, in the same stable colours."""
+the nearest in kind) tinted halfway toward the spell's colour, in the same stable colours. DRAWN:
+the mod's own, for a spell Wake of the Ravager hasn't (Restore Youth's fountain)."""
 
 import os
 import struct
@@ -33,8 +34,38 @@ FALLBACKS: Dict[str, Tuple[int, Tuple[int, int, int]]] = {
     "Sunstroke": (21131, (255, 210, 0)), "Fire Seeds": (21120, (255, 90, 0)),  # Flame Strike's, Produce Fire's
     "Heartseeker": (21136, (90, 140, 40)), "Water of Life": (21127, (40, 110, 255)),  # Slay Living's, Cure Critical's
     "Whirlwind": (21083, (215, 215, 230)),  # Dust Devil's
-    "Restore Youth": (21096, (200, 170, 255)),  # Cure Disease's
 }
+# ... and the mod's own, drawn: each letter a colour (DRAWN_COLOURS), made the nearest stable one.
+# Restore Youth: a fountain of youth, its top bowl spilling water into a pool, on light blue water
+# in a bevelled frame (lighter top and left, dark bottom and right, as the game's icons)
+DRAWN_COLOURS: Dict[str, Tuple[int, int, int]] = {
+    "B": (16, 28, 137), "w": (97, 133, 214), "b": (157, 198, 255), "W": (250, 250, 255),
+    "p": (52, 76, 178), "S": (215, 210, 195), "s": (150, 140, 125), "d": (90, 80, 70)}
+DRAWN: Dict[str, Tuple[str, ...]] = {
+    "Restore Youth": ("wwwwwwwwwwwwwwwB",
+                      "wbbbbbbWWbbbbbbB",
+                      "wbbbbWbWWbWbbbbB",
+                      "wbbbWbbWWbbWbbbB",
+                      "wbbWbsSSSSsbWbbB",
+                      "wbbWbbdssdbbWbbB",
+                      "wbWbbbbSsbbbbWbB",
+                      "wbWbbbbSsbbbbWbB",
+                      "wWbbbbbSsbbbbbWB",
+                      "wWbbbbbSsbbbbbWB",
+                      "wSpwpppWWpppwpSB",
+                      "wsSSSSSSSSSSSSsB",
+                      "wbsSSSSSSSSSSsbB",
+                      "wbbssssssssssbbB",
+                      "wbbbddddddddbbbB",
+                      "BBBBBBBBBBBBBBBB"),
+}
+
+
+def drawn(name: str, stable) -> List[List[int]]:
+    """DRAWN's NAME in the nearest of the STABLE colours (palette numbers)."""
+    near = {k: min(stable, key=lambda e: sum((a - b) ** 2 for a, b in zip(e[1], rgb)))[0]
+            for k, rgb in DRAWN_COLOURS.items()}
+    return [[near[ch] for ch in row] for row in DRAWN[name]]
 HEAL_SPIN = (211, b"HEAL:")  # (how a RESOURCE.GFF is told for Wake of the Ravager's)
 PALETTE = ("PAL ", 1000)
 PLNR = b"\xffPLNR"
@@ -266,6 +297,8 @@ def chunks(wotr_resources: Optional[str], sl_gpldata: str, numbers: Dict[str, in
     except (OSError, StopIteration, ValueError, IndexError, struct.error, gff.GffError):
         return out
     for name, number in numbers.items():
+        if name in DRAWN and ("ICON", number) not in out:
+            out[("ICON", number)] = icons.encode(drawn(name, stable))
         if ("ICON", number) in out or name not in FALLBACKS:
             continue
         icon, tint = FALLBACKS[name]
