@@ -26,6 +26,13 @@ notes](PATCH-NOTES.md).
   given an age keep it; their true age (Restore Youth's floor) is the new roll's. Checked in
   DOSBox: six figures and three typed names, each age the Loader's. Tests: `test_creation_age`.
 
+- **Natural aging**, as flavour: a year each 365 days of the game's clock (`aging.natural_years`),
+  added to the stored age wherever one is shown or moved (`age_now`, `age_by`, `restore`,
+  `describe`), the categories and the most a race lives counting as for magic. The dice log
+  says `A year has passed: Gerakis is 35.` (`natural_tick`, from `_natural_aging`), once: a load,
+  a new party or the clock going back only takes a new baseline (`NATURAL_JUMP`). Grey hair
+  follows. Checked in DOSBox. Tests: `test_natural_years`, `test_the_log_counts_each_year_once`.
+
 ## Pull request #81 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/81))
 
 Obsidian Edition 2.13.0 ([release notes](release-notes/v2.13.0.md)).

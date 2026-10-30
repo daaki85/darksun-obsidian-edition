@@ -492,8 +492,12 @@ member has one, from the Dark Sun rules' tables: a starting age rolled the
 first time the Loader sees the character (a new one, the game's own party, one
 from an earlier version), which the dice log shows
 (`Cermak is 22 (a human: 15 + 1d8 = [7]); middle-aged at 40.`), rolled from the
-character's name and race, so always the same for them. Only magic
-changes it: game time is too short to count.
+character's name and race, so always the same for them. Each **365 days of
+game time** (the game's own clock, from the start of the game) everyone is a
+year older, and the dice log says so (`A year has passed: Cermak is 23.`),
+the age categories counting as below. It is flavour: a party that rests
+5000 times is only 5 to 9 years older. Loading a save shows the ages as they
+were then, and no year is logged twice.
 
 | Race | Starting age | Middle age | Old age | Venerable | Most it lives |
 |---|---|---|---|---|---|

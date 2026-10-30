@@ -221,7 +221,7 @@ the same caps from these larger ones.)
 **Ages.** With [Ages and magical aging](FEATURES.md#ages-and-magical-aging)
 on, each character has an age from the Dark Sun rules (on the inventory
 panel, under the saves). Middle, old and venerable age change the scores, and
-a character dies at the most its race lives; only magic ages them. **Haste**
+a character dies at the most its race lives; each 365 days of game time adds a year, but magic ages them faster. **Haste**
 costs a year, after a system shock roll by CON that a character can fail and
 die (85% to survive at CON 13, 99% from 18); **Restore Youth** gives magical
 years back. *Without the mod:* no ages, and Haste costs nothing.

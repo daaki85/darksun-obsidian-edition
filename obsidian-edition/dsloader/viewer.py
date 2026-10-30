@@ -1616,7 +1616,7 @@ class Viewer:
             if known and index < game.PARTY_SIZE and self.rule_vars["aging"].get():
                 from . import aging
                 try:
-                    age = aging.describe(gd.sheet(index))
+                    age = aging.describe(gd.sheet(index), aging.natural_years(gd))
                 except (struct.error, IndexError, ValueError):
                     age = None
             card.show(name, dict(fields), status, ac, self.art, member_slots, thief, equipment, hits, saves,

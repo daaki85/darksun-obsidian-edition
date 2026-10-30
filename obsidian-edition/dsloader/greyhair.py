@@ -156,7 +156,7 @@ def stage_of(gd, member: int) -> int:
     try:
         sheet = gd.sheet(member)
         age = aging.age_of(sheet)
-        return aging.category(sheet[game.SHEET_RACE], age) if age is not None else 0
+        return aging.category(sheet[game.SHEET_RACE], age + aging.natural_years(gd)) if age is not None else 0
     except (IndexError, ValueError, KeyError):
         return 0
 

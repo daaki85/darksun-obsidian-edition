@@ -113,6 +113,35 @@ class PartyTests(unittest.TestCase):
         lines = aging.age_by(self.g, 0, -3, "Restore Youth")
         self.assertIn("no longer venerable: STR +1, DEX +1", lines[0])
 
+    def test_natural_years(self):
+        """A year of age for each 365 days of the game's clock, on top of the stored age; a year
+        passing across middle age changes the scores as Haste's would."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 38))
+        self.g.game_time = lambda: aging.YEAR * 2 - 1
+        self.assertEqual((aging.natural_years(self.g), aging.age_now(self.g, 0)), (1, 39))
+        before = self.scores()
+        lines = aging.natural_tick(self.g, 1, 2)
+        self.assertEqual(lines, ["A year has passed: Dag is 40, middle-aged: STR -1, CON -1, INT +1, WIS +1."])
+        self.assertEqual(self.scores()[0][0], before[0][0] - 1)
+        self.assertEqual(aging.age_of(self.g.sheet(0)), 38)  # (the stored age: magic's only)
+
+    def test_the_log_counts_each_year_once(self):
+        """The dice log's look: a year passed, each a year older once; a game loaded (the clock back,
+        or on by days) starts the count again."""
+        self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 20))
+        clock = [aging.YEAR - 3600]
+        self.g.game_time = lambda: clock[0]
+        self.assertEqual(self.log._natural_aging(), [])  # (the first look: the count starts)
+        clock[0] = aging.YEAR + 60
+        self.assertEqual(self.log._natural_aging(), ["A year has passed: Dag is 21."])
+        self.assertEqual(self.log._natural_aging(), [])
+        clock[0] = aging.YEAR - 60  # (an older save)
+        self.assertEqual(self.log._natural_aging(), [])
+        clock[0] = aging.YEAR * 5  # (a later one)
+        self.assertEqual(self.log._natural_aging(), [])
+        clock[0] += 3600
+        self.assertEqual(self.log._natural_aging(), [])
+
     def test_death_at_the_most(self):
         """Reaching the most its race lives, the member dies: no hit points, dead."""
         most = aging.most_age("Dag", HUMAN)

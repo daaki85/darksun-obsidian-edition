@@ -1549,6 +1549,20 @@ by the level, never below the character's true age (`natural_start`, the
 seeded starting roll `give_ages` used). Checked in DOSBox: K'ratchek at 12th
 level casting it on Gerakis aged 37, true age 27 (survived, 27 again).
 
+Natural aging: a year a 365 days of the game's clock (`natural_years`: the
+game time in seconds over `YEAR`), added to the stored age wherever an age is
+shown or moved (`age_now`; `age_by` works on the whole age and stores the age
+less those years, so Haste and Restore Youth count them; `restore` floors at
+the true age plus them; `describe` for View Character). The dice log's
+`_natural_aging`, after `give_ages`, keeps the party, the clock and its years;
+a new party, the clock going back or jumping more than 2 days
+(`NATURAL_JUMP`: a load) only takes a new baseline, and a year more otherwise
+calls `natural_tick`: a line each (`A year has passed: Gerakis is 35.`) and the
+categories reached (`_changed`, as `age_by`), death at the most the race lives.
+Checked in DOSBox: the clock put a few minutes short of a year, then past it:
+a line for each of the four, once, and `AGE: 35` on Gerakis's panel.
+Tests: `test_natural_years`, `test_the_log_counts_each_year_once`.
+
 **On the creation screen** (`CR_AGE`): the age the character will start at, from
 its name and race (`aging.natural_start`, a 16-bit hash of the name's bytes from
 the race, then each die from `h * 25173 + 13849`, its high byte mod the sides,

@@ -264,6 +264,7 @@ STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG'
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
+NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock was loaded, not run (a rest is 8 hours)
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
@@ -518,6 +519,7 @@ class DiceLog:
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
         self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
+        self._aging_at: Optional[Tuple[bytes, int, int]] = None  # (natural aging: party, clock, years)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
         self._initiative_roll: Optional[int] = None
@@ -913,7 +915,7 @@ class DiceLog:
         armour = g.armour_spells_ac(member)
         out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else -128
                                     for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
-        age = aging.age_of(g.sheet(member)) if self.rules & game.RULE_AGING else None
+        age = aging.age_now(g, member) if self.rules & game.RULE_AGING else None
         if age is None:
             out += bytes(6)
         else:
@@ -1270,6 +1272,8 @@ class DiceLog:
                 out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
                 if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
                     out += aging.give_ages(self.game)
+                if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
+                    out += self._natural_aging()
                 if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                     out += pickpocket.mend_lists(self.game)
                 itemgate.release(self.game)
@@ -1782,6 +1786,21 @@ class DiceLog:
         out, self._dialogue = self._dialogue, []
         self.itemwatch.remember_talk(out)
         return out
+
+    def _natural_aging(self) -> List[str]:
+        """Each party member a year older as the game's clock passes another year (aging.YEAR),
+        once: a game loaded (another party, the clock gone back, or on by more than NATURAL_JUMP)
+        only starts the count again."""
+        clock = self.game.game_time()
+        if clock is None:
+            return []
+        party, years = self.game.party_signature(), clock // aging.YEAR
+        last, self._aging_at = self._aging_at, (party, clock, years)
+        if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP or years <= last[2]:
+            if last is not None and last[0] == party and 0 <= clock - last[1] <= NATURAL_JUMP:
+                self._aging_at = (party, clock, last[2])  # (no year passed yet: kept)
+            return []
+        return aging.natural_tick(self.game, last[2], years)
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""
