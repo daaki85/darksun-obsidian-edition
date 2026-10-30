@@ -1017,15 +1017,7 @@ probe_view:
         inc si
         cmp si, 5
         jb .save
-        mov bx, [cs:c_who]      ; the age alone (AGE_TEXT's AGE_SHORT), under the saves
-        call age_text
-        jc .low
-        push word V_AGE_Y
-        push word V_SAVE_X
-        push cs
-        push word age_short
-        call c_draw_line
-.low:   push word V_LOW_Y       ; right of HP and PSI in the lower panel, as DAM is right of AC
+        push word V_LOW_Y       ; right of HP and PSI in the lower panel, as DAM is right of AC
         push word V_LOW_X
         push cs
         push word v_move
@@ -1068,8 +1060,6 @@ v_move_val db 0
 V_SAVE_X   equ 0xCD
 V_SAVE_GAP equ 36
 V_LOW_X    equ 0xD8             ; (clear of HP's value, 7 letters from the game's place for it)
-V_AGE_Y    equ 0x4F             ; (the row under SP's save, over the game's sex and race line, which
-                                ;   starts left of the saves: no room there for the category too)
 V_LOW_Y    equ 0x7F             ; (HP's line; PSI's 7 below)
 v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 .ppd     db 'PPD 00 ', 0
@@ -1245,10 +1235,10 @@ c_itoa:                         ; AL (unsigned) -> decimal at CS:DI, NUL-termina
 ; cells: x, y, label, value's x (window coordinates: the stats' labels are at x 0ECh, their
 ; values at 104h, STR at y 35h, lines 7 apart)
 c_cells_top:
-        dw 0xEC, 0x0E, l_thac0, 0x111
-        dw 0xEC, 0x15, l_ppd, 0x103,  0x113, 0x15, l_rsw, 0x12A
-        dw 0xEC, 0x1C, l_pp, 0x103,   0x113, 0x1C, l_bw, 0x12A
-        dw 0xEC, 0x23, l_sp, 0x103
+        dw 0xEC, 0x0D, l_thac0, 0x111
+        dw 0xEC, 0x14, l_ppd, 0x103,  0x113, 0x14, l_rsw, 0x12A
+        dw 0xEC, 0x1B, l_pp, 0x103,   0x113, 0x1B, l_bw, 0x12A
+        dw 0xEC, 0x22, l_sp, 0x103
 c_cells_thief:                  ; right of the abilities (whose values end by 10Eh), in the
         dw 0x113, 0x35, l_pick, 0x12D  ; saves' second column, level with STR..CHA
         dw 0x113, 0x3C, l_lock, 0x12D
@@ -1274,11 +1264,11 @@ c_react db 0
 c_defence db 0
 DEX_DEFENCE equ 0x07F6          ; DS: the DEX defensive adjustment (bytes, by score: on AC)
 DEF_Y   equ 0x72                ; the AC line's y
-AGE_INV_Y equ 0x2C              ; (the free row between the saves' last, SP's at 23h, and STR's at 35h)
+AGE_INV_Y equ 0x2B              ; (the free row between the saves' last, SP's at 22h, and STR's at 35h)
 DEF_VALUE_X equ 0x12D           ; (under the thief skills' values, as REAC's)
 NO_REACT equ 0x80
 DEX_REACTION equ 0x07DC         ; DS: the DEX reaction adjustment (bytes, by score)
-REACT_Y equ 0x23                ; the saves' last row, right of SP (where BW and RSW are above)
+REACT_Y equ 0x22                ; the saves' last row, right of SP (where BW and RSW are above)
 REACT_VALUE_X equ 0x130         ; (a little right of the thief skills' values: REAC is the longer label)
 c_vals  times 8 db 0
 c_num   db 0, 0, 0, 0
@@ -5916,7 +5906,6 @@ ef_draw:
 ef_lines_of:
         mov byte [cs:ef_last], 0xFF
         mov word [cs:ef_head], 0
-        call age_lines          ; (the age first: AGE 23, MIDDLE-AGED / OLD AT 53)
         call kit_place          ; (a line for each kit, the oldest class's first; a human's kit
         jc .specs               ; asleep until its class is passed, as the game's classes are)
 .kit:   call kit_at
@@ -9292,28 +9281,8 @@ path_down:
         pop ax
         ret
 
-; AGE_LINES: (EF_LINES_OF) EF_MEMBER's age and the next category's, through EF_LINE, when the
-; Loader keeps it (AGE_TEXT). All registers kept.
-age_lines:
-        push bx
-        push si
-        mov bx, [cs:ef_member]
-        call age_text
-        jc .out
-        mov byte [cs:ef_is_head], 0
-        mov si, age_line1
-        call ef_line
-        cmp byte [cs:age_line2], 0
-        je .out
-        mov si, age_line2
-        call ef_line
-.out:   pop si
-        pop bx
-        ret
-
 ; AGE_TEXT: CF set when party member BX has no age in its STATS (the Loader not keeping them, the
-; rule off, none given); else AGE_LINE1 "AGE 23, MIDDLE-AGED" (or "AGE 19"), AGE_SHORT "AGE 23"
-; and AGE_LINE2 "OLD AT 53" (empty once venerable). All registers kept.
+; rule off, none given); else AGE_SHORT "AGE 23", for the inventory panel. All registers kept.
 age_text:
         pusha
         call stats_for
@@ -9324,30 +9293,6 @@ age_text:
         mov di, age_short
         mov si, age_word
         call age_copy
-        call w_itoa
-        mov di, age_line1
-        mov si, age_word
-        call age_copy
-        call w_itoa
-        movzx si, byte [cs:bx + STATS_AGE + 2]
-        or si, si
-        jz .next
-        mov word [cs:di], ', '
-        add di, 2
-        shl si, 1
-        mov si, [cs:si + age_names]
-        call age_copy
-.next:  mov di, age_line2
-        mov byte [cs:di], 0
-        movzx si, byte [cs:bx + STATS_AGE + 3]
-        or si, si
-        jz .done
-        shl si, 1
-        mov si, [cs:si + age_names]
-        call age_copy
-        mov si, age_at
-        call age_copy
-        mov ax, [cs:bx + STATS_AGE + 4]
         call w_itoa
 .done:  popa
         clc
@@ -9394,14 +9339,7 @@ w_itoa:                         ; AX (unsigned) -> decimal at CS:DI, DI left at 
         ret
 
 age_word  db 'AGE ', 0
-age_at    db ' AT ', 0
-age_names dw 0, .middle, .old, .venerable
-.middle   db 'MIDDLE-AGED', 0
-.old      db 'OLD', 0
-.venerable db 'VENERABLE', 0
-age_line1 times 28 db 0
 age_short times 12 db 0
-age_line2 times 28 db 0
 
 ; EF_LINE: CS:SI EF_DRAW's next line: counted (EF_INDEX), and put on the panel (EF_PUT) if drawing
 ; and on the page shown. All registers kept.

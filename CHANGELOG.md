@@ -13,10 +13,10 @@ notes](PATCH-NOTES.md).
   age from Dark Sun's Table 7, rolled the first time the Loader sees it (`aging.give_ages`, in the
   dice log), kept in the sheet's +17h; middle, old and venerable age (Table 8) change the scores
   once and for good, and the most a race lives (its secret roll, seeded by the character) kills
-  (`aging.age_by`, for Haste and Restore Youth). Shown on the inventory panel between the saves and STR, on View Character under the saves
-  (`AGE 23`), first in the Effects panel (`AGE 23` / `MIDDLE-AGED AT 40`: DSCLOG's `AGE_TEXT`,
-  `AGE_LINES`, from the age in STATS' new +28h on) and on the Characters tab. Checked in DOSBox.
-  Tests: `test_aging`; `test_effects_specs` with an age.
+  (`aging.age_by`, for Haste and Restore Youth). Shown on the inventory panel between the saves and STR
+  (`AGE 23`: DSCLOG's `AGE_TEXT`, from the age in STATS' new +28h on; THAC0 and the saves moved 3
+  pixels up for it) and on the Characters tab. Checked in DOSBox. Tests: `test_aging`;
+  `test_effects_specs` (an age adds no Effects lines).
 - **Haste ages (the same rule).** Each creature Haste speeds rolls system shock by its CON (the
   PHB's table) or dies, and a party member who survives is a year older (`aging.hasted`, from the
   dice log's `effect_changes` as a Hasted effect starts). Checked in DOSBox: a failure kills as the

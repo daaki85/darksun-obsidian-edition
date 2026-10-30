@@ -1522,13 +1522,12 @@ scores kept within 3 to 25), and the maximum (`most_age`: the race's base and
 dice, seeded with the character's name and race, so always the same) kills
 (`kill`: no hit points, the game's dead status). The Loader puts the age, its
 category, the next and its age in each member's STATS (+28h on: `STATS_AGE`),
-and DSCLOG's `AGE_TEXT` writes them: the inventory panel's `AGE 23` in its free
-row between the saves and STR (`PROBE_INV`, `AGE_INV_Y`), View Character's under the saves
-(`V_AGE_Y`: there is no free row in the left column, CHR's line and the sex and
-race line being 3 pixels apart), and `AGE_LINES`, the first of the Effects
-panel's lines (`EF_LINES_OF`). Checked in DOSBox: the game's own party given
-ages in a new game, View Character, the Effects screen (its weapon specs then
-on its second page) and the Characters tab.
+and DSCLOG's `AGE_TEXT` writes the age, `AGE 23`, in the inventory panel's
+free row between the saves and STR (`PROBE_INV`, `AGE_INV_Y`; the THAC0 and
+save rows 3 pixels higher than before to make room). The category and the
+next are for the Characters tab; the game's screens show only the age.
+Checked in DOSBox: the game's own party given ages in a new game, the
+inventory panel and the Characters tab.
 
 Haste's aging: the dice log's `effect_changes`, as a Hasted effect (22) starts
 on a combatant (not one a game just loaded has), calls `aging.hasted`: a system

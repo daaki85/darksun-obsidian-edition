@@ -4846,7 +4846,7 @@ class KitTests(unittest.TestCase):
                     del lines[:]
                     self.call(rb"\x2e\xc6\x06..\xff\x2e\xc7\x06..\x00\x00\xe8", es=self.SHEET, ebx=0)
                     self.assertEqual(lines, want)
-            # with an age in each member's STATS (aging.py): its lines first, then the rest as before
+            # an age in each member's STATS (aging.py) adds no lines: it is on the inventory panel
             hdr = TSR * 16 + self.image.find(HDR_SIG)
             stats = TSR * 16 + struct.unpack("<H", bytes(self.mu.mem_read(hdr + 162, 2)))[0]
             entry = bytearray(34)
@@ -4856,7 +4856,7 @@ class KitTests(unittest.TestCase):
                 self.mu.mem_write(stats + member * 34, bytes(entry))
             del lines[:]
             self.call(rb"\x2e\xc6\x06..\xff\x2e\xc7\x06..\x00\x00\xe8", es=self.SHEET, ebx=0)
-            self.assertEqual(lines, ["AGE 23", "MIDDLE-AGED AT 40", "SPECIALIZED IN", "LONG SWORD"])
+            self.assertEqual(lines, ["SPECIALIZED IN", "LONG SWORD"])
             self.mu.mem_write(stats, bytes(34 * 4))
         finally:
             self.mu.hook_del(hook)
