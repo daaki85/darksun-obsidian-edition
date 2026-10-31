@@ -429,6 +429,13 @@ ABILITY_NAMES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 SHEET_MAGIC_RESISTANCE = 0x29
 SPHERE_NAMES = ("air", "earth", "fire", "water")  # the clerics' and druids' spheres, by class order
 SHEET_ATTACKS = 0x2A  # the game's attacks a round, in halves (2: 1, 3: 3/2)
+# A creature's natural attacks, up to three sets (N 0-2), each a byte from: its attacks a round in
+# halves (+2Bh + N), its dice (+2Eh + N) of SIDES (+31h + N), and their bonus (+34h + N). The melee
+# routine (58019h) keeps the set it's on in its [BP-22h]. The game gives every thri-kreen four claws,
+# 1d4 (set 0), and a bite, 1d4+1 (set 2), whatever its class (DSUN.EXE 66BF1h, the dice; 87635h,
+# the attacks a round)
+SHEET_NATURAL_HALVES, SHEET_NATURAL_COUNT, SHEET_NATURAL_SIDES, SHEET_NATURAL_BONUS = 0x2B, 0x2E, 0x31, 0x34
+THRI_KREEN_ATTACKS = {0: "claw", 2: "bite"}
 SHEET_XP, SHEET_XP_VALUE, SHEET_MAX_HP = 0x00, 0x04, 0x08  # a monster's sheet holds its XP value at +4
 SHEET_RACE, SHEET_ABILITIES = 0x18, 0x1B
 SHEET_CLASSES, SHEET_LEVELS, SHEET_BASE_AC = 0x21, 0x24, 0x27
@@ -814,7 +821,7 @@ SLOT_CLASS_RULES, SLOT_RULES = 0x664, 0x678
 SPELL_SPHERES_SEG, SPELL_SPHERES_OFF, SPELL_SPHERES_SIZE = 0x3FB9, 0x19D, 7
 RANGER_CLASSES = range(13, 17)
 SLOTS_ALL_19 = 0x1164  # a DS word the game checks: 1 gives the party 19 of everything
-HUMAN = 1
+HUMAN, THRI_KREEN = 1, 8
 
 # Thief skills (the game's routine at 8023Bh in DSUN.EXE). Their order is AD&D's; the game
 # never names them, but its checks fit: blindness stops all but hearing noise, Fire Shield
@@ -2390,6 +2397,20 @@ class GameData:
         at = far_pointer(self.guest, self.ds, CREATION_SHEET_PTR) + SHEET_SIZE + CREATURE_ABILITIES
         values = list(self.guest.read(at, 6))
         return values if len(values) == 6 and all(3 <= v <= 25 for v in values) else None
+
+    def natural_attack(self, creature: int, natural_set: Optional[int]) -> Optional[Tuple[str, str]]:
+        """A party thri-kreen's natural attack in set NATURAL_SET (the melee routine's [BP-22h]): its
+        name (THRI_KREEN_ATTACKS) and dice ("1d4+1", from the sheet), or None."""
+        if not 0 <= creature < PARTY_SIZE or natural_set not in THRI_KREEN_ATTACKS:
+            return None
+        sheet = self.sheet(creature)
+        if len(sheet) < SHEET_SIZE or sheet[SHEET_RACE] != THRI_KREEN:
+            return None
+        count, sides = sheet[SHEET_NATURAL_COUNT + natural_set], sheet[SHEET_NATURAL_SIDES + natural_set]
+        bonus = struct.unpack_from("b", sheet, SHEET_NATURAL_BONUS + natural_set)[0]
+        if not count or not sides:
+            return None
+        return THRI_KREEN_ATTACKS[natural_set], f"{count}d{sides}" + (f"{bonus:+d}" if bonus else "")
 
     def race_adjustment(self, race: int, ability: int) -> int:
         if not 0 < race < 16 or not 0 <= ability < 6:

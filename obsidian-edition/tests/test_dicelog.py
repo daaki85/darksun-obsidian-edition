@@ -303,6 +303,30 @@ class AttackTests(unittest.TestCase):
                                    "hits AC -9, target AC 1 -> HIT")
         self.assertEqual(lines[1], "    THAC0 11 = 11")
 
+    def test_thri_kreen_claw_and_bite(self):
+        """A party thri-kreen with nothing in hand attacks with a claw (the natural attacks' set 0,
+        the melee routine's [BP-22h]) or its bite (set 2), their dice from its sheet; the bite's +1
+        is named on its damage line. Another creature's natural attack is named as before."""
+        log = make_game()
+        m = log.guest.mem
+        sheet = SHEETS
+        m[sheet + game.SHEET_RACE] = 8  # Dag a thri-kreen: claws 1d4 (set 0), bite 1d4+1 (set 2)
+        m[sheet + game.SHEET_NATURAL_COUNT], m[sheet + game.SHEET_NATURAL_SIDES] = 1, 4
+        m[sheet + game.SHEET_NATURAL_COUNT + 2], m[sheet + game.SHEET_NATURAL_SIDES + 2] = 1, 4
+        m[sheet + game.SHEET_NATURAL_BONUS + 2] = 1
+        claw = log.describe(self.attack(18, 8, 4, -1, -1, after_f1=8, hit_bonus=0, m22=0))
+        self.assertEqual(claw[0], "Dag attacks Mountain Stalker with a claw (1d4): d20 = 18, needs 4+ (85%), "
+                                  "hits AC -10, target AC 4 -> HIT")
+        bite = log.describe(self.attack(18, 8, 4, -1, -1, after_f1=8, hit_bonus=0, m22=2))
+        self.assertTrue(bite[0].startswith("Dag attacks Mountain Stalker with its bite (1d4+1): d20 = 18"))
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, -1, -1, 1)  # (unarmed: item -1)
+        die = entry(raw_for(2, 4), dicelog.DICE_SITE, words(0, 0, 1, 4, 1), parent, (0x29, 0, 0, 0),
+                    parent_code=dicelog.WEAPON_DAMAGE_RETURN)
+        self.assertEqual(log.describe(die), ["  Dag hits Mountain Stalker for 15: 1d4 = [2] +1 bite +12 STR 24"])
+        m[sheet + game.SHEET_RACE] = 5  # (a half-giant's fists: no name)
+        fist = log.describe(self.attack(18, 8, 4, -1, -1, after_f1=8, hit_bonus=0, m22=0))
+        self.assertTrue(fist[0].startswith("Dag attacks Mountain Stalker: d20 = 18"))
+
     def test_weapon_damage(self):
         log = make_game()
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1)  # the attack's frame: ... [BP+0Eh] attacker, [BP+16h] mode

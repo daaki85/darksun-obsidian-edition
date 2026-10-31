@@ -542,6 +542,7 @@ class DiceLog:
         self._initiative_at = 0.0
         self._names: Dict[int, str] = {}  # combatant -> name, for effects that end after a fight
         self._last_attacker = ""
+        self._last_natural: Optional[Tuple[int, str]] = None  # (attacker, "claw"): a thri-kreen's last
         self._break_first: Optional[int] = None  # the 0-7 roll of a break check in progress
         self._ability_tries: List[int] = []  # character creation: this ability's 4d4 totals so far
         self._ability_of: Optional[int] = None  # ... and which ability they are for
@@ -2253,7 +2254,13 @@ class DiceLog:
             self.last_ac[target_index] = ac
             self._ac_whose[target_index] = g.creature_name(target_index)
         weapon = g.weapon(item, item_type)
-        with_what = f" with {g.weapon_name(weapon)} ({weapon.dice()})" if weapon else ""
+        # a party thri-kreen with nothing in hand: a claw or its bite, by the set of natural attacks
+        # the melee routine is on (its [BP-22h])
+        natural = g.natural_attack(attacker, e.parent_local(-0x22)) \
+            if not weapon and item == -1 and mode is not None and mode <= 1 else None
+        self._last_natural = (attacker, natural[0]) if natural else None
+        with_what = f" with {g.weapon_name(weapon)} ({weapon.dice()})" if weapon else \
+            f" with {'its' if natural[0] == 'bite' else 'a'} {natural[0]} ({natural[1]})" if natural else ""
         target = g.combatant_name(target_combatant)
         # the attack's own arguments: [BP+1Eh] a backstab, [BP+20h] from behind
         how = " BACKSTAB" if e.arg(0x1E) and e.arg(0x20) else " from behind" if e.arg(0x20) else ""
@@ -2494,7 +2501,9 @@ class DiceLog:
         material = MATERIAL_DAMAGE.get(weapon.material, 0) if weapon and weapon.sides and not weapon.plus \
             and not weapon.nonmagical_flag else 0
         own = bonus - extra - kit - material
-        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(own)} weapon" if own else "") \
+        natural = self._last_natural[1] if not weapon and self._last_natural \
+            and self._last_natural[0] == attacker else "weapon"  # (a thri-kreen's bite's +1)
+        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(own)} {natural}" if own else "") \
             + (f" {signed(material)} {MATERIALS[weapon.material].lower()}" if material else "") \
             + (f" {signed(extra)} {specialize.SKILL_NAMES[skill]}" if extra else "") \
             + (f" {signed(kit)} {kit_name}" if kit else "")

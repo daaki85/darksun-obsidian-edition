@@ -8,6 +8,16 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Changed**
+- **The dice log names a thri-kreen's claw or bite:** a party thri-kreen with nothing in hand
+  attacks `with a claw (1d4)` (four a round) and `with its bite (1d4+1)`, the bite's damage line
+  showing `+1 bite` where it said `+1 weapon`. The melee routine (58019h) keeps the set of natural
+  attacks it's on in its [BP-22h], and the sheet holds each set's attacks, dice and bonus from +2Bh
+  (`game.SHEET_NATURAL_*`, `THRI_KREEN_ATTACKS`, `GameData.natural_attack`); the game gives every
+  thri-kreen four 1d4 claws (set 0) and a 1d4+1 bite (set 2) (66BF1h). Checked in DOSBox with
+  K'ratchek unarmed. The guide's races table and DICE-LOG say so. Tests:
+  `test_thri_kreen_claw_and_bite`.
+
 **Docs**
 - The player's guide's spell slot table shows the priests' 6th-level slots in its rows (5 4 4 3 2 1
   at 11th, 6 5 5 3 2 2 at 12th) and says which class stops where under the XP cap (a druid at 12th,

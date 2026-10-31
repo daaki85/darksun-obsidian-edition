@@ -212,7 +212,7 @@ What the scores do:
 | Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand |
 | Halfling | −2 | +2 | −1 | | +2 | −1 | better CON saves |
 | Mul | +2 | | +1 | −1 | | −2 | |
-| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); claws that cut (edged, not crushing); no armour, cloaks, belts, boots or rings |
+| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); unarmed, four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); no armour, cloaks, belts, boots or rings |
 
 With each score rolled 8 to 20 before the adjustment, a race's scores run from
 8 to 20 plus its adjustment: a half-giant's STR 12 to 24, its DEX and INT 3 to
