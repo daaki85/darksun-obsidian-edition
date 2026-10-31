@@ -3751,8 +3751,9 @@ class NewSpellTests(RuleTests):
 
     def test_claw(self):
         """A natural attack's dice (NS_CLAW, thing SI, attack DX): with Erdlu Claw's effect (6) on the
-        thing, 1d6+1 where that is better on average than its own; then on to the game's effects
-        for the first attack only (the JNE past them for the others)."""
+        thing, the first set's (fists; a thri-kreen's claws, not its bite, set 2) 1d6+1 where that is
+        better on average than its own; then on to the game's effects for the first attack only (the
+        JNE past them for the others)."""
         from dsloader import gamepatch
         effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
         self.mu.mem_write(effects, struct.pack("<hhhBB", 2, 0, 197, 9, 0) + bytes(2)
@@ -3777,7 +3778,7 @@ class NewSpellTests(RuleTests):
             return struct.unpack("<3H", self.mu.mem_read(out, 6)), ip
         self.rules(32)
         self.assertEqual(run(5, (1, 4, 0)), ((1, 6, 1), 3))  # (a thri-kreen's claw: 1d4 -> 1d6+1)
-        self.assertEqual(run(5, (1, 4, 1), attack=2), ((1, 6, 1), 3 + 0x7B755 - 0x7B70D))  # (its bite too)
+        self.assertEqual(run(5, (1, 4, 1), attack=2), ((1, 4, 1), 3 + 0x7B755 - 0x7B70D))  # (its bite: as it is)
         self.assertEqual(run(5, (2, 4, 0))[0], (2, 4, 0))  # (2d4 is as good: kept)
         self.assertEqual(run(5, (1, 8, 2))[0], (1, 8, 2))  # (better: kept)
         self.assertEqual(run(2, (1, 2, 0))[0], (1, 2, 0))  # (not on it)
@@ -3786,20 +3787,25 @@ class NewSpellTests(RuleTests):
 
     def test_fist(self):
         """A melee hit's magic (NS_FIST, attacker SI): with Erdlu Claw's effect on it, a natural
-        attack ([BP-2] -1: no weapon) is +1 to hit ([BP-8]) and at least a +1 weapon ([BP-0Ch]);
-        then the game's "cmp word [bp-0Ch],0"."""
+        attack ([BP-2] -1: no weapon) of the first set ([BP-22h] 0: fists, a thri-kreen's claws) is
+        +1 to hit ([BP-8]) and at least a +1 weapon ([BP-0Ch]); a thri-kreen's bite (set 2) has
+        neither, a party member's starting from none; then the game's "cmp word [bp-0Ch],0"."""
         from dsloader import gamepatch
         effects = (GAME_DS - (0x4356 - 0x3BF6)) * 16 + 0x106
         self.mu.mem_write(effects, struct.pack("<hhhBB", 5, 0, 197, 6, 0) + bytes(2))
         self.mu.mem_write(GAME_DS * 16 + 0x1E24, struct.pack("<H", 1))
-        def run(thing, item, plus, magic):
+        def run(thing, item, plus, magic, natural_set=0):
             self.mu.mem_write(SS * 16 + BP - 0x0C, struct.pack("<hhhhhh", magic, 0, plus, 0, 0, item))
+            self.mu.mem_write(SS * 16 + BP - 0x22, struct.pack("<h", natural_set))
             flags = self.site(gamepatch.NS_FIST, esi=thing)
             magic, _, plus = struct.unpack("<hhh", self.mu.mem_read(SS * 16 + BP - 0x0C, 6))
             return plus, magic, bool(flags & 0x40)
         self.rules(32)
         self.assertEqual(run(5, -1, 0, 0), (1, 1, False))  # (clawed and unarmed: +1, a +1 weapon)
         self.assertEqual(run(5, -1, 0, 2), (1, 2, False))  # (a monster's own +2 kept)
+        self.assertEqual(run(5, -1, 0, 0, natural_set=2), (0, 0, True))  # (a thri-kreen's bite: no talons)
+        self.assertEqual(run(1, -1, 1, 1, natural_set=2), (0, 0, True))  # (a party member's bite: the
+        #   claws' +1 and magic, kept by the routine from set to set, gone)
         self.assertEqual(run(5, 40, 1, 1), (1, 1, False))  # (a weapon: as it was)
         self.assertEqual(run(5, 40, 0, 0), (0, 0, True))
         self.assertEqual(run(2, -1, 0, 0), (0, 0, True))  # (not on it)
@@ -3820,15 +3826,17 @@ class NewSpellTests(RuleTests):
         for creature, race in ((1, 8), (2, 4), (6, 8)):  # (a thri-kreen, a human; a thri-kreen monster)
             self.mu.mem_write(creatures * 16 + creature * 0x3A + 4, struct.pack("<H", creature))
             self.mu.mem_write(sheets * 16 + creature * 0x47 + 0x18, bytes((race,)))
-        def kinds(thing, item, before, rules=32):
+        def kinds(thing, item, before, rules=32, natural_set=0):
             self.rules(rules)
             self.mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<H", before))
+            self.mu.mem_write(SS * 16 + BP - 0x22, struct.pack("<h", natural_set))
             self.mu.mem_write(SS * 16 + BP - 0x0C, struct.pack("<hhhhhh", 0, 0, 0, 0, 0, item))
             self.site(gamepatch.NS_FIST, esi=thing)
             return struct.unpack("<H", self.mu.mem_read(SS * 16 + BP - 0x14, 2))[0]
         self.assertEqual(kinds(5, -1, 0x08), 0x10)  # (Erdlu Claw's talons)
         self.assertEqual(kinds(1, -1, 0x08), 0x10)  # (a thri-kreen of the party's claws)
         self.assertEqual(kinds(1, -1, 0x08, rules=0), 0x10)  # (whatever the rules)
+        self.assertEqual(kinds(1, -1, 0x08, natural_set=2), 0x10)  # (its bite too)
         self.assertEqual(kinds(2, -1, 0x08), 0x08)  # (a human's fists)
         self.assertEqual(kinds(6, -1, 0x08), 0x08)  # (a monster's own)
         self.assertEqual(kinds(1, 40, 0x20), 0x20)  # (a weapon's)

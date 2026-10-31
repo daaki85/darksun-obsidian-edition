@@ -15,8 +15,23 @@ notes](PATCH-NOTES.md).
   attacks it's on in its [BP-22h], and the sheet holds each set's attacks, dice and bonus from +2Bh
   (`game.SHEET_NATURAL_*`, `THRI_KREEN_ATTACKS`, `GameData.natural_attack`); the game gives every
   thri-kreen four 1d4 claws (set 0) and a 1d4+1 bite (set 2) (66BF1h). Checked in DOSBox with
-  K'ratchek unarmed. The guide's races table and DICE-LOG say so. Tests:
-  `test_thri_kreen_claw_and_bite`.
+  K'ratchek unarmed; with weapons in hand a thri-kreen attacks with them and then still bites
+  (checked with a thri-kreen's attacks put on Gerakis). The claw's dice are the ones it has now,
+  with Erdlu Claw, Animal Affinity or Body Weaponry (`natural_attack`'s `effects`). The guide's
+  races table and DICE-LOG say so. Tests: `test_thri_kreen_claw_and_bite`.
+- **Erdlu Claw's talons are the claws alone:** a thri-kreen's four claws become 1d6+1, +1 to hit, as
+  a +1 weapon; its bite stays 1d4+1 with nothing from the spell, as Body Weaponry and Animal
+  Affinity already change only the first set of natural attacks (DSCLOG's `NS_CLAW`: DX, the set;
+  `NS_FIST`: the melee routine's [BP-22h]; the dice log's THAC0 breakdown the same). The in-game
+  description, FEATURES, the guide, HOW-THE-GAME-WORKS and the patch notes say so; the guide and
+  HOW-THE-GAME-WORKS also say the two powers change only the claws. Tests: `test_claw`,
+  `test_fist`, `test_fist_claws_cut`, `test_thri_kreen_claw_and_bite`.
+
+**Fixed**
+- A party thri-kreen's bite got the claws' Erdlu Claw +1 to hit and magic: the melee routine sets
+  [BP-8] and [BP-0Ch] once for a round's natural attacks, so what `NS_FIST` gave the claws went on
+  to the bite. A party member's natural attack now starts with neither (the game gives it none).
+  Checked in DOSBox: the bite at THAC0 15, the claws 14. DSCLOG's image 64,352 bytes (+32).
 
 **Docs**
 - The player's guide's spell slot table shows the priests' 6th-level slots in its rows (5 4 4 3 2 1

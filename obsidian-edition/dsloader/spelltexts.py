@@ -12,7 +12,7 @@ PICK_SPIN = TU_SPIN + 1  # the purse's (TU_INFO_PICK 2), then the four spell arr
 
 TEXTS: Dict[int, str] = {
     197: "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.",
-    198: "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
+    198: "ERDLU CLAW:  Erdlu talons: unarmed attacks (not a thri-kreen's bite) do 1d6+1 (or +1 to Body Weaponry's or "
          "Animal Affinity's dice), +1 to hit, as a +1 weapon. Lasts 5 rounds per level.",
     199: "FOGBOLT:  A bolt of fog clings to one creature: -3 to hit and Armor Class 2 worse for "
          "2 to 8 rounds. A saving throw negates it.",

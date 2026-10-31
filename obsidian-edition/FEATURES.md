@@ -1308,7 +1308,7 @@ sheet, so it saves with the game and the character.
 | Spell | Level | Cast on | Lasts | Does |
 |---|---|---|---|---|
 | **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
-| **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, counts as a +1 magical weapon, and cuts (edged, not crushing) |
+| **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each unarmed attack (a thri-kreen's claws, not its bite) does 1d6+1 where that's better than its own, is +1 to hit, counts as a +1 magical weapon, and cuts (edged, not crushing) |
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | −3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
 | **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: a hit, or a foe's spell for one creature, has a 50% chance of striking the image instead, which vanishes |
 | **Spook** | 1 | one creature in sight | 3 rounds (a save negates) | the creature panics and flees (Afraid); its save is 1 worse for every 2 caster levels (at most −6); undead aren't affected, magic resistance applies, and Cloak of Bravery gives +4 against it |
@@ -1321,14 +1321,17 @@ sheet, so it saves with the game and the character.
   `Cat's Grace: 1d6 = 4 -> Gerakis's DEX +4 while it lasts (at most 24)`.
 - **Erdlu Claw** grows talons like an erdlu's. A character with a weapon in hand
   is unchanged; one fighting unarmed hits for 1d6+1 instead. A thri-kreen's four
-  claws and bite become 1d6+1 each (a natural attack already better on average,
-  as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in the log's THAC0
+  claws become 1d6+1 each; its bite, no talon, stays 1d4+1, with nothing from
+  the spell (a natural attack already better on average, as 2d4 or 1d8+2, stays
+  as it is). The +1 to hit shows in the log's THAC0
   breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons hurt creatures that
   only magical weapons can. They cut: edged, where the game makes every unarmed
   attack crushing, so they hurt a creature that crushing weapons can't (a
   mastyrial). A thri-kreen in the party fights with edged claws the same way,
-  with or without the spell. With **Body Weaponry** or **Animal Affinity** up,
-  the power's dice for the first attack get the claw's +1: 2d4+1 or 1d10+1.
+  with or without the spell, and its bite too. With **Body Weaponry** or
+  **Animal Affinity** up, the power's dice get the claw's +1: 2d4+1 or 1d10+1.
+  Those powers change only the first of a creature's natural attacks too (a
+  thri-kreen's claws, not its bite), as the game has them.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
   own blue); like any bolt it needs a clear line to the target. Its THAC0

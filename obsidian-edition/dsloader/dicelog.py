@@ -2256,7 +2256,8 @@ class DiceLog:
         weapon = g.weapon(item, item_type)
         # a party thri-kreen with nothing in hand: a claw or its bite, by the set of natural attacks
         # the melee routine is on (its [BP-22h])
-        natural = g.natural_attack(attacker, e.parent_local(-0x22)) \
+        natural = g.natural_attack(attacker, e.parent_local(-0x22),
+                                   [x.id for x in g.effects() if x.owner == attacker_combatant]) \
             if not weapon and item == -1 and mode is not None and mode <= 1 else None
         self._last_natural = (attacker, natural[0]) if natural else None
         with_what = f" with {g.weapon_name(weapon)} ({weapon.dice()})" if weapon else \
@@ -2339,7 +2340,8 @@ class DiceLog:
                 penalty = MATERIAL_TO_HIT[weapon.material]
                 parts.append((MATERIALS[weapon.material].lower(), penalty))
                 rest -= penalty
-        elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT):
+        elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT) \
+                and not e.parent_local(-0x22):  # (the first set's alone: not a thri-kreen's bite)
             parts.append(("Erdlu Claw", 1))  # (unarmed: DSCLOG's NS_FIST, in [BP-8])
             rest -= 1
         # With two weapons ready the game adjusts every melee attack by the DEX table it

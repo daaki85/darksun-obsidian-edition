@@ -17020,13 +17020,15 @@ ns_name:
 ; the routine giving natural attack DX of thing SI (7B66Ch; its dice's number to the far word at
 ; [BP+0Eh], their sides to [BP+12h], its bonus to [BP+16h], all set by now), where the game goes on
 ; to its effects only for the first (Body Weaponry's 2d4, Animal Affinity's 1d10). With Erdlu
-; Claw's effect on it (NS_HAS), each natural attack is 1d6+1 where that is better on average than
-; its own; then the game's way on.
+; Claw's effect on it (NS_HAS), the first too (fists; a thri-kreen's claws, not its bite) is 1d6+1
+; where that is better on average than its own; then the game's way on.
 NS_CLAW_PAST equ 0x7B755 - 0x7B70D
 ns_claw:
         pushad
         push es
         mov di, sp
+        or dx, dx
+        jnz .on
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .on
         mov ax, si
@@ -18928,9 +18930,13 @@ ns_hit:
 ; melee attack routine (58019h: SI the attacker; [BP-2] the weapon's item, -1 for none: a natural
 ; attack; [BP-8] its to-hit plus, taken off the THAC0; [BP-0Ch] its magic, which the hit's damage
 ; kinds then get as PLUS1..PLUS3; [BP-14h] those kinds, the game's crushing (8) for any natural
-; attack). With Erdlu Claw's effect on the attacker, a natural attack is +1 to hit and at least a
-; +1 weapon. Its talons, and a thri-kreen of the party's claws, cut: a natural attack of either is
-; slashing, not crushing (monsters' own as the game has them). Then that compare.
+; attack; [BP-22h] the set of natural attacks it is on, 0-2, all of a round's in one call, [BP-8]
+; and [BP-0Ch] set only once for them). A party member's natural attack starts with no plus and no
+; magic, as the game gives it none. With Erdlu Claw's effect on the attacker, a natural attack of
+; the first set (fists; a thri-kreen's claws, not its bite, set 2) is +1 to hit and at least a +1
+; weapon. Its talons, and a thri-kreen of the party's claws and bite,
+; cut: a natural attack of either is slashing, not crushing (monsters' own as the game has them).
+; Then that compare.
 DMG_CRUSHING equ 0x08
 DMG_SLASHING equ 0x10
 PARTY_COUNT  equ 4             ; (game.PARTY_SIZE)
@@ -18940,6 +18946,12 @@ ns_fist:
         mov di, sp
         cmp word [bp - 2], -1
         jne .test
+        cmp si, PARTY_COUNT             ; (a party member's natural attack has no plus or magic of
+        jae .set                        ;   its own: the routine keeps [BP-8] and [BP-0Ch] from set
+        mov word [bp - 8], 0            ;   to set, so the claws' talons would go on to the bite)
+        mov word [bp - 0x0C], 0
+.set:   cmp word [bp - 0x22], 0         ; (the talons: the first set's alone)
+        jne .kreen
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .kreen
         mov ax, si

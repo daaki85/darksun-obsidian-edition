@@ -146,7 +146,7 @@ A few of them:
 
 | Spell | Level | What it does |
 |---|---|---|
-| **Erdlu Claw** | 1st | unarmed attacks become talons: +1 to hit, 1d6+1, as a +1 magical edged weapon (Body Weaponry's and Animal Affinity's dice gain +1) |
+| **Erdlu Claw** | 1st | unarmed attacks (a thri-kreen's claws, not its bite) become talons: +1 to hit, 1d6+1, as a +1 magical edged weapon (Body Weaponry's and Animal Affinity's dice gain +1) |
 | **Fogbolt** | 1st | a dark grey bolt: the creature has −3 to its attacks and is hit at +2, for 2d4 rounds |
 | **Reflected Image** | 1st | one image of the caster, struck instead of it half the time |
 | **Spook** | 1st | a creature flees for 3 rounds unless it saves |

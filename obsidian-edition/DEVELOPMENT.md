@@ -551,19 +551,19 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,114 of the room's 8,182
-paragraphs, so 2,068 (32.3 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,116 of the room's 8,182
+paragraphs, so 2,066 (32.3 KB) are spare, and with `UMBPLUS.COM`
 about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
 helper, the overlay buffer and the music buffer, each with its MCB: 3,340
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 64,320 bytes
-(`image_len`; the resident part ends at `resident_end`, F430h), so with the
-install's 256-byte stack 960 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 64,352 bytes
+(`image_len`; the resident part ends at `resident_end`, F450h), so with the
+install's 256-byte stack 928 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
 specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240, its kit and the review's fixes 240; moving the crash report's
-two 256-byte buffers into the far block gave back 464); the HMA has 6,566 bytes left for more buffers (the far block ends at
+two 256-byte buffers into the far block gave back 464, Erdlu Claw's talons for the claws alone 32); the HMA has 6,566 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,970). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -2932,15 +2932,18 @@ count DS:1E24h), moving the rest down.
   works out a creature's abilities from its scores and effects adds it to DEX
   as Strength's adds to STR (`INT EFh`).
 - Erdlu Claw puts effect 6 (unused) on its target. In the routine giving a
-  natural attack's dice (7B66Ch, `NS_CLAW` at 7B70Ah), each attack becomes
-  1d6+1 where that's better on average than its own. In the melee attack
+  natural attack's dice (7B66Ch, `NS_CLAW` at 7B70Ah; DX the set of natural
+  attacks, 0-2, as the sheet holds them from +2Bh: `game.SHEET_NATURAL_*`), the
+  first set's (fists; a thri-kreen's claws, not its bite, set 2) becomes 1d6+1
+  where that's better on average than its own. In the melee attack
   routine (58019h, `NS_FIST` at 58226h), where a hit gets its weapon's magic
   (`[BP-0Ch]`, which becomes damage kinds 1000h/2000h/8000h, PLUS1-PLUS3 in
-  `monsters.py`), an unarmed attack (`[BP-2]` −1) is +1 to hit (`[BP-8]`,
-  taken off the THAC0) and at least a +1 weapon. The same hook makes the hit's
+  `monsters.py`), an unarmed attack (`[BP-2]` −1) of the first set (`[BP-22h]`
+  0, the set the routine is on) is +1 to hit (`[BP-8]`, taken off the THAC0)
+  and at least a +1 weapon. The same hook makes the hit's
   damage kinds (`[BP-14h]`, set at 581DFh to crushing, 8, for any natural
   attack) slashing (10h) for Erdlu Claw's talons, and for a thri-kreen of the
-  party's (combatant below 4, its sheet's race 8) whatever the spell: the game
+  party's (combatant below 4, its sheet's race 8), claws and bite, whatever the spell: the game
   has no other notion of claws, and the mastyrials' class takes nothing from
   crushing. Monsters keep the game's. The natural-attack routine
   applies Body Weaponry (2d4) and Animal Affinity (at least 1d10) to the first

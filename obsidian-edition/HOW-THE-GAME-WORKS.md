@@ -231,7 +231,7 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
 - Every hit has damage kinds: fire, cold, electricity, acid, poison, draining,
   psionic, death, and for weapons crushing, edged or pointed, from the item's
   type; a natural (unarmed) attack's is crushing, fists and monsters' claws
-  alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
+  alike (with Obsidian Edition, a thri-kreen of the party's claws and bite and Erdlu
   Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)).
   A weapon's hit also carries its magic: one bit for +1 or better, one
   for +2 or better and one for +3 or better (the weapon's plus, or its
@@ -466,7 +466,8 @@ their own:
   charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
   magic resistance line counts it, and Lower Resistance halving the result.
 - **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least
-  1d10.
+  1d10. Only the first of a creature's natural attacks: a thri-kreen's four
+  claws, not its bite.
 - Monsters use them too: the Screamer Beetle's special attack is Psychic
   Crush (1d8, save vs paralysis/poison/death for half).
 

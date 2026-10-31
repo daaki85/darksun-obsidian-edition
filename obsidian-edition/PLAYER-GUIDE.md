@@ -212,7 +212,7 @@ What the scores do:
 | Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand |
 | Halfling | −2 | +2 | −1 | | +2 | −1 | better CON saves |
 | Mul | +2 | | +1 | −1 | | −2 | |
-| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); unarmed, four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); no armour, cloaks, belts, boots or rings |
+| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); with weapons in hand, the weapons in the claws' place, and the bite still; no armour, cloaks, belts, boots or rings |
 
 With each score rolled 8 to 20 before the adjustment, a race's scores run from
 8 to 20 plus its adjustment: a half-giant's STR 12 to 24, its DEX and INT 3 to
@@ -1492,9 +1492,9 @@ limits:
     an hour of game time a caster level, which betters AC, initiative, thief
     skills and dodging.
   - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a
-    caster level. Unarmed attacks, a thri-kreen's claws and bite too, do 1d6+1
-    where that's better, are +1 to hit and count as a +1 magical edged weapon
-    (a thri-kreen's claws cut even without it). With Body Weaponry or
+    caster level. Unarmed attacks, a thri-kreen's claws but not its bite, do
+    1d6+1 where that's better, are +1 to hit and count as a +1 magical edged
+    weapon (a thri-kreen's claws and bite cut even without it). With Body Weaponry or
     Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
     in a clear line, for 2d4 rounds unless it saves: −3 to its attacks, +2 to
@@ -1635,7 +1635,8 @@ raises the best defence mode it knows and can pay for, by itself.
 | Thought Shield (defence) | telepathy | 1 | |
 
 Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
-makes unarmed blows 2d4. The Mind Bender, Kineticist and Titan Mind
+makes unarmed blows 2d4, and Animal Affinity at least 1d10: a thri-kreen's
+claws, not its bite. The Mind Bender, Kineticist and Titan Mind
 [kits](#kits) change some costs.
 
 ## Equipment

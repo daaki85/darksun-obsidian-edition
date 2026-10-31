@@ -33,7 +33,10 @@ backstabs (see [Attacks from behind and
 backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). A
 thri-kreen of the party with nothing in hand attacks `with a claw (1d4)`, four
 times a round, then `with its bite (1d4+1)`, whose damage line shows its
-`+1 bite`; anyone else unarmed, and a monster's own attacks, have no `with`. The
+`+1 bite`; with weapons in hand, it attacks with them and then still bites.
+The claw's dice are the ones it has now (Erdlu Claw's `1d6+1`, Animal
+Affinity's `1d10`, Body Weaponry's `2d4`). Anyone else unarmed, and a
+monster's own attacks, have no `with`. The
 target's AC includes armour, DEX and spells. A natural 20 always hits and a
 natural 1 always misses, but a 20 does no extra damage: the game has no critical
 hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).

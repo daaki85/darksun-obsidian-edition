@@ -255,7 +255,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
 # in, names them, and keeps who knows them in the sheet (NEW_KNOWN's bits).
 # Cat's Grace works as Strength does, for DEX: Strength's code rolls 1d6 into an effect of its own
 # (54, a number the game leaves unused) that adds to DEX, at most 24. Erdlu Claw's effect (6, unused
-# too) makes each natural (unarmed) attack 1d6+1 where that is better than its own (NS_CLAW), +1 to hit and at least
+# too) makes each natural (unarmed) attack of the first set (a thri-kreen's claws, not its bite: SHEET_NATURAL_*)
+# 1d6+1 where that is better than its own (NS_CLAW), +1 to hit and at least
 # a +1 weapon (NS_FIST: its hit's damage kinds get PLUS1); Fogbolt's (27) takes 3 off the fogged creature's attacks and
 # gives 2 to attacks on it. Reflected Image is Mirror Image's record with one image (its effect, 25,
 # the game's Mirror Images: one takes the other's place); Spook is Charm Person's with the game's
@@ -288,6 +289,7 @@ NEW_SPELLS_END = 212  # (past the last)
 # record copied to the records' room past the new spells, a save against death allowed
 NPP_SAVE_RECORD = 212
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
+AFFINITY_EFFECT, BODY_WEAPONRY_EFFECT = 61, 62  # (the first natural attack at least 1d10; 2d4: 7B71Bh)
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16
 IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
@@ -431,7 +433,8 @@ SPHERE_NAMES = ("air", "earth", "fire", "water")  # the clerics' and druids' sph
 SHEET_ATTACKS = 0x2A  # the game's attacks a round, in halves (2: 1, 3: 3/2)
 # A creature's natural attacks, up to three sets (N 0-2), each a byte from: its attacks a round in
 # halves (+2Bh + N), its dice (+2Eh + N) of SIDES (+31h + N), and their bonus (+34h + N). The melee
-# routine (58019h) keeps the set it's on in its [BP-22h]. The game gives every thri-kreen four claws,
+# routine (58019h) keeps the set it's on in its [BP-22h], weapons in hand taking the first two sets'
+# places (the claws' and set 1, empty). The game gives every thri-kreen four claws,
 # 1d4 (set 0), and a bite, 1d4+1 (set 2), whatever its class (DSUN.EXE 66BF1h, the dice; 87635h,
 # the attacks a round)
 SHEET_NATURAL_HALVES, SHEET_NATURAL_COUNT, SHEET_NATURAL_SIDES, SHEET_NATURAL_BONUS = 0x2B, 0x2E, 0x31, 0x34
@@ -512,7 +515,7 @@ EFFECT_RULES = {
     64: "STR + the amount borrowed, at most 24", 65: "STR - twice the amount lent, at least 3",
     66: "STR + 1d6, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
-    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
+    CLAW_EFFECT: "unarmed attacks (a thri-kreen's claws, not its bite) do 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
@@ -2398,9 +2401,13 @@ class GameData:
         values = list(self.guest.read(at, 6))
         return values if len(values) == 6 and all(3 <= v <= 25 for v in values) else None
 
-    def natural_attack(self, creature: int, natural_set: Optional[int]) -> Optional[Tuple[str, str]]:
+    def natural_attack(self, creature: int, natural_set: Optional[int],
+                       effects: Sequence[int] = ()) -> Optional[Tuple[str, str]]:
         """A party thri-kreen's natural attack in set NATURAL_SET (the melee routine's [BP-22h]): its
-        name (THRI_KREEN_ATTACKS) and dice ("1d4+1", from the sheet), or None."""
+        name (THRI_KREEN_ATTACKS) and dice ("1d4+1"), or None. The sheet's dice, and for the first
+        set (the claws) as the routine giving them has them (7B66Ch) with the creature's EFFECTS:
+        Erdlu Claw's 1d6+1 where that's better on average (DSCLOG's NS_CLAW), then Body Weaponry's
+        2d4, or else Animal Affinity's at least 1d10, the bonus kept."""
         if not 0 <= creature < PARTY_SIZE or natural_set not in THRI_KREEN_ATTACKS:
             return None
         sheet = self.sheet(creature)
@@ -2410,6 +2417,13 @@ class GameData:
         bonus = struct.unpack_from("b", sheet, SHEET_NATURAL_BONUS + natural_set)[0]
         if not count or not sides:
             return None
+        if natural_set == 0:
+            if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in effects and count * (sides + 1) + 2 * bonus < 9:
+                count, sides, bonus = 1, 6, 1
+            if BODY_WEAPONRY_EFFECT in effects:
+                count, sides = 2, 4
+            elif AFFINITY_EFFECT in effects:
+                count, sides = max(count, 1), max(sides, 10)
         return THRI_KREEN_ATTACKS[natural_set], f"{count}d{sides}" + (f"{bonus:+d}" if bonus else "")
 
     def race_adjustment(self, race: int, ability: int) -> int:
