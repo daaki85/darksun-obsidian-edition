@@ -23,7 +23,8 @@ as it is).
   ranger reads the tracks on a d20 under WIS + its level's bonus, for XP.
 - The slave pens' sewer grate: hacking its lock off is never offered (the search for a weapon in
   hand stops at once), and a hack that works leaves it shut; one that fails says the weapon
-  breaks, and keeps it (now a plain one is gone, a magic one rings off the grate unharmed).
+  breaks, and keeps it (now one that can break, as in a fight, is gone; a metal or magic one
+  rings off the grate unharmed).
 
 (The OpenDS fix that starts the final battle's stages without their pause is left out: with the
 game's clock running, the stage gate waits its window out as it should.)
@@ -56,13 +57,19 @@ TEST, IF, ELSE, ENDIF, PRINT, TAKE = 0x18, 0x3E, 0x3F, 0x67, 0x4F, 0x5C
 
 
 def _grate_hack_fails() -> Tuple[bytes, Tuple[int, ...]]:
-    """A hack at the sewer grate that fails: a plain weapon "breaks against the grate" and is gone
-    (the game's said so and kept it), a magic one (a plus, or a spell) rings off it unharmed. The
+    """A hack at the sewer grate that fails: a weapon that can break "breaks against the grate" and
+    is gone (the game's said so and kept it); one that can't rings off it unharmed. What can break
+    is the game's rule for a weapon breaking in a fight (Game.item_breaks): wood, bone, stone or
+    obsidian (its type's +8, low 4 bits 0 to 3) with no plus, no spell and not its type's 80h. The
     weapon is the one the search found in the right hand (2Ch), its holder the one hacking (local
     big number 37). IF jumps to its ELSE, ELSE to its ENDIF, written from the detour's start."""
     weapon = ("field", 0x802C, [72])
-    magic = gpl.encode_op((TEST, [("expr", ["(", ("field", 0x802C, [15]), "!=", ("n", 0), ")", "or",
-                                            "(", ("field", 0x802C, [0]), ">", ("n", 0), ")"])]))
+    material = ("field", 0x802C, [4, 8])  # (field 4, the item's type, leads to the type's record)
+    magic = gpl.encode_op((TEST, [("expr", [
+        "(", ("field", 0x802C, [15]), "!=", ("n", 0), ")", "or",
+        "(", ("field", 0x802C, [0]), ">", ("n", 0), ")", "or",
+        "(", material, "<", ("n", 0), ")", "or",
+        "(", "(", material, "&", ("n", 15), ")", ">", ("n", 3), ")"])]))
     rings = gpl.encode_op((PRINT, [("n", 98), ("str", " rings off the grate, unharmed. ")]))
     breaks = (gpl.encode_op((PRINT, [("n", 98), ("str", " breaks against the grate. ")]))
               + gpl.encode_op((TAKE, [("n", 1), weapon, ("var", 137, 37), ("n", 9999)])))
@@ -138,7 +145,7 @@ REPAIRS = (
     # The slave pens' sewer grate: hacking at its lock is offered (the game's test of a hack
     # wants 1 where it means 0), says his or her as picking it does, and opens it when it works
     # (half the time: RAND(3) is 0 to 3; always with Bloodwrath, -1576); a weapon it says breaks
-    # does, unless magic
+    # does, if it's one that can (not metal, not magic)
     Repair(137, 0xA65, bytes.fromhex("18e28c4989258200e1d5e28e03d78f01e1"),
            bytes.fromhex("18e28c4989258200e1d5e28e03d78f00e1"),
            "the sewer grate: hacking its lock off is offered"),
@@ -153,7 +160,7 @@ REPAIRS = (
            bytes.fromhex("4f006292055c80184f00628100168f01cd01f9"),
            "the sewer grate: a hack that works opens it"),
     Repair(137, 0xA31, bytes.fromhex("4f00629205418b965c3af9a0c39f0e9ddcfa20e9a32a0cfcb0f4cab90030"), _FAILS,
-           "the sewer grate: a plain weapon a hack breaks is gone, a magic one unharmed",
+           "the sewer grate: a wooden, bone or stone weapon a hack breaks is gone, metal or magic unharmed",
            relocate=_FAILS_RELOCATE),
 )
 

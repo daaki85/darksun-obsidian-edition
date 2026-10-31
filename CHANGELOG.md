@@ -38,8 +38,10 @@ notes](PATCH-NOTES.md).
   `== 80h` and `== 100h` on the class bits word are `& bit > 0`, as the game's other class tests
   are. Every object number the scripts compare an item or creature with but four is a real
   object; every thief skill and ability check tests what its text says.
-- The grate's failed hack: a plain weapon "breaks against the grate" and is gone (TAKE), a magic
-  one (a plus or a spell) "rings off the grate, unharmed" (the game said it broke and kept it).
+- The grate's failed hack: a weapon that can break "breaks against the grate" and is gone (TAKE);
+  a metal or magic one "rings off the grate, unharmed" (the game said it broke and kept it). Which
+  can break is the game's rule for a weapon breaking in a fight (`Game.item_breaks`), read through
+  the item's type (field 4, then the type's material, field 8).
 - The Loader's thief skill chances for a Slowed thief: picking pockets ruled out alone, as the
   game's routine does (80425h; the Loader had it ruling out the other seven). Tests: `test_now`.
 - Checked in DSUN.EXE: a worn or readied item's helpful spell is cast on the wearer for good

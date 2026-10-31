@@ -1197,8 +1197,10 @@ alone, but only after a sex test at B0h: a man is taken for Dagger.)
 
 A failed hack at the grate said the weapon "breaks against the grate" and left
 it; the repair at A31h (its words' print) runs a detour that tests the weapon
-(2Ch) for a plus or a spell (item fields 15 and 0): magic, " rings off the grate,
-unharmed."; plain, the game's words and TAKE (5Ch) one of that weapon from its
+(2Ch) by the game's rule for a weapon breaking in a fight (`Game.item_breaks`):
+a plus or a spell (item fields 15 and 0), its type's 80h or a material above 3
+(field 4 leads to the item's type, whose field 8 is the material byte, signed),
+and it " rings off the grate, unharmed."; else the game's words and TAKE (5Ch) one of that weapon from its
 holder (local big number 37) to 9999, as the game's scripts take items away.
 TAKE goes by the item's number, which items of a kind share, so it may take a
 spare of the same weapon from the pack rather than the one in hand.
