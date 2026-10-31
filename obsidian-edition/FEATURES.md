@@ -857,9 +857,9 @@ and thief skills are worked out from the level. So past 9th:
 - **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
   gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
 - **Spell slots** grow at the levels casters already have, up to 5th. With
-  AD&D's class tables a priest has 5 4 4 3 2 at 11th and 6 5 5 3 2 at 12th, a
-  preserver 4 4 4 3 3 at 11th. Priests also have a 6th-level slot at 11th and
-  two at 12th, for the mod's [6th-level priest
+  AD&D's class tables a priest has 5 4 4 3 2 1 at 11th and 6 5 5 3 2 2 at 12th
+  (a druid's; a cleric stops at 11th), a preserver 4 4 4 3 3 at 11th. The
+  6th-level slots are for the mod's [6th-level priest
   spells](#6th-level-priest-spells); preservers have no 6th-level spells.
 - **Thief skills** from AD&D's table go on to 13th
   ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).

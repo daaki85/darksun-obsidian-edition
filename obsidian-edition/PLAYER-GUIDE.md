@@ -1359,7 +1359,9 @@ or has anything in the quiver or on the legs.
 
 Casting uses a slot of the spell's level; resting fills them.
 
-AD&D's tables (the slots at 1st, 2nd, 3rd... spell level):
+AD&D's tables (the slots at 1st, 2nd, 3rd... spell level), to the highest
+level each class reaches under the XP cap (a druid's 12th, a cleric's and a
+preserver's 11th):
 
 | Level | Cleric, druid | Preserver |
 |---|---|---|
@@ -1373,11 +1375,11 @@ AD&D's tables (the slots at 1st, 2nd, 3rd... spell level):
 | 8 | 3 3 3 2 | 4 3 3 2 |
 | 9 | 4 4 3 2 1 | 4 3 3 2 1 |
 | 10 | 4 4 3 3 2 | 4 4 3 2 2 |
-| 11 | 5 4 4 3 2 | 4 4 4 3 3 |
-| 12 | 6 5 5 3 2 | – |
+| 11 | 5 4 4 3 2 1 | 4 4 4 3 3 |
+| 12 (druid) | 6 5 5 3 2 2 | – |
 
-Priests also have a 6th-level slot at 11th level and two at 12th, for the
-mod's 6th-level spells.
+The 6th-level slots are for the mod's 6th-level priest spells. Preservers have
+no 6th-level spells.
 
 *Without the mod:* one table for all three: 1; 2; 2 1; 2 2; 3 2 1; 3 2 2;
 4 3 2 1; 4 3 2 2; 5 4 3 2 1; 5 4 3 2 2.
@@ -1385,23 +1387,30 @@ mod's 6th-level spells.
 **Rangers** have one 1st-level slot at 8th level, two at 9th, and a 2nd-level
 slot at 10th, as in AD&D. No preserver spell is above 5th level.
 
-**Clerics and druids** have more for WIS, only at spell levels their class
-level reaches:
+**Clerics and druids** have more for WIS, the game's own rule (the bonus
+slots at 1st, 2nd, 3rd... spell level). They count only at spell levels the
+class level reaches, and the 6th-level ones only with AD&D's class tables,
+which bring the 6th-level slots:
 
-| WIS | 1st | 2nd | 3rd | 4th | 5th |
-|---|---|---|---|---|---|
-| 13 | 1 | | | | |
-| 14 | 2 | | | | |
-| 15 | 2 | 1 | | | |
-| 16 | 2 | 2 | | | |
-| 17 | 3 | 2 | 1 | | |
-| 18 | 3 | 2 | 2 | | |
-| 19 | 3 | 3 | 2 | 1 | |
-| 20 | 3 | 3 | 2 | 2 | |
-| 21 | 3 | 3 | 3 | 2 | 1 |
-| 22 | 3 | 3 | 3 | 2 | 2 |
-| 23-24 | 3 | 3 | 3 | 3 | 2 |
-| 25 | 3 | 3 | 3 | 3 | 3 |
+| WIS | 1st | 2nd | 3rd | 4th | 5th | 6th |
+|---|---|---|---|---|---|---|
+| 13 | 1 | | | | | |
+| 14 | 2 | | | | | |
+| 15 | 2 | 1 | | | | |
+| 16 | 2 | 2 | | | | |
+| 17 | 3 | 2 | 1 | | | |
+| 18 | 3 | 2 | 2 | | | |
+| 19 | 3 | 3 | 2 | 1 | | |
+| 20 | 3 | 3 | 2 | 2 | | |
+| 21 | 3 | 3 | 3 | 2 | 1 | |
+| 22 | 3 | 3 | 3 | 2 | 2 | |
+| 23 | 3 | 3 | 3 | 3 | 2 | 1 |
+| 24 | 3 | 3 | 3 | 3 | 2 | 2 |
+| 25 | 3 | 3 | 3 | 3 | 3 | 2 |
+
+These are more than AD&D's own table gives (WIS 18: 2 2 1 1 there). The game's
+rule also gives WIS 25 a 7th-level slot, of no use: there are no 7th-level
+spells.
 
 A character's classes add up their slots. Several [kits](#kits) have more or
 fewer. The game's USE screen shows what is left of each level.

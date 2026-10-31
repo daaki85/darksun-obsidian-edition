@@ -6,6 +6,17 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Docs**
+- The player's guide's spell slot table shows the priests' 6th-level slots in its rows (5 4 4 3 2 1
+  at 11th, 6 5 5 3 2 2 at 12th) and says which class stops where under the XP cap (a druid at 12th,
+  a cleric and a preserver at 11th); FEATURES' line on the slots past 10th the same.
+- The guide's WIS bonus slot table was wrong at WIS 23 to 25 and stopped at 5th level: it now has
+  the game's own rule's 6th-level column (1 at WIS 23, 2 at 24 and 25; counted with AD&D's
+  tables), WIS 25's 3 at 5th, and a note that the game's rule gives more than AD&D's table and a
+  useless 7th-level slot at WIS 25 (checked against the game's `SLOT_RULES` in DOSBox).
+
 ## Pull request #84 ([merged 2026-10-31](https://github.com/daaki85/darksun-obsidian-edition/pull/84))
 
 Obsidian Edition 2.13.3 ([release notes](release-notes/v2.13.3.md)).
