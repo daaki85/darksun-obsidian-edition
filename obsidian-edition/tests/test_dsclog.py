@@ -311,6 +311,82 @@ class StubTests(unittest.TestCase):
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
+class GameMessageTests(unittest.TestCase):
+    """DOS_WRITE and DOS_QUIT (PROBE_DOS_OPEN's AH=40h and 4Ch): the text written to the screen
+    kept in the far block's FAR_MSG, and on an exit with a code other than 0 GAMEMSG.BIN written:
+    the header from the helper, the stack and the text from the far block (launch.game_message)."""
+    DOS, PSP = 0x8000, 0x2000
+
+    def test_crash_report(self):
+        from dsloader import launch
+        image = load_image()
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, image)
+        found = re.search(re.escape(bytes.fromhex("80fc400f84")) + b"(..)" + re.escape(bytes.fromhex("80fc4c0f84"))
+                          + b"(..)", image, re.S)
+        self.assertIsNotNone(found)
+        probe = found.start()
+        quit_at = found.end() + struct.unpack("<h", found.group(2))[0]
+        flag = image.find(bytes.fromhex("2e803e"), quit_at, quit_at + 12)
+        self.assertGreater(flag, 0)
+        image_flag, = struct.unpack_from("<H", image, flag + 3)
+        self.assertEqual(image[image_flag], 1)  # (no file before FAR_INIT)
+        mu.mem_write(TSR * 16 + image_flag, b"\0")
+        old21 = image.find(bytes.fromhex("2eff2e"), quit_at)  # (the chain: jmp far [cs:old21])
+        old21, = struct.unpack_from("<H", image, old21 + 3)
+        mu.mem_write(TSR * 16 + old21, struct.pack("<HH", 0, self.DOS))
+        mu.mem_write(self.DOS * 16, bytes((0xCD, 0xF0, 0xCF)))  # INT F0h (DOS, below), IRET
+        written = []
+
+        def interrupt(uc, intno, _):
+            if intno != 0xF0:
+                return real_mode_interrupt(uc, intno, _)
+            ah, flags = uc.reg_read(r.UC_X86_REG_AH), uc.reg_read(r.UC_X86_REG_EFLAGS)
+            if ah == 0x62:
+                uc.reg_write(r.UC_X86_REG_BX, self.PSP)
+            elif ah == 0x3C:
+                uc.reg_write(r.UC_X86_REG_AX, 5)
+            elif ah == 0x40 and uc.reg_read(r.UC_X86_REG_BX) == 5:
+                at = uc.reg_read(r.UC_X86_REG_DS) * 16 + uc.reg_read(r.UC_X86_REG_DX)
+                count = uc.reg_read(r.UC_X86_REG_CX)
+                written.append(bytes(uc.mem_read(at, count)))
+                uc.reg_write(r.UC_X86_REG_AX, count)
+            uc.reg_write(r.UC_X86_REG_EFLAGS, flags & ~1)
+
+        mu.hook_add(UC_HOOK_INTR, interrupt)
+        mu.mem_write(0x21 * 4, struct.pack("<HH", probe, TSR))
+        stack = bytes(range(256))
+        mu.mem_write(SS * 16 + 0x800 - 20, b"\0" * 20 + stack)  # (PUSHA, DS and ES go below SP)
+
+        def dos(ax, bx=0, cx=0, dx=0):
+            mu.mem_write(CALLER * 16, bytes((0xCD, 0x21, 0xF4)))
+            for reg, value in ((r.UC_X86_REG_CS, CALLER), (r.UC_X86_REG_SS, SS), (r.UC_X86_REG_DS, GAME_DS),
+                               (r.UC_X86_REG_ESP, 0x800), (r.UC_X86_REG_EAX, ax), (r.UC_X86_REG_EBX, bx),
+                               (r.UC_X86_REG_ECX, cx), (r.UC_X86_REG_EDX, dx), (r.UC_X86_REG_EFLAGS, IF | 2)):
+                mu.reg_write(reg, value)
+            mu.emu_start(CALLER * 16, CALLER * 16 + 2, count=200000)
+
+        text = b"ABEND: VMDelHeap() " * 20  # (380 bytes: the ring keeps the last 256)
+        mu.mem_write(GAME_DS * 16 + 0x100, text)
+        dos(0x4000, 1, len(text), 0x100)
+        self.assertEqual(written, [])
+        dos(0x4C01)
+        data = b"".join(written)
+        self.assertEqual(data[:5], b"GMSG\1")
+        self.assertEqual(struct.unpack_from("<HHH", data, 5), (self.PSP + 0x10, SS, 0x800 - 6))
+        self.assertEqual(data[11:17], struct.pack("<HHH", 2, CALLER, IF | 2))  # (the INT's way back)
+        self.assertEqual(data[17:11 + 256], stack[:250])
+        self.assertEqual(struct.unpack_from("<H", data, 267)[0], 256)
+        self.assertEqual(data[269:], text[-256:])
+        message = launch.game_message(data)
+        self.assertIn("The game quit with code 1", message)
+        self.assertIn("VMDelHeap()", message)
+        dos(0x4C01)  # (the first time only)
+        self.assertEqual(len(b"".join(written)), len(data))
+
+
+@unittest.skipIf(Uc is None, "unicorn is not installed")
 class UseItemTests(unittest.TestCase):
     """PROBE_USE_ITEM, where the game uses the item on the pointer on what's under it: on as the
     compare and JNE it replaces would go, or, for an item the Loader answers (the cooked vulture),

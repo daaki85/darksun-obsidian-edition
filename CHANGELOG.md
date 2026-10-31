@@ -36,6 +36,15 @@ notes](PATCH-NOTES.md).
 - Tidier: the Options tab's rule groups are in each rule's own entry (`viewer.py`), and the
   creation THAC0 uses DSCLOG's `DEX_REACTION` and `CREATURE_SCORES`. DSCLOG's image 64,784 bytes
   (+240). Tests: `test_thac0_line`, `test_edit_keeps_its_specs`, `test_slots`.
+- K'ratchek's line on the Effects screen read "OPEN SKY SPELLS" only: now "OPEN SKY SPELLS/PSI",
+  as her features say (DSCLOG's `OWN_LINES`). Checked in DOSBox.
+
+**Memory**
+- The crash report's two 256-byte buffers (the copy of the stack and the last text written to the
+  screen) moved out of DSCLOG's 64 KB into the far block in the HMA (`FAR_QM_STACK`, `FAR_QM_LEN`,
+  `FAR_MSG`; `DOS_WRITE`, `DOS_QUIT`; no GAMEMSG.BIN before `FAR_INIT` now, `QUIT_SAVED` starting
+  at 1). DSCLOG's image 64,320 bytes (-464), 960 bytes spare; the HMA 6,566 bytes left. The file
+  GAMEMSG.BIN is the same. Tests: `test_crash_report`.
 
 **Changed**
 - **The Shinobi's spell slots go on to 13th level:** 3 2 1 at thief level 11, 3 2 2 at 12th and

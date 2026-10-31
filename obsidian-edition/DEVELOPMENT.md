@@ -440,7 +440,8 @@ Its big buffers are kept apart, in its **far block** (`FAR_SEG`, the header's
 +142), at fixed offsets from `FAR_RING` (10h) to `FAR_END`: the dice log's ring
 (`NENT` 63 entries of `ESIZE` 192 bytes), the panel's picture, the shadows'
 cache, the text buffer, the shadows' spans and each thing's place as last seen
-(for the dust) and the frames steady pace holds back, 58,440 bytes. `FAR_INIT` (install code) puts it in the **HMA**
+(for the dust), the frames steady pace holds back, and the crash report's copy of the stack and
+the last text written to the screen (`DOS_QUIT`, `DOS_WRITE`), 58,954 bytes. `FAR_INIT` (install code) puts it in the **HMA**
 (FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there
 is none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
 `XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
@@ -471,7 +472,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
 | C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.6 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.1 KB free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back), 6.9 KB free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back, the crash report's buffers), 6.4 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 DOSBox makes its upper memory block at D000h, but C800h-CFFFh is RAM too, and
@@ -550,19 +551,20 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,145 of the room's 8,182
-paragraphs, so 2,037 (31.8 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,114 of the room's 8,182
+paragraphs, so 2,068 (32.3 KB) are spare, and with `UMBPLUS.COM`
 about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
 helper, the overlay buffer and the music buffer, each with its MCB: 3,340
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 64,784 bytes
-(`image_len`; the resident part ends at `resident_end`, F610h), so with the
-install's 256-byte stack 496 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 64,320 bytes
+(`image_len`; the resident part ends at `resident_end`, F430h), so with the
+install's 256-byte stack 960 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
-specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240, its kit and the review's fixes 240); the HMA has 7,080 bytes left for more buffers (the far block ends at
-`FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
+specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240, its kit and the review's fixes 240; moving the crash report's
+two 256-byte buffers into the far block gave back 464); the HMA has 6,566 bytes left for more buffers (the far block ends at
+`FAR_END`, 58,970). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
 records, to make room.) The game's sound-effects buffer (24,001 bytes, kept

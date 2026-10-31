@@ -10083,7 +10083,7 @@ kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, K
              db KIT_SPELLARCHER, 'SPELLARCH', 0, KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTE SEER', 0, 0
 ef_more      db 'MORE: CLICK HERE', 0
 ; The game's own party's features on the Effects screen (OWN_RACE_B): the race, the line. 0 ends it.
-own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS', 0, 8, 'CHATKCHA 2/ROUND', 0
+own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS/PSI', 0, 8, 'CHATKCHA 2/ROUND', 0
              db 3, 'KIT: E-WANDERER', 0, 0
 ef_drawing   db 0
 ef_index     dw 0
@@ -15486,7 +15486,7 @@ probe_dos_open:
 old21       dd 0
 
 ; DOS_WRITE (INT 21h AH=40h): what the game writes to the screen (handles 1 and 2: stdout,
-; stderr) kept, its last MSG_BYTES in MSG_RING, then on to DOS. The game prints its fatal errors
+; stderr) kept, its last MSG_BYTES in the far block's FAR_MSG, then on to DOS. The game prints its fatal errors
 ; ("Mel Fatal Error", "ABEND: VMDelHeap() ...") while the screen is still in graphics, and puts
 ; it back in text mode, clearing it, on its way out: GAMEEND.COM found nothing to read.
 MSG_BYTES   equ 256
@@ -15499,12 +15499,14 @@ dos_write:
         push cx
         push si
         push di
+        push fs
+        mov fs, [cs:far_seg]
         mov si, dx
         jcxz .done
 .byte:  mov al, [si]
         inc si
         mov di, [cs:msg_at]
-        mov [cs:msg_ring + di], al
+        mov [fs:FAR_MSG + di], al
         inc di
         and di, MSG_BYTES - 1
         mov [cs:msg_at], di
@@ -15512,7 +15514,8 @@ dos_write:
         jae .full
         inc word [cs:msg_len]
 .full:  loop .byte
-.done:  pop di
+.done:  pop fs
+        pop di
         pop si
         pop cx
         pop ax
@@ -15522,7 +15525,8 @@ dos_write:
 ; game: GAMEEND.COM, after it, also ends with 1), saves D:\GAMEMSG.BIN for the Loader's crash
 ; report (launch.game_message): "GMSG", the code, the game's load segment, SS, SP, the stack's
 ; first STACK_BYTES there (the ways back of the calls that led to the exit), the length of the
-; text kept and the text (DOS_WRITE). Then on to DOS.
+; text kept and the text (DOS_WRITE): the header from here, the rest from the far block (FAR_QM_STACK
+; on). Not before FAR_INIT (QUIT_SAVED starts at 1). Then on to DOS.
 STACK_BYTES equ 256
 dos_quit:
         or al, al
@@ -15545,14 +15549,13 @@ dos_quit:
         push ss                         ; the stack, copied
         pop ds
         mov si, [cs:qm_sp]
-        push cs
-        pop es
-        mov di, qm_stack
+        mov es, [cs:far_seg]
+        mov di, FAR_QM_STACK
         mov cx, STACK_BYTES / 2
         cld
         rep movsw
         mov ax, [cs:msg_len]
-        mov [cs:qm_len], ax
+        stosw                           ; (FAR_QM_LEN)
         push cs
         pop ds
         mov ah, 3Ch
@@ -15567,24 +15570,30 @@ dos_quit:
         mov dx, qm_head
         pushf
         call far [cs:old21]
-        mov si, [msg_at]                ; the text, oldest first: from its start to the ring's
-        sub si, [msg_len]               ;   end, then from the ring's start
+        mov ds, [cs:far_seg]
+        mov ah, 40h
+        mov cx, STACK_BYTES + 2
+        mov dx, FAR_QM_STACK
+        pushf
+        call far [cs:old21]
+        mov si, [cs:msg_at]             ; the text, oldest first: from its start to the ring's
+        sub si, [cs:msg_len]            ;   end, then from the ring's start
         and si, MSG_BYTES - 1
         mov cx, MSG_BYTES
         sub cx, si
-        cmp cx, [msg_len]
+        cmp cx, [cs:msg_len]
         jbe .first
-        mov cx, [msg_len]
-.first: lea dx, [msg_ring + si]
+        mov cx, [cs:msg_len]
+.first: lea dx, [FAR_MSG + si]
         push cx
         mov ah, 40h
         pushf
         call far [cs:old21]
         pop ax
-        mov cx, [msg_len]
+        mov cx, [cs:msg_len]
         sub cx, ax
         jcxz .close
-        mov dx, msg_ring
+        mov dx, FAR_MSG
         mov ah, 40h
         pushf
         call far [cs:old21]
@@ -15595,7 +15604,7 @@ dos_quit:
         pop ds
         popa
 .chain: jmp far [cs:old21]
-quit_saved  db 0
+quit_saved  db 1
 msg_at      dw 0
 msg_len     dw 0
 qm_name     db "D:\GAMEMSG.BIN", 0
@@ -15604,10 +15613,7 @@ qm_code     db 0
 qm_load     dw 0
 qm_ss       dw 0
 qm_sp       dw 0
-qm_stack    times STACK_BYTES db 0
-qm_len      dw 0
 qm_end:
-msg_ring    times MSG_BYTES db 0
 
 ; SEG_MOVE: once, at a file open (AH=3Dh) of the game's (DSUNLOG.EXE the program running, its
 ; segment table where it should be, SEGTAB_AT), before any of its overlays is in: the game's segments
@@ -23542,7 +23548,10 @@ FAR_SPANS  equ FAR_TBUF + TSIZE                 ; the shadows' spans (SPANS_FLUS
 FAR_LAST_X equ FAR_SPANS + SPANS_MOST * 6       ; each thing's place as last seen (dust)
 FAR_LAST_Y equ FAR_LAST_X + MAP_COUNT * 2
 FAR_PACE   equ FAR_LAST_Y + MAP_COUNT * 2       ; what moved in frames left undrawn (STEADY PACE)
-FAR_END    equ FAR_PACE + PACE_KEPT * 10
+FAR_QM_STACK equ FAR_PACE + PACE_KEPT * 10      ; the crash report's copy of the stack (DOS_QUIT)
+FAR_QM_LEN equ FAR_QM_STACK + STACK_BYTES       ; ... and the length of the text kept, then
+FAR_MSG    equ FAR_QM_LEN + 2                   ; the last text written to the screen (DOS_WRITE)
+FAR_END    equ FAR_MSG + MSG_BYTES
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
 
@@ -24034,7 +24043,8 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov ax, 4C01h
         int 21h
-.far:   mov ax, [cs:far_seg]
+.far:   mov byte [cs:quit_saved], 0     ; (DOS_QUIT's from now on)
+        mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
         mov [cs:panel_seg], ax
         mov [cs:sc_seg], ax
