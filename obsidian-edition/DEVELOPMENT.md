@@ -550,18 +550,18 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,130 of the room's 8,182
-paragraphs, so 2,052 (32.1 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,145 of the room's 8,182
+paragraphs, so 2,037 (31.8 KB) are spare, and with `UMBPLUS.COM`
 about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,325
+helper, the overlay buffer and the music buffer, each with its MCB: 3,340
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 64,544 bytes
-(`image_len`; the resident part ends at `resident_end`, F520h), so with the
-install's 256-byte stack 736 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 64,784 bytes
+(`image_len`; the resident part ends at `resident_end`, F610h), so with the
+install's 256-byte stack 496 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
-specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240); the HMA has 7,080 bytes left for more buffers (the far block ends at
+specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240, its kit and the review's fixes 240); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -1458,13 +1458,15 @@ known, `ROLL_UNKNOWN` and no age), so the Loader's `give_ages` leaves it be.
 EDIT on a party member (the portrait's menu) opens the same screen on a copy of
 its sheet, which the game tells from a new member by DS:0E9Ch (-1 new, else the
 member: 65C6Dh). `CR_OPEN` (a site at 65C68h, `mov byte [1A58h],0FFh`, just
-before that test) keeps the member's classes (as the sheet numbers them, and as
+before that test) keeps the member's race, classes (as the sheet numbers them, and as
 the screen does, `KIT_CLASS_OF`), kit, `+14h` dword and six scores (`ED_*`), puts
 its kit on the copy (which the game's copy leaves out) and its classes in
 `wp_classes_seen` (else `KIT_STALE` takes the kit off both sheets), and its
 roll in `CR_ROLL`: the age shown is its own (`ED_AGE`) until the scores change
 (`ED_ROLLED`: the die; the hit point die's probe runs at the opening too). The
-panel's opening gives the kit back while the classes are the member's. At DONE,
+panel's opening gives the kit back while the race and classes are the member's
+(a multiclass kit's number is its race's group's) and, for a Healer, water is
+marked (`HEALER_BARRED`, as the kit page has it). At DONE,
 `CR_WEAPONS` asks for no weapon specs while the classes and kit are the
 member's (`ED_SAME`), keeping its specs with the screen's roll and age
 (`ED_KEEP`; an older sheet's dword as it was). Before this, EDIT took the kit
@@ -1474,10 +1476,20 @@ its age; with the die rolled during EDIT, a new age and the same kit and spec.
 Tests: `test_edit_keeps_its_specs`.
 
 The THAC0 (`CR_THAC0_DRAW`, whatever the rules): `THAC0: M18 R19` at `CR_AGE_X`
-on the hit points' line, the creature being made's THAC0 (`+1Fh`, which the
-game works out again as the classes change) less the game's STR to-hit table's
-entry (DS:7C2h + STR) for M and its DEX missile table's (DS:7DCh + DEX) for R,
-no less than 0. The hit points' box (the 7th, `CR_HP_BOX`) is widened to x 243
+on the hit points' line, the THAC0 (`CR_THAC0_BASE`) less the game's STR
+to-hit table's entry (DS:7C2h + STR) for M and its DEX missile table's
+(`DEX_REACTION`'s, + DEX) for R, no less than 0. The game works the THAC0 out
+again as the classes change, but `PROBE_THAC0` reads the kit from the party's
+sheets, not the one being made, so the creature's `+1Fh` lacks a kit chosen on
+the panel: `PROBE_THAC0` keeps the game's own, kit-less (`THAC0_GAME`,
+`THAC0_SEEN` from `CR_OPEN` on), and `CR_THAC0_BASE` applies the sheet being
+made's kit to it (`kits.thac0`: a Scholar 1 worse, a warrior's THAC0 for the
+Swashbuckler, Crusader, Battle Mage and Mind Warrior); with none worked out on
+the screen (an EDIT), the creature's `+1Fh`, its kit in it. A kit chosen or
+taken back (`KIT_SHOWN_DUE`, from `KIT_ROW`) draws the hit points and the
+THAC0 again at the click's end (`KIT_REDRAW`), after a Battle Mage's, Mind
+Warrior's or Arcanist's hit points are rolled again (`KIT_REROLL`) the age too,
+whose PSP box that puts back. The hit points' box (the 7th, `CR_HP_BOX`) is widened to x 243
 (`cr_thac0_box`; DONE's left is 244), so the game's putting it back clears the
 line. It is drawn after each redraw of the hit points: the panel's, at
 `CR_AGE` (65A89h, PSP after them), a click on CON (`CR_AGE_CON`), and `CR_HP`
@@ -1488,7 +1500,9 @@ segment read from the overlay's code beside its site, as `CR_NAME` does for
 PSP's), draws the hit points again (`CR_PAIR_DRAW`, shared with PSP's) and the
 THAC0. Checked in DOSBox: THAC0 18 with STR 17 and DEX 15 `M17 R18`; DEX 18
 after a roll `R16`; STR 18 `M16` at once; a click on the hit points and on CON
-keep the line. Tests: `test_thac0_line`.
+keep the line; a 3rd-level preserver `M19 R20`, a Scholar `M20 R21`, a Battle
+Mage `M17 R18` (the line and the age back after its hit points are rolled
+again). Tests: `test_thac0_line`.
 Before 2.13.2 the age was rolled from the name and race (`natural_start`, a
 16-bit hash, DSCLOG's `AGE_ROLL` then); a character given one keeps it, and
 `give_ages` puts that roll on its sheet, silently. `CR_AGE` and `CR_NAME` keep

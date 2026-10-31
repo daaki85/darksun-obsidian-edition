@@ -5117,6 +5117,16 @@ probe_wp_disc_win:
         and eax, 0x00FFFFFF
         cmp eax, [cs:ed_cr_classes]
         jne .cleared
+        mov dl, [cs:ed_race]    ; (and the race: a multiclass kit's number is its group's)
+        cmp dl, [es:bx + 0x18]
+        jne .cleared
+        push eax
+        mov dl, [cs:ed_kit]
+        and dl, 3
+        call kit_class
+        call healer_barred      ; (a Healer only with water marked, as the kit page has it)
+        pop eax
+        jc .cleared
         mov [cs:wp_classes_seen], eax
         mov al, [cs:ed_kit]
         mov [es:bx + KIT_BYTE], al
@@ -6756,6 +6766,8 @@ probe_thac0:
         push es
         mov cx, 20
         sub cx, si
+        mov [cs:thac0_game], cl ; (the game's, no kit: the creation screen's THAC0 applies its kit, CR_THAC0_BASE)
+        mov byte [cs:thac0_seen], 1
         les bx, [0x1661]
         imul ax, [bp + 6], 0x47
         add bx, ax
@@ -6849,7 +6861,11 @@ probe_slots:
         jne .tables
         or cx, cx
         jnz .tables
-        call kit_level
+        cmp byte [bp + 0x0A], 6         ; (a 6th-level slot only with AD&D's tables: the game's
+        jb .level                       ;   own give a cleric none)
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .tables
+.level: call kit_level
         movzx ax, al
         push bx
         movzx bx, byte [bp + 0x0A]
@@ -8624,6 +8640,7 @@ ed_classes dd 0                 ; (its classes, +21h to +23h, 1-17)
 ed_cr_classes dd 0              ; (the same as the creation screen numbers them, 1-8: KIT_CLASS_OF)
 ed_specs   dd 0                 ; (its +14h dword: the weapon specs, the roll and the age)
 ed_kit     db 0
+ed_race    db 0
 ed_scores  times 6 db 0         ; (its six scores, the creature being made's +22h on)
 cr_open:
         pop word [cs:cr_ip]
@@ -8635,6 +8652,7 @@ cr_open:
         push es
         mov byte [cs:ed_on], 0
         mov byte [cs:ed_age], 0
+        mov byte [cs:thac0_seen], 0     ; (no THAC0 worked out on this screen yet)
         mov bx, [CR_EDITING]
         cmp bx, LV_PARTY
         jae .out                ; (-1: a new member)
@@ -8647,6 +8665,8 @@ cr_open:
         mov [cs:ed_classes], eax
         mov eax, [es:bx + SPEC_SLOTS]
         mov [cs:ed_specs], eax
+        mov al, [es:bx + 0x18]
+        mov [cs:ed_race], al
         mov al, [es:bx + KIT_BYTE]
         mov [cs:ed_kit], al
         mov byte [cs:ed_on], 1
@@ -8864,26 +8884,28 @@ cr_box_put:
 .ret:   ret
 
 ; CR_THAC0_DRAW: "THAC0: M18 R19" right of the hit points (their box's saved background widened to x
-; 243: gamepatch.py's "cr_thac0_box"), at CR_AGE_X, above the age: the creature being made's THAC0
-; (+1Fh, the game's as its classes stand) less STR's to-hit adjustment (M, melee: DS:7C2h + STR) and
-; DEX's missile adjustment (R, ranged: DS:7DCh + DEX), as the inventory's THAC0 with no weapon. DS
-; the game's.
+; 243: gamepatch.py's "cr_thac0_box"), at CR_AGE_X, above the age: the THAC0 (CR_THAC0_BASE) less
+; STR's to-hit adjustment (M, melee: DS:7C2h + STR) and DEX's missile adjustment (R, ranged:
+; DEX_REACTION's table, + DEX), as the inventory's THAC0 with no weapon. DS the game's.
 CR_STR_HIT equ 0x7C2
-CR_DEX_MISSILE equ 0x7DC
 cr_thac0_word db 'THAC0: M', 0
 cr_r_word db ' R', 0
 cr_thac0_text times 16 db 0
+thac0_game db 0                 ; (PROBE_THAC0's last: 20 less the classes', no kit)
+thac0_seen db 0                 ; (one worked out since the screen opened, CR_OPEN)
 cr_thac0_draw:
+        call cr_thac0_base
+        mov cl, al
         mov di, cr_thac0_text
         mov si, cr_thac0_word
         call age_copy
         mov si, CR_STR_HIT
-        mov dx, 0x22            ; (STR)
+        mov dx, CREATURE_SCORES ; (STR)
         call cr_thac0_less
         mov si, cr_r_word
         call age_copy
-        mov si, CR_DEX_MISSILE
-        mov dx, 0x23            ; (DEX)
+        mov si, DEX_REACTION
+        mov dx, CREATURE_SCORES + 1 ; (DEX)
         call cr_thac0_less
         call cr_text_routine
         mov ax, [CR_HP_BOX + 2]
@@ -8894,17 +8916,62 @@ cr_thac0_draw:
         push word cr_thac0_text
         call c_draw_line
         ret
-cr_thac0_less:                  ; (at CS:DI, the THAC0 less DS:SI's table's entry for the score at
-        les bx, [0x11A0]        ;   the creature's +DX; no less than 0)
+cr_thac0_less:                  ; (at CS:DI, CL less DS:SI's table's entry for the score at the
+        les bx, [0x11A0]        ;   creature's +DX; no less than 0)
         add bx, dx
         movzx ax, byte [es:bx]
-        sub bx, dx
         add si, ax
-        mov al, [es:bx + 0x1F]
+        mov al, cl
         sub al, [si]
         jns .put
         xor al, al
 .put:   jmp c_itoa
+
+; CR_THAC0_BASE: AL the THAC0 of the character being made: the game's last (THAC0_GAME, worked out as
+; its classes changed) with the kit on the sheet being made (kits.thac0: a Swashbuckler's, Crusader's,
+; Battle Mage's or Mind Warrior's a warrior's, 21 less the level, where better; a Scholar's 1 worse),
+; the kit not counted there (PROBE_THAC0 reads the party's sheets); none worked out on this screen (an
+; EDIT), the creature's own (+1Fh, its kit in it). DS the game's.
+cr_thac0_base:
+        les bx, [0x11A0]
+        mov al, [es:bx + 0x1F]
+        cmp byte [cs:thac0_seen], 0
+        je .ret
+        mov al, [cs:thac0_game]
+        les bx, [WP_CREATION]
+        mov ah, [es:bx + KIT_BYTE]
+        cmp ah, KIT_OPEN
+        je .ret
+        and ah, 3
+        jz .ret
+        push ax
+        call kit_class
+        mov dl, al
+        pop ax
+        shl dl, 2
+        add dl, ah              ; (the kit, as KIT_IS numbers them)
+        cmp dl, KIT_SCHOLAR
+        jne .warrior
+        inc al
+.ret:   ret
+.warrior:
+        cmp dl, KIT_SWASHBUCKLER
+        je .level
+        cmp dl, KIT_CRUSADER
+        je .level
+        cmp dl, KIT_BATTLE_MAGE
+        je .level
+        cmp dl, KIT_MIND_WARRIOR
+        jne .ret
+.level: mov ah, 21
+        sub ah, [es:bx + 0x24]
+        cmp ah, 1
+        jge .best
+        mov ah, 1
+.best:  cmp ah, al
+        jge .ret
+        mov al, ah
+        ret
 
 cr_text_routine:                ; (c_draw_line: the game's text routine, the screen's window)
         mov ax, ds
@@ -10368,12 +10435,12 @@ wp_click:
         mov ax, [cs:wp_end_file]  ; go on at the routine's end
         sub ax, [cs:wp_ret_file]
         add [bp + 2], ax
-        cmp byte [cs:kit_reroll_due], 0
+        cmp byte [cs:kit_shown_due], 0
         je .game
         sti
         pushad
         push es
-        call kit_reroll
+        call kit_redraw
         pop es
         popad
 .game:  pop ax
@@ -10625,6 +10692,7 @@ kit_row:
         mov dl, KIT_OPEN        ; the one chosen: taken back, the rest in use again
 .put:   call kit_made           ; (a Battle Mage or Mind Warrior before or after: rolls again)
         call kit_rolls
+        mov byte [cs:kit_shown_due], 1  ; (its THAC0: KIT_REDRAW)
         mov [es:bx + KIT_BYTE], dl
         call kit_made
         call kit_rolls
@@ -10818,6 +10886,25 @@ cr_show:
         ret
 
 kit_reroll_due db 0
+kit_shown_due db 0
+
+; KIT_REDRAW: (WP_CLICK, at its end) a kit chosen or taken back: the hit points and PSP rolled again
+; for one with its own (KIT_REROLL) and the age shown again over PSP's box put back, else the hit
+; points shown again; then the THAC0 with the kit (CR_THAC0_DRAW). DS the game's.
+kit_redraw:
+        mov byte [cs:kit_shown_due], 0
+        cmp byte [cs:kit_reroll_due], 0
+        je .hp
+        call kit_reroll
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .thac0
+        call cr_age_draw
+        jmp .thac0
+.hp:    mov si, 0x3F0
+        mov di, CR_HP_BOX
+        mov ax, CR_HP_SHOW
+        call cr_show
+.thac0: jmp cr_thac0_draw
 
 ; The Elementalist (kits.py): a cleric with a second sphere, its spells and its weapons. The sheet's
 ; SPHERE2 (+45h): 0 none, 1-4 the sphere (air, earth, fire, water) + 1. On the creation panel's
@@ -17976,11 +18063,14 @@ ed_rolled:
         ret
 
 ; ED_SAME: CF clear if sheet ES:BX, made at DONE, is an EDIT's (CR_OPEN) with the member's own
-; classes and kit still. All registers kept.
+; race, classes and kit still. All registers kept.
 ed_same:
         cmp byte [cs:ed_on], 0
         je .no
         push eax
+        mov al, [es:bx + 0x18]
+        cmp al, [cs:ed_race]
+        jne .pop
         mov eax, [es:bx + 0x21]
         and eax, 0x00FFFFFF
         cmp eax, [cs:ed_classes]

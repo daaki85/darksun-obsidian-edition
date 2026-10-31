@@ -17,6 +17,24 @@ notes](PATCH-NOTES.md).
   DSCLOG's image 64,544 bytes (+240). The README's inventory THAC0 now says all it counts (the
   weapon spec's to-hit, a kit's, the two-weapon penalty).
 
+**Fixed (the review of the changes since 2.13.2)**
+- The creation screen's THAC0 left out a kit chosen on the panel (the game's THAC0 hook reads the
+  party's sheets): DSCLOG keeps the game's kit-less THAC0 (`THAC0_GAME`) and applies the sheet
+  being made's kit (`CR_THAC0_BASE`: a Scholar 1 worse, a warrior's for the Swashbuckler, Crusader,
+  Battle Mage and Mind Warrior). A kit chosen or taken back draws the line again
+  (`KIT_REDRAW`); after a Battle Mage's, Mind Warrior's or Arcanist's hit points are rolled again
+  the age is drawn again too (it went missing: PSP's box put back, nothing after). Checked in
+  DOSBox.
+- EDIT gave a kit back with the same classes whatever the race (a multiclass kit's number is its
+  race's group's: a half-elf fighter/thief Shadowblade made a dwarf came back a Ghetto Fighter),
+  and a Healer whatever the sphere: the race is kept and compared too (`ED_RACE`, `ED_SAME`), and a
+  Healer comes back only with water marked (`HEALER_BARRED`).
+- An Elementalist got a 6th-level slot at 11th without AD&D's tables, where a cleric gets none:
+  only with them now (`kits.slots`' `adnd`, DSCLOG's `PROBE_SLOTS`).
+- Tidier: the Options tab's rule groups are in each rule's own entry (`viewer.py`), and the
+  creation THAC0 uses DSCLOG's `DEX_REACTION` and `CREATURE_SCORES`. DSCLOG's image 64,784 bytes
+  (+240). Tests: `test_thac0_line`, `test_edit_keeps_its_specs`, `test_slots`.
+
 **Changed**
 - **The Shinobi's spell slots go on to 13th level:** 3 2 1 at thief level 11, 3 2 2 at 12th and
   3 3 2 at 13th, as *The Complete Ranger's Handbook*'s Seeker table goes on (its 4th-level slot
@@ -26,9 +44,10 @@ notes](PATCH-NOTES.md).
   `test_slots`. DSCLOG's image 64,272 bytes (+16).
 - **The Shinobi gets 4th-level spells at 13th:** the table's 4th-level slot (3 3 2 1, the table
   four spell levels wide now) and three spells on its list, Improved Invisibility (46), Solid Fog
-  (51) and Confusion (41) (`kits.SHINOBI_SPELLS`, DSCLOG's `SHINOBI_SPELLS`). It learns one no
-  sooner than its slot: CHOOSE A SPELL offers spell levels up to half its casting level rounded
-  up, which is 4th at thief level 12 (casting 7th), so no more than 3rd before 13th
+  (51) and Confusion (41) (`kits.SHINOBI_SPELLS`, DSCLOG's `SHINOBI_SPELLS`). CHOOSE A SPELL
+  offers one no sooner than its slot: it offers spell levels up to half the casting level rounded
+  up, which is 4th at thief level 12 (casting 7th), so no more than 3rd before 13th (a scroll of
+  one can still be read and learnt sooner, as its others are, to be cast from 13th)
   (`kits.shinobi_pick_level`, DSCLOG's `SHINOBI_PICK_CAST`, `SHINOBI_FOURTH`). Tests:
   `test_slots`, `test_pick_level`, `test_pick_any`. DSCLOG's image 64,304 bytes (+32).
 

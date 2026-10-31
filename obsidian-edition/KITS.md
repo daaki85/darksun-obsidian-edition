@@ -78,7 +78,7 @@ A thief starts with a bone long sword, sling, leather chest armour.
 |---|---|---|---|---|
 | **Assassin** | hiding in shadows not halved in daylight; a backstab one step deadlier: **×3 at 1st-4th level, ×4 at 5th-8th, ×5 at 9th-12th, ×6 from 13th** (a thief's ×2 to ×5) | −15 pick pockets and open locks; light armour only, after changing class too | the thief's gear; with fuller starting gear, a cloak | |
 | **Swashbuckler** | a warrior's THAC0: 21 less its level (20 at 1st, 11 at 10th, 8 at 13th) | −10 to every thief skill | the thief's gear | can't dual to fighter, gladiator or ranger; can't go with the Crusader, Battle Mage or Mind Warrior (a warrior's THAC0 twice over) |
-| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th; then 3 2 1 at 11th, 3 2 2 at 12th and 3 3 2 1 at 13th, a 4th-level slot**, as *The Complete Ranger's Handbook*'s Seeker table goes on; cast at the thief level less 5 (1st at 6th, 5th at 10th, 8th at 13th), in light armour too; one spell learnt at each level up from 6th, from its own 21 ([the list](#kits-spell-slots); a 4th-level one from 13th, with its slot); one of its own learnt from a scroll too, if it first reads it (a d100 against its **read languages**) and then, with the rule for INT on, learns it (INT's chance): a failed roll uses the scroll up | no spell but its own from a scroll; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (after changing class too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
+| **Shinobi** | preserver spells: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th; then 3 2 1 at 11th, 3 2 2 at 12th and 3 3 2 1 at 13th, a 4th-level slot**, as *The Complete Ranger's Handbook*'s Seeker table goes on; cast at the thief level less 5 (1st at 6th, 5th at 10th, 8th at 13th), in light armour too; one spell learnt at each level up from 6th, from its own 21 ([the list](#kits-spell-slots); a 4th-level one at a level up from 13th, with its slot, or sooner from a scroll, to cast from 13th); one of its own learnt from a scroll too, if it first reads it (a d100 against its **read languages**) and then, with the rule for INT on, learns it (INT's chance): a failed roll uses the scroll up | no spell but its own from a scroll; dagger, short sword, quarterstaff, chatkcha, sling, staff sling and bow only; light armour only (after changing class too); no shield | a bone short sword in place of the long sword; with fuller starting gear, a cloak | can't dual to preserver; can't go with the Arena Champion, Sentinel or Brute |
 
 ## Preserver kits
 
@@ -261,7 +261,8 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
   does; the Crusader still has one fewer at each spell level with them.
 - An **Elementalist**'s slots are a level behind, but never none at a spell
   level a cleric of its own level casts: 1 there (1st-level spells at 1st, 2nd
-  at 3rd, 3rd at 5th, 4th at 7th, 5th at 9th, 6th at 11th).
+  at 3rd, 3rd at 5th, 4th at 7th, 5th at 9th, and 6th at 11th with AD&D's
+  tables, as a cleric's 6th-level slots come only with them).
 - A cleric's 11th level brings a **6th-level slot**
   ([6th-level priest spells](FEATURES.md#6th-level-priest-spells)); a
   Crusader's one fewer leaves it none, and an Elementalist has 1 there (below). A preserver has no 6th-level spells to cast.

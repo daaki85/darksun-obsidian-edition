@@ -257,7 +257,7 @@ def slot_level(kid: int, level: int) -> int:
     return max(0, level - 1) if kid == ELEMENTALIST else level
 
 
-def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -> int:
+def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, adnd: bool = True) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
     giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): a Scholar's wizard slots 1 more
     at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer, an
@@ -268,8 +268,10 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -
         return game_slots + 1 if game_slots else 0
     if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
         return max(0, game_slots - 1)
-    if kid == ELEMENTALIST and magic == PRIEST and not game_slots and level >= 2 * spell_level - 1:
-        return 1  # (its slots a level behind, but 1 at a spell level its own level reaches)
+    if kid == ELEMENTALIST and magic == PRIEST and not game_slots and level >= 2 * spell_level - 1 \
+            and (spell_level < 6 or adnd):
+        return 1  # (its slots a level behind, but 1 at a spell level its own level reaches; a 6th-level
+        # one only with AD&D's tables, ADND: the game's own give a cleric none)
     if kid == SHINOBI and magic == WIZARD:
         kid = SEEKER
     elif kid in (SEEKER, JUSTIFIER) and magic != PRIEST:
