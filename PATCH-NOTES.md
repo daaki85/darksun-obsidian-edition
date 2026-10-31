@@ -84,6 +84,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.
 - **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
 - **[Changed]** A ranger's spells last and deal damage at its level minus 7, as AD&D has it *(was its full level)*.
+- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (a 6th-level priest spell: Magic and Psionics) takes magical years back.
+- **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
 - **[Changed]** Preservers' INT sets their chance to learn a spell from a scroll (35% at INT 9 to 100% at 24) and the most spells of each level they can know. New preservers choose their starting spells.
 
 **Kits**
@@ -139,9 +141,7 @@ A few of them:
 
 ## Magic and Psionics
 
-- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (6th-level priest, below) takes magical years back.
 - **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
-- **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
 - **[New]** Six new wizard spells, each with its own icon and description:
 
 | Spell | Level | What it does |
@@ -289,7 +289,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F): every match highlighted, Enter for the next.
-- **[New]** More of a fight in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`); and **Detonate**'s blast on an item: which one, the d20, and whether it's gone (it picks the worn item that breaks most easily, a bone helm before bone armour).
+- **[New]** More of a fight in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`); **Detonate**'s blast on an item: which one, the d20, and whether it's gone (it picks the worn item that breaks most easily, a bone helm before bone armour); and whether a thri-kreen strikes with a **claw or its bite**.
 - **[New]** More of the game's own choices in the dice log: why it **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **ability checks scripts make** with a roll of their own (a CHA to talk someone round, STR to break chains); and a party member's **ability score** changing.
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
@@ -332,7 +332,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); Enlarge's dice, CON's regeneration and poison saves, and Haste's aging (Magic and Psionics); and thief skills (Improved Thieving).
+Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, CON's regeneration and poison saves, and Haste's aging (Classes and Kits); Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
 
 ## Your Saved Games
 
@@ -344,8 +344,7 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
 - A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
 - With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
-- **A save made with 2.13.0 is not for earlier versions.** It keeps the weapon specs packed with the age beside them, which an older Loader reads as other specs. Older saves load in 2.13.0 as they are.
-- **A save made with this version is not for 2.13.1 or earlier.** It keeps each character's starting roll beside the weapon specs (so Restore Youth can take back any number of magical years), which an older Loader reads as other specs. A character from an older save keeps its age, and its roll is put on its sheet when the game is loaded. From 2.13.1 a character's true age (how young Restore Youth can make them) is worked out a new way, the same as the creation screen shows; an age already given stays as it is.
+- **A save made with 2.13.0 or later is not for earlier versions, and one made with 2.13.2 or later not for 2.13.1 or earlier:** the weapon specs are kept packed with the age and each character's starting roll beside them, which an older Loader reads as other specs. Older saves load in newer versions as they are: a character keeps its age, and its roll is put on its sheet when the game is loaded.
 - A thri-kreen **druid/fighter** Wasteland Seer from an earlier version has no kit now: the Wasteland Seer is for a thri-kreen druid/fighter/psionicist.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 

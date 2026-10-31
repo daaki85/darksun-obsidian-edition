@@ -11,6 +11,7 @@ README.*
 - [Checks, thief skills and searches](#checks-thief-skills-and-searches)
 - [Hit points, kills and levels](#hit-points-kills-and-levels)
 - [Character creation](#character-creation)
+- [Ages](#ages)
 - [Everything else](#everything-else)
 
 ## Fights
@@ -25,6 +26,7 @@ README.*
 | `  X hits Y for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)` / `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the weapon's dice, the rest added once; with that option off, the whole damage, STR bonus included. |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](KITS.md#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)). |
+| `Look: Mountain Stalker: HP 38/60, AC 4, THAC0 11, chaotic evil.` | A monster looked at in a fight: what the [Look box](README.md#what-hurts-a-monster-the-look-box) shows of it, and on the lines below its defences and what its hits do, as the game's window shows them on closing the box. |
 
 **Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20 hits`
 replace `needs 12+` when the roll is out of the ordinary range. `X attacks Y
@@ -51,6 +53,7 @@ hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `    Stoneskin has 23 charges (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 1d4 = [3])` | Effects that last a number of uses rather than a time (Stoneskin's blows, Mirror Image's images, Invisibility's one attack, Poison's rounds): the game stores them as charges, worked out like a duration. |
 | `    Acid on Slig: 2d4 = [3 + 1] = 4 acid damage` / `    Sunstroke's heat on Scar: 1d4 = 3 fire damage` / `    Improved AC on Slig: one charge used, 7 left` | Acid Arrow's damage each round while the acid lasts; Sunstroke's heat each round while it holds; and an effect with charges using one up, with how many are left (Armor or Ironskin taking a hit, Mirror Image losing an image...). |
 | `Harm: all the target's hit points but 1d4 (...)` / `  Wall of Thorns' wall instead: 8 + AC 3 = 11` / `    Slig is swept off its feet: loses its next turn` | The [6th-level priest spells](FEATURES.md#6th-level-priest-spells)' own lines: Harm leaving 1d4 hit points (the dice the game rolls go unused), Wall of Thorns' damage by the creature's AC in place of the dice rolled, and a creature that fails its save against Whirlwind losing its next turn. |
+| `Gerakis's system shock (Haste's aging): d100 = 40, needs 99 or less (CON 22) -> survives` | With [ages](FEATURES.md#ages-and-magical-aging) on, Haste's system shock roll by CON for each creature it speeds (a party member who survives is a year older), and Restore Youth's for each it makes younger; a failed roll kills. |
 | `Strength: 1d6 = 5 -> Cilla's STR +5 while it lasts (at most 24)` | The amount Strength (or Adrenalin Control) adds. |
 | `Y magic resistance 30% vs Fireball: d100 = 71 -> not resisted` | The magic resistance roll (only shown for targets that have some), counting Mind Bar and Lower Resistance. |
 | `    Dispel Magic on Slig's Blessed: d100 = 60, needs 85 or less (50 + 5 x 7 - 5 x 0 (its caster's level)) -> dispelled` | Dispel Magic tries each effect on its target separately: 50 + 5 for each of the dispeller's levels, less 5 for each of the level the effect was cast at. It can't touch some (Biofeedback, Diseased, Feeblemind, Poisoned, Graft Weapon, No spell use, Stuck, Mind Bar and a few more). |
@@ -86,6 +89,7 @@ creatures save again as they stay in them; those lines have no "from".
 | `Daaki shoots at the archery target (15 squares from the target, 8 from the Bowyer): 0-20 = 2, needs under 14 (DEX 21 - 15 / 2), the centre 4 or less -> the centre: the Bowyer's reward, 6 Arrows +2` | A shot at the Bowyer's archery target in Teaquetzl: the roll, what it needed, how far the archer is from the target and from the Bowyer, and why a centre shot did or didn't earn his arrows (more than 13 squares from the target, the Bowyer within 25, once a game). |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), and what its chance is made of. |
 | `Zulak uses Graft Weapon: power check d20 = 14, needs 11 or less -> it fails` / `    power score 11 = 16 CON - 5 Graft Weapon` | A psionic power's check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)): a d20 at or under the power's score, the ability it uses plus the power's adjustment. A failure is the game's `psionic power check fails`, and costs half the PSP. A line `... within X's Synaptic Static: ...` comes first when someone else keeps Synaptic Static up. |
+| `    K'ratchek spends 16 PSP (52 -> 36)` / `    Cyrus regains 8 PSP (20 -> 28)` | PSP used for a power (or to keep one up), and PSP coming back. |
 | `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20) -> resisted` | A psionic attack mode (Ego Whip, Id Insinuation, Psychic Crush, Psionic Blast) resisted or not: its target rolls 1 to its defence twice, each needing more than the attacker's power check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)). |
 | `Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Tezral moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](FEATURES.md#hiding-in-shadows-to-backstab) on). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
@@ -115,6 +119,15 @@ creatures save again as they stay in them; those lines have no "from".
 | `Character creation: the six scores add up to 101` | After the scores, what they add up to: the most they may add up to with [Scores and hit points as rolled](FEATURES.md#scores-and-hit-points-as-rolled). |
 | `Character creation, hit points 15: Fighter d10 per level: 7 + 9; Thief d6 per level: 5 + 1 = 22, / 2 classes = 11, +4 CON 16 = 15` | The new character's hit points: a die for every level of every class, divided by the number of classes, plus CON's bonus (see [Character creation](HOW-THE-GAME-WORKS.md#character-creation)). With [the better of two](FEATURES.md#hit-dice-the-better-of-two) each die shows both rolls (`10 (the better of 2 and 10)`); with [multiclass hit points](FEATURES.md#multiclass-hit-points) CON's bonus goes on each die before the total is shared (`+2 CON 16 on each of 4 dice = 30, / 2 classes = 15`). |
 | `Character creation: a name picked at random, 1d33 = 6` | The game picks a new name from its lists when the sex or race changes. |
+
+## Ages
+
+With [ages](FEATURES.md#ages-and-magical-aging) on:
+
+| Line | Meaning |
+|---|---|
+| `Cyrus the Great is 21 (a human: 15 + 1d8 = [6]); middle-aged at 40.` | A character's starting age: the race's base and dice (Table 7), on the creation screen with each roll of the die, or the first time the Loader sees a character with none (the game's own party, an older save). |
+| `A year has passed: Gerakis is 60, middle-aged: STR -1, CON -1, INT +1, WIS +1.` | Each 365 days of game time, every party member a year older, with the score changes of an age category reached (and death at the most the race lives). |
 
 ## Everything else
 

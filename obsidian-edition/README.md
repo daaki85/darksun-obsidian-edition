@@ -30,12 +30,13 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [One-time setup](#one-time-setup)
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
-  - [Updating, backups and the Loader's
-    files](#updating-backups-and-the-loaders-files)
+  - [Updating, backups, saved games and the Loader's
+    files](#updating-backups-saved-games-and-the-loaders-files)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [Names over figures](#names-over-figures)
   - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
+  - [The creation screen](#the-creation-screen)
   - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
   - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
   - [Charges in item boxes](#charges-in-item-boxes)
@@ -105,8 +106,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 **What it changes on your computer.** The game's own files are never modified:
 the Loader runs a patched copy of the game from its own folder, and writes to
 the game folder only your saves and characters. Every file it writes, and how to
-update or back up: [Updating, backups and the Loader's
-files](#updating-backups-and-the-loaders-files).
+update or back up, and what happens to your saves: [Updating, backups, saved
+games and the Loader's files](#updating-backups-saved-games-and-the-loaders-files).
 
 ## Requirements
 
@@ -250,7 +251,7 @@ beside it, and offers "Shattered Lands with the Obsidian Edition" among
 its choices, once the Loader has prepared the `dos` folder (the first
 start through the Loader does that).
 
-### Updating, backups and the Loader's files
+### Updating, backups, saved games and the Loader's files
 
 **Updating.** Unzip the new release into a folder of its own and copy
 `settings.json` from the old folder into it to keep your options (the
@@ -265,6 +266,38 @@ changes the game's own files, but your saves are written by the patched game:
 one with the new items ticked can hold item types the original game doesn't
 have, so load such a save with the Loader. To go back to the original game,
 start it the GOG way and load a save from before the mod.
+
+**Your saved games.** A save from the original game, or an earlier version
+of the mod, loads and plays with every fix and rule change from the moment it
+is loaded: they're in the patched game and the Loader, not in the save, so
+effects already running follow them too. What a bug already did stays in the
+save:
+
+- A character who kept Share Strength's strength after the power ended still
+  has it (it shows on their Effects screen): load a save from before the power
+  was used to be rid of it. One silenced by the preserver's Dispel Magic ("No
+  spell use") casts again once it wears off.
+- With ages on, each character is given a starting age the first time the
+  Loader sees them (the dice log shows the roll).
+- A Healer from an earlier version keeps its sphere and is given the cosmos
+  spells when the game is loaded. A thri-kreen druid/fighter Wasteland Seer
+  has no kit now: the kit is a druid/fighter/psionicist's.
+- Thieves' Tools from an earlier version (Mirlon's or Kel's) do nothing: a
+  thief picks pockets with the Pick Pockets button.
+- In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
+  weapon rack holding Thornwall is gone (a new game has it).
+- A new game whose arena fight never began (no announcer, and walking said NO
+  PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
+- **A save made with 2.13.0 or later is not for earlier versions**, and one
+  made with 2.13.2 or later not for 2.13.1 or earlier: the weapon specs are
+  kept packed with the age and the starting roll beside them, which an older
+  Loader reads as other specs. Older saves load in newer versions as they are.
+
+A new game is still the way to see all of the mod: kits, STORE and RECALL and
+fuller starting gear come with characters made with it, and much of the new
+content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in
+the game's first areas. A save from the original game has no kits, and what it
+has already been through stays as it was.
 
 **What the Loader writes**, all in its own folder (beside
 `Start Obsidian Edition.bat`) but the saves:
@@ -436,13 +469,6 @@ change.
   What depends on the target (attacking from behind or backstabbing, a Blurred
   target) is left out; the dice log shows it on each attack.
 
-The **creation screen** shows a THAC0 too, right of the hit points and above
-the age: `THAC0: M18 R19`, M for melee and R for ranged, the character's
-THAC0 as its classes and kit stand (a Scholar's 1 worse, a Battle Mage's a
-warrior's...) less STR's to-hit adjustment (M) and DEX's missile adjustment
-(R). So a click on STR or DEX shows at once what it does to them.
-No weapon is counted (none is held yet, and weapon specs are picked after
-DONE): it is the inventory's THAC0 before the weapon's own parts.
 - **Saves**: the d20 each needs, the character sheet's number less what the game
   adds to every save: the [Rings of Protection and the Cloak of
   Protection](FEATURES.md#rings-and-cloaks-of-protection), Bless, Prayer,
@@ -481,6 +507,31 @@ there.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thac0-saves-and-thief-skills).
 
+### The creation screen
+
+The character creation screen gains, beside the game's own scores and hit
+points:
+
+- **THAC0**, right of the hit points: `THAC0: M18 R19`, M for melee and R for
+  ranged, the character's THAC0 as its classes and kit stand (a Scholar's 1
+  worse, a Battle Mage's a warrior's...) less STR's to-hit adjustment (M) and
+  DEX's missile adjustment (R), so a click on STR or DEX shows at once what it
+  does to them. No weapon is counted (none is held yet, and weapon specs are
+  picked after DONE): it is the inventory's THAC0 before the weapon's own
+  parts.
+- **AGE**, above RECALL, with [ages](FEATURES.md#ages-and-magical-aging) on:
+  the age the character will start at, rolled again with each roll of the die.
+- **SUM**, under CHR: what the six scores add up to and the most they may
+  ([scores as rolled](FEATURES.md#scores-and-hit-points-as-rolled)).
+- **STORE** and **RECALL**, under the hit points
+  ([STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen)).
+- **KITS**, at the end of the disciplines' or spheres' panel
+  ([choosing a kit](KITS.md#choosing-a-kit)); after DONE, the weapon window
+  for a warrior's weapon specs
+  ([weapon specialization](FEATURES.md#weapon-specialization)).
+
+A picture of it: [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen).
+
 ### Spell slots on the USE screen
 
 The game's USE (cast spells) screen shows, at the top of the panel under the
@@ -488,7 +539,7 @@ spells, how many spells of the level on show (its LEVEL button) the selected
 character can still cast, and the most they get after resting, for the list on
 show only: `SPELLS LEFT`, then `WIZ` on the MAGE list (preservers' wizard
 spells) or `PRI` on the CLERIC list (clerics', druids' and rangers' priest
-spells), as `left/most` (`PRI 2/1`). The PSIONIC list shows none. Another level
+spells), as `left/most` (`PRI 3/5`). The PSIONIC list shows none. Another level
 or list shows its own when the LEVEL or list button turns to it:
 
 ![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
@@ -566,7 +617,9 @@ in its lower panel and under the pointer:
   uses up the spell and adds nothing.
 - **The armour spells' AC:** with the pointer on Barkskin's, Flesh Armor's or
   Magical Vestments' icon, the armour AC it gives by its caster's level:
-  BARKSKIN (AC 3) from a 12th-level druid. DEX and the rest are still added
+  BARKSKIN (AC 3) from a 12th-level druid (Barkskin 6 less a quarter of the
+  level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1
+  better for each 3 levels above 5). DEX and the rest are still added
   to it, and armour already better is kept, so a spell showing a worse AC
   than the character's armour does nothing for them.
 - **A click on a spell's icon leaves it on** (the game ended it); a psionic

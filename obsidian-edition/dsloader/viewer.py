@@ -431,7 +431,7 @@ class Viewer:
                                                 "rangers shoot missiles faster; other weapons at a warrior's plain rate "
                                                 "(chosen in the weapon window after DONE, and at a level up)"),
                 ("kits", None, "Kits: a character of one class may take one of its class's three kits, and some "
-                               "races' pairs of classes have kits of their own, each giving something and "
+                               "races' classes taken together (pairs, and one of three) have kits of their own, each giving something and "
                                "costing something (chosen on the creation panel's KIT page); the game's own "
                                "party gets features of its own"),
                 ("level_10", None, "An XP cap of 749,999 in place of the game's level cap of 9: a single class rises while "

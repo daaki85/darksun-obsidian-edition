@@ -34,6 +34,27 @@ notes](PATCH-NOTES.md).
   Checked in DOSBox: the bite at THAC0 15, the claws 14. DSCLOG's image 64,352 bytes (+32).
 
 **Docs**
+- **A review for redundancy and organization:**
+  - One copy of each repeated table: the thief skill tables (level, race, DEX), the highest
+    levels under the XP cap and preservers' INT table are the player's guide's alone, FEATURES
+    linking to them (two copies had let the slot table go wrong before).
+  - Saved games in one place: the Loader README's **Updating, backups, saved games and the
+    Loader's files** has every note on old saves (FEATURES' and the guide's link to it), as the
+    release zip carries the README but not the patch notes; the patch notes' two save-version
+    notes are one.
+  - The README's **In the game** has **The creation screen** (THAC0, AGE, SUM, STORE and
+    RECALL, KITS), its THAC0 paragraph no longer in the middle of the inventory's list; the USE
+    screen's example `PRI 3/5` (it was `PRI 2/1`, more left than the most).
+  - FEATURES' **Spells on the Effects screen** keeps the bug fix and links to the README for
+    what the screen shows (the armour spells' AC formulas moved there).
+  - The patch notes put Ages and CON's regeneration under Classes and Kits (they are character
+    rules, as FEATURES and the Options tab group them), and name the thri-kreen's claw or bite
+    in the dice log; the root README's What's new is the current release alone.
+  - DICE-LOG gains the Look box's line, PSP spent and regained, the system shock rolls and a
+    section for ages (a starting age, a year passing).
+  - The Options tab's Kits text and FEATURES' bug table: the multiclass kits are pairs and one
+    set of three; a thri-kreen's claws and bite cut. The weapon window's caption says what it
+    shows. Screenshots checked: none outdated.
 - The player's guide's spell slot table shows the priests' 6th-level slots in its rows (5 4 4 3 2 1
   at 11th, 6 5 5 3 2 2 at 12th) and says which class stops where under the XP cap (a druid at 12th,
   a cleric and a preserver at 11th); FEATURES' line on the slots past 10th the same.

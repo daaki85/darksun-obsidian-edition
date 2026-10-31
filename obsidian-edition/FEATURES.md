@@ -533,23 +533,11 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rangers-casting-level).
 #### Preservers' INT
 
 In the game a preserver learns any spell from a scroll it reads, and may know
-every spell. With **Preservers' INT** ticked, AD&D's table for INT holds:
-
-| INT | Chance to learn a spell | Most spells of each spell level |
-|---|---|---|
-| 9 | 35% | 6 |
-| 10 | 40% | 7 |
-| 11 | 45% | 7 |
-| 12 | 50% | 7 |
-| 13 | 55% | 9 |
-| 14 | 60% | 9 |
-| 15 | 65% | 11 |
-| 16 | 70% | 11 |
-| 17 | 75% | 14 |
-| 18 | 85% | 18 |
-| 19 | 95% | all |
-| 20 to 23 | 96% to 99% | all |
-| 24 and 25 | 100% | all |
+every spell. With **Preservers' INT** ticked, AD&D's table for INT holds (the
+table: the player's guide's [Learning preserver
+spells](PLAYER-GUIDE.md#learning-preserver-spells)): a chance to learn each
+spell from a scroll, 35% at INT 9 to 100% at 24, and a most of each spell level
+the preserver may know, 6 at INT 9 to all from 19:
 
 - **Reading a scroll:** the preserver rolls d100 against its chance. Under
   it, the spell is learnt and the scroll used up, as in the game; over it,
@@ -718,7 +706,7 @@ thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
 creation screen: DONE has made the character by then.
 
-![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec in
 place of the bone long sword the game gives warriors, in a material it may use,
@@ -820,18 +808,8 @@ human's XP starts again at 0 when it changes class, so its old classes' levels
 count against the new one: a fighter who changed to cleric at 9th (250,000 XP)
 can take the cleric to 10th, at 7th (64,000) to 11th. XP keeps counting past
 the cap; only the levels stop. With [AD&D's class tables](#adds-class-tables),
-the highest levels are:
-
-| Class | One class | Two classes | Three classes |
-|---|---|---|---|
-| Cleric | 11 | 9 | 9 |
-| Druid | 12 | 12 | 11 |
-| Fighter | 10 | 9 | 8 |
-| Gladiator | 10 | – | – |
-| Preserver | 11 | 10 | 9 |
-| Psionicist | 11 | 9 | 9 |
-| Ranger | 10 | 9 | 8 |
-| Thief | 13 | 11 | 11 |
+the highest levels are in the player's guide's [Experience and
+levels](PLAYER-GUIDE.md#experience-and-levels), with AD&D's XP table.
 
 749,999 is the most XP that keeps a druid from 13th and a preserver from 12th
 (both need 750,000), where a preserver would cast 6th-level spells. Without
@@ -1070,48 +1048,10 @@ ticked, a skill is:
   situation's bonus, a hard lock, say, still counts after it). A ranger's
   hiding and moving silently stop at 95 as well.
 
-AD&D's averages, by thief level (before the cap of 95):
-
-| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 | 90 | 95 | 99 |
-| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 | 72 | 77 | 82 |
-| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 75 | 80 |
-| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 | 86 | 94 | 99 |
-| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 | 70 | 77 | 85 |
-| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 | 35 | 35 | 40 |
-| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 | 99 | 99 | 99 |
-| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
-
-The race adjustments, as the game has them (humans, half-giants and
-thri-kreen have none):
-
-| Race | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows | Hear noise | Climb walls | Read languages |
-|---|---|---|---|---|---|---|---|---|
-| Dwarf | 0 | +10 | +15 | 0 | 0 | 0 | −10 | −5 |
-| Elf | +5 | −5 | 0 | +5 | +10 | +5 | 0 | 0 |
-| Half-elf | +10 | 0 | 0 | 0 | +5 | 0 | 0 | 0 |
-| Halfling | +5 | +5 | +5 | +10 | +15 | +5 | −15 | −5 |
-| Mul | 0 | −5 | 0 | +5 | 0 | 0 | +5 | −5 |
-
-The DEX adjustments:
-
-| DEX | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows |
-|---|---|---|---|---|---|
-| 9 | −15 | −10 | −10 | −20 | −10 |
-| 10 | −10 | −5 | −10 | −15 | −5 |
-| 11 | −5 | 0 | −5 | −10 | 0 |
-| 12 | 0 | 0 | 0 | −5 | 0 |
-| 13-15 | 0 | 0 | 0 | 0 | 0 |
-| 16 | 0 | +5 | 0 | 0 | 0 |
-| 17 | +5 | +10 | 0 | +5 | +5 |
-| 18 | +10 | +15 | +5 | +10 | +10 |
-| 19 | +15 | +20 | +10 | +15 | +15 |
-| 20 | +20 | +25 | +12 | +20 | +17 |
-| 21 | +25 | +27 | +15 | +25 | +20 |
-| 22 | +27 | +30 | +17 | +30 | +22 |
-
-then the situation and effects as before. So Azil, a 3rd-level elf thief with
+The tables (AD&D's averages by thief level, the race's adjustments and DEX's)
+are in the player's guide's [Thieves' skills and picking
+pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets).
+The situation and effects then count as before. So Azil, a 3rd-level elf thief with
 DEX 22: pick pockets 40 + 5 + 27 = 72, open locks 58, find traps 47, move
 silently 62, hide in shadows 52, hear noise 20, climb walls 87. A ranger's
 move silently and hide in shadows take the same race and DEX adjustments.
@@ -2133,7 +2073,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |
 | **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
-| A **thri-kreen's claws** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
+| A **thri-kreen's claws and bite** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
@@ -2163,13 +2103,8 @@ by yuan-ti; the Loader mends them in its copy of the game's scripts
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is
-loaded, on effects already running too. What a bug already did stays in the
-save: a character who kept Share Strength's strength still has it (load a save
-from before the power was used to be rid of it), and one silenced by the
-preserver's Dispel Magic casts again once that wears off. A new game is still
-the way to see all of the mod: kits, STORE and RECALL and fuller starting gear
-come with characters made with it, and much of the
-[new content](#new-content) is in the game's first areas.
+loaded. What a bug already did stays in the save: [your saved
+games](README.md#updating-backups-saved-games-and-the-loaders-files) says what.
 
 ### Spells on the Effects screen
 
@@ -2180,18 +2115,9 @@ is how a power is stopped. It has a switch in the Options tab's **Controls**
 section (**A click on a spell's icon on the Effects screen leaves it on**,
 from the next start).
 
-With the pointer on the icon of a spell that lasts a number of uses, the
-Effects screen names the uses left: IMPROVED AC (10 CHARGES). Enlarge's icon
-names what it adds, 10% a level of its caster: ENLARGED (+90% DICE) with
-[the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) (on unless
-unticked), or ENLARGED (+90% DAMAGE), the whole melee damage, with it off.
-Barkskin's, Flesh Armor's and Magical Vestments' name the armour AC they give,
-by their caster's level (BARKSKIN (AC 3)): Barkskin 6 less a quarter of the
-level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1 better
-for each 3 levels above 5. Armour already better is kept, and DEX is added
-after. A magic item's
-power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no
-charges.
+What else the Effects screen shows (a spell's charges left, Enlarge's damage,
+the armour spells' AC, kits and weapon specs): [the Effects
+screen](README.md#the-effects-screen).
 
 ### Rules the game got wrong
 

@@ -77,8 +77,8 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 
 Already playing? Saves made before the mod load and play with its fixes and
 rules, but kits, fuller starting gear and much of the new content come with a
-new game (see the features page's [saved
-games](FEATURES.md#the-games-bugs-fixed) note).
+new game (see [your saved
+games](README.md#updating-backups-saved-games-and-the-loaders-files)).
 
 ## Playing
 
