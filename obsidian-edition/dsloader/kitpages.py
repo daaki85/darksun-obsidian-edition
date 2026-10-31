@@ -42,7 +42,7 @@ MULTI = {9: (ELF, frozenset((1, 3))),  # elf cleric/fighter
          15: (HALF_GIANT, frozenset((3, 6))),  # half-giant fighter/psionicist
          16: (HALFLING, frozenset((3, 8))),  # halfling fighter/thief
          17: (HALFLING, frozenset((1, 6))),  # halfling cleric/psionicist
-         18: (THRI_KREEN, frozenset((2, 3))),  # thri-kreen druid/fighter
+         18: (THRI_KREEN, frozenset((2, 3, 6))),  # thri-kreen druid/fighter/psionicist
          19: (MUL, frozenset((2, 3)))}  # mul druid/fighter
 # the rows' text where the name is too long for the panel
 SHORT = {"Arena Champion": "CHAMPION", "Swashbuckler": "SWASHBUCK", "Elementalist": "ELEMENTAL",
@@ -96,10 +96,11 @@ def row_id(group: int, kit: int) -> int:
 
 
 def multi_group(race: int, classes: Sequence[int]) -> int:
-    """The multiclass group (9-13) of a character of RACE and two CLASSES at once, as the creation
-    screen numbers them (0 for none), or 0: none of that race and pair (DSCLOG's MULTI_GROUP)."""
+    """The multiclass group (9-13) of a character of RACE and two or three CLASSES at once, as the
+    creation screen numbers them (0 for none), or 0: none of that race and classes (DSCLOG's
+    MULTI_GROUP)."""
     pair = frozenset(c for c in classes if c)
-    if len(pair) != 2 or len([c for c in classes if c]) != 2:
+    if len(pair) < 2 or len(pair) != len([c for c in classes if c]):
         return 0
     return next((g for g, (r, cs) in MULTI.items() if r == race and cs == pair), 0)
 

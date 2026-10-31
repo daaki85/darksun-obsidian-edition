@@ -7,7 +7,8 @@ slots beside it). Pressed, it comes here as an item used on the map does (dicelo
 USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): with the Spellarcher's
 quiver empty, a slot of that spell's level is used up and a stack of ARROWS_PER_LEVEL arrows for
 each of its preserver levels goes in the quiver, worth nothing (no merchant pays for them); with
-anything in the quiver, nothing is made. Slots are the only limit. The arrows stay in the quiver
+the same spell's arrows in it, as many more are added to them (to MOST_ARROWS); with anything
+else in the quiver, nothing is made. Slots are the only limit. The arrows stay in the quiver
 until shot or faded, as a Flame Blade stays in the hand (DSCLOG's PROBE_TAKE and QUIVER_KEPT).
 
 At a rest (the game's own, from its menu or a script, as at a fire ring; a script's other rest
@@ -43,6 +44,7 @@ ARROW_NAMES = {a.name for a in ARROWS}
 # their pictures (icons.py: the game's Arrows', tinted for each spell), objects 2614-2621
 PICTURES = {0x16C: 0x10000 - 2614, 0x16D: 0x10000 - 2616, 0x16E: 0x10000 - 2618, 0x16F: 0x10000 - 2620}
 ARROWS_PER_LEVEL = 5
+MOST_ARROWS = 0xFFFF  # (a stack's count: the item's word)
 ARROWS_TYPE = weaponchoice.ARROWS[1]  # (the game's Arrows)
 TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")  # (worldgear's)
 ARROWS_BY = 0xFE00      # USE_ITEM for an arrow button's click (DSCLOG's ARROWS_BY): the member its low byte
@@ -63,6 +65,11 @@ def arrows_item(arrow: Arrow, count: int) -> bytes:
     struct.pack_into("<H", rec, weaponchoice.ITEM_VALUE, 0)
     struct.pack_into("<H", rec, game.ITEM_NAME, arrow.name)
     return bytes(rec)
+
+
+def item_address(gd: GameData, index: int) -> int:
+    """Where item INDEX's record is in the guest's memory."""
+    return game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR) + index * game.ITEM_SIZE
 
 
 def is_spellarcher(gd: GameData, member: int) -> bool:
@@ -95,17 +102,28 @@ class SpellArrows:
         if slots_left(gd, member, arrow.level) <= 0:
             return pickpocket.Attempt(f"{who} has no {_nth(arrow.level)}-level spell left for "
                                       f"{arrow.spell_name}'s arrows.", [])
-        if any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member)):
-            return pickpocket.Attempt(f"{who}'s quiver must be empty to weave spell arrows.", [])
+        name = NAMES[arrow.name].decode().lower()
+        quiver = next(((index, item) for index, item, _ in gd._worn(member)
+                       if item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT), None)
+        if quiver is not None and struct.unpack_from("<H", quiver[1], game.ITEM_NAME)[0] != arrow.name:
+            return pickpocket.Attempt(f"{who}'s quiver must be empty, or hold {name}, to weave "
+                                      f"{arrow.spell_name} into arrows.", [])
         level = gd.class_level(member, game.PRESERVER)
         count = ARROWS_PER_LEVEL * max(level, 1)
-        if not npcitems.add_to(gd, member, arrows_item(arrow, count), weaponchoice.AMMO_SLOT):
-            return pickpocket.Attempt("No spell arrows can be made now.", [])
-        weaponchoice.bow_ahead(gd, member)
+        had = 0
+        if quiver is not None:  # (the same spell's: as many more on the stack)
+            had = struct.unpack_from("<H", quiver[1], weaponchoice.ITEM_COUNT)[0]
+            if had + count > MOST_ARROWS:
+                return pickpocket.Attempt(f"{who}'s quiver holds no more {name}.", [])
+            gd.guest.write(item_address(gd, quiver[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
+        else:
+            if not npcitems.add_to(gd, member, arrows_item(arrow, count), weaponchoice.AMMO_SLOT):
+                return pickpocket.Attempt("No spell arrows can be made now.", [])
+            weaponchoice.bow_ahead(gd, member)
         at = gd.ds * 16 + game.SLOTS_LEFT["Wizard"] + member * game.SLOTS_STRIDE + arrow.level
         gd.guest.write(at, bytes((slots_left(gd, member, arrow.level) - 1,)))
-        name = NAMES[arrow.name].decode().lower()
-        log = f"{who} makes {count} {name} ({ARROWS_PER_LEVEL} a preserver level, {level}): a " \
+        now = f", {had + count} in the quiver now" if had else ""
+        log = f"{who} makes {count} {name} ({ARROWS_PER_LEVEL} a preserver level, {level}){now}: a " \
               f"{_nth(arrow.level)}-level slot used; each casts {arrow.spell_name} on what it hits; " \
               f"they stay in the quiver until shot, and fade at the next rest"
         return pickpocket.Attempt("", [log])  # (no window: only a refusal is shown)

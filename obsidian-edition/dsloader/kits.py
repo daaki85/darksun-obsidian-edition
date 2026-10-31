@@ -17,9 +17,13 @@ CRUSADER, SCHOLAR, BATTLE_MAGE, MIND_WARRIOR = (KIT_IDS["Crusader"], KIT_IDS["Sc
                                                 KIT_IDS["Mind Warrior"])
 ELEMENTALIST, SEEKER, JUSTIFIER = KIT_IDS["Elementalist"], KIT_IDS["Seeker"], KIT_IDS["Justifier"]
 WIZARD, PRIEST = 1, 2  # (the kinds of magic, as game.MAGIC_KINDS has their bits)
-# a Seeker's priest slots at spell levels 1, 2 and 3, by ranger level from 6 (the 10th's on: DSCLOG's
-# SEEKER_SLOTS); a Justifier's one 1st-level slot from 10th level
-SEEKER_SLOTS = ((1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1))
+# a Seeker's priest slots at spell levels 1 to 4, by level from 6 to 13 (the 13th's on: DSCLOG's
+# SEEKER_SLOTS; The Complete Ranger's Handbook's table): a ranger's to 10th, a Shinobi's wizard
+# slots (by thief level) to 13th, its 4th-level slot at 13th (SHINOBI_FOURTH); a Justifier's one
+# 1st-level slot from 10th level
+SEEKER_SLOTS = ((1, 0, 0, 0), (2, 0, 0, 0), (2, 1, 0, 0), (2, 2, 0, 0), (2, 2, 1, 0), (3, 2, 1, 0), (3, 2, 2, 0),
+                (3, 3, 2, 1))
+SHINOBI_FOURTH = 13
 SEEKER_FIRST, JUSTIFIER_FIRST = 6, 10
 MIND_BENDER, KINETICIST = KIT_IDS["Mind Bender"], KIT_IDS["Kineticist"]
 # the psionic powers' disciplines, by power (0-33: spells 138-171): psychokinesis to PK_LAST,
@@ -72,7 +76,8 @@ POISONER_KINDS = frozenset((2, 3))
 SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (FOG_SPELL, 1),  # Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt
                   (REFLECT_SPELL, 1), (SPOOK_SPELL, 1), (FRIENDS_SPELL, 1),  # Reflected Image, Spook, Friends
                   (17, 2), (19, 2), (12, 2), (13, 2), (15, 2),  # Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
-                  (25, 3), (29, 3), (36, 3), (30, 3))  # Blink, Haste, Protection from Normal Missiles, Hold Person
+                  (25, 3), (29, 3), (36, 3), (30, 3),  # Blink, Haste, Protection from Normal Missiles, Hold Person
+                  (46, 4), (51, 4), (41, 4))  # Improved Invisibility, Solid Fog, Confusion
 SHINOBI_FIRST, WIZARD_LAST = 6, 68  # (wizard spells are 0 to WIZARD_LAST)
 RANGER_CLASSES = range(13, 17)
 # the charms (DSCLOG's KIT_CHARMS): Charm Person, Charm Monster, Domination, Charm Person or
@@ -150,11 +155,11 @@ def extra(kid: int, dance: int = 0) -> int:
 # character made on the creation screen can have: the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
 # classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
 # race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
-# thri-kreen) a Wasteland Seer's casting (SKY_LEVEL) and one more chatkcha throw a round
+# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT) and one more chatkcha throw a round
 # (OWN_THROWS); Cilla (an elf) the Elven Wanderer's hiding, never halved in daylight (stealth.py).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
 HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
-OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells", "Chatkcha 2 a round"),
+OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics", "Chatkcha 2 a round"),
                 ELF: ("Elven Wanderer",)}
 CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
 
@@ -252,22 +257,27 @@ def slot_level(kid: int, level: int) -> int:
     return max(0, level - 1) if kid == ELEMENTALIST else level
 
 
-def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -> int:
+def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, adnd: bool = True) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
     giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): a Scholar's wizard slots 1 more
-    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer; a
+    at each spell level it has any, a Battle Mage's 1 fewer, a Crusader's priest slots 1 fewer, an
+    Elementalist's (slot_level: a level behind) at least 1 at a spell level its LEVEL reaches; a
     Seeker's and a Justifier's priest slots their own tables' (SEEKER_SLOTS), WIS's left out, and a
     Shinobi's wizard slots the Seeker's by its thief level."""
     if kid == SCHOLAR and magic == WIZARD:
         return game_slots + 1 if game_slots else 0
     if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
         return max(0, game_slots - 1)
+    if kid == ELEMENTALIST and magic == PRIEST and not game_slots and level >= 2 * spell_level - 1 \
+            and (spell_level < 6 or adnd):
+        return 1  # (its slots a level behind, but 1 at a spell level its own level reaches; a 6th-level
+        # one only with AD&D's tables, ADND: the game's own give a cleric none)
     if kid == SHINOBI and magic == WIZARD:
         kid = SEEKER
     elif kid in (SEEKER, JUSTIFIER) and magic != PRIEST:
         return game_slots
     if kid in (SEEKER, JUSTIFIER):
-        if not 1 <= spell_level <= 3:
+        if not 1 <= spell_level <= 4:
             return 0
         if kid == JUSTIFIER:
             return int(level >= JUSTIFIER_FIRST and spell_level == 1)
@@ -277,11 +287,15 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -
     return game_slots
 
 
-def psp_cost(kid: int, power: int, cost: int) -> int:
+def psp_cost(kid: int, power: int, cost: int, outdoors: Optional[bool] = None) -> int:
     """The PSP power POWER (0-33) costs a character of kit KID to use, the game asking COST
     (KIT_PSP): a Mind Bender's telepathy 2 less and its psychokinesis 2 more, a Kineticist's the
     other way about (psychometabolism as it is); a Titan Mind's psychometabolism 2 less and its
-    telepathy 2 more (psychokinesis as it is); never below 1, and a cost of 0 as it is."""
+    telepathy 2 more (psychokinesis as it is); a Wasteland Seer's every power 2 less under the open
+    sky (OUTDOORS), 1 more under a roof (None: not a party member, as it is); never below 1, and a
+    cost of 0 as it is."""
+    if cost > 0 and kid == WASTE_SEER and outdoors is not None:
+        return max(1, cost + (-2 if outdoors else 1))
     if cost <= 0 or kid not in (MIND_BENDER, KINETICIST, TITAN_MIND):
         return cost
     if kid == TITAN_MIND:
@@ -389,8 +403,9 @@ def max_psp(kid: int, psp: int) -> int:
 
 def shinobi_pick_level(level: int) -> int:
     """The highest spell level a Shinobi of thief level LEVEL may learn (CHOOSE A SPELL's), half its
-    casting level rounded up, as the game's for a preserver."""
-    return (shinobi_cast(level) + 1) // 2
+    casting level rounded up, as the game's for a preserver; no 4th-level spell before its slot comes,
+    at thief level SHINOBI_FOURTH (DSCLOG's SHINOBI_PICK_CAST)."""
+    return min((shinobi_cast(level) + 1) // 2, 4 if level >= SHINOBI_FOURTH else 3)
 
 
 def pick_list(kid: int, known, most: int, new_spells: bool = True):

@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.13.2 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.13.3 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -30,6 +30,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
 - **[New]** Out of a fight, the combat log panel's top line shows how long the game has run, `Day 47, 14:20`; in the arena, once the game has shown the count, how many arena fights the party has had instead (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
+- **[New]** The creation screen shows the THAC0, right of the hit points: `THAC0: M18 R19`, melee (with STR's to-hit) and ranged (with DEX's missile adjustment), the kit counted, changing as you click STR and DEX or choose a kit.
 - **[New]** With ages on, the creation screen shows the age a new character will start at, above RECALL: Table 7's dice, rolled again with each roll of the die (STORE and RECALL keep it with the roll).
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
@@ -100,7 +101,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Druid | Grove Warden, Wanderer, Lifebinder |
 | Psionicist | Mind Warrior, Mind Bender, Kineticist |
 
-- **[New]** Thirteen kits for two classes taken at once, each for one race only:
+- **[New]** Thirteen kits for two (or, for one, three) classes taken at once, each for one race only:
 
 | Race and classes | Kits |
 |---|---|
@@ -113,7 +114,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 | Half-giant fighter/psionicist | Titan Mind |
 | Halfling fighter/thief | Poisoner |
 | Halfling cleric/psionicist | Spirit Caller |
-| Thri-kreen druid/fighter | Wasteland Seer |
+| Thri-kreen druid/fighter/psionicist | Wasteland Seer |
 | Mul druid/fighter | Wild Fury |
 
 A few of them:
@@ -126,13 +127,13 @@ A few of them:
 - **Rescuer:** cures heal 1 more a die and +2 movement in a fight, for no shield and only +1 from behind.
 - **Poisoner:** every melee hit poisons (a save or 10 damage), for a dagger or short sword spec only.
 - **Battle Mage:** a warrior's THAC0, leather armour it can cast in, expertise with one weapon, and spells that still go off after being hit.
-- **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level, and learns its own from a scroll only if it can read it (its read languages).
+- **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level (4th-level ones, Improved Invisibility, Solid Fog and Confusion, at 13th), and learns its own from a scroll only if it can read it (its read languages).
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
-- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver, each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand.
+- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
-- **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek casts as a Wasteland Seer and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
+- **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek is a Wasteland Seer (spells and psionics) and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 
@@ -345,6 +346,7 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
 - **A save made with 2.13.0 is not for earlier versions.** It keeps the weapon specs packed with the age beside them, which an older Loader reads as other specs. Older saves load in 2.13.0 as they are.
 - **A save made with this version is not for 2.13.1 or earlier.** It keeps each character's starting roll beside the weapon specs (so Restore Youth can take back any number of magical years), which an older Loader reads as other specs. A character from an older save keeps its age, and its roll is put on its sheet when the game is loaded. From 2.13.1 a character's true age (how young Restore Youth can make them) is worked out a new way, the same as the creation screen shows; an age already given stays as it is.
+- A thri-kreen **druid/fighter** Wasteland Seer from an earlier version has no kit now: the Wasteland Seer is for a thri-kreen druid/fighter/psionicist.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

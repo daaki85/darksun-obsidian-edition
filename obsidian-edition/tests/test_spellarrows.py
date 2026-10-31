@@ -25,9 +25,12 @@ class FakeGame:
         return getattr(self, "armoured", False)
 
     def _worn(self, member):  # (what's in the quiver: QUIVER, or nothing)
-        if getattr(self, "quiver", None) is not None:
+        if getattr(self, "quiver", None) is not None:  # (True: plain arrows; else the arrow's name, a count)
             rec = bytearray(game.ITEM_SIZE)
             rec[game.ITEM_SLOT] = weaponchoice.AMMO_SLOT
+            if self.quiver is not True:
+                struct.pack_into("<H", rec, game.ITEM_NAME, self.quiver[0])
+                struct.pack_into("<H", rec, weaponchoice.ITEM_COUNT, self.quiver[1])
             yield 9, bytes(rec), b""
 
 
@@ -74,8 +77,33 @@ class SpellArrowsTests(unittest.TestCase):
             self.assertIn("can't weave", arrows.make(gd, 1, 1).text)  # (not a Spellarcher)
             self.assertEqual(add.call_count, 2)
 
+    def test_make_more_of_the_same(self):
+        """The same spell's arrows in the quiver: as many more added to their count, a slot used;
+        another spell's arrows: none, the slot kept."""
+        gd = FakeGame()
+        chill = spellarrows.ARROWS[1]
+        gd.quiver = (chill.name, 7)
+        arrows = spellarrows.SpellArrows()
+        with mock.patch.object(spellarrows, "is_spellarcher", return_value=True), \
+                mock.patch.object(spellarrows, "knows", return_value=True), \
+                mock.patch.object(spellarrows, "item_address", lambda gd, index: 0x50000 + index * game.ITEM_SIZE), \
+                mock.patch.object(spellarrows.npcitems, "add_to", return_value=True) as add:
+            done = arrows.make(gd, 0, 1)
+            self.assertEqual(done.text, "")
+            self.assertIn("makes 20 chill arrows (5 a preserver level, 4), 27 in the quiver now", done.log[0])
+            self.assertIn((0x50000 + 9 * game.ITEM_SIZE + weaponchoice.ITEM_COUNT, struct.pack("<H", 27)), gd.written)
+            self.assertEqual(gd.written[-1][1], bytes((1,)))  # (a 1st-level slot used)
+            self.assertEqual(add.call_count, 0)
+            gd.written.clear()
+            other = arrows.make(gd, 0, 0)  # (Burning Hands, with chill arrows in the quiver)
+            self.assertIn("must be empty, or hold burning arrows", other.text)
+            self.assertEqual(gd.written, [])
+            gd.quiver = (chill.name, spellarrows.MOST_ARROWS - 5)
+            self.assertIn("holds no more chill arrows", arrows.make(gd, 0, 1).text)
+            self.assertEqual(gd.written, [])
+
     def test_make_quiver_full(self):
-        """Anything in the quiver: no arrows, and the slot kept."""
+        """Anything else in the quiver: no arrows, and the slot kept."""
         gd = FakeGame()
         gd.quiver = True
         arrows = spellarrows.SpellArrows()

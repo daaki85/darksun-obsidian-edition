@@ -354,7 +354,7 @@ class SettingsTests(unittest.TestCase):
         with open(os.path.join(os.path.dirname(game.__file__), "viewer.py"), encoding="utf-8") as f:
             source = f.read()
         for key, _ in game.RULE_SETTINGS:
-            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*"', key)
+            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*(?:None|"\w+"),\s*"', key)  # (its group, then its text)
         bits = [bit for _, bit in game.RULE_SETTINGS]
         self.assertEqual(len(set(bits)), len(bits))
     def test_saved_options(self):

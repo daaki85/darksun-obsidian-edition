@@ -183,6 +183,13 @@ class DormantKitTests(unittest.TestCase):
         self.assertEqual(kitpages.multi_group(4, (8, 3, 0)), 10)
         self.assertEqual(kitpages.multi_group(1, (3, 8, 0)), 0)
         self.assertEqual(kitpages.multi_group(4, (3, 8, 6)), 0)
+        # the Wasteland Seer's, three classes: a thri-kreen druid/fighter/psionicist, not druid/fighter
+        self.assertEqual(kitpages.multi_group(8, (2, 3, 6)), 18)
+        self.assertEqual(kitpages.multi_group(8, (6, 2, 3)), 18)
+        self.assertEqual(kitpages.multi_group(8, (2, 3, 0)), 0)
+        self.assertEqual(kitpages.kit_class((2, 3, 6), game.RULE_KITS, race=8), 18)
+        self.assertEqual(kitpages.kit_names(self.sheet((5, 9, 12), (2, 2, 2), 1, race=8)), ["Wasteland Seer"])
+        self.assertEqual(kitpages.kit_ids(self.sheet((5, 9), (2, 2), 1, race=8)), [])
         self.assertEqual(kitpages.kit_class((3, 8, 0), game.RULE_KITS, race=2), 13)
         self.assertEqual(kitpages.kit_class((3, 8, 0), 0, race=2), 0)
         self.assertEqual(kitpages.panel_windows((3, 8, 0), game.RULE_KITS, race=4), (3022, 3023))

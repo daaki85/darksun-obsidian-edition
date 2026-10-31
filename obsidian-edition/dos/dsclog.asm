@@ -5104,12 +5104,34 @@ probe_wp_disc_win:
         call wp_ids
         mov [bp + 8], ax
         pop dx
-        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit)
-        jne .keep
+        cmp byte [cs:kit_keep], 0   ; (opened for a new character, or another class: no kit;
+        jne .keep                   ;   EDIT with the member's own classes: its kit, CR_OPEN)
         push es
         push bx
+        push eax
         les bx, [WP_CREATION]
         mov byte [es:bx + KIT_BYTE], 0
+        cmp byte [cs:ed_on], 0
+        je .cleared
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        cmp eax, [cs:ed_cr_classes]
+        jne .cleared
+        mov dl, [cs:ed_race]    ; (and the race: a multiclass kit's number is its group's)
+        cmp dl, [es:bx + 0x18]
+        jne .cleared
+        push eax
+        mov dl, [cs:ed_kit]
+        and dl, 3
+        call kit_class
+        call healer_barred      ; (a Healer only with water marked, as the kit page has it)
+        pop eax
+        jc .cleared
+        mov [cs:wp_classes_seen], eax
+        mov al, [cs:ed_kit]
+        mov [es:bx + KIT_BYTE], al
+.cleared:
+        pop eax
         pop bx
         pop es
 .keep:  mov byte [cs:kit_keep], 0
@@ -5182,8 +5204,8 @@ kit_class:
         ret
 
 ; MULTI_GROUP: AL the multiclass group (9-13, kitpages.MULTI) of sheet ES:BX, its classes 1-17
-; (KIT_CLASS_OF); MULTI_GROUP_CR the same for the sheet being made, its classes 1-8: two classes at
-; once (none at +23h), not a human's, its race and their pair one of MULTI_TABLE's; 0 for none.
+; (KIT_CLASS_OF); MULTI_GROUP_CR the same for the sheet being made, its classes 1-8: two or three
+; classes at once, not a human's, its race and their classes one of MULTI_TABLE's; 0 for none.
 ; Others kept.
 multi_group:
         push si
@@ -5197,14 +5219,15 @@ multi_find:
         push dx
         push di
         xor al, al
-        xor dx, dx              ; DX the pair's bits (1 shl the creation class)
+        xor dx, dx              ; DX the classes' bits (1 shl the creation class)
         cmp byte [es:bx + 0x18], 1
         je .out
-        cmp byte [es:bx + 0x23], 0
-        jne .out
         mov di, 0x21
 .class: movzx cx, byte [es:bx + di]
-        dec cx
+        cmp di, 0x23
+        jne .any
+        jcxz .classes           ; (two classes: no third)
+.any:   dec cx
         cmp cx, 16
         ja .out                 ; (none: one class)
         push si
@@ -5215,8 +5238,9 @@ multi_find:
         jz .out
         bts dx, cx
         inc di
-        cmp di, 0x23
+        cmp di, 0x24
         jb .class
+.classes:
         mov ch, [es:bx + 0x18]
         mov si, multi_table
         mov al, MULTI_FIRST
@@ -5235,7 +5259,7 @@ multi_find:
         pop cx
         pop si
         ret
-; (race, the pair's bits) by group from 9; then each group's kits, how many
+; (race, the classes' bits: two, or three) by group from 9; then each group's kits, how many
 multi_table db 3
             dw (1 << 1) | (1 << 3)      ; elf cleric/fighter: Battle Dancer
             db 4
@@ -5255,7 +5279,7 @@ multi_table db 3
             db 6
             dw (1 << 1) | (1 << 6)      ; halfling cleric/psionicist: Spirit Caller
             db 8
-            dw (1 << 2) | (1 << 3)      ; thri-kreen druid/fighter: Wasteland Seer
+            dw (1 << 2) | (1 << 3) | (1 << 6)   ; thri-kreen druid/fighter/psionicist: Wasteland Seer
             db 7
             dw (1 << 2) | (1 << 3)      ; mul druid/fighter: Wild Fury
             db 0
@@ -6742,6 +6766,8 @@ probe_thac0:
         push es
         mov cx, 20
         sub cx, si
+        mov [cs:thac0_game], cl ; (the game's, no kit: the creation screen's THAC0 applies its kit, CR_THAC0_BASE)
+        mov byte [cs:thac0_seen], 1
         les bx, [0x1661]
         imul ax, [bp + 6], 0x47
         add bx, ax
@@ -6787,7 +6813,8 @@ probe_thac0:
 ; and wherever the most is wanted: [BP+6] the combatant, [BP+8] the kind of magic, 1 wizard and 2
 ; priest, [BP+0Ah] the spell level; [BP-2] the slots its classes give): AX the slots, with the
 ; kit's (kits.slots): a Scholar's wizard slots 1 more at each spell level it has any, a Battle
-; Mage's 1 fewer, a Crusader's priest slots 1 fewer; a Seeker's and a Justifier's priest slots
+; Mage's 1 fewer, a Crusader's priest slots 1 fewer; an Elementalist's (a level behind:
+; PROBE_SLOT_LEVEL) at least 1 at a spell level its cleric level reaches; a Seeker's and a Justifier's priest slots
 ; their own tables' (SEEKER_SLOTS), by ranger level; a Shinobi's wizard slots the Seeker's, by
 ; thief level.
 SLOT_WIZARD  equ 1
@@ -6821,11 +6848,33 @@ probe_slots:
 .crusader:
         call kit_is_b           ; (a Crusader's priest slots 1 fewer)
         db KIT_CRUSADER
+        jne .elemental
+        cmp byte [bp + 8], SLOT_PRIEST
+        jne .elemental
+        jcxz .elemental
+        dec cx
+.elemental:
+        call kit_is_b           ; (an Elementalist: none from the level behind, but 1 at a spell
+        db KIT_ELEMENTALIST     ; level its own cleric level reaches, 2 x the spell level - 1)
         jne .tables
         cmp byte [bp + 8], SLOT_PRIEST
         jne .tables
-        jcxz .tables
-        dec cx
+        or cx, cx
+        jnz .tables
+        cmp byte [bp + 0x0A], 6         ; (a 6th-level slot only with AD&D's tables: the game's
+        jb .level                       ;   own give a cleric none)
+        test word [cs:rules_hi], RULE_HI_TABLES
+        jz .tables
+.level: call kit_level
+        movzx ax, al
+        push bx
+        movzx bx, byte [bp + 0x0A]
+        add bx, bx
+        dec bx
+        cmp ax, bx
+        pop bx
+        jb .tables
+        inc cx
 .tables:
         push dx
         mov dl, KIT_SEEKER      ; (a Shinobi's wizard slots: the Seeker's table, by thief level)
@@ -6850,8 +6899,8 @@ probe_slots:
         xor cx, cx
         movzx bx, byte [bp + 0x0A]
         dec bx
-        cmp bx, 2
-        ja .table_out           ; (spell levels 1 to 3 only)
+        cmp bx, 3
+        ja .table_out           ; (spell levels 1 to 4 only)
         cmp dl, KIT_JUSTIFIER
         jne .seeker_level
         cmp ax, 10
@@ -6863,11 +6912,11 @@ probe_slots:
 .seeker_level:
         cmp ax, 6
         jb .table_out
-        cmp ax, 10
+        cmp ax, SEEKER_LAST
         jbe .row
-        mov ax, 10
+        mov ax, SEEKER_LAST
 .row:   sub ax, 6
-        imul ax, ax, 3
+        imul ax, ax, 4
         add bx, ax
         mov cl, [cs:bx + seeker_slots]
 .table_out:
@@ -6891,8 +6940,11 @@ probe_slots:
         pop cx
         pop bx
         iret
-; a Seeker's priest slots at spell levels 1, 2 and 3, by ranger level 6 to 10 (and on: kits.SEEKER_SLOTS)
-seeker_slots db 1, 0, 0,  2, 0, 0,  2, 1, 0,  2, 2, 0,  2, 2, 1
+; a Seeker's priest slots at spell levels 1 to 4, by level 6 to 13 (and on: kits.SEEKER_SLOTS; The
+; Complete Ranger's Handbook's table): a ranger's to 10th, a Shinobi's (by thief level) to 13th
+SEEKER_LAST equ 13
+seeker_slots db 1, 0, 0, 0,  2, 0, 0, 0,  2, 1, 0, 0,  2, 2, 0, 0,  2, 2, 1, 0
+             db 3, 2, 1, 0,  3, 2, 2, 0,  3, 3, 2, 1
 
 ; PROBE_SLOT_LEVEL: INT VEC_SLOT_LEVEL replaces "mov al,es:[bx+24h]" (4 bytes: INT + 2 NOPs;
 ; DSUN.EXE 5E1F6h) in the game's spell slot routine, where it takes a class's level (ES:BX the
@@ -6927,7 +6979,8 @@ probe_slot_level:
 ; KIT_PSP: AX the PSP a power (BX, 0-33: psychokinesis to 5, psychometabolism to 19, telepathy
 ; from 20) costs combatant SI to use, from the game's AX (kits.psp_cost): a Mind Bender's telepathy
 ; 2 less, its psychokinesis 2 more, a Kineticist's the other way about; a Titan Mind's
-; psychometabolism 2 less, its telepathy 2 more; never below 1 (a cost of 0 or less as it was). KIT_PSP_OF: the same for the kit in CL. DS the game's; others kept.
+; psychometabolism 2 less, its telepathy 2 more; a Wasteland Seer's every power 2 less under the
+; open sky, 1 more under a roof; never below 1 (a cost of 0 or less as it was). KIT_PSP_OF: the same for the kit in CL. DS the game's; others kept.
 PSP_PK_LAST  equ 5
 WHOSE_TURN   equ 0x4979         ; DS: the combatant whose turn it is in a fight
 PSP_TP_FIRST equ 20
@@ -6949,7 +7002,9 @@ kit_psp:
         pop cx
         ret
 ; PSI_KIT: AL the psionicist kit of creature AX that changes costs (KIT_MIND_BENDER, KIT_KINETICIST,
-; KIT_TITAN_MIND), awake, or 0. DS the game's; others but AH kept.
+; KIT_TITAN_MIND; KIT_WASTE_SEER for a party member's, or K'ratchek's (OWN_RACE_B), under the open
+; sky, its KIT_OUTDOORS bit, and KIT_SEER_ROOF under a roof), awake, or 0. DS the game's; others but AH kept.
+KIT_SEER_ROOF equ 0xFE
 psi_kit:
         call cr_is
         db KIT_MIND_BENDER
@@ -6959,9 +7014,26 @@ psi_kit:
         je .titan
         call cr_is
         db KIT_KINETICIST
+        je .kinetic
+        cmp ax, 3
+        ja .none                ; (a Wasteland Seer, a party member: by where it stands)
+        call cr_is
+        db KIT_WASTE_SEER
+        je .seer
+        push ax                 ; (K'ratchek, as a Wasteland Seer: OWN_RACE_B)
+        call cr_own_race
+        cmp al, THRI_KREEN_RACE
+        pop ax
+        jne .none
+.seer:  bt word [cs:kit_outdoors], ax
+        mov al, KIT_WASTE_SEER
+        jc .ret
+        mov al, KIT_SEER_ROOF
+        ret
+.kinetic:
         mov al, KIT_KINETICIST
-        je .ret
-        xor al, al
+        ret
+.none:  xor al, al
 .ret:   ret
 .bender:
         mov al, KIT_MIND_BENDER
@@ -6974,7 +7046,7 @@ kit_psp_of:
         push dx
         xor dx, dx              ; DX what the kit adds to telepathy (psychokinesis the opposite)
         cmp cl, KIT_TITAN_MIND
-        jne .bender
+        jne .seer
         cmp bx, PSP_PK_LAST
         jbe .out                ; (a Titan Mind's psychokinesis: as it was)
         mov dx, -2              ; (its psychometabolism 2 less, its telepathy 2 more)
@@ -6982,6 +7054,13 @@ kit_psp_of:
         jb .add
         mov dx, 2
         jmp .add
+.seer:  mov dx, -2              ; (a Wasteland Seer's every power: 2 less under the open sky,
+        cmp cl, KIT_WASTE_SEER  ; 1 more under a roof)
+        je .add
+        mov dx, 1
+        cmp cl, KIT_SEER_ROOF
+        je .add
+        xor dx, dx
 .bender:
         cmp cl, KIT_MIND_BENDER
         jne .kineticist
@@ -7301,12 +7380,26 @@ SHINOBI_SPELLS:
         db FOG_SPELL, 1,  REFLECT_SPELL, 1,  SPOOK_SPELL, 1,  FRIENDS_SPELL, 1 ; Fogbolt, Reflected Image, Spook, Friends
         db 17, 2,  19, 2,  12, 2,  13, 2,  15, 2       ; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
         db 25, 3,  29, 3,  36, 3,  30, 3               ; Blink, Haste, Protection from Normal Missiles, Hold Person
+        db 46, 4,  51, 4,  41, 4                       ; Improved Invisibility, Solid Fog, Confusion
 SHINOBI_SPELLS_END:
 WIZARD_LAST  equ 68
 SHINOBI_FIRST equ 6             ; (the thief level its spells start at; it casts at that less 5)
 KNOWN_FROM_DS equ 0x4356 - 0x3800  ; the spells each party member knows: DS less this, from KNOWN_OFF,
 KNOWN_OFF    equ 0x168          ;   8Ah bytes a member, a byte a spell (not 0: known)
 KNOWN_SIZE   equ 0x8A
+
+; SHINOBI_PICK_CAST: AX the level a Shinobi of thief level AX casts at (SHINOBI_CAST), as the spell
+; levels it may learn count it ((AX + 1) / 2): no more than 6, 3rd-level spells, before thief level
+; SHINOBI_FOURTH, where its table's 4th-level slot comes (kits.shinobi_pick_level). Others kept.
+SHINOBI_FOURTH equ 13
+shinobi_pick_cast:
+        cmp ax, SHINOBI_FOURTH
+        jae shinobi_cast
+        call shinobi_cast
+        cmp ax, 6
+        jbe .ret
+        mov ax, 6
+.ret:   ret
 
 ; SHINOBI_CAST: AX the level a Shinobi of thief level AX casts at (less SHINOBI_FIRST - 1, no less
 ; than 0). Others kept.
@@ -7509,10 +7602,10 @@ probe_pick_any:
         jne .int
         call kit_level
         movzx ax, al
-        call shinobi_cast
+        call shinobi_pick_cast
         inc ax
         shr ax, 1
-        mov cl, al              ; (CL the highest spell level it casts)
+        mov cl, al              ; (CL the highest spell level it may learn)
         xor ax, ax
         call shinobi_unknown
         jnc .flags
@@ -7611,7 +7704,7 @@ probe_pick_level:
         jne .out
         call kit_level
         movzx ax, al
-        call shinobi_cast
+        call shinobi_pick_cast
 .out:   cmp byte [cs:pick_cap], 0   ; (PICK_SPELLS's: spell levels up to PICK_CAP)
         je .inc
         push cx
@@ -8443,6 +8536,25 @@ rl_sum:
         pop word [cs:rl_cs]
         pop word [cs:rl_fl]
         add sp, 4               ; the replaced instruction
+        sti
+        pushad
+        push es
+        mov es, [cs:rl_cs]      ; (the hit points' line put back, then them and the THAC0 drawn: a
+        mov bx, [cs:rl_ip]      ;   score's click, STR's or DEX's, draws neither)
+        lea si, [bx + RLSUM_RESTORE_AT - RLSUM_PAST]
+        lea di, [bx + RLSUM_SEG340_AT - RLSUM_PAST]
+        mov cx, CR_HP_BOX
+        call cr_box_put
+        jz .no_hp
+        les bx, [0x11A0]
+        mov ax, [es:bx]
+        les bx, [0x119C]
+        mov dx, [es:bx + 8]
+        mov si, CR_HP_BOX
+        call cr_pair_draw
+        call cr_thac0_draw
+.no_hp: pop es
+        popad
         test word [cs:rules_hi], RULE_HI_ROLLED
         jz .back
         cmp word [cs:rl_pool], 0
@@ -8492,6 +8604,9 @@ rl_ip    dw 0
 rl_cs    dw 0
 rl_fl    dw 0
 rl_label db 'SUM:', 0
+RLSUM_PAST equ 0x65188          ; (DSUN.EXE: RL_SUM's way back; "call 0A0h:30C3h"'s operand before it,
+RLSUM_RESTORE_AT equ 0x65181    ;   the scores' box put back, and "mov ax,340h"'s, the saved
+RLSUM_SEG340_AT equ 0x6516D     ;   backgrounds' segment)
 
 ; CR_AGE (RULE_HI_AGING): the creation panel's "AGE: 23", right of PSP's line, above RECALL, where
 ; nothing is drawn (the PSP box's saved background widened to cover it: gamepatch.py's
@@ -8509,6 +8624,116 @@ cr_race  db 0                   ; (0: none yet)
 cr_keep  db 0                   ; (RECALL's: the stored roll put back, not rolled again)
 cr_new   db 0
 age_seed dw 0x5A17
+; CR_OPEN: "mov byte [1A58h],0FFh" (65C68h; 5 bytes) where the creation screen opens (65C3Fh, the
+; member in its [BP+6]), just before the game tells a new member (DS:0E9Ch -1: the sheet made
+; ready, 65C77h) from EDIT on a party member (DS:0E9Ch its number: the sheet being made its copy).
+; For EDIT the member's classes, race, kit and weapon specs' dword are kept (ED_*): while the classes
+; are those, the panel's opening gives the kit back (PROBE_WP_DISC_WIN), the age is the member's
+; own roll until the die rolls (ED_AGE: until its six scores aren't those it had, ED_SCORES; the
+; hit point die's probe runs at the opening too), and DONE keeps the weapon specs,
+; asking for none (CR_WEAPONS). DS the game's; all registers kept.
+CR_EDITING equ 0x0E9C           ; DS: -1 for a new member, else the party member being edited
+CREATURE_SCORES equ 0x22        ; (a creature's six scores, STR to CHR)
+ed_on      db 0                 ; (EDIT on a party member)
+ed_age     db 0                 ; (its own roll shown, the die not rolled yet)
+ed_classes dd 0                 ; (its classes, +21h to +23h, 1-17)
+ed_cr_classes dd 0              ; (the same as the creation screen numbers them, 1-8: KIT_CLASS_OF)
+ed_specs   dd 0                 ; (its +14h dword: the weapon specs, the roll and the age)
+ed_kit     db 0
+ed_race    db 0
+ed_scores  times 6 db 0         ; (its six scores, the creature being made's +22h on)
+cr_open:
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
+        mov byte [0x1A58], 0xFF ; the replaced instruction
+        push eax
+        push bx
+        push es
+        mov byte [cs:ed_on], 0
+        mov byte [cs:ed_age], 0
+        mov byte [cs:thac0_seen], 0     ; (no THAC0 worked out on this screen yet)
+        mov bx, [CR_EDITING]
+        cmp bx, LV_PARTY
+        jae .out                ; (-1: a new member)
+        imul bx, bx, 0x47
+        mov ax, bx
+        les bx, [LV_SHEETS]
+        add bx, ax
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        mov [cs:ed_classes], eax
+        mov eax, [es:bx + SPEC_SLOTS]
+        mov [cs:ed_specs], eax
+        mov al, [es:bx + 0x18]
+        mov [cs:ed_race], al
+        mov al, [es:bx + KIT_BYTE]
+        mov [cs:ed_kit], al
+        mov byte [cs:ed_on], 1
+        push si
+        push di
+        xor eax, eax            ; (its classes as the creation screen numbers them)
+        mov di, 0x23
+.cr:    shl eax, 8
+        movzx si, byte [es:bx + di]
+        dec si
+        cmp si, 16
+        ja .next
+        mov al, [cs:si + kit_class_of]
+.next:  dec di
+        cmp di, 0x21
+        jae .cr
+        mov [cs:ed_cr_classes], eax
+        mov [cs:wp_classes_seen], eax   ; (the kit's, PROBE_WP_CLASS's and KIT_STALE's)
+        pop di
+        pop si
+        mov al, [cs:ed_kit]
+        push es                 ; (the sheet being made: its kit)
+        push bx
+        les bx, [WP_CREATION]
+        mov [es:bx + KIT_BYTE], al
+        pop bx
+        pop es
+        mov eax, [cs:ed_specs]  ; (its roll, if kept: the age shown its own)
+        test eax, SPEC_V2 << 16
+        jz .out
+        shr eax, ROLL_SHIFT
+        and al, 0x1F
+        cmp al, ROLL_UNKNOWN
+        je .out
+        mov [cs:cr_roll], al
+        mov al, [es:bx + 0x18]
+        mov [cs:cr_race], al
+        mov byte [cs:ed_age], 1
+        les bx, [CR_CREATURE]   ; (its scores: the die rolled when they change)
+        mov eax, [es:bx + CREATURE_SCORES]
+        mov [cs:ed_scores], eax
+        mov ax, [es:bx + CREATURE_SCORES + 4]
+        mov [cs:ed_scores + 4], ax
+.out:   pop es
+        pop bx
+        pop eax
+        push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
+        iret
+; CR_HP: "add sp,10h" after the hit points are drawn again (63AC3h, a click on them; 63EDAh), their
+; box put back first: the THAC0 drawn again right of them (CR_THAC0_DRAW).
+cr_hp:
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
+        add sp, 0x10            ; the replaced instruction
+        sti
+        pushad
+        push es
+        call cr_thac0_draw
+        pop es
+        popad
+        push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
+        iret
 cr_age_con:
         mov byte [cs:cr_new], 0
         jmp cr_ages
@@ -8523,16 +8748,19 @@ cr_ages:
         je .drawn
         cmp byte [cs:cr_keep], 0
         jne .drawn              ; (RECALL's roll)
+        call ed_rolled
+        jnc .drawn              ; (EDIT: the member's own, till the die rolls)
         mov byte [cs:cr_race], 0        ; (a new roll: at the drawing, or at DONE)
-.drawn: test word [cs:rules_hi], RULE_HI_AGING
-        jz .back
-        sti
+.drawn: sti
         pushad
         push es
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .thac0
         call cr_age_draw
+.thac0: call cr_thac0_draw      ; (the hit points drawn before PSP: their line clean)
         pop es
         popad
-.back:  push word [cs:cr_fl]
+        push word [cs:cr_fl]
         push word [cs:cr_cs]
         push word [cs:cr_ip]
         iret
@@ -8569,20 +8797,13 @@ cr_names:
         pushad
         push es
         mov es, [cs:cr_cs]      ; (the overlay's own code, fixed up as loaded: its selectors' segments)
-        mov bx, [cs:cr_ip]
-        add bx, [cs:cr_restore]
-        mov eax, [es:bx]
-        test eax, eax           ; (not fixed up: nothing to call)
+        mov si, [cs:cr_ip]
+        mov di, si
+        add si, [cs:cr_restore]
+        add di, [cs:cr_seg340]
+        mov cx, CR_PSP_BOX
+        call cr_box_put         ; (the PSP box's background put back)
         jz .none
-        mov [cs:cra_far], eax
-        mov bx, [cs:cr_ip]
-        add bx, [cs:cr_seg340]
-        mov ax, [es:bx]
-        mov es, ax
-        push word [es:0x3F2]
-        push word [es:0x406]
-        call far [cs:cra_far]   ; (the PSP box's background put back)
-        add sp, 4
         call cr_psp_draw        ; (PSP drawn again: the game's routine for it is an overlay's)
         call cr_age_draw
 .none:  pop es
@@ -8609,28 +8830,147 @@ cra_far dd 0
 ; CR_PSP_DRAW: the creation panel's PSP as the game has it, "28/28" (the creature's +2 of the
 ; sheet's +0Ch), centred at the PSP box's place as the game centres it (DS the game's).
 cr_psp_draw:
-        call cr_text_routine
         les bx, [0x11A0]
         mov ax, [es:bx + 2]
+        les bx, [0x119C]
+        mov dx, [es:bx + 0x0C]
+        mov si, CR_PSP_BOX
+; CR_PAIR_DRAW: "AX/DX" centred where the game centres a box's numbers (DS:SI the box: its x + 15h,
+; its y - 2; 6 pixels a character), as it draws the hit points and PSP (DS the game's).
+cr_pair_draw:
+        push ax
+        call cr_text_routine    ; (it takes AX)
+        pop ax
         mov di, cr_age_text
         call w_itoa
         mov byte [cs:di], '/'
         inc di
-        les bx, [0x119C]
-        mov ax, [es:bx + 0x0C]
+        mov ax, dx
         call w_itoa
-        mov ax, [0xF9C]
+        mov ax, [si + 2]
         sub ax, 2
         push ax
         sub di, cr_age_text     ; (centred on the game's x, as it draws it: 6 pixels a character)
         imul di, di, 3
-        mov ax, [0xF9A]
+        mov ax, [si]
         add ax, 0x15
         sub ax, di
         push ax
         push cs
         push word cr_age_text
         call c_draw_line
+        ret
+
+; CR_BOX_PUT: box CX's saved background put back as the game does (0A0:30C3h, its two words from the
+; segment of 340h: CX's and CX + 14h's), the far call's operand read from the overlay's code at
+; ES:SI and the segment's at ES:DI (fixed up as loaded). ZF set (nothing done) for an operand not
+; fixed up. DS the game's.
+CR_HP_BOX  equ 0xF92            ; (DS: the hit points' box, the 7th; its words at 340:3F0h, 404h)
+CR_PSP_BOX equ 0xF9A            ; (the PSP's, the 8th: 3F2h, 406h)
+cr_box_put:
+        mov eax, [es:si]
+        test eax, eax           ; (not fixed up: nothing to call)
+        jz .ret
+        mov [cs:cra_far], eax
+        mov es, [es:di]
+        mov bx, cx
+        sub bx, 0xF62           ; (the box's number, x 8)
+        shr bx, 2
+        push word [es:bx + 0x3E4]
+        push word [es:bx + 0x3F8]
+        call far [cs:cra_far]
+        add sp, 4
+        or sp, sp               ; (ZF clear)
+.ret:   ret
+
+; CR_THAC0_DRAW: "THAC0: M18 R19" right of the hit points (their box's saved background widened to x
+; 243: gamepatch.py's "cr_thac0_box"), at CR_AGE_X, above the age: the THAC0 (CR_THAC0_BASE) less
+; STR's to-hit adjustment (M, melee: DS:7C2h + STR) and DEX's missile adjustment (R, ranged:
+; DEX_REACTION's table, + DEX), as the inventory's THAC0 with no weapon. DS the game's.
+CR_STR_HIT equ 0x7C2
+cr_thac0_word db 'THAC0: M', 0
+cr_r_word db ' R', 0
+cr_thac0_text times 16 db 0
+thac0_game db 0                 ; (PROBE_THAC0's last: 20 less the classes', no kit)
+thac0_seen db 0                 ; (one worked out since the screen opened, CR_OPEN)
+cr_thac0_draw:
+        call cr_thac0_base
+        mov cl, al
+        mov di, cr_thac0_text
+        mov si, cr_thac0_word
+        call age_copy
+        mov si, CR_STR_HIT
+        mov dx, CREATURE_SCORES ; (STR)
+        call cr_thac0_less
+        mov si, cr_r_word
+        call age_copy
+        mov si, DEX_REACTION
+        mov dx, CREATURE_SCORES + 1 ; (DEX)
+        call cr_thac0_less
+        call cr_text_routine
+        mov ax, [CR_HP_BOX + 2]
+        sub ax, 2
+        push ax
+        push word CR_AGE_X
+        push cs
+        push word cr_thac0_text
+        call c_draw_line
+        ret
+cr_thac0_less:                  ; (at CS:DI, CL less DS:SI's table's entry for the score at the
+        les bx, [0x11A0]        ;   creature's +DX; no less than 0)
+        add bx, dx
+        movzx ax, byte [es:bx]
+        add si, ax
+        mov al, cl
+        sub al, [si]
+        jns .put
+        xor al, al
+.put:   jmp c_itoa
+
+; CR_THAC0_BASE: AL the THAC0 of the character being made: the game's last (THAC0_GAME, worked out as
+; its classes changed) with the kit on the sheet being made (kits.thac0: a Swashbuckler's, Crusader's,
+; Battle Mage's or Mind Warrior's a warrior's, 21 less the level, where better; a Scholar's 1 worse),
+; the kit not counted there (PROBE_THAC0 reads the party's sheets); none worked out on this screen (an
+; EDIT), the creature's own (+1Fh, its kit in it). DS the game's.
+cr_thac0_base:
+        les bx, [0x11A0]
+        mov al, [es:bx + 0x1F]
+        cmp byte [cs:thac0_seen], 0
+        je .ret
+        mov al, [cs:thac0_game]
+        les bx, [WP_CREATION]
+        mov ah, [es:bx + KIT_BYTE]
+        cmp ah, KIT_OPEN
+        je .ret
+        and ah, 3
+        jz .ret
+        push ax
+        call kit_class
+        mov dl, al
+        pop ax
+        shl dl, 2
+        add dl, ah              ; (the kit, as KIT_IS numbers them)
+        cmp dl, KIT_SCHOLAR
+        jne .warrior
+        inc al
+.ret:   ret
+.warrior:
+        cmp dl, KIT_SWASHBUCKLER
+        je .level
+        cmp dl, KIT_CRUSADER
+        je .level
+        cmp dl, KIT_BATTLE_MAGE
+        je .level
+        cmp dl, KIT_MIND_WARRIOR
+        jne .ret
+.level: mov ah, 21
+        sub ah, [es:bx + 0x24]
+        cmp ah, 1
+        jge .best
+        mov ah, 1
+.best:  cmp ah, al
+        jge .ret
+        mov al, ah
         ret
 
 cr_text_routine:                ; (c_draw_line: the game's text routine, the screen's window)
@@ -9743,7 +10083,7 @@ kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, K
              db KIT_SPELLARCHER, 'SPELLARCH', 0, KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTE SEER', 0, 0
 ef_more      db 'MORE: CLICK HERE', 0
 ; The game's own party's features on the Effects screen (OWN_RACE_B): the race, the line. 0 ends it.
-own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS', 0, 8, 'CHATKCHA 2/ROUND', 0
+own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS/PSI', 0, 8, 'CHATKCHA 2/ROUND', 0
              db 3, 'KIT: E-WANDERER', 0, 0
 ef_drawing   db 0
 ef_index     dw 0
@@ -10095,12 +10435,12 @@ wp_click:
         mov ax, [cs:wp_end_file]  ; go on at the routine's end
         sub ax, [cs:wp_ret_file]
         add [bp + 2], ax
-        cmp byte [cs:kit_reroll_due], 0
+        cmp byte [cs:kit_shown_due], 0
         je .game
         sti
         pushad
         push es
-        call kit_reroll
+        call kit_redraw
         pop es
         popad
 .game:  pop ax
@@ -10352,6 +10692,7 @@ kit_row:
         mov dl, KIT_OPEN        ; the one chosen: taken back, the rest in use again
 .put:   call kit_made           ; (a Battle Mage or Mind Warrior before or after: rolls again)
         call kit_rolls
+        mov byte [cs:kit_shown_due], 1  ; (its THAC0: KIT_REDRAW)
         mov [es:bx + KIT_BYTE], dl
         call kit_made
         call kit_rolls
@@ -10545,6 +10886,25 @@ cr_show:
         ret
 
 kit_reroll_due db 0
+kit_shown_due db 0
+
+; KIT_REDRAW: (WP_CLICK, at its end) a kit chosen or taken back: the hit points and PSP rolled again
+; for one with its own (KIT_REROLL) and the age shown again over PSP's box put back, else the hit
+; points shown again; then the THAC0 with the kit (CR_THAC0_DRAW). DS the game's.
+kit_redraw:
+        mov byte [cs:kit_shown_due], 0
+        cmp byte [cs:kit_reroll_due], 0
+        je .hp
+        call kit_reroll
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .thac0
+        call cr_age_draw
+        jmp .thac0
+.hp:    mov si, 0x3F0
+        mov di, CR_HP_BOX
+        mov ax, CR_HP_SHOW
+        call cr_show
+.thac0: jmp cr_thac0_draw
 
 ; The Elementalist (kits.py): a cleric with a second sphere, its spells and its weapons. The sheet's
 ; SPHERE2 (+45h): 0 none, 1-4 the sphere (air, earth, fire, water) + 1. On the creation panel's
@@ -15126,7 +15486,7 @@ probe_dos_open:
 old21       dd 0
 
 ; DOS_WRITE (INT 21h AH=40h): what the game writes to the screen (handles 1 and 2: stdout,
-; stderr) kept, its last MSG_BYTES in MSG_RING, then on to DOS. The game prints its fatal errors
+; stderr) kept, its last MSG_BYTES in the far block's FAR_MSG, then on to DOS. The game prints its fatal errors
 ; ("Mel Fatal Error", "ABEND: VMDelHeap() ...") while the screen is still in graphics, and puts
 ; it back in text mode, clearing it, on its way out: GAMEEND.COM found nothing to read.
 MSG_BYTES   equ 256
@@ -15139,12 +15499,14 @@ dos_write:
         push cx
         push si
         push di
+        push fs
+        mov fs, [cs:far_seg]
         mov si, dx
         jcxz .done
 .byte:  mov al, [si]
         inc si
         mov di, [cs:msg_at]
-        mov [cs:msg_ring + di], al
+        mov [fs:FAR_MSG + di], al
         inc di
         and di, MSG_BYTES - 1
         mov [cs:msg_at], di
@@ -15152,7 +15514,8 @@ dos_write:
         jae .full
         inc word [cs:msg_len]
 .full:  loop .byte
-.done:  pop di
+.done:  pop fs
+        pop di
         pop si
         pop cx
         pop ax
@@ -15162,7 +15525,8 @@ dos_write:
 ; game: GAMEEND.COM, after it, also ends with 1), saves D:\GAMEMSG.BIN for the Loader's crash
 ; report (launch.game_message): "GMSG", the code, the game's load segment, SS, SP, the stack's
 ; first STACK_BYTES there (the ways back of the calls that led to the exit), the length of the
-; text kept and the text (DOS_WRITE). Then on to DOS.
+; text kept and the text (DOS_WRITE): the header from here, the rest from the far block (FAR_QM_STACK
+; on). Not before FAR_INIT (QUIT_SAVED starts at 1). Then on to DOS.
 STACK_BYTES equ 256
 dos_quit:
         or al, al
@@ -15185,14 +15549,13 @@ dos_quit:
         push ss                         ; the stack, copied
         pop ds
         mov si, [cs:qm_sp]
-        push cs
-        pop es
-        mov di, qm_stack
+        mov es, [cs:far_seg]
+        mov di, FAR_QM_STACK
         mov cx, STACK_BYTES / 2
         cld
         rep movsw
         mov ax, [cs:msg_len]
-        mov [cs:qm_len], ax
+        stosw                           ; (FAR_QM_LEN)
         push cs
         pop ds
         mov ah, 3Ch
@@ -15207,24 +15570,30 @@ dos_quit:
         mov dx, qm_head
         pushf
         call far [cs:old21]
-        mov si, [msg_at]                ; the text, oldest first: from its start to the ring's
-        sub si, [msg_len]               ;   end, then from the ring's start
+        mov ds, [cs:far_seg]
+        mov ah, 40h
+        mov cx, STACK_BYTES + 2
+        mov dx, FAR_QM_STACK
+        pushf
+        call far [cs:old21]
+        mov si, [cs:msg_at]             ; the text, oldest first: from its start to the ring's
+        sub si, [cs:msg_len]            ;   end, then from the ring's start
         and si, MSG_BYTES - 1
         mov cx, MSG_BYTES
         sub cx, si
-        cmp cx, [msg_len]
+        cmp cx, [cs:msg_len]
         jbe .first
-        mov cx, [msg_len]
-.first: lea dx, [msg_ring + si]
+        mov cx, [cs:msg_len]
+.first: lea dx, [FAR_MSG + si]
         push cx
         mov ah, 40h
         pushf
         call far [cs:old21]
         pop ax
-        mov cx, [msg_len]
+        mov cx, [cs:msg_len]
         sub cx, ax
         jcxz .close
-        mov dx, msg_ring
+        mov dx, FAR_MSG
         mov ah, 40h
         pushf
         call far [cs:old21]
@@ -15235,7 +15604,7 @@ dos_quit:
         pop ds
         popa
 .chain: jmp far [cs:old21]
-quit_saved  db 0
+quit_saved  db 1
 msg_at      dw 0
 msg_len     dw 0
 qm_name     db "D:\GAMEMSG.BIN", 0
@@ -15244,10 +15613,7 @@ qm_code     db 0
 qm_load     dw 0
 qm_ss       dw 0
 qm_sp       dw 0
-qm_stack    times STACK_BYTES db 0
-qm_len      dw 0
 qm_end:
-msg_ring    times MSG_BYTES db 0
 
 ; SEG_MOVE: once, at a file open (AH=3Dh) of the game's (DSUNLOG.EXE the program running, its
 ; segment table where it should be, SEGTAB_AT), before any of its overlays is in: the game's segments
@@ -16340,6 +16706,8 @@ CR_NAME2_SITE equ NS_IMAGE + 63 ; 6349Fh: the same, a figure clicked (CR_NAME)
 CR_NAME3_SITE equ NS_IMAGE + 64 ; 63AE8h: a name typed (CR_NAME)
 CR_NAME4_SITE equ NS_IMAGE + 65 ; 63B2Dh: none typed, the game's put back (CR_NAME)
 CR_AGE_CON_SITE equ NS_IMAGE + 66 ; 63A13h: PSP drawn after a click on CON, the roll kept (CR_AGE_CON)
+CR_OPEN_SITE equ NS_IMAGE + 67  ; 65C68h: the creation screen opening, for a new member or EDIT (CR_OPEN)
+CR_HP_SITE equ NS_IMAGE + 68    ; 63AC3h, 63EDAh: the hit points drawn again, the THAC0 after them (CR_HP)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -16439,6 +16807,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je cr_age
         cmp byte [cs:rl_site], CR_AGE_CON_SITE
         je cr_age_con
+        cmp byte [cs:rl_site], CR_OPEN_SITE
+        je cr_open
+        cmp byte [cs:rl_site], CR_HP_SITE
+        je cr_hp
         cmp byte [cs:rl_site], CR_NAME_SITE
         je cr_name
         cmp byte [cs:rl_site], CR_NAME2_SITE
@@ -17648,7 +18020,11 @@ cr_weapons:
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
-        call age_put                    ; (no specs, and the creation screen's roll and age: a new
+        call ed_same
+        jc .new
+        call ed_keep            ; (EDIT, the same classes and kit: its weapon specs, none asked)
+        jmp .done
+.new:   call age_put                    ; (no specs, and the creation screen's roll and age: a new
         mov ax, ds                      ;   member, whatever the slot's last character left)
         add ax, PICK_STUB
         mov word [cs:lv_psi], DK_PSI
@@ -17656,6 +18032,7 @@ cr_weapons:
         mov byte [cs:lv_creating], 1
         call lv_check
         mov byte [cs:lv_creating], 0
+.done:  mov byte [cs:ed_on], 0
         pop bp
         pop ax                  ; the way back, as the overlay manager has left it
         pop dx
@@ -17665,6 +18042,71 @@ cr_weapons:
         pop es
         popad
 .iret:  iret
+
+; ED_ROLLED: CF set unless an EDIT's own roll is still shown (ED_AGE): it is until the creature
+; being made's six scores aren't those it had (ED_SCORES: the die rolled), ED_AGE cleared then. DS
+; the game's; all registers kept.
+ed_rolled:
+        cmp byte [cs:ed_age], 0
+        je .new
+        push eax
+        push bx
+        push es
+        les bx, [CR_CREATURE]
+        mov eax, [es:bx + CREATURE_SCORES]
+        cmp eax, [cs:ed_scores]
+        jne .pop
+        mov ax, [es:bx + CREATURE_SCORES + 4]
+        cmp ax, [cs:ed_scores + 4]
+.pop:   pop es
+        pop bx
+        pop eax
+        je .own
+        mov byte [cs:ed_age], 0
+.new:   stc
+        ret
+.own:   clc
+        ret
+
+; ED_SAME: CF clear if sheet ES:BX, made at DONE, is an EDIT's (CR_OPEN) with the member's own
+; race, classes and kit still. All registers kept.
+ed_same:
+        cmp byte [cs:ed_on], 0
+        je .no
+        push eax
+        mov al, [es:bx + 0x18]
+        cmp al, [cs:ed_race]
+        jne .pop
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        cmp eax, [cs:ed_classes]
+        jne .pop
+        mov al, [es:bx + KIT_BYTE]
+        cmp al, [cs:ed_kit]
+.pop:   pop eax
+        jne .no
+        clc
+        ret
+.no:    stc
+        ret
+; ED_KEEP: sheet ES:BX, an EDIT's (ED_SAME), its weapon specs' dword as they were (ED_SPECS); a
+; kept roll (v2) with the creation screen's roll and age in it (AGE_PUT: the die rolled again since,
+; or as it was). All registers kept.
+ed_keep:
+        push eax
+        push edx
+        mov edx, [cs:ed_specs]
+        test edx, SPEC_V2 << 16
+        jz .put                 ; (an older sheet's: as it was, the Loader's to age)
+        call age_put
+        mov eax, [es:bx + SPEC_SLOTS]
+        and eax, ~SPEC_KINDS_MASK
+        and edx, SPEC_KINDS_MASK
+        or edx, eax
+.put:   mov [es:bx + SPEC_SLOTS], edx
+        pop edx
+        pop eax
+        ret
 
 ; CR_LABELS: "mov bx,si / shl bx,2" (65125h; 5 bytes) in the routine drawing the ability labels
 ; (STR: to CHR:, 6511Fh) in the text colour the last screen left (DS:326Eh, TEXT_INK). The
@@ -23106,7 +23548,10 @@ FAR_SPANS  equ FAR_TBUF + TSIZE                 ; the shadows' spans (SPANS_FLUS
 FAR_LAST_X equ FAR_SPANS + SPANS_MOST * 6       ; each thing's place as last seen (dust)
 FAR_LAST_Y equ FAR_LAST_X + MAP_COUNT * 2
 FAR_PACE   equ FAR_LAST_Y + MAP_COUNT * 2       ; what moved in frames left undrawn (STEADY PACE)
-FAR_END    equ FAR_PACE + PACE_KEPT * 10
+FAR_QM_STACK equ FAR_PACE + PACE_KEPT * 10      ; the crash report's copy of the stack (DOS_QUIT)
+FAR_QM_LEN equ FAR_QM_STACK + STACK_BYTES       ; ... and the length of the text kept, then
+FAR_MSG    equ FAR_QM_LEN + 2                   ; the last text written to the screen (DOS_WRITE)
+FAR_END    equ FAR_MSG + MSG_BYTES
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
 
@@ -23598,7 +24043,8 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov ax, 4C01h
         int 21h
-.far:   mov ax, [cs:far_seg]
+.far:   mov byte [cs:quit_saved], 0     ; (DOS_QUIT's from now on)
+        mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
         mov [cs:panel_seg], ax
         mov [cs:sc_seg], ax

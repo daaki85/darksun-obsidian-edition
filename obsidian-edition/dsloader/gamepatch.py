@@ -169,6 +169,8 @@ ENL_SITE = NS_IMAGE + 58  # (a melee hit's damage made bigger by Enlarge: the we
 REGEN_SITE, CON_SITE = NS_IMAGE + 59, NS_IMAGE + 60  # (CON as in AD&D: regeneration's rates, dwarves' poison saves)
 CR_AGE_SITE = NS_IMAGE + 61  # (the creation panel's PSP drawn: the age above RECALL, a new roll, DSCLOG's CR_AGE)
 CR_AGE_CON_SITE = NS_IMAGE + 66  # (the same after a click on CON: the roll kept, DSCLOG's CR_AGE_CON)
+CR_OPEN_SITE = NS_IMAGE + 67  # (the creation screen opening, a new member or EDIT: DSCLOG's CR_OPEN)
+CR_HP_SITE = NS_IMAGE + 68  # (the hit points drawn again: the THAC0 after them, DSCLOG's CR_HP)
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -889,11 +891,19 @@ PATCHES = (
     # to RECALL's right, so its saved background clears what was drawn there
     Patch("cr_age", 0x65A89, bytes.fromhex("83c410"), _site(CR_AGE_SITE, 3)),
     Patch("cr_age_con", 0x63A13, bytes.fromhex("83c410"), _site(CR_AGE_CON_SITE, 3)),
+    # the creation screen opening: EDIT on a party member keeps its kit, age and weapon specs
+    Patch("cr_open", 0x65C68, bytes.fromhex("c606581aff"), _site(CR_OPEN_SITE, 5)),
     Patch("cr_age_name", 0x66045, bytes.fromhex("83c40e"), _site(CR_NAME_SITE, 3)),
     Patch("cr_age_figure", 0x6349F, bytes.fromhex("83c40e"), _site(CR_NAME2_SITE, 3)),
     Patch("cr_age_typed", 0x63AE8, bytes.fromhex("83c40e"), _site(CR_NAME3_SITE, 3)),
     Patch("cr_age_typed_none", 0x63B2D, bytes.fromhex("83c40e"), _site(CR_NAME4_SITE, 3)),
     Patch("cr_age_box", DS_FILE + 0xF9E, struct.pack("<h", 140), struct.pack("<h", 200)),
+    # the creation panel's THAC0 ("THAC0: M18 R19", DSCLOG's CR_THAC0_DRAW) right of the hit points:
+    # their box (the 7th) wider, to x 243 (DONE's left 244), so its saved background clears it; and
+    # drawn again after the two redraws of the hit points that don't draw PSP after them
+    Patch("cr_thac0_box", DS_FILE + 0xF96, struct.pack("<h", 140), struct.pack("<h", 243)),
+    Patch("cr_thac0_hp", 0x63AC3, bytes.fromhex("83c410"), _site(CR_HP_SITE, 3)),
+    Patch("cr_thac0_hp2", 0x63EDA, bytes.fromhex("83c410"), _site(CR_HP_SITE, 3)),
     # After DUAL: the new class's kit on the game's three-choice menu (an Elementalist's second sphere
     # too), and a new warrior's weapon kinds
     Patch("dual_kit", 0x86D90, bytes.fromhex("837e080c"), _interrupt(VEC_DUAL_KIT, 4)),

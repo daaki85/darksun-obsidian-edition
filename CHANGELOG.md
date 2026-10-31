@@ -8,6 +8,124 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.3 ([release notes](release-notes/v2.13.3.md)).
+
+**New**
+- **The THAC0 on the creation screen:** `THAC0: M18 R19` right of the hit points, above the age,
+  M the character's THAC0 less STR's to-hit adjustment and R less DEX's missile adjustment, drawn
+  again after every redraw of the hit points and on a click on STR or DEX (DSCLOG's
+  `CR_THAC0_DRAW`, `CR_HP` at 63AC3h and 63EDAh, `RL_SUM`, `CR_BOX_PUT`, `CR_PAIR_DRAW`; the hit
+  points' box widened to x 243, `cr_thac0_box`). Checked in DOSBox. Tests: `test_thac0_line`.
+  DSCLOG's image 64,544 bytes (+240). The README's inventory THAC0 now says all it counts (the
+  weapon spec's to-hit, a kit's, the two-weapon penalty).
+
+**Fixed (the review of the changes since 2.13.2)**
+- The creation screen's THAC0 left out a kit chosen on the panel (the game's THAC0 hook reads the
+  party's sheets): DSCLOG keeps the game's kit-less THAC0 (`THAC0_GAME`) and applies the sheet
+  being made's kit (`CR_THAC0_BASE`: a Scholar 1 worse, a warrior's for the Swashbuckler, Crusader,
+  Battle Mage and Mind Warrior). A kit chosen or taken back draws the line again
+  (`KIT_REDRAW`); after a Battle Mage's, Mind Warrior's or Arcanist's hit points are rolled again
+  the age is drawn again too (it went missing: PSP's box put back, nothing after). Checked in
+  DOSBox.
+- EDIT gave a kit back with the same classes whatever the race (a multiclass kit's number is its
+  race's group's: a half-elf fighter/thief Shadowblade made a dwarf came back a Ghetto Fighter),
+  and a Healer whatever the sphere: the race is kept and compared too (`ED_RACE`, `ED_SAME`), and a
+  Healer comes back only with water marked (`HEALER_BARRED`).
+- An Elementalist got a 6th-level slot at 11th without AD&D's tables, where a cleric gets none:
+  only with them now (`kits.slots`' `adnd`, DSCLOG's `PROBE_SLOTS`).
+- Screenshots taken again: the Loader's dice log and Dialogue tab at the arena's opening show
+  (K'ratchek's features now "Open sky spells and psionics"), the creation screen with the THAC0.
+- Tidier: the Options tab's rule groups are in each rule's own entry (`viewer.py`), and the
+  creation THAC0 uses DSCLOG's `DEX_REACTION` and `CREATURE_SCORES`. DSCLOG's image 64,784 bytes
+  (+240). Tests: `test_thac0_line`, `test_edit_keeps_its_specs`, `test_slots`.
+- K'ratchek's line on the Effects screen read "OPEN SKY SPELLS" only: now "OPEN SKY SPELLS/PSI",
+  as her features say (DSCLOG's `OWN_LINES`). Checked in DOSBox.
+
+**Memory**
+- The crash report's two 256-byte buffers (the copy of the stack and the last text written to the
+  screen) moved out of DSCLOG's 64 KB into the far block in the HMA (`FAR_QM_STACK`, `FAR_QM_LEN`,
+  `FAR_MSG`; `DOS_WRITE`, `DOS_QUIT`; no GAMEMSG.BIN before `FAR_INIT` now, `QUIT_SAVED` starting
+  at 1). DSCLOG's image 64,320 bytes (-464), 960 bytes spare; the HMA 6,566 bytes left. The file
+  GAMEMSG.BIN is the same. Tests: `test_crash_report`.
+
+**Changed**
+- **The Shinobi's spell slots go on to 13th level:** 3 2 1 at thief level 11, 3 2 2 at 12th and
+  3 3 2 at 13th, as *The Complete Ranger's Handbook*'s Seeker table goes on (its 4th-level slot
+  at 13th left out: no 4th-level spells on the Shinobi's list). The table stopped at a ranger's
+  10th, so a Shinobi stayed at 2 2 1 from 10th to the XP cap's 13th (`kits.SEEKER_SLOTS`,
+  DSCLOG's `seeker_slots` and `SEEKER_LAST`; a Seeker, a ranger, still stops at 10th). Tests:
+  `test_slots`. DSCLOG's image 64,272 bytes (+16).
+- **The Shinobi gets 4th-level spells at 13th:** the table's 4th-level slot (3 3 2 1, the table
+  four spell levels wide now) and three spells on its list, Improved Invisibility (46), Solid Fog
+  (51) and Confusion (41) (`kits.SHINOBI_SPELLS`, DSCLOG's `SHINOBI_SPELLS`). CHOOSE A SPELL
+  offers one no sooner than its slot: it offers spell levels up to half the casting level rounded
+  up, which is 4th at thief level 12 (casting 7th), so no more than 3rd before 13th (a scroll of
+  one can still be read and learnt sooner, as its others are, to be cast from 13th)
+  (`kits.shinobi_pick_level`, DSCLOG's `SHINOBI_PICK_CAST`, `SHINOBI_FOURTH`). Tests:
+  `test_slots`, `test_pick_level`, `test_pick_any`. DSCLOG's image 64,304 bytes (+32).
+
+**Fixed**
+- **EDIT on a party member** (to change a name, say) took its kit away, rolled a new age and
+  asked for its weapon specs again at DONE. DSCLOG's `CR_OPEN` (a site at the creation
+  screen's opening, 65C68h) tells EDIT from a new member as the game does (DS:0E9Ch) and keeps
+  the member's kit, age (until the die rolls) and, while its classes and kit are unchanged,
+  its weapon specs with nothing asked (`ED_SAME`, `ED_KEEP`). Checked in DOSBox. Tests:
+  `test_edit_keeps_its_specs`. DSCLOG's image 64,256 bytes (+496).
+
+**Changed**
+- **A Spellarcher adds to the same spell's arrows:** with Chill Arrows in its quiver, its Chill
+  Touch button adds as many more to them (a slot used, the dice log saying how many are in the
+  quiver now) rather than saying the quiver must be empty; another spell's arrows, or anything
+  else, still stop it (`SpellArrows.make`, `MOST_ARROWS`). Tests: `test_make_more_of_the_same`.
+- **The Wasteland Seer is a thri-kreen druid/fighter/psionicist's**, all three classes; a
+  druid/fighter has no kit now. Multiclass kit groups may be three classes (`kitpages.MULTI`,
+  `multi_group`; DSCLOG's `MULTI_FIND` takes in a third class, `multi_table` group 18's word
+  three bits). A thri-kreen druid/fighter Wasteland Seer from an earlier version keeps its kit
+  byte but has no kit. Tests: `test_multiclass_kits`, `test_kit_at`, `test_sky_level`.
+- **The Wasteland Seer's psionics follow the sky too:** every power costs 2 PSP less under the
+  open sky and 1 more under a roof, to use and to keep up, never below 1 (`kits.psp_cost`'s
+  `outdoors`; DSCLOG's `PSI_KIT`, `KIT_PSP_OF`, `KIT_SEER_ROOF`). K'ratchek, a Wasteland Seer by
+  her own feature, has it too (`PSI_KIT`'s `CR_OWN_RACE`, as `SKY_LEVEL`). Tests:
+  `test_psp_wasteland_seer`. DSCLOG's image 63,760 bytes (+48).
+- **An Elementalist has at least 1 spell slot at each spell level a cleric of its level casts**
+  (2 × the spell level − 1: 1st-level spells at 1st, 6th at 11th), its slots otherwise a level
+  behind as before (`kits.slots`; DSCLOG's `PROBE_SLOTS`). `KITS.md`'s table and notes follow.
+  Tests: `test_slots`. DSCLOG's image 63,712 bytes (+32).
+
+**Docs**
+- **The rule changes in three groups**, the same in the docs and on the Loader's Options tab:
+  *Characters* (class restrictions, multiclass hit points, hit dice, scores as rolled, AD&D's
+  class tables, CON, ages), *Weapons and armour* (two weapons, half-giants' two-handed weapons,
+  rings and cloaks, helms, items against acid) and *Magic* (rangers' casting level, preservers'
+  INT, the spell save, DEX for fire, cold and electricity, Enlarge). FEATURES has a heading and
+  a summary table for each group (the rules' anchors as they were); the Options tab a small
+  heading for each in its Rule changes section, as Improved thieving has (`viewer.py`'s
+  `rule_groups`); DEVELOPMENT's sections and the guide's Options-at-a-glance row follow. The
+  Options screenshot is taken again.
+- The Loader's README has **When something goes wrong** at the end, after the Loader's window,
+  the dice log and accessibility (it came before the game's own screens); HOW-THE-GAME-WORKS'
+  sections go by subject: character creation, fighting (initiative, critical hits, two weapons,
+  backstabs, saves, monsters' defences), spells and psionics, thief skills, then the world
+  (searches, the Bowyer's target, the arena's count, walking).
+- The player's guide reordered: **Experience and levels** comes after the classes, kits and
+  weapon specialization (it was near the end, after Equipment), with **Hit points** and
+  **THAC0 by level** moved under it from Making a party; **Ages** has a heading of its own under
+  Making a party (it was a paragraph inside Races). The anchors are as they were.
+- A review after the slot table's gap, checked against the code: every name and test the docs
+  cite, every link and anchor, the tables by level (spell slots, XP, THAC0, thief skills, the XP
+  cap's highest levels), the kits' numbers and DICE-LOG's lines. Fixed: hit points past 10th (a
+  preserver +1 a level, a thief +2, from the game's own records) in the guide's table and
+  FEATURES; EDIT's kit, age and weapon specs in KITS and the Ages section; the one three-class
+  kit where the docs said "pairs"; the Swashbuckler's THAC0 to 13th; K'ratchek "is" a Wasteland
+  Seer, and her feature's name on the Characters tab (`kits.OWN_FEATURES`: "Open sky spells and
+  psionics").
+- `KITS.md`'s spell slot table goes on to the highest level each class reaches under the XP cap
+  (a preserver's and a cleric's 11th, with the cleric's 6th-level slot; the Shinobi's thief to
+  13th), with a druid column beside the cleric's (to 12th, its second 6th-level slot), from the code's own tables (`tables.slots`, `kits.slots`); the Grove Warden's AC steps
+  go on to 4 at 12th.
+
+## Pull request #83 ([merged 2026-10-30](https://github.com/daaki85/darksun-obsidian-edition/pull/83))
+
 Obsidian Edition 2.13.2 ([release notes](release-notes/v2.13.2.md)).
 
 **Changed**
