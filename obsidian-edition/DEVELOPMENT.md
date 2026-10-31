@@ -1152,6 +1152,38 @@ fourth OpenDS repair, starting the final battle's stages without their pause,
 is left out (yuan-ti keeps it off too: with the game's clock running the stage
 gate waits its window out). Not seen in play yet: all are past the slave pens.
 
+Checks that read a character's own field (race 20, sex 21, the flags word 17)
+straight from the active member's object (8025h, or the actor's, 8026h), whose
+record, the combat record, holds none of them, so they read 0. The game's own
+scripts read them through field 71 (the combat record's pointer to the
+character's: `8025 02 47 15`, some thirty times), so the repair adds the `.71`:
+script 31 at 3Bh and 254h (the halfling's greeting and insult: yuan-ti's), 42 at
+121Eh and 154Ch (sex: "wo"man, "her" purse), 80 at 8D7h (a thri-kreen hears the
+bell) and 203 at 101Bh (a thri-kreen gets "your help"), these four found by a
+sweep of every script for fields read from a record that lacks them. The
+ranger's tracking (script 210, region 8's bodies, yuan-ti's): 5FDh tests the
+ranger bit (200h) of the flags word read directly; 60Ch, 622h and 638h test
+`class & 200h` for each class where a ranger's class code is 13 to 16 (now
+`> 12 and < 17`); 6CCh succeeded on `score < RAND(20)` (now `RAND(20) < score`).
+The score is WIS, plus 1 above ranger levels 2, 5 and 8, plus 2 for a flag, plus
+the level halved; success gives the party 75 XP a point of it. The slave pens'
+sewer grate (script 137, yuan-ti's): A65h ends the search for a weapon in hand
+on `lflag[3] == 1` where it was just set to 0 (now `== 0`), so "hack the lock
+off" never comes up; 9E0h's hack says his or her as the pick does; A14h's
+successful hack sets flag 505 and prints "The grate opens." as the pick's does.
+(Its USE WITH handler at B5Ch compares the item's field 43, which its own record lacks,
+`< 220`, so any item breaks the lock; what it meant isn't clear, so it stays.)
+The same sweep checked every RAND comparison and every bit test of a class or
+level: only the tracking's were wrong.
+
+A repair longer than the bytes it replaces runs from after the script's end:
+an exit first (a script that ran off its end still stops), then the new bytes
+and a jump back; the old bytes become a jump there, padded with exits. The jump
+is 64h, as the Loader's other script changes jump (yuan-ti uses 12h, which the
+game's scripts never do). A lengthened test takes its IF along, so the branch
+follows it as in the game's. Addresses in the new bytes written from their own
+start (`relocate`: the grate's his-or-her) are moved by where they land.
+
 **Kurzak and Legcrusher** (`dsloader/kurzak.py`, always): Kurzak's call to the
 arena (script 136 at 130h, "Legcrusher! Get gladiators!") and his talk's cases 2
 and 3 as the party comes (script 141 at 6B4h and 70Bh: "I thought I was going to

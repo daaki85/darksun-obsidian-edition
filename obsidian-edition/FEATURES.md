@@ -2088,6 +2088,9 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
 | The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
 | **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
+| A **ranger tracking** at the Wagon Train's bodies | The check looked for the ranger's flag where the character's record isn't, so found no ranger; it tested a ranger's level as a bit of its class; and the d20 had to beat the score, not come under it: "You cannot interpret the tracks surrounding the body" | A ranger reads the tracks on a d20 under its score (WIS, more at higher ranger levels), for XP |
+| The slave pens' **sewer grate** | The search for a weapon in hand stopped at once, so "hack the lock off" was never offered; and a hack that worked left the grate shut | Offered to a member with a weapon in hand, and a hack that works opens it, saying "his" or "her" as picking the lock does |
+| Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
 | **"Out of memory in OEOpenGraph"** in a long session | The map needs 60,000 bytes in one piece each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had about 57 KB to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory: about 97 KB to spare with the map up, and a warning in the dice log if it runs low ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
 | **Slay Living**'s description | Said a creature that saves takes 3 to 17 | Says 2 to 16 (half of 4d8), what the game does |
 | A character's **most PSP** (worked out at each level-up check, for every party member) | The WIS bonus read from the creation screen's record, not the character's (in play, any byte that memory holds: 183 in one test), and the bonus tables 8 scores long, so INT 22 gave nothing, INT 23 to 25 20 to 24 too many, WIS 23 to 25 none at all, CON 23 to 25 0 to 2 | Each from the character's own score: CON and INT the score less 15, WIS twice it less 10, on to 25 (found by CalvinRodo's yuan-ti, checked in DSUN.EXE). The most only ever rises, so a character's may go up once, the next time it's worked out |
@@ -2098,9 +2101,11 @@ Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it ([Spells on the Effects
 screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs
+[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The script bugs
 (Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and checked
-by yuan-ti; the Loader mends them in its copy of the game's scripts
+by yuan-ti, the ranger's tracking, the sewer grate and the halfling's lines by
+yuan-ti, and the other race and sex lines by the Loader's own search of the
+scripts; the Loader mends them in its copy of the game's scripts
 (`scriptfixes.py`).
 
 **Saved games.** There's no need to start a new game for these: they're in

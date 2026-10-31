@@ -23,6 +23,20 @@ notes](PATCH-NOTES.md).
   word's index ("shl bx,1" at 62FC0h), so every creature but the first got another's (or a byte
   past the list). The shift made two NOPs (`gamepatch`'s `fight_music`). Not heard in play.
 
+**Fixed: the game's script checks (`scriptfixes.py`, always on)**
+- yuan-ti's v0.1.49 repairs: the ranger's tracking at the Wagon Train's bodies (script 210: the
+  ranger flag read from the combat record, the ranger level tested as a bit of its class, the
+  d20 compared the wrong way round), the slave pens' sewer grate (137: "hack the lock off"
+  never offered, his or her, a hack that works opens it) and the halfling's greeting and insult
+  (31: race read from the combat record).
+- The Loader's own sweep of every script for a field read from a record that lacks it (and
+  every RAND comparison and class bit test): sex in script 42 ("wo"man, "her" purse) and race in
+  80 (a thri-kreen hears the bell the mastyrial hears) and 203 ("your help" for a thri-kreen).
+  The game's own scripts read these through field 71 some thirty times.
+- Detours for a repair longer than its bytes: after the script's end (an exit first), with a
+  jump (64h, as the Loader's other script changes) back. Not seen in play.
+  Tests: `test_scriptfixes` (each detour, relocations, the length limit).
+
 **Docs (from yuan-ti's notes, checked in the game's data and code)**
 - ITEMS: the ability items' amounts (Draketooth STR +3, Dag's Dagger CHA +1, the Helm of Might
   STR +1, the Belt of Might STR at least 24, El's Ring DEX +3, the Steadfast Ring, the game's
