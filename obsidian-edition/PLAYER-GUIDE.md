@@ -23,9 +23,8 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 - [Making a party](#making-a-party)
   - [Ability scores](#ability-scores)
   - [Races](#races)
+  - [Ages](#ages)
   - [More than one class](#more-than-one-class)
-  - [Hit points](#hit-points)
-  - [THAC0 by level](#thac0-by-level)
 - [The classes](#the-classes)
   - [What each class may use](#what-each-class-may-use)
   - [Fighter](#fighter), [Gladiator](#gladiator), [Ranger](#ranger),
@@ -35,6 +34,9 @@ The [features page](FEATURES.md) has every rule in full detail, and the
   - [Multiclass kits](#multiclass-kits)
   - [Kits' spell slots](#kits-spell-slots)
 - [Weapon specialization and attacks](#weapon-specialization-and-attacks)
+- [Experience and levels](#experience-and-levels)
+  - [Hit points](#hit-points)
+  - [THAC0 by level](#thac0-by-level)
 - [Fighting](#fighting)
   - [Initiative](#initiative)
   - [Hitting](#hitting)
@@ -53,7 +55,6 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 - [Psionics](#psionics)
 - [Equipment](#equipment)
   - [New items](#new-items)
-- [Experience and levels](#experience-and-levels)
 - [Worth knowing](#worth-knowing)
 - [Glossary](#glossary)
 - [The Options tab at a glance](#the-options-tab-at-a-glance)
@@ -219,17 +220,6 @@ With each score rolled 8 to 20 before the adjustment, a race's scores run from
 INT at 15 and its WIS and CHA at 17, with smaller adjustments; the game gets
 the same caps from these larger ones.)
 
-**Ages.** With [Ages and magical aging](FEATURES.md#ages-and-magical-aging)
-on, each character has an age from the Dark Sun rules (on the inventory
-panel, under the saves). Middle, old and venerable age change the scores, and
-a character dies at the most its race lives. Each 365 days of game time adds
-a year, and their hair greys on the map as they age (with what the party wears
-on); the creation screen shows the age a new character starts at. Magic ages
-them faster: **Haste**
-costs a year, after a system shock roll by CON that a character can fail and
-die (85% to survive at CON 13, 99% from 18); **Restore Youth** gives magical
-years back. *Without the mod:* no ages, and Haste costs nothing.
-
 **Classes by race** (the creation screen greys the rest):
 
 | Race | Cleric | Druid | Fighter | Gladiator | Preserver | Psionicist | Ranger | Thief |
@@ -245,6 +235,19 @@ years back. *Without the mod:* no ages, and Haste costs nothing.
 
 **Alignment:** a druid must be true neutral, a ranger good (lawful, neutral
 or chaotic good). The others may be any good or neutral alignment.
+
+### Ages
+
+With [Ages and magical aging](FEATURES.md#ages-and-magical-aging)
+on, each character has an age from the Dark Sun rules (on the inventory
+panel, under the saves). Middle, old and venerable age change the scores, and
+a character dies at the most its race lives. Each 365 days of game time adds
+a year, and their hair greys on the map as they age (with what the party wears
+on); the creation screen shows the age a new character starts at. Magic ages
+them faster: **Haste**
+costs a year, after a system shock roll by CON that a character can fail and
+die (85% to survive at CON 13, 99% from 18); **Restore Youth** gives magical
+years back. *Without the mod:* no ages, and Haste costs nothing.
 
 ### More than one class
 
@@ -285,54 +288,6 @@ gives (its hit points, THAC0, saves, weapon specs and kit) **sleeps until the
 new class's level passes the old one's**; then both count. The new class can
 take a kit of its own, so a human may end up with three. Some kits rule out
 classes a human could change to ([kits](#kits)).
-
-### Hit points
-
-| Class | Hit die | At 10th level | Past 10th |
-|---|---|---|---|
-| Fighter, gladiator, ranger | d10 | +3 | +3 |
-| Cleric, druid | d8 | +2 | +2 |
-| Psionicist | d6 | +2 | +2 |
-| Thief | d6 | d6 | +2 |
-| Preserver | d4 | d4 | +1 |
-
-- **Every hit die is rolled twice and the better kept,** at creation (one die
-  for every starting level) and at every level up. *Without the mod:* one roll.
-- **The hit points are as rolled:** clicking them on the creation screen does
-  nothing. Changing CON there adds or takes off its bonus for every level.
-  *Without the mod:* a click sets them anywhere the dice could have, and a
-  higher CON adds nothing unless they are below the new least.
-- Half-giants roll double. A roll counts at least 2 with CON 20, 3 with CON
-  21-22 and 4 with CON 23 or more.
-- CON 20 or more gives a party member hit points back by themselves, one an
-  hour at CON 20, 50 minutes at 21, 40 at 22, 30 at 23, 20 at 24 and 10 at
-  25 ([CON as in AD&D](FEATURES.md#con-as-in-add)). *Without the mod:* one
-  every 5 minutes at any of them.
-- Two [kits](#kits) change the die: a **Battle Mage** rolls a d6, an **Arcanist** a d3.
-- **CON's bonus** comes with every level: for a fighter, gladiator or ranger
-  +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
-  24-25 (−1 at 4-6); for anyone else at most +2.
-- **A character of several classes** adds CON's bonus to every die (the
-  fighter's bonus on every die if one of its classes is a warrior), and the
-  total is divided by the number of classes. *Without the mod:* the dice are
-  added and the total divided, and CON's bonus counts once a level of the
-  highest class.
-- At 0 hit points a character is Out Cold; at −10, dead.
-
-### THAC0 by level
-
-AD&D's tables; a character of several classes uses its best.
-
-| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Fighter, gladiator, ranger | 20 | 19 | 18 | 17 | 16 | 15 | 14 | 13 | 12 | 11 | 10 | 9 | 8 |
-| Cleric, druid | 20 | 20 | 20 | 18 | 18 | 18 | 16 | 16 | 16 | 14 | 14 | 14 | 12 |
-| Thief | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
-| Psionicist | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
-| Preserver | 20 | 20 | 20 | 19 | 19 | 19 | 18 | 18 | 18 | 17 | 17 | 17 | 16 |
-
-*Without the mod:* clerics and druids improve by about 2/3 a level (19 at
-3rd, 17 at 6th, 15 at 9th); the rest are as above.
 
 ## The classes
 
@@ -1097,6 +1052,100 @@ once a round whatever the rate.
 level) with any weapon, and no other bonus; missile weapons shoot at the
 weapon's own rate for everyone.
 
+## Experience and levels
+
+Experience comes from kills (an equal share for each character, split again
+between a character's classes) and from deeds along the way. A level up comes
+by itself, with hit points, a better THAC0 and saves, spell slots, a new
+preserver spell or psionic power, and any weapon spec due.
+
+Levels stop at a cap of **749,999 XP**, shared out: a character of one class
+goes up while its next level needs no more; two classes share it evenly
+(374,999 each), three too (249,999); and a human who changed class has the
+cap less what its old classes' levels needed (the game starts the new class
+at 0 XP). XP keeps counting past the cap. The highest levels:
+
+| Class | One class | Two classes | Three classes |
+|---|---|---|---|
+| Cleric | 11 | 9 | 9 |
+| Druid | 12 | 12 | 11 |
+| Fighter | 10 | 9 | 8 |
+| Gladiator | 10 | – | – |
+| Preserver | 11 | 10 | 9 |
+| Psionicist | 11 | 9 | 9 |
+| Ranger | 10 | 9 | 8 |
+| Thief | 13 | 11 | 11 |
+
+*Without the mod:* every class stops at 9th.
+
+AD&D's tables:
+
+| To reach level | Fighter | Gladiator, ranger | Cleric | Druid | Preserver | Psionicist | Thief |
+|---|---|---|---|---|---|---|---|
+| 2 | 2,000 | 2,250 | 1,500 | 2,000 | 2,500 | 2,200 | 1,250 |
+| 3 | 4,000 | 4,500 | 3,000 | 4,000 | 5,000 | 4,400 | 2,500 |
+| 4 | 8,000 | 9,000 | 6,000 | 7,500 | 10,000 | 8,800 | 5,000 |
+| 5 | 16,000 | 18,000 | 13,000 | 12,500 | 20,000 | 16,500 | 10,000 |
+| 6 | 32,000 | 36,000 | 27,500 | 20,000 | 40,000 | 30,000 | 20,000 |
+| 7 | 64,000 | 75,000 | 55,000 | 35,000 | 60,000 | 55,000 | 40,000 |
+| 8 | 125,000 | 150,000 | 110,000 | 60,000 | 90,000 | 100,000 | 70,000 |
+| 9 | 250,000 | 300,000 | 225,000 | 90,000 | 135,000 | 200,000 | 110,000 |
+| 10 | 500,000 | 600,000 | 450,000 | 125,000 | 250,000 | 400,000 | 160,000 |
+| 11 | 750,000 | 900,000 | 675,000 | 200,000 | 375,000 | 600,000 | 220,000 |
+| 12 | 1,000,000 | 1,200,000 | 900,000 | 300,000 | 750,000 | 800,000 | 440,000 |
+| 13 | 1,250,000 | 1,500,000 | 1,125,000 | 750,000 | 1,125,000 | 1,000,000 | 660,000 |
+
+*Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
+2nd level and a thief 1,200.
+
+### Hit points
+
+| Class | Hit die | At 10th level | Past 10th |
+|---|---|---|---|
+| Fighter, gladiator, ranger | d10 | +3 | +3 |
+| Cleric, druid | d8 | +2 | +2 |
+| Psionicist | d6 | +2 | +2 |
+| Thief | d6 | d6 | +2 |
+| Preserver | d4 | d4 | +1 |
+
+- **Every hit die is rolled twice and the better kept,** at creation (one die
+  for every starting level) and at every level up. *Without the mod:* one roll.
+- **The hit points are as rolled:** clicking them on the creation screen does
+  nothing. Changing CON there adds or takes off its bonus for every level.
+  *Without the mod:* a click sets them anywhere the dice could have, and a
+  higher CON adds nothing unless they are below the new least.
+- Half-giants roll double. A roll counts at least 2 with CON 20, 3 with CON
+  21-22 and 4 with CON 23 or more.
+- CON 20 or more gives a party member hit points back by themselves, one an
+  hour at CON 20, 50 minutes at 21, 40 at 22, 30 at 23, 20 at 24 and 10 at
+  25 ([CON as in AD&D](FEATURES.md#con-as-in-add)). *Without the mod:* one
+  every 5 minutes at any of them.
+- Two [kits](#kits) change the die: a **Battle Mage** rolls a d6, an **Arcanist** a d3.
+- **CON's bonus** comes with every level: for a fighter, gladiator or ranger
+  +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
+  24-25 (−1 at 4-6); for anyone else at most +2.
+- **A character of several classes** adds CON's bonus to every die (the
+  fighter's bonus on every die if one of its classes is a warrior), and the
+  total is divided by the number of classes. *Without the mod:* the dice are
+  added and the total divided, and CON's bonus counts once a level of the
+  highest class.
+- At 0 hit points a character is Out Cold; at −10, dead.
+
+### THAC0 by level
+
+AD&D's tables; a character of several classes uses its best.
+
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Fighter, gladiator, ranger | 20 | 19 | 18 | 17 | 16 | 15 | 14 | 13 | 12 | 11 | 10 | 9 | 8 |
+| Cleric, druid | 20 | 20 | 20 | 18 | 18 | 18 | 16 | 16 | 16 | 14 | 14 | 14 | 12 |
+| Thief | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
+| Psionicist | 20 | 20 | 19 | 19 | 18 | 18 | 17 | 17 | 16 | 16 | 15 | 15 | 14 |
+| Preserver | 20 | 20 | 20 | 19 | 19 | 19 | 18 | 18 | 18 | 17 | 17 | 17 | 16 |
+
+*Without the mod:* clerics and druids improve by about 2/3 a level (19 at
+3rd, 17 at 6th, 15 at 9th); the rest are as above.
+
 ## Fighting
 
 ### Initiative
@@ -1693,52 +1742,6 @@ chosen type, often one of these.
 
 The game's own Grey's Scale arm and leg armour is AC 3 each with the mod (2
 without).
-
-## Experience and levels
-
-Experience comes from kills (an equal share for each character, split again
-between a character's classes) and from deeds along the way. A level up comes
-by itself, with hit points, a better THAC0 and saves, spell slots, a new
-preserver spell or psionic power, and any weapon spec due.
-
-Levels stop at a cap of **749,999 XP**, shared out: a character of one class
-goes up while its next level needs no more; two classes share it evenly
-(374,999 each), three too (249,999); and a human who changed class has the
-cap less what its old classes' levels needed (the game starts the new class
-at 0 XP). XP keeps counting past the cap. The highest levels:
-
-| Class | One class | Two classes | Three classes |
-|---|---|---|---|
-| Cleric | 11 | 9 | 9 |
-| Druid | 12 | 12 | 11 |
-| Fighter | 10 | 9 | 8 |
-| Gladiator | 10 | – | – |
-| Preserver | 11 | 10 | 9 |
-| Psionicist | 11 | 9 | 9 |
-| Ranger | 10 | 9 | 8 |
-| Thief | 13 | 11 | 11 |
-
-*Without the mod:* every class stops at 9th.
-
-AD&D's tables:
-
-| To reach level | Fighter | Gladiator, ranger | Cleric | Druid | Preserver | Psionicist | Thief |
-|---|---|---|---|---|---|---|---|
-| 2 | 2,000 | 2,250 | 1,500 | 2,000 | 2,500 | 2,200 | 1,250 |
-| 3 | 4,000 | 4,500 | 3,000 | 4,000 | 5,000 | 4,400 | 2,500 |
-| 4 | 8,000 | 9,000 | 6,000 | 7,500 | 10,000 | 8,800 | 5,000 |
-| 5 | 16,000 | 18,000 | 13,000 | 12,500 | 20,000 | 16,500 | 10,000 |
-| 6 | 32,000 | 36,000 | 27,500 | 20,000 | 40,000 | 30,000 | 20,000 |
-| 7 | 64,000 | 75,000 | 55,000 | 35,000 | 60,000 | 55,000 | 40,000 |
-| 8 | 125,000 | 150,000 | 110,000 | 60,000 | 90,000 | 100,000 | 70,000 |
-| 9 | 250,000 | 300,000 | 225,000 | 90,000 | 135,000 | 200,000 | 110,000 |
-| 10 | 500,000 | 600,000 | 450,000 | 125,000 | 250,000 | 400,000 | 160,000 |
-| 11 | 750,000 | 900,000 | 675,000 | 200,000 | 375,000 | 600,000 | 220,000 |
-| 12 | 1,000,000 | 1,200,000 | 900,000 | 300,000 | 750,000 | 800,000 | 440,000 |
-| 13 | 1,250,000 | 1,500,000 | 1,125,000 | 750,000 | 1,125,000 | 1,000,000 | 660,000 |
-
-*Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
-2nd level and a thief 1,200.
 
 ## Worth knowing
 

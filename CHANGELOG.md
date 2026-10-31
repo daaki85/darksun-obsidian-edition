@@ -37,6 +37,10 @@ notes](PATCH-NOTES.md).
   Tests: `test_slots`. DSCLOG's image 63,712 bytes (+32).
 
 **Docs**
+- The player's guide reordered: **Experience and levels** comes after the classes, kits and
+  weapon specialization (it was near the end, after Equipment), with **Hit points** and
+  **THAC0 by level** moved under it from Making a party; **Ages** has a heading of its own under
+  Making a party (it was a paragraph inside Races). The anchors are as they were.
 - A review after the slot table's gap, checked against the code: every name and test the docs
   cite, every link and anchor, the tables by level (spell slots, XP, THAC0, thief skills, the XP
   cap's highest levels), the kits' numbers and DICE-LOG's lines. Fixed: hit points past 10th (a
