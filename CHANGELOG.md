@@ -8,6 +8,15 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**New**
+- **The THAC0 on the creation screen:** `THAC0: M18 R19` right of the hit points, above the age,
+  M the character's THAC0 less STR's to-hit adjustment and R less DEX's missile adjustment, drawn
+  again after every redraw of the hit points and on a click on STR or DEX (DSCLOG's
+  `CR_THAC0_DRAW`, `CR_HP` at 63AC3h and 63EDAh, `RL_SUM`, `CR_BOX_PUT`, `CR_PAIR_DRAW`; the hit
+  points' box widened to x 243, `cr_thac0_box`). Checked in DOSBox. Tests: `test_thac0_line`.
+  DSCLOG's image 64,544 bytes (+240). The README's inventory THAC0 now says all it counts (the
+  weapon spec's to-hit, a kit's, the two-weapon penalty).
+
 **Changed**
 - **The Shinobi's spell slots go on to 13th level:** 3 2 1 at thief level 11, 3 2 2 at 12th and
   3 3 2 at 13th, as *The Complete Ranger's Handbook*'s Seeker table goes on (its 4th-level slot

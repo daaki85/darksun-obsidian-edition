@@ -30,6 +30,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
 - **[New]** Out of a fight, the combat log panel's top line shows how long the game has run, `Day 47, 14:20`; in the arena, once the game has shown the count, how many arena fights the party has had instead (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
+- **[New]** The creation screen shows the THAC0, right of the hit points: `THAC0: M18 R19`, melee (with STR's to-hit) and ranged (with DEX's missile adjustment), changing as you click STR and DEX.
 - **[New]** With ages on, the creation screen shows the age a new character will start at, above RECALL: Table 7's dice, rolled again with each roll of the die (STORE and RECALL keep it with the roll).
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.

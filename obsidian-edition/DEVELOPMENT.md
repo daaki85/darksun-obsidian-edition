@@ -550,18 +550,18 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,115 of the room's 8,182
-paragraphs, so 2,067 (32.3 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,130 of the room's 8,182
+paragraphs, so 2,052 (32.1 KB) are spare, and with `UMBPLUS.COM`
 about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,310
+helper, the overlay buffer and the music buffer, each with its MCB: 3,325
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 64,304 bytes
-(`image_len`; the resident part ends at `resident_end`, F430h), so with the
-install's 256-byte stack 976 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 64,544 bytes
+(`image_len`; the resident part ends at `resident_end`, F520h), so with the
+install's 256-byte stack 736 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
-specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48); the HMA has 7,080 bytes left for more buffers (the far block ends at
+specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240); the HMA has 7,080 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,456). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -1472,6 +1472,23 @@ away, rolled a new age and asked for the weapon specs again. Checked in DOSBox:
 a Sentinel fighter edited, renamed and DONE kept the kit, its long sword and
 its age; with the die rolled during EDIT, a new age and the same kit and spec.
 Tests: `test_edit_keeps_its_specs`.
+
+The THAC0 (`CR_THAC0_DRAW`, whatever the rules): `THAC0: M18 R19` at `CR_AGE_X`
+on the hit points' line, the creature being made's THAC0 (`+1Fh`, which the
+game works out again as the classes change) less the game's STR to-hit table's
+entry (DS:7C2h + STR) for M and its DEX missile table's (DS:7DCh + DEX) for R,
+no less than 0. The hit points' box (the 7th, `CR_HP_BOX`) is widened to x 243
+(`cr_thac0_box`; DONE's left is 244), so the game's putting it back clears the
+line. It is drawn after each redraw of the hit points: the panel's, at
+`CR_AGE` (65A89h, PSP after them), a click on CON (`CR_AGE_CON`), and `CR_HP`
+(a site at 63AC3h, a click on the hit points, and 63EDAh); a click on STR or
+DEX redraws neither, so `RL_SUM` (the scores' redraw) puts the hit points' box
+back itself (`CR_BOX_PUT`, the far call's operand and the saved backgrounds'
+segment read from the overlay's code beside its site, as `CR_NAME` does for
+PSP's), draws the hit points again (`CR_PAIR_DRAW`, shared with PSP's) and the
+THAC0. Checked in DOSBox: THAC0 18 with STR 17 and DEX 15 `M17 R18`; DEX 18
+after a roll `R16`; STR 18 `M16` at once; a click on the hit points and on CON
+keep the line. Tests: `test_thac0_line`.
 Before 2.13.2 the age was rolled from the name and race (`natural_start`, a
 16-bit hash, DSCLOG's `AGE_ROLL` then); a character given one keeps it, and
 `give_ages` puts that roll on its sheet, silently. `CR_AGE` and `CR_NAME` keep

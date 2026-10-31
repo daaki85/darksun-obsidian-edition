@@ -425,13 +425,23 @@ shows at once. Spells start and end as time passes in the game, which it
 doesn't while these screens are open; open the screen again to see such a
 change.
 
-- **THAC0**: the character's THAC0 less STR's to-hit adjustment (DEX's for a
-  missile weapon), the weapon's plus (or, for a plain wooden, bone, stone or
-  obsidian weapon, its material's penalty), Bless and Prayer (+1), Curse
-  (−1), Slow (−4) and Graft Weapon (+1). The THAC0 at the top is the main
-  weapon's: the right hand's, else the left's, else the missile weapon's.
+- **THAC0**: the character's THAC0 (its classes' best, a kit's warrior THAC0
+  in it) less STR's to-hit adjustment (DEX's for a missile weapon), the
+  weapon's plus (or, for a plain wooden, bone, stone or obsidian weapon, its
+  material's penalty), its weapon spec's to-hit (specialization, mastery,
+  expertise), a kit's (a Ravager's, a Brute's, an Arena Champion's...), the
+  two-weapon penalty for the hand, Bless and Prayer (+1), Curse (−1), Slow (−4)
+  and Graft Weapon (+1). The THAC0 at the top, and View Character's, is the
+  main weapon's: the right hand's, else the left's, else the missile weapon's.
   What depends on the target (attacking from behind or backstabbing, a Blurred
   target) is left out; the dice log shows it on each attack.
+
+The **creation screen** shows a THAC0 too, right of the hit points and above
+the age: `THAC0: M18 R19`, M for melee and R for ranged, the character's
+THAC0 as its classes stand less STR's to-hit adjustment (M) and DEX's missile
+adjustment (R). So a click on STR or DEX shows at once what it does to them.
+No weapon is counted (none is held yet, and weapon specs are picked after
+DONE): it is the inventory's THAC0 before the weapon's own parts.
 - **Saves**: the d20 each needs, the character sheet's number less what the game
   adds to every save: the [Rings of Protection and the Cloak of
   Protection](FEATURES.md#rings-and-cloaks-of-protection), Bless, Prayer,

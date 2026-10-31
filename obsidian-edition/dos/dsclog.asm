@@ -8520,6 +8520,25 @@ rl_sum:
         pop word [cs:rl_cs]
         pop word [cs:rl_fl]
         add sp, 4               ; the replaced instruction
+        sti
+        pushad
+        push es
+        mov es, [cs:rl_cs]      ; (the hit points' line put back, then them and the THAC0 drawn: a
+        mov bx, [cs:rl_ip]      ;   score's click, STR's or DEX's, draws neither)
+        lea si, [bx + RLSUM_RESTORE_AT - RLSUM_PAST]
+        lea di, [bx + RLSUM_SEG340_AT - RLSUM_PAST]
+        mov cx, CR_HP_BOX
+        call cr_box_put
+        jz .no_hp
+        les bx, [0x11A0]
+        mov ax, [es:bx]
+        les bx, [0x119C]
+        mov dx, [es:bx + 8]
+        mov si, CR_HP_BOX
+        call cr_pair_draw
+        call cr_thac0_draw
+.no_hp: pop es
+        popad
         test word [cs:rules_hi], RULE_HI_ROLLED
         jz .back
         cmp word [cs:rl_pool], 0
@@ -8569,6 +8588,9 @@ rl_ip    dw 0
 rl_cs    dw 0
 rl_fl    dw 0
 rl_label db 'SUM:', 0
+RLSUM_PAST equ 0x65188          ; (DSUN.EXE: RL_SUM's way back; "call 0A0h:30C3h"'s operand before it,
+RLSUM_RESTORE_AT equ 0x65181    ;   the scores' box put back, and "mov ax,340h"'s, the saved
+RLSUM_SEG340_AT equ 0x6516D     ;   backgrounds' segment)
 
 ; CR_AGE (RULE_HI_AGING): the creation panel's "AGE: 23", right of PSP's line, above RECALL, where
 ; nothing is drawn (the PSP box's saved background widened to cover it: gamepatch.py's
@@ -8675,6 +8697,23 @@ cr_open:
         push word [cs:cr_cs]
         push word [cs:cr_ip]
         iret
+; CR_HP: "add sp,10h" after the hit points are drawn again (63AC3h, a click on them; 63EDAh), their
+; box put back first: the THAC0 drawn again right of them (CR_THAC0_DRAW).
+cr_hp:
+        pop word [cs:cr_ip]
+        pop word [cs:cr_cs]
+        pop word [cs:cr_fl]
+        add sp, 0x10            ; the replaced instruction
+        sti
+        pushad
+        push es
+        call cr_thac0_draw
+        pop es
+        popad
+        push word [cs:cr_fl]
+        push word [cs:cr_cs]
+        push word [cs:cr_ip]
+        iret
 cr_age_con:
         mov byte [cs:cr_new], 0
         jmp cr_ages
@@ -8692,15 +8731,16 @@ cr_ages:
         call ed_rolled
         jnc .drawn              ; (EDIT: the member's own, till the die rolls)
         mov byte [cs:cr_race], 0        ; (a new roll: at the drawing, or at DONE)
-.drawn: test word [cs:rules_hi], RULE_HI_AGING
-        jz .back
-        sti
+.drawn: sti
         pushad
         push es
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .thac0
         call cr_age_draw
+.thac0: call cr_thac0_draw      ; (the hit points drawn before PSP: their line clean)
         pop es
         popad
-.back:  push word [cs:cr_fl]
+        push word [cs:cr_fl]
         push word [cs:cr_cs]
         push word [cs:cr_ip]
         iret
@@ -8737,20 +8777,13 @@ cr_names:
         pushad
         push es
         mov es, [cs:cr_cs]      ; (the overlay's own code, fixed up as loaded: its selectors' segments)
-        mov bx, [cs:cr_ip]
-        add bx, [cs:cr_restore]
-        mov eax, [es:bx]
-        test eax, eax           ; (not fixed up: nothing to call)
+        mov si, [cs:cr_ip]
+        mov di, si
+        add si, [cs:cr_restore]
+        add di, [cs:cr_seg340]
+        mov cx, CR_PSP_BOX
+        call cr_box_put         ; (the PSP box's background put back)
         jz .none
-        mov [cs:cra_far], eax
-        mov bx, [cs:cr_ip]
-        add bx, [cs:cr_seg340]
-        mov ax, [es:bx]
-        mov es, ax
-        push word [es:0x3F2]
-        push word [es:0x406]
-        call far [cs:cra_far]   ; (the PSP box's background put back)
-        add sp, 4
         call cr_psp_draw        ; (PSP drawn again: the game's routine for it is an overlay's)
         call cr_age_draw
 .none:  pop es
@@ -8777,22 +8810,29 @@ cra_far dd 0
 ; CR_PSP_DRAW: the creation panel's PSP as the game has it, "28/28" (the creature's +2 of the
 ; sheet's +0Ch), centred at the PSP box's place as the game centres it (DS the game's).
 cr_psp_draw:
-        call cr_text_routine
         les bx, [0x11A0]
         mov ax, [es:bx + 2]
+        les bx, [0x119C]
+        mov dx, [es:bx + 0x0C]
+        mov si, CR_PSP_BOX
+; CR_PAIR_DRAW: "AX/DX" centred where the game centres a box's numbers (DS:SI the box: its x + 15h,
+; its y - 2; 6 pixels a character), as it draws the hit points and PSP (DS the game's).
+cr_pair_draw:
+        push ax
+        call cr_text_routine    ; (it takes AX)
+        pop ax
         mov di, cr_age_text
         call w_itoa
         mov byte [cs:di], '/'
         inc di
-        les bx, [0x119C]
-        mov ax, [es:bx + 0x0C]
+        mov ax, dx
         call w_itoa
-        mov ax, [0xF9C]
+        mov ax, [si + 2]
         sub ax, 2
         push ax
         sub di, cr_age_text     ; (centred on the game's x, as it draws it: 6 pixels a character)
         imul di, di, 3
-        mov ax, [0xF9A]
+        mov ax, [si]
         add ax, 0x15
         sub ax, di
         push ax
@@ -8800,6 +8840,71 @@ cr_psp_draw:
         push word cr_age_text
         call c_draw_line
         ret
+
+; CR_BOX_PUT: box CX's saved background put back as the game does (0A0:30C3h, its two words from the
+; segment of 340h: CX's and CX + 14h's), the far call's operand read from the overlay's code at
+; ES:SI and the segment's at ES:DI (fixed up as loaded). ZF set (nothing done) for an operand not
+; fixed up. DS the game's.
+CR_HP_BOX  equ 0xF92            ; (DS: the hit points' box, the 7th; its words at 340:3F0h, 404h)
+CR_PSP_BOX equ 0xF9A            ; (the PSP's, the 8th: 3F2h, 406h)
+cr_box_put:
+        mov eax, [es:si]
+        test eax, eax           ; (not fixed up: nothing to call)
+        jz .ret
+        mov [cs:cra_far], eax
+        mov es, [es:di]
+        mov bx, cx
+        sub bx, 0xF62           ; (the box's number, x 8)
+        shr bx, 2
+        push word [es:bx + 0x3E4]
+        push word [es:bx + 0x3F8]
+        call far [cs:cra_far]
+        add sp, 4
+        or sp, sp               ; (ZF clear)
+.ret:   ret
+
+; CR_THAC0_DRAW: "THAC0: M18 R19" right of the hit points (their box's saved background widened to x
+; 243: gamepatch.py's "cr_thac0_box"), at CR_AGE_X, above the age: the creature being made's THAC0
+; (+1Fh, the game's as its classes stand) less STR's to-hit adjustment (M, melee: DS:7C2h + STR) and
+; DEX's missile adjustment (R, ranged: DS:7DCh + DEX), as the inventory's THAC0 with no weapon. DS
+; the game's.
+CR_STR_HIT equ 0x7C2
+CR_DEX_MISSILE equ 0x7DC
+cr_thac0_word db 'THAC0: M', 0
+cr_r_word db ' R', 0
+cr_thac0_text times 16 db 0
+cr_thac0_draw:
+        mov di, cr_thac0_text
+        mov si, cr_thac0_word
+        call age_copy
+        mov si, CR_STR_HIT
+        mov dx, 0x22            ; (STR)
+        call cr_thac0_less
+        mov si, cr_r_word
+        call age_copy
+        mov si, CR_DEX_MISSILE
+        mov dx, 0x23            ; (DEX)
+        call cr_thac0_less
+        call cr_text_routine
+        mov ax, [CR_HP_BOX + 2]
+        sub ax, 2
+        push ax
+        push word CR_AGE_X
+        push cs
+        push word cr_thac0_text
+        call c_draw_line
+        ret
+cr_thac0_less:                  ; (at CS:DI, the THAC0 less DS:SI's table's entry for the score at
+        les bx, [0x11A0]        ;   the creature's +DX; no less than 0)
+        add bx, dx
+        movzx ax, byte [es:bx]
+        sub bx, dx
+        add si, ax
+        mov al, [es:bx + 0x1F]
+        sub al, [si]
+        jns .put
+        xor al, al
+.put:   jmp c_itoa
 
 cr_text_routine:                ; (c_draw_line: the game's text routine, the screen's window)
         mov ax, ds
@@ -16509,6 +16614,7 @@ CR_NAME3_SITE equ NS_IMAGE + 64 ; 63AE8h: a name typed (CR_NAME)
 CR_NAME4_SITE equ NS_IMAGE + 65 ; 63B2Dh: none typed, the game's put back (CR_NAME)
 CR_AGE_CON_SITE equ NS_IMAGE + 66 ; 63A13h: PSP drawn after a click on CON, the roll kept (CR_AGE_CON)
 CR_OPEN_SITE equ NS_IMAGE + 67  ; 65C68h: the creation screen opening, for a new member or EDIT (CR_OPEN)
+CR_HP_SITE equ NS_IMAGE + 68    ; 63AC3h, 63EDAh: the hit points drawn again, the THAC0 after them (CR_HP)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -16610,6 +16716,8 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je cr_age_con
         cmp byte [cs:rl_site], CR_OPEN_SITE
         je cr_open
+        cmp byte [cs:rl_site], CR_HP_SITE
+        je cr_hp
         cmp byte [cs:rl_site], CR_NAME_SITE
         je cr_name
         cmp byte [cs:rl_site], CR_NAME2_SITE

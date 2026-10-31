@@ -7259,6 +7259,77 @@ class RolledTests(AdndTablesTests):
 
     SHEET = 0x8800
 
+    def thac0_tables(self):
+        """The game's STR to-hit (DS:7C2h) and DEX missile (DS:7DCh) adjustments, a byte a score, as
+        AD&D's (and Dark Sun's past 18)."""
+        str_hit = [-5, -3, -3, -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 3, 3, 4, 4, 5, 6]
+        dex = [-6, -4, -3, -2, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5]
+        self.mu.mem_write(self.DS * 16 + 0x7C2, struct.pack("26b", *str_hit))
+        self.mu.mem_write(self.DS * 16 + 0x7DC, struct.pack("26b", *dex))
+        return str_hit, dex
+
+    def test_thac0_line(self):
+        """CR_HP (after the hit points are drawn again): "THAC0: M18 R19" right of them, at AGE's x
+        on the hit points' line, the creature's THAC0 less STR's to-hit (M) and DEX's missile
+        adjustment (R), no less than 0; the registers kept, whatever the rules. RL_SUM (the scores'
+        redraw, a click on STR or DEX): the hit points' box put back (its words, 3F0h's and 404h's),
+        the hit points drawn again centred on it, then the THAC0; nothing with the operand not fixed
+        up."""
+        from dsloader.gamepatch import CR_HP_SITE, RL_SUM
+        str_hit, dex = self.thac0_tables()
+        self.mu.mem_write(self.DS * 16 + 0x119C, struct.pack("<HH", 0, self.SHEET))
+        self.mu.mem_write(self.DS * 16 + 0xF92, struct.pack("<2h", 86, 172))  # (the hit points' box)
+        self.mu.mem_write(self.LOG * 16, struct.pack("<H", 2))
+        for thac0, strength, dexterity in ((18, 17, 16), (20, 9, 9), (12, 24, 22), (3, 25, 25)):
+            with self.subTest(thac0=thac0, strength=strength, dexterity=dexterity):
+                self.mu.mem_write(self.CREATURE * 16 + 0x1F, struct.pack("b", thac0))
+                self.scores(strength, dexterity, 14, 12, 11, 10)
+                self.run_site(CR_HP_SITE, 3, stack=bytes(16), popped=16, eax=0x1111, esi=0x5555)
+                self.assertEqual((self.mu.reg_read(r.UC_X86_REG_AX), self.mu.reg_read(r.UC_X86_REG_SI)), (0x1111, 0x5555))
+                m, rr = max(0, thac0 - str_hit[strength]), max(0, thac0 - dex[dexterity])
+                self.assertEqual(self.drawn(), [(146, 170, f"THAC0: M{m} R{rr}")])
+        self.assertEqual((18 - str_hit[17], 18 - dex[16]), (17, 17))
+        # CR_AGE and CR_AGE_CON (after PSP, the hit points drawn before it): the age with ages on, and
+        # the THAC0 whatever the rule
+        from dsloader.gamepatch import CR_AGE_SITE, CR_AGE_CON_SITE
+        self.mu.mem_write(self.DS * 16 + 0xF9A, struct.pack("<2h", 86, 179))  # (the PSP box)
+        self.mu.mem_write(self.SHEET * 16 + 0x18, bytes([1]))  # (a human)
+        self.mu.mem_write(self.CREATURE * 16 + 0x1F, struct.pack("b", 18))
+        self.scores(17, 16, 14, 12, 11, 10)
+        for site in (CR_AGE_SITE, CR_AGE_CON_SITE):
+            for on in (True, False):
+                with self.subTest(site=site, on=on):
+                    self.mu.mem_write(self.hdr + self.RULES_HI, struct.pack("<H", 256 if on else 0))
+                    self.run_site(site, 3, stack=bytes(16), popped=16)
+                    drawn = self.drawn()
+                    self.assertEqual(drawn[-1], (146, 170, "THAC0: M17 R17"))
+                    self.assertEqual(len(drawn), 2 if on else 1)
+                    if on:
+                        self.assertEqual(drawn[0][:2], (146, 177))
+        # RL_SUM: the hit points' line put back and drawn again, the THAC0 after
+        ip = 0x600 + RL_SUM * 0x10 + 3
+        restore_at, seg_at = ip + 0x65181 - 0x65188, ip + 0x6516D - 0x65188
+        self.mu.mem_write(CALLER * 16 + 0x100, bytes.fromhex("5589e58b46062ea3f0008b46082ea3f2005dcb"))
+        self.mu.mem_write(CALLER * 16 + seg_at, struct.pack("<H", 0x9000))
+        self.mu.mem_write(0x9000 * 16 + 0x3F0, struct.pack("<H", 0x1234))
+        self.mu.mem_write(0x9000 * 16 + 0x404, struct.pack("<H", 0x5678))
+        self.mu.mem_write(self.CREATURE * 16, struct.pack("<H", 32))  # (the hit points, and their most)
+        self.mu.mem_write(self.SHEET * 16 + 8, struct.pack("<H", 32))
+        self.mu.mem_write(self.CREATURE * 16 + 0x1F, struct.pack("b", 18))
+        self.scores(18, 17, 14, 12, 11, 10)
+        self.rules(False)
+        for operand in (struct.pack("<HH", 0x100, CALLER), bytes(4)):
+            with self.subTest(operand=operand):
+                self.mu.mem_write(CALLER * 16 + restore_at, operand)
+                self.mu.mem_write(CALLER * 16 + 0xF0, bytes(4))
+                self.run_site(RL_SUM, 3, stack=struct.pack("<HH", 0x1111, 0x2222), popped=4, eax=0x1111, esi=0x5555)
+                called = struct.unpack("<HH", self.mu.mem_read(CALLER * 16 + 0xF0, 4))
+                if any(operand):
+                    self.assertEqual(called, (0x5678, 0x1234))  # (pushed 3F0h's word, then 404h's)
+                    self.assertEqual(self.drawn(), [(86 + 0x15 - 3 * 5, 170, "32/32"), (146, 170, "THAC0: M17 R16")])
+                else:
+                    self.assertEqual((called, self.drawn()), ((0, 0), []))
+
     def test_name_redraws_psp_and_age(self):
         """CR_NAME (a name the game gave copied to the creature, 66045h's "add sp,0Eh"): the PSP
         box's background put back by the far call whose operand is read from the overlay's code

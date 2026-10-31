@@ -1133,7 +1133,11 @@ AD&D's tables:
 
 ### THAC0 by level
 
-AD&D's tables; a character of several classes uses its best.
+AD&D's tables; a character of several classes uses its best. The creation
+screen shows it with STR and DEX counted, right of the hit points
+(`THAC0: M18 R19`: melee with STR's to-hit adjustment, ranged with DEX's
+missile adjustment), so a click on either shows what it does; the inventory
+screen's THAC0 counts the weapon in hand too.
 
 | Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
