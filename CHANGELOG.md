@@ -36,7 +36,8 @@ notes](PATCH-NOTES.md).
 - A second sweep, of every check on a class, class bit, race, sex, item, weapon, thief skill or
   ability: script 44's "race != 2 or race != 6" (always true) is `and`; script 142's class tests
   `== 80h` and `== 100h` on the class bits word are `& bit > 0`, as the game's other class tests
-  are. Every object number the scripts compare an item or creature with but four is a real
+  are; script 56's slime book masks the class bits with 415 (every cleric, druid, preserver and
+  psionicist) for 417 (psionicist, preserver, fighter, air cleric). Every object number the scripts compare an item or creature with but four is a real
   object; every thief skill and ability check tests what its text says.
 - The grate's failed hack: a weapon that can break "breaks against the grate" and is gone (TAKE);
   a metal or magic one "rings off the grate, unharmed" (the game said it broke and kept it). Which

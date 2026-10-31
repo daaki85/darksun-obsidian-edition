@@ -17,7 +17,9 @@ as it is).
   which holds none of them, so they always read 0: a halfling isn't greeted as one, nor a woman
   told she is one, nor a thri-kreen hears the bell the mastyrial hears near Demothi's camp.
 - Tests asking the wrong question: "not a dwarf or not a halfling" (true of everyone), and a
-  class tested as the whole class word, so a multi-class preserver or psionicist fails it.
+  class tested as the whole class word, so a multi-class preserver or psionicist fails it; and
+  Dagolar's slime book's "magical training", which took fighters and air clerics but not the
+  other clerics or druids.
 - The ranger's tracking at region 8's bodies: no one counts as a ranger, a ranger's level is
   tested as a bit of its class code, and the roll has to beat the score, not come under it. Now a
   ranger reads the tracks on a d20 under WIS + its level's bonus, for XP.
@@ -129,6 +131,11 @@ REPAIRS = (
              f"the haystack: a {who} with another class may still claim to have {how}")
       for at, bit, back, who, how in ((0x14B0, 0x80, 0x14C2, "preserver", "scried it"),
                                       (0x14C3, 0x100, 0x14D5, "psionicist", "read his thoughts"))),
+    # Dagolar's slime book (region 27h, by his jars of slime and glyph circle): "magical training"
+    # tested the class bits against 417 (1A1h: psionicist, preserver, fighter and the air cleric
+    # alone), most likely a slip for 415 (19Fh: every cleric, druid, preserver and psionicist)
+    Repair(56, 0x125, bytes.fromhex("18e2b18025024711dd01a1e1"), bytes.fromhex("18e2b18025024711dd019fe1"),
+           "Dagolar's slime book: read with magical training by a cleric, druid, preserver or psionicist"),
     # The ranger's tracking (region 8's bodies): a ranger is the flags word's bit, its ranger level
     # the class whose code is 13 to 16 (the game's tests a bit of the class code), and the roll
     # comes under the score (the game's over it)

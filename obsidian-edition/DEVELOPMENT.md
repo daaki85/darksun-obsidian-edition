@@ -1181,11 +1181,17 @@ class or its bits, race, sex, item, weapon, thief skill or ability: script 44 at
 D6h to D5h); script 142 at 14B0h and 14C3h (the haystack: the scrying and
 mind-reading answers' flags, lflags 17 and 18) tested the class bits word
 `== 80h` and `== 100h`, which a multi-class preserver or psionicist fails; now
-`(word & bit) > 0`, the game's own form (script 67 at 1563h). Left as they are:
-script 56 at 125h, the slime book's "with magical training", masks the class
-bits with 417 (1A1h: psionicist, preserver, fighter and the air cleric, not the
-other clerics, druids or rangers), whose intent isn't clear (415, every cleric, druid, preserver and psionicist,
-would fit "magical training"); and two object numbers compared that no object
+`(word & bit) > 0`, the game's own form (script 67 at 1563h). Script 56 at
+125h, Dagolar's slime book's "with magical training", masked the class bits
+with 417 (1A1h: psionicist, preserver, fighter and the air cleric, not the other
+clerics or druids), most likely a slip for 415 (19Fh: every cleric, druid,
+preserver and psionicist), which it now is. The book (object 2021) is in region
+27h with four Jars of Slime and a glyph circle (1366): a jar used on the circle
+is used up and puts a Tyrian Slime in it (56 at 96h, unless one is already within
+20); the book, read (56 at C0h), turns a Tyrian Slime within 20 into a Dagolar
+Slime that hunts the party, when the reader has the training, or drains the
+reader into it (10 damage) when not, and with no slime near, "Nothing happens."
+Left as they are: two object numbers compared that no object
 file holds (script 10 at 352h, -261; script 195 at 35h, -144: the same number
 195 also asks for by name, so likely made in play). The other 67 object numbers
 are real objects (an item's +0 is its object's number negated: the grate's
