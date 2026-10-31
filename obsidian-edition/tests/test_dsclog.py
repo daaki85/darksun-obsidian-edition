@@ -5602,7 +5602,7 @@ class KitTests(unittest.TestCase):
             self.rules(rules)
             for cls, kit in self.KIT_CASES + ((17, 3),):
                 kid = self.kit_of(cls, kit, rules)
-                for level in (1, 5, 6, 7, 8, 9, 10, 12):
+                for level in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15):
                     self.creature(cls, kit, level=level)
                     for magic in (kits.WIZARD, kits.PRIEST):
                         for spell_level in (1, 2, 3, 4):
@@ -5622,7 +5622,11 @@ class KitTests(unittest.TestCase):
                                         r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_DX, r.UC_X86_REG_ES,
                                         r.UC_X86_REG_SP)], [0x2222, 0x3333, 0x4444, 0x6666, 0x7FC])
         self.assertEqual([kits.slots(kits.SEEKER, kits.PRIEST, lv, sl, 9) for lv in (5, 6, 8, 10, 15) for sl in (1, 3)],
-                         [0, 0, 1, 0, 2, 0, 2, 1, 2, 1])
+                         [0, 0, 1, 0, 2, 0, 2, 1, 3, 2])
+        # a Shinobi's wizard slots past a ranger's 10th, to its thief's 13th: The Complete Ranger's
+        # Handbook's Seeker table (3 2 1, 3 2 2, 3 3 2), and no 4th-level slot
+        self.assertEqual([[kits.slots(kits.SHINOBI, kits.WIZARD, lv, sl, 0) for sl in (1, 2, 3, 4)] for lv in (10, 11, 12, 13)],
+                         [[2, 2, 1, 0], [3, 2, 1, 0], [3, 2, 2, 0], [3, 3, 2, 0]])
         self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 3])
         self.assertEqual(kits.slots(kits.ARCANIST, kits.WIZARD, 5, 1, 2), 2)
         # an Elementalist: a level behind, but 1 at each spell level its own level reaches (2 x - 1)

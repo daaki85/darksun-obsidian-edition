@@ -8,6 +8,14 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Changed**
+- **The Shinobi's spell slots go on to 13th level:** 3 2 1 at thief level 11, 3 2 2 at 12th and
+  3 3 2 at 13th, as *The Complete Ranger's Handbook*'s Seeker table goes on (its 4th-level slot
+  at 13th left out: no 4th-level spells on the Shinobi's list). The table stopped at a ranger's
+  10th, so a Shinobi stayed at 2 2 1 from 10th to the XP cap's 13th (`kits.SEEKER_SLOTS`,
+  DSCLOG's `seeker_slots` and `SEEKER_LAST`; a Seeker, a ranger, still stops at 10th). Tests:
+  `test_slots`. DSCLOG's image 64,272 bytes (+16).
+
 **Fixed**
 - **EDIT on a party member** (to change a name, say) took its kit away, rolled a new age and
   asked for its weapon specs again at DONE. DSCLOG's `CR_OPEN` (a site at the creation

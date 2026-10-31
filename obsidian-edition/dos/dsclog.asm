@@ -6896,9 +6896,9 @@ probe_slots:
 .seeker_level:
         cmp ax, 6
         jb .table_out
-        cmp ax, 10
+        cmp ax, SEEKER_LAST
         jbe .row
-        mov ax, 10
+        mov ax, SEEKER_LAST
 .row:   sub ax, 6
         imul ax, ax, 3
         add bx, ax
@@ -6924,8 +6924,11 @@ probe_slots:
         pop cx
         pop bx
         iret
-; a Seeker's priest slots at spell levels 1, 2 and 3, by ranger level 6 to 10 (and on: kits.SEEKER_SLOTS)
-seeker_slots db 1, 0, 0,  2, 0, 0,  2, 1, 0,  2, 2, 0,  2, 2, 1
+; a Seeker's priest slots at spell levels 1, 2 and 3, by level 6 to 13 (and on: kits.SEEKER_SLOTS; The
+; Complete Ranger's Handbook's table, its 4th-level slot at 13th left out): a ranger's to 10th, a
+; Shinobi's (by thief level) to 13th
+SEEKER_LAST equ 13
+seeker_slots db 1, 0, 0,  2, 0, 0,  2, 1, 0,  2, 2, 0,  2, 2, 1,  3, 2, 1,  3, 2, 2,  3, 3, 2
 
 ; PROBE_SLOT_LEVEL: INT VEC_SLOT_LEVEL replaces "mov al,es:[bx+24h]" (4 bytes: INT + 2 NOPs;
 ; DSUN.EXE 5E1F6h) in the game's spell slot routine, where it takes a class's level (ES:BX the

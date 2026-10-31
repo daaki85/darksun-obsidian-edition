@@ -17,9 +17,11 @@ CRUSADER, SCHOLAR, BATTLE_MAGE, MIND_WARRIOR = (KIT_IDS["Crusader"], KIT_IDS["Sc
                                                 KIT_IDS["Mind Warrior"])
 ELEMENTALIST, SEEKER, JUSTIFIER = KIT_IDS["Elementalist"], KIT_IDS["Seeker"], KIT_IDS["Justifier"]
 WIZARD, PRIEST = 1, 2  # (the kinds of magic, as game.MAGIC_KINDS has their bits)
-# a Seeker's priest slots at spell levels 1, 2 and 3, by ranger level from 6 (the 10th's on: DSCLOG's
-# SEEKER_SLOTS); a Justifier's one 1st-level slot from 10th level
-SEEKER_SLOTS = ((1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1))
+# a Seeker's priest slots at spell levels 1, 2 and 3, by level from 6 to 13 (the 13th's on: DSCLOG's
+# SEEKER_SLOTS; The Complete Ranger's Handbook's table, its 4th-level slot at 13th left out): a
+# ranger's to 10th, a Shinobi's wizard slots (by thief level) to 13th; a Justifier's one 1st-level
+# slot from 10th level
+SEEKER_SLOTS = ((1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1), (3, 2, 1), (3, 2, 2), (3, 3, 2))
 SEEKER_FIRST, JUSTIFIER_FIRST = 6, 10
 MIND_BENDER, KINETICIST = KIT_IDS["Mind Bender"], KIT_IDS["Kineticist"]
 # the psionic powers' disciplines, by power (0-33: spells 138-171): psychokinesis to PK_LAST,
