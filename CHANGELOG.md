@@ -33,6 +33,11 @@ notes](PATCH-NOTES.md).
   every RAND comparison and class bit test): sex in script 42 ("wo"man, "her" purse) and race in
   80 (a thri-kreen hears the bell the mastyrial hears) and 203 ("your help" for a thri-kreen).
   The game's own scripts read these through field 71 some thirty times.
+- A second sweep, of every check on a class, class bit, race, sex, item, weapon, thief skill or
+  ability: script 44's "race != 2 or race != 6" (always true) is `and`; script 142's class tests
+  `== 80h` and `== 100h` on the class bits word are `& bit > 0`, as the game's other class tests
+  are. Every object number the scripts compare an item or creature with but four is a real
+  object; every thief skill and ability check tests what its text says.
 - Detours for a repair longer than its bytes: after the script's end (an exit first), with a
   jump (64h, as the Loader's other script changes) back. Not seen in play.
   Tests: `test_scriptfixes` (each detour, relocations, the length limit).

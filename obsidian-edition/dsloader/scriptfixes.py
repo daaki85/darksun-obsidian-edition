@@ -16,6 +16,8 @@ as it is).
 - Checks of the active member's race or sex, or a ranger's flag, read from its combat record,
   which holds none of them, so they always read 0: a halfling isn't greeted as one, nor a woman
   told she is one, nor a thri-kreen hears the bell the mastyrial hears near Demothi's camp.
+- Tests asking the wrong question: "not a dwarf or not a halfling" (true of everyone), and a
+  class tested as the whole class word, so a multi-class preserver or psionicist fails it.
 - The ranger's tracking at region 8's bodies: no one counts as a ranger, a ranger's level is
   tested as a bit of its class code, and the roll has to beat the score, not come under it. Now a
   ranger reads the tracks on a d20 under WIS + its level's bonus, for XP.
@@ -81,6 +83,19 @@ REPAIRS = (
     Repair(203, 0x101B, bytes.fromhex("18b180250114da8f083e1043"),
            bytes.fromhex(f"18{_through_71(0x14)}da8f083e1043"),
            "a thri-kreen asked for help is told 'your help', not 'the help of any humanoid'"),
+    # Tests that ask the wrong question: "not a dwarf or not a halfling", true of everyone, where it
+    # means neither ("bother someone your own size", or "someone else" to the small); a class bit
+    # tested as the whole word (== 80h, == 100h), so a preserver or psionicist with another class
+    # never boasts of scrying the haystack or reading the man's thoughts (now `& bit > 0`, as the
+    # game's other tests of a class read)
+    Repair(44, 0x2F9, bytes.fromhex("18e2b18025024714d88f02e1d6e2"),
+           bytes.fromhex("18e2b18025024714d88f02e1d5e2"),
+           "someone small isn't told to 'go bother someone your own size'"),
+    *(Repair(142, at, bytes.fromhex(f"18b18025024711d7{bit:04x}3e{back:04x}"),
+             bytes.fromhex(f"18e2b18025024711dd{bit:04x}e1d98f003e{back:04x}"),
+             f"the haystack: a {who} with another class may still claim to have {how}")
+      for at, bit, back, who, how in ((0x14B0, 0x80, 0x14C2, "preserver", "scried it"),
+                                      (0x14C3, 0x100, 0x14D5, "psionicist", "read his thoughts"))),
     # The ranger's tracking (region 8's bodies): a ranger is the flags word's bit, its ranger level
     # the class whose code is 13 to 16 (the game's tests a bit of the class code), and the roll
     # comes under the score (the game's over it)

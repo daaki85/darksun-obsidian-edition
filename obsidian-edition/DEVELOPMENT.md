@@ -1174,7 +1174,25 @@ successful hack sets flag 505 and prints "The grate opens." as the pick's does.
 (Its USE WITH handler at B5Ch compares the item's field 43, which its own record lacks,
 `< 220`, so any item breaks the lock; what it meant isn't clear, so it stays.)
 The same sweep checked every RAND comparison and every bit test of a class or
-level: only the tracking's were wrong.
+level: only the tracking's were wrong. A second went through every check on a
+class or its bits, race, sex, item, weapon, thief skill or ability: script 44 at
+2F9h ("why don't you go bother someone your own size / else") asked
+`race != 2 or race != 6`, always true, where it meant `and` (the operator byte,
+D6h to D5h); script 142 at 14B0h and 14C3h (the haystack: the scrying and
+mind-reading answers' flags, lflags 17 and 18) tested the class bits word
+`== 80h` and `== 100h`, which a multi-class preserver or psionicist fails; now
+`(word & bit) > 0`, the game's own form (script 67 at 1563h). Left as they are:
+script 56 at 125h, the slime book's "with magical training", masks the class
+bits with 417 (1A1h: psionicist, preserver, fighter and the air cleric, not the
+other clerics, druids or rangers), whose intent isn't clear; script 132 at 198h,
+Hototo's "Where is Dagger, bug / woman?", which calls every non-thri-kreen a
+woman with no sex test at all; and two object numbers compared that no object
+file holds (script 10 at 352h, -261; script 195 at 35h, -144: the same number
+195 also asks for by name, so likely made in play). The other 67 object numbers
+are real objects (an item's +0 is its object's number negated: the grate's
+Bloodwrath, -1576, always hacks the lock); the thief skill checks (DO_ACTION 3)
+and ability checks (59h) each test the skill or ability their text names, and
+the weapon search for the grate looks in the right hand (item +11h slot 3).
 
 A repair longer than the bytes it replaces runs from after the script's end:
 an exit first (a script that ran off its end still stops), then the new bytes
