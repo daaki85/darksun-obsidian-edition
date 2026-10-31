@@ -31,6 +31,8 @@ notes](PATCH-NOTES.md).
   Healer comes back only with water marked (`HEALER_BARRED`).
 - An Elementalist got a 6th-level slot at 11th without AD&D's tables, where a cleric gets none:
   only with them now (`kits.slots`' `adnd`, DSCLOG's `PROBE_SLOTS`).
+- Screenshots taken again: the Loader's dice log and Dialogue tab at the arena's opening show
+  (K'ratchek's features now "Open sky spells and psionics"), the creation screen with the THAC0.
 - Tidier: the Options tab's rule groups are in each rule's own entry (`viewer.py`), and the
   creation THAC0 uses DSCLOG's `DEX_REACTION` and `CREATURE_SCORES`. DSCLOG's image 64,784 bytes
   (+240). Tests: `test_thac0_line`, `test_edit_keeps_its_specs`, `test_slots`.

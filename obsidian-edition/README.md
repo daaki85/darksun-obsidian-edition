@@ -438,8 +438,9 @@ change.
 
 The **creation screen** shows a THAC0 too, right of the hit points and above
 the age: `THAC0: M18 R19`, M for melee and R for ranged, the character's
-THAC0 as its classes stand less STR's to-hit adjustment (M) and DEX's missile
-adjustment (R). So a click on STR or DEX shows at once what it does to them.
+THAC0 as its classes and kit stand (a Scholar's 1 worse, a Battle Mage's a
+warrior's...) less STR's to-hit adjustment (M) and DEX's missile adjustment
+(R). So a click on STR or DEX shows at once what it does to them.
 No weapon is counted (none is held yet, and weapon specs are picked after
 DONE): it is the inventory's THAC0 before the weapon's own parts.
 - **Saves**: the d20 each needs, the character sheet's number less what the game
@@ -757,7 +758,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted; Gerakis's age), and the dice log with Find showing the first of 8 lines naming the Rampager: the first round's initiative, Gerakis's Wild Fighting roll, and the Rampager's attacks on the Defiler, who fails his save against its acid and is killed](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted, and her features, open sky spells and psionics; Gerakis's age), and the dice log with Find on the first of 124 lines naming the Rampager: the party's features and ages as the game begins, the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Rampager's first attacks on the Defiler](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
