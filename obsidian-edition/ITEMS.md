@@ -17,12 +17,18 @@ power, and who carries it), and the mod's, in ***bold italics***. In
 **Where**, "—" means the item isn't placed with anyone in the data: the game's
 scripts hand it out (a reward, a gift or a find).
 
+A weapon's spell (Dark Flame's Burning Hands, Balk's Staff's Slow...) goes on
+whoever it hits, every hit, with no charge used. The items that change a
+score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
+Steadfast Ring and the Ring of Insight) do it while their owner has them, the
+Belt of Might making STR at least 24.
+
 **Weapons**, by material, then type:
 
 | Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
 | ![](docs/items/swiftbite.png) | Bone | long sword | Swiftbite | +2 | — |
-| ![](docs/items/draketooth.png) | Bone | long sword | Draketooth | +1, strength | — |
+| ![](docs/items/draketooth.png) | Bone | long sword | Draketooth | +1, STR +3 | — |
 | ![](docs/items/hornblade.png) | Bone | long sword | Hornblade | +1 | Kalinin's reward |
 | ![](docs/items/stillwater.png) | Bone | short sword | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
@@ -38,7 +44,7 @@ scripts hand it out (a reward, a gift or a find).
 | ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/greenbright.png) | Metal | short sword | ***Greenbright*** | a metal short sword +2 | carried by **Arant**, who holds the captured gladiators |
 | ![](docs/items/shadowseeker.png) | Metal | short sword | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | in the pack of **Kurzak**, the pens' guard leader |
-| ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, extra damage | Dagolar |
+| ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, extra damage, CHA +1 | Dagolar |
 | ![](docs/items/galefang.png) | Metal | dagger | ***Galefang*** | a metal dagger +2 an **air cleric** can wield | carried by the **Rogue Shaman**, with his Shaman Followers |
 | ![](docs/items/soulcrusher.png) | Metal | axe | Soulcrusher | +1 | Kel |
 | ![](docs/items/axe-plus1.png) | Metal | axe | Axe +1 | +1 | — |
@@ -123,7 +129,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 
 | Icon | Material | Item | Power | Where |
 |---|---|---|---|---|
-| ![](docs/items/helm-of-might.png) | Leather | Helm of Might | strength | — |
+| ![](docs/items/helm-of-might.png) | Leather | Helm of Might | STR +1 | — |
 | ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | | a chest |
 | ![](docs/items/helm-of-contemplation.png) | Metal | Helm of Contemplation | a shield of thought against psionic attacks | the Warren Chief |
 | ![](docs/items/wardens-helm.png) | Metal | ***Warden's Helm*** | the game's metal helm +1: Cloak of Bravery on its wearer while worn | on **Dagolar**'s body (the one carrying Dag's Dagger) |
@@ -148,7 +154,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [bracers of defense](FEATURES.md#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
 | ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | Kalzith ([Robes](FEATURES.md#robes)) |
 | ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by Kel ([Robes](FEATURES.md#robes)) |
-| ![](docs/items/belt-of-might.png) | Waist | Belt of Might | strength | — |
+| ![](docs/items/belt-of-might.png) | Waist | Belt of Might | STR at least 24 | — |
 | ![](docs/items/girdle-of-back-defense.png) | Waist | ***Girdle of Back Defense*** | no enemy gets the +2 to hit for attacking its wearer from behind, nor a thief's backstab | carried by the **Troop Leader**, with Linebreaker |
 | ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a chest |
@@ -162,9 +168,9 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/iron-necklace.png) | Neck | Iron Necklace | Fireball | the Hermit |
 | ![](docs/items/golden-torque.png) | Neck | Golden Torque | takes on its maker's morals | — |
 | ![](docs/items/light-of-dawn.png) | Finger | Light of Dawn | Dismissal | on the ground, in Balkazar's region |
-| ![](docs/items/steadfast-ring.png) | Finger | Ring of Steadfastness | Constitution | — |
-| ![](docs/items/ring-of-insight.png) | Finger | Ring of Insight | Wisdom | — |
-| ![](docs/items/els-ring.png) | Finger | El's Ring | Dexterity | on the ground |
+| ![](docs/items/steadfast-ring.png) | Finger | Steadfast Ring | CON +3 | — |
+| ![](docs/items/ring-of-insight.png) | Finger | Ring of Insight | WIS +2 | — |
+| ![](docs/items/els-ring.png) | Finger | El's Ring | DEX +3 | on the ground |
 | ![](docs/items/storm-ring.png) | Finger | Storm Ring | Ice Storm | a chest |
 | ![](docs/items/wind-ring.png) | Finger | Wind Ring | Protection from Normal Missiles | the Wyvern Master |
 | ![](docs/items/ring-of-protection-plus1.png) ![](docs/items/pehtucls-ring-of-protection-plus1.png) | Finger | ***Ring of Protection +1*** (two) | +1 AC and +1 on every saving throw | one on the arena's Tied-up Prisoner: free him, then look at his body (the game's script says there's nothing; the Loader finds a ring sewn into his loincloth, 50 XP to whoever searched); the other worn by **Pehtucl**, the slave pens' head templar (in the south-west corner, with the Obsidian Bloodwrath) |

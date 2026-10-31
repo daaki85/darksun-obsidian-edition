@@ -14772,10 +14772,19 @@ probe_hit_die:
         iret
 
 ; PROBE_MAX_PSP: INT VEC_MAX_PSP replaces "les bx,[bp-8]" (3 bytes: INT + NOP; DSUN.EXE 8748Fh) where
-; the level-up routine has a character's most PSP worked out (SI) and puts it in the sheet ([BP-8],
-; far: its +0Ch) when more than it was, the gain on the creature's PSP too: ES:BX the sheet, and a
-; Mind Warrior's SI a tenth less (kits.max_psp), its kit asleep or not (KIT_HAS).
+; the level-up routine (873B2h, run for each party member) has a character's most PSP worked out
+; (SI) and puts it in the sheet ([BP-8], far: its +0Ch) when more than it was, the gain on the
+; creature's PSP too: ES:BX the sheet, and a Mind Warrior's SI a tenth less (kits.max_psp), its kit
+; asleep or not (KIT_HAS). First the game's CON, INT and WIS bonuses are put right (PSP_SCORES):
+; it read WIS from the creation screen's record (DS:11A0h) rather than the member's (its creature,
+; [BP-4]), and its tables (a byte for each score from 15, in the overlay's segment that its "mov
+; dx,seg" at 873F8h holds) are 8 long, so INT 22 read 0 and a score past 22 the next table's
+; bytes (INT 23 gave 20, WIS 23 none). Each is the member's own: CON and INT the score less 15, WIS
+; twice the score less 10 (the game's own to 22, carried on to 25), nothing below 15.
+PSP_SEG_BACK equ 0x87491 - 0x873F9   ; (the "mov dx,seg"'s word, back from the INT's return)
+PSP_CREATION equ 0x11A0              ; DS: far pointer to the creation screen's creature record
 probe_max_psp:
+        call psp_scores
         les bx, [bp - 8]
         push ax
         mov al, KIT_MIND_WARRIOR
@@ -14792,6 +14801,68 @@ probe_max_psp:
         pop cx
 .out:   pop ax
         iret
+
+; PSP_SCORES (for PROBE_MAX_PSP, its interrupt frame above the call's return): SI with the game's
+; CON, INT and WIS bonuses taken off and the member's own added. All else kept.
+psp_scores:
+        push ax
+        push cx
+        push dx
+        push di
+        push es
+        push bx
+        mov di, sp
+        push ds
+        lds di, [ss:di + 14]            ; (the INT's return: past the six and the call's)
+        mov cx, [di - PSP_SEG_BACK]     ; CX: the tables' segment
+        pop ds
+        les bx, [bp - 4]                ; the member's creature record
+        mov al, [es:bx + 0x24]          ; CON
+        mov dx, 0x11C
+        call .term
+        mov al, [es:bx + 0x25]          ; INT
+        mov dx, 0x124
+        call .term
+        mov al, [es:bx + 0x26]          ; WIS: the game's from the creation screen's record
+        cmp al, 15
+        jb .done
+        cmp al, 25
+        jbe .wis
+        mov al, 25
+.wis:   mov ah, 0
+        add ax, ax
+        sub ax, 10
+        add si, ax
+        les bx, [PSP_CREATION]
+        movsx di, byte [es:bx + 0x26]   ; (signed, as the game takes it: a stray 183 reads 49h below)
+        push ds
+        mov ds, cx
+        movsx ax, byte [di + 0x12C]
+        pop ds
+        sub si, ax
+.done:  pop bx
+        pop es
+        pop di
+        pop dx
+        pop cx
+        pop ax
+        ret
+.term:  cmp al, 15                      ; (score AL, table DX: SI less the game's, plus the score's)
+        jb .none
+        movzx di, al
+        add di, dx
+        push ds
+        mov ds, cx
+        movsx di, byte [di]
+        pop ds
+        sub si, di
+        cmp al, 25
+        jbe .own
+        mov al, 25
+.own:   sub al, 15
+        movzx di, al
+        add si, di
+.none:  ret
 
 ; At creation the game rolls a character's hit points and works out its PSP when a class is
 ; clicked, before a kit can be chosen; picking or taking back a Battle Mage, a Mind Warrior or an

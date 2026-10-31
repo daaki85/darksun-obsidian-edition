@@ -26,6 +26,7 @@ the game, and checked here in the game's own code.
   - [Each power against the manual](#each-power-against-the-manual)
 - [How the game works out thief skills](#how-the-game-works-out-thief-skills)
 - [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)
+- [Resting](#resting)
 - [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
 - [The Bowyer's archery target](#the-bowyers-archery-target)
 - [The arena's count of fights](#the-arenas-count-of-fights)
@@ -655,6 +656,15 @@ the two the Loader rolls: move silently (when a pocket isn't picked, see
 [Picking pockets](FEATURES.md#picking-pockets)) and hide in shadows (to
 [backstab](FEATURES.md#hiding-in-shadows-to-backstab)).
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
+
+## Resting
+
+A rest (at a fire ring, or one a script gives) fills hit points, PSP and spell
+slots, and the party's priests tend everyone: if the best cleric among those
+Okay is 5th level or more, it casts Cure Disease, Remove Curse and Remove
+Paralysis on each party member, and so does the best druid; a druid of 7th
+level or more casts Neutralize Poison on each too (the game's rest, 8066Dh;
+found by CalvinRodo's yuan-ti, checked in DSUN.EXE).
 
 ## Searching junk, hay and wardrobes
 

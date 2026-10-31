@@ -406,6 +406,12 @@ PATCHES = (
     # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
     # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
     Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
+    # ... and a fight's music: an attack that starts a fight asks for the music level the region
+    # record gives its creature (62F75h, REQUEST 16): the creatures are words at +263h, their levels
+    # bytes at +277h, but the level was read with the word's index ("mov bx,dx / shl bx,1"), so any
+    # creature but the region's first got another's level or a byte past the list. The SHL made two
+    # NOPs: the creature's own level (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
+    Patch("fight_music", 0x62FC0, bytes.fromhex("d1e3b848038ec0"), bytes.fromhex("9090b848038ec0")),
     # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
     # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
     Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),

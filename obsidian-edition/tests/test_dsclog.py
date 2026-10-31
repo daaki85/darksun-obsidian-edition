@@ -6733,6 +6733,52 @@ class KitTests(unittest.TestCase):
                                          [back, 0x7FC, 0x1234, 0x1111, 0x2222, 0x3333, 0x4444])
                         self.assertTrue(mu.reg_read(r.UC_X86_REG_EFLAGS) & IF)
 
+    PSP_TABLES = 0x8700  # (the overlay's segment for the PSP tables, its "mov dx,seg" 99h before the return)
+    PSP_CREATION = 0x8800  # (the creation screen's record, DS:11A0h)
+
+    def psp_scores(self, con, intel, wis, made_wis):
+        """The member's (creature 5's) CON, INT and WIS, the creation screen's record's WIS, and the
+        game's tables as it has them: a byte a score from 15, 8 to a table, CON, INT (its eighth 0),
+        WIS, and the psionicist's WIS a level, then the bytes after them."""
+        from dsloader.gamepatch import VEC_MAX_PSP
+        site = 0x400 + (VEC_MAX_PSP & 0x1F) * 0x10
+        self.mu.mem_write(CALLER * 16 + site + 2 - (0x87491 - 0x873F9), struct.pack("<H", self.PSP_TABLES))
+        tables = bytes(range(8)) + bytes(range(7)) + b"\0" + bytes(range(20, 35, 2)) + bytes(range(8)) + bytes((8, 8, 10))
+        self.mu.mem_write(self.PSP_TABLES * 16 + 0x11C + 15, tables)
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", 5 * 0x3A, self.CREATURES))
+        self.mu.mem_write(self.CREATURES * 16 + 5 * 0x3A + 0x24, bytes((con, intel, wis)))
+        self.mu.mem_write(self.DS * 16 + 0x11A0, struct.pack("<HH", 0, self.PSP_CREATION))
+        self.mu.mem_write(self.PSP_CREATION * 16 + 0x26, bytes((made_wis,)))
+        self.mu.mem_write(self.PSP_TABLES * 16 + 0x12C + 183 - 256, struct.pack("b", -100))  # (a stray WIS of 183: signed)
+        whole = bytes(14) + tables + bytes(16)  # (from score 1: what the game reads below 15 and past the tables)
+        game_term = lambda off, score: struct.unpack("b", whole[off + score - 1:off + score])[0] if score >= 15 else 0
+        made = -100 if made_wis == 183 else game_term(16, made_wis)
+        game_sum = game_term(0, con) + game_term(8, intel) + (made if wis >= 15 else 0)
+        own = lambda score: max(min(score, 25) - 15, 0) if score >= 15 else 0
+        own_sum = own(con) + own(intel) + (2 * min(wis, 25) - 10 if wis >= 15 else 0)
+        return own_sum - game_sum
+
+    def test_max_psp_scores(self):
+        """PROBE_MAX_PSP's PSP_SCORES: the game's CON, INT and WIS bonuses taken off SI and the member's
+        own put in: WIS its own (the game read the creation screen's record's), and CON and INT the
+        score less 15, WIS twice it less 10, on past 22 (the game's tables ran into each other)."""
+        from dsloader.gamepatch import VEC_MAX_PSP
+        self.rules(0)
+        self.creature(12, 0, index=5)
+        for con, intel, wis, made_wis, want in ((10, 10, 10, 18, 0), (16, 16, 16, 16, 0), (16, 16, 16, 22, -12),
+                                                (22, 22, 20, 14, 7 + 30), (23, 23, 23, 15, 8 - 0 + 8 - 20 + 36 - 20),
+                                                (25, 25, 25, 25, 10 - 2 + 10 - 24 + 40 - 2), (14, 15, 14, 25, 0),
+                                                (16, 16, 16, 183, 22 + 100)):
+            with self.subTest(con=con, intel=intel, wis=wis, made_wis=made_wis):
+                diff = self.psp_scores(con, intel, wis, made_wis)
+                self.assertEqual(diff, want)
+                self.mu.mem_write(SS * 16 + BP - 8, struct.pack("<HH", 5 * 0x47, self.SHEET))
+                self.run_vector(VEC_MAX_PSP, 3, eax=0x1111, esi=200, ecx=0x3333, edx=0x4444, es=0x6666)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SI), 200 + diff)
+                self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_CX,
+                                                                r.UC_X86_REG_DX, r.UC_X86_REG_ES)],
+                                 [0x1111, 5 * 0x47, 0x3333, 0x4444, self.SHEET])
+
     def test_max_psp(self):
         """PROBE_MAX_PSP: ES:BX the sheet ([BP-8]), and SI (the most PSP) a tenth less for a Mind
         Warrior (kits.max_psp)."""
@@ -6743,6 +6789,7 @@ class KitTests(unittest.TestCase):
             for cls, kit in ((12, 2), (12, 1), (12, 0), (9, 2)):
                 kid = self.kit_of(cls, kit, rules)
                 self.creature(cls, kit, index=5)
+                self.psp_scores(10, 10, 10, 18)  # (scores under 15: no bonus to put right)
                 for psp in (0, 9, 10, 37, 125):
                     with self.subTest(rules=rules, cls=cls, kit=kit, psp=psp):
                         self.mu.mem_write(SS * 16 + BP - 8, struct.pack("<HH", 5 * 0x47, self.SHEET))

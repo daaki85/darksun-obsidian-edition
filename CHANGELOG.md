@@ -8,6 +8,29 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**Fixed (from CalvinRodo's yuan-ti, each checked in DSUN.EXE)**
+- **A character's most PSP:** the level-up check (873B2h, for every party member; a game's
+  start runs it too) took the WIS bonus from the creation screen's record (`DS:11A0h`), in play
+  a stray byte (183 in a test, read signed into memory below the table), and its CON, INT and WIS
+  tables are 8 scores long: INT 22 gave 0, INT 23 to 25 20, 22 and 24, WIS 23 to 25 0 to 2, CON
+  23 to 25 0 to 2. DSCLOG's `PSP_SCORES` (in `PROBE_MAX_PSP`) takes the game's three off SI and
+  puts the member's own in: CON and INT the score less 15, WIS twice it less 10, on to 25. The
+  most only rises, so a character's may go up once (Cilla 30 to 43, as the game's rules give her,
+  in DOSBox). The psionicist's WIS bonus a level (8, 8, 10 from WIS 23) is left as it is. Tests:
+  `test_max_psp_scores`. DSCLOG's image 64,464 bytes (+112).
+- **A fight's music level:** an attack starting a fight looks up its creature's music level in
+  the region record, the creatures words at +263h, their levels bytes at +277h, but with the
+  word's index ("shl bx,1" at 62FC0h), so every creature but the first got another's (or a byte
+  past the list). The shift made two NOPs (`gamepatch`'s `fight_music`). Not heard in play.
+
+**Docs (from yuan-ti's notes, checked in the game's data and code)**
+- ITEMS: the ability items' amounts (Draketooth STR +3, Dag's Dagger CHA +1, the Helm of Might
+  STR +1, the Belt of Might STR at least 24, El's Ring DEX +3, the Steadfast Ring, the game's
+  name, CON +3, the Ring of Insight WIS +2, read from SEGOBJEX's item records), and a weapon's
+  spell on every hit.
+- HOW-THE-GAME-WORKS: **Resting**, the priests' cures at a rest (a cleric or druid of 5th level
+  or more: Cure Disease, Remove Curse, Remove Paralysis; a druid of 7th: Neutralize Poison too).
+
 **Changed**
 - **The dice log names a thri-kreen's claw or bite:** a party thri-kreen with nothing in hand
   attacks `with a claw (1d4)` (four a round) and `with its bite (1d4+1)`, the bite's damage line

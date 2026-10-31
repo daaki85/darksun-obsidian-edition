@@ -551,19 +551,19 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,116 of the room's 8,182
-paragraphs, so 2,066 (32.3 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,123 of the room's 8,182
+paragraphs, so 2,059 (32.2 KB) are spare, and with `UMBPLUS.COM`
 about 51.1 KB are free in one piece (worked out from C90Ah to F000h less the
 helper, the overlay buffer and the music buffer, each with its MCB: 3,340
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 64,352 bytes
-(`image_len`; the resident part ends at `resident_end`, F450h), so with the
-install's 256-byte stack 928 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 64,464 bytes
+(`image_len`; the resident part ends at `resident_end`, F4C0h), so with the
+install's 256-byte stack 816 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
 specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240, its kit and the review's fixes 240; moving the crash report's
-two 256-byte buffers into the far block gave back 464, Erdlu Claw's talons for the claws alone 32); the HMA has 6,566 bytes left for more buffers (the far block ends at
+two 256-byte buffers into the far block gave back 464, Erdlu Claw's talons for the claws alone 32, the max PSP's bonuses put right 112); the HMA has 6,566 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,970). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16
@@ -2068,7 +2068,7 @@ emulated tests hold the helper to it:
 | attacks a round | Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon specialization on or off) | `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`. `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2); `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game: the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn before the off hand's cap (see [Two weapons](#two-weapons)) |
 | gear the kit allows | Battle Mage (its chosen weapon type's weapons, with weapon specialization; light armour); Battle Dancer (long swords and bows, `kit_dancer`, whatever its cleric's sphere) | `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a single class's spells, so it casts in that armour |
 | hit die | Battle Mage (d6), Arcanist (d3) | a level's die: `PROBE_HIT_DIE` (`INT A5h`, new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]` the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die` |
-| max PSP | Mind Warrior (a tenth fewer, rounded down) | at a level up: `PROBE_MAX_PSP` (`INT A4h`, new: `les bx,[bp-8]`, 8748Fh, the sum in SI before it goes in the sheet, in the routine at 873B2h); on the creation screen: `PROBE_CR_PSP` (`INT A2h`, new: the end, `pop bp / retf`, of 65B39h, which sums the PSP into the sheet being made's `+0Ch`; it drops the interrupt frame to end the routine itself, putting the flags back first, as a score's click reaches it with nothing after to set IF again). `kits.max_psp` |
+| max PSP | Mind Warrior (a tenth fewer, rounded down) | at a level up: `PROBE_MAX_PSP` (`INT A4h`, new: `les bx,[bp-8]`, 8748Fh, the sum in SI before it goes in the sheet, in the routine at 873B2h, which the level-up check runs for every party member, and a game's start too; first `PSP_SCORES` puts the game's CON, INT and WIS bonuses right: WIS read through `DS:11A0h`, the creation screen's record, taken signed as the game takes it, and tables 8 scores long in the overlay's segment, which its `mov dx,seg` at 873F8h holds, read past their ends); on the creation screen: `PROBE_CR_PSP` (`INT A2h`, new: the end, `pop bp / retf`, of 65B39h, which sums the PSP into the sheet being made's `+0Ch`; it drops the interrupt frame to end the routine itself, putting the flags back first, as a score's click reaches it with nothing after to set IF again). `kits.max_psp` |
 
 The creation screen rolls the hit points and works out the PSP when a class
 is clicked, before a kit can be chosen. Choosing or taking back a Battle

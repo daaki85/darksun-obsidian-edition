@@ -284,6 +284,9 @@ save:
   has no kit now: the kit is a druid/fighter/psionicist's.
 - Thieves' Tools from an earlier version (Mirlon's or Kel's) do nothing: a
   thief picks pockets with the Pick Pockets button.
+- A character's most PSP may go up once, the next time the game works it out
+  (a level up, or a game starting): the game's own bonuses for CON, INT and WIS
+  are counted right now, and the most only ever rises.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
   weapon rack holding Thornwall is gone (a new game has it).
 - A new game whose arena fight never began (no announcer, and walking said NO
