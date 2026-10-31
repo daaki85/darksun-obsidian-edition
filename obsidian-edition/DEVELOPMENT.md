@@ -1171,8 +1171,10 @@ sewer grate (script 137, yuan-ti's): A65h ends the search for a weapon in hand
 on `lflag[3] == 1` where it was just set to 0 (now `== 0`), so "hack the lock
 off" never comes up; 9E0h's hack says his or her as the pick does; A14h's
 successful hack sets flag 505 and prints "The grate opens." as the pick's does.
-(Its USE WITH handler at B5Ch compares the item's field 43, which its own record lacks,
-`< 220`, so any item breaks the lock; what it meant isn't clear, so it stays.)
+(Its attack trigger, B49h, registered by MAS 41 on the grate, object 1234: an
+attack on the grate "breaks the lock" when the target's field 43, which no
+record it can be has (most hit points is the character record's), is below 220,
+so always; what it meant isn't clear, so it stays.)
 The same sweep checked every RAND comparison and every bit test of a class or
 level: only the tracking's were wrong. A second went through every check on a
 class or its bits, race, sex, item, weapon, thief skill or ability: script 44 at
