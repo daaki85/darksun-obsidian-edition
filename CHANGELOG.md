@@ -38,6 +38,13 @@ notes](PATCH-NOTES.md).
   `== 80h` and `== 100h` on the class bits word are `& bit > 0`, as the game's other class tests
   are. Every object number the scripts compare an item or creature with but four is a real
   object; every thief skill and ability check tests what its text says.
+- The grate's failed hack: a plain weapon "breaks against the grate" and is gone (TAKE), a magic
+  one (a plus or a spell) "rings off the grate, unharmed" (the game said it broke and kept it).
+- The Loader's thief skill chances for a Slowed thief: picking pockets ruled out alone, as the
+  game's routine does (80425h; the Loader had it ruling out the other seven). Tests: `test_now`.
+- Checked in DSUN.EXE: a worn or readied item's helpful spell is cast on the wearer for good
+  (6F7F0h; a cursed item's attack spell too), as DEVELOPMENT had it; item 2005's swapped lists
+  don't matter, no item 2005 existing.
 - Detours for a repair longer than its bytes: after the script's end (an exit first), with a
   jump (64h, as the Loader's other script changes) back. Not seen in play.
   Tests: `test_scriptfixes` (each detour, relocations, the length limit).

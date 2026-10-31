@@ -887,9 +887,10 @@ RANGER_MOVE = AD_D_THIEF[3]
 # AD&D's most for a thief skill after every adjustment (a ranger's too): with RULE_THIEF_TABLE,
 # DSCLOG's PROBE_BELT keeps the game's chance to it, and thief_skills_now its own
 THIEF_MOST = 95
-# Effects that rule skills out (the chance can't come up), and ones that make a skill certain
+# Effects that rule skills out (the chance can't come up), and ones that make a skill certain: the
+# thief skill routine's effect tests (DSUN.EXE 80425h: Slowed, 47, rules out picking pockets alone)
 THIEF_BLOCKED = {8: (0, 1, 2, 3, 4, 6, 7), 17: tuple(range(8)), 11: tuple(range(8)), 3: tuple(range(8)),
-                 34: tuple(range(8)), 47: (1, 2, 3, 4, 5, 6, 7), 20: (0, 4), 25: (4,), 49: (0, 1, 6), 19: (7,)}
+                 34: tuple(range(8)), 47: (0,), 20: (0, 4), 25: (4,), 49: (0, 1, 6), 19: (7,)}
 THIEF_CERTAIN = {14: (2,), 23: (4,)}  # Detect Traps, Invisible
 STATUS_OKAY = 1
 STATUS_NEW = 0  # not yet played (the game makes it Okay when the game starts)

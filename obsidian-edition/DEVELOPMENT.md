@@ -401,7 +401,7 @@ alone.) Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
 | item | `+0x08` | a container's contents (an object number), as in a Dead Body |
 | item | `+0x0a` | its type |
 | item | `+0x11` | where it's worn: 0-13 the game's slots (arm, ammo, missile, right hand, finger, waist, legs, head, neck, chest, left hand, finger, cloak, foot), 14-25 a backpack cell |
-| item | `+0x0f` | a spell it carries, one past the spell's number (0: none): readied, the game casts a helpful one on the wearer; the acid's check reads it as the item's "magical power" |
+| item | `+0x0f` | a spell it carries, one past the spell's number (0: none): readied, the game casts a helpful one on the wearer, for good (DSUN.EXE 6F7F0h sets DS:5402h, so the cast routine at 78D00h makes the time -9999), and a cursed item's (plus below 0) spell against a creature too; C4h and up are the ability items; the acid's check reads it as the item's "magical power" |
 | item | `+0x12` | its name (an entry of the game's name table, 25 bytes each) |
 | item | `+0x14` | its plus |
 | type | `+0x04` | weight, in tenths of a pound |
@@ -1184,15 +1184,32 @@ mind-reading answers' flags, lflags 17 and 18) tested the class bits word
 `(word & bit) > 0`, the game's own form (script 67 at 1563h). Left as they are:
 script 56 at 125h, the slime book's "with magical training", masks the class
 bits with 417 (1A1h: psionicist, preserver, fighter and the air cleric, not the
-other clerics, druids or rangers), whose intent isn't clear; script 132 at 198h,
-Hototo's "Where is Dagger, bug / woman?", which calls every non-thri-kreen a
-woman with no sex test at all; and two object numbers compared that no object
+other clerics, druids or rangers), whose intent isn't clear (415, every cleric, druid, preserver and psionicist,
+would fit "magical training"); and two object numbers compared that no object
 file holds (script 10 at 352h, -261; script 195 at 35h, -144: the same number
 195 also asks for by name, so likely made in play). The other 67 object numbers
 are real objects (an item's +0 is its object's number negated: the grate's
 Bloodwrath, -1576, always hacks the lock); the thief skill checks (DO_ACTION 3)
 and ability checks (59h) each test the skill or ability their text names, and
 the weapon search for the grate looks in the right hand (item +11h slot 3).
+(Hototo's "Where is Dagger, bug / woman?", script 132 at 198h, tests race
+alone, but only after a sex test at B0h: a man is taken for Dagger.)
+
+A failed hack at the grate said the weapon "breaks against the grate" and left
+it; the repair at A31h (its words' print) runs a detour that tests the weapon
+(2Ch) for a plus or a spell (item fields 15 and 0): magic, " rings off the grate,
+unharmed."; plain, the game's words and TAKE (5Ch) one of that weapon from its
+holder (local big number 37) to 9999, as the game's scripts take items away.
+TAKE goes by the item's number, which items of a kind share, so it may take a
+spare of the same weapon from the pack rather than the one in hand.
+
+The thief skill routine's effect tests (DSUN.EXE 80425h, `-1000` to the
+situation): Slowed (effect 47, the list's byte 5 bit 80h) rules out picking
+pockets alone, as yuan-ti has it; the Loader's own table (`game.THIEF_BLOCKED`,
+for its screens) had it ruling out every other skill. Item 2005 on the legs
+would make moving silently certain and hearing noise impossible (80530h), but
+the routine passes its item and slot lists swapped, so it never applies; and no
+item 2005 exists in the game's data, so nothing is lost.
 
 A repair longer than the bytes it replaces runs from after the script's end:
 an exit first (a script that ran off its end still stops), then the new bytes
