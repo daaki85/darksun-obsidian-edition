@@ -1800,7 +1800,7 @@ without).
 | | how much it says: at the least, in short or in detail | in short |
 | | describe monsters when you Look at them in a fight | on |
 | | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
-| Rule changes | class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; rangers' casting level; preservers' INT; AD&D's class tables; the spell save; DEX instead of a doubled d20; two weapons; items saving against acid; rings and cloaks of protection; half-giants' two-handed weapons; helms AC 1; ages and magical aging; Enlarge multiplying the weapon's dice only; CON as in AD&D | all on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
 | More character customization | weapon specialization; kits; the XP level cap; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |

@@ -352,6 +352,13 @@ class Viewer:
         ttk.Checkbutton(in_game, text="Float a spell's name over its caster, and \"Miss\" over whoever an attack missed",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
+        # in three groups, as FEATURES.md has them
+        rule_groups = {}
+        for group, title in (("characters", "Characters"), ("arms", "Weapons and armour"), ("magic", "Magic")):
+            frame = ttk.Frame(rules)
+            ttk.Label(frame, text=title, style="Status.TLabel").pack(anchor="w")
+            frame.pack(anchor="w", fill="x", pady=(8 if rule_groups else 0, 0))
+            rule_groups[group] = frame
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
         # the thief's rules and picking pockets together, as the guide's Thieves section has them
@@ -366,12 +373,18 @@ class Viewer:
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
-        where = {"weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features, "buyback": features,
+        where = {**{key: rule_groups["characters"] for key in ("class_restrictions", "multiclass_hp", "best_hit_die",
+                                                               "rolled_scores", "adnd_tables", "con_adnd", "aging")},
+                 **{key: rule_groups["arms"] for key in ("two_weapons", "half_giant_hands", "protection_rules",
+                                                         "helm_ac", "item_saves")},
+                 **{key: rule_groups["magic"] for key in ("ranger_casting_level", "int_learning", "spell_save",
+                                                          "no_doubled_save", "enlarge_dice")},
+                 "weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features, "buyback": features,
                  "thief_table": thieves, "stealth": thieves, "backstab_dice": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
-        # (in the order the README has them)
+        # (in the order FEATURES.md has them: the rule changes in their three groups)
         for key, text in (
                 ("class_restrictions", "Class restrictions on armour, shields and weapons, the strictest class "
                                        "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
@@ -386,38 +399,38 @@ class Viewer:
                                   "while the six add up to no more than the die gave (lower one to raise "
                                   "another; the total is shown under CHR), and the hit points can't be "
                                   "clicked; a change of CON adds or takes off its bonus"),
+                ("adnd_tables", "AD&D's class tables: the XP each class needs (a gladiator's its own, not the "
+                                "fighter's), priests' THAC0 (2 better every 3 levels), and clerics', druids' and "
+                                "preservers' spell slots by level (WIS's bonus slots stay the game's)"),
+                ("con_adnd", "CON as in AD&D: from CON 20 a hit point back an hour, to one every 10 minutes at 25 "
+                             "(the game's every 5 minutes at any); dwarves and halflings add only their racial "
+                             "bonus to poison saves, not CON's adjustment too"),
+                ("aging", "Ages and magical aging: each character has an age from Dark Sun's tables, its "
+                          "scores changing at middle, old and venerable age, and dies at the most its race "
+                          "lives; a year older each 365 days of game time; Haste ages each it speeds a year, "
+                          "and each must survive a system shock roll (by CON), as in AD&D"),
+                ("two_weapons", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
+                                "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
+                ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
+                                     "weapon in the other; two heavy weapons still can't be held)"),
+                ("protection_rules", "Rings and cloaks of protection as in AD&D: only the better of two rings "
+                                     "counts, a ring gives no AC with magical armour, and a cloak does nothing "
+                                     "with magical or metal armour or a shield"),
+                ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
+                ("item_saves", "Items save against acid as in AD&D, by material, a plus helping, where that's "
+                               "better than the game's (which destroys armour without a magical power outright)"),
                 ("ranger_casting_level", "Rangers' spells last and do damage as cast at the ranger level less 7, "
                                          "as the spell levels they may cast count it (the game takes the whole "
                                          "level)"),
                 ("int_learning", "Preservers' INT: a chance to learn a spell from a scroll (35% at INT 9 "
                                  "to 100% at 24; a failed try uses the scroll up) and the most spells of "
                                  "each spell level they may know (6 at INT 9, all from 19)"),
-                ("adnd_tables", "AD&D's class tables: the XP each class needs (a gladiator's its own, not the "
-                                "fighter's), priests' THAC0 (2 better every 3 levels), and clerics', druids' and "
-                                "preservers' spell slots by level (WIS's bonus slots stay the game's)"),
                 ("spell_save", "Spells are saved against with the spell save (the game uses "
                                "petrification/polymorph)"),
                 ("no_doubled_save", "Saves against fire, cold and electricity: DEX defensive adjustment "
                                     "instead of a doubled d20"),
-                ("two_weapons", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
-                                "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
-                ("item_saves", "Items save against acid as in AD&D, by material, a plus helping, where that's "
-                               "better than the game's (which destroys armour without a magical power outright)"),
-                ("protection_rules", "Rings and cloaks of protection as in AD&D: only the better of two rings "
-                                     "counts, a ring gives no AC with magical armour, and a cloak does nothing "
-                                     "with magical or metal armour or a shield"),
-                ("half_giant_hands", "Half-giants wield two-handed weapons in one hand (a shield or a light "
-                                     "weapon in the other; two heavy weapons still can't be held)"),
-                ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
-                ("aging", "Ages and magical aging: each character has an age from Dark Sun's tables, its "
-                          "scores changing at middle, old and venerable age, and dies at the most its race "
-                          "lives; a year older each 365 days of game time; Haste ages each it speeds a year, "
-                          "and each must survive a system shock roll (by CON), as in AD&D"),
                 ("enlarge_dice", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                  "as in AD&D (the game multiplies the whole melee damage, STR included)"),
-                ("con_adnd", "CON as in AD&D: from CON 20 a hit point back an hour, to one every 10 minutes at 25 "
-                             "(the game's every 5 minutes at any); dwarves and halflings add only their racial "
-                             "bonus to poison saves, not CON's adjustment too"),
                 ("weapon_specialization", "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
                                           "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                           "rangers have expertise, every ranger with the bow; specialists and "

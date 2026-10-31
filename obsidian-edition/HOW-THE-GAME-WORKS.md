@@ -12,24 +12,60 @@ the game, and checked here in the game's own code.
 
 ## Contents
 
+- [Character creation](#character-creation)
 - [Initiative](#initiative)
+- [No critical hits](#no-critical-hits)
+- [The game's two weapons](#the-games-two-weapons)
+- [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
+- [The game's saving throws](#the-games-saving-throws)
+- [Monsters' defences](#monsters-defences)
 - [Spells and effects](#spells-and-effects)
   - [Each cleric spell against the
     manual](#each-cleric-spell-against-the-manual)
 - [Psionics](#psionics)
   - [Each power against the manual](#each-power-against-the-manual)
-- [Character creation](#character-creation)
-- [Monsters' defences](#monsters-defences)
-- [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
-- [The Bowyer's archery target](#the-bowyers-archery-target)
-- [No critical hits](#no-critical-hits)
-- [The game's two weapons](#the-games-two-weapons)
 - [How the game works out thief skills](#how-the-game-works-out-thief-skills)
 - [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)
-- [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
-- [The game's saving throws](#the-games-saving-throws)
+- [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
+- [The Bowyer's archery target](#the-bowyers-archery-target)
 - [The arena's count of fights](#the-arenas-count-of-fights)
 - [How fast the party walks](#how-fast-the-party-walks)
+
+## Character creation
+
+Every click of the die on the creation screen (and every change of race or sex)
+rolls a new character. From the game's code, and checked against the screen:
+
+* **Abilities.** Each score is rolled four times as 4d4 + 4 (8 to 20), the
+  best of the four kept, and the race's adjustment added. The score is then
+  raised, if need be, to the least that the
+  classes allow: 17 in the class's prime requisite (STR for fighters and
+  gladiators, WIS for clerics, druids, psionicists and rangers, INT for
+  preservers, DEX for thieves), and otherwise 9 (clerics, fighters, preservers,
+  thieves), 12 (druids, psionicists), 13 (gladiators) or 14 (rangers). A
+  multiclass character takes the highest of their classes' minimums.
+* **Race adjustments** (STR, DEX, CON, INT, WIS, CHA): dwarf +1 −1 +2 0 0 −2;
+  elf 0 +2 −2 +1 −1 0; half-elf 0 +1 −1 0 0 0; half-giant +4 −5 +2 −5 −3 −3;
+  halfling −2 +2 −1 0 +2 −1; mul +2 0 +1 −1 0 −2; thri-kreen 0 +2 0 −1 +1 −2.
+  Humans have none.
+* **Hit points.** One die for every level of every class (d8 clerics and
+  druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists
+  and thieves), doubled for half-giants. The total is divided by the number of
+  classes (rounded down), and then CON's bonus is added for every level: a
+  warrior's full bonus (+1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at
+  19-20, +6 at 21-23, +7 at 24-25; −1 at 4-6, −2 at 2-3, −3 at 0-1), and at
+  most +2 for levels in the other classes. There is no automatic maximum at
+  first level: the first level rolls like the rest.
+* **Choices without dice.** Raising a score to a new class's minimum (adding
+  Thief raises DEX to 17) and PSP aren't rolled, so they don't appear in the
+  log. The creation screen's other random numbers only choose pictures.
+* **The total.** After the six scores comes what they add up to, the most they
+  may add up to with [Scores and hit points as
+  rolled](FEATURES.md#scores-and-hit-points-as-rolled).
+
+Changing sex or race can make the game roll hit points twice, once with the
+old scores and once with the new: the last hit point line is the one that
+counts.
 
 ## Initiative
 
@@ -41,6 +77,191 @@ The DEX adjustment has its own table: −6 at DEX 1, −4 at 2, −3 at 3, −2 
 highest score acts first; a second roll, 0-199, decides between equal scores
 (the log shows it only for those). Choosing Wait lowers the character's score
 to 10 (or by one, if it's 10 or less already) so they act later in the round.
+
+## No critical hits
+
+A natural 20 on an attack always hits, and a natural 1 always misses, but
+that is all the d20 does: the game has no critical hits or fumbles. Its attack
+routine uses the d20 only for those two checks and the comparison with THAC0,
+and never passes it to the damage routine, so a hit on a 20 rolls the same
+damage as any other. A backstab is the only thing that multiplies damage.
+
+## The game's two weapons
+
+The manual says a character with two weapons ready uses the second "at a
+disadvantage", unless a ranger or dextrous. The game's code does something
+else: with two weapons ready (in melee), every attack, first hand and second
+alike, is adjusted by the DEX table used for initiative with its sign flipped
+and never below 0, and rangers are left out. That comes to a **bonus** of +6 at
+DEX 1, +4 at 2, +3 at 3, +2 at 4 and +1 at 5, and nothing at DEX 6 and up, so
+in practice there is no off-hand penalty at all: both weapons hit as well as a
+single one would. The log names it, e.g. `+2 two weapons at DEX 4`. It looks
+like a sign slip: AD&D uses the same DEX adjustment to make two-weapon
+fighting *harder* at low DEX.
+
+## Attacks from behind and backstabs
+
+From the game's code:
+
+- An attack is **from behind** when the attacker stands in the square directly
+  behind the way the target is facing. A creature faces nowhere in particular
+  at the start of each round; the first attack on it in the round turns it
+  to face that attacker (one of eight directions), and it keeps facing that
+  way for the rest of the round. So a second attacker on the far side, later
+  in the same round, attacks from behind. (Its own attacks don't turn it.)
+  It gets +2 to hit, and the target loses its DEX bonus and its shield.
+- A **backstab** is an attack from behind by a thief, in melee, with a weapon
+  that isn't too heavy (the game's weight value at most 40, a metal long
+  sword's). It gets another +2 to hit (+4 in all), and on the thief's first
+  two attacks of the round (an off-hand one too) the damage, STR bonus
+  included, is multiplied: x2 at thief levels 1-4, x3 at 5-8, x4 at 9-12 and
+  x5 from 13 (AD&D's table). With **A backstab multiplies the weapon's dice
+  only** ticked, only the round's first attack is multiplied, and only its
+  dice: STR, the weapon's plus and any other bonus are added once, as in AD&D
+  (DSCLOG's `STAB_TIMES`).
+
+Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items)
+(magic ones included). Weight belongs to the weapon's type and material, in the
+game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
+mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
+(slings, bows, a thrown chatkcha) never backstab: it has to be melee.
+
+| Weapon | Material (weight) | Damage | Backstab |
+|---|---|---|---|
+| Dagger | bone, stone, obsidian, metal (10) | 1d4 | yes |
+| Short sword | bone (15); obsidian, metal (30) | 1d6 | yes |
+| Long sword | bone, obsidian, metal (10 to 40, metal at the limit) | 1d8 | yes |
+| Club | wood (30) | 1d6 | yes |
+| Quarterstaff | wood (40) | 1d6 | yes |
+| Axe | bone, obsidian (30) | 1d8 | yes |
+| Pick | stone, metal (40) | 1d4+1 | yes |
+| Shillelagh, Flame Blade, Spiritual Hammer (spells) | (10, 40, 40) | 2d4, 1d4+4, 1d4+1 | yes |
+| Axe | metal (70) | 1d8 | no |
+| Great axe | bone (50); obsidian, metal (70) | 1d10 | no |
+| Mace | bone, obsidian, metal (100) | 1d6+1 | no |
+| Cahulaks, gythka | bone (120) | 1d6, 2d4 | no |
+| Polearm | bone, metal (150) | 1d10 | no |
+
+About a dozen more weapon types are in the game's tables with no item of
+theirs in its data (monsters' own, made by scripts, or unused).
+
+## The game's saving throws
+
+From the game's saving throw routine. The spell names which of the character
+sheet's five saves to use; a natural 1 always fails and a natural 20 always
+saves; otherwise the d20 and the modifiers below must reach the save's number.
+
+**Petrification/polymorph for almost every spell.** The game's code maps the
+spell's save kind 5 to the sheet's third save; kind 1 is
+paralysis/poison/death, used by the clouds, Poison, Slay Living and the
+psionic attacks. The spell save, the one AD&D uses for spells, is never used:
+a 3rd-level warrior needs 13 against Psychic Crush (paralysis) and 14 against
+Fireball (petrification), where the spell save would be 16.
+
+**Fire, cold and electricity: the d20 counts double.** Each spell's record has
+a word of flags saying what kind of damage it does, and the saving throw code
+doubles the d20 whenever the kind is fire, cold or electricity. Nothing else
+is doubled: not acid (Acid Arrow), crushing (Ice Storm, Magical Stone), poison
+(Cloudkill), draining (Vampiric Touch, the Cause Wounds spells) or the psionic
+attacks. The doubled spells are:
+- fire: Burning Hands, Flaming Sphere, Fireball, Flame Arrow, Minute Meteors,
+  Fire Shield, Wall of Fire (both), Focus Heat, Produce Fire, Flame Strike;
+- cold: Chill Touch, Cone of Cold;
+- electricity: Shocking Grasp, Lightning Bolt.
+
+In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
+a normal d20 saves 35% of the time and a doubled one 70%, which is why
+Fireball's victims usually get away with half damage. It isn't AD&D, and the
+game never explains it; it may have been meant as a dodge. The log says it on
+each save: `d20 = 7, doubled against fire = 14`. Two of the mod's
+[rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
+spell save back and take the doubled d20 away.
+
+The target's spells and effects:
+- Blessed +1, Barkskin +1, Spirit Armor +3 (but not on
+  paralysis/poison/death saves), and the Save penalty effect −1.
+- Prayer: +1 if its caster is on your side, −1 if not.
+- Protection from Evil +2 against an evil caster (lawful, neutral or chaotic
+  evil); Protection from Fire and from Cold +3 against fire and cold spells;
+  Protection from Lightning +4 against electricity.
+- +4 against a spell aimed at one target (not an area) when the caster can't
+  see you: the caster is Blind, or you're Invisible (or Invisible to Undead,
+  against an undead caster) and the caster can't detect invisibility.
+
+Class, race and abilities:
+- WIS, against mind-affecting spells, charms and holds, fear and illusions: −6
+  at WIS 1, −4 at 2, −3 at 3, −2 at 4, −1 at 5-7, +1 at 15, +2 at 16, +3 at 17
+  and +4 at 18 and up.
+- CON, on paralysis/poison/death saves: −2 at CON 1, −1 at 2, +1 at 19-20, +2
+  at 21-22, +3 at 23-24 and +4 at 25. Dwarves and halflings also add CON x 2 /
+  7 (+1 for every 3.5 points); in AD&D that bonus replaces the adjustment
+  (with the Loader: [CON as in AD&D](FEATURES.md#con-as-in-add)).
+- Druids +2 against fire and electricity; psionicists +2 against
+  mind-affecting spells and charms.
+- Some spells carry a modifier of their own (a monster's poison at −4).
+
+Spells with rules of their own: creatures of 6th level or lower can't save
+against Cloudkill; against Chaos only warriors (fighters, gladiators and
+rangers) can; against Dismissal the target adds its level and takes away the
+caster's; and against Scare, 6th level and up always save and everyone below
+can't. The Scare code looks meant to let some elf or half-elf priests save
+(AD&D gives elves, half-elves and priests a bonus), but it asks for a
+creature that is both an elf and a half-elf, so no one qualifies.
+
+Rules in the code that never come into play: Cloak of Bravery's +4 against
+fear applies only to a kind of spell that no spell in the game is marked as
+(the patched game marks the fear spells: see
+[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)), and so does
+AD&D's DEX defensive adjustment for attacks that can be dodged (+5 at DEX 1 to
+−6 at DEX 25 on AC, so −5 to +6 on the save), unless the
+[rule change](FEATURES.md#rule-changes) puts it on the fire, cold and
+electricity spells. And nothing in the game gives saves from items: there are
+no rings or cloaks of protection, which is why the mod adds
+[two rings and a cloak](FEATURES.md#new-items). Their +1 is in the log's
+saving throws as `+1 Ring of Protection` and `+1 Cloak of Protection` (with
+[AD&D's rules for them](FEATURES.md#rings-and-cloaks-of-protection) off, all
+of it as `Ring of Protection`).
+
+## Monsters' defences
+
+From the game's damage code (DSUN.EXE); none of this is in the manual:
+
+- Every creature has a monster kind, and each kind a resistance class and a
+  set of properties, in a table the game fills when it starts.
+- Every hit has damage kinds: fire, cold, electricity, acid, poison, draining,
+  psionic, death, and for weapons crushing, edged or pointed, from the item's
+  type; a natural (unarmed) attack's is crushing, fists and monsters' claws
+  alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
+  Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)).
+  A weapon's hit also carries its magic: one bit for +1 or better, one
+  for +2 or better and one for +3 or better (the weapon's plus, or its
+  ammunition's if that's higher). A monster's own attacks count as magical by
+  its level: (level - 2) / 2, so a 6th-level monster hits like a +2 weapon.
+- A resistance class is up to four rules: "these kinds of damage: this
+  percent of it". The largest percent that applies counts. So "crushing, edged
+  and pointed: 0%; +1 or better: 100%" is a monster only magical weapons hurt.
+  The game's 14 classes come to: only +1 (or +2) weapons hurt it, sometimes
+  with immunity to poison and draining, or to fire; half damage from
+  non-magical weapons and psionic attacks (the Rampager); immune to crushing
+  weapons (the mastyrials); immune to crushing and pointed weapons, fire and
+  acid, so that only edged weapons hurt it (the slimes); immune to fire and
+  cold (and half from electricity); half from fire; immune to poison; immune
+  to psionic attacks.
+- Properties: can't be charmed or held; unaffected by spells left on the ground
+  (fogs, clouds, walls, Web, Grease); not held by Grease, Web, Entangle, Solid
+  Fog or Quicksand; and hits that also cast one of the monsters' powers on the
+  target: 2d6 cold, 2d6 or 20 acid, paralysis, poison of 10 or 30 damage, a
+  deadly Poison, disease on 1 hit in 10. The 20 acid (the Rampager's) and a
+  corroding touch (the Babau's) can also destroy a worn item (see [Items saving
+  against acid](FEATURES.md#items-saving-against-acid)).
+- Undead (race 9 on the character sheet) take nothing from poison and
+  draining, and mind-affecting spells, charms and holds don't work on them.
+
+The dice log notes a weapon hit that takes less than its roll, or nothing at
+all, with what the monster's defences say about it
+(`Mastyrial takes none of the 6 damage: crushing weapons can't hurt it`: the
+game's mastyrials take nothing from clubs and maces, only from edged and
+pointed weapons).
 
 ## Spells and effects
 
@@ -329,148 +550,6 @@ below 16, and up):
 | Synaptic Static | telepathy | 15 | 10 |
 | Thought Shield (defence mode) | telepathy | 1 | 0 |
 
-## Character creation
-
-Every click of the die on the creation screen (and every change of race or sex)
-rolls a new character. From the game's code, and checked against the screen:
-
-* **Abilities.** Each score is rolled four times as 4d4 + 4 (8 to 20), the
-  best of the four kept, and the race's adjustment added. The score is then
-  raised, if need be, to the least that the
-  classes allow: 17 in the class's prime requisite (STR for fighters and
-  gladiators, WIS for clerics, druids, psionicists and rangers, INT for
-  preservers, DEX for thieves), and otherwise 9 (clerics, fighters, preservers,
-  thieves), 12 (druids, psionicists), 13 (gladiators) or 14 (rangers). A
-  multiclass character takes the highest of their classes' minimums.
-* **Race adjustments** (STR, DEX, CON, INT, WIS, CHA): dwarf +1 −1 +2 0 0 −2;
-  elf 0 +2 −2 +1 −1 0; half-elf 0 +1 −1 0 0 0; half-giant +4 −5 +2 −5 −3 −3;
-  halfling −2 +2 −1 0 +2 −1; mul +2 0 +1 −1 0 −2; thri-kreen 0 +2 0 −1 +1 −2.
-  Humans have none.
-* **Hit points.** One die for every level of every class (d8 clerics and
-  druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists
-  and thieves), doubled for half-giants. The total is divided by the number of
-  classes (rounded down), and then CON's bonus is added for every level: a
-  warrior's full bonus (+1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at
-  19-20, +6 at 21-23, +7 at 24-25; −1 at 4-6, −2 at 2-3, −3 at 0-1), and at
-  most +2 for levels in the other classes. There is no automatic maximum at
-  first level: the first level rolls like the rest.
-* **Choices without dice.** Raising a score to a new class's minimum (adding
-  Thief raises DEX to 17) and PSP aren't rolled, so they don't appear in the
-  log. The creation screen's other random numbers only choose pictures.
-* **The total.** After the six scores comes what they add up to, the most they
-  may add up to with [Scores and hit points as
-  rolled](FEATURES.md#scores-and-hit-points-as-rolled).
-
-Changing sex or race can make the game roll hit points twice, once with the
-old scores and once with the new: the last hit point line is the one that
-counts.
-
-## Monsters' defences
-
-From the game's damage code (DSUN.EXE); none of this is in the manual:
-
-- Every creature has a monster kind, and each kind a resistance class and a
-  set of properties, in a table the game fills when it starts.
-- Every hit has damage kinds: fire, cold, electricity, acid, poison, draining,
-  psionic, death, and for weapons crushing, edged or pointed, from the item's
-  type; a natural (unarmed) attack's is crushing, fists and monsters' claws
-  alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
-  Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)).
-  A weapon's hit also carries its magic: one bit for +1 or better, one
-  for +2 or better and one for +3 or better (the weapon's plus, or its
-  ammunition's if that's higher). A monster's own attacks count as magical by
-  its level: (level - 2) / 2, so a 6th-level monster hits like a +2 weapon.
-- A resistance class is up to four rules: "these kinds of damage: this
-  percent of it". The largest percent that applies counts. So "crushing, edged
-  and pointed: 0%; +1 or better: 100%" is a monster only magical weapons hurt.
-  The game's 14 classes come to: only +1 (or +2) weapons hurt it, sometimes
-  with immunity to poison and draining, or to fire; half damage from
-  non-magical weapons and psionic attacks (the Rampager); immune to crushing
-  weapons (the mastyrials); immune to crushing and pointed weapons, fire and
-  acid, so that only edged weapons hurt it (the slimes); immune to fire and
-  cold (and half from electricity); half from fire; immune to poison; immune
-  to psionic attacks.
-- Properties: can't be charmed or held; unaffected by spells left on the ground
-  (fogs, clouds, walls, Web, Grease); not held by Grease, Web, Entangle, Solid
-  Fog or Quicksand; and hits that also cast one of the monsters' powers on the
-  target: 2d6 cold, 2d6 or 20 acid, paralysis, poison of 10 or 30 damage, a
-  deadly Poison, disease on 1 hit in 10. The 20 acid (the Rampager's) and a
-  corroding touch (the Babau's) can also destroy a worn item (see [Items saving
-  against acid](FEATURES.md#items-saving-against-acid)).
-- Undead (race 9 on the character sheet) take nothing from poison and
-  draining, and mind-affecting spells, charms and holds don't work on them.
-
-The dice log notes a weapon hit that takes less than its roll, or nothing at
-all, with what the monster's defences say about it
-(`Mastyrial takes none of the 6 damage: crushing weapons can't hurt it`: the
-game's mastyrials take nothing from clubs and maces, only from edged and
-pointed weapons).
-
-## Searching junk, hay and wardrobes
-
-Junk piles, haystacks and wardrobes are searched by one of the game's scripts,
-each with a roll of its own: 0 to N, each number as likely. A low roll finds
-nothing, and junk and hay stop giving anything once the party has found 6
-things in them (each kind counts its own finds); wardrobes count every search,
-and after 6 every wardrobe is empty.
-
-| Search | Roll | Finds nothing on | What the rolls find |
-|---|---|---|---|
-| Junk pile | 0-14 | 0-1, or after 6 finds in junk | 2 a scorpion bite, dodged; 3 a scrap of paper ("Watch out for the..."); 4 a dead rat; 5 stale bread; 6 a piece of a grainpot; 7 a rat's bite (0-4 damage); 8 magic fruit; 9 wood for a club; 10 a drawing of a four-armed statue; 11 trinkets with a gem; 12 dung; 13 arrows; 14 magic fruit |
-| Haystack | 0-10 | 0-2, or after 6 finds in hay | 3 a bone needle; 4 a piece of a pot; 5 a rat's bite (0-4 damage); 6 a table leg for a club; 7 a soiled loincloth; 8 15 ceramic coins; 9 a bug; 10 a small gem |
-| Wardrobe | 0-10 | 0-2 (after 6 searches, empty) | 3 a rat's bite (0-4 damage); 4 a piece of a pot; 5 "Gareth the scribe was here."; 6 magic fruit; 7 a falling pot (0-5 damage); 8 a small gem; 9 a falling pot that misses; 10 "Don't trust Pehtucl." |
-
-The script also has outcomes for the rolls that find nothing (a scorpion's bite
-in junk, a skull in hay, coins in a wardrobe...), but its "nothing" check comes
-first, so they never happen.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#searching-junk-hay-and-wardrobes).
-
-## The Bowyer's archery target
-
-In Teaquetzl, the Bowyer keeps an archery target, and his script decides each
-shot at it. The distance is the game's, in squares from the archer to the
-target, and the archer's DEX does the rest:
-
-- From under 5 squares, every shot is a bull's eye ("could hardly miss at that
-  range"), with no roll and no reward.
-- Otherwise the shot rolls 0 to 20 and hits on a roll under **DEX − distance ÷
-  2** (rounded down; 2 if DEX is under the distance). Under it by less than 5
-  is the outer ring, by less than 10 the inner ring, by 10 or more the centre.
-- The centre from **more than 13 squares**, with the Bowyer **within 25** of
-  the archer, has him give **6 Arrows +2**, once a game. From 13 squares or
-  closer, the centre is only "the bull's eye".
-- The archer must have a bow in hand, one of the three the script names: the
-  plain bow, the Bow +2 or Phrain's Bow (the mod adds its Dunesong, which the
-  Bowyer sells). With anything else the Bowyer only tells you off.
-
-So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
-less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
-the dice log with the distances and what it needed.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-bowyers-archery-target).
-
-## No critical hits
-
-A natural 20 on an attack always hits, and a natural 1 always misses, but
-that is all the d20 does: the game has no critical hits or fumbles. Its attack
-routine uses the d20 only for those two checks and the comparison with THAC0,
-and never passes it to the damage routine, so a hit on a 20 rolls the same
-damage as any other. A backstab is the only thing that multiplies damage.
-
-## The game's two weapons
-
-The manual says a character with two weapons ready uses the second "at a
-disadvantage", unless a ranger or dextrous. The game's code does something
-else: with two weapons ready (in melee), every attack, first hand and second
-alike, is adjusted by the DEX table used for initiative with its sign flipped
-and never below 0, and rangers are left out. That comes to a **bonus** of +6 at
-DEX 1, +4 at 2, +3 at 3, +2 at 4 and +1 at 5, and nothing at DEX 6 and up, so
-in practice there is no off-hand penalty at all: both weapons hit as well as a
-single one would. The log names it, e.g. `+2 two weapons at DEX 4`. It looks
-like a sign slip: AD&D uses the same DEX adjustment to make two-weapon
-fighting *harder* at low DEX.
-
 ## How the game works out thief skills
 
 The game never shows thief skills, but it rolls them: for traps, and for the
@@ -576,128 +655,49 @@ the two the Loader rolls: move silently (when a pocket isn't picked, see
 [backstab](FEATURES.md#hiding-in-shadows-to-backstab)).
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
-## Attacks from behind and backstabs
+## Searching junk, hay and wardrobes
 
-From the game's code:
+Junk piles, haystacks and wardrobes are searched by one of the game's scripts,
+each with a roll of its own: 0 to N, each number as likely. A low roll finds
+nothing, and junk and hay stop giving anything once the party has found 6
+things in them (each kind counts its own finds); wardrobes count every search,
+and after 6 every wardrobe is empty.
 
-- An attack is **from behind** when the attacker stands in the square directly
-  behind the way the target is facing. A creature faces nowhere in particular
-  at the start of each round; the first attack on it in the round turns it
-  to face that attacker (one of eight directions), and it keeps facing that
-  way for the rest of the round. So a second attacker on the far side, later
-  in the same round, attacks from behind. (Its own attacks don't turn it.)
-  It gets +2 to hit, and the target loses its DEX bonus and its shield.
-- A **backstab** is an attack from behind by a thief, in melee, with a weapon
-  that isn't too heavy (the game's weight value at most 40, a metal long
-  sword's). It gets another +2 to hit (+4 in all), and on the thief's first
-  two attacks of the round (an off-hand one too) the damage, STR bonus
-  included, is multiplied: x2 at thief levels 1-4, x3 at 5-8, x4 at 9-12 and
-  x5 from 13 (AD&D's table). With **A backstab multiplies the weapon's dice
-  only** ticked, only the round's first attack is multiplied, and only its
-  dice: STR, the weapon's plus and any other bonus are added once, as in AD&D
-  (DSCLOG's `STAB_TIMES`).
-
-Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items)
-(magic ones included). Weight belongs to the weapon's type and material, in the
-game's units, which look like tenths of a pound (a dagger is 10, a club 30, a
-mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
-(slings, bows, a thrown chatkcha) never backstab: it has to be melee.
-
-| Weapon | Material (weight) | Damage | Backstab |
+| Search | Roll | Finds nothing on | What the rolls find |
 |---|---|---|---|
-| Dagger | bone, stone, obsidian, metal (10) | 1d4 | yes |
-| Short sword | bone (15); obsidian, metal (30) | 1d6 | yes |
-| Long sword | bone, obsidian, metal (10 to 40, metal at the limit) | 1d8 | yes |
-| Club | wood (30) | 1d6 | yes |
-| Quarterstaff | wood (40) | 1d6 | yes |
-| Axe | bone, obsidian (30) | 1d8 | yes |
-| Pick | stone, metal (40) | 1d4+1 | yes |
-| Shillelagh, Flame Blade, Spiritual Hammer (spells) | (10, 40, 40) | 2d4, 1d4+4, 1d4+1 | yes |
-| Axe | metal (70) | 1d8 | no |
-| Great axe | bone (50); obsidian, metal (70) | 1d10 | no |
-| Mace | bone, obsidian, metal (100) | 1d6+1 | no |
-| Cahulaks, gythka | bone (120) | 1d6, 2d4 | no |
-| Polearm | bone, metal (150) | 1d10 | no |
+| Junk pile | 0-14 | 0-1, or after 6 finds in junk | 2 a scorpion bite, dodged; 3 a scrap of paper ("Watch out for the..."); 4 a dead rat; 5 stale bread; 6 a piece of a grainpot; 7 a rat's bite (0-4 damage); 8 magic fruit; 9 wood for a club; 10 a drawing of a four-armed statue; 11 trinkets with a gem; 12 dung; 13 arrows; 14 magic fruit |
+| Haystack | 0-10 | 0-2, or after 6 finds in hay | 3 a bone needle; 4 a piece of a pot; 5 a rat's bite (0-4 damage); 6 a table leg for a club; 7 a soiled loincloth; 8 15 ceramic coins; 9 a bug; 10 a small gem |
+| Wardrobe | 0-10 | 0-2 (after 6 searches, empty) | 3 a rat's bite (0-4 damage); 4 a piece of a pot; 5 "Gareth the scribe was here."; 6 magic fruit; 7 a falling pot (0-5 damage); 8 a small gem; 9 a falling pot that misses; 10 "Don't trust Pehtucl." |
 
-About a dozen more weapon types are in the game's tables with no item of
-theirs in its data (monsters' own, made by scripts, or unused).
+The script also has outcomes for the rolls that find nothing (a scorpion's bite
+in junk, a skull in hay, coins in a wardrobe...), but its "nothing" check comes
+first, so they never happen.
 
-## The game's saving throws
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#searching-junk-hay-and-wardrobes).
 
-From the game's saving throw routine. The spell names which of the character
-sheet's five saves to use; a natural 1 always fails and a natural 20 always
-saves; otherwise the d20 and the modifiers below must reach the save's number.
+## The Bowyer's archery target
 
-**Petrification/polymorph for almost every spell.** The game's code maps the
-spell's save kind 5 to the sheet's third save; kind 1 is
-paralysis/poison/death, used by the clouds, Poison, Slay Living and the
-psionic attacks. The spell save, the one AD&D uses for spells, is never used:
-a 3rd-level warrior needs 13 against Psychic Crush (paralysis) and 14 against
-Fireball (petrification), where the spell save would be 16.
+In Teaquetzl, the Bowyer keeps an archery target, and his script decides each
+shot at it. The distance is the game's, in squares from the archer to the
+target, and the archer's DEX does the rest:
 
-**Fire, cold and electricity: the d20 counts double.** Each spell's record has
-a word of flags saying what kind of damage it does, and the saving throw code
-doubles the d20 whenever the kind is fire, cold or electricity. Nothing else
-is doubled: not acid (Acid Arrow), crushing (Ice Storm, Magical Stone), poison
-(Cloudkill), draining (Vampiric Touch, the Cause Wounds spells) or the psionic
-attacks. The doubled spells are:
-- fire: Burning Hands, Flaming Sphere, Fireball, Flame Arrow, Minute Meteors,
-  Fire Shield, Wall of Fire (both), Focus Heat, Produce Fire, Flame Strike;
-- cold: Chill Touch, Cone of Cold;
-- electricity: Shocking Grasp, Lightning Bolt.
+- From under 5 squares, every shot is a bull's eye ("could hardly miss at that
+  range"), with no roll and no reward.
+- Otherwise the shot rolls 0 to 20 and hits on a roll under **DEX − distance ÷
+  2** (rounded down; 2 if DEX is under the distance). Under it by less than 5
+  is the outer ring, by less than 10 the inner ring, by 10 or more the centre.
+- The centre from **more than 13 squares**, with the Bowyer **within 25** of
+  the archer, has him give **6 Arrows +2**, once a game. From 13 squares or
+  closer, the centre is only "the bull's eye".
+- The archer must have a bow in hand, one of the three the script names: the
+  plain bow, the Bow +2 or Phrain's Bow (the mod adds its Dunesong, which the
+  Bowyer sells). With anything else the Bowyer only tells you off.
 
-In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
-a normal d20 saves 35% of the time and a doubled one 70%, which is why
-Fireball's victims usually get away with half damage. It isn't AD&D, and the
-game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. Two of the mod's
-[rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
-spell save back and take the doubled d20 away.
+So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
+less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
+the dice log with the distances and what it needed.
 
-The target's spells and effects:
-- Blessed +1, Barkskin +1, Spirit Armor +3 (but not on
-  paralysis/poison/death saves), and the Save penalty effect −1.
-- Prayer: +1 if its caster is on your side, −1 if not.
-- Protection from Evil +2 against an evil caster (lawful, neutral or chaotic
-  evil); Protection from Fire and from Cold +3 against fire and cold spells;
-  Protection from Lightning +4 against electricity.
-- +4 against a spell aimed at one target (not an area) when the caster can't
-  see you: the caster is Blind, or you're Invisible (or Invisible to Undead,
-  against an undead caster) and the caster can't detect invisibility.
-
-Class, race and abilities:
-- WIS, against mind-affecting spells, charms and holds, fear and illusions: −6
-  at WIS 1, −4 at 2, −3 at 3, −2 at 4, −1 at 5-7, +1 at 15, +2 at 16, +3 at 17
-  and +4 at 18 and up.
-- CON, on paralysis/poison/death saves: −2 at CON 1, −1 at 2, +1 at 19-20, +2
-  at 21-22, +3 at 23-24 and +4 at 25. Dwarves and halflings also add CON x 2 /
-  7 (+1 for every 3.5 points); in AD&D that bonus replaces the adjustment
-  (with the Loader: [CON as in AD&D](FEATURES.md#con-as-in-add)).
-- Druids +2 against fire and electricity; psionicists +2 against
-  mind-affecting spells and charms.
-- Some spells carry a modifier of their own (a monster's poison at −4).
-
-Spells with rules of their own: creatures of 6th level or lower can't save
-against Cloudkill; against Chaos only warriors (fighters, gladiators and
-rangers) can; against Dismissal the target adds its level and takes away the
-caster's; and against Scare, 6th level and up always save and everyone below
-can't. The Scare code looks meant to let some elf or half-elf priests save
-(AD&D gives elves, half-elves and priests a bonus), but it asks for a
-creature that is both an elf and a half-elf, so no one qualifies.
-
-Rules in the code that never come into play: Cloak of Bravery's +4 against
-fear applies only to a kind of spell that no spell in the game is marked as
-(the patched game marks the fear spells: see
-[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)), and so does
-AD&D's DEX defensive adjustment for attacks that can be dodged (+5 at DEX 1 to
-−6 at DEX 25 on AC, so −5 to +6 on the save), unless the
-[rule change](FEATURES.md#rule-changes) puts it on the fire, cold and
-electricity spells. And nothing in the game gives saves from items: there are
-no rings or cloaks of protection, which is why the mod adds
-[two rings and a cloak](FEATURES.md#new-items). Their +1 is in the log's
-saving throws as `+1 Ring of Protection` and `+1 Cloak of Protection` (with
-[AD&D's rules for them](FEATURES.md#rings-and-cloaks-of-protection) off, all
-of it as `Ring of Protection`).
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-bowyers-archery-target).
 
 ## The arena's count of fights
 
@@ -743,4 +743,3 @@ game's time, the whole party in view 152 to 175, and the game showed about 37
 pictures a second while they walked, not 70. [Steady
 pace](FEATURES.md#game-speed) keeps everyone at full speed by leaving out the
 pictures that would be late, rather than waiting for them.
-

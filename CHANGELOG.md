@@ -37,6 +37,20 @@ notes](PATCH-NOTES.md).
   Tests: `test_slots`. DSCLOG's image 63,712 bytes (+32).
 
 **Docs**
+- **The rule changes in three groups**, the same in the docs and on the Loader's Options tab:
+  *Characters* (class restrictions, multiclass hit points, hit dice, scores as rolled, AD&D's
+  class tables, CON, ages), *Weapons and armour* (two weapons, half-giants' two-handed weapons,
+  rings and cloaks, helms, items against acid) and *Magic* (rangers' casting level, preservers'
+  INT, the spell save, DEX for fire, cold and electricity, Enlarge). FEATURES has a heading and
+  a summary table for each group (the rules' anchors as they were); the Options tab a small
+  heading for each in its Rule changes section, as Improved thieving has (`viewer.py`'s
+  `rule_groups`); DEVELOPMENT's sections and the guide's Options-at-a-glance row follow. The
+  Options screenshot is taken again.
+- The Loader's README has **When something goes wrong** at the end, after the Loader's window,
+  the dice log and accessibility (it came before the game's own screens); HOW-THE-GAME-WORKS'
+  sections go by subject: character creation, fighting (initiative, critical hits, two weapons,
+  backstabs, saves, monsters' defences), spells and psionics, thief skills, then the world
+  (searches, the Bowyer's target, the arena's count, walking).
 - The player's guide reordered: **Experience and levels** comes after the classes, kits and
   weapon specialization (it was near the end, after Equipment), with **Hit points** and
   **THAC0 by level** moved under it from Making a party; **Ages** has a heading of its own under

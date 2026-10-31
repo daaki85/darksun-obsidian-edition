@@ -14,25 +14,28 @@ figures), is in the [README](README.md#in-the-game).
 ## Contents
 
 - [Rule changes](#rule-changes)
-  - [Class restrictions](#class-restrictions)
-  - [Multiclass hit points](#multiclass-hit-points)
-  - [Hit dice: the better of two](#hit-dice-the-better-of-two)
-  - [Scores and hit points as rolled](#scores-and-hit-points-as-rolled)
-  - [Rangers' casting level](#rangers-casting-level)
-  - [Preservers' INT](#preservers-int)
-  - [AD&D's class tables](#adds-class-tables)
-  - [Spells saved against with the spell
-    save](#spells-saved-against-with-the-spell-save)
-  - [Fire, cold and electricity: DEX instead of a doubled
-    d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
-  - [Two weapons](#two-weapons)
-  - [Items saving against acid](#items-saving-against-acid)
-  - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
-  - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
-  - [Helms](#helms)
-  - [Ages and magical aging](#ages-and-magical-aging)
-  - [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only)
-  - [CON as in AD&D](#con-as-in-add)
+  - [Characters](#characters)
+    - [Class restrictions](#class-restrictions)
+    - [Multiclass hit points](#multiclass-hit-points)
+    - [Hit dice: the better of two](#hit-dice-the-better-of-two)
+    - [Scores and hit points as rolled](#scores-and-hit-points-as-rolled)
+    - [AD&D's class tables](#adds-class-tables)
+    - [CON as in AD&D](#con-as-in-add)
+    - [Ages and magical aging](#ages-and-magical-aging)
+  - [Weapons and armour](#weapons-and-armour)
+    - [Two weapons](#two-weapons)
+    - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
+    - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
+    - [Helms](#helms)
+    - [Items saving against acid](#items-saving-against-acid)
+  - [Magic](#magic)
+    - [Rangers' casting level](#rangers-casting-level)
+    - [Preservers' INT](#preservers-int)
+    - [Spells saved against with the spell
+      save](#spells-saved-against-with-the-spell-save)
+    - [Fire, cold and electricity: DEX instead of a doubled
+      d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
+    - [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
@@ -90,11 +93,15 @@ figures), is in the [README](README.md#in-the-game).
 ## Rule changes
 
 Seventeen changes that bring the game's own rules closer to AD&D, each with its
-own box in the Options tab's **Rule changes** section. All are on by default,
+own box in the Options tab's **Rule changes** section, grouped there as they
+are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
+and [magic](#magic). All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set). Untick one
 and the game's own rule is back at once.
 [How the game works](HOW-THE-GAME-WORKS.md) has what the game does without them.
+
+### Characters
 
 | Rule | What it changes |
 |---|---|
@@ -102,21 +109,11 @@ and the game's own rule is back at once.
 | [Multiclass hit points](#multiclass-hit-points) | CON's bonus on every hit die (a warrior's for a character with a warrior class), the total shared between the classes |
 | [Hit dice: the better of two](#hit-dice-the-better-of-two) | each hit die rolled twice, the better kept, for every character |
 | [Scores and hit points as rolled](#scores-and-hit-points-as-rolled) | on the creation screen, a click raises a score only while the six add up to no more than the die gave (lower one to raise another), and doesn't change the hit points |
-| [Rangers' casting level](#rangers-casting-level) | a ranger's spells last and do damage as cast at its level less 7, as the spell levels it may cast already count it |
-| [Preservers' INT](#preservers-int) | INT gives a preserver a chance to learn a spell from a scroll, and the most spells of each spell level it may know |
 | [AD&D's class tables](#adds-class-tables) | the XP for each level, priests' THAC0, and clerics', druids' and preservers' spell slots from AD&D's tables |
-| [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | the spell save rather than petrification/polymorph |
-| [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | DEX's defensive adjustment on those saves rather than a doubled d20 |
-| [Two weapons](#two-weapons) | −2 main hand, −4 off hand, DEX's reaction adjustment added; rangers none in light armour; the off hand attacks once a round |
-| [Items saving against acid](#items-saving-against-acid) | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
-| [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
-| [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
-| [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
-| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; a year older each 365 days of game time; Haste ages its target a year, after a system shock roll to survive |
-| [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
 | [CON as in AD&D](#con-as-in-add) | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
+| [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; a year older each 365 days of game time; Haste ages its target a year, after a system shock roll to survive |
 
-### Class restrictions
+#### Class restrictions
 
 With **Class restrictions** ticked, a character's classes keep it from
 armour, shields and weapons as in AD&D, the strictest class winning. The game
@@ -173,7 +170,7 @@ it can use with [Fuller starting gear](#fuller-starting-gear).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#class-restrictions).
 
-### Multiclass hit points
+#### Multiclass hit points
 
 With **Multiclass hit points** ticked, a character of more than one class
 gets its hit points as *Demihuman Deities* (TSR, 1998) sets out AD&D's rule
@@ -199,7 +196,7 @@ Gerrard's 4th Fighter level: hit points d10 = 8, +3 CON 17, into the total share
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#multiclass-hit-points).
 
-### Hit dice: the better of two
+#### Hit dice: the better of two
 
 With **Hit dice rolled twice** ticked, every character's hit die is rolled
 twice and the better roll kept: at creation (one die for each starting level
@@ -217,7 +214,7 @@ Character creation, hit points 18: Fighter d10 per level: 10 (the better of 2 an
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hit-dice-the-better-of-two).
 
-### Scores and hit points as rolled
+#### Scores and hit points as rolled
 
 The game's creation screen lets a click change what the die rolled: a left
 click raises a score by 1 (from its most, round to its least), a right click
@@ -243,61 +240,7 @@ The dice log gives each roll's total with its scores:
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scores-and-hit-points-as-rolled).
 
-### Rangers' casting level
-
-A ranger casts priest spells as a priest of its level less 7, as in AD&D: a
-9th-level ranger counts as 2nd level, so it may cast 1st-level spells. The
-game counts it so for the spell levels it may cast (and for Dispel Magic),
-but a spell's duration and damage take the whole ranger level: that ranger's
-spells lasted as a 9th-level priest's. With **Rangers' casting level**
-ticked, they take the level less 7 too. A character with another class that
-casts the spell (a cleric/ranger of the same element) casts it at the better
-of the two, the ranger's counted 7 less. The Seeker and Justifier kits take
-off 5 and 9 instead, ticked or not. A 9th-level ranger's Protection from Evil
-(3 rounds a level) lasts 6 rounds with the rule, 27 without. The dice log's
-duration and damage lines show the level wherever they roll dice.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rangers-casting-level).
-
-### Preservers' INT
-
-In the game a preserver learns any spell from a scroll it reads, and may know
-every spell. With **Preservers' INT** ticked, AD&D's table for INT holds:
-
-| INT | Chance to learn a spell | Most spells of each spell level |
-|---|---|---|
-| 9 | 35% | 6 |
-| 10 | 40% | 7 |
-| 11 | 45% | 7 |
-| 12 | 50% | 7 |
-| 13 | 55% | 9 |
-| 14 | 60% | 9 |
-| 15 | 65% | 11 |
-| 16 | 70% | 11 |
-| 17 | 75% | 14 |
-| 18 | 85% | 18 |
-| 19 | 95% | all |
-| 20 to 23 | 96% to 99% | all |
-| 24 and 25 | 100% | all |
-
-- **Reading a scroll:** the preserver rolls d100 against its chance. Under
-  it, the spell is learnt and the scroll used up, as in the game; over it,
-  the spell isn't learnt (YOU FAIL TO LEARN THE SPELL) and the scroll is used
-  up all the same.
-- **A full spell level:** a preserver that already knows the most spells of
-  the scroll's spell level can't learn it (TOO MANY SPELLS OF THAT LEVEL),
-  and keeps the scroll.
-- **Level ups and new characters:** CHOOSE A SPELL leaves out the spells of a
-  level the preserver already knows the most of, and doesn't open when
-  nothing else is left to learn.
-
-The dice log shows each try: `Dreamwalker reads the scroll of Magic Missile:
-d100 = 37, needs 60 or less (INT 14) -> learnt`. Priest spells and psionic
-powers are as the game has them.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
-
-### AD&D's class tables
+#### AD&D's class tables
 
 The game has tables of its own where AD&D's differ. With **AD&D's class
 tables** ticked, AD&D's hold (the [player's guide](PLAYER-GUIDE.md) has them in
@@ -320,171 +263,33 @@ Hit dice were AD&D's already, past 9th level too with
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#adds-class-tables).
 
-### Spells saved against with the spell save
+#### CON as in AD&D
 
-Almost every spell is marked for the game's "kind 5" save, which it treats as
-petrification/polymorph; with this rule it is the spell save. The spells
-marked for paralysis/poison/death (the poison clouds, Poison, Slay Living, the
-psionic attacks) keep it, as AD&D has them, and so do three monsters' powers
-marked for petrification/polymorph. The dice log and the Spells tab name the
-save used.
+A party member with CON 20 or more gets hit points back by itself. The game
+gives one every 5 minutes of game time at any such CON, 12 an hour. With **CON as in AD&D** ticked it is
+the Player's Handbook's rate:
 
-How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#spells-saved-against-with-the-spell-save).
-
-### Fire, cold and electricity: DEX instead of a doubled d20
-
-The game doubles the save's d20 against those spells (and nine monsters'
-attacks of those kinds). With this rule the d20 isn't doubled and AD&D's DEX
-defensive adjustment is added instead, as AD&D does for attacks that can be
-dodged: −5 at DEX 1, −4 at 3, −3 at 4, ... none for 7-14, +1 at 15, +2 at 16,
-+3 at 17, +4 at 18-20, +5 at 21-23 and +6 at 24-25. Fireball stays dangerous
-for slow targets (needing 14 at DEX 12: 35% to save, where the doubled d20
-gave 70%) and much less so for quick ones (DEX 21: 60%). The log names it:
-`+5 DEX 21 dodging`.
-
-How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
-
-### Two weapons
-
-With **Two weapons** ticked, a character with a melee weapon in each hand
-attacks at −2 with the main (right) hand and −4 with the off (left) hand, plus
-the DEX reaction adjustment (the table under
-[Initiative](HOW-THE-GAME-WORKS.md#initiative)). That can bring the penalty to 0
-but never make it a bonus, and low DEX makes it worse: DEX 17 gives 0 and −2,
-DEX 21 0 and 0, DEX 3 −5 and −7. One weapon, a two-handed weapon, a weapon and a
-shield, or a weapon and a bow or sling (the missile slot) have no penalty. The
-game's own rule, a small bonus at DEX 5 or less, is gone.
-
-Rangers (their kits too) and [Twin-blades](#kits) have no penalty in light
-armour: every armour piece worn, a helm too, of leather or of no material. In
-other armour they take it as anyone does, DEX included. A Justifier has none
-in any armour. The dice log names it (`-4 two weapons, off hand at DEX 15`),
-as do the THAC0 lines on the Characters tab and the inventory screen.
-
-The off hand attacks once a round, whoever holds it: extra attacks (a
-fighter's, gladiator's or ranger's 3/2 from the game, a specialist's,
-mastery's, the kits') are the main hand's alone. So a 7th-level Crusader
-with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
-in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
-The off hand's DAM lines (the inventory screen and View Character) show its
-one attack.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons).
-
-### Items saving against acid
-
-Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
-of armour, and the **Babau's corroding touch** a worn piece of armour and the
-melee weapon held (the first one in the character's list of held items; bows
-and slings never). The game makes the check on every such hit, whether or not
-the target's saving throw against the attack succeeds, and shows its own
-message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
-pieces worn on the arms, legs or chest count (bracers and robes among them),
-not helms, shields, cloaks, boots or belts, and at most one piece of armour is
-lost to a hit: the first that fails, in the order of the character's list.
-
-The game's own checks:
-
-- **A weapon** is destroyed on a d20 under 8 less its plus: a plain one 7 in
-  20 (35%), a +1 30%, +7 or better never.
-- **Armour** with a magical power (Drake Armor, Shimmer Armor) rolls a d20
-  against 10 less its power's number, which for every such armour in the game
-  means it always comes through. Any other piece is destroyed at once, without
-  a roll, plus or no plus: Tanelyv's Armor +2 goes as surely as plain leather.
-  (The game reads the byte that holds the item's power, not its plus.)
-
-With **Items save against acid as in AD&D** ticked, each item needs the easier
-of the game's number and AD&D's saving throw against acid for its material
-(the DMG's table), so no item is worse off than in the game. AD&D's number is
-less the item's plus, and 1 less again for a magical power:
-
-| Material | AD&D's number (the DMG's row) |
+| CON | A hit point every |
 |---|---|
-| Wood | 8 (thick wood) |
-| Bone (the game's ring, brigandine and scale armour too) | 11 |
-| Stone, obsidian | 5 (glass, the nearest) |
-| Metal | 13 |
-| Leather | 10 |
-| None (Silk Armor) | 12 (cloth) |
+| 20 | hour |
+| 21 | 50 minutes |
+| 22 | 40 minutes |
+| 23 | 30 minutes |
+| 24 | 20 minutes |
+| 25 | 10 minutes |
 
-| Item | Saved in the game | Saved with the rule |
-|---|---|---|
-| Leather Chest Armor | 0% | 55% (needs 10) |
-| Chain chest | 0% | 40% (needs 13) |
-| Tanelyv's arm or leg armour (metal, +2) | 0% | 50% (needs 11) |
-| Drake Armor +1 (a power) | 100% | 100% (the game's) |
-| Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
-| Obsidian Dagger | 65% | 80% (needs 5) |
+Minutes short of the next hit point count towards it later. The dice log
+shows each: `Gerakis regenerates 1 HP (CON 22), now 12/54 HP`.
 
-Every other armour piece and weapon, the mod's among them: [Items against
-acid](ITEMS.md#items-against-acid).
+The same box takes CON's adjustment off a dwarf's or a halfling's
+paralysis/poison/death save. The game adds both their racial bonus (CON × 2 /
+7, +1 for every 3.5 points) and the adjustment everyone with CON 19 or more
+gets (+1 to +4); in AD&D the racial bonus takes its place. A dwarf with CON 19
+saves at +5, not +6.
 
-The dice log shows every check, whichever rule is on:
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#con-as-in-add).
 
-```
-Defiler's saving throw vs Acid from Rampager (paralysis/poison/death): d20 = 20 (natural 20) -> saved
-  Rampager's acid on Defiler's Metal Chain Leg Armor: d20 = 16, needs 13 (AD&D's, 13 for metal; the game's: destroyed without a roll) -> safe
-  Rampager's acid on Defiler's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe
-```
-
-The Detonate psionic power (the daggorans' too) keeps the game's own rule:
-besides its blast, it picks the item the target wears that breaks most easily (a
-cloak, then a bone helm or leather chest armour, then bone scale armour) and
-destroys it on a d20 under 15 less the item's plus, so 70% for a plain item. The
-dice log shows that check and its outcome.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
-
-### Rings and cloaks of protection
-
-The game has no rings or cloaks of protection; the mod adds three (the
-arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
-[New items](#new-items)), each +1 to AC and +1 on every saving throw. With
-**Rings and cloaks of protection as in AD&D** ticked, they follow the AD&D
-rules for them:
-
-- **Two rings don't add up:** only the better one counts (the left hand's,
-  if they're equal). The arena's ring and Pehtucl's, both +1, give +1 together,
-  not +2.
-- **A ring gives no AC with magical armour** (any worn armour piece, helm
-  included, with a plus), but still adds to saving throws.
-- **A cloak does nothing,** neither AC nor saves, with magical armour, with
-  metal armour (Chain, Grey's Scale, Tanelyv's Armor, the Helm of
-  Contemplation) or with a shield in either hand. Natural armour is fine:
-  leather and bone (Ring, Brigandine and Scale are bone in Dark Sun), and
-  plain helms. The cloak still adds to a ring.
-
-Armour here is what is worn on the arms, legs, head or chest; something only
-carried in a backpack doesn't count. Untick it and every ring and cloak worn
-counts in full, whatever else is worn.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rings-and-cloaks-of-protection).
-
-### Half-giants' two-handed weapons
-
-Half-giants stand up to twelve feet tall. With **Half-giants wield
-two-handed weapons in one hand** ticked, a half-giant can hold a two-handed
-weapon (a two-handed sword, a halberd, a bow) in one hand, with a shield or a
-light weapon in the other. The game's own rule that the two hands can't both
-hold heavy weapons (over 30 in weight each) still stands, so no half-giant
-holds two two-handed weapons. With two weapons ready, the two-weapon penalties
-apply as for anyone. The inventory screen still writes "2 handed" in the
-weapon's line: that is its weapon type, not a limit.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
-
-### Helms
-
-The game's helms count as armour but give AC 0. With **Helms give AC 1**
-ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
-Contemplation and the Helm of Might. It shows on the View Character and inventory screens like
-any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
-
-### Ages and magical aging
+#### Ages and magical aging
 
 The game keeps no ages. With **Ages and magical aging** ticked, each party
 member has one, from the Dark Sun rules' tables: a starting age, the race's
@@ -551,7 +356,245 @@ have no hair, so they keep their looks.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
 
-### Enlarge multiplies the weapon's dice only
+### Weapons and armour
+
+| Rule | What it changes |
+|---|---|
+| [Two weapons](#two-weapons) | −2 main hand, −4 off hand, DEX's reaction adjustment added; rangers none in light armour; the off hand attacks once a round |
+| [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | a half-giant wields a two-handed weapon in one hand |
+| [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
+| [Helms give AC 1](#helms) | the game's helms give AC 1 rather than 0 |
+| [Items saving against acid](#items-saving-against-acid) | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
+
+#### Two weapons
+
+With **Two weapons** ticked, a character with a melee weapon in each hand
+attacks at −2 with the main (right) hand and −4 with the off (left) hand, plus
+the DEX reaction adjustment (the table under
+[Initiative](HOW-THE-GAME-WORKS.md#initiative)). That can bring the penalty to 0
+but never make it a bonus, and low DEX makes it worse: DEX 17 gives 0 and −2,
+DEX 21 0 and 0, DEX 3 −5 and −7. One weapon, a two-handed weapon, a weapon and a
+shield, or a weapon and a bow or sling (the missile slot) have no penalty. The
+game's own rule, a small bonus at DEX 5 or less, is gone.
+
+Rangers (their kits too) and [Twin-blades](#kits) have no penalty in light
+armour: every armour piece worn, a helm too, of leather or of no material. In
+other armour they take it as anyone does, DEX included. A Justifier has none
+in any armour. The dice log names it (`-4 two weapons, off hand at DEX 15`),
+as do the THAC0 lines on the Characters tab and the inventory screen.
+
+The off hand attacks once a round, whoever holds it: extra attacks (a
+fighter's, gladiator's or ranger's 3/2 from the game, a specialist's,
+mastery's, the kits') are the main hand's alone. So a 7th-level Crusader
+with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
+in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
+The off hand's DAM lines (the inventory screen and View Character) show its
+one attack.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons).
+
+#### Half-giants' two-handed weapons
+
+Half-giants stand up to twelve feet tall. With **Half-giants wield
+two-handed weapons in one hand** ticked, a half-giant can hold a two-handed
+weapon (a two-handed sword, a halberd, a bow) in one hand, with a shield or a
+light weapon in the other. The game's own rule that the two hands can't both
+hold heavy weapons (over 30 in weight each) still stands, so no half-giant
+holds two two-handed weapons. With two weapons ready, the two-weapon penalties
+apply as for anyone. The inventory screen still writes "2 handed" in the
+weapon's line: that is its weapon type, not a limit.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
+
+#### Rings and cloaks of protection
+
+The game has no rings or cloaks of protection; the mod adds three (the
+arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
+[New items](#new-items)), each +1 to AC and +1 on every saving throw. With
+**Rings and cloaks of protection as in AD&D** ticked, they follow the AD&D
+rules for them:
+
+- **Two rings don't add up:** only the better one counts (the left hand's,
+  if they're equal). The arena's ring and Pehtucl's, both +1, give +1 together,
+  not +2.
+- **A ring gives no AC with magical armour** (any worn armour piece, helm
+  included, with a plus), but still adds to saving throws.
+- **A cloak does nothing,** neither AC nor saves, with magical armour, with
+  metal armour (Chain, Grey's Scale, Tanelyv's Armor, the Helm of
+  Contemplation) or with a shield in either hand. Natural armour is fine:
+  leather and bone (Ring, Brigandine and Scale are bone in Dark Sun), and
+  plain helms. The cloak still adds to a ring.
+
+Armour here is what is worn on the arms, legs, head or chest; something only
+carried in a backpack doesn't count. Untick it and every ring and cloak worn
+counts in full, whatever else is worn.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rings-and-cloaks-of-protection).
+
+#### Helms
+
+The game's helms count as armour but give AC 0. With **Helms give AC 1**
+ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
+Contemplation and the Helm of Might. It shows on the View Character and inventory screens like
+any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
+
+#### Items saving against acid
+
+Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
+of armour, and the **Babau's corroding touch** a worn piece of armour and the
+melee weapon held (the first one in the character's list of held items; bows
+and slings never). The game makes the check on every such hit, whether or not
+the target's saving throw against the attack succeeds, and shows its own
+message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
+pieces worn on the arms, legs or chest count (bracers and robes among them),
+not helms, shields, cloaks, boots or belts, and at most one piece of armour is
+lost to a hit: the first that fails, in the order of the character's list.
+
+The game's own checks:
+
+- **A weapon** is destroyed on a d20 under 8 less its plus: a plain one 7 in
+  20 (35%), a +1 30%, +7 or better never.
+- **Armour** with a magical power (Drake Armor, Shimmer Armor) rolls a d20
+  against 10 less its power's number, which for every such armour in the game
+  means it always comes through. Any other piece is destroyed at once, without
+  a roll, plus or no plus: Tanelyv's Armor +2 goes as surely as plain leather.
+  (The game reads the byte that holds the item's power, not its plus.)
+
+With **Items save against acid as in AD&D** ticked, each item needs the easier
+of the game's number and AD&D's saving throw against acid for its material
+(the DMG's table), so no item is worse off than in the game. AD&D's number is
+less the item's plus, and 1 less again for a magical power:
+
+| Material | AD&D's number (the DMG's row) |
+|---|---|
+| Wood | 8 (thick wood) |
+| Bone (the game's ring, brigandine and scale armour too) | 11 |
+| Stone, obsidian | 5 (glass, the nearest) |
+| Metal | 13 |
+| Leather | 10 |
+| None (Silk Armor) | 12 (cloth) |
+
+| Item | Saved in the game | Saved with the rule |
+|---|---|---|
+| Leather Chest Armor | 0% | 55% (needs 10) |
+| Chain chest | 0% | 40% (needs 13) |
+| Tanelyv's arm or leg armour (metal, +2) | 0% | 50% (needs 11) |
+| Drake Armor +1 (a power) | 100% | 100% (the game's) |
+| Bone or metal Long Sword | 65% | 65% (the game's: needs 8) |
+| Obsidian Dagger | 65% | 80% (needs 5) |
+
+Every other armour piece and weapon, the mod's among them: [Items against
+acid](ITEMS.md#items-against-acid).
+
+The dice log shows every check, whichever rule is on:
+
+```
+Defiler's saving throw vs Acid from Rampager (paralysis/poison/death): d20 = 20 (natural 20) -> saved
+  Rampager's acid on Defiler's Metal Chain Leg Armor: d20 = 16, needs 13 (AD&D's, 13 for metal; the game's: destroyed without a roll) -> safe
+  Rampager's acid on Defiler's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe
+```
+
+The Detonate psionic power (the daggorans' too) keeps the game's own rule:
+besides its blast, it picks the item the target wears that breaks most easily (a
+cloak, then a bone helm or leather chest armour, then bone scale armour) and
+destroys it on a d20 under 15 less the item's plus, so 70% for a plain item. The
+dice log shows that check and its outcome.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
+
+### Magic
+
+| Rule | What it changes |
+|---|---|
+| [Rangers' casting level](#rangers-casting-level) | a ranger's spells last and do damage as cast at its level less 7, as the spell levels it may cast already count it |
+| [Preservers' INT](#preservers-int) | INT gives a preserver a chance to learn a spell from a scroll, and the most spells of each spell level it may know |
+| [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | the spell save rather than petrification/polymorph |
+| [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | DEX's defensive adjustment on those saves rather than a doubled d20 |
+| [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
+
+#### Rangers' casting level
+
+A ranger casts priest spells as a priest of its level less 7, as in AD&D: a
+9th-level ranger counts as 2nd level, so it may cast 1st-level spells. The
+game counts it so for the spell levels it may cast (and for Dispel Magic),
+but a spell's duration and damage take the whole ranger level: that ranger's
+spells lasted as a 9th-level priest's. With **Rangers' casting level**
+ticked, they take the level less 7 too. A character with another class that
+casts the spell (a cleric/ranger of the same element) casts it at the better
+of the two, the ranger's counted 7 less. The Seeker and Justifier kits take
+off 5 and 9 instead, ticked or not. A 9th-level ranger's Protection from Evil
+(3 rounds a level) lasts 6 rounds with the rule, 27 without. The dice log's
+duration and damage lines show the level wherever they roll dice.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rangers-casting-level).
+
+#### Preservers' INT
+
+In the game a preserver learns any spell from a scroll it reads, and may know
+every spell. With **Preservers' INT** ticked, AD&D's table for INT holds:
+
+| INT | Chance to learn a spell | Most spells of each spell level |
+|---|---|---|
+| 9 | 35% | 6 |
+| 10 | 40% | 7 |
+| 11 | 45% | 7 |
+| 12 | 50% | 7 |
+| 13 | 55% | 9 |
+| 14 | 60% | 9 |
+| 15 | 65% | 11 |
+| 16 | 70% | 11 |
+| 17 | 75% | 14 |
+| 18 | 85% | 18 |
+| 19 | 95% | all |
+| 20 to 23 | 96% to 99% | all |
+| 24 and 25 | 100% | all |
+
+- **Reading a scroll:** the preserver rolls d100 against its chance. Under
+  it, the spell is learnt and the scroll used up, as in the game; over it,
+  the spell isn't learnt (YOU FAIL TO LEARN THE SPELL) and the scroll is used
+  up all the same.
+- **A full spell level:** a preserver that already knows the most spells of
+  the scroll's spell level can't learn it (TOO MANY SPELLS OF THAT LEVEL),
+  and keeps the scroll.
+- **Level ups and new characters:** CHOOSE A SPELL leaves out the spells of a
+  level the preserver already knows the most of, and doesn't open when
+  nothing else is left to learn.
+
+The dice log shows each try: `Dreamwalker reads the scroll of Magic Missile:
+d100 = 37, needs 60 or less (INT 14) -> learnt`. Priest spells and psionic
+powers are as the game has them.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
+
+#### Spells saved against with the spell save
+
+Almost every spell is marked for the game's "kind 5" save, which it treats as
+petrification/polymorph; with this rule it is the spell save. The spells
+marked for paralysis/poison/death (the poison clouds, Poison, Slay Living, the
+psionic attacks) keep it, as AD&D has them, and so do three monsters' powers
+marked for petrification/polymorph. The dice log and the Spells tab name the
+save used.
+
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#spells-saved-against-with-the-spell-save).
+
+#### Fire, cold and electricity: DEX instead of a doubled d20
+
+The game doubles the save's d20 against those spells (and nine monsters'
+attacks of those kinds). With this rule the d20 isn't doubled and AD&D's DEX
+defensive adjustment is added instead, as AD&D does for attacks that can be
+dodged: −5 at DEX 1, −4 at 3, −3 at 4, ... none for 7-14, +1 at 15, +2 at 16,
++3 at 17, +4 at 18-20, +5 at 21-23 and +6 at 24-25. Fireball stays dangerous
+for slow targets (needing 14 at DEX 12: 35% to save, where the doubled d20
+gave 70%) and much less so for quick ones (DEX 21: 60%). The log names it:
+`+5 DEX 21 dodging`.
+
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
+
+#### Enlarge multiplies the weapon's dice only
 
 The game's Enlarge adds 10% a level of its caster to the whole of a melee
 hit's damage: STR's bonus, the weapon's plus and a specialist's bonus grow
@@ -567,32 +610,6 @@ Gerakis hits Screamer Beetle for 21: 1d8 = [4] -1 bone +2 specialized +3 Wild Fi
 where the game made it 22 (20 × 110%). A backstab then multiplies the
 enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
 (+90% DAMAGE).
-
-### CON as in AD&D
-
-A party member with CON 20 or more gets hit points back by itself. The game
-gives one every 5 minutes of game time at any such CON, 12 an hour. With **CON as in AD&D** ticked it is
-the Player's Handbook's rate:
-
-| CON | A hit point every |
-|---|---|
-| 20 | hour |
-| 21 | 50 minutes |
-| 22 | 40 minutes |
-| 23 | 30 minutes |
-| 24 | 20 minutes |
-| 25 | 10 minutes |
-
-Minutes short of the next hit point count towards it later. The dice log
-shows each: `Gerakis regenerates 1 HP (CON 22), now 12/54 HP`.
-
-The same box takes CON's adjustment off a dwarf's or a halfling's
-paralysis/poison/death save. The game adds both their racial bonus (CON × 2 /
-7, +1 for every 3.5 points) and the adjustment everyone with CON 19 or more
-gets (+1 to +4); in AD&D the racial bonus takes its place. A dwarf with CON 19
-saves at +5, not +6.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#con-as-in-add).
 
 ## More character customization
 

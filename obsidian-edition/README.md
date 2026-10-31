@@ -32,11 +32,6 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Other ways to start](#other-ways-to-start)
   - [Updating, backups and the Loader's
     files](#updating-backups-and-the-loaders-files)
-- [When something goes wrong](#when-something-goes-wrong)
-  - [Troubleshooting](#troubleshooting)
-  - [Known issues](#known-issues)
-  - [Crash, freeze and item reports](#crash-freeze-and-item-reports)
-  - [Reporting a problem](#reporting-a-problem)
 - [In the game](#in-the-game)
   - [The combat log in the game](#the-combat-log-in-the-game)
   - [Names over figures](#names-over-figures)
@@ -53,6 +48,11 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [The Dialogue tab](#the-dialogue-tab)
 - [The dice log](#the-dice-log)
 - [Accessibility](#accessibility)
+- [When something goes wrong](#when-something-goes-wrong)
+  - [Troubleshooting](#troubleshooting)
+  - [Known issues](#known-issues)
+  - [Crash, freeze and item reports](#crash-freeze-and-item-reports)
+  - [Reporting a problem](#reporting-a-problem)
 
 ## What it does
 
@@ -279,106 +279,6 @@ start it the GOG way and load a save from before the mod.
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools: a layout you save there, and a memory search's results |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
-
-## When something goes wrong
-
-### Troubleshooting
-
-- **Windows warns about the `.bat` file** ("Open File - Security Warning"):
-  see [One-time setup](#one-time-setup).
-- **An antivirus program blocks or quarantines the Loader.** The Loader reads
-  and writes DOSBox's memory while you play, as debuggers and game trainers do,
-  which some antivirus programs distrust. Allow the Loader's folder, or start
-  just the game with **`Play Dark Sun (in-game rolls).bat`** to see whether
-  the trouble is the Loader's window.
-- **The game runs slowly, or the sound stutters:** choose a lower
-  [game speed](FEATURES.md#game-speed).
-- **Walking looks jerky with the whole party in view:** steady pace is
-  skipping pictures so no one slows down. **Fastest** game speed on a quick
-  computer skips almost none; untick steady pace to see every picture at the
-  game's slower walk ([game speed](FEATURES.md#game-speed)).
-- **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
-  takes the mouse at the first click in its window (that click does nothing
-  in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
-- **The Loader shows no party or rolls:** check that Python is the 64-bit one
-  ([Requirements](#requirements)) and that the game was started from the
-  Loader or one of its `.bat` files.
-
-### Known issues
-
-Being looked into; a crash report, a save from just before and what you were
-doing help (see [Reporting a problem](#reporting-a-problem)):
-
-- **The game can stop with an error after a fight in the arena.** The Loader
-  writes a crash report; load the last save to go on.
-- **In a long session, figures can vanish from the screen and the game then
-  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
-  it happens, press **Freeze report** on the Loader before closing DOSBox.
-
-### Crash, freeze and item reports
-
-When something goes wrong, the Loader saves a report in the `crash-logs`
-folder (beside `Start Obsidian Edition.bat`), named for the time, and says so
-in the dice log (or, with `Play Dark Sun (in-game rolls).bat`, in a message
-box). Send it along with what you were doing just before (see
-[Reporting a problem](#reporting-a-problem)). Reports need the game started
-from the Loader or one of its `.bat` files: from GOG's own shortcut the Loader
-can't see how the game closed. Every report holds the Loader's switches, the
-last 300 lines of the dice log and the last 80 of the dialogue (which name your
-characters), and the table says what else. DOSBox's own messages in a crash
-report can name the folders the game is in, so read a report before you post
-it anywhere public.
-
-| Report | When | What else it holds |
-|---|---|---|
-| **Crash** (`crash-2026-10-04-213012.txt`) | the game stops with an error, or DOSBox closes while the game still runs | how DOSBox closed (its exit code), what the game left on the screen and the message it last wrote, with the calls that led to it; how long the game ran and the game speed; DOSBox's own `stdout.txt` and `stderr.txt`, if it wrote them; any writes into the game the Loader refused as unsafe; the game's memory at the last reading and at its lowest |
-| **Freeze** (`freeze-2026-10-16-213012.zip`) | you press **Freeze report** | where the game was running for the last few seconds (the helper notes it about 4 times a second), whether the game's timer and the map still move, the helper's own state, and a copy of the game's memory (about 1 MB: the party, the map and the fight, nothing outside DOSBox) |
-| **Item** (`item-2026-10-18-213012.txt`) | an item vanishes from the party | the item, who had it and where, what its record in the game's item table says now (freed, or reused for another item), the game's time, the region, whether a fight was on and whose turn, the item's record and its type's before and after, and the owner's and the party's items |
-
-**Memory running low.** The game has little memory to spare, and in a long
-session it can run out ("Out of memory in OEOpenGraph"). The Loader watches it,
-and if it gets low with the map up, the dice log says so: save and restart the
-game soon, as a fresh start has all of it back.
-
-**A crash.** When the game stops with an error (such as "Null pointer
-assignment"), DOSBox waits with the game's message on screen ("The game
-stopped with an error", then press a key) rather than closing over it. Some of
-the game's own errors (its memory manager's `ABEND: ...`, its script engine's
-`Mel Fatal Error`) are printed while the screen is still in graphics and wiped
-as the game quits; the helper keeps what the game last wrote, so the report
-has them anyway. The dice log also says how DOSBox closed:
-`DOSBox closed: it crashed (an access violation, code C0000005h)` means DOSBox
-itself failed, not the game. If DOSBox closes while the game is still running
-(after a freeze, DOSBox stopping with an error of its own, or its window's
-button), the report says the game didn't end on its own. A game ended from
-its own menu (Exit to DOS) writes none.
-
-**A freeze.** If the game stops responding but DOSBox stays open, leave DOSBox
-as it is, switch to the Loader and press **Freeze report**. The Loader watches
-the game for a second, then saves the zip and says where.
-
-**An item gone.** The Loader watches the party's items (every member's, worn
-or carried). When one is gone from the whole party for two seconds with
-nothing ordinary to explain it, it saves the report (loading a game starts
-the watch afresh):
-
-```
-Leather Inixhide +1 is gone from Gerakis's chest: its record is empty: the game freed it (destroyed, used up or discarded). An item report is saved in ...
-```
-
-The ordinary ways for an item to go pass in silence: dropped, put in a chest,
-given, sold or stolen; used up or taken for a quest; a spell's weapon
-(Shillelagh, Flame Blade) ending; a weapon that broke; an item handed to
-another member or moved between areas. An item the game destroys (acid,
-Detonate's blast) is reported too, so the loss is on record.
-
-### Reporting a problem
-
-Open an issue on [the project's Issues
-page](https://github.com/daaki85/darksun-obsidian-edition/issues), saying what
-you were doing, the version (the Loader's title bar), and attaching the crash,
-freeze or item report if there is one (all three are in `crash-logs`). A save
-from just before it happened helps most of all.
 
 ## In the game
 
@@ -724,7 +624,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (all seventeen, ages, Enlarge's dice and CON as in AD&D last) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (all seventeen, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -915,3 +815,103 @@ level AA:
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
   and `python -m dsloader dicelog` prints the same log (dialogue included) in
   a command prompt, which screen readers do read.
+
+## When something goes wrong
+
+### Troubleshooting
+
+- **Windows warns about the `.bat` file** ("Open File - Security Warning"):
+  see [One-time setup](#one-time-setup).
+- **An antivirus program blocks or quarantines the Loader.** The Loader reads
+  and writes DOSBox's memory while you play, as debuggers and game trainers do,
+  which some antivirus programs distrust. Allow the Loader's folder, or start
+  just the game with **`Play Dark Sun (in-game rolls).bat`** to see whether
+  the trouble is the Loader's window.
+- **The game runs slowly, or the sound stutters:** choose a lower
+  [game speed](FEATURES.md#game-speed).
+- **Walking looks jerky with the whole party in view:** steady pace is
+  skipping pictures so no one slows down. **Fastest** game speed on a quick
+  computer skips almost none; untick steady pace to see every picture at the
+  game's slower walk ([game speed](FEATURES.md#game-speed)).
+- **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
+  takes the mouse at the first click in its window (that click does nothing
+  in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
+- **The Loader shows no party or rolls:** check that Python is the 64-bit one
+  ([Requirements](#requirements)) and that the game was started from the
+  Loader or one of its `.bat` files.
+
+### Known issues
+
+Being looked into; a crash report, a save from just before and what you were
+doing help (see [Reporting a problem](#reporting-a-problem)):
+
+- **The game can stop with an error after a fight in the arena.** The Loader
+  writes a crash report; load the last save to go on.
+- **In a long session, figures can vanish from the screen and the game then
+  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
+  it happens, press **Freeze report** on the Loader before closing DOSBox.
+
+### Crash, freeze and item reports
+
+When something goes wrong, the Loader saves a report in the `crash-logs`
+folder (beside `Start Obsidian Edition.bat`), named for the time, and says so
+in the dice log (or, with `Play Dark Sun (in-game rolls).bat`, in a message
+box). Send it along with what you were doing just before (see
+[Reporting a problem](#reporting-a-problem)). Reports need the game started
+from the Loader or one of its `.bat` files: from GOG's own shortcut the Loader
+can't see how the game closed. Every report holds the Loader's switches, the
+last 300 lines of the dice log and the last 80 of the dialogue (which name your
+characters), and the table says what else. DOSBox's own messages in a crash
+report can name the folders the game is in, so read a report before you post
+it anywhere public.
+
+| Report | When | What else it holds |
+|---|---|---|
+| **Crash** (`crash-2026-10-04-213012.txt`) | the game stops with an error, or DOSBox closes while the game still runs | how DOSBox closed (its exit code), what the game left on the screen and the message it last wrote, with the calls that led to it; how long the game ran and the game speed; DOSBox's own `stdout.txt` and `stderr.txt`, if it wrote them; any writes into the game the Loader refused as unsafe; the game's memory at the last reading and at its lowest |
+| **Freeze** (`freeze-2026-10-16-213012.zip`) | you press **Freeze report** | where the game was running for the last few seconds (the helper notes it about 4 times a second), whether the game's timer and the map still move, the helper's own state, and a copy of the game's memory (about 1 MB: the party, the map and the fight, nothing outside DOSBox) |
+| **Item** (`item-2026-10-18-213012.txt`) | an item vanishes from the party | the item, who had it and where, what its record in the game's item table says now (freed, or reused for another item), the game's time, the region, whether a fight was on and whose turn, the item's record and its type's before and after, and the owner's and the party's items |
+
+**Memory running low.** The game has little memory to spare, and in a long
+session it can run out ("Out of memory in OEOpenGraph"). The Loader watches it,
+and if it gets low with the map up, the dice log says so: save and restart the
+game soon, as a fresh start has all of it back.
+
+**A crash.** When the game stops with an error (such as "Null pointer
+assignment"), DOSBox waits with the game's message on screen ("The game
+stopped with an error", then press a key) rather than closing over it. Some of
+the game's own errors (its memory manager's `ABEND: ...`, its script engine's
+`Mel Fatal Error`) are printed while the screen is still in graphics and wiped
+as the game quits; the helper keeps what the game last wrote, so the report
+has them anyway. The dice log also says how DOSBox closed:
+`DOSBox closed: it crashed (an access violation, code C0000005h)` means DOSBox
+itself failed, not the game. If DOSBox closes while the game is still running
+(after a freeze, DOSBox stopping with an error of its own, or its window's
+button), the report says the game didn't end on its own. A game ended from
+its own menu (Exit to DOS) writes none.
+
+**A freeze.** If the game stops responding but DOSBox stays open, leave DOSBox
+as it is, switch to the Loader and press **Freeze report**. The Loader watches
+the game for a second, then saves the zip and says where.
+
+**An item gone.** The Loader watches the party's items (every member's, worn
+or carried). When one is gone from the whole party for two seconds with
+nothing ordinary to explain it, it saves the report (loading a game starts
+the watch afresh):
+
+```
+Leather Inixhide +1 is gone from Gerakis's chest: its record is empty: the game freed it (destroyed, used up or discarded). An item report is saved in ...
+```
+
+The ordinary ways for an item to go pass in silence: dropped, put in a chest,
+given, sold or stolen; used up or taken for a quest; a spell's weapon
+(Shillelagh, Flame Blade) ending; a weapon that broke; an item handed to
+another member or moved between areas. An item the game destroys (acid,
+Detonate's blast) is reported too, so the loss is on record.
+
+### Reporting a problem
+
+Open an issue on [the project's Issues
+page](https://github.com/daaki85/darksun-obsidian-edition/issues), saying what
+you were doing, the version (the Loader's title bar), and attaching the crash,
+freeze or item report if there is one (all three are in `crash-logs`). A save
+from just before it happened helps most of all.

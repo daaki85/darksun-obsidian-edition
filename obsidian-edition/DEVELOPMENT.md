@@ -41,26 +41,26 @@ of the game's data, the tools for mapping it, and how each part of the
   - [Multiclass hit points](#multiclass-hit-points)
   - [Hit dice: the better of two](#hit-dice-the-better-of-two)
   - [Scores and hit points as rolled](#scores-and-hit-points-as-rolled)
-  - [Rangers' casting level](#rangers-casting-level)
-  - [Preservers' INT](#preservers-int)
   - [AD&D's class tables](#adds-class-tables)
-  - [Spells saved against with the spell
-    save](#spells-saved-against-with-the-spell-save)
-  - [Fire, cold and electricity: DEX instead of a doubled
-    d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
-  - [Two weapons](#two-weapons)
-  - [Items saving against acid](#items-saving-against-acid)
-  - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
-  - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
-  - [Helms](#helms)
+  - [CON as in AD&D](#con-as-in-add)
   - [Ages](#ages)
     - [Haste's aging](#hastes-aging)
     - [Restore Youth](#restore-youth)
     - [Natural aging](#natural-aging)
     - [The age on the creation screen](#the-age-on-the-creation-screen)
     - [Grey hair on the map](#grey-hair-on-the-map)
+  - [Two weapons](#two-weapons)
+  - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
+  - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
+  - [Helms](#helms)
+  - [Items saving against acid](#items-saving-against-acid)
+  - [Rangers' casting level](#rangers-casting-level)
+  - [Preservers' INT](#preservers-int)
+  - [Spells saved against with the spell
+    save](#spells-saved-against-with-the-spell-save)
+  - [Fire, cold and electricity: DEX instead of a doubled
+    d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
   - [Enlarge's dice](#enlarges-dice)
-  - [CON as in AD&D](#con-as-in-add)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits)
   - [Level cap by XP](#level-cap-by-xp)
@@ -1304,99 +1304,6 @@ next roll `SUM:98/98`, as the dice log's line; a new class raising INT from 14
 to 17 took a fighter's 98 to 101. DONE on a preserver still opened CHOOSE A
 SPELL (`PROBE_CR_SPELLS`).
 
-### Rangers' casting level
-
-([In the features page](FEATURES.md#rangers-casting-level).)
-
-The game works out a caster's level in two places, both with the combatant
-and the spell as arguments. The caster level routine (81B16h) takes the best
-level of the caster's classes that cast the spell, a ranger's 7 less (its
-"sub dx,7" at 81B6Ah); it sets the spell levels a caster may cast (half it
-rounded up, 81664h) and weighs a spell against Dispel Magic. The level a
-spell's duration and damage take is another routine's (5E25Ch), the same best
-of the classes but a ranger's whole; the cast passes it down to the duration
-(76CB3h) and the damage dice (76DA2h).
-
-How: `PROBE_RANGER_LEVEL` (`INT A6h`, in place of `mov al,es:[bx+24h]`,
-5E3B8h, where 5E25Ch takes a class's level, ES:BX the sheet plus the class's
-place) counts a ranger's (classes 13 to 16) 7 less with the rule
-(`RULE_HI_RANGER`, the second rules word's 2: `game.RULE_RANGER_CAST`), before
-the best is chosen, so a cleric/ranger's cleric level can still win. A
-Seeker's 5 and a Justifier's 9 come off there whatever the rule
-(`kits.spell_class_level`).
-
-Checked in the game: a 9th-level air ranger's Protection from Evil lasted 6
-rounds (caster level 2; 27 without the rule).
-
-### Preservers' INT
-
-([In the features page](FEATURES.md#preservers-int).)
-
-When a scroll's icon is clicked in its box, the game's routine (DSUN.EXE
-8B690h) asks whether the character on show may learn the scroll's spell
-(500:39h: only whether it already knows it; then 8B6D3h's `or ax,ax`), and if
-so teaches it (500:43h sets the low four bits of its byte in the known spells'
-table), uses the scroll up and says YOU LEARN THE SPELL
-(`push ds / push 33F1h`, 8B712h); if not, YOU ALREADY KNOW THIS SPELL
-(`push ds / push 3405h`, 8B719h) and the scroll is kept. Each spell's level is
-a byte of the game's table of spells at the load segment + 3FB9h, 19Ch + 7 a
-spell (`SPELL_LEVELS`; `GameData.spell_level`).
-
-How (`RULE_HI_INT`, the second rules word's 4: `game.RULE_INT_LEARN`):
-`PROBE_SCROLL_LEARN` (`INT A9h`) goes on to `INT_LEARN` for a preserver (the
-class among its sheet's) and a wizard spell. Its INT is the creature record's
-(`+25h`), its row of `INT_CHANCE` and `INT_MOST` (`intlearn.py`); `LEVEL_FULL`
-counts the wizard spells of the scroll's level it knows. Full: AX 0 (the game
-refuses, the scroll kept), and `PROBE_LEARN_REFUSED` (`INT 91h`, new, 8B719h)
-pushes TOO MANY SPELLS OF THAT LEVEL in place of the game's message. Else a
-d100 of the helper's own (`D100`: a generator stirred by the BIOS's timer
-ticks); over the chance, the game teaches the spell and uses the scroll up,
-and `PROBE_LEARN_SAID` (`INT 92h`, new, 8B712h) takes it back (the four bits
-cleared) and pushes YOU FAIL TO LEARN THE SPELL. Each try is told to the
-Loader in the helper's header (`+272`: a count, then the member, spell, INT,
-chance, d100 or spells known, result; `DiceLog._learn_lines`). At a level up
-(and a new preserver's picks), `PROBE_PICK_LIST` drops the game's list's
-spells of a full level, and `PROBE_PICK_ANY` (`PICK_INT_ANY`) doesn't open
-CHOOSE A SPELL when no unknown wizard spell is left at a level on offer that
-isn't full.
-
-A Shinobi (kits): the same check whether the character on show may learn its
-spell (8B6D3h, `or ax,ax` before the jump to CANNOT LEARN FROM THIS ITEM) goes
-to `SHINOBI_READ` (from `PROBE_SCROLL_LEARN`): not one of its spells, no (`THAT IS
-NOT A SHINOBI SPELL`, the scroll kept); else a d100 against its
-read languages, which the Loader keeps for each party member in the header
-(`+362`, with STATS: `game.thief_skills_now`'s skill 7, armour and effects
-counted), and above it the game teaches the spell and uses the scroll up, and
-`PROBE_LEARN_SAID` takes it back (`YOU CAN NOT READ THE SCROLL`); read,
-`INT_LEARN`'s d100 against INT's chance with the rule for INT (no most a
-level). The try goes to the Loader as a preserver's (`+272`), with the read
-roll and chance at `+366` (`intlearn.line`).
-
-The box's spell icon is a button only for a character whose class the item type
-allows: as the inventory opens the box, the game tests the type's class mask
-(`+10h`) against the sheet's (`+12h`, 6D3B9h) and passes the answer on to
-`DS:9CF6h`, and with it 0 the icon (button 3BC9h, 8B1A7h) is made inactive. The
-scroll type (60h) allows wizards only, so a Shinobi, a thief to the game, could
-never click it. `SCROLL_USE` (`INT 98h` and its site number, in place of `test
-[es:bx+10h],ax`) makes the test and passes the scroll type for a Shinobi too.
-
-What the box's handler says (4D0:2Ah, 8B810h: YOU LEARN THE SPELL, a Shinobi's
-answers, the tome's) is written, on the inventory screen, to its line under
-the paper doll, but nothing written there while the handler runs reaches the
-screen: the game's own messages were never seen. `BOX_SAID` (`INT 98h` and its site number in
-place of the `add sp,4` after it, 8B815h) keeps the text, and for 5 seconds
-`LINE_SAID` (after the inventory's writes to its line, 580h:5Ch: 6E125h,
-891A4h, 89222h, 89552h, 8968Bh, 8A940h) and `LINE_CLEARED` (after its clears,
-528h:2Ah: 6C9BFh, 701C2h, 89595h) write it there again (580h:5Ch on the window
-at `DS:11A4h`, through its stub segment 4272h, in a frame the overlay manager
-can fix up). Those run as the pointer moves, so 2 ticks after the message
-`BOX_NUDGE` (from the timer's `PROBE_TICK`) tells the game's mouse handler
-(`MOUSE_EVENT`, as the driver would) that the pointer moved, with the driver's
-buttons and place (INT 33h, 03h): the line shows the message with the mouse
-still. As the game's own messages there, it stays till the pointer is on
-something else. Not redrawing the window (118h:618h) afterwards matters: that
-draws it blank.
-
 ### AD&D's class tables
 
 ([In the features page](FEATURES.md#adds-class-tables); `tables.py`.)
@@ -1423,119 +1330,29 @@ preserver it calls the routine with the level byte 0 (WIS's part alone; the
 routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
 `ADND_SLOTS`; anyone else, or with the rule off, the routine as it was.
 
-### Spells saved against with the spell save
+### CON as in AD&D
 
-([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
+([In the features page](FEATURES.md#con-as-in-add).)
 
-How: the Loader writes the game's own table that turns a spell's kind of save
-into one of the five (a table of words at DS:1E75h, read afresh for every
-save), and puts it back when the rule is unticked.
+Regeneration: the game's routine (227E5h, called often; it acts once more than
+300 seconds of game time, the clock at 3781:35Bh, have passed since the last,
+DS:1654h) gives each party member a psionic strength point for each 300
+seconds and, with CON 20 or more, a hit point for each 300 too, at any CON,
+dropping what is left over. DSCLOG's `REGEN_SITE` (228BFh, after its
+`div ebx`) with `RULE_HI_CON` (`game.RULE_CON`) adds the seconds to the
+member's own count (`REGEN_SECS`, the remainder kept) and gives a hit point
+for each (26 − CON) × 600 seconds: AD&D's one an hour at 20 to one every 10
+minutes at 25. The psionic points are left as they are.
 
-### Fire, cold and electricity: DEX instead of a doubled d20
-
-([In the features
-page](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
-
-How: the helper does the save's doubling (`INT F0h`) only while this rule is
-off, and the Loader marks the fire, cold and electricity spells with the game's
-own "can be dodged" flag (bit 40h of the spell's category word), which no spell
-has, so the game's save routine adds the DEX defensive adjustment from its own
-table.
-
-### Two weapons
-
-([In the features page](FEATURES.md#two-weapons).)
-
-How: the game reads the attacker's DEX adjustment when it works out the
-two-weapon adjustment; the helper takes over from there (`INT FEh`) and gives
-AD&D's for the hand the attack's weapon is in.
-
-The off hand's one attack: the game gives every weapon the character's rate
-(the attack routine's `[BP-8]`, from the sheet's `+2Ah`, worked on by
-`PROBE_ATTACKS`), so each hand of a 3/2 fighter attacks 1, then 2. With the
-rule, `OFF_HAND_HALVES` makes a melee weapon in the off hand (the item's
-`+11h`, slot 10; in the attack routine `[BP+12h]`, the DAM line's DI, View
-Character's `[BP-0Ah]`) no more than 2 halves, after every other change to
-the rate (specialization, the kits), so the extra attacks stay with the main
-hand. `GameData.weapon_hits` gives the party view the same.
-
-Haste and Slow come last, in the game itself: after `[BP-8]` is set (and
-`PROBE_ATTACKS` has worked on it), the attack routine (5883Ah) asks a routine
-for the attacker's speed, which reads its effects: 4 for Hasted (effect 22)
-doubles the halves, 1 for Slowed (47) halves them, rounded down; then the
-round's attacks are the halves plus the round's parity, over 2. Checked in
-DOSBox by turning a Hasted effect into Bless (the attacks went back) and one
-into Slowed. The game's DAM lines never did it: `SPEED_HALVES` (`NS_HAS` on
-the two effects) does, last, in `PROBE_DAM_LINE` and `PROBE_MISSILE_LINE`
-(`FRAME_SPEED`: the creature from the routine's `[BP-6]`, its record, over
-3Ah from the creatures' `[1665h]`) and `PROBE_VIEW_DAM` (the character on
-show), whatever the rules; `weapon_hits` does it for the Characters tab. The
-inventory's formatter (72AB1h) wrote no count for 2 halves or fewer, so a
-slowed character's 1 read as one a round: `dam_half` makes its `jng` a `je`
-(72AC3h), and 1 half is `0.5x`. View Character's always has its count.
-
-A weak material's damage: the attack (and the inventory's line, through the
-same overlay routine, 508:52h) takes 2 off for wood and 1 for bone, stone and
-obsidian, from a weapon with no plus (a power alone doesn't spare it) whose
-type isn't marked 80h (the clubs and staves), as Dark Sun's rules have it
-(`game.MATERIAL_DAMAGE`, beside `MATERIAL_TO_HIT`); found in DOSBox by giving
-Cilla's long sword each type and reading the line. View Character's line
-(64E33h) adds only the type's bonus and the plus, so it read one or two more:
-`VIEW_MATERIAL` takes it off in `PROBE_VIEW_DAM`, whatever the rules. The dice
-log's damage line names it (`-1 bone`) where it said `-1 weapon`.
-
-Rangers and Twin-blades in light armour: the game asks whether the attacker
-is a ranger (the sheet's `+12h`, 200h) before it calls for the DEX
-adjustment, and gives a ranger none (DSUN.EXE 5961Fh). With the rule that
-test is `RG_TWO` (a site of `INT 98h`): a ranger wearing armour that isn't
-light (`HEAVY_WORN`: `ARMOUR_WORN` with each piece's material weighed, as
-`KIT_ALLOWS` does: leather, or of no material) reads as anyone else, and
-`PROBE_TWO` gives AD&D's; a Justifier (`KIT_IS_B` on the sheet) is let
-through in any armour. A Twin-blade is passed over in `PROBE_TWO` only in
-light armour. `GameData.two_weapons` (`heavy_armour_worn`) says the same in
-the log and the party view.
-
-### Items saving against acid
-
-([In the features page](FEATURES.md#items-saving-against-acid).)
-
-How: where the game works out the number a weapon's d20 must reach
-(`INT D6h`), where it skips the roll for armour with no magical power
-(`INT D5h`) and where it works out armour's number (`INT D4h`), the helper
-gives the easier of the two and records the check for the dice log.
-
-### Rings and cloaks of protection
-
-([In the features page](FEATURES.md#rings-and-cloaks-of-protection).)
-
-How: the game's AC routine counts a worn item's plus only if its type's +0Fh
-has bit 80h, which the Ring type lacks; the helper (`INT F8h`, at 58EBDh)
-sets it for rings, and the saving throw routine's sum of modifiers starts at
-the worn rings' plus (`INT F9h`, its `xor si,si` at 79D47h) rather than 0.
-With the rule, both look first at what the creature wears (`PROT_SCAN`: a
-worn armour piece with a plus, one of metal, a shield in a hand, and each
-hand's ring): the AC routine drops a ring with magical armour and the worse
-of two rings, and both drop the cloak with any of the three. The Loader's
-saves and AC rows weigh it the same way (`GameData.protection`).
-
-### Half-giants' two-handed weapons
-
-([In the features page](FEATURES.md#half-giants-two-handed-weapons).)
-
-How: the inventory screen checks a weapon type's two-handed bit (+0Fh, 40h)
-twice when something goes into a hand: the other hand's ("Two handed weapon in
-use") and the one going in ("Need two free hands"). The helper (`INT E3h`)
-answers both for the character on show, "not two-handed" for a half-giant.
-
-### Helms
-
-([In the features page](FEATURES.md#helms).)
-
-How: the helper sets the helm types' AC as the game's AC routine reads it
-(`INT F8h`, the Ring +1's place), and as the item box reads it for its "AC
-BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An
-earlier rule gave boots a move in a fight; it is gone, and the boots' names it
-changed go back to the game's.)
+Poison saves: the saving throw's CON adjustment (5EA91h, the table at DS:810h
+by CON) is added to the paralysis/poison/death save, and for a dwarf or a
+halfling its CON × 2 / 7 as well. DSCLOG's `CON_SAVE` (5EAA1h) makes the
+adjustment 0 for a dwarf or a halfling with the rule, so only the racial bonus
+counts; the Loader's saves (`GameData.save_modifiers`, `saves_now`) do the
+same. Checked in DOSBox: Gerakis at CON 22 an hour on, 1 hit point (the game's
+way 12), and the 1330 seconds left over counted towards the next. The saves
+are checked by the emulator (`test_dwarves_poison_saves`): the party has no
+dwarf or halfling.
 
 ### Ages
 
@@ -1685,6 +1502,213 @@ its golden pixels, `own_hair`). Dwarves, muls and thri-kreen have none (a
 thri-kreen's antennae greyed were tried and left out). Checked in DOSBox:
 Gerakis old and Cilla venerable, their figures redrawn as their ages were set.
 
+### Two weapons
+
+([In the features page](FEATURES.md#two-weapons).)
+
+How: the game reads the attacker's DEX adjustment when it works out the
+two-weapon adjustment; the helper takes over from there (`INT FEh`) and gives
+AD&D's for the hand the attack's weapon is in.
+
+The off hand's one attack: the game gives every weapon the character's rate
+(the attack routine's `[BP-8]`, from the sheet's `+2Ah`, worked on by
+`PROBE_ATTACKS`), so each hand of a 3/2 fighter attacks 1, then 2. With the
+rule, `OFF_HAND_HALVES` makes a melee weapon in the off hand (the item's
+`+11h`, slot 10; in the attack routine `[BP+12h]`, the DAM line's DI, View
+Character's `[BP-0Ah]`) no more than 2 halves, after every other change to
+the rate (specialization, the kits), so the extra attacks stay with the main
+hand. `GameData.weapon_hits` gives the party view the same.
+
+Haste and Slow come last, in the game itself: after `[BP-8]` is set (and
+`PROBE_ATTACKS` has worked on it), the attack routine (5883Ah) asks a routine
+for the attacker's speed, which reads its effects: 4 for Hasted (effect 22)
+doubles the halves, 1 for Slowed (47) halves them, rounded down; then the
+round's attacks are the halves plus the round's parity, over 2. Checked in
+DOSBox by turning a Hasted effect into Bless (the attacks went back) and one
+into Slowed. The game's DAM lines never did it: `SPEED_HALVES` (`NS_HAS` on
+the two effects) does, last, in `PROBE_DAM_LINE` and `PROBE_MISSILE_LINE`
+(`FRAME_SPEED`: the creature from the routine's `[BP-6]`, its record, over
+3Ah from the creatures' `[1665h]`) and `PROBE_VIEW_DAM` (the character on
+show), whatever the rules; `weapon_hits` does it for the Characters tab. The
+inventory's formatter (72AB1h) wrote no count for 2 halves or fewer, so a
+slowed character's 1 read as one a round: `dam_half` makes its `jng` a `je`
+(72AC3h), and 1 half is `0.5x`. View Character's always has its count.
+
+A weak material's damage: the attack (and the inventory's line, through the
+same overlay routine, 508:52h) takes 2 off for wood and 1 for bone, stone and
+obsidian, from a weapon with no plus (a power alone doesn't spare it) whose
+type isn't marked 80h (the clubs and staves), as Dark Sun's rules have it
+(`game.MATERIAL_DAMAGE`, beside `MATERIAL_TO_HIT`); found in DOSBox by giving
+Cilla's long sword each type and reading the line. View Character's line
+(64E33h) adds only the type's bonus and the plus, so it read one or two more:
+`VIEW_MATERIAL` takes it off in `PROBE_VIEW_DAM`, whatever the rules. The dice
+log's damage line names it (`-1 bone`) where it said `-1 weapon`.
+
+Rangers and Twin-blades in light armour: the game asks whether the attacker
+is a ranger (the sheet's `+12h`, 200h) before it calls for the DEX
+adjustment, and gives a ranger none (DSUN.EXE 5961Fh). With the rule that
+test is `RG_TWO` (a site of `INT 98h`): a ranger wearing armour that isn't
+light (`HEAVY_WORN`: `ARMOUR_WORN` with each piece's material weighed, as
+`KIT_ALLOWS` does: leather, or of no material) reads as anyone else, and
+`PROBE_TWO` gives AD&D's; a Justifier (`KIT_IS_B` on the sheet) is let
+through in any armour. A Twin-blade is passed over in `PROBE_TWO` only in
+light armour. `GameData.two_weapons` (`heavy_armour_worn`) says the same in
+the log and the party view.
+
+### Half-giants' two-handed weapons
+
+([In the features page](FEATURES.md#half-giants-two-handed-weapons).)
+
+How: the inventory screen checks a weapon type's two-handed bit (+0Fh, 40h)
+twice when something goes into a hand: the other hand's ("Two handed weapon in
+use") and the one going in ("Need two free hands"). The helper (`INT E3h`)
+answers both for the character on show, "not two-handed" for a half-giant.
+
+### Rings and cloaks of protection
+
+([In the features page](FEATURES.md#rings-and-cloaks-of-protection).)
+
+How: the game's AC routine counts a worn item's plus only if its type's +0Fh
+has bit 80h, which the Ring type lacks; the helper (`INT F8h`, at 58EBDh)
+sets it for rings, and the saving throw routine's sum of modifiers starts at
+the worn rings' plus (`INT F9h`, its `xor si,si` at 79D47h) rather than 0.
+With the rule, both look first at what the creature wears (`PROT_SCAN`: a
+worn armour piece with a plus, one of metal, a shield in a hand, and each
+hand's ring): the AC routine drops a ring with magical armour and the worse
+of two rings, and both drop the cloak with any of the three. The Loader's
+saves and AC rows weigh it the same way (`GameData.protection`).
+
+### Helms
+
+([In the features page](FEATURES.md#helms).)
+
+How: the helper sets the helm types' AC as the game's AC routine reads it
+(`INT F8h`, the Ring +1's place), and as the item box reads it for its "AC
+BONUS:" (`INT 88h`, at 8C15Ah), so a helm not worn yet shows its 1 too. (An
+earlier rule gave boots a move in a fight; it is gone, and the boots' names it
+changed go back to the game's.)
+
+### Items saving against acid
+
+([In the features page](FEATURES.md#items-saving-against-acid).)
+
+How: where the game works out the number a weapon's d20 must reach
+(`INT D6h`), where it skips the roll for armour with no magical power
+(`INT D5h`) and where it works out armour's number (`INT D4h`), the helper
+gives the easier of the two and records the check for the dice log.
+
+### Rangers' casting level
+
+([In the features page](FEATURES.md#rangers-casting-level).)
+
+The game works out a caster's level in two places, both with the combatant
+and the spell as arguments. The caster level routine (81B16h) takes the best
+level of the caster's classes that cast the spell, a ranger's 7 less (its
+"sub dx,7" at 81B6Ah); it sets the spell levels a caster may cast (half it
+rounded up, 81664h) and weighs a spell against Dispel Magic. The level a
+spell's duration and damage take is another routine's (5E25Ch), the same best
+of the classes but a ranger's whole; the cast passes it down to the duration
+(76CB3h) and the damage dice (76DA2h).
+
+How: `PROBE_RANGER_LEVEL` (`INT A6h`, in place of `mov al,es:[bx+24h]`,
+5E3B8h, where 5E25Ch takes a class's level, ES:BX the sheet plus the class's
+place) counts a ranger's (classes 13 to 16) 7 less with the rule
+(`RULE_HI_RANGER`, the second rules word's 2: `game.RULE_RANGER_CAST`), before
+the best is chosen, so a cleric/ranger's cleric level can still win. A
+Seeker's 5 and a Justifier's 9 come off there whatever the rule
+(`kits.spell_class_level`).
+
+Checked in the game: a 9th-level air ranger's Protection from Evil lasted 6
+rounds (caster level 2; 27 without the rule).
+
+### Preservers' INT
+
+([In the features page](FEATURES.md#preservers-int).)
+
+When a scroll's icon is clicked in its box, the game's routine (DSUN.EXE
+8B690h) asks whether the character on show may learn the scroll's spell
+(500:39h: only whether it already knows it; then 8B6D3h's `or ax,ax`), and if
+so teaches it (500:43h sets the low four bits of its byte in the known spells'
+table), uses the scroll up and says YOU LEARN THE SPELL
+(`push ds / push 33F1h`, 8B712h); if not, YOU ALREADY KNOW THIS SPELL
+(`push ds / push 3405h`, 8B719h) and the scroll is kept. Each spell's level is
+a byte of the game's table of spells at the load segment + 3FB9h, 19Ch + 7 a
+spell (`SPELL_LEVELS`; `GameData.spell_level`).
+
+How (`RULE_HI_INT`, the second rules word's 4: `game.RULE_INT_LEARN`):
+`PROBE_SCROLL_LEARN` (`INT A9h`) goes on to `INT_LEARN` for a preserver (the
+class among its sheet's) and a wizard spell. Its INT is the creature record's
+(`+25h`), its row of `INT_CHANCE` and `INT_MOST` (`intlearn.py`); `LEVEL_FULL`
+counts the wizard spells of the scroll's level it knows. Full: AX 0 (the game
+refuses, the scroll kept), and `PROBE_LEARN_REFUSED` (`INT 91h`, new, 8B719h)
+pushes TOO MANY SPELLS OF THAT LEVEL in place of the game's message. Else a
+d100 of the helper's own (`D100`: a generator stirred by the BIOS's timer
+ticks); over the chance, the game teaches the spell and uses the scroll up,
+and `PROBE_LEARN_SAID` (`INT 92h`, new, 8B712h) takes it back (the four bits
+cleared) and pushes YOU FAIL TO LEARN THE SPELL. Each try is told to the
+Loader in the helper's header (`+272`: a count, then the member, spell, INT,
+chance, d100 or spells known, result; `DiceLog._learn_lines`). At a level up
+(and a new preserver's picks), `PROBE_PICK_LIST` drops the game's list's
+spells of a full level, and `PROBE_PICK_ANY` (`PICK_INT_ANY`) doesn't open
+CHOOSE A SPELL when no unknown wizard spell is left at a level on offer that
+isn't full.
+
+A Shinobi (kits): the same check whether the character on show may learn its
+spell (8B6D3h, `or ax,ax` before the jump to CANNOT LEARN FROM THIS ITEM) goes
+to `SHINOBI_READ` (from `PROBE_SCROLL_LEARN`): not one of its spells, no (`THAT IS
+NOT A SHINOBI SPELL`, the scroll kept); else a d100 against its
+read languages, which the Loader keeps for each party member in the header
+(`+362`, with STATS: `game.thief_skills_now`'s skill 7, armour and effects
+counted), and above it the game teaches the spell and uses the scroll up, and
+`PROBE_LEARN_SAID` takes it back (`YOU CAN NOT READ THE SCROLL`); read,
+`INT_LEARN`'s d100 against INT's chance with the rule for INT (no most a
+level). The try goes to the Loader as a preserver's (`+272`), with the read
+roll and chance at `+366` (`intlearn.line`).
+
+The box's spell icon is a button only for a character whose class the item type
+allows: as the inventory opens the box, the game tests the type's class mask
+(`+10h`) against the sheet's (`+12h`, 6D3B9h) and passes the answer on to
+`DS:9CF6h`, and with it 0 the icon (button 3BC9h, 8B1A7h) is made inactive. The
+scroll type (60h) allows wizards only, so a Shinobi, a thief to the game, could
+never click it. `SCROLL_USE` (`INT 98h` and its site number, in place of `test
+[es:bx+10h],ax`) makes the test and passes the scroll type for a Shinobi too.
+
+What the box's handler says (4D0:2Ah, 8B810h: YOU LEARN THE SPELL, a Shinobi's
+answers, the tome's) is written, on the inventory screen, to its line under
+the paper doll, but nothing written there while the handler runs reaches the
+screen: the game's own messages were never seen. `BOX_SAID` (`INT 98h` and its site number in
+place of the `add sp,4` after it, 8B815h) keeps the text, and for 5 seconds
+`LINE_SAID` (after the inventory's writes to its line, 580h:5Ch: 6E125h,
+891A4h, 89222h, 89552h, 8968Bh, 8A940h) and `LINE_CLEARED` (after its clears,
+528h:2Ah: 6C9BFh, 701C2h, 89595h) write it there again (580h:5Ch on the window
+at `DS:11A4h`, through its stub segment 4272h, in a frame the overlay manager
+can fix up). Those run as the pointer moves, so 2 ticks after the message
+`BOX_NUDGE` (from the timer's `PROBE_TICK`) tells the game's mouse handler
+(`MOUSE_EVENT`, as the driver would) that the pointer moved, with the driver's
+buttons and place (INT 33h, 03h): the line shows the message with the mouse
+still. As the game's own messages there, it stays till the pointer is on
+something else. Not redrawing the window (118h:618h) afterwards matters: that
+draws it blank.
+
+### Spells saved against with the spell save
+
+([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
+
+How: the Loader writes the game's own table that turns a spell's kind of save
+into one of the five (a table of words at DS:1E75h, read afresh for every
+save), and puts it back when the rule is unticked.
+
+### Fire, cold and electricity: DEX instead of a doubled d20
+
+([In the features
+page](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
+
+How: the helper does the save's doubling (`INT F0h`) only while this rule is
+off, and the Loader marks the fire, cold and electricity spells with the game's
+own "can be dodged" flag (bit 40h of the spell's category word), which no spell
+has, so the game's save routine adds the DEX defensive adjustment from its own
+table.
+
 ### Enlarge's dice
 
 ([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)
@@ -1703,30 +1727,6 @@ line does the same (`RULE_ENLARGE`), and the Effects screen's line says DICE
 rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Checked in DOSBox:
 Gerakis Enlarged at level 1 hitting a Screamer Beetle for 21, 22 and 25, its
 hit points down by the same (the game's way: 22, 23 and 26).
-
-### CON as in AD&D
-
-([In the features page](FEATURES.md#con-as-in-add).)
-
-Regeneration: the game's routine (227E5h, called often; it acts once more than
-300 seconds of game time, the clock at 3781:35Bh, have passed since the last,
-DS:1654h) gives each party member a psionic strength point for each 300
-seconds and, with CON 20 or more, a hit point for each 300 too, at any CON,
-dropping what is left over. DSCLOG's `REGEN_SITE` (228BFh, after its
-`div ebx`) with `RULE_HI_CON` (`game.RULE_CON`) adds the seconds to the
-member's own count (`REGEN_SECS`, the remainder kept) and gives a hit point
-for each (26 − CON) × 600 seconds: AD&D's one an hour at 20 to one every 10
-minutes at 25. The psionic points are left as they are.
-
-Poison saves: the saving throw's CON adjustment (5EA91h, the table at DS:810h
-by CON) is added to the paralysis/poison/death save, and for a dwarf or a
-halfling its CON × 2 / 7 as well. DSCLOG's `CON_SAVE` (5EAA1h) makes the
-adjustment 0 for a dwarf or a halfling with the rule, so only the racial bonus
-counts; the Loader's saves (`GameData.save_modifiers`, `saves_now`) do the
-same. Checked in DOSBox: Gerakis at CON 22 an hour on, 1 hit point (the game's
-way 12), and the 1330 seconds left over counted towards the next. The saves
-are checked by the emulator (`test_dwarves_poison_saves`): the party has no
-dwarf or halfling.
 
 ### Weapon specialization
 
