@@ -66,11 +66,13 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.13.2** is out ([release notes](release-notes/v2.13.2.md)):
-the creation screen rolls a new character's age on Table 7's dice with each roll
-of the die, and Restore Youth can take back any number of magical years. 2.13.1
-made characters age with the game's clock and grey on the map, showed how long
-you've played, and let Kurzak notice when Legcrusher is gone. 2.13.0 gave characters ages,
+**Obsidian Edition 2.13.3** is out ([release notes](release-notes/v2.13.3.md)):
+the creation screen shows a new character's melee and missile THAC0, the
+Wasteland Seer is a thri-kreen druid/fighter/psionicist whose psionics follow the
+sky, the Shinobi casts to 13th level with three 4th-level spells, a Spellarcher
+adds to the same spell's arrows, and EDIT no longer takes a member's kit away.
+2.13.2 rolled a new character's age on Table 7's dice, and 2.13.1
+made characters age with the game's clock and grey on the map. 2.13.0 gave characters ages,
 Haste's cost and Restore Youth; 2.12.4 let the Loader run the game as
 [Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled).
 

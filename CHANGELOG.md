@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.3 ([release notes](release-notes/v2.13.3.md)).
+
 **New**
 - **The THAC0 on the creation screen:** `THAC0: M18 R19` right of the hit points, above the age,
   M the character's THAC0 less STR's to-hit adjustment and R less DEX's missile adjustment, drawn
