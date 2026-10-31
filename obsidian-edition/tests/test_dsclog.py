@@ -5605,7 +5605,7 @@ class KitTests(unittest.TestCase):
                 for level in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15):
                     self.creature(cls, kit, level=level)
                     for magic in (kits.WIZARD, kits.PRIEST):
-                        for spell_level in (1, 2, 3, 4):
+                        for spell_level in (1, 2, 3, 4, 5):
                             for given in (0, 1, 3):
                                 with self.subTest(rules=rules, cls=cls, kit=kit, level=level, magic=magic,
                                                   spell_level=spell_level, given=given):
@@ -5624,9 +5624,9 @@ class KitTests(unittest.TestCase):
         self.assertEqual([kits.slots(kits.SEEKER, kits.PRIEST, lv, sl, 9) for lv in (5, 6, 8, 10, 15) for sl in (1, 3)],
                          [0, 0, 1, 0, 2, 0, 2, 1, 3, 2])
         # a Shinobi's wizard slots past a ranger's 10th, to its thief's 13th: The Complete Ranger's
-        # Handbook's Seeker table (3 2 1, 3 2 2, 3 3 2), and no 4th-level slot
+        # Handbook's Seeker table (3 2 1, 3 2 2, 3 3 2 1)
         self.assertEqual([[kits.slots(kits.SHINOBI, kits.WIZARD, lv, sl, 0) for sl in (1, 2, 3, 4)] for lv in (10, 11, 12, 13)],
-                         [[2, 2, 1, 0], [3, 2, 1, 0], [3, 2, 2, 0], [3, 3, 2, 0]])
+                         [[2, 2, 1, 0], [3, 2, 1, 0], [3, 2, 2, 0], [3, 3, 2, 1]])
         self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 3])
         self.assertEqual(kits.slots(kits.ARCANIST, kits.WIZARD, 5, 1, 2), 2)
         # an Elementalist: a level behind, but 1 at each spell level its own level reaches (2 x - 1)
@@ -6193,20 +6193,22 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(self.CREATION * 16, bytes(sheet))  # (DS:[119Ch] points at it)
 
     def test_pick_level(self):
-        """PROBE_PICK_LEVEL: AL (the preserver level) + 1, a Shinobi's casting level + 1, no more
-        than 11 (spell levels up to 5th: there are no 6th-level wizard spells)."""
+        """PROBE_PICK_LEVEL: AL (the preserver level) + 1, a Shinobi's casting level + 1 (no more
+        than 7, 3rd-level spells, before its 4th-level slot at 13th: kits.shinobi_pick_level), no
+        more than 11 (spell levels up to 5th: there are no 6th-level wizard spells)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_PICK_LEVEL
         for rules in (game.RULE_KITS, 0):
             self.rules(rules)
             for cls, kit in self.SHINOBI_CASES:
                 kid = self.kit_of(cls, kit, rules)
-                for level in (5, 6, 8, 10, 11, 12):
+                for level in (5, 6, 8, 10, 11, 12, 13):
                     with self.subTest(rules=rules, cls=cls, kit=kit, level=level):
                         self.picker_sheet(cls, kit, level)
                         al = level if cls == 11 else 0
                         self.run_vector(VEC_PICK_LEVEL, 2, eax=0x1100 | al, ebx=0x2222, es=0x6666)
-                        want = min(kits.shinobi_cast(level) if kid == kits.SHINOBI else al, 10) + 1
+                        shinobi = min(kits.shinobi_cast(level), 2 * kits.shinobi_pick_level(level))
+                        want = min(shinobi if kid == kits.SHINOBI else al, 10) + 1
                         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AL), want)
                         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
                                          [0x2222, 0x6666])
@@ -6682,8 +6684,9 @@ class KitTests(unittest.TestCase):
             self.rules(rules)
             for cls, kit in self.SHINOBI_CASES:
                 kid = self.kit_of(cls, kit, rules)
+                three = tuple(n for n, lvl in kits.SHINOBI_SPELLS if lvl <= 3)
                 for level, known in ((5, ()), (6, ()), (6, (6, 2, 9, 4, 11)), (8, (6, 2, 9, 4, 11)),
-                                     (10, tuple(n for n, _ in kits.SHINOBI_SPELLS))):
+                                     (10, tuple(n for n, _ in kits.SHINOBI_SPELLS)), (12, three), (13, three)):
                     for ax in (0, 3):
                         with self.subTest(rules=rules, cls=cls, kit=kit, level=level, known=known, ax=ax):
                             self.creature(cls, kit, index=who, level=level)
@@ -6707,7 +6710,7 @@ class KitTests(unittest.TestCase):
                             self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_SI,
                                                                             r.UC_X86_REG_ES, r.UC_X86_REG_SP, r.UC_X86_REG_BP)],
                                              [0x2222, 0x3333, who, 0x6666, 0x7FC, BP])
-        self.assertEqual([kits.shinobi_pick_level(n) for n in (5, 6, 7, 8, 9, 10)], [0, 1, 1, 2, 2, 3])
+        self.assertEqual([kits.shinobi_pick_level(n) for n in (5, 6, 7, 8, 9, 10, 11, 12, 13)], [0, 1, 1, 2, 2, 3, 3, 3, 4])
 
     def test_scroll_learn(self):
         """PROBE_SCROLL_LEARN: AX and ZF as "or ax,ax", but a Shinobi learns no spell not its own

@@ -6883,8 +6883,8 @@ probe_slots:
         xor cx, cx
         movzx bx, byte [bp + 0x0A]
         dec bx
-        cmp bx, 2
-        ja .table_out           ; (spell levels 1 to 3 only)
+        cmp bx, 3
+        ja .table_out           ; (spell levels 1 to 4 only)
         cmp dl, KIT_JUSTIFIER
         jne .seeker_level
         cmp ax, 10
@@ -6900,7 +6900,7 @@ probe_slots:
         jbe .row
         mov ax, SEEKER_LAST
 .row:   sub ax, 6
-        imul ax, ax, 3
+        imul ax, ax, 4
         add bx, ax
         mov cl, [cs:bx + seeker_slots]
 .table_out:
@@ -6924,11 +6924,11 @@ probe_slots:
         pop cx
         pop bx
         iret
-; a Seeker's priest slots at spell levels 1, 2 and 3, by level 6 to 13 (and on: kits.SEEKER_SLOTS; The
-; Complete Ranger's Handbook's table, its 4th-level slot at 13th left out): a ranger's to 10th, a
-; Shinobi's (by thief level) to 13th
+; a Seeker's priest slots at spell levels 1 to 4, by level 6 to 13 (and on: kits.SEEKER_SLOTS; The
+; Complete Ranger's Handbook's table): a ranger's to 10th, a Shinobi's (by thief level) to 13th
 SEEKER_LAST equ 13
-seeker_slots db 1, 0, 0,  2, 0, 0,  2, 1, 0,  2, 2, 0,  2, 2, 1,  3, 2, 1,  3, 2, 2,  3, 3, 2
+seeker_slots db 1, 0, 0, 0,  2, 0, 0, 0,  2, 1, 0, 0,  2, 2, 0, 0,  2, 2, 1, 0
+             db 3, 2, 1, 0,  3, 2, 2, 0,  3, 3, 2, 1
 
 ; PROBE_SLOT_LEVEL: INT VEC_SLOT_LEVEL replaces "mov al,es:[bx+24h]" (4 bytes: INT + 2 NOPs;
 ; DSUN.EXE 5E1F6h) in the game's spell slot routine, where it takes a class's level (ES:BX the
@@ -7364,12 +7364,26 @@ SHINOBI_SPELLS:
         db FOG_SPELL, 1,  REFLECT_SPELL, 1,  SPOOK_SPELL, 1,  FRIENDS_SPELL, 1 ; Fogbolt, Reflected Image, Spook, Friends
         db 17, 2,  19, 2,  12, 2,  13, 2,  15, 2       ; Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
         db 25, 3,  29, 3,  36, 3,  30, 3               ; Blink, Haste, Protection from Normal Missiles, Hold Person
+        db 46, 4,  51, 4,  41, 4                       ; Improved Invisibility, Solid Fog, Confusion
 SHINOBI_SPELLS_END:
 WIZARD_LAST  equ 68
 SHINOBI_FIRST equ 6             ; (the thief level its spells start at; it casts at that less 5)
 KNOWN_FROM_DS equ 0x4356 - 0x3800  ; the spells each party member knows: DS less this, from KNOWN_OFF,
 KNOWN_OFF    equ 0x168          ;   8Ah bytes a member, a byte a spell (not 0: known)
 KNOWN_SIZE   equ 0x8A
+
+; SHINOBI_PICK_CAST: AX the level a Shinobi of thief level AX casts at (SHINOBI_CAST), as the spell
+; levels it may learn count it ((AX + 1) / 2): no more than 6, 3rd-level spells, before thief level
+; SHINOBI_FOURTH, where its table's 4th-level slot comes (kits.shinobi_pick_level). Others kept.
+SHINOBI_FOURTH equ 13
+shinobi_pick_cast:
+        cmp ax, SHINOBI_FOURTH
+        jae shinobi_cast
+        call shinobi_cast
+        cmp ax, 6
+        jbe .ret
+        mov ax, 6
+.ret:   ret
 
 ; SHINOBI_CAST: AX the level a Shinobi of thief level AX casts at (less SHINOBI_FIRST - 1, no less
 ; than 0). Others kept.
@@ -7572,10 +7586,10 @@ probe_pick_any:
         jne .int
         call kit_level
         movzx ax, al
-        call shinobi_cast
+        call shinobi_pick_cast
         inc ax
         shr ax, 1
-        mov cl, al              ; (CL the highest spell level it casts)
+        mov cl, al              ; (CL the highest spell level it may learn)
         xor ax, ax
         call shinobi_unknown
         jnc .flags
@@ -7674,7 +7688,7 @@ probe_pick_level:
         jne .out
         call kit_level
         movzx ax, al
-        call shinobi_cast
+        call shinobi_pick_cast
 .out:   cmp byte [cs:pick_cap], 0   ; (PICK_SPELLS's: spell levels up to PICK_CAP)
         je .inc
         push cx

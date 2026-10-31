@@ -15,6 +15,13 @@ notes](PATCH-NOTES.md).
   10th, so a Shinobi stayed at 2 2 1 from 10th to the XP cap's 13th (`kits.SEEKER_SLOTS`,
   DSCLOG's `seeker_slots` and `SEEKER_LAST`; a Seeker, a ranger, still stops at 10th). Tests:
   `test_slots`. DSCLOG's image 64,272 bytes (+16).
+- **The Shinobi gets 4th-level spells at 13th:** the table's 4th-level slot (3 3 2 1, the table
+  four spell levels wide now) and three spells on its list, Improved Invisibility (46), Solid Fog
+  (51) and Confusion (41) (`kits.SHINOBI_SPELLS`, DSCLOG's `SHINOBI_SPELLS`). It learns one no
+  sooner than its slot: CHOOSE A SPELL offers spell levels up to half its casting level rounded
+  up, which is 4th at thief level 12 (casting 7th), so no more than 3rd before 13th
+  (`kits.shinobi_pick_level`, DSCLOG's `SHINOBI_PICK_CAST`, `SHINOBI_FOURTH`). Tests:
+  `test_slots`, `test_pick_level`, `test_pick_any`. DSCLOG's image 64,304 bytes (+32).
 
 **Fixed**
 - **EDIT on a party member** (to change a name, say) took its kit away, rolled a new age and

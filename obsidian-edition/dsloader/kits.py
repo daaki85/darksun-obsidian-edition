@@ -17,11 +17,13 @@ CRUSADER, SCHOLAR, BATTLE_MAGE, MIND_WARRIOR = (KIT_IDS["Crusader"], KIT_IDS["Sc
                                                 KIT_IDS["Mind Warrior"])
 ELEMENTALIST, SEEKER, JUSTIFIER = KIT_IDS["Elementalist"], KIT_IDS["Seeker"], KIT_IDS["Justifier"]
 WIZARD, PRIEST = 1, 2  # (the kinds of magic, as game.MAGIC_KINDS has their bits)
-# a Seeker's priest slots at spell levels 1, 2 and 3, by level from 6 to 13 (the 13th's on: DSCLOG's
-# SEEKER_SLOTS; The Complete Ranger's Handbook's table, its 4th-level slot at 13th left out): a
-# ranger's to 10th, a Shinobi's wizard slots (by thief level) to 13th; a Justifier's one 1st-level
-# slot from 10th level
-SEEKER_SLOTS = ((1, 0, 0), (2, 0, 0), (2, 1, 0), (2, 2, 0), (2, 2, 1), (3, 2, 1), (3, 2, 2), (3, 3, 2))
+# a Seeker's priest slots at spell levels 1 to 4, by level from 6 to 13 (the 13th's on: DSCLOG's
+# SEEKER_SLOTS; The Complete Ranger's Handbook's table): a ranger's to 10th, a Shinobi's wizard
+# slots (by thief level) to 13th, its 4th-level slot at 13th (SHINOBI_FOURTH); a Justifier's one
+# 1st-level slot from 10th level
+SEEKER_SLOTS = ((1, 0, 0, 0), (2, 0, 0, 0), (2, 1, 0, 0), (2, 2, 0, 0), (2, 2, 1, 0), (3, 2, 1, 0), (3, 2, 2, 0),
+                (3, 3, 2, 1))
+SHINOBI_FOURTH = 13
 SEEKER_FIRST, JUSTIFIER_FIRST = 6, 10
 MIND_BENDER, KINETICIST = KIT_IDS["Mind Bender"], KIT_IDS["Kineticist"]
 # the psionic powers' disciplines, by power (0-33: spells 138-171): psychokinesis to PK_LAST,
@@ -74,7 +76,8 @@ POISONER_KINDS = frozenset((2, 3))
 SHINOBI_SPELLS = ((6, 1), (2, 1), (9, 1), (4, 1), (11, 1), (FOG_SPELL, 1),  # Gaze Reflection, Charm Person, Shield, Color Spray, Wall of Fog, Fogbolt
                   (REFLECT_SPELL, 1), (SPOOK_SPELL, 1), (FRIENDS_SPELL, 1),  # Reflected Image, Spook, Friends
                   (17, 2), (19, 2), (12, 2), (13, 2), (15, 2),  # Invisibility, Mirror Image, Blur, Detect Invisibility, Fog Cloud
-                  (25, 3), (29, 3), (36, 3), (30, 3))  # Blink, Haste, Protection from Normal Missiles, Hold Person
+                  (25, 3), (29, 3), (36, 3), (30, 3),  # Blink, Haste, Protection from Normal Missiles, Hold Person
+                  (46, 4), (51, 4), (41, 4))  # Improved Invisibility, Solid Fog, Confusion
 SHINOBI_FIRST, WIZARD_LAST = 6, 68  # (wizard spells are 0 to WIZARD_LAST)
 RANGER_CLASSES = range(13, 17)
 # the charms (DSCLOG's KIT_CHARMS): Charm Person, Charm Monster, Domination, Charm Person or
@@ -272,7 +275,7 @@ def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int) -
     elif kid in (SEEKER, JUSTIFIER) and magic != PRIEST:
         return game_slots
     if kid in (SEEKER, JUSTIFIER):
-        if not 1 <= spell_level <= 3:
+        if not 1 <= spell_level <= 4:
             return 0
         if kid == JUSTIFIER:
             return int(level >= JUSTIFIER_FIRST and spell_level == 1)
@@ -398,8 +401,9 @@ def max_psp(kid: int, psp: int) -> int:
 
 def shinobi_pick_level(level: int) -> int:
     """The highest spell level a Shinobi of thief level LEVEL may learn (CHOOSE A SPELL's), half its
-    casting level rounded up, as the game's for a preserver."""
-    return (shinobi_cast(level) + 1) // 2
+    casting level rounded up, as the game's for a preserver; no 4th-level spell before its slot comes,
+    at thief level SHINOBI_FOURTH (DSCLOG's SHINOBI_PICK_CAST)."""
+    return min((shinobi_cast(level) + 1) // 2, 4 if level >= SHINOBI_FOURTH else 3)
 
 
 def pick_list(kid: int, known, most: int, new_spells: bool = True):
