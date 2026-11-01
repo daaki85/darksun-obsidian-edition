@@ -133,3 +133,14 @@ The four grate repairs in `scriptfixes.py` (script 137), as the Loader builds th
   (115,53), and the corridor gate (81,20-21). Clicking (95,28) and the floor beyond it did nothing.
 - 16:31 Saved as pens-kurzak-door (in the repository). Stopped to ask the user which door Kurzak
   means and how it opens.
+
+### Sixth run (2026-11-01, night): into the pens
+- DOSBox gone after the pause; reloaded pens-kurzak-door.
+- The user's marked entryway (99, 33-34) is open: walked through into the hall (rows 35-37).
+- The corridor gate (81, 20-21): look box "Door", USE: "The door is locked. It appears quite sturdy."
+- doorpath.py (new): the other way west is the door at (113, 90), the bottom corridor, the door at
+  (93, 94), then up to the south hall and the stalker pen's anteroom.
+- route.py stalled clicking a square a party member stood on; fixed (skips figures and dead
+  squares, shows the way ahead). Walked to the door at (113, 90): slaves whisper "Is it time to
+  break out yet?" "Shh, not yet!".
+- Paused here for the user's request: another look at yuan-ti's updates.

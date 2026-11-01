@@ -76,5 +76,7 @@ Monitor, and every step gets a `timeout`.
    north, clicks inside the wall (488,232), then the gate strip (488,184), and answers Y.
    Staying sends more fights.
 3. The pens: the party arrives at (1816,440) and Kurzak greets it (choose Goodbye). The cluebook
-   (`Cluebook.PDF`, `pdftotext -layout`) gives the rest: #11, break into the stalker pen, kill
+   (`Cluebook.PDF`, `pdftotext -layout`) gives the rest. Kurzak's door is the entryway south of
+   his stop (99,33-34) into the hall; the corridor gate (81,20-21) is locked, so the way west is
+   the door at (113,90), the bottom corridor and its door (93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
    the mountain stalker, push the button on the north wall; #12 is the sewer grate (46,86).

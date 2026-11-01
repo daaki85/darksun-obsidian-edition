@@ -102,6 +102,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **Clicks**: `python3 click.py X Y [left|right|none]` in game pixels (320x200). DOSBox captures
   the mouse, so the tool moves it relatively until the game's own pointer reads X,Y. Plain
   `xdotool mousedown/up` clicks where the pointer already is (fine for dismissing a message).
+- **Pointer cycle, as checked 2026-11-01**: arrow, sword, eye, arrow. Over bare floor the sword and
+  the eye show red with a bar (nothing to act on); over a door the eye is plain. Check the mode on a
+  shot before walking (a walk tool clicking in eye mode looks at the floor and nothing moves).
 - **Pointer mode**: a right-click on the map cycles it: the plain arrow (Walk, and use/talk on a
   thing), the sword (attack), the **eye (look: opens doors)**, back to the arrow. Over a wall a red
   "no" sign is drawn on top. **Right-click only on empty floor**: on a party member it opens the
@@ -183,6 +186,11 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   to the look cursor and click the door; then, with the walk arrow, click on the far side of the
   open door to move past it. The walk arrow on a door, or on the floor beyond a closed one, does
   nothing (that was the stall at Kurzak's last stop).
+- **`doorpath.py TC TR`**: the shortest way to a square through closed doors too, listing the doors
+  it crosses and its turns; `BLOCK="C,R C,R"` rules out squares (a locked door). **route.py** skips
+  squares a figure stands on (96: a party member there takes the click and nobody walks), drops a
+  square whose click moved nobody, and brings the view to the way ahead when nothing nearer the
+  goal is on screen (the view on the leader can hide the way, as the hall south of Kurzak's stop).
 - **Doors**: `python3 doors.py` lists the closed doors and gates on the edge of the area the party
   can reach (live grid 192+ where the file's grid has a doorway), with their map positions.
   Clicking a door square, or the floor beyond it, did nothing for the pens' doors near Kurzak's
@@ -302,6 +310,19 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   beside him. At (99, 32): "All right, go through the door. There's a place to rest down the east
   hall. I'll come get you when it's time for your next fight. If you want to fight before that,
   knock on the door." 
+- **Into the pens (2026-11-01, the user)**: Kurzak's "door" is the entryway south of where he
+  stops, squares (99, 33-34), map (1592, 536-551), open once he has led the party there; through it
+  is the east-west hall (rows 35-37, columns 90-115), the cells south of it, and "the east hall"
+  (the campfire) down the passage at columns 112-114. `route.py 1592 584` walks through.
+- **The corridor gate (81, 20-21) is locked**: the look pointer on the gold post opens a look box
+  titled "Door" whose only live button is the third (USE, 116,137): "The door is locked. It
+  appears quite sturdy." The box message then has to be clicked away (boxclick.sh), and the
+  pointer is left on the eye: right-click on to the arrow before walking.
+- **The other way west** (`doorpath.py`, with BLOCK="81,20 81,21"): down the east passage to the
+  door at (113, 90) (map 1816, 1448; `route.py 1816 1400` stands beside it), west along the bottom
+  corridor (rows 91-95) through the door at (93, 94), north up columns 34-35 to the south hall
+  (rows 66-70), and north at columns 17-20 to the stalker pen's anteroom (its door 16, 54-56).
+  On the way, two slaves whisper "Is it time to break out yet?" / "Shh, not yet!".
 - **Opening that door sets off the alarm** (the user, 2026-11-01): plan for it (the guards come)
   or find another way to the button.
 - Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else

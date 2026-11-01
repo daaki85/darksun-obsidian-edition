@@ -48,6 +48,14 @@ def dist_from(goal):  # steps to GOAL from every floor square reachable from it
 # on the wall: NO PATH FROM HERE)
 clear = lambda c, r: all(free(c + i, r + j) for i in (-1, 0, 1) for j in (-1, 0, 1, 2))
 dist = dist_from(goal)
+tried = set()  # squares whose click didn't move the party
+def ahead(sq, n):  # the square N steps further along the way to the goal
+    for _ in range(n):
+        c, r = sq
+        nxt = [(c + i, r + j) for i in (-1, 0, 1) for j in (-1, 0, 1) if dist.get((c + i, r + j), 1e9) < dist[sq]]
+        if not nxt: break
+        sq = min(nxt, key=dist.get)
+    return sq
 for hop in range(40):
     px, py = gd.party_position()
     if abs(px - tx) <= 16 and abs(py - ty) <= 16: print('ARRIVED', px, py); sys.exit(0)
@@ -58,7 +66,7 @@ for hop in range(40):
         best = None
         for (c, r), k in dist.items():
             sx, sy = c * 16 + 8 - cx, r * 16 + 8 - cy
-            if 30 <= sx <= 290 and 40 <= sy <= 165 and k < dist[here] and (ok(c, r) or k == 0):
+            if 30 <= sx <= 290 and 40 <= sy <= 165 and k < dist[here] and (c, r) not in tried and gm[r * W + c] != 96 and (ok(c, r) or k == 0):
                 if best is None or k < best[0]: best = (k, (c, r))
         return best, cx, cy
     best, cx, cy = choose(clear)
@@ -67,13 +75,23 @@ for hop in range(40):
         best, cx, cy = choose(clear)
         if best is None:
             best, cx, cy = choose(lambda c, r: all(free(c + i, r + j) for i in (-1, 0, 1) for j in (0, 1)))
+        if best is None:  # still none: show the way ahead (the view on the leader can hide it)
+            ac, ar = ahead(here, 8)
+            subprocess.run(['python3', os.path.join(HERE, 'viewto.py'), str(ac * 16 + 8), str(ar * 16 + 8)], capture_output=True)
+            best, cx, cy = choose(clear)
+            if best is None:
+                best, cx, cy = choose(lambda c, r: all(free(c + i, r + j) for i in (-1, 0, 1) for j in (0, 1)))
     if best is None: print('NO CLEAR SQUARE ON SCREEN nearer the goal from', here); sys.exit(1)
     pick = best[1]
     sx, sy = pick[0] * 16 + 8 - cx, pick[1] * 16 + 8 - cy
+    before = gd.party_position()
     subprocess.run(['python3', os.path.join(HERE, 'click.py'), str(sx), str(sy)], capture_output=True)
     time.sleep(1.5)
     for _ in range(30):
         a = gd.party_position(); time.sleep(0.5)
         if gd.party_position() == a: break
     print(f'hop {hop}: square {pick} (steps left {best[0]}) -> {gd.party_position()}', flush=True)
+    if gd.party_position() == before:  # the click did nothing: not that square again, and show the way ahead
+        tried.add(pick); ac, ar = ahead(here, 8)
+        subprocess.run(['python3', os.path.join(HERE, 'viewto.py'), str(ac * 16 + 8), str(ar * 16 + 8)], capture_output=True)
 print('NOT THERE', gd.party_position()); sys.exit(1)
