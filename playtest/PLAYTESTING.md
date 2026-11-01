@@ -85,6 +85,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - `$WORK/dice.txt`: the dice log: every roll, every line of dialogue and narration
   (`[Narration] ...`, `[The Announcer] ...`), menus with their choices, and "Message: NO PATH FROM
   HERE". Read its tail after each action; it is the most reliable record of what happened.
+- **Pixel checks** go through `pixmatch.py` (colours within 3, a row either way, for the
+  recompiled program); it uses PIL, or ImageMagick where PIL is broken (2026-11-01: "cannot import
+  name '_imaging'" made every msgbox.sh call fail).
 - **Two picture sizes**: `shot.sh` saves the game's own capture, 320x200; a window grab
   (`import -window`, which msgbox.sh, panel.sh and levelup.sh use for speed) is 320x**240**, the
   height stretched: a pixel at y in a capture is at y x 1.2 in a grab. Take a pixel's coordinates
@@ -275,10 +278,14 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   Using it says "The door is locked. It appears quite sturdy."; attacking it (138:121h) rolls
   RAND(30) against the attacker's STR to bash it open, and the Mountain Stalker (151, at 187,856)
   then hunts the party. A second stalker pen is further south (door 2157/2158 at 255,1087-1119).
-- **From the save, the party is shut in**: it stands in the corridor where Kurzak met it (1352-1400,
-  344), and a gate at squares (81, 20-21), map (1304, 320-351), the gold post west of it, is
-  closed (live grid 192/193). Clicking it does nothing; no script opens those squares (no request
-  10-13 on them). Kurzak "leads the party to its cell": the way on is likely to follow him.
+- **From the save, follow Kurzak**: the party starts shut in the corridor where Kurzak met it
+  (1352-1400, 344): a gate at squares (81, 20-21), map (1304, 320-351), the gold post west of it,
+  is closed (live grid 192/193), clicking it does nothing, and no script opens those squares.
+  Kurzak (object 29) walks his route a waypoint at a time (141 at 0h: squares 99,25 then 99,31...),
+  each waiting for the party within 4 squares: `python3 follow.py 29` keeps walking the party
+  beside him. At (99, 32): "All right, go through the door. There's a place to rest down the east
+  hall. I'll come get you when it's time for your next fight. If you want to fight before that,
+  knock on the door." 
 - **Opening that door sets off the alarm** (the user, 2026-11-01): plan for it (the guards come)
   or find another way to the button.
 - Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else
