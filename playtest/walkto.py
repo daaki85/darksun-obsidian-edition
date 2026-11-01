@@ -4,7 +4,9 @@
 # clamped to the open view (not the top bar, not the combat log panel at the bottom right), so far
 # targets take several clicks. Prints each step; exits 0 within 12 units, 1 if it stops moving
 # (a wall: the dice log says NO PATH FROM HERE). The camera doesn't follow the leader closely: it
-# scrolls in steps, so always work from the camera, never from the screen's centre.
+# scrolls in steps, so always work from the camera, never from the screen's centre. Over a big
+# map the view doesn't follow the leader at all: each step drags it back (scroll.py) when the
+# leader is near an edge.
 import sys, time, subprocess, struct, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE, 'live.py')).read())
@@ -20,6 +22,10 @@ for step in range(tries):
         print('ARRIVED', px, py); sys.exit(0)
     cx, cy = cam()
     lx, ly = px - cx, py - cy  # the leader on screen
+    if not (60 <= lx <= 260 and 60 <= ly <= 150):  # the view left the leader behind: drag it back
+        subprocess.run(['python3', os.path.join(HERE, 'scroll.py'), str(-(lx - 160) * 5 // 4),
+                        str(-(ly - 107) * 5 // 4)], capture_output=True)
+        cx, cy = cam(); lx, ly = px - cx, py - cy
     sx, sy = tx - cx, ty - cy
     f = 1.0
     while not ok(int(lx + (sx - lx) * f), int(ly + (sy - ly) * f)) and f > 0.05:

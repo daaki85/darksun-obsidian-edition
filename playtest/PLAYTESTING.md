@@ -93,6 +93,12 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   (scroll.py does): the game took no clicks at all until they were. **A message box blocks drags
   too**: drags made under one did nothing, and the view later jumped. Clear boxes first. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
   HERE"; walkto stops after two clicks that don't move the leader.
+- **Long walks: hop.** A click a few hundred map units away walks the party there, round walls
+  (1672,344 to 1400,344 in the pens), but a click across a whole region says NO PATH FROM HERE,
+  and the view snaps back to the party. Plan hops on a map picture (`mapshot.py`, below) and
+  use `viewto.py X Y` to bring each hop's spot on screen before clicking it; clicks on walls or
+  on the edge of the screen (often a wall) do nothing. walkto.py drags the view back to the
+  leader when it falls behind.
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
   click to go away, and while one is up Tab, Return, map clicks and drags do nothing. `msgbox.sh`
   tells whether one is up; **click ON the box** (`boxclick.sh`: 160, 20): a click wherever the
@@ -219,11 +225,29 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   click inside the wall's boundary: the party finds its own way in, and that safely takes it back
   into the pens. Don't stay outside the walls in the arena: more monsters are sent.
 
+**Map pictures**: `python3 mapshot.py OUT.png [W H]` steps the view across the region and pastes
+the captures at their cameras: one map unit a pixel, so a point's pixel is its map position.
+Region pictures made so far are in `playtest/maps/`.
+
 **The slave pens (region 29h)**: through the gate the party comes out at (1816, 440) and Kurzak
 meets it ("These are the slavepens. I'm Kurzak, leader of the guards. Follow me. I'm here to lead
 you to your cell."; his menu: help me escape or I'll kill you, about yourself, the half-giant,
 escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Saved there:
-`pens-after-arena`. From the cluebook's map: #11 the stalker pen (break the door,
+`pens-after-arena`. The way to the grate, from the scripts and the region file (2026-11-01):
+- The stalker pen nearest the north: its door, objects 2163/2164 at (256, 864-896), is barred.
+  Using it says "The door is locked. It appears quite sturdy."; attacking it (138:121h) rolls
+  RAND(30) against the attacker's STR to bash it open, and the Mountain Stalker (151, at 187,856)
+  then hunts the party. A second stalker pen is further south (door 2157/2158 at 255,1087-1119).
+- Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else
+  "is too far away to press the button") it sets flag 518 and "hears a click as the secret door to
+  the west opens". (Button 1280 at 1335,798 opens another door, 81-82,53-54, only once the monster
+  266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
+- The grate, object 1234 at (46, 86), the far northwest; walking onto squares 3-4, 5-6 (map
+  48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the lock off.
+- The pens' cell doors (2141-2164) have USE (script 138) and ATTACK handlers ("This door is too
+  strong to bash open" for the cells').
+
+From the cluebook's map: #11 the stalker pen (break the door,
 kill the mountain stalker, push the button on the north wall: a secret door to the northwest
 corner), #12 the sewer grate (square 46, 86; "use" it or walk over it: rip, hack or pick; a failed
 try can be tried again), #15 the campfire (rest; two rests bring the next arena fight; keeping
