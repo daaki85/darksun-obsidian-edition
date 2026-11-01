@@ -20,5 +20,8 @@ for i in $(seq 1 30); do W=$(timeout 5 xdotool search --name Recompiled | head -
 [ -z "$W" ] && { echo "no window (see $WORK/dsun.log)"; exit 1; }
 [ "$(cat /proc/$(cat "$WORK/dsun.pid")/comm 2>/dev/null)" = dsun ] || pgrep -n -x dsun > "$WORK/dsun.pid"
 timeout 5 xdotool windowmove $W 0 0; timeout 5 xdotool windowsize $W 320 240; sleep 1
+# (the dice log attached before the helper is resident recorded nothing afterwards, 2026-11-01:
+#  wait for the program's "helper from" line first)
+for i in $(seq 1 30); do grep -q "helper from" "$WORK/dsun.log" && break; sleep 1; done; sleep 2
 cd "$REPO/obsidian-edition" && (setsid nohup python3 -u -m dsloader dicelog --pid $(cat "$WORK/dsun.pid") > "$WORK/dice.txt" 2>&1 < /dev/null &)
 sleep 3; grep -m1 "Dark Sun" "$WORK/dsun.log"; echo started
