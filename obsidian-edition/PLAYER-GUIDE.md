@@ -449,7 +449,7 @@ single class** (a human may still change class).
 - [Weapon specialization](#weapon-specialization-and-attacks) in **two** weapon
   types at 1st level, a third at 6th and a fourth at 9th: +1 to hit, +2 damage
   and 3/2 attacks with each. *Without the mod:* 3/2 attacks with any weapon.
-- AC 2 better at 10th level, with the [XP cap](#experience-and-levels) letting it get there (the game's own AC 1 better from 5th, with or without armour).
+- AC 2 better at 10th level, with the [XP cap](#experience-and-levels) letting it get there (the game's own AC 1 better from 5th), in armour only. *Without the mod:* with or without armour.
 - AD&D's experience table. *Without the mod:* the fighter's.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 

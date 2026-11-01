@@ -354,6 +354,24 @@ after the `ns_list_` patches):
   (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
   is 1, then the replaced test.
 
+## Worn items and the gladiator's armour
+
+([In the features page](FEATURES.md#the-games-bugs-fixed); found by OpenDS, checked in
+DSUN.EXE with yuan-ti's notes.) One helper interrupt (`INT 81h`, `PROBE_WORN`), told where it
+was called from by its return address:
+
+- **Ability items.** The ability routine (7B758h, `80F5:2BB8`) goes through every item the
+  creature has (the list `A0:1A2D` makes) and applies the ability byte (+0Fh, FAh-FFh) of each,
+  with no look at its slot, so a ring or gauntlets in the backpack counted. Its read of that byte
+  (`mov al,es:[bx+0Fh]`, 7B8ABh) is the interrupt: the byte only for an item in a worn slot
+  (+11h below 14), else 0, which the routine's switch passes over.
+- **The gladiator.** The AC routine (58DD3h, `612E:2113`) takes a fifth of the gladiator level
+  off after its items, for the sheet's gladiator flag (+12h 40h) alone. Its test (`test word
+  es:[bx+12h],40h`, 58F86h) is the interrupt: ZF clear only when the creature also wears armour
+  (`ARMOUR_WORN`: an armour piece on the arms, legs, head or chest, not a shield, bracers or a
+  robe), so the game's `jbe` passes the bonus by otherwise. `THORNS_AC` and the Loader's
+  `GameData.counted_ac` (`armour_worn`) count it the same way.
+
 ## New spells (wizard and 6th-level priest)
 
 ([In the features page](FEATURES.md#new-wizard-spells), and

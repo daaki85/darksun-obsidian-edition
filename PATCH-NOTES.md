@@ -315,6 +315,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** A **thri-kreen**'s claws and bite did crushing damage, as the game makes every unarmed attack, so creatures that crushing weapons can't hurt were safe from it. Now they cut.
 - **[Fixed]** The **fire elementals**' resistances were the wrong way round. Now the fire elemental needs +2 weapons and the lesser one +1, and neither is hurt by fire.
 - **[Fixed]** Monsters' **walls** (Wall of Fire, Ice, Force and the rest) came out a single point. Now they run across the line of fire, four cells long.
+- **[Fixed]** Items that raise or lower an **ability score** worked from the backpack as well as worn. Now only while worn. (Found by OpenDS and yuan-ti.)
+- **[Fixed]** The **gladiator**'s better AC (1 for every 5 levels) came with no armour on. Now only in armour, as Dark Sun has it. (Found by OpenDS and yuan-ti.)
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.

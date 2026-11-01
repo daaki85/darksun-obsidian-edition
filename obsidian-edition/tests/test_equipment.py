@@ -92,12 +92,17 @@ class CountedAcTests(unittest.TestCase):
         self.assertEqual(self.ac(), 5)
 
     def test_gladiator(self):
-        """A fifth of a gladiator's level (10th: 2); not without the sheet's gladiator flag."""
+        """A fifth of a gladiator's level (10th: 2), in armour only (DSCLOG's PROBE_WORN); not
+        without the sheet's gladiator flag."""
+        armour = ITEMS + 20 * game.ITEM_SIZE + game.ITEM_SLOT
         self.m[self.sheet + game.SHEET_CLASSES] = game.GLADIATOR_CLASS
         self.m[self.sheet + game.SHEET_LEVELS] = 10
+        self.m[armour] = 9  # on the chest (the slot byte; the lists' counting aside)
         self.assertEqual(self.ac(), 7)
         struct.pack_into("<H", self.m, self.sheet + game.SHEET_FLAGS, game.SHEET_FLAG_GLADIATOR)
         self.assertEqual(self.ac(), 5)
+        self.m[armour] = 20  # in the backpack: no armour worn, no optimisation
+        self.assertEqual(self.ac(), 7)
 
 
 class EffectsLeftTests(unittest.TestCase):

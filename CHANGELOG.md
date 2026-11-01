@@ -23,6 +23,22 @@ notes](PATCH-NOTES.md).
   word's index ("shl bx,1" at 62FC0h), so every creature but the first got another's (or a byte
   past the list). The shift made two NOPs (`gamepatch`'s `fight_music`). Not heard in play.
 
+**Fixed: two of the game's bugs from OpenDS's list (yuan-ti's issue #129), checked in DSUN.EXE**
+- **Ability items only worn:** the ability routine (7B758h) applied every listed item's ability
+  byte wherever it was; `PROBE_WORN` (`INT 81h`, the last free vector but 80h) gives it at
+  7B8ABh only for a worn slot (below 14). Tests: `WornTests.test_ability_byte_only_worn`.
+- **The gladiator's armour optimisation only in armour:** the AC routine's test of the gladiator
+  flag (58F86h) is the same interrupt, true only with `ARMOUR_WORN`; `THORNS_AC` and
+  `counted_ac` follow. Tests: `WornTests.test_gladiator_bonus_needs_armour`, the Wall of Thorns
+  damage's gladiator, `CountedAcTests.test_gladiator`. DSCLOG's image 64,544 bytes (+80).
+- Checked and left: scores over 25 (the ability routine caps each at 25 before storing it, so
+  the tables' lookups stay inside them); the difficulty setting (applied as a monster comes, by
+  design); a ghost slot or a vanishing item, and a save made mid-scene (no case to follow; the
+  item watch reports a vanished item). Left for a test in the game: bodies after a region is
+  left (the game makes a Dead Body, object 1101, for a creature that carried something), and a
+  wall of fire's damage twice in one move (ground fields act again on each move). Psionic Blast's
+  lost hit points coming back after the fight is a larger change, not made yet.
+
 **Fixed: the game's script checks (`scriptfixes.py`, always on)**
 - yuan-ti's v0.1.49 repairs: the ranger's tracking at the Wagon Train's bodies (script 210: the
   ranger flag read from the combat record, the ranger level tested as a bit of its class, the

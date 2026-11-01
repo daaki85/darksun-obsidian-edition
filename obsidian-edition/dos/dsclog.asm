@@ -152,6 +152,7 @@ VEC_HEAP equ 0xCB          ; PROBE_HEAP
 VEC_FLIP equ 0x8B          ; PROBE_FLIP
 VEC_PACE_PASS equ 0x83     ; PROBE_PACE_PASS
 VEC_PACE_DRAW equ 0x82     ; PROBE_PACE_DRAW
+VEC_WORN equ 0x81          ; PROBE_WORN
 VEC_TAKE equ 0xF7          ; PROBE_TAKE
 VEC_SPHERE equ 0xFF        ; PROBE_SPHERE
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
@@ -4885,6 +4886,48 @@ probe_no_cast:
         pop bx
 .done:  iret
 nc_who  dw 0                            ; (the character the test was asked about)
+
+;
+; PROBE_WORN: INT VEC_WORN at two places, told apart by where it returns to:
+; - the ability routine's "mov al,es:[bx+0Fh]" (80F5:2D0Bh, 7B8ABh; INT + 2 NOPs), ES:BX a
+;   listed item: AL its ability byte (FAh-FFh: a score raised or lowered) only while it is worn
+;   (a slot below the backpack's), else 0, so a ring or gauntlets in the pack change nothing;
+; - the AC routine's "test word es:[bx+12h],40h" (612E:22C6h, 58F86h; INT + 4 NOPs), ES:BX the
+;   character sheet of thing DI: ZF clear only for a gladiator who wears armour (ARMOUR_WORN),
+;   so the gladiator's armour optimisation (1 a 5 levels) needs armour, as Dark Sun has it.
+WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
+FIRST_PACK  equ 14                      ; the first backpack slot
+probe_worn:
+        sti
+        push bp
+        mov bp, sp
+        cmp word [bp+2], WORN_AC_RET
+        pop bp
+        je .ac
+        mov al, [es:bx+0x0F]
+        cmp byte [es:bx+0x11], FIRST_PACK
+        jb .worn
+        mov al, 0
+.worn:  iret
+.ac:    test word [es:bx+0x12], 0x40
+        jz .out                         ; not a gladiator (ZF set)
+        push es
+        push bx
+        push dx
+        mov dx, ds
+        add dx, THINGS_SEG
+        mov es, dx
+        imul bx, di, 3
+        mov dx, [es:bx+THINGS+1]        ; its creature (a thing of kind 2 here)
+        call armour_worn
+        pop dx
+        pop bx
+        pop es
+        jc .armour
+        cmp al, al                      ; none: ZF set, no bonus
+        jmp short .out
+.armour: or sp, sp                      ; ZF and CF clear: the bonus
+.out:   retf 2
 
 ; ARMOUR_WORN: carry set if creature DX (DS = the game's) wears armour, a helm too: an item of
 ; a type the game marks armour (+0Fh 80h), not a shield, on its arms, legs, head or chest.
@@ -12637,7 +12680,8 @@ thorns_damage:
 ; behind; worn: in its first two item lists, +8 and +0Ah, as putting an item on moves it there
 ; from +0Ch, whatever its slot byte says), a fifth of a gladiator's level (the sheet's +12h 40h: its class among the three, a
 ; human's later class only once past the first's level, as the game's 508:25h has it) and the
-; DEX adjustment (the record's +23h). Spells' changes to AC (5B8:F2h's) aren't counted. DS the
+; DEX adjustment (the record's +23h); the gladiator's only in armour (ARMOUR_WORN), as PROBE_WORN
+; has the game's. Spells' changes to AC (5B8:F2h's) aren't counted. DS the
 ; game's; SI and BP kept (WALL_DAMAGE's PUSHAD keeps the rest).
 THORNS_BASE equ 8
 SHEET_AC    equ 0x27
@@ -12660,6 +12704,10 @@ thorns_ac:
         movsx di, byte [es:bx + SHEET_AC]
         test byte [es:bx + 0x12], 0x40
         jz .items
+        mov bp, sp
+        mov dx, [bp]            ; (the creature, pushed)
+        call armour_worn        ; (a gladiator's optimisation only in armour: PROBE_WORN)
+        jnc .items
         xor cx, cx
 .class: mov di, cx              ; (the base read again after)
         cmp byte [es:bx + di + 0x21], GLADIATOR_CLASS
@@ -23765,6 +23813,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_PACE_PASS
         mov dx, probe_pace_pass
         int 21h
+        mov ax, 2500h + VEC_WORN
+        mov dx, probe_worn
+        int 21h
         mov ax, 2500h + VEC_PACE_DRAW
         mov dx, probe_pace_draw
         int 21h
@@ -24211,7 +24262,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_TAKE, VEC_SPHERE
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE
 all_vectors_end:
 
         align 16, db 0

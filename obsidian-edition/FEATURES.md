@@ -747,8 +747,9 @@ and thief skills are worked out from the level. So past 9th:
   roll their 10th die.
 - **Gladiators** optimise their armour, as the game already has them do: AC 1
   better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
-  Loader counts it in **AC: spells, rings, other**. The game gives it with or
-  without armour.)
+  Loader counts it in **AC: spells, rings, other**.) In armour only, as Dark
+  Sun has it: the game gave it with none ([the game's bugs,
+  fixed](#the-games-bugs-fixed)).
 - **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
   gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
 - **Spell slots** grow at the levels casters already have, up to 5th. With
@@ -2425,6 +2426,8 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
 | A **thri-kreen's claws and bite** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
+| Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-and-the-gladiators-armour)) |
+| The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |

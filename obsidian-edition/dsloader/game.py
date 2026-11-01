@@ -2116,6 +2116,13 @@ class GameData:
                 base, hand = kits.two_weapon_base(kid, base), f"{hand}, {kits.name(kid)}"
         return (f"two weapons, {hand} at DEX {dex}", min(0, base + self.dex_initiative(dex)))
 
+    def armour_worn(self, creature: int) -> bool:
+        """Armour worn (DSCLOG's ARMOUR_WORN), a helm too: an armour piece (not a shield, nor
+        bracers or a robe) on the arms, legs, head or chest."""
+        from . import restrict
+        return any(item[ITEM_SLOT] in ARMOUR_SLOTS and len(typ) > 0x0F and restrict.is_armour(typ)
+                   for _, item, typ in self._worn(creature))
+
     def heavy_armour_worn(self, creature: int) -> bool:
         """Armour worn that isn't light (not leather, and of a material: DSCLOG's HEAVY_WORN),
         a helm too: an armour piece (not a shield, nor bracers or a robe) on the arms, legs, head
@@ -2320,14 +2327,15 @@ class GameData:
     def counted_ac(self, creature: int) -> Optional[int]:
         """A creature's AC as the game's AC routine (58DD3h) counts it for each attack, spells' part
         aside: the sheet's base, less each worn item's plus and its type's AC where the type counts
-        for AC (+0Fh 80h; a shield too), a fifth of a gladiator's level and the DEX adjustment. Worn:
+        for AC (+0Fh 80h; a shield too), a fifth of a gladiator's level (in armour: DSCLOG's PROBE_WORN)
+        and the DEX adjustment. Worn:
         in the first two item lists (putting an item on moves it there from +0Ch, whatever its slot
         byte says). As DSCLOG's THORNS_AC counts it. None without a record and sheet."""
         rec, sheet = self.creature(creature), self.sheet(creature)
         if len(rec) < CREATURE_SIZE or len(sheet) < SHEET_SIZE:
             return None
         ac = struct.unpack_from("b", sheet, SHEET_BASE_AC)[0]
-        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR:
+        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR and self.armour_worn(creature):
             for n in range(3):
                 if sheet[SHEET_CLASSES + n] == GLADIATOR_CLASS:
                     level = sheet[SHEET_LEVELS + n]

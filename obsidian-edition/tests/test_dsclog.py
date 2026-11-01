@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader.dicelog import FILTERS, HDR_SIG, Entry
 from dsloader.textlog import TextBuffer
-from dsloader.gamepatch import (VEC_MC_CON, VEC_MC_UNCON, VEC_NO_CAST, VEC_CAN_USE, VEC_VIEW_DAM, VEC_DAM_LINE, VEC_SPEC_DAMAGE, VEC_ATTACKS, VEC_XP_NEXT, VEC_SCRIPT_RAND, VEC_ITEM_ARMOUR, VEC_ITEM_SKIP, VEC_ITEM_WEAPON, VEC_AC, VEC_DOUBLE, VEC_MSG, VEC_RAND, VEC_RING_AC, VEC_USE_ITEM,
+from dsloader.gamepatch import (VEC_WORN, VEC_MC_CON, VEC_MC_UNCON, VEC_NO_CAST, VEC_CAN_USE, VEC_VIEW_DAM, VEC_DAM_LINE, VEC_SPEC_DAMAGE, VEC_ATTACKS, VEC_XP_NEXT, VEC_SCRIPT_RAND, VEC_ITEM_ARMOUR, VEC_ITEM_SKIP, VEC_ITEM_WEAPON, VEC_AC, VEC_DOUBLE, VEC_MSG, VEC_RAND, VEC_RING_AC, VEC_USE_ITEM,
                                   VEC_RING_SAVE, VEC_SAVE, VEC_TEXT, VEC_TWO, VEC_GRACE_CAST, VEC_GRACE_EFFECT,
                                   VEC_GRACE_ABILITY, VEC_NAMES_FILL, VEC_NAMES_SIZE, VEC_STEALTH, VEC_TYPES_FILL,
                                   VEC_TYPES_SIZE, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED,
@@ -596,6 +596,75 @@ class BeltTests(unittest.TestCase):
             self.mu.mem_write(self.hdr + 350, bytes(1))
         self.assertEqual([kits.thief_skill(kits.SCOUT, s, True) for s in range(8)], [0, 0, 10, 10, 10, 0, 10, 0])
         self.assertEqual([kits.thief_skill(kits.SCOUT, s, False) for s in range(8)], [0, 0, -5, -5, -5, 0, -5, 0])
+
+
+@unittest.skipIf(Uc is None, "unicorn is not installed")
+class WornTests(unittest.TestCase):
+    """PROBE_WORN: an ability item counts only worn; a gladiator's armour optimisation only in armour."""
+    CREATURES, ITEMS, TYPES = 0x9000, 0xA000, 0xB000
+    AC_AT = 0x22C6  # (the AC routine's INT: its return address tells the two places apart)
+
+    def setUp(self):
+        image = load_image()
+        self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, image)
+        at = image.find(bytes.fromhex("fb5589e5817e02c822"))
+        self.assertGreater(at, 0)
+        mu.mem_write(VEC_WORN * 4, struct.pack("<HH", at, TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, self.CREATURES))
+        mu.mem_write(GAME_DS * 16 + 0x165D, struct.pack("<HH", 0, self.ITEMS))
+        mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
+        things = (GAME_DS - 0x9E4) * 16 + 0xC36  # (THINGS_SEG: the game's DS less 9E4h paragraphs)
+        # thing 3: creature 1, its first list thing 10 (item 4)
+        for thing, kind, index in ((3, 2, 1), (10, 1, 4)):
+            mu.mem_write(things + thing * 3, struct.pack("<BH", kind, index))
+        mu.mem_write(self.CREATURES * 16 + 0x3A + 8, struct.pack("<HHH", 10, 9999, 9999))
+        mu.mem_write(self.TYPES * 16 + 6 * 0x14 + 0x0F, bytes([0x80]))  # type 6: armour
+        mu.mem_write(self.TYPES * 16 + 7 * 0x14, bytes([4]))  # type 7: a shield
+        mu.mem_write(self.TYPES * 16 + 7 * 0x14 + 0x0F, bytes([0x80]))
+
+    def item(self, typ, slot, ability=0):
+        rec = bytearray(21)
+        struct.pack_into("<H", rec, 4, 9999)
+        struct.pack_into("<H", rec, 0x0A, typ)
+        rec[0x0F], rec[0x11] = ability, slot
+        self.mu.mem_write(self.ITEMS * 16 + 4 * 21, bytes(rec))
+
+    def run_at(self, at, **regs):
+        mu = self.mu
+        mu.mem_write(CALLER * 16 + at, bytes((0xCD, VEC_WORN)))
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(CALLER * 16 + at, CALLER * 16 + at + 2)
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
+
+    def test_ability_byte_only_worn(self):
+        """AL: the item's +0Fh in a worn slot (0-13), 0 in the backpack (14-25) or none."""
+        for slot, want in ((3, 0xFA), (0, 0xFA), (13, 0xFA), (14, 0), (25, 0), (0xFF, 0)):
+            with self.subTest(slot=slot):
+                self.item(6, slot, 0xFA)
+                self.run_at(0x600, es=self.ITEMS, ebx=4 * 21, eax=0x1234)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AL), want)
+
+    def gladiator(self, flags):
+        """The AC routine's test for thing 3, its sheet's +12h FLAGS: (ZF, CF) as the game's jbe sees them."""
+        mu = self.mu
+        mu.mem_write(self.CREATURES * 16 + 0x400 + 0x12, struct.pack("<H", flags))
+        self.run_at(self.AC_AT, es=self.CREATURES, ebx=0x400, edi=3, edx=0x4444)
+        f = mu.reg_read(r.UC_X86_REG_EFLAGS)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_DX), mu.reg_read(r.UC_X86_REG_ES), mu.reg_read(r.UC_X86_REG_BX)),
+                         (0x4444, self.CREATURES, 0x400))
+        return bool(f & 0x40), bool(f & 1)
+
+    def test_gladiator_bonus_needs_armour(self):
+        for typ, slot, want_bonus in ((6, 9, True), (6, 6, True), (6, 14, False), (7, 3, False)):
+            with self.subTest(typ=typ, slot=slot):
+                self.item(typ, slot)
+                self.assertEqual(self.gladiator(0x40), (not want_bonus, False))
+        self.item(6, 9)
+        self.assertEqual(self.gladiator(0x01), (True, False))  # not a gladiator: no bonus, armour or not
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
@@ -3489,6 +3558,26 @@ class NewSpellTests(RuleTests):
         self.assertEqual(damage(spell=game.THORNS_SPELL), (12, 12, (9, 12 | game.THORNS_SPELL << 8, 40 | (4 + 0x80) << 8)))
         mu.mem_write(0x9400 * 16 + 3 * 0x47 + 0x27, struct.pack("b", -9))  # (AC -9: at least 1)
         self.assertEqual(damage(spell=game.THORNS_SPELL), (1, 1, (9, 1 | game.THORNS_SPELL << 8, 40 | (-9 + 0x80) << 8)))
+        # (a 10th-level gladiator: its optimisation, 2, only in armour: PROBE_WORN, ARMOUR_WORN)
+        sheet = 0x9400 * 16 + 3 * 0x47
+        mu.mem_write(sheet + 0x27, struct.pack("b", 4))
+        mu.mem_write(sheet + 0x12, struct.pack("<H", 0x40))
+        mu.mem_write(sheet + 0x21, bytes([10]))
+        mu.mem_write(sheet + 0x24, bytes([10]))
+        self.assertEqual(damage(spell=game.THORNS_SPELL)[:2], (12, 12))  # nothing worn
+        mu.mem_write(things + 41 * 3, struct.pack("<BH", 1, 4))  # item 4: chest armour, AC 0 and no plus
+        mu.mem_write(0x9000 * 16 + 7 * 0x3A + 8, struct.pack("<HHH", 41, 9999, 9999))
+        mu.mem_write(GAME_DS * 16 + 0x165D, struct.pack("<HH", 0, 0xA000))
+        mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, 0xB000))
+        item = bytearray(21)
+        struct.pack_into("<H", item, 4, 9999)
+        struct.pack_into("<H", item, 0x0A, 6)
+        item[0x11] = 9
+        mu.mem_write(0xA000 * 16 + 4 * 21, bytes(item))
+        mu.mem_write(0xB000 * 16 + 6 * 0x14 + 0x0F, bytes([0x80]))
+        self.assertEqual(damage(spell=game.THORNS_SPELL)[:2], (10, 10))  # in armour: AC 4 - 2
+        mu.mem_write(sheet + 0x12, struct.pack("<H", 0))
+        mu.mem_write(0x9000 * 16 + 7 * 0x3A + 8, struct.pack("<HHH", 9999, 9999, 9999))
         # (a party member: the AC the game last worked out for it, PROBE_AC's [BP+6] the combatant)
         mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 2))
         mu.mem_write(SS * 16 + BP - 6, struct.pack("<h", 3))

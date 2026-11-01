@@ -90,6 +90,7 @@ VEC_OVR_BUF = 0x84
 VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
 VEC_PACE_PASS, VEC_PACE_DRAW = 0x83, 0x82
+VEC_WORN = 0x81
 VEC_TAKE = 0xF7
 VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
@@ -266,6 +267,12 @@ PATCHES = (
     # the start of the saving throw's modifiers: xor si,si (DSCLOG starts SI, their sum, at
     # the plus of the rings the one saving wears)
     Patch("ring_save", 0x79D47, bytes.fromhex("33f6"), _interrupt(VEC_RING_SAVE, 2)),
+    # the AC function's gladiator test: test word es:[bx+12h],40h (DSCLOG answers it for a
+    # gladiator who wears armour only: armour optimisation needs armour)
+    Patch("gladiator_armour", 0x58F86, bytes.fromhex("26f747124000"), _interrupt(VEC_WORN, 6)),
+    # the ability routine, as it reads a listed item's ability byte: mov al,es:[bx+0Fh] (DSCLOG
+    # gives it only for an item worn, so one in the pack raises no score)
+    Patch("ability_worn", 0x7B8AB, bytes.fromhex("268a470f"), _interrupt(VEC_WORN, 4)),
     # the routine that lists a creature's weapons (the inventory screen, the Look box), straight
     # after drawing one: add sp,10h (DSCLOG does it, then adds that weapon's THAC0)
     Patch("weapon", 0x7276E, bytes.fromhex("83c410"), _interrupt(VEC_WEAPON, 3)),
