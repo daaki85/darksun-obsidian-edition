@@ -30,6 +30,9 @@ as it is).
   as ripping it open has).
 - The Rebel Mindhome's 5000 XP for killing the spiders came again at every talk to their leader;
   now once.
+- Region 9's messenger (the slaves' rising from the sand) came only if the party left the region
+  and came back after the elves had gone; now he comes. The Draj serf left behind on the way to
+  region 10 gave a second obelisk gem; now he comes along.
 
 (The OpenDS fix that starts the final battle's stages without their pause is left out: with the
 game's clock running, the stage gate waits its window out as it should.)
@@ -184,6 +187,20 @@ REPAIRS = (
     Repair(204, 0x5C9, bytes.fromhex("1613888710140087004a"),
            bytes.fromhex("18cd02b7d78f003e0014" "1613888710140087004a" "67"),
            "the Rebel Mindhome's 5000 XP for the spiders is given once", relocate=(8,)),
+    # Region 9: the messenger's sight trigger (object -1297, GPL 133, "men burst from the ground")
+    # is registered by MAS 9 at 63h only if the elves have left (flag 245) when the region loads;
+    # they leave during a stay (GPL 58 sets 245 at 1Ah, 99h or CCh), so without leaving and coming
+    # back he never came. Where 58 sets the flag, the trigger as MAS 9 registers it, while flag 339
+    # is 0 (yuan-ti's; GPL 133 clears -1297's sight triggers first, so two can't run it twice)
+    *(Repair(58, at, bytes.fromhex("168f018df5"),
+             bytes.fromhex("168f018df5" "18cd0153d78f00" "3e0019" "1b000100859105118f0f" "67"),
+             "region 9: the messenger comes once the elves have left", relocate=(13,))
+      for at in (0x1A, 0x99, 0xCC)),
+    # Region 38's way to region 10 (GPL 60 at CD8h) took the following Draj serf along only within
+    # 14: one further behind stayed, without his orders, and talking to him again ran the whole
+    # deal and gave a second obelisk gem (-1352). Now within 127 (yuan-ti's, off by default there)
+    Repair(60, 0xCD8, bytes.fromhex("18e28c808925910103e1da8f0e"), bytes.fromhex("18e28c808925910103e1da8f7f"),
+           "the Draj serf comes along to region 10 however far behind"),
 )
 
 

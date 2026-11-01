@@ -1179,7 +1179,18 @@ item type's +6), so 0, and always. The repair at B5Ch (yuan-ti's) rolls
 can come. The Rebel Mindhome's leader (script 204, Undermountain, yuan-ti's)
 gave the spiders' 5000 XP (gnum 16 and GPL 74, at 5C9h) at every talk once they
 were dead; the award sets flag 695 (5D6h), which nothing read: the repair runs it
-only while that flag is 0.
+only while that flag is 0. (Their "Have you killed the spiders yet?" while the
+spiders live is meant: told the spiders are possessed, or offered peace, the
+Mindhome still wants them gone.) Region 9's messenger (yuan-ti's, from OpenDS's
+triage): MAS 9 at 63h registers his sight trigger (1Bh: entry 1 of GPL 133 on
+-1297, range 15, while flag 339 is 0) only if flag 245, the elves gone, is set
+as the region loads; GPL 58 sets it at 1Ah, 99h and CCh during a stay, so a party
+that never left and came back never saw him. Each of those sets now registers the
+trigger too; GPL 133 starts by clearing -1297's sight triggers (1Dh), so a second
+one can't run it twice. The Draj serf (GPL 60 at CD8h): region 38's way to region
+10 takes the following serf along within 14; left further behind he stayed,
+without his orders, and talking to him again ran the deal and gave a second
+obelisk gem (-1352). Now within 127.
 The same sweep checked every RAND comparison and every bit test of a class or
 level: only the tracking's were wrong. A second went through every check on a
 class or its bits, race, sex, item, weapon, thief skill or ability: script 44 at

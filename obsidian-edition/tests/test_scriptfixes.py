@@ -70,6 +70,18 @@ class RepairTests(unittest.TestCase):
         self.assertEqual(award.now[-1], sf.ENDIF)
         self.assertEqual(award.relocate, (8,))
 
+    def test_messenger_trigger_as_mas_9_registers_it(self):
+        # MAS 9 at 6Ch: while flag 339 is 0, the sight trigger, entry 1 of GPL 133 on -1297, range 15
+        messenger = [r for r in sf.REPAIRS if r.script == 58]
+        self.assertEqual([r.at for r in messenger], [0x1A, 0x99, 0xCC])
+        for r in messenger:
+            self.assertTrue(r.now.startswith(r.was))  # the flag still set first
+            self.assertIn(bytes.fromhex("18cd0153d78f003e"), r.now)
+            self.assertIn(bytes.fromhex("1b000100859105118f0f"), r.now)
+            self.assertEqual(int.from_bytes(r.now[13:15], "big"), len(r.now) - 1)  # to its ENDIF
+        serf = next(r for r in sf.REPAIRS if r.script == 60)
+        self.assertEqual((serf.was[-1], serf.now[-1], serf.now[:-1]), (14, 127, serf.was[:-1]))
+
     def test_too_long_a_script_left_alone(self):
         code = script_with(31, sf._longest())
         self.assertEqual(sf.repaired(31, code), code)

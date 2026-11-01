@@ -46,6 +46,15 @@ notes](PATCH-NOTES.md).
   the detour). The Rebel Mindhome's leader (204 at 5C9h) gave the spiders' 5000 XP (gnum 16, GPL
   74) at every talk; it now waits on flag 695 being 0, which the first award sets (5D6h). Tests:
   `test_grate_attack_rolls_strength_and_award_once`.
+- yuan-ti's v0.1.52 repairs (OpenDS's triage): region 9's messenger (MAS 9 at 63h registers the
+  sight trigger on -1297, GPL 133, only if flag 245 is set as the region loads; GPL 58 sets it at
+  1Ah, 99h and CCh during a stay): each set now registers the trigger as MAS 9 does, while flag
+  339 is 0 (GPL 133 clears -1297's sight triggers first). The Draj serf (GPL 60 at CD8h: region
+  38's way to region 10 takes him along within 14, now 127). Looked at and left: the Mindhome's
+  "Have you killed the spiders yet?" while they live (their own lines want them dead in every
+  case), the Hound Necklace killing prisoners (its scripted effect), Alhena (there unless the
+  caravan was made hostile), the army count (a failure marker never lowers it). Tests:
+  `test_messenger_trigger_as_mas_9_registers_it`.
 - The grate's failed hack: a weapon that can break "breaks against the grate" and is gone (TAKE);
   a metal or magic one "rings off the grate, unharmed" (the game said it broke and kept it). Which
   can break is the game's rule for a weapon breaking in a fight (`Game.item_breaks`), read through

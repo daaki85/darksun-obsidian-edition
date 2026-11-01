@@ -2091,6 +2091,8 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | A **ranger tracking** at the Wagon Train's bodies | The check looked for the ranger's flag where the character's record isn't, so found no ranger; it tested a ranger's level as a bit of its class; and the d20 had to beat the score, not come under it: "You cannot interpret the tracks surrounding the body" | A ranger reads the tracks on a d20 under its score (WIS, more at higher ranger levels), for XP |
 | The slave pens' **sewer grate** | The search for a weapon in hand stopped at once, so "hack the lock off" was never offered; and a hack that worked left the grate shut; one that failed said the weapon broke, and kept it; an attack on the grate always broke its lock | Offered to a member with a weapon in their right hand. A hack works half the time, always with Bloodwrath, and opens the grate, saying "his" or "her" as picking the lock does (one that fails breaks a weapon that can break in a fight, a plain wooden, bone, stone or obsidian one, which is lost; a metal or magic one "rings off the grate, unharmed"). An attack breaks the lock on a Strength roll, as ripping the grate open does, or "fails to damage the lock" |
 | The **Rebel Mindhome** in Undermountain | Once the party had killed the four spiders, every talk to the Mindhome's leader gave the thanks and its 5000 XP again | The 5000 XP comes once |
+| The **messenger in region 9** (the men who burst from the sand, after the elves leave) | Came only if the party left the region and came back after the elves had gone, so a party that stayed never met him | He comes once the elves have left |
+| The **Draj serf** led to region 10 | One left more than 14 squares behind stayed in region 38 without his orders, and talking to him again ran the whole deal and gave a second obelisk gem | He comes along however far behind |
 | A **multi-class preserver or psionicist** talking about the haystack | The talk tested the class as the whole class word, so only a single-class one could answer "Being a powerful magician, I scried it" or "I can read your very thoughts" | Any preserver or psionicist |
 | **Dagolar's slime book**, in his laboratory | "Magical training" to read it took a psionicist, a preserver, a fighter or an air cleric, not an earth, fire or water cleric or a druid | A cleric, druid, preserver or psionicist (any one of the character's classes); a fighter has no magical training |
 | The cave guide's "Why don't you go bother someone **your own size**" | Asked "not a dwarf, or not a halfling?", true of everyone, so a dwarf or halfling heard it too | A dwarf or halfling is told to bother "someone else" |
@@ -2107,7 +2109,7 @@ spell's icon on the Effects screen ending it ([Spells on the Effects
 screen](#spells-on-the-effects-screen)). How the fixes work:
 [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The script bugs
 (Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and checked
-by yuan-ti, the ranger's tracking, the sewer grate, the Rebel Mindhome and the halfling's lines by
+by yuan-ti, the ranger's tracking, the sewer grate, the Rebel Mindhome, region 9's messenger, the Draj serf and the halfling's lines by
 yuan-ti, and the other race and sex lines, the haystack, the cave guide and the slime book by
 the Loader's own search of the scripts; the Loader mends them in its copy of the game's scripts
 (`scriptfixes.py`).
