@@ -123,6 +123,13 @@ notes](PATCH-NOTES.md).
   - The Options tab's Kits text and FEATURES' bug table: the multiclass kits are pairs and one
     set of three; a thri-kreen's claws and bite cut. The weapon window's caption says what it
     shows. Screenshots checked: none outdated.
+- **DEVELOPMENT in four pages:** its "How each part works" (234 of 277 KB) is three pages beside
+  it, as FEATURES is ordered: `DEVELOPMENT-SCREENS.md` (what the game and the Loader show, the
+  controls, saves and speed), `DEVELOPMENT-RULES.md` (the rule changes, customization and
+  thieving, the kits among them) and `DEVELOPMENT-CONTENT.md` (the game's script and spell bugs,
+  the new spells, items and people, the graphics). DEVELOPMENT keeps building and testing, the
+  dice log, the helper's room, the reports and memory, with a section linking each part. Every
+  link follows (no broken one); `test_readme_links_how_it_works` reads the three pages.
 - **The web pages carry their fonts:** `player-guide.html` and `patch-notes.html` load nothing
   from Google Fonts; `pagefonts.py` puts Marcellus SC, Alegreya Sans and IBM Plex Mono (their
   Latin sets, in `dsloader/fonts` with their SIL Open Font Licences) inside each page (about

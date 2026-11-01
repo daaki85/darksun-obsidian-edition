@@ -333,7 +333,7 @@ PATCHES = (
     # ... and the lists' ends
     *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"), bytes((0x81, 0xFE, NS_END, 0x00)))
       for offset in NS_LIST_ENDS),
-    # Bugs of the game's spells, fixed whatever the rules (DEVELOPMENT.md's "The game's spells"):
+    # Bugs of the game's spells, fixed whatever the rules (DEVELOPMENT-CONTENT.md's "The game's spells"):
     # Armor used a charge where any spell or blow landed on its wearer (7A557h, "je" past it
     # unless the target has Armor, 2), as well as where damage is taken (79A3Eh): the jump
     # always taken, so a damaging hit uses one charge and a friend's spell none ...
@@ -366,7 +366,7 @@ PATCHES = (
     # undead (7BE20h, AL), "or al,al / je +22h" (DSCLOG's NS_HOLD: Hold Undead on a living
     # target goes to the immunity's return, 7A1F0h)
     Patch("hold_undead", 0x7A333, bytes.fromhex("0ac07422"), _site(NS_HOLD, 4)),
-    # ... and more of the game's own slips (DEVELOPMENT.md's "The game's spells"): Absorb Disease
+    # ... and more of the game's own slips (DEVELOPMENT-CONTENT.md's "The game's spells"): Absorb Disease
     # (power 147) went on into Strength's handler (79470h), so the psionicist took the disease and
     # 1d6 STR too, and with no disease to take, the STR alone: both ways now jump to the end of
     # Strength's handler, its "or byte [si],2 / or byte [bp-15h],1 / jmp" (794ACh), past the effect
