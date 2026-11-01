@@ -4,7 +4,7 @@
 # which it answers N. Then the arena says "Go back to the pens to heal your wounds" and the clock
 # runs: leave at once (PLAYTESTING.md, the arena). Prints each wave's end and DONE or STUCK.
 . "$(dirname "$0")/env.sh"
-W=$(timeout 5 xdotool search --class dosbox | head -1)
+W=$(timeout 5 xdotool search $WINQ | head -1)
 for wave in 1 2 3 4 5 6 7 8; do
   case "$(timeout 20 python3 "$PT/state.py")" in "fight_on 1"*)
     timeout 900 sh "$PT/fightout.sh" 120 | tail -1;; esac

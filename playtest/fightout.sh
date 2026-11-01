@@ -5,7 +5,7 @@
 # Escape: with no menu up it opens EXIT GAME?. Enemies act alone. DONE when fight_on is 0, else
 # STUCK with a screenshot. The arena sends several waves: run it again while a new fight starts.
 . "$(dirname "$0")/env.sh"
-W=$(timeout 5 xdotool search --class dosbox | head -1)
+W=$(timeout 5 xdotool search $WINQ | head -1)
 case "$(timeout 20 python3 "$PT/state.py")" in "fight_on 0"*) echo "NO FIGHT ON"; exit 2;; esac
 timeout 20 python3 "$PT/hp.py" 1 >/dev/null
 for i in $(seq 1 ${1:-40}); do

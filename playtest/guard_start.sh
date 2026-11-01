@@ -8,7 +8,7 @@
 (
   last=""; same=0; n=0
   while true; do
-    W=$(timeout 5 xdotool search --class dosbox | head -1)
+    W=$(timeout 5 xdotool search $WINQ | head -1)
     if [ -z "$W" ]; then echo "$(date +%T) GONE"; sleep 20; continue; fi
     h=$(timeout 10 import -window $W png:- 2>/dev/null | md5sum | cut -c1-8)
     if [ "$h" = "$last" ]; then same=$((same+1)); else same=0; fi; last=$h

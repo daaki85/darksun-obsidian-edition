@@ -2,7 +2,7 @@
 # topartyfight.sh: a fresh DOSBox at its title: START GAME, through the opening show fight, the party
 # gathered (6), the panel hidden (L), stepped forward until the arena fight is on; the panel shown again
 . "$(dirname "$0")/env.sh"
-W=$(timeout 10 xdotool search --class dosbox | head -1)
+W=$(timeout 10 xdotool search $WINQ | head -1)
 timeout 5 xdotool windowmove $W 0 0; timeout 5 xdotool mousemove 160 120; sleep 0.3
 timeout 5 xdotool click 1; sleep 1; timeout 5 xdotool click 1; sleep 14
 timeout 5 xdotool key --window $W s; sleep 6

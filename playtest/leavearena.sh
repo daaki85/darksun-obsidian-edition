@@ -7,7 +7,7 @@
 # "This corridor leads down to the slavepens. Do you wish to continue?" Y, and the region is the
 # pens (29h). Prints each step; IN THE PENS or STUCK.
 . "$(dirname "$0")/env.sh"
-W=$(timeout 5 xdotool search --class dosbox | head -1)
+W=$(timeout 5 xdotool search $WINQ | head -1)
 sh "$PT/panel.sh" hide >/dev/null
 clamp() { v=$1; [ $v -gt 150 ] && v=150; [ $v -lt -150 ] && v=-150; echo $v; }
 for target in "488 232" "488 232" "488 200" "488 184" "488 184" "488 176"; do
