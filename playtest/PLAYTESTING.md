@@ -195,6 +195,12 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
 - **The clock after "Go back to the pens" is short**: a few walking clicks, then "Since you will
   not leave, you must fight!" and another fight (Silt Runners...). Leave at once, and don't walk
   south or east first: the 2026-11-01 run lost its time getting the view to the wall.
+- **Out of the arena (done 2026-11-01, the fourth run):** after the last fight, drag the view
+  north (scroll.py) until the ground inside the wall (488, 232) shows, click it, and the party
+  walks round into it by itself; then click the gate strip (488, 184): "This corridor leads down
+  to the slavepens. Do you wish to continue? (Answer Yes or No)": **Y** (N, as for the Announcer,
+  turns it down, and the question comes back only on stepping off the strip and on again). The
+  party comes out in the pens (region 29h) at (1816, 440). `leavearena.sh` does all of it.
 - **Leaving the arena (the user's advice, 2026-11-01):** if the party stops at the stone wall,
   click inside the wall's boundary: the party finds its own way in, and that safely takes it back
   into the pens. Don't stay outside the walls in the arena: more monsters are sent.
