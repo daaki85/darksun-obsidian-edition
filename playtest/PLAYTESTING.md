@@ -138,6 +138,9 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   south from there), and find that strip on screen (squares are 16 map units: x 448-527,
   y 176-191) before the "Go back to the pens" line starts the clock.
 - The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
+- **Leaving the arena (the user's advice, 2026-11-01):** if the party stops at the stone wall,
+  click inside the wall's boundary: the party finds its own way in, and that safely takes it back
+  into the pens. Don't stay outside the walls in the arena: more monsters are sent.
 
 **The slave pens (region 29h)**, from the cluebook's map: #11 the stalker pen (break the door,
 kill the mountain stalker, push the button on the north wall: a secret door to the northwest
