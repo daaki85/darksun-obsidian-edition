@@ -17,3 +17,7 @@ cannot be loaded in a fresh install (2026-11-01).
   to rest down the east hall...". The doors bordering the party's area (doors.py) are still
   closed. Its `DARKSAVE.GFF` is the one the save left in the game folder, which the DOSBox game did
   not rewrite at this save (dated 2026-10-28, 991 bytes: the install's own).
+- `pens-kurzak-door-recomp` (2026-11-01): `pens-kurzak-door` loaded on Dark Sun Recompiled and
+  saved again there at once (slot name RECOMP1), to check a save made by the program loads in
+  DOSBox and the other way round. Its `DARKSAVE.GFF` is the one the load put in the folder (the
+  program did not rewrite it at the save, as DOSBox doesn't).
