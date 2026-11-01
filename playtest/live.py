@@ -21,3 +21,8 @@ ds = game.find_data_segment(g)
 gd = game.GameData(g, ds)
 CAMERA = 0x1178  # DS: the map view's top-left, x and y words: screen = map - camera, 1 unit a pixel
 POINTER = 0xA133  # DS: the pointer, x and y in game pixels (320x200)
+MAP_PTR = 0x556  # DS: far pointer to the live walkability grid of the region (128 x 98 bytes, one a
+# 16-unit square, as RGNxx.GFF's GMAP but as now: closed doors and gates 192/193 and up, figures 96)
+def live_map():
+    off, seg = struct.unpack('<HH', g.read(ds * 16 + MAP_PTR, 4))
+    return g.read(seg * 16 + off, 128 * 98)

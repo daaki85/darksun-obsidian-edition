@@ -119,6 +119,17 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   (scroll.py does): the game took no clicks at all until they were. **A message box blocks drags
   too**: drags made under one did nothing, and the view later jumped. Clear boxes first. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
   HERE"; walkto stops after two clicks that don't move the leader.
+- **The walkability grid**: each region has one, 128 x 98 squares of 16 map units (GMAP in
+  RGNxx.GFF): 0 floor, 192 walls, 64 things (furniture, a button on a wall), 1-31 and 64-95 wall
+  edges and doorways. The game's live copy (far pointer at **DS:0556h**, `live_map()` in live.py)
+  also has closed doors and gates (192, 193, 204, 205) and figures (96). `route.py TX TY` finds a
+  path on the live grid and walks it in clicks near the leader, preferring squares with floor all
+  round and two squares deep to the south: **walls are drawn with height, so a wall's face covers
+  the floor squares north of it, and a click there is a click on the wall** (NO PATH FROM HERE).
+  The camera at DS:1178h is the real view (screen = map - camera; checked by drawing the grid's
+  walls over a screenshot); the view stays put while the party walks, so bring it back
+  (`viewto.py`) when the party nears an edge. `route.py` says NO ROUTE when a closed door cuts the
+  way: the region file's grid didn't show that.
 - **Long walks: hop.** A click a few hundred map units away walks the party there, round walls
   (1672,344 to 1400,344 in the pens), but a click across a whole region says NO PATH FROM HERE,
   and the view snaps back to the party. Plan hops on a map picture (`mapshot.py`, below) and
@@ -264,6 +275,12 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   Using it says "The door is locked. It appears quite sturdy."; attacking it (138:121h) rolls
   RAND(30) against the attacker's STR to bash it open, and the Mountain Stalker (151, at 187,856)
   then hunts the party. A second stalker pen is further south (door 2157/2158 at 255,1087-1119).
+- **From the save, the party is shut in**: it stands in the corridor where Kurzak met it (1352-1400,
+  344), and a gate at squares (81, 20-21), map (1304, 320-351), the gold post west of it, is
+  closed (live grid 192/193). Clicking it does nothing; no script opens those squares (no request
+  10-13 on them). Kurzak "leads the party to its cell": the way on is likely to follow him.
+- **Opening that door sets off the alarm** (the user, 2026-11-01): plan for it (the guards come)
+  or find another way to the button.
 - Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else
   "is too far away to press the button") it sets flag 518 and "hears a click as the secret door to
   the west opens". (Button 1280 at 1335,798 opens another door, 81-82,53-54, only once the monster
