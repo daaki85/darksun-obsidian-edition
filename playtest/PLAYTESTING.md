@@ -103,7 +103,10 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   the mouse, so the tool moves it relatively until the game's own pointer reads X,Y. Plain
   `xdotool mousedown/up` clicks where the pointer already is (fine for dismissing a message).
 - **Pointer mode**: a right-click on the map cycles it: the plain arrow (Walk, and use/talk on a
-  thing), a red sword (attack), another red one, back to the arrow. Check the pointer in a
+  thing), the sword (attack), the **eye (look: opens doors)**, back to the arrow. Over a wall a red
+  "no" sign is drawn on top. **Right-click only on empty floor**: on a party member it opens the
+  USE screen (Escape closes it). Only walkable ground takes a walking click (the user,
+  2026-11-01): a click on a wall does nothing. Check the pointer in a
   screenshot before walking.
 - **Walking**: `python3 walkto.py X Y` (map units). Screen = map - camera, 1 unit a pixel; the
   camera scrolls in steps and does NOT keep the leader centred, so work from the camera, never the
@@ -173,6 +176,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   `CHARSAVE.GFF` and `DARKRUN.GFF` written at the same time; keep all three.
 - **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
   and Backspace from the start does nothing: press End, then Backspace enough times, then type.
+- **Look needs line of sight**: "NO LINE OF SIGHT" from a party round a wall corner, and still
+  from beside the pens' gold post at (1528, 456) (whatever part of it was clicked, 2026-11-01): that
+  post may not be a door at all.
 - **Opening a door (the user, 2026-11-01): the look pointer.** Cycle the pointer with right-clicks
   to the look cursor and click the door; then, with the walk arrow, click on the far side of the
   open door to move past it. The walk arrow on a door, or on the floor beyond a closed one, does
