@@ -93,3 +93,20 @@ each milestone into `playtest/saves/`.
  before the load records nothing after it (twice today): loadsave.sh now reattaches it after the
  load. Guide updated and pushed. The door stays the story's blocker for both sessions; next here:
  the USE screen and a spell cast on the program, which need no door.
+17:21:36
+ USE screen on the program: Gerakis's psionic tabs, Cermak's spells with SPELLS LEFT WIZ 1/2
+ (MAGE, LEVEL 1), hovering an icon names it (ENLARGE); a click on the icon then on the lower box
+ readies it ("1 LEVEL 1 SPELL TO CAST"); Escape to the map and a click on a figure casts it.
+ **Suspect:** the cast on K'ratchek logged "K'ratchek now 0/19 HP (-12)" then "1/19 HP (+1)":
+ damage from Enlarge. Repeating the same steps in DOSBox from the same save to compare.
+18:41:55
+ The same readied-spell steps in DOSBox and again on the program: Escape leaves the spell readied,
+ the pointer stays the arrow, and a click on a figure is a walk click (NO PATH FROM HERE); hit
+ points unchanged (K'ratchek 12/19) in both. The earlier "0/19 (-12)", "1/19 (+1)" on the
+ program did not come back: seen once, cause unknown, kept on the list to watch for.
+18:47:29
+ Stopped at the user's word. State: the program runs the pens from both saves; open on the
+ program: RECALL with the 2.13 helper ("Stack overflow!": after the helper's framed call to the
+ scores routine, its frame comes back with the overlay's segment and a helper offset, D101:6F88;
+ the trace in /home/user/scratch/rc2/recall_trace2.log). The door Kurzak means stays closed for
+ both sessions. Nothing left unpushed.
