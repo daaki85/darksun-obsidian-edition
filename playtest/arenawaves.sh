@@ -13,6 +13,7 @@ for wave in 1 2 3 4 5 6 7 8; do
       timeout 5 xdotool key --window $W n; sleep 3; tail -2 "$WORK/dice.txt"
       sh "$PT/dismiss.sh" 4 >/dev/null; echo DONE; exit 0
     fi
+    if tail -1 "$WORK/dice.txt" | grep -q "Go back to the pens"; then echo DONE; exit 0; fi  # (a repeat: no question)
     timeout 20 python3 "$PT/state.py" | grep -q "^fight_on 1" && break
     if sh "$PT/msgbox.sh"; then sh "$PT/boxclick.sh"; fi; sleep 2
   done

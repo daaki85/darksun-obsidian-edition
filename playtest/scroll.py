@@ -7,8 +7,13 @@ import sys, os, time, subprocess, struct
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'live.py')).read())
 dx, dy = int(sys.argv[1]), int(sys.argv[2])
 def cam(): return struct.unpack('<hh', g.read(ds * 16 + CAMERA, 4))
+# The pointer must never reach the screen's edge: there the view scrolls by itself, the other
+# way (a 150-pixel drag from the centre sent it south, 2026-11-01). So start from the side the drag
+# moves away from, keep the whole drag within 16..304 x 30..184, and cap it to that.
+dx = max(-270, min(270, dx)); dy = max(-150, min(150, dy))
+x0 = 160 - dx // 2; y0 = 107 - dy // 2
 before = cam()
-subprocess.run(['python3', os.path.join(PT, 'click.py'), '160', '100', 'none'], capture_output=True)
+subprocess.run(['python3', os.path.join(PT, 'click.py'), str(x0), str(y0), 'none'], capture_output=True)
 subprocess.run(['xdotool', 'mousedown', '2']); time.sleep(0.2)
 steps = 8
 for _ in range(steps):

@@ -82,7 +82,11 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   the number but not the picture (it's a copy, not what's drawn).
 - **Scrolling the view: drag with the middle mouse button** (`python3 scroll.py DX DY`; the
   user's advice, 2026-11-01). It moves the map like grabbing it: dragging down shows more of the
-  north (60 pixels moved the camera 48 map units, in steps of 16). Then click the spot and the
+  north (60 pixels moved the camera 48 map units, in steps of 16). **Keep the pointer off the
+  screen's edges while dragging**: at an edge the view scrolls by itself the other way, so a long
+  drag from the centre ran the pointer off the bottom and sent the view south, and a loop that
+  sized each drag from the last ran it off to (0, 1368) (2026-11-01). scroll.py starts each drag
+  on the side it moves away from and caps it (270 x 150 pixels). Then click the spot and the
   party walks there, finding its own way round walls. **After a drag, release every button**
   (scroll.py does): the game took no clicks at all until they were. **A message box blocks drags
   too**: drags made under one did nothing, and the view later jumped. Clear boxes first. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
@@ -140,8 +144,9 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    and fights hand to hand; with Move 0 the END menu opens; in Attack mode a far target showed the
    red "can't" pointer and the turn passed. A shot test needs a clear line, a target in range, and
    a readied missile weapon with ammunition in the missile slot.
-8. **Never `pkill -f` a pattern your own command line contains**: it kills the shell running it
-   (exit 144, 2026-11-01). Kill by pid (`pgrep -f "sh leavearena.sh"`, then `kill PID`). And
+8. **Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains**: it kills
+   the shell running it (exit 144, twice on 2026-11-01, the second time with this rule already
+   written: run the kill as its own command, by pid, and nothing else in it). Kill by pid (`pgrep -f "sh leavearena.sh"`, then `kill PID`). And
    stopping a background task can leave its children running: check with pgrep afterwards.
 9. **Never cut steps out of a bigger script with sed**: its header may restart the whole game.
    Use the small tools.
@@ -182,6 +187,8 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   south from there), and find that strip on screen (squares are 16 map units: x 448-527,
   y 176-191) before the "Go back to the pens" line starts the clock.
 - The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
+- **After a repeat fight the arena may only say "Go back to the pens"**, with no YES/NO question:
+  arenawaves.sh stops at either.
 - **Staying sends another fight** each time: "Excellent! These gladiators wish to fight again! We
   shall see how they fare!" (Silt Runners, a Screamer Beetle...), then "Go back to the pens" again:
   the arena repeats until the party leaves. Each fight can bring a level-up screen.
