@@ -80,7 +80,8 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   user's advice, 2026-11-01). It moves the map like grabbing it: dragging down shows more of the
   north (60 pixels moved the camera 48 map units, in steps of 16). Then click the spot and the
   party walks there, finding its own way round walls. **After a drag, release every button**
-  (scroll.py does): the game took no clicks at all until they were. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
+  (scroll.py does): the game took no clicks at all until they were. **A message box blocks drags
+  too**: drags made under one did nothing, and the view later jumped. Clear boxes first. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
   HERE"; walkto stops after two clicks that don't move the leader.
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
   click to go away, and while one is up Tab, Return and map clicks do nothing. `msgbox.sh` tells
@@ -132,9 +133,12 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    and fights hand to hand; with Move 0 the END menu opens; in Attack mode a far target showed the
    red "can't" pointer and the turn passed. A shot test needs a clear line, a target in range, and
    a readied missile weapon with ammunition in the missile slot.
-8. **Never cut steps out of a bigger script with sed**: its header may restart the whole game.
+8. **Never `pkill -f` a pattern your own command line contains**: it kills the shell running it
+   (exit 144, 2026-11-01). Kill by pid (`pgrep -f "sh leavearena.sh"`, then `kill PID`). And
+   stopping a background task can leave its children running: check with pgrep afterwards.
+9. **Never cut steps out of a bigger script with sed**: its header may restart the whole game.
    Use the small tools.
-9. **Every step gets its own `timeout`**; long runs go in the background and are followed through
+10. **Every step gets its own `timeout`**; long runs go in the background and are followed through
    the watchdog's Monitor, not by sleeping.
 
 ## 5. The story so far: what's known of the route

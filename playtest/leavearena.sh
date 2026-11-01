@@ -1,28 +1,28 @@
 #!/bin/sh
 # leavearena.sh: right after "Go back to the pens" (arenawaves.sh), before the arena's patience runs
-# out: drag the view (scroll.py, the middle button) until the ground inside the wall, between the
-# bones and the gate (488, 232), is on screen, click it (the party finds its own way in), then keep
-# clicking the gate strip until the region is the pens (29h). The user's way, 2026-11-01. Prints
-# each step; IN THE PENS or STUCK.
+# out (a few actions): each step first clicks away any message (a box blocks drags as well as
+# clicks), then drags the view (scroll.py, the middle button; at most 150 pixels a drag) until the
+# ground inside the wall, between the bones and the gate (488, 232), is on screen, and clicks it:
+# the party finds its own way in (the user's way, 2026-11-01). Then the gate strip (488, 184),
+# until the region is the pens (29h). Prints each step; IN THE PENS or STUCK.
 . "$(dirname "$0")/env.sh"
+W=$(timeout 5 xdotool search --class dosbox | head -1)
 sh "$PT/panel.sh" hide >/dev/null
-cam() { timeout 20 python3 "$PT/state.py" | sed -n 's/.*camera (\([-0-9]*\), \([-0-9]*\)).*/\1 \2/p'; }
-for i in 1 2 3 4 5 6; do   # the view north and over x 488
-  set -- $(cam); echo "camera $1 $2"
-  dx=$(( ($1 - 328) * 5 / 4 )); dy=$(( ($2 - 112) * 5 / 4 ))
-  [ ${dx#-} -lt 20 ] && [ ${dy#-} -lt 20 ] && break
-  timeout 30 python3 "$PT/scroll.py" $dx $dy
-done
-for tx_ty in "488 232" "488 200" "488 176"; do  # inside the wall, then the gate strip
-  set -- $tx_ty; tx=$1; ty=$2
-  for k in 1 2 3 4; do
+clamp() { v=$1; [ $v -gt 150 ] && v=150; [ $v -lt -150 ] && v=-150; echo $v; }
+for target in "488 232" "488 232" "488 200" "488 184" "488 184" "488 176"; do
+  set -- $target; tx=$1; ty=$2
+  for k in 1 2 3 4 5 6 7 8; do
     s=$(timeout 20 python3 "$PT/state.py"); echo "$s"
-    case "$s" in *"region 0x29"*) echo "IN THE PENS"; exit 0;; esac
-    if sh "$PT/msgbox.sh"; then timeout 5 xdotool mousedown 1; sleep 0.1; timeout 5 xdotool mouseup 1; sleep 2; continue; fi
-    set -- $(cam); sx=$(( tx - $1 )); sy=$(( ty - $2 ))
-    if [ $sy -lt 24 ]; then timeout 30 python3 "$PT/scroll.py" 0 40; continue; fi
-    timeout 15 python3 "$PT/click.py" $sx $sy >/dev/null; sleep 6
+    case "$s" in *"region 0x29"*) echo "IN THE PENS"; exit 0;; "fight_on 1"*) echo "A FIGHT: fightout.sh first"; exit 1;; esac
+    if tail -4 "$WORK/dice.txt" | grep -q "2. No"; then timeout 5 xdotool key --window $W n; sleep 2; continue; fi
+    if sh "$PT/msgbox.sh"; then timeout 5 xdotool mousedown 1; sleep 0.1; timeout 5 xdotool mouseup 1; sleep 1; continue; fi
+    cx=$(echo "$s" | sed -n 's/.*camera (\([-0-9]*\), .*/\1/p'); cy=$(echo "$s" | sed -n 's/.*camera ([-0-9]*, \([-0-9]*\)).*/\1/p')
+    sx=$(( tx - cx )); sy=$(( ty - cy ))
+    if [ $sx -lt 20 ] || [ $sx -gt 300 ] || [ $sy -lt 40 ] || [ $sy -gt 180 ]; then
+      timeout 30 python3 "$PT/scroll.py" $(clamp $(( (sx - 160) * -5 / 4 ))) $(clamp $(( (sy - 110) * -5 / 4 ))); continue
+    fi
+    timeout 15 python3 "$PT/click.py" $sx $sy >/dev/null; sleep 5; break
   done
 done
 s=$(timeout 20 python3 "$PT/state.py"); case "$s" in *"region 0x29"*) echo "IN THE PENS"; exit 0;; esac
-echo "STUCK: $s"; sh "$PT/shot.sh" "$WORK/stuck-leave.png"; exit 1
+echo "STUCK: $s"; tail -2 "$WORK/dice.txt"; sh "$PT/shot.sh" "$WORK/stuck-leave.png"; exit 1
