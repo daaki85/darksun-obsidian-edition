@@ -171,6 +171,12 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   SAVE (253, 46). "GAME SAVED", and then **the game quits to DOS** (it's the exit menu): restart
   with loadsave.sh. The slot is `SAVE01.SAV` in the game folder (85,680 bytes), with
   `CHARSAVE.GFF` and `DARKRUN.GFF` written at the same time; keep all three.
+- **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
+  and Backspace from the start does nothing: press End, then Backspace enough times, then type.
+- **Doors**: `python3 doors.py` lists the closed doors and gates on the edge of the area the party
+  can reach (live grid 192+ where the file's grid has a doorway), with their map positions.
+  Clicking a door square, or the floor beyond it, did nothing for the pens' doors near Kurzak's
+  last stop (95,28; 2026-11-01).
 - **Loading**: the title (two clicks), then the main menu: START GAME, CREATE CHARACTERS, LOAD
   SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
   LOAD (253, 46). `loadsave.sh` does it.
