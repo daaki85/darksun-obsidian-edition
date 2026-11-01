@@ -173,6 +173,10 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   `CHARSAVE.GFF` and `DARKRUN.GFF` written at the same time; keep all three.
 - **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
   and Backspace from the start does nothing: press End, then Backspace enough times, then type.
+- **Opening a door (the user, 2026-11-01): the look pointer.** Cycle the pointer with right-clicks
+  to the look cursor and click the door; then, with the walk arrow, click on the far side of the
+  open door to move past it. The walk arrow on a door, or on the floor beyond a closed one, does
+  nothing (that was the stall at Kurzak's last stop).
 - **Doors**: `python3 doors.py` lists the closed doors and gates on the edge of the area the party
   can reach (live grid 192+ where the file's grid has a doorway), with their map positions.
   Clicking a door square, or the floor beyond it, did nothing for the pens' doors near Kurzak's

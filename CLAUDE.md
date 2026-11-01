@@ -46,6 +46,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   north). The tool keeps the pointer off the screen's edges, since an edge scrolls the view the
   other way, and releases every button afterwards. Click past a wall and the party finds its own
   way round.
+- Doors open with the **look** pointer (right-click to cycle to it, then click the door); then
+  click on the far side of the open door with the walk arrow to go through.
 - Message boxes block clicks, keys and drags: click ON the box (`boxclick.sh`, 160,20).
 - A YES/NO question needs the N or Y key, and only while the dice log's last line is `    2. No`.
   The arena gate's "Do you wish to continue?" is **Y**; the Announcer's question is N.
