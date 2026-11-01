@@ -66,6 +66,13 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   differ from DOSBox's by one (38 of 63 is 153, DOSBox says 154) and its picture is stretched to
   240 rows a row apart, so pixel checks go through `pixmatch.py` (within 3 a channel, a row up or
   down): msgbox.sh, panel.sh and levelup.sh use it.
+- **The dice log must be attached after the game is loaded**: attached at the program's start,
+  or before a save is loaded, it printed nothing afterwards (2026-11-01, twice); `loadsave.sh`
+  restarts it after the load, and after any restart of the program check that an action shows in
+  `$WORK/dice.txt` before trusting its silence.
+- **Saves cross over both ways**: a save made in DOSBox loads on the program (pens-kurzak-door),
+  and one made on the program loads in DOSBox (pens-kurzak-door-recomp). The program's save
+  leaves DARKSAVE.GFF as it was, as DOSBox's did.
 - Controls behave as in DOSBox: click.py's relative moves converge on the pointer, walkto walks,
   right-click cycles arrow, red sword, red look, arrow; the arrow over a person shows the portrait
   pointer and a click opens the mod's Look box (Talk is its first button, 216,99).
@@ -325,6 +332,11 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   On the way, two slaves whisper "Is it time to break out yet?" / "Shh, not yet!".
 - **Opening that door sets off the alarm** (the user, 2026-11-01): plan for it (the guards come)
   or find another way to the button.
+- On the recompiled program (2026-11-01) the same: the look pointer on the doorway's drawing
+  (square 95,27, above the door square) opens the mod's Look box "Door" (INFO only); the arrow,
+  the look click and the sword on the door square do nothing and log nothing; the sword on
+  Kurzak (object 29, then at square 99,31) does nothing either: no fight starts from a click on a
+  friendly figure.
 - Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else
   "is too far away to press the button") it sets flag 518 and "hears a click as the secret door to
   the west opens". (Button 1280 at 1335,798 opens another door, 81-82,53-54, only once the monster

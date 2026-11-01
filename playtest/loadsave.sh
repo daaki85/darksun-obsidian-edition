@@ -15,4 +15,8 @@ timeout 5 xdotool click 1; sleep 1; timeout 5 xdotool click 1; sleep 12
 timeout 15 python3 "$PT/click.py" 170 109 >/dev/null; sleep 4
 timeout 15 python3 "$PT/click.py" 100 46 >/dev/null; sleep 1
 timeout 15 python3 "$PT/click.py" 253 46 >/dev/null; sleep 12
+if [ "$TARGET" = recomp ]; then   # (the dice log attached before the load recorded nothing after it, 2026-11-01)
+  for p in $(pgrep -f "^python3 -u -m dsloade[r]"); do kill $p; done; sleep 1
+  (cd "$REPO/obsidian-edition" && setsid nohup python3 -u -m dsloader dicelog --pid $(cat "$WORK/dsun.pid") > "$WORK/dice.txt" 2>&1 < /dev/null &); sleep 3
+fi
 timeout 10 python3 "$PT/state.py"
