@@ -22,9 +22,11 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    the triggers in the region's MAS script), the region's entities (ETAB in `RGNxx.GFF`). Don't
    assume a place is reachable from a new game: check what the story requires (the slave pens'
    sewer grate, for one, is behind the stalker pen's secret door).
-3. **Look for a saved game past the parts you don't need.** There are none in the extracted game.
-   Ask the user, or look on their Google Drive (the Drive connector) for save files, before
-   playing a long way in.
+3. **Start from a saved game past the parts you don't need**: `sh loadsave.sh NAME` loads one of
+   `playtest/saves/` (see its README: `pens-after-arena`, the slave pens after the arena). None
+   came with the game and none were on the Drive (2026-11-01). **Save at every milestone** (below)
+   and add the save to `playtest/saves/` with a line in its README, then commit: replaying the
+   arena took most of a day.
 
 ## 1. Setting up
 
@@ -118,6 +120,18 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   waits for a spell's icon to be clicked; the watchdog reports it as STUCK. `levelup.sh` finds it
   (its scroll's rollers) and clicks the first spell (125, 90); fightout.sh runs it each turn.
 
+- **Saving**: Escape (nothing else open) brings EXIT: SAVE GAME? (SAVE / QUIT / CANCEL); **S**
+  opens the SAVE screen: click a slot (the first at 120, 46), type a name (`xdotool type`), click
+  SAVE (253, 46). "GAME SAVED", and then **the game quits to DOS** (it's the exit menu): restart
+  with loadsave.sh. The slot is `SAVE01.SAV` in the game folder (85,680 bytes), with
+  `CHARSAVE.GFF` and `DARKRUN.GFF` written at the same time; keep all three.
+- **Loading**: the title (two clicks), then the main menu: START GAME, CREATE CHARACTERS, LOAD
+  SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
+  LOAD (253, 46). `loadsave.sh` does it.
+- **Talk menus** (WHAT DO YOU SAY?): number keys don't choose; click the line. The list scrolls:
+  its down arrow is at (311, 187), and the last visible line is about y 189. The dice log lists
+  every choice with a number, which helps find the one wanted.
+
 ## 4. Fights
 
 1. **Story fights: `sh fightout.sh`.** It sets every foe to 1 HP (not the arena's prisoners) and
@@ -205,7 +219,11 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   click inside the wall's boundary: the party finds its own way in, and that safely takes it back
   into the pens. Don't stay outside the walls in the arena: more monsters are sent.
 
-**The slave pens (region 29h)**, from the cluebook's map: #11 the stalker pen (break the door,
+**The slave pens (region 29h)**: through the gate the party comes out at (1816, 440) and Kurzak
+meets it ("These are the slavepens. I'm Kurzak, leader of the guards. Follow me. I'm here to lead
+you to your cell."; his menu: help me escape or I'll kill you, about yourself, the half-giant,
+escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Saved there:
+`pens-after-arena`. From the cluebook's map: #11 the stalker pen (break the door,
 kill the mountain stalker, push the button on the north wall: a secret door to the northwest
 corner), #12 the sewer grate (square 46, 86; "use" it or walk over it: rip, hack or pick; a failed
 try can be tried again), #15 the campfire (rest; two rests bring the next arena fight; keeping
