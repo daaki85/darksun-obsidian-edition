@@ -123,6 +123,16 @@ notes](PATCH-NOTES.md).
   - The Options tab's Kits text and FEATURES' bug table: the multiclass kits are pairs and one
     set of three; a thri-kreen's claws and bite cut. The weapon window's caption says what it
     shows. Screenshots checked: none outdated.
+- **A second review** (with another chat's review of `main` at 2.13.3, each point checked here):
+  the guide's psionics table gave Enhanced Strength, Domination and Mass Domination a cost of 0
+  (their records' 0; the game works it out when used: (24 − STR) × 2, and 3, 8, 13 or 18 by the
+  target's level, as HOW-THE-GAME-WORKS has it); KITS' slot table shows — for every "no spells
+  yet" (the Seeker, Justifier and Shinobi had blanks, which mean past the XP cap); the README's
+  bugs-fixed line names the scripts' broken checks. Checked and right: every table copied between
+  files (thief skills, class equipment, CHA's discount, CON's bonus, weapon specs), the Options
+  tab's texts against `options.png`, the old names (the mod renamed after 1.2.0, the Loader after
+  2.2.1), every link, anchor and image. Outdated: `new-spells.png` (Erdlu Claw's description now
+  says "not a thri-kreen's bite"), to retake in the game.
 - The player's guide's spell slot table shows the priests' 6th-level slots in its rows (5 4 4 3 2 1
   at 11th, 6 5 5 3 2 2 at 12th) and says which class stops where under the XP cap (a druid at 12th,
   a cleric and a preserver at 11th); FEATURES' line on the slots past 10th the same.

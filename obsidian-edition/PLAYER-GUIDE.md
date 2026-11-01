@@ -1614,13 +1614,13 @@ raises the best defence mode it knows and can pay for, by itself.
 | Body Weaponry | psychometabolism | 9 | 4 |
 | Cell Adjustment | psychometabolism | 5 | |
 | Displacement | psychometabolism | 6 | 3 |
-| Enhanced Strength | psychometabolism | 0 | 8 |
+| Enhanced Strength | psychometabolism | (24 − STR) × 2 | 8 |
 | Flesh Armor | psychometabolism | 8 | 4 |
 | Graft Weapon | psychometabolism | 10 | 1 |
 | Lend Health | psychometabolism | 4 | |
 | Share Strength | psychometabolism | 6 | 2 |
-| Domination | telepathy | 0 | |
-| Mass Domination | telepathy | 0 | |
+| Domination | telepathy | 3, 8, 13 or 18 by the target's level | |
+| Mass Domination | telepathy | 3, 8, 13 or 18 by the target's level | |
 | Psychic Crush (attack) | telepathy | 7 | |
 | Superior Invisibility | telepathy | 5 | 5 |
 | Tower of Iron Will (defence) | telepathy | 6 | |
