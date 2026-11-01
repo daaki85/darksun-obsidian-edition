@@ -123,6 +123,9 @@ notes](PATCH-NOTES.md).
   - The Options tab's Kits text and FEATURES' bug table: the multiclass kits are pairs and one
     set of three; a thri-kreen's claws and bite cut. The weapon window's caption says what it
     shows. Screenshots checked: none outdated.
+- **The changelog's five longest entries shortened** (#55, #31, #51, #44, #61: about 85 KB): each
+  change its headline and first sentence, and a link to the file as it was, with every address
+  and measurement. 278 KB to 246 KB.
 - **DEVELOPMENT in four pages:** its "How each part works" (234 of 277 KB) is three pages beside
   it, as FEATURES is ordered: `DEVELOPMENT-SCREENS.md` (what the game and the Loader show, the
   controls, saves and speed), `DEVELOPMENT-RULES.md` (the rule changes, customization and
@@ -1128,154 +1131,37 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #61 ([merged 2026-10-25](https://github.com/daaki85/darksun-obsidian-edition/pull/61))
 
-- **Obsidian Edition 2.8.0**: the version is 2.8.0, with its notes in `release-notes/v2.8.0.md`,
-  for this pull request and #60.
+- **Obsidian Edition 2.8.0**: the version is 2.8.0, with its notes in `release-notes/v2.8.0.md`, for this pull request and #60.
 
 **New**
-- **The glow in each item's own colour.** The game's palette cycles four runs on the map (its
-  cycler's table: 1-5 green, 6-10 violet, 11-15 the water's blue, 240-248 fire), the same in every
-  area's palette but for a step. `spritegear.glow_for` picks one from the item's icon
-  (`sprites.item_glow`: its picture word negated, the object's icon in the Loader's objects
-  copy): the run its icon already shines in, else its vivid pixels' hue, each by its chroma,
-  browns and tans left out, a fifth of the icon or more; else blue. `worn` passes it as the gear's
-  4th element (`GLOWS` index) or armour's `GLOW_SHIFT` bits. Of the 116 item icons in ITEMS.md:
-  66 blue, 40 fire, 6 green, 4 violet.
-- **A cloak from the front no longer looks held.** The cloak is fitted from the human woman's,
-  which swings out to one side as she walks; on the elves and the half-elf man that showed as a
-  dark panel by one hand. From the front it is now kept within 0.38 of the shoulder line each side
-  of its middle (the line runs over the arms), as from behind.
-- **The glow on every magic item a figure shows.** `spritegear.sparkle` marks, after a magic piece
-  is drawn, every fifth pixel (every ninth on a piece as large as a cloak; at least every other
-  on a small one) of those it changed, on a diagonal, in `GLINT`: armour (in place of picking its
-  light shades, which the human and half-elf women's dark clothes hadn't), bracers, cloaks,
-  helms, boots and belts. A named blade that isn't fire (Shadowseeker) glints along its edge as
-  other magic weapons do. Checked over every party figure (objects 300-307), walking and
-  fighting: each item's glint pixels on each. Boots of Elvenkind were not drawn at all (`BOOTS`
-  had only the plain ones): soft green now.
-- **The pointer at the desktop's speed in a window.** Captured, DOSBox 0.74 moves the driver's
-  pointer a game pixel for each desktop pixel the mouse moves (at 8 mickeys a pixel), three
-  screen pixels in the usual window: too fast and coarse for placing items. With `mouse_start`
-  the Loader's settings give the mouse `sensitivity` 100 over the window's scale (33 in the usual
-  window; `launch.display_lines`) and `autolock=true`, and DSCLOG's `MOUSE_RATIO` makes up and
-  down 10 mickeys, not 8, for the aspect correction's taller pixels. Seen in DOSBox: 30 desktop
-  pixels across move the pointer 8 game pixels, down 7.
-- **Magic weapons, shields and armour glow on figures.** `sprites.worn` marks a weapon or shield
-  with a plus or a power `spritegear.MAGIC` (Kreenfang and the Flame Blade keep their own colours),
-  and a piece of armour's type with `MAGIC_ARMOUR` (10000h) added. `draw_weapon` draws the shape's
-  light cells (a staff, which has none, every third cell of its shaft) in `GLINT`, the fire colours
-  240-248 the game's palette cycles; `draw_shield` its light and every third rim pixel; and
-  `draw_armour` every fifth of its upper shades' pixels, on a diagonal.
+- **The glow in each item's own colour.** The game's palette cycles four runs on the map (its cycler's table: 1-5 green, 6-10 violet, 11-15 the water's blue, 240-248 fire), the same in every area's palette but for a step.
+- **A cloak from the front no longer looks held.** The cloak is fitted from the human woman's, which swings out to one side as she walks; on the elves and the half-elf man that showed as a dark panel by one hand.
+- **The glow on every magic item a figure shows.** `spritegear.sparkle` marks, after a magic piece is drawn, every fifth pixel (every ninth on a piece as large as a cloak; at least every other on a small one) of those it changed, on a diagonal, in `GLINT`: armour (in place of picking its light shades, which the human and half-elf women's dark clothes hadn't), bracers, cloaks, helms, boots and belts.
+- **The pointer at the desktop's speed in a window.** Captured, DOSBox 0.74 moves the driver's pointer a game pixel for each desktop pixel the mouse moves (at 8 mickeys a pixel), three screen pixels in the usual window: too fast and coarse for placing items.
+- **Magic weapons, shields and armour glow on figures.** `sprites.worn` marks a weapon or shield with a plus or a power `spritegear.MAGIC` (Kreenfang and the Flame Blade keep their own colours), and a piece of armour's type with `MAGIC_ARMOUR` (10000h) added.
 
 **New**
-- **Shadows kept for figures whose pictures the game lets go of.** In the arena's fight every figure
-  but one had its picture out of the game's cache as the floor was drawn, so `SHADOW_OF` (which
-  won't load one mid-drawing) drew no shadow. DSCLOG now keeps each frame's shadow as it draws it:
-  `SC_START`/`SC_PUT`/`SC_END`, the runs (up from the feet, x, pixels; at most 64) under the
-  picture's number (the cache slot's `+6`, one per picture: the same for monsters of a kind) and
-  the frame, 80 slots of 208 bytes in a block KEEP takes in upper memory (`SC_SEG`, 16 KB),
-  filled in turn. A picture out of memory casts its frame's kept shadow, else another frame's
-  (`SC_FIND`). Seen in the user's arena save: 74 slots filled in a few rounds; Zulak, walked onto
-  the sand with his picture out, and the fire eels cast shadows (shadows off and on compared); the
-  otyugh, never in memory at a floor drawing, still none.
-- **The game's music buffer in upper memory: 12 KB more of the 640 KB.** A research build of the
-  helper logged the C library's farmalloc, farfree and farrealloc: 134 KB of the far heap is taken
-  before the main menu and kept, never freed or resized through a load, an area change and a fight
-  (music 12,001 bytes, sound effects 24,001, tables). `PROBE_HEAP` (`gamepatch` `heap_malloc`,
-  `heap_free`, `heap_realloc`: INT CBh at each function's start) gives `farmalloc(12001)` a block
-  KEEP took in upper memory (`POOL_SEG`, with a heap block's paragraphs word for the wrapper's
-  guard byte); farfree of it marks it free, farrealloc keeps it or moves it to the heap; nothing
-  else changes. With the map open the game has 97 KB spare, not 85. Seen: the XMIDI file in the
-  block, walking, an area change and a fight as usual. Both need `UMBPLUS.COM`'s room; without it
-  neither is taken.
-- **28 KB more upper memory.** DOSBox 0.74 starts its upper memory block at D000h, but C800h-CFFFh
-  is RAM too, and DOSBox's own tables (`DOS_PRIVATE_SEGMENT`) use only its start (to C8C0h with
-  the game running). `UMBPLUS.COM` (`dos/umbplus.asm`), run by the launcher's config just before
-  the helper is loaded high, moves the block's start to C900h: the system MCB at 9FFFh cut to end
-  there, a free block's MCB at C900h to F000h. Only on DOSBox 0.74's exact chain, with C900h-CFFFh
-  all zero and RAM; otherwise nothing changes. `mem`: 155 KB of upper memory instead of 127, 29 KB
-  free with the helper loaded instead of 1. Seen in DOSBox with the user's arena save: the helper at
-  C90Ah, the overlay buffer in upper memory, walking, the arena's area change and a fight as
-  usual, DOSBox's tables still at C8C0h; the game's 640 KB unchanged (85 KB free with the map
-  open). The helper still fits the old block, so it works where the move can't be made.
+- **Shadows kept for figures whose pictures the game lets go of.** In the arena's fight every figure but one had its picture out of the game's cache as the floor was drawn, so `SHADOW_OF` (which won't load one mid-drawing) drew no shadow.
+- **The game's music buffer in upper memory: 12 KB more of the 640 KB.** A research build of the helper logged the C library's farmalloc, farfree and farrealloc: 134 KB of the far heap is taken before the main menu and kept, never freed or resized through a load, an area change and a fight (music 12,001 bytes, sound effects 24,001, tables).
+- **28 KB more upper memory.** DOSBox 0.74 starts its upper memory block at D000h, but C800h-CFFFh is RAM too, and DOSBox's own tables (`DOS_PRIVATE_SEGMENT`) use only its start (to C8C0h with the game running).
 
 **Removed** (to free the helper's memory)
-- **Scrolling by holding the right button.** `MOUSE_EVENT` passes the right button straight to
-  the game again (`SCROLL_RIGHT`, `DRAG_START` and the click-or-drag test gone); the wheel's drag
-  stays (`scrolling.DRAG_MIDDLE` the only bit). The `scroll_right` setting is ignored.
-- **Rings under all the enemies.** Only the enemy chosen with Tab gets one (or none);
-  `rings.ring_table` marks only it, and an older `"rings": "all"` reads as the chosen one's.
-- **The combat log strip below the map.** `PROBE_STRIP`, `PROBE_PALETTE`, `PROBE_COLOURS` and the
-  strip's drawing and colours (`STRIP_*`), gamepatch's eight `STRIP` patches and
-  `combatlog.STRIP` are gone; the panel over the map (L) is as it was. What the panel needs of
-  them stays as `ON_MAP` and `POINTER_DS`. The `combat_log_strip` setting is ignored, and the
-  4x window is always 1280 x 960. With the three gone, UMB_NEED is 8108 of 8182 paragraphs (was
-  8171), DSCLOG.EXE 1 KB smaller. Seen in DOSBox, in the user's arena save: a right click still
-  changes the pointer (walk to attack), a right drag scrolls nothing, the wheel's drag scrolls;
-  Tab rings only the enemy chosen, the next on Tab again; L opens the panel.
+- **Scrolling by holding the right button.** `MOUSE_EVENT` passes the right button straight to the game again (`SCROLL_RIGHT`, `DRAG_START` and the click-or-drag test gone); the wheel's drag stays (`scrolling.DRAG_MIDDLE` the only bit).
+- **Rings under all the enemies.** Only the enemy chosen with Tab gets one (or none); `rings.ring_table` marks only it, and an older `"rings": "all"` reads as the chosen one's.
+- **The combat log strip below the map.** `PROBE_STRIP`, `PROBE_PALETTE`, `PROBE_COLOURS` and the strip's drawing and colours (`STRIP_*`), gamepatch's eight `STRIP` patches and `combatlog.STRIP` are gone; the panel over the map (L) is as it was.
 
 **Fixed**
-- **A shorter pause after picking up or putting down an item.** The pointer stood still 56-103 ms
-  (85 on average, Zulak's inventory in the user's save, 20,000 cycles) while the game redrew the
-  inventory: its mouse handler (DSUN.EXE 3573Dh) only queues the moves, and the pointer is drawn
-  again once the redraw is done. Sampled at every timer strike (a research build of `PROBE_TICK`),
-  a quarter of that was the vertical-retrace wait (1167Ah's loop at 11686h), reached from the page
-  flip at 14414h: the redraw flips its two pages, each flip waiting for the next retrace. The blits'
-  own waits (1350Dh-13DFBh) cost nothing measurable. `PROBE_FLIP` (`gamepatch` `flip_wait`, INT 8Bh
-  in place of "push cs / call 1674h" at 1445Fh) waits as the game does except with a full screen up
-  (`SCREEN_IS` 2), where the map's pace isn't concerned: 42-45 ms putting an item down, 63-67 picking
-  one up. Frames captured through a pick-up show no tearing. (Live patches of the game's code
-  through the Loader don't take in DOSBox's dynamic core, which keeps its translated code: tests of
-  such changes go in the patched copy of DSUN.EXE.)
-- **A shorter wait for the Loader after picking up or putting down an item.** Each time an item
-  moves on the inventory screen the game redraws it, and the helper (`STATS_SYNC`) has the game
-  stand still until the Loader brings the THAC0, saves and thief skills up to date, so an item just
-  put on counts. The Loader answered on its main loop's next pass: 26-79 ms a request with the
-  Ledger's window open. `DiceLog.answer_stats_in_background` (started by `dicelog`, the launcher's
-  loop and the Ledger) answers from a thread of its own, 6-12 ms (on Windows with the timer at 1 ms,
-  `timeBeginPeriod`, as its ticks are otherwise 15.6 ms). `_stats_lock` keeps the thread's and the
-  main loop's writes of STATS apart; on Linux the Loader reads and writes the game's memory with
-  `os.pread`/`os.pwrite` (no shared file position between the threads). The pointer still stands
-  still 50-90 ms after a pick-up: measured by where the game last drew it (`DS:A137h`), the game
-  queues the mouse's moves (its handler, DSUN.EXE 3573Dh, only posts them) and draws the pointer
-  only once its pick-up is done; the helper's code is in none of the timer's samples meanwhile, the
-  vertical-retrace waits aren't the cause, and 35,000 cycles take off about 15 ms.
-- **The Loader's own magic items glowed blue on figures.** `sprites.item_glow` looked each item's
-  object and icon up in the game's SEGOBJEX.GFF, which has none of the Loader's items (the
-  Hayneedle, Kreenfang, Thornwall, Inixhide, the Ashen Robe...), so they fell back to blue whatever
-  their icon. The `Dresser` now reads them from the Loader's copy (`items`: the copy's chunks over
-  the game's). Seen in the user's save: Railune's Bone Hayneedle +1 and Inixhide glint in the fire
-  colours, as their icons are.
-- **No thief skill above 95.** With **Thief skills from AD&D's table** a skill had no ceiling: a
-  13th-level thief with DEX 24 showed move silently 121 and pick pockets 117 (AD&D's 99 for the
-  level plus DEX's 30). AD&D allows none above 95% after every adjustment: DSCLOG's `PROBE_BELT`
-  keeps the game's chance to `THIEF_MOST` after the belt, kits and armour (the situation's bonus
-  and effects, which the game's caller adds after, at DSUN.EXE 803D0h, still count), and
-  `game.thief_skills_now` (the inventory screen's numbers, the Ledger) the same; a ranger's hide
-  and move silently, and the stealth rule's rolls, too. The dice log's breakdown shows
-  `(at most 95)`, and its first part no longer prints as `+99 thief level 13`.
-- **The pointer put back in the middle as screens changed.** A video mode set (each scene's
-  start, the menus, loading a save) leaves the driver's pointer at the right edge, which
-  `MOUSE_SET` and the scenes' `CINE_MOUSE`/`CINE_WHERE` put in the middle; they now put it where it
-  was last seen: `MP_X`, `MP_Y`, kept by the scenes' arrow and by `MOUSE_EVENT` (every event the
-  game is sent). The ring is 63 entries (the room: UMB_NEED 8171 of 8182). Seen in DOSBox: moved
-  to (120, 78) in the intro, there at the main menu; (250, 60) on the load screen, there on the
-  map.
-- **"Regains 1 HP from Fire attack."** A hit point regenerated (CON 20 or more) in the moment
-  after a spell or attack was put down to it, the spell's healing tested first; regeneration is
-  tested first now.
-- **"Script: a creature changes sides" in runs of a dozen** as a fight's scripts set up: request
-  18 only with "Show unlabelled rolls" (`REQUESTS_SHOWN`).
-- **An archer's pointer with shots left.** The weapon attack routine (5883Ah) counts a combatant's
-  attacks this round (+181h of the round's tables) and makes it 99 once all are made, allowing
-  another while it is under 99; the pointer's missile test (1D5AEh) refused any count but 0, so
-  after a shot that killed (the round's shots not all made) it showed ICON 6006, "can't shoot",
-  though a click still shot. `gamepatch.shots_left` (1D657h) makes its "cmp ...,0 / jnz" "cmp
-  ...,63h / jnl". Not seen in a fight yet: the test harness couldn't hold an archer's turn.
-- **Cermak's Arcanist slot at the start of a new game.** The game fills the party's spell slots as
-  a new game begins, before the Loader makes Cermak an Arcanist, so the USE screen showed WIZ 1/2
-  until his first rest. `defaultparty.set_kit` now adds the slots the kit gives to what he has
-  left (`_add_slots`: the most before and after the kit, the difference added, so a spell already
-  cast isn't given back). Checked in the game: WIZ 2/2 from the start.
+- **A shorter pause after picking up or putting down an item.** The pointer stood still 56-103 ms (85 on average, Zulak's inventory in the user's save, 20,000 cycles) while the game redrew the inventory: its mouse handler (DSUN.EXE 3573Dh) only queues the moves, and the pointer is drawn again once the redraw is done.
+- **A shorter wait for the Loader after picking up or putting down an item.** Each time an item moves on the inventory screen the game redraws it, and the helper (`STATS_SYNC`) has the game stand still until the Loader brings the THAC0, saves and thief skills up to date, so an item just put on counts.
+- **The Loader's own magic items glowed blue on figures.** `sprites.item_glow` looked each item's object and icon up in the game's SEGOBJEX.GFF, which has none of the Loader's items (the Hayneedle, Kreenfang, Thornwall, Inixhide, the Ashen Robe...), so they fell back to blue whatever their icon.
+- **No thief skill above 95.** With **Thief skills from AD&D's table** a skill had no ceiling: a 13th-level thief with DEX 24 showed move silently 121 and pick pockets 117 (AD&D's 99 for the level plus DEX's 30).
+- **The pointer put back in the middle as screens changed.** A video mode set (each scene's start, the menus, loading a save) leaves the driver's pointer at the right edge, which `MOUSE_SET` and the scenes' `CINE_MOUSE`/`CINE_WHERE` put in the middle; they now put it where it was last seen: `MP_X`, `MP_Y`, kept by the scenes' arrow and by `MOUSE_EVENT` (every event the game is sent).
+- **"Regains 1 HP from Fire attack."** A hit point regenerated (CON 20 or more) in the moment after a spell or attack was put down to it, the spell's healing tested first; regeneration is tested first now.
+- **"Script: a creature changes sides" in runs of a dozen** as a fight's scripts set up: request 18 only with "Show unlabelled rolls" (`REQUESTS_SHOWN`).
+- **An archer's pointer with shots left.** The weapon attack routine (5883Ah) counts a combatant's attacks this round (+181h of the round's tables) and makes it 99 once all are made, allowing another while it is under 99; the pointer's missile test (1D5AEh) refused any count but 0, so after a shot that killed (the round's shots not all made) it showed ICON 6006, "can't shoot", though a click still shot.
+- **Cermak's Arcanist slot at the start of a new game.** The game fills the party's spell slots as a new game begins, before the Loader makes Cermak an Arcanist, so the USE screen showed WIZ 1/2 until his first rest.
+
+*Shortened: each change's full notes (addresses, measurements, how it was found) are in [this file as it was](https://github.com/daaki85/darksun-obsidian-edition/blob/7e18e937e583d95fc493d89cf157b7f8463ba85f/CHANGELOG.md), and how each part works now in the [development notes](obsidian-edition/DEVELOPMENT.md).*
 
 ## Pull request #60 ([merged 2026-10-24](https://github.com/daaki85/darksun-obsidian-edition/pull/60))
 
@@ -1418,330 +1304,65 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 ## Pull request #55 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/55))
 
 **Added**
-- **6th-level priest spells** (with **New wizard spells**, slots with AD&D's tables): Heal, Harm,
-  Blade Barrier, Wall of Thorns and Sunstroke (cosmos: druids and Healer clerics), Fire Seeds
-  (fire), Heartseeker (earth, water), Water of Life (water) and Whirlwind (air), spells 202-210,
-  each on a template record the game already casts (Cure and Cause Critical Wounds, the priest's
-  Wall of Fire, Hold Person, Flame Strike, Slay Living, Lend Health) with its own changes
-  (`NS_PATCH`). A priest's 6th-level slot at 11th, two at 12th (`probe_adnd_slots`,
-  `tables.slots`). `HARM_SITE` (761A9h, the one-target damage roll): Harm leaves 1d4 hit points
-  (and the most it could roll the same, for a helpless target); a fire wall's damage there
-  (the game rolled Wall of Fire's for any) was the last wall cast's: Blade Barrier 8d8, Wall of
-  Thorns 8 + its AC (`CAST_SITE` noted it; record kind 9 for the dice log; since replaced by
-  walls of their own, below). Whirlwind has the
-  crushing damage kind and Ice Storm's picture: a record with no damage kind, or Dust Cloud's
-  picture, does no damage. Checked live, each spell cast in the Scar fight.
-- **The 6th-level priest spells closer to the books and Wake of the Ravager.** Wall of Thorns
-  does 8 + the creature's AC (at least 1; `THORNS_AC`: a monster's sheet +27h, a party member's
-  AC as the game last worked it out, kept by `PROBE_AC` in `AC_SEEN`; the dice log shows the AC,
-  carried in the entry's extra's high byte + 80h), not 1d10 + 8. Sunstroke strikes one creature
-  (its record's +0Ch aim, 4, as Slay Living's), not Hold Person's several. Heal cures blindness
-  too (`HEAL_SIGHT` at `CAST_SITE`: the target's Blind entries taken out of the game's table of
-  active effects; its record already cured disease). Fire Seeds' description says four seeds of
-  2d8 (the same 8d8). Left as they were: Blade Barrier's saving throw (since added, below) and
-  Sunstroke's 1d4 a round (since added, above). Checked live in the
-  Scar fight: thorns 8 + AC 10 = 18 on Scar's henchmen, Sunstroke on Scar alone with one click
-  (paralysed on a failed save), Heal on a blinded Xan leaving no Blind entry.
-- **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds'
-  fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back
-  to the game's.
-- **Spheres:** Blade Barrier is air's, Wall of Thorns earth's and Sunstroke fire's, not the
-  cosmos's (`P6_MASKS`, `game.PRIEST6_MASKS`: `AIR_MASK`, `EARTH_MASK` 0010808Ah, the earth's
-  own 5th-level rows', `FIRE_MASK`); the cosmos keeps Heal and Harm.
-- **Whirlwind lasts and sweeps:** built on Stinking Cloud (its record, `ns_templates`; its
-  ground entry, a lasting one whose spell acts each round on those in it, `AREA_NEW 8`) with
-  Sand Storm's picture: 1d4 rounds and 1 more from 7th level, 2d8 crushing each round, a save
-  vs spell for half. A failed save reaches the damage routine's effect step (78DEFh, after the
-  save at 78DB0h), where `ACID_ONCE` now has `SWEPT_MARK` mark the creature (`SWEPT`) and put
-  nothing on (the record's Stuck is never put on), recorded (kind 11:
-  `X is swept off its feet: loses its next turn`). At the next round's start `PROBE_MOVE`
-  (57566h, each creature's movement) gives a marked one no movement and the initiative -1 the
-  game gives a held creature, so it doesn't act, then clears the mark; a fight's first round
-  clears them all. Not helpless: attacks, saves and damage against it are as usual.
-- **Whirlwind's funnel, drawn once, blocking sight:** its own picture (`whirlart.py`: a funnel
-  of dust in ground ellipses, object 8433 in the Loader's SEGOBJEX copy, put in its entry by
-  `NS_SETUP`). The game draws a lasting area as 18-46 copies of its picture scattered over the
-  area (draw-list entries with 20h), and its damage and blocked tiles go by those copies, so
-  they stay; `DRAW_SITE` (232D4h, the draw of each thing on the map, 1DBD:0002) passes over all
-  of Whirlwind's but the one nearest their middle and draws that one at the middle
-  (`WHIRL_PICK`, worked out again at each round's start and each cast). Its entry's 10h is set
-  (`AREA_SIGHT`): the tiles under the copies block sight (tile bit 80h, as Wall of Fog's), which
-  the missile and spell paths stop at (84300h's trace). The funnel turns: `WHIRL_TICK` steps
-  its 4 frames every 3 timer ticks and redraws the funnel's rectangle through the dust's redraw
-  (`DUST_UNION`/`DUST_NUDGE`); the dice ring goes to 65 entries for the room.
+- **6th-level priest spells** (with **New wizard spells**, slots with AD&D's tables): Heal, Harm, Blade Barrier, Wall of Thorns and Sunstroke (cosmos: druids and Healer clerics), Fire Seeds (fire), Heartseeker (earth, water), Water of Life (water) and Whirlwind (air), spells 202-210, each on a template record the game already casts (Cure and Cause Critical Wounds, the priest's Wall of Fire, Hold Person, Flame Strike, Slay Living, Lend Health) with its own changes (`NS_PATCH`).
+- **The 6th-level priest spells closer to the books and Wake of the Ravager.** Wall of Thorns does 8 + the creature's AC (at least 1; `THORNS_AC`: a monster's sheet +27h, a party member's AC as the game last worked it out, kept by `PROBE_AC` in `AC_SEEN`; the dice log shows the AC, carried in the entry's extra's high byte + 80h), not 1d10 + 8.
+- **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds' fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back to the game's.
+- **Spheres:** Blade Barrier is air's, Wall of Thorns earth's and Sunstroke fire's, not the cosmos's (`P6_MASKS`, `game.PRIEST6_MASKS`: `AIR_MASK`, `EARTH_MASK` 0010808Ah, the earth's own 5th-level rows', `FIRE_MASK`); the cosmos keeps Heal and Harm.
+- **Whirlwind lasts and sweeps:** built on Stinking Cloud (its record, `ns_templates`; its ground entry, a lasting one whose spell acts each round on those in it, `AREA_NEW 8`) with Sand Storm's picture: 1d4 rounds and 1 more from 7th level, 2d8 crushing each round, a save vs spell for half.
+- **Whirlwind's funnel, drawn once, blocking sight:** its own picture (`whirlart.py`: a funnel of dust in ground ellipses, object 8433 in the Loader's SEGOBJEX copy, put in its entry by `NS_SETUP`).
 - **Sunstroke's heat:** 1d4 of fire at the start of each round on a creature Sunstroke holds.
-  `ACID_ROUND`'s pass (now `BURN_PASS`, twice: Acid, then Sunstroke) calls Acid's burn (7897Bh,
-  through its stub) for each creature with a Paralyzed entry from Sunstroke, `SUN_HEAT` set:
-  `ACID_BURN` makes its dice 1d4, and `HEAT_SITE` (78C24h, the start of a spell's damage on a
-  creature) makes the spell Sunstroke, the kind fire, and what a helpless creature takes the
-  roll (the burn's own 8, 2d4's most, would have been taken by every held creature). These are
-  changed in the damage routine's frame, not the burn's code: the 1d4's own overlay can load
-  the burn's code again from the file. No entry of its own: the heat ends with the paralysis.
-  Recorded (kind 10) for the dice log's `Sunstroke's heat on X: 1d4 = N fire damage`.
-  Checked live in the Scar fight: a held henchman burned 4, then 3, at the next two rounds'
-  starts, the HP lost exactly the roll and put down to Sunstroke.
-- **Backstabs multiply the weapon's dice only** (new option `backstab_dice`, `RULE_BACKSTAB`,
-  DSCLOG's `RULE_HI_BACKSTAB`, on by default): `STAB_ROLL` (58A29h) keeps a hit's dice (the
-  roll less `[BP-12h]`), `STAB_TIMES` (58A80h, where the game multiplies the whole damage by
-  595C4h's x2-x5) adds them again for each time past the first instead. The dice log shows
-  `+10 backstab (the dice x3)`. The multiplier itself already followed AD&D's table past 10th
-  level (x4 at 9-12, x5 from 13); the docs said x4 at 9 and 10.
-- **Acid Arrow burns each round.** In the game its acid never burned after the hit: the routine
-  spending an effect's charges (76803h, Acid's burn 7897Bh) was called for Acid only on chance
-  events, and Acid Arrow's time was seconds on the game clock (DS:[9B72h], 60 a round in a fight), a
-  timer that only ended it, with no charges to spend. DSCLOG's
-  `ACID_ROUNDS` makes an Acid's time rounds as charges, `ACID_ROUND` spends one for each creature
-  at the start of each round (through 76803h's stub, in a frame the overlay manager can fix up),
-  `ACID_USE` lets no other call spend them, and `ACID_BURN`/`ACID_ONCE` keep the burn's damage from
-  putting Acid on again. The dice log gives the rounds and leaves out the burn's duration roll.
-  Checked live in the Scar fight: an 11th-level Acid Arrow hit for 8, then 6, 4, 3 and 5 at the
-  start of the next four rounds, and ended.
-- **Names over figures: no leftover sliver.** When a label went away the game's redraw of its
-  rectangle only drew whole bytes of the VGA planes inside it, so a label starting mid-byte left
-  its first columns on the map (seen after Prayer's cloud, a "[" left on the sand). `LABEL_ERASE`
-  widens the rectangle to whole 4-pixel columns. Checked live: Prayer cast in the Scar fight, the
-  name over the cloud and nothing left after it.
-- **Walls of their own.** Blade Barrier, Wall of Thorns, Fire Seeds and Whirlwind each have an
-  entry of their own in the table of ground pictures, so walls no longer share Wall of Fire's (a
-  Wall of Fire cast while a Blade Barrier stood made both burn as Wall of Fire). `SEG_MOVE` moves
-  the table (selector 3A8h) into DSCLOG's memory with four entries after the game's 45, keyed to
-  the spells (`AREA_NEW`), their records' +17h naming them; the game's own code reads it through
-  `AREA_SITE` (six places, patched by the Loader: `area_table_*`). A wall's damage each round is
-  its own spell's: Blade Barrier its record's 8d8, edged, with a saving throw for none, as Wake of
-  the Ravager's; Wall of Thorns 8 + AC (`THORNS_DAMAGE`, keyed on the spell). `WALL_NOTE`,
-  `WALL_LAST` and `AREA_NOTE` are gone. The dice log puts an HP loss down to the spell whose
-  recent roll it matches, so two walls hurting one creature are each named. Checked live in the
-  Scar fight: a Blade Barrier and a Wall of Thorns standing together, the blades 8d8 with saves
-  (a natural 20 saved for none), the thorns 8 + AC 10 = 18, each named in the log.
-- **Pictures on the ground for the 6th-level priest spells**, Wake of the Ravager's: Blade
-  Barrier's circling blades and Wall of Thorns' thorns (its objects 8432 and 8425, added to the
-  Loader's SEGOBJEX copy by `wotrart.area_chunks`, recoloured; without it the fire wall tinted
-  grey or dark brown), Fire Seeds' fireball (8405) and Whirlwind's Sand Storm dust (8403).
-  DSCLOG's `AREA_NOTE` (from `CAST_SITE`) set the object of the area-picture entries they
-  shared with their templates (the table before the flights: 18 bytes an entry, a record's +17h
-  the entry) at each cast (since replaced by entries of their own, below).
-- **Names over figures.** A spell's name floats over its caster for 1.5 seconds as it is cast
-  (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an
-  attack that missed, in the game's font with a dark edge; at most two at once. An Options switch
-  in the game section, on by default. DSCLOG's `CAST_SITE` (772AAh, the cast routine: a new
-  record kind, 8) and `LABEL_*`: two slots in the header (+374) the Loader fills
-  (`labels.py`), put again from the game's timer every other strike so swings and damage
-  bursts don't wipe them, placed and erased from the main loop. The dice ring is 66 entries
-  (74) for the room.
-- **Spellarcher spell arrows.** Outside a fight, a Spellarcher's USE screen has a button for
-  each touch spell it knows (Burning, Chill, Shocking and Vampiric Arrows) in the row of class
-  abilities, the first where a priest's Turn Undead is, the rest beside it. One click uses a
-  slot of the spell's level and puts 5 arrows a preserver level in the backpack (on the ground
-  at the party's feet when it is full; no window either way), worth nothing,
-  each casting its spell on what it hits at the archer's caster level; only a Spellarcher can
-  ready them or cast their spell (`ARROWS_FORBID`). Slots are the only limit;
-  every spell arrow fades at the next rest (a script's rest request, or the vulture meal).
-  DSCLOG's `ARROW_KNOWS`, the ability row's spare places, `ARROWS_ASK`, `ARROWS_DROP`, `ARROW_HIT`,
-  `ARROW_SPELL` and `PROBE_ARROW`'s kept name; `spellarrows.py`; icons for the four buttons and
-  the four arrows.
-- **Three new magic items** (with New items on), each with its own icon:
-  the **Girdle of Back Defense** (no enemy gets the bonus for attacking its wearer from behind,
-  nor a backstab; the Troop Leader carries it), the **Golden Girdle of Urnst** (AC 3 better
-  against long and short swords; Wyrmias) and the **Amulet of Magic Resistance** (15% magic
-  resistance; it never shatters; sold by Kel). DSCLOG's `ITEM_REAR` and `AMULET_SITE`; the dice log names each.
-- **The Crusader and Mind Warrior have expertise in one melee weapon spec of their choice**
-  (with weapon specialization), as the Battle Mage has: 3/2 attacks a round, 2 from 7th level,
-  picked on the weapon window after DONE. DSCLOG's `war_kit_is` in the pick count,
-  `KINDS_ALLOWED` (melee kinds only) and the spec lookup; `specialize.war_kit`.
-- **The dice log names a refused cast's reason** (`can't cast Fireball there: no line of sight`;
-  DSCLOG's `AIM_SITE`) **and the scripts' requests** (`Script: random monsters come`;
-  `REQ_SITE`, all 20 named, from the yuan-ti project's notes on the game).
-- **The Wanderer halves fire and cold spells' damage**, as Resist Fire and Resist Cold do (it had
-  their saves only): DSCLOG's `WANDER_DMG` at the game's own test of what a creature is guarded
-  from (7B56Fh); the log says `(halved: Wanderer)`.
-- **The Myrmidon's initiative is 2 worse**, a second drawback beside its −4 against charms
-  (`PROBE_INIT`; the log's initiative line names it).
-- **Cleric spells against the manual.** HOW-THE-GAME-WORKS has a table of every cleric spell:
-  the manual's text, what the game's records and code do, and what the log shows. Among the
-  differences: Remove Curse only puts a lowered STR back (no curse ends), Bestow Curse is −1 to
-  hit with no save, Cause Disease lowers nothing, Raise Dead always works, Summon Insects and
-  Dust Devil summon a creature, Insect Plague is fear with no damage, Blood Flow paralyses an
-  enemy with no save.
-- **The log names a protection that halves a spell's damage.** The game's damage routine
-  (7B4C0h) halves a spell that is all fire under Resist Fire or Protection from Fire, all cold
-  under Resist Cold, all electricity under Protection from Lightning, fire or cold under Fire
-  Shield: `takes 9 from Fireball (halved: Prot Fire)`. Their effect lines say so too; Diseased,
-  Detect Traps, Fire Shield, Protection from Evil 10' and Negative Plane Protection got lines
-  of what they do.
-- **A party member's ability scores changing** get a line once the change holds:
-  `Cilla's STR 12 -> 16` (Strength, Remove Curse, Raise Dead's CON, the Tome).
-- **Psionic powers checked against the manual.** A table in How the game works, power by
-  power: the manual's text, what the game's code does (Detonate hits only its target, no save;
-  Cell Adjustment heals 2 and cures nothing; Biofeedback gives AC -1 and takes no damage off;
-  Inertial Barrier makes missile attacks miss and does nothing else; Psionic Blast takes real
-  HP down to a fifth; Control Body and the dominations are a charm; Mass Domination's record
-  targets one creature) and what the log shows.
-- **The psionic defence in the dice log.** An attack mode's target rolls 1 to its defence twice,
-  each over the attacker's power check d20, to resist (5D718h); the log skipped both rolls:
-  `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20)
-  -> resisted`.
-- **What more powers do, in the log's effect lines:** Inertial Barrier (missile attacks miss),
-  Energy Containment (no damage from fire, cold, electricity or magic alone), Synaptic
-  Static, Enhanced Strength (STR 24, read from the game's stats code), Adrenalin Control
-  (STR + 1d6) and Share Strength's lender (STR - twice the amount); Detonate's 1d10 named
-  "Detonate's blast".
-- **Detonate's blast on an item in the dice log.** The power (a daggoran's too) destroys the
-  target's worn item with the lowest item +10h (under 6) on a 1d20 under 15 less its plus
-  (DSUN 7AAEBh, from the effect switch's case 138 at 797F6h; the item taken away by 4E0:7Ah,
-  one of a stack), and nothing showed it. DSCLOG's `DET_ITEM` (7AB95h) records the item, the
-  d20 and the number: `Detonate's blast on Cilla's Bone Helm: d20 = 7, breaks it under 15 (15)
-  -> DESTROYED`.
-- **Find in the dice log and the dialogue.** A box above each (Ctrl+F): every match (any case)
-  highlighted, the one shown in amber with `n of N`, Enter / **Next** and Shift+Enter /
-  **Previous** round the end, Escape to clear; details hidden aren't searched, and the log stops
-  following its newest line while a match is shown (`viewer.Viewer._find_bar`, `tests/test_find.py`;
-  the highlight colours are in `palette.TEXT_PAIRS`).
-- **The psionic power check in the dice log.** `Zulak uses Graft Weapon: power check d20 = 14,
-  needs 11 or less -> it fails` with the score's parts (`16 CON - 5 Graft Weapon`), and the
-  Synaptic Static contest when someone else keeps it up. The game rolls these with its
-  random(low, high) (1A0A:2FA9h), whose rolls the helper didn't record: a new roll filter
-  (`RANGE_SITE`; it also makes points of some spells' pictures, which the log passes over). The
-  check (5D59Dh) and the table it reads (`game.POWERS_SEG`, the per-character byte at selector
-  2F0h) are in DEVELOPMENT.md.
+- **Backstabs multiply the weapon's dice only** (new option `backstab_dice`, `RULE_BACKSTAB`, DSCLOG's `RULE_HI_BACKSTAB`, on by default): `STAB_ROLL` (58A29h) keeps a hit's dice (the roll less `[BP-12h]`), `STAB_TIMES` (58A80h, where the game multiplies the whole damage by 595C4h's x2-x5) adds them again for each time past the first instead.
+- **Acid Arrow burns each round.** In the game its acid never burned after the hit: the routine spending an effect's charges (76803h, Acid's burn 7897Bh) was called for Acid only on chance events, and Acid Arrow's time was seconds on the game clock (DS:[9B72h], 60 a round in a fight), a timer that only ended it, with no charges to spend.
+- **Names over figures: no leftover sliver.** When a label went away the game's redraw of its rectangle only drew whole bytes of the VGA planes inside it, so a label starting mid-byte left its first columns on the map (seen after Prayer's cloud, a "[" left on the sand). `LABEL_ERASE` widens the rectangle to whole 4-pixel columns. Checked live: Prayer cast in the Scar fight, the name over the cloud and nothing left after it.
+- **Walls of their own.** Blade Barrier, Wall of Thorns, Fire Seeds and Whirlwind each have an entry of their own in the table of ground pictures, so walls no longer share Wall of Fire's (a Wall of Fire cast while a Blade Barrier stood made both burn as Wall of Fire).
+- **Pictures on the ground for the 6th-level priest spells**, Wake of the Ravager's: Blade Barrier's circling blades and Wall of Thorns' thorns (its objects 8432 and 8425, added to the Loader's SEGOBJEX copy by `wotrart.area_chunks`, recoloured; without it the fire wall tinted grey or dark brown), Fire Seeds' fireball (8405) and Whirlwind's Sand Storm dust (8403).
+- **Names over figures.** A spell's name floats over its caster for 1.5 seconds as it is cast (any cast: the party's, the monsters', a weapon's on a hit), and "Miss" over the target of an attack that missed, in the game's font with a dark edge; at most two at once.
+- **Spellarcher spell arrows.** Outside a fight, a Spellarcher's USE screen has a button for each touch spell it knows (Burning, Chill, Shocking and Vampiric Arrows) in the row of class abilities, the first where a priest's Turn Undead is, the rest beside it.
+- **Three new magic items** (with New items on), each with its own icon: the **Girdle of Back Defense** (no enemy gets the bonus for attacking its wearer from behind, nor a backstab; the Troop Leader carries it), the **Golden Girdle of Urnst** (AC 3 better against long and short swords; Wyrmias) and the **Amulet of Magic Resistance** (15% magic resistance; it never shatters; sold by Kel).
+- **The Crusader and Mind Warrior have expertise in one melee weapon spec of their choice** (with weapon specialization), as the Battle Mage has: 3/2 attacks a round, 2 from 7th level, picked on the weapon window after DONE.
+- **The dice log names a refused cast's reason** (`can't cast Fireball there: no line of sight`; DSCLOG's `AIM_SITE`) **and the scripts' requests** (`Script: random monsters come`; `REQ_SITE`, all 20 named, from the yuan-ti project's notes on the game).
+- **The Wanderer halves fire and cold spells' damage**, as Resist Fire and Resist Cold do (it had their saves only): DSCLOG's `WANDER_DMG` at the game's own test of what a creature is guarded from (7B56Fh); the log says `(halved: Wanderer)`.
+- **The Myrmidon's initiative is 2 worse**, a second drawback beside its −4 against charms (`PROBE_INIT`; the log's initiative line names it).
+- **Cleric spells against the manual.** HOW-THE-GAME-WORKS has a table of every cleric spell: the manual's text, what the game's records and code do, and what the log shows.
+- **The log names a protection that halves a spell's damage.** The game's damage routine (7B4C0h) halves a spell that is all fire under Resist Fire or Protection from Fire, all cold under Resist Cold, all electricity under Protection from Lightning, fire or cold under Fire Shield: `takes 9 from Fireball (halved: Prot Fire)`.
+- **A party member's ability scores changing** get a line once the change holds: `Cilla's STR 12 -> 16` (Strength, Remove Curse, Raise Dead's CON, the Tome).
+- **Psionic powers checked against the manual.** A table in How the game works, power by power: the manual's text, what the game's code does (Detonate hits only its target, no save; Cell Adjustment heals 2 and cures nothing; Biofeedback gives AC -1 and takes no damage off; Inertial Barrier makes missile attacks miss and does nothing else; Psionic Blast takes real HP down to a fifth; Control Body and the dominations are a charm; Mass Domination's record targets one creature) and what the log shows.
+- **The psionic defence in the dice log.** An attack mode's target rolls 1 to its defence twice, each over the attacker's power check d20, to resist (5D718h); the log skipped both rolls: `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20) -> resisted`.
+- **What more powers do, in the log's effect lines:** Inertial Barrier (missile attacks miss), Energy Containment (no damage from fire, cold, electricity or magic alone), Synaptic Static, Enhanced Strength (STR 24, read from the game's stats code), Adrenalin Control (STR + 1d6) and Share Strength's lender (STR - twice the amount); Detonate's 1d10 named "Detonate's blast".
+- **Detonate's blast on an item in the dice log.** The power (a daggoran's too) destroys the target's worn item with the lowest item +10h (under 6) on a 1d20 under 15 less its plus (DSUN 7AAEBh, from the effect switch's case 138 at 797F6h; the item taken away by 4E0:7Ah, one of a stack), and nothing showed it.
+- **Find in the dice log and the dialogue.** A box above each (Ctrl+F): every match (any case) highlighted, the one shown in amber with `n of N`, Enter / **Next** and Shift+Enter / **Previous** round the end, Escape to clear; details hidden aren't searched, and the log stops following its newest line while a match is shown (`viewer.Viewer._find_bar`, `tests/test_find.py`; the highlight colours are in `palette.TEXT_PAIRS`).
+- **The psionic power check in the dice log.** `Zulak uses Graft Weapon: power check d20 = 14, needs 11 or less -> it fails` with the score's parts (`16 CON - 5 Graft Weapon`), and the Synaptic Static contest when someone else keeps it up.
 
 **Changed**
-- **Axes and maces on figures look like the game's own:** the axe was a thin stick in its metal
-  with a hollow hook for a head (it read as a fork), the mace the same with a thin diamond.
-  Now (`spritegear._shape`) an axe, great axe or mace has a wooden haft (`WOOD`: the wood's
-  colours whatever the weapon's material) and a solid head, after Scar's henchmen's axes
-  (picture 240). On a half-giant (`MODEL_SCALE` 1.35) only the haft is drawn longer (`HEADS`),
-  as the stretched head smeared into a spiked ball. Checked in the Loader's own pictures in the
-  running game. In-game spell texts brought in line with the docs: Blade Barrier's save for none,
-  Heartseeker no longer called an arrow, Whirlwind blocking shots and spells.
-- **Level cap by XP.** The levels-up-to-10 rule is now an XP cap: a class goes up while its next level
-  needs no more than 749,999 XP, the whole of it for a character of one class, an even share for each
-  class of a multiclass character (as the game shares out XP), and for a human who changed class the cap
-  less what its old classes' levels needed (the game starts the new class at 0). With AD&D's class tables
-  that is cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief
-  13th; 749,999 keeps a druid from 13th and a preserver from 12th (and 6th-level spells). DSCLOG's
-  `PROBE_LEVEL` and `PROBE_XP_NEXT` ask `LEVEL_ROOM`; AD&D's XP table to 14th level, slots to 12th, thief
-  skills to 13th (`tables.py`, `game.AD_D_THIEF`); CHOOSE A SPELL no higher than 5th (`WIZ_LEVEL_MOST`).
-  Checked in the game with a single, a two- and a three-class character and a dual-class human.
+- **Axes and maces on figures look like the game's own:** the axe was a thin stick in its metal with a hollow hook for a head (it read as a fork), the mace the same with a thin diamond.
+- **Level cap by XP.** The levels-up-to-10 rule is now an XP cap: a class goes up while its next level needs no more than 749,999 XP, the whole of it for a character of one class, an even share for each class of a multiclass character (as the game shares out XP), and for a human who changed class the cap less what its old classes' levels needed (the game starts the new class at 0).
 
-- **Weapons spells make count for weapon specialization.** The Flame Blade counts as a long
-  sword (AD&D's scimitar, which Athas hasn't), Shillelagh as a club, Spiritual Hammer as a mace
-  (the war hammer's nearest): DSCLOG's `SPEC_KIND` and `specialize.spec_kind_of`, for the
-  specialization's attacks, to-hit and damage alone. Class and kit restrictions still see no kind,
-  so whoever casts the spell holds its weapon.
+- **Weapons spells make count for weapon specialization.** The Flame Blade counts as a long sword (AD&D's scimitar, which Athas hasn't), Shillelagh as a club, Spiritual Hammer as a mace (the war hammer's nearest): DSCLOG's `SPEC_KIND` and `specialize.spec_kind_of`, for the specialization's attacks, to-hit and damage alone.
 
 **Fixed**
-- **Whirlwind lasts a round a caster level,** as AD&D has it (11 rounds or more for a priest who
-  can cast it), not Stinking Cloud's shape of 1d4 + 1 for each 7 levels (`NS_PATCH`: no dice, as
-  Blink's and Cause Fear's records, and the level rule's step 1).
-- **Three of the game's script bugs mended** (`scriptfixes.py`, always on, in the Loader's copy of
-  GPLDATA.GFF): each re-points one trigger or call to the handler it was meant to have, applied
-  only where the script holds the expected bytes. Darkhold: the wyvern scene's creature and two in
-  the queen's chamber keep their look text (scripts 41, 203), and the portcullis guard fights back
-  (195); the Lava Rifts ranger keeps his own sight trigger, not the hermit's (100); Linara's talk
-  goes on to her menu after the extract (68). Found by the OpenDS project (darkfix), checked by
-  yuan-ti and here against the GOG file. Not checked in play yet (all are past the slave pens).
-- **The Spells tab's 6th-level priest spells:** they were described from the records they are built
-  on, so Harm read as 3d8+3 draining, Heartseeker as 4d8 halved by a save, Wall of Thorns as
-  1d10+8, Heal and Water of Life as next to nothing, Sunstroke without its heat and Whirlwind as
-  "can't move". `spellbook.OWN_LINES` gives those spells' lines by hand, as FEATURES.md has them.
-- The USE screen's spell slots line ran off its panel with a 6th spell level: the panel now
-  shows the slots of the level and list on show only (`SPELLS LEFT`, then e.g. `PRI 2/1`: `WIZ`
-  on MAGE, `PRI` on CLERIC, none on PSIONIC). Each line's first byte is a key (80h | the list
-  << 4 | the level, 0 the heading); DSCLOG picks the lines by the LEVEL button's DS:4AECh and
-  the member's list byte, DS:4AE8h + the member. `SLOTS_SIZE` 128 (was 96).
-- **Spell arrows fade at the game's own rest.** They faded only at a script's rest request and the
-  vulture meal; camping at a fire ring runs the game's rest routine (8066Dh, also its REST from a
-  script) without one. A site in its loop over the members (806C3h, `REST_SITE`) records it as
-  request 0, and the arrows fade in the next pass.
-- **Spell arrows (and Pick Pockets, and the vulture meal) work with the party spread out.** The
-  Loader's fight check read the game's DS:1168h, which stays 1 while the party walks uncollapsed
-  with no one to fight, so it answered "can't be made in a fight". It now reads the game's own
-  test, the fight state's +19h (`game.fight_on`), as its rest and the USE screen do.
-- **The pointer on a spell arrow button lights that button.** Turn Undead's handler, which the
-  buttons beside it share, lit and unlit the frame at Turn Undead's place (DS:30F8h) as the
-  pointer came and went, so the Vampiric Arrows button lit the Burning Arrows one; two 4-byte
-  patches (89528h, 8956Fh) light the button's own place, as its press already did.
-- **Every magic item of the Loader's shines.** The game shines a magic item by cycling palette
-  colours (11-15, the water's, and 224-255, fire's among them); icons tinted in colours it doesn't
-  cycle stood still: the Chill, Shocking and Vampiric Arrows, Shadowseeker, the Cloak of Protection
-  +1, Pehtucl's ring, the Girdle of Back Defense, the Amulet of Magic Resistance, the Veiled Robe,
-  the Cloak and Boots of Elvenkind and the Golden Girdle of Urnst. Every other column of their
-  tint is now in the water's colours (`icons.shining`), so they keep their tint and shimmer.
-- **A Fireball no longer floods the dice log.** The filter for `random(low, high)` (1A0A:2FA9h,
-  kept for psionic ranges) also recorded the eleven picture-point calls a spell burst makes, so a
-  Fireball filled the ring ("148 rolls came too fast to record"). It now records only the calls
-  whose code goes on as the psionic sites' does (88h, 8Ah or 5Ah three bytes past the return).
-- **More room in the helper's upper memory.** Its text buffer is 2 KB, not 4 (251 bytes came in
-  between two of the Loader's reads at most), and the descriptions of the new spells, Pick
-  Pockets and the spell arrows are SPIN chunks in the Loader's copy of RESOURCE.GFF
-  (`spelltexts.py`; `PROBE_CHUNK_ID` points Turn Undead's box at the purse's or an arrow's),
-  not the helper's text: 3.8 KB of the upper memory block spare rather than 224 bytes, for
-  features to come.
-- **An item the game destroys gets its crash-log report.** The game frees a destroyed item
-  (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record
-  and linking it into the free list: its type and name stay. The item watch took that record for
-  an item still in the world (dropped, or put in a container) and wrote nothing, so a bone helm
-  lost to a daggoran's Detonate left no report. A record whose first word went to 0 is now
-  reported as freed by the game; quest items a script takes (types 61, 87, 104 as well as 60)
-  and a wand's last charge free a record the same way and stay silent.
-- **A party's thief skill roll goes to its best member.** Where the game asks the whole party
-  (a trap's find/remove traps, all 50 trap triggers with the arena prisoner's among them, and
-  hear noise by the wagon), its pick (DSUN 801BDh) was to keep the highest chance but kept the
-  lower, unsigned, of a best starting at 0: no one was ever lower, so the first party member
-  always rolled. `party_best` makes its "jna" a "jge": the highest chance above 0 rolls (no one
-  able, the first member, as before). A character's own checks (pick pockets, the scripted
-  searches, the Loader's stealth rolls) were never picked this way and don't change.
-- **Random monsters come in the right numbers and can't crash the game.** REQUEST 8 (80BE4h,
-  scripts 99 and 106) sends 2 x the party's strength / the monster's, 1 to 6, but took the
-  strength of the slot after the one picked: from the next region's record after the tenth, and
-  0 after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255, a division by 0 that ends the
-  game ("Divide error"). `monster_count` reads the picked slot's own. Both found from the notes of
-  CalvinRodo/yuan-ti and checked in DSUN.EXE.
-- **A likely cause of figures vanishing and then a freeze.** A freeze report (2.6.0, 49 minutes
-  into an arena trip) had the game's picture row decoder (0980:709Ch) unpacking a figure's picture
-  from garbage: never meeting the row's end, it copied on from its 5,408-byte buffer (0980:11BCh)
-  over the code after it, itself included, and the game's data segment was then overwritten by its
-  own stack (all 64 KB the word 44F8h: the dialogue's `D°D°D°`). For a figure's shadow DSCLOG had
-  the game load its picture into the cache when it wasn't there, in the middle of drawing the floor,
-  which can push out or move a picture the game is drawing. Shadows now use only pictures already
-  in the cache (a newly seen figure's shadow comes a frame later). Not proven to be the cause.
-- **Magic items shine in a shop.** The palette's colour cycles (the glow of a magic weapon's
-  icon) turn only in the map's main loop, when the timer asks (DS:1194h, then 22F8h:047Ch); a shop,
-  opened from a conversation, runs its own event loop (7DDE4h) and waits in the game's wait for an
-  event (2531:083Ch), and neither turned them, so its items stood still. DSCLOG's `SHOP_SHINE` and
-  `SHOP_LOOP` (sites at 2AFA6h and 7DE11h) do as the main loop while a character's screen is open
-  (DS:11B2h).
-- **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the
-  dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature
-  and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so
-  where the game was still shows.
+- **Whirlwind lasts a round a caster level,** as AD&D has it (11 rounds or more for a priest who can cast it), not Stinking Cloud's shape of 1d4 + 1 for each 7 levels (`NS_PATCH`: no dice, as Blink's and Cause Fear's records, and the level rule's step 1).
+- **Three of the game's script bugs mended** (`scriptfixes.py`, always on, in the Loader's copy of GPLDATA.GFF): each re-points one trigger or call to the handler it was meant to have, applied only where the script holds the expected bytes.
+- **The Spells tab's 6th-level priest spells:** they were described from the records they are built on, so Harm read as 3d8+3 draining, Heartseeker as 4d8 halved by a save, Wall of Thorns as 1d10+8, Heal and Water of Life as next to nothing, Sunstroke without its heat and Whirlwind as "can't move".
+- The USE screen's spell slots line ran off its panel with a 6th spell level: the panel now shows the slots of the level and list on show only (`SPELLS LEFT`, then e.g. `PRI 2/1`: `WIZ` on MAGE, `PRI` on CLERIC, none on PSIONIC).
+- **Spell arrows fade at the game's own rest.** They faded only at a script's rest request and the vulture meal; camping at a fire ring runs the game's rest routine (8066Dh, also its REST from a script) without one.
+- **Spell arrows (and Pick Pockets, and the vulture meal) work with the party spread out.** The Loader's fight check read the game's DS:1168h, which stays 1 while the party walks uncollapsed with no one to fight, so it answered "can't be made in a fight".
+- **The pointer on a spell arrow button lights that button.** Turn Undead's handler, which the buttons beside it share, lit and unlit the frame at Turn Undead's place (DS:30F8h) as the pointer came and went, so the Vampiric Arrows button lit the Burning Arrows one; two 4-byte patches (89528h, 8956Fh) light the button's own place, as its press already did.
+- **Every magic item of the Loader's shines.** The game shines a magic item by cycling palette colours (11-15, the water's, and 224-255, fire's among them); icons tinted in colours it doesn't cycle stood still: the Chill, Shocking and Vampiric Arrows, Shadowseeker, the Cloak of Protection +1, Pehtucl's ring, the Girdle of Back Defense, the Amulet of Magic Resistance, the Veiled Robe, the Cloak and Boots of Elvenkind and the Golden Girdle of Urnst.
+- **A Fireball no longer floods the dice log.** The filter for `random(low, high)` (1A0A:2FA9h, kept for psionic ranges) also recorded the eleven picture-point calls a spell burst makes, so a Fireball filled the ring ("148 rolls came too fast to record").
+- **More room in the helper's upper memory.** Its text buffer is 2 KB, not 4 (251 bytes came in between two of the Loader's reads at most), and the descriptions of the new spells, Pick Pockets and the spell arrows are SPIN chunks in the Loader's copy of RESOURCE.GFF (`spelltexts.py`; `PROBE_CHUNK_ID` points Turn Undead's box at the purse's or an arrow's), not the helper's text: 3.8 KB of the upper memory block spare rather than 224 bytes, for features to come.
+- **An item the game destroys gets its crash-log report.** The game frees a destroyed item (Detonate's blast, acid, a script; 1A0A:0A3Ah) by zeroing only the first word of its record and linking it into the free list: its type and name stay.
+- **A party's thief skill roll goes to its best member.** Where the game asks the whole party (a trap's find/remove traps, all 50 trap triggers with the arena prisoner's among them, and hear noise by the wagon), its pick (DSUN 801BDh) was to keep the highest chance but kept the lower, unsigned, of a best starting at 0: no one was ever lower, so the first party member always rolled.
+- **Random monsters come in the right numbers and can't crash the game.** REQUEST 8 (80BE4h, scripts 99 and 106) sends 2 x the party's strength / the monster's, 1 to 6, but took the strength of the slot after the one picked: from the next region's record after the tenth, and 0 after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255, a division by 0 that ends the game ("Divide error").
+- **A likely cause of figures vanishing and then a freeze.** A freeze report (2.6.0, 49 minutes into an arena trip) had the game's picture row decoder (0980:709Ch) unpacking a figure's picture from garbage: never meeting the row's end, it copied on from its 5,408-byte buffer (0980:11BCh) over the code after it, itself included, and the game's data segment was then overwritten by its own stack (all 64 KB the word 44F8h: the dialogue's `D°D°D°`).
+- **Magic items shine in a shop.** The palette's colour cycles (the glow of a magic weapon's icon) turn only in the map's main loop, when the timer asks (DS:1194h, then 22F8h:047Ch); a shop, opened from a conversation, runs its own event loop (7DDE4h) and waits in the game's wait for an event (2531:083Ch), and neither turned them, so its items stood still.
+- **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so where the game was still shows.
 
 **Documentation**
-- **Reviews, pictures and the since-2.6.0 list:** the patch notes' list of what comes after
-  2.6.0 brought up to date; the XP cap, the 6th-level spells and the new switches in the Loader
-  README, the guide's Options summary and the dice log table; Wake of the Ravager as an optional
-  install; a link and anchor check over every page (none broken, no picture unused). New
-  pictures: the nine 6th-level priest spells' descriptions (`new-priest-spells.png`) and
-  Whirlwind's turning funnel (`whirlwind.gif`, under Graphics: Spells on the ground); retaken:
-  the Options tab and the USE screen's spell slot line (`use-slots.png`, `default-party-armor.png`).
-  Three spell descriptions shortened to fit the game's box (Wall of Thorns, Sunstroke, Whirlwind).
-- A review of every page. The patch notes gain the spell arrows (under Items, and the
-  Spellarcher among the kits described; its row in the kit table back to a name), and the
-  dice log's new lines move from Quality of Life to The Loader with those missing (refused
-  casts, scripts' requests, the protection that halved a spell, ability scores changing; the
-  cleric spell and psionic power tables). Item reports now say that an item the game destroys
-  is reported (patch notes, player's guide, README). The README's dice log tables have rows for
-  the psionic defence, Detonate's blast, the halving protection and the spell arrows; the
-  player's guide a row for names over figures. DEVELOPMENT.md and How the game works have a
-  table of contents; the front page and How the game works credit yuan-ti's notes; pull
-  request #54 (the 2.6.0 release) is in this changelog, and #55's two lists of additions are
-  one.
-- A second review: the patch notes say which of their changes come with the next release, not
-  2.6.0, and name the Battle Mage's, Crusader's and Mind Warrior's weapon expertise (the
-  release steps now drop that line); the README's known issues add the vanishing figures and
-  freeze, and lose a class-letter table that repeated its sentence; spell arrows left on the
-  ground fade at the first rest after they're picked up (KITS, the player's guide, whose
-  paragraph is rewritten).
+- **Reviews, pictures and the since-2.6.0 list:** the patch notes' list of what comes after 2.6.0 brought up to date; the XP cap, the 6th-level spells and the new switches in the Loader README, the guide's Options summary and the dice log table; Wake of the Ravager as an optional install; a link and anchor check over every page (none broken, no picture unused).
+- A review of every page.
+- A second review: the patch notes say which of their changes come with the next release, not 2.6.0, and name the Battle Mage's, Crusader's and Mind Warrior's weapon expertise (the release steps now drop that line); the README's known issues add the vanishing figures and freeze, and lose a class-letter table that repeated its sentence; spell arrows left on the ground fade at the first rest after they're picked up (KITS, the player's guide, whose paragraph is rewritten).
+
+*Shortened: each change's full notes (addresses, measurements, how it was found) are in [this file as it was](https://github.com/daaki85/darksun-obsidian-edition/blob/7e18e937e583d95fc493d89cf157b7f8463ba85f/CHANGELOG.md), and how each part works now in the [development notes](obsidian-edition/DEVELOPMENT.md).*
 
 ## Pull request #54 ([merged 2026-10-21](https://github.com/daaki85/darksun-obsidian-edition/pull/54))
 
@@ -1948,265 +1569,67 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 ## Pull request #51 ([merged 2026-10-19](https://github.com/daaki85/darksun-obsidian-edition/pull/51))
 
 **Release**
-- **Obsidian Edition 2.5.0**: the version is 2.5.0, with its notes in
-  `release-notes/v2.5.0.md`, listed on the front page with the others.
+- **Obsidian Edition 2.5.0**: the version is 2.5.0, with its notes in `release-notes/v2.5.0.md`, listed on the front page with the others.
 
 **Added**
-- **Item reports**: the Loader watches the party's items and, when one is gone
-  from the whole party for two seconds, saves `crash-logs\item-<time>.txt`
-  (the item, who had it and where, what its record says now, the game's time
-  and region, the fight, the party's items before and after, the switches,
-  and the dice log's and dialogue's last lines) and says so in the dice log,
-  so a vanished item can be looked into as a crash is. The ordinary losses
-  (an item still outside the party, used up, a spell's weapon, sold, broken)
-  pass in silence (a line each made a stream of them in a shop), as does an
-  item handed to another member under a new record number (the same picture,
-  type, name and plus turning up within the wait), and a loaded game is not news
-  (`dsloader/itemwatch.py`, `GameData.party_items`; README, "If an item
-  disappears").
-- **Four more magic weapons** for the kits that had too few (the dagger
-  fighters, the archers, the thri-kreen), each with its icon, its name in
-  DSCLOG's table (now 39 names) and a story from Alagorn:
-  - **Hayneedle,** a bone dagger +1 (a water cleric's too), early: hidden in
-    Merzol's haystack in the slave pens with his sack of ceramic pieces. The
-    hay's script (137) says so and leaves it beside the sack, the first
-    search only (haystash.py; its own object, 2590).
-  - **Nightsliver,** an obsidian dagger +2 (a fire or earth cleric's too),
-    mid-game: the Lava Rift's Hermit carries it in place of his stone dagger.
-  - **Dunesong,** a bow +1, sold by the Bowyer in Teaquetzl with Windlash,
-    priced as a melee weapon (20,800; the game's Bow +2 is 50,800).
-  - **Skycutter,** a chatkcha +2 (3,500, as the game's Sling +2), on one of
-    the thri-kreen hunting the Gemfields (its own object, 2598; the region's
-    copy, RGN06.GFF, points to it).
-  The guide's lists of each class's magic weapons count them, and an air
-  cleric's list now has every dagger (DSCLOG gives air clerics the game's
-  daggers too; the list showed only Galefang).
+- **Item reports**: the Loader watches the party's items and, when one is gone from the whole party for two seconds, saves `crash-logs\item-<time>.txt` (the item, who had it and where, what its record says now, the game's time and region, the fight, the party's items before and after, the switches, and the dice log's and dialogue's last lines) and says so in the dice log, so a vanished item can be looked into as a crash is.
+- **Four more magic weapons** for the kits that had too few (the dagger fighters, the archers, the thri-kreen), each with its icon, its name in DSCLOG's table (now 39 names) and a story from Alagorn: - **Hayneedle,** a bone dagger +1 (a water cleric's too), early: hidden in Merzol's haystack in the slave pens with his sack of ceramic pieces.
 
 **Changed**
-- **Weapon specs picked after DONE** (with weapon specialization on): the
-  creation screen's WEAPON SPEC pages are gone. Pressing DONE brings up the
-  weapon window a level gained uses (a picture of each weapon spec), as a
-  preserver's CHOOSE A SPELL comes up: a fighter, ranger or Battle Mage picks
-  one, a gladiator or Myrmidon two, a fighter/preserver after its spells. KITS
-  is on the panel for every class now. EXIT leaves the Loader to pick: the
-  kit's weapon (Ghetto Fighter, Poisoner: dagger; Battle Dancer: long sword),
-  a thri-kreen's chatkcha, else the long sword (a gladiator's second the club).
-  DSCLOG's `CR_WEAPONS` (a site of `INT 98h` at DSUN.EXE 666DFh, once DONE has
-  closed the screen's windows: before, the bigger window failed to open, the
-  game's "Failed to open window", exit code 1), with the header's +361 up while
-  it asks so the Loader waits (`DiceLog._weapons_asked`);
-  `weaponchoice.kinds_for`'s defaults; `kitpages.panel_windows`. README,
-  "Choosing at creation"; the guide. The weapon pages' code is gone from
-  DSCLOG (about 1 KB) and the Loader (windows 3014-3019 and 3025; the kit
-  pages keep VIEW PSIONICS, `kitpages.KIT_BACK`). The Loader's pictures are
-  packed with repeats as the game's own are (`icons._pack`): the weapon
-  window's 93 KB came to 41 KB, and it opens for a fourth character after
-  CHOOSE A SPELL, where it failed with "Failed to open window". A new
-  character's weapon is made before the class check leaves gear behind, so
-  a fighter/psionicist's long sword becomes its club, not left behind.
-- **Claws cut**: the game makes every unarmed attack crushing, so a creature
-  crushing weapons can't hurt (the mastyrials) took nothing from a
-  thri-kreen's claws. A thri-kreen in the party now fights with edged claws,
-  and Erdlu Claw's talons are edged too. Monsters' own attacks are as before.
-- **A Shinobi learns its own spells from scrolls too** (with kits on): it
-  first reads the scroll, a d100 against its read languages, and then, with
-  the rule for INT on, learns the spell at INT's chance. A failed roll uses
-  the scroll up; a scroll of a spell not among its 18 is kept, unlearnt. The
-  dice log shows both rolls.
-- **A Pick Pockets button for thieves** in place of Thieves' Tools: on the
-  USE screen, where a priest's Turn Undead is, a character with thief levels
-  has a purse (outside fights; a cleric/thief has both, the purse beside Turn
-  Undead, and Turn Undead alone in a fight).
-  Pressed, the pointer is the one for talking, and the next person clicked has
-  their pocket tried by that thief, leader or not, into that thief's own
-  backpack. The Options tab says so. Mirlon and Kel no longer carry the tools,
-  Mirlon's script is the game's own again, and tools already in a saved game
-  do nothing.
-- **Coins from a picked purse grow with the thief**: 2 to 5 ceramic pieces for
-  each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
+- **Weapon specs picked after DONE** (with weapon specialization on): the creation screen's WEAPON SPEC pages are gone.
+- **Claws cut**: the game makes every unarmed attack crushing, so a creature crushing weapons can't hurt (the mastyrials) took nothing from a thri-kreen's claws.
+- **A Shinobi learns its own spells from scrolls too** (with kits on): it first reads the scroll, a d100 against its read languages, and then, with the rule for INT on, learns the spell at INT's chance.
+- **A Pick Pockets button for thieves** in place of Thieves' Tools: on the USE screen, where a priest's Turn Undead is, a character with thief levels has a purse (outside fights; a cleric/thief has both, the purse beside Turn Undead, and Turn Undead alone in a fight).
+- **Coins from a picked purse grow with the thief**: 2 to 5 ceramic pieces for each thief level (a 4th-level thief takes 8 to 20) instead of 2 to 5 in all.
 
 **Fixed**
-- **Gerakis's Wild Fighting damage logged as the weapon's**: the game added
-  his +3 (DSCLOG gives it to whoever's check passed), but the dice log
-  credited Wild Fighting only to a Wild Fury's kit, so a passed check showed
-  as "+2 weapon" (a bone sword's −1 and the +3), and a failed one's −3 to hit
-  went unexplained. It now names Wild Fighting for anyone fighting wild
-  (`DiceLog._kit_attack`).
-- **A Battle Dancer's dance and Wild Fighting not rolled at a fight's start**:
-  the Loader rolled them only for a fight's round 1, and it took a fight to be
-  new only when the game's clock had run two minutes past the last one's last
-  round. A fight soon after another (the arena's next wave), or one after
-  loading a save (the clock gone back), was counted as the last one going on,
-  and kept its result. Now both end as soon as the fight does, whatever came of
-  them (the game's fight flag down two seconds, once seen up in the fight; the
-  clock past or gone back), and the next fight's first round rolls them again.
-  A loaded game's rounds count from 1 again too.
-- **Turn Undead's right click showed a new spell's description** (Fogbolt's,
-  for an earth cleric; seen in 2.3.0 on): the game describes Turn Undead by
-  numbers the new spells took. It shows its own again.
-- **Pick Pockets' right click showed nothing**: it now shows the purse and
-  what it does.
-- **A Shadowblade or Ghetto Fighter could start with a shield in the
-  backpack**: the kit's gear left a shield behind only from a hand, so one
-  already moved to the backpack stayed. It is left behind from there too.
-- **White ability labels on the inventory screen** (STR: to CHR:, among the
-  yellow): the fix that drew the creation screen's labels in its white drew
-  the inventory's in it too, as both screens draw them with one routine. The
-  white is now set only for labels at the creation screen's place.
-- **The Trustee stuck in the pens** (again): his rounds' two pauses took their
-  corner from numbers any script in the pens could change, and once another
-  had, he set off for a spot that doesn't exist and stood still for good, busy.
-  The pauses now have corners of their own, and his busy line starts his
-  rounds again, so a Trustee already stuck in a saved game walks on once
-  talked to.
-- **Figures hold the Loader's own weapons**: the bone and obsidian short swords
-  and axes a new warrior starts with, the metal daggers, maces, great axes,
-  picks and polearms, and the other new weapons were drawn as nothing, so a
-  figure carrying one swung empty-handed (the game's own weapons were drawn).
-- **Dinos's talk after the cooked vulture**: once he had given the meal's XP,
-  his menu came back with only "Goodbye.", and a stray "Goodbye." followed in
-  a window with no portrait. The XP is now given within his talk, as the
-  game's own quests do, and his questions come back after it.
-- **Mirror Image works as it says** (seen in 2.4.0). The game's images
-  stopped no weapon blow, and took the caster's own spells: Armor cast on
-  oneself under Mirror Image was lost three times in four, an image with it.
-  Now each hit has a 75% chance (50% for Reflected Image) to strike an image
-  instead, and so does a foe's spell for one creature; spells from the
-  target's own side always get through. The dice log shows each d100.
-- **Armor lasts as long as it should**: it used a charge each time any spell
-  or blow landed on its wearer, as well as for the damage, so each hit cost
-  two and a friend's Bless one. Now one for each damaging hit.
-- **Share Strength's strength goes when the power ends**: the game looked for
-  it under the psionicist rather than the one who got it, who kept it (and
-  could end another of the psionicist's own effects instead).
-- **The preserver's Dispel Magic no longer silences**: it laid "No spell use"
-  on everyone it caught, the party too, which Dispel Magic can't remove. Now
-  it only dispels, as the cleric's does.
+- **Gerakis's Wild Fighting damage logged as the weapon's**: the game added his +3 (DSCLOG gives it to whoever's check passed), but the dice log credited Wild Fighting only to a Wild Fury's kit, so a passed check showed as "+2 weapon" (a bone sword's −1 and the +3), and a failed one's −3 to hit went unexplained.
+- **A Battle Dancer's dance and Wild Fighting not rolled at a fight's start**: the Loader rolled them only for a fight's round 1, and it took a fight to be new only when the game's clock had run two minutes past the last one's last round.
+- **Turn Undead's right click showed a new spell's description** (Fogbolt's, for an earth cleric; seen in 2.3.0 on): the game describes Turn Undead by numbers the new spells took.
+- **Pick Pockets' right click showed nothing**: it now shows the purse and what it does.
+- **A Shadowblade or Ghetto Fighter could start with a shield in the backpack**: the kit's gear left a shield behind only from a hand, so one already moved to the backpack stayed.
+- **White ability labels on the inventory screen** (STR: to CHR:, among the yellow): the fix that drew the creation screen's labels in its white drew the inventory's in it too, as both screens draw them with one routine.
+- **The Trustee stuck in the pens** (again): his rounds' two pauses took their corner from numbers any script in the pens could change, and once another had, he set off for a spot that doesn't exist and stood still for good, busy.
+- **Figures hold the Loader's own weapons**: the bone and obsidian short swords and axes a new warrior starts with, the metal daggers, maces, great axes, picks and polearms, and the other new weapons were drawn as nothing, so a figure carrying one swung empty-handed (the game's own weapons were drawn).
+- **Dinos's talk after the cooked vulture**: once he had given the meal's XP, his menu came back with only "Goodbye.", and a stray "Goodbye." followed in a window with no portrait.
+- **Mirror Image works as it says** (seen in 2.4.0).
+- **Armor lasts as long as it should**: it used a charge each time any spell or blow landed on its wearer, as well as for the damage, so each hit cost two and a friend's Bless one.
+- **Share Strength's strength goes when the power ends**: the game looked for it under the psionicist rather than the one who got it, who kept it (and could end another of the psionicist's own effects instead).
+- **The preserver's Dispel Magic no longer silences**: it laid "No spell use" on everyone it caught, the party too, which Dispel Magic can't remove.
 - **Hold Undead holds only the undead**: it held living creatures too.
-- **Cause Serious and Critical Wounds do 2d8+1 and 3d8+3**, as AD&D has them
-  and the Cure spells heal; their records had 2d9 and 3d9.
-- **A new game's arena could be left without its announcer, and new characters
-  without their gear** (seen in 2.4.0): the Loader's starting gear, fitted
-  just as START GAME rebuilt the game's item records, could use up the game's
-  free records. The arena then couldn't place its announcer (the opening fight
-  never began; walking said NO PATH FROM HERE), and the gear went nowhere. The
-  Loader now waits until the game's item lists are settled. A game this
-  happened to can't be mended: start a new one.
-- **A Brute started with no weapon**: its long sword and club, which the game
-  puts in the backpack, were left behind. The long sword now becomes its
-  weapon spec's weapon (a great axe without weapon specialization), in hand,
-  and the club is left behind as the kit's ("a Brute fights with two-handed
-  weapons only"). Armour only a kit forbids is left behind naming the kit that
-  forbids it ("a Shadowblade can't wear it").
-- **No crash report when DOSBox closed while the game still ran** (a freeze,
-  DOSBox stopping with an error of its own, or its window closed): a report
-  was saved only for an error code or the game's own error. GAMEEND.COM now
-  notes a game that ends as usual (`GAMEOK.TXT`), and without that or an error
-  the Loader saves a report saying the game didn't end on its own.
-- **A crash after Continue on a monster's whole description** (the window
-  that follows a Look box with more to say): the dialogue window can load
-  other parts of the game's code over the routine that closed the Look box,
-  and DSCLOG went back into it without a way back the game's overlay manager
-  could mend. It now gives it one, as it does for a picked pocket's window.
-- **The Loader's item-list changes made safer** (found in review): taking an
-  item out of a list while the game's own free list moved could leave the
-  item in no list at all; it now goes back where it was.
-- **Defilers' scrolls on creatures that aren't defilers** (one of Scar's
-  henchmen dropped one): the Loader knew a defiler by the class on its
-  character sheet, which the game hands on from one creature to the next. It
-  now knows one by the game's object for it: only the creatures the game's
-  data makes defilers (Balkazar, Wyrmias, Tara, the Troop Leader, the arena's
-  Defiler, the Dark Spiders and the Spider Mother, the Hermit and three
-  thri-kreen) carry one.
+- **Cause Serious and Critical Wounds do 2d8+1 and 3d8+3**, as AD&D has them and the Cure spells heal; their records had 2d9 and 3d9.
+- **A new game's arena could be left without its announcer, and new characters without their gear** (seen in 2.4.0): the Loader's starting gear, fitted just as START GAME rebuilt the game's item records, could use up the game's free records.
+- **A Brute started with no weapon**: its long sword and club, which the game puts in the backpack, were left behind.
+- **No crash report when DOSBox closed while the game still ran** (a freeze, DOSBox stopping with an error of its own, or its window closed): a report was saved only for an error code or the game's own error.
+- **A crash after Continue on a monster's whole description** (the window that follows a Look box with more to say): the dialogue window can load other parts of the game's code over the routine that closed the Look box, and DSCLOG went back into it without a way back the game's overlay manager could mend.
+- **The Loader's item-list changes made safer** (found in review): taking an item out of a list while the game's own free list moved could leave the item in no list at all; it now goes back where it was.
+- **Defilers' scrolls on creatures that aren't defilers** (one of Scar's henchmen dropped one): the Loader knew a defiler by the class on its character sheet, which the game hands on from one creature to the next.
 
 **Documentation**
-- **Kits, a page of their own** (`obsidian-edition/KITS.md`): the README's
-  kit tables and rules moved out, as Items were, the README keeping a table of
-  the kits' names with links; each kit fact repeated across the section (the
-  Shinobi's spell list, the Seeker's and Justifier's casting levels, the
-  Battle Mage's weapon pick, the Arcanist's two spells, Wild Fighting) is now
-  said once. Preservers' first spells stays in the README.
-- **A documentation review**: the Options tab's Weapon specialization switch
-  no longer names the weapon pages; the mod's items are "the mod's", not "the
-  Loader's"; the guide says weapon spec, as the game's screens do; the
-  Effects-screen click among the bug fixes; item reports and thri-kreen claws
-  in the guide and the README's bug fixes; the acid table in ITEMS.md ("Items
-  against acid"); the dice log's attack and save rows shortened, their detail
-  under the tables; the front page's "What it does" a paragraph; install
-  advice said once.
-- **New:** "Where to start" and "Known issues" in the README, a glossary in
-  the guide (THAC0, AC, PSP, the saves' letters and more), and in
-  DEVELOPMENT.md the folders and how a release is made.
-- **Items, a page of its own** (`obsidian-edition/ITEMS.md`): the README's
-  item tables (every magic item, the magic weapons by weapon spec, every
-  mundane weapon) moved out, as How the game works was; the README keeps a
-  short section linking to it, and the front page, the guide and the
-  docicons test name it.
-- **Draft release notes for 2.5.0** (`release-notes/v2.5.0.md`), this pull
-  request's changes for players, and a "Coming in 2.5.0" line on the front
-  page. The version stays 2.4.0 until the release is cut.
-- **The Warden's Legs' chest is the Wagon Train's**, not the Gemfields' (its
-  chest, object 1065, is in region 8, with the magera and their prisoners; the
-  Gemfields are region 6). The item table, the Loader's names for it and
-  Alagorn's story say so.
-- **Patch notes:** the six new spells and the nineteen magic weapons as
-  tables; the air cleric's dagger line says what the game had (none); acid on
-  armour with the other Combat rules; the Loader's accessibility (larger text,
-  the keyboard, contrast, logs as text).
-- **The Loader's Options tab:** Picking pockets says a click on anyone in sight
-  (it said "talk to someone"); the hiding switch reads more plainly; "... or by
-  holding the right mouse button" sits under the map scrolling it belongs to,
-  not under the view in fights. The screenshot of the tab is retaken.
-- **Credits** on the front page: the code and documentation written by
-  Claude, the direction and testing, the game and its makers, the rule books,
-  and the tools.
+- **Kits, a page of their own** (`obsidian-edition/KITS.md`): the README's kit tables and rules moved out, as Items were, the README keeping a table of the kits' names with links; each kit fact repeated across the section (the Shinobi's spell list, the Seeker's and Justifier's casting levels, the Battle Mage's weapon pick, the Arcanist's two spells, Wild Fighting) is now said once.
+- **A documentation review**: the Options tab's Weapon specialization switch no longer names the weapon pages; the mod's items are "the mod's", not "the Loader's"; the guide says weapon spec, as the game's screens do; the Effects-screen click among the bug fixes; item reports and thri-kreen claws in the guide and the README's bug fixes; the acid table in ITEMS.md ("Items against acid"); the dice log's attack and save rows shortened, their detail under the tables; the front page's "What it does" a paragraph; install advice said once.
+- **New:** "Where to start" and "Known issues" in the README, a glossary in the guide (THAC0, AC, PSP, the saves' letters and more), and in DEVELOPMENT.md the folders and how a release is made.
+- **Items, a page of its own** (`obsidian-edition/ITEMS.md`): the README's item tables (every magic item, the magic weapons by weapon spec, every mundane weapon) moved out, as How the game works was; the README keeps a short section linking to it, and the front page, the guide and the docicons test name it.
+- **Draft release notes for 2.5.0** (`release-notes/v2.5.0.md`), this pull request's changes for players, and a "Coming in 2.5.0" line on the front page.
+- **The Warden's Legs' chest is the Wagon Train's**, not the Gemfields' (its chest, object 1065, is in region 8, with the magera and their prisoners; the Gemfields are region 6).
+- **Patch notes:** the six new spells and the nineteen magic weapons as tables; the air cleric's dagger line says what the game had (none); acid on armour with the other Combat rules; the Loader's accessibility (larger text, the keyboard, contrast, logs as text).
+- **The Loader's Options tab:** Picking pockets says a click on anyone in sight (it said "talk to someone"); the hiding switch reads more plainly; "...
+- **Credits** on the front page: the code and documentation written by Claude, the direction and testing, the game and its makers, the rule books, and the tools.
 - **The Loader's items in bold italics** in the item tables.
-- **One item catalogue**: the README's New items tables merged into the item
-  tables, which list the game's items and the Loader's together. The Loader's
-  magic items (in bold) carry where each is and what it does; its plain
-  weapons a **new** note. New items keeps its prose, prices and the two new
-  pieces of armour.
-- **`patch-notes.html` made from `PATCH-NOTES.md`** by `python -m
-  dsloader.patchnotes`, as the guide's page is (a test fails when it falls
-  behind); its Copy as Markdown button gives the Markdown itself. Both pages
-  share `dsloader/pagestyle.css`.
-- **The front page tidied**: a list of the documents in place of the contents,
-  the fan-project and license notes at the end, and the release notes listed
-  once. A test checks the version is the same in `dsloader`, the patch notes,
-  the front page and the release notes.
-- **DEVELOPMENT.md opens with how to test, build and run** from a command
-  prompt, then how it works; it says how the two web pages are made.
-- **The README's "What it changes on your computer"** points to the files
-  table instead of listing them twice; the patch notes' first line split in two.
-- **GPL-3.0**: the project's code and documentation are licensed under the GNU
-  General Public License v3.0 (`LICENSE`, in the release zip too), with a note
-  that the game's own art in the pages isn't covered.
-- **How the game works** moved out of the README into
-  `obsidian-edition/HOW-THE-GAME-WORKS.md` (the original game's own rules,
-  about 490 lines), the README keeping a list of its sections.
-- **One source for the kits' numbers**: the README's kit tables. The player's
-  guide keeps who takes each kit on Athas and links to them; the kits' spell
-  slots table moved from the guide to the README; DEVELOPMENT links there for
-  the Seeker's, Justifier's and Shinobi's tables.
-- **[The game's bugs, fixed](obsidian-edition/FEATURES.md#the-games-bugs-fixed)**:
-  a README section with every bug of the game's own the Loader mends, the
-  spells' among them, and a line for them under What it does on both front
-  pages.
-- **Rules the game got wrong** (the README's bug fixes, and a paragraph
-  under the patch notes' Bug Fixes): the spell save, the doubled d20, two
-  weapons, warriors' attacks, class restrictions, multiclass hit points,
-  rangers' spells, acid, the class tables and thief skills, each with
-  what the game did and the rule that puts it right; the thief skills'
-  equipment penalty among the bugs always fixed.
-- **The player's guide as a web page**, `obsidian-edition/player-guide.html`,
-  in the patch notes' look with its sections as an index, made from
-  PLAYER-GUIDE.md by `python -m dsloader.guidepage` (a test fails when it
-  falls behind the guide).
-- **Your saved games** (the patch notes, and the README's bug fixes): no new
-  game needed for the fixes, which work from loading; what the old bugs
-  already did to a save stays (Share Strength's kept strength, a Dispel Magic
-  silence until it wears off, a 2.4.0 arena without its announcer); a new game
-  still the way to see kits, fuller starting gear and the early new content.
+- **One item catalogue**: the README's New items tables merged into the item tables, which list the game's items and the Loader's together.
+- **`patch-notes.html` made from `PATCH-NOTES.md`** by `python -m dsloader.patchnotes`, as the guide's page is (a test fails when it falls behind); its Copy as Markdown button gives the Markdown itself.
+- **The front page tidied**: a list of the documents in place of the contents, the fan-project and license notes at the end, and the release notes listed once.
+- **DEVELOPMENT.md opens with how to test, build and run** from a command prompt, then how it works; it says how the two web pages are made.
+- **The README's "What it changes on your computer"** points to the files table instead of listing them twice; the patch notes' first line split in two.
+- **GPL-3.0**: the project's code and documentation are licensed under the GNU General Public License v3.0 (`LICENSE`, in the release zip too), with a note that the game's own art in the pages isn't covered.
+- **How the game works** moved out of the README into `obsidian-edition/HOW-THE-GAME-WORKS.md` (the original game's own rules, about 490 lines), the README keeping a list of its sections.
+- **One source for the kits' numbers**: the README's kit tables.
+- **[The game's bugs, fixed](obsidian-edition/FEATURES.md#the-games-bugs-fixed)**: a README section with every bug of the game's own the Loader mends, the spells' among them, and a line for them under What it does on both front pages.
+- **Rules the game got wrong** (the README's bug fixes, and a paragraph under the patch notes' Bug Fixes): the spell save, the doubled d20, two weapons, warriors' attacks, class restrictions, multiclass hit points, rangers' spells, acid, the class tables and thief skills, each with what the game did and the rule that puts it right; the thief skills' equipment penalty among the bugs always fixed.
+- **The player's guide as a web page**, `obsidian-edition/player-guide.html`, in the patch notes' look with its sections as an index, made from PLAYER-GUIDE.md by `python -m dsloader.guidepage` (a test fails when it falls behind the guide).
+- **Your saved games** (the patch notes, and the README's bug fixes): no new game needed for the fixes, which work from loading; what the old bugs already did to a save stays (Share Strength's kept strength, a Dispel Magic silence until it wears off, a 2.4.0 arena without its announcer); a new game still the way to see kits, fuller starting gear and the early new content.
+
+*Shortened: each change's full notes (addresses, measurements, how it was found) are in [this file as it was](https://github.com/daaki85/darksun-obsidian-edition/blob/7e18e937e583d95fc493d89cf157b7f8463ba85f/CHANGELOG.md), and how each part works now in the [development notes](obsidian-edition/DEVELOPMENT.md).*
 
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 
@@ -2499,196 +1922,53 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 ## Pull request #44 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/44))
 
 **Added**
-- **A combat log in the game.** In a fight, a panel over the map's lower right
-  shows the dice log's lines as they come, in the game's font and the Ledger's
-  colours, with the round and who acts next above them; at the least, in short
-  (the default) or in detail. An Options switch, off by default. It scrolls
-  back over the fight: the scrollbar's handle, a page at a click on the bar,
-  the mouse wheel over it (on Windows), and a **Latest** chip back to the
-  newest lines. Its header has the level and
-  - / + buttons: collapsed to one line, docked, or expanded with filters
-  (All, Party, Damage, Saves); **L** collapses and opens it.
-- **Saves under their names.** The Ledger keeps a second copy of every save in
-  its **Named saves** folder, named as in the game
-  (`Page 2 slot 05 - Before Scar's battle.SAV`), and the Options tab's new
-  **Saves** section opens the folder and puts a named save back in a slot of
-  the game's list.
-- **Two magic shields.** **Gutterward**, a wooden shield +1, on a skeleton in
-  the Tari's warrens; **Ironbulwark**, a metal shield +3 (the game has no
-  metal shield: a type of the Ledger's), carried by the Guardian of
-  Balkazar's fortress. Each has its icon, its price (25,000 and 65,000) and
-  its story from Alagorn, in his shields' menu.
-- **Three new wizard spells,** with the new spells on: **Reflected Image**
-  (1st level, on the caster: one image, struck instead of the caster half the
-  time; it and Mirror Image replace each other), **Spook** (1st level: one
-  creature flees for 3 rounds unless it saves, at -1 for every 2 caster
-  levels, at most -6; undead aren't affected) and **Friends** (1st level, on
-  the caster: CHA + 2d4, at most 25, for 1d4 rounds and 1 a level, for better
-  prices). Each has its icon (Reflected Image's a hand mirror, named on the
-  Effects screen) and description; preservers and the Shinobi learn all
-  three.
-- **Defilers' scrolls:** each defiler in a fight has a 5% chance of carrying
-  a scroll of a random preserver spell (the game's 69, and the new spells
-  with them on), found on its body when it dies; rolled once a fight, and
-  kept out of the dice log so it isn't given away. A New content box, on by
-  default.
-- **Buying back magical items:** a magical item sold to a merchant (a plus,
-  or a power: rings, wands, scrolls) stays in the merchant's stock to buy
-  back; the game destroys everything sold, and still does other items. An
-  Expanded features box, on by default.
+- **A combat log in the game.** In a fight, a panel over the map's lower right shows the dice log's lines as they come, in the game's font and the Ledger's colours, with the round and who acts next above them; at the least, in short (the default) or in detail.
+- **Saves under their names.** The Ledger keeps a second copy of every save in its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before Scar's battle.SAV`), and the Options tab's new **Saves** section opens the folder and puts a named save back in a slot of the game's list.
+- **Two magic shields.** **Gutterward**, a wooden shield +1, on a skeleton in the Tari's warrens; **Ironbulwark**, a metal shield +3 (the game has no metal shield: a type of the Ledger's), carried by the Guardian of Balkazar's fortress.
+- **Three new wizard spells,** with the new spells on: **Reflected Image** (1st level, on the caster: one image, struck instead of the caster half the time; it and Mirror Image replace each other), **Spook** (1st level: one creature flees for 3 rounds unless it saves, at -1 for every 2 caster levels, at most -6; undead aren't affected) and **Friends** (1st level, on the caster: CHA + 2d4, at most 25, for 1d4 rounds and 1 a level, for better prices).
+- **Defilers' scrolls:** each defiler in a fight has a 5% chance of carrying a scroll of a random preserver spell (the game's 69, and the new spells with them on), found on its body when it dies; rolled once a fight, and kept out of the dice log so it isn't given away.
+- **Buying back magical items:** a magical item sold to a merchant (a plus, or a power: rings, wands, scrolls) stays in the merchant's stock to buy back; the game destroys everything sold, and still does other items.
 
 **Changed**
-- **Templar's Ledger is now the Dark Sun Obsidian Edition Loader** (the
-  Loader for short): the window's banner and title, the crash message in the
-  game, and every page of the docs, which now call it what starts the game
-  with the mod rather than a companion window. Its settings, named saves and
-  crash reports stay where they were.
-- **The folder is `obsidian-edition` and the Python package `dsloader`**
-  (they were `darksun-companion` and `dscompanion`): `python -m dsloader`
-  runs the command line, and the tests workflow is `tests.yml`.
-- **More kits that can't go together:** the Grove Warden can't dual to
-  gladiator, nor a gladiator who duals to druid take it (its AC would add to
-  the gladiator's own); the Swashbuckler, Crusader, Battle Mage and Mind
-  Warrior, each giving a warrior's THAC0, can't go with one another.
-- **The Ravager and the Grove Warden can't go together:** a human who has
-  one isn't offered the other after DUAL (each has an AC of its own that
-  betters with level, and they would stack).
-- **The Stalker and the thief:** a human Stalker can't dual to thief, and a
-  thief (with any thief kit or none) who duals to ranger isn't offered the
-  Stalker kit: its +15 to hiding would add to a thief's own skills.
-- **EMS off in the launcher's DOSBox settings:** GOG's settings turn on EMS,
-  whose 64 KB page frame left the helper 1 KB of upper memory; the
-  launcher's config now turns it off (the game uses XMS instead), giving the
-  helper a 64 KB block more, with conventional memory unchanged (632 KB).
-- **Kits in the docs, class by class:** the README's one table of kits is now
-  a table for each class, under a heading of its own, with the level each
-  part of a kit comes at (the Myrmidon's mastery at 5th level and grand
-  mastery at 9th, the Ravager's AC, the Seeker's and Shinobi's slots, the
-  Crusader's, Mind Warrior's and Battle Mage's attacks, the Grove Warden's
-  AC), each kit's starting gear and what else a player should know (the
-  classes and kits it rules out, where its choices are made); the player
-  guide's class sections have the same full rows.
-- **The player's guide is now `PLAYER-GUIDE.md`** (it was `GUIDE.md`), so its
-  name says what it is; the links to it follow.
-- **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each
-  point after, to 40% at 25 (it was 5% at 16 to 25% from 20); shops pay 60%
-  of an item's price when the party sells (the game paid all of it, which
-  with the discount let anything bought be sold at a profit).
-- **Fogbolt's icon is grey** (its cloud on Armor's grey tile, rather than
-  Charm Person's purple).
-- **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the
-  game's five, with the new spells on: offered at a level up as the others
-  are, and cast at the thief level less 5 as they are.
-- **The bone and obsidian axes weigh 30** (35 and 70 before), the game's
-  heaviest a weapon can be without being HEAVY: they are no longer HEAVY, so
-  either can go in the off hand with another weapon, and both can backstab.
-  The metal Axe is the game's own, 70. Drakejaw and Glasshewer, of those
-  types, weigh 30 too.
+- **Templar's Ledger is now the Dark Sun Obsidian Edition Loader** (the Loader for short): the window's banner and title, the crash message in the game, and every page of the docs, which now call it what starts the game with the mod rather than a companion window.
+- **The folder is `obsidian-edition` and the Python package `dsloader`** (they were `darksun-companion` and `dscompanion`): `python -m dsloader` runs the command line, and the tests workflow is `tests.yml`.
+- **More kits that can't go together:** the Grove Warden can't dual to gladiator, nor a gladiator who duals to druid take it (its AC would add to the gladiator's own); the Swashbuckler, Crusader, Battle Mage and Mind Warrior, each giving a warrior's THAC0, can't go with one another.
+- **The Ravager and the Grove Warden can't go together:** a human who has one isn't offered the other after DUAL (each has an AC of its own that betters with level, and they would stack).
+- **The Stalker and the thief:** a human Stalker can't dual to thief, and a thief (with any thief kit or none) who duals to ranger isn't offered the Stalker kit: its +15 to hiding would add to a thief's own skills.
+- **EMS off in the launcher's DOSBox settings:** GOG's settings turn on EMS, whose 64 KB page frame left the helper 1 KB of upper memory; the launcher's config now turns it off (the game uses XMS instead), giving the helper a 64 KB block more, with conventional memory unchanged (632 KB).
+- **Kits in the docs, class by class:** the README's one table of kits is now a table for each class, under a heading of its own, with the level each part of a kit comes at (the Myrmidon's mastery at 5th level and grand mastery at 9th, the Ravager's AC, the Seeker's and Shinobi's slots, the Crusader's, Mind Warrior's and Battle Mage's attacks, the Grove Warden's AC), each kit's starting gear and what else a player should know (the classes and kits it rules out, where its choices are made); the player guide's class sections have the same full rows.
+- **The player's guide is now `PLAYER-GUIDE.md`** (it was `GUIDE.md`), so its name says what it is; the links to it follow.
+- **The leader's CHA at shops:** 5% off from CHA 18 and 5% more for each point after, to 40% at 25 (it was 5% at 16 to 25% from 20); shops pay 60% of an item's price when the party sells (the game paid all of it, which with the discount let anything bought be sold at a profit).
+- **Fogbolt's icon is grey** (its cloud on Armor's grey tile, rather than Charm Person's purple).
+- **The Shinobi can learn Fogbolt,** a 1st-level spell on its list beside the game's five, with the new spells on: offered at a level up as the others are, and cast at the thief level less 5 as they are.
+- **The bone and obsidian axes weigh 30** (35 and 70 before), the game's heaviest a weapon can be without being HEAVY: they are no longer HEAVY, so either can go in the off hand with another weapon, and both can backstab.
 
 **Removed**
-- **Each turn's rolls in the game's dialogue window** (the "Show each turn's
-  rolls" switch and `--popups`): the combat log shows them without stopping
-  the game. The game is no longer patched in its combat loop for them, and
-  DSCLOG is about 1 KB smaller.
+- **Each turn's rolls in the game's dialogue window** (the "Show each turn's rolls" switch and `--popups`): the combat log shows them without stopping the game.
 
 **Fixed**
-- **The dice log stopped in a fight whose round order named someone it
-  couldn't match** (seen in the arena's opening show, the Defiler and a
-  Slig): the turn's lines now pass over that entry.
-- **The new spells' records shared memory with a stack.** The game kept a
-  small stack where Cat's Grace, Erdlu Claw and Fogbolt's records are; the
-  helper now moves it (and the monster kinds table) into its own memory as
-  the game starts, which also makes room for the three spells above.
-- **New preservers weren't offered their spells.** DONE on the creation
-  screen gave a new preserver (single or multiclass) the game's own starting
-  spells instead of CHOOSE A SPELL: the check meant to leave START GAME's
-  ready-made party alone read the character's status, which says Okay for a
-  character being made too. It now tells the two apart by where the game's
-  spell grants were called from.
-- **Stuck on the creation panel's KITS page.** A single-class warrior on the
-  last weapon page has KITS for its button; adding a class there (a fighter
-  made fighter/thief) kept the button, and pressing it opened a page with no
-  kits, titled KITS, whose KITS button opened the same page again. The last
-  weapon page now changes its button to VIEW PSIONICS as soon as the
-  character can no longer take a kit (and back to KITS if it can again), and
-  KITS pressed for a character with no kit class goes back as VIEW PSIONICS
-  does.
-- **A kit lost on a new roll.** The die's new roll takes a kit away when the
-  character's classes aren't the ones the panel last saw, which it learns
-  from a click on a class. A new character's default class is never clicked,
-  so a fighter given a kit (a Myrmidon, with its two specializations) and
-  then rolled again lost the kit, and with it the second specialization. A
-  kit chosen now records the classes it goes with.
-- **The panel after a new race or sex.** The creation screen empties the
-  classes, opens the panel for a character of no class, then puts the default
-  class back without a click: a fighter was left with the game's VIEW SPHERES
-  (which did nothing) where WEAPON SPEC belongs. The panel now follows the
-  class put back.
-- **Starting gear the classes can't use.** A character of several classes
-  started with each class's gear, what it couldn't wear in the backpack (a
-  fighter/druid/thief's leather armour, which a druid can't wear). With class
-  restrictions, a new character's weapons, armour and shields its classes
-  can't use are left behind, and the dice log says so.
-- **A missile weapon's line on the inventory screen** showed the weapon's own
-  rate of fire and no specialization bonus (a staff sling specialist's `1D4`).
-  It now shows the rate and the bonus the attack uses (`1.5x1D4+2`).
-- **A helm's item box said AC BONUS:0** (beside its name's "(AC 1)") until it
-  had been worn: the rule set the helms' AC only as the game added up a
-  character's. The box now sets it too, and shows 1.
-- **Doors with charges.** A door's box (and a mirror's, a crank's) could say
-  `Charges: 10`: the charges line read bytes that, in scenery, hold something
-  else. Scenery no longer gets the line.
-- **The Cloak of Protection forbidden to druids.** Its type counts for AC as
-  armour does, so class restrictions took it for armour, which a druid (a
-  fighter/druid/thief too) can't wear. It's a cloak, for every class.
-- **A polearm's item box ran out of the box.** The game's Polearm picture is
-  36 pixels tall, where every other item's is 22 at most, and the box puts its
-  lines below the picture: the damage line (Thornwall's, Linebreaker's, the
-  game's own bone polearm's) fell outside. The Ledger now writes the polearms'
-  picture at 22 pixels.
-- **The Trustee stuck at "I have to get back to work".** The game makes him
-  busy after a talk until his rounds of the pens bring him back to their first
-  corner; when his rounds stall (he can't reach his next corner), he stays busy
-  for good and never talks again. What stalls them: a thief with no room for
-  his stolen key drops it at his feet, and after each step of his rounds he
-  makes for it ("There it is!") without picking it up. In the Ledger's copy he
-  leaves the key where it lies (the party can pick it up), and he says the
-  busy line once and is free to talk the next time.
-- **Rows of the creation panel's weapon and kit pages took clicks only at
-  their left.** Each row is a copy of the game's AIR row, a button 33 pixels
-  wide: a click on the rest of a longer name (the middle of MYRMIDON or LNG
-  SWORD) did nothing. Each row's button is now as wide as its name.
+- **The dice log stopped in a fight whose round order named someone it couldn't match** (seen in the arena's opening show, the Defiler and a Slig): the turn's lines now pass over that entry.
+- **The new spells' records shared memory with a stack.** The game kept a small stack where Cat's Grace, Erdlu Claw and Fogbolt's records are; the helper now moves it (and the monster kinds table) into its own memory as the game starts, which also makes room for the three spells above.
+- **New preservers weren't offered their spells.** DONE on the creation screen gave a new preserver (single or multiclass) the game's own starting spells instead of CHOOSE A SPELL: the check meant to leave START GAME's ready-made party alone read the character's status, which says Okay for a character being made too.
+- **Stuck on the creation panel's KITS page.** A single-class warrior on the last weapon page has KITS for its button; adding a class there (a fighter made fighter/thief) kept the button, and pressing it opened a page with no kits, titled KITS, whose KITS button opened the same page again.
+- **A kit lost on a new roll.** The die's new roll takes a kit away when the character's classes aren't the ones the panel last saw, which it learns from a click on a class.
+- **The panel after a new race or sex.** The creation screen empties the classes, opens the panel for a character of no class, then puts the default class back without a click: a fighter was left with the game's VIEW SPHERES (which did nothing) where WEAPON SPEC belongs.
+- **Starting gear the classes can't use.** A character of several classes started with each class's gear, what it couldn't wear in the backpack (a fighter/druid/thief's leather armour, which a druid can't wear).
+- **A missile weapon's line on the inventory screen** showed the weapon's own rate of fire and no specialization bonus (a staff sling specialist's `1D4`).
+- **A helm's item box said AC BONUS:0** (beside its name's "(AC 1)") until it had been worn: the rule set the helms' AC only as the game added up a character's.
+- **Doors with charges.** A door's box (and a mirror's, a crank's) could say `Charges: 10`: the charges line read bytes that, in scenery, hold something else.
+- **The Cloak of Protection forbidden to druids.** Its type counts for AC as armour does, so class restrictions took it for armour, which a druid (a fighter/druid/thief too) can't wear.
+- **A polearm's item box ran out of the box.** The game's Polearm picture is 36 pixels tall, where every other item's is 22 at most, and the box puts its lines below the picture: the damage line (Thornwall's, Linebreaker's, the game's own bone polearm's) fell outside.
+- **The Trustee stuck at "I have to get back to work".** The game makes him busy after a talk until his rounds of the pens bring him back to their first corner; when his rounds stall (he can't reach his next corner), he stays busy for good and never talks again.
+- **Rows of the creation panel's weapon and kit pages took clicks only at their left.** Each row is a copy of the game's AIR row, a button 33 pixels wide: a click on the rest of a longer name (the middle of MYRMIDON or LNG SWORD) did nothing.
 
 **Documentation**
-- **A review of every page for this pull request's changes.** The README's
-  picking pockets section tells of the Trustee's key, its class restrictions
-  that a cloak isn't armour, its kits that a new roll keeps the kit, its new
-  items the axes' weight, its Options list the Saves section and its More
-  saves `cloud_saves`; the More character customization table gains STORE and
-  RECALL, which has a box too. A backstab's weight limit is a metal long
-  sword's 40 (it said a long sword's was 20), and the AC and saves lines point
-  to the rings of protection rather than "the Ring +1". The guide's Equipment
-  has the obsidian axe backstabbing and cloaks for every class, and its Ledger
-  list the named saves; both overviews mention them. DEVELOPMENT.md has the
-  scenery and cloak checks, the kit kept through a roll, the rows' width, the
-  polearm's picture, the Trustee's two script changes (his script is now
-  10,967 bytes), the named saves and the `checks` command.
-- **A second review, after the combat log:** the overviews name the combat
-  log, the six wizard spells, buying back and defilers' scrolls; the top
-  README's overview is a short list linking to the full one; the last
-  mentions of the turn pop-up are gone; the kits' starting gear is said once,
-  in each class's table, not again in a table and list of its own; the
-  Options tab's new spells box names all six, and its screenshot is retaken.
-- **A third review, after the rename:** the full README puts **In the game**
-  (the combat log first) before the Loader's window, and its overview is a
-  list as the top README's is; the player's guide starts with the combat log;
-  the patch notes put the game's changes first and the Loader after them;
-  DEVELOPMENT.md has the combat log under How each part works and Room in the
-  helper as a section of its own (they were inside Kits), and a Shinobi table
-  split by a paragraph is whole again; "viewer" is gone from the docs.
-- **The polearms' icons** in the README's item tables (the bone and metal
-  Polearm, Thornwall, Linebreaker) are redrawn at the 22 pixels the game now
-  shows them at.
+- **A review of every page for this pull request's changes.** The README's picking pockets section tells of the Trustee's key, its class restrictions that a cloak isn't armour, its kits that a new roll keeps the kit, its new items the axes' weight, its Options list the Saves section and its More saves `cloud_saves`; the More character customization table gains STORE and RECALL, which has a box too.
+- **A second review, after the combat log:** the overviews name the combat log, the six wizard spells, buying back and defilers' scrolls; the top README's overview is a short list linking to the full one; the last mentions of the turn pop-up are gone; the kits' starting gear is said once, in each class's table, not again in a table and list of its own; the Options tab's new spells box names all six, and its screenshot is retaken.
+- **A third review, after the rename:** the full README puts **In the game** (the combat log first) before the Loader's window, and its overview is a list as the top README's is; the player's guide starts with the combat log; the patch notes put the game's changes first and the Loader after them; DEVELOPMENT.md has the combat log under How each part works and Room in the helper as a section of its own (they were inside Kits), and a Shinobi table split by a paragraph is whole again; "viewer" is gone from the docs.
+- **The polearms' icons** in the README's item tables (the bone and metal Polearm, Thornwall, Linebreaker) are redrawn at the 22 pixels the game now shows them at.
+
+*Shortened: each change's full notes (addresses, measurements, how it was found) are in [this file as it was](https://github.com/daaki85/darksun-obsidian-edition/blob/7e18e937e583d95fc493d89cf157b7f8463ba85f/CHANGELOG.md), and how each part works now in the [development notes](obsidian-edition/DEVELOPMENT.md).*
 
 ## Pull request #43 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/43))
 
@@ -2979,275 +2259,71 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 ## Pull request #31 ([merged 2026-10-09](https://github.com/daaki85/darksun-obsidian-edition/pull/31))
 
 **Added**
-- **Kits:** a character of one class may take one of three kits for its class,
-  or none, on the creation panel's new KIT page (KITS, at the end of the
-  panel's pages: the disciplines' for a class with no sphere, the spheres' for
-  a cleric, druid or ranger, the last weapon page for a warrior with weapon
-  specialization), NO KIT first and what a new character has, the rows not
-  chosen greyed as the spheres' are. The kit is kept with the character (sheet
-  `+43h`), and the Effects screen (`KIT: RAVAGER`) and the Ledger's Characters
-  tab name it. A new switch on the Options tab, under Rule changes.
-- **What the kits do:** the Myrmidon, Sentinel and Ravager (fighter); the
-  Arena Champion, Twin-blade and Brute (gladiator); the Stalker (ranger); the
-  Assassin (thief); the Grove Warden and Wanderer (druid); the Lifebinder's
-  weapons, and the Shinobi's weapons and armour. The guide's Kits has what
-  each does. The dice log and the Ledger show each kit's part; a new probe in
-  the game (INT B8h) makes the Sentinel's initiative.
-- **Kits' THAC0:** the Swashbuckler, Crusader, Battle Mage and Mind Warrior
-  get a warrior's THAC0, the Scholar's is 1 worse, through a new probe at the
-  end of the game's THAC0 routine (INT B7h); the Swashbuckler's −10 to every
-  thief skill, named in the dice log's thief skill lines as the Assassin's
-  now is.
-- **Kits' spell slots:** the Arcanist's wizard slots 1 more at each spell
-  level, the Battle Mage's and Crusader's 1 fewer, the Elementalist's a level
-  behind, the Seeker's and Justifier's priest slots their own tables, through
-  two new probes in the game's slot routine (INT B6h, INT B5h); the Ledger's
-  Spells tab counts them the same way.
-- **Kits' PSP:** the Mind Bender's telepathy powers (the defence modes too)
-  cost 2 PSP less to use and to keep up and its psychokinesis 2 more, the
-  Kineticist's the other way about, through new probes where the game prices
-  a power (INT B4h, B3h, B2h, B0h, AEh).
-- **Kits' healing:** the Healer's Cure Light, Serious and Critical Wounds heal
-  1 more a die, and the Lifebinder's cures heal a die more (INT B1h); the dice
-  log shows each. The Healer may hold no weapon in the off hand.
-- **The Battle Mage** casts though hit earlier in the round (the game stops
-  anyone else: INT ADh), and holds nothing in the off hand.
-- **Kits' casting level:** the Seeker casts at its ranger level less 5 and the
-  Justifier less 9 (a ranger's: less 7), which also lets a Seeker of 6th level
-  choose 1st-level priest spells for its slots (INT AFh). The level a spell's
-  duration and damage take, which the game works out apart from that (with a
-  ranger's whole level), now has the kits' too (INT A6h).
-- **Rangers' casting level (a rule, on by default):** a ranger's spells last
-  and do damage as cast at its level less 7, as the spell levels it may cast
-  already count it; the game took the whole ranger level (a 9th-level
-  ranger's spells lasted as a 9th-level priest's). A multiclass ranger casts
-  at the better of its classes, the ranger's counted 7 less (INT A6h).
-- **The Shinobi's spells:** preserver spells from 6th thief level on the
-  Seeker's slots, cast at the thief level less 5, from its own list of 14:
-  one learnt at each level up from 6th, on the game's CHOOSE A SPELL screen,
-  which shows its spells only, up to the spell level it casts; none learnt
-  from scrolls (INT ACh, A8h, A7h, ABh, AAh, A9h, and the level-up's probe).
-  The Ledger's Spells tab shows its slots.
-- **The Scholar** learns a spell more at each level up: CHOOSE A SPELL comes
-  up twice.
-- **The Battle Mage's weapon and armour:** it wears light armour (leather, or
-  none) and casts in it; with weapon specialization it chooses one weapon spec
-  (long sword, club, dagger, short sword, mace, axe or pick) on the weapon
-  pages, which the panel now offers it, may use those weapons as well as a
-  preserver's own, and attacks with them at expertise's rate, 3/2 a round (2
-  from 7th level). The game's equip check, the fight, View Character's and the
-  inventory's DAM lines, the Effects screen (EXPERT IN) and the Ledger all
-  count it.
-- **The Elementalist's second sphere:** chosen on the creation panel's
-  CLERICAL SPHERE list once the kit is taken (a second row marked beside its
-  own), its spells known from the start, as its own sphere's are, cast at its
-  cleric level, and its weapons allowed as well as its own sphere's (INT A1h,
-  A0h, 9Fh, 9Eh). The Characters tab names it. Every kit now works.
-- **The Seeker's weapons** are its sphere's, as a cleric's of that sphere,
-  but for the bow, on the weapon pages and when equipping. **The Justifier's**
-  expertise with the bow and its chosen weapon spec is specialization (+1 to
-  hit, +2 damage), with weapon specialization.
-- **Kits' hit dice and PSP:** the Battle Mage rolls a d6 for its hit points,
-  the Mind Warrior a d8 and has a tenth fewer PSP (rounded down), and the
-  Arcanist a d3, at each level up and on the creation screen: choosing or
-  taking back one of these kits rolls the new character's hit points and
-  works out its PSP again (the game did both only when a class was clicked),
-  and the screen shows the new numbers (INT A5h, A4h, A3h, A2h). The dice
-  log's hit point lines name the kit's die.
-- **A kit sleeps when a human dual-classes** (DUAL on a portrait's menu), as
-  the class it was chosen with does, and wakes, gifts and costs, once the new
-  class's level passes the old one's. The Effects screen adds (ASLEEP) after
-  the kit and the Characters tab names the level to pass. Awake, it goes by
-  its own class's level; its hit die counts only for its own class. A Battle
-  Mage's chosen weapon spec stays the kit's (expertise when awake, nothing
-  while asleep), not a new fighter's specialization.
-- **Classes a kit bars on dual-classing,** greyed on the DUAL window (INT
-  9Dh): a Seeker or Justifier can't become a cleric or druid, a Shinobi a
-  preserver (their own slot tables would replace the new class's); the
-  Swashbuckler, Crusader, Battle Mage and Mind Warrior no warrior class (they
-  have a warrior's THAC0 already); an Arena Champion or Sentinel no druid or
-  preserver (no shield); a Brute no psionicist or air cleric (no two-handed
-  melee weapon).
-- **Weapon specs are weapons learnt for good,** while the class or kit that
-  gave them is awake: no kit forbids a weapon type the character specialized
-  in (but for the off hand's rules). A dual-classed human's chosen weapon
-  types sleep with their class, as before, and come back when it wakes.
-- **A human who becomes a preserver picks its two spells** on the game's
-  CHOOSE A SPELL window (1st level only), not Grease and Magic Missile (INT
-  9Ch).
-- **Kits for a human's new class:** after DUAL, the game's three-choice menu
-  asks for the new class's kit (**KIT: NONE**, then its kits; one barred by
-  the character's other classes or kits left off), and a new Elementalist's
-  second sphere; with weapon specialization a new fighter, gladiator, ranger
-  or Battle Mage then picks the weapon types it is due, as at a level up. Up
-  to three kits, one for each class, each asleep with its class. A human who
-  becomes a preserver and takes the Scholar kit picks three spells, not two.
-  Kits that can't go together (Arena Champion or Sentinel with Shinobi;
-  Twin-blade with Healer; Brute with Shinobi or Lifebinder), and kits a class
-  bars, both ways (INT 99h).
-- **The Effects screen a page at a time:** its lower panel has room for five
-  lines, too few for three kits and a gladiator's weapon specs. A kit takes
-  one line (the long names shortened as on the KIT page, "(ASLEEP)" after one
-  that sleeps), and when there are more than five lines the panel shows four
-  and MORE: CLICK HERE; a click on it shows the next page, a weapon spec's
-  heading carried over with its weapons (INT 97h).
-- **A new preserver picks its starting spells** on CHOOSE A SPELL when DONE
-  is clicked on the creation screen (two 1st-level spells at 1st level, four
-  at 2nd, four and two of 2nd level at 3rd; a Scholar one more a level), in
-  place of the ones the game handed out (INT 98h).
-- **The Stalker hides in shadows indoors** with its full chance (the stealth
-  rule halves a ranger's indoors).
-- **Starting gear fitted to the kit:** the game's class gear, given at DONE,
-  is changed while the character is new where the kit can't use it: a
-  Shinobi's long sword becomes a bone short sword, a Brute's a bone great axe
-  (its club to the backpack), a Seeker's of its sphere's material, a Ravager's
-  shield is taken away (a kit that can't use a shield has no use for it in the
-  backpack); an Arena Champion's off-hand club becomes a shield, and a Battle
-  Mage's quarterstaff its weapon spec's weapon. The dice log names each
-  change. The guide lists each class's starting gear.
-- **Two magic robes** for preservers, psionicists and druids, worn on the
-  chest and not armour (cast in them; their AC with no armour worn, as
-  bracers'): the **Ashen Robe** (+1 AC, +1 on saves against spells), which
-  Kalzith wears and sells and leaves when killed, and the **Veiled Robe** (+2
-  AC, +1 on every save, a wizard slot more at spell levels 1-3), sold by Kel.
-  Drawn icons, Alagorn's stories, the Ledger's saves and slots count them.
-- **The Warden's Plate's AC explained:** 12 points better as a set (the helm
-  2: a helm's AC 1 and its +1), not "AC 11".
-- **Kits' starting gear, more:** a Myrmidon gets a plain weapon of its second
-  weapon spec as well (in the backpack; a bow in the missile slot, with
-  arrows), a Ravager a second of its weapon for the hand its shield left (none
-  for a two-handed one), and a Brute's club is left behind rather than
-  carried.
-- **Charges in an item's box:** a wand, the Storm Ring or a necklace shows the
-  charges it has left (`Charges: 50`) in its item box.
-- **Preservers' INT**, a new rule change (on by default): AD&D's table for
-  INT gives a preserver a chance to learn a spell from a scroll (35% at INT
-  9 to 100% at 24; a failed try uses the scroll up) and the most spells of
-  each spell level it may know (6 at INT 9, all from 19), which also limits
-  CHOOSE A SPELL at a level up. The dice log shows each try.
-- **The leader's CHA at shops**, a new rule change (on by default): the
-  party leader's CHA lowers what shops ask, as Baldur's Gate's table has it
-  (5% at CHA 16 to 25% from 20), in the price shown, the price charged and
-  the list's greying of what the party can't afford; selling unchanged.
-  Through two new probes (INT 8Dh, 8Ch).
-- **The guide's races:** each race's range of scores, and why a half-giant's
-  large penalties give the Dark Sun book's caps.
-- **AD&D's class tables**, a new rule change (on by default): AD&D's XP
-  tables (a gladiator's and ranger's 2nd level 2,250, a thief's 1,250; the
-  game had a gladiator on the fighter's), priests' THAC0 (2 better every 3
-  levels from 4th; the game's from 3rd) and spell slots (AD&D's priest table
-  for clerics and druids, its wizard table for preservers), through three new
-  probes (INT 90h, 8Fh, 8Eh). Hit points were AD&D's already. The guide has
-  the tables.
+- **Kits:** a character of one class may take one of three kits for its class, or none, on the creation panel's new KIT page (KITS, at the end of the panel's pages: the disciplines' for a class with no sphere, the spheres' for a cleric, druid or ranger, the last weapon page for a warrior with weapon specialization), NO KIT first and what a new character has, the rows not chosen greyed as the spheres' are.
+- **What the kits do:** the Myrmidon, Sentinel and Ravager (fighter); the Arena Champion, Twin-blade and Brute (gladiator); the Stalker (ranger); the Assassin (thief); the Grove Warden and Wanderer (druid); the Lifebinder's weapons, and the Shinobi's weapons and armour.
+- **Kits' THAC0:** the Swashbuckler, Crusader, Battle Mage and Mind Warrior get a warrior's THAC0, the Scholar's is 1 worse, through a new probe at the end of the game's THAC0 routine (INT B7h); the Swashbuckler's −10 to every thief skill, named in the dice log's thief skill lines as the Assassin's now is.
+- **Kits' spell slots:** the Arcanist's wizard slots 1 more at each spell level, the Battle Mage's and Crusader's 1 fewer, the Elementalist's a level behind, the Seeker's and Justifier's priest slots their own tables, through two new probes in the game's slot routine (INT B6h, INT B5h); the Ledger's Spells tab counts them the same way.
+- **Kits' PSP:** the Mind Bender's telepathy powers (the defence modes too) cost 2 PSP less to use and to keep up and its psychokinesis 2 more, the Kineticist's the other way about, through new probes where the game prices a power (INT B4h, B3h, B2h, B0h, AEh).
+- **Kits' healing:** the Healer's Cure Light, Serious and Critical Wounds heal 1 more a die, and the Lifebinder's cures heal a die more (INT B1h); the dice log shows each.
+- **The Battle Mage** casts though hit earlier in the round (the game stops anyone else: INT ADh), and holds nothing in the off hand.
+- **Kits' casting level:** the Seeker casts at its ranger level less 5 and the Justifier less 9 (a ranger's: less 7), which also lets a Seeker of 6th level choose 1st-level priest spells for its slots (INT AFh).
+- **Rangers' casting level (a rule, on by default):** a ranger's spells last and do damage as cast at its level less 7, as the spell levels it may cast already count it; the game took the whole ranger level (a 9th-level ranger's spells lasted as a 9th-level priest's).
+- **The Shinobi's spells:** preserver spells from 6th thief level on the Seeker's slots, cast at the thief level less 5, from its own list of 14: one learnt at each level up from 6th, on the game's CHOOSE A SPELL screen, which shows its spells only, up to the spell level it casts; none learnt from scrolls (INT ACh, A8h, A7h, ABh, AAh, A9h, and the level-up's probe).
+- **The Scholar** learns a spell more at each level up: CHOOSE A SPELL comes up twice.
+- **The Battle Mage's weapon and armour:** it wears light armour (leather, or none) and casts in it; with weapon specialization it chooses one weapon spec (long sword, club, dagger, short sword, mace, axe or pick) on the weapon pages, which the panel now offers it, may use those weapons as well as a preserver's own, and attacks with them at expertise's rate, 3/2 a round (2 from 7th level).
+- **The Elementalist's second sphere:** chosen on the creation panel's CLERICAL SPHERE list once the kit is taken (a second row marked beside its own), its spells known from the start, as its own sphere's are, cast at its cleric level, and its weapons allowed as well as its own sphere's (INT A1h, A0h, 9Fh, 9Eh).
+- **The Seeker's weapons** are its sphere's, as a cleric's of that sphere, but for the bow, on the weapon pages and when equipping.
+- **Kits' hit dice and PSP:** the Battle Mage rolls a d6 for its hit points, the Mind Warrior a d8 and has a tenth fewer PSP (rounded down), and the Arcanist a d3, at each level up and on the creation screen: choosing or taking back one of these kits rolls the new character's hit points and works out its PSP again (the game did both only when a class was clicked), and the screen shows the new numbers (INT A5h, A4h, A3h, A2h).
+- **A kit sleeps when a human dual-classes** (DUAL on a portrait's menu), as the class it was chosen with does, and wakes, gifts and costs, once the new class's level passes the old one's.
+- **Classes a kit bars on dual-classing,** greyed on the DUAL window (INT 9Dh): a Seeker or Justifier can't become a cleric or druid, a Shinobi a preserver (their own slot tables would replace the new class's); the Swashbuckler, Crusader, Battle Mage and Mind Warrior no warrior class (they have a warrior's THAC0 already); an Arena Champion or Sentinel no druid or preserver (no shield); a Brute no psionicist or air cleric (no two-handed melee weapon).
+- **Weapon specs are weapons learnt for good,** while the class or kit that gave them is awake: no kit forbids a weapon type the character specialized in (but for the off hand's rules).
+- **A human who becomes a preserver picks its two spells** on the game's CHOOSE A SPELL window (1st level only), not Grease and Magic Missile (INT 9Ch).
+- **Kits for a human's new class:** after DUAL, the game's three-choice menu asks for the new class's kit (**KIT: NONE**, then its kits; one barred by the character's other classes or kits left off), and a new Elementalist's second sphere; with weapon specialization a new fighter, gladiator, ranger or Battle Mage then picks the weapon types it is due, as at a level up.
+- **The Effects screen a page at a time:** its lower panel has room for five lines, too few for three kits and a gladiator's weapon specs.
+- **A new preserver picks its starting spells** on CHOOSE A SPELL when DONE is clicked on the creation screen (two 1st-level spells at 1st level, four at 2nd, four and two of 2nd level at 3rd; a Scholar one more a level), in place of the ones the game handed out (INT 98h).
+- **The Stalker hides in shadows indoors** with its full chance (the stealth rule halves a ranger's indoors).
+- **Starting gear fitted to the kit:** the game's class gear, given at DONE, is changed while the character is new where the kit can't use it: a Shinobi's long sword becomes a bone short sword, a Brute's a bone great axe (its club to the backpack), a Seeker's of its sphere's material, a Ravager's shield is taken away (a kit that can't use a shield has no use for it in the backpack); an Arena Champion's off-hand club becomes a shield, and a Battle Mage's quarterstaff its weapon spec's weapon.
+- **Two magic robes** for preservers, psionicists and druids, worn on the chest and not armour (cast in them; their AC with no armour worn, as bracers'): the **Ashen Robe** (+1 AC, +1 on saves against spells), which Kalzith wears and sells and leaves when killed, and the **Veiled Robe** (+2 AC, +1 on every save, a wizard slot more at spell levels 1-3), sold by Kel.
+- **The Warden's Plate's AC explained:** 12 points better as a set (the helm 2: a helm's AC 1 and its +1), not "AC 11".
+- **Kits' starting gear, more:** a Myrmidon gets a plain weapon of its second weapon spec as well (in the backpack; a bow in the missile slot, with arrows), a Ravager a second of its weapon for the hand its shield left (none for a two-handed one), and a Brute's club is left behind rather than carried.
+- **Charges in an item's box:** a wand, the Storm Ring or a necklace shows the charges it has left (`Charges: 50`) in its item box.
+- **Preservers' INT**, a new rule change (on by default): AD&D's table for INT gives a preserver a chance to learn a spell from a scroll (35% at INT 9 to 100% at 24; a failed try uses the scroll up) and the most spells of each spell level it may know (6 at INT 9, all from 19), which also limits CHOOSE A SPELL at a level up.
+- **The leader's CHA at shops**, a new rule change (on by default): the party leader's CHA lowers what shops ask, as Baldur's Gate's table has it (5% at CHA 16 to 25% from 20), in the price shown, the price charged and the list's greying of what the party can't afford; selling unchanged.
+- **The guide's races:** each race's range of scores, and why a half-giant's large penalties give the Dark Sun book's caps.
+- **AD&D's class tables**, a new rule change (on by default): AD&D's XP tables (a gladiator's and ranger's 2nd level 2,250, a thief's 1,250; the game had a gladiator on the fighter's), priests' THAC0 (2 better every 3 levels from 4th; the game's from 3rd) and spell slots (AD&D's priest table for clerics and druids, its wizard table for preservers), through three new probes (INT 90h, 8Fh, 8Eh).
 
 **Changed**
-- **The mod is now Obsidian Edition.** Templar's Ledger stays the name of its
-  companion window. The launcher is `Start Obsidian Edition.bat`, releases are
-  `Obsidian-Edition-<version>.zip`, and crash reports are headed "Obsidian
-  Edition crash report".
-- **Kalzith** wears his Ashen Robe, Cloak and Quarterstaff from the start and
-  sells them with his scrolls (the game's shops sell all a merchant carries, worn
-  or not; nothing marks an item not for sale). He is sold out once he carries
-  nothing; killed, he leaves what he still has and one of his scrolls.
-- **The helper loads into upper memory again,** leaving the game 62 KB more
-  conventional memory (632 KB free, was 570): the dice log's ring buffer now
-  follows the helper in a segment of its own, so the helper's image is 40 KB
-  (was 63) and what it asks for fits DOSBox's upper memory. It also leaves
-  room in its segment for the kits' code.
-- **Two weapons:** the off hand attacks once a round, whoever holds it; the
-  extra attacks (the game's 3/2 for warriors, specialization's, the kits')
-  are the main hand's. The game gave each hand the whole rate.
-- **A kit for each class:** the kit byte keeps two bits for each of a
-  human's classes, so a human who changes class can have up to three kits;
-  every kit rule, in the helper and the Ledger, now asks for each kit the
-  character has awake, and the Effects screen lists them all. Characters
-  made before read as they did.
-- **The Arcanist casts two preserver spells in a turn** in a fight: its first
-  doesn't end the turn (a hit still keeps it from a second).
-- **The Crusader and Mind Warrior** have a warrior's extra attacks in melee:
-  3/2 a round from 7th level of the kit's class, whether weapon
-  specialization is on or not (the DAM lines and the Ledger's party view show
-  them too).
-- **The Ravager's base AC** is described only up to 10th level, the highest
-  the game goes.
-- **The Arcanist's drawback** is a d3 hit die (a preserver's is a d4), in
-  place of −2 CON.
-- **The dice log's ring holds 96 entries** (was 128), and the helper's text
-  buffer is 4 KB (was 8), making room in upper memory for the kits' code.
-- **The helper's interrupts** are now 8Ch to FEh (and 60h to 65h); the
-  message when they are in use says so.
+- **The mod is now Obsidian Edition.** Templar's Ledger stays the name of its companion window.
+- **Kalzith** wears his Ashen Robe, Cloak and Quarterstaff from the start and sells them with his scrolls (the game's shops sell all a merchant carries, worn or not; nothing marks an item not for sale).
+- **The helper loads into upper memory again,** leaving the game 62 KB more conventional memory (632 KB free, was 570): the dice log's ring buffer now follows the helper in a segment of its own, so the helper's image is 40 KB (was 63) and what it asks for fits DOSBox's upper memory.
+- **Two weapons:** the off hand attacks once a round, whoever holds it; the extra attacks (the game's 3/2 for warriors, specialization's, the kits') are the main hand's.
+- **A kit for each class:** the kit byte keeps two bits for each of a human's classes, so a human who changes class can have up to three kits; every kit rule, in the helper and the Ledger, now asks for each kit the character has awake, and the Effects screen lists them all.
+- **The Arcanist casts two preserver spells in a turn** in a fight: its first doesn't end the turn (a hit still keeps it from a second).
+- **The Crusader and Mind Warrior** have a warrior's extra attacks in melee: 3/2 a round from 7th level of the kit's class, whether weapon specialization is on or not (the DAM lines and the Ledger's party view show them too).
+- **The Ravager's base AC** is described only up to 10th level, the highest the game goes.
+- **The Arcanist's drawback** is a d3 hit die (a preserver's is a d4), in place of −2 CON.
+- **The dice log's ring holds 96 entries** (was 128), and the helper's text buffer is 4 KB (was 8), making room in upper memory for the kits' code.
+- **The helper's interrupts** are now 8Ch to FEh (and 60h to 65h); the message when they are in use says so.
 
 **Fixed**
-- **A kit or a second sphere could change a sound.** The game reads two sound
-  numbers on the character sheet (`+42h`, `+44h`) as words, and the kit
-  (`+43h`) and second sphere (`+45h`) sit in their high bytes; they are read a
-  byte each now (INT 9Bh, 9Ah).
-- **Arena crash after a kill (hardened):** DOSBox could close as a creature
-  died in a fight. The shadows drew from a list the Ledger refreshes only
-  twice a second, so a creature dying since could still be given a shadow,
-  and the helper loaded its new death pictures from inside the game's floor
-  drawing. The helper now checks the creature's status as it draws and gives
-  a dying or dead one no shadow; the Ledger's list leaves out the dying too.
-  The crash didn't happen again in testing, but it was never reproduced
-  either.
+- **A kit or a second sphere could change a sound.** The game reads two sound numbers on the character sheet (`+42h`, `+44h`) as words, and the kit (`+43h`) and second sphere (`+45h`) sit in their high bytes; they are read a byte each now (INT 9Bh, 9Ah).
+- **Arena crash after a kill (hardened):** DOSBox could close as a creature died in a fight.
 
 **Documentation**
-- **The guide's kits** each have a short description of who takes them on
-  Athas, above each class's kit table.
-- **The guide's Battle Mage** now says its chosen weapon type gives 3/2
-  attacks a round, 2 from 7th level.
-- **Kits:** DEVELOPMENT.md has how they are built: room in the helper, the
-  sheet byte for the kit, the creation page, and each effect's hook.
-- **The player's guide** (`GUIDE.md`), new: the game's rules as its code works
-  them and the mod's changes, laid out like the game's rule book (making a
-  party, the classes, kits, fighting, magic, psionics, equipment, levels), with
-  the tables, and no spoilers: no places past the arena, people, quests or
-  items by name. Its spell slot, WIS bonus and XP tables are read from the
-  game, which differs from the manual's.
-- **The README reorganised:** what the game does on its own (initiative,
-  spells, psionics, character creation, monsters' defences, two weapons,
-  thief skills, saving throws) is under one heading, How the game works, and
-  every rule change under Rule changes (the two-weapon, thief and saving
-  throw rules had sections of their own); Kits has sub-headings; the charges
-  in item boxes are under In the game; addresses in the game's code are left
-  to DEVELOPMENT.md; the contents list every section. Corrected: the Crusader
-  and Mind Warrior attack 3/2 from 7th level (no character reaches 13th), a
-  backstab is ×4 at 9th and 10th, and an example of the off hand's one attack
-  a round is clearer (3/2 + 1).
-- **The player's guide rewritten** to tell how the mod plays, with its
-  default options, each rule as it is in play and a "Without the mod" note
-  where a switch changes the game's own; the manual's comparisons, the race
-  and class list and the game's hot keys (not checked against the game) are
-  gone. Corrected: a warrior's attacks with weapon specialization, and picking
-  pockets (a failed try rolls move silently, never hide in shadows).
-- **The player's guide, more:** the quality of life changes in a table; each
-  kit's starting gear; the spell slots of the kits that change them (Arcanist,
-  Battle Mage, Crusader, Elementalist, Seeker, Justifier, Shinobi) and the
-  Shinobi's spell list; the preservers' and priests' spells by level, sphere
-  and class (read from the game's spell records: the common 4th and 5th-level
-  priest spells are druids' alone); and a list of things worth knowing in
-  play.
-- **The player's guide by class:** a section for each class, with how it
-  plays, what the mod changes, its weapons and armour, its kits (what each
-  gives, costs and starts with), its starting gear, its races, every
-  multiclass combination it can be part of (read from the game's creation
-  tables: gladiators never multiclass) and how a human dual-classes into or
-  out of it (read from the game's DUAL check: 2nd level, 15 in the old prime
-  requisite and 17 in the new, a class of another group, a druid true neutral
-  and a ranger good), and the magic weapons it can wield (from the game's
-  class lists and the mod's restrictions, kits included). Classes by race,
-  and tables of the mod's new items, mundane and magic, by what they are and
-  who can use them, never where they are.
-- **Kits that can't go together** lists only pairs that can meet: a human
-  has one kit for each class, and the game never lets a human change from one
-  warrior class to another, so the Arena Champion and Sentinel clash only with
-  the Shinobi (the README, the guide).
-- **The Kits switch** on the Options tab no longer says half the kits work so
-  far.
-- **The front page** names the kits and INT among the rules, and what has
-  changed since 1.2.0.
-- **DEVELOPMENT.md:** the patched game's interrupts are summarised, with
-  `gamepatch.py` as the list, in place of a list that had fallen behind.
+- **The guide's kits** each have a short description of who takes them on Athas, above each class's kit table.
+- **The guide's Battle Mage** now says its chosen weapon type gives 3/2 attacks a round, 2 from 7th level.
+- **Kits:** DEVELOPMENT.md has how they are built: room in the helper, the sheet byte for the kit, the creation page, and each effect's hook.
+- **The player's guide** (`GUIDE.md`), new: the game's rules as its code works them and the mod's changes, laid out like the game's rule book (making a party, the classes, kits, fighting, magic, psionics, equipment, levels), with the tables, and no spoilers: no places past the arena, people, quests or items by name.
+- **The README reorganised:** what the game does on its own (initiative, spells, psionics, character creation, monsters' defences, two weapons, thief skills, saving throws) is under one heading, How the game works, and every rule change under Rule changes (the two-weapon, thief and saving throw rules had sections of their own); Kits has sub-headings; the charges in item boxes are under In the game; addresses in the game's code are left to DEVELOPMENT.md; the contents list every section.
+- **The player's guide rewritten** to tell how the mod plays, with its default options, each rule as it is in play and a "Without the mod" note where a switch changes the game's own; the manual's comparisons, the race and class list and the game's hot keys (not checked against the game) are gone.
+- **The player's guide, more:** the quality of life changes in a table; each kit's starting gear; the spell slots of the kits that change them (Arcanist, Battle Mage, Crusader, Elementalist, Seeker, Justifier, Shinobi) and the Shinobi's spell list; the preservers' and priests' spells by level, sphere and class (read from the game's spell records: the common 4th and 5th-level priest spells are druids' alone); and a list of things worth knowing in play.
+- **The player's guide by class:** a section for each class, with how it plays, what the mod changes, its weapons and armour, its kits (what each gives, costs and starts with), its starting gear, its races, every multiclass combination it can be part of (read from the game's creation tables: gladiators never multiclass) and how a human dual-classes into or out of it (read from the game's DUAL check: 2nd level, 15 in the old prime requisite and 17 in the new, a class of another group, a druid true neutral and a ranger good), and the magic weapons it can wield (from the game's class lists and the mod's restrictions, kits included).
+- **Kits that can't go together** lists only pairs that can meet: a human has one kit for each class, and the game never lets a human change from one warrior class to another, so the Arena Champion and Sentinel clash only with the Shinobi (the README, the guide).
+- **The Kits switch** on the Options tab no longer says half the kits work so far.
+- **The front page** names the kits and INT among the rules, and what has changed since 1.2.0.
+- **DEVELOPMENT.md:** the patched game's interrupts are summarised, with `gamepatch.py` as the list, in place of a list that had fallen behind.
+
+*Shortened: each change's full notes (addresses, measurements, how it was found) are in [this file as it was](https://github.com/daaki85/darksun-obsidian-edition/blob/7e18e937e583d95fc493d89cf157b7f8463ba85f/CHANGELOG.md), and how each part works now in the [development notes](obsidian-edition/DEVELOPMENT.md).*
 
 ## Pull request #30 ([merged 2026-10-08](https://github.com/daaki85/darksun-obsidian-edition/pull/30))
 
@@ -3882,7 +2958,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   party in, people were missing, Merzol didn't stop the party, the doors'
   "pick the lock" and "knock" and the main door's "Summon Kurzak!" were gone
   and the water jug couldn't be filled.
-- **Kalzith's scrolls taught the spell before their own** .
+- **Kalzith's scrolls taught the spell before their own.**
 - **"Who are you?" hung the game** when asked of Kalzith.
 - **Pickpocketing said "won't get another chance" to everyone** in a new game
   with the same party: the last game's tries were remembered.
