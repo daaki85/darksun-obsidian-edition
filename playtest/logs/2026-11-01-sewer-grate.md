@@ -99,3 +99,19 @@ The four grate repairs in `scriptfixes.py` (script 137), as the Loader builds th
   stopped it until a spell was clicked. Fought it, "Go back to the pens" again, and again the view
   wouldn't reach the wall before the arena's patience ran out.
 - Stopped to ask the user how to get the view (or the party) to the wall in time.
+
+### Fourth run (the user: drag the view with the middle mouse button)
+
+- DOSBox was gone again after the pause; started over.
+- Middle-button drag (the user's advice): works, as grabbing the map; a drag that runs the pointer
+  to the screen's edge scrolls the view the other way (fixed in scroll.py), and a message box
+  blocks drags. After a drag every button must be released or no click counts.
+- Message boxes: click ON them (160, 20). A preserver's level-up (CHOOSE A SPELL) blocks fights:
+  levelup.sh. Window grabs are 320x240 (y x 1.2 against the 320x200 capture).
+- 15:44 Out of the arena: dragged north, clicked inside the wall (488, 232), the party walked in;
+  the gate strip (488, 184): "This corridor leads down to the slavepens. Do you wish to continue?"
+  Y (my exit loop had answered N to it once). Region 29h, (1816, 440). Kurzak: Goodbye.
+- 15:48 Saved (Escape, S, slot 1 "PENS", SAVE): "GAME SAVED", and the game quit. Loaded it back
+  from the main menu's LOAD SAVED GAME: the pens, (1672, 344). The save is in the repository
+  (playtest/saves/pens-after-arena), with loadsave.sh.
+- Next: the pens' route to the grate (cluebook #11: the stalker pen, the button), then the grate.
