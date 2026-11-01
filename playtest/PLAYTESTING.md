@@ -75,7 +75,12 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   screen centre. **The view can stop scrolling**: in the arena (2026-11-01) it stayed put with the
   leader at the top edge (screen y 24, under the top bar), so nothing north of it could be clicked;
   resting the pointer on the edge didn't scroll it, and writing DS:1178h (`camera.py X Y`) changed
-  the number but not the picture (it's a copy, not what's drawn). Unsolved. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
+  the number but not the picture (it's a copy, not what's drawn).
+- **Scrolling the view: drag with the middle mouse button** (`python3 scroll.py DX DY`; the
+  user's advice, 2026-11-01). It moves the map like grabbing it: dragging down shows more of the
+  north (60 pixels moved the camera 48 map units, in steps of 16). Then click the spot and the
+  party walks there, finding its own way round walls. **After a drag, release every button**
+  (scroll.py does): the game took no clicks at all until they were. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
   HERE"; walkto stops after two clicks that don't move the leader.
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
   click to go away, and while one is up Tab, Return and map clicks do nothing. `msgbox.sh` tells
@@ -142,7 +147,12 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   into the arena (488, 424) and starts the fight on its own once some game time has passed:
   keep clicking south (each click passes time) until `fight_on 1`, about 8 clicks.
 - Then `sh arenawaves.sh`: every wave fought with fightout.sh, the messages between, and the
-  YES/NO question answered N.
+  YES/NO question answered N; and at once `sh leavearena.sh`: the view dragged north until the
+  ground inside the wall (488, 232) shows, a click there (the party finds its own way in), then
+  the gate strip, until the region is the pens (29h). Run them together:
+  `(sh arenawaves.sh && sh leavearena.sh)`, in the background, followed with a Monitor.
+- **The combat log panel**: `sh panel.sh hide|show` checks the panel's pixel before pressing L
+  (L alone toggles, and can leave it the wrong way round).
 
 **The arena (region 2Ah)**, as of 2026-11-01:
 - Several waves (Sligs and a Screamer Beetle; Sand Howlers and a Tohr-kreen; ...), then "The
