@@ -48,6 +48,32 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    start again from `start.sh`. Don't leave a test half-done across a pause expecting it to be
    there.
 
+## 1b. The recompiled program as the target (Dark Sun Recompiled)
+
+The kit drives the recompiled program too (`PT_TARGET=recomp`, exported for every tool; `DSUN`
+names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 2026-11-01:
+
+- `start_recomp.sh` (and `loadsave.sh` under that target) starts it with the Loader's patched
+  game (`prepare_patched_game`, as start.sh) and the mod's `dos` folder, makes its window 320x240
+  at 0,0 (so the window grabs and their pixel positions are DOSBox's), records its pid in
+  `$WORK/dsun.pid` (the dice log and `live.py` use that pid: other dsun processes may be headless
+  runs of the program's own tests, and `dsloader dicelog` refuses to guess among several) and
+  attaches the dice log. **Its build must match the mod's helper**: the program lifts
+  `dos/DSCLOG.EXE` into its `build/ds1o`; a branch with a newer helper needs
+  `tools/build_mod.sh <this repo>/obsidian-edition` in the program's repository and its
+  convergence runs first (a wrong helper shows as `no function at B....` in `$WORK/dsun.log`).
+- `shot.sh` grabs its window and scales it to 320x200 (there is no Ctrl+F5 capture). Its colours
+  differ from DOSBox's by one (38 of 63 is 153, DOSBox says 154) and its picture is stretched to
+  240 rows a row apart, so pixel checks go through `pixmatch.py` (within 3 a channel, a row up or
+  down): msgbox.sh, panel.sh and levelup.sh use it.
+- Controls behave as in DOSBox: click.py's relative moves converge on the pointer, walkto walks,
+  right-click cycles arrow, red sword, red look, arrow; the arrow over a person shows the portrait
+  pointer and a click opens the mod's Look box (Talk is its first button, 216,99).
+- **The view does not scroll by itself** here either; the middle-button drag did nothing on the
+  program until its runtime passed the middle button through (fixed 2026-11-01: every button but
+  the left had been the right one). A kit tool that stalls on the program and not in DOSBox is a
+  program fault to report, not a tool to work around.
+
 ## 2. Reading the game
 
 - `python3 state.py [FLAG...]`: fight on, whose turn (0-3 the party), region, the leader's map

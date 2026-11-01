@@ -4,7 +4,7 @@
 # wrong way round (topartyfight's step forward clicked the panel that way).
 . "$(dirname "$0")/env.sh"
 W=$(timeout 5 xdotool search $WINQ | head -1)
-up() { [ "$(timeout 10 import -window $W png:- | convert - -format '%[pixel:p{140,150}]' info:)" = "srgb(215,215,227)" ]; }
+up() { timeout 20 python3 "$PT/pixmatch.py" 140 150 215 215 227; }
 case "$1" in
   hide) up && { timeout 5 xdotool key --window $W l; sleep 1; } ;;
   show) up || { timeout 5 xdotool key --window $W l; sleep 1; } ;;

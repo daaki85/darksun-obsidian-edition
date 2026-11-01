@@ -4,6 +4,5 @@
 # 0; else exit 1. It blocks the whole game until a spell is picked (2026-11-01, Cermak in the arena).
 . "$(dirname "$0")/env.sh"
 W=$(timeout 5 xdotool search $WINQ | head -1)
-p=$(timeout 10 import -window $W png:- | convert - -format '%[pixel:p{73,54}] %[pixel:p{247,54}]' info:)
-[ "$p" = "srgb(146,56,69) srgb(113,56,73)" ] || exit 1
+timeout 20 python3 "$PT/pixmatch.py" 73 54 146 56 69 247 54 113 56 73 || exit 1
 timeout 15 python3 "$PT/click.py" 125 90 >/dev/null; sleep 2; echo "picked a spell (CHOOSE A SPELL)"; exit 0

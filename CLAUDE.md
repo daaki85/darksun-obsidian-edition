@@ -21,6 +21,12 @@ wins where they differ.
 (`guard_start.sh`, a Monitor on `guard.log` for STUCK/GONE). Keep a test log the user can read and
 send it at each milestone; copy it to `playtest/logs/` and commit.
 
+**The recompiled program** (Dark Sun Recompiled) as the target: `export PT_TARGET=recomp`, then
+`start_recomp.sh` / `loadsave.sh` as usual (its window is made 320x240; its pid is in
+`$WORK/dsun.pid`; pixel checks are tolerant through `pixmatch.py`). Its `build/ds1o` must be lifted
+from this branch's helper (`tools/build_mod.sh` there) or `$WORK/dsun.log` shows `no function at`.
+What stalls on it and not in DOSBox is a program fault to report.
+
 **Start from a save.** `sh loadsave.sh pens-after-arena` loads the slave pens after the arena
 (region 29h). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
 253,46: the game then quits) and add it to `playtest/saves/` with a README line.
