@@ -72,7 +72,10 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   screenshot before walking.
 - **Walking**: `python3 walkto.py X Y` (map units). Screen = map - camera, 1 unit a pixel; the
   camera scrolls in steps and does NOT keep the leader centred, so work from the camera, never the
-  screen centre. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
+  screen centre. **The view can stop scrolling**: in the arena (2026-11-01) it stayed put with the
+  leader at the top edge (screen y 24, under the top bar), so nothing north of it could be clicked;
+  resting the pointer on the edge didn't scroll it, and writing DS:1178h (`camera.py X Y`) changed
+  the number but not the picture (it's a copy, not what's drawn). Unsolved. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
   HERE"; walkto stops after two clicks that don't move the leader.
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
   click to go away, and while one is up Tab, Return and map clicks do nothing. `msgbox.sh` tells
@@ -85,13 +88,26 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   screen or menu that is open, and **opens EXIT GAME? when nothing is**: a click after that can quit
   to DOS. Press Escape only with a menu or screen showing.
 - **Ending a turn by hand**: a click exactly ON the active member's figure opens END <NAME>'S
-  MOVE (GUARD / WAIT / END TURN); a click beside it walks it a step instead. The menu's position
-  varies: read its rows off a screenshot before clicking END TURN.
+  MOVE (GUARD / WAIT / END TURN); a click beside it walks it a step instead. In that menu press
+  **E** for END TURN: when Return opened it (no Move left), clicks on its rows didn't register
+  (2026-11-01). E with no menu up opens the Effects screen instead (Escape closes that).
+- **Loose `xdotool` commands need `DISPLAY=:55`** (`export DISPLAY=:55` first): the kit's tools
+  set it, a command typed on its own doesn't ("Can't open display").
+- **The combat log panel covers the bottom right** (x 135+, y 120+): a click there lands on the
+  panel, not the map. Press L to hide it before walking near it (the party's first step into the
+  arena, for one, is right above it).
+
+- **Level-up screens block everything**: CHOOSE A SPELL (a preserver's new level) waits for a
+  spell's icon to be clicked; the watchdog reports it as STUCK. Look at its screenshot, click an
+  icon (the first is at about 125, 90), then go on.
 
 ## 4. Fights
 
-1. **Story fights: `sh fightout.sh`.** It sets every foe to 1 HP and finishes the fight with Tab
-   + Return on each party turn, clicking messages away, so the game's scripts see every kill.
+1. **Story fights: `sh fightout.sh`.** It sets every foe to 1 HP (not the arena's prisoners) and
+   finishes the fight with Tab + Return on each party turn, clicking messages away and pressing E
+   (END TURN) for a member with no Move left, so the game's scripts see every kill. It refuses to
+   run with no fight on: run outside one, hp.py and its keys did harm (a prisoner at 1 HP, the
+   party stuck in place).
 2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
    reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
    fights no story depends on, and the fight still needs its turn ended.
@@ -120,6 +136,13 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
 
 **A new game** (`start.sh`, then `topartyfight.sh`: START GAME, the ready-made party, the opening,
 the step forward) ends in the arena's first fight (region 2Ah), party at about (488, 424).
+- The opening's show fight (a Rampager kills a Defiler) isn't the party's: leave it be.
+- The party then waits at the gate (488, 168-184): "Gladiators: Step forward, into the arena!".
+  One step south takes it to (488, 232), between the gate and the bone wall; the game brings it
+  into the arena (488, 424) and starts the fight on its own once some game time has passed:
+  keep clicking south (each click passes time) until `fight_on 1`, about 8 clicks.
+- Then `sh arenawaves.sh`: every wave fought with fightout.sh, the messages between, and the
+  YES/NO question answered N.
 
 **The arena (region 2Ah)**, as of 2026-11-01:
 - Several waves (Sligs and a Screamer Beetle; Sand Howlers and a Tohr-kreen; ...), then "The
@@ -138,6 +161,9 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   south from there), and find that strip on screen (squares are 16 map units: x 448-527,
   y 176-191) before the "Go back to the pens" line starts the clock.
 - The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
+- **The clock after "Go back to the pens" is short**: a few walking clicks, then "Since you will
+  not leave, you must fight!" and another fight (Silt Runners...). Leave at once, and don't walk
+  south or east first: the 2026-11-01 run lost its time getting the view to the wall.
 - **Leaving the arena (the user's advice, 2026-11-01):** if the party stops at the stone wall,
   click inside the wall's boundary: the party finds its own way in, and that safely takes it back
   into the pens. Don't stay outside the walls in the arena: more monsters are sent.

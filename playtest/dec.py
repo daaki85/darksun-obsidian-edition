@@ -10,5 +10,11 @@ data = open(os.environ.get('GPLDATA', os.path.join(GAME, 'GPLDATA.GFF')), 'rb').
 scripts, ftypes = gpl.load_scripts(data)
 kind = os.environ.get('KIND', 'GPL ')
 s = int(sys.argv[1]); lo = int(sys.argv[2], 16); hi = int(sys.argv[3], 16)
-for op in gpl.decode(scripts[(kind, s)], ftypes):
-    if lo <= op.at <= hi: print(hex(op.at), op.code, str(op.args)[:200])
+code = scripts[(kind, s)]
+r = gpl._Reader(code, ftypes); r.i = lo  # decode op by op from LO, so bytes no command reaches
+while r.i <= hi:                        # elsewhere (a Loader change's leftovers) don't stop it
+    try:
+        op = gpl._op(r)
+    except gpl.ScriptError as e:
+        print('stopped:', e); break
+    print(hex(op.at), op.code, str(op.args)[:200])

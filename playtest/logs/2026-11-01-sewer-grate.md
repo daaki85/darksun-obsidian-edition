@@ -81,12 +81,21 @@ The four grate repairs in `scriptfixes.py` (script 137), as the Loader builds th
 - Stopped here to write the playing guide (playtest/PLAYTESTING.md) and its tools, committed to
   the repository. The way out of the arena is its open problem.
 
-### Correction (after the user asked why the party never reached the pens)
+### Third run (after the user's advice on leaving the arena)
 
-- The "flag 11 still 0" readings were meaningless: `gd.flag` returns False while the flags have
-  no place in memory, which in the arena is any time outside a script's run (its own docstring).
-  So killfoes.py didn't necessarily stop flag 11; what it did skip is the Announcer's lines about
-  the kills.
-- The real reason the party didn't get out: I walked it straight north into the bone wall
-  (NO PATH FROM HERE) without having found where the exit strip is, and the arena's patience ran
-  out. The guide (and state.py, which now says when flags can't be read) are corrected.
+- Guide re-read in full. No saved games on the Drive (only the two GOG installers).
+- Fixed tools on the way: topartyfight.sh's step forward clicked the log panel (now walks south
+  with walkto, the panel hidden); fightout.sh ran outside a fight once (hp.py put a prisoner at
+  1 HP) and now refuses; hp.py leaves prisoners alone; dec.py decodes from an offset; new tools
+  rec.py, camera.py, arenawaves.sh.
+- Into the arena: one step south from the gate (488, 232), then ~8 more clicks (game time) and the
+  game brought the party in and started the fight.
+- A member with no Move left: Return opens END <NAME>'S MOVE, where clicks didn't register; E is
+  END TURN there. Built into fightout.sh.
+- arenawaves.sh fought every wave and answered N. "Go back to the pens" at 14:37.
+- Leaving: walkto north from (216, 504) stopped near the top of the view; the view didn't scroll
+  north (camera stuck at y 368 with the leader at 392), so the wall couldn't be clicked. Another
+  fight came ("Since you will not leave...", Silt Runners); Cermak's level-up CHOOSE A SPELL
+  stopped it until a spell was clicked. Fought it, "Go back to the pens" again, and again the view
+  wouldn't reach the wall before the arena's patience ran out.
+- Stopped to ask the user how to get the view (or the party) to the wall in time.
