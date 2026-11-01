@@ -54,6 +54,9 @@ Return on party turns, E for a member out of movement, and messages and level-up
 `levelup.sh`) cleared. Never `killfoes.py` in a fight a script waits on: the scripts miss the
 kills.
 
+**Git.** Other sessions push to `obsidian-edition` too: fetch and rebase onto
+`origin/obsidian-edition` before every push.
+
 **Shell.** Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains: it
 kills your shell. Kill by pid, in a command of its own. Long runs go in the background with a
 Monitor, and every step gets a `timeout`.

@@ -255,6 +255,13 @@ Kurzak waiting sets off the alarm), #10 Pehtucl's ambush (Bloodwrath on his body
 
 ## 6. After
 
+**Other sessions push to this branch too** (2026-11-01: a Dark Sun Recompiled session changed the
+kit while this one played): `git fetch origin obsidian-edition` and `git rebase
+origin/obsidian-edition` before every push, read what changed in `playtest/`, and keep both
+sessions' lessons. The kit drives the recompiled program as well (`PT_TARGET=recomp`,
+`start_recomp.sh`).
+
+
 **After every play, add everything learned to this guide** (the user's standing instruction,
 2026-11-01): not only stalls, but every control, screen, message, map position, route step,
 timing, script detail and tool change found while playing, each where it belongs above, then
