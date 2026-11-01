@@ -7,7 +7,16 @@ sys.path.insert(0, os.path.join(REPO, 'obsidian-edition'))
 from dsloader.__main__ import connect
 from dsloader import game
 from dsloader.process import find_dosbox_processes
-g = connect(argparse.Namespace(pid=max(p for p, _ in find_dosbox_processes()), host_base=None))
+def _pid():
+    # the test's own program when start_recomp.sh recorded it (other dsun processes may be
+    # headless runs of the recompiled program); else the newest DOSBox or dsun
+    f = os.path.join(WORK, 'dsun.pid')
+    if os.path.exists(f):
+        pid = int(open(f).read().split()[0])
+        if os.path.exists(f'/proc/{pid}'):
+            return pid
+    return max(p for p, _ in find_dosbox_processes())
+g = connect(argparse.Namespace(pid=_pid(), host_base=None))
 ds = game.find_data_segment(g)
 gd = game.GameData(g, ds)
 CAMERA = 0x1178  # DS: the map view's top-left, x and y words: screen = map - camera, 1 unit a pixel
