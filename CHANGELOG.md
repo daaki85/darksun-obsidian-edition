@@ -123,6 +123,13 @@ notes](PATCH-NOTES.md).
   - The Options tab's Kits text and FEATURES' bug table: the multiclass kits are pairs and one
     set of three; a thri-kreen's claws and bite cut. The weapon window's caption says what it
     shows. Screenshots checked: none outdated.
+- **Level cap by XP is a rule change:** its switch is in the Options tab's Rule changes,
+  Characters (the eighteenth), and FEATURES, the README, the guide's Options at a glance and
+  `options.png` (retaken) follow; More character customization is weapon specs, kits, STORE and
+  RECALL and the starting gear. FEATURES' contents had Weapons and armour under Characters.
+  The patch notes file the thri-kreen's claws and bite under Bug Fixes, as FEATURES does. The
+  known issues say since when (the arena error listed since 2.5.0; the freeze reported in 2.6.0,
+  not seen since 2.7.0's fix).
 - **In the game moves to FEATURES:** the Loader README's **In the game** (the combat log, names
   over figures, THAC0 and saves, the creation screen, the USE screen's slots, the Look box,
   charges, the Effects screen, a scroll's message, the manual check) is FEATURES' first section,

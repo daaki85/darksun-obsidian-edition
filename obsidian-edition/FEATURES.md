@@ -33,6 +33,7 @@ running the game, the Loader's window and its dice log are in the
     - [AD&D's class tables](#adds-class-tables)
     - [CON as in AD&D](#con-as-in-add)
     - [Ages and magical aging](#ages-and-magical-aging)
+    - [Level cap by XP](#level-cap-by-xp)
   - [Weapons and armour](#weapons-and-armour)
     - [Two weapons](#two-weapons)
     - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
@@ -50,7 +51,6 @@ running the game, the Loader's window and its dice log are in the
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
-  - [Level cap by XP](#level-cap-by-xp)
   - [STORE and RECALL on the creation
     screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
@@ -442,7 +442,7 @@ How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
 
 ## Rule changes
 
-Seventeen changes that bring the game's own rules closer to AD&D, each with its
+Eighteen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section, grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
@@ -462,6 +462,7 @@ and the game's own rule is back at once.
 | [AD&D's class tables](#adds-class-tables) | the XP for each level, priests' THAC0, and clerics', druids' and preservers' spell slots from AD&D's tables |
 | [CON as in AD&D](#con-as-in-add) | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
 | [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; a year older each 365 days of game time; Haste ages its target a year, after a system shock roll to survive |
+| [Level cap by XP](#level-cap-by-xp) | a class goes up past 9th while its next level needs no more than 749,999 XP, shared out between a character's classes |
 
 #### Class restrictions
 
@@ -705,6 +706,73 @@ hair is left as it is. Dwarves and muls are hairless on Athas, and thri-kreen
 have no hair, so they keep their looks.
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
+
+#### Level cap by XP
+
+The game stops every class at level 9 (its manual's tables end there too).
+With **Level cap by XP** ticked, a class goes up instead while its next level
+needs no more than **749,999 XP**, shared out:
+
+| Character | A class goes up while its next level needs no more than |
+|---|---|
+| One class | 749,999 |
+| Two or three classes | an even share: 374,999 each for two, 249,999 for three |
+| A human who changed class | 749,999 less what its old classes' levels needed |
+
+A character of several classes already has its XP shared: the game splits
+every award between the classes, and the sheet shows one class's share. A
+human's XP starts again at 0 when it changes class, so its old classes' levels
+count against the new one: a fighter who changed to cleric at 9th (250,000 XP)
+can take the cleric to 10th, at 7th (64,000) to 11th. XP keeps counting past
+the cap; only the levels stop. With [AD&D's class tables](#adds-class-tables),
+the highest levels are in the player's guide's [Experience and
+levels](PLAYER-GUIDE.md#experience-and-levels), with AD&D's XP table.
+
+749,999 is the most XP that keeps a druid from 13th and a preserver from 12th
+(both need 750,000), where a preserver would cast 6th-level spells. Without
+AD&D's tables the game's own XP tables count.
+
+Everything else past 9th level is the game's own: it had it all along, and
+only the cap kept it out of reach. Its XP tables go on to level 20 (druids
+with a table of their own, not the cleric's), and THAC0, saves, spell slots
+and thief skills are worked out from the level. So past 9th:
+
+- **Hit points** follow AD&D: preservers roll their d4 to 10th and thieves
+  their d6 to 10th (CON's bonus counting too), then gain a fixed amount (+1 a
+  level for preservers, +2 for thieves); the
+  others gain a fixed amount from 10th (+3 for fighters, gladiators and
+  rangers, +2 for clerics, druids and psionicists). The game's own table has
+  the fixed gain for thieves at 10th too, as it keeps thieves and psionicists
+  together and AD&D's psionicist stops rolling at 9th; with the rule thieves
+  roll their 10th die.
+- **Gladiators** optimise their armour, as the game already has them do: AC 1
+  better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
+  Loader counts it in **AC: spells, rings, other**. The game gives it with or
+  without armour.)
+- **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
+  gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
+- **Spell slots** grow at the levels casters already have, up to 5th. With
+  AD&D's class tables a priest has 5 4 4 3 2 1 at 11th and 6 5 5 3 2 2 at 12th
+  (a druid's; a cleric stops at 11th), a preserver 4 4 4 3 3 at 11th. The
+  6th-level slots are for the mod's [6th-level priest
+  spells](#6th-level-priest-spells); preservers have no 6th-level spells.
+- **Thief skills** from AD&D's table go on to 13th
+  ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).
+- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
+  as at every level, offered from spell level (class level + 1) / 2 down, but
+  no higher than 5th (the game would offer an empty 6th-level page at 11th).
+  **A psionicist picks a new power** (the game gives one at each level, two at
+  odd levels and 4th).
+- Spell damage that grows with the caster's level counts up to level 10 in
+  the game, so a caster past 10th does no more.
+
+The level-up comes as the game's usual one ("Gerakis gains a level"), and
+View Character stops showing the XP for the next level at the cap, as it does
+at 9 without the rule. For a character of more than one class, a class
+already at its cap isn't named in the brackets, since it has no next level.
+Untick it and nobody goes past the level they have.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#level-cap-by-xp).
 
 ### Weapons and armour
 
@@ -951,9 +1019,9 @@ enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
 
 ## More character customization
 
-More choices for each character: a weapon to specialize in, a kit, levels
-past 9th, a roll to keep while trying the die again, and fuller starting
-gear. Each has a box in the Options tab's **More character customization**
+More choices for each character: a weapon to specialize in, a kit, a roll to
+keep while trying the die again, and fuller starting gear (levels past 9th are
+a [rule change](#level-cap-by-xp)). Each has a box in the Options tab's **More character customization**
 section. All are on by default and, like the rule changes, take effect at
 once (STORE and RECALL from the next start); untick one and the game is as it
 was. New preservers picking their first spells, and the game's own party
@@ -963,7 +1031,6 @@ fitted to these choices, come with them.
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own |
-| [Level cap by XP](#level-cap-by-xp) | classes go up to a cap of 749,999 XP, shared between a character's classes (the game stops at 9th level) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 | [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
 
@@ -1139,73 +1206,6 @@ The game's own party gets features of its own
 ([The game's own party](#the-games-own-party)).
 
 How it works: [DEVELOPMENT.md](DEVELOPMENT.md#kits).
-
-### Level cap by XP
-
-The game stops every class at level 9 (its manual's tables end there too).
-With **Level cap by XP** ticked, a class goes up instead while its next level
-needs no more than **749,999 XP**, shared out:
-
-| Character | A class goes up while its next level needs no more than |
-|---|---|
-| One class | 749,999 |
-| Two or three classes | an even share: 374,999 each for two, 249,999 for three |
-| A human who changed class | 749,999 less what its old classes' levels needed |
-
-A character of several classes already has its XP shared: the game splits
-every award between the classes, and the sheet shows one class's share. A
-human's XP starts again at 0 when it changes class, so its old classes' levels
-count against the new one: a fighter who changed to cleric at 9th (250,000 XP)
-can take the cleric to 10th, at 7th (64,000) to 11th. XP keeps counting past
-the cap; only the levels stop. With [AD&D's class tables](#adds-class-tables),
-the highest levels are in the player's guide's [Experience and
-levels](PLAYER-GUIDE.md#experience-and-levels), with AD&D's XP table.
-
-749,999 is the most XP that keeps a druid from 13th and a preserver from 12th
-(both need 750,000), where a preserver would cast 6th-level spells. Without
-AD&D's tables the game's own XP tables count.
-
-Everything else past 9th level is the game's own: it had it all along, and
-only the cap kept it out of reach. Its XP tables go on to level 20 (druids
-with a table of their own, not the cleric's), and THAC0, saves, spell slots
-and thief skills are worked out from the level. So past 9th:
-
-- **Hit points** follow AD&D: preservers roll their d4 to 10th and thieves
-  their d6 to 10th (CON's bonus counting too), then gain a fixed amount (+1 a
-  level for preservers, +2 for thieves); the
-  others gain a fixed amount from 10th (+3 for fighters, gladiators and
-  rangers, +2 for clerics, druids and psionicists). The game's own table has
-  the fixed gain for thieves at 10th too, as it keeps thieves and psionicists
-  together and AD&D's psionicist stops rolling at 9th; with the rule thieves
-  roll their 10th die.
-- **Gladiators** optimise their armour, as the game already has them do: AC 1
-  better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
-  Loader counts it in **AC: spells, rings, other**. The game gives it with or
-  without armour.)
-- **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
-  gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
-- **Spell slots** grow at the levels casters already have, up to 5th. With
-  AD&D's class tables a priest has 5 4 4 3 2 1 at 11th and 6 5 5 3 2 2 at 12th
-  (a druid's; a cleric stops at 11th), a preserver 4 4 4 3 3 at 11th. The
-  6th-level slots are for the mod's [6th-level priest
-  spells](#6th-level-priest-spells); preservers have no 6th-level spells.
-- **Thief skills** from AD&D's table go on to 13th
-  ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).
-- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
-  as at every level, offered from spell level (class level + 1) / 2 down, but
-  no higher than 5th (the game would offer an empty 6th-level page at 11th).
-  **A psionicist picks a new power** (the game gives one at each level, two at
-  odd levels and 4th).
-- Spell damage that grows with the caster's level counts up to level 10 in
-  the game, so a caster past 10th does no more.
-
-The level-up comes as the game's usual one ("Gerakis gains a level"), and
-View Character stops showing the XP for the next level at the cap, as it does
-at 9 without the rule. For a character of more than one class, a class
-already at its cap isn't named in the brackets, since it has no next level.
-Untick it and nobody goes past the level they have.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#level-cap-by-xp).
 
 ### STORE and RECALL on the creation screen
 

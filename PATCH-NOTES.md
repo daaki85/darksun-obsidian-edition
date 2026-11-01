@@ -69,7 +69,6 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Races**
 
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
-- **[Changed]** A thri-kreen in the party fights with edged claws, so creatures that crushing weapons can't hurt are no longer safe from it *(was crushing, as every unarmed attack)*.
 
 ## Classes and Kits
 
@@ -313,6 +312,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Cloak of Bravery**'s +4 on saves against fear never applied. Now it does against Scare, Fear, Cause Fear and Insect Plague, and the new Spook.
 - **[Fixed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 - **[Fixed]** A **berserk** or **confused** party member could be left fighting for the monsters when it wore off. Now they're back on your side.
+- **[Fixed]** A **thri-kreen**'s claws and bite did crushing damage, as the game makes every unarmed attack, so creatures that crushing weapons can't hurt were safe from it. Now they cut.
 - **[Fixed]** The **fire elementals**' resistances were the wrong way round. Now the fire elemental needs +2 weapons and the lesser one +1, and neither is hurt by fire.
 - **[Fixed]** Monsters' **walls** (Wall of Fire, Ice, Force and the rest) came out a single point. Now they run across the line of fire, four cells long.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.

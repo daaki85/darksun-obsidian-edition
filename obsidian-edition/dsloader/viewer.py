@@ -373,7 +373,7 @@ class Viewer:
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
-        where = {"weapon_specialization": custom, "kits": custom, "level_10": custom, "cha_prices": features, "buyback": features,
+        where = {"weapon_specialization": custom, "kits": custom, "cha_prices": features, "buyback": features,
                  "thief_table": thieves, "stealth": thieves, "backstab_dice": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
@@ -434,7 +434,7 @@ class Viewer:
                                "races' classes taken together (pairs, and one of three) have kits of their own, each giving something and "
                                "costing something (chosen on the creation panel's KIT page); the game's own "
                                "party gets features of its own"),
-                ("level_10", None, "An XP cap of 749,999 in place of the game's level cap of 9: a single class rises while "
+                ("level_10", "characters", "An XP cap of 749,999 in place of the game's level cap of 9: a single class rises while "
                                    "its next level needs no more; a multiclass character's classes share it evenly; "
                                    "a human's new class gets what its old classes' levels didn't use"),
                 ("cha_prices", None, "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "

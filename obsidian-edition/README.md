@@ -56,13 +56,13 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
 - **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
   (experience, priests' THAC0, spell slots), INT's limits on learning spells,
   saving throws and multiclass hit points as the books have them, scores and
-  hit points kept as rolled, ages (a year each 365 days of game time, and Haste's cost), Enlarge's weapon dice
-  and CON's regeneration ([Rule changes](FEATURES.md#rule-changes)).
+  hit points kept as rolled, ages (a year each 365 days of game time, and Haste's cost), levels
+  past 9th up to a cap by XP (10th to 13th for one class, lower for two or
+  three), Enlarge's weapon dice and CON's regeneration ([Rule
+  changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' classes taken together:
-  pairs, and one set of three), levels
-  past 9th up to a cap by XP (10th to 13th for one class, lower for two or
-  three), STORE and RECALL for a
+  pairs, and one set of three), STORE and RECALL for a
   creation roll, fuller starting gear, and features of their own for the
   game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
@@ -344,7 +344,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (all seventeen, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (all eighteen, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -566,10 +566,12 @@ Being looked into; a crash report, a save from just before and what you were
 doing help (see [Reporting a problem](#reporting-a-problem)):
 
 - **The game can stop with an error after a fight in the arena.** The Loader
-  writes a crash report; load the last save to go on.
+  writes a crash report; load the last save to go on. (Listed since 2.5.0;
+  its cause isn't known yet.)
 - **In a long session, figures can vanish from the screen and the game then
   freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
   it happens, press **Freeze report** on the Loader before closing DOSBox.
+  (Reported in 2.6.0; not seen since the fix in 2.7.0.)
 
 ### Crash, freeze and item reports
 
