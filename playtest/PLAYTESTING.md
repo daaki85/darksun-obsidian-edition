@@ -50,6 +50,10 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
 
 - `python3 state.py [FLAG...]`: fight on, whose turn (0-3 the party), region, the leader's map
   position, the camera, and any game flags (`state.py 11 505`).
+- **A game flag reads as 0 whenever the flags have no place in memory** (`gd.flag`: their pointer,
+  DS:1352h, is null at times, such as in the arena outside a script's run). Check `gd.flags_ready()`
+  before believing a 0; `state.py` prints `flags ?` when they can't be read (2026-11-01: an arena
+  "flag 11 never set" was only this).
 - `$WORK/dice.txt`: the dice log: every roll, every line of dialogue and narration
   (`[Narration] ...`, `[The Announcer] ...`), menus with their choices, and "Message: NO PATH FROM
   HERE". Read its tail after each action; it is the most reliable record of what happened.
@@ -88,9 +92,9 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
 
 1. **Story fights: `sh fightout.sh`.** It sets every foe to 1 HP and finishes the fight with Tab
    + Return on each party turn, clicking messages away, so the game's scripts see every kill.
-2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts:
-   in the arena there was no Announcer, flag 11 never set, and no way out. It is only for fights no
-   story depends on, and the fight still needs its turn ended.
+2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
+   reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
+   fights no story depends on, and the fight still needs its turn ended.
 3. **The arena sends waves.** After one fight ends, messages, then another fight: run
    `fightout.sh` again until the wave messages stop (a YES/NO question ends them).
 4. **Whose turn**: `state.py`'s `turn` (0-3 the party); never guess from sleeps. Act only on party
@@ -126,11 +130,13 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
 - **Open problem: the way out.** MAS 42's move triggers: squares 5-7 at rows 30-32 run script 3
   at 6B4h ("Gladiators escaping! Guards! Sound the alarms!": avoid); a strip at squares 28-32,
   row 11 runs script 3 at 73Eh, which (with flag 11 set and local 32 at 0) teleports the party to
-  the pens (region 29h, 113, 27). Flag 11 is set by script 2 at BB8h; in the 2026-11-01 run it was
-  still 0 after the "Go back to the pens" line, and walking north stopped at the bone wall (488,
-  328: NO PATH). Next: find where that strip is on screen (the trigger's squares against map
-  units), whether a gate opens, and what sets flag 11 (decode script 2 around BB8h and what calls
-  it).
+  the pens (region 29h, 113, 27). Flag 11 is set by script 2 at BB8h (its handler at B61h is
+  called from script 4 at B23h). In the 2026-11-01 run the party walked straight north from
+  (488, 424) and stopped at the bone wall (488, 328: NO PATH FROM HERE), and the arena ran out of
+  patience before the way out was found. Next time, before the fight: note where the party
+  stands when the arena loads (it comes in by the gate, and the opening's "step forward" walks it
+  south from there), and find that strip on screen (squares are 16 map units: x 448-527,
+  y 176-191) before the "Go back to the pens" line starts the clock.
 - The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
 
 **The slave pens (region 29h)**, from the cluebook's map: #11 the stalker pen (break the door,

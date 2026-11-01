@@ -80,3 +80,13 @@ The four grate repairs in `scriptfixes.py` (script 137), as the Loader builds th
   "The patience of the citizens of Draj is not infinite. Since you will not leave, you must fight!"
 - Stopped here to write the playing guide (playtest/PLAYTESTING.md) and its tools, committed to
   the repository. The way out of the arena is its open problem.
+
+### Correction (after the user asked why the party never reached the pens)
+
+- The "flag 11 still 0" readings were meaningless: `gd.flag` returns False while the flags have
+  no place in memory, which in the arena is any time outside a script's run (its own docstring).
+  So killfoes.py didn't necessarily stop flag 11; what it did skip is the Announcer's lines about
+  the kills.
+- The real reason the party didn't get out: I walked it straight north into the bone wall
+  (NO PATH FROM HERE) without having found where the exit strip is, and the arena's patience ran
+  out. The guide (and state.py, which now says when flags can't be read) are corrected.
