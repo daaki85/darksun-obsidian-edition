@@ -1,0 +1,19 @@
+#!/bin/sh
+# fightout.sh [MAX]: finish a fight the game's own way, so its scripts see each kill: every foe to
+# 1 HP (hp.py 1), then on each party turn Tab (the mod picks the nearest enemy) + Return (attacks).
+# A waiting message is clicked away first (msgbox.sh: Tab/Return do nothing under one). Never
+# Escape: with no menu up it opens EXIT GAME?. Enemies act alone. DONE when fight_on is 0, else
+# STUCK with a screenshot. The arena sends several waves: run it again while a new fight starts.
+. "$(dirname "$0")/env.sh"
+W=$(timeout 5 xdotool search --class dosbox | head -1)
+timeout 20 python3 "$PT/hp.py" 1 >/dev/null
+for i in $(seq 1 ${1:-40}); do
+  f=$(timeout 20 python3 "$PT/state.py")
+  case "$f" in "fight_on 0"*) echo "DONE after $i: $f"; exit 0;; esac
+  if sh "$PT/msgbox.sh"; then timeout 5 xdotool mousedown 1; sleep 0.1; timeout 5 xdotool mouseup 1; sleep 2; continue; fi
+  t=$(echo "$f" | sed -n 's/.*turn \([0-9-]*\).*/\1/p')
+  if [ -n "$t" ] && [ "$t" -ge 0 ] 2>/dev/null && [ "$t" -le 3 ]; then
+    timeout 5 xdotool key --window $W Tab; sleep 1; timeout 5 xdotool key --window $W Return; sleep 4
+  else sleep 3; fi
+done
+echo "STUCK: $f"; sh "$PT/shot.sh" "$WORK/stuck-fightout.png"; exit 1
