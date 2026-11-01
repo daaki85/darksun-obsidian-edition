@@ -14,8 +14,8 @@ for target in "488 232" "488 232" "488 200" "488 184" "488 184" "488 176"; do
   for k in 1 2 3 4 5 6 7 8; do
     s=$(timeout 20 python3 "$PT/state.py"); echo "$s"
     case "$s" in *"region 0x29"*) echo "IN THE PENS"; exit 0;; "fight_on 1"*) echo "A FIGHT: fightout.sh first"; exit 1;; esac
-    if tail -4 "$WORK/dice.txt" | grep -q "2. No"; then timeout 5 xdotool key --window $W n; sleep 2; continue; fi
-    if sh "$PT/msgbox.sh"; then timeout 5 xdotool mousedown 1; sleep 0.1; timeout 5 xdotool mouseup 1; sleep 1; continue; fi
+    if [ "$(tail -1 "$WORK/dice.txt")" = "    2. No" ]; then timeout 5 xdotool key --window $W n; sleep 2; continue; fi
+    if sh "$PT/msgbox.sh"; then sh "$PT/boxclick.sh"; sleep 1; continue; fi
     cx=$(echo "$s" | sed -n 's/.*camera (\([-0-9]*\), .*/\1/p'); cy=$(echo "$s" | sed -n 's/.*camera ([-0-9]*, \([-0-9]*\)).*/\1/p')
     sx=$(( tx - cx )); sy=$(( ty - cy ))
     if [ $sx -lt 20 ] || [ $sx -gt 300 ] || [ $sy -lt 40 ] || [ $sy -gt 180 ]; then

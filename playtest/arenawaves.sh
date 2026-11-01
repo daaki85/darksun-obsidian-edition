@@ -9,12 +9,12 @@ for wave in 1 2 3 4 5 6 7 8; do
   case "$(timeout 20 python3 "$PT/state.py")" in "fight_on 1"*)
     timeout 900 sh "$PT/fightout.sh" 120 | tail -1;; esac
   for i in $(seq 1 15); do
-    if tail -4 "$WORK/dice.txt" | grep -q "2. No"; then
+    if [ "$(tail -1 "$WORK/dice.txt")" = "    2. No" ]; then
       timeout 5 xdotool key --window $W n; sleep 3; tail -2 "$WORK/dice.txt"
       sh "$PT/dismiss.sh" 4 >/dev/null; echo DONE; exit 0
     fi
     timeout 20 python3 "$PT/state.py" | grep -q "^fight_on 1" && break
-    if sh "$PT/msgbox.sh"; then timeout 5 xdotool mousedown 1; sleep 0.1; timeout 5 xdotool mouseup 1; fi; sleep 2
+    if sh "$PT/msgbox.sh"; then sh "$PT/boxclick.sh"; fi; sleep 2
   done
   echo "wave $wave over: $(timeout 20 python3 "$PT/state.py")"
 done

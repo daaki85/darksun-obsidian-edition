@@ -84,11 +84,14 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   too**: drags made under one did nothing, and the view later jumped. Clear boxes first. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
   HERE"; walkto stops after two clicks that don't move the leader.
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
-  click to go away, and while one is up Tab, Return and map clicks do nothing. `msgbox.sh` tells
-  whether one is up; `dismiss.sh` clicks them away.
+  click to go away, and while one is up Tab, Return, map clicks and drags do nothing. `msgbox.sh`
+  tells whether one is up; **click ON the box** (`boxclick.sh`: 160, 20): a click wherever the
+  pointer was (low on the map, after a drag) left "Excellent! These gladiators wish to fight
+  again!" up through a whole loop of clicks (2026-11-01). `dismiss.sh` does this for several.
 - **YES/NO questions** ("Yell something back at the Announcer? (Answer Yes or No)") look like a
-  message box, but a click doesn't answer them: press **N** (or Y). `dismiss.sh` stops at one and
-  says so.
+  message box, but a click doesn't answer them: press **N** (or Y). One is waiting only while the
+  dice log's last line is `    2. No` (answered, `    > No` follows): a check for "2. No" in the
+  last few lines took an old, answered one for a new one (2026-11-01). `dismiss.sh` stops at one.
 - **Keys**: Tab picks the nearest enemy and Return attacks it (the mod's keys, in a fight); L shows
   or hides the combat log panel; **E opens the Effects screen** (not "end turn"); Escape closes a
   screen or menu that is open, and **opens EXIT GAME? when nothing is**: a click after that can quit
@@ -175,6 +178,9 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   south from there), and find that strip on screen (squares are 16 map units: x 448-527,
   y 176-191) before the "Go back to the pens" line starts the clock.
 - The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
+- **Staying sends another fight** each time: "Excellent! These gladiators wish to fight again! We
+  shall see how they fare!" (Silt Runners, a Screamer Beetle...), then "Go back to the pens" again:
+  the arena repeats until the party leaves. Each fight can bring a level-up screen.
 - **The clock after "Go back to the pens" is short**: a few walking clicks, then "Since you will
   not leave, you must fight!" and another fight (Silt Runners...). Leave at once, and don't walk
   south or east first: the 2026-11-01 run lost its time getting the view to the wall.
@@ -189,6 +195,12 @@ try can be tried again), #15 the campfire (rest; two rests bring the next arena 
 Kurzak waiting sets off the alarm), #10 Pehtucl's ambush (Bloodwrath on his body).
 
 ## 6. After
+
+**After every play, add everything learned to this guide** (the user's standing instruction,
+2026-11-01): not only stalls, but every control, screen, message, map position, route step,
+timing, script detail and tool change found while playing, each where it belongs above, then
+commit and push. Do it at each stop, not only at the end: a pause can lose the container.
+
 
 1. Stop the watchdog; restore anything raised in memory.
 2. Send the test log; copy it to `playtest/logs/` and commit.

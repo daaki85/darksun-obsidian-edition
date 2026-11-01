@@ -4,6 +4,6 @@
 . "$(dirname "$0")/env.sh"
 for i in $(seq 1 ${1:-6}); do
   sh "$PT/msgbox.sh" || break
-  grep -q "Answer Yes or No" "$WORK/dice.txt" && tail -3 "$WORK/dice.txt" | grep -q "2. No" && { echo "YES/NO QUESTION: press N or Y"; break; }
-  timeout 5 xdotool mousedown 1; sleep 0.1; timeout 5 xdotool mouseup 1; sleep 2
+  [ "$(tail -1 "$WORK/dice.txt")" = "    2. No" ] && { echo "YES/NO QUESTION: press N or Y"; break; }
+  sh "$PT/boxclick.sh"; sleep 2
 done; tail -3 "$WORK/dice.txt"

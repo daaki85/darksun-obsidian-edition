@@ -11,7 +11,7 @@ timeout 20 python3 "$PT/hp.py" 1 >/dev/null
 for i in $(seq 1 ${1:-40}); do
   f=$(timeout 20 python3 "$PT/state.py")
   case "$f" in "fight_on 0"*) echo "DONE after $i: $f"; exit 0;; esac
-  if sh "$PT/msgbox.sh"; then timeout 5 xdotool mousedown 1; sleep 0.1; timeout 5 xdotool mouseup 1; sleep 2; continue; fi
+  if sh "$PT/msgbox.sh"; then sh "$PT/boxclick.sh"; sleep 2; continue; fi
   t=$(echo "$f" | sed -n 's/.*turn \([0-9-]*\).*/\1/p')
   if [ -n "$t" ] && [ "$t" -ge 0 ] 2>/dev/null && [ "$t" -le 3 ]; then
     timeout 5 xdotool key --window $W Tab; sleep 1; timeout 5 xdotool key --window $W Return; sleep 4
