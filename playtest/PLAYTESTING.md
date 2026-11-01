@@ -57,6 +57,10 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
 - `$WORK/dice.txt`: the dice log: every roll, every line of dialogue and narration
   (`[Narration] ...`, `[The Announcer] ...`), menus with their choices, and "Message: NO PATH FROM
   HERE". Read its tail after each action; it is the most reliable record of what happened.
+- **Two picture sizes**: `shot.sh` saves the game's own capture, 320x200; a window grab
+  (`import -window`, which msgbox.sh, panel.sh and levelup.sh use for speed) is 320x**240**, the
+  height stretched: a pixel at y in a capture is at y x 1.2 in a grab. Take a pixel's coordinates
+  from the same kind of picture the check uses (panel.sh read the wrong row this way for a day).
 - `sh shot.sh OUT.png`, then Read the picture: the game's own 320x200 capture. Look at the screen
   before any key that could do harm (Escape) and whenever a step didn't do what it should.
 - `live.py` (exec'd by the Python tools) gives `g` (memory), `ds`, `gd` (dsloader's GameData);
@@ -106,9 +110,9 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
   panel, not the map. Press L to hide it before walking near it (the party's first step into the
   arena, for one, is right above it).
 
-- **Level-up screens block everything**: CHOOSE A SPELL (a preserver's new level) waits for a
-  spell's icon to be clicked; the watchdog reports it as STUCK. Look at its screenshot, click an
-  icon (the first is at about 125, 90), then go on.
+- **Level-up screens block everything**: CHOOSE A SPELL (a preserver's new level, mid-fight)
+  waits for a spell's icon to be clicked; the watchdog reports it as STUCK. `levelup.sh` finds it
+  (its scroll's rollers) and clicks the first spell (125, 90); fightout.sh runs it each turn.
 
 ## 4. Fights
 

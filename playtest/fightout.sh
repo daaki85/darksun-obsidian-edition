@@ -11,6 +11,7 @@ timeout 20 python3 "$PT/hp.py" 1 >/dev/null
 for i in $(seq 1 ${1:-40}); do
   f=$(timeout 20 python3 "$PT/state.py")
   case "$f" in "fight_on 0"*) echo "DONE after $i: $f"; exit 0;; esac
+  if sh "$PT/levelup.sh"; then continue; fi
   if sh "$PT/msgbox.sh"; then sh "$PT/boxclick.sh"; sleep 2; continue; fi
   t=$(echo "$f" | sed -n 's/.*turn \([0-9-]*\).*/\1/p')
   if [ -n "$t" ] && [ "$t" -ge 0 ] 2>/dev/null && [ "$t" -le 3 ]; then
