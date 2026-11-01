@@ -15,7 +15,8 @@ with your options and keeps the full dice log while you play.
   [`player-guide.html`](obsidian-edition/player-guide.html))
 - [The full documentation](obsidian-edition/README.md): installing, running, the
   Loader's window and the dice log
-- [Features and rules](obsidian-edition/FEATURES.md): every rule change and
+- [Features and rules](obsidian-edition/FEATURES.md): what the game shows
+  (the combat log, the Look box, THAC0 and saves), and every rule change and
   addition in detail, with its switch
 - [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
 - [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line

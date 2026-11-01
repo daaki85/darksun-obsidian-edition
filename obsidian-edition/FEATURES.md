@@ -7,12 +7,23 @@ Everything the mod changes and adds in the game, in the order of the Loader's
 Options tab, each with its switch there; the game's bugs fixed come last. A
 switch's name here in bold (**Rangers' casting level**) is the short form of the
 sentence the Options tab gives it, in the same section and order. How each is
-done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). The tab's
-first section, **In the game** (the combat log, the Look box, names over
-figures), is in the [README](README.md#in-the-game).
+done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). Installing,
+running the game, the Loader's window and its dice log are in the
+[README](README.md).
 
 ## Contents
 
+- [In the game](#in-the-game)
+  - [The combat log in the game](#the-combat-log-in-the-game)
+  - [Names over figures](#names-over-figures)
+  - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
+  - [The creation screen](#the-creation-screen)
+  - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
+  - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
+  - [Charges in item boxes](#charges-in-item-boxes)
+  - [The Effects screen](#the-effects-screen)
+  - [What a scroll says](#what-a-scroll-says)
+  - [No manual check](#no-manual-check)
 - [Rule changes](#rule-changes)
   - [Characters](#characters)
     - [Class restrictions](#class-restrictions)
@@ -89,6 +100,345 @@ figures), is in the [README](README.md#in-the-game).
 - [The game's bugs, fixed](#the-games-bugs-fixed)
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
   - [Rules the game got wrong](#rules-the-game-got-wrong)
+
+## In the game
+
+The game itself shows more, in its own lettering and windows, when it is started
+from the Loader (or either `.bat` file): the Options tab's **In the game**
+section.
+
+### The combat log in the game
+
+With **A combat log in the game** ticked on the Options tab (the default),
+**L** on the map shows the [dice log](README.md#the-dice-log)'s lines in the game
+itself, and **L** again hides them: in a fight or out of one, whenever you
+want to read back. It doesn't open by itself, and stays as you left it (from
+one game to the next too). The lines are in the game's own font, in the
+Loader's colours for each kind of line (hits green, misses grey, damage
+amber, saving throws blue), the party's names in their colours and the
+monsters' in red, a filled pip before a party member's line and a hollow one
+before a monster's. In a fight its top line says the round, who is acting
+and who is still to (`Round 2: Gerakis, then Cermak, Cilla`). Out of fights,
+the lines with a roll in them go in too (a thief's skills, a scroll learned,
+the hit points of a new level), so they can be checked after they happen.
+
+Below the switch, pick how much it says: **at the least**
+(`Rampager hits Defiler for 4`), **in short**, the default
+(`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
+`Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
+the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
+target's AC; a natural 20 always hits, a 1 always misses). It never waits for
+a click.
+
+![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
+
+**The panel** sits over the map's lower right. A window the game opens over
+the map (a character's menu, a question) hides it until it closes. Expanded, it
+covers that part of the map, and the game's damage numbers over a creature
+there; **-** makes it smaller.
+
+- **Scrolling:** it keeps the last 200 lines. Drag the scrollbar's handle,
+  click the bar above or below it for a page, or turn the mouse wheel with
+  the pointer over the panel (on Windows). Scrolled back, it stays where it
+  is as new lines come, and a **Latest** chip at its foot says how many have;
+  click it (or scroll to the end) to follow again. Clicks on the panel are
+  its own: the party doesn't walk there.
+- **How long you've played.** Out of a fight, the top line says how long the
+  game has run, `Day 47, 14:20`: from day 1 at 00:00, the game's own clock (it
+  has no time of day, so 14:20 is the hours into that day; a rest moves it on 8
+  hours). Saves keep it.
+- **The arena's count of fights.** Between fights in the arena, the top line
+  says instead how many arena fights the party has had (`Arena fights: 4`; the
+  time until the game has shown the count to the Loader): the game's
+  own count, one a trip into the arena however many waves come (see [the
+  arena's count of
+  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). Once the party
+  has escaped Draj it's gone. (Not when the panel is collapsed to one line:
+  that line stays the newest.)
+- **Its buttons**, on the right of its top line: **L**, which hides it as the
+  key does; the level (**Least**, **Short**, **Detail**; a click goes to the
+  next, and the Options tab follows); and **-** and **+** for a smaller or
+  bigger panel. Collapsed, it is one line, the newest; expanded, it is
+  taller (11 lines) and has filters along its top: **All**, **Party** (the
+  party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
+  throws and magic resistance). Its size is remembered.
+
+![The combat log expanded, with its filters](docs/combat-log-expanded.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-combat-log-in-the-game).
+
+### Names over figures
+
+With **Float a spell's name over its caster, and "Miss" over whoever an attack
+missed** ticked on the Options tab (the default), a spell's name floats over
+its caster for a second and a half as it is cast, and "Miss" over anyone an
+attack misses, in the game's lettering with a dark edge. They work in and out
+of fights, for the party and the monsters alike, and a weapon's spell on a hit
+shows too. A name stays with its figure; near the top of the screen it goes
+under the figure's feet, clear of the game's boxes. Long names are shortened
+("Lesser Water Elem."), and up to four show at once.
+
+![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
+
+The same switch floats a spell's charge being used over whoever has it, in
+light blue: "Armor: 7 left" for a hit Armor took, "Reflected Image: 2 left" for
+a lost image, "Armor ends" for the last. These stay three seconds, twice as
+long, and a "Miss" or a spell's name never pushes one out.
+
+![An arena fight: "Armor: 8 left" in light blue over a Slig the party's gladiator has just hit, and "Miss" beside it](docs/floating-charges.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#names-over-figures).
+
+### THAC0, saves and thief skills
+
+Started from the Loader, the game's own inventory screen (the one with the
+character's figure and their equipment) shows six more things in its
+right-hand panel, drawn by the game's text routine so they look like the rest:
+
+![The inventory screen's panel in the game: THAC0 and the saves at the top, then Cilla's age; her thief skills (move silently and hide in shadows among them) beside the abilities, her DEX reaction and defensive adjustments, a sling and a long sword](docs/inventory.png)
+
+![A ranger's panel: move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
+
+- above STR, **THAC0** and the five **saving throws**, with the usual AD&D
+  short labels: `PPD` paralysis/poison/death, `RSW` rod/staff/wand, `PP`
+  petrification/polymorph, `BW` breath weapon, `SP` spell;
+- at the right of each weapon's damage line, the THAC0 with that weapon
+  (`T14`);
+- right of the abilities, level with STR to CHA, for a character with thief
+  levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
+  `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
+  and hide in shadows are the ones the Loader rolls (for [picking
+  pockets](#picking-pockets) and [hiding to
+  backstab](#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
+  `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
+  boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
+  script check) and read languages (a Shinobi's, for a scroll: on its
+  [Effects screen](#the-effects-screen)) are left out for want of room. A
+  ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
+  places, the cloak and boots counted (the other four left out);
+- right of SP in the saves (where RSW and BW sit on the rows above), the DEX
+  **reaction adjustment** (`REAC +4`): −6 at DEX 1 to +5 at DEX 24-25, the
+  number the [two-weapon rule](#two-weapons) adds to its penalties,
+  and the one initiative uses. It is worked out from the character's DEX each
+  time the panel is drawn, so it follows any change (Cat's Grace's, while it
+  lasts);
+- with [ages](#ages-and-magical-aging) on, the character's **AGE**
+  between the saving throws and STR;
+- right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as AD&D's
+  table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5 at 21-23).
+  The game counts it in AC already; on saving throws against what can be dodged
+  it counts the other way round (DEF −5 is +5 on the save), with the [rule
+  change](#rule-changes) for fire, cold and electricity. Worked out
+  the same way as REAC, each time the panel is drawn.
+
+The **View Character** screen gets them too: the five saves under the item
+icons, each with its label as above (`PPD 11  RSW 9` / `PP 10  BW 13` /
+`SP 10`), and in the lower panel, right of HP and PSI as DAM is right of AC,
+the character's **MOVE** (its movement in a fight, before boots or a spell
+change it) and **THAC0**.
+
+![The View Character screen: the saves labelled under the item icons, and MOVE and THAC0 beside HP and PSI](docs/view-character.png)
+
+They're the numbers as they stand now, worked out by the Loader the way the
+game's own attack and saving throw routines do. Each time the game draws one
+of these screens, the helper has the Loader bring them up to date first (the
+game waits a moment for it), so putting on a ring or readying another weapon
+shows at once. Spells start and end as time passes in the game, which it
+doesn't while these screens are open; open the screen again to see such a
+change.
+
+- **THAC0**: the character's THAC0 (its classes' best, a kit's warrior THAC0
+  in it) less STR's to-hit adjustment (DEX's for a missile weapon), the
+  weapon's plus (or, for a plain wooden, bone, stone or obsidian weapon, its
+  material's penalty), its weapon spec's to-hit (specialization, mastery,
+  expertise), a kit's (a Ravager's, a Brute's, an Arena Champion's...), the
+  two-weapon penalty for the hand, Bless and Prayer (+1), Curse (−1), Slow (−4)
+  and Graft Weapon (+1). The THAC0 at the top, and View Character's, is the
+  main weapon's: the right hand's, else the left's, else the missile weapon's.
+  What depends on the target (attacking from behind or backstabbing, a Blurred
+  target) is left out; the dice log shows it on each attack.
+
+- **Saves**: the d20 each needs, the character sheet's number less what the game
+  adds to every save: the [Rings of Protection and the Cloak of
+  Protection](#rings-and-cloaks-of-protection), Bless, Prayer,
+  Barkskin, Spirit Armor (not on PPD), the Save penalty, and on PPD the CON
+  adjustment (and a dwarf's or halfling's CON bonus). What depends on the spell
+  or its caster (WIS against mind spells, Protection from Fire, a doubled d20
+  against fire...) is left out; the dice log shows it on each save. A 1 always
+  fails and a 20 always saves, so they show between 2 and 20.
+- **Thief skills**: as they stand (with no equipment penalty in games started
+  with the dice log: see [How the game works out thief
+  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), at most
+  95 with [AD&D's table](#thief-skills-from-adds-table), 0 for a
+  skill an effect rules out or when the thief isn't Okay (New counts as Okay),
+  and 100 for one an effect makes certain (Detect Traps). Only the situation's
+  bonus or penalty (a hard lock) is left out: the dice log shows it on each
+  roll.
+
+The Characters tab shows the same THAC0 with each weapon and saves. The
+game's own numbers (the character sheet's) come back on these screens when
+the Loader isn't running.
+
+**The next level's class.** For a character of more than one class, the number
+in brackets on View Character's experience line is the XP at which the first
+of their classes goes up a level, and the Loader adds which class that is:
+`EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each class
+is its first letter (C, D, F, G, R, T), except the preserver's Pr and the
+psionicist's Ps. When two classes go up at the same XP, both are named:
+`(20000 Pr/T)`. A class already at the highest level (9, or its share of the
+XP cap with [Level cap by XP](#level-cap-by-xp)) has no next level,
+so it is never named.
+A character of one class shows the line as the game always has, and so does a
+human, who can only dual-class: the game counts only one of their classes
+there.
+
+![View Character's experience line for a fighter/thief, (110000 T), and a fighter/preserver/thief, (90000 Pr)](docs/xp-next.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thac0-saves-and-thief-skills).
+
+### The creation screen
+
+The character creation screen gains, beside the game's own scores and hit
+points:
+
+- **THAC0**, right of the hit points: `THAC0: M18 R19`, M for melee and R for
+  ranged, the character's THAC0 as its classes and kit stand (a Scholar's 1
+  worse, a Battle Mage's a warrior's...) less STR's to-hit adjustment (M) and
+  DEX's missile adjustment (R), so a click on STR or DEX shows at once what it
+  does to them. No weapon is counted (none is held yet, and weapon specs are
+  picked after DONE): it is the inventory's THAC0 before the weapon's own
+  parts.
+- **AGE**, above RECALL, with [ages](#ages-and-magical-aging) on:
+  the age the character will start at, rolled again with each roll of the die.
+- **SUM**, under CHR: what the six scores add up to and the most they may
+  ([scores as rolled](#scores-and-hit-points-as-rolled)).
+- **STORE** and **RECALL**, under the hit points
+  ([STORE and RECALL](#store-and-recall-on-the-creation-screen)).
+- **KITS**, at the end of the disciplines' or spheres' panel
+  ([choosing a kit](KITS.md#choosing-a-kit)); after DONE, the weapon window
+  for a warrior's weapon specs
+  ([weapon specialization](#weapon-specialization)).
+
+A picture of it: [STORE and RECALL](#store-and-recall-on-the-creation-screen).
+
+### Spell slots on the USE screen
+
+The game's USE (cast spells) screen shows, at the top of the panel under the
+spells, how many spells of the level on show (its LEVEL button) the selected
+character can still cast, and the most they get after resting, for the list on
+show only: `SPELLS LEFT`, then `WIZ` on the MAGE list (preservers' wizard
+spells) or `PRI` on the CLERIC list (clerics', druids' and rangers' priest
+spells), as `left/most` (`PRI 3/5`). The PSIONIC list shows none. Another level
+or list shows its own when the LEVEL or list button turns to it:
+
+![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
+
+The numbers go down as spells are cast (the screen shows the new count when it
+is next drawn) and back up after resting. A preserver in armour reads `NO
+SPELLS IN ARMOUR` in place of the heading.
+
+The numbers are the Characters tab's (see [spell slots](README.md#the-characters-tab)),
+WIS bonus included, printed with the game's own text routine; they show while
+the Loader (or its command-line dice log) is running.
+
+### What hurts a monster (the Look box)
+
+In a fight, Look at a monster (right-click until the pointer is the Look icon,
+then click the monster) and the game's small box, under its name and level,
+now also shows its hit points and AC (`HP 15/15 AC 2`), its THAC0 and
+alignment (`THAC0 17 AL TN`), its magic resistance beside its level
+(`LEVEL: 3 MR 30`), and its most important defence: `NEEDS +1 WEAPON`,
+`IMM FIRE COLD`, `NO CRUSH`, `HALF FROM WPNS` or `UNDEAD`. The alignment is in
+two letters: `LG`, `LN`, `LE`, `NG`, `TN`, `NE`, `CG`, `CN` or `CE`. (A line
+that would run past the box's edge, such as a monster's with over 100 HP,
+loses its spaces.) Its own status lines (casting, charmed, held...) follow in
+any row left. When there's more to say, closing the box shows everything in
+the game's dialogue window: the weapons it needs, the damage it's immune to or
+takes half of, spells that don't work on it, and what its hits do besides
+damage. The AC is the one the game last used against it; before anything
+has attacked it, the Loader works it out as the game would, from its armour,
+shield and DEX (spells on it, such as Barkskin, aren't counted until then).
+The dice log gets the same lines (`Look: ...`). Untick **Describe
+monsters when you Look at them in a fight** on the Options tab to turn this
+off.
+
+![The Look box on a Screamer Beetle in the arena: LEVEL: 3, then HP 15/15 AC 2 and THAC0 17 AL TN added](docs/look-box.png)
+
+The arena's first monsters have no magic resistance or special defences, so
+their box shows just the numbers and the alignment.
+
+How it works:
+[DEVELOPMENT.md](DEVELOPMENT.md#what-hurts-a-monster-the-look-box).
+
+### Charges in item boxes
+
+An item that casts a spell with charges (the wands, the Storm Ring, the
+necklaces) shows how many it has left in its item box (right-click it on the
+inventory screen), under its name, counting down as it's used. A cloak's,
+boots' or belt's box shows what it adds to thief skills (with
+[improved thieving](#improved-thieving) on):
+
+![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#charges-in-item-boxes).
+
+### The Effects screen
+
+The Effects screen (Current Spell Effects) shows more
+in its lower panel and under the pointer:
+
+- **Kits and weapon specs:** each kit (`KIT: RAVAGER`), with a Shinobi's chance
+  to read a scroll under it (`READ LANG. 35%`), then the weapon specs, a page
+  at a time when there are more than fit ([Changing
+  class](KITS.md#changing-class) has pictures).
+- **Charges left:** with the pointer on the icon of a spell that lasts a number
+  of uses, the name under the icons says how many are left: IMPROVED AC (4
+  CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
+  Effects that last until removed (Charmed) and a magic item's power while
+  it is readied (Shadowseeker's Detect Invisibility) show none.
+- **Enlarge's damage:** with the pointer on its icon, how much more it gives,
+  10% a level of its caster: ENLARGED (+90% DICE) from a 9th-level preserver,
+  the weapon's dice made bigger
+  ([the rule](#enlarge-multiplies-the-weapons-dice-only), on unless
+  unticked), or ENLARGED (+90% DAMAGE) with it off, the whole melee damage. The inventory's and View Character's damage don't count it (no room);
+  each hit's line in the dice log does (`+5 Enlarge (the dice 5 x190% = 10,
+  level 9)`, or `x190% Enlarge (level 9)` with the rule off). A second Enlarge on someone already enlarged
+  uses up the spell and adds nothing.
+- **The armour spells' AC:** with the pointer on Barkskin's, Flesh Armor's or
+  Magical Vestments' icon, the armour AC it gives by its caster's level:
+  BARKSKIN (AC 3) from a 12th-level druid (Barkskin 6 less a quarter of the
+  level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1
+  better for each 3 levels above 5). DEX and the rest are still added
+  to it, and armour already better is kept, so a spell showing a worse AC
+  than the character's armour does nothing for them.
+- **A click on a spell's icon leaves it on** (the game ended it); a psionic
+  power's icon still ends the power, as that is how one is stopped ([Spells on
+  the Effects screen](#spells-on-the-effects-screen)).
+
+![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells).
+
+### What a scroll says
+
+Clicking a scroll's spell icon in its item box gives the result on the line
+under the paper doll: YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU FAIL
+TO LEARN THE SPELL, TOO MANY SPELLS OF THAT LEVEL, or a Shinobi's YOU CAN NOT
+READ THE SCROLL and THAT IS NOT A SHINOBI SPELL. The game wrote these there too,
+but they never reached the screen. Like the game's own messages on that line, it
+stays until the pointer is on something else. Always on.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
+
+### No manual check
+
+The game's copy protection is gone. Leaving the sewers (the Tari's warrens) the
+first time, the game has a dragon appear and ask for a word from the manual
+("The 3rd word on page 14, line 1, begins with the letter 'p'. What is that
+word?"), and three wrong answers kill the party. Started from the Loader, the
+dragon doesn't come: the game goes on as if it had been answered. Always on.
+
+How it works: [DEVELOPMENT.md](DEVELOPMENT.md#no-manual-check).
 
 ## Rule changes
 
@@ -2130,7 +2480,7 @@ from the next start).
 
 What else the Effects screen shows (a spell's charges left, Enlarge's damage,
 the armour spells' AC, kits and weapon specs): [the Effects
-screen](README.md#the-effects-screen).
+screen](#the-effects-screen).
 
 ### Rules the game got wrong
 

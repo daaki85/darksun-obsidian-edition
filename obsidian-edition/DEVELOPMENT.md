@@ -277,7 +277,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    `SEGOBJEX.GFF`, `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (for
    the [new items](FEATURES.md#new-items), [Kalzith](FEATURES.md#kalzith),
    [Semyon](FEATURES.md#semyon) and [no manual
-   check](README.md#no-manual-check)), and to keep what the game last wrote to
+   check](FEATURES.md#no-manual-check)), and to keep what the game last wrote to
    the screen for a crash report (see [the crash report](#the-crash-report)),
    the mouse driver's `INT 33h` (for [scrolling the
    map](FEATURES.md#scrolling-the-map)) and the keyboard's `INT 16h` (for Tab
@@ -308,7 +308,7 @@ fixes always in the patched copy: no equipment penalty on thief skills (see
 roster's
 DELETE and New characters counting as Okay (see
 [More characters](FEATURES.md#more-characters)), and no manual check (see
-[No manual check](README.md#no-manual-check)).
+[No manual check](FEATURES.md#no-manual-check)).
 
 Limitations:
 - Only the GOG release (`DSUN.EXE` of 611,408 bytes) is supported. With
@@ -759,7 +759,7 @@ favours (the score 25 with the lowest roll). Tested in play with Chahl.
 
 ### The combat log in the game
 
-([In the README](README.md#the-combat-log-in-the-game).)
+([In FEATURES](FEATURES.md#the-combat-log-in-the-game).)
 
 #### What the game allows
 
@@ -955,7 +955,7 @@ dice log running:
 
 ### Names over figures
 
-([In the README](README.md#names-over-figures).)
+([In FEATURES](FEATURES.md#names-over-figures).)
 
 - **What starts one.** A spell's cast: `CAST_SITE` (INT 98h and its site
   number over `mov cx,[bp+6]` at 772AAh, the start of the routine at 772A5h
@@ -1010,7 +1010,7 @@ dice log running:
 
 ### THAC0, saves and thief skills
 
-([In the README](README.md#thac0-saves-and-thief-skills).)
+([In FEATURES](FEATURES.md#thac0-saves-and-thief-skills).)
 
 How: the patched game calls the helper (`INT 65h`) just after the panel's
 weapon lines; the helper prints the lines with the game's own text routine,
@@ -1090,7 +1090,7 @@ does.
 
 ### What hurts a monster (the Look box)
 
-([In the README](README.md#what-hurts-a-monster-the-look-box).)
+([In FEATURES](FEATURES.md#what-hurts-a-monster-the-look-box).)
 
 How: the patched game calls the helper (`INT F5h`; INT 66h-6Fh can't be used:
 the game calls those itself, looking for sound drivers) where the box has
@@ -1109,7 +1109,7 @@ Barkskin...) is left out.
 
 ### Charges in item boxes
 
-([In the README](README.md#charges-in-item-boxes).)
+([In FEATURES](FEATURES.md#charges-in-item-boxes).)
 
 An item that casts a spell has the spell + 1 in its `+0Fh` and its charges
 left in `+0Eh` (the routine finishing an item's use takes one off, 721E4h,
@@ -1123,7 +1123,7 @@ mirror, a crank), where those bytes hold something else (`TYPE_SCENERY`).
 
 ### No manual check
 
-([In the README](README.md#no-manual-check).)
+([In FEATURES](FEATURES.md#no-manual-check).)
 
 How: the dragon's question is the game's script 20, which script 120 runs (a
 call into another script, command 14h) when the party leaves the warrens

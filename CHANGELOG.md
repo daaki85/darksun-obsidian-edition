@@ -123,6 +123,11 @@ notes](PATCH-NOTES.md).
   - The Options tab's Kits text and FEATURES' bug table: the multiclass kits are pairs and one
     set of three; a thri-kreen's claws and bite cut. The weapon window's caption says what it
     shows. Screenshots checked: none outdated.
+- **In the game moves to FEATURES:** the Loader README's **In the game** (the combat log, names
+  over figures, THAC0 and saves, the creation screen, the USE screen's slots, the Look box,
+  charges, the Effects screen, a scroll's message, the manual check) is FEATURES' first section,
+  as it is the Options tab's; the README (58 KB to 38 KB) is installing, running, the Loader's
+  window and the dice log. Every link to those sections follows (DEVELOPMENT's "In FEATURES").
 - **A second review** (with another chat's review of `main` at 2.13.3, each point checked here):
   the guide's psionics table gave Enhanced Strength, Domination and Mass Domination a cost of 0
   (their records' 0; the game works it out when used: (24 − STR) × 2, and 3, 8, 13 or 18 by the
