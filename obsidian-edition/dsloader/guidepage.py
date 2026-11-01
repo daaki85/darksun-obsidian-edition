@@ -9,6 +9,7 @@ import html
 import os
 import re
 from typing import List, Tuple
+from . import pagefonts
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GUIDE = os.path.join(HERE, "PLAYER-GUIDE.md")
@@ -209,11 +210,8 @@ def build() -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Obsidian Edition Player's Guide</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <!-- Made from PLAYER-GUIDE.md by dsloader/guidepage.py: edit the guide, then run python -m dsloader.guidepage -->
-<style>{style()}</style>
+<style>{pagefonts.faces()}{style()}</style>
 </head>
 <body>
 <header class="banner">

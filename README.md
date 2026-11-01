@@ -116,4 +116,4 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues).
   [Python](https://www.python.org/) and
   [Unicorn](https://www.unicorn-engine.org/) (the CPU emulator the helper's
   tests run in); the web pages' fonts, Marcellus SC, Alegreya Sans and IBM Plex
-  Mono, from Google Fonts.
+  Mono (SIL Open Font License), carried inside the pages.

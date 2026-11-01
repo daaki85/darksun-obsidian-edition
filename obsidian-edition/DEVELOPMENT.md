@@ -136,7 +136,8 @@ Two web pages are made from Markdown, and a test fails when either falls behind:
 `player-guide.html` from `PLAYER-GUIDE.md` (`python -m dsloader.guidepage`) and
 `../patch-notes.html` from `../PATCH-NOTES.md` (`python -m
 dsloader.patchnotes`). Edit the Markdown, then run the module. Both use
-`dsloader/pagestyle.css`.
+`dsloader/pagestyle.css`, and carry their fonts inside them (`pagefonts.py`: the Latin sets
+in `dsloader/fonts`, with their licences), so they load nothing from the internet.
 
 `tests/test_dsclog.py` runs the helper's interrupt handlers in a CPU emulator
 when `unicorn` is installed (`pip install unicorn`), and is skipped otherwise.

@@ -123,6 +123,12 @@ notes](PATCH-NOTES.md).
   - The Options tab's Kits text and FEATURES' bug table: the multiclass kits are pairs and one
     set of three; a thri-kreen's claws and bite cut. The weapon window's caption says what it
     shows. Screenshots checked: none outdated.
+- **The web pages carry their fonts:** `player-guide.html` and `patch-notes.html` load nothing
+  from Google Fonts; `pagefonts.py` puts Marcellus SC, Alegreya Sans and IBM Plex Mono (their
+  Latin sets, in `dsloader/fonts` with their SIL Open Font Licences) inside each page (about
+  190 KB more a page). Checked in Chromium: every face loaded, no request made.
+- The release notes keep their Getting started: each file is that release's GitHub page, with
+  its own zip's name, and the published pages don't change with the files.
 - **Level cap by XP is a rule change:** its switch is in the Options tab's Rule changes,
   Characters (the eighteenth), and FEATURES, the README, the guide's Options at a glance and
   `options.png` (retaken) follow; More character customization is weapon specs, kits, STORE and
