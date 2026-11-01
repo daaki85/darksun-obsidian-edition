@@ -115,3 +115,21 @@ The four grate repairs in `scriptfixes.py` (script 137), as the Loader builds th
   from the main menu's LOAD SAVED GAME: the pens, (1672, 344). The save is in the repository
   (playtest/saves/pens-after-arena), with loadsave.sh.
 - Next: the pens' route to the grate (cluebook #11: the stalker pen, the button), then the grate.
+
+### Fifth run (2026-11-01, evening): from the pens save to the grate
+
+- Route from the data: the stalker pen's door (objects 2163/2164, 256,864-896; attack it: a STR
+  roll bashes it, and the stalker 151 at 187,856 hunts the party); button 1281 (139,748, within 4
+  squares) opens the secret door to the west; the grate 1234 at (46,86) (the MOVE_BOX at squares
+  3-4, 5-6 runs its menu, 137:29Bh).
+- Walking the pens: far clicks fail; built route.py on the region's walkability grid, then on the
+  game's live copy (DS:0556h), which shows closed gates. Walls are drawn over the squares north of
+  them, so route.py clicks squares with floor all round. The party started shut in Kurzak's
+  corridor (a gate at 81,20-21); follow.py 29 walked it beside Kurzak to (99, 32): "All right, go
+  through the door. There's a place to rest down the east hall."
+- msgbox.sh broke (the other session's pixmatch.py needs PIL, broken here): an ImageMagick
+  fallback added.
+- doors.py: closed doors on the area's edge: (95,28) right by the party, (88,54), (113,90),
+  (115,53), and the corridor gate (81,20-21). Clicking (95,28) and the floor beyond it did nothing.
+- 16:31 Saved as pens-kurzak-door (in the repository). Stopped to ask the user which door Kurzak
+  means and how it opens.
