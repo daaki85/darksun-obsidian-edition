@@ -39,6 +39,13 @@ notes](PATCH-NOTES.md).
   are; script 56's slime book masks the class bits with 415 (every cleric, druid, preserver and
   psionicist) for 417 (psionicist, preserver, fighter, air cleric). Every object number the scripts compare an item or creature with but four is a real
   object; every thief skill and ability check tests what its text says.
+- yuan-ti's v0.1.50 and v0.1.51 repairs: an attack on the grate (137 at B5Ch, its attack
+  trigger) broke the lock when the grate's field 43 was below 220, a field no record the grate can
+  be has (GPLX: the character record's +8 and the item type's +6 alone), so 0 and always; now
+  `RAND(30) < STR`, the rip's roll, and "fails to damage the lock" can come (the IF taken along to
+  the detour). The Rebel Mindhome's leader (204 at 5C9h) gave the spiders' 5000 XP (gnum 16, GPL
+  74) at every talk; it now waits on flag 695 being 0, which the first award sets (5D6h). Tests:
+  `test_grate_attack_rolls_strength_and_award_once`.
 - The grate's failed hack: a weapon that can break "breaks against the grate" and is gone (TAKE);
   a metal or magic one "rings off the grate, unharmed" (the game said it broke and kept it). Which
   can break is the game's rule for a weapon breaking in a fight (`Game.item_breaks`), read through

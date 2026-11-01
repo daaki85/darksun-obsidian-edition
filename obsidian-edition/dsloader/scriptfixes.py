@@ -26,7 +26,10 @@ as it is).
 - The slave pens' sewer grate: hacking its lock off is never offered (the search for a weapon in
   hand stops at once), and a hack that works leaves it shut; one that fails says the weapon
   breaks, and keeps it (now one that can break, as in a fight, is gone; a metal or magic one
-  rings off the grate unharmed).
+  rings off the grate unharmed); and an attack on it always broke the lock (now a Strength roll,
+  as ripping it open has).
+- The Rebel Mindhome's 5000 XP for killing the spiders came again at every talk to their leader;
+  now once.
 
 (The OpenDS fix that starts the final battle's stages without their pause is left out: with the
 game's clock running, the stage gate waits its window out as it should.)
@@ -169,6 +172,18 @@ REPAIRS = (
     Repair(137, 0xA31, bytes.fromhex("4f00629205418b965c3af9a0c39f0e9ddcfa20e9a32a0cfcb0f4cab90030"), _FAILS,
            "the sewer grate: a wooden, bone or stone weapon a hack breaks is gone, metal or magic unharmed",
            relocate=_FAILS_RELOCATE),
+    # Attacking the grate (its attack trigger, B49h) broke the lock when the grate's field 43 was
+    # below 220: a field no record the grate can be has, so 0, and always (yuan-ti's). Now the
+    # Strength roll ripping it open has (AA6h: RAND(30) < STR), so "fails to damage the lock" can be
+    Repair(137, 0xB5C, bytes.fromhex("18b18027012bda00dc3e0b98"),
+           bytes.fromhex("18e28c528f1ee1dab1802501173e0b98"),
+           "the sewer grate: an attack breaks its lock on a Strength roll"),
+    # The Rebel Mindhome (script 204): with the four spiders dead, every talk to the leader
+    # ran the thanks and its 5000 XP award again; the first sets flag 695, which nothing read. The
+    # award now only while it is 0 (yuan-ti's)
+    Repair(204, 0x5C9, bytes.fromhex("1613888710140087004a"),
+           bytes.fromhex("18cd02b7d78f003e0014" "1613888710140087004a" "67"),
+           "the Rebel Mindhome's 5000 XP for the spiders is given once", relocate=(8,)),
 )
 
 

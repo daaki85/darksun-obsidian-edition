@@ -57,6 +57,19 @@ class RepairTests(unittest.TestCase):
                 self.assertIn(bytes.fromhex("80250247"), r.now)
                 self.assertNotIn(bytes.fromhex("802501"), r.now)
 
+    def test_grate_attack_rolls_strength_and_award_once(self):
+        grate = next(r for r in sf.REPAIRS if (r.script, r.at) == (137, 0xB5C))
+        self.assertTrue(grate.now.startswith(bytes.fromhex("18e28c528f1ee1da")))  # TEST (RAND(30)) <
+        self.assertIn(bytes.fromhex("b180250117"), grate.now)  # the member's STR (field 17h)
+        self.assertEqual(grate.now[-3:], grate.was[-3:])  # its IF, to "fails to damage the lock", kept
+        award = next(r for r in sf.REPAIRS if r.script == 204)
+        self.assertTrue(award.now.startswith(bytes.fromhex("18cd02b7d78f00")))  # TEST flag 695 == 0
+        self.assertEqual(award.now[7], sf.IF)
+        self.assertEqual(int.from_bytes(award.now[8:10], "big"), len(award.now) - 1)  # to its ENDIF
+        self.assertEqual(award.now[10:-1], award.was)
+        self.assertEqual(award.now[-1], sf.ENDIF)
+        self.assertEqual(award.relocate, (8,))
+
     def test_too_long_a_script_left_alone(self):
         code = script_with(31, sf._longest())
         self.assertEqual(sf.repaired(31, code), code)
