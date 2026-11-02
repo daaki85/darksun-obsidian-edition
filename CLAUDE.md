@@ -71,7 +71,8 @@ Monitor, and every step gets a `timeout`.
 
 **The route so far.**
 1. New game: `start.sh`, `topartyfight.sh` (the opening, then clicks south from the gate until
-   the game brings the party into the arena).
+   the game brings the party into the arena). On 2026-11-02 the first bout never started from
+   there (the bone wall stops the party at 488,264): restart and try again before digging.
 2. The arena: `(sh arenawaves.sh && sh leavearena.sh)` fights the waves, answers N, drags the view
    north, clicks inside the wall (488,232), then the gate strip (488,184), and answers Y.
    Staying sends more fights.
