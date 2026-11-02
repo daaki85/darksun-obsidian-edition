@@ -31,6 +31,9 @@ notes](PATCH-NOTES.md).
   flag (58F86h) is the same interrupt, true only with `ARMOUR_WORN`; `THORNS_AC` and
   `counted_ac` follow. Tests: `WornTests.test_gladiator_bonus_needs_armour`, the Wall of Thorns
   damage's gladiator, `CountedAcTests.test_gladiator`. DSCLOG's image 64,544 bytes (+80).
+- Seen in DOSBox (playtest/logs/2026-11-02-dsun-fixes.md): a worn sling given DEX +2 raised DEX
+  15 to 17, in the backpack not; Gerakis's inventory AC at gladiator level 10 (raised in memory)
+  5 in armour, 9 in none, as at level 3 (before the fix, 7).
 - Checked and left: scores over 25 (the ability routine caps each at 25 before storing it, so
   the tables' lookups stay inside them); the difficulty setting (applied as a monster comes, by
   design); a ghost slot or a vanishing item, and a save made mid-scene (no case to follow; the
