@@ -47,14 +47,15 @@ TEXTS: Dict[int, str] = {
          "the target's true age. The target must survive a system shock.",
     PICK_SPIN: "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
                "If it fails, the thief tries to slip away unseen. Not in a fight.",
-    PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows per level in the empty quiver, for a 1st-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
-    PICK_SPIN + 2: "CHILL ARROWS:  Weaves Chill Touch into 5 arrows per level in the empty quiver, for a 1st-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
-    PICK_SPIN + 3: "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows per level in the empty quiver, for a 1st-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
-    PICK_SPIN + 4: "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows per level in the empty quiver, for a 3rd-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
+    # (the arrows' too: seven lines fill the box)
+    PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+    PICK_SPIN + 2: "CHILL ARROWS:  Weaves Chill Touch into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+    PICK_SPIN + 3: "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+    PICK_SPIN + 4: "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows a level in the empty quiver, for a 3rd-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
 }
 
 
