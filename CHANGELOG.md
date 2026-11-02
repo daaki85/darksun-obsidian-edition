@@ -8,6 +8,8 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.13.4 ([release notes](release-notes/v2.13.4.md)).
+
 **Changed**
 - **The dice log's `--all` line for each AC** the game works out gives its parts (base, armour,
   DEX, other).
