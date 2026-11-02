@@ -357,8 +357,8 @@ after the `ns_list_` patches):
 ## Worn items and the gladiator's armour
 
 ([In the features page](FEATURES.md#the-games-bugs-fixed); found by OpenDS, checked in
-DSUN.EXE with yuan-ti's notes.) One helper interrupt (`INT 81h`, `PROBE_WORN`), told where it
-was called from by its return address:
+DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One helper interrupt
+(`INT 81h`, `PROBE_WORN`), told where it was called from by its return address:
 
 - **Ability items.** The ability routine (7B758h, `80F5:2BB8`) goes through every item the
   creature has (the list `A0:1A2D` makes) and applies the ability byte (+0Fh, FAh-FFh) of each,
@@ -371,6 +371,17 @@ was called from by its return address:
   (`ARMOUR_WORN`: an armour piece on the arms, legs, head or chest, not a shield, bracers or a
   robe), so the game's `jbe` passes the bonus by otherwise. `THORNS_AC` and the Loader's
   `GameData.counted_ac` (`armour_worn`) count it the same way.
+- **Psionic Blast.** The effect routine's case 169 (796CBh, `80F5:0B2B`), for a target that
+  failed its save, takes its hit points down to a fifth of its most (the loss in `[BP-18h]`, the
+  damage routine 79A01h dealing it), then `or byte [si],1` (79707h). That OR is the interrupt
+  (with a NOP): it does it, and for target DI 0-3 (the party's combatants) adds the loss to the
+  header's `BLAST_HP` (+1814, a word each). `psiblast.BlastWatch`, in the dice log's pass, gives
+  each loss back once the fight flag has been down `FIGHT_OVER` (2 s), up to the member's most
+  and only to one still Okay (one Out Cold or dead was put there by something real), says so
+  ("Cilla shakes off Psionic Blast's imagined wounds as the fight ends: +23 HP, now 30/38"), and
+  clears the field; a game loaded (the clock gone back) clears it with nothing given. The three
+  places are told apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h, else the
+  ability routine's), so the one vector serves them all.
 
 ## New spells (wizard and 6th-level priest)
 

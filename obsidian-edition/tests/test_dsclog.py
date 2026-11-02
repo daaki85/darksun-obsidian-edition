@@ -666,6 +666,23 @@ class WornTests(unittest.TestCase):
         self.item(6, 9)
         self.assertEqual(self.gladiator(0x01), (True, False))  # not a gladiator: no bonus, armour or not
 
+    def test_psionic_blast_kept(self):
+        """Psionic Blast's "or byte [si],1" (80F5:0B67h): the OR done, and the loss ([BP-18h]) added
+        to BLAST_HP (header +1814) for party member DI (0-3); a monster's (DI 4 up) not kept."""
+        mu, image = self.mu, load_image()
+        hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        mu.mem_write(hdr + 1814, bytes(8))
+        for di, lost, want in ((1, 23, [0, 23, 0, 0]), (1, 4, [0, 27, 0, 0]), (3, 9, [0, 27, 0, 9]),
+                               (4, 50, [0, 27, 0, 9]), (200, 50, [0, 27, 0, 9])):
+            with self.subTest(di=di):
+                mu.mem_write(GAME_DS * 16 + 0x700, bytes([0x80]))
+                mu.mem_write(SS * 16 + BP - 0x18, struct.pack("<h", lost))
+                self.run_at(0x0B67, edi=di, esi=0x700, ebx=0x1111, eax=0x2222)
+                self.assertEqual(bytes(mu.mem_read(GAME_DS * 16 + 0x700, 1)), bytes([0x81]))
+                self.assertEqual((mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_DI)),
+                                 (0x1111, 0x2222, di))
+                self.assertEqual(list(struct.unpack("<4h", mu.mem_read(hdr + 1814, 8))), want)
+
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class RingTests(unittest.TestCase):

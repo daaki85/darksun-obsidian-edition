@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -520,6 +520,7 @@ class DiceLog:
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
+        self._blast = psiblast.BlastWatch()  # (Psionic Blast's imagined wounds, given back as a fight ends)
         self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, made and faded)
         self._rest_due = False  # (a rest seen: the spell arrows fade in the next pass)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
@@ -1181,6 +1182,7 @@ class DiceLog:
         changes = self.hp_changes(now) + self.psp_changes() + self.ability_changes()
         if not self._party_check(now):  # not while a game is loading: its records are half-filled
             out += changes
+            out += self._blast.tick(self.game, self.tsr_hdr, now)
         for rec in self.text.poll():
             if rec.kind == KIND_MESSAGE:
                 if rec.text.strip():

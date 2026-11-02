@@ -40,7 +40,16 @@ notes](PATCH-NOTES.md).
   item watch reports a vanished item). Left for a test in the game: bodies after a region is
   left (the game makes a Dead Body, object 1101, for a creature that carried something), and a
   wall of fire's damage twice in one move (ground fields act again on each move). Psionic Blast's
-  lost hit points coming back after the fight is a larger change, not made yet.
+  lost hit points coming back after the fight: made (below).
+
+**Fixed: Psionic Blast's imagined wounds kept for good (issue #129's last)**
+- The game's Psionic Blast takes a target that fails its save down to a fifth of its most hit
+  points, for good; the power's wounds are imagined. `PROBE_WORN` takes the case's `or byte
+  [si],1` (79707h, `gamepatch`'s `psionic_blast`; told apart by its return address, 0B69h) and
+  adds a party member's loss to the header's `BLAST_HP` (+1814); `psiblast.py` gives each back
+  as the fight ends (the fight flag down 2 s), up to the most and only to a member still Okay,
+  with a dice log line, and clears it (a loaded game clears it with nothing given). Tests:
+  `WornTests.test_psionic_blast_kept`, `test_psiblast.py`. DSCLOG's image 64,592 bytes (+48).
 
 **Fixed: the Loader's own starting armour gave no AC**
 - A party member's items are in three lists: worn things (armour, a shield, rings, a cloak,

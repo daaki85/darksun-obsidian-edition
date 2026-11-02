@@ -505,7 +505,7 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Superior Invisibility | unseen; ends if it attacks | Invisible; attacking or casting at an enemy ends it | the effect |
 | Ego Whip | stunned 1d4 rounds | can't attack or cast harmful spells for 1d4 rounds; psionic defence, no save | the defence and the effect |
 | Id Insinuation | paralyzed 1d4 rounds; combat only | Paralyzed 1d4 rounds; psionic defence, no save; combat only | the defence and the effect |
-| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first | the defence, save and HP lost |
+| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first; the Edition gives a party member standing at the fight's end the HP back | the defence, save, HP lost and given back |
 | Mind Bar | 75% resistance to mind spells | the same | the resistance roll |
 | Synaptic Static | no one nearby can use psionics | its keeper can't; anyone else must beat the static (above) | the contest |
 | Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |

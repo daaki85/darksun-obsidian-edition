@@ -273,6 +273,10 @@ PATCHES = (
     # the ability routine, as it reads a listed item's ability byte: mov al,es:[bx+0Fh] (DSCLOG
     # gives it only for an item worn, so one in the pack raises no score)
     Patch("ability_worn", 0x7B8AB, bytes.fromhex("268a470f"), _interrupt(VEC_WORN, 4)),
+    # Psionic Blast (the effect routine's case 169), once a target that failed its save is down to
+    # a fifth of its most hit points: or byte [si],1 (DSCLOG does it, and keeps a party member's
+    # loss for the Loader to give back as the fight ends: psiblast.py)
+    Patch("psionic_blast", 0x79707, bytes.fromhex("800c01"), _interrupt(VEC_WORN, 3)),
     # the routine that lists a creature's weapons (the inventory screen, the Look box), straight
     # after drawing one: add sp,10h (DSCLOG does it, then adds that weapon's THAC0)
     Patch("weapon", 0x7276E, bytes.fromhex("83c410"), _interrupt(VEC_WEAPON, 3)),

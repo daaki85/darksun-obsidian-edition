@@ -399,6 +399,9 @@ lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; +374 the Loader's: names floating o
                                 ;      far above the feet, +4 ink, +5 edge (palette indices), +6 the
                                 ;      map thing, +8 the ink's mask, then the edge's (LBL_ROW bytes a
                                 ;      row, bit 0 of the first the leftmost)
+blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took
+                                ;      from each party member this fight (PROBE_WORN), for the Loader
+                                ;      to give back and clear as the fight ends (psiblast.py)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -4894,21 +4897,42 @@ nc_who  dw 0                            ; (the character the test was asked abou
 ;   (a slot below the backpack's), else 0, so a ring or gauntlets in the pack change nothing;
 ; - the AC routine's "test word es:[bx+12h],40h" (612E:22C6h, 58F86h; INT + 4 NOPs), ES:BX the
 ;   character sheet of thing DI: ZF clear only for a gladiator who wears armour (ARMOUR_WORN),
-;   so the gladiator's armour optimisation (1 a 5 levels) needs armour, as Dark Sun has it.
+;   so the gladiator's armour optimisation (1 a 5 levels) needs armour, as Dark Sun has it;
+; - Psionic Blast's "or byte [si],1" (80F5:0B67h, 79707h; INT + a NOP), once the effect routine
+;   (case 169) has taken a target that failed its save down to a fifth of its most hit points: it
+;   does the OR, and adds the loss (the routine's [BP-18h]) to BLAST_HP for target DI if a party
+;   member (0-3), for the Loader to give back as the fight ends (psiblast.py): the blast's wounds
+;   are imagined.
 WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
+BLAST_RET   equ 0x0B69                  ; (Psionic Blast's)
 FIRST_PACK  equ 14                      ; the first backpack slot
 probe_worn:
         sti
         push bp
         mov bp, sp
         cmp word [bp+2], WORN_AC_RET
+        je .ac_bp
+        cmp word [bp+2], BLAST_RET
         pop bp
-        je .ac
+        je .blast
         mov al, [es:bx+0x0F]
         cmp byte [es:bx+0x11], FIRST_PACK
         jb .worn
         mov al, 0
 .worn:  iret
+.blast: or byte [si], 1                 ; (the game's)
+        cmp di, 3
+        ja .bout
+        push bx
+        push ax
+        mov bx, di
+        add bx, bx
+        mov ax, [bp - 0x18]             ; the hit points taken (SS:BP the routine's frame)
+        add [cs:bx + blast_hp], ax
+        pop ax
+        pop bx
+.bout:  iret
+.ac_bp: pop bp
 .ac:    test word [es:bx+0x12], 0x40
         jz .out                         ; not a gladiator (ZF set)
         push es
