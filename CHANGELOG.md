@@ -42,6 +42,23 @@ notes](PATCH-NOTES.md).
   wall of fire's damage twice in one move (ground fields act again on each move). Psionic Blast's
   lost hit points coming back after the fight is a larger change, not made yet.
 
+**Fixed: the Loader's own starting armour gave no AC**
+- A party member's items are in three lists: worn things (armour, a shield, rings, a cloak,
+  ammunition) at the record's `+08h`, held weapons at `+0Ah`, the backpack at `+0Ch`; the
+  inventory screen files an item by its type's kind (a melee, missile or thrown weapon to
+  `+0Ah`, anything else to `+08h`), and the game's AC routine (58DD3h) counts only `+08h`. The
+  Loader put everything worn in `+0Ah`, so Fuller starting gear's leather armour (and a
+  Stalker's cloak) showed as worn and gave no AC: Gerakis was hit at AC 8, not 6, in the arena
+  (the dice log's AC parts: armour -1 for three pieces). `pickpocket.list_for` files as the
+  screen does (`party_list`, `place`, `npcitems.add_to`), `mend_lists` moves what an earlier
+  version put in `+0Ah` ("Gerakis's Leg Armor is now counted as worn"), and `counted_ac` and
+  DSCLOG's `THORNS_AC` count `+08h` only, as the game. Seen in DOSBox: the old save repaired, AC 6
+  in the inventory; a new game's gear in `+08h`, Gerakis hit at AC 6. Tests:
+  `ListTests.test_mend_worn`, `test_list_for`, `test_add_to`,
+  `CountedAcTests.test_held_armour_doesnt_count`, the Wall of Thorns damage's held armour.
+- The dice log's `--all` line for each AC worked out now gives its parts (base, armour, DEX,
+  other).
+
 **Fixed: the game's script checks (`scriptfixes.py`, always on)**
 - yuan-ti's v0.1.49 repairs: the ranger's tracking at the Wagon Train's bodies (script 210: the
   ranger flag read from the combat record, the ranger level tested as a bit of its class, the

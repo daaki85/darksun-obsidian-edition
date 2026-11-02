@@ -2328,9 +2328,10 @@ class GameData:
         """A creature's AC as the game's AC routine (58DD3h) counts it for each attack, spells' part
         aside: the sheet's base, less each worn item's plus and its type's AC where the type counts
         for AC (+0Fh 80h; a shield too), a fifth of a gladiator's level (in armour: DSCLOG's PROBE_WORN)
-        and the DEX adjustment. Worn:
-        in the first two item lists (putting an item on moves it there from +0Ch, whatever its slot
-        byte says). As DSCLOG's THORNS_AC counts it. None without a record and sheet."""
+        and the DEX adjustment. Worn: in the first item list, +08h, whatever the slot byte says
+        (the inventory screen puts all but weapons there; the routine counts nothing in the held
+        list, +0Ah, or the backpack's, +0Ch: pickpocket.list_for). As DSCLOG's THORNS_AC counts
+        it. None without a record and sheet."""
         rec, sheet = self.creature(creature), self.sheet(creature)
         if len(rec) < CREATURE_SIZE or len(sheet) < SHEET_SIZE:
             return None
@@ -2345,7 +2346,7 @@ class GameData:
                     ac -= level // 5
                     break
         ac += self.dex_ac(rec[CREATURE_ABILITIES + 1])
-        for _, item, typ in self._worn(creature, CREATURE_ITEM_LISTS[:2]):
+        for _, item, typ in self._worn(creature, CREATURE_ITEM_LISTS[:1]):
             if struct.unpack_from("<H", item, ITEM_TYPE)[0] < NO_ITEM and typ[0x0F] & 0x80:
                 ac -= struct.unpack_from("b", item, ITEM_PLUS)[0] + struct.unpack_from("b", typ, 0x12)[0]
         return ac

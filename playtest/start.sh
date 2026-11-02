@@ -7,7 +7,7 @@ pgrep -x Xvfb >/dev/null || (Xvfb :55 -screen 0 1024x768x24 >/dev/null 2>&1 &); 
 for p in $(pgrep -f "^python3 -u -m dsloade[r]"); do kill $p; done; pkill -9 -x dosbox; sleep 1
 cd "$REPO/obsidian-edition" && python3 -c "
 from dsloader import launch
-s = launch.load_settings(); s['game_dir'] = '$GAME'; launch.save_settings(s)
+s = launch.load_settings(); s['game_dir'] = '$GAME'; s['window_scale'] = 1; launch.save_settings(s)
 print('problem:', launch.prepare_patched_game('$GAME'))
 print(launch.write_conf('$GAME'))"
 cd "$GAME/DOSBOX" && (SDL_AUDIODRIVER=disk SDL_DISKAUDIOFILE=/dev/null setsid dosbox -conf ../__support/app/dosbox_darksun.conf -conf "$REPO/obsidian-edition/dosbox_dicelog.conf" >"$WORK/dosbox.log" 2>&1 < /dev/null &)

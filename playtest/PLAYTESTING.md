@@ -95,6 +95,11 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **Pixel checks** go through `pixmatch.py` (colours within 3, a row either way, for the
   recompiled program); it uses PIL, or ImageMagick where PIL is broken (2026-11-01: "cannot import
   name '_imaging'" made every msgbox.sh call fail).
+- **The window must be 320x240** (2026-11-02): with no `obsidian-edition/settings.json` the
+  Loader's default window is 960x720 (window_scale 3), and every pixel check (msgbox.sh,
+  levelup.sh, panel.sh) then failed, so message boxes and CHOOSE A SPELL went unseen and the
+  loops stalled. start.sh now sets `window_scale` 1, and pixmatch.py samples a bigger grab down
+  to 320x240 first. Check with `xdotool getwindowgeometry`.
 - **Two picture sizes**: `shot.sh` saves the game's own capture, 320x200; a window grab
   (`import -window`, which msgbox.sh, panel.sh and levelup.sh use for speed) is 320x**240**, the
   height stretched: a pixel at y in a capture is at y x 1.2 in a grab. Take a pixel's coordinates
@@ -258,6 +263,8 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   ground inside the wall (488, 232) shows, a click there (the party finds its own way in), then
   the gate strip, until the region is the pens (29h). Run them together:
   `(sh arenawaves.sh && sh leavearena.sh)`, in the background, followed with a Monitor.
+- **The first bout started at once** in two later fresh games on 2026-11-02 (topartyfight.sh
+  "FIGHT"), so the failure below is intermittent.
 - **The first bout can fail to start** (2026-11-02): topartyfight.sh ended "NO FIGHT" at
   (488, 232), and 60-odd more clicks south and walks between (488, 232) and (488, 264) (the bone
   wall stops the party at 264) over several game minutes didn't start it. The bout is GPL 2's
@@ -270,6 +277,24 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   20,20) before reading it. It follows a gladiator level raised in memory (`sheetedit.py`); the
   THAC0 line doesn't. Gerakis's armour: chest (173,70), arm (66,70), legs (173,128); the
   backpack's cells start at (195,26), (213,26), then down 18 a row.
+- **The party's item lists** (2026-11-02): worn things (armour, a shield, rings, a cloak,
+  ammunition) at the creature record's +08h, held weapons at +0Ah, the backpack at +0Ch; the
+  inventory screen files by the type's kind, and the game's AC counts +08h only. `itemlists.py`
+  shows where things are; swapping two list words
+  in memory (the record's +08h/+0Ah/+0Ch) is a quick, undoable test of what a list does.
+- **The inventory screen's places** (2026-11-02, from hovering: the name shows in the bar at the
+  bottom; the ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest
+  (173,70), left hand (173,92), legs (173,128); the backpack fills down its first column first: (195,26),
+  (195,48), (195,70)..., then (213,26)... Click an item to pick it up, click a place to put it;
+  armour can't be put on in a fight ("CANNOT USE THIS ITEM"); a wrong place says "ILLEGAL
+  PLACEMENT" and keeps it on the pointer.
+- **The parts of an AC** (2026-11-02): run the dice log with `--all` (kill its process by pid,
+  then `python3 -u -m dsloader dicelog --all >> $WORK/dice.txt` from obsidian-edition): each AC the
+  game works out gets a line "AC of X against Y: 8 (base 10, armour -1, DEX -1, other +0)".
+- **Getting a party member attacked**: a scratch loop that passes the party's turns (Tab +
+  Return, then E if the turn stays) and stops once the dice log has N more "attacks NAME"
+  lines; between waves click the messages and walk about in the arena (staying brings more
+  fights). It can lose the whole party ("YOUR PARTY HAS BEEN DEFEATED"): have a save to go back to.
 - **Ability items and memory edits** (2026-11-02): an item's +0Fh is also the spell the game casts
   on the wearer as it is put on (FAh-FFh: STR to CHA, +0Eh the amount), kept as an effect (the
   item's byte 2 links it, for taking it off). Picking an item up or putting it down recounts the

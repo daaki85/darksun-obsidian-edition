@@ -15,6 +15,9 @@ w = subprocess.run(['timeout', '5', 'xdotool', 'search'] + winq, capture_output=
 if not w:
     print('no window'); sys.exit(2)
 png = subprocess.run(['timeout', '10', 'import', '-window', w[0], 'png:-'], capture_output=True).stdout
+# a bigger window (the Loader's window_scale 2-4: 960x720 when its settings file is missing,
+# 2026-11-02) is sampled down to 320x240 first, so the coordinates stay the game's
+png = subprocess.run(['convert', 'png:-', '-sample', '320x240!', 'png:-'], input=png, capture_output=True).stdout
 vals = [int(v) for v in sys.argv[1:]]
 if Image is not None:
     im = Image.open(io.BytesIO(png)).convert('RGB')

@@ -551,9 +551,11 @@ routine's end, keeps each party member's last AC (`AC_SEEN`, its `[BP+6]` the
 combatant; 7Fh none yet), and for anyone else (or a member not yet attacked)
 `THORNS_AC` counts as the routine does: the sheet's base (+27h, 10 for an armed
 man: the routine adds the armour), less each worn item's plus and its type's AC
-(+12h, types with +0Fh 80h, a shield too) in the creature's item lists +8 and
-+0Ah (where putting an item on moves it; the routine doesn't look at the slot
-byte, and +0Ch, the backpack, doesn't count), a fifth of a gladiator's level
+(+12h, types with +0Fh 80h, a shield too) in the creature's worn item list,
++8 (the routine doesn't look at the slot byte, and counts nothing in the held
+list, +0Ah, or the backpack's, +0Ch: [DEVELOPMENT.md](DEVELOPMENT.md)'s
+"The party's three item lists"), a
+fifth of a gladiator's level
 (508:25h's) and the DEX adjustment (DS:7F6h by the record's +23h). The effects'
 part (5B8:F2h: Armor, Barkskin and the rest) is left out. The dice log shows it:
 the entry's extra carries the AC + 80h in its high byte. Blade Barrier's record

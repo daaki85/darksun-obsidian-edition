@@ -51,7 +51,7 @@
 - Found: with armour on, the game's AC is 1 worse than the Loader's `counted_ac` (7 against 6;
   9 and 9 with none): a follow-up for the Loader's count (the Look box, Wall of Thorns).
 
-## The Loader's AC against the game's (2026-11-02, open)
+## The Loader's AC against the game's (2026-11-02, settled below)
 - Gerakis (no kit, no spells, DEX 15: -1), arm, leg and chest armour (types 7, 8, 6, each AC 1,
   no plus), each state read after two portrait switches: none 9; chest alone 8; any two 8; all
   three 7. The Loader's `counted_ac` (and DSCLOG's `THORNS_AC`) add each piece: 9, 8, 7, 6. So
@@ -61,3 +61,28 @@
   PROBE_RING_AC (no helm or bracers type among them), the gladiator test (level 3: no bonus).
 - Next: the AC an attack on him uses (PROBE_AC's record, the dice log's "target AC"), to tell
   whether the display or the Loader is off; then trace 58DD3h's loop with the game's list.
+
+## Settled: the Loader's starting armour was in the wrong list (2026-11-02)
+- A fresh new game, Gerakis and Cermak made 10th-level gladiators in memory (Cermak's flag C0h),
+  the arena's waves fought by passing the party's turns (`passturns.sh`, a scratch loop: Tab +
+  Return, E for a member out of moves) so the foes attack.
+- The gladiator in a fight: Cermak (no armour, DEX 18: -4) hit at target AC 6, so no gladiator
+  bonus without armour (the fix); Gerakis (arm, leg, chest armour) hit at 6, and at 8 with his
+  gladiator flag cleared in memory: the bonus (2) is given in armour. **The DSUN fix is seen
+  in play.**
+- The dice log restarted with `--all` (its AC line now gives the parts): "AC of Gerakis against
+  Wild Mul: 8 (base 10, armour -1, DEX -1, other +0)": three pieces of AC 1, armour -1. His lists:
+  the game's own arm armour at +08h, the Loader's leg and chest armour (Fuller starting gear) at
+  +0Ah. The two lists swapped in memory: armour -2. The game's AC routine counts +08h only.
+- The inventory screen (out of a fight; armour can't be put on in one: "CANNOT USE THIS ITEM"):
+  chest and leg armour taken off and put on again went to +08h; a shield (copied from an NPC's
+  pack with `npcitems.add_to`) into the left hand to +08h; arrows into the ammo slot to +08h; the
+  long sword, the gythka and a bow to +0Ah. So the screen files by kind: a melee, missile or
+  thrown weapon held, anything else worn. The +08h list swapped with +0Ch: AC 9, nothing counted.
+- Fixed in the Loader (pickpocket.list_for; mend_lists moves what earlier versions put in +0Ah;
+  `counted_ac` and THORNS_AC count +08h only). The old save `pens-kurzak-door` loaded: "Gerakis's
+  Leg Armor is now counted as worn (it had been counted as held, and gave no AC)" and the same
+  for the chest; inventory AC 6, the Loader's count 6. A new game: the gear in +08h; Slig attacks
+  on Gerakis at target AC 6 (8 before).
+- Lost on the way: the whole party fell in the arena (turns passed, levels raised only for two),
+  "YOUR PARTY HAS BEEN DEFEATED"; reloaded a save.

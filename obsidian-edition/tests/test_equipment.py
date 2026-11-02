@@ -91,6 +91,12 @@ class CountedAcTests(unittest.TestCase):
         self.lists(50, 51, 9999)
         self.assertEqual(self.ac(), 5)
 
+    def test_held_armour_doesnt_count(self):
+        """In the held list (+0Ah: weapons; earlier versions' starting gear put armour there), as
+        the game's routine: no AC (Gerakis in a fight, 2026-11-02)."""
+        self.lists(9999, 50, 51)
+        self.assertEqual(self.ac(), 7)
+
     def test_gladiator(self):
         """A fifth of a gladiator's level (10th: 2), in armour only (DSCLOG's PROBE_WORN); not
         without the sheet's gladiator flag."""

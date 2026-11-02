@@ -3576,6 +3576,11 @@ class NewSpellTests(RuleTests):
         mu.mem_write(0xA000 * 16 + 4 * 21, bytes(item))
         mu.mem_write(0xB000 * 16 + 6 * 0x14 + 0x0F, bytes([0x80]))
         self.assertEqual(damage(spell=game.THORNS_SPELL)[:2], (10, 10))  # in armour: AC 4 - 2
+        mu.mem_write(0xB000 * 16 + 6 * 0x14 + 0x12, bytes([1]))  # (the armour AC 1: AC 4 - 1 - 2)
+        self.assertEqual(damage(spell=game.THORNS_SPELL)[:2], (9, 9))
+        # (in the held list, +0Ah, as the game's routine: no AC; still armour on, for the gladiator)
+        mu.mem_write(0x9000 * 16 + 7 * 0x3A + 8, struct.pack("<HHH", 9999, 41, 9999))
+        self.assertEqual(damage(spell=game.THORNS_SPELL)[:2], (10, 10))
         mu.mem_write(sheet + 0x12, struct.pack("<H", 0))
         mu.mem_write(0x9000 * 16 + 7 * 0x3A + 8, struct.pack("<HHH", 9999, 9999, 9999))
         # (a party member: the AC the game last worked out for it, PROBE_AC's [BP+6] the combatant)

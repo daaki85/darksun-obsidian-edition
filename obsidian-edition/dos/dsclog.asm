@@ -12677,8 +12677,8 @@ thorns_damage:
 ; out (AC_SEEN), else counted as the game's AC routine (DSUN.EXE 58DD3h, in an overlay: not to be
 ; called from the damage's) counts it: its sheet's base (+27h), less each worn item's plus and its
 ; type's AC where the type counts for AC (+0Fh 80h; a shield too, the thorns not being from
-; behind; worn: in its first two item lists, +8 and +0Ah, as putting an item on moves it there
-; from +0Ch, whatever its slot byte says), a fifth of a gladiator's level (the sheet's +12h 40h: its class among the three, a
+; behind; worn: in its first item list, +8, whatever its slot byte says: the inventory screen
+; puts all but weapons there, and the game's routine counts nothing in +0Ah or +0Ch), a fifth of a gladiator's level (the sheet's +12h 40h: its class among the three, a
 ; human's later class only once past the first's level, as the game's 508:25h has it) and the
 ; DEX adjustment (the record's +23h); the gladiator's only in armour (ARMOUR_WORN), as PROBE_WORN
 ; has the game's. Spells' changes to AC (5B8:F2h's) aren't counted. DS the
@@ -12738,7 +12738,8 @@ thorns_ac:
         jae .lists
         movsx ax, byte [bx + DEX_AC]
         add di, ax
-.lists: mov cx, 8               ; its worn item lists, each a thing: +8, +0Ah
+.lists: mov cx, 8               ; its worn item list, a thing: +8 (as the game's AC routine: not
+                                ;   the held +0Ah, nor the backpack's +0Ch)
 .list:  les bx, [CREATURES]
         add bx, [cs:r_creature]
         add bx, cx
@@ -12773,7 +12774,7 @@ thorns_ac:
 .on:    dec byte [cs:r_left]
         jnz .item
 .next:  add cx, 2
-        cmp cx, 0x0C
+        cmp cx, 0x0A
         jb .list
         movsx eax, di
         pop bp

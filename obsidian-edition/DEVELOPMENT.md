@@ -307,17 +307,28 @@ finds the party by itself (`dsloader/game.py`).
 **Items.** A creature's items hang off its record at `+0x08`, `+0x0a` and
 `+0x0c`: each is an object number (the object table has a kind, 1 for an item
 and 2 for a creature, and an index), the first item of a list, whose own
-records then name the next. A party member keeps what it wears or holds in
-its `+0x0a` list and what's in its backpack in its `+0x0c` one: the inventory
-screen moves an item from one to the other as it's put on or away (a new list
-when there's none). The game fights with every weapon in the `+0x0a` list,
-whatever the item's slot byte says: a dagger put in a backpack cell but left
-in that list is a weapon in hand to the game (its inventory panel lists it,
-and it attacks with it). So the Loader gives and moves the party's items
-through `pickpocket.party_list` and `pickpocket.place`, and `mend_lists` puts
-away backpack items an earlier version left in the worn list. (The game's own
-party starts with worn armour in `+0x0c`, so worn items found there are left
-alone.) Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
+records then name the next.
+
+**The party's three item lists.** A party member keeps what it wears in its
+`+0x08` list (armour, a shield, rings, a cloak, ammunition: whatever is on the
+body and isn't a weapon), the weapons it holds in its `+0x0a` one, and what's
+in its backpack in its `+0x0c` one. The inventory screen moves an item from
+one to another as it's put on or away, by its type's kind (`+0x00`): a melee,
+missile or thrown weapon to `+0x0a`, anything else to `+0x08` (a new list when
+there's none; seen in the game 2026-11-02: chest and leg armour, a shield in
+the left hand and arrows went to `+0x08`, a long sword, a gythka and a bow to
+`+0x0a`). The game fights with every weapon in the `+0x0a` list, whatever the
+item's slot byte says: a dagger put in a backpack cell but left in that list
+is a weapon in hand to the game (its inventory panel lists it, and it attacks
+with it). Its AC routine (58DD3h) counts only the `+0x08` list: armour left in
+`+0x0a` or `+0x0c` shows as worn and gives no AC (Gerakis's dice-log AC in a
+fight: arm armour in `+0x08`, leg and chest in `+0x0a`, armour -1; the two
+lists swapped in memory, -2). So the Loader gives and moves the party's items
+through `pickpocket.list_for`, `party_list` and `place`, and `mend_lists`
+moves what an earlier version left in the held list: backpack items to the
+backpack's list, and worn things that aren't weapons (starting armour, a
+cloak) to the worn list. (The game's own party starts with worn things in
+`+0x0c`, so worn items found there are left alone.) Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
 (`DS:0x1669`, 115 of them, from GPLDATA.GFF):
 
 | Record | Offset | Field |

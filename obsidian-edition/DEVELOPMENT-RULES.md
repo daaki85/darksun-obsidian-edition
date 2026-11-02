@@ -1104,7 +1104,8 @@ lists (or `restrict.kit_allows`) and, with the class restrictions on,
   (`CLOAK_KITS`): the plain cloak (type 65, name 0Eh, picture FBE3h).
 
 Items are made by `npcitems.add_to` (a worn slot only when it's free; in the
-worn list or the backpack's, as the slot is), and moved with
+worn list, the held one for a weapon, or the backpack's, as the inventory
+screen keeps it: `pickpocket.list_for`), and moved with
 `pickpocket.place`. Each step is skipped once its item or kind is there, so
 `fill` leaves nothing to do the next time; one line for the log lists what it
 gave. `fill_member` gives a thri-kreen (race 8, `THRI_KREEN`) nothing, and

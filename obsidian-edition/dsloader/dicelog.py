@@ -3396,7 +3396,10 @@ class DiceLog:
                 dex = self.game.dex_ac(rec[CREATURE_ABILITIES + 1]) if not rear else 0
                 self.ac_detail[index] = AcDetail(base, armour - base, dex, ac - armour - dex, ac)
         if show_all:
-            return [f"AC of {self.game.combatant_name(target)} against {self.game.combatant_name(e.arg(8))}: {ac}"]
+            d = self.ac_detail.get(index) if index is not None else None
+            parts = (f" (base {d.base}, armour {d.armour:+d}, DEX {d.dex:+d}, other {d.other:+d})"
+                     if d is not None and d.total == ac else "")
+            return [f"AC of {self.game.combatant_name(target)} against {self.game.combatant_name(e.arg(8))}: {ac}{parts}"]
         return []
 
     # ability checks --------------------------------------------------------------------

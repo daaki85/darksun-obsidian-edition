@@ -426,7 +426,7 @@ The AC is the one `PROBE_AC` last recorded for the creature
 none). Before any attack on it, `GameData.counted_ac` counts it as the game's
 AC routine (58DD3h) does, as `THORNS_AC` does in the helper: the sheet's base
 (+27h, 10 for an armed man), less each worn item's plus and its type's AC
-(types with +0Fh 80h, in the item lists +8 and +0Ah), a fifth of a
+(types with +0Fh 80h, in the worn item list, +8), a fifth of a
 gladiator's level and the DEX adjustment; the effects' part (Armor,
 Barkskin...) is left out.
 
