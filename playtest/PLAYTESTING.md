@@ -265,8 +265,11 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   object 2059 at (498, 341), beyond the bone wall, and it waits on flag 5 (MAS 42 sets it on
   loading); the flags can't be read in the arena. Earlier runs got in from the same place; why
   not this one is open. Next time: restart (`start.sh`) and try again before digging.
-- **Testing a rule on AC needs an attack**: the game works an AC out only for an attack on the
-  creature; the inventory's AC and THAC0 lines didn't follow a level raised in memory (2026-11-02).
+- **AC in the inventory** (2026-11-02): the AC line is the game's own, worked out afresh from what
+  is worn, but drawn one change behind: switch to another member's portrait and back (20,62 then
+  20,20) before reading it. It follows a gladiator level raised in memory (`sheetedit.py`); the
+  THAC0 line doesn't. Gerakis's armour: chest (173,70), arm (66,70), legs (173,128); the
+  backpack's cells start at (195,26), (213,26), then down 18 a row.
 - **Ability items and memory edits** (2026-11-02): an item's +0Fh is also the spell the game casts
   on the wearer as it is put on (FAh-FFh: STR to CHA, +0Eh the amount), kept as an effect (the
   item's byte 2 links it, for taking it off). Picking an item up or putting it down recounts the

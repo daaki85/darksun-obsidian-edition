@@ -35,3 +35,18 @@
 - Smoke: the new helper ran the pens and the arena's opening show (the Rampager's fight, the
   Defiler killed) with no fault.
 - All memory edits gone with the game (nothing saved).
+
+## The gladiator in the inventory (2026-11-02, the user's suggestion)
+- The inventory's AC line is the game's own and is worked out afresh from what is worn; read it
+  after switching to another member and back (it was one change behind otherwise).
+- Gerakis (gladiator), pens-kurzak-door, his level raised in memory:
+
+| Wears | Level 3 | Level 10 |
+|---|---|---|
+| arm, leg and chest armour | 7 | 5 (the bonus of 2) |
+| arm and leg armour | 8 | 6 (the bonus of 2) |
+| no armour | 9 | 9 (no bonus: **the fix working**; before it, 7) |
+
+- Armour put back; nothing saved.
+- Found: with armour on, the game's AC is 1 worse than the Loader's `counted_ac` (7 against 6;
+  9 and 9 with none): a follow-up for the Loader's count (the Look box, Wall of Thorns).
