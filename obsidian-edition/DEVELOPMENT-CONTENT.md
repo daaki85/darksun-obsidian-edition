@@ -354,7 +354,7 @@ after the `ns_list_` patches):
   (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
   is 1, then the replaced test.
 
-## Worn items and the gladiator's armour
+## Worn items, the gladiator's armour and Psionic Blast
 
 ([In the features page](FEATURES.md#the-games-bugs-fixed); found by OpenDS, checked in
 DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One helper interrupt

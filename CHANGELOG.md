@@ -42,6 +42,17 @@ notes](PATCH-NOTES.md).
   wall of fire's damage twice in one move (ground fields act again on each move). Psionic Blast's
   lost hit points coming back after the fight: made (below).
 
+**Docs: a review after the item-list and Psionic Blast fixes**
+- The psionic powers' cost table was in the player's guide and How the game works: it stays in
+  the guide, How the game works links to it with the three costs worked out as used. The dice
+  log page has the new lines (Psionic Blast's hit points back, armour moved to the worn list,
+  `--all`'s AC parts); the README's bug list, the guide's Psionics and Equipment (armour in
+  pieces, DEX and shield not from behind) follow. DEVELOPMENT's helper size and upper-memory
+  figures brought up to date (64,592 bytes, 688 spare; 6,131 paragraphs). The developer section
+  on `PROBE_WORN` renamed for its third use. A note that the game's own party starts with its
+  armour in the backpack's list corrected: Gerakis's own arm armour is in `+08h`. Screenshots:
+  `new-spells.png` still shows Erdlu Claw's old description.
+
 **Fixed: Psionic Blast's imagined wounds kept for good (issue #129's last)**
 - The game's Psionic Blast takes a target that fails its save down to a fifth of its most hit
   points, for good; the power's wounds are imagined. `PROBE_WORN` takes the case's `or byte

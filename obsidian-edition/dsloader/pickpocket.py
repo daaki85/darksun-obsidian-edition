@@ -210,8 +210,8 @@ def mend_lists(gd: GameData) -> List[str]:
     lines for the log. A backpack item goes to the backpack's list (they gave the backpack's
     dagger, Thieves' Tools and such to the held list, where a weapon is fought with); something
     worn that isn't a weapon to the worn list (they gave starting armour, a cloak, a shield, a
-    ring to the held list, where it counted for no AC). (Nothing else: the game's own party
-    starts with worn things in the backpack's list.)"""
+    ring to the held list, where it counted for no AC). Nothing else: a worn item in the
+    backpack's list is left as the game has it."""
     out: List[str] = []
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)

@@ -510,47 +510,11 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Synaptic Static | no one nearby can use psionics | its keeper can't; anyone else must beat the static (above) | the contest |
 | Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |
 
-What each costs, from the game's own table, and for three of them worked out as
-they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination
-and Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11,
-below 16, and up):
-
-| Power | Discipline | PSP to use | PSP each round kept up |
-|---|---|---|---|
-| Detonate | psychokinesis | 18 | — |
-| Disintegrate | psychokinesis | 40 | — |
-| Project Force | psychokinesis | 10 | — |
-| Ballistic Attack | psychokinesis | 5 | — |
-| Control Body | psychokinesis | 8 | — |
-| Inertial Barrier | psychokinesis | 7 | 5 |
-| Animal Affinity | psychometabolism | 15 | 4 |
-| Energy Containment | psychometabolism | 10 | — |
-| Life Draining | psychometabolism | 11 | — |
-| Absorb Disease | psychometabolism | 12 | — |
-| Adrenalin Control | psychometabolism | 8 | 4 |
-| Biofeedback | psychometabolism | 6 | 3 |
-| Body Weaponry | psychometabolism | 9 | 4 |
-| Cell Adjustment | psychometabolism | 5 | — |
-| Displacement | psychometabolism | 6 | 3 |
-| Enhanced Strength | psychometabolism | (24 − STR) × 2 | 8 |
-| Flesh Armor | psychometabolism | 8 | 4 |
-| Graft Weapon | psychometabolism | 10 | 1 |
-| Lend Health | psychometabolism | 4 | — |
-| Share Strength | psychometabolism | 6 | 2 |
-| Domination | telepathy | 3-18 by level | — |
-| Mass Domination | telepathy | 3-18 by level | — |
-| Psychic Crush (attack mode) | telepathy | 7 | — |
-| Superior Invisibility | telepathy | 5 | 5 |
-| Tower of Iron Will (defence mode) | telepathy | 6 | 0 |
-| Ego Whip (attack mode) | telepathy | 4 | — |
-| Id Insinuation (attack mode) | telepathy | 5 | — |
-| Intellect Fortress (defence mode) | telepathy | 4 | 0 |
-| Mental Barrier (defence mode) | telepathy | 3 | 0 |
-| Mind Bar | telepathy | 6 | 4 |
-| Mind Blank (defence mode) | telepathy | 0 | 0 |
-| Psionic Blast (attack mode) | telepathy | 10 | — |
-| Synaptic Static | telepathy | 15 | 10 |
-| Thought Shield (defence mode) | telepathy | 1 | 0 |
+What each power costs to use and to keep up is in the game's own table, given
+in full in the [Player's Guide](PLAYER-GUIDE.md#psionics). Three are worked out
+as they're used: Enhanced Strength (24 less the target's STR) × 2, and
+Domination and Mass Domination 3, 8, 13 or 18 by the target's level (below 6,
+below 11, below 16, and up). Defence modes cost nothing to keep up.
 
 ## How the game works out thief skills
 

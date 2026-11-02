@@ -1634,7 +1634,9 @@ raises the best defence mode it knows and can pay for, by itself.
 | Synaptic Static | telepathy | 15 | 10 |
 | Thought Shield (defence) | telepathy | 1 | |
 
-Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
+Psionic Blast leaves a victim that fails its save at a fifth of its hit
+points; the wounds are imagined, so a party member still standing gets them
+back as the fight ends. Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
 makes unarmed blows 2d4, and Animal Affinity at least 1d10: a thri-kreen's
 claws, not its bite. The Mind Bender, Kineticist and Titan Mind
 [kits](#kits) change some costs.
@@ -1665,8 +1667,11 @@ materials, the short sword among them.
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
 
-**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**. *Without
-the mod:* helms give no AC.
+**Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by
+its own amount, and a shield and DEX lower it more (but not against an attack
+[from behind](#from-behind-and-backstabs)). **Helms give AC 1**. *Without
+the mod:* helms give no AC. The inventory screen's AC line counts them all; the
+Loader's Characters tab shows the AC of the last attack and what made it.
 
 **Protection.** Rings and cloaks of protection give +1 AC and +1 on every
 save, by AD&D's rules: two rings don't add up; a ring gives no AC with magical

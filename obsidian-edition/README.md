@@ -88,7 +88,9 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   [no manual check](FEATURES.md#no-manual-check).
 - **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Negative Plane Protection never working, Cause Wounds' odd dice, the game's
+  Negative Plane Protection never working, Cause Wounds' odd dice, Psionic
+  Blast's imagined wounds kept for good, ability items working from the
+  backpack, the gladiator's armour bonus without armour, the game's
   scripts' broken checks (the sewer grate's hack, a ranger's tracking, a
   halfling's greeting), and more; and
   the rules it got wrong, from spell saves to warriors' attacks, put right ([The
