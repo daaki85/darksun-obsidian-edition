@@ -258,6 +258,25 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   ground inside the wall (488, 232) shows, a click there (the party finds its own way in), then
   the gate strip, until the region is the pens (29h). Run them together:
   `(sh arenawaves.sh && sh leavearena.sh)`, in the background, followed with a Monitor.
+- **The first bout can fail to start** (2026-11-02): topartyfight.sh ended "NO FIGHT" at
+  (488, 232), and 60-odd more clicks south and walks between (488, 232) and (488, 264) (the bone
+  wall stops the party at 264) over several game minutes didn't start it. The bout is GPL 2's
+  entry at 1 (case gnum 3 = 1, "Step forward" sets it), run by MAS 42's code-111 trigger on
+  object 2059 at (498, 341), beyond the bone wall, and it waits on flag 5 (MAS 42 sets it on
+  loading); the flags can't be read in the arena. Earlier runs got in from the same place; why
+  not this one is open. Next time: restart (`start.sh`) and try again before digging.
+- **Testing a rule on AC needs an attack**: the game works an AC out only for an attack on the
+  creature; the inventory's AC and THAC0 lines didn't follow a level raised in memory (2026-11-02).
+- **Ability items and memory edits** (2026-11-02): an item's +0Fh is also the spell the game casts
+  on the wearer as it is put on (FAh-FFh: STR to CHA, +0Eh the amount), kept as an effect (the
+  item's byte 2 links it, for taking it off). Picking an item up or putting it down recounts the
+  scores (opening the inventory doesn't); clearing the bytes of a worn item leaves its effect
+  behind: reload. `itemedit.py MEMBER SLOT [slot= e= f=]`, `sheetedit.py MEMBER [levelN= flags|=]`
+  and `party.py` (classes, flags, scores, items) are the tools.
+- **The pens' main door** (objects 2145-2146 at 1571-1611, 559: the entryway Kurzak opens) has
+  the "Take me to the Arena! I want a fight!" menu (137:14CEh), but open it answers nothing to
+  the look pointer. **Resting** is at a fire ring (the game's rest, 8066Dh); the east hall's
+  object 2264 (1908, 675) is a haystack (137:F5h), not the fire ring.
 - **The combat log panel**: `sh panel.sh hide|show` checks the panel's pixel before pressing L
   (L alone toggles, and can leave it the wrong way round).
 
