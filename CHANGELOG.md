@@ -50,8 +50,11 @@ notes](PATCH-NOTES.md).
   pieces, DEX and shield not from behind) follow. DEVELOPMENT's helper size and upper-memory
   figures brought up to date (64,592 bytes, 688 spare; 6,131 paragraphs). The developer section
   on `PROBE_WORN` renamed for its third use. A note that the game's own party starts with its
-  armour in the backpack's list corrected: Gerakis's own arm armour is in `+08h`. Screenshots:
-  `new-spells.png` still shows Erdlu Claw's old description.
+  armour in the backpack's list corrected: Gerakis's own arm armour is in `+08h`.
+- Screenshots: `new-spells.png` retaken for Erdlu Claw's description, which showed a fault: with
+  "(not a thri-kreen's bite)" it ran to eight lines and the last spilled over the box's bottom
+  edge. Now "(or +1 to a psionic power's dice)" in place of naming Body Weaponry and Animal
+  Affinity, seven lines (`spelltexts.py`), seen in DOSBox.
 
 **Fixed: Psionic Blast's imagined wounds kept for good (issue #129's last)**
 - The game's Psionic Blast takes a target that fails its save down to a fifth of its most hit

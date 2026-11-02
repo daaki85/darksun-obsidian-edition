@@ -288,6 +288,12 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   (195,48), (195,70)..., then (213,26)... Click an item to pick it up, click a place to put it;
   armour can't be put on in a fight ("CANNOT USE THIS ITEM"); a wrong place says "ILLEGAL
   PLACEMENT" and keeps it on the pointer.
+- **A spell's description box** (2026-11-02): U, a member's portrait (Cermak 66,108), then
+  right-click a spell's icon (from 177,59, about 14 apart). Seven lines fill the box: an eighth
+  spills over its edge, so check a lengthened text in the game. A new wizard spell is known by a
+  bit of the sheet's +45h (`game.NEW_KNOWN`: Erdlu Claw 20h), which a scratch write can set for a
+  shot (the sheet from SHEETS_PTR and the creature's +4 index). Doc panels like
+  `new-spells.png` are crops of `shot.sh`'s 320x200 picture scaled 2.09 (304x188 each).
 - **The parts of an AC** (2026-11-02): run the dice log with `--all` (kill its process by pid,
   then `python3 -u -m dsloader dicelog --all >> $WORK/dice.txt` from obsidian-edition): each AC the
   game works out gets a line "AC of X against Y: 8 (base 10, armour -1, DEX -1, other +0)".
