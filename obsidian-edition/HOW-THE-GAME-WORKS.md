@@ -26,6 +26,7 @@ the game, and checked here in the game's own code.
   - [Each power against the manual](#each-power-against-the-manual)
 - [How the game works out thief skills](#how-the-game-works-out-thief-skills)
 - [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)
+- [Resting](#resting)
 - [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
 - [The Bowyer's archery target](#the-bowyers-archery-target)
 - [The arena's count of fights](#the-arenas-count-of-fights)
@@ -231,7 +232,7 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
 - Every hit has damage kinds: fire, cold, electricity, acid, poison, draining,
   psionic, death, and for weapons crushing, edged or pointed, from the item's
   type; a natural (unarmed) attack's is crushing, fists and monsters' claws
-  alike (with Obsidian Edition, a thri-kreen of the party's claws and Erdlu
+  alike (with Obsidian Edition, a thri-kreen of the party's claws and bite and Erdlu
   Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)).
   A weapon's hit also carries its magic: one bit for +1 or better, one
   for +2 or better and one for +3 or better (the weapon's plus, or its
@@ -466,7 +467,8 @@ their own:
   charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
   magic resistance line counts it, and Lower Resistance halving the result.
 - **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least
-  1d10.
+  1d10. Only the first of a creature's natural attacks: a thri-kreen's four
+  claws, not its bite.
 - Monsters use them too: the Screamer Beetle's special attack is Psychic
   Crush (1d8, save vs paralysis/poison/death for half).
 
@@ -503,52 +505,16 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Superior Invisibility | unseen; ends if it attacks | Invisible; attacking or casting at an enemy ends it | the effect |
 | Ego Whip | stunned 1d4 rounds | can't attack or cast harmful spells for 1d4 rounds; psionic defence, no save | the defence and the effect |
 | Id Insinuation | paralyzed 1d4 rounds; combat only | Paralyzed 1d4 rounds; psionic defence, no save; combat only | the defence and the effect |
-| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first | the defence, save and HP lost |
+| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first; the Edition gives a party member standing at the fight's end the HP back | the defence, save, HP lost and given back |
 | Mind Bar | 75% resistance to mind spells | the same | the resistance roll |
 | Synaptic Static | no one nearby can use psionics | its keeper can't; anyone else must beat the static (above) | the contest |
 | Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |
 
-What each costs, from the game's own table, and for three of them worked out as
-they're used: Enhanced Strength (24 less the target's STR) × 2, and Domination
-and Mass Domination 3, 8, 13 or 18 by the target's level (below 6, below 11,
-below 16, and up):
-
-| Power | Discipline | PSP to use | PSP each round kept up |
-|---|---|---|---|
-| Detonate | psychokinesis | 18 | — |
-| Disintegrate | psychokinesis | 40 | — |
-| Project Force | psychokinesis | 10 | — |
-| Ballistic Attack | psychokinesis | 5 | — |
-| Control Body | psychokinesis | 8 | — |
-| Inertial Barrier | psychokinesis | 7 | 5 |
-| Animal Affinity | psychometabolism | 15 | 4 |
-| Energy Containment | psychometabolism | 10 | — |
-| Life Draining | psychometabolism | 11 | — |
-| Absorb Disease | psychometabolism | 12 | — |
-| Adrenalin Control | psychometabolism | 8 | 4 |
-| Biofeedback | psychometabolism | 6 | 3 |
-| Body Weaponry | psychometabolism | 9 | 4 |
-| Cell Adjustment | psychometabolism | 5 | — |
-| Displacement | psychometabolism | 6 | 3 |
-| Enhanced Strength | psychometabolism | (24 − STR) × 2 | 8 |
-| Flesh Armor | psychometabolism | 8 | 4 |
-| Graft Weapon | psychometabolism | 10 | 1 |
-| Lend Health | psychometabolism | 4 | — |
-| Share Strength | psychometabolism | 6 | 2 |
-| Domination | telepathy | 3-18 by level | — |
-| Mass Domination | telepathy | 3-18 by level | — |
-| Psychic Crush (attack mode) | telepathy | 7 | — |
-| Superior Invisibility | telepathy | 5 | 5 |
-| Tower of Iron Will (defence mode) | telepathy | 6 | 0 |
-| Ego Whip (attack mode) | telepathy | 4 | — |
-| Id Insinuation (attack mode) | telepathy | 5 | — |
-| Intellect Fortress (defence mode) | telepathy | 4 | 0 |
-| Mental Barrier (defence mode) | telepathy | 3 | 0 |
-| Mind Bar | telepathy | 6 | 4 |
-| Mind Blank (defence mode) | telepathy | 0 | 0 |
-| Psionic Blast (attack mode) | telepathy | 10 | — |
-| Synaptic Static | telepathy | 15 | 10 |
-| Thought Shield (defence mode) | telepathy | 1 | 0 |
+What each power costs to use and to keep up is in the game's own table, given
+in full in the [Player's Guide](PLAYER-GUIDE.md#psionics). Three are worked out
+as they're used: Enhanced Strength (24 less the target's STR) × 2, and
+Domination and Mass Domination 3, 8, 13 or 18 by the target's level (below 6,
+below 11, below 16, and up). Defence modes cost nothing to keep up.
 
 ## How the game works out thief skills
 
@@ -655,6 +621,15 @@ the two the Loader rolls: move silently (when a pocket isn't picked, see
 [backstab](FEATURES.md#hiding-in-shadows-to-backstab)).
 **All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
 
+## Resting
+
+A rest (at a fire ring, or one a script gives) fills hit points, PSP and spell
+slots, and the party's priests tend everyone: if the best cleric among those
+Okay is 5th level or more, it casts Cure Disease, Remove Curse and Remove
+Paralysis on each party member, and so does the best druid; a druid of 7th
+level or more casts Neutralize Poison on each too (the game's rest, 8066Dh;
+found by CalvinRodo's yuan-ti, checked in DSUN.EXE).
+
 ## Searching junk, hay and wardrobes
 
 Junk piles, haystacks and wardrobes are searched by one of the game's scripts,
@@ -673,7 +648,7 @@ The script also has outcomes for the rolls that find nothing (a scorpion's bite
 in junk, a skull in hay, coins in a wardrobe...), but its "nothing" check comes
 first, so they never happen.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#searching-junk-hay-and-wardrobes).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#searching-junk-hay-and-wardrobes).
 
 ## The Bowyer's archery target
 
@@ -697,7 +672,7 @@ So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
 less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
 the dice log with the distances and what it needed.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-bowyers-archery-target).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-bowyers-archery-target).
 
 ## The arena's count of fights
 

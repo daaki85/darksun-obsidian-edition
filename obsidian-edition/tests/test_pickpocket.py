@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, pickpocket, ring, tools
+from dsloader import game, pickpocket, restrict, ring, tools
 from test_dicelog import CREATURES, DS, ITEM_TYPES, ITEMS, LOAD_SEG, NAMES
 from test_now import ThiefTests
 
@@ -228,6 +228,13 @@ class ListTests(unittest.TestCase):
         self.pick.setUp()
         self.gd, self.m = self.pick.log.game, self.pick.m
         struct.pack_into("<Bh", self.m, THINGS + 505 * 3, 0, 506)  # (two free objects for new lists)
+        # Dag's sword and bow weapons (their types' kinds), held as the game holds them: his
+        # list as the held one (+0Ah)
+        for item, kind in ((5, restrict.MELEE), (6, restrict.MISSILE)):
+            typ, = struct.unpack_from("<H", self.m, ITEMS + item * game.ITEM_SIZE + game.ITEM_TYPE)
+            self.m[ITEM_TYPES + typ * game.ITEM_TYPE_SIZE] = kind
+        thing, = struct.unpack_from("<h", self.m, CREATURES + 8)
+        struct.pack_into("<hh", self.m, CREATURES + 8, game.NO_ITEM, thing)
 
     def items_in(self, offset):
         thing, = struct.unpack_from("<h", self.m, CREATURES + offset)
@@ -237,31 +244,52 @@ class ListTests(unittest.TestCase):
 
     def test_put_away_and_taken_out(self):
         """Dag's sword put in the backpack goes to the backpack's list (a new one), and back in
-        his hand to the worn list (a new one too: his first list emptied of it)."""
+        his hand to the held list."""
         self.assertTrue(pickpocket.place(self.gd, 0, 5, 14))
         self.assertEqual(self.items_in(pickpocket.PACK_LIST), [(5, 14)])
-        self.assertEqual(self.items_in(8), [(6, game.MISSILE_SLOT)])
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(6, game.MISSILE_SLOT)])
         self.assertTrue(pickpocket.place(self.gd, 0, 5, game.WEAPON_HANDS[0]))
-        self.assertEqual(self.items_in(pickpocket.WORN_LIST), [(5, game.WEAPON_HANDS[0])])
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0]), (6, game.MISSILE_SLOT)])
         self.assertEqual(self.items_in(pickpocket.PACK_LIST), [])
 
     def test_mend(self):
-        """A backpack item in the worn list (as earlier versions gave it) is put in the backpack's
-        list, once; what is worn stays."""
-        thing, = struct.unpack_from("<h", self.m, CREATURES + 8)
-        struct.pack_into("<h", self.m, CREATURES + pickpocket.WORN_LIST, thing)  # (his list as the worn one)
-        struct.pack_into("<h", self.m, CREATURES + 8, game.NO_ITEM)
-        self.m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 15  # (the bow in the backpack, in the worn list)
+        """A backpack item in the held list (as earlier versions gave it) is put in the backpack's
+        list, once; what is held stays."""
+        self.m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = 15  # (the bow in the backpack, in the held list)
         out = pickpocket.mend_lists(self.gd)
         self.assertEqual(len(out), 1)
         self.assertIn("put away in the backpack", out[0])
         self.assertEqual(self.items_in(pickpocket.PACK_LIST), [(6, 15)])
-        self.assertEqual(self.items_in(pickpocket.WORN_LIST), [(5, game.WEAPON_HANDS[0])])
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0])])
         self.assertEqual(pickpocket.mend_lists(self.gd), [])
+
+    def test_mend_worn(self):
+        """Armour worn but in the held list (as earlier versions' starting gear gave it: there it
+        counted for no AC) is moved to the worn list, once; the weapons stay held."""
+        self.m[ITEMS + 6 * game.ITEM_SIZE + game.ITEM_SLOT] = game.EQUIP_SLOTS.index("chest")
+        typ, = struct.unpack_from("<H", self.m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_TYPE)
+        self.m[ITEM_TYPES + typ * game.ITEM_TYPE_SIZE] = 0  # (the bow made chest armour: no weapon kind)
+        out = pickpocket.mend_lists(self.gd)
+        self.assertEqual(len(out), 1)
+        self.assertIn("now counted as worn", out[0])
+        self.assertEqual(self.items_in(pickpocket.WEAR_LIST), [(6, game.EQUIP_SLOTS.index("chest"))])
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0])])
+        self.assertEqual(pickpocket.mend_lists(self.gd), [])
+
+    def test_list_for(self):
+        """The inventory screen's lists: a backpack cell's, else the held one for a melee, missile
+        or thrown weapon, the worn one for the rest (a shield in the hand too)."""
+        kind = lambda k: bytes((k,)) + bytes(game.ITEM_TYPE_SIZE - 1)
+        hand = game.WEAPON_HANDS[0]
+        self.assertEqual(pickpocket.list_for(14, kind(restrict.MELEE)), pickpocket.PACK_LIST)
+        for k in (restrict.MELEE, restrict.MISSILE, restrict.THROWN, restrict.MISSILE | 8, restrict.MISSILE | restrict.THROWN):
+            self.assertEqual(pickpocket.list_for(hand, kind(k)), pickpocket.HOLD_LIST)
+        self.assertEqual(pickpocket.list_for(game.WEAPON_HANDS[1], kind(restrict.SHIELD)), pickpocket.WEAR_LIST)
+        self.assertEqual(pickpocket.list_for(game.EQUIP_SLOTS.index("chest"), kind(0)), pickpocket.WEAR_LIST)
 
     def test_add_to(self):
         """npcitems.add_to gives a party member an item for the backpack in the backpack's list,
-        one to wear in the worn list."""
+        one to wear in the worn list, a weapon in the held one."""
         from dsloader import npcitems
         struct.pack_into("<HH", self.m, DS * 16 + ring.FREE_ITEMS, 60, 0)
         struct.pack_into("<h", self.m, ITEMS + 60 * game.ITEM_SIZE + game.ITEM_NEXT, 61)
@@ -270,4 +298,11 @@ class ListTests(unittest.TestCase):
         self.assertTrue(npcitems.add_to(self.gd, 0, rec))
         self.assertEqual(self.items_in(pickpocket.PACK_LIST), [(60, 14)])
         self.assertTrue(npcitems.add_to(self.gd, 0, rec, game.CLOAK_SLOT))
-        self.assertEqual(self.items_in(pickpocket.WORN_LIST), [(61, game.CLOAK_SLOT)])
+        self.assertEqual(self.items_in(pickpocket.WEAR_LIST), [(61, game.CLOAK_SLOT)])
+        struct.pack_into("<HH", self.m, DS * 16 + ring.FREE_ITEMS, 62, 0)
+        struct.pack_into("<h", self.m, ITEMS + 62 * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
+        self.m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = 20  # (his right hand free)
+        sword = bytearray(rec)
+        sword[game.ITEM_TYPE:game.ITEM_TYPE + 2] = self.m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_TYPE:ITEMS + 5 * game.ITEM_SIZE + game.ITEM_TYPE + 2]
+        self.assertTrue(npcitems.add_to(self.gd, 0, bytes(sword), game.WEAPON_HANDS[0]))
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST)[0], (62, game.WEAPON_HANDS[0]))

@@ -12,8 +12,10 @@ PICK_SPIN = TU_SPIN + 1  # the purse's (TU_INFO_PICK 2), then the four spell arr
 
 TEXTS: Dict[int, str] = {
     197: "CAT'S GRACE:  Raises the target's dexterity by 1 to 6 pts. Maximum dexterity is 24.",
-    198: "ERDLU CLAW:  Erdlu talons: unarmed attacks do 1d6+1 (or +1 to Body Weaponry's or "
-         "Animal Affinity's dice), +1 to hit, as a +1 weapon. Lasts 5 rounds per level.",
+    # (seven lines fill the box: an eighth spills over its bottom edge)
+    # (Body Weaponry's or Animal Affinity's dice: "a psionic power's")
+    198: "ERDLU CLAW:  Erdlu talons: unarmed attacks (not a thri-kreen's bite) do 1d6+1 (or +1 to a psionic "
+         "power's dice), +1 to hit, as a +1 weapon. Lasts 5 rounds per level.",
     199: "FOGBOLT:  A bolt of fog clings to one creature: -3 to hit and Armor Class 2 worse for "
          "2 to 8 rounds. A saving throw negates it.",
     200: "REFLECTED IMAGE:  An image of the caster moves with it: an attack may strike the "
@@ -45,14 +47,15 @@ TEXTS: Dict[int, str] = {
          "the target's true age. The target must survive a system shock.",
     PICK_SPIN: "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
                "If it fails, the thief tries to slip away unseen. Not in a fight.",
-    PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows per level in the empty quiver, for a 1st-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
-    PICK_SPIN + 2: "CHILL ARROWS:  Weaves Chill Touch into 5 arrows per level in the empty quiver, for a 1st-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
-    PICK_SPIN + 3: "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows per level in the empty quiver, for a 1st-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
-    PICK_SPIN + 4: "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows per level in the empty quiver, for a 3rd-level slot. "
-                   "Each casts it on what it hits. They stay until shot or the next rest. Not in a fight.",
+    # (the arrows' too: seven lines fill the box)
+    PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+    PICK_SPIN + 2: "CHILL ARROWS:  Weaves Chill Touch into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+    PICK_SPIN + 3: "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+    PICK_SPIN + 4: "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows a level in the empty quiver, for a 3rd-level slot; each "
+                   "casts it on what it hits. Gone at a rest. Not in a fight.",
 }
 
 

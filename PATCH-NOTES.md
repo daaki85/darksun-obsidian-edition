@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.13.3 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.13.4 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -69,7 +69,6 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Races**
 
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
-- **[Changed]** A thri-kreen in the party fights with edged claws, so creatures that crushing weapons can't hurt are no longer safe from it *(was crushing, as every unarmed attack)*.
 
 ## Classes and Kits
 
@@ -84,6 +83,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.
 - **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
 - **[Changed]** A ranger's spells last and deal damage at its level minus 7, as AD&D has it *(was its full level)*.
+- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (a 6th-level priest spell: Magic and Psionics) takes magical years back.
+- **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
 - **[Changed]** Preservers' INT sets their chance to learn a spell from a scroll (35% at INT 9 to 100% at 24) and the most spells of each level they can know. New preservers choose their starting spells.
 
 **Kits**
@@ -139,14 +140,12 @@ A few of them:
 
 ## Magic and Psionics
 
-- **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (6th-level priest, below) takes magical years back.
 - **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
-- **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
 - **[New]** Six new wizard spells, each with its own icon and description:
 
 | Spell | Level | What it does |
 |---|---|---|
-| **Erdlu Claw** | 1st | unarmed attacks become talons: +1 to hit, 1d6+1, as a +1 magical edged weapon (Body Weaponry's and Animal Affinity's dice gain +1) |
+| **Erdlu Claw** | 1st | unarmed attacks (a thri-kreen's claws, not its bite) become talons: +1 to hit, 1d6+1, as a +1 magical edged weapon (Body Weaponry's and Animal Affinity's dice gain +1) |
 | **Fogbolt** | 1st | a dark grey bolt: the creature has −3 to its attacks and is hit at +2, for 2d4 rounds |
 | **Reflected Image** | 1st | one image of the caster, struck instead of it half the time |
 | **Spook** | 1st | a creature flees for 3 rounds unless it saves |
@@ -289,7 +288,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Spells:** every wizard spell, priest spell and psionic power's damage dice, saving throw, effect and duration, read from the running game.
 - **[New]** **Dialogue:** everything said, with the speaker's portrait and name, and the reply you chose.
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F): every match highlighted, Enter for the next.
-- **[New]** More of a fight in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`); and **Detonate**'s blast on an item: which one, the d20, and whether it's gone (it picks the worn item that breaks most easily, a bone helm before bone armour).
+- **[New]** More of a fight in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`); **Detonate**'s blast on an item: which one, the d20, and whether it's gone (it picks the worn item that breaks most easily, a bone helm before bone armour); and whether a thri-kreen strikes with a **claw or its bite**.
 - **[New]** More of the game's own choices in the dice log: why it **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **ability checks scripts make** with a roll of their own (a CHA to talk someone round, STR to break chains); and a party member's **ability score** changing.
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
@@ -313,8 +312,12 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Cloak of Bravery**'s +4 on saves against fear never applied. Now it does against Scare, Fear, Cause Fear and Insect Plague, and the new Spook.
 - **[Fixed]** A click on a spell's icon on the Effects screen no longer ends the spell by mistake. A psionic power's icon still ends it, as that's how you stop a power.
 - **[Fixed]** A **berserk** or **confused** party member could be left fighting for the monsters when it wore off. Now they're back on your side.
+- **[Fixed]** A **thri-kreen**'s claws and bite did crushing damage, as the game makes every unarmed attack, so creatures that crushing weapons can't hurt were safe from it. Now they cut.
 - **[Fixed]** The **fire elementals**' resistances were the wrong way round. Now the fire elemental needs +2 weapons and the lesser one +1, and neither is hurt by fire.
 - **[Fixed]** Monsters' **walls** (Wall of Fire, Ice, Force and the rest) came out a single point. Now they run across the line of fire, four cells long.
+- **[Fixed]** Items that raise or lower an **ability score** worked from the backpack as well as worn. Now only while worn. (Found by OpenDS and yuan-ti.)
+- **[Fixed]** The **gladiator**'s better AC (1 for every 5 levels) came with no armour on. Now only in armour, as Dark Sun has it. (Found by OpenDS and yuan-ti.)
+- **[Fixed]** **Psionic Blast**'s wounds are imagined (its victim believes it has lost most of its hit points), but the game took them for good. Now a party member still standing gets them back as the fight ends.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
@@ -325,14 +328,23 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** **Random monsters** came in numbers worked out from the wrong monster, and in some areas could crash the game ("Divide error"). Now the count fits the monster that comes, and the crash can't happen.
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
+- **[Fixed]** A character's **most PSP** took the WIS bonus from whatever the creation screen last held (in play, a stray byte), and its bonus tables ran out at 22: INT 22 gave nothing, INT 23 and up 20 too many, WIS 23 and up none. Now each comes from the character's own score, on to 25. (Found by yuan-ti.)
+- **[Fixed]** A fight's **music** took its level from the wrong creature for every one but the region's first. (Found by yuan-ti.)
 - **[Fixed]** **View Character** showed one or two more damage than a non-magical wooden, bone, stone or obsidian weapon does: it left out the weaker material (2 for wood, 1 for the others). It now matches the inventory and the fight.
 - **[Fixed]** A **hasted** or **slowed** character's damage lines (the inventory, View Character) showed their attacks a round as if they were neither. Now Haste doubles them and Slow halves them there (`0.5x1D8`), as in the fight itself.
 - **[Fixed]** An archer's pointer showed "can't shoot" after a shot that killed, with shots left (a click still shot). Now it shows "can't" only once every shot of the round is made.
 - **[Fixed]** **Slay Living**'s description said a creature that saves takes 3 to 17; the game does 2 to 16 (half of 4d8). It says so now.
 - **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
+- **[Fixed]** A ranger could never read the tracks around the **Wagon Train's bodies**: the check found no ranger, tested the wrong thing for its level, and rolled the wrong way round. Now a ranger reads them on a d20 under its WIS (more at higher levels), for XP. (Found by yuan-ti.)
+- **[Fixed]** The slave pens' **sewer grate** never offered "hack the lock off", and a hack that worked left it shut. Now a member with a weapon in hand can hack it open, half the time (always with Bloodwrath). A failed hack said the weapon broke but kept it: now a weapon that can break in a fight (plain wood, bone, stone or obsidian) is lost, and a metal or magic one rings off the grate unharmed. An attack on the grate always broke its lock: now it takes a Strength roll, as ripping it open does. (Found by yuan-ti.)
+- **[Fixed]** The **Rebel Mindhome** in Undermountain gave its 5000 XP for the spiders again at every talk once they were dead. Now once. (Found by yuan-ti.)
+- **[Fixed]** The **messenger in region 9**, who comes with men bursting from the sand once the elves have left, came only if the party left the region and came back. Now he comes. (Found by OpenDS and yuan-ti.)
+- **[Fixed]** The **Draj serf**, left far behind on the way to region 10, stayed without his orders and gave a second obelisk gem when talked to again. Now he comes along. (Found by OpenDS and yuan-ti.)
+- **[Fixed]** Lines that depend on the active member's **race or sex** always took them for a man of no race: a halfling is now greeted as a fellow halfling, a woman told "only a mad woman would think of fighting Draj", a thri-kreen hears the bell the mastyrial hears near Demothi's camp. (The halfling's found by yuan-ti.)
+- **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables and rangers' spells (Classes and Kits); Enlarge's dice, CON's regeneration and poison saves, and Haste's aging (Magic and Psionics); and thief skills (Improved Thieving).
+Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, CON's regeneration and poison saves, and Haste's aging (Classes and Kits); Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
 
 ## Your Saved Games
 
@@ -344,8 +356,7 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
 - A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
 - With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
-- **A save made with 2.13.0 is not for earlier versions.** It keeps the weapon specs packed with the age beside them, which an older Loader reads as other specs. Older saves load in 2.13.0 as they are.
-- **A save made with this version is not for 2.13.1 or earlier.** It keeps each character's starting roll beside the weapon specs (so Restore Youth can take back any number of magical years), which an older Loader reads as other specs. A character from an older save keeps its age, and its roll is put on its sheet when the game is loaded. From 2.13.1 a character's true age (how young Restore Youth can make them) is worked out a new way, the same as the creation screen shows; an age already given stays as it is.
+- **A save made with 2.13.0 or later is not for earlier versions, and one made with 2.13.2 or later not for 2.13.1 or earlier:** the weapon specs are kept packed with the age and each character's starting roll beside them, which an older Loader reads as other specs. Older saves load in newer versions as they are: a character keeps its age, and its roll is put on its sheet when the game is loaded.
 - A thri-kreen **druid/fighter** Wasteland Seer from an earlier version has no kit now: the Wasteland Seer is for a thri-kreen druid/fighter/psionicist.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 

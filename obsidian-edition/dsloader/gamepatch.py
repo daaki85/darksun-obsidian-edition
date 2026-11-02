@@ -90,6 +90,7 @@ VEC_OVR_BUF = 0x84
 VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
 VEC_PACE_PASS, VEC_PACE_DRAW = 0x83, 0x82
+VEC_WORN = 0x81
 VEC_TAKE = 0xF7
 VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
@@ -266,6 +267,16 @@ PATCHES = (
     # the start of the saving throw's modifiers: xor si,si (DSCLOG starts SI, their sum, at
     # the plus of the rings the one saving wears)
     Patch("ring_save", 0x79D47, bytes.fromhex("33f6"), _interrupt(VEC_RING_SAVE, 2)),
+    # the AC function's gladiator test: test word es:[bx+12h],40h (DSCLOG answers it for a
+    # gladiator who wears armour only: armour optimisation needs armour)
+    Patch("gladiator_armour", 0x58F86, bytes.fromhex("26f747124000"), _interrupt(VEC_WORN, 6)),
+    # the ability routine, as it reads a listed item's ability byte: mov al,es:[bx+0Fh] (DSCLOG
+    # gives it only for an item worn, so one in the pack raises no score)
+    Patch("ability_worn", 0x7B8AB, bytes.fromhex("268a470f"), _interrupt(VEC_WORN, 4)),
+    # Psionic Blast (the effect routine's case 169), once a target that failed its save is down to
+    # a fifth of its most hit points: or byte [si],1 (DSCLOG does it, and keeps a party member's
+    # loss for the Loader to give back as the fight ends: psiblast.py)
+    Patch("psionic_blast", 0x79707, bytes.fromhex("800c01"), _interrupt(VEC_WORN, 3)),
     # the routine that lists a creature's weapons (the inventory screen, the Look box), straight
     # after drawing one: add sp,10h (DSCLOG does it, then adds that weapon's THAC0)
     Patch("weapon", 0x7276E, bytes.fromhex("83c410"), _interrupt(VEC_WEAPON, 3)),
@@ -333,7 +344,7 @@ PATCHES = (
     # ... and the lists' ends
     *(Patch(f"ns_list_{offset:x}", offset, bytes.fromhex("81fe8a00"), bytes((0x81, 0xFE, NS_END, 0x00)))
       for offset in NS_LIST_ENDS),
-    # Bugs of the game's spells, fixed whatever the rules (DEVELOPMENT.md's "The game's spells"):
+    # Bugs of the game's spells, fixed whatever the rules (DEVELOPMENT-CONTENT.md's "The game's spells"):
     # Armor used a charge where any spell or blow landed on its wearer (7A557h, "je" past it
     # unless the target has Armor, 2), as well as where damage is taken (79A3Eh): the jump
     # always taken, so a damaging hit uses one charge and a friend's spell none ...
@@ -366,7 +377,7 @@ PATCHES = (
     # undead (7BE20h, AL), "or al,al / je +22h" (DSCLOG's NS_HOLD: Hold Undead on a living
     # target goes to the immunity's return, 7A1F0h)
     Patch("hold_undead", 0x7A333, bytes.fromhex("0ac07422"), _site(NS_HOLD, 4)),
-    # ... and more of the game's own slips (DEVELOPMENT.md's "The game's spells"): Absorb Disease
+    # ... and more of the game's own slips (DEVELOPMENT-CONTENT.md's "The game's spells"): Absorb Disease
     # (power 147) went on into Strength's handler (79470h), so the psionicist took the disease and
     # 1d6 STR too, and with no disease to take, the STR alone: both ways now jump to the end of
     # Strength's handler, its "or byte [si],2 / or byte [bp-15h],1 / jmp" (794ACh), past the effect
@@ -406,6 +417,12 @@ PATCHES = (
     # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
     # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
     Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
+    # ... and a fight's music: an attack that starts a fight asks for the music level the region
+    # record gives its creature (62F75h, REQUEST 16): the creatures are words at +263h, their levels
+    # bytes at +277h, but the level was read with the word's index ("mov bx,dx / shl bx,1"), so any
+    # creature but the region's first got another's level or a byte past the list. The SHL made two
+    # NOPs: the creature's own level (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
+    Patch("fight_music", 0x62FC0, bytes.fromhex("d1e3b848038ec0"), bytes.fromhex("9090b848038ec0")),
     # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
     # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
     Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),

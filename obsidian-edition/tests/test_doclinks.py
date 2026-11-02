@@ -67,18 +67,20 @@ class DocLinkTests(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_readme_links_how_it_works(self):
-        """DEVELOPMENT's "How each part works" names README and features page sections by their
-        headings; each such section links to its explanation."""
-        dev = os.path.join(HERE, "DEVELOPMENT.md")
-        with open(dev, encoding="utf-8") as f:
-            text = f.read()
-        part = text[text.index("## How each part works"):]
-        explained = {h: slug(h) for h in re.findall(r"^### (.+)$", part, re.M)}
+        """The development pages on how each part works (DEVELOPMENT-SCREENS, -RULES and -CONTENT)
+        name README and features page sections by their headings; each such section links to its
+        explanation, on the page that has it."""
+        explained = {}
+        for page in ("DEVELOPMENT-SCREENS.md", "DEVELOPMENT-RULES.md", "DEVELOPMENT-CONTENT.md"):
+            with open(os.path.join(HERE, page), encoding="utf-8") as f:
+                for h in re.findall(r"^## (.+)$", f.read(), re.M):
+                    if h != "Contents":
+                        explained[h] = f"{page}#{slug(h)}"
+        self.assertGreater(len(explained), 60)
         missing = [heading for page in ("README.md", "FEATURES.md")
                    for heading, body in sections(os.path.join(HERE, page))
-                   if heading in explained and f"DEVELOPMENT.md#{explained[heading]}" not in body]
+                   if heading in explained and explained[heading] not in body]
         self.assertEqual(missing, [])
-
 
 if __name__ == "__main__":
     unittest.main()

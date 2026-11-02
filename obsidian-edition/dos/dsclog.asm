@@ -152,6 +152,7 @@ VEC_HEAP equ 0xCB          ; PROBE_HEAP
 VEC_FLIP equ 0x8B          ; PROBE_FLIP
 VEC_PACE_PASS equ 0x83     ; PROBE_PACE_PASS
 VEC_PACE_DRAW equ 0x82     ; PROBE_PACE_DRAW
+VEC_WORN equ 0x81          ; PROBE_WORN
 VEC_TAKE equ 0xF7          ; PROBE_TAKE
 VEC_SPHERE equ 0xFF        ; PROBE_SPHERE
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
@@ -398,6 +399,9 @@ lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; +374 the Loader's: names floating o
                                 ;      far above the feet, +4 ink, +5 edge (palette indices), +6 the
                                 ;      map thing, +8 the ink's mask, then the edge's (LBL_ROW bytes a
                                 ;      row, bit 0 of the first the leftmost)
+blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took
+                                ;      from each party member this fight (PROBE_WORN), for the Loader
+                                ;      to give back and clear as the fight ends (psiblast.py)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -4885,6 +4889,69 @@ probe_no_cast:
         pop bx
 .done:  iret
 nc_who  dw 0                            ; (the character the test was asked about)
+
+;
+; PROBE_WORN: INT VEC_WORN at two places, told apart by where it returns to:
+; - the ability routine's "mov al,es:[bx+0Fh]" (80F5:2D0Bh, 7B8ABh; INT + 2 NOPs), ES:BX a
+;   listed item: AL its ability byte (FAh-FFh: a score raised or lowered) only while it is worn
+;   (a slot below the backpack's), else 0, so a ring or gauntlets in the pack change nothing;
+; - the AC routine's "test word es:[bx+12h],40h" (612E:22C6h, 58F86h; INT + 4 NOPs), ES:BX the
+;   character sheet of thing DI: ZF clear only for a gladiator who wears armour (ARMOUR_WORN),
+;   so the gladiator's armour optimisation (1 a 5 levels) needs armour, as Dark Sun has it;
+; - Psionic Blast's "or byte [si],1" (80F5:0B67h, 79707h; INT + a NOP), once the effect routine
+;   (case 169) has taken a target that failed its save down to a fifth of its most hit points: it
+;   does the OR, and adds the loss (the routine's [BP-18h]) to BLAST_HP for target DI if a party
+;   member (0-3), for the Loader to give back as the fight ends (psiblast.py): the blast's wounds
+;   are imagined.
+WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
+BLAST_RET   equ 0x0B69                  ; (Psionic Blast's)
+FIRST_PACK  equ 14                      ; the first backpack slot
+probe_worn:
+        sti
+        push bp
+        mov bp, sp
+        cmp word [bp+2], WORN_AC_RET
+        je .ac_bp
+        cmp word [bp+2], BLAST_RET
+        pop bp
+        je .blast
+        mov al, [es:bx+0x0F]
+        cmp byte [es:bx+0x11], FIRST_PACK
+        jb .worn
+        mov al, 0
+.worn:  iret
+.blast: or byte [si], 1                 ; (the game's)
+        cmp di, 3
+        ja .bout
+        push bx
+        push ax
+        mov bx, di
+        add bx, bx
+        mov ax, [bp - 0x18]             ; the hit points taken (SS:BP the routine's frame)
+        add [cs:bx + blast_hp], ax
+        pop ax
+        pop bx
+.bout:  iret
+.ac_bp: pop bp
+.ac:    test word [es:bx+0x12], 0x40
+        jz .out                         ; not a gladiator (ZF set)
+        push es
+        push bx
+        push dx
+        mov dx, ds
+        add dx, THINGS_SEG
+        mov es, dx
+        imul bx, di, 3
+        mov dx, [es:bx+THINGS+1]        ; its creature (a thing of kind 2 here)
+        call armour_worn
+        pop dx
+        pop bx
+        pop es
+        jc .armour
+        cmp al, al                      ; none: ZF set, no bonus
+        jmp short .out
+.armour: or sp, sp                      ; ZF and CF clear: the bonus
+.out:   retf 2
 
 ; ARMOUR_WORN: carry set if creature DX (DS = the game's) wears armour, a helm too: an item of
 ; a type the game marks armour (+0Fh 80h), not a shield, on its arms, legs, head or chest.
@@ -12634,10 +12701,11 @@ thorns_damage:
 ; out (AC_SEEN), else counted as the game's AC routine (DSUN.EXE 58DD3h, in an overlay: not to be
 ; called from the damage's) counts it: its sheet's base (+27h), less each worn item's plus and its
 ; type's AC where the type counts for AC (+0Fh 80h; a shield too, the thorns not being from
-; behind; worn: in its first two item lists, +8 and +0Ah, as putting an item on moves it there
-; from +0Ch, whatever its slot byte says), a fifth of a gladiator's level (the sheet's +12h 40h: its class among the three, a
+; behind; worn: in its first item list, +8, whatever its slot byte says: the inventory screen
+; puts all but weapons there, and the game's routine counts nothing in +0Ah or +0Ch), a fifth of a gladiator's level (the sheet's +12h 40h: its class among the three, a
 ; human's later class only once past the first's level, as the game's 508:25h has it) and the
-; DEX adjustment (the record's +23h). Spells' changes to AC (5B8:F2h's) aren't counted. DS the
+; DEX adjustment (the record's +23h); the gladiator's only in armour (ARMOUR_WORN), as PROBE_WORN
+; has the game's. Spells' changes to AC (5B8:F2h's) aren't counted. DS the
 ; game's; SI and BP kept (WALL_DAMAGE's PUSHAD keeps the rest).
 THORNS_BASE equ 8
 SHEET_AC    equ 0x27
@@ -12660,6 +12728,10 @@ thorns_ac:
         movsx di, byte [es:bx + SHEET_AC]
         test byte [es:bx + 0x12], 0x40
         jz .items
+        mov bp, sp
+        mov dx, [bp]            ; (the creature, pushed)
+        call armour_worn        ; (a gladiator's optimisation only in armour: PROBE_WORN)
+        jnc .items
         xor cx, cx
 .class: mov di, cx              ; (the base read again after)
         cmp byte [es:bx + di + 0x21], GLADIATOR_CLASS
@@ -12690,7 +12762,8 @@ thorns_ac:
         jae .lists
         movsx ax, byte [bx + DEX_AC]
         add di, ax
-.lists: mov cx, 8               ; its worn item lists, each a thing: +8, +0Ah
+.lists: mov cx, 8               ; its worn item list, a thing: +8 (as the game's AC routine: not
+                                ;   the held +0Ah, nor the backpack's +0Ch)
 .list:  les bx, [CREATURES]
         add bx, [cs:r_creature]
         add bx, cx
@@ -12725,7 +12798,7 @@ thorns_ac:
 .on:    dec byte [cs:r_left]
         jnz .item
 .next:  add cx, 2
-        cmp cx, 0x0C
+        cmp cx, 0x0A
         jb .list
         movsx eax, di
         pop bp
@@ -14772,10 +14845,19 @@ probe_hit_die:
         iret
 
 ; PROBE_MAX_PSP: INT VEC_MAX_PSP replaces "les bx,[bp-8]" (3 bytes: INT + NOP; DSUN.EXE 8748Fh) where
-; the level-up routine has a character's most PSP worked out (SI) and puts it in the sheet ([BP-8],
-; far: its +0Ch) when more than it was, the gain on the creature's PSP too: ES:BX the sheet, and a
-; Mind Warrior's SI a tenth less (kits.max_psp), its kit asleep or not (KIT_HAS).
+; the level-up routine (873B2h, run for each party member) has a character's most PSP worked out
+; (SI) and puts it in the sheet ([BP-8], far: its +0Ch) when more than it was, the gain on the
+; creature's PSP too: ES:BX the sheet, and a Mind Warrior's SI a tenth less (kits.max_psp), its kit
+; asleep or not (KIT_HAS). First the game's CON, INT and WIS bonuses are put right (PSP_SCORES):
+; it read WIS from the creation screen's record (DS:11A0h) rather than the member's (its creature,
+; [BP-4]), and its tables (a byte for each score from 15, in the overlay's segment that its "mov
+; dx,seg" at 873F8h holds) are 8 long, so INT 22 read 0 and a score past 22 the next table's
+; bytes (INT 23 gave 20, WIS 23 none). Each is the member's own: CON and INT the score less 15, WIS
+; twice the score less 10 (the game's own to 22, carried on to 25), nothing below 15.
+PSP_SEG_BACK equ 0x87491 - 0x873F9   ; (the "mov dx,seg"'s word, back from the INT's return)
+PSP_CREATION equ 0x11A0              ; DS: far pointer to the creation screen's creature record
 probe_max_psp:
+        call psp_scores
         les bx, [bp - 8]
         push ax
         mov al, KIT_MIND_WARRIOR
@@ -14792,6 +14874,68 @@ probe_max_psp:
         pop cx
 .out:   pop ax
         iret
+
+; PSP_SCORES (for PROBE_MAX_PSP, its interrupt frame above the call's return): SI with the game's
+; CON, INT and WIS bonuses taken off and the member's own added. All else kept.
+psp_scores:
+        push ax
+        push cx
+        push dx
+        push di
+        push es
+        push bx
+        mov di, sp
+        push ds
+        lds di, [ss:di + 14]            ; (the INT's return: past the six and the call's)
+        mov cx, [di - PSP_SEG_BACK]     ; CX: the tables' segment
+        pop ds
+        les bx, [bp - 4]                ; the member's creature record
+        mov al, [es:bx + 0x24]          ; CON
+        mov dx, 0x11C
+        call .term
+        mov al, [es:bx + 0x25]          ; INT
+        mov dx, 0x124
+        call .term
+        mov al, [es:bx + 0x26]          ; WIS: the game's from the creation screen's record
+        cmp al, 15
+        jb .done
+        cmp al, 25
+        jbe .wis
+        mov al, 25
+.wis:   mov ah, 0
+        add ax, ax
+        sub ax, 10
+        add si, ax
+        les bx, [PSP_CREATION]
+        movsx di, byte [es:bx + 0x26]   ; (signed, as the game takes it: a stray 183 reads 49h below)
+        push ds
+        mov ds, cx
+        movsx ax, byte [di + 0x12C]
+        pop ds
+        sub si, ax
+.done:  pop bx
+        pop es
+        pop di
+        pop dx
+        pop cx
+        pop ax
+        ret
+.term:  cmp al, 15                      ; (score AL, table DX: SI less the game's, plus the score's)
+        jb .none
+        movzx di, al
+        add di, dx
+        push ds
+        mov ds, cx
+        movsx di, byte [di]
+        pop ds
+        sub si, di
+        cmp al, 25
+        jbe .own
+        mov al, 25
+.own:   sub al, 15
+        movzx di, al
+        add si, di
+.none:  ret
 
 ; At creation the game rolls a character's hit points and works out its PSP when a class is
 ; clicked, before a kit can be chosen; picking or taking back a Battle Mage, a Mind Warrior or an
@@ -17020,13 +17164,15 @@ ns_name:
 ; the routine giving natural attack DX of thing SI (7B66Ch; its dice's number to the far word at
 ; [BP+0Eh], their sides to [BP+12h], its bonus to [BP+16h], all set by now), where the game goes on
 ; to its effects only for the first (Body Weaponry's 2d4, Animal Affinity's 1d10). With Erdlu
-; Claw's effect on it (NS_HAS), each natural attack is 1d6+1 where that is better on average than
-; its own; then the game's way on.
+; Claw's effect on it (NS_HAS), the first too (fists; a thri-kreen's claws, not its bite) is 1d6+1
+; where that is better on average than its own; then the game's way on.
 NS_CLAW_PAST equ 0x7B755 - 0x7B70D
 ns_claw:
         pushad
         push es
         mov di, sp
+        or dx, dx
+        jnz .on
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .on
         mov ax, si
@@ -18928,9 +19074,13 @@ ns_hit:
 ; melee attack routine (58019h: SI the attacker; [BP-2] the weapon's item, -1 for none: a natural
 ; attack; [BP-8] its to-hit plus, taken off the THAC0; [BP-0Ch] its magic, which the hit's damage
 ; kinds then get as PLUS1..PLUS3; [BP-14h] those kinds, the game's crushing (8) for any natural
-; attack). With Erdlu Claw's effect on the attacker, a natural attack is +1 to hit and at least a
-; +1 weapon. Its talons, and a thri-kreen of the party's claws, cut: a natural attack of either is
-; slashing, not crushing (monsters' own as the game has them). Then that compare.
+; attack; [BP-22h] the set of natural attacks it is on, 0-2, all of a round's in one call, [BP-8]
+; and [BP-0Ch] set only once for them). A party member's natural attack starts with no plus and no
+; magic, as the game gives it none. With Erdlu Claw's effect on the attacker, a natural attack of
+; the first set (fists; a thri-kreen's claws, not its bite, set 2) is +1 to hit and at least a +1
+; weapon. Its talons, and a thri-kreen of the party's claws and bite,
+; cut: a natural attack of either is slashing, not crushing (monsters' own as the game has them).
+; Then that compare.
 DMG_CRUSHING equ 0x08
 DMG_SLASHING equ 0x10
 PARTY_COUNT  equ 4             ; (game.PARTY_SIZE)
@@ -18940,6 +19090,12 @@ ns_fist:
         mov di, sp
         cmp word [bp - 2], -1
         jne .test
+        cmp si, PARTY_COUNT             ; (a party member's natural attack has no plus or magic of
+        jae .set                        ;   its own: the routine keeps [BP-8] and [BP-0Ch] from set
+        mov word [bp - 8], 0            ;   to set, so the claws' talons would go on to the bite)
+        mov word [bp - 0x0C], 0
+.set:   cmp word [bp - 0x22], 0         ; (the talons: the first set's alone)
+        jne .kreen
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .kreen
         mov ax, si
@@ -23682,6 +23838,9 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 2500h + VEC_PACE_PASS
         mov dx, probe_pace_pass
         int 21h
+        mov ax, 2500h + VEC_WORN
+        mov dx, probe_worn
+        int 21h
         mov ax, 2500h + VEC_PACE_DRAW
         mov dx, probe_pace_draw
         int 21h
@@ -24128,7 +24287,7 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_TAKE, VEC_SPHERE
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE
 all_vectors_end:
 
         align 16, db 0

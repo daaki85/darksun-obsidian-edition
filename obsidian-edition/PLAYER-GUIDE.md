@@ -77,8 +77,8 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 
 Already playing? Saves made before the mod load and play with its fixes and
 rules, but kits, fuller starting gear and much of the new content come with a
-new game (see the features page's [saved
-games](FEATURES.md#the-games-bugs-fixed) note).
+new game (see [your saved
+games](README.md#updating-backups-saved-games-and-the-loaders-files)).
 
 ## Playing
 
@@ -212,7 +212,7 @@ What the scores do:
 | Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand |
 | Halfling | −2 | +2 | −1 | | +2 | −1 | better CON saves |
 | Mul | +2 | | +1 | −1 | | −2 | |
-| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); claws that cut (edged, not crushing); no armour, cloaks, belts, boots or rings |
+| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); with weapons in hand, the weapons in the claws' place, and the bite still; no armour, cloaks, belts, boots or rings |
 
 With each score rolled 8 to 20 before the adjustment, a race's scores run from
 8 to 20 plus its adjustment: a half-giant's STR 12 to 24, its DEX and INT 3 to
@@ -449,7 +449,7 @@ single class** (a human may still change class).
 - [Weapon specialization](#weapon-specialization-and-attacks) in **two** weapon
   types at 1st level, a third at 6th and a fourth at 9th: +1 to hit, +2 damage
   and 3/2 attacks with each. *Without the mod:* 3/2 attacks with any weapon.
-- AC 2 better at 10th level, with the [XP cap](#experience-and-levels) letting it get there (the game's own AC 1 better from 5th, with or without armour).
+- AC 2 better at 10th level, with the [XP cap](#experience-and-levels) letting it get there (the game's own AC 1 better from 5th), in armour only. *Without the mod:* with or without armour.
 - AD&D's experience table. *Without the mod:* the fighter's.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
@@ -1359,7 +1359,9 @@ or has anything in the quiver or on the legs.
 
 Casting uses a slot of the spell's level; resting fills them.
 
-AD&D's tables (the slots at 1st, 2nd, 3rd... spell level):
+AD&D's tables (the slots at 1st, 2nd, 3rd... spell level), to the highest
+level each class reaches under the XP cap (a druid's 12th, a cleric's and a
+preserver's 11th):
 
 | Level | Cleric, druid | Preserver |
 |---|---|---|
@@ -1373,11 +1375,11 @@ AD&D's tables (the slots at 1st, 2nd, 3rd... spell level):
 | 8 | 3 3 3 2 | 4 3 3 2 |
 | 9 | 4 4 3 2 1 | 4 3 3 2 1 |
 | 10 | 4 4 3 3 2 | 4 4 3 2 2 |
-| 11 | 5 4 4 3 2 | 4 4 4 3 3 |
-| 12 | 6 5 5 3 2 | – |
+| 11 | 5 4 4 3 2 1 | 4 4 4 3 3 |
+| 12 (druid) | 6 5 5 3 2 2 | – |
 
-Priests also have a 6th-level slot at 11th level and two at 12th, for the
-mod's 6th-level spells.
+The 6th-level slots are for the mod's 6th-level priest spells. Preservers have
+no 6th-level spells.
 
 *Without the mod:* one table for all three: 1; 2; 2 1; 2 2; 3 2 1; 3 2 2;
 4 3 2 1; 4 3 2 2; 5 4 3 2 1; 5 4 3 2 2.
@@ -1385,23 +1387,30 @@ mod's 6th-level spells.
 **Rangers** have one 1st-level slot at 8th level, two at 9th, and a 2nd-level
 slot at 10th, as in AD&D. No preserver spell is above 5th level.
 
-**Clerics and druids** have more for WIS, only at spell levels their class
-level reaches:
+**Clerics and druids** have more for WIS, the game's own rule (the bonus
+slots at 1st, 2nd, 3rd... spell level). They count only at spell levels the
+class level reaches, and the 6th-level ones only with AD&D's class tables,
+which bring the 6th-level slots:
 
-| WIS | 1st | 2nd | 3rd | 4th | 5th |
-|---|---|---|---|---|---|
-| 13 | 1 | | | | |
-| 14 | 2 | | | | |
-| 15 | 2 | 1 | | | |
-| 16 | 2 | 2 | | | |
-| 17 | 3 | 2 | 1 | | |
-| 18 | 3 | 2 | 2 | | |
-| 19 | 3 | 3 | 2 | 1 | |
-| 20 | 3 | 3 | 2 | 2 | |
-| 21 | 3 | 3 | 3 | 2 | 1 |
-| 22 | 3 | 3 | 3 | 2 | 2 |
-| 23-24 | 3 | 3 | 3 | 3 | 2 |
-| 25 | 3 | 3 | 3 | 3 | 3 |
+| WIS | 1st | 2nd | 3rd | 4th | 5th | 6th |
+|---|---|---|---|---|---|---|
+| 13 | 1 | | | | | |
+| 14 | 2 | | | | | |
+| 15 | 2 | 1 | | | | |
+| 16 | 2 | 2 | | | | |
+| 17 | 3 | 2 | 1 | | | |
+| 18 | 3 | 2 | 2 | | | |
+| 19 | 3 | 3 | 2 | 1 | | |
+| 20 | 3 | 3 | 2 | 2 | | |
+| 21 | 3 | 3 | 3 | 2 | 1 | |
+| 22 | 3 | 3 | 3 | 2 | 2 | |
+| 23 | 3 | 3 | 3 | 3 | 2 | 1 |
+| 24 | 3 | 3 | 3 | 3 | 2 | 2 |
+| 25 | 3 | 3 | 3 | 3 | 3 | 2 |
+
+These are more than AD&D's own table gives (WIS 18: 2 2 1 1 there). The game's
+rule also gives WIS 25 a 7th-level slot, of no use: there are no 7th-level
+spells.
 
 A character's classes add up their slots. Several [kits](#kits) have more or
 fewer. The game's USE screen shows what is left of each level.
@@ -1483,9 +1492,9 @@ limits:
     an hour of game time a caster level, which betters AC, initiative, thief
     skills and dodging.
   - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a
-    caster level. Unarmed attacks, a thri-kreen's claws and bite too, do 1d6+1
-    where that's better, are +1 to hit and count as a +1 magical edged weapon
-    (a thri-kreen's claws cut even without it). With Body Weaponry or
+    caster level. Unarmed attacks, a thri-kreen's claws but not its bite, do
+    1d6+1 where that's better, are +1 to hit and count as a +1 magical edged
+    weapon (a thri-kreen's claws and bite cut even without it). With Body Weaponry or
     Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
     in a clear line, for 2d4 rounds unless it saves: −3 to its attacks, +2 to
@@ -1605,13 +1614,13 @@ raises the best defence mode it knows and can pay for, by itself.
 | Body Weaponry | psychometabolism | 9 | 4 |
 | Cell Adjustment | psychometabolism | 5 | |
 | Displacement | psychometabolism | 6 | 3 |
-| Enhanced Strength | psychometabolism | 0 | 8 |
+| Enhanced Strength | psychometabolism | (24 − STR) × 2 | 8 |
 | Flesh Armor | psychometabolism | 8 | 4 |
 | Graft Weapon | psychometabolism | 10 | 1 |
 | Lend Health | psychometabolism | 4 | |
 | Share Strength | psychometabolism | 6 | 2 |
-| Domination | telepathy | 0 | |
-| Mass Domination | telepathy | 0 | |
+| Domination | telepathy | 3, 8, 13 or 18 by the target's level | |
+| Mass Domination | telepathy | 3, 8, 13 or 18 by the target's level | |
 | Psychic Crush (attack) | telepathy | 7 | |
 | Superior Invisibility | telepathy | 5 | 5 |
 | Tower of Iron Will (defence) | telepathy | 6 | |
@@ -1625,8 +1634,11 @@ raises the best defence mode it knows and can pay for, by itself.
 | Synaptic Static | telepathy | 15 | 10 |
 | Thought Shield (defence) | telepathy | 1 | |
 
-Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
-makes unarmed blows 2d4. The Mind Bender, Kineticist and Titan Mind
+Psionic Blast leaves a victim that fails its save at a fifth of its hit
+points; the wounds are imagined, so a party member still standing gets them
+back as the fight ends. Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
+makes unarmed blows 2d4, and Animal Affinity at least 1d10: a thri-kreen's
+claws, not its bite. The Mind Bender, Kineticist and Titan Mind
 [kits](#kits) change some costs.
 
 ## Equipment
@@ -1655,8 +1667,11 @@ materials, the short sword among them.
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
 
-**Armour** lowers AC, and DEX lowers it more. **Helms give AC 1**. *Without
-the mod:* helms give no AC.
+**Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by
+its own amount, and a shield and DEX lower it more (but not against an attack
+[from behind](#from-behind-and-backstabs)). **Helms give AC 1**. *Without
+the mod:* helms give no AC. The inventory screen's AC line counts them all; the
+Loader's Characters tab shows the AC of the last attack and what made it.
 
 **Protection.** Rings and cloaks of protection give +1 AC and +1 on every
 save, by AD&D's rules: two rings don't add up; a ring gives no AC with magical
@@ -1804,8 +1819,8 @@ without).
 | | how much it says: at the least, in short or in detail | in short |
 | | describe monsters when you Look at them in a fight | on |
 | | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
-| More character customization | weapon specialization; kits; the XP level cap; STORE and RECALL on the creation screen; fuller starting gear | all on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
+| More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | all on |

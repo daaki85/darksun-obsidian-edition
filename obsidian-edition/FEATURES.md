@@ -7,12 +7,23 @@ Everything the mod changes and adds in the game, in the order of the Loader's
 Options tab, each with its switch there; the game's bugs fixed come last. A
 switch's name here in bold (**Rangers' casting level**) is the short form of the
 sentence the Options tab gives it, in the same section and order. How each is
-done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). The tab's
-first section, **In the game** (the combat log, the Look box, names over
-figures), is in the [README](README.md#in-the-game).
+done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). Installing,
+running the game, the Loader's window and its dice log are in the
+[README](README.md).
 
 ## Contents
 
+- [In the game](#in-the-game)
+  - [The combat log in the game](#the-combat-log-in-the-game)
+  - [Names over figures](#names-over-figures)
+  - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
+  - [The creation screen](#the-creation-screen)
+  - [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
+  - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
+  - [Charges in item boxes](#charges-in-item-boxes)
+  - [The Effects screen](#the-effects-screen)
+  - [What a scroll says](#what-a-scroll-says)
+  - [No manual check](#no-manual-check)
 - [Rule changes](#rule-changes)
   - [Characters](#characters)
     - [Class restrictions](#class-restrictions)
@@ -22,6 +33,7 @@ figures), is in the [README](README.md#in-the-game).
     - [AD&D's class tables](#adds-class-tables)
     - [CON as in AD&D](#con-as-in-add)
     - [Ages and magical aging](#ages-and-magical-aging)
+    - [Level cap by XP](#level-cap-by-xp)
   - [Weapons and armour](#weapons-and-armour)
     - [Two weapons](#two-weapons)
     - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
@@ -39,7 +51,6 @@ figures), is in the [README](README.md#in-the-game).
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
-  - [Level cap by XP](#level-cap-by-xp)
   - [STORE and RECALL on the creation
     screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
@@ -90,9 +101,348 @@ figures), is in the [README](README.md#in-the-game).
   - [Spells on the Effects screen](#spells-on-the-effects-screen)
   - [Rules the game got wrong](#rules-the-game-got-wrong)
 
+## In the game
+
+The game itself shows more, in its own lettering and windows, when it is started
+from the Loader (or either `.bat` file): the Options tab's **In the game**
+section.
+
+### The combat log in the game
+
+With **A combat log in the game** ticked on the Options tab (the default),
+**L** on the map shows the [dice log](README.md#the-dice-log)'s lines in the game
+itself, and **L** again hides them: in a fight or out of one, whenever you
+want to read back. It doesn't open by itself, and stays as you left it (from
+one game to the next too). The lines are in the game's own font, in the
+Loader's colours for each kind of line (hits green, misses grey, damage
+amber, saving throws blue), the party's names in their colours and the
+monsters' in red, a filled pip before a party member's line and a hollow one
+before a monster's. In a fight its top line says the round, who is acting
+and who is still to (`Round 2: Gerakis, then Cermak, Cilla`). Out of fights,
+the lines with a roll in them go in too (a thief's skills, a scroll learned,
+the hit points of a new level), so they can be checked after they happen.
+
+Below the switch, pick how much it says: **at the least**
+(`Rampager hits Defiler for 4`), **in short**, the default
+(`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
+`Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
+the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
+target's AC; a natural 20 always hits, a 1 always misses). It never waits for
+a click.
+
+![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
+
+**The panel** sits over the map's lower right. A window the game opens over
+the map (a character's menu, a question) hides it until it closes. Expanded, it
+covers that part of the map, and the game's damage numbers over a creature
+there; **-** makes it smaller.
+
+- **Scrolling:** it keeps the last 200 lines. Drag the scrollbar's handle,
+  click the bar above or below it for a page, or turn the mouse wheel with
+  the pointer over the panel (on Windows). Scrolled back, it stays where it
+  is as new lines come, and a **Latest** chip at its foot says how many have;
+  click it (or scroll to the end) to follow again. Clicks on the panel are
+  its own: the party doesn't walk there.
+- **How long you've played.** Out of a fight, the top line says how long the
+  game has run, `Day 47, 14:20`: from day 1 at 00:00, the game's own clock (it
+  has no time of day, so 14:20 is the hours into that day; a rest moves it on 8
+  hours). Saves keep it.
+- **The arena's count of fights.** Between fights in the arena, the top line
+  says instead how many arena fights the party has had (`Arena fights: 4`; the
+  time until the game has shown the count to the Loader): the game's
+  own count, one a trip into the arena however many waves come (see [the
+  arena's count of
+  fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)). Once the party
+  has escaped Draj it's gone. (Not when the panel is collapsed to one line:
+  that line stays the newest.)
+- **Its buttons**, on the right of its top line: **L**, which hides it as the
+  key does; the level (**Least**, **Short**, **Detail**; a click goes to the
+  next, and the Options tab follows); and **-** and **+** for a smaller or
+  bigger panel. Collapsed, it is one line, the newest; expanded, it is
+  taller (11 lines) and has filters along its top: **All**, **Party** (the
+  party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
+  throws and magic resistance). Its size is remembered.
+
+![The combat log expanded, with its filters](docs/combat-log-expanded.png)
+
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
+
+### Names over figures
+
+With **Float a spell's name over its caster, and "Miss" over whoever an attack
+missed** ticked on the Options tab (the default), a spell's name floats over
+its caster for a second and a half as it is cast, and "Miss" over anyone an
+attack misses, in the game's lettering with a dark edge. They work in and out
+of fights, for the party and the monsters alike, and a weapon's spell on a hit
+shows too. A name stays with its figure; near the top of the screen it goes
+under the figure's feet, clear of the game's boxes. Long names are shortened
+("Lesser Water Elem."), and up to four show at once.
+
+![Two misses in a fight in the slave pens: "Miss" over Kalzith and over the party's fighter beside him](docs/floating-names.png)
+
+The same switch floats a spell's charge being used over whoever has it, in
+light blue: "Armor: 7 left" for a hit Armor took, "Reflected Image: 2 left" for
+a lost image, "Armor ends" for the last. These stay three seconds, twice as
+long, and a "Miss" or a spell's name never pushes one out.
+
+![An arena fight: "Armor: 8 left" in light blue over a Slig the party's gladiator has just hit, and "Miss" beside it](docs/floating-charges.png)
+
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#names-over-figures).
+
+### THAC0, saves and thief skills
+
+Started from the Loader, the game's own inventory screen (the one with the
+character's figure and their equipment) shows six more things in its
+right-hand panel, drawn by the game's text routine so they look like the rest:
+
+![The inventory screen's panel in the game: THAC0 and the saves at the top, then Cilla's age; her thief skills (move silently and hide in shadows among them) beside the abilities, her DEX reaction and defensive adjustments, a sling and a long sword](docs/inventory.png)
+
+![A ranger's panel: move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
+
+- above STR, **THAC0** and the five **saving throws**, with the usual AD&D
+  short labels: `PPD` paralysis/poison/death, `RSW` rod/staff/wand, `PP`
+  petrification/polymorph, `BW` breath weapon, `SP` spell;
+- at the right of each weapon's damage line, the THAC0 with that weapon
+  (`T14`);
+- right of the abilities, level with STR to CHA, for a character with thief
+  levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
+  `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
+  and hide in shadows are the ones the Loader rolls (for [picking
+  pockets](#picking-pockets) and [hiding to
+  backstab](#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
+  `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
+  boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
+  script check) and read languages (a Shinobi's, for a scroll: on its
+  [Effects screen](#the-effects-screen)) are left out for want of room. A
+  ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
+  places, the cloak and boots counted (the other four left out);
+- right of SP in the saves (where RSW and BW sit on the rows above), the DEX
+  **reaction adjustment** (`REAC +4`): −6 at DEX 1 to +5 at DEX 24-25, the
+  number the [two-weapon rule](#two-weapons) adds to its penalties,
+  and the one initiative uses. It is worked out from the character's DEX each
+  time the panel is drawn, so it follows any change (Cat's Grace's, while it
+  lasts);
+- with [ages](#ages-and-magical-aging) on, the character's **AGE**
+  between the saving throws and STR;
+- right of the AC line, the DEX **defensive adjustment** (`DEF -5`), as AD&D's
+  table gives it, on AC: +5 at DEX 1 to −6 at DEX 24-25 (−4 at 18, −5 at 21-23).
+  The game counts it in AC already; on saving throws against what can be dodged
+  it counts the other way round (DEF −5 is +5 on the save), with the [rule
+  change](#rule-changes) for fire, cold and electricity. Worked out
+  the same way as REAC, each time the panel is drawn.
+
+The **View Character** screen gets them too: the five saves under the item
+icons, each with its label as above (`PPD 11  RSW 9` / `PP 10  BW 13` /
+`SP 10`), and in the lower panel, right of HP and PSI as DAM is right of AC,
+the character's **MOVE** (its movement in a fight, before boots or a spell
+change it) and **THAC0**.
+
+![The View Character screen: the saves labelled under the item icons, and MOVE and THAC0 beside HP and PSI](docs/view-character.png)
+
+They're the numbers as they stand now, worked out by the Loader the way the
+game's own attack and saving throw routines do. Each time the game draws one
+of these screens, the helper has the Loader bring them up to date first (the
+game waits a moment for it), so putting on a ring or readying another weapon
+shows at once. Spells start and end as time passes in the game, which it
+doesn't while these screens are open; open the screen again to see such a
+change.
+
+- **THAC0**: the character's THAC0 (its classes' best, a kit's warrior THAC0
+  in it) less STR's to-hit adjustment (DEX's for a missile weapon), the
+  weapon's plus (or, for a plain wooden, bone, stone or obsidian weapon, its
+  material's penalty), its weapon spec's to-hit (specialization, mastery,
+  expertise), a kit's (a Ravager's, a Brute's, an Arena Champion's...), the
+  two-weapon penalty for the hand, Bless and Prayer (+1), Curse (−1), Slow (−4)
+  and Graft Weapon (+1). The THAC0 at the top, and View Character's, is the
+  main weapon's: the right hand's, else the left's, else the missile weapon's.
+  What depends on the target (attacking from behind or backstabbing, a Blurred
+  target) is left out; the dice log shows it on each attack.
+
+- **Saves**: the d20 each needs, the character sheet's number less what the game
+  adds to every save: the [Rings of Protection and the Cloak of
+  Protection](#rings-and-cloaks-of-protection), Bless, Prayer,
+  Barkskin, Spirit Armor (not on PPD), the Save penalty, and on PPD the CON
+  adjustment (and a dwarf's or halfling's CON bonus). What depends on the spell
+  or its caster (WIS against mind spells, Protection from Fire, a doubled d20
+  against fire...) is left out; the dice log shows it on each save. A 1 always
+  fails and a 20 always saves, so they show between 2 and 20.
+- **Thief skills**: as they stand (with no equipment penalty in games started
+  with the dice log: see [How the game works out thief
+  skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), at most
+  95 with [AD&D's table](#thief-skills-from-adds-table), 0 for a
+  skill an effect rules out or when the thief isn't Okay (New counts as Okay),
+  and 100 for one an effect makes certain (Detect Traps). Only the situation's
+  bonus or penalty (a hard lock) is left out: the dice log shows it on each
+  roll.
+
+The Characters tab shows the same THAC0 with each weapon and saves. The
+game's own numbers (the character sheet's) come back on these screens when
+the Loader isn't running.
+
+**The next level's class.** For a character of more than one class, the number
+in brackets on View Character's experience line is the XP at which the first
+of their classes goes up a level, and the Loader adds which class that is:
+`EXP:87230 (90000 Pr)` means the preserver goes up next, at 90,000. Each class
+is its first letter (C, D, F, G, R, T), except the preserver's Pr and the
+psionicist's Ps. When two classes go up at the same XP, both are named:
+`(20000 Pr/T)`. A class already at the highest level (9, or its share of the
+XP cap with [Level cap by XP](#level-cap-by-xp)) has no next level,
+so it is never named.
+A character of one class shows the line as the game always has, and so does a
+human, who can only dual-class: the game counts only one of their classes
+there.
+
+![View Character's experience line for a fighter/thief, (110000 T), and a fighter/preserver/thief, (90000 Pr)](docs/xp-next.png)
+
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#thac0-saves-and-thief-skills).
+
+### The creation screen
+
+The character creation screen gains, beside the game's own scores and hit
+points:
+
+- **THAC0**, right of the hit points: `THAC0: M18 R19`, M for melee and R for
+  ranged, the character's THAC0 as its classes and kit stand (a Scholar's 1
+  worse, a Battle Mage's a warrior's...) less STR's to-hit adjustment (M) and
+  DEX's missile adjustment (R), so a click on STR or DEX shows at once what it
+  does to them. No weapon is counted (none is held yet, and weapon specs are
+  picked after DONE): it is the inventory's THAC0 before the weapon's own
+  parts.
+- **AGE**, above RECALL, with [ages](#ages-and-magical-aging) on:
+  the age the character will start at, rolled again with each roll of the die.
+- **SUM**, under CHR: what the six scores add up to and the most they may
+  ([scores as rolled](#scores-and-hit-points-as-rolled)).
+- **STORE** and **RECALL**, under the hit points
+  ([STORE and RECALL](#store-and-recall-on-the-creation-screen)).
+- **KITS**, at the end of the disciplines' or spheres' panel
+  ([choosing a kit](KITS.md#choosing-a-kit)); after DONE, the weapon window
+  for a warrior's weapon specs
+  ([weapon specialization](#weapon-specialization)).
+
+A picture of it: [STORE and RECALL](#store-and-recall-on-the-creation-screen).
+
+### Spell slots on the USE screen
+
+The game's USE (cast spells) screen shows, at the top of the panel under the
+spells, how many spells of the level on show (its LEVEL button) the selected
+character can still cast, and the most they get after resting, for the list on
+show only: `SPELLS LEFT`, then `WIZ` on the MAGE list (preservers' wizard
+spells) or `PRI` on the CLERIC list (clerics', druids' and rangers' priest
+spells), as `left/most` (`PRI 3/5`). The PSIONIC list shows none. Another level
+or list shows its own when the LEVEL or list button turns to it:
+
+![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
+
+The numbers go down as spells are cast (the screen shows the new count when it
+is next drawn) and back up after resting. A preserver in armour reads `NO
+SPELLS IN ARMOUR` in place of the heading.
+
+The numbers are the Characters tab's (see [spell slots](README.md#the-characters-tab)),
+WIS bonus included, printed with the game's own text routine; they show while
+the Loader (or its command-line dice log) is running.
+
+### What hurts a monster (the Look box)
+
+In a fight, Look at a monster (right-click until the pointer is the Look icon,
+then click the monster) and the game's small box, under its name and level,
+now also shows its hit points and AC (`HP 15/15 AC 2`), its THAC0 and
+alignment (`THAC0 17 AL TN`), its magic resistance beside its level
+(`LEVEL: 3 MR 30`), and its most important defence: `NEEDS +1 WEAPON`,
+`IMM FIRE COLD`, `NO CRUSH`, `HALF FROM WPNS` or `UNDEAD`. The alignment is in
+two letters: `LG`, `LN`, `LE`, `NG`, `TN`, `NE`, `CG`, `CN` or `CE`. (A line
+that would run past the box's edge, such as a monster's with over 100 HP,
+loses its spaces.) Its own status lines (casting, charmed, held...) follow in
+any row left. When there's more to say, closing the box shows everything in
+the game's dialogue window: the weapons it needs, the damage it's immune to or
+takes half of, spells that don't work on it, and what its hits do besides
+damage. The AC is the one the game last used against it; before anything
+has attacked it, the Loader works it out as the game would, from its armour,
+shield and DEX (spells on it, such as Barkskin, aren't counted until then).
+The dice log gets the same lines (`Look: ...`). Untick **Describe
+monsters when you Look at them in a fight** on the Options tab to turn this
+off.
+
+![The Look box on a Screamer Beetle in the arena: LEVEL: 3, then HP 15/15 AC 2 and THAC0 17 AL TN added](docs/look-box.png)
+
+The arena's first monsters have no magic resistance or special defences, so
+their box shows just the numbers and the alignment.
+
+How it works:
+[DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#what-hurts-a-monster-the-look-box).
+
+### Charges in item boxes
+
+An item that casts a spell with charges (the wands, the Storm Ring, the
+necklaces) shows how many it has left in its item box (right-click it on the
+inventory screen), under its name, counting down as it's used. A cloak's,
+boots' or belt's box shows what it adds to thief skills (with
+[improved thieving](#improved-thieving) on):
+
+![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
+
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
+
+### The Effects screen
+
+The Effects screen (Current Spell Effects) shows more
+in its lower panel and under the pointer:
+
+- **Kits and weapon specs:** each kit (`KIT: RAVAGER`), with a Shinobi's chance
+  to read a scroll under it (`READ LANG. 35%`), then the weapon specs, a page
+  at a time when there are more than fit ([Changing
+  class](KITS.md#changing-class) has pictures).
+- **Charges left:** with the pointer on the icon of a spell that lasts a number
+  of uses, the name under the icons says how many are left: IMPROVED AC (4
+  CHARGES) for Armor, MIRROR IMAGES (3 CHARGES), REFLECTED IMAGE (2 CHARGES).
+  Effects that last until removed (Charmed) and a magic item's power while
+  it is readied (Shadowseeker's Detect Invisibility) show none.
+- **Enlarge's damage:** with the pointer on its icon, how much more it gives,
+  10% a level of its caster: ENLARGED (+90% DICE) from a 9th-level preserver,
+  the weapon's dice made bigger
+  ([the rule](#enlarge-multiplies-the-weapons-dice-only), on unless
+  unticked), or ENLARGED (+90% DAMAGE) with it off, the whole melee damage. The inventory's and View Character's damage don't count it (no room);
+  each hit's line in the dice log does (`+5 Enlarge (the dice 5 x190% = 10,
+  level 9)`, or `x190% Enlarge (level 9)` with the rule off). A second Enlarge on someone already enlarged
+  uses up the spell and adds nothing.
+- **The armour spells' AC:** with the pointer on Barkskin's, Flesh Armor's or
+  Magical Vestments' icon, the armour AC it gives by its caster's level:
+  BARKSKIN (AC 3) from a 12th-level druid (Barkskin 6 less a quarter of the
+  level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1
+  better for each 3 levels above 5). DEX and the rest are still added
+  to it, and armour already better is kept, so a spell showing a worse AC
+  than the character's armour does nothing for them.
+- **A click on a spell's icon leaves it on** (the game ended it); a psionic
+  power's icon still ends the power, as that is how one is stopped ([Spells on
+  the Effects screen](#spells-on-the-effects-screen)).
+
+![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
+
+### What a scroll says
+
+Clicking a scroll's spell icon in its item box gives the result on the line
+under the paper doll: YOU LEARN THE SPELL, YOU ALREADY KNOW THIS SPELL, YOU FAIL
+TO LEARN THE SPELL, TOO MANY SPELLS OF THAT LEVEL, or a Shinobi's YOU CAN NOT
+READ THE SCROLL and THAT IS NOT A SHINOBI SPELL. The game wrote these there too,
+but they never reached the screen. Like the game's own messages on that line, it
+stays until the pointer is on something else. Always on.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-int).
+
+### No manual check
+
+The game's copy protection is gone. Leaving the sewers (the Tari's warrens) the
+first time, the game has a dragon appear and ask for a word from the manual
+("The 3rd word on page 14, line 1, begins with the letter 'p'. What is that
+word?"), and three wrong answers kill the party. Started from the Loader, the
+dragon doesn't come: the game goes on as if it had been answered. Always on.
+
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
+
 ## Rule changes
 
-Seventeen changes that bring the game's own rules closer to AD&D, each with its
+Eighteen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section, grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
@@ -112,6 +462,7 @@ and the game's own rule is back at once.
 | [AD&D's class tables](#adds-class-tables) | the XP for each level, priests' THAC0, and clerics', druids' and preservers' spell slots from AD&D's tables |
 | [CON as in AD&D](#con-as-in-add) | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
 | [Ages and magical aging](#ages-and-magical-aging) | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; a year older each 365 days of game time; Haste ages its target a year, after a system shock roll to survive |
+| [Level cap by XP](#level-cap-by-xp) | a class goes up past 9th while its next level needs no more than 749,999 XP, shared out between a character's classes |
 
 #### Class restrictions
 
@@ -168,7 +519,7 @@ fighter/druid's leather armour, given for its fighter class). A character left
 without a weapon this way (a thief/psionicist loses its long sword) gets one
 it can use with [Fuller starting gear](#fuller-starting-gear).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#class-restrictions).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#class-restrictions).
 
 #### Multiclass hit points
 
@@ -194,7 +545,7 @@ the bonus on each die:
 Gerrard's 4th Fighter level: hit points d10 = 8, +3 CON 17, into the total shared by 2 classes
 ```
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#multiclass-hit-points).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#multiclass-hit-points).
 
 #### Hit dice: the better of two
 
@@ -212,7 +563,7 @@ Cilla's 3rd Ranger level: hit points d10 = 2 and 7, the better 7
 Character creation, hit points 18: Fighter d10 per level: 10 (the better of 2 and 10) + 5 (the better of 5 and 1); ...
 ```
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hit-dice-the-better-of-two).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#hit-dice-the-better-of-two).
 
 #### Scores and hit points as rolled
 
@@ -238,7 +589,7 @@ rolled** ticked:
 The dice log gives each roll's total with its scores:
 `Character creation: the six scores add up to 101`.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scores-and-hit-points-as-rolled).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled).
 
 #### AD&D's class tables
 
@@ -261,7 +612,7 @@ full):
 Hit dice were AD&D's already, past 9th level too with
 [Level cap by XP](#level-cap-by-xp). Kits still change these tables.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#adds-class-tables).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#adds-class-tables).
 
 #### CON as in AD&D
 
@@ -287,7 +638,7 @@ paralysis/poison/death save. The game adds both their racial bonus (CON × 2 /
 gets (+1 to +4); in AD&D the racial bonus takes its place. A dwarf with CON 19
 saves at +5, not +6.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#con-as-in-add).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#con-as-in-add).
 
 #### Ages and magical aging
 
@@ -354,7 +705,75 @@ in the figure's own pictures, walking and fighting (with
 hair is left as it is. Dwarves and muls are hairless on Athas, and thri-kreen
 have no hair, so they keep their looks.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#ages).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#ages).
+
+#### Level cap by XP
+
+The game stops every class at level 9 (its manual's tables end there too).
+With **Level cap by XP** ticked, a class goes up instead while its next level
+needs no more than **749,999 XP**, shared out:
+
+| Character | A class goes up while its next level needs no more than |
+|---|---|
+| One class | 749,999 |
+| Two or three classes | an even share: 374,999 each for two, 249,999 for three |
+| A human who changed class | 749,999 less what its old classes' levels needed |
+
+A character of several classes already has its XP shared: the game splits
+every award between the classes, and the sheet shows one class's share. A
+human's XP starts again at 0 when it changes class, so its old classes' levels
+count against the new one: a fighter who changed to cleric at 9th (250,000 XP)
+can take the cleric to 10th, at 7th (64,000) to 11th. XP keeps counting past
+the cap; only the levels stop. With [AD&D's class tables](#adds-class-tables),
+the highest levels are in the player's guide's [Experience and
+levels](PLAYER-GUIDE.md#experience-and-levels), with AD&D's XP table.
+
+749,999 is the most XP that keeps a druid from 13th and a preserver from 12th
+(both need 750,000), where a preserver would cast 6th-level spells. Without
+AD&D's tables the game's own XP tables count.
+
+Everything else past 9th level is the game's own: it had it all along, and
+only the cap kept it out of reach. Its XP tables go on to level 20 (druids
+with a table of their own, not the cleric's), and THAC0, saves, spell slots
+and thief skills are worked out from the level. So past 9th:
+
+- **Hit points** follow AD&D: preservers roll their d4 to 10th and thieves
+  their d6 to 10th (CON's bonus counting too), then gain a fixed amount (+1 a
+  level for preservers, +2 for thieves); the
+  others gain a fixed amount from 10th (+3 for fighters, gladiators and
+  rangers, +2 for clerics, druids and psionicists). The game's own table has
+  the fixed gain for thieves at 10th too, as it keeps thieves and psionicists
+  together and AD&D's psionicist stops rolling at 9th; with the rule thieves
+  roll their 10th die.
+- **Gladiators** optimise their armour, as the game already has them do: AC 1
+  better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
+  Loader counts it in **AC: spells, rings, other**.) In armour only, as Dark
+  Sun has it: the game gave it with none ([the game's bugs,
+  fixed](#the-games-bugs-fixed)).
+- **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
+  gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
+- **Spell slots** grow at the levels casters already have, up to 5th. With
+  AD&D's class tables a priest has 5 4 4 3 2 1 at 11th and 6 5 5 3 2 2 at 12th
+  (a druid's; a cleric stops at 11th), a preserver 4 4 4 3 3 at 11th. The
+  6th-level slots are for the mod's [6th-level priest
+  spells](#6th-level-priest-spells); preservers have no 6th-level spells.
+- **Thief skills** from AD&D's table go on to 13th
+  ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).
+- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
+  as at every level, offered from spell level (class level + 1) / 2 down, but
+  no higher than 5th (the game would offer an empty 6th-level page at 11th).
+  **A psionicist picks a new power** (the game gives one at each level, two at
+  odd levels and 4th).
+- Spell damage that grows with the caster's level counts up to level 10 in
+  the game, so a caster past 10th does no more.
+
+The level-up comes as the game's usual one ("Gerakis gains a level"), and
+View Character stops showing the XP for the next level at the cap, as it does
+at 9 without the rule. For a character of more than one class, a class
+already at its cap isn't named in the brackets, since it has no next level.
+Untick it and nobody goes past the level they have.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 ### Weapons and armour
 
@@ -391,7 +810,7 @@ in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
 The off hand's DAM lines (the inventory screen and View Character) show its
 one attack.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#two-weapons).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#two-weapons).
 
 #### Half-giants' two-handed weapons
 
@@ -404,7 +823,7 @@ holds two two-handed weapons. With two weapons ready, the two-weapon penalties
 apply as for anyone. The inventory screen still writes "2 handed" in the
 weapon's line: that is its weapon type, not a limit.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#half-giants-two-handed-weapons).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed-weapons).
 
 #### Rings and cloaks of protection
 
@@ -429,7 +848,7 @@ Armour here is what is worn on the arms, legs, head or chest; something only
 carried in a backpack doesn't count. Untick it and every ring and cloak worn
 counts in full, whatever else is worn.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rings-and-cloaks-of-protection).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#rings-and-cloaks-of-protection).
 
 #### Helms
 
@@ -438,7 +857,7 @@ ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
 Contemplation and the Helm of Might. It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#helms).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#helms).
 
 #### Items saving against acid
 
@@ -502,7 +921,7 @@ cloak, then a bone helm or leather chest armour, then bone scale armour) and
 destroys it on a d20 under 15 less the item's plus, so 70% for a plain item. The
 dice log shows that check and its outcome.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#items-saving-against-acid).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-acid).
 
 ### Magic
 
@@ -528,28 +947,16 @@ off 5 and 9 instead, ticked or not. A 9th-level ranger's Protection from Evil
 (3 rounds a level) lasts 6 rounds with the rule, 27 without. The dice log's
 duration and damage lines show the level wherever they roll dice.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#rangers-casting-level).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#rangers-casting-level).
 
 #### Preservers' INT
 
 In the game a preserver learns any spell from a scroll it reads, and may know
-every spell. With **Preservers' INT** ticked, AD&D's table for INT holds:
-
-| INT | Chance to learn a spell | Most spells of each spell level |
-|---|---|---|
-| 9 | 35% | 6 |
-| 10 | 40% | 7 |
-| 11 | 45% | 7 |
-| 12 | 50% | 7 |
-| 13 | 55% | 9 |
-| 14 | 60% | 9 |
-| 15 | 65% | 11 |
-| 16 | 70% | 11 |
-| 17 | 75% | 14 |
-| 18 | 85% | 18 |
-| 19 | 95% | all |
-| 20 to 23 | 96% to 99% | all |
-| 24 and 25 | 100% | all |
+every spell. With **Preservers' INT** ticked, AD&D's table for INT holds (the
+table: the player's guide's [Learning preserver
+spells](PLAYER-GUIDE.md#learning-preserver-spells)): a chance to learn each
+spell from a scroll, 35% at INT 9 to 100% at 24, and a most of each spell level
+the preserver may know, 6 at INT 9 to all from 19:
 
 - **Reading a scroll:** the preserver rolls d100 against its chance. Under
   it, the spell is learnt and the scroll used up, as in the game; over it,
@@ -566,7 +973,7 @@ The dice log shows each try: `Dreamwalker reads the scroll of Magic Missile:
 d100 = 37, needs 60 or less (INT 14) -> learnt`. Priest spells and psionic
 powers are as the game has them.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#preservers-int).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-int).
 
 #### Spells saved against with the spell save
 
@@ -578,7 +985,7 @@ marked for petrification/polymorph. The dice log and the Spells tab name the
 save used.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#spells-saved-against-with-the-spell-save).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-saved-against-with-the-spell-save).
 
 #### Fire, cold and electricity: DEX instead of a doubled d20
 
@@ -592,7 +999,7 @@ gave 70%) and much less so for quick ones (DEX 21: 60%). The log names it:
 `+5 DEX 21 dodging`.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
 
 #### Enlarge multiplies the weapon's dice only
 
@@ -613,9 +1020,9 @@ enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
 
 ## More character customization
 
-More choices for each character: a weapon to specialize in, a kit, levels
-past 9th, a roll to keep while trying the die again, and fuller starting
-gear. Each has a box in the Options tab's **More character customization**
+More choices for each character: a weapon to specialize in, a kit, a roll to
+keep while trying the die again, and fuller starting gear (levels past 9th are
+a [rule change](#level-cap-by-xp)). Each has a box in the Options tab's **More character customization**
 section. All are on by default and, like the rule changes, take effect at
 once (STORE and RECALL from the next start); untick one and the game is as it
 was. New preservers picking their first spells, and the game's own party
@@ -625,7 +1032,6 @@ fitted to these choices, come with them.
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own |
-| [Level cap by XP](#level-cap-by-xp) | classes go up to a cap of 749,999 XP, shared between a character's classes (the game stops at 9th level) |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 | [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
 
@@ -718,7 +1124,7 @@ thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
 creation screen: DONE has made the character by then.
 
-![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new Myrmidon's name, and 2 picks left beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec in
 place of the bone long sword the game gives warriors, in a material it may use,
@@ -777,7 +1183,7 @@ ranger: its weapon specs, and the weapons it chose, whatever the new class (or
 a kit) allows, count again once the new class's level passes the old. Till
 then they are asleep, as the class is.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#weapon-specialization).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization).
 
 ### Kits
 
@@ -800,84 +1206,7 @@ starting gear and rules, are on a page of their own, [Kits](KITS.md):
 The game's own party gets features of its own
 ([The game's own party](#the-games-own-party)).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#kits).
-
-### Level cap by XP
-
-The game stops every class at level 9 (its manual's tables end there too).
-With **Level cap by XP** ticked, a class goes up instead while its next level
-needs no more than **749,999 XP**, shared out:
-
-| Character | A class goes up while its next level needs no more than |
-|---|---|
-| One class | 749,999 |
-| Two or three classes | an even share: 374,999 each for two, 249,999 for three |
-| A human who changed class | 749,999 less what its old classes' levels needed |
-
-A character of several classes already has its XP shared: the game splits
-every award between the classes, and the sheet shows one class's share. A
-human's XP starts again at 0 when it changes class, so its old classes' levels
-count against the new one: a fighter who changed to cleric at 9th (250,000 XP)
-can take the cleric to 10th, at 7th (64,000) to 11th. XP keeps counting past
-the cap; only the levels stop. With [AD&D's class tables](#adds-class-tables),
-the highest levels are:
-
-| Class | One class | Two classes | Three classes |
-|---|---|---|---|
-| Cleric | 11 | 9 | 9 |
-| Druid | 12 | 12 | 11 |
-| Fighter | 10 | 9 | 8 |
-| Gladiator | 10 | – | – |
-| Preserver | 11 | 10 | 9 |
-| Psionicist | 11 | 9 | 9 |
-| Ranger | 10 | 9 | 8 |
-| Thief | 13 | 11 | 11 |
-
-749,999 is the most XP that keeps a druid from 13th and a preserver from 12th
-(both need 750,000), where a preserver would cast 6th-level spells. Without
-AD&D's tables the game's own XP tables count.
-
-Everything else past 9th level is the game's own: it had it all along, and
-only the cap kept it out of reach. Its XP tables go on to level 20 (druids
-with a table of their own, not the cleric's), and THAC0, saves, spell slots
-and thief skills are worked out from the level. So past 9th:
-
-- **Hit points** follow AD&D: preservers roll their d4 to 10th and thieves
-  their d6 to 10th (CON's bonus counting too), then gain a fixed amount (+1 a
-  level for preservers, +2 for thieves); the
-  others gain a fixed amount from 10th (+3 for fighters, gladiators and
-  rangers, +2 for clerics, druids and psionicists). The game's own table has
-  the fixed gain for thieves at 10th too, as it keeps thieves and psionicists
-  together and AD&D's psionicist stops rolling at 9th; with the rule thieves
-  roll their 10th die.
-- **Gladiators** optimise their armour, as the game already has them do: AC 1
-  better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
-  Loader counts it in **AC: spells, rings, other**. The game gives it with or
-  without armour.)
-- **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
-  gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
-- **Spell slots** grow at the levels casters already have, up to 5th. With
-  AD&D's class tables a priest has 5 4 4 3 2 at 11th and 6 5 5 3 2 at 12th, a
-  preserver 4 4 4 3 3 at 11th. Priests also have a 6th-level slot at 11th and
-  two at 12th, for the mod's [6th-level priest
-  spells](#6th-level-priest-spells); preservers have no 6th-level spells.
-- **Thief skills** from AD&D's table go on to 13th
-  ([Thief skills from AD&D's table](#thief-skills-from-adds-table)).
-- **A preserver picks a new spell** on the game's own CHOOSE A SPELL screen,
-  as at every level, offered from spell level (class level + 1) / 2 down, but
-  no higher than 5th (the game would offer an empty 6th-level page at 11th).
-  **A psionicist picks a new power** (the game gives one at each level, two at
-  odd levels and 4th).
-- Spell damage that grows with the caster's level counts up to level 10 in
-  the game, so a caster past 10th does no more.
-
-The level-up comes as the game's usual one ("Gerakis gains a level"), and
-View Character stops showing the XP for the next level at the cap, as it does
-at 9 without the rule. For a character of more than one class, a class
-already at its cap isn't named in the brackets, since it has no next level.
-Untick it and nobody goes past the level they have.
-
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#level-cap-by-xp).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).
 
 ### STORE and RECALL on the creation screen
 
@@ -897,7 +1226,7 @@ place of the old. Unticked, the screen is as the game has it, from the next
 time the game is started.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#store-and-recall-on-the-creation-screen).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen).
 
 ### Fuller starting gear
 
@@ -932,7 +1261,7 @@ the kind, so each item comes once. The [game's own party](#the-games-own-party)
 gets it too, in the first moments of a new game. Unticked, a new character
 starts with the game's gear, changed only by the rules above.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#fuller-starting-gear).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#fuller-starting-gear).
 
 ### Preservers' first spells
 
@@ -957,7 +1286,7 @@ Cloud, Mirror Image), less any already picked. The character is already saved
 when the window opens, so EXIT can't take you back to the creation screen.
 
 Always on (it isn't a switch of its own). How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#kits) (its rows for a new preserver's spells).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits) (its rows for a new preserver's spells).
 
 ### The game's own party
 
@@ -993,7 +1322,7 @@ on the creation screen [picks its own](#preservers-first-spells).
 
 ![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-games-own-party).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-games-own-party).
 
 ## Expanded features
 
@@ -1028,7 +1357,7 @@ most the CHA discount takes off is 40%, so nothing can be bought and sold back
 at a profit, and at CHA 25 a round trip comes out even. The game pays all of
 it, which with the discount would let anything be sold at a profit.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-leaders-cha-at-shops).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-leaders-cha-at-shops).
 
 ### Buying back magical items
 
@@ -1040,7 +1369,7 @@ can be bought back. Anything else sold is gone, as in the game. With the CHA
 rule's selling at 60%, buying an item back costs more than it was sold for, or
 the same at CHA 25.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#buying-back-magical-items).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#buying-back-magical-items).
 
 ### Improved thieving
 
@@ -1070,54 +1399,16 @@ ticked, a skill is:
   situation's bonus, a hard lock, say, still counts after it). A ranger's
   hiding and moving silently stop at 95 as well.
 
-AD&D's averages, by thief level (before the cap of 95):
-
-| Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Pick pockets | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 80 | 90 | 95 | 99 |
-| Open locks | 25 | 29 | 33 | 37 | 42 | 47 | 52 | 57 | 62 | 67 | 72 | 77 | 82 |
-| Find/remove traps | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 | 70 | 75 | 80 |
-| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 | 86 | 94 | 99 |
-| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 | 70 | 77 | 85 |
-| Hear noise | 10 | 10 | 15 | 15 | 20 | 20 | 25 | 25 | 30 | 30 | 35 | 35 | 40 |
-| Climb walls | 85 | 86 | 87 | 88 | 90 | 92 | 94 | 96 | 98 | 99 | 99 | 99 | 99 |
-| Read languages | 0 | 0 | 0 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 | 65 |
-
-The race adjustments, as the game has them (humans, half-giants and
-thri-kreen have none):
-
-| Race | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows | Hear noise | Climb walls | Read languages |
-|---|---|---|---|---|---|---|---|---|
-| Dwarf | 0 | +10 | +15 | 0 | 0 | 0 | −10 | −5 |
-| Elf | +5 | −5 | 0 | +5 | +10 | +5 | 0 | 0 |
-| Half-elf | +10 | 0 | 0 | 0 | +5 | 0 | 0 | 0 |
-| Halfling | +5 | +5 | +5 | +10 | +15 | +5 | −15 | −5 |
-| Mul | 0 | −5 | 0 | +5 | 0 | 0 | +5 | −5 |
-
-The DEX adjustments:
-
-| DEX | Pick pockets | Open locks | Find/remove traps | Move silently | Hide in shadows |
-|---|---|---|---|---|---|
-| 9 | −15 | −10 | −10 | −20 | −10 |
-| 10 | −10 | −5 | −10 | −15 | −5 |
-| 11 | −5 | 0 | −5 | −10 | 0 |
-| 12 | 0 | 0 | 0 | −5 | 0 |
-| 13-15 | 0 | 0 | 0 | 0 | 0 |
-| 16 | 0 | +5 | 0 | 0 | 0 |
-| 17 | +5 | +10 | 0 | +5 | +5 |
-| 18 | +10 | +15 | +5 | +10 | +10 |
-| 19 | +15 | +20 | +10 | +15 | +15 |
-| 20 | +20 | +25 | +12 | +20 | +17 |
-| 21 | +25 | +27 | +15 | +25 | +20 |
-| 22 | +27 | +30 | +17 | +30 | +22 |
-
-then the situation and effects as before. So Azil, a 3rd-level elf thief with
+The tables (AD&D's averages by thief level, the race's adjustments and DEX's)
+are in the player's guide's [Thieves' skills and picking
+pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets).
+The situation and effects then count as before. So Azil, a 3rd-level elf thief with
 DEX 22: pick pockets 40 + 5 + 27 = 72, open locks 58, find traps 47, move
 silently 62, hide in shadows 52, hear noise 20, climb walls 87. A ranger's
 move silently and hide in shadows take the same race and DEX adjustments.
 Untick it for the game's numbers.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#thief-skills-from-adds-table).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
 
 #### Hiding in shadows to backstab
 
@@ -1216,7 +1507,7 @@ Plain cloaks, boots and belts cost 24 (the game's Leather Cloak is 20), anywhere
 in the region, shops included; magic ones (with a plus, or dearer than 100)
 keep their prices.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#hiding-in-shadows-to-backstab).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab).
 
 #### Picking pockets
 
@@ -1283,7 +1574,7 @@ pick up, and has him say the busy line once and walk on (see
 [The game's bugs, fixed](#the-games-bugs-fixed) for the other way his rounds
 stalled).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#picking-pockets).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#picking-pockets).
 
 ## New content
 
@@ -1308,7 +1599,7 @@ sheet, so it saves with the game and the character.
 | Spell | Level | Cast on | Lasts | Does |
 |---|---|---|---|---|
 | **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
-| **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each natural (unarmed) attack does 1d6+1 where that's better than its own, is +1 to hit, counts as a +1 magical weapon, and cuts (edged, not crushing) |
+| **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each unarmed attack (a thri-kreen's claws, not its bite) does 1d6+1 where that's better than its own, is +1 to hit, counts as a +1 magical weapon, and cuts (edged, not crushing) |
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | −3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
 | **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: a hit, or a foe's spell for one creature, has a 50% chance of striking the image instead, which vanishes |
 | **Spook** | 1 | one creature in sight | 3 rounds (a save negates) | the creature panics and flees (Afraid); its save is 1 worse for every 2 caster levels (at most −6); undead aren't affected, magic resistance applies, and Cloak of Bravery gives +4 against it |
@@ -1321,14 +1612,17 @@ sheet, so it saves with the game and the character.
   `Cat's Grace: 1d6 = 4 -> Gerakis's DEX +4 while it lasts (at most 24)`.
 - **Erdlu Claw** grows talons like an erdlu's. A character with a weapon in hand
   is unchanged; one fighting unarmed hits for 1d6+1 instead. A thri-kreen's four
-  claws and bite become 1d6+1 each (a natural attack already better on average,
-  as 2d4 or 1d8+2, stays as it is). The +1 to hit shows in the log's THAC0
+  claws become 1d6+1 each; its bite, no talon, stays 1d4+1, with nothing from
+  the spell (a natural attack already better on average, as 2d4 or 1d8+2, stays
+  as it is). The +1 to hit shows in the log's THAC0
   breakdown (`+1 Erdlu Claw`), and as a +1 weapon the talons hurt creatures that
   only magical weapons can. They cut: edged, where the game makes every unarmed
   attack crushing, so they hurt a creature that crushing weapons can't (a
   mastyrial). A thri-kreen in the party fights with edged claws the same way,
-  with or without the spell. With **Body Weaponry** or **Animal Affinity** up,
-  the power's dice for the first attack get the claw's +1: 2d4+1 or 1d10+1.
+  with or without the spell, and its bite too. With **Body Weaponry** or
+  **Animal Affinity** up, the power's dice get the claw's +1: 2d4+1 or 1d10+1.
+  Those powers change only the first of a creature's natural attacks too (a
+  thri-kreen's claws, not its bite), as the game has them.
 - **Fogbolt** wraps one creature in clinging fog. It flies to its target as
   a dark grey bolt, Magic Missile's in smoky greys (Magic Missile keeps its
   own blue); like any bolt it needs a clear line to the target. Its THAC0
@@ -1370,7 +1664,7 @@ and the game is as it was.
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### 6th-level priest spells
 
@@ -1467,7 +1761,7 @@ Wake of the Ravager hasn't, has the mod's own: a fountain on light blue water,
 and is cast with Cure Disease's sound.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### New items
 
@@ -1556,7 +1850,7 @@ game's own, one story for each kind: the four pairs of bracers share one, and
 so do both rings of protection. The Warden's Plate's pieces each tell a part
 of Haldren's, the last of the Wardens.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
 
 #### Bracers of defense
 
@@ -1572,7 +1866,7 @@ them, a thief wears them, and a ring or cloak of protection still counts. In the
 game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
 priced 5,000 a point of AC.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#bracers-of-defense).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#bracers-of-defense).
 
 #### Robes
 
@@ -1591,7 +1885,7 @@ it.
 The dice log and the Loader name a robe among a save's modifiers, and the
 Spells tab counts the Veiled Robe's slots. Alagorn tells both their stories.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#robes).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#robes).
 
 ### New people
 
@@ -1658,7 +1952,7 @@ as dead; after the party's escape he is gone from the pens with everyone else.
 
 ![Kalzith's body opened in the game: a Scroll, the Cloak and the Quarterstaff](docs/kalzith-body.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#kalzith).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#kalzith).
 
 #### Semyon
 
@@ -1703,7 +1997,7 @@ else.
 
 ![The slave pens during the escape: Semyon, with his portrait, telling the party to stay close to Scar](docs/semyon-escape.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#semyon).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#semyon).
 
 #### What Dinos and the Trustee say about them
 
@@ -1730,7 +2024,7 @@ and Semyon are taken off the map too, the way the game takes the others, and
 Semyon is never put in his pen after it.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#what-dinos-and-the-trustee-say-about-them).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#what-dinos-and-the-trustee-say-about-them).
 
 ### The cooked vulture
 
@@ -1754,7 +2048,7 @@ inventory, it's too tough to be worth the chewing.)
 
 ![Dinos's answer in his dialogue window with his portrait, then the game's own window for the reward: "Each party member receives 100 experience points!"](docs/vulture-meal.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#the-cooked-vulture).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-cooked-vulture).
 
 ### Defilers' scrolls
 
@@ -1778,7 +2072,7 @@ defiler had a scroll is found out on its body.
 Each defiler is rolled for once in each fight, the arena's later defilers too.
 A fight played again from a save is a new chance; a game saved mid-fight keeps the scroll a defiler was given.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#defilers-scrolls).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#defilers-scrolls).
 
 ## Graphics
 
@@ -1812,7 +2106,7 @@ time the game is started (a game where she already has the elf's keeps it).
 
 ![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#elves-and-half-elves).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#elves-and-half-elves).
 
 ### What the party wears
 
@@ -1841,7 +2135,7 @@ second is moved to pictures of their own.
 
 ![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#what-the-party-wears).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#what-the-party-wears).
 
 ### Shadows
 
@@ -1854,7 +2148,7 @@ never covers another figure. Switch them off on the Options tab.
 
 ![The arena without shadows (left) and with them (right): each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#shadows).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#shadows).
 
 ### Dust
 
@@ -1864,7 +2158,7 @@ stand in front of them, as with the shadows. Switch it off on the Options tab.
 
 ![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#dust).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#dust).
 
 ### Magic items' icons
 
@@ -1879,7 +2173,7 @@ share their picture with a plain item in the game, so they get one of their own
 and the plain cahulaks and ring stay still. The Loader's own magic items shine
 in their icons too. There's no switch: only the pictures change.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#new-items).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
 
 ### Spells on the ground
 
@@ -1893,7 +2187,7 @@ dust at the edge (two Whirlwinds at once each turn).
 ![Whirlwind in the arena: a tall grey funnel of dust turning over the sligs as the party fights beside it, the damage it does each round](docs/whirlwind.gif)
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#new-spells-wizard-and-6th-level-priest).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
 ## Controls
 
@@ -1916,7 +2210,7 @@ their own.
 Tab and Enter also make attacking possible without aiming the mouse at all.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#choosing-an-enemy-tab-enter-and-the-rings).
+[DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings).
 
 ### Scrolling the map
 
@@ -1929,7 +2223,7 @@ fight.
 The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map).
 
 ### M, U and I: open a screen, close it again
 
@@ -1939,7 +2233,7 @@ them when pressed a second time. **U** on the inventory, or **I** on USE,
 switches to the other screen, as in the game. After a click on a screen's
 buttons or another key, the next **U** or **I** works as in the game.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
 paragraph on M, U and I).
 
 ### The whole party in view
@@ -1953,7 +2247,7 @@ until the next fight or load. On by default: **The whole party in view as a
 game starts or loads and after each fight** on the Options tab, from the next
 start.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
 paragraph on the whole party in view).
 
 ### The view in fights
@@ -1966,7 +2260,7 @@ fight, the view moves to a figure only when it walks off the screen** on the
 Options tab, from the next start). Out of fights the view follows the party
 as the game has it.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#scrolling-the-map) (its part
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its part
 on the view in a fight).
 
 ### The pointer in scenes, and where it starts
@@ -1993,7 +2287,7 @@ moved, too fast and coarse to put an item where you meant in the inventory.
 Each has its switch on the Options tab, on by default (from the next start).
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT.md#the-pointer-in-scenes-and-where-it-starts).
+[DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
 
 ## More saves and characters
 
@@ -2019,7 +2313,7 @@ started without the Loader shows page 1 only, as always: it looks for
 them: it puts each save it finds in the row its number names, with room for
 ten, and a `SAVE11.SAV` would be written past the end.)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-saves).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#more-saves).
 
 #### Saves under their names
 
@@ -2058,7 +2352,7 @@ game counts New as Okay wherever it tests for Okay, and so does the Loader.
 Left as they were: the status under the portrait still reads New, and the game
 still makes New characters Okay when the game starts.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#more-characters).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#more-characters).
 
 ## Game speed
 
@@ -2106,7 +2400,7 @@ leader's speed in pixels a second of the game's time):
 What each setting asks of the computer:
 [Suggested system requirements](README.md#suggested-system-requirements).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#game-speed).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#game-speed).
 
 ## The game's bugs, fixed
 
@@ -2130,8 +2424,11 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |
 | **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
-| A **thri-kreen's claws** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
+| A **thri-kreen's claws and bite** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
+| Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
+| The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
+| **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends, to a member still standing (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
@@ -2145,28 +2442,36 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
 | The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
 | **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
+| A **ranger tracking** at the Wagon Train's bodies | The check looked for the ranger's flag where the character's record isn't, so found no ranger; it tested a ranger's level as a bit of its class; and the d20 had to beat the score, not come under it: "You cannot interpret the tracks surrounding the body" | A ranger reads the tracks on a d20 under its score (WIS, more at higher ranger levels), for XP |
+| The slave pens' **sewer grate** | The search for a weapon in hand stopped at once, so "hack the lock off" was never offered; and a hack that worked left the grate shut; one that failed said the weapon broke, and kept it; an attack on the grate always broke its lock | Offered to a member with a weapon in their right hand. A hack works half the time, always with Bloodwrath, and opens the grate, saying "his" or "her" as picking the lock does (one that fails breaks a weapon that can break in a fight, a plain wooden, bone, stone or obsidian one, which is lost; a metal or magic one "rings off the grate, unharmed"). An attack breaks the lock on a Strength roll, as ripping the grate open does, or "fails to damage the lock" |
+| The **Rebel Mindhome** in Undermountain | Once the party had killed the four spiders, every talk to the Mindhome's leader gave the thanks and its 5000 XP again | The 5000 XP comes once |
+| The **messenger in region 9** (the men who burst from the sand, after the elves leave) | Came only if the party left the region and came back after the elves had gone, so a party that stayed never met him | He comes once the elves have left |
+| The **Draj serf** led to region 10 | One left more than 14 squares behind stayed in region 38 without his orders, and talking to him again ran the whole deal and gave a second obelisk gem | He comes along however far behind |
+| A **multi-class preserver or psionicist** talking about the haystack | The talk tested the class as the whole class word, so only a single-class one could answer "Being a powerful magician, I scried it" or "I can read your very thoughts" | Any preserver or psionicist |
+| **Dagolar's slime book**, in his laboratory | "Magical training" to read it took a psionicist, a preserver, a fighter or an air cleric, not an earth, fire or water cleric or a druid | A cleric, druid, preserver or psionicist (any one of the character's classes); a fighter has no magical training |
+| The cave guide's "Why don't you go bother someone **your own size**" | Asked "not a dwarf, or not a halfling?", true of everyone, so a dwarf or halfling heard it too | A dwarf or halfling is told to bother "someone else" |
+| Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
 | **"Out of memory in OEOpenGraph"** in a long session | The map needs 60,000 bytes in one piece each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had about 57 KB to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory: about 97 KB to spare with the map up, and a warning in the dice log if it runs low ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
 | **Slay Living**'s description | Said a creature that saves takes 3 to 17 | Says 2 to 16 (half of 4d8), what the game does |
+| A character's **most PSP** (worked out at each level-up check, for every party member) | The WIS bonus read from the creation screen's record, not the character's (in play, any byte that memory holds: 183 in one test), and the bonus tables 8 scores long, so INT 22 gave nothing, INT 23 to 25 20 to 24 too many, WIS 23 to 25 none at all, CON 23 to 25 0 to 2 | Each from the character's own score: CON and INT the score less 15, WIS twice it less 10, on to 25 (found by CalvinRodo's yuan-ti, checked in DSUN.EXE). The most only ever rises, so a character's may go up once, the next time it's worked out |
+| A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti, checked in DSUN.EXE) |
 | An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it ([Spells on the Effects
 screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT.md](DEVELOPMENT.md#the-games-spells). The three script bugs
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells). The script bugs
 (Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and checked
-by yuan-ti; the Loader mends them in its copy of the game's scripts
+by yuan-ti, the ranger's tracking, the sewer grate, the Rebel Mindhome, region 9's messenger, the Draj serf and the halfling's lines by
+yuan-ti, and the other race and sex lines, the haystack, the cave guide and the slime book by
+the Loader's own search of the scripts; the Loader mends them in its copy of the game's scripts
 (`scriptfixes.py`).
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is
-loaded, on effects already running too. What a bug already did stays in the
-save: a character who kept Share Strength's strength still has it (load a save
-from before the power was used to be rid of it), and one silenced by the
-preserver's Dispel Magic casts again once that wears off. A new game is still
-the way to see all of the mod: kits, STORE and RECALL and fuller starting gear
-come with characters made with it, and much of the
-[new content](#new-content) is in the game's first areas.
+loaded. What a bug already did stays in the save: [your saved
+games](README.md#updating-backups-saved-games-and-the-loaders-files) says what.
 
 ### Spells on the Effects screen
 
@@ -2177,18 +2482,9 @@ is how a power is stopped. It has a switch in the Options tab's **Controls**
 section (**A click on a spell's icon on the Effects screen leaves it on**,
 from the next start).
 
-With the pointer on the icon of a spell that lasts a number of uses, the
-Effects screen names the uses left: IMPROVED AC (10 CHARGES). Enlarge's icon
-names what it adds, 10% a level of its caster: ENLARGED (+90% DICE) with
-[the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) (on unless
-unticked), or ENLARGED (+90% DAMAGE), the whole melee damage, with it off.
-Barkskin's, Flesh Armor's and Magical Vestments' name the armour AC they give,
-by their caster's level (BARKSKIN (AC 3)): Barkskin 6 less a quarter of the
-level, Flesh Armor 10 less the psionicist level, Magical Vestments 5, 1 better
-for each 3 levels above 5. Armour already better is kept, and DEX is added
-after. A magic item's
-power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no
-charges.
+What else the Effects screen shows (a spell's charges left, Enlarge's damage,
+the armour spells' AC, kits and weapon specs): [the Effects
+screen](#the-effects-screen).
 
 ### Rules the game got wrong
 

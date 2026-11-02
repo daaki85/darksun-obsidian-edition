@@ -23,16 +23,22 @@ import struct
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
 
-from . import game, itemgate, ring
+from . import game, itemgate, restrict, ring
 from .game import GameData
 
 PICK_POCKETS, MOVE_SILENTLY = 0, 3  # thief skill numbers
 BACKPACK = range(14, 26)  # the backpack's 12 cells, as the inventory screen shows them (0-13: the body's)
-# A party member's items are in two of its lists: what it wears or holds in the +0Ah one, what's in
-# its backpack in the +0Ch one (the inventory screen moves an item from one to the other as it's
-# put on or away). The game fights with every weapon in the +0Ah list, whatever its slot byte says,
-# so the Loader puts what it gives and moves in the list its slot belongs in (party_list, place).
-WORN_LIST, PACK_LIST = 0x0A, 0x0C
+# A party member's items are in three lists: what it wears in the +08h one (armour, a shield,
+# rings, a cloak, ammunition: whatever is on the body and isn't a weapon), the weapons it holds in
+# the +0Ah one, and its backpack in the +0Ch one. The inventory screen moves an item from one to
+# another as it's put on or away, by its type's kind (+00h): a melee, missile or thrown weapon to
+# +0Ah, anything else to +08h (seen 2026-11-02: chest and leg armour, a shield in the left hand
+# and arrows went to +08h; a long sword, a gythka and a bow to +0Ah). The game fights with every
+# weapon in the +0Ah list whatever its slot byte says, and its AC routine (58DD3h) counts only
+# what is in the +08h one (armour in +0Ah or +0Ch counts for nothing), so the Loader puts what
+# it gives and moves in the list the screen would (list_for, party_list, place).
+WEAR_LIST, HOLD_LIST, PACK_LIST = 0x08, 0x0A, 0x0C
+WEAPON_KINDS = restrict.MELEE | restrict.MISSILE | restrict.THROWN
 TYPE_WEIGHT, TYPE_WORN = 0x04, 0x09  # in an item type's record: its weight; where it's worn
 LIFTABLE_TYPES = (game.SHORT_SWORD_TYPE,)  # lifted whatever their weight: Kurzak's short sword
 # ... and these by their name entry, with what the conversation says was lifted: Churrr's club
@@ -134,11 +140,20 @@ def _take(gd: GameData, it: ring.Items, creature: int, list_no: int, item: int, 
         gd.guest.write(base + offset, struct.pack("<H", game.NO_ITEM))
 
 
-def party_list(gd: GameData, it: ring.Items, member: int, slot: int) -> Optional[int]:
-    """The list (its object) that party member MEMBER keeps an item in SLOT in: the worn one
-    (WORN_LIST) for a slot of the body, the backpack's (PACK_LIST) for a cell; a new one, as the
-    game's allocator gives it, if it has none. None if there's none to be had."""
-    offset = PACK_LIST if slot in BACKPACK else WORN_LIST
+def list_for(slot: int, typ: bytes) -> int:
+    """The list (its offset in the creature record) the inventory screen keeps an item of type
+    record TYP in SLOT in: the backpack's for a cell; for a slot of the body, the held one for a
+    weapon, else the worn one."""
+    if slot in BACKPACK:
+        return PACK_LIST
+    return HOLD_LIST if typ and typ[0] & WEAPON_KINDS else WEAR_LIST
+
+
+def party_list(gd: GameData, it: ring.Items, member: int, slot: int, typ: bytes = b"") -> Optional[int]:
+    """The list (its object) that party member MEMBER keeps an item of type record TYP in SLOT
+    in (list_for); a new one, as the game's allocator gives it, if it has none. None if there's
+    none to be had."""
+    offset = list_for(slot, typ)
     thing, = struct.unpack_from("<h", gd.creature(member), offset)
     if 0 <= thing < ring.THING_COUNT and it.thing(thing)[0] == game.THING_ITEM:
         return thing
@@ -157,8 +172,10 @@ def party_list(gd: GameData, it: ring.Items, member: int, slot: int) -> Optional
 
 
 def _link(gd: GameData, it: ring.Items, member: int, item: int, slot: int) -> bool:
-    """ITEM (in no list) put first in the party member's list for SLOT, in SLOT."""
-    thing = party_list(gd, it, member, slot)
+    """ITEM (in no list) put first in the party member's list for SLOT and its kind, in SLOT."""
+    data = it.item(item)
+    typ = gd.item_type_record(data) if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM else b""
+    thing = party_list(gd, it, member, slot, typ)
     if thing is None:
         return False
     it = ring.Items(gd)  # (read again: the list may be new)
@@ -189,22 +206,31 @@ def place(gd: GameData, member: int, item: int, slot: int) -> bool:
 
 
 def mend_lists(gd: GameData) -> List[str]:
-    """The party's backpack items in the worn list put in the backpack's (earlier versions gave
-    the backpack's dagger, Thieves' Tools and such to the worn list, where a weapon is fought
-    with): lines for the log. (Not the other way: the game's own party starts with worn armour in
-    the backpack's list.)"""
+    """What earlier versions left in the held list put where the inventory screen keeps it:
+    lines for the log. A backpack item goes to the backpack's list (they gave the backpack's
+    dagger, Thieves' Tools and such to the held list, where a weapon is fought with); something
+    worn that isn't a weapon to the worn list (they gave starting armour, a cloak, a shield, a
+    ring to the held list, where it counted for no AC). Nothing else: a worn item in the
+    backpack's list is left as the game has it."""
     out: List[str] = []
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
         if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
             continue
-        thing, = struct.unpack_from("<h", rec, WORN_LIST)
-        wrong = [(item, data) for item, data in _chain(ring.Items(gd), thing) if data[game.ITEM_SLOT] in BACKPACK]
+        thing, = struct.unpack_from("<h", rec, HOLD_LIST)
+        wrong = []
+        for item, data in _chain(ring.Items(gd), thing):
+            slot = data[game.ITEM_SLOT]
+            typ = gd.item_type_record(data) if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM else b""
+            if slot in BACKPACK or (len(typ) == game.ITEM_TYPE_SIZE and list_for(slot, typ) == WEAR_LIST):
+                wrong.append((item, data))
         for item, data in wrong:
             if place(gd, member, item, data[game.ITEM_SLOT]):
                 name = gd.item_name(struct.unpack_from("<H", data, game.ITEM_NAME)[0])
-                out.append(f"{gd.creature_name(member)}'s {name} is put away in the backpack (it had been "
-                           f"counted as held)")
+                who = gd.creature_name(member)
+                out.append(f"{who}'s {name} is put away in the backpack (it had been counted as held)"
+                           if data[game.ITEM_SLOT] in BACKPACK else
+                           f"{who}'s {name} is now counted as worn (it had been counted as held, and gave no AC)")
     return out
 
 

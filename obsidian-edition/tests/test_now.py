@@ -336,8 +336,8 @@ class ThiefTests(unittest.TestCase):
         self.assertEqual(list(entry[17:24]), [1, 11, 39, 16, 16, 23, 6])
 
     def test_effects(self):
-        set_effects(self.log, [(0, 0, 47)])  # Slowed: all but picking pockets
-        self.assertEqual(self.now(), [11, 0, 0, 0, 0, 0])
+        set_effects(self.log, [(0, 0, 47)])  # Slowed: picking pockets alone (DSUN.EXE 80425h)
+        self.assertEqual(self.now(), [0, 39, 16, 16, 16, 6])
         set_effects(self.log, [(0, 0, 14)])  # Detect Traps
         self.assertEqual(self.now()[2], 100)
 

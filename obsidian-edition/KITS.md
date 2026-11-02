@@ -238,20 +238,21 @@ The kits that change spell slots, by the level of the kit's class (spells of
 1st to 6th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on,
 to the highest level each class reaches under the
 [XP cap](FEATURES.md#level-cap-by-xp) (a preserver and a cleric 11th, a druid
-12th, a ranger 10th, a thief 13th; a blank past it). The druid has no kit that
+12th, a ranger 10th, a thief 13th; a blank past it, and — before the class's
+first spells). The druid has no kit that
 changes its slots; it is here, as the cleric is, to set the kits beside:
 
 | Level | Preserver | Scholar | Battle Mage | Cleric | Crusader | Elementalist | Druid | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 1 | 2 | — | 1 | — | 1 | 1 | | | |
-| 2 | 2 | 3 | 1 | 2 | 1 | 1 | 2 | | | |
-| 3 | 2 1 | 3 2 | 1 | 2 1 | 1 | 2 1 | 2 1 | | | |
-| 4 | 3 2 | 4 3 | 2 1 | 3 2 | 2 1 | 2 1 | 3 2 | | | |
-| 5 | 4 2 1 | 5 3 2 | 3 1 | 3 3 1 | 2 2 | 3 2 1 | 3 3 1 | | | |
-| 6 | 4 2 2 | 5 3 3 | 3 1 1 | 3 3 2 | 2 2 1 | 3 3 1 | 3 3 2 | 1 | | 1 |
-| 7 | 4 3 2 1 | 5 4 3 2 | 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 1 | 3 3 2 1 | 2 | | 2 |
-| 8 | 4 3 3 2 | 5 4 4 3 | 3 2 2 1 | 3 3 3 2 | 2 2 2 1 | 3 3 2 1 | 3 3 3 2 | 2 1 | | 2 1 |
-| 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 2 1 | 3 3 3 2 1 | 4 4 3 2 1 | 2 2 | | 2 2 |
+| 1 | 1 | 2 | — | 1 | — | 1 | 1 | — | — | — |
+| 2 | 2 | 3 | 1 | 2 | 1 | 1 | 2 | — | — | — |
+| 3 | 2 1 | 3 2 | 1 | 2 1 | 1 | 2 1 | 2 1 | — | — | — |
+| 4 | 3 2 | 4 3 | 2 1 | 3 2 | 2 1 | 2 1 | 3 2 | — | — | — |
+| 5 | 4 2 1 | 5 3 2 | 3 1 | 3 3 1 | 2 2 | 3 2 1 | 3 3 1 | — | — | — |
+| 6 | 4 2 2 | 5 3 3 | 3 1 1 | 3 3 2 | 2 2 1 | 3 3 1 | 3 3 2 | 1 | — | 1 |
+| 7 | 4 3 2 1 | 5 4 3 2 | 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 1 | 3 3 2 1 | 2 | — | 2 |
+| 8 | 4 3 3 2 | 5 4 4 3 | 3 2 2 1 | 3 3 3 2 | 2 2 2 1 | 3 3 2 1 | 3 3 3 2 | 2 1 | — | 2 1 |
+| 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 2 1 | 3 3 3 2 1 | 4 4 3 2 1 | 2 2 | — | 2 2 |
 | 10 | 4 4 3 2 2 | 5 5 4 3 3 | 3 3 2 1 1 | 4 4 3 3 2 | 3 3 2 2 1 | 4 4 3 2 1 | 4 4 3 3 2 | 2 2 1 | 1 | 2 2 1 |
 | 11 | 4 4 4 3 3 | 5 5 5 4 4 | 3 3 3 2 2 | 5 4 4 3 2 1 | 4 3 3 2 1 | 4 4 3 3 2 1 | 5 4 4 3 2 1 | | | 3 2 1 |
 | 12 | | | | | | | 6 5 5 3 2 2 | | | 3 2 2 |
@@ -359,4 +360,4 @@ class to another, so only these can meet):
 | Ravager | Grove Warden | each has an AC of its own that betters with level: one on top of the other would stack |
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | each other | each gives a warrior's THAC0: two would be one wasted |
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT.md#kits).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).

@@ -255,7 +255,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
 # in, names them, and keeps who knows them in the sheet (NEW_KNOWN's bits).
 # Cat's Grace works as Strength does, for DEX: Strength's code rolls 1d6 into an effect of its own
 # (54, a number the game leaves unused) that adds to DEX, at most 24. Erdlu Claw's effect (6, unused
-# too) makes each natural (unarmed) attack 1d6+1 where that is better than its own (NS_CLAW), +1 to hit and at least
+# too) makes each natural (unarmed) attack of the first set (a thri-kreen's claws, not its bite: SHEET_NATURAL_*)
+# 1d6+1 where that is better than its own (NS_CLAW), +1 to hit and at least
 # a +1 weapon (NS_FIST: its hit's damage kinds get PLUS1); Fogbolt's (27) takes 3 off the fogged creature's attacks and
 # gives 2 to attacks on it. Reflected Image is Mirror Image's record with one image (its effect, 25,
 # the game's Mirror Images: one takes the other's place); Spook is Charm Person's with the game's
@@ -288,6 +289,7 @@ NEW_SPELLS_END = 212  # (past the last)
 # record copied to the records' room past the new spells, a save against death allowed
 NPP_SAVE_RECORD = 212
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
+AFFINITY_EFFECT, BODY_WEAPONRY_EFFECT = 61, 62  # (the first natural attack at least 1d10; 2d4: 7B71Bh)
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16
 IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
@@ -429,6 +431,14 @@ ABILITY_NAMES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 SHEET_MAGIC_RESISTANCE = 0x29
 SPHERE_NAMES = ("air", "earth", "fire", "water")  # the clerics' and druids' spheres, by class order
 SHEET_ATTACKS = 0x2A  # the game's attacks a round, in halves (2: 1, 3: 3/2)
+# A creature's natural attacks, up to three sets (N 0-2), each a byte from: its attacks a round in
+# halves (+2Bh + N), its dice (+2Eh + N) of SIDES (+31h + N), and their bonus (+34h + N). The melee
+# routine (58019h) keeps the set it's on in its [BP-22h], weapons in hand taking the first two sets'
+# places (the claws' and set 1, empty). The game gives every thri-kreen four claws,
+# 1d4 (set 0), and a bite, 1d4+1 (set 2), whatever its class (DSUN.EXE 66BF1h, the dice; 87635h,
+# the attacks a round)
+SHEET_NATURAL_HALVES, SHEET_NATURAL_COUNT, SHEET_NATURAL_SIDES, SHEET_NATURAL_BONUS = 0x2B, 0x2E, 0x31, 0x34
+THRI_KREEN_ATTACKS = {0: "claw", 2: "bite"}
 SHEET_XP, SHEET_XP_VALUE, SHEET_MAX_HP = 0x00, 0x04, 0x08  # a monster's sheet holds its XP value at +4
 SHEET_RACE, SHEET_ABILITIES = 0x18, 0x1B
 SHEET_CLASSES, SHEET_LEVELS, SHEET_BASE_AC = 0x21, 0x24, 0x27
@@ -505,7 +515,7 @@ EFFECT_RULES = {
     64: "STR + the amount borrowed, at most 24", 65: "STR - twice the amount lent, at least 3",
     66: "STR + 1d6, at most 24",
     67: "STR + 1d6, at most 24", 68: "STR - the amount, at least 3", GRACE_EFFECT: "DEX + 1d6, at most 24",
-    CLAW_EFFECT: "each natural (unarmed) attack does 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
+    CLAW_EFFECT: "unarmed attacks (a thri-kreen's claws, not its bite) do 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
@@ -814,7 +824,7 @@ SLOT_CLASS_RULES, SLOT_RULES = 0x664, 0x678
 SPELL_SPHERES_SEG, SPELL_SPHERES_OFF, SPELL_SPHERES_SIZE = 0x3FB9, 0x19D, 7
 RANGER_CLASSES = range(13, 17)
 SLOTS_ALL_19 = 0x1164  # a DS word the game checks: 1 gives the party 19 of everything
-HUMAN = 1
+HUMAN, THRI_KREEN = 1, 8
 
 # Thief skills (the game's routine at 8023Bh in DSUN.EXE). Their order is AD&D's; the game
 # never names them, but its checks fit: blindness stops all but hearing noise, Fire Shield
@@ -877,9 +887,10 @@ RANGER_MOVE = AD_D_THIEF[3]
 # AD&D's most for a thief skill after every adjustment (a ranger's too): with RULE_THIEF_TABLE,
 # DSCLOG's PROBE_BELT keeps the game's chance to it, and thief_skills_now its own
 THIEF_MOST = 95
-# Effects that rule skills out (the chance can't come up), and ones that make a skill certain
+# Effects that rule skills out (the chance can't come up), and ones that make a skill certain: the
+# thief skill routine's effect tests (DSUN.EXE 80425h: Slowed, 47, rules out picking pockets alone)
 THIEF_BLOCKED = {8: (0, 1, 2, 3, 4, 6, 7), 17: tuple(range(8)), 11: tuple(range(8)), 3: tuple(range(8)),
-                 34: tuple(range(8)), 47: (1, 2, 3, 4, 5, 6, 7), 20: (0, 4), 25: (4,), 49: (0, 1, 6), 19: (7,)}
+                 34: tuple(range(8)), 47: (0,), 20: (0, 4), 25: (4,), 49: (0, 1, 6), 19: (7,)}
 THIEF_CERTAIN = {14: (2,), 23: (4,)}  # Detect Traps, Invisible
 STATUS_OKAY = 1
 STATUS_NEW = 0  # not yet played (the game makes it Okay when the game starts)
@@ -2105,6 +2116,13 @@ class GameData:
                 base, hand = kits.two_weapon_base(kid, base), f"{hand}, {kits.name(kid)}"
         return (f"two weapons, {hand} at DEX {dex}", min(0, base + self.dex_initiative(dex)))
 
+    def armour_worn(self, creature: int) -> bool:
+        """Armour worn (DSCLOG's ARMOUR_WORN), a helm too: an armour piece (not a shield, nor
+        bracers or a robe) on the arms, legs, head or chest."""
+        from . import restrict
+        return any(item[ITEM_SLOT] in ARMOUR_SLOTS and len(typ) > 0x0F and restrict.is_armour(typ)
+                   for _, item, typ in self._worn(creature))
+
     def heavy_armour_worn(self, creature: int) -> bool:
         """Armour worn that isn't light (not leather, and of a material: DSCLOG's HEAVY_WORN),
         a helm too: an armour piece (not a shield, nor bracers or a robe) on the arms, legs, head
@@ -2309,14 +2327,16 @@ class GameData:
     def counted_ac(self, creature: int) -> Optional[int]:
         """A creature's AC as the game's AC routine (58DD3h) counts it for each attack, spells' part
         aside: the sheet's base, less each worn item's plus and its type's AC where the type counts
-        for AC (+0Fh 80h; a shield too), a fifth of a gladiator's level and the DEX adjustment. Worn:
-        in the first two item lists (putting an item on moves it there from +0Ch, whatever its slot
-        byte says). As DSCLOG's THORNS_AC counts it. None without a record and sheet."""
+        for AC (+0Fh 80h; a shield too), a fifth of a gladiator's level (in armour: DSCLOG's PROBE_WORN)
+        and the DEX adjustment. Worn: in the first item list, +08h, whatever the slot byte says
+        (the inventory screen puts all but weapons there; the routine counts nothing in the held
+        list, +0Ah, or the backpack's, +0Ch: pickpocket.list_for). As DSCLOG's THORNS_AC counts
+        it. None without a record and sheet."""
         rec, sheet = self.creature(creature), self.sheet(creature)
         if len(rec) < CREATURE_SIZE or len(sheet) < SHEET_SIZE:
             return None
         ac = struct.unpack_from("b", sheet, SHEET_BASE_AC)[0]
-        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR:
+        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR and self.armour_worn(creature):
             for n in range(3):
                 if sheet[SHEET_CLASSES + n] == GLADIATOR_CLASS:
                     level = sheet[SHEET_LEVELS + n]
@@ -2326,7 +2346,7 @@ class GameData:
                     ac -= level // 5
                     break
         ac += self.dex_ac(rec[CREATURE_ABILITIES + 1])
-        for _, item, typ in self._worn(creature, CREATURE_ITEM_LISTS[:2]):
+        for _, item, typ in self._worn(creature, CREATURE_ITEM_LISTS[:1]):
             if struct.unpack_from("<H", item, ITEM_TYPE)[0] < NO_ITEM and typ[0x0F] & 0x80:
                 ac -= struct.unpack_from("b", item, ITEM_PLUS)[0] + struct.unpack_from("b", typ, 0x12)[0]
         return ac
@@ -2390,6 +2410,31 @@ class GameData:
         at = far_pointer(self.guest, self.ds, CREATION_SHEET_PTR) + SHEET_SIZE + CREATURE_ABILITIES
         values = list(self.guest.read(at, 6))
         return values if len(values) == 6 and all(3 <= v <= 25 for v in values) else None
+
+    def natural_attack(self, creature: int, natural_set: Optional[int],
+                       effects: Sequence[int] = ()) -> Optional[Tuple[str, str]]:
+        """A party thri-kreen's natural attack in set NATURAL_SET (the melee routine's [BP-22h]): its
+        name (THRI_KREEN_ATTACKS) and dice ("1d4+1"), or None. The sheet's dice, and for the first
+        set (the claws) as the routine giving them has them (7B66Ch) with the creature's EFFECTS:
+        Erdlu Claw's 1d6+1 where that's better on average (DSCLOG's NS_CLAW), then Body Weaponry's
+        2d4, or else Animal Affinity's at least 1d10, the bonus kept."""
+        if not 0 <= creature < PARTY_SIZE or natural_set not in THRI_KREEN_ATTACKS:
+            return None
+        sheet = self.sheet(creature)
+        if len(sheet) < SHEET_SIZE or sheet[SHEET_RACE] != THRI_KREEN:
+            return None
+        count, sides = sheet[SHEET_NATURAL_COUNT + natural_set], sheet[SHEET_NATURAL_SIDES + natural_set]
+        bonus = struct.unpack_from("b", sheet, SHEET_NATURAL_BONUS + natural_set)[0]
+        if not count or not sides:
+            return None
+        if natural_set == 0:
+            if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in effects and count * (sides + 1) + 2 * bonus < 9:
+                count, sides, bonus = 1, 6, 1
+            if BODY_WEAPONRY_EFFECT in effects:
+                count, sides = 2, 4
+            elif AFFINITY_EFFECT in effects:
+                count, sides = max(count, 1), max(sides, 10)
+        return THRI_KREEN_ATTACKS[natural_set], f"{count}d{sides}" + (f"{bonus:+d}" if bonus else "")
 
     def race_adjustment(self, race: int, ability: int) -> int:
         if not 0 < race < 16 or not 0 <= ability < 6:

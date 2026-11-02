@@ -11,13 +11,14 @@ README.*
 - [Checks, thief skills and searches](#checks-thief-skills-and-searches)
 - [Hit points, kills and levels](#hit-points-kills-and-levels)
 - [Character creation](#character-creation)
+- [Ages](#ages)
 - [Everything else](#everything-else)
 
 ## Fights
 
 | Line | Meaning |
 |---|---|
-| `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round of a fight, numbered from the fight's start, and the order everyone acts in (highest first). The order also stays in view above the log for the whole round, however far the log has scrolled: `Round 2. Now: Cilla (30). Still to act: Gerakis 26, Slig 26. Done: K'ratchek 32, Cermak 31. Down: ...`, and the [combat log in the game](README.md#the-combat-log-in-the-game) begins with who acts and who is next. The lines under it (shown with **Show details**) give each score's make-up: `    Gerakis 26 = 20 + 6 (0-9 roll), tie broken by 38 (0-199 roll)` (see [Initiative](HOW-THE-GAME-WORKS.md#initiative)). If the log was started in the middle of a round, the list has only the rolls it saw. |
+| `Round 2: K'ratchek 32, Cermak 31, Cilla 30, Gerakis 26, Slig 26` | A new round of a fight, numbered from the fight's start, and the order everyone acts in (highest first). The order also stays in view above the log for the whole round, however far the log has scrolled: `Round 2. Now: Cilla (30). Still to act: Gerakis 26, Slig 26. Done: K'ratchek 32, Cermak 31. Down: ...`, and the [combat log in the game](FEATURES.md#the-combat-log-in-the-game) begins with who acts and who is next. The lines under it (shown with **Show details**) give each score's make-up: `    Gerakis 26 = 20 + 6 (0-9 roll), tie broken by 38 (0-199 roll)` (see [Initiative](HOW-THE-GAME-WORKS.md#initiative)). If the log was started in the middle of a round, the list has only the rolls it saw. |
 | `Gerakis's turn` | Whose turn it is now, each time the turn passes in a fight. |
 | `X attacks Y with Long Sword +1 (1d8+1): d20 = 14, needs 12+ (45%), hits AC 1, target AC 3 -> HIT` | An attack roll, the weapon and its damage dice: the d20, the roll this attacker needed against this target (THAC0 − target AC) and the chance of it, the lowest AC the roll hits, and the target's AC as the game used it. More below the table. |
 | `    THAC0 16, +1 Blessed, +6 STR, +1 weapon = 8` | Where the attacker's THAC0 for this attack comes from: STR (melee) or DEX (missiles), spells (Bless, Prayer, Slow, Graft Weapon, the target's Blur), attacking from behind, the weapon's plus, the penalty for non-metal weapons (wooden −3, bone −1, stone and obsidian −2), the two-weapon adjustment (see [Two weapons](FEATURES.md#two-weapons)), and the difficulty setting for monsters. |
@@ -25,12 +26,19 @@ README.*
 | `  X hits Y for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)` / `  X hits Y for 51: (1d8 = [5] +12 STR 24) x3 backstab` | A backstab (see [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)) multiplies the weapon's dice, the rest added once; with that option off, the whole damage, STR bonus included. |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` / `Halton fights wild: d20 = 9, needs 11 or less (CON 15 -4) -> 1 more attack a round and +3 damage for the fight` | A Battle Dancer's dance or a Wild Fury's Wild Fighting as a fight starts (see [Multiclass kits](KITS.md#multiclass-kits)). |
 | `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)). |
+| `Look: Mountain Stalker: HP 38/60, AC 4, THAC0 11, chaotic evil.` | A monster looked at in a fight: what the [Look box](FEATURES.md#what-hurts-a-monster-the-look-box) shows of it, and on the lines below its defences and what its hits do, as the game's window shows them on closing the box. |
 
 **Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20 hits`
 replace `needs 12+` when the roll is out of the ordinary range. `X attacks Y
 from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and
 backstabs (see [Attacks from behind and
-backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). The
+backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). A
+thri-kreen of the party with nothing in hand attacks `with a claw (1d4)`, four
+times a round, then `with its bite (1d4+1)`, whose damage line shows its
+`+1 bite`; with weapons in hand, it attacks with them and then still bites.
+The claw's dice are the ones it has now (Erdlu Claw's `1d6+1`, Animal
+Affinity's `1d10`, Body Weaponry's `2d4`). Anyone else unarmed, and a
+monster's own attacks, have no `with`. The
 target's AC includes armour, DEX and spells. A natural 20 always hits and a
 natural 1 always misses, but a 20 does no extra damage: the game has no critical
 hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
@@ -45,6 +53,7 @@ hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 | `    Stoneskin has 23 charges (caster level 20: 1 for each caster level = 20 + 3 from the dice; dice 1d4 = [3])` | Effects that last a number of uses rather than a time (Stoneskin's blows, Mirror Image's images, Invisibility's one attack, Poison's rounds): the game stores them as charges, worked out like a duration. |
 | `    Acid on Slig: 2d4 = [3 + 1] = 4 acid damage` / `    Sunstroke's heat on Scar: 1d4 = 3 fire damage` / `    Improved AC on Slig: one charge used, 7 left` | Acid Arrow's damage each round while the acid lasts; Sunstroke's heat each round while it holds; and an effect with charges using one up, with how many are left (Armor or Ironskin taking a hit, Mirror Image losing an image...). |
 | `Harm: all the target's hit points but 1d4 (...)` / `  Wall of Thorns' wall instead: 8 + AC 3 = 11` / `    Slig is swept off its feet: loses its next turn` | The [6th-level priest spells](FEATURES.md#6th-level-priest-spells)' own lines: Harm leaving 1d4 hit points (the dice the game rolls go unused), Wall of Thorns' damage by the creature's AC in place of the dice rolled, and a creature that fails its save against Whirlwind losing its next turn. |
+| `Gerakis's system shock (Haste's aging): d100 = 40, needs 99 or less (CON 22) -> survives` | With [ages](FEATURES.md#ages-and-magical-aging) on, Haste's system shock roll by CON for each creature it speeds (a party member who survives is a year older), and Restore Youth's for each it makes younger; a failed roll kills. |
 | `Strength: 1d6 = 5 -> Cilla's STR +5 while it lasts (at most 24)` | The amount Strength (or Adrenalin Control) adds. |
 | `Y magic resistance 30% vs Fireball: d100 = 71 -> not resisted` | The magic resistance roll (only shown for targets that have some), counting Mind Bar and Lower Resistance. |
 | `    Dispel Magic on Slig's Blessed: d100 = 60, needs 85 or less (50 + 5 x 7 - 5 x 0 (its caster's level)) -> dispelled` | Dispel Magic tries each effect on its target separately: 50 + 5 for each of the dispeller's levels, less 5 for each of the level the effect was cast at. It can't touch some (Biofeedback, Diseased, Feeblemind, Poisoned, Graft Weapon, No spell use, Stuck, Mind Bar and a few more). |
@@ -80,6 +89,7 @@ creatures save again as they stay in them; those lines have no "from".
 | `Daaki shoots at the archery target (15 squares from the target, 8 from the Bowyer): 0-20 = 2, needs under 14 (DEX 21 - 15 / 2), the centre 4 or less -> the centre: the Bowyer's reward, 6 Arrows +2` | A shot at the Bowyer's archery target in Teaquetzl: the roll, what it needed, how far the archer is from the target and from the Bowyer, and why a centre shot did or didn't earn his arrows (more than 13 squares from the target, the Bowyer within 25, once a game). |
 | `Cilla tries to open locks: d100 = 35, needs 40 or less -> success` / `    open locks 40 = 18 + 16 thief level 4 + 10 elf...` | A thief skill roll (see [How the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), and what its chance is made of. |
 | `Zulak uses Graft Weapon: power check d20 = 14, needs 11 or less -> it fails` / `    power score 11 = 16 CON - 5 Graft Weapon` | A psionic power's check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)): a d20 at or under the power's score, the ability it uses plus the power's adjustment. A failure is the game's `psionic power check fails`, and costs half the PSP. A line `... within X's Synaptic Static: ...` comes first when someone else keeps Synaptic Static up. |
+| `    K'ratchek spends 16 PSP (52 -> 36)` / `    Cyrus regains 8 PSP (20 -> 28)` | PSP used for a power (or to keep one up), and PSP coming back. |
 | `Gerakis's psionic defence: d6 = 5 and 6, both need over 4 (the attacker's power check d20) -> resisted` | A psionic attack mode (Ego Whip, Id Insinuation, Psychic Crush, Psionic Blast) resisted or not: its target rolls 1 to its defence twice, each needing more than the attacker's power check (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)). |
 | `Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Tezral moves silently: ...` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](FEATURES.md#hiding-in-shadows-to-backstab) on). |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have (the thri-kreen bite, for one). |
@@ -95,6 +105,7 @@ creatures save again as they stay in them; those lines have no "from".
 | `  Slig now 8/18 HP (-10)` / `  Gerakis now 51/54 HP (+1)` | Any combatant's hit points going down or up, with what's left out of their most. The game never shows a monster's HP; this does. The line comes just after the damage that caused it (sometimes after the next roll, when the game is quick). |
 | `  Gerrard regenerates 1 HP (CON 22), now 16/35 HP` | A hit point back by itself, to a party member with CON 20 or more: every 5 minutes of game time in the game, or at AD&D's rate by CON with [CON as in AD&D](FEATURES.md#con-as-in-add) (an hour at 20 to 10 minutes at 25). |
 | `  Rampager now 69/72 HP (-3: 3 of the 7 rolled, non-magical weapons do half)` / `  Mastyrial takes none of the 6 damage: crushing weapons can't hurt it` | A weapon hit that took less than its roll, or none at all (no HP lost three seconds on, or by the next round), with the reason when the monster's own defences give one (what weapons hurt it); otherwise "a protection or resistance took it" (Stoneskin, say). |
+| `Cilla shakes off Psionic Blast's imagined wounds as the fight ends: +23 HP, now 30/38` | A party member's hit points taken by Psionic Blast given back once the fight is over (its wounds are imagined: see [the game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)); one Out Cold or dead by then gets none back. |
 | `Slig is killed` | A creature dying. What it's worth comes on the XP line below, only if the party gains it (the opening fight in the arena gives none, whoever dies). |
 | `XP: Gerakis +67, K'ratchek +22, ... (for Slig 270)` | Experience the party got, and for which kills, with each one's XP from its character sheet. The game gives it right after the kill: an equal share to each character, split again between a multiclass character's classes (the sheet counts XP per class, so a three-class thri-kreen shows a third of the share). |
 | `Cilla is now a 3rd level Ranger` / `    max HP 15 -> 21 (+6)` | A level gained, and the new maximum HP. |
@@ -110,6 +121,15 @@ creatures save again as they stay in them; those lines have no "from".
 | `Character creation, hit points 15: Fighter d10 per level: 7 + 9; Thief d6 per level: 5 + 1 = 22, / 2 classes = 11, +4 CON 16 = 15` | The new character's hit points: a die for every level of every class, divided by the number of classes, plus CON's bonus (see [Character creation](HOW-THE-GAME-WORKS.md#character-creation)). With [the better of two](FEATURES.md#hit-dice-the-better-of-two) each die shows both rolls (`10 (the better of 2 and 10)`); with [multiclass hit points](FEATURES.md#multiclass-hit-points) CON's bonus goes on each die before the total is shared (`+2 CON 16 on each of 4 dice = 30, / 2 classes = 15`). |
 | `Character creation: a name picked at random, 1d33 = 6` | The game picks a new name from its lists when the sex or race changes. |
 
+## Ages
+
+With [ages](FEATURES.md#ages-and-magical-aging) on:
+
+| Line | Meaning |
+|---|---|
+| `Cyrus the Great is 21 (a human: 15 + 1d8 = [6]); middle-aged at 40.` | A character's starting age: the race's base and dice (Table 7), on the creation screen with each roll of the die, or the first time the Loader sees a character with none (the game's own party, an older save). |
+| `A year has passed: Gerakis is 60, middle-aged: STR -1, CON -1, INT +1, WIS +1.` | Each 365 days of game time, every party member a year older, with the score changes of an age category reached (and death at the most the race lives). |
+
 ## Everything else
 
 | Line | Meaning |
@@ -118,5 +138,7 @@ creatures save again as they stay in them; those lines have no "from".
 | `Dinos cooks the vulture and the party eats with him: ... restored as after a full rest (HP, PSP and spell slots); the game gives each 100 XP` | Dinos asked about the cooked vulture (see [The cooked vulture](FEATURES.md#the-cooked-vulture)); the XP itself is on the `XP:` line after it. |
 | `Dreamwalker reads the scroll of Magic Missile: d100 = 37, needs 60 or less (INT 14) -> learnt` / `Xan reads the scroll of Shield: read languages d100 = 70, needs 35 or less -> can't read it (the scroll is used up)` / `Xan can't learn Armor from the scroll: not one of a Shinobi's spells (the scroll is kept)` | A try at a scroll's spell (see [Preservers' INT](FEATURES.md#preservers-int)): a preserver's d100 against INT's chance; a Shinobi's d100 against its read languages first, then INT's. A spell already known gives no line. |
 | `Daaki makes 20 burning arrows (5 a preserver level, 4): a 1st-level slot used; ...` | A Spellarcher's arrow button (see [Multiclass kits](KITS.md#multiclass-kits)): the arrows go in its empty quiver, and stay there; with the same spell's arrows there, the line ends its first part with how many it holds now (`, 27 in the quiver now`). |
+| `Gerakis's Leg Armor is now counted as worn (it had been counted as held, and gave no AC)` | Once, as a save is loaded: armour (or a cloak) an earlier version of the Loader gave to a character's held items, where the game counted it for no AC, moved to what the character wears. |
+| `AC of Gerakis against Wild Mul: 8 (base 10, armour -1, DEX -1, other +0)` | Only with "Show unlabelled rolls": each AC the game works out for an attack, and what it is made of (the sheet's base, the armour and shield worn, DEX, and spells, rings and the rest). |
 | `Dice: 1d8 = [3] = 3` | Dice the log couldn't tie to anything (for example a spell with no saving throw). |
 | `(The Loader stopped one of its own writes over the game's memory: ...)` | A safety net: the Loader never writes over the start of memory (the interrupt vectors, the BIOS's and DOS's data) or the first bytes of the game's data, which its C runtime checks ("Null pointer assignment"). Such a write could only come from a pointer the game has left empty for a moment; the line says where in the Loader it came from. Please report it. |

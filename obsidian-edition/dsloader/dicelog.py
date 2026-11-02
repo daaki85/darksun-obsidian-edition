@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -520,6 +520,7 @@ class DiceLog:
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
+        self._blast = psiblast.BlastWatch()  # (Psionic Blast's imagined wounds, given back as a fight ends)
         self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, made and faded)
         self._rest_due = False  # (a rest seen: the spell arrows fade in the next pass)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
@@ -542,6 +543,7 @@ class DiceLog:
         self._initiative_at = 0.0
         self._names: Dict[int, str] = {}  # combatant -> name, for effects that end after a fight
         self._last_attacker = ""
+        self._last_natural: Optional[Tuple[int, str]] = None  # (attacker, "claw"): a thri-kreen's last
         self._break_first: Optional[int] = None  # the 0-7 roll of a break check in progress
         self._ability_tries: List[int] = []  # character creation: this ability's 4d4 totals so far
         self._ability_of: Optional[int] = None  # ... and which ability they are for
@@ -1180,6 +1182,7 @@ class DiceLog:
         changes = self.hp_changes(now) + self.psp_changes() + self.ability_changes()
         if not self._party_check(now):  # not while a game is loading: its records are half-filled
             out += changes
+            out += self._blast.tick(self.game, self.tsr_hdr, now)
         for rec in self.text.poll():
             if rec.kind == KIND_MESSAGE:
                 if rec.text.strip():
@@ -2253,7 +2256,14 @@ class DiceLog:
             self.last_ac[target_index] = ac
             self._ac_whose[target_index] = g.creature_name(target_index)
         weapon = g.weapon(item, item_type)
-        with_what = f" with {g.weapon_name(weapon)} ({weapon.dice()})" if weapon else ""
+        # a party thri-kreen with nothing in hand: a claw or its bite, by the set of natural attacks
+        # the melee routine is on (its [BP-22h])
+        natural = g.natural_attack(attacker, e.parent_local(-0x22),
+                                   [x.id for x in g.effects() if x.owner == attacker_combatant]) \
+            if not weapon and item == -1 and mode is not None and mode <= 1 else None
+        self._last_natural = (attacker, natural[0]) if natural else None
+        with_what = f" with {g.weapon_name(weapon)} ({weapon.dice()})" if weapon else \
+            f" with {'its' if natural[0] == 'bite' else 'a'} {natural[0]} ({natural[1]})" if natural else ""
         target = g.combatant_name(target_combatant)
         # the attack's own arguments: [BP+1Eh] a backstab, [BP+20h] from behind
         how = " BACKSTAB" if e.arg(0x1E) and e.arg(0x20) else " from behind" if e.arg(0x20) else ""
@@ -2332,7 +2342,8 @@ class DiceLog:
                 penalty = MATERIAL_TO_HIT[weapon.material]
                 parts.append((MATERIALS[weapon.material].lower(), penalty))
                 rest -= penalty
-        elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT):
+        elif g.rules & game.RULE_NEW_SPELLS and on(attacker_combatant, game.CLAW_EFFECT) \
+                and not e.parent_local(-0x22):  # (the first set's alone: not a thri-kreen's bite)
             parts.append(("Erdlu Claw", 1))  # (unarmed: DSCLOG's NS_FIST, in [BP-8])
             rest -= 1
         # With two weapons ready the game adjusts every melee attack by the DEX table it
@@ -2494,7 +2505,9 @@ class DiceLog:
         material = MATERIAL_DAMAGE.get(weapon.material, 0) if weapon and weapon.sides and not weapon.plus \
             and not weapon.nonmagical_flag else 0
         own = bonus - extra - kit - material
-        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(own)} weapon" if own else "") \
+        natural = self._last_natural[1] if not weapon and self._last_natural \
+            and self._last_natural[0] == attacker else "weapon"  # (a thri-kreen's bite's +1)
+        steps = f"{count}d{sides} = {faces_text}" + (f" {signed(own)} {natural}" if own else "") \
             + (f" {signed(material)} {MATERIALS[weapon.material].lower()}" if material else "") \
             + (f" {signed(extra)} {specialize.SKILL_NAMES[skill]}" if extra else "") \
             + (f" {signed(kit)} {kit_name}" if kit else "")
@@ -3385,7 +3398,10 @@ class DiceLog:
                 dex = self.game.dex_ac(rec[CREATURE_ABILITIES + 1]) if not rear else 0
                 self.ac_detail[index] = AcDetail(base, armour - base, dex, ac - armour - dex, ac)
         if show_all:
-            return [f"AC of {self.game.combatant_name(target)} against {self.game.combatant_name(e.arg(8))}: {ac}"]
+            d = self.ac_detail.get(index) if index is not None else None
+            parts = (f" (base {d.base}, armour {d.armour:+d}, DEX {d.dex:+d}, other {d.other:+d})"
+                     if d is not None and d.total == ac else "")
+            return [f"AC of {self.game.combatant_name(target)} against {self.game.combatant_name(e.arg(8))}: {ac}{parts}"]
         return []
 
     # ability checks --------------------------------------------------------------------

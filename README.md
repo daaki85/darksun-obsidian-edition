@@ -15,7 +15,8 @@ with your options and keeps the full dice log while you play.
   [`player-guide.html`](obsidian-edition/player-guide.html))
 - [The full documentation](obsidian-edition/README.md): installing, running, the
   Loader's window and the dice log
-- [Features and rules](obsidian-edition/FEATURES.md): every rule change and
+- [Features and rules](obsidian-edition/FEATURES.md): what the game shows
+  (the combat log, the Look box, THAC0 and saves), and every rule change and
   addition in detail, with its switch
 - [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
 - [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
@@ -66,15 +67,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.13.3** is out ([release notes](release-notes/v2.13.3.md)):
-the creation screen shows a new character's melee and missile THAC0, the
-Wasteland Seer is a thri-kreen druid/fighter/psionicist whose psionics follow the
-sky, the Shinobi casts to 13th level with three 4th-level spells, a Spellarcher
-adds to the same spell's arrows, and EDIT no longer takes a member's kit away.
-2.13.2 rolled a new character's age on Table 7's dice, and 2.13.1
-made characters age with the game's clock and grey on the map. 2.13.0 gave characters ages,
-Haste's cost and Restore Youth; 2.12.4 let the Loader run the game as
-[Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled).
+**Obsidian Edition 2.13.4** is out ([release notes](release-notes/v2.13.4.md)):
+fuller starting gear's armour counts for AC, Psionic Blast's imagined wounds heal
+after the fight, ability items work only worn, the gladiator's armour bonus needs
+armour, and more of the game's script bugs are fixed (the slave pens' sewer
+grate, a ranger's tracking, region 9's messenger).
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one
@@ -109,7 +106,8 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues).
 - **Research:** the notes of [yuan-ti](https://github.com/CalvinRodo/yuan-ti),
   CalvinRodo's new engine for the game, which pointed to several of the
   original game's bugs fixed here (facts only, each checked in the game's own
-  code; none of its code is used), and through it the OpenDS project's fixes to
+  code; none of its code is used), and the
+  [OpenDS](https://github.com/VirInvictus/opends) project's notes and fixes to
   the game's scripts.
 - **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities* and
   *The Complete Ranger's Handbook*, where the mod's rule changes and the
@@ -119,4 +117,4 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues).
   [Python](https://www.python.org/) and
   [Unicorn](https://www.unicorn-engine.org/) (the CPU emulator the helper's
   tests run in); the web pages' fonts, Marcellus SC, Alegreya Sans and IBM Plex
-  Mono, from Google Fonts.
+  Mono (SIL Open Font License), carried inside the pages.

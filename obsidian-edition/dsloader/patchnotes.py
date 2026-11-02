@@ -13,6 +13,7 @@ import re
 from typing import List, Tuple
 
 from .guidepage import _cells, inline, slug
+from . import pagefonts
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(HERE)
@@ -140,12 +141,9 @@ def build() -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(name)} {html.escape(kind)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <!-- Made from PATCH-NOTES.md by obsidian-edition/dsloader/patchnotes.py: edit the notes, then run python -m dsloader.patchnotes -->
 <style>
-{style()}</style>
+{pagefonts.faces()}{style()}</style>
 </head>
 <body>
 <header class="banner">
