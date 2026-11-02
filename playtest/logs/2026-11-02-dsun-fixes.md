@@ -50,3 +50,14 @@
 - Armour put back; nothing saved.
 - Found: with armour on, the game's AC is 1 worse than the Loader's `counted_ac` (7 against 6;
   9 and 9 with none): a follow-up for the Loader's count (the Look box, Wall of Thorns).
+
+## The Loader's AC against the game's (2026-11-02, open)
+- Gerakis (no kit, no spells, DEX 15: -1), arm, leg and chest armour (types 7, 8, 6, each AC 1,
+  no plus), each state read after two portrait switches: none 9; chest alone 8; any two 8; all
+  three 7. The Loader's `counted_ac` (and DSCLOG's `THORNS_AC`) add each piece: 9, 8, 7, 6. So
+  the game's display gives two pieces 1 between them and three 2, as if arm and leg armour were
+  worth half each, rounded down; the game's AC loop (58DD3h) reads as adding each whole.
+- Ruled out: DEX (none agrees), kits (`kit_ac`: none for him), spells (5B8:F2h's: none on him),
+  PROBE_RING_AC (no helm or bracers type among them), the gladiator test (level 3: no bonus).
+- Next: the AC an attack on him uses (PROBE_AC's record, the dice log's "target AC"), to tell
+  whether the display or the Loader is off; then trace 58DD3h's loop with the game's list.
