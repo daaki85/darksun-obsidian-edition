@@ -6,7 +6,7 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-## Next pull request (not opened yet)
+## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 
 Obsidian Edition 2.13.4 ([release notes](release-notes/v2.13.4.md)).
 
