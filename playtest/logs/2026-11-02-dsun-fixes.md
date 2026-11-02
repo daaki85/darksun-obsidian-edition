@@ -86,3 +86,11 @@
   on Gerakis at target AC 6 (8 before).
 - Lost on the way: the whole party fell in the arena (turns passed, levels raised only for two),
   "YOUR PARTY HAS BEEN DEFEATED"; reloaded a save.
+
+## Psionic Blast build in play (2026-11-02)
+- The build with `psionic_blast` (PROBE_WORN at 79707h) and psiblast.py: a fresh game, the arena's
+  first bout started at once, every wave fought (arenawaves.sh), no Loader error, psionic attacks
+  on the party (Psychic Crush) as before. No Psionic Blast came up (no one in the party knows it,
+  and the arena's foes used other powers), so the giving back is checked by the tests only: see it
+  in play when a foe blasts a party member (the dice log: "... shakes off Psionic Blast's imagined
+  wounds as the fight ends").
