@@ -360,4 +360,4 @@ class to another, so only these can meet):
 | Ravager | Grove Warden | each has an AC of its own that betters with level: one on top of the other would stack |
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | each other | each gives a warrior's THAC0: two would be one wasted |
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#kits).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).

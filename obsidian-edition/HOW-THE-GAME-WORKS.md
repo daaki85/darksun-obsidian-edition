@@ -648,7 +648,7 @@ The script also has outcomes for the rolls that find nothing (a scorpion's bite
 in junk, a skull in hay, coins in a wardrobe...), but its "nothing" check comes
 first, so they never happen.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#searching-junk-hay-and-wardrobes).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#searching-junk-hay-and-wardrobes).
 
 ## The Bowyer's archery target
 
@@ -672,7 +672,7 @@ So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
 less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
 the dice log with the distances and what it needed.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#the-bowyers-archery-target).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-bowyers-archery-target).
 
 ## The arena's count of fights
 

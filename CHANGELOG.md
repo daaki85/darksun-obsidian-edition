@@ -58,6 +58,9 @@ notes](PATCH-NOTES.md).
   192 characters, the game's own longest about 160) spilled over the same way (seen by showing
   Shocking Arrows' text in Erdlu Claw's box): now "5 arrows a level ...; each casts it on what it
   hits. Gone at a rest. Not in a fight.", seven lines.
+- The "How it works" links in FEATURES, KITS, README and How the game works named DEVELOPMENT.md
+  but pointed into DEVELOPMENT-RULES, -SCREENS or -CONTENT since the split (66 links): each now
+  names the page it opens.
 
 **Fixed: Psionic Blast's imagined wounds kept for good (issue #129's last)**
 - The game's Psionic Blast takes a target that fails its save down to a fifth of its most hit

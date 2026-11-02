@@ -165,7 +165,7 @@ there; **-** makes it smaller.
 
 ![The combat log expanded, with its filters](docs/combat-log-expanded.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
 
 ### Names over figures
 
@@ -187,7 +187,7 @@ long, and a "Miss" or a spell's name never pushes one out.
 
 ![An arena fight: "Armor: 8 left" in light blue over a Slig the party's gladiator has just hit, and "Miss" beside it](docs/floating-charges.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#names-over-figures).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#names-over-figures).
 
 ### THAC0, saves and thief skills
 
@@ -294,7 +294,7 @@ there.
 
 ![View Character's experience line for a fighter/thief, (110000 T), and a fighter/preserver/thief, (90000 Pr)](docs/xp-next.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#thac0-saves-and-thief-skills).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#thac0-saves-and-thief-skills).
 
 ### The creation screen
 
@@ -368,7 +368,7 @@ The arena's first monsters have no magic resistance or special defences, so
 their box shows just the numbers and the alignment.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#what-hurts-a-monster-the-look-box).
+[DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#what-hurts-a-monster-the-look-box).
 
 ### Charges in item boxes
 
@@ -380,7 +380,7 @@ boots' or belt's box shows what it adds to thief skills (with
 
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
 
 ### The Effects screen
 
@@ -417,7 +417,7 @@ in its lower panel and under the pointer:
 
 ![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
 
 ### What a scroll says
 
@@ -428,7 +428,7 @@ READ THE SCROLL and THAT IS NOT A SHINOBI SPELL. The game wrote these there too,
 but they never reached the screen. Like the game's own messages on that line, it
 stays until the pointer is on something else. Always on.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#preservers-int).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-int).
 
 ### No manual check
 
@@ -438,7 +438,7 @@ first time, the game has a dragon appear and ask for a word from the manual
 word?"), and three wrong answers kill the party. Started from the Loader, the
 dragon doesn't come: the game goes on as if it had been answered. Always on.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#no-manual-check).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
 
 ## Rule changes
 
@@ -519,7 +519,7 @@ fighter/druid's leather armour, given for its fighter class). A character left
 without a weapon this way (a thief/psionicist loses its long sword) gets one
 it can use with [Fuller starting gear](#fuller-starting-gear).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#class-restrictions).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#class-restrictions).
 
 #### Multiclass hit points
 
@@ -545,7 +545,7 @@ the bonus on each die:
 Gerrard's 4th Fighter level: hit points d10 = 8, +3 CON 17, into the total shared by 2 classes
 ```
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#multiclass-hit-points).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#multiclass-hit-points).
 
 #### Hit dice: the better of two
 
@@ -563,7 +563,7 @@ Cilla's 3rd Ranger level: hit points d10 = 2 and 7, the better 7
 Character creation, hit points 18: Fighter d10 per level: 10 (the better of 2 and 10) + 5 (the better of 5 and 1); ...
 ```
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#hit-dice-the-better-of-two).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#hit-dice-the-better-of-two).
 
 #### Scores and hit points as rolled
 
@@ -589,7 +589,7 @@ rolled** ticked:
 The dice log gives each roll's total with its scores:
 `Character creation: the six scores add up to 101`.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled).
 
 #### AD&D's class tables
 
@@ -612,7 +612,7 @@ full):
 Hit dice were AD&D's already, past 9th level too with
 [Level cap by XP](#level-cap-by-xp). Kits still change these tables.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#adds-class-tables).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#adds-class-tables).
 
 #### CON as in AD&D
 
@@ -638,7 +638,7 @@ paralysis/poison/death save. The game adds both their racial bonus (CON × 2 /
 gets (+1 to +4); in AD&D the racial bonus takes its place. A dwarf with CON 19
 saves at +5, not +6.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#con-as-in-add).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#con-as-in-add).
 
 #### Ages and magical aging
 
@@ -705,7 +705,7 @@ in the figure's own pictures, walking and fighting (with
 hair is left as it is. Dwarves and muls are hairless on Athas, and thri-kreen
 have no hair, so they keep their looks.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#ages).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#ages).
 
 #### Level cap by XP
 
@@ -773,7 +773,7 @@ at 9 without the rule. For a character of more than one class, a class
 already at its cap isn't named in the brackets, since it has no next level.
 Untick it and nobody goes past the level they have.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 ### Weapons and armour
 
@@ -810,7 +810,7 @@ in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
 The off hand's DAM lines (the inventory screen and View Character) show its
 one attack.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#two-weapons).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#two-weapons).
 
 #### Half-giants' two-handed weapons
 
@@ -823,7 +823,7 @@ holds two two-handed weapons. With two weapons ready, the two-weapon penalties
 apply as for anyone. The inventory screen still writes "2 handed" in the
 weapon's line: that is its weapon type, not a limit.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#half-giants-two-handed-weapons).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed-weapons).
 
 #### Rings and cloaks of protection
 
@@ -848,7 +848,7 @@ Armour here is what is worn on the arms, legs, head or chest; something only
 carried in a backpack doesn't count. Untick it and every ring and cloak worn
 counts in full, whatever else is worn.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#rings-and-cloaks-of-protection).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#rings-and-cloaks-of-protection).
 
 #### Helms
 
@@ -857,7 +857,7 @@ ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
 Contemplation and the Helm of Might. It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#helms).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#helms).
 
 #### Items saving against acid
 
@@ -921,7 +921,7 @@ cloak, then a bone helm or leather chest armour, then bone scale armour) and
 destroys it on a d20 under 15 less the item's plus, so 70% for a plain item. The
 dice log shows that check and its outcome.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#items-saving-against-acid).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-acid).
 
 ### Magic
 
@@ -947,7 +947,7 @@ off 5 and 9 instead, ticked or not. A 9th-level ranger's Protection from Evil
 (3 rounds a level) lasts 6 rounds with the rule, 27 without. The dice log's
 duration and damage lines show the level wherever they roll dice.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#rangers-casting-level).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#rangers-casting-level).
 
 #### Preservers' INT
 
@@ -973,7 +973,7 @@ The dice log shows each try: `Dreamwalker reads the scroll of Magic Missile:
 d100 = 37, needs 60 or less (INT 14) -> learnt`. Priest spells and psionic
 powers are as the game has them.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#preservers-int).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-int).
 
 #### Spells saved against with the spell save
 
@@ -985,7 +985,7 @@ marked for petrification/polymorph. The dice log and the Spells tab name the
 save used.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-RULES.md#spells-saved-against-with-the-spell-save).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-saved-against-with-the-spell-save).
 
 #### Fire, cold and electricity: DEX instead of a doubled d20
 
@@ -999,7 +999,7 @@ gave 70%) and much less so for quick ones (DEX 21: 60%). The log names it:
 `+5 DEX 21 dodging`.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-RULES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).
 
 #### Enlarge multiplies the weapon's dice only
 
@@ -1183,7 +1183,7 @@ ranger: its weapon specs, and the weapons it chose, whatever the new class (or
 a kit) allows, count again once the new class's level passes the old. Till
 then they are asleep, as the class is.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#weapon-specialization).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization).
 
 ### Kits
 
@@ -1206,7 +1206,7 @@ starting gear and rules, are on a page of their own, [Kits](KITS.md):
 The game's own party gets features of its own
 ([The game's own party](#the-games-own-party)).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#kits).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).
 
 ### STORE and RECALL on the creation screen
 
@@ -1226,7 +1226,7 @@ place of the old. Unticked, the screen is as the game has it, from the next
 time the game is started.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen).
 
 ### Fuller starting gear
 
@@ -1261,7 +1261,7 @@ the kind, so each item comes once. The [game's own party](#the-games-own-party)
 gets it too, in the first moments of a new game. Unticked, a new character
 starts with the game's gear, changed only by the rules above.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#fuller-starting-gear).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#fuller-starting-gear).
 
 ### Preservers' first spells
 
@@ -1286,7 +1286,7 @@ Cloud, Mirror Image), less any already picked. The character is already saved
 when the window opens, so EXIT can't take you back to the creation screen.
 
 Always on (it isn't a switch of its own). How it works:
-[DEVELOPMENT.md](DEVELOPMENT-RULES.md#kits) (its rows for a new preserver's spells).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits) (its rows for a new preserver's spells).
 
 ### The game's own party
 
@@ -1322,7 +1322,7 @@ on the creation screen [picks its own](#preservers-first-spells).
 
 ![Gerakis's inventory in the game: a Gythka in his left hand and a Long Sword in his right, 1.5 attacks a round with the sword and one with the gythka in the off hand](docs/default-party-gerakis.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#the-games-own-party).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-games-own-party).
 
 ## Expanded features
 
@@ -1357,7 +1357,7 @@ most the CHA discount takes off is 40%, so nothing can be bought and sold back
 at a profit, and at CHA 25 a round trip comes out even. The game pays all of
 it, which with the discount would let anything be sold at a profit.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#the-leaders-cha-at-shops).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-leaders-cha-at-shops).
 
 ### Buying back magical items
 
@@ -1369,7 +1369,7 @@ can be bought back. Anything else sold is gone, as in the game. With the CHA
 rule's selling at 60%, buying an item back costs more than it was sold for, or
 the same at CHA 25.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#buying-back-magical-items).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#buying-back-magical-items).
 
 ### Improved thieving
 
@@ -1408,7 +1408,7 @@ silently 62, hide in shadows 52, hear noise 20, climb walls 87. A ranger's
 move silently and hide in shadows take the same race and DEX adjustments.
 Untick it for the game's numbers.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
 
 #### Hiding in shadows to backstab
 
@@ -1507,7 +1507,7 @@ Plain cloaks, boots and belts cost 24 (the game's Leather Cloak is 20), anywhere
 in the region, shops included; magic ones (with a plus, or dearer than 100)
 keep their prices.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab).
 
 #### Picking pockets
 
@@ -1574,7 +1574,7 @@ pick up, and has him say the busy line once and walk on (see
 [The game's bugs, fixed](#the-games-bugs-fixed) for the other way his rounds
 stalled).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-RULES.md#picking-pockets).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#picking-pockets).
 
 ## New content
 
@@ -1664,7 +1664,7 @@ and the game is as it was.
 ![Fogbolt's dark grey bolt striking a Daggoran, cast by Daaki (right)](docs/fogbolt.png)
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### 6th-level priest spells
 
@@ -1761,7 +1761,7 @@ Wake of the Ravager hasn't, has the mod's own: a fountain on light blue water,
 and is cast with Cure Disease's sound.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
 ### New items
 
@@ -1850,7 +1850,7 @@ game's own, one story for each kind: the four pairs of bracers share one, and
 so do both rings of protection. The Warden's Plate's pieces each tell a part
 of Haldren's, the last of the Wardens.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#new-items).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
 
 #### Bracers of defense
 
@@ -1866,7 +1866,7 @@ them, a thief wears them, and a ring or cloak of protection still counts. In the
 game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
 priced 5,000 a point of AC.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#bracers-of-defense).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#bracers-of-defense).
 
 #### Robes
 
@@ -1885,7 +1885,7 @@ it.
 The dice log and the Loader name a robe among a save's modifiers, and the
 Spells tab counts the Veiled Robe's slots. Alagorn tells both their stories.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#robes).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#robes).
 
 ### New people
 
@@ -1952,7 +1952,7 @@ as dead; after the party's escape he is gone from the pens with everyone else.
 
 ![Kalzith's body opened in the game: a Scroll, the Cloak and the Quarterstaff](docs/kalzith-body.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#kalzith).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#kalzith).
 
 #### Semyon
 
@@ -1997,7 +1997,7 @@ else.
 
 ![The slave pens during the escape: Semyon, with his portrait, telling the party to stay close to Scar](docs/semyon-escape.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#semyon).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#semyon).
 
 #### What Dinos and the Trustee say about them
 
@@ -2024,7 +2024,7 @@ and Semyon are taken off the map too, the way the game takes the others, and
 Semyon is never put in his pen after it.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#what-dinos-and-the-trustee-say-about-them).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#what-dinos-and-the-trustee-say-about-them).
 
 ### The cooked vulture
 
@@ -2048,7 +2048,7 @@ inventory, it's too tough to be worth the chewing.)
 
 ![Dinos's answer in his dialogue window with his portrait, then the game's own window for the reward: "Each party member receives 100 experience points!"](docs/vulture-meal.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#the-cooked-vulture).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-cooked-vulture).
 
 ### Defilers' scrolls
 
@@ -2072,7 +2072,7 @@ defiler had a scroll is found out on its body.
 Each defiler is rolled for once in each fight, the arena's later defilers too.
 A fight played again from a save is a new chance; a game saved mid-fight keeps the scroll a defiler was given.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#defilers-scrolls).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#defilers-scrolls).
 
 ## Graphics
 
@@ -2106,7 +2106,7 @@ time the game is started (a game where she already has the elf's keeps it).
 
 ![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#elves-and-half-elves).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#elves-and-half-elves).
 
 ### What the party wears
 
@@ -2135,7 +2135,7 @@ second is moved to pictures of their own.
 
 ![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#what-the-party-wears).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#what-the-party-wears).
 
 ### Shadows
 
@@ -2148,7 +2148,7 @@ never covers another figure. Switch them off on the Options tab.
 
 ![The arena without shadows (left) and with them (right): each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#shadows).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#shadows).
 
 ### Dust
 
@@ -2158,7 +2158,7 @@ stand in front of them, as with the shadows. Switch it off on the Options tab.
 
 ![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#dust).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#dust).
 
 ### Magic items' icons
 
@@ -2173,7 +2173,7 @@ share their picture with a plain item in the game, so they get one of their own
 and the plain cahulaks and ring stay still. The Loader's own magic items shine
 in their icons too. There's no switch: only the pictures change.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#new-items).
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
 
 ### Spells on the ground
 
@@ -2187,7 +2187,7 @@ dust at the edge (two Whirlwinds at once each turn).
 ![Whirlwind in the arena: a tall grey funnel of dust turning over the sligs as the party fights beside it, the damage it does each round](docs/whirlwind.gif)
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
 ## Controls
 
@@ -2210,7 +2210,7 @@ their own.
 Tab and Enter also make attacking possible without aiming the mouse at all.
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings).
+[DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings).
 
 ### Scrolling the map
 
@@ -2223,7 +2223,7 @@ fight.
 The view can't be zoomed: the game draws a 320 by 200 screen at one scale,
 with the view's size built into its drawing code and its video memory pages.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#scrolling-the-map).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map).
 
 ### M, U and I: open a screen, close it again
 
@@ -2233,7 +2233,7 @@ them when pressed a second time. **U** on the inventory, or **I** on USE,
 switches to the other screen, as in the game. After a click on a screen's
 buttons or another key, the next **U** or **I** works as in the game.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
 paragraph on M, U and I).
 
 ### The whole party in view
@@ -2247,7 +2247,7 @@ until the next fight or load. On by default: **The whole party in view as a
 game starts or loads and after each fight** on the Options tab, from the next
 start.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
 paragraph on the whole party in view).
 
 ### The view in fights
@@ -2260,7 +2260,7 @@ fight, the view moves to a figure only when it walks off the screen** on the
 Options tab, from the next start). Out of fights the view follows the party
 as the game has it.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its part
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its part
 on the view in a fight).
 
 ### The pointer in scenes, and where it starts
@@ -2287,7 +2287,7 @@ moved, too fast and coarse to put an item where you meant in the inventory.
 Each has its switch on the Options tab, on by default (from the next start).
 
 How it works:
-[DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
+[DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
 
 ## More saves and characters
 
@@ -2313,7 +2313,7 @@ started without the Loader shows page 1 only, as always: it looks for
 them: it puts each save it finds in the row its number names, with room for
 ten, and a `SAVE11.SAV` would be written past the end.)
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#more-saves).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#more-saves).
 
 #### Saves under their names
 
@@ -2352,7 +2352,7 @@ game counts New as Okay wherever it tests for Okay, and so does the Loader.
 Left as they were: the status under the portrait still reads New, and the game
 still makes New characters Okay when the game starts.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#more-characters).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#more-characters).
 
 ## Game speed
 
@@ -2400,7 +2400,7 @@ leader's speed in pixels a second of the game's time):
 What each setting asks of the computer:
 [Suggested system requirements](README.md#suggested-system-requirements).
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#game-speed).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#game-speed).
 
 ## The game's bugs, fixed
 
@@ -2461,7 +2461,7 @@ Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it ([Spells on the Effects
 screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT.md](DEVELOPMENT-CONTENT.md#the-games-spells). The script bugs
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells). The script bugs
 (Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and checked
 by yuan-ti, the ranger's tracking, the sewer grate, the Rebel Mindhome, region 9's messenger, the Draj serf and the halfling's lines by
 yuan-ti, and the other race and sex lines, the haystack, the cave guide and the slime book by

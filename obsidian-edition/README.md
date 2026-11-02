@@ -465,7 +465,7 @@ run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the Loader
 remembers); nothing from the game is copied into the Loader. Without the game
 installed the window uses its own lettering and no portraits.
 
-How it works: [DEVELOPMENT.md](DEVELOPMENT-SCREENS.md#the-dialogue-tab).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-dialogue-tab).
 
 ## The dice log
 
