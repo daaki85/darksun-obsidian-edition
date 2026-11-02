@@ -8,7 +8,28 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
-**Fixed (from CalvinRodo's yuan-ti, each checked in DSUN.EXE)**
+**Changed**
+- **The dice log's `--all` line for each AC** the game works out gives its parts (base, armour,
+  DEX, other).
+- **The dice log names a thri-kreen's claw or bite:** a party thri-kreen with nothing in hand
+  attacks `with a claw (1d4)` (four a round) and `with its bite (1d4+1)`, the bite's damage line
+  showing `+1 bite` where it said `+1 weapon`. The melee routine (58019h) keeps the set of natural
+  attacks it's on in its [BP-22h], and the sheet holds each set's attacks, dice and bonus from +2Bh
+  (`game.SHEET_NATURAL_*`, `THRI_KREEN_ATTACKS`, `GameData.natural_attack`); the game gives every
+  thri-kreen four 1d4 claws (set 0) and a 1d4+1 bite (set 2) (66BF1h). Checked in DOSBox with
+  K'ratchek unarmed; with weapons in hand a thri-kreen attacks with them and then still bites
+  (checked with a thri-kreen's attacks put on Gerakis). The claw's dice are the ones it has now,
+  with Erdlu Claw, Animal Affinity or Body Weaponry (`natural_attack`'s `effects`). The guide's
+  races table and DICE-LOG say so. Tests: `test_thri_kreen_claw_and_bite`.
+- **Erdlu Claw's talons are the claws alone:** a thri-kreen's four claws become 1d6+1, +1 to hit, as
+  a +1 weapon; its bite stays 1d4+1 with nothing from the spell, as Body Weaponry and Animal
+  Affinity already change only the first set of natural attacks (DSCLOG's `NS_CLAW`: DX, the set;
+  `NS_FIST`: the melee routine's [BP-22h]; the dice log's THAC0 breakdown the same). The in-game
+  description, FEATURES, the guide, HOW-THE-GAME-WORKS and the patch notes say so; the guide and
+  HOW-THE-GAME-WORKS also say the two powers change only the claws. Tests: `test_claw`,
+  `test_fist`, `test_fist_claws_cut`, `test_thri_kreen_claw_and_bite`.
+
+**Fixed: the game's code** (from yuan-ti and OpenDS's list, yuan-ti's issue #129; each checked in DSUN.EXE)
 - **A character's most PSP:** the level-up check (873B2h, for every party member; a game's
   start runs it too) took the WIS bonus from the creation screen's record (`DS:11A0h`), in play
   a stray byte (183 in a test, read signed into memory below the table), and its CON, INT and WIS
@@ -22,8 +43,6 @@ notes](PATCH-NOTES.md).
   the region record, the creatures words at +263h, their levels bytes at +277h, but with the
   word's index ("shl bx,1" at 62FC0h), so every creature but the first got another's (or a byte
   past the list). The shift made two NOPs (`gamepatch`'s `fight_music`). Not heard in play.
-
-**Fixed: two of the game's bugs from OpenDS's list (yuan-ti's issue #129), checked in DSUN.EXE**
 - **Ability items only worn:** the ability routine (7B758h) applied every listed item's ability
   byte wherever it was; `PROBE_WORN` (`INT 81h`, the last free vector but 80h) gives it at
   7B8ABh only for a worn slot (below 14). Tests: `WornTests.test_ability_byte_only_worn`.
@@ -33,60 +52,22 @@ notes](PATCH-NOTES.md).
   damage's gladiator, `CountedAcTests.test_gladiator`. DSCLOG's image 64,544 bytes (+80).
 - Seen in DOSBox (playtest/logs/2026-11-02-dsun-fixes.md): a worn sling given DEX +2 raised DEX
   15 to 17, in the backpack not; Gerakis's inventory AC at gladiator level 10 (raised in memory)
-  5 in armour, 9 in none, as at level 3 (before the fix, 7).
+  5 in armour, 9 in none, as at level 3 (before the fix, 7); in an arena fight, a 10th-level
+  gladiator hit at AC 6 in armour (8 with the flag cleared) and with none at DEX's alone.
 - Checked and left: scores over 25 (the ability routine caps each at 25 before storing it, so
   the tables' lookups stay inside them); the difficulty setting (applied as a monster comes, by
   design); a ghost slot or a vanishing item, and a save made mid-scene (no case to follow; the
   item watch reports a vanished item). Left for a test in the game: bodies after a region is
   left (the game makes a Dead Body, object 1101, for a creature that carried something), and a
   wall of fire's damage twice in one move (ground fields act again on each move). Psionic Blast's
-  lost hit points coming back after the fight: made (below).
-
-**Docs: a review after the item-list and Psionic Blast fixes**
-- The psionic powers' cost table was in the player's guide and How the game works: it stays in
-  the guide, How the game works links to it with the three costs worked out as used. The dice
-  log page has the new lines (Psionic Blast's hit points back, armour moved to the worn list,
-  `--all`'s AC parts); the README's bug list, the guide's Psionics and Equipment (armour in
-  pieces, DEX and shield not from behind) follow. DEVELOPMENT's helper size and upper-memory
-  figures brought up to date (64,592 bytes, 688 spare; 6,131 paragraphs). The developer section
-  on `PROBE_WORN` renamed for its third use. A note that the game's own party starts with its
-  armour in the backpack's list corrected: Gerakis's own arm armour is in `+08h`.
-- Screenshots: `new-spells.png` retaken for Erdlu Claw's description, which showed a fault: with
-  "(not a thri-kreen's bite)" it ran to eight lines and the last spilled over the box's bottom
-  edge. Now "(or +1 to a psionic power's dice)" in place of naming Body Weaponry and Animal
-  Affinity, seven lines (`spelltexts.py`), seen in DOSBox. The four spell arrows' texts (186 to
-  192 characters, the game's own longest about 160) spilled over the same way (seen by showing
-  Shocking Arrows' text in Erdlu Claw's box): now "5 arrows a level ...; each casts it on what it
-  hits. Gone at a rest. Not in a fight.", seven lines.
-- The "How it works" links in FEATURES, KITS, README and How the game works named DEVELOPMENT.md
-  but pointed into DEVELOPMENT-RULES, -SCREENS or -CONTENT since the split (66 links): each now
-  names the page it opens.
-
-**Fixed: Psionic Blast's imagined wounds kept for good (issue #129's last)**
-- The game's Psionic Blast takes a target that fails its save down to a fifth of its most hit
+  lost hit points coming back after the fight: made (next).
+- **Psionic Blast's imagined wounds:** the game's Psionic Blast takes a target that fails its save down to a fifth of its most hit
   points, for good; the power's wounds are imagined. `PROBE_WORN` takes the case's `or byte
   [si],1` (79707h, `gamepatch`'s `psionic_blast`; told apart by its return address, 0B69h) and
   adds a party member's loss to the header's `BLAST_HP` (+1814); `psiblast.py` gives each back
   as the fight ends (the fight flag down 2 s), up to the most and only to a member still Okay,
   with a dice log line, and clears it (a loaded game clears it with nothing given). Tests:
   `WornTests.test_psionic_blast_kept`, `test_psiblast.py`. DSCLOG's image 64,592 bytes (+48).
-
-**Fixed: the Loader's own starting armour gave no AC**
-- A party member's items are in three lists: worn things (armour, a shield, rings, a cloak,
-  ammunition) at the record's `+08h`, held weapons at `+0Ah`, the backpack at `+0Ch`; the
-  inventory screen files an item by its type's kind (a melee, missile or thrown weapon to
-  `+0Ah`, anything else to `+08h`), and the game's AC routine (58DD3h) counts only `+08h`. The
-  Loader put everything worn in `+0Ah`, so Fuller starting gear's leather armour (and a
-  Stalker's cloak) showed as worn and gave no AC: Gerakis was hit at AC 8, not 6, in the arena
-  (the dice log's AC parts: armour -1 for three pieces). `pickpocket.list_for` files as the
-  screen does (`party_list`, `place`, `npcitems.add_to`), `mend_lists` moves what an earlier
-  version put in `+0Ah` ("Gerakis's Leg Armor is now counted as worn"), and `counted_ac` and
-  DSCLOG's `THORNS_AC` count `+08h` only, as the game. Seen in DOSBox: the old save repaired, AC 6
-  in the inventory; a new game's gear in `+08h`, Gerakis hit at AC 6. Tests:
-  `ListTests.test_mend_worn`, `test_list_for`, `test_add_to`,
-  `CountedAcTests.test_held_armour_doesnt_count`, the Wall of Thorns damage's held armour.
-- The dice log's `--all` line for each AC worked out now gives its parts (base, armour, DEX,
-  other).
 
 **Fixed: the game's script checks (`scriptfixes.py`, always on)**
 - yuan-ti's v0.1.49 repairs: the ranger's tracking at the Wagon Train's bodies (script 210: the
@@ -124,49 +105,41 @@ notes](PATCH-NOTES.md).
   a metal or magic one "rings off the grate, unharmed" (the game said it broke and kept it). Which
   can break is the game's rule for a weapon breaking in a fight (`Game.item_breaks`), read through
   the item's type (field 4, then the type's material, field 8).
-- The Loader's thief skill chances for a Slowed thief: picking pockets ruled out alone, as the
-  game's routine does (80425h; the Loader had it ruling out the other seven). Tests: `test_now`.
-- Checked in DSUN.EXE: a worn or readied item's helpful spell is cast on the wearer for good
-  (6F7F0h; a cursed item's attack spell too), as DEVELOPMENT had it; item 2005's swapped lists
-  don't matter, no item 2005 existing.
 - Detours for a repair longer than its bytes: after the script's end (an exit first), with a
   jump (64h, as the Loader's other script changes) back. Not seen in play.
   Tests: `test_scriptfixes` (each detour, relocations, the length limit).
 
-**Docs (from yuan-ti's notes, checked in the game's data and code)**
+**Fixed: the Loader and its helper**
+- **The Loader's starting armour gave no AC:** a party member's items are in three lists: worn things (armour, a shield, rings, a cloak,
+  ammunition) at the record's `+08h`, held weapons at `+0Ah`, the backpack at `+0Ch`; the
+  inventory screen files an item by its type's kind (a melee, missile or thrown weapon to
+  `+0Ah`, anything else to `+08h`), and the game's AC routine (58DD3h) counts only `+08h`. The
+  Loader put everything worn in `+0Ah`, so Fuller starting gear's leather armour (and a
+  Stalker's cloak) showed as worn and gave no AC: Gerakis was hit at AC 8, not 6, in the arena
+  (the dice log's AC parts: armour -1 for three pieces). `pickpocket.list_for` files as the
+  screen does (`party_list`, `place`, `npcitems.add_to`), `mend_lists` moves what an earlier
+  version put in `+0Ah` ("Gerakis's Leg Armor is now counted as worn"), and `counted_ac` and
+  DSCLOG's `THORNS_AC` count `+08h` only, as the game. Seen in DOSBox: the old save repaired, AC 6
+  in the inventory; a new game's gear in `+08h`, Gerakis hit at AC 6. Tests:
+  `ListTests.test_mend_worn`, `test_list_for`, `test_add_to`,
+  `CountedAcTests.test_held_armour_doesnt_count`, the Wall of Thorns damage's held armour.
+- **A thri-kreen's bite and Erdlu Claw:** a party thri-kreen's bite got the claws' Erdlu Claw +1 to hit and magic: the melee routine sets
+  [BP-8] and [BP-0Ch] once for a round's natural attacks, so what `NS_FIST` gave the claws went on
+  to the bite. A party member's natural attack now starts with neither (the game gives it none).
+  Checked in DOSBox: the bite at THAC0 15, the claws 14. DSCLOG's image 64,352 bytes (+32).
+- **A Slowed thief's skills:** the Loader's chances for a Slowed thief: picking pockets ruled out alone, as the
+  game's routine does (80425h; the Loader had it ruling out the other seven). Tests: `test_now`.
+
+**Docs**
 - ITEMS: the ability items' amounts (Draketooth STR +3, Dag's Dagger CHA +1, the Helm of Might
   STR +1, the Belt of Might STR at least 24, El's Ring DEX +3, the Steadfast Ring, the game's
   name, CON +3, the Ring of Insight WIS +2, read from SEGOBJEX's item records), and a weapon's
   spell on every hit.
 - HOW-THE-GAME-WORKS: **Resting**, the priests' cures at a rest (a cleric or druid of 5th level
   or more: Cure Disease, Remove Curse, Remove Paralysis; a druid of 7th: Neutralize Poison too).
-
-**Changed**
-- **The dice log names a thri-kreen's claw or bite:** a party thri-kreen with nothing in hand
-  attacks `with a claw (1d4)` (four a round) and `with its bite (1d4+1)`, the bite's damage line
-  showing `+1 bite` where it said `+1 weapon`. The melee routine (58019h) keeps the set of natural
-  attacks it's on in its [BP-22h], and the sheet holds each set's attacks, dice and bonus from +2Bh
-  (`game.SHEET_NATURAL_*`, `THRI_KREEN_ATTACKS`, `GameData.natural_attack`); the game gives every
-  thri-kreen four 1d4 claws (set 0) and a 1d4+1 bite (set 2) (66BF1h). Checked in DOSBox with
-  K'ratchek unarmed; with weapons in hand a thri-kreen attacks with them and then still bites
-  (checked with a thri-kreen's attacks put on Gerakis). The claw's dice are the ones it has now,
-  with Erdlu Claw, Animal Affinity or Body Weaponry (`natural_attack`'s `effects`). The guide's
-  races table and DICE-LOG say so. Tests: `test_thri_kreen_claw_and_bite`.
-- **Erdlu Claw's talons are the claws alone:** a thri-kreen's four claws become 1d6+1, +1 to hit, as
-  a +1 weapon; its bite stays 1d4+1 with nothing from the spell, as Body Weaponry and Animal
-  Affinity already change only the first set of natural attacks (DSCLOG's `NS_CLAW`: DX, the set;
-  `NS_FIST`: the melee routine's [BP-22h]; the dice log's THAC0 breakdown the same). The in-game
-  description, FEATURES, the guide, HOW-THE-GAME-WORKS and the patch notes say so; the guide and
-  HOW-THE-GAME-WORKS also say the two powers change only the claws. Tests: `test_claw`,
-  `test_fist`, `test_fist_claws_cut`, `test_thri_kreen_claw_and_bite`.
-
-**Fixed**
-- A party thri-kreen's bite got the claws' Erdlu Claw +1 to hit and magic: the melee routine sets
-  [BP-8] and [BP-0Ch] once for a round's natural attacks, so what `NS_FIST` gave the claws went on
-  to the bite. A party member's natural attack now starts with neither (the game gives it none).
-  Checked in DOSBox: the bite at THAC0 15, the claws 14. DSCLOG's image 64,352 bytes (+32).
-
-**Docs**
+- Checked in DSUN.EXE: a worn or readied item's helpful spell is cast on the wearer for good
+  (6F7F0h; a cursed item's attack spell too), as DEVELOPMENT had it; item 2005's swapped lists
+  don't matter, no item 2005 existing.
 - **A review for redundancy and organization:**
   - One copy of each repeated table: the thief skill tables (level, race, DEX), the highest
     levels under the XP cap and preservers' INT table are the player's guide's alone, FEATURES
@@ -225,7 +198,7 @@ notes](PATCH-NOTES.md).
   files (thief skills, class equipment, CHA's discount, CON's bonus, weapon specs), the Options
   tab's texts against `options.png`, the old names (the mod renamed after 1.2.0, the Loader after
   2.2.1), every link, anchor and image. Outdated: `new-spells.png` (Erdlu Claw's description now
-  says "not a thri-kreen's bite"), to retake in the game.
+  says "not a thri-kreen's bite"): retaken in the next review.
 - The player's guide's spell slot table shows the priests' 6th-level slots in its rows (5 4 4 3 2 1
   at 11th, 6 5 5 3 2 2 at 12th) and says which class stops where under the XP cap (a druid at 12th,
   a cleric and a preserver at 11th); FEATURES' line on the slots past 10th the same.
@@ -233,6 +206,28 @@ notes](PATCH-NOTES.md).
   the game's own rule's 6th-level column (1 at WIS 23, 2 at 24 and 25; counted with AD&D's
   tables), WIS 25's 3 at 5th, and a note that the game's rule gives more than AD&D's table and a
   useless 7th-level slot at WIS 25 (checked against the game's `SLOT_RULES` in DOSBox).
+- **A review after the item-list and Psionic Blast fixes:** the psionic powers' cost table was in the player's guide and How the game works: it stays in
+  the guide, How the game works links to it with the three costs worked out as used. The dice
+  log page has the new lines (Psionic Blast's hit points back, armour moved to the worn list,
+  `--all`'s AC parts); the README's bug list, the guide's Psionics and Equipment (armour in
+  pieces, DEX and shield not from behind) follow. DEVELOPMENT's helper size and upper-memory
+  figures brought up to date (64,592 bytes, 688 spare; 6,131 paragraphs). The developer section
+  on `PROBE_WORN` renamed for its third use. A note that the game's own party starts with its
+  armour in the backpack's list corrected: Gerakis's own arm armour is in `+08h`.
+- Screenshots: `new-spells.png` retaken for Erdlu Claw's description, which showed a fault: with
+  "(not a thri-kreen's bite)" it ran to eight lines and the last spilled over the box's bottom
+  edge. Now "(or +1 to a psionic power's dice)" in place of naming Body Weaponry and Animal
+  Affinity, seven lines (`spelltexts.py`), seen in DOSBox. The four spell arrows' texts (186 to
+  192 characters, the game's own longest about 160) spilled over the same way (seen by showing
+  Shocking Arrows' text in Erdlu Claw's box): now "5 arrows a level ...; each casts it on what it
+  hits. Gone at a rest. Not in a fight.", seven lines.
+- The "How it works" links in FEATURES, KITS, README and How the game works named DEVELOPMENT.md
+  but pointed into DEVELOPMENT-RULES, -SCREENS or -CONTENT since the split (66 links): each now
+  names the page it opens.
+- **The changelog reviewed:** this entry's groups put in the order the merged entries use (one
+  Changed, then the fixes to the game's code, its scripts and the Loader, then Docs), and the
+  older entries' **Added** and **Documentation** called **New** and **Docs**, as the newer ones
+  are.
 
 ## Pull request #84 ([merged 2026-10-31](https://github.com/daaki85/darksun-obsidian-edition/pull/84))
 
@@ -557,7 +552,7 @@ Obsidian Edition 2.13.0 ([release notes](release-notes/v2.13.0.md)).
   `test_a_plain_quote_is_text`, `test_scores_never_cut_the_wrong_way`,
   `test_every_rule_has_its_box` (each rule a box on the Options tab, each its own bit).
 
-**Documentation**
+**Docs**
 - A review of every document for the new rules: the patch notes (Ages under Magic and Psionics,
   Haste's shock that kills, saves made with 2.13.0 not for earlier versions), FEATURES (contents,
   the whole system shock table), the player guide (ages, Haste, CON's regeneration, the seventeen
@@ -597,7 +592,7 @@ Obsidian Edition 2.12.5 ([release notes](release-notes/v2.12.5.md)).
   to act loses that round's turn there and then (`SWEPT_NOW`), one that has acted the next. Found
   and checked in DOSBox: K'ratchek's Whirlwind on the arena's sligs, three rounds each way.
 
-**Documentation**
+**Docs**
 - A review of the pages for 2.12.5: Whirlwind's timing (FEATURES, the player's guide,
   DEVELOPMENT), the Effects screen's Enlarge and armour lines (README, FEATURES, the patch
   notes). Links, anchors and pictures checked: none broken, none unused; `whirlwind.gif` shows
@@ -708,7 +703,7 @@ Obsidian Edition 2.12.3 ([release notes](release-notes/v2.12.3.md)).
 - **The game folder is kept as a full path:** a relative `--game-dir` at a command prompt gave
   DOSBox a settings path from the wrong folder.
 
-**Documentation**
+**Docs**
 - **A review of the pages for 2.12.3:** the player's guide gains weaker materials' penalties (to
   hit and, newly found, to damage), the features page Haste and Slow under the attacks a round,
   and the backstab example's damage line its `-1 bone`. `docs/dicelog.png` taken anew in DOSBox
@@ -760,7 +755,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   against 0.83 (within how much turns vary), the animation's flips 38 ms apart against 36; with
   a Whirlwind turning, 42 ms against 41.
 
-**Documentation**
+**Docs**
 - **Three animated pictures, recorded in DOSBox:** `docs/combat-log-live.gif` (the in-game combat
   log filling in as an arena fight is played with Tab and Enter: Wild Fighting, attacks, a kill and
   its XP, hiding in shadows) in place of the still shot in the Loader README; `docs/whirlwind.gif`
@@ -1322,7 +1317,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #57 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/57))
 
-**Added**
+**New**
 - **Wake of the Ravager found in more places, or chosen** (`wotrart.find_resources`): any folder
   beside Shattered Lands (GOG Galaxy installs them as `Dark Sun` and `Dark Sun 2`, so a Galaxy
   install was never found), GOG's usual folders on any drive, and a folder inside each; the Options tab's new **Wake of the Ravager** section says where it was
@@ -1339,7 +1334,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   duration, and the log says so (`Paralysing attack: lasts 7 rounds unless saved against (2d4 =
   [4 + 3] = 7)`; the Red Slaad's 182 was `special attack 182: 2d4 = [4 + 3] = 7`).
 
-**Documentation**
+**Docs**
 - Wake of the Ravager described as what it is for nearly every player, the game GOG sells with
   Shattered Lands, rather than an optional extra (the Loader README's requirements, FEATURES, the
   patch notes); the patch notes list this pull request's changes as coming after 2.7.0.
@@ -1358,7 +1353,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   something else from coming back (see Cause Disease in HOW-THE-GAME-WORKS); the docs say so too.
   The priest spells screenshot retaken.
 
-**Documentation**
+**Docs**
 - A fourth review. The root README says what the repository has beyond 2.6.0 (the patch notes
   already did). FEATURES moves Harm's Diseased note out of its table row into the spell's notes,
   linked to Cause Disease. DEVELOPMENT gives the 6th-level priest spells' description chunks
@@ -1368,7 +1363,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #55 ([merged 2026-10-23](https://github.com/daaki85/darksun-obsidian-edition/pull/55))
 
-**Added**
+**New**
 - **6th-level priest spells** (with **New wizard spells**, slots with AD&D's tables): Heal, Harm, Blade Barrier, Wall of Thorns and Sunstroke (cosmos: druids and Healer clerics), Fire Seeds (fire), Heartseeker (earth, water), Water of Life (water) and Whirlwind (air), spells 202-210, each on a template record the game already casts (Cure and Cause Critical Wounds, the priest's Wall of Fire, Hold Person, Flame Strike, Slay Living, Lend Health) with its own changes (`NS_PATCH`).
 - **The 6th-level priest spells closer to the books and Wake of the Ravager.** Wall of Thorns does 8 + the creature's AC (at least 1; `THORNS_AC`: a monster's sheet +27h, a party member's AC as the game last worked it out, kept by `PROBE_AC` in `AC_SEEN`; the dice log shows the AC, carried in the entry's extra's high byte + 80h), not 1d10 + 8.
 - **The ground pictures checked live:** the blades and the thorns standing as walls, Fire Seeds' fireball, and Whirlwind's entry holding the dust (8403) after its cast, the other entries back to the game's.
@@ -1422,7 +1417,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **Magic items shine in a shop.** The palette's colour cycles (the glow of a magic weapon's icon) turn only in the map's main loop, when the timer asks (DS:1194h, then 22F8h:047Ch); a shop, opened from a conversation, runs its own event loop (7DDE4h) and waits in the game's wait for an event (2531:083Ch), and neither turned them, so its items stood still.
 - **Freeze reports with the game's memory overwritten.** The report found DSCLOG only through the dice log, which had lost the game with its data segment: it now finds DSCLOG by its signature and the game's load segment from its DOS block (`freeze.find_header`, `load_from_block`), so where the game was still shows.
 
-**Documentation**
+**Docs**
 - **Reviews, pictures and the since-2.6.0 list:** the patch notes' list of what comes after 2.6.0 brought up to date; the XP cap, the 6th-level spells and the new switches in the Loader README, the guide's Options summary and the dice log table; Wake of the Ravager as an optional install; a link and anchor check over every page (none broken, no picture unused).
 - A review of every page.
 - A second review: the patch notes say which of their changes come with the next release, not 2.6.0, and name the Battle Mage's, Crusader's and Mind Warrior's weapon expertise (the release steps now drop that line); the README's known issues add the vanishing figures and freeze, and lose a class-letter table that repeated its sentence; spell arrows left on the ground fade at the first rest after they're picked up (KITS, the player's guide, whose paragraph is rewritten).
@@ -1446,7 +1441,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   animations on and off, so a button A read as a key it wasn't. `combat_log_arena` is no longer
   saved.
 
-**Added**
+**New**
 - **A warning when the game's memory runs low.** With the map open, below 24 KB spare the dice log
   says so and to save and restart soon (a new start has it all back); once, then again only after
   it has recovered. If upper memory had no room for the overlay buffer (another DOSBox, other
@@ -1511,7 +1506,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #52 ([merged 2026-10-20](https://github.com/daaki85/darksun-obsidian-edition/pull/52))
 
-**Added**
+**New**
 - **The arena's count of fights, on the combat log panel's A.** A button left
   of the header's L puts "Arena fights: N" in the header instead of the
   round (lit while on, saved as `combat_log_arena`; not in the strip, which
@@ -1598,7 +1593,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **`Play Dark Sun (in-game rolls).bat`** said only "Something went wrong" when a crash report
   couldn't be written; it says why now, with how DOSBox closed.
 
-**Documentation**
+**Docs**
 - **Crash, freeze and item reports** are one section of the README, with a table of
   when each is written and what it holds (what all three share said once); closing
   DOSBox's window while the game runs is a crash report, as the code has it.
@@ -1636,7 +1631,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 **Release**
 - **Obsidian Edition 2.5.0**: the version is 2.5.0, with its notes in `release-notes/v2.5.0.md`, listed on the front page with the others.
 
-**Added**
+**New**
 - **Item reports**: the Loader watches the party's items and, when one is gone from the whole party for two seconds, saves `crash-logs\item-<time>.txt` (the item, who had it and where, what its record says now, the game's time and region, the fight, the party's items before and after, the switches, and the dice log's and dialogue's last lines) and says so in the dice log, so a vanished item can be looked into as a crash is.
 - **Four more magic weapons** for the kits that had too few (the dagger fighters, the archers, the thri-kreen), each with its icon, its name in DSCLOG's table (now 39 names) and a story from Alagorn: - **Hayneedle,** a bone dagger +1 (a water cleric's too), early: hidden in Merzol's haystack in the slave pens with his sack of ceramic pieces.
 
@@ -1670,7 +1665,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **The Loader's item-list changes made safer** (found in review): taking an item out of a list while the game's own free list moved could leave the item in no list at all; it now goes back where it was.
 - **Defilers' scrolls on creatures that aren't defilers** (one of Scar's henchmen dropped one): the Loader knew a defiler by the class on its character sheet, which the game hands on from one creature to the next.
 
-**Documentation**
+**Docs**
 - **Kits, a page of their own** (`obsidian-edition/KITS.md`): the README's kit tables and rules moved out, as Items were, the README keeping a table of the kits' names with links; each kit fact repeated across the section (the Shinobi's spell list, the Seeker's and Justifier's casting levels, the Battle Mage's weapon pick, the Arcanist's two spells, Wild Fighting) is now said once.
 - **A documentation review**: the Options tab's Weapon specialization switch no longer names the weapon pages; the mod's items are "the mod's", not "the Loader's"; the guide says weapon spec, as the game's screens do; the Effects-screen click among the bug fixes; item reports and thri-kreen claws in the guide and the README's bug fixes; the acid table in ITEMS.md ("Items against acid"); the dice log's attack and save rows shortened, their detail under the tables; the front page's "What it does" a paragraph; install advice said once.
 - **New:** "Where to start" and "Known issues" in the README, a glossary in the guide (THAC0, AC, PSP, the saves' letters and more), and in DEVELOPMENT.md the folders and how a release is made.
@@ -1705,7 +1700,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #49 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/49))
 
-**Added**
+**New**
 - **The game's own party, features of their own** (with kits): Gerakis fights
   wild (the Wild Fury's Wild Fighting); K'ratchek casts as a Wasteland Seer
   (druid spells 2 levels higher under the open sky, 1 lower under a roof), and
@@ -1841,7 +1836,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #48 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/48))
 
-**Added**
+**New**
 - **Multiclass kits** (with Kits ticked): seven kits for two classes taken at
   once, each for one race only. Elf cleric/fighter: **Battle Dancer**, which
   dances as each fight starts (a d20 against DEX: +1 to hit, damage and AC for
@@ -1932,7 +1927,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   2.3.0, with its notes in `release-notes/v2.3.0.md`, listed on the front
   page with the others.
 
-**Added**
+**New**
 - **Fuller starting gear** (More character customization, on by default).
   Before a new character is first played, the Loader adds plain gear the
   character can use and hasn't got: a weapon in an empty right hand (from the
@@ -1986,7 +1981,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #44 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/44))
 
-**Added**
+**New**
 - **A combat log in the game.** In a fight, a panel over the map's lower right shows the dice log's lines as they come, in the game's font and the Ledger's colours, with the round and who acts next above them; at the least, in short (the default) or in detail.
 - **Saves under their names.** The Ledger keeps a second copy of every save in its **Named saves** folder, named as in the game (`Page 2 slot 05 - Before Scar's battle.SAV`), and the Options tab's new **Saves** section opens the folder and puts a named save back in a slot of the game's list.
 - **Two magic shields.** **Gutterward**, a wooden shield +1, on a skeleton in the Tari's warrens; **Ironbulwark**, a metal shield +3 (the game has no metal shield: a type of the Ledger's), carried by the Guardian of Balkazar's fortress.
@@ -2027,7 +2022,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **The Trustee stuck at "I have to get back to work".** The game makes him busy after a talk until his rounds of the pens bring him back to their first corner; when his rounds stall (he can't reach his next corner), he stays busy for good and never talks again.
 - **Rows of the creation panel's weapon and kit pages took clicks only at their left.** Each row is a copy of the game's AIR row, a button 33 pixels wide: a click on the rest of a longer name (the middle of MYRMIDON or LNG SWORD) did nothing.
 
-**Documentation**
+**Docs**
 - **A review of every page for this pull request's changes.** The README's picking pockets section tells of the Trustee's key, its class restrictions that a cloak isn't armour, its kits that a new roll keeps the kit, its new items the axes' weight, its Options list the Saves section and its More saves `cloud_saves`; the More character customization table gains STORE and RECALL, which has a box too.
 - **A second review, after the combat log:** the overviews name the combat log, the six wizard spells, buying back and defilers' scrolls; the top README's overview is a short list linking to the full one; the last mentions of the turn pop-up are gone; the kits' starting gear is said once, in each class's table, not again in a table and list of its own; the Options tab's new spells box names all six, and its screenshot is retaken.
 - **A third review, after the rename:** the full README puts **In the game** (the combat log first) before the Loader's window, and its overview is a list as the top README's is; the player's guide starts with the combat log; the patch notes put the game's changes first and the Loader after them; DEVELOPMENT.md has the combat log under How each part works and Room in the helper as a section of its own (they were inside Kits), and a Shinobi table split by a paragraph is whole again; "viewer" is gone from the docs.
@@ -2041,7 +2036,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **Obsidian Edition 2.2.1:** the version is 2.2.1, with its notes in
   `release-notes/v2.2.1.md`, listed on the front page with the others.
 
-**Added**
+**New**
 - **A switch for the elves' and half-elves' looks:** **Elves have pointed
   ears, and half-elves figures of their own** in the Options tab's Graphics
   section, on by default, from the next time the game is started. Off, elves
@@ -2072,7 +2067,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #41 ([merged 2026-10-14](https://github.com/daaki85/darksun-obsidian-edition/pull/41))
 
-**Added**
+**New**
 - **STORE and RECALL on the creation screen,** as Baldur's Gate has them:
   STORE keeps the roll on screen (the six scores and the die's total, the hit
   points and PSP), RECALL brings it back however many times the die has been
@@ -2110,7 +2105,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   figure for half-elf women; she has the elf woman's now, in a new game and
   (from the next area) in one already begun.
 
-**Documentation**
+**Docs**
 - **Graphics** is the README's section for what the Ledger draws on the map
   (was "On the screen"), with a part for elves and half-elves; the Options
   tab's section has the same name, and DEVELOPMENT.md a section of its own
@@ -2139,7 +2134,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #40 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/40))
 
-**Documentation**
+**Docs**
 - **Semyon as the game tells him.** The README called him "of the Veiled
   Alliance"; in the game he is a slave tied up for asking after it, "much more
   of a scout than a warrior", who takes the party for the Alliance and asks to
@@ -2148,7 +2143,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #39 ([merged 2026-10-12](https://github.com/daaki85/darksun-obsidian-edition/pull/39))
 
-**Added**
+**New**
 - **Two new wizard spells, and Cat's Grace is a spell of its own.** Erdlu Claw
   (1st level: 5 rounds a caster level, natural and unarmed attacks do 1d6+1
   where that's better, or Body Weaponry's and Animal Affinity's dice +1, are
@@ -2217,7 +2212,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   They keep the game's own spells again; only a character made on the
   creation screen (still New) picks.
 
-**Documentation**
+**Docs**
 - **The new spells' screenshots:** their three descriptions, the Effects screen
   with Cat's Grace and Erdlu Claw, and Fogbolt's bolt replace the two Cat's
   Grace pictures; the Options tab and a spell's end-of-turn window (a Fogbolt,
@@ -2275,7 +2270,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #35 ([merged 2026-10-09](https://github.com/daaki85/darksun-obsidian-edition/pull/35))
 
-**Added**
+**New**
 - **Scores and hit points as rolled** (a new rule, on by default, its own box
   on the Options tab): on the creation screen a click raises a score only
   while the six add up to no more than the die gave, so lowering one frees
@@ -2297,7 +2292,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **Turning the mouse wheel** no longer scrolls the map (the Ledger's Windows
   mouse hook is gone); pressing the wheel and dragging still does.
 
-**Documentation**
+**Docs**
 - **Patch notes** (`PATCH-NOTES.md`, and `patch-notes.html` as a page with a
   copy-as-Markdown button): every change from the original game, laid out as
   patch notes, to share online. Linked from the front page.
@@ -2311,7 +2306,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #32 ([merged 2026-10-09](https://github.com/daaki85/darksun-obsidian-edition/pull/32))
 
-**Documentation**
+**Docs**
 - **All the documents reviewed:** the front page and the README name AD&D's
   class tables, the leader's CHA and the robes among the rules and items, and
   the README's rule count (21), item and price tables and Kalzith's shop are
@@ -2323,7 +2318,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #31 ([merged 2026-10-09](https://github.com/daaki85/darksun-obsidian-edition/pull/31))
 
-**Added**
+**New**
 - **Kits:** a character of one class may take one of three kits for its class, or none, on the creation panel's new KIT page (KITS, at the end of the panel's pages: the disciplines' for a class with no sphere, the spheres' for a cleric, druid or ranger, the last weapon page for a warrior with weapon specialization), NO KIT first and what a new character has, the rows not chosen greyed as the spheres' are.
 - **What the kits do:** the Myrmidon, Sentinel and Ravager (fighter); the Arena Champion, Twin-blade and Brute (gladiator); the Stalker (ranger); the Assassin (thief); the Grove Warden and Wanderer (druid); the Lifebinder's weapons, and the Shinobi's weapons and armour.
 - **Kits' THAC0:** the Swashbuckler, Crusader, Battle Mage and Mind Warrior get a warrior's THAC0, the Scholar's is 1 worse, through a new probe at the end of the game's THAC0 routine (INT B7h); the Swashbuckler's −10 to every thief skill, named in the dice log's thief skill lines as the Assassin's now is.
@@ -2374,7 +2369,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **A kit or a second sphere could change a sound.** The game reads two sound numbers on the character sheet (`+42h`, `+44h`) as words, and the kit (`+43h`) and second sphere (`+45h`) sit in their high bytes; they are read a byte each now (INT 9Bh, 9Ah).
 - **Arena crash after a kill (hardened):** DOSBox could close as a creature died in a fight.
 
-**Documentation**
+**Docs**
 - **The guide's kits** each have a short description of who takes them on Athas, above each class's kit table.
 - **The guide's Battle Mage** now says its chosen weapon type gives 3/2 attacks a round, 2 from 7th level.
 - **Kits:** DEVELOPMENT.md has how they are built: room in the helper, the sheet byte for the kit, the creation page, and each effect's hook.
@@ -2406,7 +2401,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   back with its chosen weapon spec, once the cleric level passes the ranger's.
   Before, its bow expertise was there but no bow could be readied.
 
-**Documentation**
+**Docs**
 - **What it does**, on the front page and in the guide alike: what the Ledger
   shows of the game's hidden rolls, how it brings the rules closer to AD&D,
   what it adds to Athas and on the screen, and its quality of life changes,
@@ -2439,7 +2434,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **A character's card** leaves out empty lines (a non-warrior's weapon
   specs), rather than showing a blank one.
 
-**Documentation**
+**Docs**
 - **Guide reorganised:** Every magic item and Every mundane weapon in a
   section of their own, Item tables (they list the game's items too, not only
   new content); Suggested system requirements under Requirements, linked from
@@ -2468,7 +2463,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   level gained, for a ranger with no weapon type yet): every ranger has
   expertise with the bow already.
 
-**Documentation**
+**Docs**
 - Where a ranger's bow expertise and missile weapons' rates show, and the
   Options tab's weapon specialization box, mention them.
 
@@ -2486,14 +2481,14 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   the weapon type it chooses, and a ranger's expertise with a missile weapon now
   gives the same rate of fire, with no other bonus.
 
-**Documentation**
+**Docs**
 - **Attacks a round:** a table in the guide by skill (non-warriors, a weapon
   type not chosen, expertise, specialized, mastery, grand mastery) and level,
   for melee, bows and the other missile weapons.
 
 ## Pull request #25 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/25))
 
-**Added**
+**New**
 - **Bone and obsidian great axes and a bone dagger,** each with an icon of its
   own. A warrior's starting great axe is now bone (obsidian for a fire or earth
   cleric), and a water cleric's starting dagger bone. Water and fire clerics'
@@ -2521,7 +2516,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **The game's Sling +1** (in a chest) showed a blank icon: its picture was
   missing from the game's data. It now has one, the Sling's with a glow.
 
-**Documentation**
+**Docs**
 - **Item icons** in every item table of the guide.
 - **[Every magic item](obsidian-edition/ITEMS.md#every-magic-item)** and
   **[Every mundane weapon](obsidian-edition/ITEMS.md#every-mundane-weapon):**
@@ -2533,7 +2528,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #24 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/24))
 
-**Added**
+**New**
 - **Magic weapons for the classes that had too few,** each with an icon of its
   own and a story from Alagorn:
   - **Galefang,** a metal dagger +2 an air cleric can wield (a new item type:
@@ -2554,7 +2549,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #23 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/23))
 
-**Added**
+**New**
 - **Three magic axes,** each with an icon of its own and a story from Alagorn:
   - **Drakejaw,** a bone axe +1, on one of the Magera guarding the wagon's
     prisoners (he gets an object of his own);
@@ -2575,7 +2570,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #21 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/21))
 
-**Added**
+**New**
 - **The Tome of Understanding,** Father Garyn's gift when the party brings
   him the ranike pith: read like a scroll (right-click it, click its icon),
   it gives the reader a point of WIS for good (at most 25) and is used up.
@@ -2673,7 +2668,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #20 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/20))
 
-**Added**
+**New**
 - **The new plain weapons in the world** (a new content switch, on by default):
   the Weapon Merchant and Jark sell the bone and obsidian short swords and axes,
   the obsidian mace and (the Weapon Merchant) a plain metal short sword; Merzol,
@@ -2760,7 +2755,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #19 ([merged 2026-10-06](https://github.com/daaki85/darksun-obsidian-edition/pull/19))
 
-**Added**
+**New**
 - **Which class levels up next, on View Character:** for a character of more
   than one class, the XP in brackets on the experience line now names the
   class that reaches its next level there: `EXP:87230 (90000 Pr)`. A letter
@@ -2808,7 +2803,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **Plain cloaks, boots and belts cost 24** (the Leather Cloak was 20); magic
   ones keep their prices.
 
-**Added**
+**New**
 - **Searching junk, hay and wardrobes in the dice log:** each search's roll,
   what it found, and how far the count of finds has got; a rat's bite or a
   falling pot shows its damage roll.
@@ -2859,7 +2854,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #16 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/16))
 
-**Added**
+**New**
 - **Semyon breaks out with Scar:** recruit Semyon before the fight with Scar,
   take up Scar's offer to break out, and Semyon comes along to the slave pens
   with Scar's men, fights the guards on the party's side, and has a line of
@@ -2937,7 +2932,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #14 ([merged 2026-10-04](https://github.com/daaki85/darksun-obsidian-edition/pull/14))
 
-**Added**
+**New**
 - **What the party wears, on the map:** each character's figure shows their
   weapons and shields, bow and quiver on the back, armour, helms as circlets,
   cloaks, boots and belts, walking and fighting, and changes as soon as their
@@ -3035,18 +3030,18 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #13 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/13))
 
-**Added**
+**New**
 - **The Release workflow can be run by hand**, making the version's tag.
 
 ## Pull request #12 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/12))
 
-**Added**
+**New**
 - **Release 1.0.0:** the version, its release notes, and a workflow that
   builds the release zip.
 
 ## Pull request #11 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/11))
 
-**Added**
+**New**
 - **Cat's Grace looks like itself:** its own icon and its own description in
   the spell box, instead of Flaming Sphere's.
 
@@ -3080,7 +3075,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #9 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/9))
 
-**Added**
+**New**
 - **Rule change: thief skills from AD&D's table.** A skill is AD&D's average
   for the thief level, plus the race's adjustment, plus Dark Sun's DEX
   adjustment.
@@ -3108,7 +3103,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #8 ([merged 2026-10-02](https://github.com/daaki85/darksun-obsidian-edition/pull/8))
 
-**Added**
+**New**
 - **Rule change: levels up to 10.** Every class can reach 10th level, at
   AD&D's XP.
 - **Gear for the slave pens' bosses** (with the Ledger running, given once a
@@ -3135,7 +3130,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #7 ([merged 2026-10-01](https://github.com/daaki85/darksun-obsidian-edition/pull/7))
 
-**Added**
+**New**
 - **Rule change: AD&D's two-weapon penalties.** A non-ranger with a melee
   weapon in each hand attacks at −2 with the main hand and −4 with the off
   hand, offset by the DEX reaction adjustment.
@@ -3175,7 +3170,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #5 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/5))
 
-**Added**
+**New**
 - A **Give thieving tools now** button on the Options tab.
 - **Thieves' Tools** get a name of their own and a leather satchel's picture
   instead of a key's.
@@ -3187,7 +3182,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #4 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/4))
 
-**Added**
+**New**
 - **Picking pockets:**
   - press P in a conversation, with a thief leading;
   - small things only;
@@ -3207,7 +3202,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #3 ([merged 2026-09-30](https://github.com/daaki85/darksun-obsidian-edition/pull/3))
 
-**Added**
+**New**
 - **In the game:**
   - THAC0, saves and thief skills on the inventory and View Character screens;
   - spell slots on the USE screen;
@@ -3228,7 +3223,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #2 ([merged 2026-09-29](https://github.com/daaki85/darksun-obsidian-edition/pull/2))
 
-**Added**
+**New**
 - The game's own **portraits and font**, read from your install at run time.
 - **A Characters tab** laid out like the game's View Character screen.
   - Each character's equipment by slot.
@@ -3248,7 +3243,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 
 ## Pull request #1 ([merged 2026-09-28](https://github.com/daaki85/darksun-obsidian-edition/pull/1))
 
-**Added**
+**New**
 - **The party viewer**, reading Shattered Lands' character records live.
 - **The dice log:**
   - attack bonuses, weapons, saving throws, spells and buffs;
