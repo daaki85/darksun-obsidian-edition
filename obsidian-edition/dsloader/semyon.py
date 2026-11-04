@@ -52,6 +52,12 @@ GONE_AT = (255, 20, 20, 1)  # where the game puts the pens' people then (region 
 # and with their 12 (STEADY), once (SETTLED; also for one put in his pen before). Attacked, he is then as any of them is.
 SET_FIELD, SIDE, NEUTRAL, STEADY, SLAVES_STEADY = 0x40, 74, 4, 70, 12
 SETTLED = 779
+# The weapon shipment: asked "Did you see anything on your way back in?", he tells of a polearm
+# brought in with it and racked (his script sets TOLD); then, in the pens, the Loader puts Thornwall
+# on the pens' weapon rack, once (SHIPPED), unless a Thornwall is somewhere already (a save from
+# when the rack's data had it). (Two of the flags between the game's 755 and the Loader's 760.)
+TOLD, SHIPPED = 756, 757
+PENS = 0x29
 
 # Breaking out with Scar (the game's script 3, when the party reaches the arena's west exit after
 # Scar's plan is agreed: "Gladiators escaping! Guards! Sound the alarms!"): the game takes Scar
@@ -209,6 +215,11 @@ def conversation() -> bytes:
                 ("Have you heard anything useful?", reply(
                     "Only the trustee, the head templar and Kurzak carry keys. The trustee keeps "
                     "his on his belt. Do with that what you will."), ALWAYS),
+                ("Did you see anything on your way back in?", lambda: (s.say(
+                    "As the guards brought me to my cell, a weapon shipment was coming in. Mostly "
+                    "the usual bone junk, but they carried one polearm like it might bite. Whatever "
+                    "it is, it's no ordinary weapon. They put it on the weapon rack with the rest."),
+                    s.flag(TOLD, 1)), ALWAYS),
                 ("Where was that gem again?", reply(
                     "In one of the grain pots: the kitchen, the storage room, or near the "
                     "fountain. I can't remember which, so check them all."), ALWAYS),
@@ -235,3 +246,42 @@ def conversation() -> bytes:
     escaping = ("expr", _flag(ESCAPING) + ["and"] + _flag(ESCAPED, 0))
     s.when(escaping, breaking_out, at_home)
     return s.bytes()
+
+
+def ship(gd) -> bool:
+    """In the pens, once Semyon has told of the shipment (TOLD), Thornwall onto the pens' weapon
+    rack (first among its contents), once (SHIPPED); none if a Thornwall is somewhere already. An
+    item record from the game's free list, as the Loader's other gifts. True when put there."""
+    import struct
+    from . import game, icons, ring, worldgear
+    if gd.region() != PENS or not gd.flag(TOLD) or gd.flag(SHIPPED):
+        return False
+    it = ring.Items(gd)
+    rack = None
+    for thing in range(ring.THING_COUNT):
+        for index, rec in it.chain(thing):
+            if struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == worldgear.THORNWALL:
+                gd.set_flag(SHIPPED)
+                return False
+            if rack is None and struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == worldgear.RACK_TYPE:
+                rack = (index, rec)
+    if rack is None:
+        return False
+    index, rec = rack
+    contents, = struct.unpack_from("<H", rec, ring.ITEM_CONTENTS)
+    item = it.word(ring.FREE_ITEMS)
+    if not 0 <= contents < ring.THING_COUNT or item >= game.NO_ITEM:
+        return False
+    kind, first = it.thing(contents)
+    if kind != game.THING_ITEM:
+        return False
+    new = bytearray(worldgear.weapon(*worldgear.BONE_POLEARM_1))
+    gd.guest.write(gd.ds * 16 + ring.FREE_ITEMS, it.item(item)[game.ITEM_NEXT:game.ITEM_NEXT + 2])
+    ring.took(item, "Thornwall, for the pens' weapon rack")
+    struct.pack_into("<h", new, game.ITEM_NEXT, first)
+    new[game.ITEM_SLOT] = 0xFF
+    gd.guest.write(it.items + item * game.ITEM_SIZE, bytes(new))
+    gd.guest.write(it.things + contents * 3, struct.pack("<Bh", game.THING_ITEM, item))
+    icons.fit(gd, item)
+    gd.set_flag(SHIPPED)
+    return True

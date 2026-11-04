@@ -281,7 +281,7 @@ save:
   (a level up, or a game starting): the game's own bonuses for CON, INT and WIS
   are counted right now, and the most only ever rises.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
-  weapon rack holding Thornwall is gone (a new game has it).
+  weapon rack is gone, and with it Thornwall's place (a new game has it).
 - A new game whose arena fight never began (no announcer, and walking said NO
   PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 - **A save made with 2.13.0 or later is not for earlier versions**, and one

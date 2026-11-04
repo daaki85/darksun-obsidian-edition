@@ -198,7 +198,7 @@ class WorldGearTests(unittest.TestCase):
             g = next(g for g in worldgear.MAGIC if item in g.items)
             self.assertEqual((g.name, g.objects, g.region), (holder, objects, region))
         rack = next(g for g in worldgear.MAGIC if g.name == "Weapon Rack")
-        self.assertEqual((rack.clone, rack.instead), ((131, worldgear.PENS_RACK_OBJECT), (19, 0)))
+        self.assertEqual((rack.clone, rack.instead, rack.items), ((131, worldgear.PENS_RACK_OBJECT), None, ()))
         self.assertEqual(gift("Magera").clone, (122, 2562))
         # (the plain axes still the plain ones)
         self.assertEqual(icons.which(worldgear.weapon(worldgear.BONE_AXE)), "Bone Axe")
@@ -214,8 +214,7 @@ class WorldGearTests(unittest.TestCase):
         cases = ((worldgear.AIR_DAGGER_2, game.AIR_DAGGER_TYPE, 2, "Galefang", "Rogue Shaman", (77,), 0x0F),
                  (worldgear.OBSIDIAN_SHORT_SWORD_1, game.OBSIDIAN_SHORT_SWORD_TYPE, 1, "Mindshard", "Maris", (228,), 0x22),
                  (worldgear.BONE_SHORT_SWORD_1, game.BONE_SHORT_SWORD_TYPE, 1, "Stillwater", "Chaya's chest", (2249,), None),
-                 (worldgear.POLEARM_2, game.METAL_POLEARM_TYPE, 2, "Linebreaker", "Troop Leader", (18,), 0x21),
-                 (worldgear.BONE_POLEARM_1, 19, 1, "Thornwall", "Weapon Rack", (1647,), 0x29))
+                 (worldgear.POLEARM_2, game.METAL_POLEARM_TYPE, 2, "Linebreaker", "Troop Leader", (18,), 0x21))
         for spec, type_, plus, name, holder, objects, region in cases:
             item = worldgear.weapon(*spec)
             self.assertEqual((struct.unpack_from("<H", item, game.ITEM_TYPE)[0], item[game.ITEM_PLUS]), (type_, plus))
@@ -426,9 +425,8 @@ class DataTests(unittest.TestCase):
         recs, _ = d.records(out[("RDFF", worldgear.PENS_RACK_OBJECT)])
         self.assertEqual(struct.unpack_from("<h", recs[0].data)[0], -worldgear.PENS_RACK_OBJECT)
         self.assertEqual(recs[0].data[2:], rack_head[2:])
-        self.assertEqual([icons.which(r) for r in d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)])], ["Thornwall", None, None])
-        self.assertEqual(d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)])[1:], [staff, polearm])
-        self.assertEqual([(r.kind, r.number) for r in recs[2:4]], [(5, 19), (3, worldgear.THORNWALL)])
+        # (Thornwall comes later, once Semyon has told of it: semyon.ship)
+        self.assertEqual(d.items_of(out[("RDFF", worldgear.PENS_RACK_OBJECT)]), [polearm, staff, polearm])
         self.assertEqual(len(recs), len(d.records(self.chunks[("RDFF", 1647)])[0]))
         # (none to replace: unchanged)
         self.assertEqual(d.with_item_replaced(self.chunks[("RDFF", 26)], lambda r: True, polearm), self.chunks[("RDFF", 26)])

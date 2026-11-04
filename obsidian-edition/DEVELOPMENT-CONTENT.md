@@ -714,8 +714,8 @@ kind's object, 2266, is the skeletons' of five regions), and one thri-kreen of
 the Gemfields (Skycutter's: 2598, entity 22 in the copy of `RGN06.GFF`; its
 kind's object, 215, is the whole pack's). So does the slave pens' weapon rack
 (2563: the Lower Castle's rack is the same object 1647; a thing's record has its
-number first, a person's at +6), with Thornwall in place of its first bone
-polearm, in Kalzith's copy of `RGN29.GFF` (one copy of the pens: with Kalzith
+number first, a person's at +6), with its own two bone polearms (Thornwall
+comes onto it later: [Semyon](#semyon)), in Kalzith's copy of `RGN29.GFF` (one copy of the pens: with Kalzith
 off, the rack's alone). The Elven Leader's Gythka +2 is his own Gythka +1 (in
 his pack, object 124, and the item object 2534 his script gives) made +2.
 (People of a kind share an object, so every Tari, Renegade and Wild Mul carries
@@ -960,6 +960,16 @@ use to change someone (40h: his fields 74, the side, to 4, theirs, and 70 to
 party, and only guards near him join the fight; in a fight in the pens he isn't
 on the party's side. Like Kalzith's, his commands come after everything of the
 game's, which keeps its place.
+
+The weapon shipment: his answer to "Did you see anything on your way back in?"
+sets flag 756 (between the game's 755 and the Loader's own 760). Each pass in
+the pens with it set and flag 757 not, `semyon.ship` puts Thornwall on the
+pens' weapon rack: the rack found by its item type (6Ch) among the region's
+things, an item record from the game's free list, first in the rack's contents
+list (the object its +8 names), then flag 757. A Thornwall somewhere already
+(the rack's data had it from 1.2.0 to 2.13.4, so a save from then that has been
+to the pens) sets 757 with none made. Once on the rack it is the game's own,
+kept and saved as any item.
 
 ## What Dinos and the Trustee say about them
 

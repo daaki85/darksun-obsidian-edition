@@ -1975,8 +1975,11 @@ of his own above Kalzith's, the first time the party is in the pens after it.
 His other ways out stay as in the game, and so does a Semyon who was killed: he
 isn't in the pens. Talk to him (Look, then Talk): he says why the templars tied
 him up in the arena (he was asking about the Veiled Alliance), passes on what he
-has heard (who carries keys), reminds the party where he hid his gem (the grain
-pots), and talks about the Alliance's plans, in his own voice from the arena.
+has heard (who carries keys), tells of a weapon shipment he saw brought in ("they
+carried one polearm like it might bite... They put it on the weapon rack with the
+rest": from then on the pens' weapon rack holds **Thornwall**, a bone polearm +1),
+reminds the party where he hid his gem (the grain pots), and talks about the
+Alliance's plans, in his own voice from the arena.
 As with the game's own people, each question goes from the list once asked,
 and comes back the next time you talk to him.
 

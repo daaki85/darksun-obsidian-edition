@@ -196,7 +196,7 @@ A few of them:
 | **Headsman** | a metal great axe +2 |
 | **Kreenfang** | a bone gythka +1 |
 | **Linebreaker** | a metal polearm +2 |
-| **Thornwall** | a bone polearm +1 |
+| **Thornwall** | a bone polearm +1, on the slave pens' weapon rack once Semyon has told of it |
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
 | **Dunesong** | a bow +1, sold by the Bowyer, whose archery target counts it as it does the game's own bows |
